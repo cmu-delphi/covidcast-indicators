@@ -1,4 +1,4 @@
-### Code Review
+### Code Review
 
 A code review of this module should include a careful look at the code and the
 output. To assist in the process, but certainly not in replace of it, please

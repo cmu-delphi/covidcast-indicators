@@ -1,0 +1,6 @@
+{
+    "export_start_date": "2020-03-03",
+    "static_file_dir": "../static",
+    "export_dir": "./receiving",
+    "base_url": "test_dir/small_{metric}.csv"
+}

@@ -1,0 +1,71 @@
+# -*- coding: utf-8 -*-
+from datetime import datetime
+from itertools import product
+from os.path import join
+
+import numpy as np
+import pandas as pd
+from delphi_utils import read_params, create_export_csv
+
+from .geo import geo_map
+from .pull import pull_jhu_data
+
+
+# global constants
+METRICS = [
+    "confirmed",
+    "deaths",
+]
+SENSORS = [
+    "new_counts",
+    "cumulative_counts",
+    "incidence",  # new_counts per 100k people
+    "cumulative_prop",
+]
+SENSOR_NAME_MAP = {
+    "new_counts": ("incidence_num", False),
+    "cumulative_counts": ("cumulative_num", False),
+    "incidence": ("incidence_prop", False),
+    "cumulative_prop": ("cumulative_prop", True),
+}
+GEO_RESOLUTIONS = [
+    "county",
+    "state",
+    "msa",
+    "hrr",
+]
+
+
+def run_module():
+
+    params = read_params()
+    export_start_date = params["export_start_date"]
+    export_dir = params["export_dir"]
+    base_url = params["base_url"]
+    static_file_dir = params["static_file_dir"]
+
+    map_df = pd.read_csv(join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int})
+    pop_df = pd.read_csv(
+        join(static_file_dir, "fips_population.csv"), dtype={"fips": float, "population": float}
+    ).rename({"fips": "FIPS"}, axis=1)
+
+    dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
+    for metric, geo_res, sensor in product(METRICS, GEO_RESOLUTIONS, SENSORS):
+        print(geo_res, metric, sensor)
+        df = dfs[metric]
+        # Aggregate to appropriate geographic resolution
+        df = geo_map(df, geo_res, map_df)
+        df["val"] = df[sensor]
+        df["se"] = np.nan
+        df["sample_size"] = np.nan
+        sensor_name = SENSOR_NAME_MAP[sensor][0]
+        if SENSOR_NAME_MAP[sensor][1]:
+            metric = f"wip_{metric}"
+        create_export_csv(
+            df,
+            export_dir=export_dir,
+            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            metric=metric,
+            geo_res=geo_res,
+            sensor=sensor_name,
+        )

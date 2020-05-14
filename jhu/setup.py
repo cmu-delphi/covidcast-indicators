@@ -6,6 +6,7 @@ required = [
     "pandas",
     "pytest",
     "pytest-cov",
+    "pylint",
     "delphi-utils"
 ]
 

@@ -6,7 +6,10 @@ import numpy as np
 import pandas as pd
 from delphi_jhu.geo import fips_to_state, disburse, geo_map
 
-MAP_DF = pd.read_csv(join("static", "fips_prop_pop.csv"), dtype={"fips": int})
+MAP_DF = pd.read_csv(
+    join("..", "static", "fips_prop_pop.csv"),
+    dtype={"fips": int}
+)
 
 
 class TestFipsToState:

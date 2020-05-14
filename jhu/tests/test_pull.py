@@ -6,7 +6,8 @@ import pandas as pd
 from delphi_jhu.pull import pull_jhu_data
 
 pop_df = pd.read_csv(
-    join("static", "fips_population.csv"), dtype={"fips": float, "population": float}
+    join("..", "static", "fips_population.csv"),
+    dtype={"fips": float, "population": float}
 ).rename({"fips": "FIPS"}, axis=1)
 
 

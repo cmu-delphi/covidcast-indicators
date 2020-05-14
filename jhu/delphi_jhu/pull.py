@@ -103,7 +103,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     except ValueError as e:
         print(e)
         raise ValueError(
-            f"Detected unexpected column(s) "
+            "Detected unexpected column(s) "
             "after dropping DROP_COLUMNS. The dataset "
             "schema may have changed. Please investigate and "
             "amend DROP_COLUMNS."

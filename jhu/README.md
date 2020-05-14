@@ -41,7 +41,7 @@ To do a static test of the code style, it is recommended to run **pylint** on
 the module. To do this, run the following from the main module directory:
 
 ```
-pylint delphi_jhu
+env/bin/pylint delphi_jhu
 ```
 
 The most aggressive checks are turned off; only relatively important issues

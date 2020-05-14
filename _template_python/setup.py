@@ -11,9 +11,9 @@ required = [
 ]
 
 setup(
-    name="delphi_google_health",
+    name="delphi_NAME",
     version="0.1.0",
-    description="Indicators from Google Health Trends",
+    description="SHORT DESCRIPTION",
     author="",
     author_email="",
     url="https://github.com/cmu-delphi/covidcast-indicators",

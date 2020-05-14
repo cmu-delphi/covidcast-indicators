@@ -15,8 +15,8 @@ MAP_DF = pd.read_csv(
 class TestFipsToState:
     def test_exceptions(self):
 
-        assert fips_to_state("70002") == "mo"
-        assert fips_to_state("70003") == "ma"
+        assert fips_to_state("70002") == "ma"
+        assert fips_to_state("70003") == "mo"
 
     def test_normal(self):
 

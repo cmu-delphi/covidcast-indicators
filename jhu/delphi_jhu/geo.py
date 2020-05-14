@@ -115,9 +115,9 @@ def fips_to_state(fips: str) -> str:
         Inputted FIPS code not recognized.
     """
     if fips == "70002":
-        return FIPS_TO_STATE["29"]  # Dukes & Nantucket -> Massachusetts
+        return FIPS_TO_STATE["25"]  # Dukes & Nantucket -> Massachusetts
     if fips == "70003":
-        return FIPS_TO_STATE["25"]  # Kansas City -> Missouri
+        return FIPS_TO_STATE["29"]  # Kansas City -> Missouri
     return FIPS_TO_STATE[fips[:2]]
 
 

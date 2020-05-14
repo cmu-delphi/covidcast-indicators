@@ -3,7 +3,7 @@ import pytest
 from os.path import join
 
 import pandas as pd
-from jhu.pull import pull_jhu_data
+from delphi_jhu.pull import pull_jhu_data
 
 pop_df = pd.read_csv(
     join("static", "fips_population.csv"), dtype={"fips": float, "population": float}
@@ -13,7 +13,7 @@ pop_df = pd.read_csv(
 class TestPullJHU:
     def test_good_file(self):
 
-        df = pull_jhu_data(join("test_dir", "small_{metric}.csv"), "deaths", pop_df)
+        df = pull_jhu_data(join("test_data", "small_{metric}.csv"), "deaths", pop_df)
 
         assert (
             df.columns.values
@@ -24,19 +24,19 @@ class TestPullJHU:
 
         with pytest.raises(ValueError):
             df = pull_jhu_data(
-                join("test_dir", "bad_{metric}_missing_days.csv"), "confirmed", pop_df
+                join("test_data", "bad_{metric}_missing_days.csv"), "confirmed", pop_df
             )
 
     def test_missing_cols(self):
 
         with pytest.raises(ValueError):
             df = pull_jhu_data(
-                join("test_dir", "bad_{metric}_missing_cols.csv"), "confirmed", pop_df
+                join("test_data", "bad_{metric}_missing_cols.csv"), "confirmed", pop_df
             )
 
     def test_extra_cols(self):
 
         with pytest.raises(ValueError):
             df = pull_jhu_data(
-                join("test_dir", "bad_{metric}_extra_cols.csv"), "confirmed", pop_df
+                join("test_data", "bad_{metric}_extra_cols.csv"), "confirmed", pop_df
             )

@@ -5,7 +5,7 @@ import pytest
 from os import listdir, remove
 from os.path import join
 
-from jhu.run import run_module
+from delphi_jhu.run import run_module
 
 
 @pytest.fixture(scope="session")

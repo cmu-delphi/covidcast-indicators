@@ -10,7 +10,7 @@ required = [
 ]
 
 setup(
-    name="jhu",
+    name="delphi_jhu",
     version="0.0.1",
     description="Indicators from Johns Hopkins GitHub Files",
     author="",

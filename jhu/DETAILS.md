@@ -7,63 +7,6 @@ State levels.
 In order to avoid confusing public consumers of the data, we maintain
 consistency how JHU reports the data, please refer to [Exceptions](#Exceptions).
 
-## Running the Indicator
-
-The indicator is run by directly executing the Python module contained in this
-directory. The safest way to do this is to create a virtual environment,
-installed the common DELPHI tools, and then install the module and its
-dependencies. To do this, run the following code from this directory:
-
-```
-python -m venv env
-source env/bin/activate
-pip install ../_py_utils/.
-pip install .
-```
-
-All of the user-changable parameters are stored in `params.json`. To execute
-the module and produce the output datasets, run the following:
-
-```
-env/bin/python -m jhu
-```
-
-If you set your midas username and password in the `params.json` file and run
-the module with the switch `--upload`, all of the files in the received directory
-will be uploaded to the server for inclusion in the API.
-
-Once you are finished with the code, you can deactivate the virtual environment
-and (optionally) remove the environment itself.
-
-```
-deactivate
-rm -r env
-```
-
-## Testing the code
-
-To do a static test of the code style, it is recommended to run **pylint** on
-the module. To do this, run the following from the main module directory:
-
-```
-pylint jhu
-```
-
-The most aggressive checks are turned off; only relatively important issues
-should be raised and they should be manually checked (or better, fixed).
-
-Unit tests are also included in the module. To execute these, run the following
-command from this directory:
-
-```
-(cd tests && ../env/bin/pytest --cov=jhu --cov-report=term-missing)
-```
-
-The output will show the number of unit tests that passed and failed, along
-with the percentage of code covered by the tests. None of the tests should
-fail and the code lines that are not covered by unit tests should be small and
-should not include critical sub-routines.
-
 ## Geographical Levels (`geo`)
 * `county`: reported using zero-padded FIPS codes.  There are some exceptions
   that lead to inconsistency with the other COVIDcast data (but are necessary

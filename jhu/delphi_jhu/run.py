@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""Functions to call when running the function.
+
+This module should contain a function called `run_module`, that is executed
+when the module is run with `python -m MODULE_NAME`.
+"""
 from datetime import datetime
 from itertools import product
 from os.path import join
@@ -44,9 +49,12 @@ def run_module():
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
 
-    map_df = pd.read_csv(join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int})
+    map_df = pd.read_csv(
+        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
+    )
     pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"), dtype={"fips": float, "population": float}
+        join(static_file_dir, "fips_population.csv"),
+        dtype={"fips": float, "population": float},
     ).rename({"fips": "FIPS"}, axis=1)
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}

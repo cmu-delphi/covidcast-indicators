@@ -2,5 +2,7 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
+  "start_date": "2020-02-01",
+  "end_date": "2020-04-28",
   "ght_key": ""
 }

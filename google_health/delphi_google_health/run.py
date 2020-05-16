@@ -7,8 +7,8 @@ when the module is run with `python -m MODULE_NAME`.
 
 from delphi_utils import read_params
 
-from .api import GoogleHealthTrends, get_counts_states, get_counts_dma
-from .map import derived_counts_from_dma
+from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
+from .map_values import derived_counts_from_dma
 from .export import export_csv
 
 

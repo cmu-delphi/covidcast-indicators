@@ -4,6 +4,7 @@
 Most of the logic is to deal with the caching files.
 """
 import time
+from os.path import join
 
 import numpy as np
 import pandas as pd
@@ -165,7 +166,7 @@ def get_counts_dma(
 
 def _get_counts_geoid(
     ght: GoogleHealthTrends,
-    geo_id: str,
+    geo_id: str or int,
     start_date: str,
     end_date: str,
     dma: bool,
@@ -203,18 +204,23 @@ def _get_counts_geoid(
     cache_dates = set(dt["timestamp"].values)
     req_dates = list(output_dates - cache_dates)
 
-    if req_dates:
-        sdate = min(req_dates)
-        edate = max(req_dates)
-        new_data = _api_data_to_df(
-            ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
-            geo_id=geo_id,
-        )
-        new_data = new_data[new_data["timestamp"].isin(req_dates)]
-        dt = dt.append(new_data).sort_values("timestamp")
-        dt = dt.drop_duplicates(subset="timestamp")
-        _write_cached_file(dt, geo_id, cache_dir)
-        dt = _load_cached_file(geo_id, cache_dir)
+    try:
+        if req_dates:
+            sdate = min(req_dates)
+            edate = max(req_dates)
+            new_data = _api_data_to_df(
+                ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
+                geo_id=geo_id,
+            )
+            new_data = new_data[new_data["timestamp"].isin(req_dates)]
+            dt = dt.append(new_data).sort_values("timestamp")
+            dt = dt.drop_duplicates(subset="timestamp")
+            _write_cached_file(dt, geo_id, cache_dir)
+            dt = _load_cached_file(geo_id, cache_dir)
+    except googleapiclient.errors.HttpError:
+        # This is thrown in there is no data yet for the given days. Need to
+        # investigate this further.
+        pass
 
     dt = dt[dt["timestamp"].isin(output_dates)]
     return dt
@@ -268,7 +274,7 @@ def _load_cached_file(geo_id: str, cache_dir: str) -> pd.DataFrame:
     pd.DataFrame
     """
     try:
-        fn_cache = f"./{cache_dir}/Data_{geo_id}_{TERMS_IDS}.csv"
+        fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
         return pd.read_csv(fn_cache)
     except FileNotFoundError:
         return pd.DataFrame({"geo_id": [], "timestamp": [], "val": []})
@@ -287,5 +293,5 @@ def _write_cached_file(df: pd.DataFrame, geo_id: str, cache_dir: str):
     cache_dir: str
         path to location where cached CSV files are stored
     """
-    fn_cache = f"./{cache_dir}/Data_{geo_id}_{TERMS_IDS}.csv"
+    fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
     df.to_csv(fn_cache, index=False)

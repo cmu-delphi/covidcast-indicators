@@ -26,7 +26,7 @@ class TestGoogleHealthTrends:
         params = read_params()
         ght = GoogleHealthTrends(ght_key=params["ght_key"])
 
-        res = ght.query("2020-05-13", "2020-05-13", geo_id="AL", dma=False)
+        res = ght.query("2020-05-10", "2020-05-11", geo_id="AL", dma=False)
         assert [x for x in res.keys()] == ["lines"]
         assert [x["term"] for x in res["lines"]] == [
             "/m/0m7pl",

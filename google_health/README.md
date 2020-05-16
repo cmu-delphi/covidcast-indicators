@@ -14,9 +14,12 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
-All of the user-changable parameters are stored in `params.json`. To execute
-the module and produce the output datasets (by default, in `receiving`), run
-the following:
+All of the user-changable parameters are stored in `params.json`. A template is
+included as `params.json.template`. At a minimum, you will need to include a
+Google API key.
+
+To execute the module and produce the output datasets (by default, in
+`receiving`), run the following:
 
 ```
 env/bin/python -m delphi_google_health

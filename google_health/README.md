@@ -16,7 +16,8 @@ pip install .
 
 All of the user-changable parameters are stored in `params.json`. A template is
 included as `params.json.template`. At a minimum, you will need to include a
-Google API key.
+Google API key. Note that setting `end_date` to an empty string will pull
+data through today (GMT) minus 5 days.
 
 To execute the module and produce the output datasets (by default, in
 `receiving`), run the following:

@@ -44,5 +44,8 @@ def export_csv(
         date_short = date.replace("-", "")
         export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
         df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]].to_csv(
-            f"{receiving_dir}/{export_fn}", index=False, na_rep="NA", float_format='%.8f'
+            f"{receiving_dir}/{export_fn}",
+            index=False,
+            na_rep="NA",
+            float_format="%.8f",
         )

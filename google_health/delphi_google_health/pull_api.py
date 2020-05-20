@@ -3,6 +3,7 @@
 
 Most of the logic is to deal with the caching files.
 """
+import logging
 import time
 from os.path import join
 
@@ -69,6 +70,12 @@ class GoogleHealthTrends:
             params["geoRestriction_region"] = "US-" + geo_id
 
         time.sleep(1)
+        logging.info(
+            "Pulling data from geoid='%s' between %s and %s.",
+            geo_id,
+            start_date,
+            end_date,
+        )
         data = self.service.getTimelinesForHealth(**params).execute()
 
         return data
@@ -219,8 +226,8 @@ def _get_counts_geoid(
             _write_cached_file(dt, geo_id, cache_dir)
             dt = _load_cached_file(geo_id, cache_dir)
     except googleapiclient.errors.HttpError:
-        # This is thrown in there is no data yet for the given days. Need to
-        # investigate this further.
+        #  This is thrown in there is no data yet for the given days. Need to
+        #  investigate this further.
         pass
 
     dt = dt[dt["timestamp"].isin(output_dates)]
@@ -295,4 +302,4 @@ def _write_cached_file(df: pd.DataFrame, geo_id: str, cache_dir: str):
         path to location where cached CSV files are stored
     """
     fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
-    df.to_csv(fn_cache, index=False, float_format='%.8f')
+    df.to_csv(fn_cache, index=False, float_format="%.8f")

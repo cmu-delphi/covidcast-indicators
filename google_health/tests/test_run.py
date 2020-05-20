@@ -33,7 +33,7 @@ class TestRunModule:
             test_df = pd.read_csv(join("receiving_test", fname))
             new_df = pd.read_csv(join("receiving", fname))
 
-            assert_frame_equal(test_df, new_df)
+            assert_frame_equal(test_df, new_df, check_less_precise=5)
 
     def test_match_old_smoothed_output(self, run_as_module):
 

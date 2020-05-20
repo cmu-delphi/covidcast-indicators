@@ -6,10 +6,10 @@ Most of the logic is to deal with the caching files.
 import time
 from os.path import join
 
-import googleapiclient
 import numpy as np
 import pandas as pd
-from googleapiclient.discovery import build
+import googleapiclient
+import googleapiclient.discovery
 
 DISCOVERY_URL = "https://www.googleapis.com/discovery/v1/apis/trends/v1beta/rest"
 TERMS_IDS = "anosmia_ms"
@@ -27,7 +27,7 @@ class GoogleHealthTrends:
 
     def __init__(self, ght_key: str):
         self.key = ght_key
-        self.service = build(
+        self.service = googleapiclient.discovery.build(
             serviceName="trends",
             version="v1beta",
             developerKey=ght_key,
@@ -295,4 +295,4 @@ def _write_cached_file(df: pd.DataFrame, geo_id: str, cache_dir: str):
         path to location where cached CSV files are stored
     """
     fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
-    df.to_csv(fn_cache, index=False)
+    df.to_csv(fn_cache, index=False, float_format='%.8f')

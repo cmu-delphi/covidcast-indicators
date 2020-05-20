@@ -21,12 +21,13 @@ def create_export_csv(
     export_dir: str
         Export directory
     metric: str
-        Metric we are considering (confirmed vs deaths)
+        Metric we are considering
     geo_res: str
         Geographic resolution to which the data has been aggregated
     sensor: str
         Sensor that has been calculated (cumulative_counts vs new_counts)
     """
+    df = df.copy()
     df["timestamp"] = pd.to_datetime(df["timestamp"])
     dates = pd.Series(
         df[df["timestamp"] >= start_date]["timestamp"].unique()

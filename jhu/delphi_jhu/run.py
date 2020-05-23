@@ -31,7 +31,7 @@ SENSOR_NAME_MAP = {
     "new_counts": ("incidence_num", False),
     "cumulative_counts": ("cumulative_num", False),
     "incidence": ("incidence_prop", False),
-    "cumulative_prop": ("cumulative_prop", True),
+    "cumulative_prop": ("cumulative_prop", False),
 }
 GEO_RESOLUTIONS = [
     "county",

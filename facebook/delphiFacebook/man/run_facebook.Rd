@@ -4,7 +4,10 @@
 \alias{run_facebook}
 \title{Run the entire pipeline}
 \usage{
-run_facebook()
+run_facebook(parameter_path)
+}
+\arguments{
+\item{parameter_path}{path to the parameters file}
 }
 \value{
 none

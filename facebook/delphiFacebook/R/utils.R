@@ -1,7 +1,10 @@
 #' Return params file as an R list
 #'
-#' Reads the file "params.json" in the current working directory. If the file does not
-#' exist, the function will create a copy of "params.json.template" and read from that.
+#' Reads a parameters file. If the file does not exist, the function will create a copy of
+#' '"params.json.template" and read from that.
+#'
+#' @param path    path to the parameters file; if not present, will try to copy the file
+#'                "params.json.template"
 #'
 #' @return a named list of parameters values
 #'
@@ -9,9 +12,9 @@
 #' @importFrom jsonlite read_json
 #' @importFrom lubridate ymd_hms
 #' @export
-read_params <- function() {
-  if (!file.exists("params.json")) file.copy("params.json.template", "params.json")
-  params <- read_json("params.json", simplifyVector = TRUE)
+read_params <- function(path = "params.json") {
+  if (!file.exists(path)) file.copy("params.json.template", "params.json")
+  params <- read_json(path, simplifyVector = TRUE)
 
   params$num_filter <- if_else(params$debug, 2L, 100L)
   params$s_weight <- if_else(params$debug, 1.00, 0.01)

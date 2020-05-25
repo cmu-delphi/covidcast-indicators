@@ -46,4 +46,4 @@ To see the code coverage from the tests and example run the following:
 Rscript -e 'covr::package_coverage("delphiFacebook")'
 ```
 
-There should be good coverage of all the core functions in the package. 
+There should be good coverage of all the core functions in the package.

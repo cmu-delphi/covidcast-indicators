@@ -7,7 +7,7 @@
 #'
 #' @return none
 #' @export
-run_facebook <- function(parameter_path)
+run_facebook <- function(parameter_path = "params.json")
 {
   # read parameters file, load geographic data, load archived data
   params <- read_params(parameter_path)

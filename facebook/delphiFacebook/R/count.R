@@ -17,13 +17,13 @@ write_hh_count_data <- function(df, cw_list, params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, TRUE)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("smooth_%s", metric))
+      write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params, TRUE)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("smooth_w%s", metric))
+      write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
     }
   }
 }
@@ -41,6 +41,7 @@ write_hh_count_data <- function(df, cw_list, params)
 #' @importFrom dplyr inner_join group_by mutate n case_when first
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
+#' @export
 summarize_hh_count <- function(
   df, crosswalk_data, metric, var_weight, params, smooth = FALSE
 )
@@ -108,7 +109,13 @@ apply_count_smoothing <- function(df, params, k = 3L, max_window = c(1L, 7L))
 {
 
   day_set <- format(
-    seq(as.Date(params$start_time), as.Date(params$end_time), by = '1 day'), "%Y%m%d"
+    seq(
+      as.Date(params$start_time, tz = "America/Los_Angeles"),
+      as.Date(params$end_time, tz = "America/Los_Angeles"),
+      by = '1 day'
+    ),
+    "%Y%m%d",
+    tz = "America/Los_Angeles"
   )
 
   roll_sum <- function(val) rollapplyr(val, k, sum, partial = TRUE, na.rm = TRUE)

@@ -9,20 +9,12 @@
 #' @export
 load_archive <- function(params)
 {
-  if (file.exists(a_path <- file.path(params$archive_dir, "data_agg.Rds")))
+  if (file.exists(a_path <- file.path(params$archive_dir, "data_agg.Rds")) & !params$debug)
   {
     archive <- read_rds(a_path)
   } else {
     archive <- list(data_agg = NULL, seen_tokens = NULL)
     return(archive)
-  }
-
-  if (params$debug)
-  {
-    archive$data_agg <- archive$data_agg[1:100,]
-    archive$seen_tokens <- semi_join(
-      archive$seen_tokens, archive$data_agg, by = "token"
-    )
   }
 
   return(archive)

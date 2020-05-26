@@ -83,12 +83,18 @@ summarize_binary <- function(
 sum_n_days <- function(df, smooth_days, params)
 {
   day_set <- format(
-    seq(as.Date(params$start_time), as.Date(params$end_time), by = '1 day'), "%Y%m%d"
+    seq(
+      as.Date(params$start_time, tz = "America/Los_Angeles"),
+      as.Date(params$end_time, tz = "America/Los_Angeles"),
+      by = '1 day'
+    ),
+    "%Y%m%d",
+    tz = "America/Los_Angeles"
   )
 
   roll_sum <- function(val) rollapplyr(val, smooth_days, sum, partial = TRUE, na.rm = TRUE)
 
-  df_complete <- complete(df, day = day_set, .data$geo_id)
+  df_complete <- complete(df, day = day_set, .data$geo_id, fill = list(yes = 0, no = 0))
   df_complete <- group_by(df_complete, .data$geo_id)
   df_complete <- arrange(df_complete, .data$day)
   df_complete <- mutate(
@@ -96,8 +102,6 @@ sum_n_days <- function(df, smooth_days, params)
   )
   df_complete <- ungroup(df_complete)
   df_complete <- df_complete[!is.na(df_complete$yes) & !is.na(df_complete$no),]
-  df_complete <- df_complete[df_complete$yes > 0,]
-  df_complete <- df_complete[df_complete$no > 0,]
 
   df_complete
 }

@@ -65,3 +65,21 @@ test_that("testing read params when not debug", {
   expect_true(inherits(params$end_time, "POSIXct"))
 
 })
+
+test_that("testing mix weights", {
+  # for intermediate version, check that mixing works
+  for (k in seq(2, 5))
+  {
+    new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(num_filter = k))
+    expect_true(max(new_weights) < 1 / k)
+  }
+
+  # for extreme value, can only mix to uniform
+  new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(num_filter = 6L))
+  expect_equal(length(expect_true), 1L)
+
+  # check that no mixing occurs when not needed
+  new_weights <- mix_weights(c(0.1, 0.2, 0.2, 0.2, 0.3),  list(num_filter = 3L))
+  expect_equal(new_weights, c(0.1, 0.2, 0.2, 0.2, 0.3))
+
+})

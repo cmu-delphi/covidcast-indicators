@@ -64,3 +64,39 @@ create_dir_not_exist <- function(path)
 {
   if (!dir.exists(path)) { dir.create(path) }
 }
+
+#' Return vector from the past n days, inclusive
+#'
+#' Returns dates as strings in the form "YYYYMMDD"
+#'
+#' @param date   a string containing a single date that can be parsed with `ymd`, such as
+#'               "20201215"
+#' @param ndays  how many days in the past to include
+#'
+#'
+#' @importFrom lubridate ymd
+#' @export
+past_n_days <- function(date, ndays = 0L)
+{
+  return(format(ymd(date) - seq(0, ndays), format = "%Y%m%d"))
+}
+
+#' Adjust weights so no weight is not too much of the final estimate
+#'
+#' @param weights     a vector of sample weights
+#' @param params      a named list containing an element named "num_filter"; the maximum
+#'                    weight is assumed to be 1 / "num_filter" * 0.999.
+#' @export
+mix_weights <- function(weights, params)
+{
+  weights <- weights / sum(weights)
+  max_weight <- max(weights)
+  max_allowed_weight <- 1 / params$num_filter * 0.999
+
+  mix_coef <- (max_weight - max_allowed_weight) / (max_weight  - 1 / length(weights))
+  if (mix_coef < 0) { mix_coef <- 0 }
+  if (mix_coef > 1) { mix_coef <- 1 }
+  new_weights <- mix_coef / length(weights) + (1 - mix_coef) * weights
+
+  return(new_weights)
+}

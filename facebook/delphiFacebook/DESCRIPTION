@@ -7,7 +7,7 @@ Author: Taylor Arnold
 Maintainer: Taylor Arnold <tarnold2@richmond.edu>
 Description: Takes the raw results from the facebook survey data and produced usable
   outputs in several formats. See documentation in the GitHub source directory.
-License: file LICENSE 
+License: file LICENSE
 Depends:
     R (>= 3.5.0),
 Imports:
@@ -17,9 +17,7 @@ Imports:
     dplyr,
     stringi,
     jsonlite,
-    lubridate,
-    tidyr,
-    zoo
+    lubridate
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

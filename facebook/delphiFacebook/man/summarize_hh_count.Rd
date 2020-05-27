@@ -10,7 +10,7 @@ summarize_hh_count(
   metric,
   var_weight,
   params,
-  smooth = FALSE
+  smooth_days = 0L
 )
 }
 \arguments{
@@ -25,7 +25,8 @@ summarize_hh_count(
 \item{params}{a named list with entries "s_weight", "s_mix_coef", "num_filter",
 "start_time", and "end_time"}
 
-\item{smooth}{logical; should the results by smoothed?}
+\item{smooth_days}{integer; how many does in the past should be pooled into the
+estimate of a day}
 }
 \description{
 Summarize CLI and ILI household variables at a geographic level

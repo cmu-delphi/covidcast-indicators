@@ -16,13 +16,13 @@ write_hh_count_data <- function(df, cw_list, params)
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, TRUE)
+      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 7)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params, TRUE)
+      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params, 7)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
     }
   }
@@ -36,117 +36,77 @@ write_hh_count_data <- function(df, cw_list, params)
 #' @param var_weight       name of the variable containing the survey weights
 #' @param params           a named list with entries "s_weight", "s_mix_coef", "num_filter",
 #'                         "start_time", and "end_time"
-#' @param smooth           logical; should the results by smoothed?
+#' @param smooth_days      integer; how many does in the past should be pooled into the
+#'                         estimate of a day
 #'
 #' @importFrom dplyr inner_join group_by mutate n case_when first
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
 #' @export
 summarize_hh_count <- function(
-  df, crosswalk_data, metric, var_weight, params, smooth = FALSE
+  df, crosswalk_data, metric, var_weight, params, smooth_days = 0L
 )
 {
   df <- inner_join(df, crosswalk_data, by = "zip5")
   names(df)[names(df) == sprintf("hh_p_%s", metric)] <- "hh_p_metric"
-  names(df)[names(df) == var_weight] <- "w"
 
-  df$hh_preweight <- df$w * df$weight_in_location
-
-  df <- group_by(df, .data$day, .data$geo_id)
-  df <- mutate(
-    df,
-    hh_normalize_preweight = .data$hh_preweight / sum(.data$hh_preweight),
-    n = n(),
-    maxp = max(.data$hh_normalize_preweight),
-    precoefficient = case_when(
-      maxp <= params$s_weight ~ 0,
-      1 / n > params$s_weight * 0.999  ~ 1,
-      TRUE ~ (.data$maxp * n - params$s_weight * 0.999 * n + 1e-6) / (n - 1 + 1e-6)
-    ),
-    mix_coef = pmax(.data$precoefficient, params$s_mix_coef, na.rm = FALSE),
-    hh_mixed_weight = .data$mix_coef / n + (1 + .data$mix_coef) * .data$hh_normalize_preweight
-  )
-
-  df_summary <- ungroup(summarize(
-    df,
-    val = weighted.mean(.data$hh_p_metric, .data$hh_mixed_weight),
-    se = sqrt(sum( (.data$hh_mixed_weight * (.data$hh_p_metric-.data$val))^2 )),
-    se_use = diff(range(.data$hh_p_metric)) >= 1e-10,
-    denominator = sum(.data$hh_number_total * .data$weight_in_location),
-    hh_mixed_weight_sum = sum(.data$hh_mixed_weight),
-    hh_mixed_weight_max = max(.data$hh_mixed_weight),
-    mix_coef = first(.data$mix_coef),
-    n_response = sum(.data$weight_in_location),
-    sample_size = n() * mean(.data$hh_mixed_weight)^2 / mean(.data$hh_mixed_weight^2)
+  df_out <- as_tibble(expand.grid(
+    day = unique(df$day), geo_id = unique(df$geo_id), stringsAsFactors = FALSE
   ))
-
-  if (smooth) { df_summary <- apply_count_smoothing(df_summary, params) }
-
-  df_summary <- df_summary[df_summary$n_response > params$num_filter,]
-  df_summary <- df_summary[df_summary$sample_size > params$num_filter,]
-  df_summary <- df_summary[df_summary$hh_mixed_weight_max <= params$s_weight,]
-  df_summary$se <- jeffreys_se(df_summary$se, df_summary$val, df_summary$sample_size)
-
-  rowsum_na <- rowSums(is.na(df_summary[, c("val", "sample_size", "geo_id", "day")]))
-  df_summary <- df_summary[rowsum_na == 0,]
-
-  return(df_summary)
-}
-
-#' Applying smoothing to household counts data (CLI and ILI)
-#'
-#' @param df            input data frame of summerized data
-#' @param params        a named list containing entried "start_time" and "end_time"
-#' @param k             integer
-#' @param max_window    pair of integers
-#'
-#' @importFrom tidyr complete
-#' @importFrom dplyr group_by arrange mutate ungroup filter select
-#' @importFrom zoo rollapplyr rollsumr
-#' @importFrom rlang .data
-#' @export
-apply_count_smoothing <- function(df, params, k = 3L, max_window = c(1L, 7L))
-{
-
-  day_set <- format(
-    seq(
-      as.Date(params$start_time, tz = "America/Los_Angeles"),
-      as.Date(params$end_time, tz = "America/Los_Angeles"),
-      by = '1 day'
-    ),
-    "%Y%m%d",
-    tz = "America/Los_Angeles"
-  )
-
-  roll_sum <- function(val) rollapplyr(val, k, sum, partial = TRUE, na.rm = TRUE)
-  roll_max <- function(val) {
-    rollapplyr(val, k, function(x, ...) max(0, x, ...), partial = TRUE, na.rm = TRUE)
+  df_out$val <- NA_real_
+  df_out$sample_size <- NA_real_
+  df_out$se <- NA_real_
+  for (i in seq_len(nrow(df_out)))
+  {
+    allowed_days <- past_n_days(df_out$day[i], smooth_days)
+    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
+    if (length(index))
+    {
+      mixed_weights <- mix_weights(df[[var_weight]][index], params)
+      new_row <- compute_count_response(
+        response = df$hh_p_metric[index],
+        weight = df[[var_weight]][index],
+        sample_weight = df$weight_in_location[index]
+      )
+      df_out[i,]$val <- new_row$val
+      df_out[i,]$sample_size <- new_row$sample_size
+      df_out[i,]$se <- new_row$se
+    }
   }
 
-  df_complete <- complete(df, day = day_set, .data$geo_id)
-  df_complete <- group_by(df_complete, .data$geo_id)
-  df_complete <- arrange(df_complete, .data$day)
-  df_complete <- mutate(
-    df_complete,
-    .data$day,
-    valid = !is.na(.data$sample_size),
-    row_w = .data$sample_size,
-    window_w = roll_sum(.data$row_w),
-    val = pmax(0, roll_sum(.data$row_w * .data$val) / .data$window_w),
-    se = sqrt(pmax(0, roll_sum(.data$se^2 * .data$row_w^2) / .data$window_w^2)),
-    se_use = roll_sum(.data$se_use) > 1e-3,
-    n_response = roll_sum(.data$n_response),
-    sample_size = roll_sum(.data$sample_size),
-    hh_mixed_weight_max = roll_max(.data$hh_mixed_weight_max * .data$row_w) / .data$window_w
-  )
+  df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+  df_out <- df_out[df_out$sample_size > params$num_filter, ]
+  return(df_out)
+}
 
-  df_complete <- ungroup(filter(
-    df_complete,
-    rollsumr(c(rep(FALSE, max_window[2L] - 1L), .data$valid), max_window[2L]) >= max_window[1L]
-  ))
-  df_complete <- select(df_complete, -.data$valid, -.data$row_w, -.data$window_w)
+#' Returns county response estimates
+#'
+#' This function takes vectors as input and computes the count response values (a point
+#' estimate named "val", a standard error named "se", and a sample size named "sample_size")
+#' Note that there are two different sets of weights that have a different effect on the
+#' output.
+#'
+#' @param response                    a vector of percentages (100 * cnt / total)
+#' @param weight                      a vector of sample weights for inverse probability
+#'                                    weighting; invariant up to a scaling factor
+#' @param sample_weight               a vector of sample size weights
+#'
+#' @importFrom stats weighted.mean
+#' @export
+compute_count_response <- function(response, weight, sample_weight)
+{
+  assert(all( response >= 0 & response <= 100 ))
 
-  return (df_complete)
+  weight <- weight / sum(weight) * length(weight)
+  val <- weighted.mean(response * weight, sample_weight)
+
+  w <- sample_weight * weight
+  sample_size <- mean(w)^2 / mean(w^2) * length(sample_weight)
+
+  se <- sqrt( sum(weight^2 * (response - val)^2 ) / length(weight)^2 )
+  se <- jeffreys_se(se, val, sample_size)
+
+  return(list(val = val, se = se, sample_size = sample_size))
 }
 
 #' Apply Jeffrey's Prior to correct standard error values

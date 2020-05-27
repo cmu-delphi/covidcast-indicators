@@ -57,9 +57,10 @@ summarize_binary <- function(
     index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
     if (length(index))
     {
+      mixed_weights <- mix_weights(df[[var_weight]][index], params)
       new_row <- compute_binary_response(
         response = df[[var_yes]][index],
-        weight = df[[var_weight]][index],
+        weight = mixed_weights,
         sample_weight = df$weight_in_location[index]
       )
       df_out[i,]$val <- new_row$val
@@ -71,22 +72,6 @@ summarize_binary <- function(
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
   df_out <- df_out[df_out$sample_size > params$num_filter, ]
   return(df_out)
-}
-
-#' Return vector from the past n days, inclusive
-#'
-#' Returns dates as strings in the form "YYYYMMDD"
-#'
-#' @param date   a string containing a single date that can be parsed with `ymd`, such as
-#'               "20201215"
-#' @param ndays  how many days in the past to include
-#'
-#'
-#' @importFrom lubridate ymd
-#' @export
-past_n_days <- function(date, ndays = 0L)
-{
-  return(format(ymd(date) - seq(0, ndays), format = "%Y%m%d"))
 }
 
 #' Returns binary response estimates

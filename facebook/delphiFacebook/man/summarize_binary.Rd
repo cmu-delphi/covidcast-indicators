@@ -8,7 +8,6 @@ summarize_binary(
   df,
   crosswalk_data,
   var_yes,
-  var_no,
   var_weight,
   params,
   smooth_days = 0L
@@ -20,8 +19,6 @@ summarize_binary(
 \item{crosswalk_data}{a named list containing geometry crosswalk files from zip5 values}
 
 \item{var_yes}{name of the variable containing the number of "yes" responses}
-
-\item{var_no}{name of the variable containing the number of "no" responses}
 
 \item{var_weight}{name of the variable containing the survey weights}
 

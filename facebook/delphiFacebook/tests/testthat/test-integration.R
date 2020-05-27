@@ -66,9 +66,9 @@ test_that("testing geo files containg correct number of lines", {
   expect_true(all(
     dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "raw")] == 1L
   ))
-  # expect_true(all(
-  #   dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "smoothed")] == 2L
-  # ))
+  expect_true(all(
+    dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "smoothed")] == 2L
+  ))
 })
 
 test_that("testing raw community values files", {
@@ -85,6 +85,7 @@ test_that("testing raw community values files", {
   # there are 4 / 4 households in PA on 2020-05-11 for community
   # there are 3 / 4 households in VA on 2020-05-11 for community
   x <- read_csv(file.path("receiving", "20200512_state_raw_community.csv"))
+  x <- arrange(x, geo_id)
   expect_equal(x$geo_id, c("pa", "va"))
   expect_equal(x$sample_size, c(4L, 4L))
   eval <-  100 * (c(4, 3) + 0.5) / ( c(4, 4) + 1 )
@@ -94,26 +95,41 @@ test_that("testing raw community values files", {
 
 })
 
+test_that("testing smoothed community values files at endpoints", {
+
+  # for the first datapoint, smoothing and raw should be the same
+  x_smooth <- read_csv(file.path("receiving", "20200510_state_smoothed_community.csv"))
+  x_raw <- read_csv(file.path("receiving", "20200510_state_raw_community.csv"))
+  expect_equal(x_raw, x_smooth)
+
+  # for the first datapoint, smoothing and raw should be the same in VA
+  x_smooth <- read_csv(file.path("receiving", "20200512_state_smoothed_community.csv"))
+  x_raw <- read_csv(file.path("receiving", "20200512_state_raw_community.csv"))
+  expect_equal(x_raw[x_raw$geo_id == "va",], x_smooth[x_raw$geo_id == "va",])
+})
+
 test_that("testing smoothed community values files", {
 
-  # there are 2 / 4 households in PA on 2020-05-10 for community
-  # x <- read_csv(file.path("receiving", "20200510_state_smoothed_community.csv"))
-  # expect_equal(x$geo_id, "pa")
-  # expect_equal(x$sample_size, 4L)
-  # eval <-  100 * (2 + 0.5) / ( 4 + 1)
-  # ese <- sqrt( eval * (100 - eval) ) / sqrt( 4 )
-  # expect_equal(x$val, eval)
-  # expect_equal(x$se, ese)
+  # there are 0 / 4 households in PA on 2020-05-10 for community
+  # there are 2 / 4 households in PA on 2020-05-11 for community
+  #    after pooling => 2 / 8
+  eval <-  100 * (2 + 0.5) / ( 8 + 1 )
+  ese <- sqrt( eval * (100 - eval) / 8 )
+  x_smooth <- read_csv(file.path("receiving", "20200511_state_smoothed_community.csv"))
+  expect_equal(eval, x_smooth$val)
+  expect_equal(8L, x_smooth$sample_size)
+  expect_equal(ese, x_smooth$se)
 
-  # there are 4 / 4 households in PA on 2020-05-11 for community
-  # there are 3 / 4 households in VA on 2020-05-11 for community
-  x <- read_csv(file.path("receiving", "20200512_state_raw_community.csv"))
-  expect_equal(x$geo_id, c("pa", "va"))
-  expect_equal(x$sample_size, c(4L, 4L))
-  eval <-  100 * (c(4, 3) + 0.5) / ( c(4, 4) + 1)
-  ese <- sqrt( eval * (100 - eval) ) / sqrt( c(4, 4) )
-  expect_equal(x$val, eval)
-  expect_equal(x$se, ese)
+  # there are 0 / 4 households in PA on 2020-05-10 for community
+  # there are 2 / 4 households in PA on 2020-05-11 for community
+  # there are 4 / 4 households in PA on 2020-05-12 for community
+  #    after pooling => 6 / 12
+  eval <-  100 * (6 + 0.5) / ( 12 + 1 )
+  ese <- sqrt( eval * (100 - eval) / 12 )
+  x_smooth <- read_csv(file.path("receiving", "20200512_state_smoothed_community.csv"))
+  expect_equal(eval, x_smooth$val[x_smooth$geo_id == "pa"])
+  expect_equal(12L, x_smooth$sample_size[x_smooth$geo_id == "pa"])
+  expect_equal(ese, x_smooth$se[x_smooth$geo_id == "pa"])
 
 })
 
@@ -127,10 +143,10 @@ test_that("testing weighted community values files", {
   these <- input_data[input_data$date == "2020-05-11" & input_data$zip5 == "15106",]
   these_weight <- these$weight
   these_yes <- as.numeric(these$A4 > 1)
-  these_no <- as.numeric(these$A4 == 0)
 
+  these_val <- sum(these_yes * these_weight)
   these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
-  these_ss <- weighted.mean(these_yes + these_no, these_weight) * length(these_yes)
+  these_ss <- length(these_yes)
   these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
   these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
 
@@ -144,10 +160,10 @@ test_that("testing weighted community values files", {
   these <- input_data[input_data$date == "2020-05-13" & input_data$zip5 == "23220",]
   these_weight <- these$weight
   these_yes <- as.numeric(these$A4 > 1)
-  these_no <- as.numeric(these$A4 == 0)
 
+  these_val <- sum(these_yes * these_weight)
   these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
-  these_ss <- weighted.mean(these_yes + these_no, these_weight) * length(these_yes)
+  these_ss <- length(these_yes)
   these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
   these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
 
@@ -156,6 +172,32 @@ test_that("testing weighted community values files", {
   expect_equal(x$sample_size, these_ss)
   expect_equal(x$val, these_val)
   expect_equal(x$se, these_se)
+})
+
+test_that("testing weighted smoothed community values files", {
+  params <- read_params("params.json")
+  input_data <- load_responses_all(params)
+  input_data <- join_weights(input_data, params)
+
+  # there are 2 / 4 households in PA on 2020-05-11 for community
+  these <- input_data[
+     ((input_data$date == "2020-05-10") | (input_data$date == "2020-05-11")) &
+     input_data$zip5 == "15106",]
+  these_weight <- these$weight
+  these_yes <- as.numeric(these$A4 > 1)
+
+  these_val <- sum(these_yes * these_weight)
+  these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
+  these_ss <- length(these_yes)
+  these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
+  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+
+  x <- read_csv(file.path("receiving", "20200511_state_smoothed_wcommunity.csv"))
+  expect_equal(x$geo_id, "pa")
+  expect_equal(x$sample_size, these_ss)
+  expect_equal(x$val, these_val)
+  expect_equal(x$se, these_se)
+
 })
 
 test_that("testing raw ili/cli values files", {
@@ -187,13 +229,5 @@ test_that("testing raw ili/cli values files", {
   expected_se_min <- sqrt(sum( (0.275 * (c(0, 0, 0, 0) - 0))^2 ))
   expected_se_min <- jeffreys_se(expected_se_min, 0, 4L)
   expect_equal(min(x$se), expected_se_min)
-
-})
-
-test_that("testing weighted ili/cli values files", {
-
-})
-
-test_that("testing smoothed ili/cli values files", {
 
 })

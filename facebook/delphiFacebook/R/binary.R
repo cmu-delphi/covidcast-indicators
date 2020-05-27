@@ -2,26 +2,25 @@
 #'
 #' @param df          a data frame of survey responses
 #' @param cw_list     a named list containing geometry crosswalk files from zip5 values
-#' @param var_yes     name of the variable containing the number of yes responses
-#' @param var_no      name of the variable containing the number of no responses
+#' @param var_yes     name of the variable containing the binary response
 #' @param params      a named list with entries "start_time", and "end_time"
 #' @param metric      name of the metric; used in the output file
 #'
 #' @export
-write_binary_variable <- function(df, cw_list, var_yes, var_no, params, metric)
+write_binary_variable <- function(df, cw_list, var_yes, params, metric)
 {
   for (i in seq_along(cw_list))
   {
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, var_no, "weight_unif", params)
+    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, var_no, "weight", params)
+    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight", params)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, var_no, "weight_unif", params, 7L)
+    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params, 7L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, var_no, "weight", params, 7L)
+    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight", params, 7L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
   }
 }
@@ -31,77 +30,89 @@ write_binary_variable <- function(df, cw_list, var_yes, var_no, params, metric)
 #' @param df               a data frame of survey responses
 #' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
 #' @param var_yes          name of the variable containing the number of "yes" responses
-#' @param var_no           name of the variable containing the number of "no" responses
 #' @param var_weight       name of the variable containing the survey weights
 #' @param params           a named list with entries "start_time", and "end_time"
 #' @param smooth_days      integer; how many days in the past to smooth ?
 #'
-#' @importFrom dplyr inner_join group_by ungroup summarize n
+#' @importFrom dplyr inner_join group_by ungroup summarize n as_tibble
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
 #' @export
 summarize_binary <- function(
-  df, crosswalk_data, var_yes, var_no, var_weight, params, smooth_days = 0L
+  df, crosswalk_data, var_yes, var_weight, params, smooth_days = 0L
 )
 {
   df <- inner_join(df, crosswalk_data, by = "zip5")
-  names(df)[names(df) == var_yes] <- "yes"
-  names(df)[names(df) == var_no] <- "no"
-  names(df)[names(df) == var_weight] <- "w"
+  df <- df[!is.na(df[[var_yes]]),]
 
-  df <- df[!is.na(df$yes) & !is.na(df$no),]
-  df$yes <- df$yes * df$weight_in_location
-  df$no <- df$no * df$weight_in_location
+  df_out <- as_tibble(expand.grid(
+    day = unique(df$day), geo_id = unique(df$geo_id), stringsAsFactors = FALSE
+  ))
+  df_out$val <- NA_real_
+  df_out$sample_size <- NA_real_
+  df_out$se <- NA_real_
+  for (i in seq_len(nrow(df_out)))
+  {
+    allowed_days <- past_n_days(df_out$day[i], smooth_days)
+    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
+    if (length(index))
+    {
+      new_row <- compute_binary_response(
+        response = df[[var_yes]][index],
+        weight = df[[var_weight]][index],
+        sample_weight = df$weight_in_location[index]
+      )
+      df_out[i,]$val <- new_row$val
+      df_out[i,]$sample_size <- new_row$sample_size
+      df_out[i,]$se <- new_row$se
+    }
+  }
 
-  if (smooth_days > 0) { df <- sum_n_days(df, smooth_days, params) }
-
-  df <- group_by(df, .data$day, .data$geo_id)
-  df <- ungroup(summarize(df,
-    val = weighted.mean(.data$yes, .data$w) * n(),
-    sample_size = weighted.mean(.data$yes + .data$no, .data$w) * n())
-  )
-  df$val <- 100 * (df$val + 0.5) / (df$sample_size + 1)
-  df$se <- sqrt( df$val * (100 - df$val) ) / sqrt( df$sample_size )
-
-  df <- df[rowSums(is.na(df[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-  df <- df[df$sample_size > params$num_filter, ]
-
-  return(df)
+  df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+  df_out <- df_out[df_out$sample_size > params$num_filter, ]
+  return(df_out)
 }
 
-#' Smooth data by summing responses n days in the past
+#' Return vector from the past n days, inclusive
 #'
-#' @param df               a data frame of survey responses
-#' @param smooth_days      integer; how many days in the past to smooth ?
-#' @param params           a named list with entries "start_time", and "end_time"
+#' Returns dates as strings in the form "YYYYMMDD"
 #'
-#' @importFrom rlang .data
-#' @importFrom tidyr complete
-#' @importFrom dplyr group_by arrange mutate ungroup
-#' @importFrom zoo rollapplyr
+#' @param date   a string containing a single date that can be parsed with `ymd`, such as
+#'               "20201215"
+#' @param ndays  how many days in the past to include
+#'
+#'
+#' @importFrom lubridate ymd
 #' @export
-sum_n_days <- function(df, smooth_days, params)
+past_n_days <- function(date, ndays = 0L)
 {
-  day_set <- format(
-    seq(
-      as.Date(params$start_time, tz = "America/Los_Angeles"),
-      as.Date(params$end_time, tz = "America/Los_Angeles"),
-      by = '1 day'
-    ),
-    "%Y%m%d",
-    tz = "America/Los_Angeles"
-  )
+  return(format(ymd(date) - seq(0, ndays), format = "%Y%m%d"))
+}
 
-  roll_sum <- function(val) rollapplyr(val, smooth_days, sum, partial = TRUE, na.rm = TRUE)
+#' Returns binary response estimates
+#'
+#' This function takes vectors as input and computes the binary response values (a point
+#' estimate named "val", a standard error named "se", and a sample size named "sample_size")
+#' Note that there are two different sets of weights that have a different effect on the
+#' output.
+#'
+#' @param response                    a vector of binary (0 or 1) responses
+#' @param weight                      a vector of sample weights for inverse probability
+#'                                    weighting; invariant up to a scaling factor
+#' @param sample_weight               a vector of sample size weights; the total sample size
+#'                                    will be the sum of these values
+#'
+#' @importFrom stats weighted.mean
+#' @export
+compute_binary_response <- function(response, weight, sample_weight)
+{
+  assert(all( (response == 0) | (response == 1) ))
 
-  df_complete <- complete(df, day = day_set, .data$geo_id, fill = list(yes = 0, no = 0))
-  df_complete <- group_by(df_complete, .data$geo_id)
-  df_complete <- arrange(df_complete, .data$day)
-  df_complete <- mutate(
-    df_complete, .data$day, yes = roll_sum(.data$yes), no = roll_sum(.data$no)
-  )
-  df_complete <- ungroup(df_complete)
-  df_complete <- df_complete[!is.na(df_complete$yes) & !is.na(df_complete$no),]
+  response_sum <- weighted.mean(response * sample_weight, weight) * length(response)
+  sample_size <- sum(sample_weight)
 
-  df_complete
+  val <- 100 * (response_sum + 0.5) / (sample_size + 1)
+  se <- sqrt( (val * (100 - val) / sample_size) )
+
+  return(list(val = val, se = se, sample_size = sample_size))
 }

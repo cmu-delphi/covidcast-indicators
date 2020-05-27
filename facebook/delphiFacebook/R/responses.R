@@ -125,7 +125,6 @@ create_data_for_aggregatation <- function(input_data)
 
   # create variables for community survey
   df$community_yes <- as.numeric(as.numeric(df$A4) > 0)
-  df$community_no <- as.numeric(as.numeric(df$A4) == 0)
 
   return(df)
 }

@@ -4,16 +4,14 @@
 \alias{write_binary_variable}
 \title{Write binary response variable for export to the API}
 \usage{
-write_binary_variable(df, cw_list, var_yes, var_no, params, metric)
+write_binary_variable(df, cw_list, var_yes, params, metric)
 }
 \arguments{
 \item{df}{a data frame of survey responses}
 
 \item{cw_list}{a named list containing geometry crosswalk files from zip5 values}
 
-\item{var_yes}{name of the variable containing the number of yes responses}
-
-\item{var_no}{name of the variable containing the number of no responses}
+\item{var_yes}{name of the variable containing the binary response}
 
 \item{params}{a named list with entries "start_time", and "end_time"}
 

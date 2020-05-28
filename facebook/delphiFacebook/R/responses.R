@@ -119,7 +119,7 @@ create_data_for_aggregatation <- function(input_data)
   )
   df$is_cli[is.na(df$is_cli)] <- FALSE
   df$is_ili <- df$hh_fever & (df$hh_soar_throat | df$hh_cough)
-  df$is_ili[is.na(df$is_cli)] <- FALSE
+  df$is_ili[is.na(df$is_ili)] <- FALSE
   df$hh_p_cli <- 100 * df$is_cli * df$hh_number_sick / df$hh_number_total
   df$hh_p_ili <- 100 * df$is_ili * df$hh_number_sick / df$hh_number_total
 

@@ -36,6 +36,27 @@ produce_allowed_zip5 <- function(static_dir)
   return(zip_metadata$zip5[zip_metadata$keep_in_agg])
 }
 
+#' Produce crosswalk file relating zip codes to the entire U.S.
+#'
+#' Every zip code is mapped to one entity, "usa".
+#'
+#' @param zip_metadata   output from a call to the function produce_allowed_zip5
+#'
+#' @return  A tibble containing three columns: zip5, geo_id (county fips codes), and
+#'          weight_in_location.
+#'
+#' @importFrom dplyr tibble
+produce_crosswalk_national <- function(zip_metadata)
+{
+  crosswalk_national <- tibble(
+    zip5 = zip_metadata$zip5,
+    geo_id = "usa",
+    weight_in_location = 1.0
+  )
+
+  return(crosswalk_national)
+}
+
 #' Produce crosswalk file relating zip codes to counties
 #'
 #' @param static_dir     local directory containing the file "02_20_uszips.csv"
@@ -151,12 +172,14 @@ produce_crosswalk_list <- function(static_dir)
   crosswalk_state <- produce_crosswalk_state(zip_metadata, crosswalk_county)
   crosswalk_hrr <- produce_crosswalk_hrr(zip_metadata)
   crosswalk_msa <- produce_crosswalk_msa(static_dir, crosswalk_county)
+  crosswalk_national <- produce_crosswalk_national(zip_metadata)
 
   cw_list <- list(
     "county" = crosswalk_county,
     "state" = crosswalk_state,
     "msa" = crosswalk_hrr,
-    "hrr" = crosswalk_msa
+    "hrr" = crosswalk_msa,
+    "national" = crosswalk_national
   )
 
   return (cw_list)

@@ -6,7 +6,7 @@ library(testthat)
 
 context("Testing the run_facebook function")
 
-geo_levels <- c("state", "county", "hrr", "msa")
+geo_levels <- c("state", "county", "hrr", "msa", "national")
 dates <- c("20200510", "20200511", "20200512", "20200513")
 metrics <- c("raw_cli", "raw_ili", "raw_community",
              "raw_wcli", "raw_wili", "raw_wcommunity",
@@ -62,13 +62,16 @@ test_that("testing geo files containg correct number of lines", {
 
   expect_true(all(dt_nrow[grid$dates == "20200510"] == 1L))
   expect_true(all(dt_nrow[grid$dates == "20200511"] == 1L))
-  expect_true(all(dt_nrow[grid$dates == "20200512"] == 2L))
+  expect_true(all(dt_nrow[grid$dates == "20200512" & grid$geo_levels != "national"] == 2L))
   expect_true(all(
     dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "raw")] == 1L
   ))
   expect_true(all(
-    dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "smoothed")] == 2L
+    dt_nrow[grid$dates == "20200513" &
+            stri_detect(fnames, fixed = "smoothed") &
+            grid$geo_levels != "national"] == 2L
   ))
+  expect_true(all(dt_nrow[grid$geo_levels == "national"] == 1L))
 })
 
 test_that("testing raw community values files", {
@@ -344,4 +347,24 @@ test_that("testing weighted ili/cli values files", {
   ese <- sqrt( sum(these_weight^2 * (hh_p_cli - these_val)^2 ) / length(these_weight)^2 )
   ese <- jeffreys_se(ese, these_val, these_ss)
   expect_equal(x$se[x$geo_id == "pa"], ese)
+})
+
+test_that("testing national aggregation", {
+  grid <- expand.grid(
+    dates = dates,
+    metrics = c("raw_cli", "raw_ili", "raw_community"),
+    stringsAsFactors=FALSE
+  )
+  f_state <- sprintf("%s_%s_%s.csv", grid$dates, "state", grid$metrics)
+  f_national <- sprintf("%s_%s_%s.csv", grid$dates, "national", grid$metrics)
+
+  for(i in seq_along(f_state))
+  {
+    x_state <- read_csv(file.path("receiving", f_state[i]))
+    x_national <- read_csv(file.path("receiving", f_national[i]))
+
+    expect_equal(sum(x_state$sample_size), x_national$sample_size)
+    if (nrow(x_state) == 1L) { expect_equal(x_state$val, x_national$val) }
+  }
+
 })

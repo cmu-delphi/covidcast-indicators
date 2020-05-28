@@ -69,7 +69,7 @@ test_that("testing creating all all crosswalk files", {
 
   cw_list <- produce_crosswalk_list(static_dir)
 
-  expect_setequal(names(cw_list), c("county", "state", "msa", "hrr"))
+  expect_setequal(names(cw_list), c("county", "state", "msa", "hrr", "national"))
   expect_true(all(sapply(cw_list, function(v) inherits(v, "data.frame"))))
 
 })

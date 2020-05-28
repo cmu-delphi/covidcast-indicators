@@ -11,7 +11,7 @@ DATA = pd.read_csv(
     usecols=CONFIG.FILT_COLS,
     dtype=CONFIG.DTYPES,
     parse_dates=[CONFIG.DATE_COL],
-    nrows=9
+    nrows=9,
 )
 
 GM = GeoMaps("../static")

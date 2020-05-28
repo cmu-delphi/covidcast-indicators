@@ -24,19 +24,19 @@ def run_module():
     logging.basicConfig(level=logging.DEBUG)
 
     ## start date will be Jan 1
-    logging.info("start date:\t%s", params['start_date'])
+    logging.info("start date:\t%s", params["start_date"])
 
     ## get end date from input file
     # the filename is expected to be in the format:
     # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
-    if params['end_date'] == "":
+    if params["end_date"] == "":
         dropdate = str(
             datetime.strptime(
                 Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
             ).date()
         )
     else:
-        dropdate = params['end_date']
+        dropdate = params["end_date"]
 
     logging.info("drop date:\t%s", dropdate)
 
@@ -58,7 +58,7 @@ def run_module():
                 params["input_file"],
                 params["export_dir"],
                 params["static_file_dir"],
-                params['start_date'],
+                params["start_date"],
                 dropdate,
                 geo,
                 params["parallel"],

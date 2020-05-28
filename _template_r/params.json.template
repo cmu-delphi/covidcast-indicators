@@ -1,0 +1,23 @@
+{
+  "start_date": "2020-05-08",
+  "end_date": "2020-05-15",
+  "static_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "archive_dir": "./archive",
+  "individual_dir": "./individual",
+  "weights_in_dir": "./weights_in",
+  "weights_out_dir": "./weights_out",
+  "input_dir": "./input",
+  "input": [
+    "2020-05-15.2020-05-08.2020-05-15.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
+  ],
+  "output": [
+    "cids",
+    "individual",
+    "covidalert",
+    "archive",
+    "community"
+  ],
+  "debug": true
+}

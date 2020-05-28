@@ -9,18 +9,21 @@
 #' @export
 write_binary_variable <- function(df, cw_list, var_yes, params, metric)
 {
+  ## weighted output files can only use surveys with weights
+  weight_df <- df[!is.na(df$weight), ]
+
   for (i in seq_along(cw_list))
   {
     df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight", params)
+    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
     df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params, 7L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight", params, 7L)
+    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params, 7L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
   }
 }

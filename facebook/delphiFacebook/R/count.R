@@ -8,6 +8,8 @@
 #' @export
 write_hh_count_data <- function(df, cw_list, params)
 {
+  ## weighted output files can only use surveys with weights
+  weight_df <- df[!is.na(df$weight), ]
 
   for (i in seq_along(cw_list))
   {
@@ -19,10 +21,10 @@ write_hh_count_data <- function(df, cw_list, params)
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 7)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params)
+      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight", params, 7)
+      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 7)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
     }
   }

@@ -63,9 +63,9 @@ summarize_binary <- function(
         weight = mixed_weights,
         sample_weight = df$weight_in_location[index]
       )
-      df_out[i,]$val <- new_row$val
-      df_out[i,]$sample_size <- new_row$sample_size
-      df_out[i,]$se <- new_row$se
+      df_out$val[i] <- new_row$val
+      df_out$sample_size[i] <- new_row$sample_size
+      df_out$se[i] <- new_row$se
     }
   }
 

@@ -62,6 +62,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     MIN_FIPS = 1000
     MAX_FIPS = 57000
     EXTRA_FIPS = (
+        72,     # Puerto Rico (provided as the entire state)
         70002,  # Kansas City, MO
         70003,  # Dukes and Nantucket Counties, MA
     )
@@ -81,6 +82,9 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     ]
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     df = pd.merge(df, pop_df, on="FIPS")
+
+    # Manual correction for PR
+    df.loc[df["FIPS"] == 72, "FIPS"] = 72000
 
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")

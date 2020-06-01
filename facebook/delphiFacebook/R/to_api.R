@@ -9,9 +9,12 @@
 #' @param signal_name    name of the signal; used for naming the output file
 #'
 #' @importFrom readr write_csv
+#' @importFrom dplyr arrange
+#' @importFrom rlang .data
 #' @export
 write_data_api <- function(data, params, geo_name, signal_name)
 {
+  data <- arrange(data, .data$day, .data$geo_id)
   for (tunit in unique(data$day))
   {
     df <- data[data$day == tunit, c("geo_id", "val", "se", "sample_size")]

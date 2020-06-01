@@ -41,11 +41,11 @@ load_response_one <- function(input_filename, params)
   input_data <- arrange(input_data, desc(.data$StartDate))
 
   # create new variables
-  input_data$hh_fever <- (input_data$A1_1 == 2L)
-  input_data$hh_soar_throat <- (input_data$A1_2 == 2L)
-  input_data$hh_cough <- (input_data$A1_3 == 2L)
-  input_data$hh_short_breath <- (input_data$A1_4 == 2L)
-  input_data$hh_diff_breath <- (input_data$A1_5 == 2L)
+  input_data$hh_fever <- (input_data$A1_1 == 1L)
+  input_data$hh_soar_throat <- (input_data$A1_2 == 1L)
+  input_data$hh_cough <- (input_data$A1_3 == 1L)
+  input_data$hh_short_breath <- (input_data$A1_4 == 1L)
+  input_data$hh_diff_breath <- (input_data$A1_5 == 1L)
   suppressWarnings({ input_data$hh_number_sick <- as.integer(input_data$A2) })
   suppressWarnings({ input_data$hh_number_total <- as.integer(input_data$A2b) })
   input_data$zip5 <- input_data$A3
@@ -75,6 +75,7 @@ load_response_one <- function(input_filename, params)
 #'                               and "end_time"
 #'
 #' @importFrom dplyr anti_join between
+#' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, seen_tokens_archive, params)
 {
@@ -88,6 +89,7 @@ filter_responses <- function(input_data, seen_tokens_archive, params)
   }
 
   # take only the first instance of each token
+  input_data <- arrange(input_data, .data$StartDate)
   input_data <- input_data[input_data$token != "",]
   input_data <- input_data[!duplicated(input_data$token),]
 
@@ -112,8 +114,8 @@ create_data_for_aggregatation <- function(input_data)
 
   # create variables for cli and ili signals
   hh_cols <- c("hh_fever", "hh_soar_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
-  cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)
-  df$hh_number_sick[hh_cols <= 0] <- 0
+  df$cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)
+  df$hh_number_sick[df$cnt_symptoms <= 0] <- 0
   df$is_cli <- df$hh_fever & (
     df$hh_cough | df$hh_short_breath | df$hh_diff_breath
   )

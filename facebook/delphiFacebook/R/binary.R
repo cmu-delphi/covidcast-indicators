@@ -20,10 +20,10 @@ write_binary_variable <- function(df, cw_list, var_yes, params, metric)
     df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params, 7L)
+    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params, 6L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
-    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params, 7L)
+    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params, 6L)
     write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
   }
 }
@@ -54,9 +54,11 @@ summarize_binary <- function(
   df_out$val <- NA_real_
   df_out$sample_size <- NA_real_
   df_out$se <- NA_real_
+  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
+
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days(df_out$day[i], smooth_days)
+    allowed_days <- past_n_days_matrix[i,]
     index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
     if (length(index))
     {

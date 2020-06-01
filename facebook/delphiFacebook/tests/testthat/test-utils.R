@@ -26,7 +26,7 @@ test_that("testing read params when missing file", {
 
   # expect error if missing file, since no template in test dir
   tdir <- tempfile()
-  expect_error(read_params(tdir))
+  expect_warning(expect_error(read_params(tdir)))
 })
 
 test_that("testing read params when debug", {

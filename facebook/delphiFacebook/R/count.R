@@ -18,13 +18,13 @@ write_hh_count_data <- function(df, cw_list, params)
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 7)
+      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 6)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
       df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 7)
+      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 6)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
     }
   }
@@ -58,9 +58,11 @@ summarize_hh_count <- function(
   df_out$val <- NA_real_
   df_out$sample_size <- NA_real_
   df_out$se <- NA_real_
+  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
+
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days(df_out$day[i], smooth_days)
+    allowed_days <- past_n_days_matrix[i,]
     index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
     if (length(index))
     {
@@ -77,7 +79,7 @@ summarize_hh_count <- function(
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-  df_out <- df_out[df_out$sample_size > params$num_filter, ]
+  df_out <- df_out[df_out$sample_size >= params$num_filter, ]
   return(df_out)
 }
 

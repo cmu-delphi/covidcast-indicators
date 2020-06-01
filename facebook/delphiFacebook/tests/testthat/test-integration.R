@@ -138,7 +138,7 @@ test_that("testing smoothed community values files", {
 
 test_that("testing weighted community values files", {
 
-  params <- read_params("params.json")
+  params <- read_params("params-test.json")
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
 
@@ -178,7 +178,7 @@ test_that("testing weighted community values files", {
 })
 
 test_that("testing weighted smoothed community values files", {
-  params <- read_params("params.json")
+  params <- read_params("params-test.json")
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
 
@@ -205,22 +205,22 @@ test_that("testing weighted smoothed community values files", {
 
 test_that("testing raw ili/cli values files", {
 
-  # there are 1 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
+  # there are 2 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
   x <- read_csv(file.path("receiving", "20200510_state_raw_ili.csv"))
-  expect_equal(x$geo_id, "pa")
-  expect_equal(x$val, 25)
-  expect_equal(x$sample_size, 4L)
-  ese <- sqrt(sum((c(100, 0, 0, 0) - 25)^2 * (1/4)^2))
-  ese <- jeffreys_se(ese, 25, 4L)
-  expect_equal(x$se, ese)
-
-  # there are 2 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
-  x <- read_csv(file.path("receiving", "20200511_state_raw_ili.csv"))
   expect_equal(x$geo_id, "pa")
   expect_equal(x$val, 50)
   expect_equal(x$sample_size, 4L)
   ese <- sqrt(sum((c(100, 100, 0, 0) - 50)^2 * (1/4)^2))
   ese <- jeffreys_se(ese, 50, 4L)
+  expect_equal(x$se, ese)
+
+  # there are 1 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
+  x <- read_csv(file.path("receiving", "20200511_state_raw_ili.csv"))
+  expect_equal(x$geo_id, "pa")
+  expect_equal(x$val, 25)
+  expect_equal(x$sample_size, 4L)
+  ese <- sqrt(sum((c(100, 0, 0, 0) - 25)^2 * (1/4)^2))
+  ese <- jeffreys_se(ese, 25, 4L)
   expect_equal(x$se, ese)
 
   # there are 2 / 4 households in VA on 2020-05-13 with ILI (all households have size 1)
@@ -232,16 +232,16 @@ test_that("testing raw ili/cli values files", {
   ese <- jeffreys_se(ese, 50, 4L)
   expect_equal(x$se, ese)
 
-  # there are 0 / 4 households in PA on 2020-05-10 with CLI (all households have size 1)
+  # there are 1 / 4 households in PA on 2020-05-10 with CLI (all households have size 1)
   x <- read_csv(file.path("receiving", "20200510_state_raw_cli.csv"))
   expect_equal(x$geo_id, "pa")
-  expect_equal(x$val, 0)
+  expect_equal(x$val, 25)
   expect_equal(x$sample_size, 4L)
-  ese <- sqrt(sum((c(0, 0, 0, 0) - 0)^2 * (1/4)^2))
-  ese <- jeffreys_se(ese, 0, 4L)
+  ese <- sqrt(sum((c(100, 0, 0, 0) - 25)^2 * (1/4)^2))
+  ese <- jeffreys_se(ese, 25, 4L)
   expect_equal(x$se, ese)
 
-  # there are 1 / 4 households in PA on 2020-05-10 with CLI (all households have size 1)
+  # there are 1 / 4 households in PA on 2020-05-11 with CLI (all households have size 1)
   x <- read_csv(file.path("receiving", "20200511_state_raw_cli.csv"))
   expect_equal(x$geo_id, "pa")
   expect_equal(x$val, 25)
@@ -274,8 +274,8 @@ test_that("testing pooled ili/cli values files at endpoints", {
 
 test_that("testing pooled ili/cli values files", {
 
-  # there are 1 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
-  # there are 2 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
+  # there are 2 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
+  # there are 1 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
   #   total => 3 / 8 of households
   x <- read_csv(file.path("receiving", "20200511_state_smoothed_ili.csv"))
   expect_equal(x$geo_id, "pa")
@@ -285,19 +285,19 @@ test_that("testing pooled ili/cli values files", {
   ese <- jeffreys_se(ese, 3 / 8 * 100, 8L)
   expect_equal(x$se, ese)
 
-  # there are 0 / 4 households in PA on 2020-05-10 with CLI (all households have size 1)
+  # there are 1 / 4 households in PA on 2020-05-10 with CLI (all households have size 1)
   # there are 1 / 4 households in PA on 2020-05-11 with CLI (all households have size 1)
-  #   total => 1 / 8 of households
+  #   total => 2 / 8 of households
   x <- read_csv(file.path("receiving", "20200511_state_smoothed_cli.csv"))
   expect_equal(x$geo_id, "pa")
-  expect_equal(x$val, 1 / 8 * 100)
+  expect_equal(x$val, 2 / 8 * 100)
   expect_equal(x$sample_size, 4L + 4L)
-  ese <- sqrt(sum((c(rep(100, 1), rep(0, 7)) - 1 / 8 * 100)^2 * (1 / 8)^2))
-  ese <- jeffreys_se(ese, 1 / 8 * 100, 8L)
+  ese <- sqrt(sum((c(rep(100, 2), rep(0, 6)) - 2 / 8 * 100)^2 * (1 / 8)^2))
+  ese <- jeffreys_se(ese, 2 / 8 * 100, 8L)
   expect_equal(x$se, ese)
 
-  # there are 1 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
-  # there are 2 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
+  # there are 2 / 4 households in PA on 2020-05-10 with ILI (all households have size 1)
+  # there are 1 / 4 households in PA on 2020-05-11 with ILI (all households have size 1)
   # there are 2 / 4 households in PA on 2020-05-12 with ILI (all households have size 1)
   #   total => 5 / 12 of households
   x <- read_csv(file.path("receiving", "20200512_state_smoothed_ili.csv"))
@@ -311,12 +311,12 @@ test_that("testing pooled ili/cli values files", {
 
 test_that("testing weighted ili/cli values files", {
 
-  params <- read_params("params.json")
+  params <- read_params("params-test.json")
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
   data_agg <- create_data_for_aggregatation(input_data)
 
-  # there are 2 / 4 households in PA on 2020-05-11 for ILI
+  # there are 1 / 4 households in PA on 2020-05-11 for ILI
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]
   these_weight <- these$weight
   hh_p_ili <- these$hh_p_ili

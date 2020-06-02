@@ -3,6 +3,6 @@
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "start_date": "2020-02-01",
-  "end_date": "2020-05-15",
+  "end_date": "",
   "ght_key": ""
 }

@@ -1,5 +1,6 @@
 library(delphiFacebook)
 library(jsonlite)
+library(testthat)
 
 context("Testing utility functions")
 
@@ -67,19 +68,30 @@ test_that("testing read params when not debug", {
 })
 
 test_that("testing mix weights", {
-  # for intermediate version, check that mixing works
+  ## When all weights are smaller than the minimum threshold, the minimum mixing
+  ## mixes uniform with uniform and has no effect.
+  weights <- rep(1, times = 200)
+
+  expect_equal(mix_weights(weights, list(s_mix_coef = 0.05, num_filter = 1L)),
+               rep(1/200, 200))
+
+  ## for intermediate version, check that mixing enforces the intended maximum
   for (k in seq(2, 5))
   {
-    new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(num_filter = k))
-    expect_true(max(new_weights) < 1 / k)
+    new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(s_mix_coef = 0.05,
+                                                                     num_filter = k))
+    expect_lt(max(new_weights), 1 / k)
   }
 
-  # for extreme value, can only mix to uniform
-  new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(num_filter = 6L))
-  expect_equal(length(expect_true), 1L)
+  ## for extreme value, can only mix to uniform (maximum mixing coefficient of 1
+  ## applies and mixes everything to uniform)
+  new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), list(s_mix_coef = 0.05,
+                                                                   num_filter = 6L))
+  expect_equal(new_weights, rep(1/6, 6))
 
-  # check that no mixing occurs when not needed
-  new_weights <- mix_weights(c(0.1, 0.2, 0.2, 0.2, 0.3),  list(num_filter = 3L))
-  expect_equal(new_weights, c(0.1, 0.2, 0.2, 0.2, 0.3))
+  ## when mixing is not needed, only minimum mixing is applied
+  new_weights <- mix_weights(c(0.1, 0.2, 0.2, 0.2, 0.3),  list(s_mix_coef = 0.05,
+                                                               num_filter = 3L))
+  expect_equal(new_weights, 0.05 / 5 + 0.95 * c(0.1, 0.2, 0.2, 0.2, 0.3))
 
 })

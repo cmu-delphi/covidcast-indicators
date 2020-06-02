@@ -85,22 +85,54 @@ past_n_days <- function(date, ndays = 0L)
   return(out)
 }
 
-#' Adjust weights so no weight is not too much of the final estimate
+#' Adjust weights so no weight is too much of the final estimate.
 #'
-#' @param weights     a vector of sample weights
-#' @param params      a named list containing an element named "num_filter"; the maximum
-#'                    weight is assumed to be 1 / "num_filter" * 0.999.
+#' For privacy and estimation quality, we do not want to allow one survey
+#' response to have such a high weight that it becomes most of an estimate.
+#'
+#' So, for a specific time and location:
+#'
+#' 1. Normalize weights so they sum to 1.
+#'
+#' 2. Determine a "mixing coefficient" based on the maximum weight. The mixing
+#' coefficient is chosen to make the maximum weight smaller than 1 /
+#' `params$num_filter`, subject to the constraint that the mixing coefficient
+#' must be larger than `params$s_mix_coef`.
+#'
+#' 3. Replace weights with a weighted average of the original weights and
+#' uniform weights (meaning 1/N for every observation), weighted by the mixing
+#' coefficient.
+#'
+#' @param weights a vector of sample weights
+#' @param params a named list containing an element named "num_filter" and
+#'   another named "s_mix_coef". The maximum desired weight is assumed to be 1 /
+#'   params$num_filter; the minimum allowable mixing coefficient is
+#'   "s_mix_coef".
 #' @export
 mix_weights <- function(weights, params)
 {
-  weights <- weights / sum(weights)
-  max_weight <- max(weights)
-  max_allowed_weight <- 1 / params$num_filter * 0.999
+  N <- length(weights)
 
-  mix_coef <- (max_weight - max_allowed_weight) / (max_weight  - 1 / length(weights))
-  if (mix_coef < 0) { mix_coef <- 0 }
+  ## Step 1: Normalize weights to sum to 1.
+  weights <- weights / sum(weights)
+
+  ## Step 2: Choose a mixing coefficient to bring down the maximum weight.
+  max_weight <- max(weights)
+
+  ## Choose the mix_coef to solve this problem:
+  ##
+  ## max_weight * (1 - mix_coef) + mix_coef / N <= 1 / params$num_filter
+  ##
+  ## plus some fudge factors.
+  mix_coef <- (max_weight * N - 0.999 * N / params$num_filter + 1e-6) /
+    (max_weight * N - 1 + 1e-6)
+
+  ## Enforce minimum and maximum.
+  if (mix_coef < params$s_mix_coef) { mix_coef <- params$s_mix_coef }
   if (mix_coef > 1) { mix_coef <- 1 }
-  new_weights <- mix_coef / length(weights) + (1 - mix_coef) * weights
+
+  ## Step 3: Replace weights.
+  new_weights <- mix_coef / N + (1 - mix_coef) * weights
 
   return(new_weights)
 }

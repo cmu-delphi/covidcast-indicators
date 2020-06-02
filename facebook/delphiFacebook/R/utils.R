@@ -78,7 +78,11 @@ create_dir_not_exist <- function(path)
 #' @export
 past_n_days <- function(date, ndays = 0L)
 {
-  return(format(ymd(date) - seq(0, ndays), format = "%Y%m%d"))
+  date_ymd <- ymd(date)
+  date_ymd <- rep(date_ymd, each = (ndays + 1L))
+  out <- format(date_ymd - seq(0, ndays), format = "%Y%m%d")
+  out <- matrix(out, ncol = (ndays + 1L), byrow = TRUE)
+  return(out)
 }
 
 #' Adjust weights so no weight is not too much of the final estimate

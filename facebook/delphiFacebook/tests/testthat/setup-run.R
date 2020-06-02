@@ -1,5 +1,5 @@
-library(delphiFacebook)
 
 setup({
-  run_facebook("params.json")
+  delphiFacebook::run_facebook("params-test.json")
+  delphiFacebook::run_facebook("params-full.json")
 })

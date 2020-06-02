@@ -4,6 +4,7 @@
 #'
 #' @importFrom stringi stri_trans_tolower
 #' @importFrom readr read_csv cols
+#' @export
 produce_zip_metadata <- function(static_dir)
 {
   zip_metadata <- read_csv(
@@ -46,6 +47,7 @@ produce_allowed_zip5 <- function(static_dir)
 #'          weight_in_location.
 #'
 #' @importFrom dplyr tibble
+#' @export
 produce_crosswalk_national <- function(zip_metadata)
 {
   crosswalk_national <- tibble(
@@ -68,6 +70,7 @@ produce_crosswalk_national <- function(zip_metadata)
 #'
 #' @importFrom dplyr tibble
 #' @importFrom jsonlite fromJSON
+#' @export
 produce_crosswalk_county <- function(static_dir, zip_metadata)
 {
   cweights <- lapply(zip_metadata$county_weights, fromJSON)
@@ -91,18 +94,33 @@ produce_crosswalk_county <- function(static_dir, zip_metadata)
 #'          by zip5.
 #'
 #' @importFrom stringi stri_sub
-#' @importFrom dplyr select left_join
+#' @importFrom dplyr select left_join summarize group_by ungroup
+#' @export
 produce_crosswalk_state <- function(zip_metadata, crosswalk_county)
 {
-  county_to_state <- zip_metadata
-  county_to_state$state <- stri_sub(zip_metadata$fips, 1L, 2L)
-  county_to_state <- unique(county_to_state[,c("state", "state_id")])
+  # NOTE: This is the "correct" way to do the mapping, as it does not assume that every
+  # county-equivalent has a zip code that is predominantly inside of it, but for now using
+  # the code below to match the reference implementation
 
-  crosswalk_state <- select(crosswalk_county, "zip5", county = "geo_id", "weight_in_location")
-  crosswalk_state$state <- stri_sub(crosswalk_state$county, 1, 2)
-  crosswalk_state <- left_join(crosswalk_state, county_to_state, by = "state")
-  crosswalk_state <- select(crosswalk_state, "zip5", geo_id = "state_id", "weight_in_location")
-  crosswalk_state <- crosswalk_state[crosswalk_state$weight_in_location > 0,]
+  # state_fips <- zip_metadata
+  # state_fips$state <- stri_sub(state_fips$fips, 1L, 2L)
+  # state_fips <- unique(state_fips[,c("state", "state_id")])
+  #
+  # crosswalk_state <- select(crosswalk_county, "zip5", county = "geo_id", "weight_in_location")
+  # crosswalk_state$state <- stri_sub(crosswalk_state$county, 1, 2)
+  # crosswalk_state <- left_join(crosswalk_state, state_fips, by = "state")
+  # crosswalk_state <- select(crosswalk_state, "zip5", geo_id = "state_id", "weight_in_location")
+  # crosswalk_state <- group_by(crosswalk_state, zip5, geo_id)
+  # crosswalk_state <- summarize(crosswalk_state, weight_in_location = sum(weight_in_location))
+  # crosswalk_state <- ungroup(crosswalk_state)
+
+  county_to_state <- unique(select(zip_metadata, .data$fips, .data$state_id))
+
+  crosswalk_state <- select(crosswalk_county, "zip5", fips = "geo_id", "weight_in_location")
+  crosswalk_state <- inner_join(crosswalk_state, county_to_state, by = "fips")
+  crosswalk_state <- select(
+    crosswalk_state, .data$zip5, geo_id = .data$state_id, .data$weight_in_location
+  )
 
   return(crosswalk_state)
 }
@@ -114,11 +132,11 @@ produce_crosswalk_state <- function(zip_metadata, crosswalk_county)
 #' @return  A tibble containing three columns: zip5, geo_id (HRR code as character), and
 #'          weight_in_location. The variable weight_in_location will sum to 1 when grouped
 #'          by zip5.
-#'
+#' @export
 produce_crosswalk_hrr <- function(zip_metadata)
 {
   crosswalk_hrr <- zip_metadata[!is.na(zip_metadata$hrrnum), ]
-  crosswalk_hrr$geo_id <- sprintf("%03d", crosswalk_hrr$hrrnum)
+  crosswalk_hrr$geo_id <- as.character(crosswalk_hrr$hrrnum)
   crosswalk_hrr$weight_in_location <- 1
   crosswalk_hrr <- crosswalk_hrr[, c("zip5", "geo_id", "weight_in_location")]
 
@@ -137,6 +155,7 @@ produce_crosswalk_hrr <- function(zip_metadata)
 #' @importFrom readr read_csv
 #' @importFrom dplyr inner_join group_by summarize
 #' @importFrom rlang .data
+#' @export
 produce_crosswalk_msa <- function(static_dir, crosswalk_county)
 {
   fips_to_msa <- read_csv(
@@ -145,7 +164,8 @@ produce_crosswalk_msa <- function(static_dir, crosswalk_county)
     col_names = c("geo_id", "msa", "fips", "county_name"),
     skip = 1L
   )
-  crosswalk_msa <- inner_join(crosswalk_county, fips_to_msa, by=c("geo_id" = "fips"))
+  names(crosswalk_county)[2] <- "fips"
+  crosswalk_msa <- inner_join(crosswalk_county, fips_to_msa, by=c("fips"))
   crosswalk_msa <- group_by(crosswalk_msa, .data$zip5, .data$geo_id)
   crosswalk_msa <- summarize(
     crosswalk_msa, weight_in_location = sum(.data$weight_in_location, na.rm = TRUE)
@@ -177,8 +197,8 @@ produce_crosswalk_list <- function(static_dir)
   cw_list <- list(
     "county" = crosswalk_county,
     "state" = crosswalk_state,
-    "msa" = crosswalk_hrr,
-    "hrr" = crosswalk_msa,
+    "hrr" = crosswalk_hrr,
+    "msa" = crosswalk_msa,
     "national" = crosswalk_national
   )
 

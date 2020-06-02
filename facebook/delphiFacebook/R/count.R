@@ -18,13 +18,13 @@ write_hh_count_data <- function(df, cw_list, params)
       df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 7)
+      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 6)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
 
       df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
 
-      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 7)
+      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 6)
       write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
     }
   }
@@ -58,9 +58,12 @@ summarize_hh_count <- function(
   df_out$val <- NA_real_
   df_out$sample_size <- NA_real_
   df_out$se <- NA_real_
+  df_out$effective_sample_size <- NA_real_
+  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
+
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days(df_out$day[i], smooth_days)
+    allowed_days <- past_n_days_matrix[i,]
     index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
     if (length(index))
     {
@@ -73,11 +76,12 @@ summarize_hh_count <- function(
       df_out$val[i] <- new_row$val
       df_out$sample_size[i] <- new_row$sample_size
       df_out$se[i] <- new_row$se
+      df_out$effective_sample_size[i] <- new_row$effective_sample_size
     }
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-  df_out <- df_out[df_out$sample_size > params$num_filter, ]
+  df_out <- df_out[df_out$sample_size >= params$num_filter, ]
   return(df_out)
 }
 
@@ -102,13 +106,22 @@ compute_count_response <- function(response, weight, sample_weight)
   weight <- weight / sum(weight) * length(weight)
   val <- weighted.mean(response * weight, sample_weight)
 
+  sample_size <- sum(sample_weight)
   w <- sample_weight * weight
-  sample_size <- mean(w)^2 / mean(w^2) * length(sample_weight)
+  effective_sample_size <- mean(w)^2 / mean(w^2) * length(sample_weight)
 
   se <- sqrt( sum(weight^2 * (response - val)^2 ) / length(weight)^2 )
-  se <- jeffreys_se(se, val, sample_size)
+  se <- jeffreys_se(se, val, effective_sample_size)
 
-  return(list(val = val, se = se, sample_size = sample_size))
+  # EffectiveNumberResponses = dplyr::n()*mean(HouseholdMixedWeight)^2/mean(HouseholdMixedWeight^2)
+  # HouseholdMixedWeight = MixingCoefficient/dplyr::n() + (1-MixingCoefficient)*HouseholdNormalizedPreweight
+
+  return(list(
+    val = val,
+    se = se,
+    sample_size = sample_size,
+    effective_sample_size = effective_sample_size
+  ))
 }
 
 #' Apply Jeffrey's Prior to correct standard error values

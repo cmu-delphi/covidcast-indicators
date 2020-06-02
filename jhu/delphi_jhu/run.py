@@ -44,8 +44,8 @@ SENSOR_NAME_MAP = {
     "cumulative_prop":      ("cumulative_prop", False),
 }
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, ''),
-    "seven_day_average":    (seven_day_moving_average, '7day_avg_'),
+    "unsmoothed":           (identity, '', False),
+    "seven_day_average":    (seven_day_moving_average, '7day_avg_', True),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -84,7 +84,7 @@ def run_module():
         # Drop early entries where data insufficient for smoothing
         df = df.loc[~df["val"].isnull(), :]
         sensor_name = SENSOR_NAME_MAP[sensor][0]
-        if SENSOR_NAME_MAP[sensor][1]:
+        if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
             metric = f"wip_{metric}"
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
         create_export_csv(

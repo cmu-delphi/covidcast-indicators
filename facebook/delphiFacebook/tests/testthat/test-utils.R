@@ -68,8 +68,8 @@ test_that("testing read params when not debug", {
 })
 
 test_that("testing mix weights", {
-  ## When all weights are smaller than the minimum threshold, the minimum mixing
-  ## mixes uniform with uniform and has no effect.
+  ## When all weights are identical and smaller than the minimum threshold, the
+  ## minimum mixing mixes uniform with uniform and has no effect.
   weights <- rep(1, times = 200)
 
   expect_equal(mix_weights(weights, list(s_mix_coef = 0.05, num_filter = 1L)),

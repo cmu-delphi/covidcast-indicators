@@ -1,3 +1,11 @@
+### Integration test that compares the output of the full pipeline against saved
+### "gold" reference output. The pipeline is run on the test data by
+### `setup-run.R`, automatically run by testthat as part of the test harness.
+### The test data is removed by `teardown-run.R` to clean up.
+###
+### This test file specifically tests the configuration in `params-full.json`,
+### which loads the synthetic data in `input/full_synthetic.csv`.
+
 library(delphiFacebook)
 library(dplyr)
 library(readr)

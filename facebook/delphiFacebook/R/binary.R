@@ -32,10 +32,10 @@ write_binary_variable <- function(df, cw_list, var_yes, params, metric)
 #'
 #' @param df               a data frame of survey responses
 #' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
-#' @param var_yes          name of the variable containing the number of "yes" responses
-#' @param var_weight       name of the variable containing the survey weights
+#' @param var_yes          name of the column in `df` containing the number of "yes" responses
+#' @param var_weight       name of the column in `df` containing the survey weights
 #' @param params           a named list with entries "start_time", and "end_time"
-#' @param smooth_days      integer; how many days in the past to smooth ?
+#' @param smooth_days      integer; how many days in the past to smooth?
 #'
 #' @importFrom dplyr inner_join group_by ungroup summarize n as_tibble
 #' @importFrom stats weighted.mean

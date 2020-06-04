@@ -123,7 +123,7 @@ mix_weights <- function(weights, params)
   ##
   ## max_weight * (1 - mix_coef) + mix_coef / N <= 1 / params$num_filter
   ##
-  ## plus some fudge factors.
+  ## TODO: Determine if the fudge factors are really necessary
   mix_coef <- (max_weight * N - 0.999 * N / params$num_filter + 1e-6) /
     (max_weight * N - 1 + 1e-6)
 

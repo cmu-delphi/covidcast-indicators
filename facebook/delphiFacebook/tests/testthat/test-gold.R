@@ -27,7 +27,7 @@ grid <- expand.grid(
 )
 expected_files <- sprintf("%s_%s_%s.csv", grid$dates, grid$geo_levels, grid$metrics)
 
-test_that("testing existance of csv files", {
+test_that("testing existence of csv files", {
   expect_true(all(file.exists(file.path("gold", expected_files))))
   expect_true(all(file.exists(file.path("receiving_full", expected_files))))
 })
@@ -45,16 +45,16 @@ test_that("testing files contain the same geo", {
 })
 
 test_that("testing files contain the same val", {
-
   for (i in seq_along(expected_files))
   {
     test <- read_csv(file.path("receiving_full", expected_files[i]))
     gold <- read_csv(file.path("gold", expected_files[i]))
 
     test <- arrange(test, geo_id)
-     gold <- arrange(gold, geo_id)
+    gold <- arrange(gold, geo_id)
 
-    expect_true(max(abs(test$val - gold$val)) < 0.0001, info = expected_files[i])
+    expect_equal(test$val, gold$val, tolerance = 0.0001,
+                 info = expected_files[i])
   }
 
 })
@@ -69,7 +69,8 @@ test_that("testing files contain the same se", {
     test <- arrange(test, geo_id)
     gold <- arrange(gold, geo_id)
 
-    expect_true(max(abs(test$se - gold$se)) < 0.001, info = expected_files[i])
+    expect_equal(test$se, gold$se, tolerance = 0.001,
+                 info = expected_files[i])
   }
 
 })
@@ -85,10 +86,9 @@ test_that("testing files contain the same sample size", {
     test <- arrange(test, geo_id)
     gold <- arrange(gold, geo_id)
 
-    expect_true(
-      max(abs(test$sample_size - gold$sample_size)) < 0.0001,
-      info = expected_files[i]
-    )
+    expect_equal(test$sample_size, gold$sample_size,
+                 tolerance = 0.0001,
+                 info = expected_files[i])
   }
 
 })

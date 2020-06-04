@@ -34,43 +34,38 @@ test_that("testing existence of csv files", {
 
 test_that("testing files contain the same geo", {
 
-  for (i in seq_along(expected_files))
+  for (f in expected_files)
   {
-    test <- read_csv(file.path("receiving_full", expected_files[i]))
-    gold <- read_csv(file.path("gold", expected_files[i]))
+    geos <- function(dir, filename) {
+      read_csv(file.path(dir, filename))$geo_id
+    }
 
-    expect_setequal(test$geo_id, gold$geo_id)
+    expect_setequal(geos("receiving_full", !!f), geos("gold", !!f))
   }
 
 })
 
 test_that("testing files contain the same val", {
-  for (i in seq_along(expected_files))
+  for (f in expected_files)
   {
-    test <- read_csv(file.path("receiving_full", expected_files[i]))
-    gold <- read_csv(file.path("gold", expected_files[i]))
+    vals <- function(dir, filename) {
+      arrange(read.csv(file.path(dir, filename)), geo_id)$val
+    }
 
-    test <- arrange(test, geo_id)
-    gold <- arrange(gold, geo_id)
-
-    expect_equal(test$val, gold$val, tolerance = 0.0001,
-                 info = expected_files[i])
+    expect_equal(vals("receiving_full", !!f), vals("gold", !!f), tolerance = 0.0001)
   }
 
 })
 
 test_that("testing files contain the same se", {
 
-  for (i in seq_along(expected_files))
+  for (f in expected_files)
   {
-    test <- read_csv(file.path("receiving_full", expected_files[i]))
-    gold <- read_csv(file.path("gold", expected_files[i]))
+    ses <- function(dir, filename) {
+      arrange(read.csv(file.path(dir, filename)), geo_id)$se
+    }
 
-    test <- arrange(test, geo_id)
-    gold <- arrange(gold, geo_id)
-
-    expect_equal(test$se, gold$se, tolerance = 0.001,
-                 info = expected_files[i])
+    expect_equal(ses("receiving_full", !!f), ses("gold", !!f), tolerance = 0.001)
   }
 
 })
@@ -78,17 +73,14 @@ test_that("testing files contain the same se", {
 
 test_that("testing files contain the same sample size", {
 
-  for (i in seq_along(expected_files))
+  for (f in expected_files)
   {
-    test <- read_csv(file.path("receiving_full", expected_files[i]))
-    gold <- read_csv(file.path("gold", expected_files[i]))
+    sample_sizes <- function(dir, filename) {
+      arrange(read.csv(file.path(dir, filename)), geo_id)$sample_size
+    }
 
-    test <- arrange(test, geo_id)
-    gold <- arrange(gold, geo_id)
-
-    expect_equal(test$sample_size, gold$sample_size,
-                 tolerance = 0.0001,
-                 info = expected_files[i])
+    expect_equal(sample_sizes("receiving_full", !!f),
+                 sample_sizes("gold", !!f), tolerance = 0.0001)
   }
 
 })

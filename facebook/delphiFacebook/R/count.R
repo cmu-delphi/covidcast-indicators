@@ -67,15 +67,16 @@ summarize_hh_count <- function(
     index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
     if (length(index))
     {
-      mixed_weights <- mix_weights(df[[var_weight]][index], params)
+      mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
+                                   params)
+
       new_row <- compute_count_response(
         response = df$hh_p_metric[index],
-        weight = df[[var_weight]][index],
-        sample_weight = df$weight_in_location[index]
-      )
+        weight = mixed_weights)
+
       df_out$val[i] <- new_row$val
-      df_out$sample_size[i] <- new_row$sample_size
       df_out$se[i] <- new_row$se
+      df_out$sample_size[i] <- sum(df$weight_in_location[index])
       df_out$effective_sample_size[i] <- new_row$effective_sample_size
     }
   }
@@ -85,46 +86,50 @@ summarize_hh_count <- function(
   return(df_out)
 }
 
-#' Returns county response estimates
+#' Returns response estimates for a single geographic area.
 #'
-#' This function takes vectors as input and computes the count response values (a point
-#' estimate named "val", a standard error named "se", and a sample size named "sample_size")
-#' Note that there are two different sets of weights that have a different effect on the
-#' output.
+#' This function takes vectors as input and computes the count response values
+#' (a point estimate named "val", a standard error named "se", and an effective
+#' sample size named "effective_sample_size").
 #'
-#' @param response                    a vector of percentages (100 * cnt / total)
-#' @param weight                      a vector of sample weights for inverse probability
-#'                                    weighting; invariant up to a scaling factor
-#' @param sample_weight               a vector of sample size weights
+#' @param response a vector of percentages (100 * cnt / total)
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
 #'
 #' @importFrom stats weighted.mean
 #' @export
-compute_count_response <- function(response, weight, sample_weight)
+compute_count_response <- function(response, weight)
 {
   assert(all( response >= 0 & response <= 100 ))
+  assert(length(response) == length(weight))
 
-  weight <- weight / sum(weight) * length(weight)
-  val <- weighted.mean(response * weight, sample_weight)
+  weight <- weight / sum(weight)
+  val <- weighted.mean(response, weight)
 
-  sample_size <- sum(sample_weight)
-  w <- sample_weight * weight
-  effective_sample_size <- mean(w)^2 / mean(w^2) * length(sample_weight)
+  effective_sample_size <- mean(weight)^2 / mean(weight^2) * length(weight)
 
-  se <- sqrt( sum(weight^2 * (response - val)^2 ) / length(weight)^2 )
+  se <- sqrt( sum(weight^2 * (response - val)^2) )
   se <- jeffreys_se(se, val, effective_sample_size)
-
-  # EffectiveNumberResponses = dplyr::n()*mean(HouseholdMixedWeight)^2/mean(HouseholdMixedWeight^2)
-  # HouseholdMixedWeight = MixingCoefficient/dplyr::n() + (1-MixingCoefficient)*HouseholdNormalizedPreweight
 
   return(list(
     val = val,
     se = se,
-    sample_size = sample_size,
     effective_sample_size = effective_sample_size
   ))
 }
 
-#' Apply Jeffrey's Prior to correct standard error values
+#' Apply Jeffreys Prior to adjust standard error values.
+#'
+#' The Jeffreys approach for estimating binomial proportions assumes a Beta(1/2,
+#' 1/2) prior on the proportion. If x is the number of successes, the posterior
+#' mean is hence (x + 0.5) / (n + 1), which prevents the estimate from ever
+#' being 0 or 1. This is desirable because the typical normal approximation SE
+#' would be 0 in both cases, which is both misleading and prevents reasonable
+#' resampling of the data for bootstrapping.
+#'
+#' We apply the Jeffreys approach only to the calculation of the standard error;
+#' applying it to the estimate of proportion would introduce too much bias for
+#' small proportions, like we typically see for symptoms within households.
 #'
 #' @param old_se          a numeric vector of previous standard errors
 #' @param percent         a numeric vector of the the estimated point estimates

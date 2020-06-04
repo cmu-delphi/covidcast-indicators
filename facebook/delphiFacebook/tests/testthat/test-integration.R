@@ -54,7 +54,7 @@ test_that("testing geo files are the same", {
   }
 })
 
-test_that("testing geo files containg correct number of lines", {
+test_that("testing geo files contain correct number of lines", {
   grid <- expand.grid(
     geo_levels = geo_levels, dates = dates, metrics = metrics, stringsAsFactors=FALSE
   )
@@ -118,9 +118,9 @@ test_that("testing smoothed community values files at endpoints", {
 
 test_that("testing smoothed community values files", {
 
-  # there are 0 / 4 households in PA on 2020-05-10 for community
-  # there are 2 / 4 households in PA on 2020-05-11 for community
-  #    after pooling => 2 / 8
+  # there are 0 / 4 households in PA on 2020-05-10 for community
+  # there are 2 / 4 households in PA on 2020-05-11 for community
+  #    after pooling => 2 / 8
   eval <-  100 * (2 + 0.5) / ( 8 + 1 )
   ese <- sqrt( eval * (100 - eval) / 8 )
   x_smooth <- read_csv(file.path("receiving", "20200511_state_smoothed_community.csv"))
@@ -128,10 +128,10 @@ test_that("testing smoothed community values files", {
   expect_equal(8L, x_smooth$sample_size)
   expect_equal(ese, x_smooth$se)
 
-  # there are 0 / 4 households in PA on 2020-05-10 for community
-  # there are 2 / 4 households in PA on 2020-05-11 for community
-  # there are 4 / 4 households in PA on 2020-05-12 for community
-  #    after pooling => 6 / 12
+  # there are 0 / 4 households in PA on 2020-05-10 for community
+  # there are 2 / 4 households in PA on 2020-05-11 for community
+  # there are 4 / 4 households in PA on 2020-05-12 for community
+  #    after pooling => 6 / 12
   eval <-  100 * (6 + 0.5) / ( 12 + 1 )
   ese <- sqrt( eval * (100 - eval) / 12 )
   x_smooth <- read_csv(file.path("receiving", "20200512_state_smoothed_community.csv"))
@@ -142,7 +142,8 @@ test_that("testing smoothed community values files", {
 })
 
 test_that("testing weighted community values files", {
-
+  ## TODO Unskip community
+  skip("community not ready yet")
   params <- read_params("params-test.json")
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
@@ -183,6 +184,9 @@ test_that("testing weighted community values files", {
 })
 
 test_that("testing weighted smoothed community values files", {
+  ## TODO Unskip community
+  skip("community not ready yet")
+
   params <- read_params("params-test.json")
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
@@ -321,36 +325,38 @@ test_that("testing weighted ili/cli values files", {
   input_data <- join_weights(input_data, params)
   data_agg <- create_data_for_aggregatation(input_data)
 
-  # there are 1 / 4 households in PA on 2020-05-11 for ILI
+  ## There are 4 households in PA on 2020-05-11, one with ILI.
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params)
+
   hh_p_ili <- these$hh_p_ili
-  these_weight <- these_weight / sum(these_weight) * length(these_weight)
-  these_val <- mean(these_weight * hh_p_ili)
-  these_ss <- length(these_weight) * mean(these_weight)^2 / mean(these_weight^2)
+  these_val <- weighted.mean(hh_p_ili, these_weight)
+  these_ss <- 4
+  these_ess <- length(these_weight) * mean(these_weight)^2 / mean(these_weight^2)
 
   x <- read_csv(file.path("receiving", "20200511_state_raw_wili.csv"))
   expect_equal(x$geo_id, "pa")
   expect_equal(x$sample_size, these_ss)
   expect_equal(x$val, these_val)
-  ese <- sqrt( sum(these_weight^2 * (hh_p_ili - these_val)^2 ) / length(these_weight)^2 )
-  ese <- jeffreys_se(ese, these_val, these_ss)
+  ese <- sqrt( sum(these_weight^2 * (hh_p_ili - these_val)^2 ) )
+  ese <- jeffreys_se(ese, these_val, these_ess)
   expect_equal(x$se[x$geo_id == "pa"], ese)
 
-  # there are 1 / 4 households in PA on 2020-05-11 for CLI
+  ## There are 4 households in PA on 2020-05-11, one with CLI
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params)
+
   hh_p_cli <- these$hh_p_cli
-  these_weight <- these_weight / sum(these_weight) * length(these_weight)
-  these_val <- mean(these_weight * hh_p_cli)
-  these_ss <- length(these_weight) * mean(these_weight)^2 / mean(these_weight^2)
+  these_val <- weighted.mean(hh_p_cli, these_weight)
+  these_ss <- 4
+  these_ess <- length(these_weight) * mean(these_weight)^2 / mean(these_weight^2)
 
   x <- read_csv(file.path("receiving", "20200511_state_raw_wcli.csv"))
   expect_equal(x$geo_id, "pa")
   expect_equal(x$sample_size, these_ss)
   expect_equal(x$val, these_val)
-  ese <- sqrt( sum(these_weight^2 * (hh_p_cli - these_val)^2 ) / length(these_weight)^2 )
-  ese <- jeffreys_se(ese, these_val, these_ss)
+  ese <- sqrt( sum(these_weight^2 * (hh_p_cli - these_val)^2 ) )
+  ese <- jeffreys_se(ese, these_val, these_ess)
   expect_equal(x$se[x$geo_id == "pa"], ese)
 })
 

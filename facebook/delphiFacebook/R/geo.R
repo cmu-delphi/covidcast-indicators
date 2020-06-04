@@ -64,9 +64,10 @@ produce_crosswalk_national <- function(zip_metadata)
 #' @param static_dir     local directory containing the file "02_20_uszips.csv"
 #' @param zip_metadata   output from a call to the function produce_allowed_zip5
 #'
-#' @return  A tibble containing three columns: zip5, geo_id (county fips codes), and
-#'          weight_in_location. The variable weight_in_location will sum to 1 when grouped
-#'          by zip5.
+#' @return A tibble containing three columns: zip5, geo_id (county fips codes),
+#'     and weight_in_location. Since ZIP codes can span multiple counties, the
+#'     weight_in_location indicates the fraction of the ZIP population contained
+#'     in the county. When grouped by ZIP5, this should sum to 1.
 #'
 #' @importFrom dplyr tibble
 #' @importFrom jsonlite fromJSON
@@ -121,6 +122,18 @@ produce_crosswalk_state <- function(zip_metadata, crosswalk_county)
   crosswalk_state <- select(
     crosswalk_state, .data$zip5, geo_id = .data$state_id, .data$weight_in_location
   )
+
+  ## Some ZIP codes span counties. Hence when we join ZIPs with counties above,
+  ## we can get multiple rows for one ZIP. Then, when we join with state, those
+  ## counties might be in one state -- so consolidate the rows back into one row
+  ## with the correct weight. (You might think it doesn't matter, because two
+  ## observations with weight 0.5 should be the same as one with weight 1, but
+  ## the mixing algorithm can kick in and change the estimates.)
+  crosswalk_state <- group_by(crosswalk_state, .data$zip5, .data$geo_id)
+  crosswalk_state <- summarize(
+    crosswalk_state, weight_in_location = sum(.data$weight_in_location, na.rm = TRUE)
+  )
+  crosswalk_state <- ungroup(crosswalk_state)
 
   return(crosswalk_state)
 }

@@ -6,4 +6,4 @@
 python -m venv env
 source env/bin/activate
 pip install _delphi_utils_python/.
-pip install jhu/setup.python
+pip install jhu/setup.py

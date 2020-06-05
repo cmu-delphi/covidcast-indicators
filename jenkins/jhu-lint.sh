@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Style lint test
+# Check for code style issues
 #
 
 $WORKSPACE/env/bin/pylint delphi_jhu

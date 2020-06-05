@@ -82,7 +82,8 @@ summarize_hh_count <- function(
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-  df_out <- df_out[df_out$sample_size >= params$num_filter, ]
+  df_out <- df_out[df_out$sample_size >= params$num_filter &
+                     df_out$effective_sample_size >= params$num_filter, ]
   return(df_out)
 }
 

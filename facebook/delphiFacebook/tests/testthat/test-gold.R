@@ -84,3 +84,17 @@ test_that("testing files contain the same sample size", {
   }
 
 })
+
+test_that("testing files contain the same effective sample size", {
+
+  for (f in expected_files)
+  {
+    effective_sample_sizes <- function(dir, filename) {
+      arrange(read.csv(file.path(dir, filename)), geo_id)$effective_sample_size
+    }
+
+    expect_equal(effective_sample_sizes("receiving_full", !!f),
+                 effective_sample_sizes("gold", !!f), tolerance = 0.0001)
+  }
+
+})

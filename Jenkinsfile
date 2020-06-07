@@ -1,15 +1,13 @@
 pipeline {
     agent any
     stages {
-        slackSend color: 'warning',
-                           message: "Started build phase."
         stage('Build') {
             steps {
-                // slackSend color: 'warning',
-                //                   message: "Started build phase."
+                slackSend color: 'warning',
+                                  message: "Started build phase."
                 echo 'Building..' // Do some work here...
-                // slackSend color: 'good',
-                //                   message: "Completed build phase."
+                slackSend color: 'good',
+                                  message: "Completed build phase."
             }
         }
         stage('Test') {

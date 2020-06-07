@@ -25,7 +25,7 @@ pipeline {
         // }
         success {
             // echo 'I succeeeded!'
-            slackSend color: good,
+            slackSend color: 'good',
                       message: "Tsaul good!"
         }
         unstable {

@@ -3,6 +3,8 @@ pipeline {
     stages {
         stage('Build') {
             steps {
+                slackSend color: 'warning',
+                                  message: "Starting build phase."
                 echo 'Building..'
 
             }

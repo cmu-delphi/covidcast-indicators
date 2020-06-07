@@ -4,6 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building..'
+
             }
         }
         stage('Test') {
@@ -24,6 +25,8 @@ pipeline {
         // }
         success {
             echo 'I succeeeded!'
+            slackSend color: good,
+                      message: "Tsaul good!"
         }
         unstable {
             echo 'I am unstable :/'

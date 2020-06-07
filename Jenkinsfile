@@ -24,7 +24,7 @@ pipeline {
         //     deleteDir() /* clean up our workspace */
         // }
         success {
-            echo 'I succeeeded!'
+            echo 'I succeeeded!',
             slackSend color: good,
                       message: "Tsaul good!"
         }

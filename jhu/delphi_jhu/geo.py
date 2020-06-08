@@ -91,61 +91,7 @@ FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
 # Fake fips to States
 
-STATES_TO_JHU_FIPS_FOR_UNASSIGNED = {
-    "AL":"01",
-    "AK":"02",
-    "AZ":"04",
-    "AR":"05",
-    "CA":"06",
-    "CO":"08",
-    "CT":"09",
-    "DE":"10",
-    "DC":"11",
-    "FL":"12",
-    "GA":"13",
-    "HI":"15",
-    "ID":"16",
-    "IL":"17",
-    "IN":"18",
-    "IA":"19",
-    "KS":"20",
-    "KY":"21",
-    "LA":"22",
-    "ME":"23",
-    "MD":"24",
-    "MA":"25",
-    "MI":"26",
-    "MN":"27",
-    "MS":"28",
-    "MO":"29",
-    "MT":"30",
-    "NE":"31",
-    "NV":"32",
-    "NH":"33",
-    "NJ":"34",
-    "NM":"35",
-    "NY":"36",
-    "NC":"37",
-    "ND":"38",
-    "OH":"39",
-    "OK":"40",
-    "OR":"41",
-    "PA":"42",
-    "RI":"44",
-    "SC":"45",
-    "SD":"46",
-    "TN":"47",
-    "TX":"48",
-    "UT":"49",
-    "VT":"50",
-    "VA":"51",
-    "WA":"53",
-    "WV":"54",
-    "WI":"55",
-    "WY":"56"    
-}
-
-FAKE_FIPS_TO_STATES = {f'900{v}' : k.lower() for k, v in STATES_TO_JHU_FIPS_FOR_UNASSIGNED.items()}
+JHU_FAKE_FIPS_TO_MEGA_FIPS = {f'900{x}' : f'{x}000' for x in STATE_TO_FIPS.values()}
 
 
 def fips_to_state(fips: str) -> str:
@@ -176,11 +122,7 @@ def fips_to_state(fips: str) -> str:
         return FIPS_TO_STATE["25"]  # Dukes & Nantucket -> Massachusetts
     if fips == "70003":
         return FIPS_TO_STATE["29"]  # Kansas City -> Missouri
-    # Fake fips -> states
-    if fips[:2] == '90':
-        return FAKE_FIPS_TO_STATES[fips]
-    else:
-        return FIPS_TO_STATE[fips[:2]]
+    return FIPS_TO_STATE[fips[:2]]
 
 
 def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
@@ -241,7 +183,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
  
     df_mega = df[df['fips'].astype(int) >= 90001].copy()
-    df_mega['geo_id'] = df_mega['fips'].apply(fips_to_state)
+    df_mega['geo_id'] = df_mega['fips'].apply(lambda x: JHU_FAKE_FIPS_TO_MEGA_FIPS[x])
     
     df = df[df['fips'].astype(int) < 90001].copy()
     
@@ -252,9 +194,10 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
-        df["geo_id"] = df["fips"].apply(fips_to_state)
+        df["geo_id"] = df["fips"]
         # Add unassigned cases/deaths
         df = df.append(df_mega)
+        df["geo_id"] = df["geo_id"].apply(fips_to_state)
     elif geo_res in ("msa", "hrr"):
         # Disburse Dukes & Nantucket to individual counties
         df = disburse(df, DN_FIPS, DN_COUNTY_FIPS)

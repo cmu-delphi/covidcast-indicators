@@ -95,19 +95,19 @@ past_n_days <- function(date, ndays = 0L)
 #' 1. Normalize weights so they sum to 1.
 #'
 #' 2. Determine a "mixing coefficient" based on the maximum weight. The mixing
-#' coefficient is chosen to make the maximum weight smaller than 1 /
-#' `params$num_filter`, subject to the constraint that the mixing coefficient
-#' must be larger than `params$s_mix_coef`.
+#' coefficient is chosen to make the maximum weight smaller than
+#' `params$s_weight`, subject to the constraint that the mixing coefficient must
+#' be larger than `params$s_mix_coef`.
 #'
 #' 3. Replace weights with a weighted average of the original weights and
 #' uniform weights (meaning 1/N for every observation), weighted by the mixing
 #' coefficient.
 #'
 #' @param weights a vector of sample weights
-#' @param params a named list containing an element named "num_filter" and
-#'   another named "s_mix_coef". The maximum desired weight is assumed to be 1 /
-#'   params$num_filter; the minimum allowable mixing coefficient is
-#'   "s_mix_coef".
+#' @param params a named list containing an element named "s_mix_coef" and
+#'   another called "s_weight". The maximum desired weight is assumed to be
+#'   params$s_weight; the minimum allowable mixing coefficient is
+#'   params$s_mix_coef.
 #' @export
 mix_weights <- function(weights, params)
 {
@@ -121,10 +121,10 @@ mix_weights <- function(weights, params)
 
   ## Choose the mix_coef to solve this problem:
   ##
-  ## max_weight * (1 - mix_coef) + mix_coef / N <= 1 / params$num_filter
+  ## max_weight * (1 - mix_coef) + mix_coef / N <= params$s_weight
   ##
   ## TODO: Determine if the fudge factors are really necessary
-  mix_coef <- (max_weight * N - 0.999 * N / params$num_filter + 1e-6) /
+  mix_coef <- (max_weight * N - 0.999 * N * params$s_weight + 1e-6) /
     (max_weight * N - 1 + 1e-6)
 
   ## Enforce minimum and maximum.

@@ -4,7 +4,10 @@ pipeline {
         stage('Build') {
             steps {
                 slackSend color: 'warning',
-                                  message: "Build started for ${env.BRANCH_NAME}"
+                                  message: "Build started for
+                                  branch: ${env.BRANCH_NAME}
+                                  change: CHANGE_TITLE
+                                  url: CHANGE_URL"
                 echo 'Building..' // Do some work here...
                 slackSend color: 'good',
                                   message: "Completed build phase."

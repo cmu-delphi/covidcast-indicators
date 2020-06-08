@@ -89,6 +89,62 @@ REPLACE_FIPS = [
 
 FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
+# Fake fips to States
+
+FAKE_FIPS_TO_STATES = {
+    "90001":"al",
+    "90002":"ak",
+    "90004":"az",
+    "90005":"ar",
+    "90006":"ca",
+    "90008":"co",
+    "90009":"ct",
+    "90010":"de",
+    "90011":"dc",
+    "90012":"fl",
+    "90013":"ga",
+    "90015":"hi",
+    "90016":"id",
+    "90017":"il",
+    "90018":"in",
+    "90019":"ia",
+    "90020":"ks",
+    "90021":"ky",
+    "90022":"la",
+    "90023":"me",
+    "90024":"md",
+    "90025":"ma",
+    "90026":"mi",
+    "90027":"mn",
+    "90028":"ms",
+    "90029":"mo",
+    "90030":"mt",
+    "90031":"ne",
+    "90032":"nv",
+    "90033":"nh",
+    "90034":"nj",
+    "90035":"nm",
+    "90036":"ny",
+    "90037":"nc",
+    "90038":"nd",
+    "90039":"oh",
+    "90040":"ok",
+    "90041":"or",
+    "90042":"pa",
+    "90044":"ri",
+    "90045":"sc",
+    "90046":"sd",
+    "90047":"tn",
+    "90048":"tx",
+    "90049":"ut",
+    "90050":"vt",
+    "90051":"va",
+    "90053":"wa",
+    "90054":"wv",
+    "90055":"wi",
+    "90056":"wy"    
+}
+
 
 def fips_to_state(fips: str) -> str:
     """Wrapper that handles exceptions to the FIPS scheme in the JHU data.
@@ -118,7 +174,11 @@ def fips_to_state(fips: str) -> str:
         return FIPS_TO_STATE["25"]  # Dukes & Nantucket -> Massachusetts
     if fips == "70003":
         return FIPS_TO_STATE["29"]  # Kansas City -> Missouri
-    return FIPS_TO_STATE[fips[:2]]
+    # Fake fips -> states
+    if fips[:2] == '90':
+        return FAKE_FIPS_TO_STATES[fips]
+    else:
+        return FIPS_TO_STATE[fips[:2]]
 
 
 def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
@@ -148,7 +208,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
+def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.
@@ -169,15 +229,26 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         Columns: geo_id, timestamp, ...
     """
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
+    #It is not clear to calculate the proportion for unassigned cases/deaths
+    PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
-    df = df.copy()
+ 
+    df_mega = df[df['fips'].astype(int) >= 90001].copy()
+    df_mega['geo_id'] = df_mega['fips'].apply(fips_to_state)
+    
+    df = df[df['fips'].astype(int) < 90001].copy()
+    
     if geo_res == "county":
         df["geo_id"] = df["fips"]
+        if sensor not in PROP_SENSORS:
+            df = df.append(df_mega)
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
         df["geo_id"] = df["fips"].apply(fips_to_state)
+        # Add unassigned cases/deaths
+        df = df.append(df_mega)
     elif geo_res in ("msa", "hrr"):
         # Disburse Dukes & Nantucket to individual counties
         df = disburse(df, DN_FIPS, DN_COUNTY_FIPS)
@@ -200,8 +271,12 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
         merged["population"] = merged["population"] * merged["pop_prop"]
         df = merged.drop(["zip", "pop_prop", "hrrnum", "cbsa_id"], axis=1)
+        if sensor not in PROP_SENSORS:
+            df = df.append(df_mega)
     df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
+    
+    # Value would be negative for megacounties , which would not be considered in the main function
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df

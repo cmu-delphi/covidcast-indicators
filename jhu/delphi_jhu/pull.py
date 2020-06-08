@@ -62,7 +62,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     MIN_FIPS = 1000
     MAX_FIPS = 57000
     EXTRA_FIPS = (
-        72,     # Puerto Rico (provided as the entire state)
+        72,     # Puerto Rico (provided as the entire state)
         70002,  # Kansas City, MO
         70003,  # Dukes and Nantucket Counties, MA
     )
@@ -79,9 +79,13 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
             & (df["FIPS"] < MAX_FIPS)
         )  # "Uncategorized", etc.
         | df["FIPS"].isin(EXTRA_FIPS)
+        # Get Fake FIPS for unassigned cases
+        | np.logical_and(df['FIPS'] >= 90001,
+                         df['FIPS'] <= 90056)
     ]
     # Merge in population LOWERCASE, consistent across confirmed and deaths
-    df = pd.merge(df, pop_df, on="FIPS")
+    # set population as -1 for fake fips
+    df = pd.merge(df, pop_df, on="FIPS", how = 'left').fillna(-1)
 
     # Manual correction for PR
     df.loc[df["FIPS"] == 72, "FIPS"] = 72000

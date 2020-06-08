@@ -4,7 +4,7 @@ pipeline {
         stage('Build') {
             steps {
                 slackSend color: 'warning',
-                                  message: "CHANGE_AUTHOR started build phase"
+                                  message: "${CHANGE_AUTHOR} started build phase"
                 echo 'Building..' // Do some work here...
                 slackSend color: 'good',
                                   message: "Completed build phase."

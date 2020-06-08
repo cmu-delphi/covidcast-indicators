@@ -23,13 +23,13 @@ run_facebook <- function(parameter_path = "params.json")
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregatation(input_data)
   data_agg <- filter_data_for_aggregatation(data_agg)
-  data_agg <- join_weights(data_agg, params)
+  data_agg <- join_weights(data_agg, params, weights = "step1")
   msg_df("response data to aggregate", data_agg)
 
   # create "complete" data that will be shared with research partners
   data_full <- create_complete_responses(input_data)
   data_full <- filter_complete_responses(data_full)
-  data_full <- join_weights(data_full, params)
+  data_full <- join_weights(data_full, params, weights = "full")
   msg_df("full data to share with research partners", data_full)
 
   # write files for each specific output

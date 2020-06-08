@@ -26,15 +26,27 @@ write_cid <- function(data, type_name, params)
 
 #' Add weights to a dataset of responses
 #'
+#' There are two types of weights: step 1 weights and full weights. Step 1
+#' weights are used for producing our aggregations; full weights are used
+#' exclusively for producing individual response files.
+#'
 #' @param data    a data frame containing a column called "token"
 #' @param params  a named list containing a value "weights_in_dir" indicating where the
 #'                weights files are stored
 #'
 #' @importFrom dplyr bind_rows left_join
 #' @export
-join_weights <- function(data, params)
+join_weights <- function(data, params, weights = c("step1", "full"))
 {
-  weights_files <- dir(params$weights_in_dir, pattern = ".csv$", full.names = TRUE)
+  weights <- match.arg(weights)
+
+  if (weights == "step1") {
+    pattern <- "step_1_weights.csv$"
+  } else if (weights == "full") {
+    pattern <- "finish_full_survey_weights.csv$"
+  }
+
+  weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
   weights_files <- sort(weights_files)
   agg_weights <- bind_rows(lapply(weights_files, read_csv, col_types = "cd"))
   agg_weights <- agg_weights[!duplicated(agg_weights$cid),]

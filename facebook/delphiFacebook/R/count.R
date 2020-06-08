@@ -107,9 +107,9 @@ compute_count_response <- function(response, weight)
   weight <- weight / sum(weight)
   val <- weighted.mean(response, weight)
 
-  effective_sample_size <- mean(weight)^2 / mean(weight^2) * length(weight)
+  effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
 
-  se <- sqrt( sum(weight^2 * (response - val)^2) )
+  se <- sqrt( sum( (weight * (response - val))^2 ) )
   se <- jeffreys_se(se, val, effective_sample_size)
 
   return(list(

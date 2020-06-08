@@ -84,8 +84,8 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
                          df['FIPS'] <= 90056)
     ]
     # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # set population as -1 for fake fips
-    df = pd.merge(df, pop_df, on="FIPS", how = 'left').fillna(-1)
+    # Set population as NAN for fake fips
+    df = pd.merge(df, pop_df, on="FIPS", how = 'left')
 
     # Manual correction for PR
     df.loc[df["FIPS"] == 72, "FIPS"] = 72000

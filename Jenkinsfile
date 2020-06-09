@@ -7,8 +7,8 @@ pipeline {
     stages {
         stage('Build') {
             when {
-                branch 'bgc/deploy-test',
-                branch 'master'
+                branch 'bgc/deploy-test'
+                // branch 'master'
             }
             steps {
                 'jenkins/jhu-build.sh'
@@ -17,8 +17,8 @@ pipeline {
 
         stage('Test') {
             when {
-                branch 'bgc/deploy-test',
-                branch 'master'
+                branch 'bgc/deploy-test'
+                // branch 'master'
             }
             steps {
                 'jenkins/jhu-test.sh'

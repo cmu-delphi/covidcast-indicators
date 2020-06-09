@@ -26,8 +26,11 @@ pipeline {
 
     post {
         always {
+            script {
+                slackNotifier(currentBuild.currentResult)
+            }
             /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
-            slackNotifier(currentBuild.currentResult)
+            // slackNotifier(currentBuild.currentResult)
             // cleanWs()
             // slackSend color: "good", message: "Yarssss."
         }

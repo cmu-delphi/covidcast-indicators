@@ -11,7 +11,7 @@ pipeline {
                 // branch 'master'
             }
             steps {
-                'jenkins/jhu-build.sh'
+                sh 'jenkins/jhu-build.sh'
             }
         }
 
@@ -21,7 +21,7 @@ pipeline {
                 // branch 'master'
             }
             steps {
-                'jenkins/jhu-test.sh'
+                sh 'jenkins/jhu-test.sh'
             }
         }
 

@@ -1,5 +1,5 @@
 /* import shared library */
-@Library('jenkins-pipeline-shared-library')_
+@Library('jenkins-shared-library')_
 
 pipeline {
     agent any

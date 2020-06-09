@@ -93,8 +93,12 @@ test_that("testing files contain the same effective sample size", {
       arrange(read.csv(file.path(dir, filename)), geo_id)$effective_sample_size
     }
 
-    expect_equal(effective_sample_sizes("receiving_full", !!f),
-                 effective_sample_sizes("gold", !!f), tolerance = 0.0001)
+    ## Community gold files don't have effective sample sizes; this is wasteful
+    ## but easy to check
+    if ("effective_sample_size" %in% names(read.csv(file.path("gold", f)))) {
+      expect_equal(effective_sample_sizes("receiving_full", !!f),
+                   effective_sample_sizes("gold", !!f), tolerance = 0.0001)
+    }
   }
 
 })

@@ -13,7 +13,8 @@
     "full_synthetic.csv"
   ],
   "output": [
-    "covidalert"
+    "covidalert",
+    "community"
   ],
   "debug": true
 }

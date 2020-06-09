@@ -53,7 +53,11 @@ run_facebook <- function(parameter_path = "params.json")
   if ( "community" %in% params$output )
   {
     write_binary_variable(
-      data_agg, cw_list, "community_yes", params, metric = "community"
+      data_agg, cw_list, "community_yes", params, metric = "nohh_cmnty_cli"
+    )
+
+    write_binary_variable(
+      data_agg, cw_list, "hh_community_yes", params, metric = "hh_cmnty_cli"
     )
   }
 

@@ -125,8 +125,14 @@ create_data_for_aggregatation <- function(input_data)
   df$hh_p_cli <- 100 * df$is_cli * df$hh_number_sick / df$hh_number_total
   df$hh_p_ili <- 100 * df$is_ili * df$hh_number_sick / df$hh_number_total
 
-  # create variables for community survey
+  ### Create variables for community survey.
+  ## Question A4: how many people you know in the local community (not your
+  ## household) with CLI
   df$community_yes <- as.numeric(as.numeric(df$A4) > 0)
+
+  ## Whether you know someone in your local community *or* household who is
+  ## sick.
+  df$hh_community_yes <- as.numeric(as.numeric(df$A4) + df$hh_number_sick > 0)
 
   return(df)
 }

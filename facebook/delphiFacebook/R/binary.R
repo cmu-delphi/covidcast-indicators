@@ -12,6 +12,9 @@ write_binary_variable <- function(df, cw_list, var_yes, params, metric)
   ## weighted output files can only use surveys with weights
   weight_df <- df[!is.na(df$weight), ]
 
+  ## TODO Temporary fix to match old pipeline
+  params$s_mix_coef <- 0
+
   for (i in seq_along(cw_list))
   {
     df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params)
@@ -53,56 +56,68 @@ summarize_binary <- function(
   ))
   df_out$val <- NA_real_
   df_out$sample_size <- NA_real_
+  df_out$effective_sample_size <- NA_real_
   df_out$se <- NA_real_
   past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
 
   for (i in seq_len(nrow(df_out)))
   {
     allowed_days <- past_n_days_matrix[i,]
-    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
+    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]) & !is.na(df$A4))
     if (length(index))
     {
-      mixed_weights <- mix_weights(df[[var_weight]][index], params)
+      mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
+                                   params)
+
+      sample_size <- sum(df$weight_in_location[index])
+
       new_row <- compute_binary_response(
         response = df[[var_yes]][index],
         weight = mixed_weights,
-        sample_weight = df$weight_in_location[index]
-      )
+        sample_size = sample_size)
+
       df_out$val[i] <- new_row$val
-      df_out$sample_size[i] <- new_row$sample_size
       df_out$se[i] <- new_row$se
+      df_out$sample_size[i] <- sample_size
+      df_out$effective_sample_size[i] <- sample_size # TODO FIXME
     }
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-  df_out <- df_out[df_out$sample_size > params$num_filter, ]
+  df_out <- df_out[df_out$sample_size >= params$num_filter &
+                 df_out$effective_sample_size >= params$num_filter, ]
   return(df_out)
 }
 
 #' Returns binary response estimates
 #'
-#' This function takes vectors as input and computes the binary response values (a point
-#' estimate named "val", a standard error named "se", and a sample size named "sample_size")
-#' Note that there are two different sets of weights that have a different effect on the
-#' output.
+#' This function takes vectors as input and computes the binary response values
+#' (a point estimate named "val", a standard error named "se", and a sample size
+#' named "sample_size").
 #'
-#' @param response                    a vector of binary (0 or 1) responses
-#' @param weight                      a vector of sample weights for inverse probability
-#'                                    weighting; invariant up to a scaling factor
-#' @param sample_weight               a vector of sample size weights; the total sample size
-#'                                    will be the sum of these values
+#' @param response a vector of binary (0 or 1) responses
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size The sample size to use, which may be a non-integer (as
+#'   responses from ZIPs that span geographical boundaries are weighted
+#'   proportionately, and survey weights may also be applied)
 #'
 #' @importFrom stats weighted.mean
 #' @export
-compute_binary_response <- function(response, weight, sample_weight)
+compute_binary_response <- function(response, weight, sample_size)
 {
   assert(all( (response == 0) | (response == 1) ))
+  assert(length(response) == length(weight))
 
-  response_sum <- weighted.mean(response * sample_weight, weight) * length(response)
-  sample_size <- sum(sample_weight)
+  response_prop <- weighted.mean(response, weight)
 
-  val <- 100 * (response_sum + 0.5) / (sample_size + 1)
-  se <- sqrt( (val * (100 - val) / sample_size) )
+  ## Jeffreys correction to estimate.
+  val <- 100 * (response_prop * sample_size + 0.5) / (sample_size + 1)
+  if (sample_size > 0) {
+    se <- sqrt( (val * (100 - val) / sample_size) )
+  } else {
+    se <- NA
+  }
 
-  return(list(val = val, se = se, sample_size = sample_size))
+  return(list(val = val, se = se))
 }

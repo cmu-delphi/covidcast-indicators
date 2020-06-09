@@ -27,7 +27,8 @@ pipeline {
     post {
         always {
             /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
-            slackNotifier.call(currentBuild.currentResult)
+            //slackNotifier(currentBuild.currentResult)
+            slackNotifier(currentResult)
             cleanWs()
         }
     }

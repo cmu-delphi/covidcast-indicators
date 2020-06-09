@@ -6,19 +6,27 @@ pipeline {
 
     stages {
         stage('Build') {
+            when {
+                branch 'bgc/deploy-test',
+                branch 'master'
             steps {
-                echo 'Building...' // Do some work here...
+                'jenkins/jhu-build.sh'
             }
         }
 
         stage('Test') {
+            when {
+                branch 'bgc/deploy-test',
+                branch 'master'
             steps {
-                echo 'Testing...' // Do some work here...
+                'jenkins/jhu-test.sh'
             }
         }
 
         stage('Deploy') {
             steps {
+            when {
+                branch 'master'
                 echo 'Deploying...' // Do some work here...
             }
         }
@@ -27,12 +35,10 @@ pipeline {
     post {
         always {
             script {
+                /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
                 slackNotifier(currentBuild.currentResult)
+                cleanWs()
             }
-            /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
-            // slackNotifier(currentBuild.currentResult)
-            // cleanWs()
-            // slackSend color: "good", message: "Yarssss."
         }
     }
 }

@@ -4,7 +4,7 @@
 #
 
 # Switch to working dir
-cd $WORKSPACE/jhu || exit
+cd "${WORKSPACE}"/jhu || exit
 
 # Run soft linting
 env/bin/pylint delphi_jhu

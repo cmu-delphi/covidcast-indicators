@@ -4,7 +4,7 @@
 #
 
 # Switch to working dir
-cd $WORKSPACE/jhu || exit
+cd "${WORKSPACE}"/jhu || exit
 
 # Set up venv
 python -m venv env

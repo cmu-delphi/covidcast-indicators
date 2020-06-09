@@ -9,6 +9,7 @@ pipeline {
             when {
                 branch 'bgc/deploy-test',
                 branch 'master'
+            }
             steps {
                 'jenkins/jhu-build.sh'
             }
@@ -18,15 +19,17 @@ pipeline {
             when {
                 branch 'bgc/deploy-test',
                 branch 'master'
+            }
             steps {
                 'jenkins/jhu-test.sh'
             }
         }
 
         stage('Deploy') {
-            steps {
             when {
                 branch 'master'
+            }
+            steps {
                 echo 'Deploying...' // Do some work here...
             }
         }

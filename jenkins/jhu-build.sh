@@ -4,10 +4,15 @@
 #
 
 set -exo pipefail
-
 source ~/.bash_profile
 
-cd "${WORKSPACE}"/jhu || exit
+indicator="jhu"
+
+#
+# Build
+#
+
+cd "${WORKSPACE}/${indicator}" || exit
 
 # Set up venv
 python -m venv env

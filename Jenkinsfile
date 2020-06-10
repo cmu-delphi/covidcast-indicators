@@ -24,6 +24,16 @@ pipeline {
                 sh 'jenkins/jhu-test.sh'
             }
         }
+        
+        stage('Package') {
+            when {
+                branch 'bgc/deploy-test'
+                // branch 'master'
+            }
+            steps {
+                sh 'jenkins/jhu-package.sh'
+            }
+        }
 
         stage('Deploy') {
             when {

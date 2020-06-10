@@ -4,14 +4,15 @@
 #
 
 set -exo pipefail
-
 source ~/.bash_profile
 
-cd "${WORKSPACE}"/jhu || exit
+indicator="jhu"
 
 #
 # Test
 #
+
+cd "${WORKSPACE}/${indicator}" || exit
 
 # Linter
 env/bin/pylint delphi_jhu

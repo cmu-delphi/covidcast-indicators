@@ -3,6 +3,9 @@
 # JHU indicator Jenkins build
 #
 
+# Source to learn about env
+source ~/.bash_profile
+
 # Switch to working dir
 cd "${WORKSPACE}"/jhu || exit
 

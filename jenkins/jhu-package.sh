@@ -15,4 +15,5 @@ indicator="jhu"
 cd "${WORKSPACE}" || exit
 
 # Create .tar.gz for later deployment
-tar -czvf "${WORKSPACE}/${indicator}.tar.gz" "${indicator}"
+# tar -czvf "${WORKSPACE}/${indicator}.tar.gz" "${indicator}"
+ tar -czvf "../${indicator}.tar.gz" "${indicator}"

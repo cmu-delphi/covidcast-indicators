@@ -32,6 +32,7 @@ pipeline {
             steps {
                 echo 'Deploying...' // Do some work here...
                 echo currentBuild.absoluteUrl
+                echo "${env.BRANCH_NAME}"
             }
         }
     }

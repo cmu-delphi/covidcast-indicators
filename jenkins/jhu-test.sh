@@ -3,7 +3,7 @@
 # JHU indicator Jenkins tests
 #
 
-set -euxo pipefail
+set -exo pipefail
 
 source ~/.bash_profile
 

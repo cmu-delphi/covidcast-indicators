@@ -3,15 +3,19 @@
 # JHU indicator Jenkins tests
 #
 
-# Source to learn about env
+set -euxo pipefail
+
 source ~/.bash_profile
 
-# Switch to working dir
 cd "${WORKSPACE}"/jhu || exit
 
-# Test: Soft linting
+#
+# Test
+#
+
+# Linter
 env/bin/pylint delphi_jhu
 
-# Test: Unit tests and code coverage
+# Unit tests and code coverage
 cd tests || exit && \
   ../env/bin/pytest --cov=delphi_jhu --cov-report=term-missing

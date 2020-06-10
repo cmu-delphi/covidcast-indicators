@@ -3,10 +3,10 @@
 # JHU indicator Jenkins build
 #
 
-# Source to learn about env
+set -euxo pipefail
+
 source ~/.bash_profile
 
-# Switch to working dir
 cd "${WORKSPACE}"/jhu || exit
 
 # Set up venv

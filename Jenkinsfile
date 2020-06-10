@@ -7,7 +7,7 @@ pipeline {
     stages {
         stage('Build') {
             when {
-                branch 'bgc/deploy-test' || 'master'
+                branch 'bgc/deploy-test'
                 // branch 'master'
             }
             steps {
@@ -17,7 +17,7 @@ pipeline {
 
         stage('Test') {
             when {
-                branch 'bgc/deploy-test' || 'master'
+                branch 'bgc/deploy-test'
                 // branch 'master'
             }
             steps {
@@ -27,7 +27,7 @@ pipeline {
 
         stage('Deploy') {
             when {
-                branch 'master'
+                branch 'bgc/deploy-test'
             }
             steps {
                 echo 'Deploying...' // Do some work here...

@@ -15,4 +15,4 @@ indicator="jhu"
 cd "${WORKSPACE}" || exit
 
 # Create .tar.gz for later deployment
- tar -czvf "${indicator}.tar.gz" "${indicator}"
+ tar -czvf "${env.JENKINS_HOME}/artifacts/${indicator}.tar.gz" "${indicator}"

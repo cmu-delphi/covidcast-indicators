@@ -1,0 +1,10 @@
+---
+- name: Deploy the JHU indicator
+  hosts: all
+  become: yes
+  vars_files:
+    - vars.yaml
+  
+# Place on system, extract
+# Mutate json config
+# Run!

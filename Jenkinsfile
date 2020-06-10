@@ -31,6 +31,7 @@ pipeline {
             }
             steps {
                 echo 'Deploying...' // Do some work here...
+                echo currentBuild.absoluteUrl
             }
         }
     }

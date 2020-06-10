@@ -181,12 +181,12 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
- 
+
     df_mega = df[df['fips'].astype(int) >= 90001].copy()
     df_mega['geo_id'] = df_mega['fips'].apply(lambda x: JHU_FAKE_FIPS_TO_MEGA_FIPS[x])
-    
+
     df = df[df['fips'].astype(int) < 90001].copy()
-    
+
     if geo_res == "county":
         df["geo_id"] = df["fips"]
         if sensor not in PROP_SENSORS:
@@ -225,7 +225,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
             df = df.append(df_mega)
     df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
-    
+
     # Value would be negative for megacounties , which would not be considered in the main function
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE

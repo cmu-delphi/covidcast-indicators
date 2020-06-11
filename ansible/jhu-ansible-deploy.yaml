@@ -4,7 +4,7 @@
   vars_files:
     - vars.yaml
   tasks:
-    - name: Copy and unarchive the package into the runtime host directory.
+    - name: Copy and unarchive the package into the indicators runtime host directory
       unarchive:
         src: "{{ jenkins_artifact_dir }}"
         dest: "{{ indicators_runtime_dir }}"

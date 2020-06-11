@@ -220,9 +220,9 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
         merged["population"] = merged["population"] * merged["pop_prop"]
         df = merged.drop(["zip", "pop_prop", "hrrnum", "cbsa_id"], axis=1)
-        if sensor not in PROP_SENSORS:
-            df_mega["geo_id"] = df_mega["geo_id"].apply(fips_to_state)
-            df = df.append(df_mega)
+        # if sensor not in PROP_SENSORS:
+        #     df_mega["geo_id"] = df_mega["geo_id"].apply(fips_to_state)
+        #     df = df.append(df_mega)
     df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
 

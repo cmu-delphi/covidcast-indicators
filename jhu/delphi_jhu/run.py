@@ -35,7 +35,7 @@ SENSORS = [
 ]
 SMOOTHERS = [
     "unsmoothed",
-    "seven_day_average",
+    #"seven_day_average",
 ]
 SENSOR_NAME_MAP = {
     "new_counts":           ("incidence_num", False),
@@ -45,7 +45,7 @@ SENSOR_NAME_MAP = {
 }
 SMOOTHERS_MAP = {
     "unsmoothed":           (identity, '', False),
-    "seven_day_average":    (seven_day_moving_average, '7dav_', True),
+    #"seven_day_average":    (seven_day_moving_average, '7dav_', True),
 }
 GEO_RESOLUTIONS = [
     "county",

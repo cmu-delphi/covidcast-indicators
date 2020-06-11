@@ -14,13 +14,15 @@ library(testthat)
 
 context("Testing against reference implementation")
 
-geo_levels <- c("state", "county", "hrr", "msa")
+## TODO County left out here, because megacounties are not done
+geo_levels <- c("state", "hrr", "msa")
 dates <- c("20200508", "20200509", "20200510", "20200511", "20200512")
-metrics <- c("raw_cli", "raw_ili", "raw_wcli", "raw_wili",
-             "smoothed_cli", "smoothed_ili", "smoothed_wcli", "smoothed_wili")
 
-geo_levels <- c("state", "msa", "hrr")
-metrics <- c("raw_cli", "raw_ili")
+## Smoothed signals are not included because we deliberately mismatch the old
+## signals. The old pipeline did not produce weighted community estimates, so we
+## can't check those here.
+metrics <- c("raw_cli", "raw_ili", "raw_wcli", "raw_wili",
+             "raw_nohh_cmnty_cli", "raw_hh_cmnty_cli")
 
 grid <- expand.grid(
  geo_levels = geo_levels, dates = dates, metrics = metrics, stringsAsFactors = FALSE
@@ -34,38 +36,48 @@ test_that("testing existence of csv files", {
 
 test_that("testing files contain the same geo", {
 
+  geos <- function(dir, filename) {
+    g <- read_csv(file.path(dir, filename))$geo_id
+
+    ## Gross hack: All geo IDs are numeric except states, which are
+    ## two-character strings. However, sometimes the numeric geo-IDs are
+    ## zero-padded and sometimes they are not; make them consistent by turning
+    ## them into numbers so we can match across pipelines.
+    if (is.character(g) && all(nchar(g) > 2)) {
+      return(as.numeric(g))
+    }
+    return(g)
+  }
+
   for (f in expected_files)
   {
-    geos <- function(dir, filename) {
-      read_csv(file.path(dir, filename))$geo_id
-    }
-
     expect_setequal(geos("receiving_full", !!f), geos("gold", !!f))
   }
 
 })
 
 test_that("testing files contain the same val", {
+
+  vals <- function(dir, filename) {
+    arrange(read.csv(file.path(dir, filename)), geo_id)$val
+  }
+
   for (f in expected_files)
   {
-    vals <- function(dir, filename) {
-      arrange(read.csv(file.path(dir, filename)), geo_id)$val
-    }
-
     expect_equal(vals("receiving_full", !!f), vals("gold", !!f), tolerance = 0.0001)
   }
 
 })
 
 test_that("testing files contain the same se", {
+  ses <- function(dir, filename) {
+    arrange(read.csv(file.path(dir, filename)), geo_id)$se
+  }
 
   for (f in expected_files)
   {
-    ses <- function(dir, filename) {
-      arrange(read.csv(file.path(dir, filename)), geo_id)$se
-    }
 
-    expect_equal(ses("receiving_full", !!f), ses("gold", !!f), tolerance = 0.001)
+    expect_equal(ses("receiving_full", !!f), ses("gold", !!f), tolerance = 0.0001)
   }
 
 })
@@ -73,12 +85,12 @@ test_that("testing files contain the same se", {
 
 test_that("testing files contain the same sample size", {
 
+  sample_sizes <- function(dir, filename) {
+    arrange(read.csv(file.path(dir, filename)), geo_id)$sample_size
+  }
+
   for (f in expected_files)
   {
-    sample_sizes <- function(dir, filename) {
-      arrange(read.csv(file.path(dir, filename)), geo_id)$sample_size
-    }
-
     expect_equal(sample_sizes("receiving_full", !!f),
                  sample_sizes("gold", !!f), tolerance = 0.0001)
   }
@@ -87,12 +99,12 @@ test_that("testing files contain the same sample size", {
 
 test_that("testing files contain the same effective sample size", {
 
+  effective_sample_sizes <- function(dir, filename) {
+    arrange(read.csv(file.path(dir, filename)), geo_id)$effective_sample_size
+  }
+
   for (f in expected_files)
   {
-    effective_sample_sizes <- function(dir, filename) {
-      arrange(read.csv(file.path(dir, filename)), geo_id)$effective_sample_size
-    }
-
     ## Community gold files don't have effective sample sizes; this is wasteful
     ## but easy to check
     if ("effective_sample_size" %in% names(read.csv(file.path("gold", f)))) {

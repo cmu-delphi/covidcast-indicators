@@ -44,7 +44,7 @@ SENSOR_NAME_MAP = {
     "cumulative_prop":      ("cumulative_prop", False),
 }
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, ''),
+    "unsmoothed":           (identity, '', False),
     #"seven_day_average":    (seven_day_moving_average, '7dav_', True),
 }
 GEO_RESOLUTIONS = [

@@ -1,3 +1,6 @@
 ---
 jenkins_artifacts_dir: "/var/lib/jenkins/artifacts"
-indicators_code_dir: "/home/automation/drive/delphi/covidcast-indicators"
+indicators_code_dir: "/home/automation/driver/delphi/covidcast-indicators"
+indicator: "{{ indicator }}"
+package: "{{ indicator }}".tar.gz
+midas_server: "delphi-master-prod-01.delphi.cmu.edu"

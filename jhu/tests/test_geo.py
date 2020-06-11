@@ -152,30 +152,30 @@ class TestGeoMap:
             }
         )
 
-        df_mega = pd.DataFrame(
-            {
-                "fips": ["90013", "90001"],
-                "timestamp": ["2020-02-15", "2020-02-15"],
-                "new_counts": [8, 2],
-                "cumulative_counts": [80, 12],
-                "population": [np.nan, np.nan],
-            }
-        )
+        # df_mega = pd.DataFrame(
+        #     {
+        #         "fips": ["90013", "90001"],
+        #         "timestamp": ["2020-02-15", "2020-02-15"],
+        #         "new_counts": [8, 2],
+        #         "cumulative_counts": [80, 12],
+        #         "population": [np.nan, np.nan],
+        #     }
+        # )
         
-        df = df.append(df_mega)
+        # df = df.append(df_mega)
         
         new_df = geo_map(df, "hrr", MAP_DF, 'new_counts')
 
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
 
-          assert (new_df["geo_id"].values == [110, 147]).all()
-          assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-          assert new_df["new_counts"].values == pytest.approx([13.0, 27.0])
-          assert new_df["cumulative_counts"].values == pytest.approx([60, 165])
-          assert new_df["population"].values == pytest.approx([25, 2500])
-          assert new_df["incidence"].values == pytest.approx(exp_incidence)
-          assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
+        assert (new_df["geo_id"].values == [110, 147]).all()
+        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
+        assert new_df["new_counts"].values == pytest.approx([13.0, 27.0])
+        assert new_df["cumulative_counts"].values == pytest.approx([60, 165])
+        assert new_df["population"].values == pytest.approx([25, 2500])
+        assert new_df["incidence"].values == pytest.approx(exp_incidence)
+        assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
 
     def test_msa(self):
 
@@ -189,27 +189,27 @@ class TestGeoMap:
             }
         )
         
-        df_mega = pd.DataFrame(
-            {
-                "fips": ["90013", "90001"],
-                "timestamp": ["2020-02-15", "2020-02-15"],
-                "new_counts": [8, 2],
-                "cumulative_counts": [80, 12],
-                "population": [np.nan, np.nan],
-            }
-        )
+        # df_mega = pd.DataFrame(
+        #     {
+        #         "fips": ["90013", "90001"],
+        #         "timestamp": ["2020-02-15", "2020-02-15"],
+        #         "new_counts": [8, 2],
+        #         "cumulative_counts": [80, 12],
+        #         "population": [np.nan, np.nan],
+        #     }
+        # )
         
-        df = df.append(df_mega)
+        # df = df.append(df_mega)
 
         new_df = geo_map(df, "msa", MAP_DF, 'new_counts')
 
         exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
         exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000
 
-         assert (new_df["geo_id"].values == [31420, 49340]).all()
-         assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-         assert new_df["new_counts"].values == pytest.approx([2.0, 13.0])
-         assert new_df["cumulative_counts"].values == pytest.approx([45, 60])
-         assert new_df["population"].values == pytest.approx([300, 25])
-         assert new_df["incidence"].values == pytest.approx(exp_incidence)
-         assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
+        assert (new_df["geo_id"].values == [31420, 49340]).all()
+        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
+        assert new_df["new_counts"].values == pytest.approx([2.0, 13.0])
+        assert new_df["cumulative_counts"].values == pytest.approx([45, 60])
+        assert new_df["population"].values == pytest.approx([300, 25])
+        assert new_df["incidence"].values == pytest.approx(exp_incidence)
+        assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)

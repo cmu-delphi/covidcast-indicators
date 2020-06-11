@@ -206,12 +206,10 @@ class TestGeoMap:
         exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
         exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000
 
-        assert set(new_df["geo_id"].values) == set([31420, 49340,  "al", "ga"])
-        assert set(new_df["timestamp"]) == set(["2020-02-15"])
-        assert new_df["new_counts"].values == pytest.approx([2.0, 13.0, 2.0, 8.0])
-        assert new_df["cumulative_counts"].values == pytest.approx([45, 60, 12, 80])
-        assert new_df["population"].values == pytest.approx([300, 25, 0, 0])
-        assert new_df["incidence"].values == pytest.approx(np.append(exp_incidence, 
-                                                                     [np.Inf, np.Inf]))
-        assert new_df["cumulative_prop"].values == pytest.approx(np.append(exp_cprop,
-                                                                           [np.Inf, np.Inf]))
+         assert (new_df["geo_id"].values == [31420, 49340]).all()
+         assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
+         assert new_df["new_counts"].values == pytest.approx([2.0, 13.0])
+         assert new_df["cumulative_counts"].values == pytest.approx([45, 60])
+         assert new_df["population"].values == pytest.approx([300, 25])
+         assert new_df["incidence"].values == pytest.approx(exp_incidence)
+         assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)

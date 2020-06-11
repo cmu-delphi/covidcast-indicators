@@ -15,4 +15,4 @@ indicator="jhu"
 cd "${WORKSPACE}/ansible" || exit
 
 # Ansible!
-ansbible-playbook "${indicator}"-ansible-deploy.yaml -i {{ midas_server }},
+ansible-playbook "${indicator}"-ansible-deploy.yaml -i {{ midas_server }},

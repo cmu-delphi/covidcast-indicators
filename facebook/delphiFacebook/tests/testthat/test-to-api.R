@@ -12,7 +12,8 @@ test_that("testing write_data_api command", {
     geo_id = c("MA", "MA", "MA", "MA"),
     val = c(1, 2, 3, 4),
     se = c(10, 20, 30, 40),
-    sample_size = c(100, 200, 300, 400)
+    sample_size = c(100, 200, 300, 400),
+    effective_sample_size = c(100, 200, 300, 400)
   )
 
   write_data_api(test_data, params = list(export_dir = tdir), "state", "test")

@@ -140,6 +140,9 @@ produce_crosswalk_state <- function(zip_metadata, crosswalk_county)
 
 #' Produce crosswalk file relating zip codes to hospital referral regions (HRRs)
 #'
+#' Each ZIP5 is completely contained in a HRR, and the corresponding HRR is
+#' provided in our ZIP metadata.
+#'
 #' @param zip_metadata   output from a call to the function produce_allowed_zip5
 #'
 #' @return  A tibble containing three columns: zip5, geo_id (HRR code as character), and

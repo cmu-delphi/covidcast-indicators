@@ -47,3 +47,44 @@ Rscript -e 'covr::package_coverage("delphiFacebook")'
 ```
 
 There should be good coverage of all the core functions in the package.
+
+## Outline of the Indicator
+
+Facebook surveys are one of our most complex data pipelines. At a high level,
+the pipeline must do the following:
+
+1. Download the latest survey from Qualtrics and place it in a CSV. This is done
+   by a Python script using the Qualtrics API (not yet in this repository).
+2. Read the survey data. This package extracts a unique token from each survey
+   response and saves these to an output file; the automation script driving
+   this package uses SFTP to send this file to Facebook.
+3. Download the latest survey weights computed by Facebook for the tokens we
+   provide. Facebook usually provides survey weights within one day, so our
+   pipeline can produce weighted estimates a day after unweighted estimates. The
+   download is managed by the same automation script, not this package.
+4. Aggregate the data and produce survey estimates.
+5. Write the survey estimates to covidalert CSV files: one per day per signal
+   type and geographic region type. (For example, there will be one CSV
+   containing every unweighted unsmoothed county estimate for one signal on
+   2020-05-10.)
+6. Validate these estimates against basic sanity checks. (Not yet implemented in
+   this pipeline!)
+7. Push the CSV files to the API server. Also done by the automation script, not
+   by this package.
+
+
+Mathematical details of how the survey estimates are calculated are given in the
+signal descriptions PDF in the `covid-19` repository. This pipeline currently
+calculates two basic types of survey estimates:
+
+1. Estimates of the fraction of individuals with COVID-like or influenza-like
+   illness. The survey includes questions about how many people in your
+   household have specific symptoms; we use the fractions within households to
+   estimate a population rate of symptoms. This estimation is handled by
+   `count.R` in the `delphiFacebook` package.
+2. Estimates of the fraction of people who know someone in their local community
+   with symptoms. Here we do not distinguish between COVID-like and
+   influenza-like symptoms. We produce separate estimates including or excluding
+   within-household symptoms, and do not use the number of people the respondent
+   knows, only whether or not they know someone with symptoms. This estimation
+   is handled by `binary.R` in the `delphiFacebook` package.

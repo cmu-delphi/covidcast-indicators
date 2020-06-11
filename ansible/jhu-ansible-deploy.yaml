@@ -1,10 +1,19 @@
 ---
-- name: Deploy the JHU indicator
-  hosts: all
+- hosts: all
   become: yes
   vars_files:
     - vars.yaml
-  
+  vars:
+    indicator: jhu
+    package: "{{ indicator }}".tar.gz
+  tasks:
+    - name: Copy and unarchive the package onto the runtime host
+      unarchive:
+        src: "{{ jenkins_artifact_dir }}"
+        dest: "{{ indicators_code_dir }}"
+        owner: automation
+        mode: preserve
+      
 # Place on system, extract
 # Mutate json config
-# Run!
+# Run! Do we add this here as well? Maybe better to schedule it via automation?

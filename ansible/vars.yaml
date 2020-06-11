@@ -1,0 +1,3 @@
+---
+jenkins_artifacts_dir: "/var/lib/jenkins/artifacts"
+indicators_code_dir: "/home/automation/drive/delphi/covidcast-indicators"

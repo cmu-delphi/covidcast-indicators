@@ -11,7 +11,7 @@ pipeline {
                 // branch 'master'
             }
             steps {
-                sh 'jenkins/jhu-build.sh'
+                sh 'jenkins/jhu-jenkins-build.sh'
             }
         }
 
@@ -21,7 +21,7 @@ pipeline {
                 // branch 'master'
             }
             steps {
-                sh 'jenkins/jhu-test.sh'
+                sh 'jenkins/jhu-jenkins-test.sh'
             }
         }
         
@@ -31,7 +31,7 @@ pipeline {
                 // branch 'master'
             }
             steps {
-                sh 'jenkins/jhu-package.sh'
+                sh 'jenkins/jhu-jenkins-package.sh'
             }
         }
 
@@ -40,9 +40,7 @@ pipeline {
                 branch 'bgc/deploy-test'
             }
             steps {
-                echo 'Deploying...' // Do some work here...
-                echo currentBuild.absoluteUrl
-                echo "${env.BRANCH_NAME}"
+                sh 'jenkins/jhu-jenkins-deploy.sh'
             }
         }
     }

@@ -135,7 +135,7 @@ class TestGeoMap:
         assert set(new_df["geo_id"].values) == set(["az", "ma", "al", "ga"])
         assert set(new_df["timestamp"].values) == set(["2020-02-15"])
         assert set(new_df["new_counts"].values) == set([32, 23, 2, 8])
-        assert set(new_df["cumulative_counts"].values) == set([195, 160, 80, 12])
+        assert set(new_df["cumulative_counts"].values) == set([195, 160, 12, 80])
         assert set(new_df["population"].values) == set([2500, 25, 0])
         assert set(new_df["incidence"].values) - set(exp_incidence) == set([np.Inf])
         assert set(new_df["cumulative_prop"].values) - set(exp_cprop) == set([np.Inf])

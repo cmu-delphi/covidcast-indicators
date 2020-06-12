@@ -1,6 +1,6 @@
 ---
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"
-# indicators_code_dir: "/home/automation/driver/delphi/covidcast-indicators"
-indicators_runtime_dir: "/tmp"
+# indicator_code_dir: "/home/automation/driver/delphi/covidcast-indicators"
+indicator_runtime_dir: "/tmp"
 indicator: "{{ indicator }}"
 package: "{{ indicator }}.tar.gz"

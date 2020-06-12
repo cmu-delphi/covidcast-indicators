@@ -17,7 +17,7 @@ import pandas as pd
 # first party
 from .config import Config, Constants
 from .geo_maps import GeoMaps
-from .load_data import load_emr_data, load_claims_data
+from .load_data import load_combined_data
 from .sensor import EMRHospSensor
 from .weekday import Weekday
 
@@ -118,18 +118,7 @@ def update_sensor(
 
     # load data
     base_geo = "hrr" if geo == "hrr" else "fips"
-    emr_data = load_emr_data(emr_filepath, dropdate, base_geo)
-    claims_data = load_claims_data(claims_filepath, dropdate, base_geo)
-
-    # merge data
-    data = emr_data.merge(claims_data, how="outer", left_index=True, right_index=True)
-    assert data.isna().all(axis=1).sum() == 0, "entire row is NA after merge"
-
-    # calculate combined numerator and denominator
-    data.fillna(0, inplace=True)
-    data["num"] = data["IP_COVID_Total_Count"] + data["Covid_like"]
-    data["den"] = data["Total_Count"] + data["Denominator"]
-    data = data[['num', 'den']]
+    data = load_combined_data(emr_filepath, claims_filepath, dropdate, base_geo)
 
     # get right geography
     geo_map = GeoMaps(staticpath)

@@ -16,12 +16,12 @@ def load_emr_data(emr_filepath, dropdate, base_geo):
     """Load in and set up EMR data.
 
     Args:
-      emr_filepath: path to the aggregated EMR data
-      dropdate: data drop date (datetime object)
-      base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
+        emr_filepath: path to the aggregated EMR data
+        dropdate: data drop date (datetime object)
+        base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
 
     Returns:
-      cleaned emr dataframe
+        cleaned emr dataframe
     """
     assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
 
@@ -56,12 +56,12 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     """Load in and set up claims data.
 
     Args:
-      claims_filepath: path to the aggregated claims data
-      dropdate: data drop date (datetime object)
-      base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
+        claims_filepath: path to the aggregated claims data
+        dropdate: data drop date (datetime object)
+        base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
 
     Returns:
-      cleaned claims dataframe
+        cleaned claims dataframe
     """
     assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
 
@@ -90,3 +90,34 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     claims_data.dropna(inplace=True)  # drop rows with any missing entries
 
     return claims_data
+
+
+def load_combined_data(emr_filepath, claims_filepath, dropdate, base_geo):
+    """Load in emr and claims data, and combine them.
+
+    Args:
+        emr_filepath: path to the aggregated EMR data
+        claims_filepath: path to the aggregated claims data
+        dropdate: data drop date (datetime object)
+        base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
+
+    Returns:
+        combined dataframe
+    """
+    assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
+
+    # load each data stream
+    emr_data = load_emr_data(emr_filepath, dropdate, base_geo)
+    claims_data = load_claims_data(claims_filepath, dropdate, base_geo)
+
+    # merge data
+    data = emr_data.merge(claims_data, how="outer", left_index=True, right_index=True)
+    assert data.isna().all(axis=1).sum() == 0, "entire row is NA after merge"
+
+    # calculate combined numerator and denominator
+    data.fillna(0, inplace=True)
+    data["num"] = data["IP_COVID_Total_Count"] + data["Covid_like"]
+    data["den"] = data["Total_Count"] + data["Denominator"]
+    data = data[['num', 'den']]
+
+    return data

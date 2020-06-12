@@ -10,6 +10,7 @@ from __future__ import absolute_import
 
 from . import config
 from . import geo_maps
+from . import load_data
 from . import run
 from . import sensor
 from . import smooth

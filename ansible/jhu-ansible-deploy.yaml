@@ -13,8 +13,8 @@
 
     - name: Mutate Python bin path used in venv.
       file:
-        src: "{{ indicator_runtime_dir }}/{{ indicator }}/env/bin/python"
-        dest: "{{ pyenv_python_path }}"
+        src: "{{ pyenv_python_path }}"
+        dest: "{{ indicator_runtime_dir }}/{{ indicator }}/env/bin/python"
         owner: automation
         group: automation
         state: link

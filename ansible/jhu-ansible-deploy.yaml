@@ -22,7 +22,7 @@
     - name: Place production config json file.
       copy:
         src: files/{{ indicator }}-params.json.template.prod
-        dest: "{{ indicator_runtime_dir }}/{{ indicator }}"
+        dest: "{{ indicator_runtime_dir }}/{{ indicator }}/params.json.template"
         owner: automation
         group: automation
       

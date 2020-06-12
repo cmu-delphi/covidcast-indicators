@@ -27,10 +27,10 @@ def run_module():
     # the filenames are expected to be in the format:
     # EMR: "ICUE_CMB_INPATIENT_DDMMYYYY.csv.gz"
     # CLAIMS: "EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
-    if params["end_date"] == "":
+    if params["drop_date"] == "":
         dropdate_emr = str(
             datetime.strptime(
-                Path(params["input_emr_file"]).name.split("_")[3], "%d%m%Y"
+                Path(params["input_emr_file"]).name.split("_")[3].split(".")[0], "%d%m%Y"
             ).date()
         )
         dropdate_claims = str(

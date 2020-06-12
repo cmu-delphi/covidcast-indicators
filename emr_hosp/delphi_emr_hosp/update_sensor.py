@@ -68,17 +68,16 @@ def write_to_csv(output_dict, out_name, output_path="."):
 
 
 def update_sensor(
-    emr_filepath,
-    claims_filepath,
-    outpath,
-    staticpath,
-    startdate,
-    enddate,
-    dropdate,
-    geo,
-    parallel,
-    weekday
-):
+        emr_filepath,
+        claims_filepath,
+        outpath,
+        staticpath,
+        startdate,
+        enddate,
+        dropdate,
+        geo,
+        parallel,
+        weekday):
     """Generate sensor values, and write to csv format.
 
     Args:
@@ -96,9 +95,8 @@ def update_sensor(
 
     # handle dates
     startdate, enddate, dropdate = map(pd.to_datetime, [startdate, enddate, dropdate])
-    assert (
-        startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
-    ), f"not enough data to produce estimates starting {startdate}"
+    assert (startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
+            ), f"not enough data to produce estimates starting {startdate}"
     assert startdate < enddate, "start date >= end date"
     assert enddate <= dropdate, "end date > drop date"
 
@@ -152,9 +150,8 @@ def update_sensor(
     print(len(unique_geo_ids), len(fit_dates))
     multiindex = pd.MultiIndex.from_product((unique_geo_ids, fit_dates),
                                             names=[geo, "date"])
-    assert (
-        len(multiindex) <= (Constants.MAX_GEO[geo] * len(fit_dates))
-    ), "more loc-date pairs than maximum number of geographies x number of dates"
+    assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(fit_dates))
+            ), "more loc-date pairs than maximum number of geographies x number of dates"
 
     # fill dataframe with missing dates using 0
     data_frame = data_frame.reindex(multiindex, fill_value=0)

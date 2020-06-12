@@ -5,10 +5,6 @@ Author: Maria Jahja
 Created: 2020-06-12
 """
 
-# standard packages
-import logging
-from datetime import timedelta
-
 # third party
 import pandas as pd
 
@@ -39,8 +35,8 @@ def load_emr_data(emr_filepath, dropdate, base_geo):
 
     # restrict to start and end date
     emr_data = emr_data[
-        (emr_data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (
-            emr_data[Config.DATE_COL] < dropdate)
+        (emr_data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) &
+        (emr_data[Config.DATE_COL] < dropdate)
         ]
 
     assert (
@@ -77,8 +73,8 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
 
     # restrict to start and end date
     claims_data = claims_data[
-        (claims_data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) & (
-            claims_data[Config.DATE_COL] < dropdate)
+        (claims_data[Config.DATE_COL] >= Config.FIRST_DATA_DATE) &
+        (claims_data[Config.DATE_COL] < dropdate)
         ]
 
     assert (

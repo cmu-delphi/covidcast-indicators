@@ -18,6 +18,9 @@ from .update_sensor import update_sensor
 
 
 def run_module():
+    """Run the delphi_emr_hosp module.
+    """
+
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)

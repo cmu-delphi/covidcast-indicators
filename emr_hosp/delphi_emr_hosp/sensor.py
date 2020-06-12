@@ -24,10 +24,10 @@ class EMRHospSensor:
 
     @staticmethod
     def backfill(
-        num,
-        den,
-        k=Config.MAX_BACKFILL_WINDOW,
-        min_visits_to_fill=Config.MIN_CUM_VISITS):
+            num,
+            den,
+            k=Config.MAX_BACKFILL_WINDOW,
+            min_visits_to_fill=Config.MIN_CUM_VISITS):
         """
         Adjust for backfill (retroactively added observations) by using a
          variable length smoother, which starts from the RHS and moves
@@ -106,15 +106,15 @@ class EMRHospSensor:
         smoothed_total_counts = np.clip(left_gauss_linear(total_counts.values), 0, None)
         smoothed_total_visits = np.clip(left_gauss_linear(total_visits.values), 0, None)
         smoothed_total_rates = (
-            (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
+                (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
         )
 
         # checks - due to the smoother, the first value will be NA
         assert (
-            np.sum(np.isnan(smoothed_total_rates[1:]) == True) == 0
+                np.sum(np.isnan(smoothed_total_rates[1:]) == True) == 0
         ), "NAs in rate calculation"
         assert (
-            np.sum(smoothed_total_rates[1:] <= 0) == 0
+                np.sum(smoothed_total_rates[1:] <= 0) == 0
         ), f"0 or negative value, {geo_id}"
 
         # cut off at sensor indexes

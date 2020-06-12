@@ -75,13 +75,11 @@ class Weekday:
         b = cp.Variable((X.shape[1]))
         lmbda = cp.Parameter(nonneg=True)
         lmbda.value = 10  # Hard-coded for now, seems robust to changes
-        ll = (
-                 cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms))
-                 - cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
-             ) / X.shape[0]
-        penalty = (
-            lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
-        )  # L-1 Norm of third differences, rewards smoothness
+        ll = (cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms))
+              - cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
+              ) / X.shape[0]
+        penalty = (lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
+                   )  # L-1 Norm of third differences, rewards smoothness
         try:
             prob = cp.Problem(cp.Minimize(-ll + lmbda * penalty))
             _ = prob.solve()

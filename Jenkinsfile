@@ -5,7 +5,7 @@ pipeline {
     agent any
 
     environment {
-        INDICATOR = "${env.BRANCH_NAME}"
+        INDICATOR = 'env.BRANCH_NAME' - 'deploy-'
     }
 
     stages {
@@ -14,7 +14,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-build.sh"
+                sh "jenkins/INDICATOR-jenkins-build.sh"
             }
         }
 
@@ -23,7 +23,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-test.sh"
+                sh "jenkins/INDICATOR-jenkins-test.sh"
             }
         }
         
@@ -32,7 +32,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-package.sh"
+                sh "jenkins/INDICATOR-jenkins-package.sh"
             }
         }
 

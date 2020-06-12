@@ -4,43 +4,44 @@
 pipeline {
     agent any
 
+    environment {
+        INDICATOR = "${env.BRANCH_NAME}"
+    }
+
     stages {
         stage('Build') {
             when {
-                branch 'bgc/deploy-test'
-                // branch 'master'
+                branch "deploy-*"
             }
             steps {
-                sh 'jenkins/jhu-jenkins-build.sh'
+                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-build.sh"
             }
         }
 
         stage('Test') {
             when {
-                branch 'bgc/deploy-test'
-                // branch 'master'
+                branch "deploy-*"
             }
             steps {
-                sh 'jenkins/jhu-jenkins-test.sh'
+                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-test.sh"
             }
         }
         
         stage('Package') {
             when {
-                branch 'bgc/deploy-test'
-                // branch 'master'
+                branch "deploy-*"
             }
             steps {
-                sh 'jenkins/jhu-jenkins-package.sh'
+                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-package.sh"
             }
         }
 
         stage('Deploy') {
             when {
-                branch 'bgc/deploy-test'
+                branch "deploy-*"
             }
             steps {
-                sh 'jenkins/jhu-jenkins-deploy.sh'
+                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-deploy.sh"
             }
         }
     }

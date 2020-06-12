@@ -41,7 +41,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/$(${INDICATOR} | tr -d "deploy-")-jenkins-deploy.sh"
+                sh "jenkins/INDICATOR-jenkins-deploy.sh"
             }
         }
     }

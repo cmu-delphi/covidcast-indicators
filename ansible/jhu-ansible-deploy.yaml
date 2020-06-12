@@ -9,7 +9,7 @@
         src: "{{ jenkins_artifact_dir }}/{{ package }}"
         dest: "{{ indicator_runtime_dir }}"
         owner: automation
-        mode: preserve
+        mode: "preserve"
 
     # - name: Place production config json file.
       

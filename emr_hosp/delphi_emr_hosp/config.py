@@ -70,4 +70,4 @@ class Constants:
     MAX_GEO = {"county": NUM_COUNTIES,
                "hrr": NUM_HRRS,
                "msa": NUM_MSAS,
-               "states": NUM_STATES}
+               "state": NUM_STATES}

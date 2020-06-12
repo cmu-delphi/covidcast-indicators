@@ -120,8 +120,8 @@ def update_sensor(
 
     # load data
     base_geo = "hrr" if geo == "hrr" else "fips"
-    emr_data = load_emr_data(emr_filepath, startdate, dropdate, base_geo)
-    claims_data = load_claims_data(claims_filepath, startdate, dropdate, base_geo)
+    emr_data = load_emr_data(emr_filepath, dropdate, base_geo)
+    claims_data = load_claims_data(claims_filepath, dropdate, base_geo)
 
     # merge data
     data = emr_data.merge(claims_data, how="outer", left_index=True, right_index=True)
@@ -149,10 +149,11 @@ def update_sensor(
     unique_geo_ids = list(sorted(np.unique(data_frame.index.get_level_values(0))))
 
     # for each location, fill in all missing dates with 0 values
+    print(len(unique_geo_ids), len(fit_dates))
     multiindex = pd.MultiIndex.from_product((unique_geo_ids, fit_dates),
                                             names=[geo, "date"])
     assert (
-        len(multiindex) < (Constants.MAX_GEO[geo] * len(fit_dates))
+        len(multiindex) <= (Constants.MAX_GEO[geo] * len(fit_dates))
     ), "more loc-date pairs than maximum number of geographies x number of dates"
 
     # fill dataframe with missing dates using 0

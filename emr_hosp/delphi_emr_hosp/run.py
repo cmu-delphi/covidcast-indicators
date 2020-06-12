@@ -21,8 +21,6 @@ def run_module():
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)
-
-    ## start date will be Jan 1
     logging.info("start date:\t%s", params["start_date"])
 
     ## get end date from input file
@@ -30,13 +28,21 @@ def run_module():
     # EMR: "ICUE_CMB_INPATIENT_DDMMYYYY.csv.gz"
     # CLAIMS: "EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
     if params["end_date"] == "":
-        dropdate = str(
+        dropdate_emr = str(
             datetime.strptime(
-                Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
+                Path(params["input_emr_file"]).name.split("_")[3], "%d%m%Y"
             ).date()
         )
+        dropdate_claims = str(
+            datetime.strptime(
+                Path(params["input_claims_file"]).name.split("_")[3], "%d%m%Y"
+            ).date()
+        )
+
+        assert dropdate_emr == dropdate_claims, "different drop dates for data steams"
+        dropdate = dropdate_claims
     else:
-        dropdate = params["end_date"]
+        dropdate = params["drop_date"]
 
     logging.info("drop date:\t%s", dropdate)
 
@@ -46,10 +52,11 @@ def run_module():
     ## print out other vars
     logging.info("outpath:\t%s", params["export_dir"])
     logging.info("parallel:\t%s", params["parallel"])
+    logging.info("weekday:\t%s", params["weekday"])
 
     ## start generating
     for geo in geos:
-        for weekday in [True, False]:
+        for weekday in params["weekday"]:
             if weekday:
                 logging.info("starting %s, weekday adj", geo)
             else:
@@ -60,6 +67,7 @@ def run_module():
                 params["export_dir"],
                 params["static_file_dir"],
                 params["start_date"],
+                params["end_date"],
                 dropdate,
                 geo,
                 params["parallel"],

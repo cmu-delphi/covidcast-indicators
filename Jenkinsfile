@@ -16,7 +16,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/INDICATOR-jenkins-build.sh"
+                sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
             }
         }
 
@@ -25,7 +25,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/INDICATOR-jenkins-test.sh"
+                sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
             }
         }
         
@@ -34,7 +34,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/INDICATOR-jenkins-package.sh"
+                sh "jenkins/${env.INDICATOR}-jenkins-package.sh"
             }
         }
 
@@ -43,7 +43,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/INDICATOR-jenkins-deploy.sh"
+                sh "jenkins/${env.INDICATOR}-jenkins-deploy.sh"
             }
         }
     }

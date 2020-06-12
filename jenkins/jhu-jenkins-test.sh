@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# JHU indicator Jenkins tests
+# JHU indicator: Jenkins test
 #
 
 set -exo pipefail
 source ~/.bash_profile
 
-indicator="jhu"
-
 #
 # Test
 #
+
+indicator="jhu"
 
 cd "${WORKSPACE}/${indicator}" || exit
 

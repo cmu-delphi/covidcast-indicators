@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 #
-# JHU indicator Jenkins deploy
+# JHU indicator: Jenkins deploy
 #
 
 set -exo pipefail
 source ~/.bash_profile
 
-indicator="jhu"
-
 #
 # Deploy
 #
+
+indicator="jhu"
 
 cd "${WORKSPACE}/ansible" || exit
 

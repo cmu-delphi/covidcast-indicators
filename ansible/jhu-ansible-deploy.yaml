@@ -4,12 +4,20 @@
   vars_files:
     - vars.yaml
   tasks:
-    - name: Copy and unarchive the package into the indicators runtime host directory
+    - name: Copy and unarchive the package into the indicators runtime host directory.
       unarchive:
         src: "{{ jenkins_artifact_dir }}/{{ package }}"
         dest: "{{ indicator_runtime_dir }}"
         owner: automation
         group: automation
+
+    - name: Mutate Python bin path used in venv.
+      file:
+        src: "{{ indicator_runtime_dir }}/{{ indicator }}/env/bin/python"
+        dest: "{{ pyenv_python_path }}"
+        owner: automation
+        group: automation
+        state: link
 
     # - name: Place production config json file.
       

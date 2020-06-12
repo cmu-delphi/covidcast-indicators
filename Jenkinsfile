@@ -5,7 +5,7 @@ pipeline {
     agent any
 
     environment {
-        INDICATOR = 'env.BRANCH_NAME' - 'deploy-'
+        INDICATOR = env.BRANCH_NAME.replaceALL("\deploy-\s","")
     }
 
     stages {

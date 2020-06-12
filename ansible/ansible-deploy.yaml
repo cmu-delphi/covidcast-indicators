@@ -26,5 +26,6 @@
         owner: automation
         group: automation
       
-# Mutate json config
+# TODO:
 # Run! Do we add this here as well? Maybe better to schedule it via automation?
+# We can make something and keep it in this repo for easy updating

@@ -19,7 +19,12 @@
         group: automation
         state: link
 
-    # - name: Place production config json file.
+    - name: Place production config json file.
+      copy:
+        src: files/{{ indicator }}-params.json.template.prod
+        dest: "{{ indicator_runtime_dir }}/{{ indicator }}"
+        owner: automation
+        group: automation
       
 # Mutate json config
 # Run! Do we add this here as well? Maybe better to schedule it via automation?

@@ -23,6 +23,8 @@ def load_emr_data(emr_filepath, dropdate, base_geo):
     Returns:
       cleaned emr dataframe
     """
+    assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
+
     emr_data = pd.read_csv(
         emr_filepath,
         usecols=Config.EMR_DTYPES.keys(),
@@ -61,6 +63,8 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     Returns:
       cleaned claims dataframe
     """
+    assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
+
     claims_data = pd.read_csv(
         claims_filepath,
         usecols=Config.CLAIMS_DTYPES.keys(),

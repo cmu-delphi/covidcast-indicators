@@ -1,7 +1,6 @@
 ---
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"
-# indicator_code_dir: "/home/automation/driver/delphi/covidcast-indicators"
-indicator_runtime_dir: "/tmp"
-package: "{{ indicator }}.tar.gz"
+indicator_runtime_dir: "/home/automation/driver/delphi/covidcast-indicators"
+package: "{{ indicator }}.tar.gz" # This is passed in the Ansible invocation.
 python_version: "3.8.2"
 pyenv_python_path: "/home/automation/.pyenv/versions/{{ python_version }}/bin/python"

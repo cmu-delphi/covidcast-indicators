@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Build
 #
 
-#indicator="jhu"
+indicator="jhu"
 
-cd "${WORKSPACE}/${INDICATOR}" || exit
+cd "${WORKSPACE}/${indicator}" || exit
 
 # Set up venv
 python -m venv env

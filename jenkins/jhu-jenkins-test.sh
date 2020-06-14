@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Test
 #
 
-#indicator="jhu"
+indicator="jhu"
 
-cd "${WORKSPACE}/${INDICATOR}" || exit
+cd "${WORKSPACE}/${indicator}" || exit
 
 # Linter
 env/bin/pylint delphi_jhu

@@ -33,7 +33,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/${env.INDICATOR}-jenkins-package.sh"
+                sh "jenkins/jenkins-package.sh"
             }
         }
 
@@ -42,7 +42,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/${env.INDICATOR}-jenkins-deploy.sh"
+                sh "jenkins/jenkins-deploy.sh"
             }
         }
     }

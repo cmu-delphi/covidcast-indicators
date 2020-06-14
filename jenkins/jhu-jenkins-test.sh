@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# JHU indicator: Jenkins test
+# JHU: Jenkins test
 #
 
 set -exo pipefail
@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Test
 #
 
-indicator="jhu"
+local_indicator="jhu"
 
-cd "${WORKSPACE}/${indicator}" || exit
+cd "${WORKSPACE}/${local_indicator}" || exit
 
 # Linter
 env/bin/pylint delphi_jhu

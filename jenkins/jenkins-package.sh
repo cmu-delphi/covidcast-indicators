@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# JHU indicator: Jenkins package
+# Jenkins package
 #
 
 set -exo pipefail
@@ -9,8 +9,6 @@ source ~/.bash_profile
 #
 # Package
 #
-
-#indicator="jhu"
 
 cd "${WORKSPACE}" || exit
 

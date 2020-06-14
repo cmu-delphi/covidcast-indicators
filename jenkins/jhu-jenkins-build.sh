@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# JHU indicator: Jenkins build
+# JHU: Jenkins build
 #
 
 set -exo pipefail
@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Build
 #
 
-indicator="jhu"
+local_indicator="jhu"
 
-cd "${WORKSPACE}/${indicator}" || exit
+cd "${WORKSPACE}/${local_indicator}" || exit
 
 # Set up venv
 python -m venv env

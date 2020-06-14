@@ -1,6 +1,5 @@
 ---
-- hosts: all
-  # become: yes
+- hosts: runtime_host
   vars_files:
     - vars.yaml
   tasks:

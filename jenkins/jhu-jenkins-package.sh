@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Package
 #
 
-indicator="jhu"
+#indicator="jhu"
 
 cd "${WORKSPACE}" || exit
 
 # Create .tar.gz for deployment
- tar -czvf "${JENKINS_HOME}/artifacts/${indicator}.tar.gz" "${indicator}"
+ tar -czvf "${JENKINS_HOME}/artifacts/${INDICATOR}.tar.gz" "${INDICATOR}"

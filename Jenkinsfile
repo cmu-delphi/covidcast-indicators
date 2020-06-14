@@ -5,8 +5,7 @@ pipeline {
     agent any
 
     environment {
-        // Find the branch name and remove `deploy-`. We are left with the
-        // indicator name that is used to reference the wrapper scripts.
+        // Get the indicator name.
         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
     }
 

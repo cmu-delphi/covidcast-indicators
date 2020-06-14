@@ -10,9 +10,9 @@ source ~/.bash_profile
 # Deploy
 #
 
-indicator="jhu"
+#indicator="jhu"
 
 cd "${WORKSPACE}/ansible" || exit
 
 # Ansible!
-ansible-playbook ansible-deploy.yaml --extra-vars "indicator=${indicator}" -i inventory
+ansible-playbook ansible-deploy.yaml --extra-vars "indicator=${INDICATOR}" -i inventory

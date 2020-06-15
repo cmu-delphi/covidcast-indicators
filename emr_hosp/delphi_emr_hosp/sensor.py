@@ -105,6 +105,12 @@ class EMRHospSensor:
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
         smoothed_total_counts = np.clip(left_gauss_linear(total_counts.values), 0, None)
         smoothed_total_visits = np.clip(left_gauss_linear(total_visits.values), 0, None)
+
+        # in smoothing, the numerator may have become more than the denominator
+        # simple fix is to clip the max values elementwise to the denominator (note that
+        # this has only been observed in synthetic data)
+        smoothed_total_counts = np.clip(smoothed_total_counts, 0, smoothed_total_visits)
+
         smoothed_total_rates = (
                 (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
         )

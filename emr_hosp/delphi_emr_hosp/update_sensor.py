@@ -56,7 +56,8 @@ def write_to_csv(output_dict, out_name, output_path="."):
                 if all_include[geo_id][i]:
                     assert not np.isnan(sensor), "value for included sensor is nan"
                     assert not np.isnan(se), "se for included sensor is nan"
-                    assert sensor < 90, f"value suspiciously high, {geo_id}: {sensor}"
+                    if sensor > 90:
+                        logging.warning(f"value suspiciously high, {geo_id}: {sensor}")
                     assert se < 5, f"se suspiciously high, {geo_id}: {se}"
 
                     # for privacy reasons we will not report the standard error
@@ -136,7 +137,6 @@ def update_sensor(
     unique_geo_ids = list(sorted(np.unique(data_frame.index.get_level_values(0))))
 
     # for each location, fill in all missing dates with 0 values
-    print(len(unique_geo_ids), len(fit_dates))
     multiindex = pd.MultiIndex.from_product((unique_geo_ids, fit_dates),
                                             names=[geo, "date"])
     assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(fit_dates))

@@ -118,16 +118,10 @@ class TestWriteToCsv:
         with pytest.raises(AssertionError):
             write_to_csv(res2, "name_of_signal", td.name)
 
-        # large sensor value
+        # large se value
         res3 = deepcopy(res0)
-        res3["rates"]["a"][0] = 95
+        res3["se"]["a"][0] = 10
         with pytest.raises(AssertionError):
             write_to_csv(res3, "name_of_signal", td.name)
-
-        # large se value
-        res4 = deepcopy(res0)
-        res4["se"]["a"][0] = 10
-        with pytest.raises(AssertionError):
-            write_to_csv(res4, "name_of_signal", td.name)
 
         td.cleanup()

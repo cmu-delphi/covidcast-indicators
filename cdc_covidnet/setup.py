@@ -12,7 +12,7 @@ required = [
 ]
 
 setup(
-    name="delphi_cdc_covidnet/",
+    name="delphi_cdc_covidnet",
     version="0.1.0",
     description="Parse information for the CDC COVID-NET indicator",
     author="Eu Jing Chua",

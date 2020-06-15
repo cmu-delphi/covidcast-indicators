@@ -12,5 +12,6 @@ from . import run
 from . import config
 from . import geo_maps
 from . import update_sensor
+from . import covidnet
 
 __version__ = "0.1.0"

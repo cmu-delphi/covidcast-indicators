@@ -81,6 +81,7 @@ def update_sensor(state_files, mmwr_info, output_path, static_path, start_date, 
     hosp_df["sample_size"] = np.nan
 
     # Write results
-    write_to_csv(hosp_df, output_path, "covidnet")
+    out_name = "wip_covidnet"
+    write_to_csv(hosp_df, out_name, output_path)
 
     return hosp_df

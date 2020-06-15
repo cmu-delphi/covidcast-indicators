@@ -135,8 +135,15 @@ class CovidNet:
 
         # Download all state files
         if parallel:
-            with Pool(min(10, cpu_count())) as pool:
+            # Originally used context-manager API, but does not work well with pytest-cov
+            # https://pytest-cov.readthedocs.io/en/latest/subprocess-support.html#if-you-use-multiprocessing-pool
+            # However seems to still produce .coverage.<HOSTNAME>... files on python 3.8 at least
+            pool = Pool(min(10, cpu_count()))
+            try:
                 pool.starmap(CovidNet.download_hosp_data, state_args)
+            finally:
+                pool.close()
+                pool.join()
         else:
             for args in state_args:
                 CovidNet.download_hosp_data(*args)

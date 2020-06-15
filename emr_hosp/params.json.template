@@ -1,11 +1,11 @@
 {
   "static_file_dir": "./static",
   "export_dir": "./receiving",
-  "input_emr_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
-  "input_claims_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
+  "input_emr_file": "./tests/test_data/SYNICUE_CMB_INPATIENT_11062020.csv.gz",
+  "input_claims_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
   "start_date": "2020-02-01",
-  "end_date": "2020-05-18",
-  "drop_date": "2020-05-18",
+  "end_date": "2020-02-05",
+  "drop_date": "",
   "parallel": false,
   "weekday": [true, false]
 }

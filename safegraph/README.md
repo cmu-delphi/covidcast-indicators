@@ -19,6 +19,13 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
+One must also install the
+[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html).
+Please refer to OS-specific instructions to install this command line
+interface, and verify that it is installed by calling `which aws`.
+If `aws` is not installed prior to running the pipeline, it will raise
+a `FileNotFoundError`.
+
 All of the user-changable parameters are stored in `params.json`. To execute
 the module and produce the output datasets (by default, in `receiving`), run
 the following:

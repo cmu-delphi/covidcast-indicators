@@ -14,7 +14,7 @@ from multiprocessing import cpu_count, Pool
 import requests
 import pandas as pd
 
-from .config import Config
+from .api_config import APIConfig
 
 class CovidNet:
     """
@@ -23,7 +23,7 @@ class CovidNet:
 
     @staticmethod
     def download_mappings(
-            url: str = Config.API_INIT_URL,
+            url: str = APIConfig.INIT_URL,
             outfile: str = "./init.json"):
         """
         Downloads the JSON file with all mappings (age, mmwr, catchments etc.) to disk
@@ -60,12 +60,12 @@ class CovidNet:
         catchment_info = pd.DataFrame.from_records(data["catchments"])
 
         # MMWR date mappings
-        mmwr_info = pd.DataFrame.from_records(data["mmwr"], columns=Config.API_MMWR_COLS)
+        mmwr_info = pd.DataFrame.from_records(data["mmwr"], columns=APIConfig.MMWR_COLS)
         mmwr_info["weekstart"] = pd.to_datetime(mmwr_info["weekstart"])
         mmwr_info["weekend"] = pd.to_datetime(mmwr_info["weekend"])
 
         # Age mappings
-        age_info = pd.DataFrame.from_records(data["ages"], columns=Config.API_AGE_COLS)
+        age_info = pd.DataFrame.from_records(data["ages"], columns=APIConfig.AGE_COLS)
 
         return catchment_info, mmwr_info, age_info
 
@@ -74,7 +74,7 @@ class CovidNet:
             network_id: int, catchment_id: str,
             age_groups: List[int], seasons: List[int],
             outfile: str,
-            url: str = Config.API_HOSP_URL):
+            url: str = APIConfig.HOSP_URL):
         """
         Downloads hospitalization data to disk for a particular network or state
         Refer to catchment_info for network & catchment ID mappings
@@ -134,7 +134,7 @@ class CovidNet:
         for nid, cid in args.itertuples(index=False, name=None):
             outfile = os.path.join(cache_path, f"networkid_{nid}_catchmentid_{cid}.json")
             state_files.append(outfile)
-            args = (nid, cid, age_groups, Config.API_SEASONS, outfile, Config.API_HOSP_URL)
+            args = (nid, cid, age_groups, APIConfig.SEASONS, outfile, APIConfig.HOSP_URL)
             state_args.append(args)
 
         # Download all state files
@@ -174,7 +174,7 @@ class CovidNet:
                 data = json.load(f_json)["datadownload"]
 
             # Make dataframe out of json
-            state_df = pd.DataFrame.from_records(data).astype(Config.API_HOSP_DTYPES)
+            state_df = pd.DataFrame.from_records(data).astype(APIConfig.HOSP_DTYPES)
             dfs.append(state_df)
 
         # Combine dataframes

@@ -16,7 +16,15 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
-All of the user-changable parameters are stored in `params.json`. To execute
+All of the user-changable parameters are stored in `params.json`.
+
+The module has to request for each participating state's hospitalization data
+from the COVID-NET API individually. When `parallel` is set to `true` in
+`params.json`, the module makes these requests in parallel (up to 10 at once)
+instead of sequentially. This should make downloading all hospitalization data
+faster, especially for larger number of participating states.
+
+To execute
 the module and produce the output datasets (by default, in `receiving`), run
 the following:
 

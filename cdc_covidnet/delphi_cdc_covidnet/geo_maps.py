@@ -9,7 +9,7 @@ from os.path import join
 
 import pandas as pd
 
-from .config import Config
+from .api_config import APIConfig
 
 class GeoMaps:
     """
@@ -40,6 +40,6 @@ class GeoMaps:
         state_map = state_map["state_id"]
 
         # Map state name to state two-letter abbreviation
-        data[Config.STATE_COL] = data[Config.STATE_COL].map(state_map)
+        data[APIConfig.STATE_COL] = data[APIConfig.STATE_COL].map(state_map)
 
         return data

@@ -12,7 +12,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from .config import Config
+from .api_config import APIConfig
 from .covidnet import CovidNet
 from .geo_maps import GeoMaps
 
@@ -20,7 +20,7 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """
     Write sensor values to csv.
     The dataframe be indexed by (date, geo_id), with columns
-    values, se, direction, sample_size
+    values, se, sample_size
 
     Args:
         data: pd.DataFrame to write to csvs
@@ -31,12 +31,18 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     # Each date is a csv file
     dates = data.index.get_level_values("date").unique()
     for date in dates:
-
         # Each csv file is indexed by geo_id
         sub_df = data.loc[date, :]
-        filename = join(output_path, "{}_state_{}.csv".format(
-            date.strftime("%Y%m%d"), out_name))
-        sub_df.to_csv(filename, na_rep="NA")
+
+        # There should only be one epiweek number for this week
+        assert len(sub_df["epiweek"].unique()) == 1
+        epiweek = int(sub_df["epiweek"].unique()[0])
+
+        filename = join(output_path, "{}{:02}_state_{}.csv".format(
+            date.strftime("%Y"), epiweek, out_name))
+
+        # Drop extra epiweek column before writing to csv
+        sub_df.drop("epiweek", axis=1).to_csv(filename, na_rep="NA")
 
 
 def update_sensor(
@@ -66,7 +72,8 @@ def update_sensor(
                             right_on=["year", "weeknumber"])
 
     # Select relevant columns and standardize naming
-    hosp_df = hosp_df.loc[:, Config.HOSP_RENAME_COLS.keys()].rename(columns=Config.HOSP_RENAME_COLS)
+    hosp_df = hosp_df.loc[:, APIConfig.HOSP_RENAME_COLS.keys()]\
+        .rename(columns=APIConfig.HOSP_RENAME_COLS)
 
     # Restrict to start and end date
     hosp_df = hosp_df[
@@ -83,7 +90,6 @@ def update_sensor(
 
     # Fill in remaining expected columns
     hosp_df["se"] = np.nan
-    hosp_df["direction"] = np.nan
     hosp_df["sample_size"] = np.nan
 
     # Write results

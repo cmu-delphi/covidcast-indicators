@@ -6,6 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import glob
 import multiprocessing as mp
+import subprocess
 from datetime import datetime
 from functools import partial
 
@@ -34,6 +35,10 @@ def run_module():
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
     n_core = int(params["n_core"])
+    aws_access_key_id = params["aws_access_key_id"]
+    aws_secret_access_key = params["aws_secret_access_key"]
+    aws_default_region = params["aws_default_region"]
+    aws_endpoint = params["aws_endpoint"]
 
     process_file = partial(process,
             signals=SIGNALS,
@@ -43,13 +48,15 @@ def run_module():
 
     # Update raw data
     subprocess.run(
-            'aws s3 sync s3://sg-c19-response/social-distancing/v2/'
-            f'{raw_data_dir} --endpoint {aws_endpoint}',
+            f'aws s3 sync s3://sg-c19-response/social-distancing/v2/ '
+            f'{raw_data_dir}/social-distancing/ --endpoint {aws_endpoint}',
             env={
                 'AWS_ACCESS_KEY_ID': aws_access_key_id,
                 'AWS_SECRET_ACCESS_KEY': aws_secret_access_key,
                 'AWS_DEFAULT_REGION': aws_default_region,
-            })
+            },
+            shell=True,
+        )
 
     files = glob.glob(f'{raw_data_dir}/social-distancing/**/*.csv.gz',
             recursive=True)

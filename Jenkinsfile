@@ -13,7 +13,7 @@ pipeline {
         stage('Build') {
             when {
                 // branch "deploy-*"
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
@@ -23,7 +23,7 @@ pipeline {
         stage('Test') {
             when {
                 // branch "deploy-*"
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
@@ -33,7 +33,7 @@ pipeline {
         stage('Package') {
             when {
                 // branch "deploy-*"
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/jenkins-package.sh"

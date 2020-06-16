@@ -1,6 +1,6 @@
 {
   "static_file_dir": "./static",
-  "raw_data_dir": "./raw_data/",
+  "raw_data_dir": "/mnt/data/safegraph/",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "n_core": "12",

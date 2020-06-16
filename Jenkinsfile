@@ -12,7 +12,8 @@ pipeline {
     stages {
         stage('Build') {
             when {
-                branch "deploy-*"
+                // branch "deploy-*"
+                changeRequest branch "deploy-*"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
@@ -21,7 +22,8 @@ pipeline {
 
         stage('Test') {
             when {
-                branch "deploy-*"
+                // branch "deploy-*"
+                changeRequest branch "deploy-*"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
@@ -30,7 +32,8 @@ pipeline {
         
         stage('Package') {
             when {
-                branch "deploy-*"
+                // branch "deploy-*"
+                changeRequest branch "deploy-*"
             }
             steps {
                 sh "jenkins/jenkins-package.sh"

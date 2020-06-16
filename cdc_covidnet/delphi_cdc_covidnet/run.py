@@ -29,7 +29,7 @@ def run_module():
     if params["end_date"] == "":
         end_date = datetime.now()
     else:
-        end_date = params["end_date"]
+        end_date = datetime.strptime(params["end_date"], "%Y-%m-%d")
 
     logging.info("start date:\t%s", start_date.date())
     logging.info("end date:\t%s", end_date.date())
@@ -54,7 +54,7 @@ def run_module():
         mmwr_info,
         params["export_dir"],
         params["static_file_dir"],
-        params["start_date"],
+        start_date,
         end_date)
 
     logging.info("finished all")

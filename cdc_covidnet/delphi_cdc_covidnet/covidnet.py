@@ -8,6 +8,7 @@ Created: 2020-06-12
 import json
 import logging
 import os
+from typing import Tuple, List
 from multiprocessing import cpu_count, Pool
 
 import requests
@@ -22,8 +23,8 @@ class CovidNet:
 
     @staticmethod
     def download_mappings(
-            url=Config.API_INIT_URL,
-            outfile="./init.json"):
+            url: str = Config.API_INIT_URL,
+            outfile: str = "./init.json"):
         """
         Downloads the JSON file with all mappings (age, mmwr, catchments etc.) to disk
 
@@ -38,7 +39,7 @@ class CovidNet:
             json.dump(data, f_json)
 
     @staticmethod
-    def read_mappings(infile):
+    def read_mappings(infile: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
         Reads the mappings JSON file from disk to produce formatted
         pd.DataFrame for relevant mappings
@@ -70,10 +71,10 @@ class CovidNet:
 
     @staticmethod
     def download_hosp_data(
-            network_id, catchment_id,
-            age_groups, seasons,
-            outfile,
-            url=Config.API_HOSP_URL):
+            network_id: int, catchment_id: str,
+            age_groups: List[int], seasons: List[int],
+            outfile: str,
+            url: str = Config.API_HOSP_URL):
         """
         Downloads hospitalization data to disk for a particular network or state
         Refer to catchment_info for network & catchment ID mappings
@@ -82,7 +83,7 @@ class CovidNet:
 
         Args:
             network_id: Network ID of intended network / state
-            catchment_id: Catchment ID of intended network / state
+            catchment_id: Catchment ID of intended network / state.
             age_groups: List of age-group IDs to request for
             seasons: List of season IDs to request for
             outfile: JSON file to write the results to
@@ -92,6 +93,7 @@ class CovidNet:
         download_params = {
             "AppVersion": "Public",
             "networkid": network_id,
+            # Catchment_id are "numbers", but they represent it as a string
             "catchmentid": catchment_id,
             "seasons": [{"ID": season_id} for season_id in seasons],
             "agegroups": [{"ID": ag_id} for ag_id in age_groups]
@@ -102,7 +104,9 @@ class CovidNet:
             json.dump(data, f_json)
 
     @staticmethod
-    def download_all_hosp_data(mappings_file, cache_path, parallel=False):
+    def download_all_hosp_data(
+            mappings_file: str, cache_path: str, parallel: bool = False
+        ) -> List[str]:
         """
         Downloads hospitalization data for all states listed in the mappings JSON file to disk.
 
@@ -152,7 +156,7 @@ class CovidNet:
         return state_files
 
     @staticmethod
-    def read_all_hosp_data(state_files):
+    def read_all_hosp_data(state_files: List[str]) -> pd.DataFrame:
         """
         Read and combine hospitalization JSON files for each state into a pd.DataFrame
 

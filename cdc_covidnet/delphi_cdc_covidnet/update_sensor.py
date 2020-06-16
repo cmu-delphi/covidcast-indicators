@@ -5,15 +5,18 @@ Author: Eu Jing Chua
 Created: 2020-06-12
 """
 
+from datetime import datetime
 from os.path import join
+from typing import List
 
 import numpy as np
+import pandas as pd
 
 from .config import Config
 from .covidnet import CovidNet
 from .geo_maps import GeoMaps
 
-def write_to_csv(data, out_name, output_path):
+def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """
     Write sensor values to csv.
     The dataframe be indexed by (date, geo_id), with columns
@@ -36,7 +39,10 @@ def write_to_csv(data, out_name, output_path):
         sub_df.to_csv(filename, na_rep="NA")
 
 
-def update_sensor(state_files, mmwr_info, output_path, static_path, start_date, end_date):
+def update_sensor(
+        state_files: List[str], mmwr_info: pd.DataFrame,
+        output_path: str, static_path: str,
+        start_date: datetime, end_date: datetime) -> pd.DataFrame:
     """
     Generate sensor values, and write to csv format.
 

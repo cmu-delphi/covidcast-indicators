@@ -16,10 +16,10 @@ class GeoMaps:
     Class to handle any geography-related mappings
     """
 
-    def __init__(self, geo_filepath):
+    def __init__(self, geo_filepath: str):
         self.geo_filepath = geo_filepath
 
-    def state_name_to_abbr(self, data):
+    def state_name_to_abbr(self, data: pd.DataFrame) -> pd.DataFrame:
         """
         Converts the geo_id column from a full state name to the two-letter abbreviation
 

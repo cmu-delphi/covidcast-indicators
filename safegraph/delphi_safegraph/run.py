@@ -17,11 +17,11 @@ from delphi_utils import read_params
 from .process import process
 
 SIGNALS = [
-    # signal_name               wip
-    ('median_home_dwell_time',   True),
-    ('prop_completely_home',     True),
-    ('prop_full_time_work',      True),
-    ('prop_part_time_work',      True),
+    # signal_name                wip
+    ('median_home_dwell_time',   False),
+    ('prop_completely_home',     False),
+    ('prop_full_time_work',      False),
+    ('prop_part_time_work',      False),
 ]
 GEO_RESOLUTIONS = [
     'county',

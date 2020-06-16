@@ -70,7 +70,7 @@ class TestUpdateSensor:
             mmwr_info["weekstart"] = pd.to_datetime(mmwr_info["weekstart"])
             mmwr_info["weekend"] = pd.to_datetime(mmwr_info["weekend"])
 
-            # End date setup to be before last week of data
+            # End date set up to be before last week of data
             start_date = datetime(year=2020, month=3, day=7)
             end_date = datetime(year=2020, month=3, day=17)
 
@@ -86,30 +86,28 @@ class TestUpdateSensor:
             assert set(hosp_df.index.get_level_values("geo_id")) == {"CA", "PA"}
             assert set(hosp_df.index.get_level_values("date")) == \
                     {datetime(2020, 3, 7), datetime(2020, 3, 14)}
+            assert set(hosp_df["epiweek"].unique()) == {10, 11}
             geo_index = hosp_df.index.get_level_values("geo_id")
             assert np.allclose(hosp_df.loc[geo_index == "CA", "val"], [2.5, 3.5])
             assert np.allclose(hosp_df.loc[geo_index == "PA", "val"], [10.3, 11.2])
             assert pd.isna(hosp_df["se"]).all()
-            assert pd.isna(hosp_df["direction"]).all()
             assert pd.isna(hosp_df["sample_size"]).all()
 
             # Check actual files generated
-            expected_files = ["20200307_state_wip_covidnet.csv", "20200314_state_wip_covidnet.csv"]
+            expected_files = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
             expected_files = [join(temp_dir, exp_file) for exp_file in expected_files]
             for exp_file in expected_files:
                 assert exists(exp_file)
-            assert not exists("20200321_state_wip_covidnet.csv")
+            assert not exists("202012_state_wip_covidnet.csv")
 
             for i, exp_file in enumerate(expected_files):
                 data = pd.read_csv(exp_file)
-                print(data.dtypes)
-                assert (data.columns == ["geo_id", "val", "se", "direction", "sample_size"]).all()
+                assert (data.columns == ["geo_id", "val", "se", "sample_size"]).all()
 
                 # Check data for NA
                 assert (~pd.isna(data["geo_id"])).all()
                 assert (~pd.isna(data["val"])).all()
                 assert pd.isna(data["se"]).all()
-                assert pd.isna(data["direction"]).all()
                 assert pd.isna(data["sample_size"]).all()
 
                 # Check values are right

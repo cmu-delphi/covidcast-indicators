@@ -5,7 +5,7 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 from delphi_utils import read_params
-from delphi_cdc_covidnet.config import Config
+from delphi_cdc_covidnet.api_config import APIConfig
 from delphi_cdc_covidnet.covidnet import CovidNet
 
 params = read_params()
@@ -18,7 +18,7 @@ class TestCovidNet:
 
             # Perform the download
             CovidNet.download_mappings(
-                url=Config.API_INIT_URL,
+                url=APIConfig.INIT_URL,
                 outfile=init_file)
 
             assert exists(init_file)
@@ -57,7 +57,7 @@ class TestCovidNet:
         with TemporaryDirectory() as temp_dir:
             init_file = join(temp_dir, "init.json")
             CovidNet.download_mappings(
-                url=Config.API_INIT_URL,
+                url=APIConfig.INIT_URL,
                 outfile=init_file)
             catchment_info, _, _ = CovidNet.read_mappings(init_file)
 

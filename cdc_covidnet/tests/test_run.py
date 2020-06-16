@@ -7,7 +7,7 @@ from delphi_cdc_covidnet.run import run_module
 
 class TestRun:
     def test_match_old_to_new_output(self):
-        output_fnames = ["20200307_state_wip_covidnet.csv", "20200314_state_wip_covidnet.csv"]
+        output_fnames = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
 
         # Run the whole program to completion
         run_module()

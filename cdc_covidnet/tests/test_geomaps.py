@@ -5,7 +5,6 @@ from delphi_cdc_covidnet.config import Config
 from delphi_cdc_covidnet.geo_maps import GeoMaps
 
 params = read_params()
-CACHE_DIR = params["cache_dir"]
 
 class TestGeoMaps:
     geomap = GeoMaps(params["static_file_dir"])

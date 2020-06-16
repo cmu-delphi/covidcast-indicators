@@ -47,6 +47,9 @@ def run_module():
         )
 
     # Update raw data
+    # Why call subprocess rather than using a native Python client, e.g. boto3?
+    # Because boto3 does not have a simple rsync-like call that can perform
+    # the following behavior elegantly.
     subprocess.run(
             f'aws s3 sync s3://sg-c19-response/social-distancing/v2/ '
             f'{raw_data_dir}/social-distancing/ --endpoint {aws_endpoint}',

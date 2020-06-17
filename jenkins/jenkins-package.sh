@@ -13,4 +13,4 @@ source ~/.bash_profile
 cd "${WORKSPACE}" || exit
 
 # Create .tar.gz for deployment
- tar -czvf "${JENKINS_HOME}/artifacts/${INDICATOR}.tar.gz" "${INDICATOR}"
+tar -czvf "${JENKINS_HOME}/artifacts/${INDICATOR}.tar.gz" "${INDICATOR}"

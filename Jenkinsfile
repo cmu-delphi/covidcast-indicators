@@ -70,7 +70,7 @@ pipeline {
             }
             steps {
                 echo "${INDICATOR}" // DEBUG
-                sh "jenkins/jenkins-package.sh"
+                sh "jenkins/${INDICATOR}-jenkins-package.sh"
             }
         }
 
@@ -79,7 +79,7 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "jenkins/jenkins-deploy.sh"
+                sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
             }
         }
     }

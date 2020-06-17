@@ -69,6 +69,7 @@ pipeline {
                 changeRequest target: "deploy-jhu"
             }
             steps {
+                echo "${INDICATOR}" // DEBUG
                 sh "jenkins/jenkins-package.sh"
             }
         }

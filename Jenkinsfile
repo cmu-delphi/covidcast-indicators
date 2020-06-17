@@ -28,6 +28,9 @@ pipeline {
                 script {
                     // Get the indicator name.
                     INDICATOR = getIndicatorName
+                    if ( env.BRANCH_NAME.exists() ) {
+                        echo "exists!"
+                    }
                 } 
                 sh "env"
                 echo "${env.INDICATOR}"

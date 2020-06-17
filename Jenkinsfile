@@ -79,7 +79,6 @@ pipeline {
                 branch "deploy-*"
             }
             steps {
-                sh "env" // DEBUG
                 sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
             }
         }

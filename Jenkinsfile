@@ -1,4 +1,5 @@
-// import shared library - https://github.com/cmu-delphi/jenkins-shared-library
+/* import shared library
+   - https://github.com/cmu-delphi/jenkins-shared-library */
 @Library('jenkins-shared-library') _
 
 pipeline {
@@ -34,53 +35,47 @@ pipeline {
                         INDICATOR = ""
                     }
                 } 
-                sh "env"
-                echo "${env.INDICATOR}"
-                echo "${env.BRANCH_NAME}"
             }
         }
 
         stage('Build') {
-            // when {
-            //     branch "deploy-*"
-            //     // changeRequest target: "deploy-jhu"
-            // }
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
             steps {
-                // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
-                // sh "env" Let us level set and find out what we have to work with.
-                echo "hi!"
-                echo "${INDICATOR}"
+                sh "jenkins/${INDICATOR}-jenkins-build.sh"
             }
         }
 
-    //     stage('Test') {
-    //         when {
-    //             // branch "deploy-*"
-    //             changeRequest target: "deploy-jhu"
-    //         }
-    //         steps {
-    //             sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
-    //         }
-    //     }
+        stage('Test') {
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
+            steps {
+                sh "jenkins/${INDICATOR}-jenkins-test.sh"
+            }
+        }
         
-    //     stage('Package') {
-    //         when {
-    //             // branch "deploy-*"
-    //             changeRequest target: "deploy-jhu"
-    //         }
-    //         steps {
-    //             sh "jenkins/jenkins-package.sh"
-    //         }
-    //     }
+        stage('Package') {
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
+            steps {
+                sh "jenkins/jenkins-package.sh"
+            }
+        }
 
-    //     stage('Deploy') {
-    //         when {
-    //             branch "deploy-*"
-    //         }
-    //         steps {
-    //             sh "jenkins/jenkins-deploy.sh"
-    //         }
-    //     }
+        stage('Deploy') {
+            when {
+                branch "deploy-*"
+            }
+            steps {
+                sh "jenkins/jenkins-deploy.sh"
+            }
+        }
     }
 
     post {

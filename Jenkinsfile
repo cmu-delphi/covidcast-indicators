@@ -12,10 +12,10 @@ pipeline {
 
     stages {
         stage('Build') {
-            when {
-                branch "deploy-*"
-                // changeRequest target: "deploy-jhu"
-            }
+            // when {
+            //     branch "deploy-*"
+            //     // changeRequest target: "deploy-jhu"
+            // }
             steps {
                 // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
                 sh "env" // Let us level set and find out what we have to work with.

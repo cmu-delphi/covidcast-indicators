@@ -5,21 +5,39 @@ pipeline {
     agent any
 
     environment {
-        script {
-            // Get the indicator name.
-            if ( env.BRANCH_NAME.exists() ) {
-                INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-            }
-            else if ( env.CHANGE_TARGET.exists() ) {
-                INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-            }
-            else {
-                INDICATOR = ""
-            }
-        }
+        // script {
+        //     // Get the indicator name.
+        //     if ( env.BRANCH_NAME.exists() ) {
+        //         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+        //     }
+        //     else if ( env.CHANGE_TARGET.exists() ) {
+        //         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+        //     }
+        //     else {
+        //         INDICATOR = ""
+        //     }
+        // }
     }
 
     stages {
+        stage ("Environment") {
+            steps {
+                script {
+                    // Get the indicator name.
+                    if ( env.BRANCH_NAME.exists() ) {
+                        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+                    }
+                    else if ( env.CHANGE_TARGET.exists() ) {
+                        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+                    }
+                    else {
+                        INDICATOR = ""
+                    }
+                } 
+                sh "env"
+            }
+        }
+
         stage('Build') {
             // when {
             //     branch "deploy-*"
@@ -27,7 +45,7 @@ pipeline {
             // }
             steps {
                 // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
-                sh "env" // Let us level set and find out what we have to work with.
+                // sh "env" Let us level set and find out what we have to work with.
             }
         }
 

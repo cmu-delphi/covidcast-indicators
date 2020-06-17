@@ -48,7 +48,7 @@ pipeline {
                 // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
                 // sh "env" Let us level set and find out what we have to work with.
                 echo "hi!"
-                echo ${env.INDICATOR}
+                echo "${env.INDICATOR}"
             }
         }
 

@@ -5,7 +5,8 @@ pipeline {
     agent any
 
     environment {
-        INDICATOR = getIndicatorName()
+        script {
+            INDICATOR = getIndicatorName()
         // script {
         //     // Get the indicator name.
         //     if ( env.BRANCH_NAME.exists() ) {
@@ -18,6 +19,7 @@ pipeline {
         //         INDICATOR = ""
         //     }
         // }
+        }
     }
 
     stages {

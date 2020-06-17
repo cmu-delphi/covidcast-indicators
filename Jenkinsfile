@@ -48,6 +48,7 @@ pipeline {
                 changeRequest target: "deploy-jhu"
             }
             steps {
+                sh "env" // DEBUG
                 sh "jenkins/${INDICATOR}-jenkins-build.sh"
             }
         }

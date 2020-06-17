@@ -4,37 +4,36 @@
 pipeline {
     agent any
 
-    // environment {
-    //     INDICATOR = getIndicatorName()
-    //     // script {
-    //     //     Get the indicator name.
-    //     //     if ( env.BRANCH_NAME.exists() ) {
-    //     //         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-    //     //     }
-    //     //     else if ( env.CHANGE_TARGET.exists() ) {
-    //     //         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-    //     //     }
-    //     //     else {
-    //     //         INDICATOR = ""
-    //     //     }
-    //     // }
-    // }
-
-    stages {
-        stage ("Environment") {
-            steps {
-                script {
-                    // Get the indicator name.
-                    INDICATOR = getIndicatorName()
-                    // if ( env.BRANCH_NAME ) {
-                    //     echo "exists!"
-                    // }
-                } 
-                sh "env"
-                echo "${env.INDICATOR}"
-                echo "${env.BRANCH_NAME}"
+    environment {
+        script {
+            // Get the indicator name.
+            if ( env.BRANCH_NAME ) {
+                INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+            }
+            else if ( env.CHANGE_TARGET ) {
+                INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+            }
+            else {
+                INDICATOR = ""
             }
         }
+    }
+
+    stages {
+        // stage ("Environment") {
+        //     steps {
+        //         script {
+        //             // Get the indicator name.
+        //             INDICATOR = getIndicatorName()
+        //             // if ( env.BRANCH_NAME ) {
+        //             //     echo "exists!"
+        //             // }
+        //         } 
+        //         sh "env"
+        //         echo "${env.INDICATOR}"
+        //         echo "${env.BRANCH_NAME}"
+        //     }
+        // }
 
         stage('Build') {
             // when {

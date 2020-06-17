@@ -21,20 +21,24 @@ pipeline {
     // }
 
     stages {
-        stage ("Environment") {
-            steps {
-                script {
-                    // Get the indicator name.
-                    if ( env.BRANCH_NAME ) {
-                        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-                    }
-                    else if ( env.CHANGE_TARGET ) {
-                        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-                    }
-                    else {
-                        INDICATOR = ""
-                    }
-                } 
+        stage ("Environment") {            
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+                steps {
+                    script {
+                        // Get the indicator name.
+                        if ( env.BRANCH_NAME ) {
+                            INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+                        }
+                        else if ( env.CHANGE_TARGET ) {
+                            INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+                        }
+                        else {
+                            INDICATOR = ""
+                        }
+                    } 
+                }
             }
         }
 

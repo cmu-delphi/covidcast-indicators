@@ -27,7 +27,7 @@ pipeline {
             steps {
                 script {
                     // Get the indicator name.
-                    INDICATOR = getIndicatorName()
+                    INDICATOR = getIndicatorName
                 } 
                 sh "env"
             }

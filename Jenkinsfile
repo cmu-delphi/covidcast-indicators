@@ -6,7 +6,7 @@ pipeline {
 
     environment {
         script {
-            INDICATOR = getIndicatorName()
+            INDICATOR = getIndicatorName
         // script {
         //     // Get the indicator name.
         //     if ( env.BRANCH_NAME.exists() ) {

@@ -50,7 +50,7 @@ pipeline {
     //             sh "jenkins/jenkins-deploy.sh"
     //         }
     //     }
-    // }
+    }
 
     post {
         always {

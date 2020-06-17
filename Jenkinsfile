@@ -30,6 +30,7 @@ pipeline {
                     INDICATOR = getIndicatorName
                 } 
                 sh "env"
+                echo "${env.INDICATOR}"
             }
         }
 

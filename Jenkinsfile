@@ -1,55 +1,87 @@
-/* import shared library */
+/* import shared library
+   - https://github.com/cmu-delphi/jenkins-shared-library */
 @Library('jenkins-shared-library') _
 
 pipeline {
     agent any
 
-    environment {
-        // Get the indicator name.
-        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-        // INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-    }
+    // environment {
+    //     script {
+    //         // Get the indicator name.
+    //         if ( env.BRANCH_NAME ) {
+    //             INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+    //         }
+    //         else if ( env.CHANGE_TARGET ) {
+    //             INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+    //         }
+    //         else {
+    //             INDICATOR = ""
+    //         }
+    //     }
+    // }
 
     stages {
-        stage('Build') {
-            // when {
-            //     branch "deploy-*"
-            //     // changeRequest target: "deploy-jhu"
-            // }
+        stage ("Environment") {            
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
             steps {
-                // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
-                sh "env" // Let us level set and find out what we have to work with.
+                script {
+                    // Get the indicator name, checking for CHANGE_TARGET first.
+                    if ( env.CHANGE_TARGET ) {
+                        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+                    }
+                    else if ( env.BRANCH_NAME ) {
+                        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+                    }
+                    else {
+                        INDICATOR = ""
+                    }
+                } 
             }
         }
 
-    //     stage('Test') {
-    //         when {
-    //             // branch "deploy-*"
-    //             changeRequest target: "deploy-jhu"
-    //         }
-    //         steps {
-    //             sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
-    //         }
-    //     }
-        
-    //     stage('Package') {
-    //         when {
-    //             // branch "deploy-*"
-    //             changeRequest target: "deploy-jhu"
-    //         }
-    //         steps {
-    //             sh "jenkins/jenkins-package.sh"
-    //         }
-    //     }
+        stage('Build') {
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
+            steps {
+                sh "env" // DEBUG
+                sh "jenkins/${INDICATOR}-jenkins-build.sh"
+            }
+        }
 
-    //     stage('Deploy') {
-    //         when {
-    //             branch "deploy-*"
-    //         }
-    //         steps {
-    //             sh "jenkins/jenkins-deploy.sh"
-    //         }
-    //     }
+        stage('Test') {
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
+            steps {
+                sh "jenkins/${INDICATOR}-jenkins-test.sh"
+            }
+        }
+        
+        stage('Package') {
+            when {
+                // branch "deploy-*"
+                changeRequest target: "deploy-jhu"
+            }
+            steps {
+                echo "${INDICATOR}" // DEBUG
+                sh "jenkins/${INDICATOR}-jenkins-package.sh"
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                branch "deploy-*"
+            }
+            steps {
+                sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
+            }
+        }
     }
 
     post {

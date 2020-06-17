@@ -6,8 +6,16 @@ pipeline {
 
     environment {
         // Get the indicator name.
+        if ( env.BRANCH_NAME.exists() ) {
+            INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+        }
+        else if ( env.CHANGE_TARGET.exists() ) {
+            INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+        }
+        else {
+            INDICATOR = ""
+        }
         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-        // INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
     }
 
     stages {

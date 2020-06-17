@@ -8,9 +8,24 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 import numpy as np
 
-# first party
-from delphi_emr_hosp.update_sensor import write_to_csv, update_sensor
+# third party
+from delphi_utils import read_params
 
+# first party
+from delphi_emr_hosp.config import Config, Constants
+
+# first party
+from delphi_emr_hosp.update_sensor import write_to_csv, SensorUpdator
+from delphi_emr_hosp.load_data import *
+
+CONFIG = Config()
+CONSTANTS = Constants()
+PARAMS = read_params()
+CLAIMS_FILEPATH = PARAMS["input_claims_file"]
+EMR_FILEPATH = PARAMS["input_emr_file"]
+DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+
+# class TestSensorUpdator:
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

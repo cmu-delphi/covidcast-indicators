@@ -105,7 +105,7 @@ class GeoMaps:
         return data
 
     def hrr(self, data):
-        """Prepare hrr groups.
+        """Prepare hrr (Hospital Referral Region) groups.
 
         Args:
             data: dataframe aggregated to the daily-hrr resolution

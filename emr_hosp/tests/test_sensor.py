@@ -59,7 +59,7 @@ class TestLoadData:
         for fips in sample_fips:
             sub_data = self.fips_combined_data.loc[fips]
             sub_data = sub_data.reindex(date_range, fill_value=0)
-            res0 = EMRHospSensor.fit(sub_data, date_range, fips)
+            res0 = EMRHospSensor.fit(sub_data, date_range[0], fips)
             # first value is burn-in
             assert np.min(res0["rate"][1:]) > 0
             assert np.max(res0["rate"][1:]) <= 100
@@ -81,7 +81,7 @@ class TestLoadData:
         for hrr in sample_hrrs:
             sub_data = self.hrr_combined_data.loc[hrr]
             sub_data = sub_data.reindex(date_range, fill_value=0)
-            res0 = EMRHospSensor.fit(sub_data, date_range, hrr)
+            res0 = EMRHospSensor.fit(sub_data, date_range[0], hrr)
             # first value is burn-in
             assert np.min(res0["rate"][1:]) > 0
             assert np.max(res0["rate"][1:]) <= 100

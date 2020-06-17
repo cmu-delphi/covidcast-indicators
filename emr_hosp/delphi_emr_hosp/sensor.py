@@ -83,12 +83,12 @@ class EMRHospSensor:
         return new_num, new_den
 
     @staticmethod
-    def fit(y_data, sensor_dates, geo_id):
+    def fit(y_data, first_sensor_date, geo_id):
         """Fitting routine.
 
         Args:
             y_data: dataframe for one geo_id, indexed by date
-            sensor_dates: list of sorted datetime for which to produce sensor values
+            first_sensor_date: datetime of first date
             geo_id: unique identifier for the location column
 
         Returns:
@@ -96,7 +96,7 @@ class EMRHospSensor:
 
         """
         # values to keep
-        fitting_idxs = np.where(y_data.index >= sensor_dates[0])[0]
+        fitting_idxs = np.where(y_data.index >= first_sensor_date)[0] # JS: WILL CHANGE
 
         # backfill
         total_counts, total_visits = EMRHospSensor.backfill(y_data["num"], y_data["den"])

@@ -1,45 +1,37 @@
-/* import shared library */
+// import shared library - https://github.com/cmu-delphi/jenkins-shared-library
 @Library('jenkins-shared-library') _
 
 pipeline {
     agent any
 
-    environment {
-        script {
-            INDICATOR = getIndicatorName()
-        // script {
-        //     // Get the indicator name.
-        //     if ( env.BRANCH_NAME.exists() ) {
-        //         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-        //     }
-        //     else if ( env.CHANGE_TARGET.exists() ) {
-        //         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-        //     }
-        //     else {
-        //         INDICATOR = ""
-        //     }
-        // }
-        }
-    }
+    // environment {
+    //     script {
+    //         INDICATOR = getIndicatorName()
+    //     // script {
+    //     //     // Get the indicator name.
+    //     //     if ( env.BRANCH_NAME.exists() ) {
+    //     //         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+    //     //     }
+    //     //     else if ( env.CHANGE_TARGET.exists() ) {
+    //     //         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+    //     //     }
+    //     //     else {
+    //     //         INDICATOR = ""
+    //     //     }
+    //     // }
+    //     }
+    // }
 
     stages {
-        // stage ("Environment") {
-        //     steps {
-        //         script {
-        //             // Get the indicator name.
-        //             if ( env.BRANCH_NAME.exists() ) {
-        //                 INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-        //             }
-        //             else if ( env.CHANGE_TARGET.exists() ) {
-        //                 INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-        //             }
-        //             else {
-        //                 INDICATOR = ""
-        //             }
-        //         } 
-        //         sh "env"
-        //     }
-        // }
+        stage ("Environment") {
+            steps {
+                script {
+                    // Get the indicator name.
+                    INDICATOR = getIndicatorName()
+                } 
+                sh "env"
+            }
+        }
 
         stage('Build') {
             // when {

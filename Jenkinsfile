@@ -28,7 +28,7 @@ pipeline {
                 script {
                     // Get the indicator name.
                     INDICATOR = getIndicatorName
-                    if env.BRANCH_NAME.exists() {
+                    if ( env.BRANCH_NAME.exists() ) {
                         echo "exists!"
                     }
                 } 

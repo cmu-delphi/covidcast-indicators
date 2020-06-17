@@ -25,7 +25,29 @@ CLAIMS_FILEPATH = PARAMS["input_claims_file"]
 EMR_FILEPATH = PARAMS["input_emr_file"]
 DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
-# class TestSensorUpdator:
+class TestSensorUpdator:
+    geo = "hrr"
+    parallel = False
+    weekday = False
+
+    def test_shift_dates(self):
+        su_inst = SensorUpdator(
+            "02-01-2020",
+            "06-01-2020",
+            "06-12-2020",
+            self.geo,
+            self.parallel,
+            self.weekday)
+        ## Test init
+        assert su_inst.startdate.month == 2
+        assert su_inst.enddate.month == 6
+        assert su_inst.dropdate.day == 12
+
+        ## Test shift
+        su_inst.shift_dates()
+        assert su_inst.sensor_dates[0] == su_inst.startdate
+        assert su_inst.sensor_dates[-1] == su_inst.enddate - pd.Timedelta(days=1)
+
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

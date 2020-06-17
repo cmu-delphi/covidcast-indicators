@@ -104,14 +104,15 @@ class SensorUpdator:
         on May 2 to May 20. therefore, we will move the startdate back by one day
         in order to get the proper estimate at May 1
         """
+        ## JS: WILL USE DATETIMEINDEX FOR THIS...
         drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
-        self.fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)
+        self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
         burn_in_dates = drange(self.burnindate, self.dropdate)
         self.sensor_dates = drange(self.startdate, self.enddate)
         self.final_sensor_idxs = np.where(
-            (burn_in_dates >= startdate) & (burn_in_dates <= enddate)) # JS: WILL CHANGE
+            (burn_in_dates >= self.startdate) & (burn_in_dates <= self.enddate)) # JS: WILL CHANGE
 
 
     def update_sensor(self,

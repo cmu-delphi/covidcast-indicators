@@ -18,7 +18,6 @@ CLAIMS_FILEPATH = PARAMS["input_claims_file"]
 EMR_FILEPATH = PARAMS["input_emr_file"]
 DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
-
 class TestLoadData:
     fips_combined_data = load_combined_data(EMR_FILEPATH, CLAIMS_FILEPATH, DROP_DATE,
                                             "fips")

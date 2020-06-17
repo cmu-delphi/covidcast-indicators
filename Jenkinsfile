@@ -13,43 +13,44 @@ pipeline {
     stages {
         stage('Build') {
             when {
-                // branch "deploy-*"
-                changeRequest target: "deploy-jhu"
-            }
-            steps {
-                sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
-            }
-        }
-
-        stage('Test') {
-            when {
-                // branch "deploy-*"
-                changeRequest target: "deploy-jhu"
-            }
-            steps {
-                sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
-            }
-        }
-        
-        stage('Package') {
-            when {
-                // branch "deploy-*"
-                changeRequest target: "deploy-jhu"
-            }
-            steps {
-                sh "jenkins/jenkins-package.sh"
-            }
-        }
-
-        stage('Deploy') {
-            when {
                 branch "deploy-*"
+                // changeRequest target: "deploy-jhu"
             }
             steps {
-                sh "jenkins/jenkins-deploy.sh"
+                // sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
+                sh "env" // Let us level set and find out what we have to work with.
             }
         }
-    }
+
+    //     stage('Test') {
+    //         when {
+    //             // branch "deploy-*"
+    //             changeRequest target: "deploy-jhu"
+    //         }
+    //         steps {
+    //             sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
+    //         }
+    //     }
+        
+    //     stage('Package') {
+    //         when {
+    //             // branch "deploy-*"
+    //             changeRequest target: "deploy-jhu"
+    //         }
+    //         steps {
+    //             sh "jenkins/jenkins-package.sh"
+    //         }
+    //     }
+
+    //     stage('Deploy') {
+    //         when {
+    //             branch "deploy-*"
+    //         }
+    //         steps {
+    //             sh "jenkins/jenkins-deploy.sh"
+    //         }
+    //     }
+    // }
 
     post {
         always {

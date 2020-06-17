@@ -5,15 +5,17 @@ pipeline {
     agent any
 
     environment {
-        // Get the indicator name.
-        if ( env.BRANCH_NAME.exists() ) {
-            INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-        }
-        else if ( env.CHANGE_TARGET.exists() ) {
-            INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-        }
-        else {
-            INDICATOR = ""
+        script {
+            // Get the indicator name.
+            if ( env.BRANCH_NAME.exists() ) {
+                INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+            }
+            else if ( env.CHANGE_TARGET.exists() ) {
+                INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+            }
+            else {
+                INDICATOR = ""
+            }
         }
     }
 

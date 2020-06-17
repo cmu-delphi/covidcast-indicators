@@ -6,14 +6,15 @@ pipeline {
 
     environment {
         // Get the indicator name.
-        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+        // INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
     }
 
     stages {
         stage('Build') {
             when {
                 // branch "deploy-*"
-                changeRequest branch: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-build.sh"
@@ -23,7 +24,7 @@ pipeline {
         stage('Test') {
             when {
                 // branch "deploy-*"
-                changeRequest branch: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${env.INDICATOR}-jenkins-test.sh"
@@ -33,7 +34,7 @@ pipeline {
         stage('Package') {
             when {
                 // branch "deploy-*"
-                changeRequest branch: "deploy-*"
+                changeRequest target: "deploy-jhu"
             }
             steps {
                 sh "jenkins/jenkins-package.sh"

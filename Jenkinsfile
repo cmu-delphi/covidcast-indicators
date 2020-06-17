@@ -15,7 +15,6 @@ pipeline {
         else {
             INDICATOR = ""
         }
-        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
     }
 
     stages {

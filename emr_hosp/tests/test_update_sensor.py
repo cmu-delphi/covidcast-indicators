@@ -1,5 +1,6 @@
 # standard
 from copy import deepcopy
+import os
 from os.path import join, exists
 import pytest
 from tempfile import TemporaryDirectory
@@ -24,6 +25,7 @@ PARAMS = read_params()
 CLAIMS_FILEPATH = PARAMS["input_claims_file"]
 EMR_FILEPATH = PARAMS["input_emr_file"]
 DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+OUTPATH="test_data/"
 
 class TestEMRHospSensorUpdator:
     geo = "hrr"
@@ -65,6 +67,25 @@ class TestEMRHospSensorUpdator:
         data_frame = su_inst.geo_reindex(self.small_test_data,PARAMS["static_file_dir"])
         assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
         assert (data_frame.sum() == (4200,19000)).all()
+
+    def test_update_sensor(self):
+        td = TemporaryDirectory()
+        su_inst = EMRHospSensorUpdator(
+            "02-01-2020",
+            "06-01-2020",
+            "06-12-2020",
+            'hrr',
+            self.parallel,
+            self.weekday)
+        su_inst.update_sensor(
+            EMR_FILEPATH,
+            CLAIMS_FILEPATH,
+            td.name,
+            PARAMS["static_file_dir"]
+        )
+        assert len(os.listdir(td.name)) == len(su_inst.sensor_dates)
+        ## JS: ADD MORE TESTS HERE
+        td.cleanup()
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

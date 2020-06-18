@@ -130,10 +130,10 @@ class EMRHospSensorUpdator:
         else:
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
             return False
-        unique_geo_ids = pd.unique(data_frame.index.get_level_values(0))
+        self.unique_geo_ids = pd.unique(data_frame.index.get_level_values(0))
 
         # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
+        multiindex = pd.MultiIndex.from_product((self.unique_geo_ids, self.fit_dates),
                                                 names=[geo, "date"])
         assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
                 ), "more loc-date pairs than maximum number of geographies x number of dates"
@@ -164,7 +164,7 @@ class EMRHospSensorUpdator:
         ## JS: THIS IS FINE
 
         # load data
-        base_geo = "hrr" if geo == "hrr" else "fips"
+        base_geo = "hrr" if self.geo == "hrr" else "fips"
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
         data_frame = self.geo_reindex(data,staticpath)
@@ -178,11 +178,13 @@ class EMRHospSensorUpdator:
         sensor_rates = {}
         sensor_se = {}
         sensor_include = {}
-        if not parallel:
-            for geo_id in unique_geo_ids:
-                sub_data = data_frame.loc[geo_id].copy()
-                if weekday:
-                    sub_data = Weekday.calc_adjustment(params, sub_data)
+        if not self.parallel:
+            for geo_id, sub_data in data_frame.groupby(level=0):
+                sub_data.reset_index(level=0,inplace=True)
+                del sub_data[base_geo]
+
+                if self.weekday:
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
                 res = EMRHospSensor.fit(sub_data, self.burnindate, geo_id)
                 sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
@@ -195,10 +197,11 @@ class EMRHospSensorUpdator:
 
             with Pool(n_cpu) as pool:
                 pool_results = []
-                for geo_id in unique_geo_ids:
-                    sub_data = data_frame.loc[geo_id].copy()
-                    if weekday:
-                        sub_data = Weekday.calc_adjustment(params, sub_data)
+                for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
+                    sub_data.reset_index(level=0, inplace=True)
+                    del sub_data[base_geo]
+                    if self.weekday:
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
                     pool_results.append(
                         pool.apply_async(
@@ -217,15 +220,16 @@ class EMRHospSensorUpdator:
         output_dict = {
             "rates": sensor_rates,
             "se": sensor_se,
-            "dates": sensor_dates,
-            "geo_ids": unique_geo_ids,
-            "geo_level": geo,
+            "dates": self.sensor_dates,
+            "geo_ids": self.unique_geo_ids,
+            "geo_level": self.geo,
             "include": sensor_include,
         }
 
         # write out results
         wip_string = "wip_XXXXX_"
-        out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
-        write_to_csv(output_dict, wip_string + out_name, outpath)
+        out_name = "smoothed_adj_cli" if self.weekday else "smoothed_cli"
+        self.output_filename = wip_string + out_name
+        write_to_csv(output_dict, self.output_filename, outpath)
         logging.debug(f"wrote files to {outpath}")
         return True

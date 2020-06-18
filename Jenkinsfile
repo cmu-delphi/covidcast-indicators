@@ -3,6 +3,7 @@
 @Library('jenkins-shared-library') _
 
 pipeline {
+
     agent any
 
     // environment {
@@ -21,10 +22,13 @@ pipeline {
     // }
 
     stages {
+
         stage ("Environment") {            
             when {
-                // branch "deploy-*"
-                changeRequest target: "deploy-jhu"
+                anyOf {
+                    branch "deploy-*";
+                    changeRequest target: "deploy-jhu"
+                }
             }
             steps {
                 script {
@@ -80,6 +84,8 @@ pipeline {
                 // changeRequest branch: "deploy-jhu"
             }
             steps {
+                echo "${INDICATOR}" //DEBUG
+                sh env
                 sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
             }
         }
@@ -88,7 +94,10 @@ pipeline {
     post {
         always {
             script {
-                /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
+                /*
+                Use slackNotifier.groovy from shared library and provide current
+                build result as parameter
+                */   
                 slackNotifier(currentBuild.currentResult)
                 //cleanWs()
             }

@@ -110,10 +110,8 @@ class EMRHospSensorUpdator:
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
         self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
-        burn_in_dates = drange(self.burnindate, self.dropdate)
+        self.burn_in_dates = drange(self.burnindate, self.dropdate)
         self.sensor_dates = drange(self.startdate, self.enddate)
-        self.final_sensor_idxs = np.where(
-            (burn_in_dates >= self.startdate) & (burn_in_dates <= self.enddate)) # JS: WILL CHANGE
 
     def geo_reindex(self,data,staticpath):
         # get right geography
@@ -159,8 +157,7 @@ class EMRHospSensorUpdator:
         """
 
         self.shift_dates()
-        final_sensor_idxs = self.final_sensor_idxs ## JS: REPLACE EVENTUALLY
-
+        final_sensor_idxs = (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
         ## JS: THIS IS FINE
 
         # load data
@@ -171,8 +168,6 @@ class EMRHospSensorUpdator:
 
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(data_frame) if self.weekday else None
-
-        ## JS: FOLLOWING BLOCK SHOULD BE GROUPBY
 
         # run sensor fitting code (maybe in parallel)
         sensor_rates = {}
@@ -187,9 +182,10 @@ class EMRHospSensorUpdator:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
                 res = EMRHospSensor.fit(sub_data, self.burnindate, geo_id)
-                sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-                sensor_se[geo_id] = res["se"][final_sensor_idxs]
-                sensor_include[geo_id] = res["incl"][final_sensor_idxs]
+                res = pd.DataFrame(res)
+                sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs,"rate"])
+                sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs,"se"])
+                sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs,"incl"])
 
         else:
             n_cpu = min(10, cpu_count())
@@ -211,10 +207,12 @@ class EMRHospSensorUpdator:
                 pool_results = [proc.get() for proc in pool_results]
 
                 for res in pool_results:
+                    ## un-tested
                     geo_id = res["geo_id"]
-                    sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-                    sensor_se[geo_id] = res["se"][final_sensor_idxs]
-                    sensor_include[geo_id] = res["incl"][final_sensor_idxs]
+                    res = pd.DataFrame(res)
+                    sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs, "rate"])
+                    sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs, "se"])
+                    sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs, "incl"])
 
         unique_geo_ids = list(sensor_rates.keys())
         output_dict = {

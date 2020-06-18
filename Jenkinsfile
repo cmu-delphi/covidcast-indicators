@@ -23,8 +23,7 @@ pipeline {
     stages {
         stage ("Environment") {            
             when {
-                // branch "deploy-*"
-                changeRequest target: "deploy-jhu"
+                branch "deploy-*" || changeRequest target: "deploy-jhu"
             }
             steps {
                 script {

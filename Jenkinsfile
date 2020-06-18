@@ -77,7 +77,6 @@ pipeline {
                 build result as parameter
                 */   
                 slackNotifier(currentBuild.currentResult)
-                //cleanWs()
             }
         }
     }

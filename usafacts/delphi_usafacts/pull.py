@@ -49,7 +49,6 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     MAX_FIPS = 57000
 
     # Read data
-    print(base_url[metric].format(metric=metric))
     df = pd.read_csv(base_url[metric].format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
     # Check missing FIPS
     null_mask = pd.isnull(df["FIPS"])

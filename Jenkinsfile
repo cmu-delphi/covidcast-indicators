@@ -13,7 +13,7 @@ pipeline {
             when {
                 anyOf {
                     branch "deploy-*";
-                    changeRequest target: "deploy-*"
+                    changeRequest target: "deploy-*", comparator: "GLOB"
                 }
             }
             steps {
@@ -34,7 +34,7 @@ pipeline {
 
         stage('Build') {
             when {
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-*", comparator: "GLOB"
             }
             steps {
                 sh "jenkins/${INDICATOR}-jenkins-build.sh"
@@ -43,7 +43,7 @@ pipeline {
 
         stage('Test') {
             when {
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-*", comparator: "GLOB"
             }
             steps {
                 sh "jenkins/${INDICATOR}-jenkins-test.sh"
@@ -52,7 +52,7 @@ pipeline {
         
         stage('Package') {
             when {
-                changeRequest target: "deploy-*"
+                changeRequest target: "deploy-*", comparator: "GLOB"
             }
             steps {
                 sh "jenkins/${INDICATOR}-jenkins-package.sh"

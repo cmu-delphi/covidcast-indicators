@@ -7,7 +7,7 @@ when the module is run with `python -m delphi_doctor_visits`.
 
 # standard packages
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 #  third party
@@ -23,46 +23,59 @@ def run_module():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    ## start date will be Jan 1
-    logging.info("start date:\t%s", params["start_date"])
-
     ## get end date from input file
     # the filename is expected to be in the format:
     # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
-    if params["end_date"] == "":
-        dropdate = str(
-            datetime.strptime(
-                Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
-            ).date()
+    if params["drop_date"] == "":
+        dropdate_dt = datetime.strptime(
+            Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
         )
     else:
-        dropdate = params["end_date"]
+        dropdate_dt = datetime.strptime(params["end_date"], "%Y-%m-%d")
+    dropdate = str(dropdate_dt.date())
 
-    logging.info("drop date:\t%s", dropdate)
+    # range of estimates to produce
+    n_backfill_days = params["n_backfill_days"] # produce estimates for n_backfill_days
+    n_waiting_days = params["n_waiting_days"]  # most recent n_waiting_days won't be est
+    enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
+    startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
+    enddate = str(enddate_dt.date())
+    startdate = str(startdate_dt.date())
+    logging.info(f"drop date:\t\t{dropdate}")
+    logging.info(f"first sensor date:\t{startdate}")
+    logging.info(f"last sensor date:\t{enddate}")
+    logging.info(f"n_backfill_days:\t{n_backfill_days}")
+    logging.info(f"n_waiting_days:\t{n_waiting_days}")
 
     ## geographies
     geos = ["state", "msa", "hrr", "county"]
 
     ## print out other vars
-    logging.info("outpath:\t%s", params["export_dir"])
-    logging.info("parallel:\t%s", params["parallel"])
+    logging.info("outpath:\t\t%s", params["export_dir"])
+    logging.info("parallel:\t\t%s", params["parallel"])
+    logging.info(f"weekday:\t\t%s", params["weekday"])
+    logging.info(f"write se:\t\t%s", params["se"])
+    logging.info(f"obfuscated prefix:\t%s", params["obfuscated_prefix"])
 
     ## start generating
     for geo in geos:
-        for weekday in [True, False]:
+        for weekday in params["weekday"]:
             if weekday:
                 logging.info("starting %s, weekday adj", geo)
             else:
                 logging.info("starting %s, no adj", geo)
             update_sensor(
-                params["input_file"],
-                params["export_dir"],
-                params["static_file_dir"],
-                params["start_date"],
-                dropdate,
-                geo,
-                params["parallel"],
-                weekday,
+                filepath=params["input_file"],
+                outpath=params["export_dir"],
+                staticpath=params["static_file_dir"],
+                startdate=startdate,
+                enddate=enddate,
+                dropdate=dropdate,
+                geo=geo,
+                parallel=params["parallel"],
+                weekday=weekday,
+                se=params["se"],
+                prefix=params["obfuscated_prefix"]
             )
         logging.info("finished %s", geo)
 

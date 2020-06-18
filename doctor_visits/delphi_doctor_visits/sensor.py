@@ -25,7 +25,7 @@ class DoctorVisitsSensor:
 
     @staticmethod
     def transform(
-        sig, h=Config.SMOOTHER_BANDWIDTH, smoother=left_gauss_linear, base=None
+            sig, h=Config.SMOOTHER_BANDWIDTH, smoother=left_gauss_linear, base=None
     ):
         """Transform signal by applying a smoother, and/or adjusting by a base.
 
@@ -80,12 +80,12 @@ class DoctorVisitsSensor:
 
     @staticmethod
     def backfill(
-        num,
-        den,
-        k=Config.MAX_BACKFILL_WINDOW,
-        min_visits_to_fill=Config.MIN_CUM_VISITS,
-        min_visits_to_include=Config.MIN_RECENT_VISITS,
-        min_recent_obs_to_include=Config.MIN_RECENT_OBS,
+            num,
+            den,
+            k=Config.MAX_BACKFILL_WINDOW,
+            min_visits_to_fill=Config.MIN_CUM_VISITS,
+            min_visits_to_include=Config.MIN_RECENT_VISITS,
+            min_recent_obs_to_include=Config.MIN_RECENT_OBS,
     ):
         """
         Adjust for backfill (retroactively added observations) by using a
@@ -129,17 +129,17 @@ class DoctorVisitsSensor:
                 for j in range(p):
                     new_num[i, j] = revnum[i, j]
             else:
-                den_bin = revden[i : (i + closest_fill_day + 1)]
+                den_bin = revden[i: (i + closest_fill_day + 1)]
                 new_den[i] = den_bin.sum()
 
                 for j in range(p):
-                    num_bin = revnum[i : (i + closest_fill_day + 1), j]
+                    num_bin = revnum[i: (i + closest_fill_day + 1), j]
                     new_num[i, j] = num_bin.sum()
 
             # if we do not observe at least min_visits_to_include in the denominator or
             # if we observe 0 counts for min_recent_obs window, don't show.
             if (new_den[i] < min_visits_to_include) or (
-                revden[i:][:min_recent_obs_to_include].sum() == 0
+                    revden[i:][:min_recent_obs_to_include].sum() == 0
             ):
                 include[i] = False
 
@@ -156,7 +156,13 @@ class DoctorVisitsSensor:
         return new_num, new_den, include
 
     @staticmethod
-    def fit(y_data, fit_dates, sensor_dates, geo_id, recent_min_visits, min_recent_obs):
+    def fit(y_data,
+            fit_dates,
+            sensor_dates,
+            geo_id,
+            recent_min_visits,
+            min_recent_obs,
+            jeffreys):
         """Fitting routine.
 
         Args:
@@ -168,6 +174,9 @@ class DoctorVisitsSensor:
                                                 <RECENT_LENGTH> days
             min_recent_obs: location is sparse also if it has 0 observations in the
                                             last min_recent_obs days
+            jeffreys: boolean whether to use Jeffreys estimate for binomial proportion, this
+                is currently only applied if we are writing SEs out. The estimate is
+                p_hat = (x + 0.5)/(n + 1).
 
         Returns: dictionary of results
         """
@@ -176,28 +185,43 @@ class DoctorVisitsSensor:
         sensor_idxs = np.where(y_data.index >= sensor_dates[0])[0]
         n_dates = y_data.shape[0]
 
+        # combine Flu_like and Mixed columns
+        y_data["Flu_like_Mixed"] = y_data["Flu_like"] + y_data["Mixed"]
+        NEW_CLI_COLS = list(set(Config.CLI_COLS) - {"Flu_like", "Mixed"}) + [
+            "Flu_like_Mixed"]
+
+        # small backfill correction
         total_visits = y_data["Denominator"]
-        total_counts = y_data[Config.CLI_COLS + Config.FLU1_COL]
+        total_counts = y_data[NEW_CLI_COLS + Config.FLU1_COL]
         total_counts, total_visits, include = DoctorVisitsSensor.backfill(
             total_counts,
             total_visits,
             min_visits_to_include=recent_min_visits,
-            min_recent_obs_to_include=min_recent_obs,
+            min_recent_obs_to_include=min_recent_obs
         )
-        total_rates = total_counts.div(total_visits, axis=0)
+
+        # jeffreys inflation
+        if jeffreys:
+            total_counts[NEW_CLI_COLS] = total_counts[NEW_CLI_COLS] + 0.5
+            total_rates = total_counts.div(total_visits + 1, axis=0)
+        else:
+            total_rates = total_counts.div(total_visits, axis=0)
+
         total_rates.fillna(0, inplace=True)
         flu1 = total_rates[Config.FLU1_COL]
         new_rates = []
-        for code in Config.CLI_COLS:
+        for code in NEW_CLI_COLS:
             code_vals = total_rates[code]
 
             # if all rates are zero, don't bother
             if code_vals.sum() == 0:
+                if jeffreys:
+                    logging.error("p is 0 even though we used Jefferys estimate")
                 new_rates.append(np.zeros((n_dates,)))
                 continue
 
             # include adjustment for flu like codes
-            base = flu1 if code in ["Flu_like", "Mixed"] else None
+            base = flu1 if code in ["Flu_like_Mixed"] else None
             fitted_codes = DoctorVisitsSensor.transform(
                 code_vals.values.reshape(-1, 1), base=base
             )
@@ -211,9 +235,9 @@ class DoctorVisitsSensor:
         den = total_visits[sensor_idxs].values
 
         # calculate standard error
-        mask = den < 1
-        se = np.sqrt(np.divide((new_rates * (1 - new_rates)), den, where=den != 0))
-        se[mask] = np.nan  # handle case where we observe no visits
+        se = np.full_like(new_rates, np.nan)
+        se[include] = np.sqrt(
+            np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
         return {"geo_id": geo_id, "rate": new_rates, "se": se, "incl": include}

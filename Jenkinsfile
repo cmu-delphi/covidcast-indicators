@@ -1,3 +1,5 @@
+#!groovy
+
 /* import shared library from:
    - https://github.com/cmu-delphi/jenkins-shared-library */
 @Library('jenkins-shared-library') _

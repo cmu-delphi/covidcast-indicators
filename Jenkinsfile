@@ -32,7 +32,7 @@ pipeline {
             }
             steps {
                 script {
-                    // Get the indicator name, checking for CHANGE_TARGET first.
+                    // Get the indicator name from the pipeline env.
                     if ( env.CHANGE_TARGET ) {
                         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
                     }

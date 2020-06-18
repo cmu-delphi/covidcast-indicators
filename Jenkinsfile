@@ -1,4 +1,4 @@
-/* import shared library
+/* import shared library from:
    - https://github.com/cmu-delphi/jenkins-shared-library */
 @Library('jenkins-shared-library') _
 
@@ -76,8 +76,8 @@ pipeline {
 
         stage('Deploy') {
             when {
-                // branch "deploy-*"
-                changeRequest branch: "deploy-jhu"
+                branch "deploy-*"
+                // changeRequest branch: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${INDICATOR}-jenkins-deploy.sh"

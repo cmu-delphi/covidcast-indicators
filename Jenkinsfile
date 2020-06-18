@@ -76,8 +76,8 @@ pipeline {
 
         stage('Deploy') {
             when {
-                // branch "deploy-*"
-                changeRequest branch: "deploy-jhu"
+                branch "deploy-*"
+                // changeRequest branch: "deploy-jhu"
             }
             steps {
                 sh "jenkins/${INDICATOR}-jenkins-deploy.sh"

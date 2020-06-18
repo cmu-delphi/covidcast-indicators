@@ -14,7 +14,7 @@ class TestSmooth:
 
         smoothed = pd.read_csv(
             join("receiving",
-                f"{dates[-1]}_state_confirmed_7dav_cumulative_num.csv")
+                f"{dates[-1]}_state_confirmed_7day_avg_cumulative_num.csv")
         )
 
         raw = pd.concat([

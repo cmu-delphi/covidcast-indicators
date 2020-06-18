@@ -24,7 +24,7 @@ the module and produce the output datasets (by default, in `receiving`), run
 the following:
 
 ```
-env/bin/python -m delphi_jhu
+env/bin/python -m delphi_usafacts
 ```
 
 Once you are finished with the code, you can deactivate the virtual environment
@@ -41,7 +41,7 @@ To do a static test of the code style, it is recommended to run **pylint** on
 the module. To do this, run the following from the main module directory:
 
 ```
-env/bin/pylint delphi_jhu
+env/bin/pylint delphi_usafacts
 ```
 
 The most aggressive checks are turned off; only relatively important issues
@@ -51,7 +51,7 @@ Unit tests are also included in the module. To execute these, run the following
 command from this directory:
 
 ```
-(cd tests && ../env/bin/pytest --cov=delphi_jhu --cov-report=term-missing)
+(cd tests && ../env/bin/pytest --cov=delphi_usafacts --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along

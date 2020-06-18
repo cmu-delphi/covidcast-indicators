@@ -67,7 +67,7 @@ def write_to_csv(output_dict, out_name, output_path="."):
                     out_n += 1
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
 
-class SensorUpdator:
+class EMRHospSensorUpdator:
 
     def __init__(self,
                  startdate,
@@ -93,6 +93,7 @@ class SensorUpdator:
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
+        self.geo, self.parallel, self.weekday = geo, parallel, weekday
 
 
     def shift_dates(self):
@@ -105,7 +106,7 @@ class SensorUpdator:
         in order to get the proper estimate at May 1
         """
         ## JS: WILL USE DATETIMEINDEX FOR THIS...
-        drange = lambda s, e: np.array([s + timedelta(days=x) for x in range((e - s).days)])
+        drange = lambda s, e: pd.date_range(start=s,periods=(e-s).days,freq='D')
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
         self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
@@ -113,6 +114,34 @@ class SensorUpdator:
         self.sensor_dates = drange(self.startdate, self.enddate)
         self.final_sensor_idxs = np.where(
             (burn_in_dates >= self.startdate) & (burn_in_dates <= self.enddate)) # JS: WILL CHANGE
+
+    def geo_reindex(self,data,staticpath):
+        # get right geography
+        geo = self.geo
+        geo_map = GeoMaps(staticpath)
+        if geo.lower() == "county":
+            data_frame = geo_map.county_to_megacounty(data)
+        elif geo.lower() == "state":
+            data_frame = geo_map.county_to_state(data)
+        elif geo.lower() == "msa":
+            data_frame = geo_map.county_to_msa(data)
+        elif geo.lower() == "hrr":
+            data_frame = data  # data is already adjusted in aggregation step above
+        else:
+            logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
+            return False
+        unique_geo_ids = pd.unique(data_frame.index.get_level_values(0))
+
+        # for each location, fill in all missing dates with 0 values
+        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
+                                                names=[geo, "date"])
+        assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
+                ), "more loc-date pairs than maximum number of geographies x number of dates"
+
+        # fill dataframe with missing dates using 0
+        data_frame = data_frame.reindex(multiindex, fill_value=0)
+        data_frame.fillna(0, inplace=True)
+        return data_frame
 
 
     def update_sensor(self,
@@ -138,33 +167,10 @@ class SensorUpdator:
         base_geo = "hrr" if geo == "hrr" else "fips"
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
-        # get right geography
-        geo_map = GeoMaps(staticpath)
-        if geo.lower() == "county":
-            data_frame = geo_map.county_to_megacounty(data)
-        elif geo.lower() == "state":
-            data_frame = geo_map.county_to_state(data)
-        elif geo.lower() == "msa":
-            data_frame = geo_map.county_to_msa(data)
-        elif geo.lower() == "hrr":
-            data_frame = data  # data is already adjusted in aggregation step above
-        else:
-            logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
-            return False
-        unique_geo_ids = list(sorted(np.unique(data_frame.index.get_level_values(0))))
-
-        # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
-                                                names=[geo, "date"])
-        assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
-                ), "more loc-date pairs than maximum number of geographies x number of dates"
-
-        # fill dataframe with missing dates using 0
-        data_frame = data_frame.reindex(multiindex, fill_value=0)
-        data_frame.fillna(0, inplace=True)
+        data_frame = self.geo_reindex(data,staticpath)
 
         # handle if we need to adjust by weekday
-        params = Weekday.get_params(data_frame) if weekday else None
+        wd_params = Weekday.get_params(data_frame) if self.weekday else None
 
         ## JS: FOLLOWING BLOCK SHOULD BE GROUPBY
 

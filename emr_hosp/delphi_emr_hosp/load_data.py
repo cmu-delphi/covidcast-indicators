@@ -102,7 +102,7 @@ def load_combined_data(emr_filepath, claims_filepath, dropdate, base_geo):
         base_geo: base geographic unit before aggregation (either 'fips' or 'hrr')
 
     Returns:
-        combined dataframe
+        combined multiindexed dataframe, index 0 is geo_base, index 1 is date
     """
     assert base_geo in ["fips", "hrr"], "base unit must be either 'fips' or 'hrr'"
 

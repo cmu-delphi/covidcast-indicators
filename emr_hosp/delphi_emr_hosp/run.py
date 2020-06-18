@@ -14,7 +14,7 @@ from pathlib import Path
 from delphi_utils import read_params
 
 # first party
-from .update_sensor import SensorUpdator
+from .update_sensor import EMRHospSensorUpdator
 
 
 def run_module():
@@ -64,7 +64,7 @@ def run_module():
                 logging.info("starting %s, weekday adj", geo)
             else:
                 logging.info("starting %s, no adj", geo)
-            su_inst = SensorUpdator(
+            su_inst = EMRHospSensorUpdator(
                 params["start_date"],
                 params["end_date"],
                 dropdate,

@@ -29,3 +29,9 @@ to obtain the value and taking `sd / sqrt(n)` for the standard error, where
 of CBGs in the county.  In doing so, we make the simplifying assumption
 that each CBG contributes an iid observation to the county-level
 distribution.  `n` also serves as the sample size.
+
+## API Key
+
+We access the Safegraph data using an AWS key-secret pair which is valid
+until June 15, 2021.  The AWS credentials have been issued under
+@huisaddison's Safegraph Data Catalog account.

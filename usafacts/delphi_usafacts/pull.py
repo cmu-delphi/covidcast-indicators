@@ -24,7 +24,7 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     include:
 
     # - 6000: Grand Princess Cruise Ship
-        
+
     PS:  No information for PR
     Parameters
     ----------
@@ -47,39 +47,37 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     ]
     MIN_FIPS = 1000
     MAX_FIPS = 57000
-    
+
     # Read data
     print(base_url[metric].format(metric=metric))
-    df = pd.read_csv(base_url[metric].format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis = 1)
+    df = pd.read_csv(base_url[metric].format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
     # Check missing FIPS
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0
-    
+
     # 0: statewise unallocated
     # 1: New York City Unallocated/Probable (only exists for NYC)
-    # Temporarily treat New York City Unallocated/Probable as 
+    # Temporarily treat New York City Unallocated/Probable as
     # statewise unallocated
     df.loc[df["FIPS"] == 1, "FIPS"] = 0
-    
+
     # Assign Grand Princess Cruise Ship a special FIPS 90000
     df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
     df.loc[df["FIPS"] == 6000, "stateFIPS"] = 90
-    
+
     # Merge the unallocated ones for NY
     df = df.groupby(["FIPS", "stateFIPS"]).sum().reset_index()
-    
 
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Population for unassigned cases/deaths is NAN
-    df = pd.merge(df, pop_df, on="FIPS", how = "left")
-    
+    df = pd.merge(df, pop_df, on="FIPS", how="left")
+
     # Delete this later to include unallocated ones and Grand Princess Cruise Ship
     df = df[
             (df["FIPS"] >= MIN_FIPS)  # US non-state territories
             & (df["FIPS"] < MAX_FIPS)
     ]
-        
-    
+
     # Recover this later to include unallocated ones and Grand Princess Cruise Ship
     # Change FIPS from 0 to XX000 for unallocated cases/deaths
     # unassigned_index = np.logical_or(df['FIPS'] == 0,

@@ -79,8 +79,8 @@ FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 def fips_to_state(fips: str) -> str:
     """Wrapper that handles exceptions to the FIPS scheme in the USAFacts data.
 
-    All the county FIPS codes are mapped to state by taking the first two 
-    digits of the five digit, zero-padded county FIPS and applying 
+    All the county FIPS codes are mapped to state by taking the first two
+    digits of the five digit, zero-padded county FIPS and applying
     FIPS_TO_STATE to map it to the two-letter postal abbreviation.
 
     Parameters

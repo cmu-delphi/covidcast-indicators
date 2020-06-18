@@ -85,6 +85,7 @@ pipeline {
             }
             steps {
                 echo "${INDICATOR}" //DEBUG
+                sh "env"
                 sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
             }
         }

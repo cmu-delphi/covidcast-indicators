@@ -23,6 +23,19 @@ class EMRHospSensor:
     """
 
     @staticmethod
+    def gauss_smooth(count,total):
+        """smooth using the left_gauss_linear
+
+        Args:
+            count, total: array
+            """
+        count_smooth = left_gauss_linear(count)
+        total_smooth = left_gauss_linear(total)
+        total_clip = np.clip(total_smooth, 0, None)
+        count_clip = np.clip(count_smooth, 0, total_clip)
+        return count_clip, total_clip
+
+    @staticmethod
     def backfill(
             num,
             den,
@@ -37,15 +50,19 @@ class EMRHospSensor:
          bin size so to avoid inluding long-past values.
 
         Args:
-            num: dataframe of covid counts
-            den: dataframe of total visits
+            num: array of covid counts
+            den: array of total visits
             k: maximum number of days used to average a backfill correction
             min_visits_to_fill: minimum number of total visits needed in order to sum a bin
 
         Returns: dataframes of adjusted covid counts, adjusted visit counts, inclusion array
         """
-        revden = den[::-1].values
-        revnum = num[::-1].values.reshape(-1, 1)
+        if isinstance(den,(pd.DataFrame,pd.Series)):
+            den = den.values
+        if isinstance(num,(pd.DataFrame,pd.Series)):
+            num = num.values
+        revden = den[::-1]
+        revnum = num[::-1].reshape(-1, 1)
         new_num = np.full_like(revnum, np.nan, dtype=float)
         new_den = np.full_like(revden, np.nan, dtype=float)
         n, p = revnum.shape
@@ -76,20 +93,18 @@ class EMRHospSensor:
         new_num = new_num[::-1]
         new_den = new_den[::-1]
 
-        # reset date index and format
-        new_num = pd.Series(new_num.flatten(), name=num.name, index=num.index)
-        new_den = pd.Series(new_den, index=den.index)
-
         return new_num, new_den
 
     @staticmethod
-    def fit(y_data, first_sensor_date, geo_id):
+    def fit(y_data, first_sensor_date, geo_id, num_col="num", den_col="den"):
         """Fitting routine.
 
         Args:
             y_data: dataframe for one geo_id, indexed by date
             first_sensor_date: datetime of first date
             geo_id: unique identifier for the location column
+            num_col: str name of numerator column
+            den_col: str name of denominator column
 
         Returns:
             dictionary of results
@@ -99,17 +114,19 @@ class EMRHospSensor:
         fitting_idxs = np.where(y_data.index >= first_sensor_date)[0] # JS: WILL CHANGE
 
         # backfill
-        total_counts, total_visits = EMRHospSensor.backfill(y_data["num"], y_data["den"])
+        total_counts, total_visits = EMRHospSensor.backfill(y_data[num_col].values, y_data[den_col].values)
+        # total_counts = pd.Series(total_counts.flatten(), name=num_col, index=y_data.index)
+        # total_visits = pd.Series(total_visits, index=y_data.index)
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
-        smoothed_total_counts = np.clip(left_gauss_linear(total_counts.values), 0, None)
-        smoothed_total_visits = np.clip(left_gauss_linear(total_visits.values), 0, None)
+
+        smoothed_total_counts, smoothed_total_visits = EMRHospSensor.gauss_smooth(total_counts.flatten(),total_visits)
 
         # in smoothing, the numerator may have become more than the denominator
         # simple fix is to clip the max values elementwise to the denominator (note that
         # this has only been observed in synthetic data)
-        smoothed_total_counts = np.clip(smoothed_total_counts, 0, smoothed_total_visits)
+        # smoothed_total_counts = np.clip(smoothed_total_counts, 0, smoothed_total_visits)
 
         smoothed_total_rates = (
                 (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
@@ -124,14 +141,12 @@ class EMRHospSensor:
         ), f"0 or negative value, {geo_id}"
 
         # cut off at sensor indexes
-        rates = smoothed_total_rates[fitting_idxs]
-        den = smoothed_total_visits[fitting_idxs]
-        include = den >= Config.MIN_DEN
+        rate_data = pd.DataFrame({'rate':smoothed_total_rates, 'den': smoothed_total_visits}, index=y_data.index)
+        rate_data = rate_data[first_sensor_date:]
+        include = rate_data['den'] >= Config.MIN_DEN
+        valid_rates = rate_data[include]
+        se_valid = valid_rates.eval('sqrt(rate * (1 - rate) / den)')
+        rate_data['se'] = se_valid
 
-        # calculate standard error
-        se = np.full_like(rates, np.nan)
-        se[include] = np.sqrt(
-            np.divide((rates[include] * (1 - rates[include])), den[include]))
-
-        logging.debug(f"{geo_id}: {rates[-1]:.3f},[{se[-1]:.3f}]")
-        return {"geo_id": geo_id, "rate": 100 * rates, "se": 100 * se, "incl": include}
+        logging.debug(f"{geo_id}: {rate_data['rate'][-1]:.3f},[{rate_data['se'][-1]:.3f}]")
+        return {"geo_id": geo_id, "rate": 100 * rate_data['rate'], "se": 100 * rate_data['se'], "incl": include}

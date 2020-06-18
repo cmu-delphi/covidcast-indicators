@@ -25,30 +25,30 @@ class TestLoadData:
                                            "hrr")
 
     def test_backfill(self):
-        num0 = pd.Series([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float)
-        den0 = pd.Series([0, 10, 10, 10, 10, 10, 10, 100, 101], dtype=float)
+        num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)
+        den0 = np.array([0, 10, 10, 10, 10, 10, 10, 100, 101], dtype=float)
 
         num1, den1 = EMRHospSensor.backfill(num0, den0, k=7, min_visits_to_fill=0)
-        pd.testing.assert_series_equal(num0, num1)
-        pd.testing.assert_series_equal(den0, den1)
+        assert np.array_equal(num0, num1)
+        assert np.array_equal(den0, den1)
 
         num2, den2 = EMRHospSensor.backfill(num0, den0, k=7, min_visits_to_fill=11)
-        exp_num2 = pd.Series([0, 1, 3, 5, 7, 9, 11, 7, 8], dtype=float)
-        exp_den2 = pd.Series([0, 10, 20, 20, 20, 20, 20, 100, 101], dtype=float)
-        pd.testing.assert_series_equal(exp_num2, num2)
-        pd.testing.assert_series_equal(exp_den2, den2)
-
+        exp_num2 = np.array([0, 1, 3, 5, 7, 9, 11, 7, 8], dtype=float).reshape(-1, 1)
+        exp_den2 = np.array([0, 10, 20, 20, 20, 20, 20, 100, 101], dtype=float)
+        assert np.array_equal(exp_num2, num2)
+        assert np.array_equal(exp_den2, den2)
+        #
         num3, den3 = EMRHospSensor.backfill(num0, den0, k=7, min_visits_to_fill=100)
-        exp_num3 = pd.Series([0, 1, 3, 6, 10, 15, 21, 7, 8], dtype=float)
-        exp_den3 = pd.Series([0, 10, 20, 30, 40, 50, 60, 100, 101], dtype=float)
-        pd.testing.assert_series_equal(exp_num3, num3)
-        pd.testing.assert_series_equal(exp_den3, den3)
-
+        exp_num3 = np.array([0, 1, 3, 6, 10, 15, 21, 7, 8], dtype=float).reshape(-1, 1)
+        exp_den3 = np.array([0, 10, 20, 30, 40, 50, 60, 100, 101], dtype=float)
+        assert np.array_equal(exp_num3, num3)
+        assert np.array_equal(exp_den3, den3)
+        #
         num4, den4 = EMRHospSensor.backfill(num0, den0, k=3, min_visits_to_fill=100)
-        exp_num4 = pd.Series([0, 1, 3, 6, 10, 14, 18, 7, 8], dtype=float)
-        exp_den4 = pd.Series([0, 10, 20, 30, 40, 40, 40, 100, 101], dtype=float)
-        pd.testing.assert_series_equal(exp_num4, num4)
-        pd.testing.assert_series_equal(exp_den4, den4)
+        exp_num4 = np.array([0, 1, 3, 6, 10, 14, 18, 7, 8], dtype=float).reshape(-1, 1)
+        exp_den4 = np.array([0, 10, 20, 30, 40, 40, 40, 100, 101], dtype=float)
+        assert np.array_equal(exp_num4, num4)
+        assert np.array_equal(exp_den4, den4)
 
     def test_fit_fips(self):
         date_range = pd.date_range("2020-05-01", "2020-05-20")
@@ -93,3 +93,5 @@ class TestLoadData:
                 assert np.nanmax(res0["se"]) <= 100 * (0.5 / np.sqrt(Config.MIN_DEN))
                 assert np.nanmin(res0["se"]) > 0
                 assert res0["incl"].sum() > 0
+
+

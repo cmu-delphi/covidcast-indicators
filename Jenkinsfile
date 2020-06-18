@@ -1,10 +1,10 @@
 #!groovy
 
-/* import shared library from:
-   - https://github.com/cmu-delphi/jenkins-shared-library */
+// import shared library: https://github.com/cmu-delphi/jenkins-shared-library
 @Library('jenkins-shared-library') _
 
 pipeline {
+
     agent any
 
     // environment {
@@ -23,9 +23,10 @@ pipeline {
     // }
 
     stages {
+
         stage ("Environment") {            
             when {
-                ( branch "deploy-*" || changeRequest target: "deploy-jhu" )
+                branch "deploy-*" or changeRequest target: "deploy-jhu" )
             }
             steps {
                 script {
@@ -91,7 +92,10 @@ pipeline {
     post {
         always {
             script {
-                /* Use slackNotifier.groovy from shared library and provide current build result as parameter */   
+                /*
+                Use slackNotifier.groovy from shared library and provide current
+                build result as parameter
+                */   
                 slackNotifier(currentBuild.currentResult)
                 //cleanWs()
             }

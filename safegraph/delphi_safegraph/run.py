@@ -19,9 +19,9 @@ from .process import process
 SIGNALS = [
     # signal_name                wip
     ('median_home_dwell_time',   False),
-    ('prop_completely_home',     False),
-    ('prop_full_time_work',      False),
-    ('prop_part_time_work',      False),
+    ('completely_home_prop',     False),
+    ('full_time_work_prop',      False),
+    ('part_time_work_prop',      False),
 ]
 GEO_RESOLUTIONS = [
     'county',

@@ -13,11 +13,11 @@ def construct_signals(cbg_df, signal_names):
     In its current form, we prepare the following signals in addition to those
     already available in raw form from Safegraph:
 
-    - prop_completely_home, defined as:
+    - completely_home_prop, defined as:
         completely_home_device_count / device_count
-    - prop_full_time_work, defined as:
+    - full_time_work_prop, defined as:
         full_time_work_behavior_devices / device_count
-    - prop_part_time_work, defined as:
+    - part_time_work_prop, defined as:
         part_time_work_behavior_devices / device_count
 
     Documentation for the social distancing metrics:
@@ -43,11 +43,11 @@ def construct_signals(cbg_df, signal_names):
     cbg_df['county_fips'] = (cbg_df['origin_census_block_group'] // MOD).apply(
                             lambda x: f'{int(x):05d}')
     # Transformation: create signal not available in raw data
-    cbg_df['prop_completely_home'] = (cbg_df['completely_home_device_count']
+    cbg_df['completely_home_prop'] = (cbg_df['completely_home_device_count']
                                         / cbg_df['device_count'])
-    cbg_df['prop_full_time_work'] =  (cbg_df['full_time_work_behavior_devices']
+    cbg_df['full_time_work_prop'] =  (cbg_df['full_time_work_behavior_devices']
                                         / cbg_df['device_count'])
-    cbg_df['prop_part_time_work'] =  (cbg_df['part_time_work_behavior_devices']
+    cbg_df['part_time_work_prop'] =  (cbg_df['part_time_work_behavior_devices']
                                         / cbg_df['device_count'])
     # Subsetting
     return cbg_df[['timestamp', 'county_fips'] + signal_names]

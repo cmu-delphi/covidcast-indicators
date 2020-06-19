@@ -35,7 +35,7 @@ SENSORS = [
 ]
 SMOOTHERS = [
     "unsmoothed",
-    "seven_day_average",
+    #"seven_day_average",
 ]
 SENSOR_NAME_MAP = {
     "new_counts":           ("incidence_num", False),
@@ -84,7 +84,7 @@ def run_module():
         print(geo_res, metric, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df)
+        df = geo_map(df, geo_res, map_df, sensor)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

@@ -89,6 +89,10 @@ REPLACE_FIPS = [
 
 FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
+# Fake fips to States
+
+JHU_FAKE_FIPS_TO_MEGA_FIPS = {f'900{x}' : f'{x}000' for x in STATE_TO_FIPS.values()}
+
 
 def fips_to_state(fips: str) -> str:
     """Wrapper that handles exceptions to the FIPS scheme in the JHU data.
@@ -148,7 +152,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
+def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.
@@ -162,6 +166,10 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         ('county', 'state', 'msa', 'hrr').
     map_df: pd.DataFrame
         Loaded from static file "fips_prop_pop.csv".
+    sensor: str
+        sensor type. Valid options:
+        ("new_counts", "cumulative_counts",
+        "incidence", "cumulative_prop")
 
     Returns
     -------
@@ -169,15 +177,27 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         Columns: geo_id, timestamp, ...
     """
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
+    #It is not clear to calculate the proportion for unassigned cases/deaths
+    PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
-    df = df.copy()
+
+    df_mega = df[df['fips'].astype(int) >= 90001].copy()
+    df_mega['geo_id'] = df_mega['fips'].apply(lambda x: JHU_FAKE_FIPS_TO_MEGA_FIPS[x])
+
+    df = df[df['fips'].astype(int) < 90001].copy()
+
     if geo_res == "county":
         df["geo_id"] = df["fips"]
+        if sensor not in PROP_SENSORS:
+            df = df.append(df_mega)
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
-        df["geo_id"] = df["fips"].apply(fips_to_state)
+        df["geo_id"] = df["fips"]
+        # Add unassigned cases/deaths
+        df = df.append(df_mega)
+        df["geo_id"] = df["geo_id"].apply(fips_to_state)
     elif geo_res in ("msa", "hrr"):
         # Disburse Dukes & Nantucket to individual counties
         df = disburse(df, DN_FIPS, DN_COUNTY_FIPS)
@@ -200,8 +220,13 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
         merged["population"] = merged["population"] * merged["pop_prop"]
         df = merged.drop(["zip", "pop_prop", "hrrnum", "cbsa_id"], axis=1)
+        # if sensor not in PROP_SENSORS:
+        #     df_mega["geo_id"] = df_mega["geo_id"].apply(fips_to_state)
+        #     df = df.append(df_mega)
     df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
+
+    # Value would be negative for megacounties , which would not be considered in the main function
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df

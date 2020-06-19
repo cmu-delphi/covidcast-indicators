@@ -67,7 +67,7 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF)
+            geo_map(df, "département", MAP_DF, 'new_counts')
 
     def test_county(self):
 

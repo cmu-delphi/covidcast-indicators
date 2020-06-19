@@ -10,16 +10,13 @@ pop_df = pd.read_csv(
     dtype={"fips": float, "population": float}
 ).rename({"fips": "FIPS"}, axis=1)
 
-base_url_good = {
-    "confirmed": "test_data/small_confirmed.csv",
-    "deaths": "test_data/small_deaths.csv"
-    }
+base_url_good = "test_data/small_{metric}.csv"
 
 base_url_bad = {
-    "missing_days": {"confirmed": "test_data/bad_confirmed_missing_days.csv"},
-    "missing_cols": {"confirmed":"test_data/bad_confirmed_missing_cols.csv"},
-    "extra_cols": {"confirmed": "test_data/bad_confirmed_extra_cols.csv"}
-    }
+    "missing_days": "test_data/bad_{metric}_missing_days.csv",
+    "missing_cols": "test_data/bad_{metric}_missing_cols.csv",
+    "extra_cols": "test_data/bad_{metric}_extra_cols.csv"
+}
 
 
 class TestPullUSAFacts:

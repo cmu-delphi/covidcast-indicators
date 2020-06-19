@@ -45,7 +45,7 @@ SENSOR_NAME_MAP = {
 }
 SMOOTHERS_MAP = {
     "unsmoothed":           (identity, ''),
-    "seven_day_average":    (seven_day_moving_average, '7day_avg_'),
+    "seven_day_average":    (seven_day_moving_average, '7dav_'),
 }
 GEO_RESOLUTIONS = [
     "county",

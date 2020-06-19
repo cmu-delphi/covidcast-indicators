@@ -131,7 +131,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
+def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.
@@ -145,6 +145,10 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         ('county', 'state', 'msa', 'hrr').
     map_df: pd.DataFrame
         Loaded from static file "fips_prop_pop.csv".
+    sensor: str
+        sensor type. Valid options:
+        ("new_counts", "cumulative_counts",
+        "incidence", "cumulative_prop")
 
     Returns
     -------
@@ -152,24 +156,30 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
         Columns: geo_id, timestamp, ...
     """
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
+    #It is not clear to calculate the proportion for unallocated cases/deaths
+    PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
-    df = df.copy()
+    
+    df_mega = df[df['fips'] % 1000 == 0].copy()
+    
+    df = df[df['fips'] % 1000 != 0].copy()
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
     
-    if geo_res == "county":
+    if geo_res == "county":        
+        if sensor not in PROP_SENSORS:
+            df = df.append(df_mega)
         df["geo_id"] = df["fips"]
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
-        df["geo_id"] = df["fips"].apply(fips_to_state)
+         # Add unallocated cases/deaths
+        df = df.append(df_mega)
+        df["geo_id"] = df["fips"].apply(fips_to_state)        
     elif geo_res in ("msa", "hrr"):
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
             df = disburse(df, fips, fips_list)
-        # Our fips are outdated:
-        #    https://www.census.gov/programs-surveys/
-        #    geography/technical-documentation/county-changes.html
         for usafacts_fips, our_fips in REPLACE_FIPS:
             df.loc[df["fips"] == usafacts_fips, "fips"] = our_fips
         colname = "cbsa_id" if geo_res == "msa" else "hrrnum"

@@ -13,6 +13,9 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
+            "20200229",
+            "20200301",
+            "20200302",
             "20200303",
             "20200304",
             "20200305",
@@ -20,7 +23,7 @@ class TestRun:
             "20200307",
             "20200308",
             "20200309",
-            "20200310",
+            "202003010",
         ]
         geos = ["county", "hrr", "msa", "state"]
         metrics = [

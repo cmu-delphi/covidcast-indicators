@@ -1,7 +1,7 @@
 {
   "export_start_date": "2020-02-20",
-  "static_file_dir": "./static",
+  "static_file_dir": "../static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "base_url": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_{metric}_usafacts.csv"
+  "base_url": "test_data/small_{metric}.csv"
 }

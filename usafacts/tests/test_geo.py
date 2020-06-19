@@ -11,7 +11,7 @@ MAP_DF = pd.read_csv(
     dtype={"fips": int}
 )
 
-
+sensor = "new_counts"
 class TestFipsToState:
 
     def test_normal(self):
@@ -56,7 +56,7 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF)
+            geo_map(df, "département", MAP_DF, sensor)
 
     def test_county(self):
 
@@ -70,7 +70,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "county", MAP_DF)
+        new_df = geo_map(df, "county", MAP_DF, sensor)
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
@@ -92,7 +92,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "state", MAP_DF)
+        new_df = geo_map(df, "state", MAP_DF, sensor)
 
         exp_incidence = np.array([27, 13]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165, 60]) / np.array([2500, 25]) * 100000
@@ -117,7 +117,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "hrr", MAP_DF)
+        new_df = geo_map(df, "hrr", MAP_DF, sensor)
 
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
@@ -142,7 +142,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "msa", MAP_DF)
+        new_df = geo_map(df, "msa", MAP_DF, sensor)
 
         exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
         exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000

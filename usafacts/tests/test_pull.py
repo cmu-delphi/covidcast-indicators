@@ -16,15 +16,16 @@ base_url_good = {
     }
 
 base_url_bad = {
-    "confirmed": "test_data/bad_confirmed.csv",
-    "deaths": "test_data/bad_deaths.csv"
+    "missing_days": {"confirmed": "test_data/bad_confirmed_missing_days.csv"},
+    "missing_cols": {"confirmed":"test_data/bad_confirmed_missing_cols.csv"},
+    "extra_cols": {"confirmed": "test_data/bad_confirmed_extra_cols.csv"}
     }
 
 
 class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"
-        df = pull_usafacts_data(base_url_good[metric], metric, pop_df)
+        df = pull_usafacts_data(base_url_good, metric, pop_df)
 
         assert (
             df.columns.values
@@ -36,7 +37,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad[metric], metric, pop_df
+                base_url_bad["missing_days"], metric, pop_df
             )
 
     def test_missing_cols(self):
@@ -44,7 +45,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad[metric], metric, pop_df
+                base_url_bad["missing_cols"], metric, pop_df
             )
 
     def test_extra_cols(self):
@@ -52,5 +53,5 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad[metric], metric, pop_df
+                base_url_bad["extra_cols"], metric, pop_df
             )

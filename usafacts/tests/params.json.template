@@ -1,0 +1,10 @@
+{
+  "export_start_date": "2020-02-20",
+  "static_file_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "base_url": {
+    "confirmed": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_confirmed_usafacts.csv",
+    "deaths": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_deaths_usafacts.csv"
+    }
+}

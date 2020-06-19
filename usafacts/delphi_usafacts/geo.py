@@ -69,7 +69,7 @@ SECONDARY_FIPS = [
     ("51678", ["51163"]),
 ]
 NYC_FIPS = [
-    ("1", ["36061", "36005", "36047", "36081", "36085"])
+    ("00001", ["36061", "36005", "36047", "36081", "36085"])
 ]
 REPLACE_FIPS = [
     ("02158", "02270"),
@@ -156,16 +156,18 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         Columns: geo_id, timestamp, ...
     """
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
-    #It is not clear to calculate the proportion for unallocated cases/deaths
+    #It is not clear how to calculate the proportion for unallocated cases/deaths
     PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
-    
-    df_mega = df[df['fips'] % 1000 == 0].copy()
-    
-    df = df[df['fips'] % 1000 != 0].copy()
+
+    df_mega = df[df['fips'].astype(int) % 1000 == 0].copy()
+
+    df = df[df['fips'].astype(int) % 1000 != 0].copy()
+    # Disburse unallocated cases/deaths in NYC to NYC counties
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
-    
+    df = df[df['fips'] != NYC_FIPS[0][0]]
+
     if geo_res == "county":        
         if sensor not in PROP_SENSORS:
             df = df.append(df_mega)
@@ -173,7 +175,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
-         # Add unallocated cases/deaths
+        # Add unallocated cases/deaths
         df = df.append(df_mega)
         df["geo_id"] = df["fips"].apply(fips_to_state)        
     elif geo_res in ("msa", "hrr"):

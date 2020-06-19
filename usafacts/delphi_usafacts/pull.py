@@ -62,10 +62,10 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     # Assign Grand Princess Cruise Ship a special FIPS 90000
     # df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
     # df.loc[df["FIPS"] == 6000, "stateFIPS"] = 90
-    
+
     # Ignore Grand Princess Cruise Ship and Wade Hampton Census Area in AK
     df = df[
-        (df["FIPS"] != 6000) 
+        (df["FIPS"] != 6000)
         & (df["FIPS"] != 2270)
     ]
 

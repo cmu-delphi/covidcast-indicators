@@ -168,7 +168,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
     df = df[df['fips'] != NYC_FIPS[0][0]]
 
-    if geo_res == "county":        
+    if geo_res == "county":
         if sensor not in PROP_SENSORS:
             df = df.append(df_mega)
         df["geo_id"] = df["fips"]
@@ -177,7 +177,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         # Map state fips to us postal code
         # Add unallocated cases/deaths
         df = df.append(df_mega)
-        df["geo_id"] = df["fips"].apply(fips_to_state)        
+        df["geo_id"] = df["fips"].apply(fips_to_state)
     elif geo_res in ("msa", "hrr"):
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 
-def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
     """Pulls the latest USA Facts data, and conforms it into a dataset
 
     The output dataset has:
@@ -31,8 +31,8 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     PS:  No information for PR
     Parameters
     ----------
-    base_url: dict
-        Disctionary used to store base URLs for pulling the USAFacts data
+    base_url: str
+        Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
     pop_df: pd.DataFrame
@@ -54,7 +54,7 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     # MAX_FIPS = 57000
 
     # Read data
-    df = pd.read_csv(base_url[metric].format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
+    df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
     # Check missing FIPS
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0

@@ -97,23 +97,27 @@ class EMRHospSensorUpdator:
 
 
     def shift_dates(self):
-        """shift estimates one day forward to account for a 1 day lag, e.g.
-        we want to produce estimates for the time range May 2 to May 20, inclusive
-        given a drop on May 20, we have data up until May 19.
-        we then train on data from Jan 1 until May 19, storing only the sensors
-        on May 1 to May 19. we then shift the dates forward by 1, giving us sensors
-        on May 2 to May 20. therefore, we will move the startdate back by one day
-        in order to get the proper estimate at May 1
+        """shift estimates forward to account for time lag, compute burnindates, sensordates
         """
-        ## JS: WILL USE DATETIMEINDEX FOR THIS...
+
         drange = lambda s, e: pd.date_range(start=s,periods=(e-s).days,freq='D')
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
         self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
         self.burn_in_dates = drange(self.burnindate, self.dropdate)
         self.sensor_dates = drange(self.startdate, self.enddate)
+        return True
 
     def geo_reindex(self,data,staticpath):
+        """Reindex based on geography, include all date, geo pairs
+
+        Args:
+            data: dataframe, the output of loadcombineddata
+            staticpath: path for the static geographic files
+
+        Returns:
+            dataframe
+        """
         # get right geography
         geo = self.geo
         geo_map = GeoMaps(staticpath)
@@ -207,7 +211,6 @@ class EMRHospSensorUpdator:
                 pool_results = [proc.get() for proc in pool_results]
 
                 for res in pool_results:
-                    ## un-tested
                     geo_id = res["geo_id"]
                     res = pd.DataFrame(res)
                     sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs, "rate"])

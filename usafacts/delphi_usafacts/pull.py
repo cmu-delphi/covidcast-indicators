@@ -24,6 +24,8 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     include:
 
     # - 6000: Grand Princess Cruise Ship
+    # - 0: statewise unallocated
+    # - 1: New York City Unallocated/Probable (only exists for NYC)
 
     PS:  No information for PR
     Parameters
@@ -45,8 +47,8 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
         "FIPS",
         "stateFIPS"
     ]
-    MIN_FIPS = 1000
-    MAX_FIPS = 57000
+    # MIN_FIPS = 1000
+    # MAX_FIPS = 57000
 
     # Read data
     df = pd.read_csv(base_url[metric].format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
@@ -54,15 +56,11 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0
 
-    # 0: statewise unallocated
-    # 1: New York City Unallocated/Probable (only exists for NYC)
-    # Temporarily treat New York City Unallocated/Probable as
-    # statewise unallocated
-    df.loc[df["FIPS"] == 1, "FIPS"] = 0
-
     # Assign Grand Princess Cruise Ship a special FIPS 90000
-    df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
-    df.loc[df["FIPS"] == 6000, "stateFIPS"] = 90
+    # df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
+    # df.loc[df["FIPS"] == 6000, "stateFIPS"] = 90
+    # Ignore Grand Princess Cruise Ship
+    df = df[df["FIPS"] != 6000]
 
     # Merge the unallocated ones for NY
     df = df.groupby(["FIPS", "stateFIPS"]).sum().reset_index()
@@ -72,16 +70,15 @@ def pull_usafacts_data(base_url: dict, metric: str, pop_df: pd.DataFrame) -> pd.
     df = pd.merge(df, pop_df, on="FIPS", how="left")
 
     # Delete this later to include unallocated ones and Grand Princess Cruise Ship
-    df = df[
-            (df["FIPS"] >= MIN_FIPS)  # US non-state territories
-            & (df["FIPS"] < MAX_FIPS)
-    ]
+    # df = df[
+    #         (df["FIPS"] >= MIN_FIPS)  # US non-state territories
+    #         & (df["FIPS"] < MAX_FIPS)
+    # ]
 
-    # Recover this later to include unallocated ones and Grand Princess Cruise Ship
-    # Change FIPS from 0 to XX000 for unallocated cases/deaths
-    # unassigned_index = np.logical_or(df['FIPS'] == 0,
-    #                                   df['FIPS'] == 1)
-    # df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000
+
+    # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
+    unassigned_index = (df['FIPS'] == 0)
+    df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000
 
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")

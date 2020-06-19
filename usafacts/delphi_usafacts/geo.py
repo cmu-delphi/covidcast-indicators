@@ -68,6 +68,9 @@ SECONDARY_FIPS = [
     ("51580", ["51005"]),
     ("51678", ["51163"]),
 ]
+NYC_FIPS = [
+    ("1", ["36061", "36005", "36047", "36081", "36085"])
+]
 REPLACE_FIPS = [
     ("02158", "02270"),
     ("46102", "46113"),
@@ -152,6 +155,8 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
     df = df.copy()
+    df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
+    
     if geo_res == "county":
         df["geo_id"] = df["fips"]
     elif geo_res == "state":

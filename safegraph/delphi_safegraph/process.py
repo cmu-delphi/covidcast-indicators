@@ -47,7 +47,7 @@ def construct_signals(cbg_df, signal_names):
                                         / cbg_df['device_count'])
     cbg_df['prop_full_time_work'] =  (cbg_df['full_time_work_behavior_devices']
                                         / cbg_df['device_count'])
-    cbg_df['prop_part_time_work'] =  (cbg_df['full_time_work_behavior_devices']
+    cbg_df['prop_part_time_work'] =  (cbg_df['part_time_work_behavior_devices']
                                         / cbg_df['device_count'])
     # Subsetting
     return cbg_df[['timestamp', 'county_fips'] + signal_names]

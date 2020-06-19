@@ -35,7 +35,7 @@ SENSORS = [
 ]
 SMOOTHERS = [
     "unsmoothed",
-    #"seven_day_average",
+    "seven_day_average",
 ]
 SENSOR_NAME_MAP = {
     "new_counts":           ("incidence_num", False),

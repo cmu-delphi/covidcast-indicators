@@ -93,6 +93,7 @@ class EMRHospSensorUpdator:
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
+        assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
         self.geo, self.parallel, self.weekday = geo, parallel, weekday
 
 
@@ -162,9 +163,9 @@ class EMRHospSensorUpdator:
 
         self.shift_dates()
         final_sensor_idxs = (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
-        ## JS: THIS IS FINE
 
         # load data
+        ## JS: If the data is in fips then can we also put it into hrr?
         base_geo = "hrr" if self.geo == "hrr" else "fips"
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
@@ -180,7 +181,6 @@ class EMRHospSensorUpdator:
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
                 sub_data.reset_index(level=0,inplace=True)
-                del sub_data[base_geo]
 
                 if self.weekday:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data)
@@ -199,7 +199,6 @@ class EMRHospSensorUpdator:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
                     sub_data.reset_index(level=0, inplace=True)
-                    del sub_data[base_geo]
                     if self.weekday:
                         sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
@@ -222,7 +221,7 @@ class EMRHospSensorUpdator:
             "rates": sensor_rates,
             "se": sensor_se,
             "dates": self.sensor_dates,
-            "geo_ids": self.unique_geo_ids,
+            "geo_ids": unique_geo_ids,
             "geo_level": self.geo,
             "include": sensor_include,
         }

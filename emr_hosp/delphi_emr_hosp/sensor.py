@@ -110,9 +110,6 @@ class EMRHospSensor:
             dictionary of results
 
         """
-        # values to keep
-        fitting_idxs = np.where(y_data.index >= first_sensor_date)[0] # JS: WILL CHANGE
-
         # backfill
         total_counts, total_visits = EMRHospSensor.backfill(y_data[num_col].values, y_data[den_col].values)
         # total_counts = pd.Series(total_counts.flatten(), name=num_col, index=y_data.index)

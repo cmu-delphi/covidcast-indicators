@@ -69,23 +69,23 @@ class TestEMRHospSensorUpdator:
         assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
-        td = TemporaryDirectory()
-        su_inst = EMRHospSensorUpdator(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
-            'hrr',
-            self.parallel,
-            self.weekday)
-        su_inst.update_sensor(
-            EMR_FILEPATH,
-            CLAIMS_FILEPATH,
-            td.name,
-            PARAMS["static_file_dir"]
-        )
-        assert len(os.listdir(td.name)) == len(su_inst.sensor_dates)
-        ## JS: ADD MORE TESTS HERE
-        td.cleanup()
+        for geo in ["state","hrr"]:
+            td = TemporaryDirectory()
+            su_inst = EMRHospSensorUpdator(
+                "02-01-2020",
+                "06-01-2020",
+                "06-12-2020",
+                geo,
+                self.parallel,
+                self.weekday)
+            su_inst.update_sensor(
+                EMR_FILEPATH,
+                CLAIMS_FILEPATH,
+                td.name,
+                PARAMS["static_file_dir"]
+            )
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
+            td.cleanup()
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

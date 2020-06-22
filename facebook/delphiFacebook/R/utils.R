@@ -136,3 +136,44 @@ mix_weights <- function(weights, params)
 
   return(new_weights)
 }
+
+
+#' Aggregates counties into megacounties that have low sample size values 
+#' for a given day.
+#' 
+
+#' 
+#'
+#' @param df_intr Input tibble list that requires aggregation.
+#' @param threshold Sample size value below which the megacounty aggregation 
+#'   holds true.
+#' @return Tibble list of megacounties
+
+
+megacounty <- function(
+  df_intr, threshold
+)
+{
+  #df_intr$geo_id <- sprintf("%05s", df_intr$geo_id)
+  #df_megacounties <- filter(df_intr, df_intr$sample_size < threshold | df_intr$effective_sample_size < threshold)
+  df_megacounties <- df_intr[df_intr$sample_size < threshold |
+                               df_intr$effective_sample_size < threshold, ]
+  #df_intr <- mutate(df_intr, geo_id = ifelse(sample_size < threshold & effective_sample_size < threshold, substr(geo_id, 1, 2), geo_id))
+  #df_intr <- mutate(df_intr, geo_id = ifelse(sample_size < threshold & effective_sample_size < threshold, paste0(geo_id, "000"), geo_id))
+  
+  df_megacounties <- mutate(df_megacounties, geo_id = substr(geo_id, 1, 2) )
+  df_megacounties <- mutate(df_megacounties, geo_id = paste0(geo_id, "000"))
+  
+  df_megacounties <- group_by(df_megacounties, .data$day, .data$geo_id)
+  df_megacounties <- mutate(df_megacounties, county_weight = .data$effective_sample_size/sum(.data$effective_sample_size))
+  df_megacounties <- summarize(
+    df_megacounties,
+    val = sum(.data$val),
+    se = sqrt(sum(.data$se^2 * .data$county_weight^2)),
+    sample_size = sum(.data$sample_size),
+    effective_sample_size = sum(.data$effective_sample_size)
+  )
+  df_megacounties <- mutate(df_megacounties, county_weight = NULL)
+  df_megacounties <- ungroup(df_megacounties)
+  return(df_megacounties)
+}

@@ -82,36 +82,12 @@ summarize_hh_count <- function(
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-    df_megacounties <- megacounty(df_out, params$num_filter)
+  df_megacounties <- megacounty(df_out, params$num_filter)
   df_out <- df_out[df_out$sample_size >= params$num_filter &
                      df_out$effective_sample_size >= params$num_filter, ]
-  df_out <- inner_join(df_out, df_megacounties, by=c("geo_id"))
+  #df_out <- inner_join(df_out, df_megacounties, by=c("geo_id"))
+  df_out <- bind_rows(list(df_out, df_megacounties))
   return(df_out)
-}
-
-
-megacounty <- function(
-  df_intr, threshold
-)
-{
-  df_intr$geo_id <- sprintf("%05d", df_intr$geo_id)
-  
-  df_megacounties <- df_intr[df_out$sample_size < threshold &
-                     df_intr$effective_sample_size < threshold, ]
-  
-  df_megacounties <- mutate(df_megacounties, geo_id = as.integer(geo_id)/1000L * 1000L)
-  
-  df_megacounties <- group_by(df_megacounties, .data$geo_id)
-  df_megacounties <- summarize(
-    df_megacounties,
-    val = sum(.data$val),
-    se = sum(.data$se),
-    sample_size = sum(.data$sample_size),
-    effective_sample_size = sum(.data$effective_sample_size)
-  )
-  
-  df_megacounties <- ungroup(df_megacounties)
-  return(df_megacounties)
 }
 
 

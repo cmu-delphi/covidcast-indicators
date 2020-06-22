@@ -84,8 +84,10 @@ summarize_binary <- function(
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+  df_megacounties <- megacounty(df_out, params$num_filter)
   df_out <- df_out[df_out$sample_size >= params$num_filter &
                  df_out$effective_sample_size >= params$num_filter, ]
+  df_out <- bind_rows(list(df_out, df_megacounties))
   return(df_out)
 }
 

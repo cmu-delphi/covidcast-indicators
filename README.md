@@ -11,7 +11,7 @@ Each subdirectory contained here that is named after an indicator has specific d
 **tl;dr**
 
 - Create your new indicator branch from `main`.
-- Bulid it according to the established guidelines.
+- Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
 - Make some stuff!
 - When your stuff works, push your `dev-*` branch to remote for review.
 - Consult with a platform engineer for the remaining production setup needs.

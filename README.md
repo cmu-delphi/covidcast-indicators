@@ -16,7 +16,7 @@ Each subdirectory contained here that is named after an indicator has specific d
 - When your stuff works, push your `dev-*` branch to remote for review.
 - Consult with a platform engineer for the remaining production setup needs.
 - Initiate a pull request against the corresponding `deploy-*` branch for your indicator.
-- If your peers and Jenkins likes it then merge it to deploy.
+- If your peers like it and Jenkins approves, deploy your changes by merging the PR.
 - Rejoice!
 
 ### Starting out

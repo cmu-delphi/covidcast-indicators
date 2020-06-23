@@ -32,7 +32,7 @@ git checkout -b my-feature-branch
 
 ### Creating your indicator
 
-Review an existing indicator's directory to gain a sense of the pattern(s) to follow (replicate the directory structure, general code structure, linting and test guidelines, etc.)
+Create a directory for your new indicator by making a copy of `_template_r` or `_template_python` depending on the programming language you intend to use. The template copies of `README.md` and `REVIEW.md` include the minimum requirements for code structure, documentation, linting, testing, and method of configuration. Beyond that, we don't have any established restrictions on implementation; you can look at other existing indicators see some examples of code layout, organization, and general approach.
 
 - Consult your peers with questions! :handshake:
 

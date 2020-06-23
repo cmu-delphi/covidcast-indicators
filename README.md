@@ -1,6 +1,6 @@
 # Covidcast Indicators
 
-Pipeline code and supporting libaries for the **Real-time COVID-19 Indicators** used in the Delphi Group's **COVIDcast** map [<https://covidcast.cmu.edu>].
+Pipeline code and supporting libraries for the **Real-time COVID-19 Indicators** used in the Delphi Group's [**COVIDcast** map](https://covidcast.cmu.edu).
 
 ## The indicators
 

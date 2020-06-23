@@ -14,8 +14,8 @@ Each subdirectory contained here that is named after an indicator has specific d
 - Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
 - Make some stuff!
 - When your stuff works, push your `dev-*` branch to remote for review.
-- Consult with a platform engineer for the remaining production setup needs.
-- Initiate a pull request against the corresponding `deploy-*` branch for your indicator.
+- Consult with a platform engineer for the remaining production setup needs. They will create a branch called `deploy-*` for your indicator.
+- Initiate a pull request against this new branch.
 - If your peers like it and Jenkins approves, deploy your changes by merging the PR.
 - Rejoice!
 
@@ -27,7 +27,7 @@ The `main` branch should contain up-to-date code and supporting libraries This s
 # Hint
 #
 git checkout main
-git checkout -b my-feature-branch
+git checkout -b dev-my-feature-branch
 ```
 
 ### Creating your indicator
@@ -41,21 +41,21 @@ Once you have something that runs locally and passes tests you set up your remot
 ```shell
 # Hint
 #
-git push -u origin my-feature-branch
+git push -u origin dev-my-feature-branch
 ```
 
 ### Setting up for review and deployment
 
-Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. Tasks that may need to be taken care of are:
+Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. These include:
 
-- Create the corresponding `deploy-*` branch in the repo.
-- Add the necessary Jenkins scripts for your indicator.
-- Prep the runtime host with any Automation configuration necessities.
-- Generally review the workflow to makes sure it meets the general guidelines and will run as expected on the runtime host.
+- Creating the corresponding `deploy-*` branch in the repo.
+- Adding the necessary Jenkins scripts for your indicator.
+- Preparing the runtime host with any Automation configuration necessities.
+- Reviewing the workflow to make sure it meets the general guidelines and will run as expected on the runtime host.
 
 Once all the last mile configuration is in place you can create a pull request against the correct `deploy-*` branch to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
 
-If everything looks ok, platform engineering has validated the last mile, and the pull request is accepted, merge and deployment should start.
+If everything looks ok, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
 
 Hopefully it'll be a full on :tada: after that :crossed_fingers:
 

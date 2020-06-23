@@ -13,7 +13,7 @@ Each subdirectory contained here that is named after an indicator has specific d
 - Create your new indicator branch from `main`.
 - Bulid it according to the established guidelines.
 - Make some stuff!
-- When your stuff works you can create your remote tracking branch.
+- When your stuff works, push your `dev-*` branch to remote for review.
 - Consult with a platform engineer for the remaining production setup needs.
 - Initiate a pull request against the corresponding `deploy-*` branch for your indicator.
 - If your peers and Jenkins likes it then merge it to deploy.

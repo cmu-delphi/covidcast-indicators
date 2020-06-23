@@ -21,7 +21,7 @@ Each subdirectory contained here that is named after an indicator has specific d
 
 ### Starting out
 
-The `main` branch should contain up-to-date code and supporting libraries This should be your starting point when creating a new indicator.
+The `main` branch should contain up-to-date code and supporting libraries. This should be your starting point when creating a new indicator.
 
 ```shell
 # Hint
@@ -57,7 +57,7 @@ Once all the last mile configuration is in place you can create a pull request a
 
 If everything looks ok, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
 
-Hopefully it'll be a full on :tada: after that :crossed_fingers:
+Hopefully it'll be a full on :tada:, after that :crossed_fingers:
 
 If not, circle back and try again.
 

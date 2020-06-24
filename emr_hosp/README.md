@@ -1,6 +1,9 @@
 # EMR Hospitalizations Indicator
 
 COVID-19 indicator using hospitalizations from electronic medical records (EMR). 
+Reads claims data (AGG) and EMR data (CMB) and combines into pandas dataframe.
+Makes appropriate date shifts, adjusts for backfilling, and smooths estimates.
+Writes results to csvs.
 
 
 ## Running the Indicator
@@ -56,3 +59,10 @@ The output will show the number of unit tests that passed and failed, along
 with the percentage of code covered by the tests. None of the tests should
 fail and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines.
+
+## Code tour
+
+- update_sensor.py: EMRHospSensorUpdator: reads the data, makes transformations, 
+- sensor.py: EMRHospSensor: methods for transforming data, including backfill and smoothing
+- load_data.py: methods for loading claims and EHR data
+- geo_maps.py: geo reindexing

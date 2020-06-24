@@ -1,5 +1,6 @@
 # standard
 from copy import deepcopy
+import os
 from os.path import join, exists
 import pytest
 from tempfile import TemporaryDirectory
@@ -8,9 +9,83 @@ from tempfile import TemporaryDirectory
 import pandas as pd
 import numpy as np
 
-# first party
-from delphi_emr_hosp.update_sensor import write_to_csv, update_sensor
+# third party
+from delphi_utils import read_params
 
+# first party
+from delphi_emr_hosp.config import Config, Constants
+
+# first party
+from delphi_emr_hosp.update_sensor import write_to_csv, EMRHospSensorUpdator
+from delphi_emr_hosp.load_data import *
+
+CONFIG = Config()
+CONSTANTS = Constants()
+PARAMS = read_params()
+CLAIMS_FILEPATH = PARAMS["input_claims_file"]
+EMR_FILEPATH = PARAMS["input_emr_file"]
+DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+OUTPATH="test_data/"
+
+class TestEMRHospSensorUpdator:
+    geo = "hrr"
+    parallel = False
+    weekday = False
+    small_test_data = pd.DataFrame({
+        "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
+        "hrr": [1.0] * 7 + [2.0] * 6,
+        "den": [1000] * 7 + [2000] * 6,
+        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["hrr","date"])
+
+    def test_shift_dates(self):
+        su_inst = EMRHospSensorUpdator(
+            "02-01-2020",
+            "06-01-2020",
+            "06-12-2020",
+            self.geo,
+            self.parallel,
+            self.weekday)
+        ## Test init
+        assert su_inst.startdate.month == 2
+        assert su_inst.enddate.month == 6
+        assert su_inst.dropdate.day == 12
+
+        ## Test shift
+        su_inst.shift_dates()
+        assert su_inst.sensor_dates[0] == su_inst.startdate
+        assert su_inst.sensor_dates[-1] == su_inst.enddate - pd.Timedelta(days=1)
+
+    def test_geo_reindex(self):
+        su_inst = EMRHospSensorUpdator(
+            "02-01-2020",
+            "06-01-2020",
+            "06-12-2020",
+            'hrr',
+            self.parallel,
+            self.weekday)
+        su_inst.shift_dates()
+        data_frame = su_inst.geo_reindex(self.small_test_data,PARAMS["static_file_dir"])
+        assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
+        assert (data_frame.sum() == (4200,19000)).all()
+
+    def test_update_sensor(self):
+        for geo in ["state","hrr"]:
+            td = TemporaryDirectory()
+            su_inst = EMRHospSensorUpdator(
+                "02-01-2020",
+                "06-01-2020",
+                "06-12-2020",
+                geo,
+                self.parallel,
+                self.weekday)
+            su_inst.update_sensor(
+                EMR_FILEPATH,
+                CLAIMS_FILEPATH,
+                td.name,
+                PARAMS["static_file_dir"]
+            )
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
+            td.cleanup()
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

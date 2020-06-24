@@ -57,7 +57,10 @@ New York City comprises of five boroughs:
 
 **Data from all five boroughs are reported under New York County,
 FIPS Code 36061.**  The other four boroughs are included in the dataset
-and show up in our API, but they should be uniformly zero.
+and show up in our API, but they should be uniformly zero. (In our population 
+file under static folder, the population from all five boroughs are also 
+assigned to FIPS Code 36061 only. The populatio for the rest of the counties 
+are set to be 1.)
 
 All NYC counts are mapped to the MSA with CBSA ID 35620, which encompasses
 all five boroughs.  All NYC counts are mapped to HRR 303, which intersects

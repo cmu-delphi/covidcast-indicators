@@ -30,8 +30,8 @@ class TestRun:
             "confirmed_cumulative_num",
             "confirmed_incidence_num",
             "confirmed_incidence_prop",
-            "wip_deaths_cumulative_prop",
-            "wip_confirmed_cumulative_prop",
+            "deaths_7dav_cumulative_prop",
+            "confirmed_7dav_cumulative_prop",
         ]
 
         expected_files = []

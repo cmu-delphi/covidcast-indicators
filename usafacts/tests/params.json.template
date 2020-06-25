@@ -1,5 +1,5 @@
 {
-  "export_start_date": "2020-02-20",
+  "export_start_date": "2020-02-29",
   "static_file_dir": "../static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",

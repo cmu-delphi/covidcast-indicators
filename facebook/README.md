@@ -48,6 +48,16 @@ Rscript -e 'covr::package_coverage("delphiFacebook")'
 
 There should be good coverage of all the core functions in the package.
 
+### Testing during development
+
+Repeatedly building the package and running the full check suite is tedious if
+you are working on fixing a failing test. A faster workflow is this:
+
+1. Set your R working directory to `delphiFacebook/tests/testthat`.
+2. Run `testthat::test_dir('.')`
+
+This will test the live code without having to rebuild the package.
+
 ## Outline of the Indicator
 
 Facebook surveys are one of our most complex data pipelines. At a high level,

@@ -155,7 +155,7 @@ megacounty <- function(
                                df_intr$effective_sample_size < threshold, ]
 
   df_megacounties <- mutate(df_megacounties,
-                            geo_id = make_megacounty_fips(geo_id))
+                            geo_id = make_megacounty_fips(.data$geo_id))
 
   df_megacounties <- group_by(df_megacounties, .data$day, .data$geo_id)
   df_megacounties <- mutate(

@@ -3,7 +3,7 @@
 #' See the README.md file in the source directory for more information about how to run
 #' this function.
 #'
-#' @param parameter_path    path to the parameters file
+#' @param params    Params object produced by read_params
 #'
 #' @return none
 #' @export

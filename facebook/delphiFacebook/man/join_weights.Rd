@@ -11,6 +11,8 @@ join_weights(data, params, weights = c("step1", "full"))
 
 \item{params}{a named list containing a value "weights_in_dir" indicating where the
 weights files are stored}
+
+\item{weights}{Which weights to use -- step1 or full?}
 }
 \description{
 There are two types of weights: step 1 weights and full weights. Step 1

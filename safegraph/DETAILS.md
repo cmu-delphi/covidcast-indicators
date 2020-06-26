@@ -11,11 +11,11 @@ county and state levels.  MSA and HRR not yet implemented.
 * `state`: reported using two-letter postal code
 
 ## Metrics
-* `prop_completely_home`, defined as:
+* `completely_home_prop`, defined as:
 		`completely_home_device_count / device_count`
-* `prop_full_time_work`, defined as:
+* `full_time_work_prop`, defined as:
 		`full_time_work_behavior_devices / device_count`
-* `prop_part_time_work`, defined as:
+* `part_time_work_prop`, defined as:
 		`part_time_work_behavior_devices / device_count`
 * `median_home_dwell_time`
 

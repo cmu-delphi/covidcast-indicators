@@ -14,8 +14,7 @@ library(testthat)
 
 context("Testing against reference implementation")
 
-## TODO County left out here, because megacounties are not done
-geo_levels <- c("state", "hrr", "msa")
+geo_levels <- c("county", "state", "hrr", "msa")
 dates <- c("20200508", "20200509", "20200510", "20200511", "20200512")
 
 ## Smoothed signals are not included because we deliberately mismatch the old

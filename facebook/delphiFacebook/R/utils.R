@@ -138,18 +138,15 @@ mix_weights <- function(weights, params)
 }
 
 
-#' Aggregates counties into megacounties that have low sample size values 
-#' for a given day.
-#' 
-
-#' 
+#' Aggregates counties into megacounties that have low sample size values for a
+#' given day.
 #'
-#' @param df_intr Input tibble list that requires aggregation.
-#' @param threshold Sample size value below which the megacounty aggregation 
-#'   holds true.
-#' @return Tibble list of megacounties
-
-
+#' @param df_intr Input tibble that requires aggregation, with `geo_id`, `val`,
+#'     `sample_size`, `effective_sample_size`, and `se` columns.
+#' @param threshold Sample size value below which counties should be grouped
+#'     into megacounties.
+#' @return Tibble of megacounties. Counties that are not grouped are not
+#'     included in the output.
 megacounty <- function(
   df_intr, threshold
 )
@@ -157,10 +154,14 @@ megacounty <- function(
   df_megacounties <- df_intr[df_intr$sample_size < threshold |
                                df_intr$effective_sample_size < threshold, ]
 
-  df_megacounties <- mutate(df_megacounties, geo_id = make_megacounty_fips(geo_id))
-  
+  df_megacounties <- mutate(df_megacounties,
+                            geo_id = make_megacounty_fips(geo_id))
+
   df_megacounties <- group_by(df_megacounties, .data$day, .data$geo_id)
-  df_megacounties <- mutate(df_megacounties, county_weight = .data$effective_sample_size/sum(.data$effective_sample_size))
+  df_megacounties <- mutate(
+      df_megacounties,
+      county_weight = .data$effective_sample_size / sum(.data$effective_sample_size))
+
   df_megacounties <- summarize(
     df_megacounties,
     val = weighted.mean(.data$val, .data$effective_sample_size),
@@ -168,19 +169,21 @@ megacounty <- function(
     sample_size = sum(.data$sample_size),
     effective_sample_size = sum(.data$effective_sample_size)
   )
+
   df_megacounties <- mutate(df_megacounties, county_weight = NULL)
   df_megacounties <- ungroup(df_megacounties)
+
   return(df_megacounties)
 }
 
-#' Converts geographical code to megacounty code which begins with two character
-#' state code and appends "000" in the end.
+#' Converts county FIPS code to megacounty code.
 #'
-
+#' We designate megacounties with a special FIPS ending in 000; for example, the
+#' megacounty for state 26 would be 26000 and would comprise counties with FIPS
+#' codes 26XXX.
+#'
 #' @param fips Geo-id
 #' @return Megacounty
-
-
 make_megacounty_fips <- function(fips) {
   paste0(substr(fips, 1, 2), "000")
 }

@@ -24,3 +24,4 @@ Suggests:
     testthat (>= 1.0.1),
     covr (>= 2.2.2)
 RoxygenNote: 7.1.0
+Encoding: UTF-8

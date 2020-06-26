@@ -2,16 +2,33 @@
 % Please edit documentation in R/utils.R
 \name{mix_weights}
 \alias{mix_weights}
-\title{Adjust weights so no weight is not too much of the final estimate}
+\title{Adjust weights so no weight is too much of the final estimate.}
 \usage{
 mix_weights(weights, params)
 }
 \arguments{
 \item{weights}{a vector of sample weights}
 
-\item{params}{a named list containing an element named "num_filter"; the maximum
-weight is assumed to be 1 / "num_filter" * 0.999.}
+\item{params}{a named list containing an element named "s_mix_coef" and
+another called "s_weight". The maximum desired weight is assumed to be
+params$s_weight; the minimum allowable mixing coefficient is
+params$s_mix_coef.}
 }
 \description{
-Adjust weights so no weight is not too much of the final estimate
+For privacy and estimation quality, we do not want to allow one survey
+response to have such a high weight that it becomes most of an estimate.
+}
+\details{
+So, for a specific time and location:
+
+1. Normalize weights so they sum to 1.
+
+2. Determine a "mixing coefficient" based on the maximum weight. The mixing
+coefficient is chosen to make the maximum weight smaller than
+`params$s_weight`, subject to the constraint that the mixing coefficient must
+be larger than `params$s_mix_coef`.
+
+3. Replace weights with a weighted average of the original weights and
+uniform weights (meaning 1/N for every observation), weighted by the mixing
+coefficient.
 }

@@ -4,7 +4,7 @@
 \alias{join_weights}
 \title{Add weights to a dataset of responses}
 \usage{
-join_weights(data, params)
+join_weights(data, params, weights = c("step1", "full"))
 }
 \arguments{
 \item{data}{a data frame containing a column called "token"}
@@ -13,5 +13,7 @@ join_weights(data, params)
 weights files are stored}
 }
 \description{
-Add weights to a dataset of responses
+There are two types of weights: step 1 weights and full weights. Step 1
+weights are used for producing our aggregations; full weights are used
+exclusively for producing individual response files.
 }

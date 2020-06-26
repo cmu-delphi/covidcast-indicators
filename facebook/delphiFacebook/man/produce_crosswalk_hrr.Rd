@@ -15,5 +15,6 @@ A tibble containing three columns: zip5, geo_id (HRR code as character), and
          by zip5.
 }
 \description{
-Produce crosswalk file relating zip codes to hospital referral regions (HRRs)
+Each ZIP5 is completely contained in a HRR, and the corresponding HRR is
+provided in our ZIP metadata.
 }

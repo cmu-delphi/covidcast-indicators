@@ -4,7 +4,7 @@
 \alias{run_facebook}
 \title{Run the entire pipeline}
 \usage{
-run_facebook(parameter_path = "params.json")
+run_facebook(params)
 }
 \arguments{
 \item{parameter_path}{path to the parameters file}

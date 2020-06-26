@@ -2,21 +2,18 @@
 % Please edit documentation in R/count.R
 \name{compute_count_response}
 \alias{compute_count_response}
-\title{Returns county response estimates}
+\title{Returns response estimates for a single geographic area.}
 \usage{
-compute_count_response(response, weight, sample_weight)
+compute_count_response(response, weight)
 }
 \arguments{
 \item{response}{a vector of percentages (100 * cnt / total)}
 
-\item{weight}{a vector of sample weights for inverse probability
-weighting; invariant up to a scaling factor}
-
-\item{sample_weight}{a vector of sample size weights}
+\item{weight}{a vector of sample weights for inverse probability weighting;
+invariant up to a scaling factor}
 }
 \description{
-This function takes vectors as input and computes the count response values (a point
-estimate named "val", a standard error named "se", and a sample size named "sample_size")
-Note that there are two different sets of weights that have a different effect on the
-output.
+This function takes vectors as input and computes the count response values
+(a point estimate named "val", a standard error named "se", and an effective
+sample size named "effective_sample_size").
 }

@@ -22,13 +22,18 @@ from .sensor import EMRHospSensor
 from .weekday import Weekday
 
 
-def write_to_csv(output_dict, out_name, output_path="."):
+def write_to_csv(output_dict, write_se, out_name, output_path="."):
     """Write sensor values to csv.
 
     Args:
         output_dict: dictionary containing sensor rates, se, unique dates, and unique geo_id
+        write_se: boolean to write out standard errors, if true, use an obfuscated name
+        out_name: name of the output file
         output_path: outfile path to write the csv (default is current directory)
     """
+
+    if write_se:
+        logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
     geo_level = output_dict["geo_level"]
     dates = output_dict["dates"]
@@ -60,10 +65,15 @@ def write_to_csv(output_dict, out_name, output_path="."):
                         logging.warning(f"value suspiciously high, {geo_id}: {sensor}")
                     assert se < 5, f"se suspiciously high, {geo_id}: {se}"
 
-                    # for privacy reasons we will not report the standard error
-                    outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA")
-                    )
+                    if write_se:
+                        assert sensor > 0 and se > 0, "p=0, std_err=0 invalid"
+                        outfile.write(
+                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se, "NA", "NA"))
+                    else:
+                        # for privacy reasons we will not report the standard error
+                        outfile.write(
+                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA")
+                        )
                     out_n += 1
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
 
@@ -75,7 +85,9 @@ class EMRHospSensorUpdator:
                  dropdate,
                  geo,
                  parallel,
-                 weekday):
+                 weekday,
+                 se,
+                 prefix=None):
         """Init Sensor Updator
 
         Args:
@@ -85,16 +97,26 @@ class EMRHospSensorUpdator:
             geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
+            se: boolean to write out standard errors, if true, use an obfuscated name
+            prefix: string to prefix to output files (used for obfuscation in producing SEs)
 
         """
         self.startdate, self.enddate, self.dropdate = [pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
+
         # handle dates
         assert (self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
         assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
-        self.geo, self.parallel, self.weekday = geo, parallel, weekday
+        self.geo, self.parallel, self.weekday, self.se = geo, parallel, weekday, se
+
+        # output file naming
+        out_name = "smoothed_adj_covid19" if self.weekday else "smoothed_covid19"
+        if se:
+            assert prefix is not None, "supply obfuscated prefix in params"
+            out_name = prefix + "_" + out_name
+        self.output_filename = out_name
 
 
     def shift_dates(self):
@@ -227,9 +249,6 @@ class EMRHospSensorUpdator:
         }
 
         # write out results
-        wip_string = "wip_XXXXX_"
-        out_name = "smoothed_adj_cli" if self.weekday else "smoothed_cli"
-        self.output_filename = wip_string + out_name
-        write_to_csv(output_dict, self.output_filename, outpath)
+        write_to_csv(output_dict, self.se, self.output_filename, outpath)
         logging.debug(f"wrote files to {outpath}")
         return True

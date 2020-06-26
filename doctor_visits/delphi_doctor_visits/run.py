@@ -31,7 +31,7 @@ def run_module():
             Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
         )
     else:
-        dropdate_dt = datetime.strptime(params["end_date"], "%Y-%m-%d")
+        dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
     dropdate = str(dropdate_dt.date())
 
     # range of estimates to produce

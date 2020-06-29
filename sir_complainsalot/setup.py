@@ -7,7 +7,8 @@ required = [
     "pytest-cov",
     "pylint",
     "delphi-utils",
-    "slackclient"
+    "slackclient",
+    "covidcast"
 ]
 
 setup(

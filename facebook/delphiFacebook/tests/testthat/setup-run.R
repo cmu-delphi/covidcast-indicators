@@ -1,5 +1,5 @@
 
 library(delphiFacebook)
 
-run_facebook(relativize_params(read_params("params-test.json")))
-run_facebook(relativize_params(read_params("params-full.json")))
+run_facebook(relativize_params(read_params(test_path("params-test.json"))))
+run_facebook(relativize_params(read_params(test_path("params-full.json"))))

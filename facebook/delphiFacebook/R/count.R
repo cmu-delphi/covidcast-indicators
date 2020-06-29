@@ -13,19 +13,23 @@ write_hh_count_data <- function(df, cw_list, params)
 
   for (i in seq_along(cw_list))
   {
+    geo_level <- names(cw_list)[i]
+    geo_crosswalk <- cw_list[[i]]
+
     for (metric in c("ili", "cli"))
     {
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
 
-      df_out <- summarize_hh_count(df, cw_list[[i]], metric, "weight_unif", params, 6)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
+      df_out <- summarize_hh_count(df, geo_crosswalk, metric, "weight_unif", geo_level, params)
+      write_data_api(df_out, params, geo_level, sprintf("raw_%s", metric))
 
-      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
+      df_out <- summarize_hh_count(df, geo_crosswalk, metric, "weight_unif", geo_level, params, 6)
+      write_data_api(df_out, params, geo_level, sprintf("smoothed_%s", metric))
 
-      df_out <- summarize_hh_count(weight_df, cw_list[[i]], metric, "weight", params, 6)
-      write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
+      df_out <- summarize_hh_count(weight_df, geo_crosswalk, metric, "weight", geo_level, params)
+      write_data_api(df_out, params, geo_level, sprintf("raw_w%s", metric))
+
+      df_out <- summarize_hh_count(weight_df, geo_crosswalk, metric, "weight", geo_level, params, 6)
+      write_data_api(df_out, params, geo_level, sprintf("smoothed_w%s", metric))
     }
   }
 }
@@ -36,17 +40,18 @@ write_hh_count_data <- function(df, cw_list, params)
 #' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
 #' @param metric           name of the metric to use; should be "ili" or "cli"
 #' @param var_weight       name of the variable containing the survey weights
+#' @param geo_level        the aggregation level, such as county or state, being used
 #' @param params           a named list with entries "s_weight", "s_mix_coef", "num_filter",
 #'                         "start_time", and "end_time"
 #' @param smooth_days      integer; how many does in the past should be pooled into the
 #'                         estimate of a day
 #'
-#' @importFrom dplyr inner_join group_by mutate n case_when first
+#' @importFrom dplyr inner_join group_by mutate n case_when first bind_rows
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
 #' @export
 summarize_hh_count <- function(
-  df, crosswalk_data, metric, var_weight, params, smooth_days = 0L
+  df, crosswalk_data, metric, var_weight, geo_level, params, smooth_days = 0L
 )
 {
   df <- inner_join(df, crosswalk_data, by = "zip5")
@@ -59,12 +64,13 @@ summarize_hh_count <- function(
   df_out$sample_size <- NA_real_
   df_out$se <- NA_real_
   df_out$effective_sample_size <- NA_real_
-  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
 
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days_matrix[i,]
-    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
+    index <- which((df$day >= df_out$day[i] - smooth_days) &
+                     (df$day <= df_out$day[i]) &
+                     (df$geo_id == df_out$geo_id[i]))
+
     if (length(index))
     {
       mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
@@ -82,10 +88,23 @@ summarize_hh_count <- function(
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+
+  if (geo_level == "county") {
+    df_megacounties <- megacounty(df_out, params$num_filter)
+    df_out <- bind_rows(df_out, df_megacounties)
+  }
+
   df_out <- df_out[df_out$sample_size >= params$num_filter &
                      df_out$effective_sample_size >= params$num_filter, ]
+
+  ## After gluing together megacounties, apply the Jeffreys correction to the
+  ## standard errors.
+  df_out <- mutate(df_out,
+                   se = jeffreys_se(.data$se, .data$val, .data$effective_sample_size))
+
   return(df_out)
 }
+
 
 #' Returns response estimates for a single geographic area.
 #'
@@ -110,7 +129,6 @@ compute_count_response <- function(response, weight)
   effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
 
   se <- sqrt( sum( (weight * (response - val))^2 ) )
-  se <- jeffreys_se(se, val, effective_sample_size)
 
   return(list(
     val = val,

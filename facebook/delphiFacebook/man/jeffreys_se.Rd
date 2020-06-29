@@ -2,7 +2,7 @@
 % Please edit documentation in R/count.R
 \name{jeffreys_se}
 \alias{jeffreys_se}
-\title{Apply Jeffrey's Prior to correct standard error values}
+\title{Apply Jeffreys Prior to adjust standard error values.}
 \usage{
 jeffreys_se(old_se, percent, sample_size)
 }
@@ -14,5 +14,15 @@ jeffreys_se(old_se, percent, sample_size)
 \item{sample_size}{a numeric vector of the sample sizes}
 }
 \description{
-Apply Jeffrey's Prior to correct standard error values
+The Jeffreys approach for estimating binomial proportions assumes a Beta(1/2,
+1/2) prior on the proportion. If x is the number of successes, the posterior
+mean is hence (x + 0.5) / (n + 1), which prevents the estimate from ever
+being 0 or 1. This is desirable because the typical normal approximation SE
+would be 0 in both cases, which is both misleading and prevents reasonable
+resampling of the data for bootstrapping.
+}
+\details{
+We apply the Jeffreys approach only to the calculation of the standard error;
+applying it to the estimate of proportion would introduce too much bias for
+small proportions, like we typically see for symptoms within households.
 }

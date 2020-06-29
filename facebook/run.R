@@ -1,4 +1,5 @@
 library(delphiFacebook)
 
 Rprof(interval = 0.005)
-delphiFacebook::run_facebook()
+params <- read_params("params.json")
+delphiFacebook::run_facebook(params)

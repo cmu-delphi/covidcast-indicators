@@ -33,6 +33,7 @@ write_cid <- function(data, type_name, params)
 #' @param data    a data frame containing a column called "token"
 #' @param params  a named list containing a value "weights_in_dir" indicating where the
 #'                weights files are stored
+#' @param weights Which weights to use -- step1 or full?
 #'
 #' @importFrom dplyr bind_rows left_join
 #' @export

@@ -65,26 +65,6 @@ create_dir_not_exist <- function(path)
   if (!dir.exists(path)) { dir.create(path) }
 }
 
-#' Return vector from the past n days, inclusive
-#'
-#' Returns dates as strings in the form "YYYYMMDD"
-#'
-#' @param date   a string containing a single date that can be parsed with `ymd`, such as
-#'               "20201215"
-#' @param ndays  how many days in the past to include
-#'
-#'
-#' @importFrom lubridate ymd
-#' @export
-past_n_days <- function(date, ndays = 0L)
-{
-  date_ymd <- ymd(date)
-  date_ymd <- rep(date_ymd, each = (ndays + 1L))
-  out <- format(date_ymd - seq(0, ndays), format = "%Y%m%d")
-  out <- matrix(out, ncol = (ndays + 1L), byrow = TRUE)
-  return(out)
-}
-
 #' Adjust weights so no weight is too much of the final estimate.
 #'
 #' For privacy and estimation quality, we do not want to allow one survey
@@ -135,4 +115,55 @@ mix_weights <- function(weights, params)
   new_weights <- mix_coef / N + (1 - mix_coef) * weights
 
   return(new_weights)
+}
+
+
+#' Aggregates counties into megacounties that have low sample size values for a
+#' given day.
+#'
+#' @param df_intr Input tibble that requires aggregation, with `geo_id`, `val`,
+#'     `sample_size`, `effective_sample_size`, and `se` columns.
+#' @param threshold Sample size value below which counties should be grouped
+#'     into megacounties.
+#' @return Tibble of megacounties. Counties that are not grouped are not
+#'     included in the output.
+megacounty <- function(
+  df_intr, threshold
+)
+{
+  df_megacounties <- df_intr[df_intr$sample_size < threshold |
+                               df_intr$effective_sample_size < threshold, ]
+
+  df_megacounties <- mutate(df_megacounties,
+                            geo_id = make_megacounty_fips(.data$geo_id))
+
+  df_megacounties <- group_by(df_megacounties, .data$day, .data$geo_id)
+  df_megacounties <- mutate(
+      df_megacounties,
+      county_weight = .data$effective_sample_size / sum(.data$effective_sample_size))
+
+  df_megacounties <- summarize(
+    df_megacounties,
+    val = weighted.mean(.data$val, .data$effective_sample_size),
+    se = sqrt(sum(.data$se^2 * .data$county_weight^2)),
+    sample_size = sum(.data$sample_size),
+    effective_sample_size = sum(.data$effective_sample_size)
+  )
+
+  df_megacounties <- mutate(df_megacounties, county_weight = NULL)
+  df_megacounties <- ungroup(df_megacounties)
+
+  return(df_megacounties)
+}
+
+#' Converts county FIPS code to megacounty code.
+#'
+#' We designate megacounties with a special FIPS ending in 000; for example, the
+#' megacounty for state 26 would be 26000 and would comprise counties with FIPS
+#' codes 26XXX.
+#'
+#' @param fips Geo-id
+#' @return Megacounty
+make_megacounty_fips <- function(fips) {
+  paste0(substr(fips, 1, 2), "000")
 }

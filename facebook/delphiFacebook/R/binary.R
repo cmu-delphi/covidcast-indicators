@@ -17,17 +17,24 @@ write_binary_variable <- function(df, cw_list, var_yes, params, metric)
 
   for (i in seq_along(cw_list))
   {
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params)
-    write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_%s", metric))
+    geo_level <- names(cw_list)[i]
+    geo_crosswalk <- cw_list[[i]]
 
-    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params)
-    write_data_api(df_out, params, names(cw_list)[i], sprintf("raw_w%s", metric))
+    df_out <- summarize_binary(df, geo_crosswalk, var_yes, "weight_unif",
+                               geo_level, params)
+    write_data_api(df_out, params, geo_level, sprintf("raw_%s", metric))
 
-    df_out <- summarize_binary(df, cw_list[[i]], var_yes, "weight_unif", params, 6L)
-    write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_%s", metric))
+    df_out <- summarize_binary(weight_df, geo_crosswalk, var_yes, "weight",
+                               geo_level, params)
+    write_data_api(df_out, params, geo_level, sprintf("raw_w%s", metric))
 
-    df_out <- summarize_binary(weight_df, cw_list[[i]], var_yes, "weight", params, 6L)
-    write_data_api(df_out, params, names(cw_list)[i], sprintf("smoothed_w%s", metric))
+    df_out <- summarize_binary(df, geo_crosswalk, var_yes, "weight_unif",
+                               geo_level, params, 6L)
+    write_data_api(df_out, params, geo_level, sprintf("smoothed_%s", metric))
+
+    df_out <- summarize_binary(weight_df, geo_crosswalk, var_yes, "weight",
+                               geo_level, params, 6L)
+    write_data_api(df_out, params, geo_level, sprintf("smoothed_w%s", metric))
   }
 }
 
@@ -37,15 +44,16 @@ write_binary_variable <- function(df, cw_list, var_yes, params, metric)
 #' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
 #' @param var_yes          name of the column in `df` containing the number of "yes" responses
 #' @param var_weight       name of the column in `df` containing the survey weights
+#' @param geo_level        the aggregation level, such as county or state, being used
 #' @param params           a named list with entries "start_time", and "end_time"
 #' @param smooth_days      integer; how many days in the past to smooth?
 #'
-#' @importFrom dplyr inner_join group_by ungroup summarize n as_tibble
+#' @importFrom dplyr inner_join group_by ungroup summarize n as_tibble bind_rows
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
 #' @export
 summarize_binary <- function(
-  df, crosswalk_data, var_yes, var_weight, params, smooth_days = 0L
+  df, crosswalk_data, var_yes, var_weight, geo_level, params, smooth_days = 0L
 )
 {
   df <- inner_join(df, crosswalk_data, by = "zip5")
@@ -55,15 +63,17 @@ summarize_binary <- function(
     day = unique(df$day), geo_id = unique(df$geo_id), stringsAsFactors = FALSE
   ))
   df_out$val <- NA_real_
+  df_out$se <- NA_real_
   df_out$sample_size <- NA_real_
   df_out$effective_sample_size <- NA_real_
-  df_out$se <- NA_real_
-  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
 
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days_matrix[i,]
-    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]) & !is.na(df$A4))
+    index <- which((df$day >= df_out$day[i] - smooth_days) &
+                     (df$day <= df_out$day[i]) &
+                     (df$geo_id == df_out$geo_id[i]) &
+                     !is.na(df$A4))
+
     if (length(index))
     {
       mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
@@ -71,21 +81,37 @@ summarize_binary <- function(
 
       sample_size <- sum(df$weight_in_location[index])
 
-      new_row <- compute_binary_response(
+      val <- compute_binary_response(
         response = df[[var_yes]][index],
         weight = mixed_weights,
         sample_size = sample_size)
 
-      df_out$val[i] <- new_row$val
-      df_out$se[i] <- new_row$se
+      ## We don't bother with SE here, because it needs to be calculated after
+      ## the megacounty aggregation anyway, with Jeffreys correction reapplied.
+      df_out$val[i] <- val
       df_out$sample_size[i] <- sample_size
       df_out$effective_sample_size[i] <- sample_size # TODO FIXME
     }
   }
 
   df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+
+  if (geo_level == "county") {
+    df_megacounties <- megacounty(df_out, params$num_filter)
+    df_out <- bind_rows(df_out, df_megacounties)
+  }
+
   df_out <- df_out[df_out$sample_size >= params$num_filter &
                  df_out$effective_sample_size >= params$num_filter, ]
+
+  ## Now we must apply the Jeffreys correction to proportions and recalculate
+  ## the standard error.
+  df_out <- mutate(df_out,
+                   val = jeffreys_percentage(.data$val, .data$sample_size))
+
+  df_out <- mutate(df_out,
+                   se = binary_se(.data$val, .data$sample_size))
+
   return(df_out)
 }
 
@@ -111,13 +137,31 @@ compute_binary_response <- function(response, weight, sample_size)
 
   response_prop <- weighted.mean(response, weight)
 
-  ## Jeffreys correction to estimate.
-  val <- 100 * (response_prop * sample_size + 0.5) / (sample_size + 1)
-  if (sample_size > 0) {
-    se <- sqrt( (val * (100 - val) / sample_size) )
-  } else {
-    se <- NA
-  }
+  val <- 100 * response_prop
 
-  return(list(val = val, se = se))
+  return(val)
+}
+
+#' Adjust a percentage estimate to use the Jeffreys method.
+#'
+#' Takes a previously estimated percentage (calculated with num_yes / total *
+#' 100) and replaces it with the Jeffreys version, where one pseudo-observation
+#' with 50% yes is inserted.
+#'
+#' @param percentage Vector of percentages to adjust.
+#' @param sample_size Vector of corresponding sample sizes.
+#' @return Vector of adjusted percentages.
+jeffreys_percentage <- function(percentage, sample_size) {
+  return((percentage * sample_size + 50) / (sample_size + 1))
+}
+
+#' Calculate the standard error for a binary proportion (as a percentage)
+#'
+#' @param val Vector of estimated percentages
+#' @param sample_size Vector of corresponding sample sizes
+#' @return Vector of standard errors; NA when a sample size is 0.
+binary_se <- function(val, sample_size) {
+  return(ifelse(sample_size > 0,
+                sqrt( (val * (100 - val) / sample_size) ),
+                NA))
 }

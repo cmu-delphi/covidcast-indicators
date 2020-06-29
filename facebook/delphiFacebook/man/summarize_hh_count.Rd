@@ -9,6 +9,7 @@ summarize_hh_count(
   crosswalk_data,
   metric,
   var_weight,
+  geo_level,
   params,
   smooth_days = 0L
 )
@@ -21,6 +22,8 @@ summarize_hh_count(
 \item{metric}{name of the metric to use; should be "ili" or "cli"}
 
 \item{var_weight}{name of the variable containing the survey weights}
+
+\item{geo_level}{the aggregation level, such as county or state, being used}
 
 \item{params}{a named list with entries "s_weight", "s_mix_coef", "num_filter",
 "start_time", and "end_time"}

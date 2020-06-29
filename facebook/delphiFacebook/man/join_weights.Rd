@@ -4,14 +4,18 @@
 \alias{join_weights}
 \title{Add weights to a dataset of responses}
 \usage{
-join_weights(data, params)
+join_weights(data, params, weights = c("step1", "full"))
 }
 \arguments{
 \item{data}{a data frame containing a column called "token"}
 
 \item{params}{a named list containing a value "weights_in_dir" indicating where the
 weights files are stored}
+
+\item{weights}{Which weights to use -- step1 or full?}
 }
 \description{
-Add weights to a dataset of responses
+There are two types of weights: step 1 weights and full weights. Step 1
+weights are used for producing our aggregations; full weights are used
+exclusively for producing individual response files.
 }

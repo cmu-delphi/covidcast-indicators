@@ -4,20 +4,20 @@
 \alias{compute_binary_response}
 \title{Returns binary response estimates}
 \usage{
-compute_binary_response(response, weight, sample_weight)
+compute_binary_response(response, weight, sample_size)
 }
 \arguments{
 \item{response}{a vector of binary (0 or 1) responses}
 
-\item{weight}{a vector of sample weights for inverse probability
-weighting; invariant up to a scaling factor}
+\item{weight}{a vector of sample weights for inverse probability weighting;
+invariant up to a scaling factor}
 
-\item{sample_weight}{a vector of sample size weights; the total sample size
-will be the sum of these values}
+\item{sample_size}{The sample size to use, which may be a non-integer (as
+responses from ZIPs that span geographical boundaries are weighted
+proportionately, and survey weights may also be applied)}
 }
 \description{
-This function takes vectors as input and computes the binary response values (a point
-estimate named "val", a standard error named "se", and a sample size named "sample_size")
-Note that there are two different sets of weights that have a different effect on the
-output.
+This function takes vectors as input and computes the binary response values
+(a point estimate named "val", a standard error named "se", and a sample size
+named "sample_size").
 }

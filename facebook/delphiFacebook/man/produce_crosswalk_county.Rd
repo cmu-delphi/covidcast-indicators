@@ -12,9 +12,10 @@ produce_crosswalk_county(static_dir, zip_metadata)
 \item{zip_metadata}{output from a call to the function produce_allowed_zip5}
 }
 \value{
-A tibble containing three columns: zip5, geo_id (county fips codes), and
-         weight_in_location. The variable weight_in_location will sum to 1 when grouped
-         by zip5.
+A tibble containing three columns: zip5, geo_id (county fips codes),
+    and weight_in_location. Since ZIP codes can span multiple counties, the
+    weight_in_location indicates the fraction of the ZIP population contained
+    in the county. When grouped by ZIP5, this should sum to 1.
 }
 \description{
 Produce crosswalk file relating zip codes to counties

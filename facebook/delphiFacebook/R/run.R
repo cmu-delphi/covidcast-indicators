@@ -3,14 +3,12 @@
 #' See the README.md file in the source directory for more information about how to run
 #' this function.
 #'
-#' @param parameter_path    path to the parameters file
+#' @param params    Params object produced by read_params
 #'
 #' @return none
 #' @export
-run_facebook <- function(parameter_path = "params.json")
+run_facebook <- function(params)
 {
-  # read parameters file, load geographic data, load archived data
-  params <- read_params(parameter_path)
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$data_agg)

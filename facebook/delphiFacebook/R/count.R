@@ -64,12 +64,13 @@ summarize_hh_count <- function(
   df_out$sample_size <- NA_real_
   df_out$se <- NA_real_
   df_out$effective_sample_size <- NA_real_
-  past_n_days_matrix <- past_n_days(df_out$day, smooth_days)
 
   for (i in seq_len(nrow(df_out)))
   {
-    allowed_days <- past_n_days_matrix[i,]
-    index <- which(!is.na(match(df$day, allowed_days)) & (df$geo_id == df_out$geo_id[i]))
+    index <- which((df$day >= df_out$day[i] - smooth_days) &
+                     (df$day <= df_out$day[i]) &
+                     (df$geo_id == df_out$geo_id[i]))
+
     if (length(index))
     {
       mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],

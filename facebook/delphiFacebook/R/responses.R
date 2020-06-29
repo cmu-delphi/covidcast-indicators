@@ -110,7 +110,7 @@ create_data_for_aggregatation <- function(input_data)
 {
   df <- input_data
   df$weight_unif <- 1.0
-  df$day <- stri_replace_all(df$date, "", fixed = "-")
+  df$day <- as.Date(df$date)
 
   # create variables for cli and ili signals
   hh_cols <- c("hh_fever", "hh_soar_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")

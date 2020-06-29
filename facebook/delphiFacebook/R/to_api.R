@@ -15,21 +15,29 @@
 write_data_api <- function(data, params, geo_name, signal_name)
 {
   data <- arrange(data, .data$day, .data$geo_id)
-  for (tunit in unique(data$day))
+
+  ## Workaround for annoying R misfeature: a for loop over a Date vector yield
+  ## numeric entries, rather than dates. Index directly to get the dates.
+  unique_dates <- unique(data$day)
+
+  for (ii in seq_along(unique_dates))
   {
+    tunit <- unique_dates[ii]
+
     df <- data[data$day == tunit, c("geo_id", "val", "se", "sample_size", "effective_sample_size")]
     df$val <- round(df$val, 7L)
     df$se <- round(df$se, 7L)
     df$sample_size <- round(df$sample_size, 7L)
     file_out <- file.path(
-      params$export_dir, sprintf("%s_%s_%s.csv", tunit, geo_name, signal_name)
+      params$export_dir, sprintf("%s_%s_%s.csv", format(tunit, "%Y%m%d"),
+                                 geo_name, signal_name)
     )
 
     create_dir_not_exist(params$export_dir)
 
     msg_df(sprintf(
       "saving data for API to %-35s",
-      sprintf("%s_%s_%s", tunit, geo_name, signal_name)
+      sprintf("%s_%s_%s", format(tunit, "%Y%m%d"), geo_name, signal_name)
     ), df)
     write_csv(df, file_out)
   }

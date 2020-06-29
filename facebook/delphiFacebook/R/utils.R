@@ -65,26 +65,6 @@ create_dir_not_exist <- function(path)
   if (!dir.exists(path)) { dir.create(path) }
 }
 
-#' Return vector from the past n days, inclusive
-#'
-#' Returns dates as strings in the form "YYYYMMDD"
-#'
-#' @param date   a string containing a single date that can be parsed with `ymd`, such as
-#'               "20201215"
-#' @param ndays  how many days in the past to include
-#'
-#'
-#' @importFrom lubridate ymd
-#' @export
-past_n_days <- function(date, ndays = 0L)
-{
-  date_ymd <- ymd(date)
-  date_ymd <- rep(date_ymd, each = (ndays + 1L))
-  out <- format(date_ymd - seq(0, ndays), format = "%Y%m%d")
-  out <- matrix(out, ncol = (ndays + 1L), byrow = TRUE)
-  return(out)
-}
-
 #' Adjust weights so no weight is too much of the final estimate.
 #'
 #' For privacy and estimation quality, we do not want to allow one survey

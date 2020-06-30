@@ -43,7 +43,7 @@ def combine_usafacts_and_jhu(signal, geo, _date):
     jhu_df = covidcast.signal("jhu-csse", signal, _date, _date, geo)
     # State level
     if geo == 'state':
-        combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'or'])        
+        combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'pr'])        
     # County level
     elif geo == 'county':
         combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == '72000'])   

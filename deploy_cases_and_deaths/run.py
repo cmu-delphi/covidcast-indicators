@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Jun 29 20:59:58 2020
+This script produces a combined signal for jhu-csse and usa-facts.
+This signal is only used for visualization. 
+It includes all of the information in usa-facts and Puerto Rico only from jhu-csse.
 """
 import re
 import argparse

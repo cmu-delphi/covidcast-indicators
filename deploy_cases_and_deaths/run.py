@@ -3,15 +3,11 @@
 """
 Created on Tue Jun 29 20:59:58 2020
 """
-import os
 import re
 import argparse
 from argparse import RawTextHelpFormatter
 from itertools import product
 from datetime import date, timedelta, datetime
-
-import pandas as pd
-import numpy as np
 
 import covidcast
 
@@ -80,25 +76,25 @@ grpInput.add_argument('--date_range', type=str, dest='date_range',default= "new"
 args = parser.parse_args()
 
 yesterday = date.today() - timedelta(days=1)
-if args.date_list == 'new':
+if args.date_range == 'new':
     # only create combined file for the newest update (usually for yesterday)    
     date_list = [yesterday]
-elif args.date_list == 'all':
+elif args.date_range == 'all':
     # create combined files for all of the historical reports
     delta = yesterday - date(2020, 2, 20)
     date_list = [date(2020, 2, 20) + timedelta(days=i) for i in range(delta.days + 1)]
 else:
     pattern = re.compile('^\d{8}-\d{8}$')
-    match_res = re.findall(pattern, args.date_list)
+    match_res = re.findall(pattern, args.date_range)
     if match_res[0] == None:
         raise ValueError("Invalid input. Please choose from (new, all, yyyymmdd-yyyymmdd).")
     else:
         try:
-            date1 = datetime.strptime(args.date_list[:8], '%Y%m%d').date()
+            date1 = datetime.strptime(args.date_range[:8], '%Y%m%d').date()
         except ValueError:
             raise ValueError("Invalid input. Please check the first date.")
         try:
-            date2 = datetime.strptime(args.date_list[-8:], '%Y%m%d').date()
+            date2 = datetime.strptime(args.date_range[-8:], '%Y%m%d').date()
         except ValueError:
             raise ValueError("Invalid input. Please check the second date.")
         delta = date2 - date1

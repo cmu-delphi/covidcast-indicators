@@ -33,4 +33,9 @@ If you want to set a specific date range, run the following:
 env/bin/python run.py --date_range yyyymmdd-yyyymmdd
 ```
 
+Once you are finished with the code, you can deactivate the virtual environment and (optionally) remove the environment itself.
+```
+deactivate
+rm -r env
+```
 

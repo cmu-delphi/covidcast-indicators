@@ -6,10 +6,14 @@ It includes all of the information in usa-facts and Puerto Rico only from jhu-cs
 ## Running the Indicator
 
 The indicator is run by directly executing the Python script run.py. 
-The covidcast API need to be installed first. 
-To do this, run the following code:
+The safest way to do this is to create a virtual environment,
+installed the common DELPHI tools, and then install the module and its
+dependencies. To do this, run the following code from this directory:
 
 ```
+python -m venv env
+source env/bin/activate
+pip install ../_delphi_utils_python/.
 pip install covidcast
 ```
 

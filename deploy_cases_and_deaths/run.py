@@ -11,6 +11,9 @@ from argparse import RawTextHelpFormatter
 from itertools import product
 from datetime import date, timedelta, datetime
 
+import pandas as pd
+
+from delphi_utils import create_export_csv
 import covidcast
 
 export_start_date = date(2020, 4, 1)
@@ -35,12 +38,12 @@ GEO_RESOLUTIONS = [
     "hrr",
 ]
 
-def combine_usafacts_and_jhu(signal, geo, _date):
+def combine_usafacts_and_jhu(signal, geo, date_range):
     """
     Add rows for PR from JHU signals to USA-FACTS signals
     """
-    usafacts_df = covidcast.signal("usa-facts", signal, _date, _date, geo)
-    jhu_df = covidcast.signal("jhu-csse", signal, _date, _date, geo)
+    usafacts_df = covidcast.signal("usa-facts", signal, date_range[0], date_range[1], geo)
+    jhu_df = covidcast.signal("jhu-csse", signal, date_range[0], date_range[1], geo)
     # State level
     if geo == 'state':
         combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'pr'])        
@@ -50,18 +53,36 @@ def combine_usafacts_and_jhu(signal, geo, _date):
     # For MSA and HRR level, they are the same
     else:
         combined_df = usafacts_df
+    
+    combined_df = combined_df.drop(["direction"], axis = 1)
+    combined_df = combined_df.rename({"time_value": "timestamp", 
+                                      "geo_value": "geo_id",
+                                      "value": "val",
+                                      "stderr": "se"}, 
+                                     axis = 1)
     return combined_df
 
-def run(date_list):    
-    for metric, geo_res, sensor, smoother, _date in product(
-                METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES, date_list):
+def run(date_range):  
+    
+    export_dir = "./receiving"
+    
+    for metric, geo_res, sensor, smoother in product(
+                METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES):
         if smoother == "7dav":
-            signal = "_".join([metric, smoother, sensor])
+            sensor_name = "_".join([smoother, sensor])
         else:
-            signal = "_".join([metric, sensor])
-        df = combine_usafacts_and_jhu(signal, geo_res, _date)
-        df.to_csv("./receiving/%d%02d%02d_%s_%s.csv"%(_date.year, _date.month, _date.day, geo_res, signal),
-                  index = False)
+            sensor_name = sensor
+        signal = "_".join([metric, sensor_name])
+        df = combine_usafacts_and_jhu(signal, geo_res, date_range)
+        
+        create_export_csv(
+            df,
+            export_dir=export_dir,
+            start_date=pd.to_datetime(export_start_date),
+            metric=metric,
+            geo_res=geo_res,
+            sensor=sensor_name,
+        )
        
 
 
@@ -82,11 +103,10 @@ yesterday = date.today() - timedelta(days=1)
 date_list = None
 if args.date_range == 'new':
     # only create combined file for the newest update (usually for yesterday)    
-    date_list = [yesterday]
+    date_range = [yesterday, yesterday]
 elif args.date_range == 'all':
     # create combined files for all of the historical reports
-    delta = yesterday - export_start_date
-    date_list = [export_start_date + timedelta(days=i) for i in range(delta.days + 1)]
+    date_range = [export_start_date, yesterday]
 else:
     pattern = re.compile('^\d{8}-\d{8}$')
     match_res = re.findall(pattern, args.date_range)
@@ -105,11 +125,10 @@ else:
         #The the valid start date
         if date1 < export_start_date:
             date1 = export_start_date            
-        delta = date2 - date1
-        date_list = [date1 + timedelta(days=i) for i in range(delta.days + 1)]
+        date_range = [date1, date2]
 
-if date_list:
-    run(date_list)   
+if date_range:
+    run(date_range)   
                          
         
 

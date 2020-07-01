@@ -13,7 +13,7 @@ from datetime import date, timedelta, datetime
 
 import covidcast
 
-
+export_start_date = date(2020, 4, 1)
 METRICS = [
     "confirmed",
     "deaths",
@@ -43,7 +43,7 @@ def combine_usafacts_and_jhu(signal, geo, _date):
     jhu_df = covidcast.signal("jhu-csse", signal, _date, _date, geo)
     # State level
     if geo == 'state':
-        combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'or'])        
+        combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'pr'])        
     # County level
     elif geo == 'county':
         combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == '72000'])   
@@ -52,7 +52,7 @@ def combine_usafacts_and_jhu(signal, geo, _date):
         combined_df = usafacts_df
     return combined_df
 
-def run():    
+def run(date_list):    
     for metric, geo_res, sensor, smoother, _date in product(
                 METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES, date_list):
         if smoother == "7dav":
@@ -60,7 +60,8 @@ def run():
         else:
             signal = "_".join([metric, sensor])
         df = combine_usafacts_and_jhu(signal, geo_res, _date)
-        df.to_csv("./receiving/%s_%s_%s.csv"%(_date, geo_res, signal))
+        df.to_csv("./receiving/%d%02d%02d_%s_%s.csv"%(_date.year, _date.month, _date.day, geo_res, signal),
+                  index = False)
        
 
 
@@ -78,17 +79,18 @@ grpInput.add_argument('--date_range', type=str, dest='date_range',default= "new"
 args = parser.parse_args()
 
 yesterday = date.today() - timedelta(days=1)
+date_list = None
 if args.date_range == 'new':
     # only create combined file for the newest update (usually for yesterday)    
     date_list = [yesterday]
 elif args.date_range == 'all':
     # create combined files for all of the historical reports
-    delta = yesterday - date(2020, 2, 20)
-    date_list = [date(2020, 2, 20) + timedelta(days=i) for i in range(delta.days + 1)]
+    delta = yesterday - export_start_date
+    date_list = [export_start_date + timedelta(days=i) for i in range(delta.days + 1)]
 else:
     pattern = re.compile('^\d{8}-\d{8}$')
     match_res = re.findall(pattern, args.date_range)
-    if match_res[0] == None:
+    if len(match_res) == 0:
         raise ValueError("Invalid input. Please choose from (new, all, yyyymmdd-yyyymmdd).")
     else:
         try:
@@ -99,10 +101,16 @@ else:
             date2 = datetime.strptime(args.date_range[-8:], '%Y%m%d').date()
         except ValueError:
             raise ValueError("Invalid input. Please check the second date.")
+            
+        #The the valid start date
+        if date1 < export_start_date:
+            date1 = export_start_date            
         delta = date2 - date1
         date_list = [date1 + timedelta(days=i) for i in range(delta.days + 1)]
 
-run()                            
+if date_list:
+    run(date_list)   
+                         
         
 
     

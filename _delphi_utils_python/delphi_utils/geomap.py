@@ -4,7 +4,7 @@ NOTE: This file is mostly duplicated in the Quidel pipeline; bugs fixed here
 should be fixed there as well.
 
 Author: James Sharpnack @jsharpna
-Based on code by Maria Jahja
+Partially based on code by Maria Jahja
 Created: 2020-06-01
 """
 
@@ -18,40 +18,241 @@ import pkg_resources
 DATA_PATH = "data"
 ZIP_FIPS_FILE = "zip_fips_cross_2020.csv"
 STATE_FILE = "state_codes.csv"
+MSA_FILE = "fips_msa_cross_2020.csv"
 
 class GeoMapper:
-    """Class to map counties to other geographic resolutions."""
+    """Class for geo mapping tools commonly used in Delphi
+
+    GeoMapper instance will load "crosswalk" data from the package data_dir when needed
+    the cross tables convert from one geo to another and then the main defs of the form
+    *_* will use then to convert from one resolution to another
+
+    defs can be categorized:
+    - load_* : load the cross file which has from and to geo index (such as zip to fips)
+      if the mapping is probabilistic then a weight column exists, e.g.
+      zip, fips, weight satisfies (sum(weights) where zip==ZIP) == 1
+    - convert_* : add new column by joining with cross table
+    - *_to_* : replace one geo column with another via weighted sum aggregation
+      e.g. (sum(weights*count_column) groupby fips) would convert zip level data
+      to fips level data if the zip_fips_cross table is used
+
+     Mappings: (- incomplete)
+       - zip -> county : population weighted
+       + county -> state : unweighted
+       + county -> msa : unweighted
+       - county -> metacounty
+
+    """
 
     def __init__(self,
                  fips_filepath=path.join(DATA_PATH,ZIP_FIPS_FILE),
-                 state_filepath=path.join(DATA_PATH,STATE_FILE)):
+                 state_filepath=path.join(DATA_PATH,STATE_FILE),
+                 msa_filepath=path.join(DATA_PATH,MSA_FILE)):
+        """Initialize geomapper
+
+        Args:
+            fips_filepath: location of zip->fips cross table
+            state_filepath: location of state_code->state_id,name cross table
+            msa_filepath: location of fips->msa cross table
+        """
         self.fips_filepath = fips_filepath
         self.state_filepath = state_filepath
+        self.msa_filepath = msa_filepath
 
     def load_zip_fips_cross(self):
+        """load zip->fips cross table"""
         stream = pkg_resources.resource_stream(__name__, self.fips_filepath)
         self.zip_fips_cross = pd.read_csv(stream,dtype={'zip':str,
                                           'fips':str,
                                           'weight':float})
 
     def load_state_cross(self):
+        """load state_code->state_id cross table"""
         stream = pkg_resources.resource_stream(__name__, self.state_filepath)
         self.stcode_cross = pd.read_csv(stream,dtype={'st_code':str,
                                          'state_id':str,
                                          'state_name':str})
 
-    @staticmethod
-    def str_convert_fips(x):
-        """Ensure fips is a string of length 5."""
-        return str(x).zfill(5)
+    def load_fips_msa_cross(self):
+        """load fips->msa cross table"""
+        stream = pkg_resources.resource_stream(__name__, self.msa_filepath)
+        self.fips_msa_cross = pd.read_csv(stream, dtype={'fips': str,
+                                                       'msa': str})
 
-    def convert_fips_to_stcode(self,fips_ser):
-        """convert fips string Series to state code string Series"""
-        return fips_ser.str[:2]
+    def convert_fips_to_stcode(self,
+                               data,
+                               fips_col='fips',
+                               stcode_col='st_code'):
+        """create st_code column from fips column
 
-    def convert_stcode_to_stid(self, stcode_ser):
-        """convert fips string Series to state code string Series"""
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips column to convert
+            stcode_col: stcode column to create
 
+        Return:
+            data: copy of dataframe
+        """
+        data = data.copy()
+        if data[fips_col].dtype != 'O':
+            data = self.convert_intfips_to_str(data,intfips_col=fips_col,strfips_col=fips_col)
+        data[stcode_col] = data[fips_col].str[:2]
+        return data
+
+    def convert_intfips_to_str(self,
+                               data,
+                               intfips_col='fips',
+                               strfips_col='fips'):
+        """convert fips to a string of length 5"""
+        data = data.copy()
+        data[strfips_col] = data[intfips_col].astype(str).str.zfill(5)
+        return data
+
+    def convert_stcode_to_state_id(self,
+                               data,
+                               stcode_col='st_code',
+                               state_id_col='state_id',
+                               full=False):
+        """create state_id column from st_code column
+
+        Args:
+            data: pd.DataFrame input data
+            stcode_col: stcode column to convert
+            state_id_col: state_id column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+        data = data.copy()
+        if not hasattr(self,"stcode_cross"):
+            self.load_state_cross()
+        stcode_cross = self.stcode_cross[['st_code','state_id']].rename(columns={'state_id': state_id_col})
+        if full:
+            data = data.merge(stcode_cross, left_on=stcode_col, right_on='st_code', how='outer')
+        else:
+            data = data.merge(stcode_cross, left_on=stcode_col, right_on='st_code', how='left')
+        return data
+
+    def convert_fips_to_state_id(self,
+                                 data,
+                                 fips_col='fips',
+                                 state_id_col='state_id',
+                                 full=False):
+        """create state_id column from county (fips) column
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips column to convert
+            state_id_col: state_id column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        data = self.convert_fips_to_stcode(data,fips_col=fips_col)
+        data = self.convert_stcode_to_state_id(data,state_id_col=state_id_col,full=full)
+        return data
+
+    def convert_fips_to_msa(self,
+                                 data,
+                                 fips_col='fips',
+                                 msa_col='msa',
+                                 full=False):
+        """create msa column from county (fips) column
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips column to convert
+            msa_col: msa column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        data = data.copy()
+        if not hasattr(self,"fips_msa_cross"):
+            self.load_fips_msa_cross()
+        if data[fips_col].dtype != 'O':
+            data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
+        msa_cross = self.fips_msa_cross.rename(columns={'msa': msa_col})
+        if full:
+            data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='outer')
+        else:
+            data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='left')
+        return data
+
+    def county_to_state(self,
+                      data,
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None,
+                      full=False,
+                      state_id_col="state_id"):
+        """convert and aggregate from county to state_id
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips (county) column to convert
+            date_col: date column (is not aggregated)
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+            state_id_col: state_id column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        if count_cols:
+            data=data[[fips_col,date_col] + count_cols].copy()
+        data = self.convert_fips_to_state_id(data,fips_col=fips_col,state_id_col=state_id_col,full=full)
+        data.drop([fips_col,'st_code'],axis=1,inplace=True)
+        assert not data[state_id_col].isnull().values.any(), "nan states, probably invalid fips"
+        if date_col:
+            assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+            data.fillna(0,inplace=True)
+            data = data.groupby([date_col,state_id_col]).sum()
+        else:
+            data.fillna(0,inplace=True)
+            data = data.groupby(state_id_col).sum()
+        return data.reset_index()
+
+    def county_to_msa(self,
+                      data,
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None,
+                      full=False,
+                      msa_col="msa"):
+        """convert and aggregate from county to metropolitan statistical area (msa)
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips (county) column to convert
+            date_col: date column (is not aggregated)
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+            msa_col: msa column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        if count_cols:
+            data=data[[fips_col,date_col] + count_cols].copy()
+        data = self.convert_fips_to_msa(data,fips_col=fips_col,msa_col=msa_col,full=full)
+        data.drop(fips_col,axis=1,inplace=True)
+        assert not data[msa_col].isnull().values.any(), "nan states, probably invalid fips"
+        if date_col:
+            assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+            data.fillna(0,inplace=True)
+            data = data.groupby([date_col,msa_col]).sum()
+        else:
+            data.fillna(0,inplace=True)
+            data = data.groupby(msa_col).sum()
+        return data.reset_index()
 
 
     # @staticmethod

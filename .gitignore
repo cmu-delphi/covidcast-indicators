@@ -118,3 +118,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Ansible
+.retry
+.indicators-ansible-vault-pass
+indicators-ansible-vault-pass

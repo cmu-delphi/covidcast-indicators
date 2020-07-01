@@ -59,6 +59,9 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0
 
+    UNEXPECTED_COLUMNS = [x for x in df.columns if "Unnamed" in x]
+    DROP_COLUMNS.extend(UNEXPECTED_COLUMNS)
+
     # Assign Grand Princess Cruise Ship a special FIPS 90000
     # df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
     # df.loc[df["FIPS"] == 6000, "stateFIPS"] = 90

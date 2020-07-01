@@ -100,7 +100,7 @@ grpInput.add_argument('--date_range', type=str, dest='date_range',default= "new"
 args = parser.parse_args()
 
 yesterday = date.today() - timedelta(days=1)
-date_list = None
+date_range = None
 if args.date_range == 'new':
     # only create combined file for the newest update (usually for yesterday)    
     date_range = [yesterday, yesterday]

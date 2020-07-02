@@ -8,22 +8,24 @@ context("Testing creating of individual response output data for external sharin
 test_that("testing write_individual command", {
   tdir <- tempfile()
 
-  test_data <- tibble(var1 = LETTERS, var2 = letters, token = LETTERS)
+  test_data <- tibble(var1 = LETTERS, var2 = letters, weight = 1,
+                      token = LETTERS, Date = "2020-01-04")
 
   write_individual(test_data, params = list(
     individual_dir = tdir,
-    start_time = make_datetime(2020, 01, 01),
-    end_time = make_datetime(2020, 02, 01)
+    end_date = as.Date("2020-01-05")
   ))
   expect_setequal(
-    dir(tdir),
-    "cvid_responses_16_00_2019_12_31_-_16_00_2020_01_31_for_weights_2019_12_31.csv"
+    !!dir(tdir),
+    "cvid_responses_2020_01_04_recordedby_2020_01_05.csv"
   )
 
   df <- read_csv(file.path(
     tdir,
-    "cvid_responses_16_00_2019_12_31_-_16_00_2020_01_31_for_weights_2019_12_31.csv"
+    "cvid_responses_2020_01_04_recordedby_2020_01_05.csv"
   ))
-  expect_equivalent(df, test_data[, -3L])
+
+  # skip token, Date columns
+  expect_equivalent(df, test_data[, -c(4, 5)])
 
 })

@@ -27,20 +27,6 @@ test_that("contents are the same", {
     test_df <- read.csv(test_path("individual_full", f))
     gold_df <- read.csv(test_path("gold_individual", f))
 
-    ## the gold pipeline accidentally provides duplicate rows when there are
-    ## duplicate weights. This should not be possible in the real pipeline,
-    ## since an external step removes duplicate weights; but it is possible on
-    ## the synthetic data. Take the *first* such row.
-    dup_idx <- duplicated(gold_df$StartDatetime)
-    gold_df <- gold_df[!dup_idx,]
-
-    ## unfortunately, since StartDatetimes in synthetic data are drawn with
-    ## replacement from real data, we must remove dupes from the test data.
-    ## They're real dupes, but were removed from the gold data as a false
-    ## positive.
-    dup_idx <- duplicated(test_df$StartDatetime)
-    test_df <- test_df[!dup_idx,]
-
     expect_equal(nrow(gold_df), nrow(test_df))
 
     for (col in names(test_df)) {

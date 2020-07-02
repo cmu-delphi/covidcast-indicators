@@ -30,6 +30,20 @@ class TestGeoMapper:
         "count": [99,345,456,100,344,442]
     })
     zip_data["total"] = zip_data["count"] * 2
+    jan_month = pd.bdate_range('2018-01-01','2018-02-01')
+    mega_data = pd.concat((
+        pd.DataFrame({
+        'fips': [1001]*len(jan_month),
+        'date': jan_month,
+        'count': np.arange(len(jan_month)),
+        'visits': np.arange(len(jan_month)),
+        }),
+        pd.DataFrame({
+            'fips': [1002]*len(jan_month),
+            'date': jan_month,
+            'count': np.arange(len(jan_month)),
+            'visits': 2*np.arange(len(jan_month)),
+        })))
 
     def test_load_zip_fips_cross(self):
         gmpr = GeoMapper()
@@ -107,3 +121,8 @@ class TestGeoMapper:
         new_data = gmpr.zip_to_county(self.zip_data)
         assert new_data.shape[0] == 10
         assert (new_data[['count','total']].sum()-self.zip_data[['count','total']].sum()).sum() < 1e-3
+
+    def test_megacounty_creation(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.county_to_megacounty(self.mega_data,6,50)
+        assert (new_data[['count','visits']].sum()-self.mega_data[['count','visits']].sum()).sum() < 1e-3

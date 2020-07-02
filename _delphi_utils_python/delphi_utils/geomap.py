@@ -11,6 +11,8 @@ TODO:
 1. increase coverage to include full flags
 2. test that the cross files are unchanged
 3. add remaining mappings
+4. reset_index?
+5.
 """
 
 from os.path import join
@@ -45,7 +47,7 @@ class GeoMapper:
        - zip -> county : population weighted
        + county -> state : unweighted
        + county -> msa : unweighted
-       - county -> metacounty
+       - county -> megacounty
 
     """
 
@@ -104,14 +106,22 @@ class GeoMapper:
         data[stcode_col] = data[fips_col].str[:2]
         return data
 
+    @staticmethod
+    def convert_int_to_str5(data,
+                            int_col='fips',
+                            str_col='fips'):
+        """convert int to a string of length 5"""
+        data = data.copy()
+        data[str_col] = data[int_col].astype(str).str.zfill(5)
+        return data
+
     def convert_intfips_to_str(self,
                                data,
                                intfips_col='fips',
                                strfips_col='fips'):
         """convert fips to a string of length 5"""
-        data = data.copy()
-        data[strfips_col] = data[intfips_col].astype(str).str.zfill(5)
-        return data
+        return GeoMapper.convert_int_to_str5(data,int_col=intfips_col,str_col=strfips_col)
+
 
     def convert_stcode_to_state_id(self,
                                data,
@@ -183,7 +193,7 @@ class GeoMapper:
         if not hasattr(self,"zip_fips_cross"):
             self.load_zip_fips_cross()
         if data[zip_col].dtype != 'O':
-            data = self.convert_intfips_to_str(data,intfips_col=zip_col,strfips_col=zip_col)
+            data = GeoMapper.convert_int_to_str5(data,int_col=zip_col,str_col=zip_col)
         zip_cross = self.zip_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         if full:
             data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='outer')
@@ -334,6 +344,103 @@ class GeoMapper:
             data.fillna(0,inplace=True)
             data = data.groupby(fips_col).sum()
         return data.reset_index()
+
+    @staticmethod
+    def convert_fips_to_mega(data,
+                             fips_col='fips',
+                             mega_col='megafips'):
+        """convert int to a string of length 5"""
+        data = data.copy()
+        data[mega_col] = data[fips_col].astype(str).str.zfill(5)
+        data[mega_col] = data[mega_col].str.slice_replace(start=2,stop=5,repl='000')
+        return data
+
+    @staticmethod
+    def megacounty_creation(data,
+                            thr_count,
+                            thr_win_len,
+                            thr_col='visits',
+                            fips_col='fips',
+                            date_col='date',
+                            mega_col='megafips'):
+
+        data_roll = data.set_index(date_col).groupby(fips_col).rolling(f'{thr_win_len}D').agg({thr_col:'sum'})
+        data_roll.reset_index(inplace=True)
+        data_roll = GeoMapper.convert_fips_to_mega(data_roll,fips_col=fips_col,mega_col=mega_col)
+        data_roll.loc[data_roll[thr_col] > thr_count,mega_col] = data_roll.loc[data_roll[thr_col] > thr_count, fips_col]
+        return data_roll.set_index([fips_col,date_col])[mega_col]
+
+    def county_to_megacounty(self,
+                             data,
+                             thr_count,
+                             thr_win_len,
+                             thr_col='visits',
+                             fips_col='fips',
+                             date_col='date',
+                             mega_col='megafips',
+                             count_cols=None):
+
+        data = data.copy()
+        if count_cols:
+            data=data[[fips_col,date_col] + count_cols]
+        if data[fips_col].dtype != 'O':
+            data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
+        mega_data = GeoMapper.megacounty_creation(data,thr_count,thr_win_len,thr_col=thr_col,fips_col=fips_col,date_col=date_col,mega_col=mega_col)
+        data.set_index([fips_col, date_col],inplace=True)
+        data = data.join(mega_data)
+        data = data.reset_index().groupby([date_col,mega_col]).sum()
+        return data.reset_index()
+
+    # def county_to_megacounty(self,
+    #                          data,
+    #                          thr_col,
+    #                          count_cols,
+    #                          threshold_visits=Config.MIN_DEN,
+    #                          threshold_len=Config.MAX_BACKFILL_WINDOW):
+    #     """Prepare county and megacounty groups. A megacounty for a given day is all of
+    #     the counties in a certain state who have a denominator sum over <threshold_len>
+    #     days below <threshold_visits>.
+    #
+    #     Args:
+    #         data: dataframe aggregated to the daily-county resolution
+    #         threshold_visits: minimum number of total visits needed to create an estimate
+    #         threshold_len: maximum number of days to aggregate the total number of visits
+    #
+    #     Returns:
+    #         dataframe at the daily-county resolution, including megacounty rows
+    #
+    #     """
+    #
+    #     dates = np.unique(data["date"])
+    #     fipss = np.unique(data["fips"])
+    #
+    #     # get denominator by day and location for all possible date-fips pairs
+    #     # this fills in 0 if unobserved
+    #     denom_dayloc = np.zeros((len(dates), len(fipss)))
+    #     by_fips = data.groupby("fips")
+    #     for j, fips in enumerate(fipss):
+    #         denom_dayloc[:, j] = GeoMaps.fill_dates(
+    #             by_fips.get_group(fips).set_index("date"), dates
+    #         )["den"].values
+    #
+    #     # get rolling sum across <threshold_len> days
+    #     num_recent_visits = np.concatenate(
+    #         (np.zeros((threshold_len, len(fipss))), np.cumsum(denom_dayloc, axis=0)),
+    #         axis=0,
+    #     )
+    #     num_recent_visits = (
+    #         num_recent_visits[threshold_len:] - num_recent_visits[:-threshold_len]
+    #     )
+    #     recent_visits_df = pd.DataFrame(
+    #         [
+    #             (dates[x[0]], fipss[x[1]], val)
+    #             for x, val in np.ndenumerate(num_recent_visits)
+    #         ],
+    #         columns=["date", "fips", "recent_visits"],
+    #     )
+    #     data = data.merge(
+    #         recent_visits_df, how="left", on=["date", "fips"]
+    #     )
 
 
     # @staticmethod

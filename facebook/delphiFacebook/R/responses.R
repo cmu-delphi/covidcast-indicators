@@ -84,9 +84,6 @@ load_response_one <- function(input_filename, params)
 #' @export
 filter_responses <- function(input_data, seen_tokens_archive, params)
 {
-  # what zip5 values have a large enough population (>100) to include
-  allowed_zips <- produce_allowed_zip5(params$static_dir)
-
   # only include tokens we have not already seen
   if (!is.null(seen_tokens_archive))
   {
@@ -101,7 +98,6 @@ filter_responses <- function(input_data, seen_tokens_archive, params)
   input_data <- input_data[input_data$S1 == 1, ]
   input_data <- input_data[input_data$DistributionChannel != "preview", ]
   input_data <- input_data[between(input_data$start_dt, params$start_time, params$end_time),]
-  input_data <- input_data[input_data$zip5 %in% allowed_zips,]
 
   return(input_data)
 }
@@ -144,11 +140,17 @@ create_data_for_aggregatation <- function(input_data)
 
 #' Filter data that is appropriate for aggregation
 #'
-#' @param df  data frame of responses
+#' @param df data frame of responses
+#' @param params list containing `static_dir`, indicating where to find ZIP data
+#'   files
 #'
 #' @export
-filter_data_for_aggregatation <- function(df)
+filter_data_for_aggregatation <- function(df, params)
 {
+  # what zip5 values have a large enough population (>100) to include in aggregates
+  allowed_zips <- produce_allowed_zip5(params$static_dir)
+  df <- df[df$zip5 %in% allowed_zips,]
+
   df <- df[!is.na(df$hh_number_sick) & !is.na(df$hh_number_total), ]
   df <- df[between(df$hh_number_sick, 0L, 30L), ]
   df <- df[between(df$hh_number_total, 1L, 30L), ]

@@ -4,10 +4,13 @@
 \alias{filter_data_for_aggregatation}
 \title{Filter data that is appropriate for aggregation}
 \usage{
-filter_data_for_aggregatation(df)
+filter_data_for_aggregatation(df, params)
 }
 \arguments{
 \item{df}{data frame of responses}
+
+\item{params}{list containing `static_dir`, indicating where to find ZIP data
+files}
 }
 \description{
 Filter data that is appropriate for aggregation

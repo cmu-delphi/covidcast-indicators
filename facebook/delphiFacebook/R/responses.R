@@ -195,13 +195,28 @@ create_complete_responses <- function(input_data)
   return(data_full)
 }
 
-#' Filter responses with sufficent responses to share
+#' Filter responses with sufficient data to share.
 #'
-#' @param data_full    data frame of responses
+#' Inclusion criteria:
+#'
+#' * answered age consent
+#' * CID/token IS NOT missing
+#' * distribution source (ie previews) IS NOT irregular
+#' * start date IS IN range, pacific time
+#' * answered minimum of 2 additional questions, where to "answer" a numeric
+#' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
+#' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
+#' button question is to provide a selection.
+#'
+#' Most of these criteria are handled by `filter_responses()` above; this
+#' function need only handle the last criterion.
+#'
+#' @param data_full data frame of responses
 #'
 #' @export
 filter_complete_responses <- function(data_full)
 {
+  # 6 includes StartDatetime, EndDatetime, Date, token, + two questions
   data_full <- data_full[rowSums(!is.na(data_full)) >= 6, ]
 
   return(data_full)

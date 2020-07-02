@@ -2,7 +2,7 @@
 % Please edit documentation in R/responses.R
 \name{filter_complete_responses}
 \alias{filter_complete_responses}
-\title{Filter responses with sufficent responses to share}
+\title{Filter responses with sufficient data to share.}
 \usage{
 filter_complete_responses(data_full)
 }
@@ -10,5 +10,18 @@ filter_complete_responses(data_full)
 \item{data_full}{data frame of responses}
 }
 \description{
-Filter responses with sufficent responses to share
+Inclusion criteria:
+}
+\details{
+* answered age consent
+* CID/token IS NOT missing
+* distribution source (ie previews) IS NOT irregular
+* start date IS IN range, pacific time
+* answered minimum of 2 additional questions, where to "answer" a numeric
+open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
+D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
+button question is to provide a selection.
+
+Most of these criteria are handled by `filter_responses()` above; this
+function need only handle the last criterion.
 }

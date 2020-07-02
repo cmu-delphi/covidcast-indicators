@@ -20,7 +20,7 @@ run_facebook <- function(params)
 
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregatation(input_data)
-  data_agg <- filter_data_for_aggregatation(data_agg)
+  data_agg <- filter_data_for_aggregatation(data_agg, params)
   data_agg <- join_weights(data_agg, params, weights = "step1")
   msg_df("response data to aggregate", data_agg)
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/responses.R
 \name{create_complete_responses}
 \alias{create_complete_responses}
-\title{Create dataset for sharing with research parteners}
+\title{Create dataset for sharing with research partners}
 \usage{
 create_complete_responses(input_data)
 }
@@ -10,5 +10,5 @@ create_complete_responses(input_data)
 \item{input_data}{data frame of responses}
 }
 \description{
-Create dataset for sharing with research parteners
+Create dataset for sharing with research partners
 }

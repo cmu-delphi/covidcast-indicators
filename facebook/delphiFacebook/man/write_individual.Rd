@@ -14,5 +14,6 @@ indicating where the output file will be written, and values
 "start_time" and "end_time" used in the naming the output file}
 }
 \description{
-The "token" column is removed from the input dataset, which is otherwise saved as-is.
+The "token" column is removed from the input dataset and only rows with
+corresponding weights are written.
 }

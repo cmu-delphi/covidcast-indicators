@@ -12,7 +12,7 @@ library(readr)
 library(stringi)
 library(testthat)
 
-context("Testing against reference implementation")
+context("Testing API output against reference implementation")
 
 geo_levels <- c("county", "state", "hrr", "msa")
 dates <- c("20200508", "20200509", "20200510", "20200511", "20200512")

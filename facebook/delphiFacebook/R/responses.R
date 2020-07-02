@@ -160,7 +160,7 @@ filter_data_for_aggregatation <- function(df)
 create_complete_responses <- function(input_data)
 {
   data_full <- select(input_data,
-    StartDatetime = "start_dt", EndDatetime = "start_dt", Date = "date",
+    StartDatetime = "start_dt", EndDatetime = "end_dt", Date = "date",
     "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2", "A2b", "A3", "A3b", "A4",
     "B2", "B2_14_TEXT", "B2b", "B3", "B4", "B5", "B6",
     "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8_1", "C8_2", "C9", "C10_1_1", "C10_2_1",
@@ -180,8 +180,7 @@ create_complete_responses <- function(input_data)
   vars <- sapply(data_full, class)
   for (var in names(vars)[vars == "character"])
   {
-    data_full[[var]] <- stri_replace_all(data_full[[var]], " ", regex = "  *")
-    data_full[[var]] <- stri_replace_all(data_full[[var]], "", regex = "  *")
+    data_full[[var]] <- stri_trim(stri_replace_all(data_full[[var]], " ", regex = "  *"))
     data_full[[var]][data_full[[var]] == ""] <- NA_character_
   }
 

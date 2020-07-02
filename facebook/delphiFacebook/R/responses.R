@@ -24,7 +24,7 @@ load_responses_all <- function(params)
 #'                        where the input file are found
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
-#' @importFrom readr read_lines cols
+#' @importFrom readr read_lines cols locale
 #' @importFrom dplyr arrange desc
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
@@ -37,7 +37,12 @@ load_response_one <- function(input_filename, params)
   tz_from <- stri_extract(meta_data, regex = "[a-zA-Z_]+/[a-zA-Z_]+")
   col_names <- stri_split(read_lines(full_path, n_max = 1L), fixed = ",")[[1]]
   col_names <- stri_replace_all(col_names, "", fixed = "\"")
-  input_data <- read_csv(full_path, skip = 3L, col_names = col_names, col_types = cols())
+
+  ## The CSVs have some columns with column-separated fields showing which of
+  ## multiple options a user selected; readr would interpret these as thousand
+  ## separators by default, so we tell it that no thousands separators are used.
+  input_data <- read_csv(full_path, skip = 3L, col_names = col_names, col_types = cols(),
+                         locale = locale(grouping_mark = ""))
   input_data <- arrange(input_data, desc(.data$StartDate))
 
   # create new variables

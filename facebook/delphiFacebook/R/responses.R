@@ -159,9 +159,10 @@ filter_data_for_aggregatation <- function(df, params)
   return(df)
 }
 
-#' Create dataset for sharing with research parteners
+#' Create dataset for sharing with research partners
 #'
 #' @param input_data    data frame of responses
+#' @importFrom stringi stri_trim stri_replace_all
 #'
 #' @export
 create_complete_responses <- function(input_data)

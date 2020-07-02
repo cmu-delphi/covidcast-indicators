@@ -24,6 +24,12 @@ class TestGeoMapper:
         "num": [1,2,3,4,8],
         "den": [2,4,7,11,100]
     })
+    zip_data = pd.DataFrame({
+        "zip":[45140,95616,95618]*2,
+        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3,
+        "count": [99,345,456,100,344,442]
+    })
+    zip_data["total"] = zip_data["count"] * 2
 
     def test_load_zip_fips_cross(self):
         gmpr = GeoMapper()
@@ -89,3 +95,15 @@ class TestGeoMapper:
         new_data = gmpr.county_to_msa(self.fips_data_3)
         assert new_data.shape[0] == 2
         assert new_data[['num']].sum()[0] == self.fips_data_3['num'].sum()
+
+    def test_convert_zip_to_fips(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_zip_to_fips(self.zip_data)
+        assert new_data.shape[0] == 12
+        assert (new_data.groupby('zip').sum()['weight'] == 2).sum() == 3
+
+    def test_zip_to_county(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.zip_to_county(self.zip_data)
+        assert new_data.shape[0] == 10
+        assert (new_data[['count','total']].sum()-self.zip_data[['count','total']].sum()).sum() < 1e-3

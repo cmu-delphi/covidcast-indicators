@@ -6,6 +6,11 @@ should be fixed there as well.
 Author: James Sharpnack @jsharpna
 Partially based on code by Maria Jahja
 Created: 2020-06-01
+
+TODO:
+1. increase coverage to include full flags
+2. test that the cross files are unchanged
+3. add remaining mappings
 """
 
 from os.path import join
@@ -155,6 +160,38 @@ class GeoMapper:
         data = self.convert_stcode_to_state_id(data,state_id_col=state_id_col,full=full)
         return data
 
+    def convert_zip_to_fips(self,
+                            data,
+                            zip_col="zip",
+                            fips_col="fips",
+                            weight_col="weight",
+                            full=False):
+        """create fips (county) column from zip column
+
+        Args:
+            data: pd.DataFrame input data
+            zip_col: zip5 column to convert
+            fips_col: fips column to create
+            weight_col: weight (pop) column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        data = data.copy()
+        if not hasattr(self,"zip_fips_cross"):
+            self.load_zip_fips_cross()
+        if data[zip_col].dtype != 'O':
+            data = self.convert_intfips_to_str(data,intfips_col=zip_col,strfips_col=zip_col)
+        zip_cross = self.zip_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
+        if full:
+            data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='outer')
+        else:
+            data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='left')
+        return data
+
+
     def convert_fips_to_msa(self,
                                  data,
                                  fips_col='fips',
@@ -252,6 +289,50 @@ class GeoMapper:
         else:
             data.fillna(0,inplace=True)
             data = data.groupby(msa_col).sum()
+        return data.reset_index()
+
+    def zip_to_county(self,
+                      data,
+                      zip_col='zip',
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None,
+                      full=False):
+        """convert and aggregate from zip to fips (county)
+
+        Args:
+            data: pd.DataFrame input data
+            zip_col: zip column to convert
+            fips_col: fips (county) column to create
+            date_col: date column (is not aggregated, groupby), if None then no dates
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+        if date_col:
+            assert date_col in data.columns, f'{date_col} not in data.columns'
+        assert zip_col in data.columns, f'{zip_col} not in data.columns'
+        if not count_cols:
+            count_cols = list(set(data.columns) - {date_col, zip_col})
+        else:
+            count_cols = list(count_cols)
+        if date_col:
+            data = data[[zip_col, date_col] + count_cols].copy()
+        else:
+            data = data[[zip_col] + count_cols].copy()
+        data = self.convert_zip_to_fips(data,zip_col=zip_col,fips_col=fips_col,full=full)
+        data[count_cols] = data[count_cols].multiply(data['weight'],axis=0)
+        data.drop([zip_col,'weight'],axis=1,inplace=True)
+        assert not data[fips_col].isnull().values.any(), "nan fips, zip not in cross table"
+        if date_col:
+            assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+            data.fillna(0,inplace=True)
+            data = data.groupby([date_col,fips_col]).sum()
+        else:
+            data.fillna(0,inplace=True)
+            data = data.groupby(fips_col).sum()
         return data.reset_index()
 
 

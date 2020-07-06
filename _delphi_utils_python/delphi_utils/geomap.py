@@ -291,7 +291,6 @@ class GeoMapper:
             data=data[[fips_col,date_col] + count_cols].copy()
         data = self.convert_fips_to_msa(data,fips_col=fips_col,msa_col=msa_col,full=full)
         data.drop(fips_col,axis=1,inplace=True)
-        assert not data[msa_col].isnull().values.any(), "nan states, probably invalid fips"
         if date_col:
             assert not data[date_col].isnull().values.any(), "nan dates not allowed"
             data.fillna(0,inplace=True)
@@ -349,7 +348,7 @@ class GeoMapper:
     def convert_fips_to_mega(data,
                              fips_col='fips',
                              mega_col='megafips'):
-        """convert int to a string of length 5"""
+        """convert fips string to a megafips string"""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
         data[mega_col] = data[mega_col].str.slice_replace(start=2,stop=5,repl='000')
@@ -363,11 +362,33 @@ class GeoMapper:
                             fips_col='fips',
                             date_col='date',
                             mega_col='megafips'):
+        """create megacounty column
 
-        data_roll = data.set_index(date_col).groupby(fips_col).rolling(f'{thr_win_len}D').agg({thr_col:'sum'})
+        Args:
+            data: pd.DataFrame input data
+            thr_count: numeric, if the sum of counts exceed this, then fips is converted to mega
+            thr_win_len: int, the number of Days to use as an average
+            thr_col: str, column to use for threshold
+            fips_col: str, fips (county) column to create
+            date_col: str, date column (is not aggregated, groupby), if None then no dates
+            mega_col: str, the megacounty column to create
+
+        Return:
+            data: copy of dataframe
+        """
+
+        assert '_thr_col_roll' not in data.columns, "column name '_thr_col_roll' is reserved"
+        def agg_sum_iter(data):
+            data_gby = data[[fips_col, date_col, thr_col]].set_index(date_col).groupby(fips_col)
+            for _, subdf in data_gby:
+                subdf_roll = subdf[thr_col].rolling(f'{thr_win_len}D').sum()
+                subdf['_thr_col_roll'] = subdf_roll
+                yield subdf
+
+        data_roll = pd.concat(agg_sum_iter(data))
         data_roll.reset_index(inplace=True)
         data_roll = GeoMapper.convert_fips_to_mega(data_roll,fips_col=fips_col,mega_col=mega_col)
-        data_roll.loc[data_roll[thr_col] > thr_count,mega_col] = data_roll.loc[data_roll[thr_col] > thr_count, fips_col]
+        data_roll.loc[data_roll['_thr_col_roll'] > thr_count,mega_col] = data_roll.loc[data_roll['_thr_col_roll'] > thr_count, fips_col]
         return data_roll.set_index([fips_col,date_col])[mega_col]
 
     def county_to_megacounty(self,
@@ -379,6 +400,21 @@ class GeoMapper:
                              date_col='date',
                              mega_col='megafips',
                              count_cols=None):
+        """convert and aggregate from zip to fips (county)
+
+        Args:
+            data: pd.DataFrame input data
+            thr_count: numeric, if the sum of counts exceed this, then fips is converted to mega
+            thr_win_len: int, the number of Days to use as an average
+            thr_col: str, column to use for threshold
+            fips_col: str, fips (county) column to create
+            date_col: str, date column (is not aggregated, groupby), if None then no dates
+            mega_col: str, the megacounty column to create
+            count_cols: list, the count data columns to aggregate, if None (default) all non data/geo are used
+
+        Return:
+            data: copy of dataframe
+        """
 
         data = data.copy()
         if count_cols:

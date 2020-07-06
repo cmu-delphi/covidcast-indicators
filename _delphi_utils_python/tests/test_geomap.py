@@ -122,7 +122,7 @@ class TestGeoMapper:
         assert new_data.shape[0] == 10
         assert (new_data[['count','total']].sum()-self.zip_data[['count','total']].sum()).sum() < 1e-3
 
-    def test_megacounty_creation(self):
+    def test_megacounty(self):
         gmpr = GeoMapper()
         new_data = gmpr.county_to_megacounty(self.mega_data,6,50)
         assert (new_data[['count','visits']].sum()-self.mega_data[['count','visits']].sum()).sum() < 1e-3

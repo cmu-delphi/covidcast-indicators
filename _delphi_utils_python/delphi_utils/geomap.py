@@ -8,7 +8,7 @@ Partially based on code by Maria Jahja
 Created: 2020-06-01
 
 TODO:
-1. increase coverage to include full flags
+1. increase coverage to include full flags (do we want full?)
 2. test that the cross files are unchanged
 3. add remaining mappings
 4. reset_index?
@@ -44,10 +44,11 @@ class GeoMapper:
       to fips level data if the zip_fips_cross table is used
 
      Mappings: (- incomplete)
-       - zip -> county : population weighted
+       + zip -> county : population weighted
        + county -> state : unweighted
        + county -> msa : unweighted
-       - county -> megacounty
+       + county -> megacounty
+       - zip -> * not county
 
     """
 
@@ -72,6 +73,8 @@ class GeoMapper:
         self.zip_fips_cross = pd.read_csv(stream,dtype={'zip':str,
                                           'fips':str,
                                           'weight':float})
+        for col in ['fips','zip']:
+            self.zip_fips_cross = GeoMapper.convert_int_to_str5(self.zip_fips_cross,int_col=col,str_col=col)
 
     def load_state_cross(self):
         """load state_code->state_id cross table"""
@@ -85,6 +88,9 @@ class GeoMapper:
         stream = pkg_resources.resource_stream(__name__, self.msa_filepath)
         self.fips_msa_cross = pd.read_csv(stream, dtype={'fips': str,
                                                        'msa': str})
+        for col in ['fips','msa']:
+            self.fips_msa_cross = GeoMapper.convert_int_to_str5(self.fips_msa_cross,int_col=col,str_col=col)
+
 
     def convert_fips_to_stcode(self,
                                data,
@@ -192,8 +198,7 @@ class GeoMapper:
         data = data.copy()
         if not hasattr(self,"zip_fips_cross"):
             self.load_zip_fips_cross()
-        if data[zip_col].dtype != 'O':
-            data = GeoMapper.convert_int_to_str5(data,int_col=zip_col,str_col=zip_col)
+        data = GeoMapper.convert_int_to_str5(data,int_col=zip_col,str_col=zip_col)
         zip_cross = self.zip_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         if full:
             data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='outer')
@@ -222,8 +227,7 @@ class GeoMapper:
         data = data.copy()
         if not hasattr(self,"fips_msa_cross"):
             self.load_fips_msa_cross()
-        if data[fips_col].dtype != 'O':
-            data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
+        data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
         msa_cross = self.fips_msa_cross.rename(columns={'msa': msa_col})
         if full:
             data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='outer')
@@ -419,8 +423,7 @@ class GeoMapper:
         data = data.copy()
         if count_cols:
             data=data[[fips_col,date_col] + count_cols]
-        if data[fips_col].dtype != 'O':
-            data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
+        data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
         mega_data = GeoMapper.megacounty_creation(data,thr_count,thr_win_len,thr_col=thr_col,fips_col=fips_col,date_col=date_col,mega_col=mega_col)
         data.set_index([fips_col, date_col],inplace=True)
         data = data.join(mega_data)

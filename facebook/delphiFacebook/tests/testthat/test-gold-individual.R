@@ -19,10 +19,6 @@ test_that("individual output files exist", {
 })
 
 test_that("contents are the same", {
-  SKIP_COLS <- c("StartDatetime", # old was UTC-7, new is UTC
-                 "EndDatetime" # old was UTC-7, new is UTC
-                 )
-
   for (f in expected_files) {
     test_df <- read.csv(test_path("individual_full", f))
     gold_df <- read.csv(test_path("gold_individual", f))
@@ -30,10 +26,8 @@ test_that("contents are the same", {
     expect_equal(nrow(gold_df), nrow(test_df))
 
     for (col in names(test_df)) {
-      if (!(col %in% SKIP_COLS)) {
-        expect_equal(gold_df[[!!col]], test_df[[!!col]],
-                     tolerance = 0.0001)
-      }
+      expect_equal(gold_df[[!!col]], test_df[[!!col]],
+                   tolerance = 0.0001)
     }
   }
 })

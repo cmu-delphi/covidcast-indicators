@@ -178,6 +178,9 @@ create_complete_responses <- function(input_data)
     "token"
   )
 
+  data_full$StartDatetime <- format(data_full$StartDatetime)
+  data_full$EndDatetime <- format(data_full$EndDatetime)
+
   for (var in c(
     "A2", "A2b", "B2b", "Q40", "C10_1_1", "C10_2_1", "C10_3_1", "C10_4_1", "D3", "D4", "D5"
   ))

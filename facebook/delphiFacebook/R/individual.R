@@ -32,7 +32,7 @@ write_individual <- function(data_full_w, params)
       format(as.Date(params$end_date), "%Y_%m_%d")
     )
 
-    day_data <- dplyr::filter(data_to_write, Date == date)
+    day_data <- dplyr::filter(data_to_write, .data$Date == date)
     day_data <- select(day_data, -.data$Date)
 
     msg_df(sprintf("saving individual data for %s",

@@ -14,7 +14,6 @@ from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
 from .export import export_csv
 
-
 def run_module():
     """Main function run when calling the module.
 
@@ -23,7 +22,7 @@ def run_module():
     testing purposes).
     """
 
-    #  read parameters
+    #  read parameters
     params = read_params()
     ght_key = params["ght_key"]
     start_date = params["start_date"]
@@ -44,7 +43,7 @@ def run_module():
     # setup class to handle API calls
     ght = GoogleHealthTrends(ght_key=ght_key)
 
-    #  read data frame version of the data
+    #  read data frame version of the data
     df_state = get_counts_states(
         ght, start_date, end_date, static_dir=static_dir, cache_dir=cache_dir
     )
@@ -53,17 +52,20 @@ def run_module():
     )
     df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
 
-    #  export each geographic region, with both smoothed and unsmoothed data
-    export_csv(df_state, "state", "raw_search", smooth=False, receiving_dir=export_dir)
-    export_csv(
-        df_state, "state", "smoothed_search", smooth=True, receiving_dir=export_dir
-    )
+    #  export each geographic region, with both smoothed and unsmoothed data
+    
+    export_csv(df_state, "state", "raw_search", smooth="raw", receiving_dir=export_dir)
+    export_csv(df_state, "state", "smoothed_search", smooth="smooth", receiving_dir=export_dir)
+    export_csv(df_state, "state", "wip_smoothed_search", smooth="wip", receiving_dir=export_dir)
 
-    export_csv(df_dma, "dma", "raw_search", smooth=False, receiving_dir=export_dir)
-    export_csv(df_dma, "dma", "smoothed_search", smooth=True, receiving_dir=export_dir)
+    export_csv(df_dma, "dma", "raw_search", smooth="raw", receiving_dir=export_dir)
+    export_csv(df_dma, "dma", "smoothed_search", smooth="smooth", receiving_dir=export_dir)
+    export_csv(df_dma, "dma", "wip_smoothed_search", smooth="wip", receiving_dir=export_dir)
 
-    export_csv(df_hrr, "hrr", "raw_search", smooth=False, receiving_dir=export_dir)
-    export_csv(df_hrr, "hrr", "smoothed_search", smooth=True, receiving_dir=export_dir)
+    export_csv(df_hrr, "hrr", "raw_search", smooth="raw", receiving_dir=export_dir)
+    export_csv(df_hrr, "hrr", "smoothed_search", smooth="smooth", receiving_dir=export_dir)
+    export_csv(df_hrr, "hrr", "wip_smoothed_search", smooth="wip", receiving_dir=export_dir)
 
-    export_csv(df_msa, "msa", "raw_search", smooth=False, receiving_dir=export_dir)
-    export_csv(df_msa, "msa", "smoothed_search", smooth=True, receiving_dir=export_dir)
+    export_csv(df_msa, "msa", "raw_search", smooth="raw", receiving_dir=export_dir)
+    export_csv(df_msa, "msa", "smoothed_search", smooth="smooth", receiving_dir=export_dir)
+    export_csv(df_msa, "msa", "wip_smoothed_search", smooth="wip", receiving_dir=export_dir)

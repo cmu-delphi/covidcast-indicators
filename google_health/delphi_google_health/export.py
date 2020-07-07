@@ -4,13 +4,13 @@
 import numpy as np
 import pandas as pd
 
-from .smooth import smoothed_values_by_geo_id
+from .smooth import smoothed_values_by_geo_id, wip_smoothed_values_by_geo_id
 
 RESCALE_VAL = 4000 / 100
 
 
 def export_csv(
-    df: pd.DataFrame, geo_name: str, sensor: str, smooth: bool, receiving_dir: str
+    df: pd.DataFrame, geo_name: str, sensor: str, smooth: str, receiving_dir: str
 ) -> None:
     """Export data set in format expected for injestion by the API
 
@@ -25,16 +25,19 @@ def export_csv(
         name of the geographic region, such as "state" or "hrr"
     sensor: str
         name of the sensor; only used for naming the output file
-    smooth: bool
-        should the signal in "val" be smoothed?
+    smooth: str
+        choose from: "raw", "smooth", "wip"
+        should the signal in "val" be smoothed? which smoothing method? 
     receiving_dir: str
         path to location where the output CSV files to be uploaded should be stored
     """
 
     df = df.copy()
 
-    if smooth:
+    if smooth == "smooth":
         df["val"] = smoothed_values_by_geo_id(df)
+    elif smooth == "wip":
+        df["val"] = wip_smoothed_values_by_geo_id(df)
 
     df["val"] /= RESCALE_VAL
     df["se"] = np.nan

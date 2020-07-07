@@ -64,14 +64,39 @@ def combine_usafacts_and_jhu(signal, geo, date_range):
                                      axis=1)
     return combined_df
 
+def next_missing_day(source, signals):
+    """Fetch the first day for which we want to generate new data."""
+    meta_df = covidcast.metadata()
+    meta_df = meta_df[meta_df["data_source"]==source]
+    meta_df = meta_df[meta_df["signal"].isin(signals)]
+    # min: use the max_time of the most lagged signal, in case they differ
+    # +timedelta: the subsequent day is the first day of new data to generate
+    day = min(meta_df["max_time"])+timedelta(days=1)
+    return day
+
 def run_module():
     """Produce a combined cases and deaths signal using data from JHU and USA Facts"""
+    def sensor_signal(metric, sensor, smoother):
+        if smoother == "7dav":
+            sensor_name = "_".join([smoother, sensor])
+        else:
+            sensor_name = sensor
+        signal = "_".join([metric, sensor_name])
+        return sensor_name, signal
+    variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
+                for (metric, geo_res, sensor, smoother) in
+                product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
+
     params = read_params()
     params['export_start_date'] = date(*params['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
     if params['date_range'] == 'new':
-        # only create combined file for the newest update (usually for yesterday)
-        params['date_range'] = [yesterday, yesterday]
+        # only create combined file for the newest update
+        # (usually for yesterday, but check just in case)
+        params['date_range'] = [
+            min(yesterday, next_missing_day(params["source"], set(signal[-1] for signal in variants))),
+            yesterday
+        ]
     elif params['date_range'] == 'all':
         # create combined files for all of the historical reports
         params['date_range'] = [params['export_start_date'], yesterday]
@@ -94,14 +119,8 @@ def run_module():
         if date1 < params['export_start_date']:
             date1 = params['export_start_date']
         params['date_range'] = [date1, date2]
-    for metric, geo_res, sensor, smoother in product(
-                METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES):
-        if smoother == "7dav":
-            sensor_name = "_".join([smoother, sensor])
-        else:
-            sensor_name = sensor
-        signal = "_".join([metric, sensor_name])
 
+    for metric, geo_res, sensor_name, signal in variants:
         create_export_csv(
             combine_usafacts_and_jhu(signal, geo_res, params['date_range']),
             export_dir=params['export_dir'],

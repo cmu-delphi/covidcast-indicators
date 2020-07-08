@@ -17,6 +17,7 @@ this will build the following files...
 - zip_fips_cross.csv
 - state_codes.csv
 
+You can see consistency checks and diffs with old sources in ./consistency_checks.ipynb
 
 ## Source files
 
@@ -67,5 +68,8 @@ Note: The 6,222 people in Bedford city, Virginia, which was an independent city 
 
 07/07/2020:
 Introduced the March 2020 MSA file, source is [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html).  This file seems to differ in a few fips codes from the source for the 02_20_uszip file which Jingjing constructed.  There are at least 10 additional fips in 03_20_msa that are not in the uszip file, and one of the msa codes seems to be incorrect: 49020 (a google search confirms that it is incorrect in uszip and correct in the census data). 
+
+07/08/2020:
+We are reserving 00001-00099 for states codes of the form 100XX where XX is the fips code for the state.  In the case that the CBSA codes change then it should be verified that these are not used.  The current smallest CBSA is 10100.
 
 -James

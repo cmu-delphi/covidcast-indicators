@@ -19,10 +19,10 @@ class TestGeoMapper:
         "den": [4,1,400,np.nan,100001]
     })
     fips_data_3 = pd.DataFrame({
-        "fips":[48059, 48253, 48441, 72003, 72005],
-        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*2,
-        "num": [1,2,3,4,8],
-        "den": [2,4,7,11,100]
+        "fips":[48059, 48253, 48441, 72003, 72005, 10999],
+        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3,
+        "num": [1,2,3,4,8,5],
+        "den": [2,4,7,11,100,10]
     })
     zip_data = pd.DataFrame({
         "zip":[45140,95616,95618]*2,
@@ -107,7 +107,7 @@ class TestGeoMapper:
     def test_county_to_msa(self):
         gmpr = GeoMapper()
         new_data = gmpr.county_to_msa(self.fips_data_3)
-        assert new_data.shape[0] == 2
+        assert new_data.shape[0] == 3
         assert new_data[['num']].sum()[0] == self.fips_data_3['num'].sum()
 
     def test_convert_zip_to_fips(self):

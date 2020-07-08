@@ -20,9 +20,8 @@ this will build the following files...
 
 ## Source files
 
-1. 03_20_MSAs.xls : [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-\
-micro/delineation-files.html)
-2. 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these, but many data sources would work.
+1. 03_20_MSAs.xls : [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html)
+2. 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these
 
 ## Todo 07/07/2020
 

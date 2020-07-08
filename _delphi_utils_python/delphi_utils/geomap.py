@@ -23,9 +23,9 @@ from os import path
 import pkg_resources
 
 DATA_PATH = "data"
-ZIP_FIPS_FILE = "zip_fips_cross_2020.csv"
+ZIP_FIPS_FILE = "zip_fips_cross.csv"
 STATE_FILE = "state_codes.csv"
-MSA_FILE = "fips_msa_cross_2020.csv"
+MSA_FILE = "fips_msa_cross.csv"
 
 class GeoMapper:
     """Class for geo mapping tools commonly used in Delphi
@@ -295,6 +295,7 @@ class GeoMapper:
             data=data[[fips_col,date_col] + count_cols].copy()
         data = self.convert_fips_to_msa(data,fips_col=fips_col,msa_col=msa_col,full=full)
         data.drop(fips_col,axis=1,inplace=True)
+        data.dropna(axis=0,subset=[msa_col],inplace=True)
         if date_col:
             assert not data[date_col].isnull().values.any(), "nan dates not allowed"
             data.fillna(0,inplace=True)

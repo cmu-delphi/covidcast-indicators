@@ -2,14 +2,14 @@
 % Please edit documentation in R/binary.R
 \name{summarize_binary}
 \alias{summarize_binary}
-\title{Summarize binary variables at a geographic level}
+\title{Summarize binary variables at a geographic level.}
 \usage{
 summarize_binary(
   df,
   crosswalk_data,
-  var_yes,
-  var_weight,
+  indicators,
   geo_level,
+  days,
   params,
   smooth_days = 0L
 )
@@ -17,18 +17,30 @@ summarize_binary(
 \arguments{
 \item{df}{a data frame of survey responses}
 
-\item{crosswalk_data}{a named list containing geometry crosswalk files from zip5 values}
+\item{crosswalk_data}{a named list containing geometry crosswalk files from
+zip5 values. Each entry is one aggregation, such as zip => county or zip =>
+state.}
 
-\item{var_yes}{name of the column in `df` containing the number of "yes" responses}
-
-\item{var_weight}{name of the column in `df` containing the survey weights}
+\item{indicators}{list of lists. Each constituent list has entries
+`var_weight`, `var_yes`. Its name is the name of the indicator to report in
+the API. `var_weight` is the name of the column of `df` to use for weights;
+`var_yes` is the name of the column containing the binary responses.}
 
 \item{geo_level}{the aggregation level, such as county or state, being used}
 
-\item{params}{a named list with entries "start_time", and "end_time"}
+\item{days}{a vector of Dates for which we should generate response estimates}
+
+\item{params}{a named list with entries controlling mixing and filtering}
 
 \item{smooth_days}{integer; how many days in the past to smooth?}
 }
 \description{
-Summarize binary variables at a geographic level
+The organization may seem a bit contorted, but this is designed for speed.
+The primary bottleneck is repeatedly filtering the data frame to find data
+for the day and geographic area of interest. To save time, we do this once
+and then calculate all indicators for that day-area combination, rather than
+separately filtering every time we want to calculate a new indicator. We also
+rely upon data.table's keys and indices to allow us to do the filtering in
+O(log n) time, which is important when the data frame contains millions of
+rows.
 }

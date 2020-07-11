@@ -79,7 +79,7 @@ load_response_one <- function(input_filename, params)
 #' @param params                 named list containing values "static_dir", "start_time",
 #'                               and "end_time"
 #'
-#' @importFrom dplyr anti_join between
+#' @importFrom dplyr anti_join
 #' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, seen_tokens_archive, params)
@@ -97,7 +97,7 @@ filter_responses <- function(input_data, seen_tokens_archive, params)
 
   input_data <- input_data[input_data$S1 == 1, ]
   input_data <- input_data[input_data$DistributionChannel != "preview", ]
-  input_data <- input_data[between(input_data$start_dt, params$start_time, params$end_time),]
+  input_data <- input_data[dplyr::between(input_data$start_dt, params$start_time, params$end_time),]
 
   return(input_data)
 }
@@ -152,8 +152,8 @@ filter_data_for_aggregatation <- function(df, params)
   df <- df[df$zip5 %in% allowed_zips,]
 
   df <- df[!is.na(df$hh_number_sick) & !is.na(df$hh_number_total), ]
-  df <- df[between(df$hh_number_sick, 0L, 30L), ]
-  df <- df[between(df$hh_number_total, 1L, 30L), ]
+  df <- df[dplyr::between(df$hh_number_sick, 0L, 30L), ]
+  df <- df[dplyr::between(df$hh_number_total, 1L, 30L), ]
   df <- df[df$hh_number_sick <= df$hh_number_total, ]
 
   return(df)

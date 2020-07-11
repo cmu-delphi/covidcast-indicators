@@ -1,118 +1,234 @@
-#' Write binary response variable for export to the API
+#' Write binary response variables for export to the API
 #'
 #' @param df          a data frame of survey responses
 #' @param cw_list     a named list containing geometry crosswalk files from zip5 values
-#' @param var_yes     name of the variable containing the binary response
 #' @param params      a named list with entries "start_time", and "end_time"
-#' @param metric      name of the metric; used in the output file
 #'
+#' @import data.table
+#' @importFrom dplyr pull
 #' @export
-write_binary_variable <- function(df, cw_list, var_yes, params, metric)
+write_binary_variables <- function(df, cw_list, params)
 {
-  ## weighted output files can only use surveys with weights
-  weight_df <- df[!is.na(df$weight), ]
-
   ## TODO Temporary fix to match old pipeline
   params$s_mix_coef <- 0
+
+  raw_indicators <- list(
+    "raw_hh_cmnty_cli" = list(
+      var_weight = "weight_unif",
+      var_yes = "hh_community_yes"
+    ),
+    "raw_whh_cmnty_cli" = list(
+      var_weight = "weight",
+      var_yes = "hh_community_yes"
+    ),
+    "raw_nohh_cmnty_cli" = list(
+      var_weight = "weight_unif",
+      var_yes = "community_yes"
+    ),
+    "raw_wnohh_cmnty_cli" = list(
+      var_weight = "weight",
+      var_yes = "community_yes"
+    )
+  )
+
+  smoothed_indicators <- list(
+    "smoothed_hh_cmnty_cli" = list(
+      var_weight = "weight_unif",
+      var_yes = "hh_community_yes"
+    ),
+    "smoothed_whh_cmnty_cli" = list(
+      var_weight = "weight",
+      var_yes = "hh_community_yes"
+    ),
+    "smoothed_nohh_cmnty_cli" = list(
+      var_weight = "weight_unif",
+      var_yes = "community_yes"
+    ),
+    "smoothed_wnohh_cmnty_cli" = list(
+      var_weight = "weight",
+      var_yes = "community_yes"
+    )
+  )
+
+  days <- unique(pull(df, day))
+
+  ## For the day range lookups we do on df, use a data.table key. This puts the
+  ## table in sorted order so data.table can use a binary search to find
+  ## matching dates, rather than a linear scan, and is important for very large
+  ## input files.
+  df <- as.data.table(df)
+  setkey(df, day)
 
   for (i in seq_along(cw_list))
   {
     geo_level <- names(cw_list)[i]
     geo_crosswalk <- cw_list[[i]]
 
-    df_out <- summarize_binary(df, geo_crosswalk, var_yes, "weight_unif",
-                               geo_level, params)
-    write_data_api(df_out, params, geo_level, sprintf("raw_%s", metric))
+    ## Raw
+    dfs_out <- summarize_binary(df, geo_crosswalk, raw_indicators, geo_level, days, params)
 
-    df_out <- summarize_binary(weight_df, geo_crosswalk, var_yes, "weight",
-                               geo_level, params)
-    write_data_api(df_out, params, geo_level, sprintf("raw_w%s", metric))
+    for (indicator in names(dfs_out)) {
+      write_data_api(dfs_out[[indicator]], params, geo_level, indicator)
+    }
 
-    df_out <- summarize_binary(df, geo_crosswalk, var_yes, "weight_unif",
-                               geo_level, params, 6L)
-    write_data_api(df_out, params, geo_level, sprintf("smoothed_%s", metric))
+    ## Smoothed
+    dfs_out <- summarize_binary(df, geo_crosswalk, smoothed_indicators, geo_level, days,
+                                params, smooth_days = 6L)
 
-    df_out <- summarize_binary(weight_df, geo_crosswalk, var_yes, "weight",
-                               geo_level, params, 6L)
-    write_data_api(df_out, params, geo_level, sprintf("smoothed_w%s", metric))
+    for (indicator in names(dfs_out)) {
+      write_data_api(dfs_out[[indicator]], params, geo_level, indicator)
+    }
   }
 }
 
-#' Summarize binary variables at a geographic level
+#' Summarize binary variables at a geographic level.
 #'
-#' @param df               a data frame of survey responses
-#' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
-#' @param var_yes          name of the column in `df` containing the number of "yes" responses
-#' @param var_weight       name of the column in `df` containing the survey weights
-#' @param geo_level        the aggregation level, such as county or state, being used
-#' @param params           a named list with entries "start_time", and "end_time"
-#' @param smooth_days      integer; how many days in the past to smooth?
+#' The organization may seem a bit contorted, but this is designed for speed.
+#' The primary bottleneck is repeatedly filtering the data frame to find data
+#' for the day and geographic area of interest. To save time, we do this once
+#' and then calculate all indicators for that day-area combination, rather than
+#' separately filtering every time we want to calculate a new indicator. We also
+#' rely upon data.table's keys and indices to allow us to do the filtering in
+#' O(log n) time, which is important when the data frame contains millions of
+#' rows.
 #'
-#' @importFrom dplyr inner_join group_by ungroup summarize n as_tibble bind_rows
-#' @importFrom stats weighted.mean
-#' @importFrom rlang .data
+#' @param df a data frame of survey responses
+#' @param crosswalk_data a named list containing geometry crosswalk files from
+#'   zip5 values. Each entry is one aggregation, such as zip => county or zip =>
+#'   state.
+#' @param indicators list of lists. Each constituent list has entries
+#'   `var_weight`, `var_yes`. Its name is the name of the indicator to report in
+#'   the API. `var_weight` is the name of the column of `df` to use for weights;
+#'   `var_yes` is the name of the column containing the binary responses.
+#' @param geo_level the aggregation level, such as county or state, being used
+#' @param days a vector of Dates for which we should generate response estimates
+#' @param params a named list with entries controlling mixing and filtering
+#' @param smooth_days integer; how many days in the past to smooth?
+#'
+#' @importFrom dplyr bind_rows
 #' @export
 summarize_binary <- function(
-  df, crosswalk_data, var_yes, var_weight, geo_level, params, smooth_days = 0L
-)
+  df, crosswalk_data, indicators, geo_level, days, params, smooth_days = 0L
+  )
 {
-  df <- inner_join(df, crosswalk_data, by = "zip5")
-  df <- df[!is.na(df[[var_yes]]),]
 
-  df_out <- as_tibble(expand.grid(
-    day = unique(df$day), geo_id = unique(df$geo_id), stringsAsFactors = FALSE
-  ))
-  df_out$val <- NA_real_
-  df_out$se <- NA_real_
-  df_out$sample_size <- NA_real_
-  df_out$effective_sample_size <- NA_real_
+  dfs_accum <- list()
+  for (indicator in names(indicators)) {
+    dfs_accum[[indicator]] <- vector("list", length(days))
+  }
 
-  for (i in seq_len(nrow(df_out)))
-  {
-    index <- which((df$day >= df_out$day[i] - smooth_days) &
-                     (df$day <= df_out$day[i]) &
-                     (df$geo_id == df_out$geo_id[i]) &
-                     !is.na(df$A4))
 
-    if (length(index))
-    {
-      mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
-                                   params)
+  for (ii in seq_along(days)) {
+    target_day <- days[ii]
 
-      sample_size <- sum(df$weight_in_location[index])
+    # Use data.table's index to make this filter efficient
+    day_df <- df[day >= target_day - smooth_days & day <= target_day, ]
 
-      val <- compute_binary_response(
-        response = df[[var_yes]][index],
-        weight = mixed_weights,
-        sample_size = sample_size)
+    out <- summarize_binary_day(day_df, crosswalk_data, indicators, target_day,
+                                geo_level, params)
 
-      ## We don't bother with SE here, because it needs to be calculated after
-      ## the megacounty aggregation anyway, with Jeffreys correction reapplied.
-      df_out$val[i] <- val
-      df_out$sample_size[i] <- sample_size
-      df_out$effective_sample_size[i] <- sample_size # TODO FIXME
+    for (indicator in names(indicators)) {
+      dfs_accum[[indicator]][[ii]] <- out[[indicator]]
     }
   }
 
-  df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
-
-  if (geo_level == "county") {
-    df_megacounties <- megacounty(df_out, params$num_filter)
-    df_out <- bind_rows(df_out, df_megacounties)
+  dfs_out <- list()
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- bind_rows(dfs_accum[[indicator]])
   }
 
-  df_out <- df_out[df_out$sample_size >= params$num_filter &
-                 df_out$effective_sample_size >= params$num_filter, ]
+  return(dfs_out)
+}
 
-  ## Now we must apply the Jeffreys correction to proportions and recalculate
-  ## the standard error.
-  df_out <- mutate(df_out,
-                   val = jeffreys_percentage(.data$val, .data$sample_size))
+#' Produce an estimate for all binary indicators on a specific target day.
+#'
+#' @param day_df Data frame containing all data needed to estimate one day.
+#'   Estimates for `target_day` will be based on all of this data, so if the
+#'   estimates are meant to be moving averages, `day_df` may contain multiple
+#'   days of data.
+#' @param crosswalk_data See `summarize_binary()`. This contains the crosswalk
+#'   for just one `geo_level`, rather than all crosswalks.
+#' @param indicators See `summarize_binary()`.
+#' @param target_day A `Date` indicating the day for which these estimates are
+#'   to be calculated.
+#' @param geo_level Name of the geo level (county, state, etc.) for which we are
+#'   aggregating.
+#' @param params Named list of configuration options.
+#' @importFrom dplyr inner_join filter
+#' @importFrom rlang .data
+summarize_binary_day <- function(day_df, crosswalk_data, indicators, target_day,
+                                 geo_level, params) {
+  ## dplyr complains about joining a data.table, saying it is likely to be
+  ## inefficient; profiling shows the cost to be negligible, so shut it up
+  day_df <- suppressWarnings(inner_join(day_df, crosswalk_data, by = "zip5"))
 
-  df_out <- mutate(df_out,
-                   se = binary_se(.data$val, .data$sample_size))
+  ## Set an index on the geo_id column so that the lookup by exact geo_id can be
+  ## dramatically faster; data.table stores the sort order of the column and
+  ## uses a binary search to find matching values, rather than a linear scan.
+  setindex(day_df, geo_id)
 
-  return(df_out)
+  ## Prepare outputs.
+  dfs_out <- list()
+  geo_ids <- unique(day_df$geo_id)
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- tibble(
+      geo_id = geo_ids,
+      day = target_day,
+      val = NA_real_,
+      se = NA_real_,
+      sample_size = NA_real_,
+      effective_sample_size = NA_real_
+    )
+  }
+
+  for (ii in seq_len(nrow(dfs_out[[1]]))) {
+    target_geo <- geo_ids[ii]
+
+    sub_df <- day_df[geo_id == target_geo]
+
+    for (indicator in names(indicators)) {
+      var_yes <- indicators[[indicator]]$var_yes
+      var_weight <- indicators[[indicator]]$var_weight
+
+      ind_df <- sub_df[!is.na(sub_df[[var_yes]]) & !is.na(sub_df[[var_weight]]), ]
+
+      if (nrow(ind_df) > 0) {
+        mixed_weights <- mix_weights(ind_df[[var_weight]] * ind_df$weight_in_location,
+                                     params)
+
+        sample_size <- sum(ind_df$weight_in_location)
+
+        val <- compute_binary_response(
+          response = ind_df[[var_yes]],
+          weight = mixed_weights,
+          sample_size = sample_size
+        )
+
+        dfs_out[[indicator]]$val[ii] <- val
+        dfs_out[[indicator]]$sample_size[ii] <- sample_size
+        dfs_out[[indicator]]$effective_sample_size[ii] <- sample_size
+      }
+    }
+  }
+
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- dfs_out[[indicator]][rowSums(is.na(dfs_out[[indicator]][, c("val", "sample_size", "geo_id", "day")])) == 0,]
+
+    if (geo_level == "county") {
+      df_megacounties <- megacounty(dfs_out[[indicator]], params$num_filter)
+      dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]], df_megacounties)
+    }
+
+    dfs_out[[indicator]] <- filter(dfs_out[[indicator]],
+                                   sample_size >= params$num_filter,
+                                   effective_sample_size >= params$num_filter)
+
+    dfs_out[[indicator]] <- mutate(dfs_out[[indicator]],
+                                   val = jeffreys_percentage(.data$val, .data$sample_size),
+                                   se = binary_se(.data$val, .data$sample_size))
+  }
+
+  return(dfs_out)
 }
 
 #' Returns binary response estimates

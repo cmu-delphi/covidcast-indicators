@@ -46,7 +46,7 @@ write_hh_count_data <- function(df, cw_list, params)
 #' @param smooth_days      integer; how many does in the past should be pooled into the
 #'                         estimate of a day
 #'
-#' @importFrom dplyr inner_join group_by mutate n case_when first bind_rows
+#' @importFrom dplyr inner_join mutate bind_rows as_tibble
 #' @importFrom stats weighted.mean
 #' @importFrom rlang .data
 #' @export

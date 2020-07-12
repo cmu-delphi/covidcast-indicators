@@ -106,35 +106,34 @@ write_binary_variables <- function(df, cw_list, params)
 #' @param smooth_days integer; how many days in the past to smooth?
 #'
 #' @importFrom dplyr bind_rows
+#' @importFrom parallel mclapply
 #' @export
 summarize_binary <- function(
   df, crosswalk_data, indicators, geo_level, days, params, smooth_days = 0L
   )
 {
-
-  dfs_accum <- list()
-  for (indicator in names(indicators)) {
-    dfs_accum[[indicator]] <- vector("list", length(days))
-  }
-
-
-  for (ii in seq_along(days)) {
+  calculate_day <- function(ii) {
     target_day <- days[ii]
-
     # Use data.table's index to make this filter efficient
     day_df <- df[day >= target_day - smooth_days & day <= target_day, ]
 
     out <- summarize_binary_day(day_df, crosswalk_data, indicators, target_day,
                                 geo_level, params)
 
-    for (indicator in names(indicators)) {
-      dfs_accum[[indicator]][[ii]] <- out[[indicator]]
-    }
+    return(out)
   }
 
+  if (params$parallel) {
+    dfs <- mclapply(seq_along(days), calculate_day)
+  } else {
+    dfs <- lapply(seq_along(days), calculate_day)
+  }
+
+  ## Now we have a list, with one entry per day, each containing a list of one
+  ## data frame per indicator. Rearrange it.
   dfs_out <- list()
   for (indicator in names(indicators)) {
-    dfs_out[[indicator]] <- bind_rows(dfs_accum[[indicator]])
+    dfs_out[[indicator]] <- bind_rows(lapply(dfs, function(day) { day[[indicator]] }))
   }
 
   return(dfs_out)

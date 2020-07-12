@@ -17,5 +17,6 @@
     "community",
     "individual"
   ],
+  "parallel": true,
   "debug": true
 }

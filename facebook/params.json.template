@@ -19,5 +19,6 @@
     "archive",
     "community"
   ],
-  "debug": true
+  "debug": true,
+  "parallel": true
 }

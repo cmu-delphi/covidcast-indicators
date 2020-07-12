@@ -6,6 +6,7 @@
 #' @param params    Params object produced by read_params
 #'
 #' @return none
+#' @importFrom parallel detectCores
 #' @export
 run_facebook <- function(params)
 {
@@ -29,6 +30,19 @@ run_facebook <- function(params)
   data_full <- filter_complete_responses(data_full)
   data_full <- join_weights(data_full, params, weights = "full")
   msg_df("full data to share with research partners", data_full)
+
+  ## Set default number of cores for mclapply to the total available number,
+  ## because we are greedy and this will typically run on a server.
+  if (params$parallel) {
+    cores <- detectCores()
+
+    if (is.na(cores)) {
+      warning("Could not detect the number of CPU cores; parallel mode disabled")
+      params$parallel <- FALSE
+    } else {
+      options(mc.cores = cores)
+    }
+  }
 
   # write files for each specific output
   if ( "cids" %in% params$output )

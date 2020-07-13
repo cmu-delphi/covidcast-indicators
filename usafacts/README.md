@@ -19,9 +19,9 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
-All of the user-changable parameters are stored in `params.json`. To execute
-the module and produce the output datasets (by default, in `receiving`), run
-the following:
+All of the user-changable parameters are stored in `params.json`. (NOTE: In
+production we specify `"export_start_date": "latest",`). To execute the module
+and produce the output datasets (by default, in `receiving`), run the following.
 
 ```
 env/bin/python -m delphi_usafacts
@@ -58,5 +58,3 @@ The output will show the number of unit tests that passed and failed, along
 with the percentage of code covered by the tests. None of the tests should
 fail and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines.
-
-- Jenkins test #1

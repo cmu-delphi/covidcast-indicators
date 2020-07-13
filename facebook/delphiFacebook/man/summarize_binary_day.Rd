@@ -4,23 +4,13 @@
 \alias{summarize_binary_day}
 \title{Produce an estimate for all binary indicators on a specific target day.}
 \usage{
-summarize_binary_day(
-  day_df,
-  crosswalk_data,
-  indicators,
-  target_day,
-  geo_level,
-  params
-)
+summarize_binary_day(day_df, indicators, target_day, geo_level, params)
 }
 \arguments{
 \item{day_df}{Data frame containing all data needed to estimate one day.
 Estimates for `target_day` will be based on all of this data, so if the
 estimates are meant to be moving averages, `day_df` may contain multiple
 days of data.}
-
-\item{crosswalk_data}{See `summarize_binary()`. This contains the crosswalk
-for just one `geo_level`, rather than all crosswalks.}
 
 \item{indicators}{See `summarize_binary()`.}
 

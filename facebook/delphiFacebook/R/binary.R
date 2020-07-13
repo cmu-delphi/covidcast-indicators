@@ -12,6 +12,7 @@ write_binary_variables <- function(df, cw_list, params)
   ## TODO Temporary fix to match old pipeline
   params$s_mix_coef <- 0
 
+  ## TODO Auto-generate these lists (or make a data frame)
   raw_indicators <- list(
     "raw_hh_cmnty_cli" = list(
       var_weight = "weight_unif",
@@ -50,7 +51,7 @@ write_binary_variables <- function(df, cw_list, params)
     )
   )
 
-  days <- unique(pull(df, day))
+  days <- unique(df$day)
 
   ## For the day range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
@@ -93,9 +94,8 @@ write_binary_variables <- function(df, cw_list, params)
 #' rows.
 #'
 #' @param df a data frame of survey responses
-#' @param crosswalk_data a named list containing geometry crosswalk files from
-#'   zip5 values. Each entry is one aggregation, such as zip => county or zip =>
-#'   state.
+#' @param crosswalk_data An aggregation, such as zip => county or zip => state,
+#'   as a data frame with "zip5" column to join against.
 #' @param indicators list of lists. Each constituent list has entries
 #'   `var_weight`, `var_yes`. Its name is the name of the indicator to report in
 #'   the API. `var_weight` is the name of the column of `df` to use for weights;
@@ -112,13 +112,22 @@ summarize_binary <- function(
   df, crosswalk_data, indicators, geo_level, days, params, smooth_days = 0L
   )
 {
+  ## dplyr complains about joining a data.table, saying it is likely to be
+  ## inefficient; profiling shows the cost to be negligible, so shut it up
+  df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
+
+  ## Set an index on the geo_id column so that the lookup by exact geo_id can be
+  ## dramatically faster; data.table stores the sort order of the column and
+  ## uses a binary search to find matching values, rather than a linear scan.
+  setindex(df, geo_id)
+
   calculate_day <- function(ii) {
     target_day <- days[ii]
     # Use data.table's index to make this filter efficient
     day_df <- df[day >= target_day - smooth_days & day <= target_day, ]
 
-    out <- summarize_binary_day(day_df, crosswalk_data, indicators, target_day,
-                                geo_level, params)
+    out <- summarize_binary_day(day_df, indicators, target_day, geo_level,
+                                params)
 
     return(out)
   }
@@ -145,8 +154,6 @@ summarize_binary <- function(
 #'   Estimates for `target_day` will be based on all of this data, so if the
 #'   estimates are meant to be moving averages, `day_df` may contain multiple
 #'   days of data.
-#' @param crosswalk_data See `summarize_binary()`. This contains the crosswalk
-#'   for just one `geo_level`, rather than all crosswalks.
 #' @param indicators See `summarize_binary()`.
 #' @param target_day A `Date` indicating the day for which these estimates are
 #'   to be calculated.
@@ -155,17 +162,8 @@ summarize_binary <- function(
 #' @param params Named list of configuration options.
 #' @importFrom dplyr inner_join filter
 #' @importFrom rlang .data
-summarize_binary_day <- function(day_df, crosswalk_data, indicators, target_day,
-                                 geo_level, params) {
-  ## dplyr complains about joining a data.table, saying it is likely to be
-  ## inefficient; profiling shows the cost to be negligible, so shut it up
-  day_df <- suppressWarnings(inner_join(day_df, crosswalk_data, by = "zip5"))
-
-  ## Set an index on the geo_id column so that the lookup by exact geo_id can be
-  ## dramatically faster; data.table stores the sort order of the column and
-  ## uses a binary search to find matching values, rather than a linear scan.
-  setindex(day_df, geo_id)
-
+summarize_binary_day <- function(day_df, indicators, target_day, geo_level,
+                                 params) {
   ## Prepare outputs.
   dfs_out <- list()
   geo_ids <- unique(day_df$geo_id)

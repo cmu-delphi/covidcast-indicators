@@ -17,9 +17,8 @@ summarize_binary(
 \arguments{
 \item{df}{a data frame of survey responses}
 
-\item{crosswalk_data}{a named list containing geometry crosswalk files from
-zip5 values. Each entry is one aggregation, such as zip => county or zip =>
-state.}
+\item{crosswalk_data}{An aggregation, such as zip => county or zip => state,
+as a data frame with "zip5" column to join against.}
 
 \item{indicators}{list of lists. Each constituent list has entries
 `var_weight`, `var_yes`. Its name is the name of the indicator to report in

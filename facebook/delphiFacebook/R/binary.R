@@ -217,8 +217,8 @@ summarize_binary_day <- function(day_df, indicators, target_day, geo_level,
     }
 
     dfs_out[[indicator]] <- filter(dfs_out[[indicator]],
-                                   sample_size >= params$num_filter,
-                                   effective_sample_size >= params$num_filter)
+                                   .data$sample_size >= params$num_filter,
+                                   .data$effective_sample_size >= params$num_filter)
 
     dfs_out[[indicator]] <- mutate(dfs_out[[indicator]],
                                    val = jeffreys_percentage(.data$val, .data$sample_size),

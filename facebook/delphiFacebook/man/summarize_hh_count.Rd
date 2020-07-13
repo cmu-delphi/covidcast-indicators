@@ -2,14 +2,14 @@
 % Please edit documentation in R/count.R
 \name{summarize_hh_count}
 \alias{summarize_hh_count}
-\title{Summarize CLI and ILI household variables at a geographic level}
+\title{Summarize CLI and ILI household variables at a geographic level.}
 \usage{
 summarize_hh_count(
   df,
   crosswalk_data,
-  metric,
-  var_weight,
+  indicators,
   geo_level,
+  days,
   params,
   smooth_days = 0L
 )
@@ -17,20 +17,25 @@ summarize_hh_count(
 \arguments{
 \item{df}{a data frame of survey responses}
 
-\item{crosswalk_data}{a named list containing geometry crosswalk files from zip5 values}
+\item{crosswalk_data}{An aggregation, such as zip => county or zip => state,
+as a data frame with a "zip5" column to join against.}
 
-\item{metric}{name of the metric to use; should be "ili" or "cli"}
-
-\item{var_weight}{name of the variable containing the survey weights}
+\item{indicators}{list of lists. Each constituent list has entries `metric`,
+`var_weight`. Its name is the name of the indicator to report in the API.
+`var_weight` is the name of the column of `df` to use for weights; `metric`
+is the name of the metric to extract from the data frame.}
 
 \item{geo_level}{the aggregation level, such as county or state, being used}
 
-\item{params}{a named list with entries "s_weight", "s_mix_coef", "num_filter",
-"start_time", and "end_time"}
+\item{days}{a vector of Dates for which we should generate response estimates}
 
-\item{smooth_days}{integer; how many does in the past should be pooled into the
-estimate of a day}
+\item{params}{a named list with entries "s_weight", "s_mix_coef",
+"num_filter"}
+
+\item{smooth_days}{integer; how many does in the past should be pooled into
+the estimate of a day}
 }
 \description{
-Summarize CLI and ILI household variables at a geographic level
+See `summarize_binary()` for a description of the architecture here and its
+tradeoffs made in favor of high speed.
 }

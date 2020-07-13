@@ -8,101 +8,218 @@
 #' @export
 write_hh_count_data <- function(df, cw_list, params)
 {
-  ## weighted output files can only use surveys with weights
-  weight_df <- df[!is.na(df$weight), ]
+  ## TODO Auto-generate these lists (or make a data frame)
+  raw_indicators <- list(
+    "raw_cli" = list(
+      metric = "cli",
+      var_weight = "weight_unif"
+    ),
+    "raw_ili" = list(
+      metric = "ili",
+      var_weight = "weight_unif"
+    ),
+    "raw_wcli" = list(
+      metric = "cli",
+      var_weight = "weight"
+    ),
+    "raw_wili" = list(
+      metric = "ili",
+      var_weight = "weight"
+    )
+  )
+
+  smoothed_indicators <- list(
+    "smoothed_cli" = list(
+      metric = "cli",
+      var_weight = "weight_unif"
+    ),
+    "smoothed_ili" = list(
+      metric = "ili",
+      var_weight = "weight_unif"
+    ),
+    "smoothed_wcli" = list(
+      metric = "cli",
+      var_weight = "weight"
+    ),
+    "smoothed_wili" = list(
+      metric = "ili",
+      var_weight = "weight"
+    )
+  )
+
+  days <- unique(df$day)
+
+  ## For the day range lookups we do on df, use a data.table key. This puts the
+  ## table in sorted order so data.table can use a binary search to find
+  ## matching dates, rather than a linear scan, and is important for very large
+  ## input files.
+  df <- as.data.table(df)
+  setkey(df, day)
 
   for (i in seq_along(cw_list))
   {
     geo_level <- names(cw_list)[i]
     geo_crosswalk <- cw_list[[i]]
 
-    for (metric in c("ili", "cli"))
-    {
+    ## Raw
+    dfs_out <- summarize_hh_count(df, geo_crosswalk, raw_indicators, geo_level, days, params)
 
-      df_out <- summarize_hh_count(df, geo_crosswalk, metric, "weight_unif", geo_level, params)
-      write_data_api(df_out, params, geo_level, sprintf("raw_%s", metric))
+    for (indicator in names(dfs_out)) {
+      write_data_api(dfs_out[[indicator]], params, geo_level, indicator)
+    }
 
-      df_out <- summarize_hh_count(df, geo_crosswalk, metric, "weight_unif", geo_level, params, 6)
-      write_data_api(df_out, params, geo_level, sprintf("smoothed_%s", metric))
+    ## Smoothed
+    dfs_out <- summarize_hh_count(df, geo_crosswalk, smoothed_indicators, geo_level, days,
+                                params, smooth_days = 6L)
 
-      df_out <- summarize_hh_count(weight_df, geo_crosswalk, metric, "weight", geo_level, params)
-      write_data_api(df_out, params, geo_level, sprintf("raw_w%s", metric))
-
-      df_out <- summarize_hh_count(weight_df, geo_crosswalk, metric, "weight", geo_level, params, 6)
-      write_data_api(df_out, params, geo_level, sprintf("smoothed_w%s", metric))
+    for (indicator in names(dfs_out)) {
+      write_data_api(dfs_out[[indicator]], params, geo_level, indicator)
     }
   }
 }
 
-#' Summarize CLI and ILI household variables at a geographic level
+#' Summarize CLI and ILI household variables at a geographic level.
 #'
-#' @param df               a data frame of survey responses
-#' @param crosswalk_data   a named list containing geometry crosswalk files from zip5 values
-#' @param metric           name of the metric to use; should be "ili" or "cli"
-#' @param var_weight       name of the variable containing the survey weights
-#' @param geo_level        the aggregation level, such as county or state, being used
-#' @param params           a named list with entries "s_weight", "s_mix_coef", "num_filter",
-#'                         "start_time", and "end_time"
-#' @param smooth_days      integer; how many does in the past should be pooled into the
-#'                         estimate of a day
+#' See `summarize_binary()` for a description of the architecture here and its
+#' tradeoffs made in favor of high speed.
 #'
-#' @importFrom dplyr inner_join mutate bind_rows as_tibble
+#' @param df a data frame of survey responses
+#' @param crosswalk_data An aggregation, such as zip => county or zip => state,
+#'   as a data frame with a "zip5" column to join against.
+#' @param indicators list of lists. Each constituent list has entries `metric`,
+#'   `var_weight`. Its name is the name of the indicator to report in the API.
+#'   `var_weight` is the name of the column of `df` to use for weights; `metric`
+#'   is the name of the metric to extract from the data frame.
+#' @param geo_level the aggregation level, such as county or state, being used
+#' @param days a vector of Dates for which we should generate response estimates
+#' @param params a named list with entries "s_weight", "s_mix_coef",
+#'   "num_filter"
+#' @param smooth_days integer; how many does in the past should be pooled into
+#'   the estimate of a day
+#'
+#' @importFrom dplyr inner_join bind_rows
 #' @importFrom stats weighted.mean
-#' @importFrom rlang .data
 #' @export
 summarize_hh_count <- function(
-  df, crosswalk_data, metric, var_weight, geo_level, params, smooth_days = 0L
+  df, crosswalk_data, indicators, geo_level, days, params, smooth_days = 0L
 )
 {
-  df <- inner_join(df, crosswalk_data, by = "zip5")
-  names(df)[names(df) == sprintf("hh_p_%s", metric)] <- "hh_p_metric"
+  ## dplyr complains about joining a data.table, saying it is likely to be
+  ## inefficient; profiling shows the cost to be negligible, so shut it up
+  df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
 
-  df_out <- as_tibble(expand.grid(
-    day = unique(df$day), geo_id = unique(df$geo_id), stringsAsFactors = FALSE
-  ))
-  df_out$val <- NA_real_
-  df_out$sample_size <- NA_real_
-  df_out$se <- NA_real_
-  df_out$effective_sample_size <- NA_real_
+  ## Set an index on the geo_id column so that the lookup by exact geo_id can be
+  ## dramatically faster; data.table stores the sort order of the column and
+  ## uses a binary search to find matching values, rather than a linear scan.
+  setindex(df, geo_id)
 
-  for (i in seq_len(nrow(df_out)))
+  calculate_day <- function(ii) {
+    target_day <- days[ii]
+    # Use data.table's index to make this filter efficient
+    day_df <- df[day >= target_day - smooth_days & day <= target_day, ]
+
+    out <- summarize_hh_count_day(day_df, indicators, target_day, geo_level,
+                                  params)
+
+    return(out)
+  }
+
+  if (params$parallel) {
+    dfs <- mclapply(seq_along(days), calculate_day)
+  } else {
+    dfs <- lapply(seq_along(days), calculate_day)
+  }
+
+  ## Now we have a list, with one entry per day, each containing a list of one
+  ## data frame per indicator. Rearrange it.
+  dfs_out <- list()
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- bind_rows(lapply(dfs, function(day) { day[[indicator]] }))
+  }
+
+  return(dfs_out)
+}
+
+#' Produce an estimate for all household variables on a specific target day.
+#'
+#' @param day_df Data frame containing all data needed to estimate one day.
+#'   Estimates for `target_day` will be based on all of this data, so if the
+#'   estimates are meant to be moving averages, `day_df` may contain multiple
+#'   days of data.
+#' @param indicators See `summarize_hh_count()`.
+#' @param target_day A `Date` indicating the day for which these estimates are
+#'   to be calculated.
+#' @param geo_level Name of the geo level (county, state, etc.) for which we are
+#'   aggregating.
+#' @param params Named list of configuration options.
+#' @importFrom dplyr mutate
+#' @importFrom rlang .data
+summarize_hh_count_day <- function(day_df, indicators, target_day, geo_level, params) {
+  ## Prepare outputs.
+  dfs_out <- list()
+  geo_ids <- unique(day_df$geo_id)
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- tibble(
+      geo_id = geo_ids,
+      day = target_day,
+      val = NA_real_,
+      se = NA_real_,
+      sample_size = NA_real_,
+      effective_sample_size = NA_real_
+    )
+  }
+
+  for (ii in seq_len(nrow(dfs_out[[1]])))
   {
-    index <- which((df$day >= df_out$day[i] - smooth_days) &
-                     (df$day <= df_out$day[i]) &
-                     (df$geo_id == df_out$geo_id[i]))
+    target_geo <- geo_ids[ii]
 
-    if (length(index))
-    {
-      mixed_weights <- mix_weights(df[[var_weight]][index] * df$weight_in_location[index],
-                                   params)
+    sub_df <- day_df[geo_id == target_geo]
 
-      new_row <- compute_count_response(
-        response = df$hh_p_metric[index],
-        weight = mixed_weights)
+    for (indicator in names(indicators)) {
+      metric <- indicators[[indicator]]$metric
+      var_weight <- indicators[[indicator]]$var_weight
 
-      df_out$val[i] <- new_row$val
-      df_out$se[i] <- new_row$se
-      df_out$sample_size[i] <- sum(df$weight_in_location[index])
-      df_out$effective_sample_size[i] <- new_row$effective_sample_size
+      ind_df <- sub_df[!is.na(sub_df[[var_weight]]), ]
+
+      names(ind_df)[names(ind_df) == sprintf("hh_p_%s", metric)] <- "hh_p_metric"
+
+      if (nrow(ind_df) > 0)
+      {
+        mixed_weights <- mix_weights(ind_df[[var_weight]] * ind_df$weight_in_location,
+                                     params)
+
+        new_row <- compute_count_response(
+          response = ind_df$hh_p_metric,
+          weight = mixed_weights)
+
+        dfs_out[[indicator]]$val[ii] <- new_row$val
+        dfs_out[[indicator]]$se[ii] <- new_row$se
+        dfs_out[[indicator]]$sample_size[ii] <- sum(ind_df$weight_in_location)
+        dfs_out[[indicator]]$effective_sample_size[ii] <- new_row$effective_sample_size
+      }
     }
   }
 
-  df_out <- df_out[rowSums(is.na(df_out[, c("val", "sample_size", "geo_id", "day")])) == 0,]
+  for (indicator in names(indicators)) {
+    dfs_out[[indicator]] <- dfs_out[[indicator]][rowSums(is.na(dfs_out[[indicator]][, c("val", "sample_size", "geo_id", "day")])) == 0,]
 
-  if (geo_level == "county") {
-    df_megacounties <- megacounty(df_out, params$num_filter)
-    df_out <- bind_rows(df_out, df_megacounties)
+    if (geo_level == "county") {
+      df_megacounties <- megacounty(dfs_out[[indicator]], params$num_filter)
+      dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]], df_megacounties)
+    }
+
+    dfs_out[[indicator]] <- filter(dfs_out[[indicator]],
+                                   .data$sample_size >= params$num_filter,
+                                   .data$effective_sample_size >= params$num_filter)
+
+    ## After gluing together megacounties, apply the Jeffreys correction to the
+    ## standard errors.
+    dfs_out[[indicator]] <- mutate(dfs_out[[indicator]],
+                                   se = jeffreys_se(.data$se, .data$val,
+                                                    .data$effective_sample_size))
   }
 
-  df_out <- df_out[df_out$sample_size >= params$num_filter &
-                     df_out$effective_sample_size >= params$num_filter, ]
-
-  ## After gluing together megacounties, apply the Jeffreys correction to the
-  ## standard errors.
-  df_out <- mutate(df_out,
-                   se = jeffreys_se(.data$se, .data$val, .data$effective_sample_size))
-
-  return(df_out)
+  return(dfs_out)
 }
 
 

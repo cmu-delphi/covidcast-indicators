@@ -84,12 +84,10 @@ create_dir_not_exist <- function(path)
 #' coefficient.
 #'
 #' @param weights a vector of sample weights
-#' @param params a named list containing an element named "s_mix_coef" and
-#'   another called "s_weight". The maximum desired weight is assumed to be
-#'   params$s_weight; the minimum allowable mixing coefficient is
-#'   params$s_mix_coef.
+#' @param s_mix_coef Minimum allowable mixing coefficient.
+#' @param s_weight Maximum desired normalized mixing weight for any one observation.
 #' @export
-mix_weights <- function(weights, params)
+mix_weights <- function(weights, s_mix_coef, s_weight)
 {
   N <- length(weights)
 
@@ -101,14 +99,14 @@ mix_weights <- function(weights, params)
 
   ## Choose the mix_coef to solve this problem:
   ##
-  ## max_weight * (1 - mix_coef) + mix_coef / N <= params$s_weight
+  ## max_weight * (1 - mix_coef) + mix_coef / N <= s_weight
   ##
   ## TODO: Determine if the fudge factors are really necessary
-  mix_coef <- (max_weight * N - 0.999 * N * params$s_weight + 1e-6) /
+  mix_coef <- (max_weight * N - 0.999 * N * s_weight + 1e-6) /
     (max_weight * N - 1 + 1e-6)
 
   ## Enforce minimum and maximum.
-  if (mix_coef < params$s_mix_coef) { mix_coef <- params$s_mix_coef }
+  if (mix_coef < s_mix_coef) { mix_coef <- s_mix_coef }
   if (mix_coef > 1) { mix_coef <- 1 }
 
   ## Step 3: Replace weights.

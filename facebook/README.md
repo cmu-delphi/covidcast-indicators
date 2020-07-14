@@ -114,3 +114,17 @@ calculates two basic types of survey estimates:
    within-household symptoms, and do not use the number of people the respondent
    knows, only whether or not they know someone with symptoms. This estimation
    is handled by `binary.R` in the `delphiFacebook` package.
+
+
+The estimation code is driven by `aggregate.R`, which uses a tibble specifying
+the details of every indicator to report. It handles aggregation to each geo
+level and to each day (or 7-day average), and calculates each indicator at each
+aggregation. Optionally, the days over which this is calculated are calculated
+in parallel using `parallel::mclapply`.
+
+Note that the details of aggregation are *highly* performance-critical. We
+currently use `data.table` to do the filtering by geo and day, since its keys
+and indices can do this filtering in O(log n) time. This is critical when
+aggregating multiple weeks or months of data. Updates to the logic should be
+careful to perform these filters the minimum number of times and to ensure they
+still use the keys and indices.

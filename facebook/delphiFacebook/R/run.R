@@ -60,11 +60,21 @@ run_facebook <- function(params)
   }
   if ( "covidalert" %in% params$output )
   {
-    write_hh_count_data(data_agg, cw_list, params)
+    count_indicators <- get_hh_count_indicators()
+  } else {
+    count_indicators <- tibble()
   }
   if ( "community" %in% params$output )
   {
-    write_binary_variables(data_agg, cw_list, params)
+    binary_indicators <- get_binary_indicators()
+  } else {
+    binary_indicators <- tibble()
+  }
+
+  indicators <- bind_rows(count_indicators, binary_indicators)
+
+  if (nrow(indicators) > 0) {
+    aggregate_indicators(data_agg, indicators, cw_list, params)
   }
 
 }

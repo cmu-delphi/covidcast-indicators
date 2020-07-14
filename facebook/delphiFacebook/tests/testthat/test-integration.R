@@ -324,7 +324,7 @@ test_that("testing weighted ili/cli values files", {
 
   ## There are 4 households in PA on 2020-05-11, one with ILI.
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]
-  these_weight <- mix_weights(these$weight, params)
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)
 
   hh_p_ili <- these$hh_p_ili
   these_val <- weighted.mean(hh_p_ili, these_weight)
@@ -341,7 +341,7 @@ test_that("testing weighted ili/cli values files", {
 
   ## There are 4 households in PA on 2020-05-11, one with CLI
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]
-  these_weight <- mix_weights(these$weight, params)
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)
 
   hh_p_cli <- these$hh_p_cli
   these_val <- weighted.mean(hh_p_cli, these_weight)

@@ -4,13 +4,15 @@
 \alias{compute_count_response}
 \title{Returns response estimates for a single geographic area.}
 \usage{
-compute_count_response(response, weight)
+compute_count_response(response, weight, sample_size)
 }
 \arguments{
 \item{response}{a vector of percentages (100 * cnt / total)}
 
 \item{weight}{a vector of sample weights for inverse probability weighting;
 invariant up to a scaling factor}
+
+\item{sample_size}{Unused.}
 }
 \description{
 This function takes vectors as input and computes the count response values

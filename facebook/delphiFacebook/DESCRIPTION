@@ -18,7 +18,8 @@ Imports:
     stringi,
     jsonlite,
     lubridate,
-    data.table
+    data.table,
+    tibble
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

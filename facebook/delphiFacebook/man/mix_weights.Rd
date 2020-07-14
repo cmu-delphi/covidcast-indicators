@@ -4,15 +4,14 @@
 \alias{mix_weights}
 \title{Adjust weights so no weight is too much of the final estimate.}
 \usage{
-mix_weights(weights, params)
+mix_weights(weights, s_mix_coef, s_weight)
 }
 \arguments{
 \item{weights}{a vector of sample weights}
 
-\item{params}{a named list containing an element named "s_mix_coef" and
-another called "s_weight". The maximum desired weight is assumed to be
-params$s_weight; the minimum allowable mixing coefficient is
-params$s_mix_coef.}
+\item{s_mix_coef}{Minimum allowable mixing coefficient.}
+
+\item{s_weight}{Maximum desired normalized mixing weight for any one observation.}
 }
 \description{
 For privacy and estimation quality, we do not want to allow one survey

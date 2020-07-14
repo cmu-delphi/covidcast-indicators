@@ -25,6 +25,7 @@ DATA_PATH = "data"
 ZIP_FIPS_FILE = "zip_fips_cross.csv"
 STATE_FILE = "state_codes.csv"
 MSA_FILE = "fips_msa_cross.csv"
+JHU_FIPS_FILE = "jhu_fips_cross.csv"
 
 class GeoMapper:
     """Class for geo mapping tools commonly used in Delphi
@@ -54,7 +55,8 @@ class GeoMapper:
     def __init__(self,
                  fips_filepath=path.join(DATA_PATH,ZIP_FIPS_FILE),
                  state_filepath=path.join(DATA_PATH,STATE_FILE),
-                 msa_filepath=path.join(DATA_PATH,MSA_FILE)):
+                 msa_filepath=path.join(DATA_PATH,MSA_FILE),
+                 jhu_filepath=path.join(DATA_PATH,JHU_FIPS_FILE)):
         """Initialize geomapper
 
         Args:
@@ -65,6 +67,7 @@ class GeoMapper:
         self.fips_filepath = fips_filepath
         self.state_filepath = state_filepath
         self.msa_filepath = msa_filepath
+        self.jhu_filepath = jhu_filepath
 
     def load_zip_fips_cross(self):
         """load zip->fips cross table"""
@@ -89,6 +92,15 @@ class GeoMapper:
                                                        'msa': str})
         for col in ['fips','msa']:
             self.fips_msa_cross = GeoMapper.convert_int_to_str5(self.fips_msa_cross,int_col=col,str_col=col)
+
+    def load_jhu_fips_cross(self):
+        """load jhu fips->fips cross table"""
+        stream = pkg_resources.resource_stream(__name__, self.jhu_filepath)
+        self.jhu_fips_cross = pd.read_csv(stream, dtype={'fips_jhu': str,
+                                                    'fips': str,
+                                                    'weight': float})
+        for col in ['fips_jhu','fips']:
+            self.jhu_fips_cross = GeoMapper.convert_int_to_str5(self.jhu_fips_cross,int_col=col,str_col=col)
 
 
     def convert_fips_to_stcode(self,
@@ -203,6 +215,56 @@ class GeoMapper:
             data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='outer')
         else:
             data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='left')
+        return data
+
+    def convert_jhu_to_mega(self,
+                            data,
+                            jhu_col="fips_jhu",
+                            mega_col="fips_jhu"):
+        """create jhu mega fips (county) column from jhu fips column
+        - this simply converts 900XX to XX000 -
+
+        Args:
+            data: pd.DataFrame input data
+            jhu_col: JHU fips column to convert
+            mega_col: fips column to create
+
+        Return:
+            data: copy of dataframe
+        """
+        data = data.copy()
+        is_mega = data[jhu_col].astype(int) > 90001
+        data = GeoMapper.convert_int_to_str5(data, int_col=jhu_col, str_col=jhu_col)
+        data.loc[is_mega,mega_col] = data.loc[is_mega,jhu_col].str[-2:].str.ljust(5, '0')
+        return data
+
+    def convert_jhu_to_fips(self,
+                            data,
+                            jhu_col="fips_jhu",
+                            fips_col="fips",
+                            weight_col="weight"):
+        """create fips (county) column from jhu fips column
+
+        Args:
+            data: pd.DataFrame input data
+            jhu_col: JHU fips column to convert
+            fips_col: fips column to create
+            weight_col: weight (pop) column to create
+
+        Return:
+            data: copy of dataframe
+        """
+
+        data = data.copy()
+        if not hasattr(self,"jhu_fips_cross"):
+            self.load_jhu_fips_cross()
+        data = self.convert_jhu_to_mega(data,jhu_col=jhu_col,mega_col=jhu_col)
+        data = GeoMapper.convert_int_to_str5(data,int_col=jhu_col,str_col=jhu_col)
+        jhu_cross = self.jhu_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
+        data = data.merge(jhu_cross, left_on=jhu_col, right_on='fips_jhu', how='left')
+        jhu_no_match = data[fips_col].isna()
+        data.loc[jhu_no_match,weight_col] = 1
+        data.loc[jhu_no_match,fips_col] = data.loc[jhu_no_match,jhu_col]
         return data
 
 
@@ -352,6 +414,49 @@ class GeoMapper:
             data.fillna(0,inplace=True)
             data = data.groupby(fips_col).sum()
         return data.reset_index()
+
+    def jhu_to_county(self,
+                      data,
+                      jhu_col='fips_jhu',
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None):
+        """convert and aggregate from zip to fips (county)
+
+        Args:
+            data: pd.DataFrame input data
+            jhu_col: jhu fips column to convert
+            fips_col: fips (county) column to create
+            date_col: date column (is not aggregated, groupby), if None then no dates
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+
+        Return:
+            data: copy of dataframe
+        """
+        if date_col:
+            assert date_col in data.columns, f'{date_col} not in data.columns'
+        assert jhu_col in data.columns, f'{jhu_col} not in data.columns'
+        if not count_cols:
+            count_cols = list(set(data.columns) - {date_col, jhu_col})
+        else:
+            count_cols = list(count_cols)
+        if date_col:
+            data = data[[jhu_col, date_col] + count_cols].copy()
+        else:
+            data = data[[jhu_col] + count_cols].copy()
+        data = self.convert_jhu_to_fips(data,jhu_col=jhu_col,fips_col=fips_col)
+        data[count_cols] = data[count_cols].multiply(data['weight'],axis=0)
+        data.drop([jhu_col,'weight'],axis=1,inplace=True)
+        assert not data[fips_col].isnull().values.any(), "nan fips, zip not in cross table"
+        if date_col:
+            assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+            data.fillna(0,inplace=True)
+            data = data.groupby([date_col,fips_col]).sum()
+        else:
+            data.fillna(0,inplace=True)
+            data = data.groupby(fips_col).sum()
+        return data.reset_index()
+
 
     @staticmethod
     def convert_fips_to_mega(data,

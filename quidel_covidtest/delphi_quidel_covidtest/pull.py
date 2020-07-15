@@ -83,9 +83,9 @@ def fix_date(df):
     """
     df.insert(2, "timestamp", df["TestDate"])
     
-    mask = df["TestDate"] > df["StorageDate"]
+    mask = df["TestDate"] < df["StorageDate"]
     print("Removing %.2f%% of unusual data" % (np.sum(mask) * 100 / len(df)))
-    df["timestamp"].values[mask] = df["StorageDate"].values[mask]
+    df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
     print("Fixing %.2f%% of outdated data" % (np.sum(mask) * 100 / len(df)))

@@ -1,0 +1,97 @@
+import pytest
+
+from os.path import join
+
+import pandas as pd
+import numpy as np
+
+
+from delphi_quidel_covidtest.geo_maps import GeoMaps
+
+
+map_df = pd.read_csv(
+        join("../static", "fips_prop_pop.csv"), dtype={"fips": int}
+    )
+
+class TestGeoMap:
+    def test_county(self):
+        
+        geo_map = GeoMaps()
+        df = pd.DataFrame(
+            {
+                "zip": [1607, 1740, 98661, 76010, 76012, 76016],
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                              "2020-06-15", "2020-06-15", "2020-06-15"],
+                "totalTest": [100, 50, 200, 200, 250, 500],
+                "positiveTest": [10, 8, 15, 5, 20, 50],
+            }
+        )
+        
+        new_df, res_key = geo_map.zip_to_county(df, map_df)
+        
+        assert res_key == 'fips'
+        assert set(new_df["fips"].values) == set(['25027', '53011', '48439'])
+        assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
+        assert set(new_df["totalTest"].values)  == set([150, 200, 950])
+        assert set(new_df["positiveTest"].values) == set([18, 15, 75])
+
+    def test_state(self):
+
+        geo_map = GeoMaps()
+        df = pd.DataFrame(
+            {
+                "zip": [1607, 1740, 98661, 76010, 76012, 76016],
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                              "2020-06-15", "2020-06-15", "2020-06-15"],
+                "totalTest": [100, 50, 200, 200, 250, 500],
+                "positiveTest": [10, 8, 15, 5, 20, 50],
+            }
+        )
+        
+        new_df = geo_map.zip_to_state(df, map_df)
+
+        assert set(new_df["state_id"].values) == set(['ma', 'tx', 'wa'])
+        assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
+        assert set(new_df["totalTest"].values)  == set([150, 200, 950])
+        assert set(new_df["positiveTest"].values) == set([18, 15, 75])
+
+    def test_hrr(self):
+
+        geo_map = GeoMaps()
+        df = pd.DataFrame(
+            {
+                "zip": [1607, 98661, 76010, 76012, 74435, 74936],
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                              "2020-06-15", "2020-06-15", "2020-06-15"],
+                "totalTest": [100, 50, 200, 200, 250, 500],
+                "positiveTest": [10, 8, 15, 5, 20, 50],
+            }
+        )
+        
+        new_df, res_key = geo_map.zip_to_hrr(df, map_df)
+
+        assert set(new_df["hrrnum"].values) == set([16, 231, 340, 344, 394])
+        assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
+        assert set(new_df["totalTest"].values)  == set([500, 100, 250, 50, 400])
+        assert set(new_df["positiveTest"].values) == set([50, 10, 20, 8, 20])
+
+    def test_msa(self):
+
+        geo_map = GeoMaps()
+        df = pd.DataFrame(
+            {
+                "zip": [1607, 73716, 73719, 76010, 74435, 74936],
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                              "2020-06-15", "2020-06-15", "2020-06-15"],
+                "totalTest": [100, 50, 200, 200, 250, 500],
+                "positiveTest": [10, 8, 15, 5, 20, 50],
+            }
+        )
+        
+        new_df, res_key = geo_map.zip_to_msa(df, map_df)
+
+        assert res_key == 'cbsa_id'
+        assert set(new_df["cbsa_id"].values) == set(['19100', '22900', '49340'])
+        assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
+        assert set(new_df["totalTest"].values)  == set([200, 750, 100])
+        assert set(new_df["positiveTest"].values) == set([5, 70, 10])

@@ -1,17 +1,11 @@
-import pytest
-
 from delphi_utils import read_params
 
-from os.path import join, exists
-from tempfile import TemporaryDirectory
-from datetime import datetime
+from datetime import datetime, date
 
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_frame_equal
 
 from delphi_quidel_covidtest.pull import (
-    get_from_email,
     fix_zipcode,
     fix_date,
     pull_quidel_covidtest
@@ -39,7 +33,23 @@ class TestFixData:
 
 class TestingPullData:
     def test_pull_quidel_covidtest(self):
-
+        
+        params = read_params()
+        mail_server = params["mail_server"]
+        account = params["account"]
+        password = params["password"]
+        sender = params["sender"]
+        
+        pull_start_date = date(2020, 6, 10)
+        pull_end_date = date(2020, 6, 20)
+        
+        df = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
+                               account, sender, password) 
+        
+        assert df["timestamp"].min() == datetime(2020, 5, 20)
+        assert df["timestamp"].max() == datetime(2020, 6, 18)
+        assert set(df.columns) == set(["timestamp", "zip", "totalTest", "positiveTest"])
+        
         return
 
     

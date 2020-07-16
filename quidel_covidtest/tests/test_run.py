@@ -1,15 +1,15 @@
-import pytest
-
-from os import listdir
+from os import listdir, remove
 from os.path import join
 
 import pandas as pd
+
 from delphi_quidel_covidtest.run import run_module
 
 
 class TestRun:
-    def test_output_files_exist(self, run_as_module):
-
+    def test_output_files(self, run_as_module):
+        
+        # Test output exists
         csv_files = listdir("receiving")
 
         dates = [
@@ -28,7 +28,7 @@ class TestRun:
         geos = ["county", "hrr", "msa", "state"]
         sensors = [
             "raw_pct_positive",
-            "smoothed_pct_positive"
+            "wip_smoothed_pct_positive"
         ]
 
         expected_files = []
@@ -38,10 +38,18 @@ class TestRun:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
         set(csv_files) == set(expected_files)
-
-    def test_output_file_format(self, run_as_module):
-
+        
+        # Test output format
         df = pd.read_csv(
-            join("receiving", "20200610_state_raw_pct_positive.csv")
+            join("./receiving", "20200610_state_raw_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
+        
+        # test_intermediate_file
+        flag = None
+        for fname in listdir("./cache"):
+            if ".csv" in fname:
+                remove(join("cache", fname))
+                flag = 1
+        assert flag is not None
+        

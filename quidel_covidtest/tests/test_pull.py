@@ -8,7 +8,8 @@ import pandas as pd
 from delphi_quidel_covidtest.pull import (
     fix_zipcode,
     fix_date,
-    pull_quidel_covidtest
+    pull_quidel_covidtest,
+    check_intermediate_file
 )
 
 
@@ -43,7 +44,7 @@ class TestingPullData:
         pull_start_date = date(2020, 6, 10)
         pull_end_date = date(2020, 6, 12)
         
-        df = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
+        df, _ = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
                                account, sender, password) 
         
         first_date = df["timestamp"].min().date() 
@@ -53,6 +54,13 @@ class TestingPullData:
         assert [last_date.month, last_date.day] == [6, 11]
         assert set(df.columns) == set(["timestamp", "zip", "totalTest", "positiveTest"])
         
-        return
 
-    
+    def test_check_intermediate_file(self):
+        
+        filename, pull_start_date = check_intermediate_file("./cache/test_cache_with_file", None)
+        assert filename is not None
+        assert pull_start_date is not None
+
+        filename, pull_start_date = check_intermediate_file("./cache/test_cache_without_file", None)
+        assert filename is None
+        assert pull_start_date is None

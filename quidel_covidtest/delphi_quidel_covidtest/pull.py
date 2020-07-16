@@ -3,7 +3,7 @@
 Uses this handy package: https://pypi.org/project/imap-tools/
 """
 from datetime import datetime, timedelta
-import os, io
+import io
 
 import pandas as pd
 import numpy as np
@@ -29,7 +29,6 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
     output:
         df: pd.DataFrame
     """
-    file_out = "./cache/raw.xlsx"
     time_flag = None
     df = pd.DataFrame(columns=['SofiaSerNum', 'TestDate', 'Facility', 'City',
                                'State', 'Zip', 'PatientAge', 'Result1', 'Result2',
@@ -39,10 +38,7 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
     with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
         for search_date in [start_date + timedelta(days=x)
                             for x in range((end_date - start_date).days + 1)]:
-            bodies = [msg for msg in mailbox.fetch(A(AND(date=search_date, from_=sender)))]
-            if len(bodies) > 0:
-                time_flag = search_date
-            for message in bodies:
+            for message in mailbox.fetch(A(AND(date=search_date, from_=sender))):
                 for att in message.attachments:
                     name = att.filename
                     # Only consider covid tests
@@ -50,8 +46,8 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
                         continue
                     print("Pulling data received on %s"%search_date)
                     toread = io.BytesIO()
-                    toread.write(att.payload)  
-                    toread.seek(0)  # reset the pointer                    
+                    toread.write(att.payload)
+                    toread.seek(0)  # reset the pointer
                     newdf = pd.read_excel(toread)  # now read to dataframe
                     # with open(file_out, 'wb') as f:
                     #     f.write(att.payload)
@@ -59,6 +55,7 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
                     # Remove the raw file
                     # os.remove(file_out)
                     df = df.append(newdf)
+                    time_flag = search_date
     return df, time_flag
 
 def fix_zipcode(df):

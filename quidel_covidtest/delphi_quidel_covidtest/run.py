@@ -35,6 +35,13 @@ SMOOTHERS = {
     "wip_smoothed_pct_positive": True,
     "raw_pct_positive": False
 }
+def check_intermediate_file(cache_dir, pull_start_date):
+    for filename in os.listdir(cache_dir):
+        if ".csv" in filename:
+            pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
+                                            '%Y%m%d').date() + timedelta(days=1)
+            return filename, pull_start_date
+    return None, pull_start_date
 
 def run_module():
 
@@ -54,22 +61,16 @@ def run_module():
         export_end_date = datetime.today() - timedelta(days=5)
     else:
         export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d')
-    
+
     # pull new data only that has not been ingested
-    time_flag = None
     pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
-    for filename in os.listdir(cache_dir):
-        if ".csv" in filename:
-            time_flag = filename.split("_")[2].split(".")[0]
-            pull_start_date = datetime.strptime(time_flag, 
-                                                '%Y%m%d').date() + timedelta(days=1)
-            break
+    filename, pull_start_date = check_intermediate_file(cache_dir, pull_start_date)
 
     if params["pull_end_date"] == "":
         pull_end_date = date.today()
     else:
         pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d').date()
-    
+
     if pull_end_date < pull_start_date:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -82,12 +83,12 @@ def run_module():
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
                                account, sender, password)
-    if time_flag:
-        previous_df = pd.read_csv(join(cache_dir, filename), sep = ",", parse_dates=["timestamp"])
+    if filename is not None:
+        previous_df = pd.read_csv(join(cache_dir, filename), sep=",", parse_dates=["timestamp"])
         df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
-    # Save the intermediate file to cache_dir which can be re-used next time
-    os.remove(join(cache_dir, filename))
-    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index = False)
+        # Save the intermediate file to cache_dir which can be re-used next time
+        os.remove(join(cache_dir, filename))
+    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index=False)
 
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()

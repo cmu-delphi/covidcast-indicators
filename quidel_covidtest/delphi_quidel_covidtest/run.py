@@ -13,7 +13,7 @@ import pandas as pd
 from delphi_utils import read_params
 
 from .geo_maps import (zip_to_msa, zip_to_hrr, zip_to_county, zip_to_state)
-from .pull import pull_quidel_covidtest
+from .pull import pull_quidel_covidtest, check_intermediate_file
 from .export import export_csv
 from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
@@ -35,13 +35,6 @@ SMOOTHERS = {
     "wip_smoothed_pct_positive": True,
     "raw_pct_positive": False
 }
-def check_intermediate_file(cache_dir, pull_start_date):
-    for filename in os.listdir(cache_dir):
-        if ".csv" in filename:
-            pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
-                                            '%Y%m%d').date() + timedelta(days=1)
-            return filename, pull_start_date
-    return None, pull_start_date
 
 def run_module():
 

@@ -15,7 +15,7 @@ def generate_sensor_for_states(state_data, smooth, first_date, last_date):
         state_data: pd.DataFrame
         state_key: "state_id"
         smooth: bool
-    Output:
+    Returns:
         df: pd.DataFrame
     """
     state_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size", "timestamp"])
@@ -51,7 +51,7 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth, first_
         data: pd.DataFrame
         res_key: "fips", "cbsa_id" or "hrrnum"
         smooth: bool
-    Output:
+    Returns:
         df: pd.DataFrame
     """
     res_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size"])

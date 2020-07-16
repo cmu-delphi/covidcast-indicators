@@ -4,6 +4,7 @@ Uses this handy package: https://pypi.org/project/imap-tools/
 """
 from datetime import datetime, timedelta
 import io
+import os
 
 import pandas as pd
 import numpy as np
@@ -145,3 +146,11 @@ def pull_quidel_covidtest(start_date, end_date, mail_server, account, sender, pa
         how="outer").fillna(0).drop_duplicates()
 
     return df_merged, time_flag
+
+def check_intermediate_file(cache_dir, pull_start_date):
+    for filename in os.listdir(cache_dir):
+        if ".csv" in filename:
+            pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
+                                            '%Y%m%d').date() + timedelta(days=1)
+            return filename, pull_start_date
+    return None, pull_start_date

@@ -22,8 +22,9 @@ pip install xlrd
 All of the user-changable parameters are stored in `params.json`. A template is
 included as `params.json.template`. At a minimum, you will need to include a
 password for the datadrop email account and the email address of the data sender. 
-Note that setting `export_end_date` to an empty string will pull data through 
-today (GMT) minus 5 days.
+Note that setting `export_end_date` to an empty string will export data through 
+today (GMT) minus 5 days. Setting `pull_end_date` to an empty string will pull data 
+through today (GMT).
 
 To execute the module and produce the output datasets (by default, in
 `receiving`), run the following:

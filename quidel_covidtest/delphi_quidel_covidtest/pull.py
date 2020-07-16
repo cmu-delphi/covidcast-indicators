@@ -50,11 +50,6 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
                     toread.write(att.payload)
                     toread.seek(0)  # reset the pointer
                     newdf = pd.read_excel(toread)  # now read to dataframe
-                    # with open(file_out, 'wb') as f:
-                    #     f.write(att.payload)
-                    # newdf = pd.read_excel(file_out)
-                    # Remove the raw file
-                    # os.remove(file_out)
                     df = df.append(newdf)
                     time_flag = search_date
     return df, time_flag

@@ -1,7 +1,7 @@
 # Quidel COVID Test
 
 ### Background
-Starting May 9, 2020, we began getting Quidel COVID Test data and started reporting it from May 26, 2020 due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device. The present Quidel COVID Test sensor concerns the positive rate in the test result.\\
+Starting May 9, 2020, we began getting Quidel COVID Test data and started reporting it from May 26, 2020 due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device. The present Quidel COVID Test sensor concerns the positive rate in the test result.
 
 ### Signal names
 - raw_pct_positive: estimates of the percentage of positive tests in total tests 
@@ -35,7 +35,7 @@ p = 100 * X / N
 
 The estimated standard error is simply:
 ```
-se=1/100 * sqrt{ p*(1-p)/N } 
+se = 1/100 * sqrt{ p*(1-p)/N } 
 ```
 where we assume for each time point, the estimates follow a binomial distribution.
 

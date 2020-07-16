@@ -28,7 +28,7 @@ GEO_RESOLUTIONS = [
     "hrr"
 ]
 SENSORS = [
-    "smoothed_pct_positive",
+    "wip_smoothed_pct_positive",
     "raw_pct_positive"
 ]
 SMOOTHERS = {

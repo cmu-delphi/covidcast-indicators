@@ -8,7 +8,7 @@ required = [
     "pytest-cov",
     "pylint",
     "delphi-utils",
-    "map-tools",
+    "imap-tools",
     "xlrd"
 ]
 

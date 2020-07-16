@@ -10,6 +10,11 @@ def read_filenames(path):
     return daily_filenames
 
 
+def fetch_daily_data(data_source, survey_date, geo_type, signal):
+    data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_day, geo_type)
+    return data_to_validate
+    
+
 def new_stuff():
     survey_sdate = "2020-06-13"
     survey_edate = "2020-06-20"

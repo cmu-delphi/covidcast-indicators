@@ -1,5 +1,5 @@
 from fbsurveyvalidation import *
-from getdata import *
+from datafetcher import *
 
 # Defining start date and end date for the last fb-survey pipeline execution
 survey_sdate = "2020-06-13"

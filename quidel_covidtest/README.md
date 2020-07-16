@@ -13,11 +13,6 @@ source env/bin/activate
 pip install ../_delphi_utils_python/.
 pip install .
 ```
-There are two extra dependencies that are required to be installed.
-```
-pip install imap-tools
-pip install xlrd
-```
 
 All of the user-changable parameters are stored in `params.json`. A template is
 included as `params.json.template`. At a minimum, you will need to include a

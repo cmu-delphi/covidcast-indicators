@@ -4,11 +4,12 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
-    "google-api-python-client",
     "pytest",
     "pytest-cov",
     "pylint",
     "delphi-utils"
+    "map-tools",
+    "xlrd"
 ]
 
 setup(

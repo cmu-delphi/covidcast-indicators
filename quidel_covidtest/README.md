@@ -29,7 +29,7 @@ To execute the module and produce the output datasets (by default, in
 `receiving`), run the following:
 
 ```
-env/bin/python -m quidel_covidtest
+env/bin/python -m delphi_quidel_covidtest
 ```
 
 Once you are finished with the code, you can deactivate the virtual environment
@@ -46,7 +46,7 @@ To do a static test of the code style, it is recommended to run **pylint** on
 the module. To do this, run the following from the main module directory:
 
 ```
-env/bin/pylint quidel_covidtest
+env/bin/pylint delphi_quidel_covidtest
 ```
 
 The most aggressive checks are turned off; only relatively important issues
@@ -56,7 +56,7 @@ Unit tests are also included in the module. To execute these, run the following
 command from this directory:
 
 ```
-(cd tests && ../env/bin/pytest --cov=quidel_covidtest --cov-report=term-missing)
+(cd tests && ../env/bin/pytest --cov=delphi_quidel_covidtest --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along

@@ -62,6 +62,31 @@ def check_missing_dates(daily_filenames, sdate, edate):
         print("Missing dates are observed; if these dates are already in the API they would not be updated")
         print(check_dateholes)
 
-def fbsurvey_validation(daily_filnames):
+def fbsurvey_validation(daily_filnames, sdate, edate):
     
-    check_missing_dates(daily_filenames, )
+    check_missing_dates(daily_filenames, sdate, edate)
+
+    # Examples:
+    # raw_cli
+    # raw_ili
+    # raw_wcli
+    # raw_wili
+    # raw_hh_cmnty_cli
+    # raw_nohh_cmnty_cli
+    filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw|smoothed)_(\w*)([ci]li).csv$')
+    for f in daily_filnames:
+       # example: 20200624_county_smoothed_nohh_cmnty_cli
+        
+        m = filename_regex.match(f)
+        geo_type = m.group(2)
+
+        if m.group(4):
+            signal = "_".join([m.group(3), m.group(4), m.group(5)])
+        else:
+            signal = "_".join([m.group(3), m.group(5)])
+
+        if (not nameformat or not pattern_found):
+            sys.exit('=nameformat= not recognized as a daily format') 
+        
+
+        fetch_daily_data

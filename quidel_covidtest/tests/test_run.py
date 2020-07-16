@@ -37,7 +37,7 @@ class TestRun:
                 for sensor in sensors:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
-        set(csv_files) == set(expected_files)
+        assert set(expected_files).issubset(set(csv_files))
         
         # Test output format
         df = pd.read_csv(

@@ -9,21 +9,25 @@ def _prop_var(p, n):
     """var(X/n) = 1/(n^2)var(X) = (npq)/(n^2) = pq/n"""
     return p * (1 - p) / n
 
-def fill_dates(y_data):
+def fill_dates(y_data, first_date, last_date):
     """
     Ensure all dates are listed in the data, otherwise, add days with 0 counts.
     Args:
         y_data: dataframe with datetime index
+        first_date: datetime.datetime
+            first date to be included
+        last_date: datetime.datetime
+            last date to be inclluded
     Returns: dataframe containing all dates given
     """
-    # cols = y_data.columns    
-    # if first_date not in y_data.index:
-    #     y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-    #                                         columns=cols, index=[first_date]))
-    # if last_date not in y_data.index:
-    #     y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-    #                                         columns=cols, index=[last_date]))
-    
+    cols = y_data.columns
+    if first_date not in y_data.index:
+        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
+                                            columns=cols, index=[first_date]))
+    if last_date not in y_data.index:
+        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
+                                            columns=cols, index=[last_date]))
+
     y_data.sort_index(inplace=True)
     y_data = y_data.asfreq('D', fill_value=0)
     y_data.fillna(0, inplace=True)
@@ -48,7 +52,7 @@ def _slide_window_sum(arr, k):
             Array of same length of arr, holding the sliding window sum.
     """
 
-    if type(k) is not int:
+    if not isinstance(k, int):
         raise ValueError('k must be int.')
     temp = np.append(np.zeros(k - 1), arr)
     sarr = np.convolve(temp, np.ones(k, dtype=int), 'valid')
@@ -66,10 +70,10 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
 
     Args:
         tpooled_tests: np.ndarray[float]
-            Number of tests after temporal pooling.  
+            Number of tests after temporal pooling.
             There should be no np.nan here.
         tpooled_ptests: np.ndarray[float]
-            Number of parent tests after temporal pooling.  
+            Number of parent tests after temporal pooling.
             There should be no np.nan here.
         min_obs: int
             Minimum number of observations in order to compute a ratio
@@ -103,17 +107,17 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     return borrow_prop
 
 
-def raw_positive_prop(positives, tests, min_obs, pool_days):
+def raw_positive_prop(positives, tests, min_obs):
     """
     Calculates the proportion of positive tests for a single geographic
     location, without any temporal smoothing.
-    
+
     If on any day t, tests[t] < min_obs, then we report np.nan.
-    
+
     The second and third returned np.ndarray are the standard errors,
     calculated using the binomial proportion variance _prop_var(); and
     the sample size.
-    
+
     Args:
         positives: np.ndarray[float]
             Number of positive tests, ordered in time, where each array element
@@ -205,7 +209,7 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
         np.ndarray
             Effective sample size (after temporal and geographic pooling).
     """
-    
+
     positives = positives.astype(float)
     tests = tests.astype(float)
     if (parent_positives is None) or (parent_tests is None):
@@ -227,7 +231,7 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
             raise ValueError('positives should not exceed tests')
     if min_obs <= 0:
         raise ValueError('min_obs should be positive')
-    if (pool_days <= 0) or type(pool_days) is not int:
+    if (pool_days <= 0) or not isinstance(pool_days, int):
         raise ValueError('pool_days should be a positive int')
 
     # STEP 0: DO THE TEMPORAL POOLING
@@ -245,4 +249,4 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
         pooled_positives = tpooled_positives
         pooled_tests = tpooled_tests
     ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
-    return raw_positive_prop(pooled_positives, pooled_tests, min_obs, pool_days)
+    return raw_positive_prop(pooled_positives, pooled_tests, min_obs)

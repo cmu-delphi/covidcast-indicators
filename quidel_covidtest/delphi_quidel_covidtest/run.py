@@ -6,17 +6,17 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
 from itertools import product
+import os
 from os.path import join
 
-import numpy as np
 import pandas as pd
 from delphi_utils import read_params
 
-from .geo_maps import GeoMaps
+from .geo_maps import (zip_to_msa, zip_to_hrr, zip_to_county, zip_to_state)
 from .pull import pull_quidel_covidtest
-from .data_tools import *
-from .export import *
-from .generate_sensor import generate_sensor_for_states, generate_sensor_for_other_geores
+from .export import export_csv
+from .generate_sensor import (generate_sensor_for_states,
+                              generate_sensor_for_other_geores)
 
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
@@ -32,73 +32,96 @@ SENSORS = [
     "raw_pct_positive"
 ]
 SMOOTHERS = {
-    "smoothed_pct_positive": True,
+    "wip_smoothed_pct_positive": True,
     "raw_pct_positive": False
 }
-
 
 def run_module():
 
     params = read_params()
-    export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
-    if params["export_end_date"] == "":
-        export_end_date = datetime.today() - timedelta(days=5)
-    else:
-        export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d')
-        
+    cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
-    pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
     static_file_dir = params["static_file_dir"]
-    
+
     mail_server = params["mail_server"]
     account = params["account"]
     password = params["password"]
     sender = params["sender"]
+
+    export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
+    # If no export end date defined, set todya - 5 days
+    if params["export_end_date"] == "":
+        export_end_date = datetime.today() - timedelta(days=5)
+    else:
+        export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d')
     
-    pull_end_date = date.today()
+    # pull new data only that has not been ingested
+    time_flag = None
+    pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
+    for filename in os.listdir(cache_dir):
+        if ".csv" in filename:
+            time_flag = filename.split("_")[2].split(".")[0]
+            pull_start_date = datetime.strptime(time_flag, 
+                                                '%Y%m%d').date() + timedelta(days=1)
+            break
+
+    if params["pull_end_date"] == "":
+        pull_end_date = date.today()
+    else:
+        pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d').date()
+    
+    if pull_end_date < pull_start_date:
+        print("The data is up-to-date. Currently, no new data to be ingested.")
+        return
 
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
 
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
+    # Pull data from the email at 5 digit zipcode level
+    # Use _end_date to check the most recent date that we received data
+    df, _end_date = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
+                               account, sender, password)
+    if time_flag:
+        previous_df = pd.read_csv(join(cache_dir, filename), sep = ",", parse_dates=["timestamp"])
+        df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
+    # Save the intermediate file to cache_dir which can be re-used next time
+    os.remove(join(cache_dir, filename))
+    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index = False)
 
-    df = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password) 
-    geo_map = GeoMaps()
-        
+    first_date = df["timestamp"].min()
+    last_date = df["timestamp"].max()
+
     # State Level
     data = df.copy()
-    state_data  = geo_map.zip_to_state(data, map_df)
-    
-    raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth = False)
+    state_data = zip_to_state(data, map_df)
+    # Compute raw signal
+    raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth=False,
+                                                            first_date=first_date,
+                                                            last_date=last_date)
     export_csv(raw_state_df, "state", "raw_pct_positive", receiving_dir=export_dir,
-               start_date = export_start_date, end_date = export_end_date)  
-    
-    smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth = True)
-    export_csv(smoothed_state_df, "state", "smoothed_pct_positive", receiving_dir=export_dir,
-               start_date = export_start_date, end_date = export_end_date) 
-    
+               start_date=export_start_date, end_date=export_end_date)
+    # Compute smoothed signal
+    smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth=True,
+                                                      first_date=first_date,
+                                                      last_date=last_date)
+    export_csv(smoothed_state_df, "state", "wip_smoothed_pct_positive", receiving_dir=export_dir,
+               start_date=export_start_date, end_date=export_end_date)
+
+    # County/HRR/MSA level
     for geo_res, sensor in product(GEO_RESOLUTIONS, SENSORS):
         print(geo_res, sensor)
         data = df.copy()
         if geo_res == "county":
-            data, res_key = geo_map.zip_to_county(data, map_df)
-            res_groups = data.groupby(res_key)
+            data, res_key = zip_to_county(data, map_df)
         elif geo_res == "msa":
-            data, res_key = geo_map.zip_to_msa(data, map_df)
-            res_groups = data.groupby(res_key)
+            data, res_key = zip_to_msa(data, map_df)
         else:
-            data, res_key = geo_map.zip_to_hrr(data, map_df)
-        
-        res_df = generate_sensor_for_other_geores(state_groups, data, res_key, 
-                                                  smooth = SMOOTHERS[sensor])
+            data, res_key = zip_to_hrr(data, map_df)
+
+        res_df = generate_sensor_for_other_geores(state_groups, data, res_key,
+                                                  smooth=SMOOTHERS[sensor],
+                                                  first_date=first_date,
+                                                  last_date=last_date)
         export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
-                   start_date = export_start_date, end_date = export_end_date)
-        
-    return
-        
-        
+                   start_date=export_start_date, end_date=export_end_date)

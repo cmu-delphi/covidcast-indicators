@@ -13,9 +13,9 @@ required = [
 ]
 
 setup(
-    name="delphi_google_health",
+    name="quidel_covidtest",
     version="0.1.0",
-    description="Indicators Pulled from the Google Health Trends API",
+    description="Indicators Pulled from datadrop email",
     author="",
     author_email="",
     url="https://github.com/cmu-delphi/covidcast-indicators",

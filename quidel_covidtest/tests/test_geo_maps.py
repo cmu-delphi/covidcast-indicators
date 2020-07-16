@@ -6,7 +6,8 @@ import pandas as pd
 import numpy as np
 
 
-from delphi_quidel_covidtest.geo_maps import GeoMaps
+from delphi_quidel_covidtest.geo_maps import (zip_to_msa, zip_to_hrr, 
+                                              zip_to_county, zip_to_state)
 
 
 map_df = pd.read_csv(
@@ -15,8 +16,7 @@ map_df = pd.read_csv(
 
 class TestGeoMap:
     def test_county(self):
-        
-        geo_map = GeoMaps()
+
         df = pd.DataFrame(
             {
                 "zip": [1607, 1740, 98661, 76010, 76012, 76016],
@@ -27,7 +27,7 @@ class TestGeoMap:
             }
         )
         
-        new_df, res_key = geo_map.zip_to_county(df, map_df)
+        new_df, res_key = zip_to_county(df, map_df)
         
         assert res_key == 'fips'
         assert set(new_df["fips"].values) == set(['25027', '53011', '48439'])
@@ -37,7 +37,6 @@ class TestGeoMap:
 
     def test_state(self):
 
-        geo_map = GeoMaps()
         df = pd.DataFrame(
             {
                 "zip": [1607, 1740, 98661, 76010, 76012, 76016],
@@ -48,7 +47,7 @@ class TestGeoMap:
             }
         )
         
-        new_df = geo_map.zip_to_state(df, map_df)
+        new_df = zip_to_state(df, map_df)
 
         assert set(new_df["state_id"].values) == set(['ma', 'tx', 'wa'])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
@@ -57,7 +56,6 @@ class TestGeoMap:
 
     def test_hrr(self):
 
-        geo_map = GeoMaps()
         df = pd.DataFrame(
             {
                 "zip": [1607, 98661, 76010, 76012, 74435, 74936],
@@ -68,7 +66,7 @@ class TestGeoMap:
             }
         )
         
-        new_df, res_key = geo_map.zip_to_hrr(df, map_df)
+        new_df, res_key = zip_to_hrr(df, map_df)
 
         assert set(new_df["hrrnum"].values) == set([16, 231, 340, 344, 394])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
@@ -77,7 +75,6 @@ class TestGeoMap:
 
     def test_msa(self):
 
-        geo_map = GeoMaps()
         df = pd.DataFrame(
             {
                 "zip": [1607, 73716, 73719, 76010, 74435, 74936],
@@ -88,7 +85,7 @@ class TestGeoMap:
             }
         )
         
-        new_df, res_key = geo_map.zip_to_msa(df, map_df)
+        new_df, res_key = zip_to_msa(df, map_df)
 
         assert res_key == 'cbsa_id'
         assert set(new_df["cbsa_id"].values) == set(['19100', '22900', '49340'])

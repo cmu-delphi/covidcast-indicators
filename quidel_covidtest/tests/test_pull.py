@@ -41,13 +41,16 @@ class TestingPullData:
         sender = params["sender"]
         
         pull_start_date = date(2020, 6, 10)
-        pull_end_date = date(2020, 6, 20)
+        pull_end_date = date(2020, 6, 12)
         
         df = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
                                account, sender, password) 
         
-        assert df["timestamp"].min() == datetime(2020, 5, 20)
-        assert df["timestamp"].max() == datetime(2020, 6, 18)
+        first_date = df["timestamp"].min().date() 
+        last_date = df["timestamp"].max().date() 
+        
+        assert [first_date.month, first_date.day] == [5, 20]
+        assert [last_date.month, last_date.day] == [6, 11]
         assert set(df.columns) == set(["timestamp", "zip", "totalTest", "positiveTest"])
         
         return

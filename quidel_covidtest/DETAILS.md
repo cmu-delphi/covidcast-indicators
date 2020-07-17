@@ -5,7 +5,7 @@ Starting May 9, 2020, we began getting Quidel COVID Test data and started report
 
 ### Signal names
 - raw_pct_positive: estimates of the percentage of positive tests in total tests 
-- smoothed_pct_positive: same as in (a), but where the estimates are formed by pooling together the last 7 days of data
+- smoothed_pct_positive: same as in the first one, but where the estimates are formed by pooling together the last 7 days of data
 
 ### Estimating percent positive test proportion
 Let n be the number of total COVID tests taken over a given time period and a given location (the test result can be negative/positive/invalid). Let x be the number of tests taken with positive results in this location over the given time period. We are interested in estimating the percentage of positive tests which is defined as:

@@ -3,7 +3,6 @@ class APIDataFetchError(Exception):
 
     Attributes:
         custom_msg -- parameters which caused the error
-        api_msg -- explanation of the error
     """
 
     def __init__(self, custom_msg):

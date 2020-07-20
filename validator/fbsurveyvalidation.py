@@ -41,10 +41,26 @@ def main():
     #validate_daily(df_to_test, nameformat, generation_date, max_check_lookbehind, sanity_check_rows_per_day, sanity_check_value_diffs, check_vs_working)
     print(date.today())
 
+def check_bad_geo_id(df_to_test, signal):
+    df[df['geo_id'].str.count('^*')>0]
+    switch(signal) {
+        case 'msa':      df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
+                         break;
+        case 'county':   df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
+                         break;
+        case 'state':    df_to_test[df_to_test['geo_id'].str.count('[A-Z]{2}') != 0]
+                         break;
+        case 'hrr':      df_to_test[df_to_test['geo_id'].str.count('\d{1,3}') != 0]
+                         break;
+        case 'national': df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
+                         break;
+        default: sys.exit("Unknown geo type.")
+        
+    }
+
 def check_missing_dates(daily_filenames, sdate, edate):
     number_of_dates = edate - sdate + timedelta(days=1)
-    date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days + 1)}
-
+    date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days)}
     unique_dates = set()
     unique_dates_obj = set()
 
@@ -61,6 +77,12 @@ def check_missing_dates(daily_filenames, sdate, edate):
         print(check_dateholes)
     
     return
+def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
+    if (max_weighted_date < generation_date - timedelta(days=4)
+        or max_date < generation_date - timedelta(days=1)):
+        sys.exit("latest date of generated file seems too long ago")
+    return
+    
 
 def fbsurvey_validation(daily_filenames, sdate, edate):
     
@@ -84,13 +106,22 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
         if m.group(4):
             signal = "".join([m.group(4), m.group(5)])
             signal = "_".join([m.group(3), signal])
+            max_weighted_date = survey_date
         else:
             signal = "_".join([m.group(3), m.group(5)])
+            max_date = survey_date
 
         if (not m.group(0)):
             sys.exit('=nameformat= not recognized as a daily format') 
+        
+        df_to_test = pd.read_csv(
+                            "data/20200613_county_raw_cli.csv", 
+                             dtype={'geo_id': str, 'val': float, 'se': float, 'sample_size': float, 'effective_sample_size': float
+                            })
+
+        
         try:
-            df_to_validate = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
+            df_ref = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
         except APIDataFetchError as e:
             print("APIDataFetchError:", e)
             print("\n")
@@ -99,5 +130,9 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
         print(df_to_validate)
 
         i += 1
-        if i == 16:
+        if i == 2:
             break
+
+    check_min_allowed_max_date(generation_date, max_date, max_weighted_date)
+    check_bad_geo_id(df_to_test, signal)
+

@@ -1,7 +1,8 @@
 import sys
 import re
 import pandas as pd
-from datetime import date
+from datetime import date, datetime, timedelta
+from datafetcher import *
 
 DATA_SOURCE = "fb-survey"
 
@@ -42,17 +43,13 @@ def main():
 
 def check_missing_dates(daily_filenames, sdate, edate):
     number_of_dates = edate - sdate + timedelta(days=1)
-    #print(number_of_dates)
-
     date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days + 1)}
-    #print(date_seq)
 
     unique_dates = set()
     unique_dates_obj = set()
 
     for daily_filename in daily_filenames:
         unique_dates.add(daily_filename[0:8])
-
     for unique_date in unique_dates:
         newdate_obj = datetime.strptime(unique_date, '%Y%m%d')
         unique_dates_obj.add(newdate_obj)
@@ -62,8 +59,10 @@ def check_missing_dates(daily_filenames, sdate, edate):
     if check_dateholes:
         print("Missing dates are observed; if these dates are already in the API they would not be updated")
         print(check_dateholes)
+    
+    return
 
-def fbsurvey_validation(daily_filnames, sdate, edate):
+def fbsurvey_validation(daily_filenames, sdate, edate):
     
     check_missing_dates(daily_filenames, sdate, edate)
 
@@ -74,19 +73,26 @@ def fbsurvey_validation(daily_filnames, sdate, edate):
     # raw_wili
     # raw_hh_cmnty_cli
     # raw_nohh_cmnty_cli
-    filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw|smoothed)_(\w*)([ci]li).csv$')
-    for f in daily_filnames:
+    filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
+    for f in daily_filenames:
         # example: 20200624_county_smoothed_nohh_cmnty_cli
+        print("Printing filename")
+        print(f)
         m = filename_regex.match(f)
         survey_date = datetime.strptime(m.group(1), '%Y%m%d').date()
         geo_type = m.group(2)
 
         if m.group(4):
-            signal = "_".join([m.group(3), m.group(4), m.group(5)])
+            signal = "".join([m.group(4), m.group(5)])
+            signal = "_".join([m.group(3), signal])
         else:
             signal = "_".join([m.group(3), m.group(5)])
 
-        if (not nameformat or not pattern_found):
+        if (not m.group(0)):
             sys.exit('=nameformat= not recognized as a daily format') 
         
         df_to_validate = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
+
+        print(df_to_validate)
+
+        break

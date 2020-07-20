@@ -11,7 +11,7 @@ def read_filenames(path):
 
 
 def fetch_daily_data(data_source, survey_date, geo_type, signal):
-    data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_day, geo_type)
+    data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_date, geo_type)
     return data_to_validate
     
 

@@ -2,7 +2,9 @@ from os import listdir, stat
 from os.path import isfile, join 
 import platform
 import covidcast
+import pandas as pd
 from datetime import date, datetime, timedelta
+from errors import *
 
 
 def read_filenames(path):
@@ -12,6 +14,12 @@ def read_filenames(path):
 
 def fetch_daily_data(data_source, survey_date, geo_type, signal):
     data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_date, geo_type)
+    if not isinstance(data_to_validate, pd.DataFrame):
+        custom_msg = "Error fetching data on" + str(survey_date)+ \
+                     "for data source:" + data_source + \
+                     ", signal-type:"+ signal + \
+                     ", geography-type:" + geo_type
+        raise APIDataFetchError(custom_msg)
     return data_to_validate
     
 
@@ -34,7 +42,6 @@ def new_stuff():
 
     data = covidcast.signal("fb-survey", "raw_ili", date(2020, 6, 19), date(2020, 6, 19),
                             "state")
-    #print(data)
 
 
     unique_dates = set()

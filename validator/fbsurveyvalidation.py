@@ -73,11 +73,10 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
     # raw_wili
     # raw_hh_cmnty_cli
     # raw_nohh_cmnty_cli
+    i = 1
     filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
     for f in daily_filenames:
         # example: 20200624_county_smoothed_nohh_cmnty_cli
-        print("Printing filename")
-        print(f)
         m = filename_regex.match(f)
         survey_date = datetime.strptime(m.group(1), '%Y%m%d').date()
         geo_type = m.group(2)
@@ -90,9 +89,15 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
 
         if (not m.group(0)):
             sys.exit('=nameformat= not recognized as a daily format') 
-        
-        df_to_validate = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
+        try:
+            df_to_validate = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
+        except APIDataFetchError as e:
+            print("APIDataFetchError:", e)
+            print("\n")
+
 
         print(df_to_validate)
 
-        break
+        i += 1
+        if i == 16:
+            break

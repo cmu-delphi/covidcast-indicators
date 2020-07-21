@@ -11,9 +11,9 @@ required = [
 ]
 
 setup(
-    name="delphi_jhu",
+    name="delphi_usafacts",
     version="0.0.1",
-    description="Indicators from Johns Hopkins GitHub Files",
+    description="Indicators from USAFacts website",
     author="",
     author_email="",
     url="https://github.com/cmu-delphi/covidcast-indicators",

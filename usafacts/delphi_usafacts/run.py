@@ -4,7 +4,7 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, time, timedelta
 from itertools import product
 from functools import partial
 from os.path import join
@@ -51,8 +51,8 @@ SENSOR_NAME_MAP = {
 #     "cumulative_prop":      ("cumul_prop", False),
 # }
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, '', False),
-    "seven_day_average":    (seven_day_moving_average, '7dav_', True),
+    "unsmoothed":           (identity, '', False, lambda d: d - timedelta(days=7)),
+    "seven_day_average":    (seven_day_moving_average, '7dav_', True, lambda d: d),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -68,7 +68,8 @@ def run_module():
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
         export_start_date = date.today() - timedelta(days=1)
-        export_start_date = export_start_date.strftime('%Y-%m-%d')
+    else:
+        export_start_date = date.strptime(export_start_date, "%Y-%m-%d")
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
@@ -101,7 +102,9 @@ def run_module():
         create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            start_date=datetime.combine(
+                SMOOTHERS_MAP[smoother][3](export_start_date),
+                time(0,0)),
             metric=metric,
             geo_res=geo_res,
             sensor=sensor_name,

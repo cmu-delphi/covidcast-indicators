@@ -67,7 +67,7 @@ def run_module():
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
-        export_start_date = datetime.combine(date.today(),time(0,0)) - timedelta(days=1)
+        export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)
     else:
         export_start_date = datetime.strptime(export_start_date, "%Y-%m-%d")
     export_dir = params["export_dir"]

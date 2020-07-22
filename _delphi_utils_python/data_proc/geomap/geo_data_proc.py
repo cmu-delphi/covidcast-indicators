@@ -16,6 +16,14 @@ FIPS_MSA_OUT_FILE = "fips_msa_cross.csv"
 ZIP_CODE_FILE = "02_20_uszips.csv"
 ZIP_FIPS_OUT_FILE = "zip_fips_cross.csv"
 STATE_OUT_FILE = "state_codes.csv"
+FIPS_HRR_FILE = "transfipsToHRR.csv"
+FIPS_HRR_OUT_FILE = "fips_hrr_cross.csv"
+ZIP_FIPS_FILE_2 = "ZIP_COUNTY_032020.xlsx"
+ZIP_HSA_HRR_FILE = "ZipHsaHrr18.csv"
+ZIP_HSA_OUT_FILE = "zip_hsa_cross.csv"
+ZIP_HRR_OUT_FILE = "zip_hrr_cross.csv"
+JHU_FIPS_FILE = "UID_ISO_FIPS_LookUp_Table.csv"
+JHU_FIPS_OUT_FILE = "jhu_uid_fips_cross.csv"
 
 def convert_fips(x):
     """Ensure fips is a string of length 5."""
@@ -70,7 +78,65 @@ def proc_fips_msa():
     msa_df.to_csv(path.join(OUTPUT_DIR,FIPS_MSA_OUT_FILE), index=False)
     return True
 
+def proc_fips_hrr():
+    """ FIPS HRR Cross """
+    hrr_df = pd.read_csv(FIPS_HRR_FILE)
+    hrr_df = pd.melt(hrr_df,
+                id_vars=['fips'],
+                value_vars=hrr_df.columns[3:],
+                var_name='hrr',
+                value_name='weight')
+    hrr_df = hrr_df[hrr_df['weight'] != 0.]
+    hrr_df.to_csv(path.join(OUTPUT_DIR,FIPS_HRR_OUT_FILE), index=False)
+    return True
+
+def proc_zip_hsa_hrr():
+    zip_df = pd.read_csv(ZIP_HSA_HRR_FILE)
+    hsa_df = zip_df[['zipcode18','hsanum']].\
+        rename(columns={'zipcode18':'zip', 'hsanum':'hsa'})
+    hrr_df = zip_df[['zipcode18','hrrnum']].\
+        rename(columns={'zipcode18':'zip', 'hrrnum':'hrr'})
+    hsa_df.to_csv(path.join(OUTPUT_DIR, ZIP_HSA_OUT_FILE), index=False)
+    hrr_df.to_csv(path.join(OUTPUT_DIR, ZIP_HRR_OUT_FILE), index=False)
+    return True
+
+def proc_jhu_uid_to_fips():
+    hand_additions = pd.DataFrame([
+        {'jhu_uid': 84070002, 'fips': 25007, 'weight': 0.5},
+        {'jhu_uid': 84070002, 'fips': 25019, 'weight': 0.5},
+        {'jhu_uid': 84070003, 'fips': 29095, 'weight': 0.25},
+        {'jhu_uid': 84070003, 'fips': 29165, 'weight': 0.25},
+        {'jhu_uid': 84070003, 'fips': 29037, 'weight': 0.25},
+        {'jhu_uid': 84070003, 'fips': 29047, 'weight': 0.25},
+        {'jhu_uid': 84002158, 'fips': 2270, 'weight': 1.},
+        {'jhu_uid': 84070015, 'fips': 49000, 'weight': 1.},
+        {'jhu_uid': 84070016, 'fips': 49000, 'weight': 1.},
+        {'jhu_uid': 84070017, 'fips': 49000, 'weight': 1.},
+        {'jhu_uid': 84070018, 'fips': 49000, 'weight': 1.},
+        {'jhu_uid': 84070019, 'fips': 49000, 'weight': 1.},
+        {'jhu_uid': 84070020, 'fips': 49000, 'weight': 1.},
+    ])
+    jhu_df = pd.read_csv(JHU_FIPS_FILE,dtype={'UID':int, 'FIPS':float})
+    jhu_df = jhu_df.query("Country_Region == 'US'")
+    jhu_df = jhu_df[['UID','FIPS']]\
+        .rename(columns={'UID':'jhu_uid', 'FIPS':'fips'})\
+        .dropna(subset=['fips'])\
+        .convert_dtypes({'fips':int})
+    fips_st = jhu_df['fips'].astype(str).str.len() <= 2
+    jhu_df.loc[fips_st, 'fips'] = jhu_df.loc[fips_st, 'fips']\
+            .astype(str).str.ljust(5, '0')\
+            .astype(int)
+    dup_ind = jhu_df['jhu_uid'].isin(hand_additions['jhu_uid'].values)
+    jhu_df.drop(jhu_df.index[dup_ind],inplace=True)
+    jhu_df['weight'] = 1.
+    jhu_df = pd.concat((jhu_df,hand_additions))
+    jhu_df.to_csv(path.join(OUTPUT_DIR, JHU_FIPS_OUT_FILE), index=False)
+    return True
+
 if __name__ == "__main__":
 
     # proc_zip_fips()
-    proc_fips_msa()
+    # proc_fips_msa()
+    # proc_fips_hrr()
+    # proc_zip_hsa_hrr()
+    proc_jhu_uid_to_fips()

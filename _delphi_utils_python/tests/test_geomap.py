@@ -44,6 +44,19 @@ class TestGeoMapper:
             'count': np.arange(len(jan_month)),
             'visits': 2*np.arange(len(jan_month)),
         })))
+    jhu_data = pd.DataFrame({
+        "fips_jhu":[48059, 48253, 72005, 10999, 90010, 70002],
+        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3,
+        "num": [1,2,3,4,8,5],
+        "den": [2,4,7,11,100,10]
+    })
+    jhu_uid_data = pd.DataFrame({
+        "jhu_uid":[84048315, 84048137, 84013299, 84013299, 84070002, 84070003],
+        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3,
+        "num": [1,2,3,4,8,5],
+        "den": [2,4,7,11,100,10]
+    })
+
 
     def test_load_zip_fips_cross(self):
         gmpr = GeoMapper()
@@ -65,6 +78,25 @@ class TestGeoMapper:
         gmpr.load_fips_msa_cross()
         msa_data = gmpr.fips_msa_cross
         assert tuple(msa_data.columns) == ('fips','msa')
+
+    def test_load_jhu_fips_cross(self):
+        gmpr = GeoMapper()
+        gmpr.load_jhu_fips_cross()
+        jhu_data = gmpr.jhu_fips_cross
+        assert (jhu_data.groupby('fips_jhu').sum() == 1).all()[0]
+
+    def test_load_jhu_uid_fips_cross(self):
+        gmpr = GeoMapper()
+        gmpr.load_jhu_uid_fips_cross()
+        jhu_data = gmpr.jhu_uid_fips_cross
+        assert (jhu_data.groupby('jhu_uid').sum() == 1).all()[0]
+
+    def test_load_zip_hrr_cross(self):
+        gmpr = GeoMapper()
+        gmpr.load_zip_hrr_cross()
+        zip_data = gmpr.zip_hrr_cross
+        assert pd.api.types.is_string_dtype(zip_data['zip'])
+        assert pd.api.types.is_integer_dtype(zip_data['hrr'])
 
     def test_convert_intfips_to_str(self):
         gmpr = GeoMapper()
@@ -126,3 +158,53 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         new_data = gmpr.county_to_megacounty(self.mega_data,6,50)
         assert (new_data[['count','visits']].sum()-self.mega_data[['count','visits']].sum()).sum() < 1e-3
+
+    def test_convert_jhu_to_mega(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_jhu_to_mega(self.jhu_data)
+        assert not (new_data['fips_jhu'].astype(int) > 90000).any()
+
+    def test_convert_jhu_fips_to_fips(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_jhu_fips_to_fips(self.jhu_data)
+        assert new_data.eval('weight * den').sum() == self.jhu_data['den'].sum()
+
+    def test_jhu_fips_to_county(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.jhu_fips_to_county(self.jhu_data)
+        assert not (new_data['fips'].astype(int) > 90000).any()
+        assert new_data['den'].sum() == self.jhu_data['den'].sum()
+
+    def test_jhu_to_state(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.jhu_to_state(self.jhu_data)
+        assert new_data['state_id'][2] == 'DE'
+        assert new_data.shape == (4,4)
+
+    def test_jhu_to_msa(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.jhu_to_msa(self.jhu_data)
+        assert new_data.shape == (4,4)
+
+    def test_convert_zip_to_hrr(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_zip_to_hrr(self.zip_data)
+        assert len(pd.unique(new_data['hrr'])) == 2
+        assert (new_data[['count','total']].sum()-self.zip_data[['count','total']].sum()).sum() < 1e-3
+
+    def test_zip_to_hrr(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.zip_to_hrr(self.zip_data)
+        assert len(pd.unique(new_data['hrr'])) == 2
+        assert (new_data[['count','total']].sum()-self.zip_data[['count','total']].sum()).sum() < 1e-3
+
+    def test_convert_jhu_uid_to_fips(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_jhu_uid_to_fips(self.jhu_uid_data)
+        assert new_data.eval('weight * den').sum() == self.jhu_uid_data['den'].sum()
+
+    def test_jhu_uid_to_county(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.jhu_uid_to_county(self.jhu_uid_data)
+        assert not (new_data['fips'].astype(int) > 90000).any()
+        assert new_data['den'].sum() == self.jhu_data['den'].sum()

@@ -23,6 +23,7 @@ You can see consistency checks and diffs with old sources in ./consistency_check
 
 1. 03_20_MSAs.xls : [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html)
 2. 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these
+3. Crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 
 ## Todo 07/07/2020
 
@@ -72,3 +73,7 @@ Introduced the March 2020 MSA file, source is [US Census Bureau](https://www.cen
 We are reserving 00001-00099 for states codes of the form 100XX where XX is the fips code for the state.  In the case that the CBSA codes change then it should be verified that these are not used.  The current smallest CBSA is 10100.
 
 -James
+
+07/22/2020:
+- Introducing the COUNTY_ZIP and ZIP_COUNTY crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
+- Also the ZIP to HRR Crosswalk file (from 2018) from https://atlasdata.dartmouth.edu/static/supp_research_data

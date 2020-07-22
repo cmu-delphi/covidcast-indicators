@@ -175,8 +175,10 @@ create_complete_responses <- function(input_data)
     "C10_3_1", "C10_4_1", "C11", "C12",
     "D1", "D1_4_TEXT", "D1b", "D2", "D3", "D4", "D5",
     "Q36", "Q40",
-    "token"
+    "token", wave = "SurveyID", "UserLanguage"
   )
+
+  data_full$wave <- surveyID_to_wave(data_full$wave)
 
   data_full$StartDatetime <- format(data_full$StartDatetime)
   data_full$EndDatetime <- format(data_full$EndDatetime)
@@ -197,6 +199,23 @@ create_complete_responses <- function(input_data)
 
   return(data_full)
 }
+
+#' Map Qualtrics survey IDs to wave number.
+#'
+#' Wave numbers are documented on our survey documentation site with full coding
+#' details, so we can include wave number in the individual output files so
+#' users know which wave the user completed.
+surveyID_to_wave <- Vectorize(function(surveyID) {
+  waves <- list("SV_8zYl1sFN6fAFIxv" = 1,
+                "SV_cT2ri3tFp2dhJGZ" = 2,
+                "SV_8bKZvWZcGbvzsz3" = 3)
+
+  if (surveyID %in% names(waves)) {
+      return(waves[[surveyID]])
+  }
+
+  return(NA_real_)
+})
 
 #' Filter responses with sufficient data to share.
 #'

@@ -25,7 +25,7 @@ test_that("contents are the same", {
 
     expect_equal(nrow(gold_df), nrow(test_df))
 
-    for (col in names(test_df)) {
+    for (col in names(gold_df)) {
       expect_equal(gold_df[[!!col]], test_df[[!!col]],
                    tolerance = 0.0001)
     }

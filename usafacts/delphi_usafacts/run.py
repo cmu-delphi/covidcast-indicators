@@ -67,9 +67,9 @@ def run_module():
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
-        export_start_date = date.today() - timedelta(days=1)
+        export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)
     else:
-        export_start_date = date.strptime(export_start_date, "%Y-%m-%d")
+        export_start_date = datetime.strptime(export_start_date, "%Y-%m-%d")
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
@@ -102,9 +102,7 @@ def run_module():
         create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=datetime.combine(
-                SMOOTHERS_MAP[smoother][3](export_start_date),
-                time(0,0)),
+            start_date=SMOOTHERS_MAP[smoother][3](export_start_date),
             metric=metric,
             geo_res=geo_res,
             sensor=sensor_name,

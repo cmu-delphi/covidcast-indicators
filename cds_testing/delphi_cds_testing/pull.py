@@ -61,8 +61,8 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
         )
     ]
 
-    # Manual correction for PR
-    df.loc[df["fips"] // 1000 == 72, "fips"] = 72000
+    # Fill na with forward filling
+    df = df.set_index("fips").groupby("fips").ffill().reset_index()
 
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
@@ -90,13 +90,19 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
             "amend DROP_COLUMNS."
         )
 
+    # Manual correction for PR
+    df.loc[df["fips"] // 1000 == 72, "fips"] = 72000
+
     # Fill in missing dates and combine rows for PR
     FIPS_LIST = df["fips"].unique()
     DATE_LIST = pd.date_range(start=df["timestamp"].min(), end=df["timestamp"].max())
     index_df = pd.MultiIndex.from_product(
         [FIPS_LIST, DATE_LIST], names=['fips', 'timestamp']
     )
-    df = df.groupby(["fips", "timestamp"]).sum().reindex(index_df).reset_index().fillna(0)
+    df = df.groupby(["fips", "timestamp"]).sum().reindex(index_df).reset_index()
+
+    # Fill na with forward filling
+    df = df.set_index("fips").groupby("fips").ffill().reset_index().fillna(0)
 
     # Merge in population
     df = pd.merge(df, pop_df, on="fips", how='left')

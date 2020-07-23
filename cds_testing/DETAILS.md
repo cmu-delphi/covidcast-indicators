@@ -73,8 +73,8 @@ https://www.census.gov/programs-surveys/geography/technical-documentation/county
 
 ## Negative incidence
 
-Negative incidence is possible and actually there is a large amount of negative incidence
-because figures are sometimes revised downwards, e.g., when a public health authority 
+Negative incidence is possible because figures are sometimes revised downwards, 
+e.g., when a public health authority 
 moves cases from County X to County Y, County X may have negative incidence. 
 This is totally dependent on the quality of the raw dataset.
 

@@ -68,8 +68,6 @@ def check_bad_geo_id(df_to_test, geo_type):
 
     find_all_unexpected_geo_ids(df_to_test, negated_regex_dict[geo_type])
 
-    
-
 def check_missing_dates(daily_filenames, sdate, edate):
     number_of_dates = edate - sdate + timedelta(days=1)
     date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days)}
@@ -89,12 +87,24 @@ def check_missing_dates(daily_filenames, sdate, edate):
         print(check_dateholes)
     
     return
+
+def check_bad_val(df_to_test):
+    if (df_to_test[(df_to_test['val'] > 100)].empty):
+        print("val column can't have any cell greater than 100")
+        sys.exit()
+    if (df_to_test.isnull().values.any()):
+        print("val column can't have any cell set to null")
+        sys.exit()
+    if (df_to_test[(df_to_test['val'] < 0)].empty):
+        print("val column can't have any cell smaller than 0")
+        sys.exit()
+
 def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
     if (max_weighted_date < generation_date - timedelta(days=4)
         or max_date < generation_date - timedelta(days=1)):
         sys.exit("latest date of generated file seems too long ago")
     return
-    
+
 
 def fbsurvey_validation(daily_filenames, sdate, edate):
     
@@ -150,4 +160,5 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
 
     check_min_allowed_max_date(generation_date, max_date, max_weighted_date)
     check_bad_geo_id(df_to_test, geo_type)
+    check_bad_val(df_to_test)
 

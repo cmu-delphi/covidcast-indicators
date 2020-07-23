@@ -3,5 +3,5 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "base_url": "https://coronadatascraper.com/timeseries-jhu.csv"
+  "base_url": "'https://coronadatascraper.com/timeseries.csv.zip'"
 }

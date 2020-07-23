@@ -1,6 +1,7 @@
 import sys
 import re
 import pandas as pd
+from pathlib import Path
 from datetime import date, datetime, timedelta
 from datafetcher import *
 
@@ -27,7 +28,11 @@ def main():
     print("Inside main")
     df_to_test = pd.read_csv(
                             "data/20200613_county_raw_cli.csv", 
-                             dtype={'geo_id': str, 'val': float, 'se': float, 'sample_size': float, 'effective_sample_size': float
+                             dtype={'geo_id': str, 
+                                    'val': float, 
+                                    'se': float, 
+                                    'sample_size': float, 
+                                    'effective_sample_size': float
                             })
 
     print(df_to_test.head())
@@ -41,22 +46,29 @@ def main():
     #validate_daily(df_to_test, nameformat, generation_date, max_check_lookbehind, sanity_check_rows_per_day, sanity_check_value_diffs, check_vs_working)
     print(date.today())
 
-def check_bad_geo_id(df_to_test, signal):
-    df[df['geo_id'].str.count('^*')>0]
-    switch(signal) {
-        case 'msa':      df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
-                         break;
-        case 'county':   df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
-                         break;
-        case 'state':    df_to_test[df_to_test['geo_id'].str.count('[A-Z]{2}') != 0]
-                         break;
-        case 'hrr':      df_to_test[df_to_test['geo_id'].str.count('\d{1,3}') != 0]
-                         break;
-        case 'national': df_to_test[df_to_test['geo_id'].str.count('\d{5}') != 0]
-                         break;
-        default: sys.exit("Unknown geo type.")
-        
+def check_bad_geo_id(df_to_test, geo_type):
+    if geo_type not in negated_regex_dict:
+        print("Unrecognized geo type:", geo_type )
+        sys.exit()
+    
+    def find_all_unexpected_geo_ids(df_to_test, negated_regex):
+        unexpected_geos = [ugeo[0] for ugeo in df_to_test['geo_id'].str.findall(negated_regex) if len(ugeo) > 0]
+        if(len(unexpected_geos) > 0):
+            print("Non-conforming geo_ids exist!")
+            print(unexpected_geos)
+            sys.exit()
+    
+    negated_regex_dict = {
+    'county': '^(?!\d{5}).*$',
+    'hrr': '^(?!\d{1,3}).*$',
+    'msa': '^(?!\d{5}).*$',
+    'state': '^(?![A-Z]{2}).*$'
+    'national': '(?!usa).*$'
     }
+
+    find_all_unexpected_geo_ids(df_to_test, negated_regex_dict[geo_type])
+
+    
 
 def check_missing_dates(daily_filenames, sdate, edate):
     number_of_dates = edate - sdate + timedelta(days=1)
@@ -86,6 +98,8 @@ def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
 
 def fbsurvey_validation(daily_filenames, sdate, edate):
     
+    data_folder = Path("data/")
+    
     check_missing_dates(daily_filenames, sdate, edate)
 
     # Examples:
@@ -99,6 +113,13 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
     filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
     for f in daily_filenames:
         # example: 20200624_county_smoothed_nohh_cmnty_cli
+        
+        df_to_test = pd.read_csv(
+                             data_folder / f, 
+                             dtype={'geo_id': str, 'val': float, 'se': float, 'sample_size': float, 'effective_sample_size': float
+                            })
+
+
         m = filename_regex.match(f)
         survey_date = datetime.strptime(m.group(1), '%Y%m%d').date()
         geo_type = m.group(2)
@@ -114,12 +135,6 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
         if (not m.group(0)):
             sys.exit('=nameformat= not recognized as a daily format') 
         
-        df_to_test = pd.read_csv(
-                            "data/20200613_county_raw_cli.csv", 
-                             dtype={'geo_id': str, 'val': float, 'se': float, 'sample_size': float, 'effective_sample_size': float
-                            })
-
-        
         try:
             df_ref = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
         except APIDataFetchError as e:
@@ -134,5 +149,5 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
             break
 
     check_min_allowed_max_date(generation_date, max_date, max_weighted_date)
-    check_bad_geo_id(df_to_test, signal)
+    check_bad_geo_id(df_to_test, geo_type)
 

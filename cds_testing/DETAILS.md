@@ -33,7 +33,7 @@ from the US Census Bureau.  https://www.census.gov/data/tables/time-series/demo/
 
 ## Exceptions
 
-At the County (FIPS) level, we report the data _exactly_ as JHU reports their
+At the County (FIPS) level, we report the data _exactly_ as CDS reports their
 data, to prevent confusing public consumers of the data.
 The visualization and modeling teams should take note of these exceptions.
 
@@ -58,7 +58,7 @@ counts in 303).
 ### Mismatched FIPS Codes
 
 Finally, there are two FIPS codes that were changed in 2015, leading to
-mismatch between us and JHU.  We report the data using the FIPS code used
+mismatch between us and CDS.  We report the data using the FIPS code used
 by CDS, again to promote consistency and avoid confusion by external users
 of the dataset.  For the mapping to MSA, HRR, these two counties are
 included properly.

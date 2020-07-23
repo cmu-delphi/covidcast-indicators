@@ -1,0 +1,401 @@
+name,level,city,county,state,country,population,aggregate,tz,cases,deaths,recovered,active,tested,hospitalized,hospitalized_current,discharged,icu,icu_current,growthFactor,date
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,307,,,,,,,,,,1.01,6/4/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,314,,,,,,,,,,1.02,6/5/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,326,,,,,,,,,,1.04,6/6/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,327,,,,,,,,,,1,6/7/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,330,,,,,,,,,,1.01,6/8/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,340,,,,,,,,,,1.03,6/9/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,348,,,,,,,,,,1.02,6/10/20
+"Yavapai County, Arizona, United States",county,,Yavapai County,Arizona,United States,235099,county,America/Phoenix,359,,,,,,,,,,1.03,6/11/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,922,,,,,,1,6/4/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,941,,,,,,1,6/5/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,950,,,,,,1,6/6/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,975,,,,,,1,6/7/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,,,,,,,,,1,6/8/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,1098,,,,,,1,6/9/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,1192,,,,,,1,6/10/20
+"Boone County, Arkansas, United States",county,,Boone County,Arkansas,United States,37432,county,America/Chicago,7,,5,2,1245,,,,,,1,6/11/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,23,2,17,4,457,,,,,,1.05,6/4/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,23,2,17,4,473,,,,,,1,6/5/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,23,2,17,4,489,,,,,,1,6/6/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,23,2,18,3,492,,,,,,1,6/7/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,25,2,,,,,,,,,1.09,6/8/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,26,2,19,5,525,,,,,,1.04,6/9/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,26,2,19,5,543,,,,,,1,6/10/20
+"Columbia County, Arkansas, United States",county,,Columbia County,Arkansas,United States,23457,county,America/Chicago,27,2,19,6,568,,,,,,1.04,6/11/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,7,,5,2,391,,,,,,1,6/4/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,7,,6,1,399,,,,,,1,6/5/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,7,,6,1,409,,,,,,1,6/6/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,7,,6,1,427,,,,,,1,6/7/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,8,,,,,,,,,,1.14,6/8/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,7,,7,,465,,,,,,0.88,6/9/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,8,,7,1,508,,,,,,1.14,6/10/20
+"Fulton County, Arkansas, United States",county,,Fulton County,Arkansas,United States,12477,county,America/Chicago,8,,7,1,544,,,,,,1,6/11/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,10,,8,2,403,,,,,,1.11,6/4/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,10,,8,2,410,,,,,,1,6/5/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,10,,8,2,413,,,,,,1,6/6/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,10,,8,2,435,,,,,,1,6/7/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,11,,,,,,,,,,1.1,6/8/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,11,,8,3,523,,,,,,1,6/9/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,11,,8,3,543,,,,,,1,6/10/20
+"Stone County, Arkansas, United States",county,,Stone County,Arkansas,United States,12506,county,America/Chicago,11,,8,3,568,,,,,,1,6/11/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,771,8,282,481,7081,,,,,,1.18,6/4/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,824,8,314,502,7329,,,,,,1.07,6/5/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,913,8,349,556,7548,,,,,,1.11,6/6/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,1016,8,372,636,7813,,,,,,1.11,6/7/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,1097,7,,,,,,,,,1.08,6/8/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,1185,7,462,716,8428,,,,,,1.08,6/9/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,1235,9,514,712,8804,,,,,,1.04,6/10/20
+"Washington County, Arkansas, United States",county,,Washington County,Arkansas,United States,239187,county,America/Chicago,1389,10,571,808,9194,,,,,,1.12,6/11/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,4,,,,,,,,,,1,6/4/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,4,,,,,,,,,,1,6/5/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1.25,6/6/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1,6/7/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1,6/8/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1,6/9/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1,6/10/20
+"Gilpin County, Colorado, United States",county,,Gilpin County,Colorado,United States,6097,county,America/Denver,5,,,,,,,,,,1,6/11/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,9,,,,390,,,,,,1.13,6/4/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,9,,,,390,,,,,,1,6/5/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,9,,,,390,,,,,,1,6/6/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,9,,,,390,,,,,,1,6/7/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,10,,,,,,,,,,1.11,6/8/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,13,,,,405,,,,,,1.3,6/9/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,12,,,,407,,,,,,0.92,6/10/20
+"Lafayette County, Florida, United States",county,,Lafayette County,Florida,United States,8422,county,America/New_York,12,,,,410,,,,,,1,6/11/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,110,4,,,3593,,,,,,1.01,6/4/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,110,4,,,3593,,,,,,1,6/5/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,110,4,,,3593,,,,,,1,6/6/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,110,4,,,3593,,,,,,1,6/7/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,114,4,,,,,,,,,1.04,6/8/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,114,4,,,3834,,,,,,1,6/9/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,116,5,,,3885,,,,,,1.02,6/10/20
+"Monroe County, Florida, United States",county,,Monroe County,Florida,United States,74228,county,America/New_York,120,4,,,3967,,,,,,1.03,6/11/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,3939,122,,,,692,,,,,1.02,6/4/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,3986,124,,,,699,,,,,1.01,6/5/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4008,125,,,,700,,,,,1.01,6/6/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4012,125,,,,700,,,,,1,6/7/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4054,125,,,,,,,,,1.01,6/8/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4120,135,,,,712,,,,,1.02,6/9/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4186,136,,,,714,,,,,1.02,6/10/20
+"DeKalb County, Georgia, United States",county,,DeKalb County,Georgia,United States,759297,county,America/New_York,4229,139,,,,725,,,,,1.01,6/11/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1794,149,,,,441,,,,,1,6/4/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1796,149,,,,441,,,,,1,6/5/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1803,149,,,,441,,,,,1,6/6/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1803,149,,,,441,,,,,1,6/7/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1806,149,,,,,,,,,1,6/8/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1818,149,,,,444,,,,,1.01,6/9/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1820,150,,,,445,,,,,1,6/10/20
+"Dougherty County, Georgia, United States",county,,Dougherty County,Georgia,United States,87956,county,America/New_York,1827,150,,,,447,,,,,1,6/11/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,45,1,,,,7,,,,,1.13,6/4/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,46,1,,,,7,,,,,1.02,6/5/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,47,1,,,,7,,,,,1.02,6/6/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,48,1,,,,7,,,,,1.02,6/7/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,49,1,,,,,,,,,1.02,6/8/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,51,1,,,,7,,,,,1.04,6/9/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,51,1,,,,7,,,,,1,6/10/20
+"Jasper County, Georgia, United States",county,,Jasper County,Georgia,United States,14219,county,America/New_York,55,1,,,,7,,,,,1.08,6/11/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,57,3,,,,11,,,,,1.02,6/4/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,59,3,,,,11,,,,,1.04,6/5/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,60,3,,,,11,,,,,1.02,6/6/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,61,3,,,,11,,,,,1.02,6/7/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,62,3,,,,,,,,,1.02,6/8/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,64,3,,,,11,,,,,1.03,6/9/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,65,3,,,,11,,,,,1.02,6/10/20
+"Pike County, Georgia, United States",county,,Pike County,Georgia,United States,18962,county,America/New_York,65,3,,,,11,,,,,1,6/11/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,833,19,,,6791,,,,,,1.01,6/4/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,839,19,,,6963,,,,,,1.01,6/5/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,845,19,,,7130,,,,,,1.01,6/6/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,846,19,,,7292,,,,,,1,6/7/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,874,22,,,,,,,,,1.03,6/8/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,853,19,,,7550,,,,,,0.98,6/9/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,863,19,,,7736,,,,,,1.01,6/10/20
+"Kendall County, Illinois, United States",county,,Kendall County,Illinois,United States,128990,county,America/Chicago,867,19,,,7891,,,,,,1,6/11/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/4/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/5/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/6/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/7/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,450,40,,,,,,,,,6,6/8/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,0.17,6/9/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/10/20
+"Howard County, Indiana, United States",county,,Howard County,Indiana,United States,82544,county,America/Indiana/Indianapolis,75,4,,,,,,,,,1,6/11/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,21,,11,10,,,,,,,1.24,6/4/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,21,,11,10,,,,,,,1,6/5/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,21,,11,10,,,,,,,1,6/6/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,21,,11,10,,,,,,,1,6/7/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,33,,,,,,,,,,1.57,6/8/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,33,,12,21,,,,,,,1,6/9/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,36,,12,24,,,,,,,1.09,6/10/20
+"Hardin County, Iowa, United States",county,,Hardin County,Iowa,United States,16846,county,America/Chicago,40,,12,28,,,,,,,1.11,6/11/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,10,,,,,,,,,,1,6/4/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,10,,,,,,,,,,1,6/5/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,10,,,,,,,,,,1,6/6/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,10,,,,,,,,,,1,6/7/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,11,,,,,,,,,,1.1,6/8/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,11,,,,,,,,,,1,6/9/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,11,,,,,,,,,,1,6/10/20
+"Linn County, Kansas, United States",county,,Linn County,Kansas,United States,9703,county,America/Chicago,11,,,,,,,,,,1,6/11/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,66,,53,13,,,,,,,1.02,6/4/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,70,,56,14,,,,,,,1.06,6/5/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,71,,56,15,,,,,,,1.01,6/6/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,71,,56,15,,,,,,,1,6/7/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,77,,,,,,,,,,1.08,6/8/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,77,,60,17,,,,,,,1,6/9/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,77,,63,14,,,,,,,1,6/10/20
+"Jessamine County, Kentucky, United States",county,,Jessamine County,Kentucky,United States,54115,county,America/New_York,77,,64,13,,,,,,,1,6/11/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,18,3,,,,,,,1.05,6/4/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/5/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/6/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/7/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,,,,,,,,,1,6/8/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/9/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/10/20
+"Meade County, Kentucky, United States",county,,Meade County,Kentucky,United States,28572,county,America/New_York,23,2,19,2,,,,,,,1,6/11/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7192,511,,,,,,,,,1,6/4/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7206,511,,,,,,,,,1,6/5/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7222,512,,,,,,,,,1,6/6/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7230,512,,,,,,,,,1,6/7/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7237,512,,,,,,,,,1,6/8/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7247,513,,,,,,,,,1,6/9/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7279,513,,,,,,,,,1,6/10/20
+"Orleans Parish, Louisiana, United States",county,,Orleans Parish,Louisiana,United States,390144,county,America/Chicago,7294,515,,,,,,,,,1,6/11/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,311,23,,,,,,,,,1.02,6/4/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,281,24,,,,,,,,,0.9,6/5/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,285,24,,,,,,,,,1.01,6/6/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,286,24,,,,,,,,,1,6/7/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,288,24,,,,,,,,,1.01,6/8/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,291,25,,,,,,,,,1.01,6/9/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,295,25,,,,,,,,,1.01,6/10/20
+"St. Martin Parish, Louisiana, United States",county,,St. Martin Parish,Louisiana,United States,53431,county,America/Chicago,307,25,,,,,,,,,1.04,6/11/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,95,,,,,,,,,,1,6/4/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,95,,,,,,,,,,1,6/5/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,95,,,,,,,,,,1,6/6/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,95,,,,,,,,,,1,6/7/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,254,2,,,,,,,,,2.67,6/8/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,257,2,,,,,,,,,1.01,6/9/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,261,2,,,,,,,,,1.02,6/10/20
+"Carver County, Minnesota, United States",county,,Carver County,Minnesota,United States,105089,county,America/Chicago,266,2,,,,,,,,,1.02,6/11/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,2,,,,,,,,,,1,6/4/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,2,,,,,,,,,,1,6/5/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,2,,,,,,,,,,1,6/6/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,2,,,,,,,,,,1,6/7/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,3,,,,,,,,,,1.5,6/8/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,3,,,,,,,,,,1,6/9/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,3,,,,,,,,,,1,6/10/20
+"Clearwater County, Minnesota, United States",county,,Clearwater County,Minnesota,United States,8818,county,America/Chicago,3,,,,,,,,,,1,6/11/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,155,11,,,,,,,,,1.01,6/4/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,156,11,,,,,,,,,1.01,6/5/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,164,11,,,,,,,,,1.05,6/6/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,165,11,,,,,,,,,1.01,6/7/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,168,11,,,,,,,,,1.02,6/8/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,172,11,,,,,,,,,1.02,6/9/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,173,11,,,,,,,,,1.01,6/10/20
+"Smith County, Mississippi, United States",county,,Smith County,Mississippi,United States,15916,county,America/Chicago,173,11,,,,,,,,,1,6/11/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,29,,,,,,,,,,1.07,6/4/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,29,,,,,,,,,,1,6/5/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,29,,,,,,,,,,1,6/6/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,29,,,,,,,,,,1,6/7/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,28,,,,,,,,,,0.97,6/8/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,28,,,,,,,,,,1,6/9/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,28,,,,,,,,,,1,6/10/20
+"Christian County, Missouri, United States",county,,Christian County,Missouri,United States,88595,county,America/Chicago,28,,,,,,,,,,1,6/11/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,10,,,,,,,,,,1.11,6/4/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,10,,,,,,,,,,1,6/5/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,10,,,,,,,,,,1,6/6/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,10,,,,,,,,,,1,6/7/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,15,,,,,,,,,,1.5,6/8/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,14,,,,,,,,,,0.93,6/9/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,17,,,,,,,,,,1.21,6/10/20
+"Howell County, Missouri, United States",county,,Howell County,Missouri,United States,40117,county,America/Chicago,18,,,,,,,,,,1.06,6/11/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,33,,,,359,2,,,,,1,6/4/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,34,,,,366,2,,,,,1.03,6/5/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,34,,,,372,2,,,,,1,6/6/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,35,,,,375,2,,,,,1.03,6/7/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,36,,,,,,,,,,1.03,6/8/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,36,,,,395,2,,,,,1,6/9/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,36,,,,403,2,,,,,1,6/10/20
+"Merrick County, Nebraska, United States",county,,Merrick County,Nebraska,United States,7755,county,America/Chicago,37,,,,422,2,,,,,1.03,6/11/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,320,1,,,,,1,6/4/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,322,1,,,,,1,6/5/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,331,1,,,,,1,6/6/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,331,1,,,,,1,6/7/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,,,,,,,1,6/8/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,350,2,,,,,1,6/9/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,356,2,,,,,1,6/10/20
+"Phelps County, Nebraska, United States",county,,Phelps County,Nebraska,United States,9034,county,America/Chicago,20,,,,360,2,,,,,1,6/11/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,203,3,,,,,,,,,1.04,6/4/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,208,3,,,,,,,,,1.02,6/5/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,215,3,,,,,,,,,1.03,6/6/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,216,3,,,,,,,,,1,6/7/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,217,3,,,,,,,,,1,6/8/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,221,3,,,,,,,,,1.02,6/9/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,225,4,,,,,,,,,1.02,6/10/20
+"Yadkin County, North Carolina, United States",county,,Yadkin County,North Carolina,United States,37667,county,America/New_York,225,4,,,,,,,,,1,6/11/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,45,,,,,,,,,,1,6/4/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,47,,,,,,,,,,1.04,6/5/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,47,,,,,,,,,,1,6/6/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,47,,,,,,,,,,1,6/7/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,48,,,,,,,,,,1.02,6/8/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,48,,,,,,,,,,1,6/9/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,49,,,,,,,,,,1.02,6/10/20
+"Clinton County, Ohio, United States",county,,Clinton County,Ohio,United States,41968,county,America/New_York,50,,,,,,,,,,1.02,6/11/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,53,1,,,,,,,,,1.04,6/4/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,53,1,,,,,,,,,1,6/5/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,54,1,,,,,,,,,1.02,6/6/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,56,1,,,,,,,,,1.04,6/7/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,58,1,,,,,,,,,1.04,6/8/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,60,1,,,,,,,,,1.03,6/9/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,60,1,,,,,,,,,1,6/10/20
+"Hancock County, Ohio, United States",county,,Hancock County,Ohio,United States,75783,county,America/New_York,61,1,,,,,,,,,1.02,6/11/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/4/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/5/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/6/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/7/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,,,,,,,,,1,6/8/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/9/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,35,2,33,,,,,,,,1,6/10/20
+"Ottawa County, Oklahoma, United States",county,,Ottawa County,Oklahoma,United States,31127,county,America/Chicago,36,2,33,1,,,,,,,1.03,6/11/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,16,,,,1680,,,,,,1,6/4/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,16,,,,1722,,,,,,1,6/5/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,16,,,,1722,,,,,,1,6/6/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,16,,,,1722,,,,,,1,6/7/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,16,,,,,,,,,,1,6/8/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,17,,,,1812,,,,,,1.06,6/9/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,17,,,,1837,,,,,,1,6/10/20
+"Columbia County, Oregon, United States",county,,Columbia County,Oregon,United States,52354,county,America/Los_Angeles,17,,,,1887,,,,,,1,6/11/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,210,3,,,,,,,,,1,6/4/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,210,3,,,,,,,,,1,6/5/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,210,3,,,,,,,,,1,6/6/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,210,3,,,,,,,,,1,6/7/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,273,5,,,,,,,,,1.3,6/8/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,283,5,,,,,,,,,1.04,6/9/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,287,5,,,,,,,,,1.01,6/10/20
+"Orangeburg County, South Carolina, United States",county,,Orangeburg County,South Carolina,United States,86175,county,America/New_York,301,5,,,,,,,,,1.05,6/11/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,17,1,,,,,,,,,1,6/4/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,18,1,,,,,,,,,1.06,6/5/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,18,1,,,,,,,,,1,6/6/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,18,1,,,,,,,,,1,6/7/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,18,1,,,,,,,,,1,6/8/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,23,1,,,,,,,,,1.28,6/9/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,24,1,,,,,,,,,1.04,6/10/20
+"DeWitt County, Texas, United States",county,,DeWitt County,Texas,United States,20160,county,America/Chicago,25,1,,,,,,,,,1.04,6/11/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/4/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/5/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/6/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/7/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/8/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/9/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/10/20
+"Fisher County, Texas, United States",county,,Fisher County,Texas,United States,3830,county,America/Chicago,2,1,,,,,,,,,1,6/11/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,25,1,,,,,,,,,1.04,6/4/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,26,1,,,,,,,,,1.04,6/5/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,27,1,,,,,,,,,1.04,6/6/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,29,1,,,,,,,,,1.07,6/7/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,29,1,,,,,,,,,1,6/8/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,30,1,,,,,,,,,1.03,6/9/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,30,1,,,,,,,,,1,6/10/20
+"Hill County, Texas, United States",county,,Hill County,Texas,United States,36649,county,America/Chicago,33,1,,,,,,,,,1.1,6/11/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,4,,,,,,,,,,1.33,6/4/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,5,,,,,,,,,,1.25,6/5/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,5,,,,,,,,,,1,6/6/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,5,,,,,,,,,,1,6/7/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,5,,,,,,,,,,1,6/8/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,7,,,,,,,,,,1.4,6/9/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,7,,,,,,,,,,1,6/10/20
+"Lipscomb County, Texas, United States",county,,Lipscomb County,Texas,United States,3233,county,America/Chicago,7,,,,,,,,,,1,6/11/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,71,,,,,,,,,,1.03,6/4/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,88,,,,,,,,,,1.24,6/5/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,89,,,,,,,,,,1.01,6/6/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,89,,,,,,,,,,1,6/7/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,89,,,,,,,,,,1,6/8/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,98,,,,,,,,,,1.1,6/9/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,98,,,,,,,,,,1,6/10/20
+"Parmer County, Texas, United States",county,,Parmer County,Texas,United States,9605,county,America/Chicago,100,,,,,,,,,,1.02,6/11/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,65,1,,,,,,,,,1.02,6/4/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,66,1,,,,,,,,,1.02,6/5/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,66,1,,,,,,,,,1,6/6/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,66,1,,,,,,,,,1,6/7/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,66,1,,,,,,,,,1,6/8/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,66,1,,,,,,,,,1,6/9/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,67,1,,,,,,,,,1.02,6/10/20
+"Bennington County, Vermont, United States",county,,Bennington County,Vermont,United States,35470,county,America/New_York,67,1,,,,,,,,,1,6/11/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,77,,,,,,,,,,1.05,6/4/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,78,,,,,,,,,,1.01,6/5/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,79,,,,,,,,,,1.01,6/6/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,79,,,,,,,,,,1,6/7/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,79,,,,,,,,,,1,6/8/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,80,,,,,,,,,,1.01,6/9/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,80,,,,,,,,,,1,6/10/20
+"Adams County, Washington, United States",county,,Adams County,Washington,United States,19983,county,America/Los_Angeles,89,,,,,,,,,,1.11,6/11/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,212,4,,,,,,,,,1,6/4/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,214,4,,,,,,,,,1.01,6/5/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,215,4,,,,,,,,,1,6/6/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,216,4,,,,,,,,,1,6/7/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,283,3,,,,,,,,,1.31,6/8/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,222,4,,,,,,,,,0.78,6/9/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,222,4,,,,,,,,,1,6/10/20
+"Grant County, Washington, United States",county,,Grant County,Washington,United States,97733,county,America/Los_Angeles,235,4,,,,,,,,,1.06,6/11/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,53,1,,,,,,,,,1.02,6/4/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,52,1,,,,,,,,,0.98,6/5/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,56,1,,,,,,,,,1.08,6/6/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,56,1,,,,,,,,,1,6/7/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,67,2,,,,,,,,,1.2,6/8/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,56,1,,,,,,,,,0.84,6/9/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,56,1,,,,,,,,,1,6/10/20
+"Okanogan County, Washington, United States",county,,Okanogan County,Washington,United States,42243,county,America/Los_Angeles,56,1,,,,,,,,,1,6/11/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,0.75,6/4/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/5/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/6/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/7/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/8/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/9/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/10/20
+"Skamania County, Washington, United States",county,,Skamania County,Washington,United States,12083,county,America/Los_Angeles,3,,,,,,,,,,1,6/11/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,336,7,,,,,,,,,1.03,6/4/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,340,8,,,,,,,,,1.01,6/5/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,343,8,,,,,,,,,1.01,6/6/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,344,8,,,,,,,,,1,6/7/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,347,8,,,,,,,,,1.01,6/8/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,353,8,,,,,,,,,1.02,6/9/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,361,8,,,,,,,,,1.02,6/10/20
+"Berkeley County, West Virginia, United States",county,,Berkeley County,West Virginia,United States,119171,county,America/New_York,369,8,,,,,,,,,1.02,6/11/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,48,1,,,,,,,,,1.02,6/4/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,50,1,,,,,,,,,1.04,6/5/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,51,1,,,,,,,,,1.02,6/6/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,50,1,,,,,,,,,0.98,6/7/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,50,1,,,,,,,,,1,6/8/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,51,1,,,,,,,,,1.02,6/9/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,51,1,,,,,,,,,1,6/10/20
+"Mineral County, West Virginia, United States",county,,Mineral County,West Virginia,United States,26868,county,America/New_York,51,2,,,,,,,,,1,6/11/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/4/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/5/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/6/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/7/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/8/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,1,,,,,,,,,,1,6/9/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,2,,,,,,,,,,2,6/10/20
+"Ritchie County, West Virginia, United States",county,,Ritchie County,West Virginia,United States,9554,county,America/New_York,2,,,,,,,,,,1,6/11/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,409,,,,,,1,6/4/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,412,,,,,,1,6/5/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,418,,,,,,1,6/6/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,448,,,,,,1,6/7/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,,,,,,,1,6/8/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,460,,,,,,1,6/9/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,465,,,,,,1,6/10/20
+"Bayfield County, Wisconsin, United States",county,,Bayfield County,Wisconsin,United States,15036,county,America/Chicago,3,1,,,471,,,,,,1,6/11/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,36,1,,,930,,,,,,1,6/4/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,36,1,,,947,,,,,,1,6/5/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,36,1,,,976,,,,,,1,6/6/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,36,1,,,1006,,,,,,1,6/7/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,36,1,,,,,,,,,1,6/8/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,37,1,,,1037,,,,,,1.03,6/9/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,37,1,,,1055,,,,,,1,6/10/20
+"Kewaunee County, Wisconsin, United States",county,,Kewaunee County,Wisconsin,United States,20434,county,America/Chicago,37,1,,,1073,,,,,,1,6/11/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,124,,,,,,,,,,1.06,6/4/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,125,,,,,,,,,,1.01,6/5/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,128,,,,,,,,,,1.02,6/6/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,131,,,,,,,,,,1.02,6/7/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,132,,,,,,,,,,1.01,6/8/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,136,,,,,,,,,,1.03,6/9/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,136,,,,,,,,,,1,6/10/20
+"Ponce Municipio, Puerto Rico, United States",county,,Ponce Municipio,Puerto Rico,United States,,county,America/Puerto_Rico,135,,,,,,,,,,0.99,6/11/20

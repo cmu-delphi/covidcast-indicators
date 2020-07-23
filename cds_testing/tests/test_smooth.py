@@ -10,17 +10,17 @@ from delphi_cds_testing.run import run_module
 class TestSmooth:
     def test_output_files_smoothed(self, run_as_module):
 
-        dates = [str(x) for x in range(20200304, 20200311)]
+        dates = [str(x) for x in range(20200604, 20200611)]
 
         smoothed = pd.read_csv(
             join("receiving",
-                f"{dates[-1]}_state_confirmed_wip_7dav_cumulative_num.csv")
+                f"{dates[-1]}_state_wip_7dav_cumulative_num.csv")
         )
 
         raw = pd.concat([
             pd.read_csv(
                 join("receiving",
-                    f"{date}_state_confirmed_cumulative_num.csv")
+                    f"{date}_state_cumulative_num.csv")
             ) for date in dates
         ])
 

@@ -79,8 +79,8 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
         columns = list(df.columns)
         columns.remove("fips")
         columns.remove("cumulative_counts")
-        # Detects whether there is a non-date string column -- not perfect
-        assert columns == ["timestamp"]
+        columns.remove("timestamp")
+        _ = np.vstack((columns, []))
     except ValueError as e:
         print(e)
         raise ValueError(

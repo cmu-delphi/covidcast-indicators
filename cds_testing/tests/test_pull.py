@@ -16,7 +16,7 @@ countyname_to_fips_df = pd.read_csv(
 
 
 
-class TestPullJHU:
+class TestPullCDS:
     def test_good_file(self):
 
         df = pull_cds_data(join("test_data", "small.csv"), countyname_to_fips_df, pop_df)
@@ -25,13 +25,6 @@ class TestPullJHU:
             df.columns.values
             == ["fips", "timestamp", "population", "new_counts", "cumulative_counts"]
         ).all()
-
-    def test_missing_days(self):
-
-        with pytest.raises(ValueError):
-            df = pull_cds_data(
-                join("test_data", "bad_missing_days.csv"), countyname_to_fips_df, pop_df
-            )
 
     def test_missing_cols(self):
 

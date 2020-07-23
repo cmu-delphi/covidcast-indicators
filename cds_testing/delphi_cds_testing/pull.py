@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import pandas as pd   
+import pandas as pd
 
 def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
                   pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Pulls the latest Testing data from Corona Data Scraper, and conforms 
+    """Pulls the latest Testing data from Corona Data Scraper, and conforms
     it into a dataset
 
     The output dataset has:
@@ -18,10 +18,10 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
     Note that the raw dataset gives the `cumulative_counts` metric, from which
     we compute `new_counts` by taking first differences.  Hence, `new_counts`
     may be negative.  This is wholly dependent on the quality of the raw
-    dataset. 
+    dataset.
 
-    We replace all of the FIPS in PR to 72000 since we don't have detailed 
-    population information yet. 
+    We replace all of the FIPS in PR to 72000 since we don't have detailed
+    population information yet.
 
     Parameters
     ----------
@@ -29,7 +29,7 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
         Base URL for pulling the CDS data
     countyname_to_fips.csv: str
         Read from static file which includes the mapping info from county names
-        to FIPS code. This is according to the location meta 
+        to FIPS code. This is according to the location metadata
         (https://coronadatascraper.com/locations.json) provided by CDS.
     pop_df: pd.DataFrame
         Read from static file "fips_population.csv".
@@ -48,22 +48,22 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
     ]
 
     # Read data
-    df = pd.read_csv(base_url, low_memory=False, parse_dates = ["date"]).rename(
-        {"date": "timestamp", "tested": "cumulative_counts"}, axis = 1
+    df = pd.read_csv(base_url, low_memory=False, parse_dates=["date"]).rename(
+        {"date": "timestamp", "tested": "cumulative_counts"}, axis=1
     )
     # Get fips code
-    df = df.merge(countyname_to_fips_df, on = "name", how = "left")
+    df = df.merge(countyname_to_fips_df, on="name", how="left")
 
     df = df[
         (
             (df["country"] == "United States")  # US only
             & (df["level"] == "county") # county level only
-        )  
+        )
     ]
-    
+
     # Manual correction for PR
     df.loc[df["fips"] // 1000 == 72, "fips"] = 72000
-    
+
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
         df.drop(DROP_COLUMNS, axis=1, inplace=True)
@@ -73,7 +73,7 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
             "schema may have changed.  Please investigate and "
             "amend DROP_COLUMNS."
         )
-    
+
     # Check that columns are either FIPS or dates
     try:
         columns = list(df.columns)
@@ -89,21 +89,21 @@ def pull_cds_data(base_url: str, countyname_to_fips_df: pd.DataFrame,
             "schema may have changed. Please investigate and "
             "amend DROP_COLUMNS."
         )
-     
+
     # Fill in missing dates and combine rows for PR
     FIPS_LIST = df["fips"].unique()
     DATE_LIST = pd.date_range(start=df["timestamp"].min(), end=df["timestamp"].max())
     index_df = pd.MultiIndex.from_product(
         [FIPS_LIST, DATE_LIST], names=['fips', 'timestamp']
     )
-    df = df.groupby(["fips","timestamp"]).sum().reindex(index_df).reset_index().fillna(0)
-    
-    # Merge in population 
+    df = df.groupby(["fips", "timestamp"]).sum().reindex(index_df).reset_index().fillna(0)
+
+    # Merge in population
     df = pd.merge(df, pop_df, on="fips", how='left')
-    
+
     # Conform FIPS
     df["fips"] = df["fips"].apply(lambda x: f"{int(x):05d}")
-                
+
     # Add a dummy first row here on day before first day
     min_ts = min(df["timestamp"])
     df_dummy = df.loc[df["timestamp"] == min_ts].copy()

@@ -11,10 +11,11 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import read_params
 
 from .geo import geo_map
 from .pull import pull_cds_data
+from .export import create_export_csv
 from .smooth import (
     identity,
     kday_moving_average,
@@ -73,17 +74,17 @@ def run_module():
         join(static_file_dir, "fips_population.csv"),
         dtype={"fips": int, "population": float},
     )
-    
+
     countyname_to_fips_df = pd.read_csv(
         join(static_file_dir, "countyname_to_fips.csv"), dtype={"fips": int}
     )[["fips", "name"]]
 
-    df = pull_cds_data(base_url, countyname_to_fips_df, pop_df)
+    pulled_df = pull_cds_data(base_url, countyname_to_fips_df, pop_df)
     for geo_res, sensor, smoother in product(
             GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         print(geo_res, sensor, smoother)
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df, sensor)
+        df = geo_map(pulled_df, geo_res, map_df)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

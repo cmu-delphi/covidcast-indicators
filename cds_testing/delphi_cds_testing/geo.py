@@ -130,7 +130,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
+def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.
@@ -144,10 +144,6 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         ('county', 'state', 'msa', 'hrr').
     map_df: pd.DataFrame
         Loaded from static file "fips_prop_pop.csv".
-    sensor: str
-        sensor type. Valid options:
-        ("new_counts", "cumulative_counts",
-        "incidence", "cumulative_prop")
 
     Returns
     -------
@@ -157,6 +153,8 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
+
+    df = df.copy()
 
     if geo_res == "county":
         df["geo_id"] = df["fips"]

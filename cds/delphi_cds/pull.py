@@ -22,7 +22,7 @@ def pull_cds_data(base_url: str, metric: str, level: str,
 
     We replace all of the FIPS in PR to 72000 since we don't have detailed
     population information yet.
-    
+
     Special States:
         Guam, United States
         United States Virgin Islands, United States
@@ -61,19 +61,19 @@ def pull_cds_data(base_url: str, metric: str, level: str,
         "tested":("cases", "tested"),
         "confirmed": ("tested", "cases"),
     }
-    
+
     # Constants
     DROP_COLUMNS = ["population", "level", "city", "county",
                 "lat", "long", "url", "name", "country", "state",
                 "aggregate", "tz", "deaths", "recovered",
                 "active", "hospitalized", "hospitalized_current",
                 "discharged", "icu", "icu_current", "growthFactor"
-    ]    
+    ]
     DROP_COLUMNS.append(METRIC_to_DROP_KEEP_DICT[metric][0])
-    
+
     # Read data
     df = pd.read_csv(base_url, low_memory=False, parse_dates=["date"]).rename(
-        {"date": "timestamp", 
+        {"date": "timestamp",
          METRIC_to_DROP_KEEP_DICT[metric][1]: "cumulative_counts"}, axis=1
     )
 

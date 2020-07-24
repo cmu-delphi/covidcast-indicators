@@ -115,6 +115,18 @@ def check_bad_se(df):
         print("se must be in (0,min(50,val*(1+eps))]")
         sys.exit()
 
+def check_bad_sample_size(df):
+    if(df['sample_size'].isnull.values.any() | df['effective_sample_size'].isnull.values.any()):
+        print("sample size can't be NA")
+        sys.exit()
+    
+    qresult = df.query('(sample_size < 100) | (effective_sample_size < 100)')
+
+    if not qresult.empty:
+        print("sample size must be >= 100")
+        sys.exit()
+
+
 def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
     if (max_weighted_date < generation_date - timedelta(days=4)
         or max_date < generation_date - timedelta(days=1)):
@@ -178,4 +190,5 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
     check_bad_geo_id(df_to_test, geo_type)
     check_bad_val(df_to_test)
     check_bad_se(df_to_test)
+    check_bad_sample_size(df_to_test)
 

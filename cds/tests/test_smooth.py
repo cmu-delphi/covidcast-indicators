@@ -5,7 +5,7 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_cds_testing.run import run_module
+from delphi_cds.run import run_module
 
 class TestSmooth:
     def test_output_files_smoothed(self, run_as_module):
@@ -14,13 +14,13 @@ class TestSmooth:
 
         smoothed = pd.read_csv(
             join("receiving",
-                f"{dates[-1]}_state_wip_7dav_cumulative_num.csv")
+                f"{dates[-1]}_state_wip_tested_7dav_cumul_num.csv")
         )
 
         raw = pd.concat([
             pd.read_csv(
                 join("receiving",
-                    f"{date}_state_cumulative_num.csv")
+                    f"{date}_state_tested_cumulative_num.csv")
             ) for date in dates
         ])
 

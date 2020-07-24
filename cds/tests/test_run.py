@@ -4,7 +4,7 @@ from os import listdir
 from os.path import join
 
 import pandas as pd
-from delphi_cds_testing.run import run_module
+from delphi_cds.run import run_module
 
 
 class TestRun:
@@ -13,7 +13,6 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200603",
             "20200604",
             "20200605",
             "20200606",
@@ -27,11 +26,11 @@ class TestRun:
             "cumulative_num",
             "incidence_num",
             "incidence_prop",
-            "cumulative_num",
-            "incidence_num",
-            "incidence_prop",
-            "wip_7dav_cumulative_prop",
-            "wip_7dav_cumulative_prop",
+            "cumulative_prop",
+            "7dav_cumulative_prop",
+            "7dav_cumulative_num",
+            "7dav_incidence_num",
+            "7dav_incidence_prop",
         ]
 
         expected_files = []
@@ -45,6 +44,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "20200610_state_cumulative_num.csv")
+            join("receiving", "20200610_state_tested_cumulative_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

@@ -4,7 +4,7 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_cds_testing.geo import fips_to_state, disburse, geo_map
+from delphi_cds.geo import fips_to_state, disburse, geo_map
 
 MAP_DF = pd.read_csv(
     join("..", "static", "fips_prop_pop.csv"),

@@ -1,7 +1,6 @@
 import sys
 import re
 import pandas as pd
-import numpy as np
 from pathlib import Path
 from datetime import date, datetime, timedelta
 from datafetcher import *
@@ -107,8 +106,8 @@ def check_bad_se(df):
     
     df.eval('se_upper_limit = (val * effective_sample_size + 50)/(effective_sample_size + 1)', inplace=True)
 
-    df['se']= df['se'].round(6)
-    df['se_upper_limit'] = df['se_upper_limit'].apply(np.ceil)
+    df['se']= df['se'].round(3)
+    df['se_upper_limit'] = df['se_upper_limit'].round(3)
 
     result = df.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 

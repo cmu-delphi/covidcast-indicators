@@ -151,7 +151,7 @@ def run_module():
         df["pct_positive"] = df["val_confirmed"] / df["val_tested"] * 100
         df.loc[
             (df["val_confirmed"] == 0) & (df["val_tested"] == 0), "pct_positive"
-        ]
+        ] = 0
         df["val"] = SMOOTHERS_MAP[smoother][0](df["pct_positive"].values)
         df["sample_size"] = df["val_tested"]
         # Drop early entries where data insufficient for smoothing

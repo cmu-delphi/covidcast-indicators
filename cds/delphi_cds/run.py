@@ -149,6 +149,9 @@ def run_module():
                       how="inner")[["geo_id", "timestamp",
                                       "val_tested", "val_confirmed"]]
         df["pct_positive"] = df["val_confirmed"] / df["val_tested"] * 100
+        df.loc[
+            (df["val_confirmed"] == 0) & (df["val_tested"] == 0), "pct_positive"
+        ]
         df["val"] = SMOOTHERS_MAP[smoother][0](df["pct_positive"].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan
@@ -157,6 +160,7 @@ def run_module():
             (~df["val"].isnull())
             & (df["val"] >= 0)
             & (df["val"] <= 100)
+            & (df["val_tested"] >= 50)
         ]
         if smoother == "unsmoothed":
             sensor_name = "raw"

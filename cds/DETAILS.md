@@ -17,9 +17,15 @@ consistency how CDS reports the data, please refer to [Exceptions](#Exceptions).
 
 **Note that, we report msa/hrr level data based on county level information. 
 As for state level data, we use county level aggregates for confirmed cases but 
-state level data directly from the raw for tested and positivity rate.** This is because
-the cds testing data has a coverage over all states at state level, but not all states 
+state level data directly from the raw for tested.** This is because
+the CDS testing data has a coverage over all states at state level, but not all states 
 are represented at the county level. 
+
+## Metrics, Level 1 (`m1`)
+* `confirmed`: Confirmed cases
+* `tested`
+
+Recoveries and Deaths are _not_ reported.
 
 ## Metrics, Level 2 (`m2`)
 * `new_counts`: number of new {confirmed cases, deaths} on a given day
@@ -35,21 +41,21 @@ discrete difference of `cumulative_counts`,  and assume that the
 For deriving `incidence`, we use the estimated 2019 county population values
 from the US Census Bureau.  https://www.census.gov/data/tables/time-series/demo/popest/2010s-counties-total.html
 
+**We also report positivity rate according to confirmed incidence number and tested incidence number.**
+
 ## Exceptions
-At the state level, we report the data _exactly_ as CDS reports their
-data, to prevent confusing public consumers of the data. However, due to 
-the lack of population information, we ignore the four areas below:
+At the state and County (FIPS) level, we report the data _exactly_ as CDS reports their
+data, to prevent confusing public consumers of the data. 
+The visualization and modeling teams should take note of these exceptions.
+
+### Ignored Areas at State Level
+Due to the lack of population information, we ignore the four areas listed below:
 |Name        |
 |-------------------|
 |Guam     |
 |United States Virgin Islands           |
 |Northern Mariana Islands              |
 |Washington, D.C.          |
-
-
-At the County (FIPS) level, we report the data _exactly_ as CDS reports their
-data, to prevent confusing public consumers of the data.
-The visualization and modeling teams should take note of these exceptions.
 
 ### Mismatched FIPS Codes
 
@@ -78,6 +84,11 @@ This is totally dependent on the quality of the raw dataset.
 
 Because the MSA and HRR numbers are computed by taking population-weighted
 averages, the count data at those geographical levels may be non-integral.
+
+## Infinity and negative positivity rate
+The positivity rate is possible to be infinity or negative numbers caused by the problems in the
+raw data. However, we _do not_ report those cases to avoid unexplainatory numbers. Besides, we also
+set a threshold `tested >= 50` when reporting the positivity rate.
 
 ## Counties not in our canonical dataset
 

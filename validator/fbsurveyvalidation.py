@@ -89,14 +89,30 @@ def check_missing_dates(daily_filenames, sdate, edate):
     return
 
 def check_bad_val(df_to_test):
-    if (df_to_test[(df_to_test['val'] > 100)].empty):
+    if (not df_to_test[(df_to_test['val'] > 100)].empty):
         print("val column can't have any cell greater than 100")
         sys.exit()
     if (df_to_test.isnull().values.any()):
         print("val column can't have any cell set to null")
         sys.exit()
-    if (df_to_test[(df_to_test['val'] < 0)].empty):
+    if (not df_to_test[(df_to_test['val'] < 0)].empty):
         print("val column can't have any cell smaller than 0")
+        sys.exit()
+
+def check_bad_se(df):
+    if (df['se'].isnull().values.any()):
+        print("se must not be NA")
+        sys.exit()
+    
+    df.eval('se_upper_limit = (val * effective_sample_size + 50)/(effective_sample_size + 1)', inplace=True)
+
+    df['se']= df['se'].round(6)
+    df['se_upper_limit'] = df['se_upper_limit'].apply(np.ceil)
+
+    result = df.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+
+    if not result.empty:
+        print("se must be in (0,min(50,val*(1+eps))]")
         sys.exit()
 
 def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
@@ -161,4 +177,5 @@ def fbsurvey_validation(daily_filenames, sdate, edate):
     check_min_allowed_max_date(generation_date, max_date, max_weighted_date)
     check_bad_geo_id(df_to_test, geo_type)
     check_bad_val(df_to_test)
+    check_bad_se(df_to_test)
 

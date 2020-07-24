@@ -155,8 +155,8 @@ def run_module():
         # Drop early entries where data insufficient for smoothing
         df = df.loc[
             (~df["val"].isnull())
-            | (df["val"] < 0)
-            | (df["val"] > 100)
+            & (df["val"] >= 0)
+            & (df["val"] <= 100)
         ]
         if smoother == "unsmoothed":
             sensor_name = "raw"

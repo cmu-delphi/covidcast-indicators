@@ -86,8 +86,8 @@ Because the MSA and HRR numbers are computed by taking population-weighted
 averages, the count data at those geographical levels may be non-integral.
 
 ## Infinity and negative positivity rate
-The positivity rate is possible to be infinity or negative numbers caused by the problems in the
-raw data. However, we _do not_ report those cases to avoid unexplainatory numbers. Besides, we also
+The positivity rate is possible to be infinity or negative numbers due the problems in the
+raw data. However, we _do not_ report those them to avoid unexplainatory numbers. Besides, we also
 set a threshold `tested >= 50` when reporting the positivity rate.
 
 ## Counties not in our canonical dataset

@@ -153,8 +153,7 @@ def run_module():
             (df["val_confirmed"] == 0) & (df["val_tested"] == 0), "pct_positive"
         ]
         df["val"] = SMOOTHERS_MAP[smoother][0](df["pct_positive"].values)
-        df["se"] = np.nan
-        df["sample_size"] = np.nan
+        df["sample_size"] = df["val_tested"]
         # Drop early entries where data insufficient for smoothing
         df = df.loc[
             (~df["val"].isnull())
@@ -162,6 +161,7 @@ def run_module():
             & (df["val"] <= 100)
             & (df["val_tested"] >= 50)
         ]
+        df["se"] = np.sqrt(df["val"] * (1-df["val"]) / df["sample_size"])
         if smoother == "unsmoothed":
             sensor_name = "raw"
             metric = "pct_positive"

@@ -5,3 +5,6 @@ indicators_runtime_dir: "/home/{{ runtime_user }}/runtime"
 package: "{{ indicator }}.tar.gz" # This is passed in the Ansible invocation.
 python_version: "3.8.2"
 pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }}/bin/python"
+
+# Indicators variables.
+google_health_api_key: "{{ vault_google_health_api_key }}"

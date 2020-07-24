@@ -161,7 +161,9 @@ def run_module():
             & (df["val"] <= 100)
             & (df["val_tested"] >= 50)
         ]
-        df["se"] = np.sqrt(df["val"] * (1-df["val"]) / df["sample_size"])
+        df.loc[df["sample_size"] == 0, "se"] = 0
+        df.loc[df["sample_size"] > 0, "se"] = np.sqrt(
+            df["val"]/100 * (1-df["val"]/100) / df["sample_size"])
         if smoother == "unsmoothed":
             sensor_name = "raw"
             metric = "pct_positive"

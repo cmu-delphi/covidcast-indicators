@@ -29,11 +29,11 @@ GEO_RESOLUTIONS = [
 ]
 SENSORS = [
     "wip_smoothed_pct_positive",
-    "raw_pct_positive"
+    "wip_raw_pct_positive"
 ]
 SMOOTHERS = {
     "wip_smoothed_pct_positive": True,
-    "raw_pct_positive": False
+    "wip_raw_pct_positive": False
 }
 
 def run_module():
@@ -93,7 +93,7 @@ def run_module():
     raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth=False,
                                                             first_date=first_date,
                                                             last_date=last_date)
-    export_csv(raw_state_df, "state", "raw_pct_positive", receiving_dir=export_dir,
+    export_csv(raw_state_df, "state", "wip_raw_pct_positive", receiving_dir=export_dir,
                start_date=export_start_date, end_date=export_end_date)
     # Compute smoothed signal
     smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth=True,

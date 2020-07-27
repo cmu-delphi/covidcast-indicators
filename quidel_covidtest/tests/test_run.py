@@ -27,7 +27,7 @@ class TestRun:
         ]
         geos = ["county", "hrr", "msa", "state"]
         sensors = [
-            "raw_pct_positive",
+            "wip_raw_pct_positive",
             "wip_smoothed_pct_positive"
         ]
 
@@ -41,7 +41,7 @@ class TestRun:
         
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200610_state_raw_pct_positive.csv")
+            join("./receiving", "20200610_state_wip_raw_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
         

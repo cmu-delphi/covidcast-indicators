@@ -20,7 +20,7 @@ class TestSmooth:
         raw = pd.concat([
             pd.read_csv(
                 join("receiving",
-                    f"{date}_state_tested_cumulative_num.csv")
+                    f"{date}_state_wip_tested_cumulative_num.csv")
             ) for date in dates
         ])
 

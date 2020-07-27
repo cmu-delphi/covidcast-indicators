@@ -37,13 +37,13 @@ class TestRun:
         for date in dates:
             for geo in geos:
                 for metric in metrics:
-                    expected_files += [date + "_" + geo + "_" + metric + ".csv"]
+                    expected_files += [date + "_" + geo + "_wip_" + metric + ".csv"]
 
         set(csv_files) == set(expected_files)
 
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "20200710_state_tested_cumulative_num.csv")
+            join("receiving", "20200710_state_wip_tested_cumulative_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

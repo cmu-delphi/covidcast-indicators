@@ -63,11 +63,11 @@ def pull_cds_data(base_url: str, metric: str, level: str,
     }
 
     # Constants
-    DROP_COLUMNS = ["population", "level", "city", "county",
-                "lat", "long", "url", "name", "country", "state",
-                "aggregate", "tz", "deaths", "recovered",
-                "active", "hospitalized", "hospitalized_current",
-                "discharged", "icu", "icu_current", "growthFactor"
+    DROP_COLUMNS = ["locationID", "slug", "population", "level", "city",
+                    "county", "state", "country", "lat", "long", "name",
+                    "aggregate", "tz", "deaths", "recovered",
+                    "active", "hospitalized", "hospitalized_current",
+                    "discharged", "icu", "icu_current"
     ]
     DROP_COLUMNS.append(METRIC_to_DROP_KEEP_DICT[metric][0])
 
@@ -76,6 +76,7 @@ def pull_cds_data(base_url: str, metric: str, level: str,
         {"date": "timestamp",
          METRIC_to_DROP_KEEP_DICT[metric][1]: "cumulative_counts"}, axis=1
     )
+    df["cumulative_counts"] = pd.to_numeric(df['cumulative_counts'], errors='coerce')
 
     # Get fips code
     df = df.merge(PULL_MAPPING[level], on="name", how="inner")

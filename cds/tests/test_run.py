@@ -13,13 +13,13 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200604",
-            "20200605",
-            "20200606",
-            "20200607",
-            "20200608",
-            "20200609",
-            "20200610",
+            "20200704",
+            "20200705",
+            "20200706",
+            "20200707",
+            "20200708",
+            "20200709",
+            "20200710",
         ]
         geos = ["county", "hrr", "msa", "state"]
         metrics = [
@@ -44,6 +44,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "20200610_state_tested_cumulative_num.csv")
+            join("receiving", "20200710_state_tested_cumulative_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

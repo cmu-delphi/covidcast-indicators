@@ -10,7 +10,7 @@ from delphi_cds.run import run_module
 class TestSmooth:
     def test_output_files_smoothed(self, run_as_module):
 
-        dates = [str(x) for x in range(20200604, 20200611)]
+        dates = [str(x) for x in range(20200704, 20200711)]
 
         smoothed = pd.read_csv(
             join("receiving",

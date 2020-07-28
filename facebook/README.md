@@ -100,8 +100,9 @@ the pipeline must do the following:
 
 
 Mathematical details of how the survey estimates are calculated are given in the
-signal descriptions PDF in the `covid-19` repository. This pipeline currently
-calculates two basic types of survey estimates:
+signal descriptions [in the API
+documentation](https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/fb-survey.html).
+This pipeline currently calculates two basic types of survey estimates:
 
 1. Estimates of the fraction of individuals with COVID-like or influenza-like
    illness. The survey includes questions about how many people in your
@@ -128,3 +129,31 @@ and indices can do this filtering in O(log n) time. This is critical when
 aggregating multiple weeks or months of data. Updates to the logic should be
 careful to perform these filters the minimum number of times and to ensure they
 still use the keys and indices.
+
+## Output Files
+
+The indicator produces three output types:
+
+1. Aggregate estimates to covidalert CSV files, to publish in the API
+2. "Individual" data, meaning complete survey responses in cleaned form, for
+   sharing with research partners
+3. CID lists, containing the unique identifiers for survey respondents (and
+   nothing else), to send to Facebook so they can provide weights back to us.
+
+Those outputs need to cover different time periods.
+
+| Output | Function | Time period |
+| ------ | -------- | ----------- |
+| Aggregates | `aggregate_indicators` | [`start_date` - backfill period, `end_date`] |
+| Individual data | `write_individual` | [`start_date` - backfill period, `end_date`] |
+| CID lists | `write_cid` | [`start_date`, `end_date`] |
+
+The backfill period is expected to be four days at most, since survey responses
+on a specific date may be recorded a day or two later for various reasons.
+
+Note that to calculate the aggregates on `start_date` - 4 days, we need to use
+data from `start_date` - 4 days - 7 days, since we report 7-day smoothed
+aggregates.
+
+In typical use, we would expect `start_date` to be 00:00:00 on a given day, and
+`end_date` to be 23:59:59 on that same day.

@@ -11,3 +11,4 @@
         owner: "{{ jenkins_user }}"
         group: "{{ jenkins_user }}"
         mode: "0644"
+      delegate_to: localhost

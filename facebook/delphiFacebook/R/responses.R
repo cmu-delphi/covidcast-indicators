@@ -213,6 +213,9 @@ create_complete_responses <- function(input_data)
 #' Wave numbers are documented on our survey documentation site with full coding
 #' details, so we can include wave number in the individual output files so
 #' users know which wave the user completed.
+#'
+#' @param surveyID Qualtrics Survey ID
+#' @return Wave number (integer), or NA if the survey ID is unknown
 surveyID_to_wave <- Vectorize(function(surveyID) {
   waves <- list("SV_8zYl1sFN6fAFIxv" = 1,
                 "SV_cT2ri3tFp2dhJGZ" = 2,

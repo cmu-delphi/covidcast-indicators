@@ -97,7 +97,11 @@ filter_responses <- function(input_data, seen_tokens_archive, params)
 
   input_data <- input_data[input_data$S1 == 1, ]
   input_data <- input_data[input_data$DistributionChannel != "preview", ]
-  input_data <- input_data[dplyr::between(input_data$start_dt, params$start_time, params$end_time),]
+
+  # take the right dates. We don't filter the start date because the aggregate
+  # and individual data pipelines handle that themselves (aggregate in
+  # particular needs data well before start_date)
+  input_data <- input_data[as.Date(input_data$date) <= params$end_date, ]
 
   return(input_data)
 }

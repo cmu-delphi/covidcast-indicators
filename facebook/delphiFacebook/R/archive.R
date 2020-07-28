@@ -42,6 +42,10 @@ load_archive <- function(params)
 #' - all prior rows of input data (before filtering for aggregation or sharing),
 #'   except for rows with duplicate tokens.
 #'
+#' Each newly written archive appends the newest tokens to the previously seen
+#' tokens, and stores *all* historical data. This is provided as the `df`
+#' argument, which replaces the existing data stored in the archive (if any).
+#'
 #' @param df a data frame with columns "token", "start_dr" and "ResponseID"
 #' @param archive a data frame previously loaded by \code{load_archive}
 #' @param params a named list, read from read_params. Must contain an element
@@ -61,8 +65,7 @@ update_archive <- function(df, archive, params)
   create_dir_not_exist(params$archive_dir)
 
   write_rds(
-    x = list(input_data = bind_rows(archive$input_data, df),
-             seen_tokens = seen_tokens),
+    x = list(input_data = df, seen_tokens = seen_tokens),
     file.path(params$archive_dir, "data_agg.Rds"),
     compress = "gz" # gz is fast to compress and decompress
   )

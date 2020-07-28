@@ -1,10 +1,12 @@
 #' Write a file containing the new tokens seen in the dataset
 #'
-#' @param data         a data frame containing a column named "token"
-#' @param type_name    character value used for naming the output file
-#' @param params       a named listed; must contain entries "start_time", "end_time", and
-#'                     "weights_out_dir". These are used in constructing the path where the
-#'                     output data will be stored.
+#' Write only tokens that appeared between `start_date` and `end_date`.
+#'
+#' @param data a data frame containing a column named "token"
+#' @param type_name character value used for naming the output file
+#' @param params a named list; must contain entries "start_time", "end_time",
+#'   and "weights_out_dir". These are used in constructing the path where the
+#'   output data will be stored.
 #'
 #' @importFrom readr write_csv
 #' @export
@@ -20,8 +22,17 @@ write_cid <- function(data, type_name, params)
 
   create_dir_not_exist(params$weights_out_dir)
 
-  msg_df(sprintf("writing weights data for %s", type_name), data)
-  write_csv(select(data, "token"), file.path(params$weights_out_dir, fname), col_names = FALSE)
+  # aggregate data contains a `day` column that is a Date object. individual
+  # data contains a `Date` column for the same purpose, which is *not* a `Date`
+  # object but a formatted string. This sure is elegant!
+  date_col <- if ("day" %in% names(data)) { "day" } else { "Date" }
+
+  token_data <- data[data[[date_col]] >= as.Date(params$start_date) &
+                       data[[date_col]] <= as.Date(params$end_date), ]
+
+  msg_df(sprintf("writing weights data for %s", type_name), token_data)
+  write_csv(select(token_data, "token"), file.path(params$weights_out_dir, fname),
+            col_names = FALSE)
 }
 
 #' Add weights to a dataset of responses

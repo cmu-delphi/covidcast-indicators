@@ -12,22 +12,24 @@ run_facebook <- function(params)
 {
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
-  msg_df("archive data loaded", archive$data_agg)
+  msg_df("archive data loaded", archive$input_data)
 
   # load all input csv files and filter according to selection criteria
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, archive$seen_tokens, params)
   msg_df("response input data", input_data)
 
+  input_data <- bind_rows(archive$input_data, input_data)
+
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregatation(input_data)
-  data_agg <- filter_data_for_aggregatation(data_agg, params)
+  data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
   data_agg <- join_weights(data_agg, params, weights = "step1")
   msg_df("response data to aggregate", data_agg)
 
   # create "complete" data that will be shared with research partners
   data_full <- create_complete_responses(input_data)
-  data_full <- filter_complete_responses(data_full)
+  data_full <- filter_complete_responses(data_full, params)
   data_full <- join_weights(data_full, params, weights = "full")
   msg_df("full data to share with research partners", data_full)
 

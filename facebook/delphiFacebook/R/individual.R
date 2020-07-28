@@ -3,10 +3,10 @@
 #' The "token" column is removed from the input dataset and only rows with
 #' corresponding weights are written.
 #'
-#' @param data_full_w    data frame of response values
-#' @param params         a named list containing an element named "individual_dir"
-#'                       indicating where the output file will be written, and values
-#'                       "start_time" and "end_time" used in the naming the output file
+#' @param data_full_w data frame of response values
+#' @param params a named list containing an element named "individual_dir"
+#'     indicating where the output file will be written, and values "start_time"
+#'     and "end_time" used in the naming the output file
 #'
 #' @importFrom readr write_csv
 #' @importFrom dplyr select

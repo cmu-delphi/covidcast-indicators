@@ -11,10 +11,10 @@ write_cid(data, type_name, params)
 
 \item{type_name}{character value used for naming the output file}
 
-\item{params}{a named listed; must contain entries "start_time", "end_time", and
-"weights_out_dir". These are used in constructing the path where the
+\item{params}{a named list; must contain entries "start_time", "end_time",
+and "weights_out_dir". These are used in constructing the path where the
 output data will be stored.}
 }
 \description{
-Write a file containing the new tokens seen in the dataset
+Write only tokens that appeared between `start_date` and `end_date`.
 }

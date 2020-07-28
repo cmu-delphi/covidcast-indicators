@@ -142,10 +142,16 @@ create_data_for_aggregatation <- function(input_data)
 #'
 #' @param df data frame of responses
 #' @param params list containing `static_dir`, indicating where to find ZIP data
-#'   files
+#'   files, and `start_date`, indicating the first day for which estimates
+#'   should be produced
+#' @param lead_days Integer specifying how many days of data *before*
+#'   `start_date` should be included in the data frame for aggregation. For
+#'   example, if we expect up to four days of survey backfill and seven days of
+#'   smoothing, we'd want to include at least 11 days of data before
+#'   `start_date`, so estimates on `start_date` are based on the correct data.
 #'
 #' @export
-filter_data_for_aggregatation <- function(df, params)
+filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 {
   # what zip5 values have a large enough population (>100) to include in aggregates
   allowed_zips <- produce_allowed_zip5(params$static_dir)
@@ -155,6 +161,8 @@ filter_data_for_aggregatation <- function(df, params)
   df <- df[dplyr::between(df$hh_number_sick, 0L, 30L), ]
   df <- df[dplyr::between(df$hh_number_total, 1L, 30L), ]
   df <- df[df$hh_number_sick <= df$hh_number_total, ]
+
+  df <- df[df$day >= (as.Date(params$start_date) - lead_days), ]
 
   return(df)
 }
@@ -229,17 +237,27 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
 #' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
 #' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
 #' button question is to provide a selection.
+#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
+#' inclusive.
 #'
 #' Most of these criteria are handled by `filter_responses()` above; this
 #' function need only handle the last criterion.
 #'
 #' @param data_full data frame of responses
+#' @param params named list of configuration options from `read_params()`,
+#'   containing `start_date`, `backfill_days`, and `end_date`
 #'
+#' @importFrom dplyr filter
+#' @importFrom rlang .data
 #' @export
-filter_complete_responses <- function(data_full)
+filter_complete_responses <- function(data_full, params)
 {
   # 6 includes StartDatetime, EndDatetime, Date, token, + two questions
   data_full <- data_full[rowSums(!is.na(data_full)) >= 6, ]
+
+  data_full <- filter(data_full,
+                      .data$Date >= as.Date(params$start_date) - params$backfill_days,
+                      .data$Date <= as.Date(params$end_date))
 
   return(data_full)
 }

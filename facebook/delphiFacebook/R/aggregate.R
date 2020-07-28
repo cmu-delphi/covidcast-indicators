@@ -1,5 +1,15 @@
 #' Produce aggregates for all indicators.
 #'
+#' Writes the outputs directly to CSVs in the directory specified by `params`.
+#' Produces output for all available days between `params$start_date -
+#' params$backfill_days` and `params$end_date`, inclusive. (We re-output days
+#' before `start_date` in case there was backfill for those days.)
+#'
+#' Warning: The maximum value of `smooth_days` needs to be accounted for in
+#' `run.R` in the `lead_days` argument to `filter_data_for_aggregatation`, so
+#' the correct amount of archived data is included, plus the expected backfill
+#' length.
+#'
 #' @param df Data frame of individual response data.
 #' @param indicators Data frame with columns `name`, `var_weight`, `metric`,
 #'   `smooth_days`, `compute_fn`, `post_fn`. Each row represents one indicator
@@ -18,7 +28,12 @@
 #' @importFrom dplyr filter
 aggregate_indicators <- function(df, indicators, cw_list, params) {
 
+  ## The data frame will include more days than just [start_date, end_date], so
+  ## select just the unique days contained in that interval.
   days <- unique(df$day)
+  days <- days[days >= as.Date(params$start_date) - params$backfill_days &
+                 days <= as.Date(params$end_date)]
+
   smooth_days <- unique(indicators$smooth_days)
 
   ## For the day range lookups we do on df, use a data.table key. This puts the

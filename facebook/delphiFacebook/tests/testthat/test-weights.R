@@ -9,9 +9,12 @@ test_that("testing write_cid command", {
 
   fake_data <- tibble(
     token = c("DSFIJBjAexoQjDStr", "mGDsqbweUYzFnmZUH", "zocUNXYISDyYcVIQn"),
+    Date = c("2020-01-04", "2020-07-25", "2024-03-04"),
     other = runif(3)
   )
   params <- list(
+    start_date = "2020-01-02",
+    end_date = "2025-06-07",
     start_time = ymd_hm("2020-01-02 03:04", tz = "America/Los_Angeles"),
     end_time = ymd_hm("2025-06-07 08:09", tz = "America/Los_Angeles"),
     weights_out_dir = tempfile()

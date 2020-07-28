@@ -7,10 +7,24 @@
 load_archive(params)
 }
 \arguments{
-\item{params}{a named list, read from read_params. Must contain and element named
-archive_dir (containing the file "data_agg.Rds") and a logical value
+\item{params}{a named list, read from read_params. Must contain and element
+named archive_dir (containing the file "data_agg.Rds") and a logical value
 named debug.}
 }
 \description{
-Load data from cached archive
+The archive is necessary for several reasons:
+}
+\details{
+1. We want to include only the first use of any unique token, and exclude
+later survey responses that also use that token. This requires a complete
+history of tokens used. We store this in an RDS instead of having to read the
+complete CSVs of all historical data.
+
+2. Some of our aggregates are based on averages over 7-day windows. We need
+at least 7 days of data available to correctly report them.
+
+The archiving implicitly assumes a time ordering to the use of this package
+-- that is, that we calculate indicators using successively newer survey data
+files, so the archive is updated with newer and newer data. The pipeline does
+not break if run out of order, but point 2 above may not be met.
 }

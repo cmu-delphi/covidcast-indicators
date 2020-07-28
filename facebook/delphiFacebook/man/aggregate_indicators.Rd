@@ -26,5 +26,14 @@ for each geographic level.}
 \item{params}{Named list of configuration parameters.}
 }
 \description{
-Produce aggregates for all indicators.
+Writes the outputs directly to CSVs in the directory specified by `params`.
+Produces output for all available days between `params$start_date -
+params$backfill_days` and `params$end_date`, inclusive. (We re-output days
+before `start_date` in case there was backfill for those days.)
+}
+\details{
+Warning: The maximum value of `smooth_days` needs to be accounted for in
+`run.R` in the `lead_days` argument to `filter_data_for_aggregatation`, so
+the correct amount of archived data is included, plus the expected backfill
+length.
 }

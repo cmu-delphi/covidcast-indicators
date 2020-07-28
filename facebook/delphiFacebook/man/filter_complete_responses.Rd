@@ -4,10 +4,13 @@
 \alias{filter_complete_responses}
 \title{Filter responses with sufficient data to share.}
 \usage{
-filter_complete_responses(data_full)
+filter_complete_responses(data_full, params)
 }
 \arguments{
 \item{data_full}{data frame of responses}
+
+\item{params}{named list of configuration options from `read_params()`,
+containing `start_date`, `backfill_days`, and `end_date`}
 }
 \description{
 Inclusion criteria:
@@ -21,6 +24,8 @@ Inclusion criteria:
 open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
 D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
 button question is to provide a selection.
+* Date is in [`params$start_date - params$backfill_days`, `end_date`],
+inclusive.
 
 Most of these criteria are handled by `filter_responses()` above; this
 function need only handle the last criterion.

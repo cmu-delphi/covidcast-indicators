@@ -25,7 +25,7 @@
 #'   for each geographic level.
 #' @param params Named list of configuration parameters.
 #' @import data.table
-#' @importFrom dplyr filter
+#' @importFrom dplyr filter mutate_at vars
 aggregate_indicators <- function(df, indicators, cw_list, params) {
 
   ## The data frame will include more days than just [start_date, end_date], so

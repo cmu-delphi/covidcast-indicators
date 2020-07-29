@@ -25,9 +25,7 @@ write_data_api <- function(data, params, geo_name, signal_name)
     tunit <- unique_dates[ii]
 
     df <- data[data$day == tunit, c("geo_id", "val", "se", "sample_size", "effective_sample_size")]
-    df$val <- round(df$val, 7L)
-    df$se <- round(df$se, 7L)
-    df$sample_size <- round(df$sample_size, 7L)
+    df <- mutate_at(df, vars(-geo_id), function(x) round(x, 7L))
     file_out <- file.path(
       params$export_dir, sprintf("%s_%s_%s.csv", format(tunit, "%Y%m%d"),
                                  geo_name, signal_name)

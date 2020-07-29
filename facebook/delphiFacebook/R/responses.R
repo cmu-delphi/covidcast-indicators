@@ -24,7 +24,7 @@ load_responses_all <- function(params)
 #'                        where the input file are found
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
-#' @importFrom readr read_lines cols locale
+#' @importFrom readr read_lines cols locale col_character
 #' @importFrom dplyr arrange desc
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
@@ -41,7 +41,16 @@ load_response_one <- function(input_filename, params)
   ## The CSVs have some columns with column-separated fields showing which of
   ## multiple options a user selected; readr would interpret these as thousand
   ## separators by default, so we tell it that no thousands separators are used.
-  input_data <- read_csv(full_path, skip = 3L, col_names = col_names, col_types = cols(),
+  ## Sometimes readr gets confused and records the "Other" columns (*_TEXT) as
+  ## logicals or multiple-choice columns as numeric, so we tell it that those
+  ## are always character data.
+  input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
+                         col_types = cols(
+                           B2_14_TEXT = col_character(),
+                           D1_4_TEXT = col_character(),
+                           A3 = col_character(),
+                           B2 = col_character(),
+                           C1 = col_character()),
                          locale = locale(grouping_mark = ""))
   input_data <- arrange(input_data, desc(.data$StartDate))
 

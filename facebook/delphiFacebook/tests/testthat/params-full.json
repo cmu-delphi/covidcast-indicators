@@ -2,6 +2,7 @@
   "start_date": "2020-05-08",
   "end_date": "2020-05-14",
   "backfill_days": 4,
+  "archive_days": 14,
   "static_dir": "./static",
   "export_dir": "./receiving_full",
   "cache_dir": "./cache",

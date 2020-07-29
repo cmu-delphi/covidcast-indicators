@@ -80,22 +80,15 @@ load_response_one <- function(input_filename, params)
 
 #' Filter responses for privacy and validity
 #'
-#' @param input_data             data frame containing response data
-#' @param seen_tokens_archive    data frame giving previously seen tokens
-#' @param params                 named list containing values "static_dir", "start_time",
-#'                               and "end_time"
+#' @param input_data data frame containing response data
+#' @param params named list containing values "static_dir", "start_time", and
+#'   "end_time"
 #'
 #' @importFrom dplyr anti_join
 #' @importFrom rlang .data
 #' @export
-filter_responses <- function(input_data, seen_tokens_archive, params)
+filter_responses <- function(input_data, params)
 {
-  # only include tokens we have not already seen
-  if (!is.null(seen_tokens_archive))
-  {
-    input_data <- anti_join(input_data, seen_tokens_archive, by = "token")
-  }
-
   # take only the first instance of each token
   input_data <- arrange(input_data, .data$StartDate)
   input_data <- input_data[input_data$token != "",]
@@ -110,6 +103,42 @@ filter_responses <- function(input_data, seen_tokens_archive, params)
   input_data <- input_data[as.Date(input_data$date) <= params$end_date, ]
 
   return(input_data)
+}
+
+#' Merge new data with archived data
+#'
+#' See the README for details on how the archive works and why it is necessary
+#' to use the archive to check submitted tokens.
+#'
+#' @param input_data data frame containing the new response data
+#' @param archive archive data read by `load_archive()`
+#'
+#' @return single data frame containing the merged data to be used for analysis
+#' @importFrom dplyr bind_rows
+#' @export
+merge_responses <- function(input_data, archive) {
+  # First, merge the new data with the archived data, taking the first start
+  # date for any given token. This allows for backfill. Note that the order
+  # matters: since arrange() uses order(), which is a stable sort, ties will
+  # result in the input data being used in preference over the archive data.
+  # This means that if we run the pipeline, then change the input CSV, running
+  # again will used the changed data instead of the archived data.
+  data <- bind_rows(input_data, archive$input_data)
+  data <- arrange(data, .data$StartDate)
+
+  data <- data[!duplicated(data$token), ]
+
+  # Next, filter out responses with tokens that were seen before in responses
+  # started before even the responses in `data`. These are responses submitted
+  # recently with tokens that were initially used long ago, before the data
+  # contained in `archive$input_data`.
+  if (!is.null(archive$seen_tokens)) {
+    data <- left_join(data, archive$seen_tokens,
+                      by = "token", suffix = c("", ".seen"))
+    data <- data[is.na(data$start_dt.seen) | data$start_dt <= data$start_dt.seen, ]
+  }
+
+  return(data)
 }
 
 #' Create variables needed for aggregation

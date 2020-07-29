@@ -22,4 +22,9 @@ The archive contains:
 
 - all prior rows of input data (before filtering for aggregation or sharing),
   except for rows with duplicate tokens.
+
+Each newly written archive appends the newest tokens to the previously seen
+tokens, and stores historical data going back `params$archive_days` days.
+This is provided as the `df` argument, which replaces the existing data
+stored in the archive (if any) and is subsetted appropriately.
 }

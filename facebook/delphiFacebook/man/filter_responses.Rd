@@ -4,15 +4,13 @@
 \alias{filter_responses}
 \title{Filter responses for privacy and validity}
 \usage{
-filter_responses(input_data, seen_tokens_archive, params)
+filter_responses(input_data, params)
 }
 \arguments{
 \item{input_data}{data frame containing response data}
 
-\item{seen_tokens_archive}{data frame giving previously seen tokens}
-
-\item{params}{named list containing values "static_dir", "start_time",
-and "end_time"}
+\item{params}{named list containing values "static_dir", "start_time", and
+"end_time"}
 }
 \description{
 Filter responses for privacy and validity

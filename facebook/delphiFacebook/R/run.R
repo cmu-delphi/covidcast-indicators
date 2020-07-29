@@ -16,10 +16,10 @@ run_facebook <- function(params)
 
   # load all input csv files and filter according to selection criteria
   input_data <- load_responses_all(params)
-  input_data <- filter_responses(input_data, archive$seen_tokens, params)
+  input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
 
-  input_data <- bind_rows(archive$input_data, input_data)
+  input_data <- merge_responses(input_data, archive)
 
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregatation(input_data)

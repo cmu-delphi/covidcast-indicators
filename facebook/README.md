@@ -157,3 +157,53 @@ aggregates.
 
 In typical use, we would expect `start_date` to be 00:00:00 on a given day, and
 `end_date` to be 23:59:59 on that same day.
+
+## Archiving
+
+One particular challenge is created by our rule that we only consider the
+*first* survey submission for a given CID, dated by the time the survey response
+was *started*. If a Facebook user is invited to the survey, the link they
+receive contains a unique CID intended for them; if they share the link with
+friends or post it publicly, many other people may click the link and hence have
+survey responses recorded with the same CID. Since the CIDs are used to generate
+survey weights based on information about the user Facebook provided the link
+to, weights for these additional responses would be wrong.
+
+We assume the first opened survey is most likely to be the intended user, and
+all following responses with the same CID are from others whose responses should
+be excluded.
+
+However, a response is only recorded when the user either completes the survey
+or leaves it for more than four hours. This means the following could happen:
+
+1. A user receives the survey link and opens the survey.
+2. They pass the link to friends before completing the survey.
+3. Numerous friends complete the survey quickly and their responses are
+   recorded.
+4. Meanwhile, the original user completes one question per hour.
+5. Our pipeline runs and receives the responses from the friends -- but *not*
+   from the original user, who is not done yet.
+6. Finally, a day or two later, the original user finishes the survey and
+   submits their response. Their response is dated as of the date they started
+   the survey, meaning we must backfill our prior reported estimates.
+
+We work around this problem by keeping an archive of all responses seen in the
+past several weeks, stored as an RDS file. Each day, we do the following:
+
+1. Load the data from the archive.
+2. Load the newly received response data from the Qualtrics CSVs.
+3. Merge the two datasets and sort them by survey start time.
+4. Remove later responses with duplicated CIDs.
+5. Proceed to aggregation and output processing.
+
+Because a survey link can circulate online indefinitely, we must keep an archive
+of *all* previously seen tokens and their date, though we do not need to support
+backfill of responses submitted many weeks ago.
+
+The archive, by retaining all responses, also is responsible for ensuring that
+aggregate estimates that are multi-day averages function correctly even when the
+pipeline is provided only a single day of Qualtrics CSV data.
+
+We expect about four days of backfill, plus multi-day averages of a week, so the
+archive needs to contain enough data to account for both. The `archive_days`
+parameter in `params.json` controls this behavior.

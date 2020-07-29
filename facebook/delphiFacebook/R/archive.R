@@ -43,8 +43,9 @@ load_archive <- function(params)
 #'   except for rows with duplicate tokens.
 #'
 #' Each newly written archive appends the newest tokens to the previously seen
-#' tokens, and stores *all* historical data. This is provided as the `df`
-#' argument, which replaces the existing data stored in the archive (if any).
+#' tokens, and stores historical data going back `params$archive_days` days.
+#' This is provided as the `df` argument, which replaces the existing data
+#' stored in the archive (if any) and is subsetted appropriately.
 #'
 #' @param df a data frame with columns "token", "start_dr" and "ResponseID"
 #' @param archive a data frame previously loaded by \code{load_archive}
@@ -61,6 +62,8 @@ update_archive <- function(df, archive, params)
   seen_tokens <- bind_rows(archive$seen_tokens, seen_tokens)
   seen_tokens <- arrange(seen_tokens, .data$start_dt)
   seen_tokens <- seen_tokens[!duplicated(seen_tokens$token), ]
+
+  df <- df[df$start_dt >= as.Date(params$start_date) - params$archive_days, ]
 
   create_dir_not_exist(params$archive_dir)
 

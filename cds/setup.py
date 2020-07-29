@@ -11,7 +11,7 @@ required = [
 ]
 
 setup(
-    name="delphi_cds",
+    name="delphi_cds_test",
     version="0.0.1",
     description="Indicators from Corona Data Scraper",
     author="",

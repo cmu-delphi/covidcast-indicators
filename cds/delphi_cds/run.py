@@ -166,7 +166,7 @@ def run_module():
         if smoother == "unsmoothed":
             metric = "wip_raw"
         else:
-            metric = "wip_7dav"
+            metric = "wip_smoothed"
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
         create_export_csv(
             df,

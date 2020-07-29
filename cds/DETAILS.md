@@ -23,7 +23,7 @@ are represented at the county level.
 
 ## Metrics, Level 1 (`m1`)
 * `confirmed`: Confirmed cases
-* `tested`
+* `tested`: 'Number of Tested'
 
 Recoveries and Deaths are _not_ reported.
 

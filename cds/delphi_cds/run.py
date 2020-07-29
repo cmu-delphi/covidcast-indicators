@@ -113,7 +113,7 @@ def run_module():
     for geo_res, smoother in product(GEO_RESOLUTIONS, SMOOTHERS):
         # For tested and confirmed cases
         for sensor, metric in product(SENSORS, METRICS):
-            # print(geo_res, metric, sensor, smoother)
+            print(geo_res, metric, sensor, smoother)
             used_geo_res = GEO_USELEVEL[metric][geo_res]
             # Aggregate to appropriate geographic resolution
             df = geo_map(pulled_df[metric][used_geo_res], geo_res, map_df)
@@ -164,16 +164,16 @@ def run_module():
         df.loc[df["sample_size"] > 0, "se"] = np.sqrt(
             df["val"]/100 * (1-df["val"]/100) / df["sample_size"])
         if smoother == "unsmoothed":
-            sensor_name = "raw"
+            metric = "wip_raw"
         else:
-            sensor_name = "smoothed"
+            metric = "wip_7dav"
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
         create_export_csv(
             df,
             export_dir=export_dir,
             start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-            metric="wip_pct_positive",
+            metric=metric,
             geo_res=geo_res,
-            sensor=sensor_name,
+            sensor="pct_positive",
         )
   

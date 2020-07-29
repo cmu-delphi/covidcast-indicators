@@ -3,7 +3,7 @@
 # JHU: Jenkins test
 #
 
-set -exo pipefail
+set -eo pipefail
 source ~/.bash_profile
 
 #

@@ -2,6 +2,7 @@ import sys
 import re
 import pandas as pd
 from pathlib import Path
+from itertools import product
 from datetime import date, datetime, timedelta
 from datafetcher import *
 
@@ -62,7 +63,7 @@ def check_bad_geo_id(df_to_test, geo_type):
     'county': '^(?!\d{5}).*$',
     'hrr': '^(?!\d{1,3}).*$',
     'msa': '^(?!\d{5}).*$',
-    'state': '^(?![A-Z]{2}).*$'
+    'state': '^(?![A-Z]{2}).*$',
     'national': '(?!usa).*$'
     }
 
@@ -135,8 +136,58 @@ def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
 
 
 def fbsurvey_validation(daily_filenames, sdate, edate):
+
+    meta = covidcast.metadata()
+    fb_meta = meta[meta['data_source']==DATA_SOURCE]
+    unique_signals = fb_meta['signal'].unique().tolist()
+    unique_geotypes = fb_meta['geo_type'].unique().tolist()
+
+    ##### Currently metadata returns --*community*-- signals that don't get generated 
+    ##### in the new fb-pipeline. Seiving them out for now.
+    # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+    for sig in unique_signals:
+        if "community" in sig:
+            unique_signals.remove(sig)
     
+
+    geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
+    print(geo_sig_cmbo)
+    print("Number of mixed types:", len(geo_sig_cmbo))
+
+    for cmb in geo_sig_cmbo:
+        print(cmb)
+
+    ## The following dates refer to the newly generated files from latest pipeline execution
+    ######----start_date-----#######
+    ######----end_date------#######
+    #start_date = date(2020, 6, 16)
+    #end_date = date(2020, 6, 19)
+    delta_days =  (edate + timedelta(days=1)) - sdate
+    print("Number of days: ", delta_days.days)
+    date_list = [sdate + timedelta(days=x) for x in range(delta_days.days)]
+    print(date_list)
+    date_slist = [dt.strftime("%Y%m%d") for dt in date_list]
+    print(date_slist)
+
     data_folder = Path("data/")
+
+    filenames = read_relevant_date_filenames(data_folder, date_slist)
+
+    # Multi-indexed dataframe for a given (signal, geo_type)
+
+    kroc = 0
+    for recent_df in read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
+        print(recent_df)
+        kroc += 1
+        if kroc == 2:
+            break
+    sys.exit()
+
+
+
+    
+    
+    
     
     check_missing_dates(daily_filenames, sdate, edate)
 

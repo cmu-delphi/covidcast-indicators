@@ -137,11 +137,13 @@ def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
 def reldiff_by_min(x, y):
     return (x - y) / min(x,y)
 
-def check_rapid_change(start_date, end_date, max_check_lookbehind):
-    #base = datetime.datetime.today()
-    base = start_date
-    date_list = [base - timedelta(days=x) for x in range(n_past_days)]
-    #print(date_list)
+def check_rapid_change(recent_df, recent_api_df, date_list):
+    recent_rows_per_reporting_day = recent_df[recent_df['time_value'] == checking_date].shape[0]
+    recent_api_rows_per_reporting_day = recent_api_df.shape[0] / len(date_list)
+    
+    if(sanity_check_rows_per_day and abs(reldiff_by_min(recent_rows_per_reporting_day, recent_api_rows_per_reporting_day)) > 0.35):
+        print("Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
+        print("The suspicous spike is for date: ", checking_date, ", signal: ", sig, ", geo_type: ", geo)
 
 
 # The daterange function is exclusive of the end_date in line with the native python range()
@@ -201,50 +203,31 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
 
     kroc = 0
     for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
-        print(recent_df)
-        #recent_df.set_index("time_value", inplace = True)
         
+        #recent_df.set_index("time_value", inplace = True)
+        print("Printing recent_df scenes:", recent_df.shape)
+        print(recent_df)
         for checking_date in date_list:
             #print(recent_df.loc[checking_date,:])
-        # -recent- dataframe run backwards from the checking_date
+            # -recent- dataframe run backwards from the checking_date
             recent_end_date = checking_date - timedelta(days=1)
             recent_begin_date = checking_date - max_check_lookbehind
             recent_api_df = covidcast.signal(DATA_SOURCE, sig, recent_begin_date, recent_end_date, geo)
-            print("Checking recent_api_df")
-
+            
             recent_api_df.rename(columns={'stderr': 'se', 'value': 'val'}, inplace = True)
             recent_api_df.drop(['direction', 'issue', 'lag'], axis=1, inplace = True)
             
             column_names = ["geo_value", "val", "se", "sample_size", "time_value"]
 
             recent_api_df = recent_api_df.reindex(columns=column_names)
-            print(recent_api_df)
-            print(recent_api_df.dtypes)
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
-            recent_rows_per_reporting_day = recent_df[recent_df['time_value'] == checking_date].shape[0]
-            print(recent_rows_per_reporting_day)
-            recent_api_rows_per_reporting_day = recent_df.shape[0] / len(date_list)
-            print("recent_api_rows_per_reporting_day", recent_api_rows_per_reporting_day)
-
-            if(sanity_check_rows_per_day and abs(reldiff_by_min(recent_rows_per_reporting_day, recent_api_rows_per_reporting_day)) > 0.35):
-                print("Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
-                print("The suspicous spike is for date: ", checking_date, ", signal: ", sig, ", geo_type: ", geo)
-            
+            check_rapid_change(recent_df, recent_api_df, date_list)
         kroc += 1
         if kroc == 2:  
             break
-
-
-    
     sys.exit()
-
-
-
-    
-    
-    
     
     check_missing_dates(daily_filenames, sdate, edate)
 

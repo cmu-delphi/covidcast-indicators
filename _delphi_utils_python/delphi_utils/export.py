@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
 import filecmp
-from os import listdir
-from os.path import join, abspath
+from glob import glob
+from os import replace, remove
+from os.path import join, abspath, basename
 import shutil
-from typing import List
+from typing import Tuple, List, Dict, Optional
 
 import csvdiff
 from git import Repo
@@ -46,84 +47,123 @@ def create_export_csv(
             export_file, index=False, na_rep="NA"
         )
 
-def filter_new_issues(
+def diff_exports(
+    archive_dir: str,
     export_dir: str,
-    cache_dir: str,
-    ) -> bool:
+    csv_index_col: str = "geo_id",
+    deleted_indices_ok: bool = False,
+) -> Tuple[List[str], Dict[str, Optional[str]], List[str]]:
+
+    # Glob to only pick out CSV files, ignore hidden files
+    previous_files = set(basename(f) for f in glob(join(archive_dir, "*.csv")))
+    exported_files = set(basename(f) for f in glob(join(export_dir, "*.csv")))
+
+    deleted_files = sorted(join(archive_dir, f) for f in previous_files - exported_files)
+    common_filenames = sorted(exported_files & previous_files)
+    new_files = sorted(join(export_dir, f) for f in exported_files - previous_files)
+
+    common_files_to_diffs = {}
+    for filename in common_filenames:
+        before_file = join(archive_dir, filename)
+        after_file = join(export_dir, filename)
+
+        # Check for simple file similarity before doing CSV diffs
+        if filecmp.cmp(before_file, after_file, shallow=False):
+            common_files_to_diffs[after_file] = None
+            continue
+
+        # TODO: Realize we only need row-level diffs, dont need CSV cell diffs
+        diff = csvdiff.diff_files(
+            before_file, after_file,
+            index_columns=[csv_index_col])
+
+        added_indices = [added[csv_index_col] for added in diff["added"]]
+        changed_indices = [changed["key"][0] for changed in diff["changed"]]
+        if len(diff["removed"]) > 0 and not deleted_indices_ok:
+            raise NotImplementedError("Have not determined how to represent deletions")
+
+        # Write the diffs to diff_file, if applicable
+        if len(added_indices + changed_indices) > 0:
+
+            # Only load up the CSV in pandas if there are indices to access
+            after_df = pd.read_csv(
+                after_file,
+                dtype={"geo_id": str, "val": float, "se": float, "sample_size": float})
+            after_df.set_index(csv_index_col, inplace=True)
+            new_issues_df = after_df.loc[added_indices + changed_indices, :]
+
+            diff_file = join(export_dir, filename + ".diff")
+            new_issues_df.to_csv(diff_file, na_rep="NA")
+            common_files_to_diffs[after_file] = diff_file
+
+        else:
+            common_files_to_diffs[after_file] = None
+
+    return deleted_files, common_files_to_diffs, new_files
+
+def archive_exports(
+    exported_files: List[str],
+    archive_dir: str,
+    override_uncommitted: bool = False,
+    auto_commit: bool = True,
+    commit_partial_success: bool = False,
+    commit_message: str = "Automated archive",
+) -> Tuple[List[str], List[str]]:
 
     repo = Repo(".", search_parent_directories=True)
+
+
     # Abs paths of all modified files to check if we will override uncommitted changes
     dirty_files = [join(repo.working_tree_dir, f) for f in repo.untracked_files]
     dirty_files += [join(repo.working_tree_dir, d.a_path) for d in repo.index.diff(None)]
 
-    exported_files = set(listdir(export_dir))
-    previous_files = set(listdir(cache_dir))
+    archived_files = []
+    archive_success = []
+    archive_fail = []
+    for exported_file in exported_files:
+        archive_file = abspath(join(archive_dir, basename(exported_file)))
 
-    # TODO: Deal with deleted_files (previous - exported)
-
-    # New files
-    for filename in exported_files - previous_files:
-        before_file = join(cache_dir, filename)
-        after_file = join(export_dir, filename)
-
-        # Archive all, as all new files are new issues too
-        assert before_file not in dirty_files
-        shutil.copyfile(after_file, before_file)
-
-        # Stage
-        repo.index.add(abspath(before_file))
-
-    # Common files
-    dirty_conflict = False
-    for filename in exported_files & previous_files:
-        before_file = join(cache_dir, filename)
-        after_file = join(export_dir, filename)
-        diffs_file = join(export_dir, filename + ".diff")
-
-        # Check for simple file similarity before doing CSV diffs
-        if filecmp.cmp(before_file, after_file, shallow=False):
-            continue
-
-        after_df = pd.read_csv(
-            after_file,
-            dtype={"geo_id": str, "val": float, "se": float, "sample_size": float})
-        after_df.set_index("geo_id", inplace=True)
-
-        diff = csvdiff.diff_files(
-            before_file, after_file,
-            index_columns=["geo_id"])
-
-        added_keys = [added["geo_id"] for added in diff["added"]]
-        changed_keys = [changed["key"] for changed in diff["changed"]]
-        if len(diff["removed"]) > 0:
-            raise NotImplementedError("Cannot handle deletions yet")
-
-        # Write new issues only
-        new_issues_df = after_df.loc[added_keys + changed_keys, :]
-
-        # If archiving overwrites uncommitted changes,
-        # skip archiving and write new issues to diffs_file instead
-        if abspath(before_file) in dirty_files:
-            print(f"Warning, want to archive '{after_file}' as '{before_file}' but latter has uncommitted changes. Skipping archiving...")
-            dirty_conflict = True
-            new_issues_df.to_csv(diffs_file, index=False, na_rep="NA")
-
-        # Otherwise, archive and explicitly stage new export, then replace with just new issues
-        else:
+        # Archive and explicitly stage new export, depending if override
+        if archive_file not in dirty_files or override_uncommitted:
             # Archive
-            shutil.copyfile(after_file, before_file)
+            shutil.copyfile(exported_file, archive_file)
 
-            # Stage
-            repo.index.add(abspath(before_file))
+            archived_files.append(archive_file)
+            archive_success.append(exported_file)
 
-            # Replace
-            new_issues_df.to_csv(after_file, index=False, na_rep="NA")
+        # Otherwise ignore the archiving for this file
+        else:
+            archive_fail.append(exported_file)
 
-    if not dirty_conflict:
-        repo.index.commit(message="Automated archive")
-        return True
+    # Stage
+    repo.index.add(archived_files)
 
-    print(
-        "Some files were not archived to prevent overwritting uncommitted changes.\n"
-        f"Look for *.csv.diff files in {export_dir} and manually resolve / archive affected files.")
-    return False
+    # Commit staged files
+    if auto_commit and len(exported_files) > 0:
+
+        # Support partial success and at least one archive succeeded
+        partial_success = commit_partial_success and len(archive_success) > 0
+
+        if len(archive_success) == len(exported_files) or partial_success:
+            repo.index.commit(message=commit_message)
+
+    return archive_success, archive_fail
+
+def remove_identical_exports(
+    common_files_to_diffs: Dict[str, Optional[str]]
+):
+    for common_file, diff_file in common_files_to_diffs.items():
+        if diff_file is None:
+            remove(common_file)
+
+def replace_exports(
+    exported_files: List[str],
+    common_files_to_diffs: Dict[str, Optional[str]],
+):
+    for exported_file in exported_files:
+        # If exported_file is not a key, then it was not a common file.
+        # So no replacing would be needed anyway
+        diff_file = common_files_to_diffs.get(exported_file, None)
+
+        if diff_file is not None:
+            replace(diff_file, exported_file)

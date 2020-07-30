@@ -24,29 +24,6 @@ def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_c
         sys.exit('=nameformat= not recognized as a daily format')
 
 
-
-def main():
-    print("Inside main")
-    df_to_test = pd.read_csv(
-                            "data/20200613_county_raw_cli.csv", 
-                             dtype={'geo_id': str, 
-                                    'val': float, 
-                                    'se': float, 
-                                    'sample_size': float, 
-                                    'effective_sample_size': float
-                            })
-
-    print(df_to_test.head())
-    print(df_to_test.describe())
-    
-    result = df_to_test.dtypes
-    print(result)
-
-    sys.exit()
-
-    #validate_daily(df_to_test, nameformat, generation_date, max_check_lookbehind, sanity_check_rows_per_day, sanity_check_value_diffs, check_vs_working)
-    print(date.today())
-
 def check_bad_geo_id(df_to_test, geo_type):
     if geo_type not in negated_regex_dict:
         print("Unrecognized geo type:", geo_type )

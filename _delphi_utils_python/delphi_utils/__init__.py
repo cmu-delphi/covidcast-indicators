@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 from .export import (
     create_export_csv,
+    archive_branch,
     diff_exports,
     archive_exports,
     remove_identical_exports,

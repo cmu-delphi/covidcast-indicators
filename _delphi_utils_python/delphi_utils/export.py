@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from contextlib import contextmanager
 from datetime import datetime
 import filecmp
 from glob import glob
@@ -7,10 +8,11 @@ from os.path import join, abspath, basename
 import shutil
 from typing import Tuple, List, Dict, Optional
 
-import csvdiff
 from git import Repo
 import pandas as pd
 
+Files = List[str]
+FileDiffMap = Dict[str, Optional[str]]
 
 def create_export_csv(
     df: pd.DataFrame,
@@ -47,12 +49,64 @@ def create_export_csv(
             export_file, index=False, na_rep="NA"
         )
 
+@contextmanager
+def archive_branch(branch_name: Optional[str]):
+    repo = Repo(".", search_parent_directories=True)
+
+    # Set branch to an actual Head object
+    orig_branch = repo.active_branch
+    if branch_name is None:
+        branch = repo.active_branch
+    elif branch_name in repo.branches:
+        branch = repo.branches[branch_name]
+    else:
+        branch = repo.create_head(branch_name)
+
+    # Checkout target archive branch for all operations in block
+    branch.checkout()
+
+    try:
+        yield branch
+
+    finally:
+        # Once done, checkout original branch
+        orig_branch.checkout()
+
+def diff_export_csv(
+    before_csv: str,
+    after_csv: str
+) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+
+    export_csv_dtypes = {"geo_id": str, "val": float, "se": float, "sample_size": float}
+
+    before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
+    before_df.set_index("geo_id", inplace=True)
+
+    after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
+    after_df.set_index("geo_id", inplace=True)
+
+    deleted_idx = before_df.index.difference(after_df.index)
+    common_idx = before_df.index.intersection(after_df.index)
+    added_idx = after_df.index.difference(before_df.index)
+
+    before_df_cmn = before_df.reindex(common_idx)
+    after_df_cmn = after_df.reindex(common_idx)
+
+    # Comparison treating NA == NA as True
+    # TODO: Should we change exact equality to some approximate one?
+    same_mask = before_df_cmn == after_df_cmn
+    same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
+
+    return (
+        before_df.loc[deleted_idx, :],
+        after_df_cmn.loc[~(same_mask.all(axis=1)), :],
+        after_df.loc[added_idx, :])
+
 def diff_exports(
     archive_dir: str,
     export_dir: str,
-    csv_index_col: str = "geo_id",
     deleted_indices_ok: bool = False,
-) -> Tuple[List[str], Dict[str, Optional[str]], List[str]]:
+) -> Tuple[Files, FileDiffMap, Files]:
 
     # Glob to only pick out CSV files, ignore hidden files
     previous_files = set(basename(f) for f in glob(join(archive_dir, "*.csv")))
@@ -72,26 +126,14 @@ def diff_exports(
             common_files_to_diffs[after_file] = None
             continue
 
-        # TODO: Realize we only need row-level diffs, dont need CSV cell diffs
-        diff = csvdiff.diff_files(
-            before_file, after_file,
-            index_columns=[csv_index_col])
+        deleted_df, changed_df, added_df = diff_export_csv(before_file, after_file)
+        new_issues_df = pd.concat([changed_df, added_df], axis=0)
 
-        added_indices = [added[csv_index_col] for added in diff["added"]]
-        changed_indices = [changed["key"][0] for changed in diff["changed"]]
-        if len(diff["removed"]) > 0 and not deleted_indices_ok:
-            raise NotImplementedError("Have not determined how to represent deletions")
+        if not deleted_indices_ok and len(deleted_df) > 0:
+            raise NotImplementedError("Cannot handle deletions yet")
 
         # Write the diffs to diff_file, if applicable
-        if len(added_indices + changed_indices) > 0:
-
-            # Only load up the CSV in pandas if there are indices to access
-            after_df = pd.read_csv(
-                after_file,
-                dtype={"geo_id": str, "val": float, "se": float, "sample_size": float})
-            after_df.set_index(csv_index_col, inplace=True)
-            new_issues_df = after_df.loc[added_indices + changed_indices, :]
-
+        if len(new_issues_df) > 0:
             diff_file = join(export_dir, filename + ".diff")
             new_issues_df.to_csv(diff_file, na_rep="NA")
             common_files_to_diffs[after_file] = diff_file
@@ -102,16 +144,15 @@ def diff_exports(
     return deleted_files, common_files_to_diffs, new_files
 
 def archive_exports(
-    exported_files: List[str],
+    exported_files: Files,
     archive_dir: str,
     override_uncommitted: bool = False,
     auto_commit: bool = True,
     commit_partial_success: bool = False,
     commit_message: str = "Automated archive",
-) -> Tuple[List[str], List[str]]:
+) -> Tuple[Files, Files]:
 
     repo = Repo(".", search_parent_directories=True)
-
 
     # Abs paths of all modified files to check if we will override uncommitted changes
     dirty_files = [join(repo.working_tree_dir, f) for f in repo.untracked_files]
@@ -150,15 +191,15 @@ def archive_exports(
     return archive_success, archive_fail
 
 def remove_identical_exports(
-    common_files_to_diffs: Dict[str, Optional[str]]
+    common_files_to_diffs: FileDiffMap
 ):
     for common_file, diff_file in common_files_to_diffs.items():
         if diff_file is None:
             remove(common_file)
 
 def replace_exports(
-    exported_files: List[str],
-    common_files_to_diffs: Dict[str, Optional[str]],
+    exported_files: Files,
+    common_files_to_diffs: FileDiffMap,
 ):
     for exported_file in exported_files:
         # If exported_file is not a key, then it was not a common file.

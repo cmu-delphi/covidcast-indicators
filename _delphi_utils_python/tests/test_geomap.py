@@ -159,9 +159,9 @@ class TestGeoMapper:
         new_data = gmpr.county_to_megacounty(self.mega_data,6,50)
         assert (new_data[['count','visits']].sum()-self.mega_data[['count','visits']].sum()).sum() < 1e-3
 
-    def test_convert_jhu_to_mega(self):
+    def test_convert_jhu_fips_to_mega(self):
         gmpr = GeoMapper()
-        new_data = gmpr.convert_jhu_to_mega(self.jhu_data)
+        new_data = gmpr.convert_jhu_fips_to_mega(self.jhu_data)
         assert not (new_data['fips_jhu'].astype(int) > 90000).any()
 
     def test_convert_jhu_fips_to_fips(self):
@@ -175,15 +175,15 @@ class TestGeoMapper:
         assert not (new_data['fips'].astype(int) > 90000).any()
         assert new_data['den'].sum() == self.jhu_data['den'].sum()
 
-    def test_jhu_to_state(self):
+    def test_jhu_fips_to_state(self):
         gmpr = GeoMapper()
-        new_data = gmpr.jhu_to_state(self.jhu_data)
+        new_data = gmpr.jhu_fips_to_state(self.jhu_data)
         assert new_data['state_id'][2] == 'DE'
         assert new_data.shape == (4,4)
 
-    def test_jhu_to_msa(self):
+    def test_jhu_fips_to_msa(self):
         gmpr = GeoMapper()
-        new_data = gmpr.jhu_to_msa(self.jhu_data)
+        new_data = gmpr.jhu_fips_to_msa(self.jhu_data)
         assert new_data.shape == (4,4)
 
     def test_convert_zip_to_hrr(self):
@@ -208,3 +208,17 @@ class TestGeoMapper:
         new_data = gmpr.jhu_uid_to_county(self.jhu_uid_data)
         assert not (new_data['fips'].astype(int) > 90000).any()
         assert new_data['den'].sum() == self.jhu_data['den'].sum()
+
+    def test_convert_fips_to_zip(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.convert_fips_to_zip(self.fips_data_3)
+        # assert new_data.eval('weight * den').sum() == self.fips_data_3['den'].sum()
+
+    def test_county_to_zip(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.county_to_zip(self.fips_data_3)
+
+    def test_county_to_hrr(self):
+        gmpr = GeoMapper()
+        new_data = gmpr.county_to_hrr(self.fips_data_3)
+        assert new_data.shape == (2,4)

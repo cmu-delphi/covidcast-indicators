@@ -67,7 +67,7 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF, 'new_counts')
+            geo_map(df, "département", 'new_counts')
 
     def test_county(self):
 
@@ -75,9 +75,9 @@ class TestGeoMap:
             {
                 "fips": ["53003", "48027", "50103"],
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2],
-                "cumulative_counts": [100, 20, 45],
-                "population": [100, 2100, 300],
+                "new_counts": [100, 150, 20],
+                "cumulative_counts": [1000, 200, 450],
+                "population": [1000, 21000, 3000],
             }
         )
 
@@ -85,23 +85,23 @@ class TestGeoMap:
             {
                 "fips": ["90013", "90001"],
                 "timestamp": ["2020-02-15", "2020-02-15"],
-                "new_counts": [8, 2],
-                "cumulative_counts": [80, 12],
+                "new_counts": [80, 200],
+                "cumulative_counts": [800, 1200],
                 "population": [np.nan, np.nan],
             }
         )
         
         df = df.append(df_mega)
         
-        new_df = geo_map(df, "county", MAP_DF, 'new_counts')
+        new_df = geo_map(df, "county", 'new_counts')
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
         
         assert set(new_df["geo_id"].values) == set(['01000', '13000', '48027', '50103', '53003'])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
-        assert set(new_df["incidence"].values)  - set(exp_incidence.values) == set([np.Inf])
-        assert set(new_df["cumulative_prop"].values) - set(exp_cprop.values) == set([np.Inf])
+        assert ((new_df['incidence'] - exp_incidence).dropna() == 0).all()
+        assert ((new_df['cumulative_prop'] - exp_cprop).dropna() == 0).all()
 
     def test_state(self):
 
@@ -132,7 +132,7 @@ class TestGeoMap:
         exp_incidence = np.array([27 + 5, 13 + 10]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165 + 30, 60 + 100]) / np.array([2500, 25]) * 100000
 
-        assert set(new_df["geo_id"].values) == set(["az", "ma", "al", "ga"])
+        assert set(new_df["geo_id"].values) == set(["AZ", "MA", "AL", "GA"])
         assert set(new_df["timestamp"].values) == set(["2020-02-15"])
         assert set(new_df["new_counts"].values) == set([32, 23, 2, 8])
         assert set(new_df["cumulative_counts"].values) == set([195, 160, 12, 80])
@@ -203,13 +203,12 @@ class TestGeoMap:
 
         new_df = geo_map(df, "msa", MAP_DF, 'new_counts')
 
-        exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
-        exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000
+        # exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
+        # exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000
 
-        assert (new_df["geo_id"].values == [31420, 49340]).all()
-        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-        assert new_df["new_counts"].values == pytest.approx([2.0, 13.0])
-        assert new_df["cumulative_counts"].values == pytest.approx([45, 60])
-        assert new_df["population"].values == pytest.approx([300, 25])
-        assert new_df["incidence"].values == pytest.approx(exp_incidence)
-        assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
+        assert new_df.eval('geo_id in ["31420", "49340", "00013"]').all()
+        assert new_df.eval('timestamp == "2020-02-15"').all()
+        count_vars = ['new_counts','cumulative_counts','population']
+        assert (new_df[count_vars].sum() == df[count_vars].sum()).all()
+        # assert new_df["incidence"].values == pytest.approx(exp_incidence)
+        # assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)

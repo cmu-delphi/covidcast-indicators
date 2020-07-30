@@ -24,6 +24,8 @@ ZIP_HSA_OUT_FILE = "zip_hsa_cross.csv"
 ZIP_HRR_OUT_FILE = "zip_hrr_cross.csv"
 JHU_FIPS_FILE = "UID_ISO_FIPS_LookUp_Table.csv"
 JHU_FIPS_OUT_FILE = "jhu_uid_fips_cross.csv"
+FIPS_ZIP_FILE = "COUNTY_ZIP_032020.xlsx"
+FIPS_ZIP_OUT_FILE = "fips_zip_cross.csv"
 
 def convert_fips(x):
     """Ensure fips is a string of length 5."""
@@ -133,10 +135,18 @@ def proc_jhu_uid_to_fips():
     jhu_df.to_csv(path.join(OUTPUT_DIR, JHU_FIPS_OUT_FILE), index=False)
     return True
 
+def proc_fips_to_zip():
+    fips_df = pd.read_excel(FIPS_ZIP_FILE)
+    fips_df.rename(columns={'COUNTY':'fips', 'ZIP':'zip', 'TOT_RATIO': 'weight'},
+                   inplace=True)
+    fips_df[['fips','zip','weight']].to_csv(path.join(OUTPUT_DIR, FIPS_ZIP_OUT_FILE), index=False)
+    return True
+
 if __name__ == "__main__":
 
     # proc_zip_fips()
     # proc_fips_msa()
     # proc_fips_hrr()
     # proc_zip_hsa_hrr()
-    proc_jhu_uid_to_fips()
+    # proc_jhu_uid_to_fips()
+    proc_fips_to_zip()

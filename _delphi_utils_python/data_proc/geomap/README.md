@@ -21,9 +21,10 @@ You can see consistency checks and diffs with old sources in ./consistency_check
 
 ## Source files
 
-1. 03_20_MSAs.xls : [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html)
-2. 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these
-3. Crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
+- 03_20_MSAs.xls : [US Census Bureau](https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html)
+- 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these
+- Crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
+- JHU crosswalk table: https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data#uid-lookup-table-logic
 
 ## Todo 07/07/2020
 
@@ -77,3 +78,32 @@ We are reserving 00001-00099 for states codes of the form 100XX where XX is the 
 07/22/2020:
 - Introducing the COUNTY_ZIP and ZIP_COUNTY crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 - Also the ZIP to HRR Crosswalk file (from 2018) from https://atlasdata.dartmouth.edu/static/supp_research_data
+- Added the JHU crosswalk table and created a jhu_uid to fips crosswalk table: https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data#uid-lookup-table-logic
+
+There are NaN fips in the JHU tables, so to resolve this we are moving over to using the JHU unique id.
+We have to deal with the NaN fips by hand, which are 
+```
+748                                                   US
+887                                        Recovered, US
+888               Dukes and Nantucket, Massachusetts, US
+889                            Kansas City, Missouri, US
+890    Michigan Department of Corrections (MDOC), Mic...
+891    Federal Correctional Institution (FCI), Michig...
+892                           Air Force, US Military, US
+893                                Army, US Military, US
+894                        Marine Corps, US Military, US
+895                                Navy, US Military, US
+896                          Unassigned, US Military, US
+897                                      US Military, US
+898               Inmates, Federal Bureau of Prisons, US
+899                 Staff, Federal Bureau of Prisons, US
+900                        Federal Bureau of Prisons, US
+901                                 Bear River, Utah, US
+902                               Central Utah, Utah, US
+903                             Southeast Utah, Utah, US
+904                             Southwest Utah, Utah, US
+905                                  TriCounty, Utah, US
+906                               Weber-Morgan, Utah, US
+907                                Veteran Hospitals, US
+```
+Is you look at geo_data.py::

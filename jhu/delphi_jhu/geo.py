@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import pandas as pd
-
+from delphi_utils import GeoMapper
 
 INCIDENCE_BASE = 100000
 # https://code.activestate.com/recipes/577775-state-fips-codes-dict/
@@ -152,7 +152,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
+def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.
@@ -176,57 +176,24 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     pd.DataFrame
         Columns: geo_id, timestamp, ...
     """
+    df = df.copy()
     VALID_GEO_RES = ("county", "state", "msa", "hrr")
     #It is not clear to calculate the proportion for unassigned cases/deaths
     PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 
-    df_mega = df[df['fips'].astype(int) >= 90001].copy()
-    df_mega['geo_id'] = df_mega['fips'].apply(lambda x: JHU_FAKE_FIPS_TO_MEGA_FIPS[x])
-
-    df = df[df['fips'].astype(int) < 90001].copy()
-
-    if geo_res == "county":
-        df["geo_id"] = df["fips"]
-        if sensor not in PROP_SENSORS:
-            df = df.append(df_mega)
-    elif geo_res == "state":
-        # Grab first two digits of fips
-        # Map state fips to us postal code
-        df["geo_id"] = df["fips"]
-        # Add unassigned cases/deaths
-        df = df.append(df_mega)
-        df["geo_id"] = df["geo_id"].apply(fips_to_state)
-    elif geo_res in ("msa", "hrr"):
-        # Disburse Dukes & Nantucket to individual counties
-        df = disburse(df, DN_FIPS, DN_COUNTY_FIPS)
-        # Disburse Kansas City to intersecting counties
-        df = disburse(df, KC_FIPS, KC_COUNTY_FIPS)
-        # Map "missing" secondary FIPS to those that are in our canonical set
-        for fips, fips_list in SECONDARY_FIPS:
-            df = disburse(df, fips, fips_list)
-        # Our fips are outdated:
-        #    https://www.census.gov/programs-surveys/
-        #    geography/technical-documentation/county-changes.html
-        for jhu_fips, our_fips in REPLACE_FIPS:
-            df.loc[df["fips"] == jhu_fips, "fips"] = our_fips
-        colname = "cbsa_id" if geo_res == "msa" else "hrrnum"
-        map_df = map_df.loc[~pd.isnull(map_df[colname])].copy()
-        map_df["geo_id"] = map_df[colname].astype(int)
-        df["fips"] = df["fips"].astype(int)
-        merged = pd.merge(df, map_df, on="fips")
-        merged["cumulative_counts"] = merged["cumulative_counts"] * merged["pop_prop"]
-        merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
-        merged["population"] = merged["population"] * merged["pop_prop"]
-        df = merged.drop(["zip", "pop_prop", "hrrnum", "cbsa_id"], axis=1)
-        # if sensor not in PROP_SENSORS:
-        #     df_mega["geo_id"] = df_mega["geo_id"].apply(fips_to_state)
-        #     df = df.append(df_mega)
-    df = df.drop("fips", axis=1)
-    df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
-
-    # Value would be negative for megacounties , which would not be considered in the main function
+    gmpr = GeoMapper()
+    if geo_res == "state":
+        df = gmpr.county_to_state(df, fips_col="fips", state_id_col="geo_id", date_col="timestamp")
+    elif geo_res == "msa":
+        df = gmpr.county_to_msa(df, fips_col="fips", msa_col="geo_id", date_col="timestamp")
+    elif geo_res == 'hrr':
+        df = gmpr.county_to_hrr(df, fips_col="fips", hrr_col="geo_id", date_col="timestamp")
+    elif geo_res == 'county':
+        df.rename(columns={'fips': 'geo_id'}, inplace=True)
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df
+
+

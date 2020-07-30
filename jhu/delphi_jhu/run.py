@@ -63,21 +63,21 @@ def run_module():
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
 
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
     pop_df = pd.read_csv(
         join(static_file_dir, "fips_population.csv"),
         dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
+    )
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
+    for metric, df in dfs.items():
+        print(metric, df.columns)
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         print(geo_res, metric, sensor, smoother)
         df = dfs[metric]
+        print(df.columns)
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df, sensor)
+        df = geo_map(df, geo_res, sensor)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

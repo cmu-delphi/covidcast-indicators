@@ -32,6 +32,7 @@ JHU_FIPS_FILE = "jhu_fips_cross.csv"
 FIPS_HRR_FILE = "fips_hrr_cross.csv"
 ZIP_HRR_FILE = "zip_hrr_cross.csv"
 JHU_UID_FIPS_FILE = "jhu_uid_fips_cross.csv"
+FIPS_ZIP_FILE = "fips_zip_cross.csv"
 
 class GeoMapper:
     """Class for geo mapping tools commonly used in Delphi
@@ -71,7 +72,8 @@ class GeoMapper:
                  msa_filepath=path.join(DATA_PATH,MSA_FILE),
                  jhu_filepath=path.join(DATA_PATH,JHU_FIPS_FILE),
                  hrr_filepath=path.join(DATA_PATH,ZIP_HRR_FILE),
-                 jhu_uid_filepath=path.join(DATA_PATH,JHU_UID_FIPS_FILE)
+                 jhu_uid_filepath=path.join(DATA_PATH,JHU_UID_FIPS_FILE),
+                 fips_zip_filepath=path.join(DATA_PATH, FIPS_ZIP_FILE)
                 ):
         """Initialize geomapper
 
@@ -86,6 +88,7 @@ class GeoMapper:
         self.jhu_filepath = jhu_filepath
         self.hrr_filepath = hrr_filepath
         self.jhu_uid_filepath = jhu_uid_filepath
+        self.fips_zip_filepath = fips_zip_filepath
 
     def load_zip_fips_cross(self):
         """load zip->fips cross table"""
@@ -95,6 +98,15 @@ class GeoMapper:
                                           'weight':float})
         for col in ['fips','zip']:
             self.zip_fips_cross = GeoMapper.convert_int_to_str5(self.zip_fips_cross,int_col=col,str_col=col)
+
+    def load_fips_zip_cross(self):
+        """load zip->fips cross table"""
+        stream = pkg_resources.resource_stream(__name__, self.fips_zip_filepath)
+        self.fips_zip_cross = pd.read_csv(stream,dtype={'zip':str,
+                                          'fips':str,
+                                          'weight':float})
+        for col in ['fips','zip']:
+            self.fips_zip_cross = GeoMapper.convert_int_to_str5(self.fips_zip_cross,int_col=col,str_col=col)
 
     def load_fips_cross(self):
         """load zip->fips cross table"""
@@ -260,7 +272,7 @@ class GeoMapper:
             data = data.merge(zip_cross, left_on=zip_col, right_on='zip', how='left')
         return data
 
-    def convert_jhu_to_mega(self,
+    def convert_jhu_fips_to_mega(self,
                             data,
                             jhu_col="fips_jhu",
                             mega_col="fips_jhu"):
@@ -302,7 +314,7 @@ class GeoMapper:
         data = data.copy()
         if not hasattr(self,"jhu_fips_cross"):
             self.load_jhu_fips_cross()
-        data = self.convert_jhu_to_mega(data,jhu_col=jhu_col,mega_col=jhu_col)
+        data = self.convert_jhu_fips_to_mega(data,jhu_col=jhu_col,mega_col=jhu_col)
         data = GeoMapper.convert_int_to_str5(data,int_col=jhu_col,str_col=jhu_col)
         jhu_cross = self.jhu_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         data = data.merge(jhu_cross, left_on=jhu_col, right_on='fips_jhu', how='left')
@@ -362,12 +374,12 @@ class GeoMapper:
         Return:
             data: copy of dataframe
         """
-
         if count_cols:
             data = data[[fips_col,date_col] + count_cols].copy()
         data = self.convert_fips_to_state_id(data,fips_col=fips_col,state_id_col=state_id_col,full=full)
+        data.dropna(subset=['st_code'], axis=0, inplace=True)
         data.drop([fips_col,'st_code'],axis=1,inplace=True)
-        assert not data[state_id_col].isnull().values.any(), "nan states, probably invalid fips"
+        # assert not data[state_id_col].isnull().values.any(), "nan states, probably invalid fips"
         if date_col:
             assert not data[date_col].isnull().values.any(), "nan dates not allowed"
             data.fillna(0,inplace=True)
@@ -501,7 +513,7 @@ class GeoMapper:
             data = data.groupby(fips_col).sum()
         return data.reset_index()
 
-    def jhu_to_state(self,
+    def jhu_fips_to_state(self,
                       data,
                       jhu_col='fips_jhu',
                       date_col='date',
@@ -525,7 +537,7 @@ class GeoMapper:
         data = self.jhu_fips_to_county(data, jhu_col=jhu_col, fips_col=fips_col, date_col=date_col, count_cols=count_cols)
         return self.county_to_state(data, fips_col=fips_col, date_col=date_col, count_cols=count_cols, state_id_col=state_id_col)
 
-    def jhu_to_msa(self,
+    def jhu_fips_to_msa(self,
                       data,
                       jhu_col='fips_jhu',
                       date_col='date',
@@ -705,6 +717,8 @@ class GeoMapper:
             self.load_jhu_uid_fips_cross()
         jhu_cross = self.jhu_uid_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         data = data.merge(jhu_cross, left_on=jhu_col, right_on='jhu_uid', how='left')
+        if jhu_col != 'jhu_uid':
+            data.drop(columns=['jhu_uid'], inplace=True)
         return data
 
     def jhu_uid_to_county(self,
@@ -733,10 +747,94 @@ class GeoMapper:
             count_cols = list(count_cols)
         data = data[[jhu_col, date_col] + count_cols].copy()
         data = self.convert_jhu_uid_to_fips(data,jhu_col=jhu_col,fips_col=fips_col)
+        data.dropna(subset=[fips_col], axis=0, inplace=True)
         data[count_cols] = data[count_cols].multiply(data['weight'],axis=0)
         data.drop([jhu_col,'weight'],axis=1,inplace=True)
-        assert not data[fips_col].isnull().values.any(), "nan fips, uid not in cross table"
         assert not data[date_col].isnull().values.any(), "nan dates not allowed"
         data = data.groupby([date_col,fips_col]).sum()
         return data.reset_index()
 
+    def convert_fips_to_zip(self,
+                            data,
+                            fips_col="fips",
+                            zip_col="zip",
+                            weight_col="weight",
+                            full=False):
+        """create fips (county) column from zip column
+
+        Args:
+            data: pd.DataFrame input data
+            zip_col: zip5 column to convert
+            fips_col: fips column to create
+            weight_col: weight (pop) column to create
+            full: boolean, if True outer join to return at least one of every geo
+
+        Return:
+            data: copy of dataframe
+        """
+
+        data = data.copy()
+        if not hasattr(self,"fips_zip_cross"):
+            self.load_fips_zip_cross()
+        data = GeoMapper.convert_int_to_str5(data,int_col=fips_col,str_col=fips_col)
+        cross = self.fips_zip_cross.rename(columns={'zip': zip_col, 'weight':weight_col})
+        data = data.merge(cross, left_on=fips_col, right_on='fips', how='left')
+        data.dropna(subset=[zip_col],inplace=True)
+        return data
+
+    def county_to_zip(self,
+                      data,
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None,
+                      zip_col="zip"):
+        """convert and aggregate from county to zip
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips (county) column to convert
+            date_col: date column (is not aggregated)
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+            zip_col: msa column to create
+
+        Return:
+            data: copy of dataframe
+        """
+
+        if not count_cols:
+            count_cols = list(set(data.columns) - {date_col, fips_col})
+        else:
+            count_cols = list(count_cols)
+        data = self.convert_fips_to_zip(data,fips_col=fips_col,zip_col=zip_col)
+        data.drop(fips_col,axis=1,inplace=True)
+        # data.dropna(axis=0,subset=[zip_col],inplace=True) - redundant
+        assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+        data.fillna(0,inplace=True)
+        data[count_cols] = data[count_cols].multiply(data['weight'],axis=0)
+        data.drop('weight', axis=1, inplace=True)
+        data = data.groupby([date_col, zip_col]).sum()
+        return data.reset_index()
+
+    def county_to_hrr(self,
+                      data,
+                      fips_col='fips',
+                      date_col='date',
+                      count_cols=None,
+                      hrr_col="hrr"):
+        """convert and aggregate from county to hrr
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips (county) column to convert
+            date_col: date column (is not aggregated)
+            count_cols: the count data columns to aggregate, if None (default) all non data/geo are used
+            hrr_col: hrr column to create
+
+        Return:
+            data: copy of dataframe
+        """
+
+        zip_col = "_zip_col_temp"
+        data = self.county_to_zip(data, fips_col=fips_col, zip_col=zip_col, date_col=date_col, count_cols=count_cols)
+        data = self.zip_to_hrr(data, zip_col=zip_col, date_col=date_col, count_cols=count_cols, hrr_col=hrr_col)
+        return data.astype(dtype={hrr_col: int})

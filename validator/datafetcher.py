@@ -42,7 +42,7 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
                     gen_dt = datetime.strptime(dt, '%Y%m%d')
                     df['time_value'] = gen_dt
             df_list.append(df)   
-        yield pd.concat(df_list)
+        yield pd.concat(df_list), geo_sig[0], geo_sig[1]
 
 def fetch_daily_data(data_source, survey_date, geo_type, signal):
     data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_date, geo_type)

@@ -28,12 +28,12 @@ GEO_RESOLUTIONS = [
     "hrr"
 ]
 SENSORS = [
-    "wip_smoothed_pct_positive",
-    "wip_raw_pct_positive"
+    "wip_covid_ag_smoothed_pct_positive",
+    "wip_covid_ag_raw_pct_positive"
 ]
 SMOOTHERS = {
-    "wip_smoothed_pct_positive": True,
-    "wip_raw_pct_positive": False
+    "wip_covid_ag_smoothed_pct_positive": True,
+    "wip_covid_ag_raw_pct_positive": False
 }
 
 def run_module():
@@ -49,11 +49,6 @@ def run_module():
     sender = params["sender"]
 
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
-    # If no export end date defined, set todya - 5 days
-    if params["export_end_date"] == "":
-        export_end_date = datetime.today() - timedelta(days=5)
-    else:
-        export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d')
 
     # pull new data only that has not been ingested
     pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
@@ -81,7 +76,14 @@ def run_module():
         df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
         # Save the intermediate file to cache_dir which can be re-used next time
         os.remove(join(cache_dir, filename))
-    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index=False)
+
+    # By default, set the export end date to be the last pulling date - 5 days
+    export_end_date = _end_date - timedelta(days=5)
+    if params["export_end_date"] != "":
+        input_export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d').date()
+        if input_export_end_date < export_end_date:
+            export_end_date = input_export_end_date
+    export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()
@@ -93,13 +95,15 @@ def run_module():
     raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth=False,
                                                             first_date=first_date,
                                                             last_date=last_date)
-    export_csv(raw_state_df, "state", "wip_raw_pct_positive", receiving_dir=export_dir,
+    export_csv(raw_state_df, "state", "wip_covid_ag_raw_pct_positive",
+               receiving_dir=export_dir,
                start_date=export_start_date, end_date=export_end_date)
     # Compute smoothed signal
     smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth=True,
                                                       first_date=first_date,
                                                       last_date=last_date)
-    export_csv(smoothed_state_df, "state", "wip_smoothed_pct_positive", receiving_dir=export_dir,
+    export_csv(smoothed_state_df, "state", "wip_covid_ag_smoothed_pct_positive",
+               receiving_dir=export_dir,
                start_date=export_start_date, end_date=export_end_date)
 
     # County/HRR/MSA level
@@ -119,3 +123,7 @@ def run_module():
                                                   last_date=last_date)
         export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
+
+    # Export the cache file if the pipeline runs successfully.
+    # Otherwise, don't update the cache file
+    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index=False)

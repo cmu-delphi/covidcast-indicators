@@ -27,8 +27,8 @@ class TestRun:
         ]
         geos = ["county", "hrr", "msa", "state"]
         sensors = [
-            "wip_raw_pct_positive",
-            "wip_smoothed_pct_positive"
+            "wip_covid_ag_raw_pct_positive",
+            "wip_covid_ag_smoothed_pct_positive"
         ]
 
         expected_files = []
@@ -41,7 +41,7 @@ class TestRun:
         
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200610_state_wip_raw_pct_positive.csv")
+            join("./receiving", "20200610_state_wip_covid_ag_raw_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
         
@@ -49,7 +49,6 @@ class TestRun:
         flag = None
         for fname in listdir("./cache"):
             if ".csv" in fname:
-                remove(join("cache", fname))
                 flag = 1
         assert flag is not None
         

@@ -11,7 +11,11 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import (
+    read_params,
+    create_export_csv,
+    GitArchiveDiffer,
+)
 
 from .geo import geo_map
 from .pull import pull_jhu_data
@@ -62,6 +66,11 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
+    cache_dir = params["cache_dir"]
+    arch_diff = GitArchiveDiffer(
+        cache_dir, export_dir,
+        branch_name="jhu-receiving-archive")
+    arch_diff.update_cache()
 
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
@@ -95,3 +104,15 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
+
+    # Exports
+    _, common_diffs, _ = arch_diff.diff_exports()
+    successes, fails = arch_diff.archive_exports()
+    succ_common_diffs = {
+        exported_file: diff_file
+        for exported_file, diff_file in common_diffs.items()
+        if exported_file in successes}
+    arch_diff.filter_exports(succ_common_diffs)
+
+    for exported_file in fails:
+        print(f"Failed to archive '{exported_file}'")

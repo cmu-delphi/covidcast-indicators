@@ -111,9 +111,15 @@ def pull_quidel_covidtest(start_date, end_date, mail_server, account, sender, pa
             password of the datadrop email
     output:
         df: pd.DataFrame
+        time_flag: datetime.date:
+            the actual pull end date on which we successfully pull the data
     """
     # Get new data from email
     df, time_flag = get_from_email(start_date, end_date, mail_server, account, sender, password)
+
+    # No new data can be pulled
+    if time_flag is None:
+        return df, time_flag
 
     # Fix some of the fipcodes that are 9 digit instead of 5 digit
     df = fix_zipcode(df)

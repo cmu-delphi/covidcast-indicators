@@ -59,10 +59,6 @@ def run_module():
     else:
         pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d').date()
 
-    if pull_end_date < pull_start_date:
-        print("The data is up-to-date. Currently, no new data to be ingested.")
-        return
-
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
@@ -71,6 +67,11 @@ def run_module():
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
                                account, sender, password)
+    if _end_date is None:
+        print("The data is up-to-date. Currently, no new data to be ingested.")
+        return
+
+    # Utilize previously stored data
     if filename is not None:
         previous_df = pd.read_csv(join(cache_dir, filename), sep=",", parse_dates=["timestamp"])
         df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()

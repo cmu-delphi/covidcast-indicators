@@ -4,8 +4,8 @@
 Starting May 9, 2020, we began getting Quidel COVID Test data and started reporting it from May 26, 2020 due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device. The present Quidel COVID Test sensor concerns the positive rate in the test result.
 
 ### Signal names
-- raw_pct_positive: estimates of the percentage of positive tests in total tests 
-- smoothed_pct_positive: same as in the first one, but where the estimates are formed by pooling together the last 7 days of data
+- covid_ag_raw_pct_positive: estimates of the percentage of positive tests in total tests 
+- covid_ag_smoothed_pct_positive: same as in the first one, but where the estimates are formed by pooling together the last 7 days of data
 
 ### Estimating percent positive test proportion
 Let n be the number of total COVID tests taken over a given time period and a given location (the test result can be negative/positive/invalid). Let x be the number of tests taken with positive results in this location over the given time period. We are interested in estimating the percentage of positive tests which is defined as:

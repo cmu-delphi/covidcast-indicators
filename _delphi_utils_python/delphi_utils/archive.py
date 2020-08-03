@@ -6,6 +6,7 @@ from os.path import join, basename, abspath
 import shutil
 from typing import Tuple, List, Dict, Optional
 
+from boto3 import Session
 from git import Repo
 import pandas as pd
 
@@ -112,6 +113,66 @@ class ArchiveDiffer:
             else:
                 replace(diff_file, exported_file)
 
+class S3ArchiveDiffer(ArchiveDiffer):
+
+    def __init__(
+        self, cache_dir: str, export_dir: str,
+        bucket_name: str,
+        indicator_prefix: str,
+        s3_credentials: Dict[str, str],
+    ):
+        super().__init__(cache_dir, export_dir)
+        self.s3 = Session(**s3_credentials).resource("s3")
+        self.bucket = self.s3.Bucket(bucket_name)
+        self.bucket_versioning = self.s3.BucketVersioning(bucket_name)
+        self.indicator_prefix = indicator_prefix
+
+    def update_cache(self):
+        # List all indicator-related objects from S3
+        archive_objects = self.bucket.objects.filter(Prefix=self.indicator_prefix).all()
+        archive_objects = [obj for obj in archive_objects if obj.key.endswith(".csv")]
+
+        # Check against what we have locally and download missing ones
+        cached_files = set(basename(f) for f in glob(join(self.cache_dir, "*.csv")))
+        for obj in archive_objects:
+            archive_file = basename(obj.key)
+            cached_file = join(self.cache_dir, archive_file)
+
+            if archive_file not in cached_files:
+                print(f"Updating cache with {cached_file}")
+                obj.Object().download_file(cached_file)
+
+        self._cache_updated = True
+
+    def archive_exports(self, exported_files: Optional[Files] = None) -> Tuple[Files, Files]:
+        archive_success = []
+        archive_fail = []
+
+        if exported_files is None:
+            exported_files = glob(join(self.export_dir, "*.csv"))
+
+        # Enable versioning if turned off
+        # if self.bucket_versioning.status != "Enabled":
+        #     self.bucket_versioning.enable()
+
+        for exported_file in exported_files:
+            cached_file = abspath(join(self.cache_dir, basename(exported_file)))
+            archive_key = join(self.indicator_prefix, basename(exported_file))
+
+            # Update local cache
+            shutil.copyfile(exported_file, cached_file)
+
+            try:
+                self.bucket.Object(archive_key).upload_file(exported_file)
+                # TODO: Wait until exists to confirm successful upload?
+                archive_success.append(exported_file)
+            except:
+                archive_fail.append(exported_file)
+
+        self._exports_archived = True
+
+        return archive_success, archive_fail
+
 class GitArchiveDiffer(ArchiveDiffer):
 
     def __init__(
@@ -205,6 +266,7 @@ class GitArchiveDiffer(ArchiveDiffer):
 
                 if len(archive_success) == len(exported_files) or partial_success:
                     self.repo.index.commit(message=self.commit_message)
-                    self._exports_archived = True
+
+        self._exports_archived = True
 
         return archive_success, archive_fail

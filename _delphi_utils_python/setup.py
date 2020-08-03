@@ -6,6 +6,8 @@ required = [
     "pandas",
     "pytest",
     "pytest-cov",
+    "boto3",
+    "gitpython",
 ]
 
 setup(

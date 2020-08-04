@@ -28,12 +28,12 @@ GEO_RESOLUTIONS = [
     "hrr"
 ]
 SENSORS = [
-    "wip_covid_ag_smoothed_pct_positive",
-    "wip_covid_ag_raw_pct_positive"
+    "covid_ag_smoothed_pct_positive",
+    "covid_ag_raw_pct_positive"
 ]
 SMOOTHERS = {
-    "wip_covid_ag_smoothed_pct_positive": True,
-    "wip_covid_ag_raw_pct_positive": False
+    "covid_ag_smoothed_pct_positive": True,
+    "covid_ag_raw_pct_positive": False
 }
 
 def run_module():
@@ -96,14 +96,14 @@ def run_module():
     raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth=False,
                                                             first_date=first_date,
                                                             last_date=last_date)
-    export_csv(raw_state_df, "state", "wip_covid_ag_raw_pct_positive",
+    export_csv(raw_state_df, "state", "covid_ag_raw_pct_positive",
                receiving_dir=export_dir,
                start_date=export_start_date, end_date=export_end_date)
     # Compute smoothed signal
     smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth=True,
                                                       first_date=first_date,
                                                       last_date=last_date)
-    export_csv(smoothed_state_df, "state", "wip_covid_ag_smoothed_pct_positive",
+    export_csv(smoothed_state_df, "state", "covid_ag_smoothed_pct_positive",
                receiving_dir=export_dir,
                start_date=export_start_date, end_date=export_end_date)
 

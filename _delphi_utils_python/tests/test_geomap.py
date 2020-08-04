@@ -6,7 +6,6 @@ from delphi_utils.geomap import GeoMapper
 
 
 class TestGeoMapper:
-    unique_zips = 33099
     fips_data = pd.DataFrame({
         "fips":[1123,2340,98633,18181],
         "num": [2,0,20,10021],
@@ -62,8 +61,8 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         gmpr.load_zip_fips_cross()
         fips_data = gmpr.zip_fips_cross
-        assert tuple(fips_data.columns) == ('zip', 'fips', 'weight')
-        assert len(pd.unique(fips_data['zip'])) == self.unique_zips
+        assert (fips_data.groupby('zip').sum()['weight'] == 0).sum() == 144
+        assert set(fips_data.columns) == set(['zip', 'fips', 'weight'])
         assert tuple(fips_data.dtypes) == (('object','object','float64'))
 
     def test_load_state_cross(self):

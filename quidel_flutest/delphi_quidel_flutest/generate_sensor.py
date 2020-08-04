@@ -41,7 +41,7 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
             stat, se, sample_size = raw_tests_per_device(
                 devices=state_group["numUniqueDevices"].values,
                 tests=state_group['totalTest'].values,
-                min_obs=MIN_OBS, pool_days=POOL_DAYS)
+                min_obs=MIN_OBS)
             
         elif (not device) & smooth:
             stat, se, sample_size = smoothed_positive_prop(
@@ -101,7 +101,7 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
             stat, se, sample_size = raw_tests_per_device(
                 devices=res_group["numUniqueDevices"].values,
                 tests=res_group['totalTest'].values,
-                min_obs=MIN_OBS, pool_days=POOL_DAYS)
+                min_obs=MIN_OBS)
         
         elif (not device) & smooth:
             stat, se, sample_size = smoothed_positive_prop(

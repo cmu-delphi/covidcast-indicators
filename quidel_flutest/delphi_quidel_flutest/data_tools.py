@@ -288,10 +288,11 @@ def raw_tests_per_device(devices, tests, min_obs):
                          'with no np.nan')
     if min_obs <= 0:
         raise ValueError('min_obs should be positive')
-        tests[tests < min_obs] = np.nan
-        tests_per_device = tests / devices
-        se = np.repeat(np.nan, len(devices))
-        sample_size = tests
+    tests[tests < min_obs] = np.nan
+    tests_per_device = tests / devices
+    se = np.repeat(np.nan, len(devices))
+    sample_size = tests
+
     return tests_per_device, se, sample_size
 
 def smoothed_tests_per_device(devices, tests, min_obs, pool_days,

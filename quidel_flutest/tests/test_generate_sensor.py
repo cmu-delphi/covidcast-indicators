@@ -17,9 +17,9 @@ class TestGenerateSensor:
         # State Level
         state_data = pd.read_csv("./test_data/state_data.csv", sep = ",", 
                                  parse_dates=['timestamp'])
-        raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth = False,
-                                                                first_date = datetime(2020, 6, 10),
-                                                                last_date = datetime(2020, 6, 20))
+        raw_state_df, state_groups = generate_sensor_for_states(
+            state_data, smooth = False, device = False,
+            first_date = datetime(2020, 6, 10), last_date = datetime(2020, 6, 20))
 
         assert (raw_state_df.dropna()["val"] < 100).all
         assert (raw_state_df.columns == ["geo_id", "val", "se", "sample_size", "timestamp"]).all()

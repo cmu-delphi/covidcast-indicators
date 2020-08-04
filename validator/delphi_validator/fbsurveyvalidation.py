@@ -114,21 +114,36 @@ def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
 def reldiff_by_min(x, y):
     return (x - y) / min(x,y)
 
-def check_rapid_change(recent_df, recent_api_df, date_list):
+def check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo):
     recent_rows_per_reporting_day = recent_df[recent_df['time_value'] == checking_date].shape[0]
     recent_api_rows_per_reporting_day = recent_api_df.shape[0] / len(date_list)
     
-    if(sanity_check_rows_per_day and abs(reldiff_by_min(recent_rows_per_reporting_day, recent_api_rows_per_reporting_day)) > 0.35):
+    if(abs(reldiff_by_min(recent_rows_per_reporting_day, recent_api_rows_per_reporting_day)) > 0.35):
         print("Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
         print("The suspicous spike is for date: ", checking_date, ", signal: ", sig, ", geo_type: ", geo)
 
 
+def check_avg_val_diffs(recent_df, recent_api_df):
+    print("recent_df dtypes", recent_df.dtypes)
+    recent_df = recent_df.drop(columns=['geo_id'])
+    mean_recent_df = recent_df.mean()
+    recent_api_df = recent_api_df.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
+    recent_api_df = recent_api_df.drop(columns=['geo_value'])
+    mean_recent_api_df = recent_api_df.mean()
+
+    #mean.stddiff = (mean(recent-semirecent)*2/(mean(recent)+mean(semirecent)))
+    mean_stddiff = ((mean_recent_df - mean_recent_api_df).mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
+    mean_stdabsdiff = ((mean_recent_df - mean_recent_api_df).abs().mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
+    print("mean_stddiff", mean_stddiff)
+    print("mean_stdabsdiff", mean_stdabsdiff)
+    
+
 # The daterange function is exclusive of the end_date in line with the native python range()
-    for check_date in daterange(start_date, end_date):
-        print(check_date.strftime("%Y-%m-%d"))
+#    for check_date in daterange(start_date, end_date):
+#        print(check_date.strftime("%Y-%m-%d"))
 
 
-def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True):
+def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
 
     meta = covidcast.metadata()
     fb_meta = meta[meta['data_source']==DATA_SOURCE]
@@ -162,7 +177,7 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
     date_slist = [dt.strftime("%Y%m%d") for dt in date_list]
     print(date_slist)
 
-    data_folder = Path("data/")
+    data_folder = Path("../data")
 
     filenames = read_relevant_date_filenames(data_folder, date_slist)
 
@@ -200,7 +215,11 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
-            check_rapid_change(recent_df, recent_api_df, date_list)
+            #if sanity_check_rows_per_day:
+            #    check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo)
+
+            if sanity_check_value_diffs:
+                check_avg_val_diffs(recent_df, recent_api_df)
         kroc += 1
         if kroc == 2:  
             break

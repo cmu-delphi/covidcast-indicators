@@ -86,6 +86,11 @@ def run_module():
             export_end_date = input_export_end_date
     export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
+    # Only export data from -45 days to -5 days
+    fixed_export_start_date = export_end_date - timedelta(days = 40)
+    if fixed_export_start_date > export_start_date:
+        export_start_date = fixed_export_start_date
+
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()
 

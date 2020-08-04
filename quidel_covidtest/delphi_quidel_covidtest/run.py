@@ -51,8 +51,9 @@ def run_module():
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
     # pull new data only that has not been ingested
-    pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
-    filename, pull_start_date = check_intermediate_file(cache_dir, pull_start_date)
+    filename, pull_start_date = check_intermediate_file(
+        cache_dir,
+        datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date())
 
     if params["pull_end_date"] == "":
         pull_end_date = date.today()
@@ -87,9 +88,8 @@ def run_module():
     export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
     # Only export data from -45 days to -5 days
-    fixed_export_start_date = export_end_date - timedelta(days = 40)
-    if fixed_export_start_date > export_start_date:
-        export_start_date = fixed_export_start_date
+    if (export_end_date - export_start_date).days > 40:
+        export_start_date = export_end_date - timedelta(days=40)
 
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()

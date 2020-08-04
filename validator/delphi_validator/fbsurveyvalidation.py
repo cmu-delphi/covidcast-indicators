@@ -123,19 +123,27 @@ def check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, 
         print("The suspicous spike is for date: ", checking_date, ", signal: ", sig, ", geo_type: ", geo)
 
 
-def check_avg_val_diffs(recent_df, recent_api_df):
+def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     print("recent_df dtypes", recent_df.dtypes)
     recent_df = recent_df.drop(columns=['geo_id'])
-    mean_recent_df = recent_df.mean()
+    mean_recent_df = recent_df[['val', 'se', 'sample_size']].mean()
     recent_api_df = recent_api_df.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
     recent_api_df = recent_api_df.drop(columns=['geo_value'])
+
     mean_recent_api_df = recent_api_df.mean()
 
-    #mean.stddiff = (mean(recent-semirecent)*2/(mean(recent)+mean(semirecent)))
     mean_stddiff = ((mean_recent_df - mean_recent_api_df).mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
     mean_stdabsdiff = ((mean_recent_df - mean_recent_api_df).abs().mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
     print("mean_stddiff", mean_stddiff)
     print("mean_stdabsdiff", mean_stdabsdiff)
+
+    classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
+    raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
+
+    smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
+    
+
+    
     
 
 # The daterange function is exclusive of the end_date in line with the native python range()
@@ -192,9 +200,13 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
     ## in time, how many days -- before subtracting out the "recent" days ---
     ## do we use to form the reference statistics?
     semirecent_lookbehind = timedelta(days=7)
+    smooth_option_regex = re.compile(r'([^_]+)')
 
     kroc = 0
     for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
+        
+        m = smooth_option_regex.match(sig)
+        smooth_option = m.group(1)
         
         #recent_df.set_index("time_value", inplace = True)
         print("Printing recent_df scenes:", recent_df.shape)
@@ -219,7 +231,7 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
             #    check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo)
 
             if sanity_check_value_diffs:
-                check_avg_val_diffs(recent_df, recent_api_df)
+                check_avg_val_diffs(recent_df, recent_api_df, smooth_option)
         kroc += 1
         if kroc == 2:  
             break

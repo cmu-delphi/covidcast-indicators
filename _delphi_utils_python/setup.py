@@ -7,6 +7,7 @@ required = [
     "pytest",
     "pytest-cov",
     "boto3",
+    "moto",
     "gitpython",
 ]
 

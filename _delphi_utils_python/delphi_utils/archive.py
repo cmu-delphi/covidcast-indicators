@@ -74,16 +74,17 @@ class ArchiveDiffer:
             before_file = join(self.cache_dir, filename)
             after_file = join(self.export_dir, filename)
 
+            common_diffs[after_file] = None
+
             # Check for simple file similarity before doing CSV diffs
             if filecmp.cmp(before_file, after_file, shallow=False):
-                common_diffs[after_file] = None
                 continue
 
             deleted_df, changed_df, added_df = diff_export_csv(before_file, after_file)
             new_issues_df = pd.concat([changed_df, added_df], axis=0)
 
             if len(deleted_df) > 0:
-                raise NotImplementedError("Cannot handle deletions yet")
+                print(f"Warning, diff has deleted indices in {after_file} that will be ignored")
 
             # Write the diffs to diff_file, if applicable
             if len(new_issues_df) > 0:
@@ -92,12 +93,9 @@ class ArchiveDiffer:
                 new_issues_df.to_csv(diff_file, na_rep="NA")
                 common_diffs[after_file] = diff_file
 
-            else:
-                common_diffs[after_file] = None
-
         return deleted_files, common_diffs, new_files
 
-    def archive_exports(self, exported_files: Optional[Files]) -> Tuple[Files, Files]:
+    def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         raise NotImplementedError
 
     def filter_exports(self, common_diffs: FileDiffMap):
@@ -144,12 +142,9 @@ class S3ArchiveDiffer(ArchiveDiffer):
 
         self._cache_updated = True
 
-    def archive_exports(self, exported_files: Optional[Files] = None) -> Tuple[Files, Files]:
+    def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         archive_success = []
         archive_fail = []
-
-        if exported_files is None:
-            exported_files = glob(join(self.export_dir, "*.csv"))
 
         # Enable versioning if turned off
         # if self.bucket_versioning.status != "Enabled":
@@ -159,10 +154,10 @@ class S3ArchiveDiffer(ArchiveDiffer):
             cached_file = abspath(join(self.cache_dir, basename(exported_file)))
             archive_key = join(self.indicator_prefix, basename(exported_file))
 
-            # Update local cache
-            shutil.copyfile(exported_file, cached_file)
-
             try:
+                # Update local cache
+                shutil.copyfile(exported_file, cached_file)
+
                 self.bucket.Object(archive_key).upload_file(exported_file)
                 # TODO: Wait until exists to confirm successful upload?
                 archive_success.append(exported_file)
@@ -226,13 +221,10 @@ class GitArchiveDiffer(ArchiveDiffer):
         with self.archiving_branch():
             return super().diff_exports()
 
-    def archive_exports(self, exported_files: Optional[Files] = None) -> Tuple[Files, Files]:
+    def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         archived_files = []
         archive_success = []
         archive_fail = []
-
-        if exported_files is None:
-            exported_files = glob(join(self.export_dir, "*.csv"))
 
         with self.archiving_branch():
             # Abs paths of all modified files to check if we will override uncommitted changes

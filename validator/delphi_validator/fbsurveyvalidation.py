@@ -147,6 +147,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     #         dplyr::mutate(mean.stddiff.high = abs(mean.stddiff) > thresholds[["mean.stddiff"]] |
     #                           variable=="val" & abs(mean.stddiff) > thresholds[["val.mean.stddiff"]],
     #                       mean.stdabsdiff.high = mean.stdabsdiff > thresholds[["mean.stdabsdiff"]]) %>>%
+    # TOdo - Check whats the purpose of variable=="val" in the above statement
 
     switcher = {
     'raw': raw_thresholds,
@@ -242,8 +243,8 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
-            #if sanity_check_rows_per_day:
-            #    check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo)
+            if sanity_check_rows_per_day:
+                check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo)
 
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)

@@ -67,7 +67,7 @@ class GeoMapper:
     """
 
     def __init__(self,
-                 fips_filepath=path.join(DATA_PATH,ZIP_FIPS_FILE),
+                 zip_fips_filepath=path.join(DATA_PATH,ZIP_FIPS_FILE),
                  state_filepath=path.join(DATA_PATH,STATE_FILE),
                  msa_filepath=path.join(DATA_PATH,MSA_FILE),
                  jhu_filepath=path.join(DATA_PATH,JHU_FIPS_FILE),
@@ -82,7 +82,7 @@ class GeoMapper:
             state_filepath: location of state_code->state_id,name cross table
             msa_filepath: location of fips->msa cross table
         """
-        self.fips_filepath = fips_filepath
+        self.zip_fips_filepath = zip_fips_filepath
         self.state_filepath = state_filepath
         self.msa_filepath = msa_filepath
         self.jhu_filepath = jhu_filepath
@@ -92,30 +92,22 @@ class GeoMapper:
 
     def load_zip_fips_cross(self):
         """load zip->fips cross table"""
-        stream = pkg_resources.resource_stream(__name__, self.fips_filepath)
+        stream = pkg_resources.resource_stream(__name__, self.zip_fips_filepath)
         self.zip_fips_cross = pd.read_csv(stream,dtype={'zip':str,
                                           'fips':str,
                                           'weight':float})
+
         for col in ['fips','zip']:
             self.zip_fips_cross = GeoMapper.convert_int_to_str5(self.zip_fips_cross,int_col=col,str_col=col)
 
     def load_fips_zip_cross(self):
         """load zip->fips cross table"""
         stream = pkg_resources.resource_stream(__name__, self.fips_zip_filepath)
-        self.fips_zip_cross = pd.read_csv(stream,dtype={'zip':str,
-                                          'fips':str,
+        self.fips_zip_cross = pd.read_csv(stream,dtype={'fips':str,
+                                          'zip':str,
                                           'weight':float})
         for col in ['fips','zip']:
             self.fips_zip_cross = GeoMapper.convert_int_to_str5(self.fips_zip_cross,int_col=col,str_col=col)
-
-    def load_fips_cross(self):
-        """load zip->fips cross table"""
-        stream = pkg_resources.resource_stream(__name__, self.fips_filepath)
-        self.zip_fips_cross = pd.read_csv(stream,dtype={'zip':str,
-                                          'fips':str,
-                                          'weight':float})
-        for col in ['fips','zip']:
-            self.zip_fips_cross = GeoMapper.convert_int_to_str5(self.zip_fips_cross,int_col=col,str_col=col)
 
     def load_state_cross(self):
         """load state_code->state_id cross table"""
@@ -658,7 +650,7 @@ class GeoMapper:
         """
 
         data = data.copy()
-        if not hasattr(self,"fips_hrr_cross"):
+        if not hasattr(self,"zip_hrr_cross"):
             self.load_zip_hrr_cross()
         data = self.convert_intfips_to_str(data, intfips_col=zip_col, strfips_col=zip_col)
         hrr_cross = self.zip_hrr_cross.rename(columns={'hrr': hrr_col})

@@ -25,10 +25,12 @@ You can see consistency checks and diffs with old sources in ./consistency_check
 - 02_20_uszips.csv : Hand edited file from Jingjing, we only use the fips,zip encoding and also extract the states from these
 - Crosswalk files from https://www.huduser.gov/portal/datasets/usps_crosswalk.html
 - JHU crosswalk table: https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data#uid-lookup-table-logic
+- ZIP/County population: https://www.census.gov/geographies/reference-files/time-series/geo/relationship-files.html#par_textimage_674173622, https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?#
 
-## Todo 07/07/2020
+## Todo
 
-- go through the trans files
+- make direct cross tables for fips -> hrr and zip -> msa / state
+- use hud for zip -> fips?
 
 ## Notes
 

@@ -188,12 +188,17 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         df = gmpr.county_to_state(df, fips_col="fips", state_id_col="geo_id", date_col="timestamp")
     elif geo_res == "msa":
         df = gmpr.county_to_msa(df, fips_col="fips", msa_col="geo_id", date_col="timestamp")
+        df['geo_id'] = df['geo_id'].astype(int)
     elif geo_res == 'hrr':
         df = gmpr.county_to_hrr(df, fips_col="fips", hrr_col="geo_id", date_col="timestamp")
+        df['geo_id'] = df['geo_id'].astype(int)
     elif geo_res == 'county':
         df.rename(columns={'fips': 'geo_id'}, inplace=True)
+        df['geo_id'] = df['geo_id'].astype(int)
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
+    df['new_counts'] = df['new_counts']
+    df['cumulative_counts'] = df['cumulative_counts']
     return df
 
 

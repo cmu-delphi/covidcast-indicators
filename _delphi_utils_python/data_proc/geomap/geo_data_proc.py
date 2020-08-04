@@ -24,8 +24,14 @@ ZIP_HSA_OUT_FILE = "zip_hsa_cross.csv"
 ZIP_HRR_OUT_FILE = "zip_hrr_cross.csv"
 JHU_FIPS_FILE = "UID_ISO_FIPS_LookUp_Table.csv"
 JHU_FIPS_OUT_FILE = "jhu_uid_fips_cross.csv"
-FIPS_ZIP_FILE = "COUNTY_ZIP_032020.xlsx"
 FIPS_ZIP_OUT_FILE = "fips_zip_cross.csv"
+FIPS_BY_ZIP_POP_FILE = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?#"
+
+COPOP_OUT_FILE = "fips_pop.csv"
+ZIPPOP_OUT_FILE = "zip_pop.csv"
+FIPS_ZIP_OUT_FILE = "fips_zip_cross.csv"
+ZIP_FIPS_OUT_FILE = "zip_fips_cross.csv"
+
 
 def convert_fips(x):
     """Ensure fips is a string of length 5."""
@@ -136,10 +142,24 @@ def proc_jhu_uid_to_fips():
     return True
 
 def proc_fips_to_zip():
-    fips_df = pd.read_excel(FIPS_ZIP_FILE)
-    fips_df.rename(columns={'COUNTY':'fips', 'ZIP':'zip', 'TOT_RATIO': 'weight'},
-                   inplace=True)
-    fips_df[['fips','zip','weight']].to_csv(path.join(OUTPUT_DIR, FIPS_ZIP_OUT_FILE), index=False)
+    pop_df = pd.read_csv(FIPS_BY_ZIP_POP_FILE)
+    pop_df['fips'] = pop_df['STATE'].astype(str).str.zfill(2) \
+                     + pop_df['COUNTY'].astype(str).str.zfill(3)
+    pop_df['zip'] = pop_df['ZCTA5'].astype(str).str.zfill(5)
+    pop_df = pop_df[['zip', 'fips', 'POPPT']].rename(columns={'POPPT': 'pop'})
+
+    pop_fips = pop_df[['fips','pop']].groupby('fips').sum()
+    pop_fips.to_csv(path.join(OUTPUT_DIR,COPOP_OUT_FILE))
+
+    pop_zip = pop_df[['zip','pop']].groupby('zip').sum()
+    pop_zip.to_csv(path.join(OUTPUT_DIR,ZIPPOP_OUT_FILE))
+
+    pop_df.set_index(['fips', 'zip'], inplace=True)
+    fips_zip = pop_df.groupby(level=0, as_index=False).apply(lambda g: g['pop'] / g['pop'].sum())
+    zip_fips = pop_df.groupby(level=1, as_index=False).apply(lambda g: g['pop'] / g['pop'].sum())
+
+    pd.DataFrame(fips_zip).reset_index(level=[1,2]).rename(columns={'pop':'weight'}).to_csv(path.join(OUTPUT_DIR, FIPS_ZIP_OUT_FILE), index=False)
+    pd.DataFrame(zip_fips).reset_index(level=[1,2]).rename(columns={'pop':'weight'}).to_csv(path.join(OUTPUT_DIR, ZIP_FIPS_OUT_FILE), index=False)
     return True
 
 if __name__ == "__main__":

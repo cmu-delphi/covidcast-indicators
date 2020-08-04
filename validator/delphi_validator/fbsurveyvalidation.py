@@ -142,14 +142,29 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
 
     smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
     
+    # Code reference from R code
+    # changesum.by.variable.with.flags = changesum.by.variable %>>%
+    #         dplyr::mutate(mean.stddiff.high = abs(mean.stddiff) > thresholds[["mean.stddiff"]] |
+    #                           variable=="val" & abs(mean.stddiff) > thresholds[["val.mean.stddiff"]],
+    #                       mean.stdabsdiff.high = mean.stdabsdiff > thresholds[["mean.stdabsdiff"]]) %>>%
 
+    switcher = {
+    'raw': raw_thresholds,
+    'smoothed': smoothed_thresholds,
+    }
+    # Get the function from switcher dictionary
+    thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
+
+    mean.stddiff.high = mean_stddiff.abs() > thres.loc['mean.stddiff'] or
+                        mean_stddiff.abs() > thres.loc['val.mean.stddiff"']
+    mean.stdabsdiff.high = mean_stdabsdiff > thres.loc['mean.stdabsdiff']     
+
+    if mean.stddiff.high or mean.stdabsdiff.high:
+        print('Average differences in variables by geoid between recent & semirecent data seem  \
+               large --- either large increase tending toward one direction or large mean absolute \
+               difference, relative to average values of corresponding variables.  For the former \
+               check, tolerances for `val` are more restrictive than those for other columns.'')
     
-    
-
-# The daterange function is exclusive of the end_date in line with the native python range()
-#    for check_date in daterange(start_date, end_date):
-#        print(check_date.strftime("%Y-%m-%d"))
-
 
 def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
 

@@ -24,13 +24,16 @@ def load_files():
 def main():
     load_iter = load_files()
     for rec, df in load_iter:
-        if 'msa' in rec:
+        if ('msa' in rec) and False:
             msa_ds = (df['val'] - df['val_stable']).sum()
             print(f'{msa_ds} value diff')
-        if df.eval('abs(val - val_stable)').sum() > 0.01:
+        if (df.eval('abs(val - val_stable)').sum() > 0.01) and ("county" in rec):
             print(f'Printing {rec} difference')
             df_diff = df[df.eval('val != val_stable')]
             print(df_diff.head())
-            input('w')
+            print(df_diff.shape)
+            # assert "county_confirmed_7dav_incidence_num" not in rec, f"{rec}!!!"
+            #input('w')
 
-main()
+if __name__ == "__main__":
+    main()

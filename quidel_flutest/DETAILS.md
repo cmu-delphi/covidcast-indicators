@@ -1,9 +1,7 @@
 # Quidel Flu Test
 
 ### Background
-Starting Feburary 1, 2020, we began providing Quidel signal and stopped reporting it in early May due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device and we suspect that the device identifiers could potentially be useful to normalize the results over time. 
-
-Quidel is a major manufacturer of diagnostic healthcare projects and has enthusiastically collaborated with Delphi's flu forecasting efforts. Historically, they have been a major provider of flu testing and our current data from them consists of roughly 8 million flu tests dating back to 2014 and continuing up to the present day. They are also in the process of bringing a COVID test online and in the future we expect to have individual info for their COVID tests. The present sensor investigation concerns their flu tests. The hypothesis motivating this inquiry is that ILI patients presenting with respiratory symptoms may likely be tested for flu to rule it out before progressing to COVID testing. \\
+Starting from 2014-08, we began getting flu test data from Quidel. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device and we suspect that the device identifiers could potentially be useful to normalize the results over time. 
 
 ### Signal names
 - flu_ag_raw_pct_positive: percent of tests returning positive that day
@@ -69,6 +67,6 @@ q = N / D
 We conduct temporal and spatial pooling for the smoothed signal. The spatial pooling is described in the previous section where we shrink the estimates to the state's mean if the total test number is smaller than 50 for a certain location on a certain day. Additionally, as with the Quidel Flu Test signal, we consider smoothed estimates formed by pooling data over time. That is, daily, for each location, we first pool all data available in that location over the last 7 days, and we then recompute everything described in the last two subsections. Pooling in this data makes estimates available in more geographic areas.
 
 ### Exceptions
-There are 89 special zip codes that are included in Quidel COVID raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
+There are 89 special zip codes that are included in Quidel Flu raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
 * Until 08-05-2020, 133,000 tests out of 7,519,726 tests for those zip codes. 
 

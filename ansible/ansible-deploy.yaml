@@ -20,11 +20,11 @@
         state: link
 
     - name: Check to see if we have a params file to send.
-      local_action: stat files/{{ indicator }}-params-prod.json
+      local_action: stat path="files/{{ indicator }}-params-prod.json"
       register: file
 
     - name: Check to see if we have a params template to send.
-      local_action: stat templates/{{ indicator }}-params-prod.json.j2
+      local_action: stat path="templates/{{ indicator }}-params-prod.json.j2"
       register: template
 
     - name: Set production params file.

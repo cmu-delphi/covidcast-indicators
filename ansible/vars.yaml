@@ -9,3 +9,5 @@ pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }
 
 # Indicators variables.
 google_health_api_key: "{{ vault_google_health_api_key }}"
+safegraph_aws_access_key_id: "{{ vault_safegraph_aws_access_key_id }}"
+safegraph_aws_secret_access_key: "{{ vault_aws_safegraph_secret_access_key }}"

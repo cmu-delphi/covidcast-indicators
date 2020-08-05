@@ -44,7 +44,7 @@ where we assume for each time point, the estimates follow a binomial distributio
 We conduct temporal and spatial pooling for the smoothed signal. The spatial pooling is described in the previous section where we shrink the estimates to the state's mean if the total test number is smaller than 50 for a certain location on a certain day. Additionally, as with the Quidel COVID Test signal, we consider smoothed estimates formed by pooling data over time. That is, daily, for each location, we first pool all data available in that location over the last 7 days, and we then recompute everything described in the last two subsections. Pooling in this data makes estimates available in more geographic areas.
 
 ### Exceptions
-There are 8 special zip codes that are included in Quidel COVID raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
+There are 9 special zip codes that are included in Quidel COVID raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
 
 |zip       |State| Number of Tests|
 |---|-------|------|
@@ -53,9 +53,10 @@ There are 8 special zip codes that are included in Quidel COVID raw data but are
 |48824    |MI|14|
 |32313     |FL|37|
 |29486    |SC|69|
-|75033    |TX|1990|
-|79430    |TX|36|
+|75033    |TX|2318|
+|79430    |TX|43|
+|44325 |OH|56|
 |75072    |TX|63|
 
-* Number of tests calculated until 07-30-2020
-* Until 07-30-2020, only 2,324 tests out of 833,010 tests for those zip codes. 
+* Number of tests calculated until 08-05-2020
+* Until 08-05-2020, only 2,715 tests out of 942,293 tests for those zip codes. 

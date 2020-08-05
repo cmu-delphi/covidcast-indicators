@@ -11,7 +11,7 @@ import json
 
 INPUT_DIR = "."
 OUTPUT_DIR = "../../delphi_utils/data"
-MSA_FILE = "03_20_MSAs.xls"
+MSA_FILE = "09_18_MSAs.xls"
 FIPS_MSA_OUT_FILE = "fips_msa_cross.csv"
 ZIP_CODE_FILE = "02_20_uszips.csv"
 ZIP_FIPS_OUT_FILE = "zip_fips_cross.csv"
@@ -165,8 +165,8 @@ def proc_fips_to_zip():
 if __name__ == "__main__":
 
     # proc_zip_fips()
-    # proc_fips_msa()
+    proc_fips_msa()
     # proc_fips_hrr()
     # proc_zip_hsa_hrr()
     # proc_jhu_uid_to_fips()
-    proc_fips_to_zip()
+    # proc_fips_to_zip()

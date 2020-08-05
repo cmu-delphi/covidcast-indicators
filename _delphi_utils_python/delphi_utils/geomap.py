@@ -320,7 +320,8 @@ class GeoMapper:
                                  data,
                                  fips_col='fips',
                                  msa_col='msa',
-                                 full=False):
+                                 full=False,
+                                 create_mega=False):
         """create msa column from county (fips) column
 
         Args:
@@ -342,8 +343,9 @@ class GeoMapper:
             data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='outer')
         else:
             data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='left')
-        data_st = self.convert_fips_to_stcode(data[data[msa_col].isna()],fips_col=fips_col)['st_code']
-        data.loc[data[msa_col].isna(),msa_col] = data_st.astype(str).str.zfill(5)
+        if create_mega:
+            data_st = self.convert_fips_to_stcode(data[data[msa_col].isna()],fips_col=fips_col)['st_code']
+            data.loc[data[msa_col].isna(),msa_col] = data_st.astype(str).str.zfill(5)
         return data
 
     def county_to_state(self,

@@ -109,3 +109,7 @@ We have to deal with the NaN fips by hand, which are
 907                                Veteran Hospitals, US
 ```
 Is you look at geo_data.py::
+
+08/04/2020:
+Large changes in MSA from 2018 version from bea.gov (msa_list.csv), and the new 2020 version from census bureau (03_20_MSAs.xls).
+Trying to use 2018 version instead from https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html

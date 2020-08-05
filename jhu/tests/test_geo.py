@@ -164,7 +164,7 @@ class TestGeoMap:
         
         # df = df.append(df_mega)
         
-        new_df = geo_map(df, "hrr", MAP_DF, 'new_counts')
+        new_df = geo_map(df, "hrr", 'new_counts')
 
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
@@ -201,7 +201,7 @@ class TestGeoMap:
         
         # df = df.append(df_mega)
 
-        new_df = geo_map(df, "msa", MAP_DF, 'new_counts')
+        new_df = geo_map(df, "msa", 'new_counts')
 
         # exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
         # exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000

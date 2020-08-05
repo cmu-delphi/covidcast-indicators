@@ -1,4 +1,4 @@
-# Quidel COVID Test Indicators
+# Quidel Flu Test Indicators
 
 ## Running the Indicator
 

@@ -49,7 +49,7 @@ def run_module():
     mail_server = params["mail_server"]
     account = params["account"]
     password = params["password"]
-    senders = params["sender"]
+    sender = params["sender"]
 
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
@@ -69,7 +69,7 @@ def run_module():
     # Pull data from the email at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, senders, password)
+                               account, sender, password)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return

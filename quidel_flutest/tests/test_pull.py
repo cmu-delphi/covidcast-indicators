@@ -39,13 +39,13 @@ class TestingPullData:
         mail_server = params["mail_server"]
         account = params["account"]
         password = params["password"]
-        senders = params["sender"]
+        sender = params["sender"]
         
         pull_start_date = date(2020, 6, 10)
         pull_end_date = date(2020, 6, 12)
         
         df, _ = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, senders, password) 
+                               account, sender, password) 
         
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 

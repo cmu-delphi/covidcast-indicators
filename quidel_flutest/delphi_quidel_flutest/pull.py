@@ -11,25 +11,27 @@ import numpy as np
 
 from imap_tools import MailBox, A, AND
 
-def read_attached_file(att):
-    toread = io.BytesIO()
-    toread.write(att.payload)
-    toread.seek(0)  # reset the pointer
-    newdf = pd.read_excel(toread)  # now read to dataframe
-    if "AnalyteResult1" in newdf.keys():
-        newdf = newdf.rename({"AnalyteResult1": "FluA",
-                              "AnalyteResult2": "FluB"},
-                             axis=1)
-    elif "Result1" in newdf.keys():
-        newdf = newdf.rename({"Result1": "FluA",
-                              "Result2": "FluB"},
-                             axis=1)
-    if "ZipCode" not in newdf.keys():
-        newdf = newdf.rename({"Zip": "ZipCode"}, axis=1)
-    return newdf
+def read_historical_data():
+    """
+    read historical data stored in midas /common/quidel-historical-raw
+    """
+    pull_dir = "/common/quidel-historical-raw"
+
+
+    columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
+                               'FluA', 'FluB', 'StorageDate']
+    df = pd.DataFrame(columns=columns)
+
+    #Read historical data (uncomment these lines until it is ready to be
+    #publish. These can only run through midas)
+    for fn in os.listdir(pull_dir):
+        if "xlsx" in fn:
+            newdf = pd.read_excel("/".join([pull_dir, fn]))
+            df = df.append(newdf[columns])
+    return df
 
 def get_from_email(start_date: datetime.date, end_date: datetime.date,
-                   mail_server: str, account: str, senders: list, password: str):
+                   mail_server: str, account: str, sender: str, password: str):
     """
     Get raw data from email account
     Args:
@@ -40,8 +42,8 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
         mail_server: str
         account: str
             email account to receive new data
-        senders: list of strs
-            email accounts of the senders
+        sender: str
+            email account of the sender
         password: str
             password of the datadrop email
     output:
@@ -53,26 +55,30 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
     df = pd.DataFrame(columns=columns)
 
     with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
-        # Read historical data
-        if start_date <= date(2020, 5, 8):
-            for message in mailbox.fetch(A(AND(date=date(2020, 8, 4), from_=senders[1]))):
-                for att in message.attachments:
-                    name = att.filename
-                    # print(name)
-                    newdf = read_attached_file(att)
-                    df = df.append(newdf[columns])
-
         # Read new data received from Quidel
         for search_date in [start_date + timedelta(days=x)
                             for x in range((end_date - start_date).days + 1)]:
-            for message in mailbox.fetch(A(AND(date=search_date, from_=senders[0]))):
+            for message in mailbox.fetch(A(AND(date=search_date, from_=sender))):
                 for att in message.attachments:
                     name = att.filename
                     # Only consider flu tests
                     if "Flu" not in name:
                         continue
                     print("Pulling data received on %s"%search_date)
-                    newdf = read_attached_file(att)
+                    toread = io.BytesIO()
+                    toread.write(att.payload)
+                    toread.seek(0)  # reset the pointer
+                    newdf = pd.read_excel(toread)  # now read to dataframe
+                    if "AnalyteResult1" in newdf.keys():
+                        newdf = newdf.rename({"AnalyteResult1": "FluA",
+                                              "AnalyteResult2": "FluB"},
+                                             axis=1)
+                    elif "Result1" in newdf.keys():
+                        newdf = newdf.rename({"Result1": "FluA",
+                                              "Result2": "FluB"},
+                                             axis=1)
+                    if "ZipCode" not in newdf.keys():
+                        newdf = newdf.rename({"Zip": "ZipCode"}, axis=1)
                     df = df.append(newdf[columns])
                     time_flag = search_date
 
@@ -114,7 +120,7 @@ def fix_date(df):
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def pull_quidel_flutest(start_date, end_date, mail_server, account, senders, password):
+def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, password):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
@@ -129,15 +135,21 @@ def pull_quidel_flutest(start_date, end_date, mail_server, account, senders, pas
         mail_server: str
         account: str
             email account to receive new data
-        senders: list of strs
-            email accounts of the senders
+        sender: str
+            email account of the sender
         password: str
             password of the datadrop email
     output:
         df: pd.DataFrame
     """
     # Get new data from email
-    df, time_flag = get_from_email(start_date, end_date, mail_server, account, senders, password)
+    df, time_flag = get_from_email(start_date, end_date, mail_server, account, sender, password)
+
+    # Get historical data
+    if start_date < date(2020, 5, 8):
+        print("Read historical data")
+        df_historical = read_historical_data()
+        df = df.append(df_historical)
 
     # No new data can be pulled
     if time_flag is None:

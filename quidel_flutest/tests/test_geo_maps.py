@@ -6,7 +6,7 @@ import pandas as pd
 import numpy as np
 
 
-from delphi_quidel_covidtest.geo_maps import (zip_to_msa, zip_to_hrr, 
+from delphi_quidel_flutest.geo_maps import (zip_to_msa, zip_to_hrr, 
                                               zip_to_county, zip_to_state)
 
 

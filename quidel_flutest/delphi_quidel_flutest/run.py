@@ -5,7 +5,6 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
-from itertools import product
 import os
 from os.path import join
 
@@ -23,7 +22,7 @@ MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
 
 GEO_RESOLUTIONS = [
-    "county",
+    # "county",
     "msa",
     "hrr"
 ]
@@ -50,7 +49,7 @@ def run_module():
     mail_server = params["mail_server"]
     account = params["account"]
     password = params["password"]
-    sender = params["sender"]
+    senders = params["sender"]
 
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
@@ -70,7 +69,7 @@ def run_module():
     # Pull data from the email at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password)
+                               account, senders, password)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -90,24 +89,27 @@ def run_module():
             export_end_date = input_export_end_date
     export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
+    # Only export data from -45 days to -5 days
+    if (export_end_date - export_start_date).days > 40:
+        export_start_date = export_end_date - timedelta(days=40)
+
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()
 
     # State Level
     data = df.copy()
     state_groups = zip_to_state(data, map_df).groupby("state_id")
-    
+
     for sensor in SENSORS:
         # For State Level
         print("state", sensor)
         state_df = generate_sensor_for_states(
-            state_groups, smooth=SMOOTHERS[sensor][1], 
-            device=SMOOTHERS[sensor][0], first_date=first_date, 
+            state_groups, smooth=SMOOTHERS[sensor][1],
+            device=SMOOTHERS[sensor][0], first_date=first_date,
             last_date=last_date)
         export_csv(state_df, "state", sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
-   
-        
+
         # County/HRR/MSA level
         for geo_res in GEO_RESOLUTIONS:
             print(geo_res, sensor)
@@ -118,7 +120,7 @@ def run_module():
                 data, res_key = zip_to_msa(data, map_df)
             else:
                 data, res_key = zip_to_hrr(data, map_df)
-        
+
             res_df = generate_sensor_for_other_geores(
                 state_groups, data, res_key, smooth=SMOOTHERS[sensor][1],
                 device=SMOOTHERS[sensor][0], first_date=first_date,

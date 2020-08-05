@@ -5,10 +5,10 @@ from datetime import datetime, date
 import numpy as np
 import pandas as pd
 
-from delphi_quidel_covidtest.pull import (
+from delphi_quidel_flutest.pull import (
     fix_zipcode,
     fix_date,
-    pull_quidel_covidtest,
+    pull_quidel_flutest,
     check_intermediate_file
 )
 
@@ -16,7 +16,7 @@ from delphi_quidel_covidtest.pull import (
 class TestFixData:
     def test_fix_zipcode(self):
 
-        df = pd.DataFrame({"Zip":[2837,  29570, "15213-0436", "02134-3611"]})
+        df = pd.DataFrame({"ZipCode":[2837,  29570, "15213-0436", "02134-3611"]})
         df = fix_zipcode(df)
 
         assert set(df["zip"]) == set([2837, 29570, 15213, 2134])
@@ -33,26 +33,26 @@ class TestFixData:
                                             datetime(2020, 6, 11), datetime(2020, 7, 2)])
 
 class TestingPullData:
-    def test_pull_quidel_covidtest(self):
+    def test_pull_quidel_flutest(self):
         
         params = read_params()
         mail_server = params["mail_server"]
         account = params["account"]
         password = params["password"]
-        sender = params["sender"]
+        senders = params["sender"]
         
         pull_start_date = date(2020, 6, 10)
         pull_end_date = date(2020, 6, 12)
         
-        df, _ = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password) 
+        df, _ = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
+                               account, senders, password) 
         
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 
         
-        assert [first_date.month, first_date.day] == [5, 20]
+        assert [first_date.month, first_date.day] == [3, 11]
         assert [last_date.month, last_date.day] == [6, 11]
-        assert set(df.columns) == set(["timestamp", "zip", "totalTest", "positiveTest"])
+        assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
         
 
     def test_check_intermediate_file(self):

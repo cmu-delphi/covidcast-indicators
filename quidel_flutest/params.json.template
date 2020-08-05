@@ -9,5 +9,5 @@
   "mail_server": "imap.exchange.andrew.cmu.edu",
   "account": "delphi-datadrop@andrew.cmu.edu",
   "password": "",
-  "sender": ""
+  "sender": [],
 }

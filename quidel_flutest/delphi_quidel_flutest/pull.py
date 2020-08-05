@@ -11,8 +11,25 @@ import numpy as np
 
 from imap_tools import MailBox, A, AND
 
+def read_attached_file(att):
+    toread = io.BytesIO()
+    toread.write(att.payload)
+    toread.seek(0)  # reset the pointer
+    newdf = pd.read_excel(toread)  # now read to dataframe
+    if "AnalyteResult1" in newdf.keys():
+        newdf = newdf.rename({"AnalyteResult1": "FluA",
+                              "AnalyteResult2": "FluB"},
+                             axis=1)
+    elif "Result1" in newdf.keys():
+        newdf = newdf.rename({"Result1": "FluA",
+                              "Result2": "FluB"},
+                             axis=1)
+    if "ZipCode" not in newdf.keys():
+        newdf = newdf.rename({"Zip": "ZipCode"}, axis=1)
+    return newdf
+
 def get_from_email(start_date: datetime.date, end_date: datetime.date,
-                   mail_server: str, account: str, sender: str, password: str):
+                   mail_server: str, account: str, senders: list, password: str):
     """
     Get raw data from email account
     Args:
@@ -23,47 +40,42 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
         mail_server: str
         account: str
             email account to receive new data
-        sender: str
-            email account of the sender
+        senders: list of strs
+            email accounts of the senders
         password: str
             password of the datadrop email
     output:
         df: pd.DataFrame
     """
     time_flag = None
-    columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode', 
+    columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
                                'FluA', 'FluB', 'StorageDate']
     df = pd.DataFrame(columns=columns)
+
     with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
-        for search_date in [start_date + timedelta(days=x)
-                            for x in range((end_date - start_date).days + 1)]:
-            for message in mailbox.fetch(A(AND(date=search_date, from_=sender))):
+        # Read historical data
+        if start_date <= date(2020, 5, 8):
+            for message in mailbox.fetch(A(AND(date=date(2020, 8, 4), from_=senders[1]))):
                 for att in message.attachments:
                     name = att.filename
-                    # Only consider covid tests
+                    # print(name)
+                    newdf = read_attached_file(att)
+                    df = df.append(newdf[columns])
+
+        # Read new data received from Quidel
+        for search_date in [start_date + timedelta(days=x)
+                            for x in range((end_date - start_date).days + 1)]:
+            for message in mailbox.fetch(A(AND(date=search_date, from_=senders[0]))):
+                for att in message.attachments:
+                    name = att.filename
+                    # Only consider flu tests
                     if "Flu" not in name:
                         continue
                     print("Pulling data received on %s"%search_date)
-                    toread = io.BytesIO()
-                    toread.write(att.payload)
-                    toread.seek(0)  # reset the pointer
-                    newdf = pd.read_excel(toread)  # now read to dataframe
-                    if "AnalyteResult1" in newdf.keys():
-                        newdf = newdf.rename({"AnalyteResult1": "FluA",
-                                              "AnalyteResult2": "FluB"},
-                                             axis = 1)
-                    elif "Result1" in newdf.keys():
-                        newdf = newdf.rename({"Result1": "FluA",
-                                              "Result2": "FluB"},
-                                             axis = 1)
-                    if "ZipCode" not in newdf.keys():
-                        newdf = newdf.rename({"Zip": "ZipCode"}, axis = 1)
-                    # if set(columns).issubset(newdf.keys()):
-                    #     x = 1
-                    # else:
-                    #     print("%s"%search_date)
+                    newdf = read_attached_file(att)
                     df = df.append(newdf[columns])
                     time_flag = search_date
+
     return df, time_flag
 
 def fix_zipcode(df):
@@ -102,7 +114,7 @@ def fix_date(df):
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, password):
+def pull_quidel_flutest(start_date, end_date, mail_server, account, senders, password):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
@@ -117,33 +129,19 @@ def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, pass
         mail_server: str
         account: str
             email account to receive new data
-        sender: str
-            email account of the sender
+        senders: list of strs
+            email accounts of the senders
         password: str
             password of the datadrop email
     output:
         df: pd.DataFrame
     """
-    # Ingest old files
-    # df_backup = pd.DataFrame(columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode', 
-    #                            'FluA', 'FluB', 'StorageDate'])   
-    # for fn in os.listdir("../rawdata/"):
-    #     if "xlsx" not in fn:
-    #         continue
-    #     temptdf = pd.read_excel("../quidel/" + fn)
-    #     print(temptdf["TestDate"].min())
-    #     df_backup = df_backup.append(temptdf[columns])
-            
-    start_date = date(2020, 5, 8)
-    end_date = date.today()
     # Get new data from email
-    df, time_flag = get_from_email(start_date, end_date, mail_server, account, sender, password)
-    
+    df, time_flag = get_from_email(start_date, end_date, mail_server, account, senders, password)
+
     # No new data can be pulled
     if time_flag is None:
         return df, time_flag
-    
-    # df = df.append(df_backup).drop_duplicates()
 
     # Fix some of the fipcodes that are 9 digit instead of 5 digit
     df = fix_zipcode(df)
@@ -164,18 +162,18 @@ def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, pass
         as_index=False)['FluA'].count()
     overall_total["totalTest"] = overall_total["FluA"]
     overall_total.drop(labels="FluA", axis="columns", inplace=True)
-    
+
     # Compute numUniqueDevices
     numUniqueDevices = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
-            columns={ "SofiaSerNum": "numUniqueDevices" }
+            columns={"SofiaSerNum": "numUniqueDevices"}
         )
 
     df_merged = overall_total.merge(
-        overall_pos, on=["timestamp", "zip"], how="inner"
+        numUniqueDevices, on=["timestamp", "zip"], how="left"
         ).merge(
-        numUniqueDevices, on=["timestamp", "zip"], how="outer"
+        overall_pos, on=["timestamp", "zip"], how="left"
         ).fillna(0).drop_duplicates()
 
     return df_merged, time_flag

@@ -256,7 +256,7 @@ def raw_tests_per_device(devices, tests, min_obs):
     '''
     Calculates the tests per device for a single geographic
     location, without any temporal smoothing.
-  
+
     If on any day t, tests[t] < min_obs, then we report np.nan.
     The second and third returned np.ndarray are the standard errors,
     currently all np.nan; and the sample size.
@@ -267,7 +267,7 @@ def raw_tests_per_device(devices, tests, min_obs):
             be zero (never np.nan).
         tests: np.ndarray[float]
             Number of tests performed.  If there were no tests performed, this
-            should be zero (never np.nan). 
+            should be zero (never np.nan).
         min_obs: int
             Minimum number of observations in order to compute a ratio
     Returns:
@@ -316,7 +316,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
             be zero (never np.nan).
         tests: np.ndarray[float]
             Number of tests performed.  If there were no tests performed, this
-            should be zero (never np.nan).  
+            should be zero (never np.nan).
         min_obs: int
             Minimum number of observations in order to compute a ratio
         pool_days: int
@@ -332,7 +332,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
             Tests per device after the pool_days pooling, with the same
             length as devices and tests.
         np.ndarray
-            Standard errors, currently uniformly np.nan (placeholder). 
+            Standard errors, currently uniformly np.nan (placeholder).
         np.ndarray
             Effective sample size (after temporal and geographic pooling).
     """
@@ -354,7 +354,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
                        'should be non-negative with no np.nan')
     if min_obs <= 0:
         raise ValueError('min_obs should be positive')
-    if (pool_days <= 0) or type(pool_days) is not int:
+    if (pool_days <= 0) or not isinstance(pool_days, int):
         raise ValueError('pool_days should be a positive int')
     # STEP 0: DO THE TEMPORAL POOLING
     tpooled_devices = _slide_window_sum(devices, pool_days)

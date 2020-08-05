@@ -3,11 +3,12 @@ from io import StringIO, BytesIO
 from os import listdir, mkdir
 from os.path import join
 
-import pytest
 import pandas as pd
 from pandas.testing import assert_frame_equal
 from boto3 import Session
 from moto import mock_s3
+from git import Repo, exc
+import pytest
 
 from delphi_utils import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer
 
@@ -224,3 +225,154 @@ class TestS3ArchiveDiffer:
             Key=f"{self.indicator_prefix}/csv1.csv")["Body"]
 
         assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
+
+class TestGitArchiveDiffer:
+
+    def test_init_args(self, tmp_path):
+        cache_dir = str(tmp_path / "cache")
+        export_dir = str(tmp_path / "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+
+        with pytest.raises(AssertionError):
+            GitArchiveDiffer(cache_dir, export_dir, override_dirty=False, commit_partial_success=True)
+
+        with pytest.raises(exc.InvalidGitRepositoryError):
+            GitArchiveDiffer(cache_dir, export_dir)
+
+        repo = Repo.init(cache_dir)
+        assert not repo.is_dirty(untracked_files=True)
+
+        arch_diff = GitArchiveDiffer(cache_dir, export_dir)
+        assert arch_diff.branch == arch_diff.repo.active_branch
+
+    def test_update_cache(self, tmp_path):
+        cache_dir = str(tmp_path / "cache")
+        export_dir = str(tmp_path / "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+
+        Repo.init(cache_dir)
+
+        # Make repo dirty
+        with open(join(cache_dir, "test.txt"), "w") as f:
+            f.write("123")
+
+        arch_diff1 = GitArchiveDiffer(cache_dir, export_dir, override_dirty=False)
+        with pytest.raises(AssertionError):
+            arch_diff1.update_cache()
+
+        arch_diff2 = GitArchiveDiffer(cache_dir, export_dir, override_dirty=True)
+        arch_diff2.update_cache()
+        assert arch_diff2._cache_updated
+
+    def test_diff_exports(self, tmp_path):
+        cache_dir = str(tmp_path / "cache")
+        export_dir = str(tmp_path / "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+
+        branch_name = "test-branch"
+
+        repo = Repo.init(cache_dir)
+        repo.index.commit(message="Initial commit")
+        orig_branch = repo.active_branch
+        assert branch_name not in repo.heads
+
+        orig_files = {".git"}
+
+        arch_diff = GitArchiveDiffer(
+            cache_dir, export_dir,
+            branch_name=branch_name)
+        arch_diff.update_cache()
+
+        # Should have no differences, but branch should be created
+        deleted_files, common_diffs, new_files = arch_diff.diff_exports()
+
+        assert branch_name in repo.heads
+        assert set(listdir(cache_dir)) == orig_files
+        assert set(deleted_files) == set()
+        assert set(common_diffs.keys()) == set()
+        assert set(new_files) == set()
+
+        csv1 = pd.DataFrame({
+            "geo_id": ["1", "2", "3"],
+            "val": [1.0, 2.0, 3.0],
+            "se": [0.1, 0.2, 0.3],
+            "sample_size": [10.0, 20.0, 30.0]})
+
+        # Write exact same CSV into cache and export, so no diffs expected
+        csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
+        csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
+
+        # Store the csv in custom branch
+        arch_diff.get_branch(branch_name).checkout()
+        repo.index.add([join(cache_dir, "csv1.csv")])
+        repo.index.commit(message="Test commit")
+        orig_branch.checkout()
+
+        assert repo.active_branch == orig_branch
+
+        deleted_files, common_diffs, new_files = arch_diff.diff_exports()
+
+        # We will be back in original branch, so cache should not have csv1.csv
+        assert set(listdir(cache_dir)) == orig_files
+        assert set(deleted_files) == set()
+        assert set(common_diffs.keys()) == {join(export_dir, "csv1.csv")}
+        assert common_diffs[join(export_dir, "csv1.csv")] is None
+        assert set(new_files) == set()
+
+    def test_archive_exports(self, tmp_path):
+        cache_dir = str(tmp_path / "cache")
+        export_dir = str(tmp_path / "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+
+        repo = Repo.init(cache_dir)
+        repo.index.commit(message="Initial commit")
+        orig_commit = repo.active_branch.commit
+
+        csv1 = pd.DataFrame({
+            "geo_id": ["1", "2", "3"],
+            "val": [1.0, 2.0, 3.0],
+            "se": [0.1, 0.2, 0.3],
+            "sample_size": [10.0, 20.0, 30.0]})
+
+        # csv1.csv is now a dirty edit in the repo, and to be exported too
+        csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
+        csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
+
+        # Try to archive csv1.csv and non-existant csv2.csv
+        exported_files = [join(export_dir, "csv1.csv"), join(export_dir, "csv2.csv")]
+
+        # All should fail, cannot override dirty and file not found
+        arch_diff1 = GitArchiveDiffer(
+            cache_dir, export_dir,
+            override_dirty=False,
+            commit_partial_success=False)
+
+        succs, fails = arch_diff1.archive_exports(exported_files)
+        assert set(succs) == set()
+        assert set(fails) == set(exported_files)
+
+        # Only csv1.csv should succeed, but no commit should be made
+        arch_diff2 = GitArchiveDiffer(
+            cache_dir, export_dir,
+            override_dirty=True,
+            commit_partial_success=False)
+
+        succs, fails = arch_diff2.archive_exports(exported_files)
+        assert set(succs) == {join(export_dir, "csv1.csv")}
+        assert set(fails) == {join(export_dir, "csv2.csv")}
+        assert repo.active_branch.commit == orig_commit
+
+        # Only csv1.csv should succeed, and a commit should be made
+        arch_diff3 = GitArchiveDiffer(
+            cache_dir, export_dir,
+            override_dirty=True,
+            commit_partial_success=True)
+
+        succs, fails = arch_diff3.archive_exports(exported_files)
+        assert set(succs) == {join(export_dir, "csv1.csv")}
+        assert set(fails) == {join(export_dir, "csv2.csv")}
+        assert repo.active_branch.set_commit("HEAD~1").commit == orig_commit

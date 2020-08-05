@@ -40,12 +40,20 @@ GEO_RESOLUTIONS = [
     "hrr",
 ]
 
+def check_not_none(df, label, date_range):
+    if df is None:
+        print(f"{label} not available in range {date_range}")
+        exit(1)
+
 def combine_usafacts_and_jhu(signal, geo, date_range):
     """
     Add rows for PR from JHU signals to USA-FACTS signals
     """
     usafacts_df = covidcast.signal("usa-facts", signal, date_range[0], date_range[1], geo)
     jhu_df = covidcast.signal("jhu-csse", signal, date_range[0], date_range[1], geo)
+    check_not_none(usafacts_df, "USA-FACTS", date_range)
+    check_not_none(jhu_df, "JHU", date_range)
+    
     # State level
     if geo == 'state':
         combined_df = usafacts_df.append(jhu_df[jhu_df["geo_value"] == 'pr'])
@@ -63,6 +71,14 @@ def combine_usafacts_and_jhu(signal, geo, date_range):
                                       "stderr": "se"},
                                      axis=1)
     return combined_df
+
+def date_range(params, sensor_name):
+    if sensor_name.find("7dav")<0:
+        return [
+            params['date_range'][0] - timedelta(days=7),
+            params['date_range'][-1]
+            ]
+    return params['date_range']
 
 def next_missing_day(source, signals):
     """Fetch the first day for which we want to generate new data."""
@@ -122,7 +138,7 @@ def run_module():
 
     for metric, geo_res, sensor_name, signal in variants:
         create_export_csv(
-            combine_usafacts_and_jhu(signal, geo_res, params['date_range']),
+            combine_usafacts_and_jhu(signal, geo_res, date_range(params, sensor_name)),
             export_dir=params['export_dir'],
             start_date=pd.to_datetime(params['export_start_date']),
             metric=metric,

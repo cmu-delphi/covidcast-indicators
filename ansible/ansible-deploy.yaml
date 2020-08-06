@@ -36,7 +36,7 @@
       when: file.stat.exists
 
     - name: Set production params template.
-      copy:
+      template:
         src: templates/{{ indicator }}-params-prod.json.j2
         dest: "{{ indicators_runtime_dir }}/{{ indicator }}/params.json"
         owner: "{{ runtime_user }}"

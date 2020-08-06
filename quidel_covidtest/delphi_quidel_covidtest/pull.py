@@ -141,10 +141,19 @@ def pull_quidel_covidtest(start_date, end_date, mail_server, account, sender, pa
     overall_total["totalTest"] = overall_total["OverallResult"]
     overall_total.drop(labels="OverallResult", axis="columns", inplace=True)
 
+    # Compute numUniqueDevices
+    numUniqueDevices = df.groupby(
+        by=["timestamp", "zip"],
+        as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
+            columns={"SofiaSerNum": "numUniqueDevices"}
+        )
+
     df_merged = overall_total.merge(
-        overall_pos,
-        on=["timestamp", "zip"],
-        how="outer").fillna(0).drop_duplicates()
+        numUniqueDevices, on=["timestamp", "zip"], how="left"
+        ).merge(
+        overall_pos, on=["timestamp", "zip"], how="left"
+        ).fillna(0).drop_duplicates()
+
 
     return df_merged, time_flag
 
@@ -153,5 +162,8 @@ def check_intermediate_file(cache_dir, pull_start_date):
         if ".csv" in filename:
             pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
                                             '%Y%m%d').date() + timedelta(days=1)
-            return filename, pull_start_date
+            previous_df = pd.read_csv(os.path.join(cache_dir, filename),
+                                      sep=",", parse_dates=["timestamp"])
+            os.remove(os.path.join(cache_dir, filename))
+            return previous_df, pull_start_date
     return None, pull_start_date

@@ -21,6 +21,8 @@ from .generate_sensor import (generate_sensor_for_states,
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
+END_FROM_TODAY_MINUS = 5 # report data until - X days
+EXPORT_DAY_RANGE = 40 # Number of dates to report
 
 GEO_RESOLUTIONS = [
     "county",
@@ -29,11 +31,15 @@ GEO_RESOLUTIONS = [
 ]
 SENSORS = [
     "covid_ag_smoothed_pct_positive",
-    "covid_ag_raw_pct_positive"
+    "covid_ag_raw_pct_positive",
+    "wip_covid_ag_smoothed_test_per_device",
+    "wip_covid_ag_raw_test_per_device"
 ]
 SMOOTHERS = {
-    "covid_ag_smoothed_pct_positive": True,
-    "covid_ag_raw_pct_positive": False
+    "covid_ag_smoothed_pct_positive": (False, True),
+    "covid_ag_raw_pct_positive": (False, False),
+    "wip_covid_ag_smoothed_test_per_device": (True, True),
+    "wip_covid_ag_raw_test_per_device": (True, False)
 }
 
 def run_module():
@@ -51,7 +57,7 @@ def run_module():
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
     # pull new data only that has not been ingested
-    filename, pull_start_date = check_intermediate_file(
+    previous_df, pull_start_date = check_intermediate_file(
         cache_dir,
         datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date())
 
@@ -73,14 +79,11 @@ def run_module():
         return
 
     # Utilize previously stored data
-    if filename is not None:
-        previous_df = pd.read_csv(join(cache_dir, filename), sep=",", parse_dates=["timestamp"])
+    if previous_df is not None:
         df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
-        # Save the intermediate file to cache_dir which can be re-used next time
-        os.remove(join(cache_dir, filename))
 
     # By default, set the export end date to be the last pulling date - 5 days
-    export_end_date = _end_date - timedelta(days=5)
+    export_end_date = _end_date - timedelta(days=END_FROM_TODAY_MINUS)
     if params["export_end_date"] != "":
         input_export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d').date()
         if input_export_end_date < export_end_date:
@@ -88,47 +91,43 @@ def run_module():
     export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
     # Only export data from -45 days to -5 days
-    if (export_end_date - export_start_date).days > 40:
-        export_start_date = export_end_date - timedelta(days=40)
+    if (export_end_date - export_start_date).days > EXPORT_DAY_RANGE:
+        export_start_date = export_end_date - timedelta(days=EXPORT_DAY_RANGE)
 
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()
 
     # State Level
     data = df.copy()
-    state_data = zip_to_state(data, map_df)
-    # Compute raw signal
-    raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth=False,
-                                                            first_date=first_date,
-                                                            last_date=last_date)
-    export_csv(raw_state_df, "state", "covid_ag_raw_pct_positive",
-               receiving_dir=export_dir,
-               start_date=export_start_date, end_date=export_end_date)
-    # Compute smoothed signal
-    smoothed_state_df, _ = generate_sensor_for_states(state_data, smooth=True,
-                                                      first_date=first_date,
-                                                      last_date=last_date)
-    export_csv(smoothed_state_df, "state", "covid_ag_smoothed_pct_positive",
-               receiving_dir=export_dir,
-               start_date=export_start_date, end_date=export_end_date)
+    state_groups = zip_to_state(data, map_df).groupby("state_id")
 
-    # County/HRR/MSA level
-    for geo_res, sensor in product(GEO_RESOLUTIONS, SENSORS):
-        print(geo_res, sensor)
-        data = df.copy()
-        if geo_res == "county":
-            data, res_key = zip_to_county(data, map_df)
-        elif geo_res == "msa":
-            data, res_key = zip_to_msa(data, map_df)
-        else:
-            data, res_key = zip_to_hrr(data, map_df)
-
-        res_df = generate_sensor_for_other_geores(state_groups, data, res_key,
-                                                  smooth=SMOOTHERS[sensor],
-                                                  first_date=first_date,
-                                                  last_date=last_date)
-        export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
+    for sensor in SENSORS:
+        # For State Level
+        print("state", sensor)
+        state_df = generate_sensor_for_states(
+            state_groups, smooth=SMOOTHERS[sensor][1],
+            device=SMOOTHERS[sensor][0], first_date=first_date,
+            last_date=last_date)
+        export_csv(state_df, "state", sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
+
+        # County/HRR/MSA level
+        for geo_res in GEO_RESOLUTIONS:
+            print(geo_res, sensor)
+            data = df.copy()
+            if geo_res == "county":
+                data, res_key = zip_to_county(data, map_df)
+            elif geo_res == "msa":
+                data, res_key = zip_to_msa(data, map_df)
+            else:
+                data, res_key = zip_to_hrr(data, map_df)
+
+            res_df = generate_sensor_for_other_geores(
+                state_groups, data, res_key, smooth=SMOOTHERS[sensor][1],
+                device=SMOOTHERS[sensor][0], first_date=first_date,
+                last_date=last_date)
+            export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
+                       start_date=export_start_date, end_date=export_end_date)
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

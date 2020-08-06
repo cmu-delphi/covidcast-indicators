@@ -3,11 +3,11 @@ from io import StringIO, BytesIO
 from os import listdir, mkdir
 from os.path import join
 
+from boto3 import Session
+from git import Repo, exc
+from moto import mock_s3
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from boto3 import Session
-from moto import mock_s3
-from git import Repo, exc
 import pytest
 
 from delphi_utils import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer

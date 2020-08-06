@@ -1,3 +1,30 @@
+"""
+Utilities for diffing and archiving covidcast export CSVs.
+Aims to simplify the creation of issues for new and backfilled value for indicators.
+Also handles archiving of export CSVs to some backend (git, S3 etc.) before replacing them.
+
+Example workflow regardless of specific ArchiveDiffer used. Should only differ in intialization.
+1) Initialize and update cache folder if neccessary
+>>> arch_diff = S3ArchiveDiffer(cache_dir, export_dir, ...)
+>>> arch_diff.update_cache()
+>>> ... # Run indicator and generate full exports in `export_dir`
+
+2) Create new diff files from cache files vs export files
+>>> deleted_files, common_diffs, new_files = arch_diff.diff_exports()
+
+3) Archive common files with diffs and new files
+>>> to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+>>> to_archive += new_files
+>>> succs, fails = arch_diff.archive_exports(to_archive)
+
+4) Filter exports: Replace files with their diffs, or remove if no diffs
+>>> succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+>>> arch_diff.filter_exports(succ_common_diffs)
+
+Author: Eu Jing Chua
+Created: 2020-08-06
+"""
+
 from contextlib import contextmanager
 import filecmp
 from glob import glob

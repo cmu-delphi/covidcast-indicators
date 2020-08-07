@@ -8,7 +8,7 @@ import pandas as pd
 from delphi_safegraph.process import (
     construct_signals,
     aggregate,
-    signal_name
+    add_prefix
 )
 from delphi_safegraph.run import SIGNALS
 from delphi_utils import read_params
@@ -49,11 +49,13 @@ class TestProcess:
         x = df[f'{signal_names[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
 
-    def test_signal_name(self):
-        assert read_params()["wip_signal"] is not None, "supply value in params"
-        assert type(read_params()["wip_signal"]) == list or type(read_params()["wip_signal"]) == bool, "Supply True|False|list()"
-        signals = signal_name(signal_names, wip_signal=read_params()['wip_signal'],prefix='wip_')
-        assert (len(signals) >= len(signal_names))
+    def test_handle_wip_signal(self):
+        wip_signal = read_params()["wip_signal"]
+        assert isinstance(wip_signal, (list, bool)) or wip_signal == "", "Supply True | False or "" or [] | list()"
+        if isinstance(wip_signal, list):
+            assert set(wip_signal).issubset(set(SIGNALS)), "signal in params don't belong in the registry"
+        updated_signal_names = add_prefix(SIGNALS, wip_signal, prefix='wip_')
+        assert (len(updated_signal_names) >= len(SIGNALS))
 
 
 

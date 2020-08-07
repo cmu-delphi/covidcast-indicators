@@ -26,20 +26,23 @@ def add_prefix(signal_names, wip_signal, prefix: str):
     List of signal names
         wip/non wip signals for further computation
     """
-    if wip_signal is not None:
-        if wip_signal and isinstance(wip_signal, bool):
-            return [
-                (prefix + signal) if public_signal(signal)
-                else signal
-                for signal in signal_names
-            ]
-        if isinstance(wip_signal, list):
-            for signal in wip_signal:
-                if public_signal(signal):
-                    new_list = [prefix + signal]
-                    signal_names.remove(signal)
-            signal_names.extend(new_list)
-    return signal_names
+
+    if wip_signal in ("", False):
+        return signal_names
+    elif wip_signal and isinstance(wip_signal, bool):
+        return [
+            (prefix + signal) if public_signal(signal)
+            else signal
+            for signal in signal_names
+        ]
+    elif isinstance(wip_signal, list):
+        for signal in wip_signal:
+            if public_signal(signal):
+                signal_names.append(prefix + signal)
+                signal_names.remove(signal)
+        return signal_names
+    else:
+        raise ValueError("Supply True | False or '' or [] | list()")
 
 
 # Check if the signal name is public

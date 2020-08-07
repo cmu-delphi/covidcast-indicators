@@ -1,3 +1,5 @@
+from delphi_epidata import Epidata
+
 import numpy as np
 import pandas as pd
 
@@ -5,21 +7,35 @@ from .geo import FIPS_TO_STATE
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
-from delphi_utils import read_params
-from delphi_epidata import Epidata
 
 
-# Add prefix to the signal name, if needed
-def signal_name(signal_names, wip_signal, prefix):
+def add_prefix(signal_names, wip_signal, prefix: str):
+    """Adds prefix to signal if there is a WIP signal
+    Parameters
+    ----------
+    signal_names: List[str]
+        Names of signals to be exported
+    prefix : 'wip_'
+        prefix for new/non public signals
+    wip_signal : List[str] or bool
+        Either takes a list of wip signals: [], OR
+        incorporated all signals in the registry: True OR
+        no signals: False
+    Returns
+    -------
+    List of signal names
+        wip/non wip signals for further computation
+    """
     if wip_signal is not None:
-        if wip_signal and type(wip_signal) == bool:
-            new_signal_list = []
-            [new_signal_list.append(prefix + signal) if epidata_signal(signal) else new_signal_list.append(signal) for
-             signal in signal_names]
-            return new_signal_list
-        if type(wip_signal) == list:
+        if wip_signal and isinstance(wip_signal, bool):
+            return [
+                (prefix + signal) if public_signal(signal)
+                else signal
+                for signal in signal_names
+            ]
+        if isinstance(wip_signal, list):
             for signal in wip_signal:
-                if epidata_signal(signal):
+                if public_signal(signal):
                     new_list = [prefix + signal]
                     signal_names.remove(signal)
             signal_names.extend(new_list)
@@ -27,13 +43,23 @@ def signal_name(signal_names, wip_signal, prefix):
 
 
 # Check if the signal name is public
-def epidata_signal(signal_):
+def public_signal(signal_):
+    """Checks if the signal name is already public using Epidata
+    Parameters
+    ----------
+    signal_ : str
+        Name of the signal
+    Returns
+    -------
+    bool
+        True if the signal is not present
+        False if the signal is present
+    """
     epidata_df = Epidata.covidcast_meta()
     for index in range(len(epidata_df['epidata'])):
-        for key in epidata_df['epidata'][index]:
-            if key == 'signal':
-                if epidata_df['epidata'][index][key] == signal_:
-                    return False
+        if 'signal' in epidata_df['epidata'][index]:
+            if epidata_df['epidata'][index]['signal'] == signal_:
+                return False
     return True
 
 
@@ -62,22 +88,27 @@ def construct_signals(cbg_df, signal_names):
         Dataframe with columns: timestamp, county_fips, and
         {each signal described above}.
     """
-
-    COMPLETELY_HOME = signal_names[1]
-    FULL_TIME_WORK = signal_names[2]
-    PART_TIME_WORK = signal_names[3]
+    prefix = 'wip_'
+    COMPLETELY_HOME = 'completely_home_prop'
+    FULL_TIME_WORK = 'full_time_work_prop'
+    PART_TIME_WORK = 'part_time_work_prop'
 
     # Preparation
     cbg_df['timestamp'] = cbg_df['date_range_start'].apply(
         lambda x: str(x).split('T')[0])
     cbg_df['county_fips'] = (cbg_df['origin_census_block_group'] // MOD).apply(
         lambda x: f'{int(x):05d}')
+
     # Transformation: create signal not available in raw data
-    cbg_df[COMPLETELY_HOME] = (cbg_df['completely_home_device_count']
-                               / cbg_df['device_count'])
-    cbg_df[FULL_TIME_WORK] = (cbg_df['full_time_work_behavior_devices']
+    for signal in signal_names:
+        if signal in (FULL_TIME_WORK, prefix + FULL_TIME_WORK):
+            cbg_df[signal] = (cbg_df['full_time_work_behavior_devices']
                               / cbg_df['device_count'])
-    cbg_df[PART_TIME_WORK] = (cbg_df['part_time_work_behavior_devices']
+        elif signal in (COMPLETELY_HOME, prefix + COMPLETELY_HOME):
+            cbg_df[signal] = (cbg_df['completely_home_device_count']
+                              / cbg_df['device_count'])
+        elif signal in (PART_TIME_WORK, prefix + PART_TIME_WORK):
+            cbg_df[signal] = (cbg_df['part_time_work_behavior_devices']
                               / cbg_df['device_count'])
 
     # Subsetting
@@ -137,10 +168,12 @@ def process(fname, signal_names, geo_resolutions, export_dir):
     that the input file has _only_ one date of data.
     Parameters
     ----------
+    export_dir
+        path where the output files are saved
+    signal_names : List[str]
+        signal names to be processed
     fname: str
         Input filename.
-    signals: List[Tuple[str, bool]]
-        List of (signal_name, wip).
     geo_resolutions: List[str]
         List of geo resolutions to export the data.
     Returns
@@ -166,4 +199,3 @@ def process(fname, signal_names, geo_resolutions, export_dir):
             df_export.to_csv(f'{export_dir}/{date}_{geo_res}_{signal}.csv',
                              na_rep='NA',
                              index=False, )
-    return

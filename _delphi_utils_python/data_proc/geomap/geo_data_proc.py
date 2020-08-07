@@ -122,9 +122,8 @@ def proc_jhu_uid_to_fips():
         {'jhu_uid': 84070017, 'fips': 49000, 'weight': 1.},
         {'jhu_uid': 84070018, 'fips': 49000, 'weight': 1.},
         {'jhu_uid': 84070019, 'fips': 49000, 'weight': 1.},
-        {'jhu_uid': 84070020, 'fips': 49000, 'weight': 1.},
-    ])
-    jhu_df = pd.read_csv(JHU_FIPS_FILE,dtype={'UID':int, 'FIPS':float})
+        {'jhu_uid': 84070020, 'fips': 49000, 'weight': 1.}])
+    jhu_df = pd.read_csv(JHU_FIPS_FILE, dtype={'UID':int, 'FIPS':float})
     jhu_df = jhu_df.query("Country_Region == 'US'")
     jhu_df = jhu_df[['UID','FIPS']]\
         .rename(columns={'UID':'jhu_uid', 'FIPS':'fips'})\
@@ -165,8 +164,8 @@ def proc_fips_to_zip():
 if __name__ == "__main__":
 
     # proc_zip_fips()
-    proc_fips_msa()
+    # proc_fips_msa()
     # proc_fips_hrr()
     # proc_zip_hsa_hrr()
-    # proc_jhu_uid_to_fips()
+    proc_jhu_uid_to_fips()
     # proc_fips_to_zip()

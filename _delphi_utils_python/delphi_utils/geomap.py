@@ -8,13 +8,10 @@ Partially based on code by Maria Jahja
 Created: 2020-06-01
 
 TODO:
-- increase coverage to include full flags (do we want full?)
-- test that the cross files are unchanged
-- add remaining mappings
-- fix JHU docstrings
-- hrr support
+- remove full
+- add fast cross mappings
+- fix docstrings
 - remove date==None
-- add other aggregators?
 """
 
 from os.path import join
@@ -388,7 +385,7 @@ class GeoMapper:
                       fips_col='fips',
                       date_col='date',
                       count_cols=None,
-                      full=False,
+                      create_mega=False,
                       msa_col="msa"):
         """convert and aggregate from county to metropolitan statistical area (msa)
         This encoding is based on the most recent Census Bureau release of CBSA (March 2020)
@@ -409,7 +406,7 @@ class GeoMapper:
 
         if count_cols:
             data=data[[fips_col,date_col] + count_cols].copy()
-        data = self.convert_fips_to_msa(data,fips_col=fips_col,msa_col=msa_col,full=full)
+        data = self.convert_fips_to_msa(data,fips_col=fips_col,msa_col=msa_col, create_mega=create_mega)
         data.drop(fips_col,axis=1,inplace=True)
         data.dropna(axis=0,subset=[msa_col],inplace=True)
         if date_col:
@@ -706,11 +703,14 @@ class GeoMapper:
             data: copy of dataframe
         """
 
-        data = data.copy()
+        data = data.copy().astype({jhu_col: int})
         if not hasattr(self,"jhu_uid_fips_cross"):
             self.load_jhu_uid_fips_cross()
         jhu_cross = self.jhu_uid_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         data = data.merge(jhu_cross, left_on=jhu_col, right_on='jhu_uid', how='left')
+        data_states = data[jhu_col].between(85000001,85000099)
+        data.loc[data_states, fips_col] = data.loc[data_states, 'jhu_uid']\
+                                               .astype(str).str[-2:].str.ljust(5, '0')
         if jhu_col != 'jhu_uid':
             data.drop(columns=['jhu_uid'], inplace=True)
         return data

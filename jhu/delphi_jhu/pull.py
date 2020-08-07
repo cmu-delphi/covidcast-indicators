@@ -6,7 +6,7 @@ import re
 from delphi_utils import GeoMapper
 
 def detect_date_col(col_name: str):
-    """determine is column name is a date"""
+    """determine if column name is a date"""
     date_match = re.match('\d{1,2}\/\d{1,2}\/\d{1,2}', col_name)
     if date_match:
         return True
@@ -74,7 +74,6 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     gmpr = GeoMapper()
     df = gmpr.jhu_uid_to_county(df,jhu_col="UID",date_col='timestamp')
 
-    fips_int = df['fips'].astype(int)
     """
     df = df[
         (

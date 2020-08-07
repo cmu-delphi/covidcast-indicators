@@ -7,12 +7,12 @@ import os
 
 def load_files():
     rec_dir = os.listdir('../receiving')
-    rec_stable_dir = os.listdir('../receiving_stable')
+    rec_stable_dir = os.listdir('../receiving_rf')
     rec_common = set(rec_dir) & set(rec_stable_dir)
     print(set(rec_dir).symmetric_difference(rec_stable_dir))
     for rec in rec_common:
         df_rec = pd.read_csv(f'../receiving/{rec}').set_index('geo_id')
-        df_stable = pd.read_csv(f'../receiving_stable/{rec}').set_index('geo_id')
+        df_stable = pd.read_csv(f'../receiving_rf/{rec}').set_index('geo_id')
         try:
             df_join = df_rec.join(df_stable, rsuffix='_stable' )
         except:

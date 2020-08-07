@@ -24,8 +24,8 @@ from .smooth import (
 # global constants
 seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
-    "confirmed",
     "deaths",
+    "confirmed",
 ]
 SENSORS = [
     "new_counts",
@@ -69,13 +69,10 @@ def run_module():
     )
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
-    for metric, df in dfs.items():
-        print(metric, df.columns)
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
-        print(geo_res, metric, sensor, smoother)
+        print(metric, geo_res, sensor, smoother)
         df = dfs[metric]
-        print(df.columns)
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, sensor)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)

@@ -50,10 +50,10 @@ class TestGeoMapper:
         "den": [2,4,7,11,100,10]
     })
     jhu_uid_data = pd.DataFrame({
-        "jhu_uid":[84048315, 84048137, 84013299, 84013299, 84070002, 84070003],
-        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3,
-        "num": [1,2,3,4,8,5],
-        "den": [2,4,7,11,100,10]
+        "jhu_uid":[84048315, 84048137, 84013299, 84013299, 84070002, 84000013, 84000000],
+        "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3 + [pd.Timestamp('2018-01-01')],
+        "num": [1,2,3,4,8,5,20],
+        "den": [2,4,7,11,100,10,40]
     })
 
 
@@ -138,7 +138,8 @@ class TestGeoMapper:
     def test_county_to_msa(self):
         gmpr = GeoMapper()
         new_data = gmpr.county_to_msa(self.fips_data_3)
-        assert new_data.shape[0] == 3
+        assert new_data.shape[0] == 2
+        new_data = gmpr.county_to_msa(self.fips_data_3, create_mega=True)
         assert new_data[['num']].sum()[0] == self.fips_data_3['num'].sum()
 
     def test_convert_zip_to_fips(self):
@@ -183,7 +184,7 @@ class TestGeoMapper:
     def test_jhu_fips_to_msa(self):
         gmpr = GeoMapper()
         new_data = gmpr.jhu_fips_to_msa(self.jhu_data)
-        assert new_data.shape == (4,4)
+        assert new_data.shape == (2,4)
 
     def test_convert_zip_to_hrr(self):
         gmpr = GeoMapper()
@@ -199,14 +200,13 @@ class TestGeoMapper:
 
     def test_convert_jhu_uid_to_fips(self):
         gmpr = GeoMapper()
-        new_data = gmpr.convert_jhu_uid_to_fips(self.jhu_uid_data)
-        assert new_data.eval('weight * den').sum() == self.jhu_uid_data['den'].sum()
+        new_data = gmpr.convert_jhu_uid_to_fips(self.jhu_uid_data.astype({'jhu_uid':str}))
 
     def test_jhu_uid_to_county(self):
         gmpr = GeoMapper()
         new_data = gmpr.jhu_uid_to_county(self.jhu_uid_data)
         assert not (new_data['fips'].astype(int) > 90000).any()
-        assert new_data['den'].sum() == self.jhu_data['den'].sum()
+        assert new_data['den'].sum() == self.jhu_uid_data['den'].sum()
 
     def test_convert_fips_to_zip(self):
         gmpr = GeoMapper()

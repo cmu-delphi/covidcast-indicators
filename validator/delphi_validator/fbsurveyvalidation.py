@@ -1,10 +1,12 @@
 import sys
 import re
 import pandas as pd
+import numpy as np
 from pathlib import Path
 from itertools import product
 from datetime import date, datetime, timedelta
 from datafetcher import *
+import math
 
 DATA_SOURCE = "fb-survey"
 
@@ -136,6 +138,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     mean_stdabsdiff = ((mean_recent_df - mean_recent_api_df).abs().mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
     print("mean_stddiff", mean_stddiff)
     print("mean_stdabsdiff", mean_stdabsdiff)
+    print("type(mean_stdabsdiff)",type(mean_stdabsdiff))
 
     classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
     raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
@@ -147,7 +150,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     #         dplyr::mutate(mean.stddiff.high = abs(mean.stddiff) > thresholds[["mean.stddiff"]] |
     #                           variable=="val" & abs(mean.stddiff) > thresholds[["val.mean.stddiff"]],
     #                       mean.stdabsdiff.high = mean.stdabsdiff > thresholds[["mean.stdabsdiff"]]) %>>%
-    # TOdo - Check whats the purpose of variable=="val" in the above statement
+    # Todo - Check whats the purpose of variable=="val" in the above statement
 
     switcher = {
     'raw': raw_thresholds,
@@ -156,38 +159,19 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     # Get the function from switcher dictionary
     thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
-    mean.stddiff.high = mean_stddiff.abs() > thres.loc['mean.stddiff'] or
-                        mean_stddiff.abs() > thres.loc['val.mean.stddiff"']
-    mean.stdabsdiff.high = mean_stdabsdiff > thres.loc['mean.stdabsdiff']     
+    print(np.absolute(mean_stddiff) > thres.loc['mean.stddiff'])
+    mean_stddiff_high = (np.absolute(mean_stddiff) > thres.loc['mean.stddiff']).bool() or (np.absolute(mean_stddiff) > thres.loc['val.mean.stddiff"']).bool()
+    mean_stdabsdiff_high = (mean_stdabsdiff > thres.loc['mean.stdabsdiff']).bool()
 
-    if mean.stddiff.high or mean.stdabsdiff.high:
-        print('Average differences in variables by geoid between recent & semirecent data seem  \
-               large --- either large increase tending toward one direction or large mean absolute \
-               difference, relative to average values of corresponding variables.  For the former \
-               check, tolerances for `val` are more restrictive than those for other columns.'')
+    
+    if mean_stddiff_high or mean_stdabsdiff_high:
+        print('Average differences in variables by geoid between recent & semirecent data seem' \
+              + 'large --- either large increase tending toward one direction or large mean absolute' \
+              + 'difference, relative to average values of corresponding variables.  For the former' \
+              + 'check, tolerances for `val` are more restrictive than those for other columns.')
     
 
 def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
-
-    meta = covidcast.metadata()
-    fb_meta = meta[meta['data_source']==DATA_SOURCE]
-    unique_signals = fb_meta['signal'].unique().tolist()
-    unique_geotypes = fb_meta['geo_type'].unique().tolist()
-
-    ##### Currently metadata returns --*community*-- signals that don't get generated 
-    ##### in the new fb-pipeline. Seiving them out for now.
-    # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
-    for sig in unique_signals:
-        if "community" in sig:
-            unique_signals.remove(sig)
-    
-
-    geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
-    print(geo_sig_cmbo)
-    print("Number of mixed types:", len(geo_sig_cmbo))
-
-    for cmb in geo_sig_cmbo:
-        print(cmb)
 
     ## The following dates refer to the newly generated files from latest pipeline execution
     ######----start_date-----#######
@@ -201,9 +185,15 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
     date_slist = [dt.strftime("%Y%m%d") for dt in date_list]
     print(date_slist)
 
+    filenames, geo_sig = get_filenames_with_geo_signal(data_folder, date_slist)
+
     data_folder = Path("../data")
 
-    filenames = read_relevant_date_filenames(data_folder, date_slist)
+    # Read metadata from filename
+    ## Red ALERT: Repeating filenames
+    sys.exit()
+    # 
+    
 
     # Multi-indexed dataframe for a given (signal, geo_type)
 
@@ -262,44 +252,12 @@ def fbsurvey_validation(daily_filenames, sdate, edate, max_check_lookbehind = ti
     # raw_wili
     # raw_hh_cmnty_cli
     # raw_nohh_cmnty_cli
-    i = 1
-    filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
-    for f in daily_filenames:
-        # example: 20200624_county_smoothed_nohh_cmnty_cli
-        
-        df_to_test = pd.read_csv(
-                             data_folder / f, 
-                             dtype={'geo_id': str, 'val': float, 'se': float, 'sample_size': float, 'effective_sample_size': float
-                            })
-
-
-        m = filename_regex.match(f)
-        survey_date = datetime.strptime(m.group(1), '%Y%m%d').date()
-        geo_type = m.group(2)
-
-        if m.group(4):
-            signal = "".join([m.group(4), m.group(5)])
-            signal = "_".join([m.group(3), signal])
-            max_weighted_date = survey_date
-        else:
-            signal = "_".join([m.group(3), m.group(5)])
-            max_date = survey_date
-
-        if (not m.group(0)):
-            sys.exit('=nameformat= not recognized as a daily format') 
-        
-        try:
-            df_ref = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
-        except APIDataFetchError as e:
-            print("APIDataFetchError:", e)
-            print("\n")
-
-
-        print(df_to_validate)
-
-        i += 1
-        if i == 2:
-            break
+       
+        # try:
+        #     df_ref = fetch_daily_data(DATA_SOURCE, survey_date, geo_type, signal)
+        # except APIDataFetchError as e:
+        #     print("APIDataFetchError:", e)
+        #     print("\n")
 
     check_min_allowed_max_date(generation_date, max_date, max_weighted_date)
     check_bad_geo_id(df_to_test, geo_type)

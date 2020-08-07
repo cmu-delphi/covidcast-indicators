@@ -5,6 +5,71 @@ import covidcast
 import pandas as pd
 from datetime import date, datetime, timedelta
 from errors import *
+import re
+from typing import List
+import json
+
+def read_params(params_filepath):
+    with open(params_filepath) as f:
+        config = json.load(f)
+    return config      
+
+def get_filenames_with_geo_signal(path, date_slist: List[str]):
+    
+    if pipeline_version == 'new':
+        meta = covidcast.metadata()
+        fb_meta = meta[meta['data_source']==DATA_SOURCE]
+        unique_signals = fb_meta['signal'].unique().tolist()
+        unique_geotypes = fb_meta['geo_type'].unique().tolist()
+
+    
+        ##### Currently metadata returns --*community*-- signals that don't get generated 
+        ##### in the new fb-pipeline. Seiving them out for now.
+        # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+        for sig in unique_signals:
+            if "community" in sig:
+                unique_signals.remove(sig)
+        
+
+        geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
+        print(geo_sig_cmbo)
+        print("Number of mixed types:", len(geo_sig_cmbo))
+
+        for cmb in geo_sig_cmbo:
+            print(cmb)
+    
+
+        filenames = read_relevant_date_filenames(data_folder, date_slist[0])    
+        
+    else:
+        sdate = date_slist[0]
+        filenames = [f for f in listdir(path) if isfile(join(path, f))]
+
+        sdate_filenames = [fname for fname in filenames if fname.find(sdate) != -1]
+
+        # example: 20200624_county_smoothed_nohh_cmnty_cli
+        filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
+        geo_sig_cmbo = list()
+        for f in sdate_filenames:
+            
+            m = filename_regex.match(f)
+            if (not m.group(0)):
+                print('=nameformat= not recognized as a daily format') 
+                
+            geo_type = m.group(2)
+
+            
+            if m.group(4): # weighted data 'w'
+                signal = "".join([m.group(4), m.group(5)])
+                signal = "_".join([m.group(3), signal])
+            #    max_weighted_date = survey_date
+            else:
+                signal = "_".join([m.group(3), m.group(5)])
+            #    max_date = survey_date
+
+            geo_sig_cmbo.append((geo_type, signal))
+
+    return filenames, geo_sig_cmbo
 
 
 def read_filenames(path):
@@ -12,7 +77,7 @@ def read_filenames(path):
     return daily_filenames
 
 def read_relevant_date_filenames(data_path, date_slist):
-    all_files = listdir(data_path)
+    all_files = [f for f in listdir(path) if isfile(join(data_path, f))]
     filenames = list()
 
     for fl in all_files:
@@ -69,9 +134,6 @@ def new_stuff():
     date_seq = {dtobj_sdate + timedelta(days=x) for x in range(number_of_dates.days + 1)}
     print(date_seq)
 
-    # 1) Lets first fetch all daily filenames
-
-
     data = covidcast.signal("fb-survey", "raw_ili", date(2020, 6, 19), date(2020, 6, 19),
                             "state")
 
@@ -91,16 +153,3 @@ def new_stuff():
         print("Date holes exist!")
         print(check_dateholes)
   
-
-
-
-
-
-#print(data)
-#print(data.dtypes)
-
-#print(type(data))
-
-#meta = covidcast.metadata()
-#meta.to_csv('meta_out.csv')
-#print(meta)

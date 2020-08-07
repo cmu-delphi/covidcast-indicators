@@ -5,21 +5,17 @@ when the module is run with `python -m MODULE_NAME`.
 import glob
 import multiprocessing as mp
 import subprocess
-from datetime import datetime
 from functools import partial
 
-import numpy as np
-import pandas as pd
 from delphi_utils import read_params
 
-from .process import process, signal_name
+from .process import process, add_prefix
 
 SIGNALS = [
     'median_home_dwell_time',
     'completely_home_prop',
     'full_time_work_prop',
     'part_time_work_prop'
-
 ]
 
 GEO_RESOLUTIONS = [
@@ -41,7 +37,7 @@ def run_module():
     wip_signal = params["wip_signal"]
 
     process_file = partial(process,
-                           signal_names=signal_name(SIGNALS, wip_signal, prefix='wip_'),
+                           signal_names=add_prefix(SIGNALS, wip_signal, prefix='wip_'),
                            geo_resolutions=GEO_RESOLUTIONS,
                            export_dir=export_dir,
                            )

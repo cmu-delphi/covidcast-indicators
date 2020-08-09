@@ -7,10 +7,12 @@ import numpy as np
 import pandas as pd
 
 from delphi_utils import read_params
-from delphi_cdc_covidnet.update_sensor import update_sensor
+from delphi_cdc_covidnet.update_sensor import update_sensor, add_prefix, SIGNALS
 
 params = read_params()
 STATIC_DIR = params["static_file_dir"]
+wip_signal = params["wip_signal"]
+
 
 class TestUpdateSensor:
 
@@ -85,7 +87,7 @@ class TestUpdateSensor:
             assert set(hosp_df.index.names) == {"date", "geo_id"}
             assert set(hosp_df.index.get_level_values("geo_id")) == {"CA", "PA"}
             assert set(hosp_df.index.get_level_values("date")) == \
-                    {datetime(2020, 3, 7), datetime(2020, 3, 14)}
+                   {datetime(2020, 3, 7), datetime(2020, 3, 14)}
             assert set(hosp_df["epiweek"].unique()) == {10, 11}
             geo_index = hosp_df.index.get_level_values("geo_id")
             assert np.allclose(hosp_df.loc[geo_index == "CA", "val"], [2.5, 3.5])
@@ -116,3 +118,10 @@ class TestUpdateSensor:
                     data["val"], [
                         state_1["datadownload"][i]["cumulative-rate"],
                         state_2["datadownload"][i]["cumulative-rate"]])
+
+    def test_handle_wip_signal(self):
+        assert isinstance(wip_signal, (list, bool)) or wip_signal == "", "Supply True | False or "" or [] | list()"
+        if isinstance(wip_signal, list):
+            assert set(wip_signal).issubset(set(SIGNALS)), "signal in params don't belong in the registry"
+        updated_signal_names = add_prefix(SIGNALS, wip_signal, prefix='wip_')
+        assert (len(updated_signal_names) >= len(SIGNALS))

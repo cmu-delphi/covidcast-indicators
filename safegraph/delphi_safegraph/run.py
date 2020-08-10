@@ -9,20 +9,8 @@ from functools import partial
 
 from delphi_utils import read_params
 
+from .constants import SIGNALS, GEO_RESOLUTIONS
 from .process import process, add_prefix
-
-SIGNALS = [
-    'median_home_dwell_time',
-    'completely_home_prop',
-    'full_time_work_prop',
-    'part_time_work_prop'
-]
-
-GEO_RESOLUTIONS = [
-    'county',
-    'state',
-]
-
 
 def run_module():
 

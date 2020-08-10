@@ -6,14 +6,9 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from delphi_utils import read_params
 from .handle_wip_signal import add_prefix
+from .constants import SIGNALS
 
 # Sample signals
-SIGNALS = ["full_time_work_prop",
-           "covidnet",
-           "part_time_work_prop",
-           "completely_home_prop"
-           ]
-
 
 def run_module():
     """

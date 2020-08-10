@@ -5,7 +5,7 @@ Author: Vishakha
 Created: 2020-08-07
 """
 
-from delphi_epidata import Epidata
+import covidcast
 
 
 def add_prefix(signal_names, wip_signal, prefix: str):
@@ -17,34 +17,34 @@ def add_prefix(signal_names, wip_signal, prefix: str):
     prefix : 'wip_'
         prefix for new/non public signals
     wip_signal : List[str] or bool
-        Either takes a list of wip signals: [], OR
-        incorporated all signals in the registry: True OR
-        no signals: False
+        a list of wip signals: [], OR
+        all signals in the registry: True OR
+        only signals that have never been published: False
     Returns
     -------
     List of signal names
         wip/non wip signals for further computation
     """
-    if wip_signal in ("", False):
-        return signal_names
-    elif wip_signal and isinstance(wip_signal, bool):
-        return [
-            (prefix + signal) if public_signal(signal)
-            else signal
+
+    if wip_signal is True:
+        return [prefix + signal for signal in signal_names]
+    if isinstance(wip_signal, list):
+        make_wip = set(wip_signal)
+        return[
+            prefix + signal if signal in make_wip else signal
             for signal in signal_names
         ]
-    elif isinstance(wip_signal, list):
-        for signal in wip_signal:
-            if public_signal(signal):
-                signal_names.append(prefix + signal)
-                signal_names.remove(signal)
-        return signal_names
-    else:
-        raise ValueError("Supply True | False or '' or [] | list()")
+    if wip_signal in {False, ""}:
+        return [
+            signal if public_signal(signal)
+            else prefix + signal
+            for signal in signal_names
+        ]
+    raise ValueError("Supply True | False or '' or [] | list()")
 
 
 def public_signal(signal_):
-    """Checks if the signal name is already public using Epidata
+    """Checks if the signal name is already public using COVIDcast
     Parameters
     ----------
     signal_ : str
@@ -52,12 +52,11 @@ def public_signal(signal_):
     Returns
     -------
     bool
-        True if the signal is not present
-        False if the signal is present
+        True if the signal is present
+        False if the signal is not present
     """
-    epidata_df = Epidata.covidcast_meta()
-    for index in range(len(epidata_df['epidata'])):
-        if 'signal' in epidata_df['epidata'][index]:
-            if epidata_df['epidata'][index]['signal'] == signal_:
-                return False
-    return True
+    epidata_df = covidcast.metadata()
+    for index in range(len(epidata_df)):
+        if epidata_df['signal'][index] == signal_:
+            return True
+    return False

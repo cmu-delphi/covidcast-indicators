@@ -28,13 +28,13 @@ def add_prefix(signal_names, wip_signal, prefix: str):
 
     if wip_signal is True:
         return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal,list):
+    if isinstance(wip_signal, list):
         make_wip = set(wip_signal)
         return [
             (prefix if signal in make_wip else "") + signal
             for signal in signal_names
         ]
-    if wip_signal in {False,""}:
+    if wip_signal in {False, ""}:
         return [
             signal if public_signal(signal)
             else prefix + signal
@@ -105,6 +105,9 @@ def construct_signals(cbg_df, signal_names):
         elif signal.endswith(PART_TIME_WORK):
             cbg_df[signal] = (cbg_df['part_time_work_behavior_devices']
                               / cbg_df['device_count'])
+        elif signal.endswith(HOME_DWELL):
+            cbg_df[signal] = (cbg_df['median_home_dwell_time'])
+
 
     # Subsetting
     return cbg_df[['timestamp', 'county_fips'] + signal_names]

@@ -1,13 +1,12 @@
-from delphi_epidata import Epidata
-
+import covidcast
 import numpy as np
 import pandas as pd
 
+from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
 from .geo import FIPS_TO_STATE
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
-
 
 def add_prefix(signal_names, wip_signal, prefix: str):
     """Adds prefix to signal if there is a WIP signal
@@ -47,7 +46,7 @@ def add_prefix(signal_names, wip_signal, prefix: str):
 
 # Check if the signal name is public
 def public_signal(signal_):
-    """Checks if the signal name is already public using Epidata
+    """Checks if the signal name is already public using COVIDcast
     Parameters
     ----------
     signal_ : str
@@ -58,10 +57,10 @@ def public_signal(signal_):
         True if the signal is not present
         False if the signal is present
     """
-    epidata_df = Epidata.covidcast_meta()
-    for index in range(len(epidata_df['epidata'])):
-        if 'signal' in epidata_df['epidata'][index]:
-            if epidata_df['epidata'][index]['signal'] == signal_:
+    epidata_df = covidcast.meta()
+    for index in range(len(epidata_df)):
+        if 'signal' in epidata_df[index]:
+            if epidata_df[index]['signal'] == signal_:
                 return False
     return True
 
@@ -91,10 +90,6 @@ def construct_signals(cbg_df, signal_names):
         Dataframe with columns: timestamp, county_fips, and
         {each signal described above}.
     """
-    prefix = 'wip_'
-    COMPLETELY_HOME = 'completely_home_prop'
-    FULL_TIME_WORK = 'full_time_work_prop'
-    PART_TIME_WORK = 'part_time_work_prop'
 
     # Preparation
     cbg_df['timestamp'] = cbg_df['date_range_start'].apply(
@@ -104,13 +99,13 @@ def construct_signals(cbg_df, signal_names):
 
     # Transformation: create signal not available in raw data
     for signal in signal_names:
-        if signal in (FULL_TIME_WORK, prefix + FULL_TIME_WORK):
+        if signal.endswith(FULL_TIME_WORK):
             cbg_df[signal] = (cbg_df['full_time_work_behavior_devices']
                               / cbg_df['device_count'])
-        elif signal in (COMPLETELY_HOME, prefix + COMPLETELY_HOME):
+        elif signal.endswith(COMPLETELY_HOME):
             cbg_df[signal] = (cbg_df['completely_home_device_count']
                               / cbg_df['device_count'])
-        elif signal in (PART_TIME_WORK, prefix + PART_TIME_WORK):
+        elif signal.endswith(PART_TIME_WORK):
             cbg_df[signal] = (cbg_df['part_time_work_behavior_devices']
                               / cbg_df['device_count'])
 

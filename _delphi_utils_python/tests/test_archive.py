@@ -6,6 +6,7 @@ from os.path import join
 from boto3 import Session
 from git import Repo, exc
 from moto import mock_s3
+import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
@@ -43,7 +44,7 @@ class TestArchiveDiffer:
             "csv1": pd.DataFrame({
                 "geo_id": ["1", "2", "3"],
                 "val": [1.0, 2.0, 3.0],
-                "se": [0.1, 0.2, 0.3],
+                "se": [np.nan, 0.2, 0.3],
                 "sample_size": [10.0, 20.0, 30.0]}),
 
             # Deleted
@@ -65,7 +66,7 @@ class TestArchiveDiffer:
             "csv1": pd.DataFrame({
                 "geo_id": ["1", "2", "4"],
                 "val": [1.0, 2.1, 4.0],
-                "se": [0.1, 0.21, 0.4],
+                "se": [np.nan, 0.21, np.nan],
                 "sample_size": [10.0, 21.0, 40.0]}),
 
             # Added
@@ -78,7 +79,7 @@ class TestArchiveDiffer:
         csv1_diff = pd.DataFrame({
             "geo_id": ["2", "4"],
             "val": [2.1, 4.0],
-            "se": [0.21, 0.4],
+            "se": [0.21, np.nan],
             "sample_size": [21.0, 40.0]})
 
         arch_diff = ArchiveDiffer(cache_dir, export_dir)

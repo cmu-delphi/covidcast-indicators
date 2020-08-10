@@ -114,32 +114,4 @@ def fetch_daily_data(data_source, survey_date, geo_type, signal):
                      ", geography-type:" + geo_type
         raise APIDataFetchError(custom_msg)
     return data_to_validate
-    
-
-def new_stuff():
-
-    number_of_dates = dtobj_edate - dtobj_sdate + timedelta(days=1)
-    print(number_of_dates)
-
-    date_seq = {dtobj_sdate + timedelta(days=x) for x in range(number_of_dates.days + 1)}
-    print(date_seq)
-
-    data = covidcast.signal("fb-survey", "raw_ili", date(2020, 6, 19), date(2020, 6, 19),
-                            "state")
-
-
-    unique_dates = set()
-    unique_dates_obj = set()
-
-    for daily_filename in daily_filenames:
-        unique_dates.add(daily_filename[0:8])
-
-    for unique_date in unique_dates:
-        newdate_obj = datetime.strptime(unique_date, '%Y%m%d')
-        unique_dates_obj.add(newdate_obj)
-
-    check_dateholes = date_seq.difference(unique_dates_obj)
-    if check_dateholes:
-        print("Date holes exist!")
-        print(check_dateholes)
-  
+      

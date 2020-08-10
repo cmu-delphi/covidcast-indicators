@@ -17,32 +17,30 @@ def add_prefix(signal_names, wip_signal, prefix: str):
     prefix : 'wip_'
         prefix for new/non public signals
     wip_signal : List[str] or bool
-        Either takes a list of wip signals: [], OR
-        incorporated all signals in the registry: True OR
-        no signals: False
+        a list of wip signals: [], OR
+        all signals in the registry: True OR
+        only signals that have never been published: False
     Returns
     -------
     List of signal names
         wip/non wip signals for further computation
     """
 
-    if wip_signal in ("", False):
-        return signal_names
-    elif wip_signal and isinstance(wip_signal, bool):
+    if wip_signal is True:
+        return [prefix + signal for signal in signal_names]
+    if isinstance(wip_signal,list):
+        make_wip = set(wip_signal)
         return [
-            (prefix + signal) if public_signal(signal)
-            else signal
+            (prefix if signal in make_wip else "") + signal
             for signal in signal_names
         ]
-    elif isinstance(wip_signal, list):
-        for signal in wip_signal:
-            if public_signal(signal):
-                signal_names.append(prefix + signal)
-                signal_names.remove(signal)
-        return signal_names
-    else:
-        raise ValueError("Supply True | False or '' or [] | list()")
-
+    if wip_signal in {False,""}:
+        return [
+            signal if public_signal(signal)
+            else prefix + signal
+            for signal in signal_names
+        ]
+    raise ValueError("Supply True | False or '' or [] | list()")
 
 # Check if the signal name is public
 def public_signal(signal_):
@@ -54,15 +52,14 @@ def public_signal(signal_):
     Returns
     -------
     bool
-        True if the signal is not present
-        False if the signal is present
+        True if the signal is present
+        False if the signal is not present
     """
-    epidata_df = covidcast.meta()
+    epidata_df = covidcast.metadata()
     for index in range(len(epidata_df)):
-        if 'signal' in epidata_df[index]:
-            if epidata_df[index]['signal'] == signal_:
-                return False
-    return True
+        if epidata_df['signal'][index] == signal_:
+            return True
+    return False
 
 
 def construct_signals(cbg_df, signal_names):

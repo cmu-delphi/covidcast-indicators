@@ -50,12 +50,17 @@ class TestProcess:
         assert np.all(x[~np.isnan(x)] >= 0)
 
     def test_handle_wip_signal(self):
-        wip_signal = read_params()["wip_signal"]
-        assert isinstance(wip_signal, (list, bool)) or wip_signal == "", "Supply True | False or "" or [] | list()"
-        if isinstance(wip_signal, list):
-            assert set(wip_signal).issubset(set(SIGNALS)), "signal in params don't belong in the registry"
-        updated_signal_names = add_prefix(SIGNALS, wip_signal, prefix='wip_')
-        assert (len(updated_signal_names) >= len(SIGNALS))
+        # Test wip_signal = True
+        signal_names = add_prefix(SIGNALS, True, prefix="wip_")
+        assert all(s.startswith("wip_") for s in signal_names)
+        # Test wip_signal = list
+        signal_names = add_prefix(SIGNALS, [SIGNALS[0]], prefix="wip_")
+        assert signal_names[0].startswith("wip_")
+        assert all(not s.startswith("wip_") for s in signal_names[1:])
+        # Test wip_signal = False
+        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False, prefix="wip_")
+        assert signal_names[0].startswith("wip_")
+        assert all(not s.startswith("wip_") for s in signal_names[1:])
 
 
 

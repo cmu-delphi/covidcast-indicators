@@ -78,7 +78,10 @@ GEO_USELEVEL["tested"]["state"] = "state"
 def run_module():
 
     params = read_params()
-    export_start_date = params["export_start_date"]
+    export_start_dates = {
+            "confirmed": params["confirmed_export_start_date"],
+            "tested": params["tested_export_start_date"]
+    }
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
@@ -135,7 +138,8 @@ def run_module():
             create_export_csv(
                 df,
                 export_dir=export_dir,
-                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                start_date=datetime.strptime(
+                        export_start_dates[metric], "%Y-%m-%d"),
                 metric="wip_" + metric,
                 geo_res=geo_res,
                 sensor=sensor_name,
@@ -149,7 +153,7 @@ def run_module():
                       how="inner")[["geo_id", "timestamp",
                                       "val_tested", "val_confirmed"]]
         df = df.loc[
-            (df["val_tested"] >= MIN_OBS) # threshold 
+            (df["val_tested"] >= MIN_OBS) # threshold
             & (df["val_confirmed"] >= 0)
             & (df["val_confirmed"] <= df["val_tested"])
         ]
@@ -169,7 +173,8 @@ def run_module():
         create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            start_date=datetime.strptime(
+                    export_start_dates["tested"], "%Y-%m-%d"),
             metric=metric,
             geo_res=geo_res,
             sensor="pct_positive",

@@ -1,5 +1,4 @@
-from delphi_epidata import Epidata
-
+import covidcast
 import numpy as np
 import pandas as pd
 
@@ -47,7 +46,7 @@ def add_prefix(signal_names, wip_signal, prefix: str):
 
 # Check if the signal name is public
 def public_signal(signal_):
-    """Checks if the signal name is already public using Epidata
+    """Checks if the signal name is already public using COVIDcast
     Parameters
     ----------
     signal_ : str
@@ -58,10 +57,10 @@ def public_signal(signal_):
         True if the signal is not present
         False if the signal is present
     """
-    epidata_df = Epidata.covidcast_meta()
-    for index in range(len(epidata_df['epidata'])):
-        if 'signal' in epidata_df['epidata'][index]:
-            if epidata_df['epidata'][index]['signal'] == signal_:
+    epidata_df = covidcast.meta()
+    for index in range(len(epidata_df)):
+        if 'signal' in epidata_df[index]:
+            if epidata_df[index]['signal'] == signal_:
                 return False
     return True
 

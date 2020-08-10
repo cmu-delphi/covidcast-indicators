@@ -22,6 +22,7 @@ from .smooth import (
 
 
 # global constants
+MIN_OBS = 50 # minimum number of observations in order to compute a proportion.
 seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
     "confirmed",
@@ -147,22 +148,19 @@ def run_module():
                       suffixes=('_tested', '_confirmed'),
                       how="inner")[["geo_id", "timestamp",
                                       "val_tested", "val_confirmed"]]
-        df["pct_positive"] = df["val_confirmed"] / df["val_tested"] * 100
-        df.loc[
-            (df["val_confirmed"] == 0) & (df["val_tested"] == 0), "pct_positive"
-        ] = 0
-        df["val"] = SMOOTHERS_MAP[smoother][0](df["pct_positive"].values)
-        df["sample_size"] = df["val_tested"]
-        # Drop early entries where data insufficient for smoothing
         df = df.loc[
-            (~df["val"].isnull())
-            & (df["val"] >= 0)
-            & (df["val"] <= 100)
-            & (df["val_tested"] >= 50)
+            (df["val_tested"] >= MIN_OBS) # threshold 
+            & (df["val_confirmed"] >= 0)
+            & (df["val_confirmed"] <= df["val_tested"])
         ]
+        df["val"] = df["val_confirmed"] / df["val_tested"] * 100
+        df["sample_size"] = df["val_tested"]
+
+        # Calculate Standard Error
         df.loc[df["sample_size"] == 0, "se"] = 0
         df.loc[df["sample_size"] > 0, "se"] = np.sqrt(
-            df["val"]/100 * (1-df["val"]/100) / df["sample_size"])
+            df["val"]/100 * (1-df["val"]/100) / df["sample_size"]) * 100
+
         if smoother == "unsmoothed":
             metric = "wip_raw"
         else:

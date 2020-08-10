@@ -5,7 +5,7 @@ import numpy as np
 from pathlib import Path
 from itertools import product
 from datetime import date, datetime, timedelta
-from datafetcher import *
+from .datafetcher import *
 import math
 
 DATA_SOURCE = "fb-survey"

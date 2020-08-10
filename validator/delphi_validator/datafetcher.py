@@ -4,15 +4,11 @@ import platform
 import covidcast
 import pandas as pd
 from datetime import date, datetime, timedelta
-from errors import *
+from .errors import *
 import re
 from typing import List
 import json
 
-def read_params(params_filepath):
-    with open(params_filepath) as f:
-        config = json.load(f)
-    return config      
 
 def get_filenames_with_geo_signal(path, date_slist: List[str]):
     
@@ -121,12 +117,6 @@ def fetch_daily_data(data_source, survey_date, geo_type, signal):
     
 
 def new_stuff():
-    survey_sdate = "2020-06-13"
-    survey_edate = "2020-06-20"
-    dtobj_sdate = datetime.strptime(survey_sdate, '%Y-%m-%d')
-    dtobj_edate = datetime.strptime(survey_edate, '%Y-%m-%d')
-    print(dtobj_sdate.date())
-    print(dtobj_edate.date())
 
     number_of_dates = dtobj_edate - dtobj_sdate + timedelta(days=1)
     print(number_of_dates)

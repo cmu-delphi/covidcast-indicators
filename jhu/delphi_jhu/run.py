@@ -11,7 +11,11 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import (
+    read_params,
+    create_export_csv,
+    S3ArchiveDiffer,
+)
 
 from .geo import geo_map
 from .pull import pull_jhu_data
@@ -51,8 +55,8 @@ SENSOR_NAME_MAP = {
 #     "cumulative_prop":      ("cumul_prop", False),
 # }
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, '', False),
-    "seven_day_average":    (seven_day_moving_average, '7dav_', True),
+    "unsmoothed":           (identity, ''),
+    "seven_day_average":    (seven_day_moving_average, '7dav_'),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -69,6 +73,13 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
+    cache_dir = params["cache_dir"]
+
+    arch_diff = S3ArchiveDiffer(
+        cache_dir, export_dir,
+        params["bucket_name"], "jhu",
+        params["aws_credentials"])
+    arch_diff.update_cache()
 
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
@@ -103,3 +114,19 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
+
+    # Diff exports, and make incremental versions
+    _, common_diffs, new_files = arch_diff.diff_exports()
+
+    # Archive changed and new files only
+    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+    to_archive += new_files
+    _, fails = arch_diff.archive_exports(to_archive)
+
+    # Filter existing exports to exclude those that failed to archive
+    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+    arch_diff.filter_exports(succ_common_diffs)
+
+    # Report failures: someone should probably look at them
+    for exported_file in fails:
+        print(f"Failed to archive '{exported_file}'")

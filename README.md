@@ -10,14 +10,15 @@ Each subdirectory contained here that is named after an indicator has specific d
 
 **tl;dr**
 
-- Create your new indicator branch from `main`.
-- Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
-- Make some stuff!
-- When your stuff works, push your `dev-*` branch to remote for review.
-- Consult with a platform engineer for the remaining production setup needs. They will create a branch called `deploy-*` for your indicator.
-- Initiate a pull request against this new branch.
-- If your peers like it and Jenkins approves, deploy your changes by merging the PR.
-- Rejoice!
+1. Create your new indicator branch from `main`.
+2. Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
+3. Make some stuff!
+4. When your stuff works, push your `dev-*` branch to remote for review.
+5. Consult with a platform engineer for the remaining production setup needs. They will create a branch called `deploy-*` for your indicator.
+6. Initiate a pull request against this new branch.
+7. Following [the source documentation template](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md), create public API documentation for the source. You can submit this as a pull request against the delphi-epidata repository.
+8. If your peers like the code, the documentation is ready, and Jenkins approves, deploy your changes by merging the PR.
+9. Rejoice!
 
 ### Starting out
 
@@ -44,6 +45,15 @@ Once you have something that runs locally and passes tests you set up your remot
 git push -u origin dev-my-feature-branch
 ```
 
+You can then set draft public API documentation for people who would fetch this
+data from the API. Public API documentation is kept in the delphi-epidata
+repository, and there is a [template Markdown
+file](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md)
+that outlines the features that need to be documented. You can create a pull
+request to add a new file to `docs/api/covidcast-signals/` for your source. Our
+goal is to have public API documentation for the data at the same time as it
+becomes available to the public.
+
 ### Setting up for review and deployment
 
 Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. These include:
@@ -55,7 +65,7 @@ Once you have your branch set up you should get in touch with a platform enginee
 
 Once all the last mile configuration is in place you can create a pull request against the correct `deploy-*` branch to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
 
-If everything looks ok, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
+If everything looks ok, you've drafted source documentation, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
 
 Hopefully it'll be a full on :tada:, after that :crossed_fingers:
 

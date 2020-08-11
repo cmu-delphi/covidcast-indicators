@@ -8,7 +8,7 @@ Created: 2020-08-07
 import covidcast
 
 
-def add_prefix(signal_names, wip_signal, prefix: str):
+def add_prefix(signal_names, wip_signal, prefix="wip_"):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------

@@ -134,8 +134,9 @@ class CovidNet:
         for nid, cid in args.itertuples(index=False, name=None):
             outfile = os.path.join(cache_path, f"networkid_{nid}_catchmentid_{cid}.json")
             state_files.append(outfile)
-            args = (nid, cid, age_groups, APIConfig.SEASONS, outfile, APIConfig.HOSP_URL)
-            state_args.append(args)
+            if not os.path.exists(outfile):
+                args = (nid, cid, age_groups, APIConfig.SEASONS, outfile, APIConfig.HOSP_URL)
+                state_args.append(args)
 
         # Download all state files
         if parallel:

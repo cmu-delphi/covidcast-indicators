@@ -1,7 +1,7 @@
 geo_id,val,se,sample_size
-CA,1.1,NA,NA
+CA,1.0,NA,NA
 CO,0.8,NA,NA
-CT,0.8,NA,NA
+CT,1.0,NA,NA
 GA,2.7,NA,NA
 MD,0.4,NA,NA
 MN,0.1,NA,NA

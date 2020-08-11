@@ -8,8 +8,6 @@ from delphi_utils import read_params
 from .handle_wip_signal import add_prefix
 from .constants import SIGNALS
 
-# Sample signals
-
 def run_module():
     """
     Calls the method for handling the wip signals

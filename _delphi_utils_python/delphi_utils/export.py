@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from os.path import join
 
 import pandas as pd
-
 
 def create_export_csv(
     df: pd.DataFrame,
@@ -34,6 +34,7 @@ def create_export_csv(
     ).sort_values()
     for date in dates:
         export_fn = f'{date.strftime("%Y%m%d")}_{geo_res}_' f"{metric}_{sensor}.csv"
+        export_file = join(export_dir, export_fn)
         df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]].to_csv(
-            f"{export_dir}/{export_fn}", index=False, na_rep="NA"
+            export_file, index=False, na_rep="NA"
         )

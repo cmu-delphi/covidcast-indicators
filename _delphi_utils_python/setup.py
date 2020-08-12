@@ -2,6 +2,9 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "boto3",
+    "gitpython",
+    "moto",
     "numpy",
     "pandas",
     "pytest",

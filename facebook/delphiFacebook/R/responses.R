@@ -1,8 +1,15 @@
 #' Load all response datasets in a local directory
 #'
-#' @param params    a named listed containing a value named "input", a vector of paths to
-#'                  load by the function, and "input_dir", the directory where the input
-#'                  files are found
+#' Note that if some columns are not present in all files -- for example, if
+#' survey questions changed and so newer data files have different columns --
+#' the resulting data frame will contain all columns, with NAs in rows where
+#' that column was not present.
+#'
+#' @param params a named listed containing a value named "input", a vector of
+#'   paths to load by the function, and "input_dir", the directory where the
+#'   input files are found
+#' @return A data frame of all loaded data files concatenated into one data
+#'   frame
 #'
 #' @importFrom dplyr bind_rows
 #' @export

@@ -1,5 +1,5 @@
 """
-REGISTRY FOR SIGANL NAMES, GEO TYPES
+REGISTRY FOR SIGNAL NAMES, GEO TYPES
 """
 RAW = "raw_search"
 SMOOTHED = "smoothed_search"
@@ -10,5 +10,4 @@ DMA = "dma"
 
 SIGNALS = [RAW, SMOOTHED]
 GEO_TYPES = [STATE, HRR, MSA, DMA]
-
 

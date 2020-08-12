@@ -116,4 +116,3 @@ class TestUpdateSensor:
                     data["val"], [
                         state_1["datadownload"][i]["cumulative-rate"],
                         state_2["datadownload"][i]["cumulative-rate"]])
-

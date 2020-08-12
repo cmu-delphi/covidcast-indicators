@@ -75,12 +75,14 @@ def update_sensor(
                             right_on=["year", "weeknumber"])
 
     # Select relevant columns and standardize naming
-    hosp_df = hosp_df.loc[:, APIConfig.HOSP_RENAME_COLS.keys()] \
+    hosp_df = hosp_df.loc[:, APIConfig.HOSP_RENAME_COLS.keys()]\
         .rename(columns=APIConfig.HOSP_RENAME_COLS)
 
     # Restrict to start and end date
-    hosp_df = hosp_df[
-        (hosp_df["date"] >= start_date) & (hosp_df["date"] < end_date)]
+    hosp_df = hosp_df = hosp_df[
+        (hosp_df["date"] >= start_date) & (
+            hosp_df["date"] < end_date)
+    ]
 
     # Set state id to two-letter abbreviation
     geo_map = GeoMaps(static_path)

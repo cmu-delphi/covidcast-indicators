@@ -102,7 +102,7 @@ def update_sensor(
     return hosp_df
 
 
-def add_prefix(signal_names, wip_signal, prefix: str):
+def add_prefix(signal_names, wip_signal, prefix):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------

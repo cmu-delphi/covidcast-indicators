@@ -79,7 +79,7 @@ def update_sensor(
         .rename(columns=APIConfig.HOSP_RENAME_COLS)
 
     # Restrict to start and end date
-    hosp_df = hosp_df = hosp_df[
+    hosp_df = hosp_df[
         (hosp_df["date"] >= start_date) & (
             hosp_df["date"] < end_date)
     ]

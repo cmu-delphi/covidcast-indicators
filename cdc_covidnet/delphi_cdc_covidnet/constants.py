@@ -1,5 +1,6 @@
 """
-CONTAINS SIGNAL REGISTRY
+Registry for signal names
 """
 COVIDNET = "covidnet"
-SIGNALS = [COVIDNET]
+SAMPLE = "sample"
+SIGNALS = [COVIDNET, SAMPLE]

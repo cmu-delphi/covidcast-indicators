@@ -19,7 +19,6 @@ from .covidnet import CovidNet
 from .geo_maps import GeoMaps
 from .constants import SIGNALS
 
-
 def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """
     Write sensor values to csv.

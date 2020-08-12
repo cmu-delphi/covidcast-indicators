@@ -4,6 +4,6 @@
   "cache_dir": "./cache",
   "start_date": "2020-03-07",
   "end_date": "",
-  "parallel": true
-  "wip_signal": []
+  "parallel": true,
+  "wip_signal": ""
 }

@@ -201,9 +201,9 @@ create_data_for_aggregatation <- function(input_data)
 #' @export
 filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 {
-  # what zip5 values have a large enough population (>100) to include in aggregates
-  allowed_zips <- produce_allowed_zip5(params$static_dir)
-  df <- df[df$zip5 %in% allowed_zips,]
+  # Exclude responses with bad zips
+  known_zips <- produce_zip_metadata(params$static_dir)
+  df <- df[df$zip5 %in% known_zips$zip5,]
 
   df <- df[!is.na(df$hh_number_sick) & !is.na(df$hh_number_total), ]
   df <- df[dplyr::between(df$hh_number_sick, 0L, 30L), ]
@@ -221,7 +221,7 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 #' @importFrom stringi stri_trim stri_replace_all
 #'
 #' @export
-create_complete_responses <- function(input_data)
+create_complete_responses <- function(input_data, params)
 {
   data_full <- select(input_data,
     StartDatetime = "start_dt", EndDatetime = "end_dt", Date = "date",
@@ -231,7 +231,8 @@ create_complete_responses <- function(input_data)
     "C10_3_1", "C10_4_1", "C11", "C12",
     "D1", "D1_4_TEXT", "D1b", "D2", "D3", "D4", "D5",
     "Q36", "Q40",
-    "token", wave = "SurveyID", "UserLanguage"
+    "token", wave = "SurveyID", "UserLanguage",
+    "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
   data_full$wave <- surveyID_to_wave(data_full$wave)
@@ -309,6 +310,11 @@ filter_complete_responses <- function(data_full, params)
   data_full <- filter(data_full,
                       .data$Date >= as.Date(params$start_date) - params$backfill_days,
                       .data$Date <= as.Date(params$end_date))
+
+  # what zip5 values have a large enough population (>100) to include in micro output
+  allowed_zips <- produce_allowed_zip5(params$static_dir)
+  data_full <- data_full[data_full$zip5 %in% allowed_zips,]
+  data_full <- select(data_full, -zip5)
 
   return(data_full)
 }

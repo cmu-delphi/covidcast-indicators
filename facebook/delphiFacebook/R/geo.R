@@ -23,7 +23,7 @@ produce_zip_metadata <- function(static_dir)
   return(zip_metadata)
 }
 
-#' Returns list of zip codes with large enough population to include in output
+#' Returns list of zip codes with large enough population to include in micro output.
 #'
 #' For privacy reasons, we only include zip codes with a population over 100 people.
 #'

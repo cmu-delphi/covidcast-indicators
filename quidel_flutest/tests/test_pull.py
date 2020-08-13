@@ -57,10 +57,12 @@ class TestingPullData:
 
     def test_check_intermediate_file(self):
         
-        filename, pull_start_date = check_intermediate_file("./cache/test_cache_with_file", None)
-        assert filename is not None
+        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_with_file", None)
+        assert previous_df is not None
         assert pull_start_date is not None
+        # Put the test file back
+        previous_df.to_csv("./cache/test_cache_with_file/pulled_until_20200710.csv", index=False)
 
-        filename, pull_start_date = check_intermediate_file("./cache/test_cache_without_file", None)
-        assert filename is None
+        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_without_file", None)
+        assert previous_df is None
         assert pull_start_date is None

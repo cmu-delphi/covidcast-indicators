@@ -26,7 +26,7 @@ test_that("testing allowed zips function", {
 test_that("testing county crosswalk function", {
 
   zip_metadata <- produce_zip_metadata(static_dir)
-  crosswalk_county <- produce_crosswalk_county(static_dir, zip_metadata)
+  crosswalk_county <- produce_crosswalk_county(zip_metadata)
 
   expect_setequal(names(crosswalk_county), c("zip5", "geo_id", "weight_in_location"))
 
@@ -35,7 +35,7 @@ test_that("testing county crosswalk function", {
 test_that("testing state crosswalk function", {
 
   zip_metadata <- produce_zip_metadata(static_dir)
-  crosswalk_county <- produce_crosswalk_county(static_dir, zip_metadata)
+  crosswalk_county <- produce_crosswalk_county(zip_metadata)
   crosswalk_state <- produce_crosswalk_state(zip_metadata, crosswalk_county)
 
   expect_setequal(names(crosswalk_state), c("zip5", "geo_id", "weight_in_location"))
@@ -54,7 +54,7 @@ test_that("testing HRR crosswalk function", {
 test_that("testing MSA crosswalk function", {
 
   zip_metadata <- produce_zip_metadata(static_dir)
-  crosswalk_county <- produce_crosswalk_county(static_dir, zip_metadata)
+  crosswalk_county <- produce_crosswalk_county(zip_metadata)
   crosswalk_msa <- produce_crosswalk_msa(static_dir, crosswalk_county)
 
   expect_setequal(names(crosswalk_msa), c("zip5", "geo_id", "weight_in_location"))

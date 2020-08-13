@@ -1,0 +1,15 @@
+---
+- hosts: localhost
+  connection: local
+  vars_files:
+    - vars.yaml
+    - vault.yaml
+  tasks:
+    - name: Set test params template.
+      template:
+        src: templates/{{ indicator }}-params-test.json.j2
+        dest: "{{ workspace }}/{{ indicator }}/tests/params.json"
+        owner: "{{ jenkins_user }}"
+        group: "{{ jenkins_user }}"
+        mode: "0644"
+      delegate_to: localhost

@@ -189,7 +189,7 @@ class EMRHospSensorUpdator:
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
 
-    def geo_reindex(self, data, staticpath):
+    def geo_reindex(self,data,staticpath):
         """Reindex based on geography, include all date, geo pairs
 
         Args:
@@ -225,8 +225,7 @@ class EMRHospSensorUpdator:
         data_frame = data_frame.reindex(multiindex, fill_value=0)
         data_frame.fillna(0, inplace=True)
         return data_frame
-
-    
+  
     def update_sensor(self,
             emr_filepath,
             claims_filepath,

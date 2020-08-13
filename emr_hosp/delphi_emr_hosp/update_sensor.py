@@ -9,6 +9,8 @@ Created: 2020-06-01
 import logging
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
+import covidcast
+from delphi_utils import read_params
 
 # third party
 import numpy as np
@@ -20,6 +22,7 @@ from .geo_maps import GeoMaps
 from .load_data import load_combined_data
 from .sensor import EMRHospSensor
 from .weekday import Weekday
+from .constants import *
 
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
@@ -68,14 +71,69 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
                     if write_se:
                         assert sensor > 0 and se > 0, "p=0, std_err=0 invalid"
                         outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se, "NA", "NA"))
+                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se, NA, NA))
                     else:
                         # for privacy reasons we will not report the standard error
                         outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA")
+                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, NA, NA, NA)
                         )
                     out_n += 1
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+
+
+def add_prefix(signal_names, wip_signal, prefix):
+    """Adds prefix to signal if there is a WIP signal
+    Parameters
+    ----------
+    signal_names
+    self: List[str]
+        Names of signals to be exported
+    prefix : 'wip_'
+        prefix for new/non public signals
+    wip_signal : List[str] or bool
+        a list of wip signals: [], OR
+        all signals in the registry: True OR
+        only signals that have never been published: False
+    Returns
+    -------
+    List of signal names
+        wip/non wip signals for further computation
+    """
+    if wip_signal is True:
+        return [prefix + signal for signal in signal_names]
+    if isinstance(wip_signal, list):
+        make_wip = set(wip_signal)
+        return [
+            prefix + signal if signal in make_wip else signal
+            for signal in signal_names
+        ]
+    if wip_signal in {False, ""}:
+        return [
+            signal if public_signal(signal)
+            else prefix + signal
+            for signal in signal_names
+        ]
+    raise ValueError("Supply True | False or '' or [] | list()")
+
+
+def public_signal(signal_):
+    """Checks if the signal name is already public using COVIDcast
+    Parameters
+    ----------
+    signal_ : str
+        Name of the signal
+    Returns
+    -------
+    bool
+        True if the signal is present
+        False if the signal is not present
+    """
+    epidata_df = covidcast.metadata()
+    for index in range(len(epidata_df)):
+        if epidata_df['signal'][index] == signal_:
+            return True
+    return False
+
 
 class EMRHospSensorUpdator:
 
@@ -86,8 +144,7 @@ class EMRHospSensorUpdator:
                  geo,
                  parallel,
                  weekday,
-                 se,
-                 prefix=None):
+                 se):
         """Init Sensor Updator
 
         Args:
@@ -108,22 +165,23 @@ class EMRHospSensorUpdator:
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
-        assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
+        assert geo in GEO_TYPES, f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
         self.geo, self.parallel, self.weekday, self.se = geo, parallel, weekday, se
 
         # output file naming
-        out_name = "smoothed_adj_covid19" if self.weekday else "smoothed_covid19"
-        if se:
-            assert prefix is not None, "supply obfuscated prefix in params"
-            out_name = prefix + "_" + out_name
-        self.output_filename = out_name
-
+        signals = SIGNALS.copy()
+        signals.remove(SMOOTHED if self.weekday else SMOOTHED_ADJ)
+        signal_names = add_prefix(
+            signals,
+            wip_signal=read_params()["wip_signal"],
+            prefix="wip_")
+        self.updated_signal_names = signal_names
 
     def shift_dates(self):
         """shift estimates forward to account for time lag, compute burnindates, sensordates
         """
 
-        drange = lambda s, e: pd.date_range(start=s,periods=(e-s).days,freq='D')
+        drange = lambda s, e: pd.date_range(start=s, periods=(e - s).days, freq='D')
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
         self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
@@ -131,7 +189,7 @@ class EMRHospSensorUpdator:
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
 
-    def geo_reindex(self,data,staticpath):
+    def geo_reindex(self, data, staticpath):
         """Reindex based on geography, include all date, geo pairs
 
         Args:
@@ -144,13 +202,13 @@ class EMRHospSensorUpdator:
         # get right geography
         geo = self.geo
         geo_map = GeoMaps(staticpath)
-        if geo.lower() == "county":
+        if geo.lower() == COUNTY:
             data_frame = geo_map.county_to_megacounty(data)
-        elif geo.lower() == "state":
+        elif geo.lower() == STATE:
             data_frame = geo_map.county_to_state(data)
-        elif geo.lower() == "msa":
+        elif geo.lower() == MSA:
             data_frame = geo_map.county_to_msa(data)
-        elif geo.lower() == "hrr":
+        elif geo.lower() == HRR:
             data_frame = data  # data is already adjusted in aggregation step above
         else:
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
@@ -168,12 +226,11 @@ class EMRHospSensorUpdator:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-
     def update_sensor(self,
-            emr_filepath,
-            claims_filepath,
-            outpath,
-            staticpath):
+                      emr_filepath,
+                      claims_filepath,
+                      outpath,
+                      staticpath):
         """Generate sensor values, and write to csv format.
 
         Args:
@@ -188,10 +245,10 @@ class EMRHospSensorUpdator:
 
         # load data
         ## JS: If the data is in fips then can we also put it into hrr?
-        base_geo = "hrr" if self.geo == "hrr" else "fips"
+        base_geo = HRR if self.geo == HRR else FIPS
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
-        data_frame = self.geo_reindex(data,staticpath)
+        data_frame = self.geo_reindex(data, staticpath)
 
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(data_frame) if self.weekday else None
@@ -202,16 +259,16 @@ class EMRHospSensorUpdator:
         sensor_include = {}
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0,inplace=True)
+                sub_data.reset_index(level=0, inplace=True)
 
                 if self.weekday:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
                 res = EMRHospSensor.fit(sub_data, self.burnindate, geo_id)
                 res = pd.DataFrame(res)
-                sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs,"rate"])
-                sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs,"se"])
-                sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs,"incl"])
+                sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs, "rate"])
+                sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs, "se"])
+                sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs, "incl"])
 
         else:
             n_cpu = min(10, cpu_count())
@@ -219,7 +276,7 @@ class EMRHospSensorUpdator:
 
             with Pool(n_cpu) as pool:
                 pool_results = []
-                for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
+                for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
                     sub_data.reset_index(level=0, inplace=True)
                     if self.weekday:
                         sub_data = Weekday.calc_adjustment(wd_params, sub_data)
@@ -249,6 +306,7 @@ class EMRHospSensorUpdator:
         }
 
         # write out results
-        write_to_csv(output_dict, self.se, self.output_filename, outpath)
+        for signal in self.updated_signal_names:
+            write_to_csv(output_dict, self.se, signal, outpath)
         logging.debug(f"wrote files to {outpath}")
         return True

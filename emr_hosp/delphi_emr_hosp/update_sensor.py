@@ -226,6 +226,7 @@ class EMRHospSensorUpdator:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
+    
     def update_sensor(self,
             emr_filepath,
             claims_filepath,
@@ -248,7 +249,7 @@ class EMRHospSensorUpdator:
         base_geo = HRR if self.geo == HRR else FIPS
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
-        data_frame = self.geo_reindex(data, staticpath)
+        data_frame = self.geo_reindex(data,staticpath)
 
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(data_frame) if self.weekday else None
@@ -259,16 +260,16 @@ class EMRHospSensorUpdator:
         sensor_include = {}
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0, inplace=True)
+                sub_data.reset_index(level=0,inplace=True)
 
                 if self.weekday:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data)
 
                 res = EMRHospSensor.fit(sub_data, self.burnindate, geo_id)
                 res = pd.DataFrame(res)
-                sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs, "rate"])
-                sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs, "se"])
-                sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs, "incl"])
+                sensor_rates[geo_id] = np.array(res.loc[final_sensor_idxs,"rate"])
+                sensor_se[geo_id] = np.array(res.loc[final_sensor_idxs,"se"])
+                sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs,"incl"])
 
         else:
             n_cpu = min(10, cpu_count())
@@ -276,7 +277,7 @@ class EMRHospSensorUpdator:
 
             with Pool(n_cpu) as pool:
                 pool_results = []
-                for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
+                for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
                     sub_data.reset_index(level=0, inplace=True)
                     if self.weekday:
                         sub_data = Weekday.calc_adjustment(wd_params, sub_data)

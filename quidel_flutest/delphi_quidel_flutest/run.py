@@ -5,7 +5,6 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
-import os
 from os.path import join
 
 import pandas as pd
@@ -20,6 +19,8 @@ from .generate_sensor import (generate_sensor_for_states,
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
+END_FROM_TODAY_MINUS = 5 # report data until - X days
+EXPORT_DAY_RANGE = 40 # Number of dates to report
 
 GEO_RESOLUTIONS = [
     # "county",
@@ -55,7 +56,7 @@ def run_module():
 
     # pull new data only that has not been ingested
     pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
-    filename, pull_start_date = check_intermediate_file(cache_dir, pull_start_date)
+    previous_df, pull_start_date = check_intermediate_file(cache_dir, pull_start_date)
 
     if params["pull_end_date"] == "":
         pull_end_date = date.today()
@@ -75,14 +76,11 @@ def run_module():
         return
 
     # Utilize previously stored data
-    if filename is not None:
-        previous_df = pd.read_csv(join(cache_dir, filename), sep=",", parse_dates=["timestamp"])
+    if previous_df is not None:
         df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
-        # Save the intermediate file to cache_dir which can be re-used next time
-        os.remove(join(cache_dir, filename))
 
     # By default, set the export end date to be the last pulling date - 5 days
-    export_end_date = _end_date - timedelta(days=5)
+    export_end_date = _end_date - timedelta(days=END_FROM_TODAY_MINUS)
     if params["export_end_date"] != "":
         input_export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d').date()
         if input_export_end_date < export_end_date:
@@ -90,8 +88,8 @@ def run_module():
     export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
 
     # Only export data from -45 days to -5 days
-    if (export_end_date - export_start_date).days > 40:
-        export_start_date = export_end_date - timedelta(days=40)
+    if (export_end_date - export_start_date).days > EXPORT_DAY_RANGE:
+        export_start_date = export_end_date - timedelta(days=EXPORT_DAY_RANGE)
 
     first_date = df["timestamp"].min()
     last_date = df["timestamp"].max()

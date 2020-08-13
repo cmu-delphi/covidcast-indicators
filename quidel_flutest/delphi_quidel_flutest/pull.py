@@ -51,7 +51,7 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
     """
     time_flag = None
     columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
-                               'FluA', 'FluB', 'StorageDate']
+                                'FluA', 'FluB', 'StorageDate']
     df = pd.DataFrame(columns=columns)
 
     with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
@@ -79,6 +79,11 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
                                              axis=1)
                     if "ZipCode" not in newdf.keys():
                         newdf = newdf.rename({"Zip": "ZipCode"}, axis=1)
+                    # if "ResultID" not in newdf.keys():
+                    #     newdf["ResultID"] = np.nan
+                    # if "FluTestNumber" not in newdf.keys():
+                    #     newdf["FluTestNumber"] = np.nan
+                    # newdf["filename"] = name
                     df = df.append(newdf[columns])
                     time_flag = search_date
 
@@ -195,5 +200,8 @@ def check_intermediate_file(cache_dir, pull_start_date):
         if ".csv" in filename:
             pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
                                             '%Y%m%d').date() + timedelta(days=1)
-            return filename, pull_start_date
+            previous_df = pd.read_csv(os.path.join(cache_dir, filename),
+                                      sep=",", parse_dates=["timestamp"])
+            os.remove(os.path.join(cache_dir, filename))
+            return previous_df, pull_start_date
     return None, pull_start_date

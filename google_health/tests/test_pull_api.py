@@ -36,7 +36,7 @@ class TestGoogleHealthTrends:
         ]
 
         assert len(res["lines"][0]["points"]) == 2
-        assert [x for x in res["lines"][0]["points"][0].keys()] == ["date", "value"]
+        assert set([x for x in res["lines"][0]["points"][0].keys()]) == {"date", "value"}
         assert res["lines"][0]["points"][0]["date"] == "May 05 2020"
         assert res["lines"][0]["points"][1]["date"] == "May 06 2020"
 
@@ -55,7 +55,7 @@ class TestGoogleHealthTrends:
         ]
 
         assert len(res["lines"][0]["points"]) == 2
-        assert [x for x in res["lines"][0]["points"][0].keys()] == ["date", "value"]
+        assert set([x for x in res["lines"][0]["points"][0].keys()]) == {"date", "value"}
         assert res["lines"][0]["points"][0]["date"] == "May 05 2020"
         assert res["lines"][0]["points"][1]["date"] == "May 06 2020"
 

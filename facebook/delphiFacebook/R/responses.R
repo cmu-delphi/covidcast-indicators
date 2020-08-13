@@ -311,17 +311,22 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
 #' @export
 filter_complete_responses <- function(data_full, params)
 {
-  # 6 includes StartDatetime, EndDatetime, Date, token, + two questions
-  data_full <- data_full[rowSums(!is.na(data_full)) >= 6, ]
-
   data_full <- filter(data_full,
                       .data$Date >= as.Date(params$start_date) - params$backfill_days,
                       .data$Date <= as.Date(params$end_date))
 
-  # what zip5 values have a large enough population (>100) to include in micro output
-  allowed_zips <- produce_allowed_zip5(params$static_dir)
-  data_full <- data_full[data_full$zip5 %in% allowed_zips,]
+  # what zip5 values have a large enough population (>100) to include in micro
+  # output. Those with too small of a population are blanked to NA
+  zip_metadata <- produce_zip_metadata(params$static_dir)[, c("zip5", "keep_in_agg")]
+  zipitude <- left_join(data_full, zip_metadata, by = "zip5")
+  change_zip <- !is.na(zipitude$keep_in_agg) & !zipitude$keep_in_agg
+  data_full$A3[change_zip] <- NA
+
   data_full <- select(data_full, -zip5)
+
+  # 8 includes StartDatetime, EndDatetime, Date, token, wave, UserLanguage + two
+  # questions
+  data_full <- data_full[rowSums(!is.na(data_full)) >= 8, ]
 
   return(data_full)
 }

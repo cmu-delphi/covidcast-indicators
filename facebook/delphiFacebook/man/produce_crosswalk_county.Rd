@@ -4,11 +4,9 @@
 \alias{produce_crosswalk_county}
 \title{Produce crosswalk file relating zip codes to counties}
 \usage{
-produce_crosswalk_county(static_dir, zip_metadata)
+produce_crosswalk_county(zip_metadata)
 }
 \arguments{
-\item{static_dir}{local directory containing the file "02_20_uszips.csv"}
-
 \item{zip_metadata}{output from a call to the function produce_allowed_zip5}
 }
 \value{

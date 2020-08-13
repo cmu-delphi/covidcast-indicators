@@ -2,7 +2,7 @@
 % Please edit documentation in R/geo.R
 \name{produce_allowed_zip5}
 \alias{produce_allowed_zip5}
-\title{Returns list of zip codes with large enough population to include in output}
+\title{Returns list of zip codes with large enough population to include in micro output.}
 \usage{
 produce_allowed_zip5(static_dir)
 }

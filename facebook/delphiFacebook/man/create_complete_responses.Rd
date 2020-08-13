@@ -4,7 +4,7 @@
 \alias{create_complete_responses}
 \title{Create dataset for sharing with research partners}
 \usage{
-create_complete_responses(input_data)
+create_complete_responses(input_data, params)
 }
 \arguments{
 \item{input_data}{data frame of responses}

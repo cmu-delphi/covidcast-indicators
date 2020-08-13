@@ -61,7 +61,6 @@ produce_crosswalk_national <- function(zip_metadata)
 
 #' Produce crosswalk file relating zip codes to counties
 #'
-#' @param static_dir     local directory containing the file "02_20_uszips.csv"
 #' @param zip_metadata   output from a call to the function produce_allowed_zip5
 #'
 #' @return A tibble containing three columns: zip5, geo_id (county fips codes),
@@ -72,7 +71,7 @@ produce_crosswalk_national <- function(zip_metadata)
 #' @importFrom dplyr tibble
 #' @importFrom jsonlite fromJSON
 #' @export
-produce_crosswalk_county <- function(static_dir, zip_metadata)
+produce_crosswalk_county <- function(zip_metadata)
 {
   cweights <- lapply(zip_metadata$county_weights, fromJSON)
   crosswalk_county <- tibble(
@@ -204,7 +203,7 @@ produce_crosswalk_list <- function(static_dir)
 {
   zip_metadata <- produce_zip_metadata(static_dir)
 
-  crosswalk_county <- produce_crosswalk_county(static_dir, zip_metadata)
+  crosswalk_county <- produce_crosswalk_county(zip_metadata)
   crosswalk_state <- produce_crosswalk_state(zip_metadata, crosswalk_county)
   crosswalk_hrr <- produce_crosswalk_hrr(zip_metadata)
   crosswalk_msa <- produce_crosswalk_msa(static_dir, crosswalk_county)

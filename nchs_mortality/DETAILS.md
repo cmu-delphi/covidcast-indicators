@@ -4,7 +4,7 @@ We import the NCHS Mortality Data from CDC website and export
 the state-level data as-is.  
 
 In order to avoid confusing public consumers of the data, we maintain
-consistency how USA Facts reports the data, please refer to [Exceptions](#Exceptions).
+consistency how NCHS reports the data, please refer to [Exceptions](#Exceptions).
 
 ## Exceptions
 

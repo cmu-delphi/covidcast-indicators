@@ -8,7 +8,8 @@ required = [
     "pytest",
     "pytest-cov",
     "pylint",
-    "delphi-utils"
+    "delphi-utils",
+    "covidcast"
 ]
 
 setup(

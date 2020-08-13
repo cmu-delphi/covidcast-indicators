@@ -156,6 +156,12 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
     )
   }
 
+  # Normalize weights to sum to 1 within each day. (CID weights typically sum to
+  # population size instead, which affects mixing behavior.)
+  for (var_weight in unique(indicators$var_weight)) {
+    day_df[[var_weight]] <- day_df[[var_weight]] / sum(day_df[[var_weight]], na.rm = TRUE)
+  }
+
   for (ii in seq_along(geo_ids))
   {
     target_geo <- geo_ids[ii]

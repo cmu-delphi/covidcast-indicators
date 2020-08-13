@@ -5,8 +5,6 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
-from itertools import product
-import os
 from os.path import join
 
 import pandas as pd

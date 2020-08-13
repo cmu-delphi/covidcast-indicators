@@ -28,7 +28,9 @@ class TestRun:
         geos = ["county", "hrr", "msa", "state"]
         sensors = [
             "covid_ag_raw_pct_positive",
-            "covid_ag_smoothed_pct_positive"
+            "covid_ag_smoothed_pct_positive",
+            "wip_covid_ag_raw_test_per_device",
+            "wip_covid_ag_smoothed_test_per_device"
         ]
 
         expected_files = []

@@ -181,7 +181,7 @@ class EMRHospSensorUpdator:
         """shift estimates forward to account for time lag, compute burnindates, sensordates
         """
 
-        drange = lambda s, e: pd.date_range(start=s, periods=(e - s).days, freq='D')
+        drange = lambda s, e: pd.date_range(start=s,periods=(e-s).days,freq='D')
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
         self.fit_dates = drange(Config.FIRST_DATA_DATE, self.dropdate)
@@ -227,10 +227,10 @@ class EMRHospSensorUpdator:
         return data_frame
 
     def update_sensor(self,
-                      emr_filepath,
-                      claims_filepath,
-                      outpath,
-                      staticpath):
+            emr_filepath,
+            claims_filepath,
+            outpath,
+            staticpath):
         """Generate sensor values, and write to csv format.
 
         Args:

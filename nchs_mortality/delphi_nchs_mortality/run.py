@@ -26,6 +26,7 @@ SENSORS = [
         "prop"
 ]
 INCIDENCE_BASE = 100000
+geo_res = "state"
 
 def run_module():
 
@@ -52,10 +53,11 @@ def run_module():
             df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
         df["se"] = np.nan
         df["sample_size"] = np.nan
+        sensor_name = "_".join(["wip", metric, sensor])
         export_csv(
             df,
+            geo_name=geo_res,
             export_dir=export_dir,
             start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-            metric="wip_" + metric,
-            sensor=sensor,
+            sensor=sensor_name,
         )

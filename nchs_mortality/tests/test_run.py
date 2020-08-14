@@ -36,13 +36,14 @@ class TestRun:
         for date in dates:
             for metric in metrics:
                 for sensor in sensors:
-                    expected_files += [date + "_wip_" + metric + "_" + sensor + ".csv"]
+                    expected_files += ["weekly_" + date + "_state_wip_" \
+                                       + metric + "_" + sensor + ".csv"]
 
         assert set(expected_files).issubset(csv_files)
 
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "202026_wip_covid_deaths_prop.csv")
+            join("receiving", "weekly_202026_state_wip_covid_deaths_prop.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

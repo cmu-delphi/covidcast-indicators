@@ -4,7 +4,7 @@
 import pandas as pd
 from epiweeks import Week
 
-def export_csv(df, metric, sensor, export_dir, start_date):
+def export_csv(df, geo_name, sensor, export_dir, start_date):
     """Export data set in format expected for injestion by the API
     Parameters
     ----------
@@ -14,9 +14,7 @@ def export_csv(df, metric, sensor, export_dir, start_date):
         name of the geographic region, such as "state" or "hrr"
     sensor: str
         name of the sensor; only used for naming the output file
-    smooth: bool
-        should the signal in "val" be smoothed?
-    receiving_dir: str
+    export_dir: str
         path to location where the output CSV files to be uploaded should be stored
     start_date: datetime.datetime
         The first date to report
@@ -29,8 +27,8 @@ def export_csv(df, metric, sensor, export_dir, start_date):
 
     for date in df["timestamp"].unique():
         t = Week.fromdate(pd.to_datetime(str(date)))
-        date_short = str(t.year) + str(t.week + 1).zfill(2)
-        export_fn = f"{date_short}_{metric}_{sensor}.csv"
+        date_short = "weekly_" + str(t.year) + str(t.week + 1).zfill(2)
+        export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
         result_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]]
         result_df.to_csv(f"{export_dir}/{export_fn}",
                          index=False,

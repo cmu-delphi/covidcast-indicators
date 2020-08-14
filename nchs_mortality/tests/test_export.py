@@ -22,14 +22,14 @@ class TestExport:
 
         export_csv(
             input_data,
-            metric="region",
-            sensor="thing",
+            geo_name = "state",
+            sensor="region_thing",
             export_dir="./receiving",
             start_date = datetime(2020, 6, 2),
         )
 
         # check data for 2020-06-02
-        expected_name = f"202024_region_thing.csv"
+        expected_name = f"weekly_202024_state_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))
@@ -40,7 +40,7 @@ class TestExport:
         assert (output_data.sample_size.values == [100, 500, 80]).all()
 
         # check data for 2020-06-03
-        expected_name = f"202025_region_thing.csv"
+        expected_name = f"weekly_202025_state_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))

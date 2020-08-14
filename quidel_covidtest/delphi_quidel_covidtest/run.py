@@ -15,33 +15,11 @@ from .pull import pull_quidel_covidtest, check_intermediate_file
 from .export import export_csv
 from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
+from .constants import *
+from .handle_wip_sensor import add_prefix, public_signal
 
-# global constants
-MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
-POOL_DAYS = 7  # number of days in the past (including today) to pool over
-END_FROM_TODAY_MINUS = 5 # report data until - X days
-EXPORT_DAY_RANGE = 40 # Number of dates to report
-
-GEO_RESOLUTIONS = [
-    "county",
-    "msa",
-    "hrr"
-]
-SENSORS = [
-    "covid_ag_smoothed_pct_positive",
-    "covid_ag_raw_pct_positive",
-    "wip_covid_ag_smoothed_test_per_device",
-    "wip_covid_ag_raw_test_per_device"
-]
-SMOOTHERS = {
-    "covid_ag_smoothed_pct_positive": (False, True),
-    "covid_ag_raw_pct_positive": (False, False),
-    "wip_covid_ag_smoothed_test_per_device": (True, True),
-    "wip_covid_ag_raw_test_per_device": (True, False)
-}
 
 def run_module():
-
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
@@ -71,7 +49,7 @@ def run_module():
     # Pull data from the email at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password)
+                                          account, sender, password)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -99,12 +77,26 @@ def run_module():
     data = df.copy()
     state_groups = zip_to_state(data, map_df).groupby("state_id")
 
-    for sensor in SENSORS:
+    # Add prefix, if required
+    sensors = add_prefix(SENSORS,
+                         wip_signal=read_params()["wip_signal"],
+                         prefix="wip_")
+    smoothers = SMOOTHERS.copy()
+
+    for sensor in sensors:
         # For State Level
         print("state", sensor)
+        if sensor.endswith(SMOOTHED_POSITIVE):
+            smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
+        elif sensor.endswith(RAW_POSITIVE):
+            smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
+        elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
+            smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
+        else:
+            smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
         state_df = generate_sensor_for_states(
-            state_groups, smooth=SMOOTHERS[sensor][1],
-            device=SMOOTHERS[sensor][0], first_date=first_date,
+            state_groups, smooth=smoothers[sensor][1],
+            device=smoothers[sensor][0], first_date=first_date,
             last_date=last_date)
         export_csv(state_df, "state", sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
@@ -113,20 +105,20 @@ def run_module():
         for geo_res in GEO_RESOLUTIONS:
             print(geo_res, sensor)
             data = df.copy()
-            if geo_res == "county":
+            if geo_res == COUNTY:
                 data, res_key = zip_to_county(data, map_df)
-            elif geo_res == "msa":
+            elif geo_res == MSA:
                 data, res_key = zip_to_msa(data, map_df)
             else:
                 data, res_key = zip_to_hrr(data, map_df)
 
             res_df = generate_sensor_for_other_geores(
-                state_groups, data, res_key, smooth=SMOOTHERS[sensor][1],
-                device=SMOOTHERS[sensor][0], first_date=first_date,
+                state_groups, data, res_key, smooth=smoothers[sensor][1],
+                device=smoothers[sensor][0], first_date=first_date,
                 last_date=last_date)
             export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
                        start_date=export_start_date, end_date=export_end_date)
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
-    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index=False)
+    df.to_csv(join(cache_dir, "pulled_until_%s.csv") % _end_date.strftime("%Y%m%d"), index=False)

@@ -2,6 +2,7 @@
 """Function to export the dataset in the format expected of the API.
 """
 import pandas as pd
+from epiweeks import Week
 
 def export_csv(df, metric, sensor, export_dir, start_date):
     """Export data set in format expected for injestion by the API
@@ -27,8 +28,8 @@ def export_csv(df, metric, sensor, export_dir, start_date):
     df = df[df["timestamp"] >= start_date]
 
     for date in df["timestamp"].unique():
-        t = pd.to_datetime(str(date))
-        date_short = t.strftime('%Y%m%d')
+        t = Week.fromdate(pd.to_datetime(str(date)))
+        date_short = str(t.year) + str(t.week + 1).zfill(2)
         export_fn = f"{date_short}_{metric}_{sensor}.csv"
         result_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]]
         result_df.to_csv(f"{export_dir}/{export_fn}",

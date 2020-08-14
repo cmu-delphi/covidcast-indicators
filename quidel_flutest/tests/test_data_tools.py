@@ -11,7 +11,7 @@ class TestDataTools:
         # 0 cases
         (0, 8, 0),
         (1, 6, 0),
-        # valid case
+        # nonzero cases
         (0.5, 2, 0.125),
         (0.4, 6, 0.04),
     ])
@@ -57,6 +57,7 @@ class TestDataTools:
         assert data_tools.fill_dates(input_df, first, last).equals(expected)
 
     @pytest.mark.parametrize("k, expected", [
+        # check all k from 1 to n+1
         (1, np.array([1, 2, 3, 4])),
         (2, np.array([1, 3, 5, 7])),
         (3, np.array([1, 3, 6, 9])),

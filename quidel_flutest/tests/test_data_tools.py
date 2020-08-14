@@ -62,11 +62,11 @@ class TestDataTools:
         (2, np.array([1, 3, 5, 7])),
         (3, np.array([1, 3, 6, 9])),
         (4, np.array([1, 3, 6, 10])),
-        (5, np.array([1, 3, 6, 9])),
+        (5, np.array([1, 3, 6, 10])),
     ])
     def test__slide_window_sum(self, k, expected):
         arr = np.array([1, 2, 3, 4])
-        np.array_equal(data_tools._slide_window_sum(arr, k), expected)
+        assert np.array_equal(data_tools._slide_window_sum(arr, k), expected)
         # non int case
         with pytest.raises(ValueError):
             data_tools._slide_window_sum(np.array([1]), 'abc')

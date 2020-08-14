@@ -13,17 +13,17 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200411",
-            "20200418",
-            "20200425",
-            "20200502",
-            "20200509",
-            "20200516",
-            "20200523",
-            "20200530",
-            "20200606",
-            "20200613",
-            "20200620",
+            "202016",
+            "202017",
+            "202018",
+            "202019",
+            "202020",
+            "202021",
+            "202022",
+            "202023",
+            "202024",
+            "202025",
+            "202026",
         ]
         metrics = [
                 'covid_deaths', 'total_deaths', 'pneumonia_deaths',
@@ -43,6 +43,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "20200620_wip_covid_deaths_prop.csv")
+            join("receiving", "202026_wip_covid_deaths_prop.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

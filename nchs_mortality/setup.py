@@ -8,7 +8,8 @@ required = [
     "pytest-cov",
     "pylint",
     "delphi-utils",
-    "sodapy"
+    "sodapy",
+    "epiweeks"
 ]
 
 setup(

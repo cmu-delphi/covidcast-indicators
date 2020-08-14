@@ -12,6 +12,7 @@ from delphi_nchs_mortality.run import run_module
 def run_as_module():
     # Clean receiving directory
     for fname in listdir("receiving"):
-        remove(join("receiving", fname))
+        if ".csv" in fname:
+            remove(join("receiving", fname))
 
     run_module()

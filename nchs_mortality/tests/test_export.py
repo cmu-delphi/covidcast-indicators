@@ -14,7 +14,7 @@ class TestExport:
             {
                 "geo_id": ["a", "a", "b", "b", "c", "c"],
                 "val": [0, 2, 3, 5, 10, 12],
-                "timestamp": [datetime(2020, 6, 2), datetime(2020, 6, 3)] * 3,
+                "timestamp": [datetime(2020, 6, 2), datetime(2020, 6, 9)] * 3,
                 "se": [0.01, 0.02, 0.01, 0.01, 0.005, 0.01],
                 "sample_size": [100, 200, 500, 50, 80, 10]
             }
@@ -29,7 +29,7 @@ class TestExport:
         )
 
         # check data for 2020-06-02
-        expected_name = f"20200602_region_thing.csv"
+        expected_name = f"202024_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))
@@ -40,7 +40,7 @@ class TestExport:
         assert (output_data.sample_size.values == [100, 500, 80]).all()
 
         # check data for 2020-06-03
-        expected_name = f"20200603_region_thing.csv"
+        expected_name = f"202025_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))

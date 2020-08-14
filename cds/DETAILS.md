@@ -22,8 +22,8 @@ the CDS testing data has a coverage over all states at state level, but not all 
 are represented at the county level. 
 
 ## Metrics, Level 1 (`m1`)
-* `confirmed`: Confirmed cases
-* `tested`: 'Number of Tested'
+* `confirmed`: Number of confirmed cases
+* `tested`: Number of tested cases
 
 Recoveries and Deaths are _not_ reported.
 

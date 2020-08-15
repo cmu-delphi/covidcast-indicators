@@ -115,7 +115,7 @@ class TestDataTools:
             data_tools.raw_positive_prop(np.array([3]), np.array([1]), 3)
         # min obs <= 0 case
         with pytest.raises(ValueError):
-            data_tools.raw_positive_prop(np.array([3]), np.array([1]), 0)
+            data_tools.raw_positive_prop(np.array([1]), np.array([1]), 0)
 
     @pytest.mark.parametrize("min_obs, pool_days, parent_positives, parent_tests,"
                              "expected_prop, expected_se, expected_sample_sz", [
@@ -156,6 +156,10 @@ class TestDataTools:
         with pytest.raises(ValueError):
             data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1,
                                               np.array([np.nan]), np.array([np.nan]))
+        # positives > tests case with parent
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1,
+                                              np.array([3]), np.array([1]))
         # min obs <= 0 case
         with pytest.raises(ValueError):
             data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 0, 1)

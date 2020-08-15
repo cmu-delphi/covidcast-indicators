@@ -19,6 +19,7 @@ class TestDataTools:
     ])
     def test__prop_var(self, p, n, expected):
         assert data_tools._prop_var(p, n) == expected
+        # test div/0 case
         with pytest.raises(ZeroDivisionError):
             data_tools._prop_var(0.1, 0)
 
@@ -116,6 +117,55 @@ class TestDataTools:
         with pytest.raises(ValueError):
             data_tools.raw_positive_prop(np.array([3]), np.array([1]), 0)
 
+    @pytest.mark.parametrize("min_obs, pool_days, parent_positives, parent_tests,"
+                             "expected_prop, expected_se, expected_sample_sz", [
+        (3,  # no parents case
+         2,
+         None,
+         None,
+         np.array([np.nan, 1/2, 1/2, 7/16]),
+         np.array([np.nan, np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
+         np.array([np.nan, 6, 10, 16]),
+         ),
+        (3,  # parents case
+         2,
+         np.array([3, 7, 9, 11]),
+         np.array([5, 10, 15, 20]),
+         np.array([1.6/3, 1/2, 1/2, 7/16]),
+         np.array([np.sqrt(56/225/3), np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
+         np.array([3, 6, 10, 16]),
+         ),
+    ])
+    def test_smoothed_positive_prop(self, min_obs, pool_days, parent_positives,
+                                    parent_tests, expected_prop, expected_se, expected_sample_sz):
+        positives = np.array([1, 2, 3, 4])
+        tests = np.array([2, 4, 6, 10])
+        output = data_tools.smoothed_positive_prop(positives, tests, min_obs, pool_days,
+                                                   parent_positives, parent_tests)
+        assert np.allclose(output[0], expected_prop, equal_nan=True)
+        assert np.allclose(output[1], expected_se, equal_nan=True)
+        assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+
+        # nan case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([np.nan]), np.array([1]), 1, 1)
+        # positives > tests case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([2]), np.array([1]), 1, 1)
+        # nan case with parent
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1,
+                                              np.array([np.nan]), np.array([np.nan]))
+        # min obs <= 0 case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 0, 1)
+        # pool_days <= 0 case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 0)
+        # pool_days non int case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1.5)
+
     @pytest.mark.parametrize("min_obs, expected_tests_per_device, expected_sample_sz", [
         (3,  # one case of tests < min_obs
          np.array([np.nan, 2, 1/2, 10/4]),
@@ -137,3 +187,49 @@ class TestDataTools:
         # min obs <= 0 case
         with pytest.raises(ValueError):
             data_tools.raw_tests_per_device(np.array([1]), np.array([1]), 0)
+
+    @pytest.mark.parametrize("min_obs, pool_days, parent_devices, parent_tests,"
+                             "expected_prop, expected_se, expected_sample_sz", [
+        (3,  # no parents case
+         2,
+         None,
+         None,
+         np.array([np.nan, 2, 5/6, 8/7]),
+         np.repeat(np.nan, 4),
+         np.array([np.nan, 6, 10, 16]),
+         ),
+        (3,  # no parents case
+         2,
+         np.array([3, 7, 25, 11]),
+         np.array([5, 10, 15, 20]),
+         np.array([3/1.6, 2, 5/6, 8/7]),
+         np.repeat(np.nan, 4),
+         np.array([3, 6, 10, 16]),
+         ),
+    ])
+    def test_smoothed_tests_per_device(self, min_obs, pool_days, parent_devices, parent_tests,
+                                       expected_prop, expected_se, expected_sample_sz):
+        devices = np.array([1, 2, 10, 4])
+        tests = np.array([2, 4, 6, 10])
+        output = data_tools.smoothed_tests_per_device(devices, tests, min_obs, pool_days,
+                                                      parent_devices, parent_tests)
+        assert np.allclose(output[0], expected_prop, equal_nan=True)
+        assert np.allclose(output[1], expected_se, equal_nan=True)
+        assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+
+        # nan case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_tests_per_device(np.array([np.nan]), np.array([1]), 1, 1)
+        # nan case with parent
+        with pytest.raises(ValueError):
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1,
+                                                 np.array([np.nan]), np.array([np.nan]))
+        # min obs <= 0 case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 0, 1)
+        # pool_days <= 0 case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 0)
+        # pool_days non int case
+        with pytest.raises(ValueError):
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1.5)

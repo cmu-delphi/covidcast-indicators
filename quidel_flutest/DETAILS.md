@@ -55,7 +55,7 @@ If N < 50, we lend 50 - N fake samples from its home state to shrink the estimat
 ```
 q =  N/50 * N/D + (50 - N)/50 * Ns/Ds
 ```
-where Ns, Xs are the number of total flu tests taken and the number of unique devices used respectively in its home state in the same time period.
+where Ns, Ds are the number of total flu tests taken and the number of unique devices used respectively in its home state in the same time period.
 
 **State level**:  If a state has fewer than 50 tests in the certain time period, no estimate is reported. For the rest of the states with big enough sample sizes,
 ```
@@ -69,4 +69,3 @@ We conduct temporal and spatial pooling for the smoothed signal. The spatial poo
 ### Exceptions
 There are 89 special zip codes that are included in Quidel Flu raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
 * Until 08-05-2020, 133,000 tests out of 7,519,726 tests for those zip codes. 
-

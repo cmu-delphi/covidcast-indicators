@@ -17,9 +17,8 @@ TODO:
 from os.path import join
 
 import pandas as pd
-import numpy as np
-from os import path
 import pkg_resources
+from os import path
 
 DATA_PATH = "data"
 ZIP_FIPS_FILE = "zip_fips_cross.csv"
@@ -52,7 +51,9 @@ class GeoMapper:
        + county -> state : unweighted
        + county -> msa : unweighted
        + county -> megacounty
-       - zip -> * not county
+       - zip -> state
+       - zip -> msa
+       - fips -> hrr
 
     Geotypes (listed by default column name):
         zip: zip5, length 5 str of 0-9 with leading 0's
@@ -317,7 +318,6 @@ class GeoMapper:
                                  data,
                                  fips_col='fips',
                                  msa_col='msa',
-                                 full=False,
                                  create_mega=False):
         """create msa column from county (fips) column
 
@@ -336,13 +336,10 @@ class GeoMapper:
             self.load_fips_msa_cross()
         data = self.convert_intfips_to_str(data, intfips_col=fips_col, strfips_col=fips_col)
         msa_cross = self.fips_msa_cross.rename(columns={'msa': msa_col})
-        if full:
-            data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='outer')
-        else:
-            data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='left')
+        data = data.merge(msa_cross, left_on=fips_col, right_on='fips', how='left')
         if create_mega:
-            data_st = self.convert_fips_to_stcode(data[data[msa_col].isna()],fips_col=fips_col)['st_code']
-            data.loc[data[msa_col].isna(),msa_col] = data_st.astype(str).str.zfill(5)
+            data_st = data.loc[data[msa_col].isna(),fips_col]
+            data.loc[data[msa_col].isna(),msa_col] = '1' + data_st.astype(str).str[:2].str.zfill(4)
         return data
 
     def county_to_state(self,
@@ -708,7 +705,7 @@ class GeoMapper:
             self.load_jhu_uid_fips_cross()
         jhu_cross = self.jhu_uid_fips_cross.rename(columns={'fips': fips_col, 'weight':weight_col})
         data = data.merge(jhu_cross, left_on=jhu_col, right_on='jhu_uid', how='left')
-        data_states = data[jhu_col].between(85000001,85000099)
+        data_states = data[jhu_col].between(84090001, 84090099)
         data.loc[data_states, fips_col] = data.loc[data_states, 'jhu_uid']\
                                                .astype(str).str[-2:].str.ljust(5, '0')
         if jhu_col != 'jhu_uid':

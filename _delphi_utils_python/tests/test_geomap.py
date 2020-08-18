@@ -50,7 +50,7 @@ class TestGeoMapper:
         "den": [2,4,7,11,100,10]
     })
     jhu_uid_data = pd.DataFrame({
-        "jhu_uid":[84048315, 84048137, 84013299, 84013299, 84070002, 84000013, 84000000],
+        "jhu_uid":[84048315, 84048137, 84013299, 84013299, 84070002, 84000013, 84090002],
         "date": [pd.Timestamp('2018-01-01')]*3 + [pd.Timestamp('2018-01-03')]*3 + [pd.Timestamp('2018-01-01')],
         "num": [1,2,3,4,8,5,20],
         "den": [2,4,7,11,100,10,40]
@@ -134,6 +134,8 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         new_data = gmpr.convert_fips_to_msa(self.fips_data_3)
         assert new_data['msa'][2] == "10180"
+        new_data = gmpr.convert_fips_to_msa(self.fips_data_3,create_mega=True)
+        assert new_data['den'].sum() == self.fips_data_3['den'].sum()
 
     def test_county_to_msa(self):
         gmpr = GeoMapper()

@@ -2,7 +2,7 @@
 """Simply downloads email attachments.
 Uses this handy package: https://pypi.org/project/imap-tools/
 """
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import io
 import os
 
@@ -90,7 +90,8 @@ def fix_date(df):
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def pull_quidel_covidtest(start_date, end_date, mail_server, account, sender, password):
+def pull_quidel_covidtest(start_date, end_date, mail_server, account,
+                          sender, password, test_mode):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
@@ -109,13 +110,20 @@ def pull_quidel_covidtest(start_date, end_date, mail_server, account, sender, pa
             email account of the sender
         password: str
             password of the datadrop email
+        test_mode: bool
+            pull raw data from email or not
     output:
         df: pd.DataFrame
         time_flag: datetime.date:
             the actual pull end date on which we successfully pull the data
     """
-    # Get new data from email
-    df, time_flag = get_from_email(start_date, end_date, mail_server, account, sender, password)
+    if test_mode:
+        test_data_dir = "./test_data/test_data.xlsx"
+        df, time_flag = pd.read_excel(test_data_dir), date(2020, 8, 17)
+    else:
+        # Get new data from email
+        df, time_flag = get_from_email(start_date, end_date, mail_server,
+                                       account, sender, password)
 
     # No new data can be pulled
     if time_flag is None:

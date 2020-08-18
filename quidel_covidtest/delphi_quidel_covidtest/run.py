@@ -15,8 +15,12 @@ from .pull import pull_quidel_covidtest, check_intermediate_file
 from .export import export_csv
 from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
-from .constants import *
-from .handle_wip_sensor import add_prefix, public_signal
+from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+                        SMOOTHED_POSITIVE, RAW_POSITIVE,
+                        SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
+                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS,
+                        COUNTY, MSA)
+from .handle_wip_sensor import add_prefix
 
 
 def run_module():
@@ -29,6 +33,8 @@ def run_module():
     account = params["account"]
     password = params["password"]
     sender = params["sender"]
+
+    test_mode = (params["mode"] == "test")
 
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
@@ -48,8 +54,9 @@ def run_module():
 
     # Pull data from the email at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
-    df, _end_date = pull_quidel_covidtest(pull_start_date, pull_end_date, mail_server,
-                                          account, sender, password)
+    df, _end_date = pull_quidel_covidtest(
+            pull_start_date, pull_end_date, mail_server,
+            account, sender, password, test_mode)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return

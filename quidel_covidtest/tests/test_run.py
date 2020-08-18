@@ -16,17 +16,14 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200610",
-            "20200611",
-            "20200612",
-            "20200613",
-            "20200614",
-            "20200615",
-            "20200616",
-            "20200617",
-            "20200618",
-            "20200619",
-            "20200620",
+            "20200702",
+            "20200703",
+            "20200704",
+            "20200705",
+            "20200706",
+            "20200707",
+            "20200708",
+            "20200709"
         ]
         geos = GEO_RESOLUTIONS.copy()
         sensors = add_prefix(SENSORS,
@@ -43,7 +40,7 @@ class TestRun:
 
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200610_state_covid_ag_raw_pct_positive.csv")
+            join("./receiving", "20200709_state_covid_ag_raw_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 

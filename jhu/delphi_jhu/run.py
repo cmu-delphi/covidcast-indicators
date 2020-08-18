@@ -28,8 +28,8 @@ from .smooth import (
 # global constants
 seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
-    "confirmed",
     "deaths",
+    "confirmed",
 ]
 SENSORS = [
     "new_counts",
@@ -74,21 +74,18 @@ def run_module():
         params["aws_credentials"])
     arch_diff.update_cache()
 
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
     pop_df = pd.read_csv(
         join(static_file_dir, "fips_population.csv"),
         dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
+    )
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
-        print(geo_res, metric, sensor, smoother)
+        print(metric, geo_res, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df, sensor)
+        df = geo_map(df, geo_res, sensor)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

@@ -1,15 +1,14 @@
 import pytest
 
-from os import listdir
 from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_safegraph.process import (
+from delphi_safegraph_patterns.process import (
         construct_signals,
         aggregate,
     )
-from delphi_safegraph.run import METRICSS
+from delphi_safegraph_patterns.run import METRICS
 
 metric_names, naics_codes, _ = (list(x) for x in zip(*METRICS))
 

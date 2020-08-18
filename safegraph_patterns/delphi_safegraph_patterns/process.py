@@ -2,6 +2,7 @@
 import re
 import glob
 from datetime import timedelta
+from itertools import product
 
 import numpy as np
 import pandas as pd
@@ -38,9 +39,9 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
 
     Returns
     -------
-    pd.DataFrame
-        Dataframe with columns: timestamp, county_fips, and
-        {each metric described above}.
+    dict{key(str): value(pd.DataFrame)}
+        Keys are metrics
+        Values are Dataframes with columns: timestamp, Zip Codes, {metric}_num.
     """
     result_dfs = {}
     for metric, naics_code in zip(metric_names, naics_codes):
@@ -58,7 +59,8 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
             start_date = filtered_df.loc[idx]["date_range_start"].date()
 
             tempt_df = pd.DataFrame({
-                "timestamp": [pd.to_datetime(start_date) + timedelta(days=i) for i in range(7)],
+                "timestamp": [pd.to_datetime(start_date) \
+                              + timedelta(days=i) for i in range(7)],
                 metric_count_name: visits,
                 "zip": filtered_df.loc[idx]["postal_code"]
             })
@@ -69,16 +71,16 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
                                         filtered_df["raw_visit_counts"].sum()
         result_dfs[metric] = result_dfs[metric].groupby(
                                     ["timestamp", "zip"]).sum().reset_index()
-    result_df = pd.merge(result_dfs[metric_names[0]],
-                         result_dfs[metric_names[1]],
-                         on=["timestamp", "zip"], how="outer")
+#    result_df = pd.merge(result_dfs[metric_names[0]],
+#                         result_dfs[metric_names[1]],
+#                         on=["timestamp", "zip"], how="outer")
 #    problematic_set = set(result_df["zip"]) - set(map_df["zip"])
 #    result_df[result_df["zip"].isin(problematic_set)].sum()
     # Can have ~30k visits in restaurants missed in those zips in one week.
     # only ~200 visits missed for bars.
-    return result_df
+    return result_dfs
 
-def aggregate(df, metric_names, geo_res, map_df):
+def aggregate(df, metric, geo_res, map_df):
     """
     Aggregate signals to appropriate resolution.
 
@@ -87,8 +89,8 @@ def aggregate(df, metric_names, geo_res, map_df):
     df: pd.DataFrame
         Zip Code-level data with prepared metrics (output of
         construct_metrics().
-    metric_names: List[str]
-        Names of metrics to be exported.
+    metric: str
+        Name of metric to be exported.
     geo_resolution: str
         One of ('county', 'hrr, 'msa', 'state')
     map_df: pd.DataFrame
@@ -103,17 +105,13 @@ def aggregate(df, metric_names, geo_res, map_df):
     df = df.copy()
     # Add pop info
     df = df.merge(map_df[["zip", geo_res, "population"]], on="zip"
-                  ).drop("zip", axis=1)
+                  ).drop("zip", axis=1).dropna()
     df = df.groupby(["timestamp", geo_res]).sum().reset_index()
-    # Keep NANs
-    df.loc[df["bars_visit_num"] == 0, "bars_visit_num"] = np.nan
-    df.loc[df["restaurants_visit_num"] == 0, "restaurants_visit_num"] = np.nan
 
-    for metric in metric_names:
-        metric_count_name = "_".join([metric, "num"])
-        metric_prop_name = "_".join([metric, "prop"])
-        df[metric_prop_name] = df[metric_count_name] / df["population"] \
-                                * INCIDENCE_BASE
+    metric_count_name = "_".join([metric, "num"])
+    metric_prop_name = "_".join([metric, "prop"])
+    df[metric_prop_name] = df[metric_count_name] / df["population"] \
+                            * INCIDENCE_BASE
     return df.rename({geo_res: "geo_id"}, axis=1)
 
 def process(fname, sensors, metrics, geo_resolutions,
@@ -145,33 +143,37 @@ def process(fname, sensors, metrics, geo_resolutions,
     if ".csv.gz" in fname:
         df = pd.read_csv(fname,
                          parse_dates=["date_range_start", "date_range_end"])
-        df = construct_signals(df, metric_names, naics_codes, brand_df)
+        dfs = construct_signals(df, metric_names, naics_codes, brand_df)
         print("Finished pulling data from " + fname)
     else:
         files = glob.glob(f'{fname}/**/*.csv.gz', recursive=True)
-        dfs = []
+        dfs_dict = {"bars_visit": [], "restaurants_visit": []}
         for fn in files:
             df = pd.read_csv(fn,
                          parse_dates=["date_range_start", "date_range_end"])
-            df = construct_signals(df, metric_names, naics_codes, brand_df)
-            dfs.append(df)
-        df = pd.concat(dfs).groupby(["timestamp", "zip"]).sum().reset_index()
+            dfs = construct_signals(df, metric_names, naics_codes, brand_df)
+            dfs_dict["bars_visit"].append(dfs["bars_visit"])
+            dfs_dict["restaurants_visit"].append(dfs["restaurants_visit"])
+        dfs = {}
+        dfs["bars_visit"] = pd.concat(dfs_dict["bars_visit"]
+            ).groupby(["timestamp", "zip"]).sum().reset_index()
+        dfs["restaurants_visit"] = pd.concat(dfs_dict["restaurants_visit"]
+            ).groupby(["timestamp", "zip"]).sum().reset_index()
         print("Finished pulling data from " + fname)
-    for geo_res in geo_resolutions:
-        df_export = aggregate(df, metric_names, geo_res, map_df)
-        for sensor in sensors:
-            for metric, wip in zip(metric_names, wips):
-                df_export["val"] = df_export["_".join([metric, sensor])]
-                df_export["se"] = np.nan
-                df_export["sample_size"] = np.nan
+    for geo_res, sensor in product(geo_resolutions, sensors):
+        for metric, wip in zip(metric_names, wips):
+            df_export = aggregate(dfs[metric], metric, geo_res, map_df)
+            df_export["val"] = df_export["_".join([metric, sensor])]
+            df_export["se"] = np.nan
+            df_export["sample_size"] = np.nan
 
-                if wip:
-                    metric = "wip_" + metric
-                create_export_csv(
-                    df_export,
-                    export_dir=export_dir,
-                    start_date=df["timestamp"].min(),
-                    metric=metric,
-                    geo_res=geo_res,
-                    sensor=sensor,
-                )
+            if wip:
+                metric = "wip_" + metric
+            create_export_csv(
+                df_export,
+                export_dir=export_dir,
+                start_date=df_export["timestamp"].min(),
+                metric=metric,
+                geo_res=geo_res,
+                sensor=sensor,
+            )

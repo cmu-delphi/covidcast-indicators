@@ -63,12 +63,12 @@ def run_module():
         # Why call subprocess rather than using a native Python client, e.g. boto3?
         # Because boto3 does not have a simple rsync-like call that can perform
         # the following behavior elegantly.
-        subprocess.run(
-                f'aws s3 sync s3://sg-c19-response/{ver[1]}/ '
-                f'{raw_data_dir}/{ver[1]}/ --endpoint {aws_endpoint}',
-                env=env_vars,
-                shell=True,
-            )
+#        subprocess.run(
+#                f'aws s3 sync s3://sg-c19-response/{ver[1]}/ '
+#                f'{raw_data_dir}/{ver[1]}/ --endpoint {aws_endpoint}',
+#                env=env_vars,
+#                shell=True,
+#            )
 
         brand_df = pd.read_csv(
                 join(static_file_dir, f"brand_info/brand_info_{ver[0]}.csv")

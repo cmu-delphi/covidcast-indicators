@@ -1,13 +1,10 @@
 # -*- coding: utf-8 -*-
 """Functions to call when running the function.
-
 This module should contain a function called `run_module`, that is executed when
 the module is run with `python -m delphi_combo_cases_and_deaths`.
-
 This module produces a combined signal for jhu-csse and usa-facts.  This signal
 is only used for visualization.  It sources Puerto Rico from jhu-csse and
 everything else from usa-facts.
-
 """
 from datetime import date, timedelta, datetime
 from itertools import product
@@ -18,28 +15,9 @@ import covidcast
 import pandas as pd
 
 from delphi_utils import read_params, create_export_csv
+from .constants import *
+from .handle_wip_signal import *
 
-
-METRICS = [
-    "confirmed",
-    "deaths",
-]
-SMOOTH_TYPES = [
-    "",
-    "7dav",
-]
-SENSORS = [
-    "incidence_num",
-    "cumulative_num",
-    "incidence_prop",
-    "cumulative_prop",
-]
-GEO_RESOLUTIONS = [
-    "county",
-    "state",
-    "msa",
-    "hrr",
-]
 
 def check_not_none(data_frame, label, date_range):
     """Exit gracefully if a data frame we attempted to retrieve is empty"""
@@ -78,7 +56,6 @@ def extend_raw_date_range(params, sensor_name):
     """A complete issue includes smoothed signals as well as all raw data
     that contributed to the smoothed values, so that it's possible to use
     the raw values in the API to reconstruct the smoothed signal at will.
-
     The smoother we're currently using incorporates the previous 7
     days of data, so we must extend the date range of the raw data
     backwards by 7 days.
@@ -155,11 +132,21 @@ def run_module():
         params['date_range'] = [date1, date2]
 
     for metric, geo_res, sensor_name, signal in variants:
-        create_export_csv(
-            combine_usafacts_and_jhu(signal, geo_res, extend_raw_date_range(params, sensor_name)),
-            export_dir=params['export_dir'],
-            start_date=pd.to_datetime(params['export_start_date']),
-            metric=metric,
-            geo_res=geo_res,
-            sensor=sensor_name,
-        )
+
+        df = combine_usafacts_and_jhu(signal, geo_res, extend_raw_date_range(params, sensor_name))
+
+        df = df.copy()
+        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        start_date = pd.to_datetime(params['export_start_date'])
+        export_dir = params["export_dir"]
+        dates = pd.Series(
+            df[df["timestamp"] >= start_date]["timestamp"].unique()
+        ).sort_values()
+
+        signal_name = add_prefix([signal], wip_signal=params["wip_signal"], prefix="wip_")
+        for date_ in dates:
+            export_fn = f'{date_.strftime("%Y%m%d")}_{geo_res}_' f"{signal_name[0]}.csv"
+            df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
+                f"{export_dir}/{export_fn}", index=False, na_rep="NA"
+            )
+

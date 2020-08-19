@@ -51,16 +51,17 @@ class GeoMapper:
        + county -> state : unweighted
        + county -> msa : unweighted
        + county -> megacounty
+       + county -> hrr
+       + county -> zip
        - zip -> state
        - zip -> msa
-       - fips -> hrr
 
     Geotypes (listed by default column name):
         zip: zip5, length 5 str of 0-9 with leading 0's
         fips: county, length 5 str of 0-9 with leading 0's
         msa: metro stat area, length 5 str of 0-9 with leading 0's
-        st_code: state code, str of 0-9
-        state_id: state id, str of A-Z
+        st_code: state code, str in 1-99
+        state_id: state id, str in AA-ZZ
         hrr: hrr id, int 1-500
     """
 
@@ -147,27 +148,6 @@ class GeoMapper:
                                                     'weight': float})
         self.jhu_uid_fips_cross = GeoMapper.convert_int_to_str5(self.jhu_uid_fips_cross, int_col='fips', str_col='fips')
 
-
-    def convert_fips_to_stcode(self,
-                               data,
-                               fips_col='fips',
-                               stcode_col='st_code'):
-        """create st_code column from fips column
-
-        Args:
-            data: pd.DataFrame input data
-            fips_col: fips column to convert
-            stcode_col: stcode column to create
-
-        Return:
-            data: copy of dataframe
-        """
-        data = data.copy()
-        if data[fips_col].dtype != 'O':
-            data = self.convert_intfips_to_str(data,intfips_col=fips_col,strfips_col=fips_col)
-        data[stcode_col] = data[fips_col].str[:2]
-        return data
-
     @staticmethod
     def convert_int_to_str5(data,
                             int_col='fips',
@@ -184,6 +164,25 @@ class GeoMapper:
         """convert fips to a string of length 5"""
         return GeoMapper.convert_int_to_str5(data,int_col=intfips_col,str_col=strfips_col)
 
+    def convert_fips_to_stcode(self,
+                               data: pd.DataFrame,
+                               fips_col: str = 'fips',
+                               stcode_col: str = 'st_code'):
+        """create st_code column from fips column
+
+        Args:
+            data: pd.DataFrame input data
+            fips_col: fips column to convert
+            stcode_col: stcode column to create
+
+        Return:
+            data: copy of dataframe
+        """
+        data = data.copy()
+        if data[fips_col].dtype != 'O':
+            data = self.convert_intfips_to_str(data,intfips_col=fips_col,strfips_col=fips_col)
+        data[stcode_col] = data[fips_col].str[:2]
+        return data
 
     def convert_stcode_to_state_id(self,
                                data,
@@ -365,16 +364,11 @@ class GeoMapper:
         if count_cols:
             data = data[[fips_col,date_col] + count_cols].copy()
         data = self.convert_fips_to_state_id(data,fips_col=fips_col,state_id_col=state_id_col,full=full)
-        data.dropna(subset=['st_code'], axis=0, inplace=True)
+        data.dropna(subset=[state_id_col], axis=0, inplace=True)
         data.drop([fips_col,'st_code'],axis=1,inplace=True)
-        # assert not data[state_id_col].isnull().values.any(), "nan states, probably invalid fips"
-        if date_col:
-            assert not data[date_col].isnull().values.any(), "nan dates not allowed"
-            data.fillna(0,inplace=True)
-            data = data.groupby([date_col,state_id_col]).sum()
-        else:
-            data.fillna(0,inplace=True)
-            data = data.groupby(state_id_col).sum()
+        assert not data[date_col].isnull().values.any(), "nan dates not allowed"
+        # data.fillna(0,inplace=True)
+        data = data.groupby([date_col,state_id_col]).sum()
         return data.reset_index()
 
     def county_to_msa(self,

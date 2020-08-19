@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import pandas as pd
-import re
 
 from delphi_utils import GeoMapper
+import pandas as pd
+import numpy as np
+import re
 
 def detect_date_col(col_name: str):
     """determine if column name is a date"""

@@ -1,8 +1,6 @@
-import pytest
-import os
+from delphi_utils.geomap import GeoMapper
 import pandas as pd
 import numpy as np
-from delphi_utils.geomap import GeoMapper
 
 
 class TestGeoMapper:

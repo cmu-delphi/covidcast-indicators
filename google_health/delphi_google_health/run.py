@@ -39,6 +39,11 @@ def run_module():
         now = datetime.datetime.now(datetime.timezone.utc)
         start_date = (now - datetime.timedelta(days=4)).strftime("%Y-%m-%d")
 
+    # if missing start_date, set to today (GMT) minus 5 days
+    if start_date == "":
+        now = datetime.datetime.now(datetime.timezone.utc)
+        start_date = (now - datetime.timedelta(days=4)).strftime("%Y-%m-%d")
+
     # if missing end_date, set to today (GMT) minus 5 days
     if end_date == "":
         now = datetime.datetime.now(datetime.timezone.utc)

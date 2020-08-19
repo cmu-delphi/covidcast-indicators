@@ -125,7 +125,8 @@ def fix_date(df):
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, password):
+def pull_quidel_flutest(start_date, end_date, mail_server, account,
+                        sender, password, test_mode):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
@@ -147,14 +148,19 @@ def pull_quidel_flutest(start_date, end_date, mail_server, account, sender, pass
     output:
         df: pd.DataFrame
     """
-    # Get new data from email
-    df, time_flag = get_from_email(start_date, end_date, mail_server, account, sender, password)
+    if test_mode:
+        test_data_dir = "./test_data/test_data.xlsx"
+        df, time_flag = pd.read_excel(test_data_dir), date(2020, 8, 17)
+    else:
+        # Get new data from email
+        df, time_flag = get_from_email(start_date, end_date, mail_server,
+                                       account, sender, password)
 
-    # Get historical data
-    if start_date < date(2020, 5, 8):
-        print("Read historical data")
-        df_historical = read_historical_data()
-        df = df.append(df_historical)
+        # Get historical data
+        if start_date < date(2020, 5, 8):
+            print("Read historical data")
+            df_historical = read_historical_data()
+            df = df.append(df_historical)
 
     # No new data can be pulled
     if time_flag is None:

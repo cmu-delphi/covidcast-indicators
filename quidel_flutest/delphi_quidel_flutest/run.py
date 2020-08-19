@@ -52,6 +52,8 @@ def run_module():
     password = params["password"]
     sender = params["sender"]
 
+    test_mode = (params["mode"] == "test")
+
     export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
 
     # pull new data only that has not been ingested
@@ -70,7 +72,7 @@ def run_module():
     # Pull data from the email at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password)
+                               account, sender, password, test_mode)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return

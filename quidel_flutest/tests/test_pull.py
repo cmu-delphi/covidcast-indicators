@@ -41,17 +41,19 @@ class TestingPullData:
         password = params["password"]
         sender = params["sender"]
         
+        test_mode = (params["mode"] == "test")
+        
         pull_start_date = date(2020, 6, 10)
         pull_end_date = date(2020, 6, 12)
         
         df, _ = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password) 
+                               account, sender, password, test_mode) 
         
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 
         
-        assert [first_date.month, first_date.day] == [3, 11]
-        assert [last_date.month, last_date.day] == [6, 11]
+        assert [first_date.month, first_date.day] == [6, 22]
+        assert [last_date.month, last_date.day] == [8, 17]
         assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
         
 

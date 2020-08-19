@@ -13,17 +13,17 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200610",
-            "20200611",
-            "20200612",
-            "20200613",
-            "20200614",
-            "20200615",
-            "20200616",
-            "20200617",
-            "20200618",
-            "20200619",
-            "20200620",
+            "20200623",
+            "20200624",
+            "20200625",
+            "20200626",
+            "20200627",
+            "20200628",
+            "20200629",
+            "20200630",
+            "20200701",
+            "20200702",
+            "20200703",
         ]
         geos = ["hrr", "msa", "state"]
         sensors = [
@@ -43,7 +43,7 @@ class TestRun:
     
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200610_state_wip_flu_ag_raw_pct_positive.csv")
+            join("./receiving", "20200705_state_wip_flu_ag_raw_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
     
@@ -51,7 +51,6 @@ class TestRun:
         flag = None
         for fname in listdir("./cache"):
             if ".csv" in fname:
-                remove(join("cache", fname))
                 flag = 1
         assert flag is not None
         

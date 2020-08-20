@@ -48,5 +48,3 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     df['new_counts'] = df['new_counts']
     df['cumulative_counts'] = df['cumulative_counts']
     return df
-
-

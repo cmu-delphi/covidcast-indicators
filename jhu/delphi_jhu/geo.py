@@ -37,7 +37,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     elif geo_res == "msa":
         df = gmpr.county_to_msa(df, fips_col="fips", msa_col="geo_id", date_col="timestamp")
         df['geo_id'] = df['geo_id'].astype(int)
-        print(df[df['population']==0])
+        print(df[df['population'] == 0])
     elif geo_res == 'hrr':
         df = gmpr.county_to_hrr(df, fips_col="fips", hrr_col="geo_id", date_col="timestamp")
         df['geo_id'] = df['geo_id'].astype(int)
@@ -48,5 +48,3 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     df['new_counts'] = df['new_counts']
     df['cumulative_counts'] = df['cumulative_counts']
     return df
-
-

@@ -13,6 +13,9 @@ consistency how NCHS reports the data, please refer to [Exceptions](#Exceptions)
 * `covid_deaths`: All Deaths with confirmed or presumed COVID-19, 
                   coded to ICD–10 code U07.1
 * `total_deaths`: Deaths from all causes.
+* `percent_of_expected_deaths`:  the number of deaths for all causes for this 
+                                 week in 2020 compared to the average number 
+                                 across the same week in 2017–2019.
 * `pneumonia_deaths`: Counts of deaths involving Pneumonia, with or without
                       COVID-19, excluding Influenza deaths(J12.0-J18.9).
 * `pneumonia_and_covid_deaths`: Counts of deaths involving COVID-19 and Pneumonia,
@@ -23,10 +26,13 @@ consistency how NCHS reports the data, please refer to [Exceptions](#Exceptions)
 * `pneumonia_influenza_or_covid_19_deaths`: Counts of deaths involving Pneumonia, 
                                             Influenza, or COVID-19, coded to ICD–10 
                                             codes U07.1 or J09–J18.9
+Detailed description are provided in the notes under Table 1 [here]
+(https://www.cdc.gov/nchs/nvss/vsrr/COVID19/index.htm).
 
 ## Metrics, Level 2 (`m2`)
 * `num`: number of new deaths on a given week
 * `prop`: `num` / population * 100,000
+* **No** `m2` for signal `percent_of_expected_deaths`.
 
 ## Exceptions
 

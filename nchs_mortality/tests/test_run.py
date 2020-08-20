@@ -35,11 +35,14 @@ class TestRun:
         expected_files = []
         for date in dates:
             for metric in metrics:
-                for sensor in sensors:
+                if metric == "percent_of_expected_deaths":
                     expected_files += ["weekly_" + date + "_state_wip_" \
-                                       + metric + "_" + sensor + ".csv"]
-
-        assert set(expected_files).issubset(csv_files)
+                                       + metric + ".csv"]
+                else:
+                    for sensor in sensors:
+                        expected_files += ["weekly_" + date + "_state_wip_" \
+                                           + metric + "_" + sensor + ".csv"]
+        assert set(expected_files).issubset(set(csv_files))
 
     def test_output_file_format(self, run_as_module):
 

@@ -5,7 +5,6 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
-from itertools import product
 from os.path import join
 
 import numpy as np
@@ -17,8 +16,8 @@ from .export import export_csv
 
 # global constants
 METRICS = [
-        'covid_deaths', 'total_deaths', 'pneumonia_deaths',
-        'pneumonia_and_covid_deaths', 'influenza_deaths',
+        'covid_deaths', 'total_deaths', 'percent_of_expected_deaths',
+        'pneumonia_deaths', 'pneumonia_and_covid_deaths', 'influenza_deaths',
         'pneumonia_influenza_or_covid_19_deaths'
 ]
 SENSORS = [
@@ -39,25 +38,41 @@ def run_module():
     export_dir = params["export_dir"]
     static_file_dir = params["static_file_dir"]
     token = params["token"]
+    test_mode = (params["mode"] == "test")
 
     map_df = pd.read_csv(
         join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
     )
 
-    df = pull_nchs_mortality_data(token, map_df)
-    for metric, sensor in product(METRICS, SENSORS):
-        print(metric, sensor)
-        if sensor == "num":
+    df = pull_nchs_mortality_data(token, map_df, test_mode)
+    for metric in METRICS:
+        if metric == 'percent_of_expected_deaths':
+            print(metric)
             df["val"] = df[metric]
+            df["se"] = np.nan
+            df["sample_size"] = np.nan
+            sensor_name = "_".join(["wip", metric])
+            export_csv(
+                df,
+                geo_name=geo_res,
+                export_dir=export_dir,
+                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                sensor=sensor_name,
+            )
         else:
-            df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
-        df["se"] = np.nan
-        df["sample_size"] = np.nan
-        sensor_name = "_".join(["wip", metric, sensor])
-        export_csv(
-            df,
-            geo_name=geo_res,
-            export_dir=export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-            sensor=sensor_name,
-        )
+            for sensor in SENSORS:
+                print(metric, sensor)
+                if sensor == "num":
+                    df["val"] = df[metric]
+                else:
+                    df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
+                df["se"] = np.nan
+                df["sample_size"] = np.nan
+                sensor_name = "_".join(["wip", metric, sensor])
+                export_csv(
+                    df,
+                    geo_name=geo_res,
+                    export_dir=export_dir,
+                    start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                    sensor=sensor_name,
+                )

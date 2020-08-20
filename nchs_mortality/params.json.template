@@ -3,5 +3,6 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "token": "" 
+  "token": "",
+  "mode":""
 }

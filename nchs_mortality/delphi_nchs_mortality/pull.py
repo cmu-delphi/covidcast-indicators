@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
-def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
+def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     """Pulls the latest NCHS Mortality data, and conforms it into a dataset
 
     The output dataset has:
@@ -23,6 +23,8 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
         My App Token for pulling the NCHS mortality data
     map_df: pd.DataFrame
         Read from static file "state_pop.csv".
+    test_mode:str
+        Check whether to run in a test mode
 
     Returns
     -------
@@ -30,17 +32,21 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ['covid_deaths', 'total_deaths', 'pneumonia_deaths',
+    KEEP_COLUMNS = ['covid_deaths', 'total_deaths',
+                    'percent_of_expected_deaths', 'pneumonia_deaths',
                     'pneumonia_and_covid_deaths', 'influenza_deaths',
                     'pneumonia_influenza_or_covid_19_deaths']
     TYPE_DICT = {key: float for key in KEEP_COLUMNS}
     TYPE_DICT["timestamp"] = 'datetime64[ns]'
 
-    # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", token)
-    results = client.get("r8kw-7aab", limit=10**10)
-    df = pd.DataFrame.from_records(results).rename(
-            {"start_week": "timestamp"}, axis=1)
+    if test_mode:
+        df = pd.read_csv("./test_data/test_data.csv")
+    else:
+        # Pull data from Socrata API
+        client = Socrata("data.cdc.gov", token)
+        results = client.get("r8kw-7aab", limit=10**10)
+        df = pd.DataFrame.from_records(results).rename(
+                {"start_week": "timestamp"}, axis=1)
 
     # Check missing start_week == end_week
     try:

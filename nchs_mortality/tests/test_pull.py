@@ -12,6 +12,7 @@ export_start_date = params["export_start_date"]
 export_dir = params["export_dir"]
 static_file_dir = params["static_file_dir"]
 token = params["token"]
+test_mode = (params["mode"] == "test")
 
 map_df = pd.read_csv(
     join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
@@ -19,12 +20,10 @@ map_df = pd.read_csv(
 
 class TestPullUSAFacts:
     def test_good_file(self):
-        df = pull_nchs_mortality_data(token, map_df)
+        df = pull_nchs_mortality_data(token, map_df, test_mode)
 
-        assert (
-            df.columns.values
-            == ['covid_deaths', 'total_deaths', 'pneumonia_deaths',
-                'pneumonia_and_covid_deaths', 'influenza_deaths', 
-                'pneumonia_influenza_or_covid_19_deaths',
-                "timestamp", "geo_id", "population"]
-        ).all()
+        assert (df.columns.values == [
+                'covid_deaths', 'total_deaths', 'percent_of_expected_deaths',
+                'pneumonia_deaths', 'pneumonia_and_covid_deaths',
+                'influenza_deaths', 'pneumonia_influenza_or_covid_19_deaths',
+                "timestamp", "geo_id", "population"]).all()

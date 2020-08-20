@@ -26,12 +26,13 @@ consistency how NCHS reports the data, please refer to [Exceptions](#Exceptions)
 * `pneumonia_influenza_or_covid_19_deaths`: Counts of deaths involving Pneumonia, 
                                             Influenza, or COVID-19, coded to ICD–10 
                                             codes U07.1 or J09–J18.9
-Detailed description are provided in the notes under Table 1 [here](https://www.cdc.gov/nchs/nvss/vsrr/COVID19/index.htm).
+
+Detailed descriptions are provided in the notes under Table 1 [here](https://www.cdc.gov/nchs/nvss/vsrr/COVID19/index.htm).
 
 ## Metrics, Level 2 (`m2`)
 * `num`: number of new deaths on a given week
 * `prop`: `num` / population * 100,000
-* **No** `m2` for signal `percent_of_expected_deaths`.
+* _**No** `m2` for signal `percent_of_expected_deaths`._
 
 ## Exceptions
 

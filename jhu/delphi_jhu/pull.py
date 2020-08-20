@@ -72,7 +72,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
 
 
     gmpr = GeoMapper()
-    df = gmpr.jhu_uid_to_county(df,jhu_col="UID",date_col='timestamp')
+    df = gmpr.jhu_uid_to_county(df, jhu_col="UID", date_col='timestamp')
 
     """
     df = df[

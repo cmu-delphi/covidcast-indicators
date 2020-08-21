@@ -4,7 +4,7 @@ from delphi_utils import GeoMapper
 
 INCIDENCE_BASE = 100000
 
-def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
+def geo_map(df: pd.DataFrame, geo_res: str):
     """
     Maps a DataFrame df, which contains data at the county resolution, and
     aggregate it to the geographic resolution geo_res.

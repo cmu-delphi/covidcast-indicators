@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import re
-from delphi_utils import GeoMapper
 import pandas as pd
 import numpy as np
+from delphi_utils import GeoMapper
 
 def detect_date_col(col_name: str):
     """determine if column name is a date"""
-    date_match = re.match('\d{1,2}\/\d{1,2}\/\d{1,2}', col_name)
+    date_match = re.match(r'\d{1,2}\/\d{1,2}\/\d{1,2}', col_name)
     if date_match:
         return True
     return False
@@ -51,9 +51,6 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     pd.DataFrame
         Dataframe as described above.
     """
-    # Two metrics, two schema...
-    MIN_FIPS = 1000
-    MAX_FIPS = 73000
 
     # Read data
     df = pd.read_csv(base_url.format(metric=metric))
@@ -70,21 +67,9 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     )
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
-
     gmpr = GeoMapper()
     df = gmpr.jhu_uid_to_county(df, jhu_col="UID", date_col='timestamp')
 
-    """
-    df = df[
-        (
-            (fips_int >= MIN_FIPS)  # US non-state territories
-            & (fips_int < MAX_FIPS)
-        )  # "Uncategorized", etc.
-        # Get Fake FIPS for unassigned cases
-        | np.logical_and(fips_int >= 90001,
-                         fips_int <= 90056)
-    ]
-    """
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Set population as NAN for fake fips
     pop_df.rename(columns={'FIPS':'fips'}, inplace=True)

@@ -92,7 +92,7 @@ def run_module():
         print(metric, geo_res, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, sensor)
+        df = geo_map(df, geo_res)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

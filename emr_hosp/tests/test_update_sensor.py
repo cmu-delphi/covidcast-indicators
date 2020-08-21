@@ -70,7 +70,7 @@ class TestEMRHospSensorUpdator:
             self.se
         )
         su_inst.shift_dates()
-        data_frame = su_inst.geo_reindex(self.small_test_data,PARAMS["static_file_dir"])
+        data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
         assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
         assert (data_frame.sum() == (4200,19000)).all()
 

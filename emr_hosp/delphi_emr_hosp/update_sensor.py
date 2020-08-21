@@ -24,6 +24,8 @@ from .sensor import EMRHospSensor
 from .weekday import Weekday
 from .constants import *
 
+from delphi_utils import GeoMapper
+
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
     """Write sensor values to csv.
@@ -165,8 +167,8 @@ class EMRHospSensorUpdator:
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
-        assert geo in GEO_TYPES, f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
-        self.geo, self.parallel, self.weekday, self.se = geo, parallel, weekday, se
+        assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
+        self.geo, self.parallel, self.weekday, self.se = geo.lower(), parallel, weekday, se
 
         # output file naming
         signals = SIGNALS.copy()
@@ -189,7 +191,7 @@ class EMRHospSensorUpdator:
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
 
-    def geo_reindex(self,data,staticpath):
+    def geo_reindex(self,data):
         """Reindex based on geography, include all date, geo pairs
 
         Args:
@@ -201,19 +203,21 @@ class EMRHospSensorUpdator:
         """
         # get right geography
         geo = self.geo
-        geo_map = GeoMaps(staticpath)
-        if geo.lower() == COUNTY:
-            data_frame = geo_map.county_to_megacounty(data)
-        elif geo.lower() == STATE:
-            data_frame = geo_map.county_to_state(data)
-        elif geo.lower() == MSA:
-            data_frame = geo_map.county_to_msa(data)
-        elif geo.lower() == HRR:
+        gmpr = GeoMapper()
+        if geo == "county":
+            data_frame = gmpr.county_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
+        elif geo == "state":
+            data_frame = gmpr.county_to_state(data,state_id_col=geo)
+        elif geo == "msa":
+            data_frame = gmpr.county_to_msa(data,msa_col=geo)
+        elif geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
             return False
-        self.unique_geo_ids = pd.unique(data_frame.index.get_level_values(0))
+
+        self.unique_geo_ids = pd.unique(data_frame[geo])
+        data_frame.set_index([geo,'date'],inplace=True)
 
         # for each location, fill in all missing dates with 0 values
         multiindex = pd.MultiIndex.from_product((self.unique_geo_ids, self.fit_dates),
@@ -248,7 +252,8 @@ class EMRHospSensorUpdator:
         base_geo = HRR if self.geo == HRR else FIPS
         data = load_combined_data(emr_filepath, claims_filepath, self.dropdate, base_geo)
 
-        data_frame = self.geo_reindex(data,staticpath)
+        data.reset_index(inplace=True)
+        data_frame = self.geo_reindex(data)
 
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(data_frame) if self.weekday else None

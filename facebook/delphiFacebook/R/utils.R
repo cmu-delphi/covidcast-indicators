@@ -102,8 +102,14 @@ mix_weights <- function(weights, s_mix_coef, s_weight)
   ## max_weight * (1 - mix_coef) + mix_coef / N <= s_weight
   ##
   ## TODO: Determine if the fudge factors are really necessary
-  mix_coef <- (max_weight * N - 0.999 * N * s_weight + 1e-6) /
+  mix_coef <- if (max_weight <= s_weight) {
+    0
+  } else if (1/N > s_weight*0.999) {
+    1
+  } else {
+  (max_weight * N - 0.999 * N * s_weight + 1e-6) /
     (max_weight * N - 1 + 1e-6)
+  }
 
   ## Enforce minimum and maximum.
   if (mix_coef < s_mix_coef) { mix_coef <- s_mix_coef }

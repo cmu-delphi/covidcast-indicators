@@ -4,10 +4,12 @@
 \alias{create_complete_responses}
 \title{Create dataset for sharing with research partners}
 \usage{
-create_complete_responses(input_data, params)
+create_complete_responses(input_data, county_crosswalk)
 }
 \arguments{
 \item{input_data}{data frame of responses}
+
+\item{county_crosswalk}{crosswalk mapping ZIP5 to counties}
 }
 \description{
 Create dataset for sharing with research partners

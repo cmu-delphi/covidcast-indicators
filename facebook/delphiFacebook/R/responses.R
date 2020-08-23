@@ -224,11 +224,13 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 
 #' Create dataset for sharing with research partners
 #'
-#' @param input_data    data frame of responses
+#' @param input_data data frame of responses
+#' @param county_crosswalk crosswalk mapping ZIP5 to counties
 #' @importFrom stringi stri_trim stri_replace_all
+#' @importFrom dplyr left_join group_by filter ungroup select
 #'
 #' @export
-create_complete_responses <- function(input_data, params)
+create_complete_responses <- function(input_data, county_crosswalk)
 {
   data_full <- select(input_data,
     StartDatetime = "start_dt", EndDatetime = "end_dt", Date = "date",
@@ -241,6 +243,15 @@ create_complete_responses <- function(input_data, params)
     "token", wave = "SurveyID", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
+
+  # Join with counties. First, take the *primary* county for each crosswalk
+  # entry. Otherwise the output will have more than one row per response.
+  cc <- group_by(county_crosswalk, .data$zip5)
+  cc <- filter(cc, .data$weight_in_location == max(.data$weight_in_location))
+  cc <- ungroup(cc)
+  cc <- select(cc, -.data$weight_in_location)
+
+  data_full <- left_join(data_full, cc, by = "zip5")
 
   data_full$wave <- surveyID_to_wave(data_full$wave)
 
@@ -324,9 +335,9 @@ filter_complete_responses <- function(data_full, params)
 
   data_full <- select(data_full, -zip5)
 
-  # 8 includes StartDatetime, EndDatetime, Date, token, wave, UserLanguage + two
-  # questions
-  data_full <- data_full[rowSums(!is.na(data_full)) >= 8, ]
+  # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
+  # UserLanguage + two questions
+  data_full <- data_full[rowSums(!is.na(data_full)) >= 9, ]
 
   return(data_full)
 }

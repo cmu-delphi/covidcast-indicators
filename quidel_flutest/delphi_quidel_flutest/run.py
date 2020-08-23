@@ -4,14 +4,16 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from datetime import datetime, date, timedelta
 from os.path import join
 
 import pandas as pd
 from delphi_utils import read_params
 
 from .geo_maps import (zip_to_msa, zip_to_hrr, zip_to_county, zip_to_state)
-from .pull import pull_quidel_flutest, check_intermediate_file
+from .pull import (pull_quidel_flutest,
+                   check_export_start_date,
+                   check_export_end_date,
+                   update_cache_file)
 from .export import export_csv
 from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
@@ -46,55 +48,23 @@ def run_module():
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     static_file_dir = params["static_file_dir"]
-
-    mail_server = params["mail_server"]
-    account = params["account"]
-    password = params["password"]
-    sender = params["sender"]
-
-    test_mode = (params["mode"] == "test")
-
-    export_start_date = datetime.strptime(params["export_start_date"], '%Y-%m-%d')
-
-    # pull new data only that has not been ingested
-    pull_start_date = datetime.strptime(params["pull_start_date"], '%Y-%m-%d').date()
-    previous_df, pull_start_date = check_intermediate_file(cache_dir, pull_start_date)
-
-    if params["pull_end_date"] == "":
-        pull_end_date = date.today()
-    else:
-        pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d').date()
-
+    export_start_date = params["export_start_date"]
+    export_end_date = params["export_end_date"]
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
 
-    # Pull data from the email at 5 digit zipcode level
-    # Use _end_date to check the most recent date that we received data
-    df, _end_date = pull_quidel_flutest(pull_start_date, pull_end_date, mail_server,
-                               account, sender, password, test_mode)
+    # Pull data and update export date
+    df, _end_date = pull_quidel_flutest(params)
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
+    export_end_date = check_export_end_date(export_end_date, _end_date,
+                                            END_FROM_TODAY_MINUS)
+    export_start_date = check_export_start_date(export_start_date,
+                                                export_end_date, EXPORT_DAY_RANGE)
 
-    # Utilize previously stored data
-    if previous_df is not None:
-        df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
-
-    # By default, set the export end date to be the last pulling date - 5 days
-    export_end_date = _end_date - timedelta(days=END_FROM_TODAY_MINUS)
-    if params["export_end_date"] != "":
-        input_export_end_date = datetime.strptime(params["export_end_date"], '%Y-%m-%d').date()
-        if input_export_end_date < export_end_date:
-            export_end_date = input_export_end_date
-    export_end_date = datetime(export_end_date.year, export_end_date.month, export_end_date.day)
-
-    # Only export data from -45 days to -5 days
-    if (export_end_date - export_start_date).days > EXPORT_DAY_RANGE:
-        export_start_date = export_end_date - timedelta(days=EXPORT_DAY_RANGE)
-
-    first_date = df["timestamp"].min()
-    last_date = df["timestamp"].max()
+    first_date, last_date = df["timestamp"].min(), df["timestamp"].max()
 
     # State Level
     data = df.copy()
@@ -130,4 +100,4 @@ def run_module():
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
-    df.to_csv(join(cache_dir, "pulled_until_%s.csv")%_end_date.strftime("%Y%m%d"), index=False)
+    update_cache_file(df, _end_date, cache_dir)

@@ -28,7 +28,7 @@ def run_module():
     testing purposes).
     """
 
-    #  read parameters
+    # read parameters
     params = read_params()
     ght_key = params["ght_key"]
     start_date = params["start_date"]
@@ -50,6 +50,11 @@ def run_module():
         now = datetime.datetime.now(datetime.timezone.utc)
         start_date = (now - datetime.timedelta(days=4)).strftime("%Y-%m-%d")
 
+    # if missing start_date, set to today (GMT) minus 5 days
+    if start_date == "":
+        now = datetime.datetime.now(datetime.timezone.utc)
+        start_date = (now - datetime.timedelta(days=4)).strftime("%Y-%m-%d")
+
     # if missing end_date, set to today (GMT) minus 5 days
     if end_date == "":
         now = datetime.datetime.now(datetime.timezone.utc)
@@ -62,12 +67,10 @@ def run_module():
     # setup class to handle API calls
     ght = GoogleHealthTrends(ght_key=ght_key)
 
-    #  read data frame version of the data
-    df_state = get_counts_states(ght,
-                                 start_date,
-                                 end_date,
-                                 static_dir=static_dir,
-                                 data_dir=data_dir)
+    # read data frame version of the data
+    df_state = get_counts_states(
+        ght, start_date, end_date, static_dir=static_dir, cache_dir=cache_dir
+    )
     df_dma = get_counts_dma(
         ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
     )
@@ -77,7 +80,7 @@ def run_module():
 
     for signal in signal_names:
         if signal.endswith(SMOOTHED):
-            #  export each geographic region, with both smoothed and unsmoothed data
+            # export each geographic region, with both smoothed and unsmoothed data
             export_csv(df_state, STATE, signal, smooth=True, receiving_dir=export_dir)
             export_csv(df_dma, DMA, signal, smooth=True, receiving_dir=export_dir)
             export_csv(df_hrr, HRR, signal, smooth=True, receiving_dir=export_dir)

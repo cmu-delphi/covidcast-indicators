@@ -5,5 +5,10 @@
   "start_date": "2020-02-11",
   "end_date": "2020-04-30",
   "ght_key": "",
-  "wip_signal": ""
+  "wip_signal": "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": ""
 }

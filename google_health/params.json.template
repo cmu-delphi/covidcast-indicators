@@ -4,6 +4,11 @@
   "cache_dir": "./cache",
   "start_date": "2020-01-05",
   "end_date": "",
-  "ght_key": ""
-  "wip_signal" : ""
+  "ght_key": "",
+  "wip_signal" : "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": ""
 }

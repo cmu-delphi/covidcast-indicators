@@ -212,23 +212,27 @@ def _get_counts_geoid(
     cache_dates = set(dt["timestamp"].values)
     req_dates = list(output_dates - cache_dates)
 
-    try:
-        if req_dates:
-            sdate = min(req_dates)
-            edate = max(req_dates)
-            new_data = _api_data_to_df(
-                ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
-                geo_id=geo_id,
-            )
-            new_data = new_data[new_data["timestamp"].isin(req_dates)]
-            dt = dt.append(new_data).sort_values("timestamp")
-            dt = dt.drop_duplicates(subset="timestamp")
-            _write_cached_file(dt, geo_id, cache_dir)
-            dt = _load_cached_file(geo_id, cache_dir)
-    except googleapiclient.errors.HttpError:
-        #  This is thrown in there is no data yet for the given days. Need to
-        #  investigate this further.
-        pass
+    
+    if req_dates:
+        sdate = min(req_dates)
+        edate = max(req_dates)
+        # Try until pull the new data successfully
+        new_data = None
+        while new_data is None:
+            try:
+                new_data = _api_data_to_df(
+                    ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
+                    geo_id=geo_id,
+                )
+            except googleapiclient.errors.HttpError:
+                #  This is thrown in there is no data yet for the given days. Need to
+                #  investigate this further.
+                pass
+        new_data = new_data[new_data["timestamp"].isin(req_dates)]
+        dt = dt.append(new_data).sort_values("timestamp")
+        dt = dt.drop_duplicates(subset="timestamp")
+        _write_cached_file(dt, geo_id, cache_dir)
+        dt = _load_cached_file(geo_id, cache_dir)
 
     dt = dt[dt["timestamp"].isin(output_dates)]
     return dt

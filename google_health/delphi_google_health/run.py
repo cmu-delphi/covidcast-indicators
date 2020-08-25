@@ -69,7 +69,7 @@ def run_module():
 
     # read data frame version of the data
     df_state = get_counts_states(
-        ght, start_date, end_date, static_dir=static_dir, cache_dir=cache_dir
+        ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
     )
     df_dma = get_counts_dma(
         ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir

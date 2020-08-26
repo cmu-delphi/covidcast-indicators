@@ -31,7 +31,7 @@ def kday_moving_average(x, k):
     '''
     if not isinstance(k, int):
         raise ValueError('k must be int.')
-    temp = np.append(np.zeros(k - 1), x)
-    # temp = np.append(np.nan*np.ones(k-1), x)
+    # temp = np.append(np.zeros(k - 1), x)
+    temp = np.append(np.nan*np.ones(k-1), x)
     y = np.convolve(temp, np.ones(k, dtype=int), 'valid') / k
     return y

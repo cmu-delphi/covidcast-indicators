@@ -5,6 +5,7 @@ params.json
 
 # Do not commit output files
 receiving/*.csv
+tests/receiving/*.csv
 
 # Remove macOS files
 .DS_Store

@@ -94,9 +94,7 @@ def run_module():
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res)
         df.set_index(["timestamp", "geo_id"], inplace=True)
-        # df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
-        # df["val"] = df.groupby("geo_id").apply(SMOOTHERS_MAP[smoother][0])[sensor].values
-        df["val"] = df[sensor].groupby(level=1).transform(seven_day_moving_average)
+        df["val"] = df[sensor].groupby(level=1).transform(SMOOTHERS_MAP[smoother][0])
         df["se"] = np.nan
         df["sample_size"] = np.nan
         # Drop early entries where data insufficient for smoothing

@@ -71,7 +71,10 @@ load_response_one <- function(input_filename, params)
   suppressWarnings({ input_data$hh_number_total <- as.integer(input_data$A2b) })
   input_data$zip5 <- input_data$A3
 
-  input_data$token <- stri_replace(input_data$token, "-", fixed = "^'-")
+  # When a token begins with a hyphen, Qualtrics CSVs contain a lone single
+  # quote in front, for some mysterious reason. Strip these from the token,
+  # since they are erroneous and won't match with CIDs in weights files.
+  input_data$token <- stri_replace(input_data$token, "-", regex = "^'-")
 
   # clean date time data, forcing to be in the "America/Los_Angeles" timezone
   tz_to <- "America/Los_Angeles"

@@ -286,7 +286,8 @@ create_complete_responses <- function(input_data, county_crosswalk)
 surveyID_to_wave <- Vectorize(function(surveyID) {
   waves <- list("SV_8zYl1sFN6fAFIxv" = 1,
                 "SV_cT2ri3tFp2dhJGZ" = 2,
-                "SV_8bKZvWZcGbvzsz3" = 3)
+                "SV_8bKZvWZcGbvzsz3" = 3,
+                "SV_eVXdPlGVNw04el7" = 4)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

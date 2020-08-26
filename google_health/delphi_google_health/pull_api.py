@@ -212,7 +212,6 @@ def _get_counts_geoid(
     output_dates = set(pd.date_range(start_date, end_date).to_native_types())
     cache_dates = set(dt["timestamp"].values)
     req_dates = list(output_dates - cache_dates)
-    
     try:
         if req_dates:
             sdate = min(req_dates)

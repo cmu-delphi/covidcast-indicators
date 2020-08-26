@@ -65,7 +65,7 @@ def run_module():
     )
     df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
 
-    signal_names = add_prefix(SIGNALS, wip_signal, prefix)
+    signal_names = add_prefix(SIGNALS, wip_signal, prefix="wip_")
 
     for signal in signal_names:
         if signal.endswith(SMOOTHED):
@@ -81,7 +81,7 @@ def run_module():
             export_csv(df_msa, MSA, signal, smooth=False, receiving_dir=export_dir)
 
 
-def add_prefix(signal_names, wip_signal, prefix="wip_"):
+def add_prefix(signal_names, wip_signal, prefix):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------

@@ -80,11 +80,6 @@ def get_from_email(start_date: datetime.date, end_date: datetime.date,
                                              axis=1)
                     if "ZipCode" not in newdf.keys():
                         newdf = newdf.rename({"Zip": "ZipCode"}, axis=1)
-                    # if "ResultID" not in newdf.keys():
-                    #     newdf["ResultID"] = np.nan
-                    # if "FluTestNumber" not in newdf.keys():
-                    #     newdf["FluTestNumber"] = np.nan
-                    # newdf["filename"] = name
                     df = df.append(newdf[columns])
                     time_flag = search_date
 
@@ -109,7 +104,13 @@ def fix_zipcode(df):
 
 def fix_date(df):
     """
-    Quidel Covid Test are labeled with Test Date and Storage Date.
+    Quidel Flu Tests are labeled with Test Date and Storage Date. In principle,
+    the TestDate should reflect when the test was performed and the StorageDate
+    when the test was logged in the MyVirena cloud storage device. We expect
+    that the test date should precede the storage date by several days. However,
+    in the actual data the test date can be far earlier than the storage date
+    and the test date can also occur after the storage date.
+
     - For most of the cases, use test date as the timestamp
     - Remove tests with a storage date which is earlier than the test date
     - If the storage date is 90 days later than the test date, the storage
@@ -129,7 +130,7 @@ def fix_date(df):
 def preprocess_new_data(start_date, end_date, mail_server, account,
                         sender, password, test_mode):
     """
-    Pull and pre-process Quidel Covid Test data from datadrop email.
+    Pull and pre-process Quidel Flu Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
     sensor only which is related to number of total tests and number
     of positive tests.
@@ -214,7 +215,7 @@ def check_intermediate_file(cache_dir, pull_start_date):
 
 def pull_quidel_flutest(params):
     """
-    Pull the quidel covid test data. Decide whether to combine the newly
+    Pull the Quidel Flu test data. Decide whether to combine the newly
     received data with stored historical records in ./cache
 
     Parameters:

@@ -68,7 +68,18 @@ load_response_one <- function(input_filename, params)
   input_data$hh_short_breath <- (input_data$A1_4 == 1L)
   input_data$hh_diff_breath <- (input_data$A1_5 == 1L)
   suppressWarnings({ input_data$hh_number_sick <- as.integer(input_data$A2) })
-  suppressWarnings({ input_data$hh_number_total <- as.integer(input_data$A2b) })
+
+  if ("A5_1" %in% names(input_data)) {
+    # This is Wave 4, where item A2b was replaced with 3 items asking about separate ages
+    suppressWarnings({
+      input_data$hh_number_total <- (as.integer(input_data$A5_1) +
+                                       as.integer(input_data$A5_2) +
+                                       as.integer(input_data$A5_3))
+    })
+  } else {
+    # This is Wave <= 4, where item A2b measured household size
+    suppressWarnings({ input_data$hh_number_total <- as.integer(input_data$A2b) })
+  }
   input_data$zip5 <- input_data$A3
 
   # When a token begins with a hyphen, Qualtrics CSVs contain a lone single
@@ -227,25 +238,54 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 
 #' Create dataset for sharing with research partners
 #'
+#' Different survey waves may have different sets of questions. Here we report
+#' all questions across any wave, along with a wave identifier so analysts know
+#' which wave a user took.
+#'
 #' @param input_data data frame of responses
 #' @param county_crosswalk crosswalk mapping ZIP5 to counties
 #' @importFrom stringi stri_trim stri_replace_all
-#' @importFrom dplyr left_join group_by filter ungroup select
+#' @importFrom dplyr left_join group_by filter ungroup select rename
 #'
 #' @export
 create_complete_responses <- function(input_data, county_crosswalk)
 {
-  data_full <- select(input_data,
-    StartDatetime = "start_dt", EndDatetime = "end_dt", Date = "date",
-    "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2", "A2b", "A3", "A3b", "A4",
-    "B2", "B2_14_TEXT", "B2b", "B3", "B4", "B5", "B6",
-    "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8_1", "C8_2", "C9", "C10_1_1", "C10_2_1",
+  input_data$wave <- surveyID_to_wave(input_data$SurveyID)
+
+  cols_to_report <- c(
+    "start_dt", "end_dt", "date",
+    "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2",
+    "A2b", "A5_1", "A5_2", "A5_3", # A5 added in Wave 4
+    "A3", "A3b", "A4",
+    "B2", "B2_14_TEXT", "B2b", "B2c", "B2c_14_TEXT", "B3", "B4", "B5", "B6", "B7",
+    "B8", "B10", "B10a", "B10b", "B12", "B12a", "B11", # added in Wave 4
+    "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8_1", "C8_2", "C8_3", "C9", "C10_1_1", "C10_2_1",
     "C10_3_1", "C10_4_1", "C11", "C12",
+    "C13", "C13a", "C14", # C13, C13a, C14 added in Wave 4
     "D1", "D1_4_TEXT", "D1b", "D2", "D3", "D4", "D5",
+    "D8", "D9", # D6-9 added in Wave 4; D6 & D7 withheld pending privacy procedures
     "Q36", "Q40",
-    "token", wave = "SurveyID", "UserLanguage",
+    "Q64", "Q65", "Q66", "Q67", "Q68", "Q69", "Q70", "Q71", "Q72", "Q73", "Q74", "Q75",
+    "Q76", "Q77", "Q78", "Q79", "Q80", # Q64-Q90 added in Wave 4
+    "D10", # added in Wave 4
+    "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
+
+  # Not all cols are present in all waves; if our data does not include some
+  # questions, don't report them.
+  if (any(!(cols_to_report %in% names(input_data)))) {
+    warning("Some columns not present in individual response data; skipping them: ",
+            paste0(cols_to_report[!(cols_to_report %in% names(input_data))],
+                   collapse = ", "))
+    cols_to_report <- cols_to_report[cols_to_report %in% names(input_data)]
+  }
+
+  data_full <- input_data[, cols_to_report]
+  data_full <- rename(data_full,
+                      StartDatetime = .data$start_dt,
+                      EndDatetime = .data$end_dt,
+                      Date = .data$date)
 
   # Join with counties. First, take the *primary* county for each crosswalk
   # entry. Otherwise the output will have more than one row per response.
@@ -255,8 +295,6 @@ create_complete_responses <- function(input_data, county_crosswalk)
   cc <- select(cc, -.data$weight_in_location)
 
   data_full <- left_join(data_full, cc, by = "zip5")
-
-  data_full$wave <- surveyID_to_wave(data_full$wave)
 
   data_full$StartDatetime <- format(data_full$StartDatetime)
   data_full$EndDatetime <- format(data_full$EndDatetime)

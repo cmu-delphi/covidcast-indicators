@@ -67,7 +67,7 @@ class TestingPullCounts:
         ght = GoogleHealthTrends(ght_key=params["ght_key"])
 
         static_dir = join("..", "static")
-        data_dir = join("..", "cache")
+        data_dir = join(".", "static_data")
 
         df_state = get_counts_states(
             ght, "2020-03-15", "2020-03-30", static_dir, data_dir

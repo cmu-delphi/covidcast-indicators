@@ -74,7 +74,13 @@ def fix_zipcode(df):
 
 def fix_date(df):
     """
-    Quidel Covid Test are labeled with Test Date and Storage Date.
+    Quidel Covid Test are labeled with Test Date and Storage Date. In principle,
+    the TestDate should reflect when the test was performed and the StorageDate
+    when the test was logged in the MyVirena cloud storage device. We expect
+    that the test date should precede the storage date by several days. However,
+    in the actual data the test date can be far earlier than the storage date
+    and the test date can also occur after the storage date.
+
     - For most of the cases, use test date as the timestamp
     - Remove tests with a storage date which is earlier than the test date
     - If the storage date is 90 days later than the test date, the storage

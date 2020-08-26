@@ -9,7 +9,8 @@ test_that("testing write_individual command", {
   tdir <- tempfile()
 
   test_data <- tibble(var1 = LETTERS, var2 = letters, weight = 1,
-                      token = LETTERS, Date = "2020-01-04")
+                      token = LETTERS, Date = "2020-01-04",
+                      geo_id = LETTERS)
 
   write_individual(test_data, params = list(
     individual_dir = tdir,

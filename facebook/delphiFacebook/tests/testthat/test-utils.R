@@ -72,26 +72,35 @@ test_that("testing mix weights", {
   ## minimum mixing mixes uniform with uniform and has no effect.
   weights <- rep(1, times = 200)
 
-  expect_equal(mix_weights(weights, s_mix_coef = 0.05, s_weight = 1L),
+  mixed <- mix_weights(weights, s_mix_coef = 0.05, s_weight = 1L)
+  expect_equal(mixed$weights,
                rep(1/200, 200))
 
   ## for intermediate version, check that mixing enforces the intended maximum
   for (k in seq(2, 5))
   {
-    new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), s_weight = 1 / k,
+    mixed <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), s_weight = 1 / k,
                                s_mix_coef = 0.05)
-    expect_lt(max(new_weights), 1 / k)
+    expect_lt(max(mixed$weights), 1 / k)
   }
 
   ## for extreme value, can only mix to uniform (maximum mixing coefficient of 1
   ## applies and mixes everything to uniform)
-  new_weights <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), s_mix_coef = 0.05,
+  mixed <- mix_weights(c(0.1, 0.1, 0.1, 0.1, 0.1, 0.5), s_mix_coef = 0.05,
                              s_weight = 1/6)
-  expect_equal(new_weights, rep(1/6, 6))
+  expect_equal(mixed$weights, rep(1/6, 6))
 
   ## when mixing is not needed, only minimum mixing is applied
-  new_weights <- mix_weights(c(0.1, 0.2, 0.2, 0.2, 0.3), s_mix_coef = 0.05,
+  mixed <- mix_weights(c(0.1, 0.2, 0.2, 0.2, 0.3), s_mix_coef = 0.05,
                              s_weight = 1/3)
-  expect_equal(new_weights, 0.05 / 5 + 0.95 * c(0.1, 0.2, 0.2, 0.2, 0.3))
+  expect_equal(mixed$weights, 0.05 / 5 + 0.95 * c(0.1, 0.2, 0.2, 0.2, 0.3))
 
+  ## Edge case 1: when max normalized weight is below the weight
+  ## threshold, we should use the minimum mixing coefficient even if
+  ## the analytical solution is in the acceptable range.
+  weights <- rep(1, times=101)
+  weights[1] <- 0.01
+  mixed <- mix_weights(weights, s_mix_coef = 0.05, s_weight=0.01)
+  expect_equal(mixed$weights,
+               (0.05/101 + 0.95*weights/sum(weights)))
 })

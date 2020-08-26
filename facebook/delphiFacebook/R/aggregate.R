@@ -156,12 +156,6 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
     )
   }
 
-  # Normalize weights to sum to 1 within each day. (CID weights typically sum to
-  # population size instead, which affects mixing behavior.)
-  for (var_weight in unique(indicators$var_weight)) {
-    day_df[[var_weight]] <- day_df[[var_weight]] / sum(day_df[[var_weight]], na.rm = TRUE)
-  }
-
   for (ii in seq_along(geo_ids))
   {
     target_geo <- geo_ids[ii]
@@ -178,23 +172,18 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
 
       if (nrow(ind_df) > 0)
       {
-        ## TODO Fix this. Old pipeline for community responses did not apply
-        ## mixing. To reproduce it, we set s_mix_coef to 0. Once a better
-        ## mixing/weighting scheme is chosen, all signals should use it.
-        s_mix_coef <- if (indicators$skip_mixing[row]) {
-          0
-        } else {
-          params$s_mix_coef
-        }
-
-        mixed_weights <- mix_weights(ind_df[[var_weight]] * ind_df$weight_in_location,
+        s_mix_coef <- params$s_mix_coef
+        mixing <- mix_weights(ind_df[[var_weight]] * ind_df$weight_in_location,
                                      s_mix_coef, params$s_weight)
 
         sample_size <- sum(ind_df$weight_in_location)
 
+        ## TODO Fix this. Old pipeline for community responses did not apply
+        ## mixing. To reproduce it, we ignore the mixed weights. Once a better
+        ## mixing/weighting scheme is chosen, all signals should use it.
         new_row <- compute_fn(
           response = ind_df[[metric]],
-          weight = mixed_weights,
+          weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
           sample_size = sample_size)
 
         dfs_out[[indicator]]$val[ii] <- new_row$val

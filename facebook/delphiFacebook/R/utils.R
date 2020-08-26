@@ -110,6 +110,7 @@ mix_weights <- function(weights, s_mix_coef, s_weight)
   (max_weight * N - 0.999 * N * s_weight + 1e-6) /
     (max_weight * N - 1 + 1e-6)
   }
+  precoef <- mix_coef
 
   ## Enforce minimum and maximum.
   if (mix_coef < s_mix_coef) { mix_coef <- s_mix_coef }
@@ -118,7 +119,13 @@ mix_weights <- function(weights, s_mix_coef, s_weight)
   ## Step 3: Replace weights.
   new_weights <- mix_coef / N + (1 - mix_coef) * weights
 
-  return(new_weights)
+  return(list(
+    weights=new_weights,
+    coef=mix_coef,
+    precoef=precoef,
+    maxp=max_weight,
+    normalized_preweights=weights
+  ))
 }
 
 

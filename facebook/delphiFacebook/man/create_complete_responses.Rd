@@ -12,5 +12,7 @@ create_complete_responses(input_data, county_crosswalk)
 \item{county_crosswalk}{crosswalk mapping ZIP5 to counties}
 }
 \description{
-Create dataset for sharing with research partners
+Different survey waves may have different sets of questions. Here we report
+all questions across any wave, along with a wave identifier so analysts know
+which wave a user took.
 }

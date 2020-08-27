@@ -64,7 +64,7 @@ class Constants:
     # number of counties in usa, including megacounties
     NUM_COUNTIES = 3141 + 52
     NUM_HRRS = 308
-    NUM_MSAS = 392
+    NUM_MSAS = 392 + 52  # MSA + States
     NUM_STATES = 52  # including DC and PR
 
     MAX_GEO = {"county": NUM_COUNTIES,

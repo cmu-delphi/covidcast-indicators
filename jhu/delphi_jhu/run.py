@@ -28,8 +28,8 @@ from .smooth import (
 # global constants
 seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
-    "confirmed",
     "deaths",
+    "confirmed",
 ]
 SENSORS = [
     "new_counts",
@@ -47,6 +47,13 @@ SENSOR_NAME_MAP = {
     "incidence":            ("incidence_prop", False),
     "cumulative_prop":      ("cumulative_prop", False),
 }
+# Temporarily added for wip_ signals
+# WIP_SENSOR_NAME_MAP = {
+#     "new_counts":           ("incid_num", False),
+#     "cumulative_counts":    ("cumul_num", False),
+#     "incidence":            ("incid_prop", False),
+#     "cumulative_prop":      ("cumul_prop", False),
+# }
 SMOOTHERS_MAP = {
     "unsmoothed":           (identity, ''),
     "seven_day_average":    (seven_day_moving_average, '7dav_'),
@@ -74,29 +81,27 @@ def run_module():
         params["aws_credentials"])
     arch_diff.update_cache()
 
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
     pop_df = pd.read_csv(
         join(static_file_dir, "fips_population.csv"),
         dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
+    )
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
-        print(geo_res, metric, sensor, smoother)
+        print(metric, geo_res, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df, sensor)
+        df = geo_map(df, geo_res)
         df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan
         # Drop early entries where data insufficient for smoothing
         df = df.loc[~df["val"].isnull(), :]
         sensor_name = SENSOR_NAME_MAP[sensor][0]
-        if SENSOR_NAME_MAP[sensor][1]:
-            metric = f"wip_{metric}"
+        # if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
+        #     metric = f"wip_{metric}"
+        #     sensor_name = WIP_SENSOR_NAME_MAP[sensor][0]
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
         create_export_csv(
             df,

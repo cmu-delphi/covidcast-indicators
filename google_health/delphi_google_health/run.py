@@ -13,7 +13,7 @@ import covidcast
 from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
 from .export import export_csv
-from .constants import *
+from .constants import SIGNALS, RAW, SMOOTHED, MSA, HRR, DMA, STATE
 
 
 def run_module():

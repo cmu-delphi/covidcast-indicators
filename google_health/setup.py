@@ -9,7 +9,9 @@ required = [
     "pytest-cov",
     "pylint",
     "delphi-utils",
-    "covidcast"
+    "covidcast",
+    "boto3",
+    "moto"
 ]
 
 setup(

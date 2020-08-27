@@ -2,7 +2,7 @@ geo_id,val,se,sample_size
 CA,0.2,NA,NA
 CO,0.1,NA,NA
 CT,0.1,NA,NA
-GA,0.4,NA,NA
+GA,0.5,NA,NA
 MD,0.1,NA,NA
 MN,0.0,NA,NA
 NM,0.0,NA,NA
@@ -10,6 +10,6 @@ NY,0.1,NA,NA
 OR,0.1,NA,NA
 TN,0.1,NA,NA
 IA,0.0,NA,NA
-MI,0.2,NA,NA
+MI,0.1,NA,NA
 OH,0.0,NA,NA
 UT,0.0,NA,NA

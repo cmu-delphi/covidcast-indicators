@@ -20,6 +20,11 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
+*Note*: you may need to install blas, in Ubuntu do
+```
+sudo apt-get install libatlas-base-dev gfortran
+```
+
 All of the user-changable parameters are stored in `params.json`. To execute
 the module and produce the output datasets (by default, in `receiving`), run
 the following:

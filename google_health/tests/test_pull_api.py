@@ -36,7 +36,7 @@ class TestGoogleHealthTrends:
         ]
 
         assert len(res["lines"][0]["points"]) == 2
-        assert [x for x in res["lines"][0]["points"][0].keys()] == ["date", "value"]
+        assert set([x for x in res["lines"][0]["points"][0].keys()]) == {"date", "value"}
         assert res["lines"][0]["points"][0]["date"] == "May 05 2020"
         assert res["lines"][0]["points"][1]["date"] == "May 06 2020"
 
@@ -55,7 +55,7 @@ class TestGoogleHealthTrends:
         ]
 
         assert len(res["lines"][0]["points"]) == 2
-        assert [x for x in res["lines"][0]["points"][0].keys()] == ["date", "value"]
+        assert set([x for x in res["lines"][0]["points"][0].keys()]) == {"date", "value"}
         assert res["lines"][0]["points"][0]["date"] == "May 05 2020"
         assert res["lines"][0]["points"][1]["date"] == "May 06 2020"
 
@@ -67,10 +67,10 @@ class TestingPullCounts:
         ght = GoogleHealthTrends(ght_key=params["ght_key"])
 
         static_dir = join("..", "static")
-        cache_dir = join("..", "cache")
+        data_dir = join(".", "static_data")
 
         df_state = get_counts_states(
-            ght, "2020-03-15", "2020-03-30", static_dir, cache_dir
+            ght, "2020-03-15", "2020-03-30", static_dir, data_dir
         )
 
         state_list = np.loadtxt(join(static_dir, "Canonical_STATE.txt"), dtype=str)
@@ -85,9 +85,9 @@ class TestingPullCounts:
         ght = GoogleHealthTrends(ght_key=params["ght_key"])
 
         static_dir = join("..", "static")
-        cache_dir = join("..", "cache")
+        data_dir = join("..", "data")
 
-        df_dma = get_counts_dma(ght, "2020-03-15", "2020-03-30", static_dir, cache_dir)
+        df_dma = get_counts_dma(ght, "2020-03-15", "2020-03-30", static_dir, data_dir)
 
         dma_list = np.loadtxt(join(static_dir, "Canonical_DMA.txt"), dtype=int)
 
@@ -104,7 +104,7 @@ class TestGrabAPI:
         ght = GoogleHealthTrends(ght_key=params["ght_key"])
 
         td = TemporaryDirectory()
-        cache_dir = td.name
+        data_dir = td.name
 
         df = _get_counts_geoid(
             ght,
@@ -112,7 +112,7 @@ class TestGrabAPI:
             start_date="2020-02-15",
             end_date="2020-02-17",
             dma=False,
-            cache_dir=cache_dir,
+            data_dir=data_dir,
         )
 
         assert df.shape == (3, 3)
@@ -142,9 +142,9 @@ class TestPullPushCache:
     def test_empty_cache(self):
 
         td = TemporaryDirectory()
-        cache_dir = td.name
+        data_dir = td.name
 
-        df = _load_cached_file("MA", cache_dir=cache_dir)
+        df = _load_cached_file("MA", data_dir=data_dir)
 
         assert df.shape == (0, 3)
         assert (df.columns == ["geo_id", "timestamp", "val"]).all()
@@ -155,17 +155,17 @@ class TestPullPushCache:
     def test_write_load(self):
 
         td = TemporaryDirectory()
-        cache_dir = td.name
+        data_dir = td.name
 
         #  create dummy dataset, write it, and load it back in
         df_input = pd.DataFrame({"bad": ["a"], "format": ["b"]})
-        _write_cached_file(df_input, "FR", cache_dir)
-        df_output = _load_cached_file("FR", cache_dir=cache_dir)
+        _write_cached_file(df_input, "FR", data_dir)
+        df_output = _load_cached_file("FR", data_dir=data_dir)
 
         assert_frame_equal(df_input, df_output)
 
         #  make sure saved in the correct location
-        assert exists(join(cache_dir, "Data_FR_anosmia_ms.csv"))
+        assert exists(join(data_dir, "Data_FR_anosmia_ms.csv"))
 
         # remove temporary directory
         td.cleanup()

@@ -1,7 +1,14 @@
 ---
 runtime_user: "indicators"
+jenkins_user: "jenkins"
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"
 indicators_runtime_dir: "/home/{{ runtime_user }}/runtime"
-package: "{{ indicator }}.tar.gz" # This is passed in the Ansible invocation.
+package: "{{ indicator }}.tar.gz" # {{ indicator }} is passed in from the Jenkins shell script wrapper.
 python_version: "3.8.2"
 pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }}/bin/python"
+
+# Indicators variables.
+google_health_api_key: "{{ vault_google_health_api_key }}"
+delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
+delphi_aws_secret_access_key: "{{ vault_delphi_aws_secret_access_key }}"
+

@@ -6,6 +6,7 @@ when the module is run with `python -m delphi_cdc_covidnet`.
 """
 import logging
 from datetime import datetime
+from os import remove
 from os.path import join
 
 from delphi_utils import read_params
@@ -56,5 +57,10 @@ def run_module():
         params["static_file_dir"],
         start_date,
         end_date)
+
+    # Cleanup cache dir
+    remove(mappings_file)
+    for state_file in state_files:
+        remove(state_file)
 
     logging.info("finished all")

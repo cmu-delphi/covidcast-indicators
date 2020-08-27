@@ -1,7 +1,16 @@
 # -*- coding: utf-8 -*-
-import numpy as np
-import pandas as pd
 
+import re
+import pandas as pd
+import numpy as np
+from delphi_utils import GeoMapper
+
+def detect_date_col(col_name: str):
+    """determine if column name is a date"""
+    date_match = re.match(r'\d{1,2}\/\d{1,2}\/\d{1,2}', col_name)
+    if date_match:
+        return True
+    return False
 
 def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
     """Pulls the latest Johns Hopkins CSSE data, and conforms it into a dataset
@@ -42,89 +51,35 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    DROP_COLUMNS = [
-        "UID",
-        "iso2",
-        "iso3",
-        "code3",
-        "Admin2",
-        "Province_State",
-        "Country_Region",
-        "Lat",
-        "Long_",
-        "Combined_Key",
-        "FIPS",
-    ]
-    # Two metrics, two schema...
-    if metric == "deaths":
-        DROP_COLUMNS.append("Population")
-    MIN_FIPS = 1000
-    MAX_FIPS = 57000
-    EXTRA_FIPS = (
-        72,     # Puerto Rico (provided as the entire state)
-        70002,  # Kansas City, MO
-        70003,  # Dukes and Nantucket Counties, MA
-    )
+
     # Read data
     df = pd.read_csv(base_url.format(metric=metric))
+
     # FIPS are missing for some nonstandard FIPS
-    null_mask = pd.isnull(df["FIPS"])
-    df.loc[null_mask, "FIPS"] = df.loc[null_mask, "UID"].apply(
-        lambda x: float(str(x)[3:])
-    )
-    df = df[
-        (
-            (df["FIPS"] >= MIN_FIPS)  # US non-state territories
-            & (df["FIPS"] < MAX_FIPS)
-        )  # "Uncategorized", etc.
-        | df["FIPS"].isin(EXTRA_FIPS)
-        # Get Fake FIPS for unassigned cases
-        | np.logical_and(df['FIPS'] >= 90001,
-                         df['FIPS'] <= 90056)
-    ]
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Set population as NAN for fake fips
-    df = pd.merge(df, pop_df, on="FIPS", how='left')
+    date_cols = [col_name for col_name in df.columns if detect_date_col(col_name)]
+    keep_cols = date_cols + ['UID']
+    df = df[keep_cols]
 
-    # Manual correction for PR
-    df.loc[df["FIPS"] == 72, "FIPS"] = 72000
-
-    # Conform FIPS
-    df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
-    # Drop unnecessary columns (state is pre-encoded in fips)
-    try:
-        df.drop(DROP_COLUMNS, axis=1, inplace=True)
-    except KeyError as e:
-        raise ValueError(
-            "Tried to drop non-existent columns. The dataset "
-            "schema may have changed.  Please investigate and "
-            "amend DROP_COLUMNS."
-        )
-    # Check that columns are either FIPS or dates
-    try:
-        columns = list(df.columns)
-        columns.remove("fips")
-        columns.remove("population")
-        # Detects whether there is a non-date string column -- not perfect
-        _ = [int(x.replace("/", "")) for x in columns]
-    except ValueError as e:
-        print(e)
-        raise ValueError(
-            "Detected unexpected column(s) "
-            "after dropping DROP_COLUMNS. The dataset "
-            "schema may have changed. Please investigate and "
-            "amend DROP_COLUMNS."
-        )
-    # Reshape dataframe
     df = df.melt(
-        id_vars=["fips", "population"],
+        id_vars=["UID"],
         var_name="timestamp",
         value_name="cumulative_counts",
     )
-    # timestamp: str -> datetime
     df["timestamp"] = pd.to_datetime(df["timestamp"])
+
+    gmpr = GeoMapper()
+    df = gmpr.jhu_uid_to_county(df, jhu_col="UID", date_col='timestamp')
+
+    # Merge in population LOWERCASE, consistent across confirmed and deaths
+    # Set population as NAN for fake fips
+    pop_df.rename(columns={'FIPS':'fips'}, inplace=True)
+    pop_df['fips'] = pop_df['fips'].astype(int).\
+        astype(str).str.zfill(5)
+    df = pd.merge(df, pop_df, on="fips", how='left')
+
     # Add a dummy first row here on day before first day
+    # code below could be cleaned with groupby.diff
+
     min_ts = min(df["timestamp"])
     df_dummy = df.loc[df["timestamp"] == min_ts].copy()
     df_dummy.loc[:, "timestamp"] = min_ts - pd.Timedelta(days=1)

@@ -9,3 +9,4 @@ MSA = "msa"
 DMA = "dma"
 
 SIGNALS = [RAW, SMOOTHED]
+GEO_TYPES = [STATE, HRR, MSA, DMA]

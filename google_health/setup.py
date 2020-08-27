@@ -10,7 +10,8 @@ required = [
     "pylint",
     "delphi-utils",
     "covidcast",
-    "tenacity"
+    "boto3",
+    "moto"
 ]
 
 setup(

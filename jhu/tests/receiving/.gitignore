@@ -1,5 +1,4 @@
 # You should hard commit a prototype for this file, but we
-*.csv
 # want to avoid accidental adding of API tokens and other
 # private data parameters
 params.json

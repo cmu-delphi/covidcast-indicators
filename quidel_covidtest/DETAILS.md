@@ -35,7 +35,7 @@ p = 100 * X / N
 
 The estimated standard error is simply:
 ```
-se = 1/100 * sqrt{ p*(1-p)/N } 
+se = 100 * sqrt{ p/100 *(1-p/100)/N } 
 ```
 where we assume for each time point, the estimates follow a binomial distribution.
 

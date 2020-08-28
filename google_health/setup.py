@@ -11,7 +11,7 @@ required = [
     "delphi-utils",
     "covidcast",
     "boto3",
-    "moto"，
+    "moto",
     "tenacity"
 ]
 

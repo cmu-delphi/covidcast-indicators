@@ -23,7 +23,7 @@ METRICS = [
 ]
 VERSIONS = [
         # relaese version, access dir
-#        ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
+        ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
         ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*")
 ]
 SENSORS = [
@@ -86,4 +86,3 @@ def run_module():
 
         with mp.Pool(n_core) as pool:
             pool.map(process_file, files)
-        

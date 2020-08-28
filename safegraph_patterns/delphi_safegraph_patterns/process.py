@@ -7,7 +7,7 @@ from itertools import product
 import numpy as np
 import pandas as pd
 
-from delphi_utils import create_export_csv
+from delphi_utils import create_export_csv, GeoMapper
 
 INCIDENCE_BASE = 100000
 
@@ -66,16 +66,8 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
             })
             tempt_dfs.append(tempt_df)
         result_dfs[metric] = pd.concat(tempt_dfs)
-        # Sanity Check
-        assert result_dfs[metric][metric_count_name].sum() == \
-                                        filtered_df["raw_visit_counts"].sum()
         result_dfs[metric] = result_dfs[metric].groupby(
                                     ["timestamp", "zip"]).sum().reset_index()
-#    result_df = pd.merge(result_dfs[metric_names[0]],
-#                         result_dfs[metric_names[1]],
-#                         on=["timestamp", "zip"], how="outer")
-#    problematic_set = set(result_df["zip"]) - set(map_df["zip"])
-#    result_df[result_df["zip"].isin(problematic_set)].sum()
     # Can have ~30k visits in restaurants missed in those zips in one week.
     # only ~200 visits missed for bars.
     return result_dfs
@@ -103,13 +95,31 @@ def aggregate(df, metric, geo_res, map_df):
         signals.
     """
     df = df.copy()
+    metric_count_name = "_".join([metric, "num"])
+    metric_prop_name = "_".join([metric, "prop"])
+
+    ############################ Use GeoMapper in utils #####################
+#    gmpr = GeoMapper()
+#    df = gmpr.add_population_column(df, "zip")
+#    if geo_res == "county":
+#        df = gmpr.zip_to_fips(df, date_col = "timestamp",
+#                              count_cols = [metric_count_name, "population"])
+#    elif geo_res == "hrr":
+#        df = gmpr.zip_to_hrr(df, date_col = "timestamp",
+#                              count_cols = [metric_count_name, "population"])
+#    elif geo_res == "msa":
+#        df = gmpr.zip_to_msa(df, date_col = "timestamp",
+#                              count_cols = [metric_count_name, "population"])
+#    else:
+#        df = gmpr.zip_to_state_id(df, date_col = "timestamp",
+#                              count_cols = [metric_count_name, "population"])
+
+    ############################ Use mapping file in ./static ###############
     # Add pop info
     df = df.merge(map_df[["zip", geo_res, "population"]], on="zip"
                   ).drop("zip", axis=1).dropna()
     df = df.groupby(["timestamp", geo_res]).sum().reset_index()
 
-    metric_count_name = "_".join([metric, "num"])
-    metric_prop_name = "_".join([metric, "prop"])
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE
     return df.rename({geo_res: "geo_id"}, axis=1)

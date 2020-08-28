@@ -20,7 +20,7 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", 'new_counts')
+            geo_map(df, "département")
 
     def test_county(self):
         df = pd.DataFrame(
@@ -45,7 +45,7 @@ class TestGeoMap:
 
         df = df.append(df_mega)
 
-        new_df = geo_map(df, "county", 'new_counts')
+        new_df = geo_map(df, "county")
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
@@ -78,7 +78,7 @@ class TestGeoMap:
 
         df = df.append(df_mega)
 
-        new_df = geo_map(df, "state", 'new_counts')
+        new_df = geo_map(df, "state")
 
         exp_incidence = np.array([27 + 5, 13 + 10]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165 + 30, 60 + 100]) / np.array([2500, 25]) * 100000
@@ -114,7 +114,7 @@ class TestGeoMap:
 
         # df = df.append(df_mega)
 
-        new_df = geo_map(df, "hrr", 'new_counts')
+        new_df = geo_map(df, "hrr")
 
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
@@ -145,7 +145,7 @@ class TestGeoMap:
 
         # df = df.append(df_mega)
 
-        new_df = geo_map(df, "msa", 'new_counts')
+        new_df = geo_map(df, "msa")
 
         assert new_df["geo_id"].isin([31420, 49340]).all()
         assert new_df["timestamp"].isin(["2020-02-15"]).all()

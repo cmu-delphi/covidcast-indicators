@@ -59,6 +59,9 @@ load_response_one <- function(input_filename, params)
                            B2 = col_character(),
                            C1 = col_character()),
                          locale = locale(grouping_mark = ""))
+  if (nrow(input_data) == 0) {
+    return(tibble())
+  }
   input_data <- arrange(input_data, desc(.data$StartDate))
 
   # create new variables

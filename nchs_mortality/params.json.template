@@ -4,5 +4,10 @@
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "token": "",
-  "mode":""
+  "mode":"",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": ""
 }

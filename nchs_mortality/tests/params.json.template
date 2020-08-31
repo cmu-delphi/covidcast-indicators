@@ -4,5 +4,10 @@
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "token": "",
-  "mode":"test"
+  "mode":"test",
+  "aws_credentials": {
+    "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+    "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
+  },
+  "bucket_name": "test-bucket"
 }

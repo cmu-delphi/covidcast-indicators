@@ -278,7 +278,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
 
         self._cache_updated = True
 
-    def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
+    def archive_exports(self, exported_files: Files, update_cache=True) -> Tuple[Files, Files]:
         """
         Handles actual archiving of files to the S3 bucket.
 
@@ -301,8 +301,9 @@ class S3ArchiveDiffer(ArchiveDiffer):
             archive_key = join(self.indicator_prefix, basename(exported_file))
 
             try:
-                # Update local cache
-                shutil.copyfile(exported_file, cached_file)
+                if update_cache:
+                    # Update local cache
+                    shutil.copyfile(exported_file, cached_file)
 
                 self.bucket.Object(archive_key).upload_file(exported_file)
 

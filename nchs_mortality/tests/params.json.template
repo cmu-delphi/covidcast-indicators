@@ -1,0 +1,7 @@
+{
+  "export_start_date": "2020-04-11",
+  "static_file_dir": "../static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "token": "" 
+}

@@ -1,0 +1,8 @@
+{
+  "confirmed_export_start_date": "2020-02-20",
+  "tested_export_start_date": "2020-03-15",
+  "static_file_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "base_url": "https://coronadatascraper.com/timeseries.csv.zip"
+}

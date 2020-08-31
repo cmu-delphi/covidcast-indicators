@@ -54,7 +54,8 @@ should be raised and they should be manually checked (or better, fixed).
 
 Unit tests are also included in the module. To execute these, run the following
 command from this directory:
-
+(Note: the following command requires python 3.8, having any version less than 3.8 might
+fail some test cases. Please install it before running.)
 ```
 (cd tests && ../env/bin/pytest --cov=delphi_cdc_covidnet --cov-report=term-missing)
 ```

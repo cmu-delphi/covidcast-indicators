@@ -32,7 +32,8 @@ def export_csv(df, geo_name, sensor, receiving_dir, start_date, end_date):
         t = pd.to_datetime(str(date))
         date_short = t.strftime('%Y%m%d')
         export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
-        result_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]].dropna()
+        result_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]]
+        result_df = result_df[result_df["sample_size"].notnull()]
         result_df.to_csv(f"{receiving_dir}/{export_fn}",
                          index=False,
                          float_format="%.8f")

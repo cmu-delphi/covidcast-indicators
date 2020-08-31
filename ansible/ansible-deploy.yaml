@@ -2,6 +2,7 @@
 - hosts: runtime_host
   vars_files:
     - vars.yaml
+    - vault.yaml
   tasks:
     - name: Copy and unarchive the package into the indicators runtime host directory.
       unarchive:
@@ -18,9 +19,26 @@
         group: "{{ runtime_user }}"
         state: link
 
+    - name: Check to see if we have a params file to send.
+      local_action: stat path="files/{{ indicator }}-params-prod.json"
+      register: file
+
+    - name: Check to see if we have a params template to send.
+      local_action: stat path="templates/{{ indicator }}-params-prod.json.j2"
+      register: template
+
     - name: Set production params file.
       copy:
         src: files/{{ indicator }}-params-prod.json
         dest: "{{ indicators_runtime_dir }}/{{ indicator }}/params.json"
         owner: "{{ runtime_user }}"
         group: "{{ runtime_user }}"
+      when: file.stat.exists
+
+    - name: Set production params template.
+      template:
+        src: templates/{{ indicator }}-params-prod.json.j2
+        dest: "{{ indicators_runtime_dir }}/{{ indicator }}/params.json"
+        owner: "{{ runtime_user }}"
+        group: "{{ runtime_user }}"
+      when: template.stat.exists

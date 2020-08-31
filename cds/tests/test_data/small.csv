@@ -1,0 +1,757 @@
+locationID,slug,name,level,city,county,state,country,lat,long,population,aggregate,tz,cases,deaths,recovered,active,tested,hospitalized,hospitalized_current,discharged,icu,icu_current,date
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1111.0,16.0,544,,122732.0,,23.0,,,,2020-07-04
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1138.0,16.0,548,,123753.0,,19.0,,,,2020-07-05
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1138.0,16.0,548,,123753.0,,19.0,,,,2020-07-06
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1184.0,17.0,560,,131420.0,,25.0,,,,2020-07-07
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1226.0,17.0,563,,133401.0,,30.0,,,,2020-07-08
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1272.0,17.0,571,,135744.0,,28.0,,,,2020-07-09
+iso1:us#iso2:us-ak,alaska-us,"Alaska, US",state,,,Alaska,United States,64.24,-152.23,731545,,America/Anchorage,1323.0,17.0,588,,141931.0,,30.0,,,,2020-07-10
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,42862.0,1007.0,22082,,442088.0,2906.0,818.0,,843.0,,2020-07-04
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,43953.0,1007.0,22082,,449886.0,2909.0,919.0,,843.0,,2020-07-05
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,44878.0,1007.0,22082,,455095.0,2914.0,1025.0,,843.0,,2020-07-06
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,45785.0,1033.0,22082,,461364.0,2961.0,1078.0,,858.0,,2020-07-07
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,46962.0,1058.0,22082,,468292.0,3006.0,1116.0,,871.0,,2020-07-08
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,49174.0,1068.0,25783,,470504.0,3039.0,1135.0,,877.0,,2020-07-09
+iso1:us#iso2:us-al,alabama-us,"Alabama, US",state,,,Alabama,United States,32.79,-86.83,4903185,,America/Chicago,50508.0,1104.0,25783,,492216.0,3089.0,1201.0,,888.0,,2020-07-10
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,23209.0,286.0,16726,,338893.0,1536.0,285.0,,,,2020-07-04
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,23209.0,286.0,16726,,338893.0,1536.0,285.0,,,,2020-07-05
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,24253.0,292.0,17834,,344968.0,1575.0,337.0,,,,2020-07-06
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,24512.0,292.0,17834,,350655.0,1604.0,369.0,,,,2020-07-07
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,24512.0,301.0,18725,,353272.0,1655.0,358.0,,,,2020-07-08
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,26052.0,309.0,19992,,364661.0,1705.0,394.0,,,,2020-07-09
+iso1:us#iso2:us-ar,arkansas-us,"Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,26803.0,313.0,20642,,365412.0,1743.0,402.0,,,,2020-07-10
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,887.0,0.0,473,,54225.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,907.0,0.0,491,,54658.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,965.0,0.0,523,,54474.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,965.0,0.0,523,,54474.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,945.0,0.0,575,,55328.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,935.0,0.0,590,,55785.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#(unassigned),unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,34.9,-92.44,3017804,,America/Chicago,966.0,0.0,604,,56162.0,,,,,,2020-07-10
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,696.0,,,,,,2020-07-04
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,696.0,,,,,,2020-07-05
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,696.0,,,,,,2020-07-06
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,696.0,,,,,,2020-07-07
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,816.0,,,,,,2020-07-08
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,816.0,,,,,,2020-07-09
+iso1:us#iso2:us-as,american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,-14.22,-170.37,55689,,Pacific/Pago_Pago,0.0,0.0,,,816.0,,,,,,2020-07-10
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,94553.0,1805.0,10903,,589508.0,5068.0,3113.0,,,796.0,2020-07-04
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,98089.0,1809.0,11361,,604362.0,5161.0,3182.0,,,821.0,2020-07-05
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,101441.0,1810.0,11836,,617841.0,5188.0,3212.0,,,839.0,2020-07-06
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,105094.0,1927.0,12260,,628797.0,5272.0,3356.0,,,869.0,2020-07-07
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,108614.0,1963.0,12803,,641070.0,5387.0,3421.0,,,871.0,2020-07-08
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,112671.0,2038.0,13341,,653061.0,5526.0,3437.0,,,861.0,2020-07-09
+iso1:us#iso2:us-az,arizona-us,"Arizona, US",state,,,Arizona,United States,34.29,-111.66,7278717,,America/Phoenix,116892.0,2082.0,13853,,669211.0,5659.0,3432.0,,,876.0,2020-07-10
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,251236.0,6330.0,47050,,3264800.0,3164.0,7092.0,,503.0,1888.0,2020-07-04
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,255252.0,6337.0,47314,,3303694.0,3234.0,7149.0,,510.0,1907.0,2020-07-05
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,271889.0,6446.0,49281,,3532326.0,3305.0,7278.0,,516.0,1937.0,2020-07-06
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,282297.0,6564.0,51092,,3621952.0,3347.0,7499.0,,517.0,1984.0,2020-07-07
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,290884.0,6715.0,61766,,3696130.0,3359.0,7705.0,,524.0,1976.0,2020-07-08
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,300653.0,6850.0,63879,,3756199.0,3396.0,7821.0,,525.0,1957.0,2020-07-09
+iso1:us#iso2:us-ca,california-us,"California, US",state,,,California,United States,37.25,-119.61,39512223,,America/Los_Angeles,310175.0,6945.0,65225,,3834965.0,3549.0,7896.0,,529.0,2005.0,2020-07-10
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,33619.0,1521.0,4557,,345754.0,5537.0,270.0,,,,2020-07-04
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,33866.0,1521.0,4568,,350717.0,5550.0,283.0,,,,2020-07-05
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,34065.0,1521.0,4603,,355655.0,5565.0,286.0,,,,2020-07-06
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,34257.0,1542.0,4636,,360640.0,5591.0,327.0,,,,2020-07-07
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,34664.0,1542.0,4669,,365073.0,5741.0,335.0,,,,2020-07-08
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,35116.0,1544.0,4669,,370702.0,5820.0,335.0,,,,2020-07-09
+iso1:us#iso2:us-co,colorado-us,"Colorado, US",state,,,Colorado,United States,39.0,-105.55,5758736,,America/Denver,35525.0,1581.0,4691,,377140.0,5831.0,318.0,,,,2020-07-10
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,46717.0,4335.0,8210,,500026.0,10411.0,95.0,,,,2020-07-04
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,46717.0,4335.0,8210,,524568.0,10411.0,95.0,,,,2020-07-05
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,46976.0,4338.0,8210,,530513.0,10411.0,69.0,,,,2020-07-06
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,47033.0,4338.0,8210,,537826.0,10411.0,83.0,,,,2020-07-07
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,47108.0,4343.0,8210,,546003.0,10411.0,88.0,,,,2020-07-08
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,47209.0,4348.0,8351,,558442.0,10552.0,90.0,,,,2020-07-09
+iso1:us#iso2:us-ct,connecticut-us,"Connecticut, US",state,,,Connecticut,United States,41.62,-72.73,3565287,,America/New_York,47287.0,4348.0,8351,,558461.0,10552.0,77.0,,,,2020-07-10
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10447.0,557.0,1523,,104554.0,,95.0,,,28.0,2020-07-04
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10482.0,559.0,1542,,105993.0,,87.0,,,26.0,2020-07-05
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10515.0,561.0,1553,,107650.0,,88.0,,,23.0,2020-07-06
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10569.0,561.0,1574,,110377.0,,90.0,,,25.0,2020-07-07
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10642.0,564.0,1625,,114289.0,,86.0,,,30.0,2020-07-08
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10679.0,568.0,1662,,115923.0,,92.0,,,26.0,2020-07-09
+iso1:us#iso2:us-dc,washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,38.9,-77.02,705749,,America/New_York,10743.0,568.0,1703,,120884.0,,96.0,,,26.0,2020-07-10
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,11996.0,512.0,6711,,120693.0,,54.0,,,13.0,2020-07-04
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12128.0,512.0,6740,,123941.0,,53.0,,,15.0,2020-07-05
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12293.0,512.0,6778,,127179.0,,54.0,,,15.0,2020-07-06
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12414.0,514.0,6815,,128685.0,,56.0,,,15.0,2020-07-07
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12462.0,515.0,6851,,129034.0,,57.0,,,11.0,2020-07-08
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12531.0,517.0,6901,,130205.0,,63.0,,,12.0,2020-07-09
+iso1:us#iso2:us-de,delaware-us,"Delaware, US",state,,,Delaware,United States,38.99,-75.5,973764,,America/New_York,12652.0,517.0,6949,,132708.0,,58.0,,,11.0,2020-07-10
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,190052.0,3803.0,,,2148169.0,16040.0,,,,,2020-07-04
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,200111.0,3832.0,,,2201707.0,16201.0,,,,,2020-07-05
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,206447.0,3880.0,,,2235456.0,16352.0,,,,,2020-07-06
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,213794.0,3943.0,,,2270798.0,16733.0,,,,,2020-07-07
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,223783.0,3991.0,,,2321980.0,17068.0,,,,,2020-07-08
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,232718.0,4009.0,,,2359636.0,17479.0,,,,,2020-07-09
+iso1:us#iso2:us-fl,florida-us,"Florida, US",state,,,Florida,United States,28.66,-82.5,21477737,,America/New_York,244151.0,4102.0,,,2423992.0,17916.0,6974.0,,,,2020-07-10
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,93319.0,2857.0,,,926359.0,11743.0,1726.0,,2425.0,,2020-07-04
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,95516.0,2860.0,,,949185.0,11775.0,1805.0,,2429.0,,2020-07-05
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,97064.0,2878.0,,,958953.0,11919.0,1962.0,,2441.0,,2020-07-06
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,100470.0,2899.0,,,979452.0,12226.0,2096.0,,2471.0,,2020-07-07
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,103890.0,2922.0,,,1000409.0,12500.0,2215.0,,2502.0,,2020-07-08
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,106727.0,2930.0,,,1019422.0,12606.0,2322.0,,2519.0,,2020-07-09
+iso1:us#iso2:us-ga,georgia-us,"Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,111211.0,2965.0,,,1046348.0,12937.0,2443.0,,2565.0,,2020-07-10
+iso1:us#iso2:us-ga#(unassigned),unassigned-georgia-us,"Unassigned cases, Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,1211.0,2.0,,,,34.0,,,,,2020-07-09
+iso1:us#iso2:us-ga#(unassigned),unassigned-georgia-us,"Unassigned cases, Georgia, US",state,,,Georgia,United States,32.65,-83.45,10617423,,America/New_York,1363.0,1.0,,,,35.0,,,,,2020-07-10
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,288.0,5.0,179,,14954.0,,3.0,,,,2020-07-04
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,288.0,5.0,179,,14954.0,,3.0,,,,2020-07-05
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,301.0,5.0,179,,15549.0,,2.0,,,,2020-07-06
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,303.0,5.0,184,,15911.0,,3.0,,,,2020-07-07
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,307.0,5.0,202,,16140.0,,3.0,,,,2020-07-08
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,309.0,5.0,202,,16532.0,,3.0,,,,2020-07-09
+iso1:us#iso2:us-gu,guam-us,"Guam, US",state,,,Guam,United States,13.44,144.78,167772,,Pacific/Guam,310.0,5.0,202,,16866.0,,3.0,,,,2020-07-10
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,981.0,19.0,754,,83476.0,118.0,,,,,2020-07-04
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1005.0,19.0,756,,84325.0,118.0,,,,,2020-07-05
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1012.0,19.0,777,,85058.0,118.0,,,,,2020-07-06
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1053.0,19.0,781,,85673.0,119.0,,,,,2020-07-07
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1076.0,19.0,797,,87096.0,119.0,,,,,2020-07-08
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1112.0,19.0,811,,89152.0,122.0,,,,,2020-07-09
+iso1:us#iso2:us-hi,hawaii-us,"Hawaii, US",state,,,Hawaii,United States,20.25,-156.35,1415872,,Pacific/Honolulu,1139.0,19.0,840,,90595.0,123.0,,,,,2020-07-10
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,31041.0,721.0,24604,,329011.0,,134.0,,,40.0,2020-07-04
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,31353.0,721.0,24739,,332472.0,,141.0,,,43.0,2020-07-05
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,31657.0,723.0,25121,,335462.0,,151.0,,,41.0,2020-07-06
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,32029.0,725.0,25594,,339298.0,,165.0,,,44.0,2020-07-07
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,32509.0,735.0,25974,,346351.0,,165.0,,,44.0,2020-07-08
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,33240.0,739.0,26340,,354659.0,,168.0,,,49.0,2020-07-09
+iso1:us#iso2:us-ia,iowa-us,"Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,33984.0,743.0,25891,,362248.0,,169.0,,,54.0,2020-07-10
+iso1:us#iso2:us-ia#(unassigned),unassigned-iowa-us,"Unassigned cases, Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,27.0,0.0,4,,,,,,,,2020-07-09
+iso1:us#iso2:us-ia#(unassigned),unassigned-iowa-us,"Unassigned cases, Iowa, US",state,,,Iowa,United States,42.07,-93.5,3155070,,America/Chicago,27.0,0.0,2,,,,,,,,2020-07-10
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,6994.0,93.0,2831,,101067.0,355.0,67.0,,121.0,23.0,2020-07-04
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,7370.0,93.0,2858,,104266.0,359.0,71.0,,122.0,19.0,2020-07-05
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,7733.0,93.0,2886,,106465.0,369.0,85.0,,124.0,22.0,2020-07-06
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,8052.0,94.0,2907,,108541.0,387.0,105.0,,130.0,25.0,2020-07-07
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,8539.0,94.0,2932,,111331.0,396.0,118.0,,130.0,26.0,2020-07-08
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,8969.0,98.0,2978,,114620.0,411.0,120.0,,133.0,28.0,2020-07-09
+iso1:us#iso2:us-id,idaho-us,"Idaho, US",state,,,Idaho,United States,44.39,-114.66,1787065,,America/Boise,9428.0,100.0,3022,,118078.0,432.0,124.0,,137.0,29.0,2020-07-10
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,147734.0,7224.0,,,1735593.0,,1346.0,,,336.0,2020-07-04
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,148373.0,7230.0,,,1762828.0,,1326.0,,,304.0,2020-07-05
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,148987.0,7236.0,,,1783962.0,,1395.0,,,321.0,2020-07-06
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,149574.0,7273.0,,,1810956.0,,1385.0,,,320.0,2020-07-07
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,150554.0,7309.0,,,1843698.0,,1385.0,,,320.0,2020-07-08
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,150449.0,7118.0,,,1789167.0,,1507.0,,,317.0,2020-07-09
+iso1:us#iso2:us-il,illinois-us,"Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,151765.0,7144.0,,,1821628.0,,1436.0,,,306.0,2020-07-10
+iso1:us#iso2:us-il#(unassigned),unassigned-illinois-us,"Unassigned cases, Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,48.0,0.0,,,42974.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#(unassigned),unassigned-illinois-us,"Unassigned cases, Illinois, US",state,,,Illinois,United States,40.06,-89.2,12671821,,America/Chicago,43.0,0.0,,,43298.0,,,,,,2020-07-10
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,36076,,512288.0,7216.0,632.0,,1516.0,218.0,2020-07-04
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,36475,,521722.0,7254.0,632.0,,1526.0,218.0,2020-07-05
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,36788,,526592.0,7285.0,613.0,,1526.0,229.0,2020-07-06
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,36999,,530075.0,7333.0,655.0,,1540.0,213.0,2020-07-07
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,37462,,535857.0,7365.0,667.0,,1551.0,217.0,2020-07-08
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,37795,,542292.0,7386.0,686.0,,1556.0,226.0,2020-07-09
+iso1:us#iso2:us-in,indiana-us,"Indiana, US",state,,,Indiana,United States,39.91,-86.28,6732219,,America/Indiana/Indianapolis,12438.0,661.0,38120,,550562.0,7458.0,667.0,,1577.0,217.0,2020-07-10
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,15919.0,277.0,842,,191561.0,1219.0,,,377.0,,2020-07-04
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,15919.0,277.0,842,,191561.0,1219.0,,,377.0,,2020-07-05
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,16901.0,280.0,859,,202219.0,1235.0,,,384.0,,2020-07-06
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,16901.0,280.0,859,,202219.0,1235.0,,,384.0,,2020-07-07
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,17618.0,282.0,879,,208482.0,1269.0,,,397.0,,2020-07-08
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,17618.0,282.0,879,,208482.0,1269.0,,,397.0,,2020-07-09
+iso1:us#iso2:us-ks,kansas-us,"Kansas, US",state,,,Kansas,United States,38.48,-98.38,2913314,,America/Chicago,18611.0,284.0,905,,217779.0,1304.0,,,405.0,,2020-07-10
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,16376.0,585.0,4747,,395647.0,2685.0,455.0,,996.0,99.0,2020-07-04
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,16376.0,585.0,4747,,395647.0,2685.0,455.0,,996.0,99.0,2020-07-05
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,17152.0,593.0,4785,,400342.0,2699.0,433.0,,1000.0,109.0,2020-07-06
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,17519.0,602.0,4841,,409872.0,2708.0,421.0,,1003.0,110.0,2020-07-07
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,17919.0,608.0,4912,,415921.0,2737.0,453.0,,1007.0,111.0,2020-07-08
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,18245.0,612.0,4939,,424013.0,2747.0,457.0,,1007.0,105.0,2020-07-09
+iso1:us#iso2:us-ky,kentucky-us,"Kentucky, US",state,,,Kentucky,United States,37.53,-85.29,4467673,,America/New_York,18670.0,620.0,5258,,432690.0,2763.0,409.0,,1012.0,70.0,2020-07-10
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,63289.0,3278.0,43026,,784142.0,,852.0,,,,2020-07-04
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,65226.0,3288.0,43026,,802454.0,,926.0,,,,2020-07-05
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,66327.0,3296.0,43026,,813645.0,,964.0,,,,2020-07-06
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,68263.0,3319.0,43026,,847598.0,,1025.0,,,,2020-07-07
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,70151.0,3339.0,46334,,865737.0,,1022.0,,,,2020-07-08
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,71994.0,3355.0,46334,,880140.0,,1042.0,,,,2020-07-09
+iso1:us#iso2:us-la,louisiana-us,"Louisiana, US",state,,,Louisiana,United States,31.1,-92.02,4648794,,America/Chicago,74636.0,3380.0,46334,,905248.0,,1117.0,,,,2020-07-10
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,109838.0,8172.0,93157,,885767.0,11461.0,640.0,,,107.0,2020-07-04
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,109974.0,8183.0,93157,,891685.0,11463.0,636.0,,,100.0,2020-07-05
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,110137.0,8198.0,93157,,899417.0,11469.0,603.0,,,99.0,2020-07-06
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,110338.0,8213.0,93157,,906760.0,11489.0,621.0,,,104.0,2020-07-07
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,110602.0,8243.0,94347,,915995.0,11517.0,662.0,,,102.0,2020-07-08
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,110897.0,8268.0,94347,,925761.0,11559.0,635.0,,,103.0,2020-07-09
+iso1:us#iso2:us-ma,massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,42.26,-71.81,6892503,,America/New_York,111110.0,8296.0,94347,,938616.0,11582.0,632.0,,,98.0,2020-07-10
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,69341.0,3236.0,5025,,573342.0,11034.0,410.0,,,143.0,2020-07-04
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,69632.0,3243.0,5029,,579962.0,11071.0,409.0,,,144.0,2020-07-05
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,69904.0,3246.0,5029,,587361.0,11096.0,403.0,,,142.0,2020-07-06
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,70396.0,3266.0,5036,,594378.0,11111.0,404.0,,,145.0,2020-07-07
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,70861.0,3275.0,5085,,603108.0,11184.0,398.0,,,136.0,2020-07-08
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,71447.0,3288.0,5132,,612581.0,11221.0,406.0,,,139.0,2020-07-09
+iso1:us#iso2:us-md,maryland-us,"Maryland, US",state,,,Maryland,United States,39.04,-76.77,6045680,,America/New_York,71910.0,3303.0,5157,,621063.0,11300.0,385.0,,,122.0,2020-07-10
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3397.0,107.0,2751,,105945.0,358.0,27.0,,,9.0,2020-07-04
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3415.0,109.0,2772,,107932.0,359.0,25.0,,,9.0,2020-07-05
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3423.0,109.0,2787,,109550.0,359.0,21.0,,,9.0,2020-07-06
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3440.0,110.0,2816,,110906.0,360.0,22.0,,,9.0,2020-07-07
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3460.0,110.0,2856,,112938.0,363.0,22.0,,,8.0,2020-07-08
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3486.0,111.0,2901,,115758.0,365.0,16.0,,,7.0,2020-07-09
+iso1:us#iso2:us-me,maine-us,"Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,3499.0,111.0,2931,,118406.0,366.0,15.0,,,7.0,2020-07-10
+iso1:us#iso2:us-me#(unassigned),unassigned-maine-us,"Unassigned cases, Maine, US",state,,,Maine,United States,45.38,-69.23,1344212,,America/New_York,6.0,0.0,0,,,0.0,,,,,2020-07-10
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,72581.0,6218.0,52841,,1130154.0,,548.0,,,193.0,2020-07-04
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,72941.0,6218.0,52841,,1146819.0,,548.0,,,193.0,2020-07-05
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,73269.0,6221.0,52841,,1159363.0,,505.0,,,174.0,2020-07-06
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,73900.0,6251.0,52841,,1176511.0,,505.0,,,174.0,2020-07-07
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,74551.0,6262.0,52841,,1200003.0,,505.0,,,174.0,2020-07-08
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,75063.0,6271.0,52841,,1223553.0,,505.0,,,174.0,2020-07-09
+iso1:us#iso2:us-mi,michigan-us,"Michigan, US",state,,,Michigan,United States,44.35,-85.43,9986857,,America/Detroit,75685.0,6285.0,52841,,1246805.0,,505.0,,,174.0,2020-07-10
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,37624.0,1503.0,32347,,645172.0,4139.0,270.0,,1277.0,132.0,2020-07-04
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,38136.0,1508.0,33408,,674015.0,4170.0,253.0,,1287.0,132.0,2020-07-05
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,38569.0,1511.0,33907,,679693.0,4219.0,258.0,,1290.0,125.0,2020-07-06
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,39133.0,1514.0,34377,,685247.0,4252.0,267.0,,1295.0,121.0,2020-07-07
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,39589.0,1523.0,34902,,692970.0,4272.0,265.0,,1302.0,122.0,2020-07-08
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,40163.0,1528.0,35193,,705440.0,4305.0,251.0,,1312.0,116.0,2020-07-09
+iso1:us#iso2:us-mn,minnesota-us,"Minnesota, US",state,,,Minnesota,United States,46.32,-94.31,5639632,,America/Chicago,40767.0,1533.0,35442,,725825.0,4329.0,227.0,,1320.0,124.0,2020-07-10
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,23215.0,1027.0,,,412261.0,,740.0,,,,2020-07-04
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,23436.0,1028.0,,,419509.0,,739.0,,,,2020-07-05
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,23856.0,1028.0,,,426745.0,,740.0,,,,2020-07-06
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,24629.0,1042.0,,,435348.0,,676.0,,,,2020-07-07
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,25204.0,1046.0,,,442340.0,,694.0,,,,2020-07-08
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,25999.0,1051.0,,,454825.0,,811.0,,,,2020-07-09
+iso1:us#iso2:us-mo,missouri-us,"Missouri, US",state,,,Missouri,United States,38.37,-92.48,6137428,,America/Chicago,25999.0,1051.0,,,454825.0,,886.0,,,,2020-07-10
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,8218.0,,,,,,2020-07-04
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,8218.0,,,,,,2020-07-05
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,8218.0,,,,,,2020-07-06
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,8218.0,,,,,,2020-07-07
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,10765.0,,,,,,2020-07-08
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,10765.0,4.0,,,,,2020-07-09
+iso1:us#iso2:us-mp,northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,15.9,145.61,55144,,Pacific/Saipan,31.0,2.0,19,,10765.0,4.0,,,,,2020-07-10
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,30674.0,1107.0,19388,,309915.0,3268.0,872.0,,,175.0,2020-07-04
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,30900.0,1111.0,19388,,310141.0,3268.0,872.0,,,175.0,2020-07-05
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,31257.0,1114.0,22167,,314688.0,3280.0,825.0,,,165.0,2020-07-06
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,32214.0,1158.0,22167,,315645.0,3315.0,885.0,,,173.0,2020-07-07
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,32888.0,1188.0,22167,,316319.0,3365.0,883.0,,,190.0,2020-07-08
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,33591.0,1204.0,22167,,324804.0,3414.0,941.0,,,187.0,2020-07-09
+iso1:us#iso2:us-ms,mississippi-us,"Mississippi, US",state,,,Mississippi,United States,32.75,-89.67,2976149,,America/Chicago,34622.0,1215.0,22167,,330312.0,3455.0,981.0,,,205.0,2020-07-10
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1167.0,23.0,678,,98950.0,112.0,20.0,,,,2020-07-04
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1212.0,23.0,678,,100106.0,112.0,20.0,,,,2020-07-05
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1249.0,23.0,678,,102926.0,112.0,20.0,,,,2020-07-06
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1327.0,23.0,716,,105327.0,117.0,22.0,,,,2020-07-07
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1371.0,23.0,759,,106421.0,117.0,22.0,,,,2020-07-08
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1466.0,25.0,796,,108765.0,120.0,24.0,,,,2020-07-09
+iso1:us#iso2:us-mt,montana-us,"Montana, US",state,,,Montana,United States,47.03,-109.64,1068778,,America/Denver,1593.0,28.0,855,,112178.0,123.0,21.0,,,,2020-07-10
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,71654.0,1395.0,45538,,1018296.0,,945.0,,,,2020-07-04
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,72983.0,1396.0,45538,,1036838.0,,949.0,,,,2020-07-05
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,74529.0,1398.0,55318,,1051846.0,,982.0,,,,2020-07-06
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,75875.0,1420.0,55318,,1071290.0,,989.0,,,,2020-07-07
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,77310.0,1441.0,55318,,1096682.0,,994.0,,,,2020-07-08
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,79349.0,1461.0,55318,,1121811.0,,1034.0,,,,2020-07-09
+iso1:us#iso2:us-nc,north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,35.54,-79.37,10488084,,America/New_York,81330.0,1479.0,55318,,1150612.0,,1046.0,,,,2020-07-10
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,3779.0,78.0,3288,,111928.0,241.0,22.0,,,,2020-07-04
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,3816.0,78.0,3324,,113128.0,242.0,22.0,,,,2020-07-05
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,3849.0,78.0,3350,,113582.0,245.0,22.0,,,,2020-07-06
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,3898.0,81.0,3413,,114357.0,248.0,24.0,,,,2020-07-07
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,3971.0,78.0,3447,,115839.0,252.0,26.0,,,,2020-07-08
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,4070.0,78.0,3464,,117849.0,257.0,30.0,,,,2020-07-09
+iso1:us#iso2:us-nd,north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,47.45,-100.47,762062,,America/Chicago,4154.0,78.0,3496,,119596.0,260.0,33.0,,,,2020-07-10
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,19660.0,284.0,14200,,187588.0,1365.0,111.0,,,,2020-07-04
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,19827.0,284.0,14340,,189928.0,1368.0,109.0,,,,2020-07-05
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,19929.0,284.0,14641,,191740.0,1369.0,101.0,,,,2020-07-06
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,20046.0,283.0,14759,,193073.0,1369.0,109.0,,,,2020-07-07
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,20201.0,282.0,14927,,195048.0,1398.0,102.0,,,,2020-07-08
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,20425.0,282.0,15031,,197835.0,1405.0,97.0,,,,2020-07-09
+iso1:us#iso2:us-ne,nebraska-us,"Nebraska, US",state,,,Nebraska,United States,41.53,-99.81,1934408,,America/Chicago,20623.0,284.0,15206,,201014.0,1419.0,100.0,,,,2020-07-10
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5857.0,376.0,4597,,123749.0,569.0,25.0,,163.0,,2020-07-04
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5857.0,376.0,4597,,123749.0,569.0,25.0,,163.0,,2020-07-05
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5897.0,381.0,4684,,125235.0,570.0,25.0,,163.0,,2020-07-06
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5914.0,382.0,4706,,127880.0,574.0,25.0,,163.0,,2020-07-07
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5932.0,384.0,4758,,128511.0,577.0,24.0,,164.0,,2020-07-08
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5952.0,386.0,4817,,129628.0,578.0,22.0,,164.0,,2020-07-09
+iso1:us#iso2:us-nh,new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,43.69,-71.58,1359711,,America/New_York,5973.0,387.0,4831,,131051.0,581.0,24.0,,189.0,,2020-07-10
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,173033.0,15189.0,30565,,1508548.0,20233.0,983.0,,,205.0,2020-07-04
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,173402.0,15211.0,30660,,1534640.0,20237.0,917.0,,,210.0,2020-07-05
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,173611.0,15229.0,30729,,1549209.0,20237.0,861.0,,,187.0,2020-07-06
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,173878.0,15281.0,30774,,1560133.0,20246.0,903.0,,,169.0,2020-07-07
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,174039.0,15423.0,30844,,1577848.0,20426.0,935.0,,,175.0,2020-07-08
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,174240.0,15448.0,30938,,1599417.0,20505.0,963.0,,,170.0,2020-07-09
+iso1:us#iso2:us-nj,new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,40.2,-74.67,8882190,,America/New_York,174628.0,15479.0,31014,,1623158.0,20567.0,904.0,,,162.0,2020-07-10
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,12776.0,511.0,5802,,363374.0,1970.0,130.0,,,,2020-07-04
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,13063.0,513.0,5845,,372288.0,1988.0,121.0,,,,2020-07-05
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,13256.0,513.0,5860,,375054.0,2006.0,119.0,,,,2020-07-06
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,13507.0,515.0,5902,,380240.0,2033.0,129.0,,,,2020-07-07
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,13727.0,519.0,5986,,385242.0,2056.0,133.0,,,,2020-07-08
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,14017.0,527.0,6051,,389687.0,2101.0,154.0,,,,2020-07-09
+iso1:us#iso2:us-nm,new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,34.42,-106.11,2096829,,America/Denver,14251.0,533.0,6118,,395881.0,2137.0,154.0,,,,2020-07-10
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,21575.0,530.0,727,,301229.0,,749.0,,,205.0,2020-07-04
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,22418.0,534.0,727,,307697.0,,760.0,,,226.0,2020-07-05
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,22909.0,537.0,742,,311481.0,,748.0,,,201.0,2020-07-06
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,23785.0,548.0,743,,316546.0,,849.0,,,236.0,2020-07-07
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,24301.0,553.0,754,,323653.0,,876.0,,,233.0,2020-07-08
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,24904.0,571.0,759,,329778.0,,935.0,,,237.0,2020-07-09
+iso1:us#iso2:us-nv,nevada-us,"Nevada, US",state,,,Nevada,United States,39.36,-116.66,3080156,,America/Los_Angeles,25908.0,579.0,764,,335491.0,,924.0,,,248.0,2020-07-10
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,396598.0,24896.0,70877,,4170388.0,89995.0,844.0,,,190.0,2020-07-04
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,397131.0,24904.0,70968,,4233803.0,89995.0,832.0,,,178.0,2020-07-05
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,397649.0,24913.0,71040,,4288131.0,89995.0,817.0,,,170.0,2020-07-06
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,398237.0,24924.0,71091,,4344867.0,89995.0,836.0,,,160.0,2020-07-07
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,398929.0,24944.0,71185,,4402452.0,89995.0,841.0,,,166.0,2020-07-08
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,399513.0,24959.0,71279,,4468016.0,89995.0,851.0,,,173.0,2020-07-09
+iso1:us#iso2:us-ny,new-york-us,"New York, US",state,,,New York,United States,42.95,-75.52,19453561,,America/New_York,400299.0,24968.0,71371,,4541574.0,89995.0,826.0,,,178.0,2020-07-10
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,56183.0,2907.0,39903,,848370.0,8111.0,691.0,,2052.0,226.0,2020-07-04
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,57151.0,2911.0,40460,,868762.0,8172.0,693.0,,2058.0,236.0,2020-07-05
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,57956.0,2927.0,40813,,881412.0,8249.0,837.0,,2077.0,267.0,2020-07-06
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,58904.0,2970.0,41438,,896485.0,8383.0,849.0,,2101.0,289.0,2020-07-07
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,60181.0,2991.0,42111,,915252.0,8489.0,890.0,,2127.0,289.0,2020-07-08
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,61331.0,3006.0,42111,,916402.0,8570.0,890.0,,2146.0,289.0,2020-07-09
+iso1:us#iso2:us-oh,ohio-us,"Ohio, US",state,,,Ohio,United States,40.29,-82.79,11689100,,America/New_York,62856.0,3032.0,43435,,959553.0,8701.0,928.0,,2161.0,289.0,2020-07-10
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,15645.0,398.0,11965,,364434.0,1676.0,391.0,,,165.0,2020-07-04
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,15928.0,398.0,12246,,364717.0,1685.0,391.0,,,165.0,2020-07-05
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,16362.0,399.0,12432,,365151.0,1689.0,391.0,,,165.0,2020-07-06
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,17220.0,404.0,13005,,389018.0,1741.0,426.0,,,182.0,2020-07-07
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,17893.0,407.0,13538,,394823.0,1804.0,458.0,,,209.0,2020-07-08
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,18496.0,410.0,14100,,401754.0,1893.0,453.0,,,215.0,2020-07-09
+iso1:us#iso2:us-ok,oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,35.58,-97.51,3956971,,America/Chicago,19092.0,416.0,14648,,411074.0,1949.0,487.0,,,217.0,2020-07-10
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,9294.0,209.0,2759,,251054.0,1069.0,173.0,,,52.0,2020-07-04
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,9294.0,209.0,2759,,251054.0,1069.0,173.0,,,52.0,2020-07-05
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,10395.0,215.0,2846,,267721.0,1125.0,183.0,,,61.0,2020-07-06
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,10605.0,220.0,2877,,271906.0,1141.0,191.0,,,55.0,2020-07-07
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,10817.0,224.0,2877,,276267.0,1155.0,188.0,,,57.0,2020-07-08
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,11188.0,230.0,2977,,282075.0,1162.0,192.0,,,59.0,2020-07-09
+iso1:us#iso2:us-or,oregon-us,"Oregon, US",state,,,Oregon,United States,43.94,-120.55,4217737,,America/Los_Angeles,11454.0,232.0,3009,,286770.0,1180.0,208.0,,,56.0,2020-07-10
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,89375.0,6749.0,69712,,814823.0,,589.0,,,,2020-07-04
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,89854.0,6753.0,70086,,824700.0,,592.0,,,,2020-07-05
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,90304.0,6754.0,70437,,833324.0,,598.0,,,,2020-07-06
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,91299.0,6787.0,70437,,850102.0,,637.0,,,,2020-07-07
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,92148.0,6812.0,70953,,866526.0,,649.0,,,,2020-07-08
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,92867.0,6848.0,71507,,880023.0,,650.0,,,,2020-07-09
+iso1:us#iso2:us-pa,pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,40.87,-77.8,12801989,,America/New_York,93876.0,6880.0,72284,,898640.0,,653.0,,,,2020-07-10
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,7787.0,155.0,,,200473.0,,100.0,,,8.0,2020-07-04
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,7916.0,155.0,,,200602.0,,118.0,,,9.0,2020-07-05
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,8585.0,155.0,,,201271.0,,115.0,,,18.0,2020-07-06
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,8714.0,157.0,,,201400.0,,122.0,,,19.0,2020-07-07
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,8745.0,159.0,,,201431.0,,127.0,,,9.0,2020-07-08
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,8862.0,159.0,,,264628.0,,147.0,,,11.0,2020-07-09
+iso1:us#iso2:us-pr,puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,18.22,-66.47,3411307,,America/Puerto_Rico,9137.0,159.0,,,264903.0,,140.0,,,12.0,2020-07-10
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17084.0,960.0,1657,,158757.0,2019.0,61.0,,,9.0,2020-07-04
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17108.0,960.0,1657,,160155.0,2019.0,61.0,,,9.0,2020-07-05
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17163.0,960.0,1657,,161714.0,2019.0,61.0,,,9.0,2020-07-06
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17204.0,969.0,1677,,163270.0,2036.0,55.0,,,4.0,2020-07-07
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17204.0,971.0,1683,,163270.0,2043.0,56.0,,,5.0,2020-07-08
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17243.0,974.0,1684,,165137.0,2043.0,55.0,,,4.0,2020-07-09
+iso1:us#iso2:us-ri,rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,41.68,-71.55,1059361,,America/New_York,17312.0,976.0,1685,,166655.0,2051.0,61.0,,,4.0,2020-07-10
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,43386.0,813.0,16994,,420693.0,2882.0,1190.0,,,,2020-07-04
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,44847.0,820.0,16994,,430809.0,2882.0,1251.0,,,,2020-07-05
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,46380.0,827.0,16994,,439857.0,2882.0,1260.0,,,,2020-07-06
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,47352.0,846.0,19181,,445291.0,3090.0,1324.0,,,,2020-07-07
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,48909.0,884.0,19181,,453840.0,3090.0,1404.0,,,,2020-07-08
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,50691.0,905.0,19181,,463765.0,3090.0,1433.0,,,,2020-07-09
+iso1:us#iso2:us-sc,south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,33.91,-80.9,5148714,,America/New_York,52419.0,929.0,20956,,475235.0,3398.0,1438.0,,,,2020-07-10
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7028.0,97.0,6062,,83830.0,689.0,54.0,,,,2020-07-04
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7063.0,97.0,6063,,84003.0,691.0,59.0,,,,2020-07-05
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7105.0,97.0,6063,,84303.0,692.0,59.0,,,,2020-07-06
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7163.0,98.0,6190,,85365.0,699.0,64.0,,,,2020-07-07
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7242.0,98.0,6280,,86226.0,709.0,54.0,,,,2020-07-08
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7336.0,101.0,6331,,87310.0,718.0,61.0,,,,2020-07-09
+iso1:us#iso2:us-sd,south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,44.44,-100.23,884659,,America/Chicago,7401.0,107.0,6408,,88542.0,726.0,65.0,,,,2020-07-10
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,50140.0,637.0,30043,,878604.0,2860.0,949.0,,,,2020-07-04
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,51431.0,646.0,30254,,896166.0,2871.0,949.0,,,,2020-07-05
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,52155.0,653.0,31020,,904618.0,2897.0,940.0,,,,2020-07-06
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,53514.0,665.0,31827,,921199.0,2950.0,1112.0,,,,2020-07-07
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,55986.0,685.0,32736,,950959.0,3023.0,1160.0,,,,2020-07-08
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,57591.0,710.0,33609,,972714.0,3088.0,1135.0,,,,2020-07-09
+iso1:us#iso2:us-tn,tennessee-us,"Tennessee, US",state,,,Tennessee,United States,35.84,-86.34,6829174,,America/Chicago,59546.0,723.0,34740,,994575.0,3146.0,1184.0,,,,2020-07-10
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,191790.0,2608.0,97430,,2071809.0,,7890.0,,,,2020-07-04
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,195239.0,2637.0,100843,,2133457.0,,8181.0,,,,2020-07-05
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,200557.0,2655.0,103782,,2163729.0,,8698.0,,,,2020-07-06
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,210585.0,2715.0,108485,,2221287.0,,9286.0,,,,2020-07-07
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,220564.0,2813.0,113284,,2258708.0,,9610.0,,,,2020-07-08
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,230346.0,2918.0,118326,,2313212.0,,9689.0,,,,2020-07-09
+iso1:us#iso2:us-tx,texas-us,"Texas, US",state,,,Texas,United States,31.47,-99.35,28995881,,America/Chicago,240111.0,3013.0,122996,,2389789.0,,10002.0,,,,2020-07-10
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,24542.0,181.0,13807,,366716.0,1565.0,255.0,,436.0,88.0,2020-07-04
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,24952.0,184.0,14147,,371308.0,1582.0,237.0,,438.0,84.0,2020-07-05
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,25469.0,190.0,14448,,375842.0,1604.0,244.0,,438.0,83.0,2020-07-06
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,26033.0,194.0,14764,,382849.0,1653.0,248.0,,455.0,84.0,2020-07-07
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,26755.0,201.0,15178,,385760.0,1678.0,236.0,,465.0,76.0,2020-07-08
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,27356.0,205.0,15661,,388733.0,1700.0,207.0,,472.0,74.0,2020-07-09
+iso1:us#iso2:us-ut,utah-us,"Utah, US",state,,,Utah,United States,39.28,-111.66,3205958,,America/Denver,28223.0,207.0,16261,,395974.0,1748.0,229.0,,477.0,79.0,2020-07-10
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,65109.0,1849.0,8741,,699509.0,9549.0,808.0,,,207.0,2020-07-04
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,65748.0,1853.0,8784,,709601.0,9576.0,792.0,,,202.0,2020-07-05
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,66102.0,1853.0,8809,,715331.0,9592.0,783.0,,,194.0,2020-07-06
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,66740.0,1881.0,8913,,728430.0,9815.0,902.0,,,221.0,2020-07-07
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,67375.0,1905.0,9011,,738376.0,9982.0,971.0,,,230.0,2020-07-08
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,67988.0,1937.0,9065,,753798.0,10021.0,956.0,,,215.0,2020-07-09
+iso1:us#iso2:us-va,virginia-us,"Virginia, US",state,,,Virginia,United States,37.52,-78.83,8535519,,America/New_York,68931.0,1958.0,9189,,769103.0,10195.0,1006.0,,,234.0,2020-07-10
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,111.0,6.0,76,,3173.0,,,,,,2020-07-04
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,111.0,6.0,76,,3173.0,,,,,,2020-07-05
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,112.0,6.0,79,,3231.0,,,,,,2020-07-06
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,116.0,6.0,79,,3354.0,,,,,,2020-07-07
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,122.0,6.0,80,,3453.0,,,,,,2020-07-08
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,144.0,6.0,81,,3610.0,,,,,,2020-07-09
+iso1:us#iso2:us-vi,united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,17.96,-64.8,104901,,America/St_Thomas,153.0,6.0,87,,3679.0,,,,,,2020-07-10
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1238.0,56.0,999,,69397.0,,16.0,,,,2020-07-04
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1249.0,56.0,1007,,70024.0,,15.0,,,,2020-07-05
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1251.0,56.0,1022,,70353.0,,24.0,,,,2020-07-06
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1254.0,56.0,1039,,71113.0,,13.0,,,,2020-07-07
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1256.0,56.0,1049,,71756.0,,14.0,,,,2020-07-08
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1272.0,56.0,1054,,72749.0,,15.0,,,,2020-07-09
+iso1:us#iso2:us-vt,vermont-us,"Vermont, US",state,,,Vermont,United States,44.08,-72.66,623989,,America/New_York,1277.0,56.0,1066,,74098.0,,11.0,,,,2020-07-10
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,34778.0,1352.0,,,599975.0,4463.0,315.0,,,,2020-07-04
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,35247.0,1354.0,,,607276.0,4473.0,305.0,,,,2020-07-05
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,35898.0,1359.0,,,612706.0,4482.0,248.0,,,,2020-07-06
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,36985.0,1370.0,,,629256.0,4544.0,222.0,,,,2020-07-07
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,37420.0,1384.0,,,635524.0,4582.0,318.0,,,,2020-07-08
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,37941.0,1394.0,,,645072.0,4630.0,329.0,,,,2020-07-09
+iso1:us#iso2:us-wa,washington-us,"Washington, US",state,,,Washington,United States,47.38,-120.44,7614893,,America/Los_Angeles,38581.0,1409.0,,,660330.0,4665.0,326.0,,,,2020-07-10
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,34207.0,803.0,24491,,613973.0,3574.0,235.0,,771.0,67.0,2020-07-04
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,34740.0,803.0,24899,,618980.0,3586.0,244.0,,771.0,65.0,2020-07-05
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,35230.0,803.0,25242,,624315.0,3602.0,254.0,,772.0,66.0,2020-07-06
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,35765.0,812.0,25758,,636941.0,3639.0,254.0,,777.0,69.0,2020-07-07
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,36410.0,814.0,26305,,647712.0,3683.0,276.0,,787.0,74.0,2020-07-08
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,37210.0,816.0,26792,,660932.0,3726.0,285.0,,787.0,76.0,2020-07-09
+iso1:us#iso2:us-wi,wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,44.64,-90.01,5822434,,America/Chicago,38099.0,821.0,27329,,673661.0,3766.0,274.0,,792.0,77.0,2020-07-10
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3141.0,94.0,2402,,181429.0,,25.0,,,11.0,2020-07-04
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3262.0,94.0,2421,,184821.0,,27.0,,,12.0,2020-07-05
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3442.0,95.0,2518,,188981.0,,41.0,,,13.0,2020-07-06
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3461.0,95.0,2535,,189847.0,,41.0,,,13.0,2020-07-07
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3707.0,95.0,2648,,193915.0,,48.0,,,13.0,2020-07-08
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3826.0,95.0,2718,,197189.0,,50.0,,,15.0,2020-07-09
+iso1:us#iso2:us-wv,west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,38.64,-80.61,1792147,,America/New_York,3983.0,95.0,2756,,201203.0,,56.0,,,16.0,2020-07-10
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1606.0,20.0,1169,,35299.0,119.0,8.0,,,,2020-07-04
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1634.0,20.0,1172,,35327.0,119.0,8.0,,,,2020-07-05
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1634.0,20.0,1172,,35327.0,119.0,9.0,,,,2020-07-06
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1711.0,20.0,1274,,37789.0,119.0,10.0,,,,2020-07-07
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1740.0,21.0,1291,,37818.0,120.0,13.0,,,,2020-07-08
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1774.0,21.0,1313,,39045.0,121.0,12.0,,,,2020-07-09
+iso1:us#iso2:us-wy,wyoming-us,"Wyoming, US",state,,,Wyoming,United States,43.0,-107.55,578759,,America/Denver,1790.0,21.0,1327,,39867.0,121.0,12.0,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,2961.0,20.0,2295,,37660.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3000.0,20.0,2365,,38189.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3043.0,20.0,2426,,38822.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3043.0,20.0,2426,,38822.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3164.0,21.0,2615,,39817.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3270.0,22.0,2705,,40433.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05007,benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,36.34,-94.26,279141,,America/Chicago,3355.0,22.0,2800,,41159.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,208.0,1.0,117,,4547.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,215.0,1.0,120,,4689.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,216.0,1.0,133,,4800.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,216.0,1.0,133,,4800.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,227.0,1.0,151,,4980.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,247.0,1.0,163,,5121.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05033,crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,35.59,-94.24,63257,,America/Chicago,260.0,2.0,167,,5224.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,121.0,0.0,99,,4206.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,122.0,0.0,102,,4219.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,124.0,0.0,102,,4266.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,124.0,0.0,102,,4266.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,134.0,0.0,112,,4332.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,141.0,0.0,115,,4386.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05055,greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,36.12,-90.56,45325,,America/Chicago,145.0,0.0,120,,4427.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,129.0,2.0,100,,2217.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,220.0,2.0,102,,2568.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,228.0,2.0,106,,2616.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,228.0,2.0,106,,2616.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,233.0,2.0,112,,2666.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,237.0,2.0,120,,2699.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05091,miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,33.31,-93.89,43257,,America/Chicago,241.0,2.0,123,,2741.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,104.0,3.0,81,,1296.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,104.0,3.0,81,,1298.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,104.0,3.0,82,,1316.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,104.0,3.0,82,,1316.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,106.0,3.0,81,,1321.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,107.0,3.0,82,,1330.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05099,nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,33.66,-93.31,8252,,America/Chicago,108.0,3.0,86,,1338.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,8.0,0.0,5,,503.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,7.0,0.0,5,,514.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,7.0,0.0,5,,530.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,7.0,0.0,5,,530.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,7.0,0.0,6,,538.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,7.0,0.0,7,,543.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05101,newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,35.92,-93.22,7753,,America/Chicago,8.0,0.0,7,,549.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,76.0,0.0,69,,1601.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,77.0,0.0,70,,1617.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,80.0,0.0,71,,1643.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,80.0,0.0,71,,1643.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,81.0,0.0,72,,1667.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,84.0,0.0,76,,1678.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05113,polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,34.49,-94.23,19964,,America/Chicago,86.0,0.0,76,,1698.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,21.0,0.0,16,,585.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,22.0,0.0,17,,606.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,22.0,0.0,17,,628.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,22.0,0.0,17,,628.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,25.0,0.0,18,,647.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,26.0,0.0,19,,654.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05117,prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,34.83,-91.55,8062,,America/Chicago,28.0,0.0,21,,662.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2345.0,60.0,1563,,37542.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2425.0,60.0,1602,,38291.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2472.0,61.0,1653,,39188.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2472.0,61.0,1653,,39188.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2611.0,62.0,1808,,40638.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2713.0,63.0,1884,,41358.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05119,pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,34.77,-92.31,391911,,America/Chicago,2810.0,63.0,1954,,42151.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,881.0,3.0,848,,5428.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,883.0,3.0,848,,5450.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,892.0,3.0,856,,5160.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,892.0,3.0,856,,5160.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,894.0,3.0,866,,5194.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,898.0,3.0,868,,5241.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05123,st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,35.02,-90.75,24994,,America/Chicago,901.0,3.0,869,,5281.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,732.0,7.0,621,,4179.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,743.0,8.0,635,,4230.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,748.0,9.0,650,,4260.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,748.0,9.0,650,,4260.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,769.0,9.0,671,,4328.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,781.0,9.0,684,,4370.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05133,sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,34.0,-94.24,17007,,America/Chicago,788.0,9.0,696,,4392.0,,,,,,2020-07-10
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,33.0,2.0,29,,1135.0,,,,,,2020-07-04
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,33.0,2.0,29,,1139.0,,,,,,2020-07-05
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,34.0,2.0,30,,1153.0,,,,,,2020-07-06
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,34.0,2.0,30,,1153.0,,,,,,2020-07-07
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,36.0,2.0,31,,1175.0,,,,,,2020-07-08
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,36.0,2.0,31,,1188.0,,,,,,2020-07-09
+iso1:us#iso2:us-ar#fips:05141,van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,35.58,-92.52,16545,,America/Chicago,36.0,2.0,31,,1193.0,,,,,,2020-07-10
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,122.0,0.0,89,,1160.0,0.0,,,0.0,,2020-07-04
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,122.0,0.0,89,,1160.0,0.0,,,0.0,,2020-07-05
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,146.0,0.0,89,,0.0,0.0,,,0.0,,2020-07-06
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,146.0,0.0,112,,1337.0,0.0,,,0.0,,2020-07-07
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,153.0,0.0,116,,1393.0,0.0,,,0.0,,2020-07-08
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,159.0,0.0,117,,1427.0,0.0,,,0.0,,2020-07-09
+iso1:us#iso2:us-ca#fips:06021,glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,39.6,-122.39,28393,,America/Los_Angeles,164.0,0.0,118,,1448.0,0.0,,,0.0,,2020-07-10
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1476.0,25.0,0,,31863.0,105.0,,,0.0,,2020-07-04
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1476.0,25.0,0,,31863.0,105.0,,,0.0,,2020-07-05
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1740.0,25.0,0,,33874.0,107.0,,,0.0,,2020-07-06
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1826.0,27.0,0,,34329.0,107.0,,,0.0,,2020-07-07
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1922.0,27.0,0,,35124.0,108.0,,,0.0,,2020-07-08
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,1985.0,27.0,0,,35680.0,108.0,,,0.0,,2020-07-09
+iso1:us#iso2:us-ca#fips:06095,solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,38.27,-121.93,447643,,America/Los_Angeles,2075.0,28.0,0,,35840.0,111.0,,,0.0,,2020-07-10
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1352.0,11.0,620,721.0,51615.0,0.0,,,0.0,,2020-07-04
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1405.0,11.0,620,774.0,51615.0,0.0,,,0.0,,2020-07-05
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1430.0,11.0,773,646.0,51615.0,0.0,,,0.0,,2020-07-06
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1466.0,12.0,773,681.0,52935.0,0.0,,,0.0,,2020-07-07
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1487.0,14.0,773,700.0,55059.0,0.0,,,0.0,,2020-07-08
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1519.0,14.0,773,732.0,56687.0,0.0,,,0.0,,2020-07-09
+iso1:us#iso2:us-ca#fips:06097,sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,38.53,-122.89,494336,,America/Los_Angeles,1561.0,14.0,773,774.0,57209.0,0.0,,,0.0,,2020-07-10
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,93.0,6.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,97.0,6.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,97.0,6.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,101.0,6.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,106.0,6.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,122.0,7.0,,,1083.0,,,,,,2020-07-09
+iso1:us#iso2:us-fl#fips:12013,calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,30.41,-85.2,14105,,America/Chicago,133.0,7.0,,,1167.0,,,,,,2020-07-10
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,887.0,76.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,922.0,76.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,935.0,77.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,944.0,77.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,974.0,77.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,1004.0,77.0,,,14238.0,,,,,,2020-07-09
+iso1:us#iso2:us-fl#fips:12015,charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,26.91,-81.91,188910,,America/New_York,1048.0,78.0,,,14636.0,,,,,,2020-07-10
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,8116.0,184.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,8533.0,198.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,8759.0,199.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,9032.0,206.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,9395.0,209.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,9826.0,221.0,,,112346.0,,,,,,2020-07-09
+iso1:us#iso2:us-fl#fips:12103,pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,27.92,-82.73,974996,,America/New_York,10293.0,223.0,,,115481.0,,,,,,2020-07-10
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,815.0,9.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,867.0,9.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,902.0,9.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,941.0,9.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,993.0,10.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,1033.0,10.0,,,14964.0,,,,,,2020-07-09
+iso1:us#iso2:us-fl#fips:12113,santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,30.7,-87.02,184313,,America/Chicago,1085.0,10.0,,,15319.0,,,,,,2020-07-10
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2059.0,98.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2160.0,98.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2191.0,98.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2249.0,98.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2334.0,98.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2431.0,100.0,,,42523.0,,,,,,2020-07-09
+iso1:us#iso2:us-fl#fips:12115,sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,27.18,-82.33,433742,,America/New_York,2548.0,100.0,,,43336.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,18.0,0.0,,,1042.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17033,crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,39.0,-87.76,18667,,America/Chicago,19.0,0.0,,,1049.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,137.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,140.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,147.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,149.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,149.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,152.0,0.0,,,4139.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17095,knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,40.93,-90.21,49699,,America/Chicago,157.0,0.0,,,4171.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,52.0,2.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,52.0,2.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,52.0,2.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,53.0,2.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,53.0,2.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,54.0,2.0,,,3044.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17105,livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,40.89,-88.56,35648,,America/Chicago,54.0,2.0,,,3085.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,48.0,1.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,48.0,1.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,49.0,1.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,56.0,1.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,59.0,1.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,64.0,1.0,,,3643.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17135,montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,39.23,-89.48,28414,,America/Chicago,69.0,1.0,,,3710.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,20.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,20.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,20.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,20.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,20.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,21.0,0.0,,,2116.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17147,piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,40.01,-88.59,16344,,America/Chicago,21.0,0.0,,,2149.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,76.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,79.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,79.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,80.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,79.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,79.0,0.0,,,572.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17153,pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,37.22,-89.13,5335,,America/Chicago,81.0,0.0,,,578.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,1988.0,137.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2017.0,137.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2037.0,137.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2054.0,138.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2089.0,143.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2128.0,144.0,,,24328.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17163,st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,38.47,-89.93,259686,,America/Chicago,2202.0,144.0,,,24868.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,4.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,4.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,4.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,6.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,6.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,6.0,0.0,,,480.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17175,stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,41.09,-89.8,5342,,America/Chicago,7.0,0.0,,,485.0,,,,,,2020-07-10
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,77.0,2.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,78.0,2.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,79.0,2.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,79.0,2.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,82.0,2.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,85.0,2.0,,,6895.0,,,,,,2020-07-09
+iso1:us#iso2:us-il#fips:17183,vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,40.18,-87.73,75758,,America/Chicago,86.0,2.0,,,6955.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4243.0,151.0,,,64543.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4246.0,152.0,,,65639.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4248.0,152.0,,,66411.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4250.0,152.0,,,67110.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4255.0,152.0,,,68162.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4262.0,152.0,,,69203.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36027,dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,41.77,-73.74,294218,,America/New_York,4269.0,152.0,,,70432.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,239.0,5.0,,,10154.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,242.0,5.0,,,10367.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,242.0,5.0,,,10779.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,244.0,5.0,,,10957.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,244.0,5.0,,,11203.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,246.0,5.0,,,11388.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36037,genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,43.0,-78.19,57280,,America/New_York,247.0,5.0,,,11502.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60149.0,0.0,,,558504.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60211.0,0.0,,,565777.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60281.0,0.0,,,573450.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60386.0,0.0,,,580364.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60461.0,0.0,,,587592.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60560.0,0.0,,,596387.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36047,kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,40.64,-73.94,2559903,,America/New_York,60647.0,0.0,,,603930.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,363.0,17.0,,,11201.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,364.0,17.0,,,11297.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,367.0,17.0,,,11552.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,368.0,17.0,,,11859.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,368.0,17.0,,,12048.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,371.0,17.0,,,12192.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36053,madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,42.91,-75.67,70941,,America/New_York,374.0,17.0,,,12351.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10775.0,478.0,,,78384.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10781.0,484.0,,,79006.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10798.0,484.0,,,79648.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10806.0,484.0,,,80382.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10810.0,484.0,,,81248.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10820.0,484.0,,,82207.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36071,orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,41.4,-74.31,384940,,America/New_York,10830.0,484.0,,,83214.0,,,,,,2020-07-10
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,565.0,30.0,,,22623.0,,,,,,2020-07-04
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,568.0,30.0,,,23012.0,,,,,,2020-07-05
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,571.0,30.0,,,23174.0,,,,,,2020-07-06
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,580.0,30.0,,,23478.0,,,,,,2020-07-07
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,586.0,30.0,,,23877.0,,,,,,2020-07-08
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,588.0,30.0,,,24129.0,,,,,,2020-07-09
+iso1:us#iso2:us-ny#fips:36083,rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,42.71,-73.51,158714,,America/New_York,593.0,30.0,,,24460.0,,,,,,2020-07-10
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,773.0,24.0,,,24421.0,,,,,,2020-07-04
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,773.0,24.0,,,24421.0,,,,,,2020-07-05
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,861.0,25.0,,,25875.0,,,,,,2020-07-06
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,877.0,25.0,,,26322.0,,,,,,2020-07-07
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,894.0,25.0,,,26816.0,,,,,,2020-07-08
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,914.0,27.0,,,27264.0,,,,,,2020-07-09
+iso1:us#iso2:us-or#fips:41005,clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,45.19,-122.22,418187,,America/Los_Angeles,925.0,27.0,,,27711.0,,,,,,2020-07-10
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,7.0,0.0,,,729.0,,,,,,2020-07-04
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,7.0,0.0,,,729.0,,,,,,2020-07-05
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,8.0,0.0,,,746.0,,,,,,2020-07-06
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,8.0,0.0,,,757.0,,,,,,2020-07-07
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,9.0,0.0,,,769.0,,,,,,2020-07-08
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,9.0,0.0,,,780.0,,,,,,2020-07-09
+iso1:us#iso2:us-or#fips:41015,curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,42.46,-124.16,22925,,America/Los_Angeles,9.0,0.0,,,786.0,,,,,,2020-07-10
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,41.0,1.0,,,4316.0,,,,,,2020-07-04
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,41.0,1.0,,,4316.0,,,,,,2020-07-05
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,56.0,1.0,,,4640.0,,,,,,2020-07-06
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,59.0,1.0,,,4704.0,,,,,,2020-07-07
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,61.0,1.0,,,4805.0,,,,,,2020-07-08
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,54.0,1.0,,,4885.0,,,,,,2020-07-09
+iso1:us#iso2:us-or#fips:41033,josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,42.37,-123.56,87487,,America/Los_Angeles,55.0,1.0,,,4942.0,,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,674.0,3.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,707.0,3.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,745.0,4.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,773.0,4.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,874.0,4.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,889.0,4.0,464,,8770.0,44.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47011,bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,35.15,-84.86,108110,,America/New_York,925.0,4.0,487,,8927.0,45.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,35.0,3.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,38.0,3.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,40.0,3.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,40.0,3.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,44.0,3.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,48.0,3.0,23,,998.0,4.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47033,crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,35.81,-89.14,14230,,America/Chicago,49.0,3.0,23,,1019.0,4.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,248.0,1.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,251.0,1.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,254.0,3.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,261.0,3.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,270.0,3.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,274.0,3.0,122,,3574.0,22.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47045,dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,36.06,-89.41,37159,,America/Chicago,280.0,3.0,127,,3657.0,22.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,84.0,3.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,87.0,3.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,88.0,3.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,90.0,3.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,101.0,3.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,104.0,3.0,65,,3542.0,8.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47051,franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,35.16,-86.09,42208,,America/Chicago,110.0,3.0,68,,3589.0,8.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,42.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,42.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,41.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,47.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,48.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,50.0,0.0,29,,1709.0,5.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47057,grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,36.28,-83.51,23320,,America/New_York,55.0,0.0,29,,1767.0,6.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,59.0,1.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,62.0,1.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,61.0,1.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,63.0,1.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,65.0,2.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,65.0,2.0,50,,1050.0,10.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47061,grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,35.39,-85.72,13427,,America/Chicago,65.0,2.0,53,,1054.0,10.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,317.0,4.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,340.0,4.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,343.0,4.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,374.0,4.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,397.0,4.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,422.0,4.0,204,,6778.0,29.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47063,hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,36.22,-83.27,64934,,America/New_York,447.0,4.0,223,,7051.0,29.0,,,,,2020-07-10
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,109.0,7.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,108.0,7.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,109.0,7.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,115.0,7.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,119.0,7.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,120.0,7.0,40,,3401.0,10.0,,,,,2020-07-09
+iso1:us#iso2:us-tn#fips:47071,hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,35.2,-88.18,25652,,America/Chicago,125.0,7.0,42,,3501.0,11.0,,,,,2020-07-10
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,510.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,515.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,519.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,524.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,540.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,556.0,0.0,,,14064.0,,,,,,2020-07-09
+iso1:us#iso2:us-wi#fips:55063,la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,43.91,-91.12,118016,,America/Chicago,565.0,0.0,,,14288.0,,,,,,2020-07-10
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,2.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,2.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,2.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,2.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,2.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,4.0,0.0,,,1069.0,,,,,,2020-07-09
+iso1:us#iso2:us-wi#fips:55099,price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,45.68,-90.36,13351,,America/Chicago,6.0,0.0,,,1089.0,,,,,,2020-07-10
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,129.0,0.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,131.0,0.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,137.0,0.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,140.0,0.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,158.0,0.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,168.0,0.0,,,3839.0,,,,,,2020-07-09
+iso1:us#iso2:us-wi#fips:55121,trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,44.3,-91.36,29649,,America/Chicago,172.0,0.0,,,3886.0,,,,,,2020-07-10
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,422.0,16.0,,,,,,,,,2020-07-04
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,430.0,16.0,,,,,,,,,2020-07-05
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,436.0,16.0,,,,,,,,,2020-07-06
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,443.0,16.0,,,,,,,,,2020-07-07
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,451.0,17.0,,,,,,,,,2020-07-08
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,461.0,17.0,,,10102.0,,,,,,2020-07-09
+iso1:us#iso2:us-wi#fips:55131,washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,43.37,-88.23,136034,,America/Chicago,466.0,17.0,,,10110.0,,,,,,2020-07-10

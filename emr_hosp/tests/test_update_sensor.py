@@ -15,7 +15,6 @@ from delphi_utils import read_params
 # first party
 from delphi_emr_hosp.config import Config, Constants
 from delphi_emr_hosp.constants import *
-# first party
 from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
 from delphi_emr_hosp.load_data import *
 

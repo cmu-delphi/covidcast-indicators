@@ -19,7 +19,7 @@ from .geo_maps import GeoMaps
 from .load_data import load_combined_data
 from .sensor import EMRHospSensor
 from .weekday import Weekday
-from .constants import *
+from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, HRR, NA, FIPS
 
 from delphi_utils import GeoMapper
 
@@ -75,15 +75,14 @@ def add_prefix(signal_names, wip_signal, prefix):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------
-    signal_names
-    self: List[str]
+    signal_names: List[str]
         Names of signals to be exported
-    prefix : 'wip_'
-        prefix for new/non public signals
     wip_signal : List[str] or bool
         a list of wip signals: [], OR
         all signals in the registry: True OR
         only signals that have never been published: False
+    prefix : 'wip_'
+        prefix for new/non public signals
     Returns
     -------
     List of signal names
@@ -144,7 +143,6 @@ class EMRHospSensorUpdator:
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
             se: boolean to write out standard errors, if true, use an obfuscated name
-            prefix: string to prefix to output files (used for obfuscation in producing SEs)
         """
         self.startdate, self.enddate, self.dropdate = [pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
         # handle dates

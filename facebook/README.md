@@ -2,15 +2,16 @@
 
 ## Running the Indicator
 
+The Facebook symptoms surveys are one of our most complex pipelines, requiring a two-day process to accumulate all necessary input files in a production setting. This process is implemented in the `delphi_facebook` Python package and GNU make. For testing, we have included sample input files, so all that is needed is the `delphiFacebook` R package to run the actual indicator computations.
+
 The indicator is run by installing the package `delphiFacebook` and running the script
-"run.R". To install the pacakge, run the following code from this directory:
+"run.R". To install the package, run the following code from this directory:
 
 ```
-R CMD build delphiFacebook
-R CMD INSTALL delphiFacebook_1.0.tar.gz
+make install-R
 ```
 
-All of the user-changable parameters are stored in `params.json`. A template is
+All of the user-changable parameters are stored in `params.json`. A template appropriate for running unit tests is
 included as `params.json.template`.
 
 To execute the module and produce the output datasets (by default, in
@@ -27,7 +28,7 @@ The documentation for the package is written using the **roxygen2** packaage. To
 directory:
 
 ```
-R -e 'roxygen2::roxygenise("delphiFacebook")'
+make lib
 ```
 
 Testing the package is done with the build-in R package checks (which include both
@@ -35,15 +36,14 @@ static and dynamic checks), as well as unit tests written with **testthat**. To 
 of these, use the following from within this directory:
 
 ```
-R CMD build delphiFacebook
-R CMD CHECK delphiFacebook_1.0.tar.gz
+make test
 ```
 
 None of the tests should fail and notes and warnings should be manually checked for issues.
 To see the code coverage from the tests and example run the following:
 
 ```
-Rscript -e 'covr::package_coverage("delphiFacebook")'
+make coverage
 ```
 
 There should be good coverage of all the core functions in the package.
@@ -80,14 +80,17 @@ Facebook surveys are one of our most complex data pipelines. At a high level,
 the pipeline must do the following:
 
 1. Download the latest survey from Qualtrics and place it in a CSV. This is done
-   by a Python script using the Qualtrics API (not yet in this repository).
+   by the `delphi_facebook` Python package using the Qualtrics API, managed by
+   the `$(TODAY)` target of the Makefile. Successfully building this target
+   requires a Qualtrics API token with access rights to the surveys through
+   Qualtrics.
 2. Read the survey data. This package extracts a unique token from each survey
    response and saves these to an output file; the automation script driving
    this package uses SFTP to send this file to Facebook.
 3. Download the latest survey weights computed by Facebook for the tokens we
    provide. Facebook usually provides survey weights within one day, so our
    pipeline can produce weighted estimates a day after unweighted estimates. The
-   download is managed by the same automation script, not this package.
+   download is managed by the `weights` target of the Makefile.
 4. Aggregate the data and produce survey estimates.
 5. Write the survey estimates to covidalert CSV files: one per day per signal
    type and geographic region type. (For example, there will be one CSV
@@ -95,9 +98,16 @@ the pipeline must do the following:
    2020-05-10.)
 6. Validate these estimates against basic sanity checks. (Not yet implemented in
    this pipeline!)
-7. Push the CSV files to the API server. Also done by the automation script, not
-   by this package.
+7. Push the CSV files to the API server. Implementation of this is left to the
+   deployment environment (cron, DelphiAutomation, etc); for a sample script
+   consult Katie.
 
+Running the entire pipeline is managed through the `pipeline` target of the
+Makefile, and assumes an extended `params.json` file modeled after
+`params.json.production.template`. The template params file will not run the
+complete pipeline on its own without first filling in the API token and the email
+addresses of Facebook personnel who should be notified of irregularities in the
+weights download procedure. Katie has this list; if you need it, ask her.
 
 Mathematical details of how the survey estimates are calculated are given in the
 signal descriptions [in the API

@@ -71,7 +71,7 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
 
 
-def add_prefix(signal_names, wip_signal, prefix):
+def add_prefix(signal_names, wip_signal, prefix="wip_"):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------
@@ -158,8 +158,7 @@ class EMRHospSensorUpdator:
         signals.remove(SMOOTHED if self.weekday else SMOOTHED_ADJ)
         signal_names = add_prefix(
             signals,
-            wip_signal=read_params()["wip_signal"],
-            prefix="wip_")
+            wip_signal=read_params()["wip_signal"])
         self.updated_signal_names = signal_names
 
     def shift_dates(self):

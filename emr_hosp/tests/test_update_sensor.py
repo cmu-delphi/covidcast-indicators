@@ -249,13 +249,13 @@ class TestWriteToCsv:
 
     def test_handle_wip_signal(self):
         # Test wip_signal = True (all signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, True, prefix="wip_")
+        signal_names = add_prefix(SIGNALS, True)
         assert all(s.startswith("wip_") for s in signal_names)
         # Test wip_signal = list (only listed signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, [SIGNALS[0]], prefix="wip_")
+        signal_names = add_prefix(SIGNALS, [SIGNALS[0]])
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
         # Test wip_signal = False (only unpublished signals should receive prefix)
-        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False, prefix="wip_")
+        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])

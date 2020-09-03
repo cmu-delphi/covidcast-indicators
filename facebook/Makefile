@@ -169,10 +169,10 @@ post-individual: $(TODAY) $(INDIVIDUAL)
 	touch $@
 
 post-done: post-cids
-	touch $(TODAY).done
-	BATCH="put $(TODAY).done $(CIDS_DEST)\n"; \
+	touch $(YESTERDAY).done
+	BATCH="put $(YESTERDAY).done $(CIDS_DEST)\n"; \
 	$(SFTP_POST)
-	echo "SUCCESS: Posted $(TODAY).done" >> $(MESSAGES)
+	echo "SUCCESS: Posted $(YESTERDAY).done" >> $(MESSAGES)
 
 validate-covidcast:
 	@echo validate-covidcast not yet implemented

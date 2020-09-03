@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import googleapiclient
 import googleapiclient.discovery
+from tenacity import retry, wait_fixed, stop_after_attempt
 
 DISCOVERY_URL = "https://www.googleapis.com/discovery/v1/apis/trends/v1beta/rest"
 TERMS_IDS = "anosmia_ms"
@@ -80,7 +81,7 @@ class GoogleHealthTrends:
 
         return data
 
-
+@retry(wait=wait_fixed(60), stop = stop_after_attempt(5))
 def get_counts_states(
     ght: GoogleHealthTrends,
     start_date: str,
@@ -127,7 +128,7 @@ def get_counts_states(
 
     return state_df
 
-
+@retry(wait=wait_fixed(60), stop = stop_after_attempt(5))
 def get_counts_dma(
     ght: GoogleHealthTrends,
     start_date: str,
@@ -211,23 +212,22 @@ def _get_counts_geoid(
     output_dates = set(pd.date_range(start_date, end_date).to_native_types())
     cache_dates = set(dt["timestamp"].values)
     req_dates = list(output_dates - cache_dates)
-
     try:
         if req_dates:
             sdate = min(req_dates)
             edate = max(req_dates)
             new_data = _api_data_to_df(
-                ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
-                geo_id=geo_id,
-            )
+                    ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
+                    geo_id=geo_id,
+                )
             new_data = new_data[new_data["timestamp"].isin(req_dates)]
             dt = dt.append(new_data).sort_values("timestamp")
             dt = dt.drop_duplicates(subset="timestamp")
             _write_cached_file(dt, geo_id, data_dir)
             dt = _load_cached_file(geo_id, data_dir)
     except googleapiclient.errors.HttpError:
-        #  This is thrown in there is no data yet for the given days. Need to
-        #  investigate this further.
+        #  This is thrown in there is no data yet for the given days. Need to
+        #  investigate this further.
         pass
 
     dt = dt[dt["timestamp"].isin(output_dates)]

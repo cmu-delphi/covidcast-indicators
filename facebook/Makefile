@@ -5,6 +5,7 @@ DRY:=yes
 ifeq ($(DRY),yes)
 	OUTSIDE_EMAIL_FLAGS:=-d
 	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
+	DRY_MESSAGE:="[DRY-RUN] "
 else
 	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu
 endif
@@ -114,7 +115,7 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
-	echo "SUCCESS: pipeline complete" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'
@@ -151,7 +152,7 @@ post-cids: $(TODAY) $(CIDS)
 	    BATCH="$${BATCH}put $$f ${CIDS_DEST}\n"; \
 	done; \
 	$(SFTP_POST); \
-	echo "SUCCESS: Posted `echo $${POST} | wc -w` cid files" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` cid files" >> $(MESSAGES)
 	touch $@
 
 INDIVID_DEST="fb-public-results/"
@@ -165,14 +166,14 @@ post-individual: $(TODAY) $(INDIVIDUAL)
 	    BATCH="$${BATCH}put $${f}.gz ${INDIVID_DEST}\n"; \
 	done; \
 	$(SFTP_POST); \
-	echo "SUCCESS: Posted `echo $${POST} | wc -w` microresponse files" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` microresponse files" >> $(MESSAGES)
 	touch $@
 
 post-done: post-cids
 	touch $(YESTERDAY).done
 	BATCH="put $(YESTERDAY).done $(CIDS_DEST)\n"; \
 	$(SFTP_POST)
-	echo "SUCCESS: Posted $(YESTERDAY).done" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 
 validate-covidcast:
 	@echo validate-covidcast not yet implemented

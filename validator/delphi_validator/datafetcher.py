@@ -4,72 +4,40 @@ import platform
 import covidcast
 import pandas as pd
 from datetime import date, datetime, timedelta
-from .errors import *
+from .errors import APIDataFetchError
 import re
 from typing import List
 import json
 
+filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-def get_filenames_with_geo_signal(path, date_slist: List[str]):
-    
-    if pipeline_version == 'new':
-        meta = covidcast.metadata()
-        fb_meta = meta[meta['data_source']==DATA_SOURCE]
-        unique_signals = fb_meta['signal'].unique().tolist()
-        unique_geotypes = fb_meta['geo_type'].unique().tolist()
 
-    
-        ##### Currently metadata returns --*community*-- signals that don't get generated 
-        ##### in the new fb-pipeline. Seiving them out for now.
-        # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
-        for sig in unique_signals:
-            if "community" in sig:
-                unique_signals.remove(sig)
-        
+def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
+    meta = covidcast.metadata()
+    source_meta = meta[meta['data_source']==data_source]
+    unique_signals = source_meta['signal'].unique().tolist()
+    unique_geotypes = source_meta['geo_type'].unique().tolist()
 
-        geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
-        print(geo_sig_cmbo)
-        print("Number of mixed types:", len(geo_sig_cmbo))
+    ##### Currently metadata returns --*community*-- signals that don't get generated
+    ##### in the new fb-pipeline. Seiving them out for now.
+    # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+    for sig in unique_signals:
+        if "community" in sig:
+            unique_signals.remove(sig)
 
-        for cmb in geo_sig_cmbo:
-            print(cmb)
-    
+    geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
+    print(geo_sig_cmbo)
+    print("Number of mixed types:", len(geo_sig_cmbo))
 
-        filenames = read_relevant_date_filenames(data_folder, date_slist[0])    
-        
-    else:
-        sdate = date_slist[0]
-        filenames = [f for f in listdir(path) if isfile(join(path, f))]
+    for cmb in geo_sig_cmbo:
+        print(cmb)
 
-        sdate_filenames = [fname for fname in filenames if fname.find(sdate) != -1]
-
-        # example: 20200624_county_smoothed_nohh_cmnty_cli
-        filename_regex = re.compile(r'^(\d{8})_([a-z]+)_(raw\S*|smoothed\S*)[_?](w?)([ci]li).csv$')
-        geo_sig_cmbo = list()
-        for f in sdate_filenames:
-            
-            m = filename_regex.match(f)
-            if (not m.group(0)):
-                print('=nameformat= not recognized as a daily format') 
-                
-            geo_type = m.group(2)
-
-            
-            if m.group(4): # weighted data 'w'
-                signal = "".join([m.group(4), m.group(5)])
-                signal = "_".join([m.group(3), signal])
-            #    max_weighted_date = survey_date
-            else:
-                signal = "_".join([m.group(3), m.group(5)])
-            #    max_date = survey_date
-
-            geo_sig_cmbo.append((geo_type, signal))
-
+    filenames = read_relevant_date_filenames(data_folder, date_slist[0])
     return filenames, geo_sig_cmbo
 
 
 def read_filenames(path):
-    daily_filenames = [f for f in listdir(path) if isfile(join(path, f))]
+    daily_filenames = [ (f, filename_regex.match(f)) for f in listdir(path) if isfile(join(path, f))]
     return daily_filenames
 
 def read_relevant_date_filenames(data_path, date_slist):
@@ -80,7 +48,7 @@ def read_relevant_date_filenames(data_path, date_slist):
         for dt in date_slist:
             if fl.find(dt) != -1:
                 filenames.append(fl)
-    return filenames    
+    return filenames
 
 def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
     for geo_sig in geo_sig_cmbo:
@@ -105,6 +73,16 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
             df_list.append(df)   
         yield pd.concat(df_list), geo_sig[0], geo_sig[1]
 
+def load_csv(path):
+    return pd.read_csv(
+        path,
+        dtype={
+            'geo_id': str,
+            'val': float,
+            'se': float,
+            'sample_size': float,
+        })
+
 def fetch_daily_data(data_source, survey_date, geo_type, signal):
     data_to_validate = covidcast.signal(data_source, signal, survey_date, survey_date, geo_type)
     if not isinstance(data_to_validate, pd.DataFrame):
@@ -114,4 +92,4 @@ def fetch_daily_data(data_source, survey_date, geo_type, signal):
                      ", geography-type:" + geo_type
         raise APIDataFetchError(custom_msg)
     return data_to_validate
-      
+

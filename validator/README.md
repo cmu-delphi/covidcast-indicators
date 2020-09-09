@@ -41,3 +41,15 @@ and (optionally) remove the environment itself.
 deactivate
 rm -r env
 ```
+
+## Testing the code
+
+To do a static test of the code style, it is recommended to run **pylint** on
+the module. To do this, run the following from the main module directory:
+
+```
+env/bin/pylint delphi_validator
+```
+
+The most aggressive checks are turned off; only relatively important issues
+should be raised and they should be manually checked (or better, fixed).

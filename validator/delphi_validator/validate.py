@@ -1,4 +1,5 @@
 import sys
+import os
 import re
 import pandas as pd
 import numpy as np
@@ -62,7 +63,7 @@ def check_missing_dates(daily_filenames, sdate, edate):
     unique_dates_obj = set()
 
     for daily_filename in daily_filenames:
-        unique_dates.add(daily_filename[0:8])
+        unique_dates.add(daily_filename[0][0:8])
     for unique_date in unique_dates:
         newdate_obj = datetime.strptime(unique_date, '%Y%m%d')
         unique_dates_obj.add(newdate_obj)
@@ -84,9 +85,9 @@ def check_bad_val(df_to_test):
 
 def check_bad_se(df):
     if (df['se'].isnull().values.any()):
-        raise ValidationError("se must not be NA")
+        raise ValidationError(None, "se must not be NA")
     
-    df.eval('se_upper_limit = (val * effective_sample_size + 50)/(effective_sample_size + 1)', inplace=True)
+    df.eval('se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
 
     df['se']= df['se'].round(3)
     df['se_upper_limit'] = df['se_upper_limit'].round(3)
@@ -94,21 +95,21 @@ def check_bad_se(df):
     result = df.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
     if not result.empty:
-        raise ValidationError("se must be in (0,min(50,val*(1+eps))]")
+        raise ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")
 
 def check_bad_sample_size(df):
-    if(df['sample_size'].isnull.values.any() | df['effective_sample_size'].isnull.values.any()):
-        raise ValidationError("sample size can't be NA")
+    if(df['sample_size'].isnull().values.any()):
+        raise ValidationError(None, "sample size can't be NA")
     
-    qresult = df.query('(sample_size < 100) | (effective_sample_size < 100)')
+    qresult = df.query('(sample_size < 100)')
 
     if not qresult.empty:
-        raise ValidationError("sample size must be >= 100")
+        raise ValidationError(None, "sample size must be >= 100")
 
 def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
     if (max_weighted_date < generation_date - timedelta(days=4)
         or max_date < generation_date - timedelta(days=1)):
-        raise ValidationError("latest date of generated file seems too long ago")
+        raise ValidationError(None, "latest date of generated file seems too long ago")
 
 def reldiff_by_min(x, y):
     return (x - y) / min(x,y)
@@ -160,7 +161,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
 
     
     if mean_stddiff_high or mean_stdabsdiff_high:
-        raise ValidationError('Average differences in variables by geoid between recent & semirecent data seem' \
+        raise ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geoid between recent & semirecent data seem' \
               + 'large --- either large increase tending toward one direction or large mean absolute' \
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
@@ -175,8 +176,8 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
     
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
-    for filename,match in validate_files:
-        df = load_csv(filename)
+    for filename, match in validate_files:
+        df = load_csv(os.path.join(export_dir, filename))
         check_bad_geo_id(df, match.groupdict()['geo_type'])
         check_bad_val(df)
         check_bad_se(df)

@@ -8,6 +8,7 @@ from .errors import APIDataFetchError
 import re
 from typing import List
 import json
+from itertools import product
 
 filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
@@ -36,6 +37,16 @@ def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
     return filenames, geo_sig_cmbo
 
 
+def get_geo_sig_cmbo(df):
+    unique_signals = df['signal'].unique().tolist()
+    unique_geotypes = df['geo_type'].unique().tolist()
+
+    geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
+    print("Number of mixed types:", len(geo_sig_cmbo))
+
+    return geo_sig_cmbo
+
+
 def read_filenames(path):
     daily_filenames = [ (f, filename_regex.match(f)) for f in listdir(path) if isfile(join(path, f))]
     return daily_filenames
@@ -57,15 +68,10 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
         files = list(filter(lambda x: geo_sig[0] in x and geo_sig[1] in x, filenames))
         if(len(files) == 0):
             print("FILE_NOT_FOUND: File with geo_type:", geo_sig[0], " and signal:", geo_sig[1], " does not exist!")
+            yield pd.DataFrame(), geo_sig[0], geo_sig[1]
+            continue
         for f in files:
-            df = pd.read_csv(
-                            data_folder / f, 
-                            dtype={'geo_id': str, 
-                                    'val': float,
-                                    'se': float,
-                                    'sample_size': float,
-                                    'effective_sample_size': float
-                            })
+            df = load_csv(join(data_folder, f))
             for dt in date_slist:
                 if f.find(dt) != -1:
                     gen_dt = datetime.strptime(dt, '%Y%m%d')

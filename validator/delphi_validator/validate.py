@@ -1,5 +1,5 @@
 import sys
-import os
+from os.path import join 
 import re
 import pandas as pd
 import numpy as np
@@ -106,6 +106,7 @@ def check_bad_sample_size(df):
     if not qresult.empty:
         raise ValidationError(None, "sample size must be >= 100")
 
+# Not currently checked.
 def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
     if (max_weighted_date < generation_date - timedelta(days=4)
         or max_date < generation_date - timedelta(days=1)):
@@ -177,7 +178,7 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
     for filename, match in validate_files:
-        df = load_csv(os.path.join(export_dir, filename))
+        df = load_csv(join(export_dir, filename))
         check_bad_geo_id(df, match.groupdict()['geo_type'])
         check_bad_val(df)
         check_bad_se(df)
@@ -187,7 +188,12 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
         df['signal'] = match.groupdict()['signal']
         all_frames.append(df)    
 
-    # Multi-indexed dataframe for a given (signal, geo_type)
+    # TODO: Multi-indexed dataframe for a given (signal, geo_type)
+    all_frames = pd.concat(all_frames)
+
+    geo_sig_cmbo = get_geo_sig_cmbo(all_frames)
+    date_slist = df['date'].unique().tolist()
+    date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
 
     ## recent_lookbehind: start from the check date and working backward in time,
     ## how many days do we include in the window of date to check for anomalies?
@@ -201,7 +207,9 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
     smooth_option_regex = re.compile(r'([^_]+)')
 
     kroc = 0
-    for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
+
+    # TODO: Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
+    for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, validate_files, date_slist):
         
         m = smooth_option_regex.match(sig)
         smooth_option = m.group(1)

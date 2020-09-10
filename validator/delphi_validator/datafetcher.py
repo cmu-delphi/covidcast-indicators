@@ -14,21 +14,7 @@ filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+
 
 
 def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
-    meta = covidcast.metadata()
-    source_meta = meta[meta['data_source']==data_source]
-    unique_signals = source_meta['signal'].unique().tolist()
-    unique_geotypes = source_meta['geo_type'].unique().tolist()
-
-    ##### Currently metadata returns --*community*-- signals that don't get generated
-    ##### in the new fb-pipeline. Seiving them out for now.
-    # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
-    for sig in unique_signals:
-        if "community" in sig:
-            unique_signals.remove(sig)
-
-    geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
-    print(geo_sig_cmbo)
-    print("Number of mixed types:", len(geo_sig_cmbo))
+    geo_sig_cmbo = get_geo_sig_cmbo(data_source) 
 
     for cmb in geo_sig_cmbo:
         print(cmb)
@@ -37,10 +23,20 @@ def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
     return filenames, geo_sig_cmbo
 
 
-def get_geo_sig_cmbo(df):
-    unique_signals = df['signal'].unique().tolist()
-    unique_geotypes = df['geo_type'].unique().tolist()
+def get_geo_sig_cmbo(data_source):
+    meta = covidcast.metadata()
+    source_meta = meta[meta['data_source']==data_source]
+    unique_signals = source_meta['signal'].unique().tolist()
+    unique_geotypes = source_meta['geo_type'].unique().tolist()
 
+    if data_source == 'fb-survey':
+        ##### Currently metadata returns --*community*-- signals that don't get generated
+        ##### in the new fb-pipeline. Seiving them out for now.
+        # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+        for sig in unique_signals:
+            if "community" in sig:
+                unique_signals.remove(sig)
+        
     geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
     print("Number of mixed types:", len(geo_sig_cmbo))
 

@@ -191,8 +191,7 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     # TODO: Multi-indexed dataframe for a given (signal, geo_type)
     all_frames = pd.concat(all_frames)
  
-    # TODO: Should be checking covidcast.meta() for all geo-sig combos to see if any CSVs are missing.
-    geo_sig_cmbo = get_geo_sig_cmbo(all_frames)
+    geo_sig_cmbo = get_geo_sig_cmbo(data_source)
     date_slist = df['date'].unique().tolist()
     date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
 
@@ -205,13 +204,15 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     ## in time, how many days -- before subtracting out the "recent" days ---
     ## do we use to form the reference statistics?
     semirecent_lookbehind = timedelta(days=7)
+
+
     smooth_option_regex = re.compile(r'([^_]+)')
 
     kroc = 0
 
     # TODO: Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
     for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, validate_files, date_slist):
-        
+         
         m = smooth_option_regex.match(sig)
         smooth_option = m.group(1)
         
@@ -239,6 +240,8 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
 
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)
+
+            # TODO: Add semirecent check?
         kroc += 1
         if kroc == 2:  
             break

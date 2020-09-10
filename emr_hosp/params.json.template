@@ -1,6 +1,7 @@
 {
   "static_file_dir": "./static",
   "export_dir": "./receiving",
+  "cache_dir": "./cache",
   "input_emr_file": "./tests/test_data/SYNICUE_CMB_INPATIENT_11062020.csv.gz",
   "input_claims_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
   "start_date": "2020-02-01",
@@ -12,5 +13,10 @@
   "parallel": false,
   "geos": ["state", "msa", "hrr", "county"],
   "weekday": [true, false],
-  "wip_signal": ""
+  "wip_signal": "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": ""
 }

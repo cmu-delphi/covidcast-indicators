@@ -8,6 +8,9 @@ from tempfile import TemporaryDirectory
 # third party
 import pandas as pd
 import numpy as np
+from boto3 import Session
+from moto import mock_s3
+import pytest
 
 # third party
 from delphi_utils import read_params
@@ -17,6 +20,7 @@ from delphi_emr_hosp.config import Config, Constants
 from delphi_emr_hosp.constants import *
 from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
 from delphi_emr_hosp.load_data import *
+from delphi_emr_hosp.run import run_module
 
 CONFIG = Config()
 CONSTANTS = Constants()
@@ -259,3 +263,12 @@ class TestWriteToCsv:
         signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
+
+    def test_bucket(self):
+        with mock_s3():
+            # Create the fake bucket we will be using
+            params = read_params()
+            aws_credentials = params["aws_credentials"]
+            s3_client = Session(**aws_credentials).client("s3")
+            s3_client.create_bucket(Bucket=params["bucket_name"])
+            run_module()

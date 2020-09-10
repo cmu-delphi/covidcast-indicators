@@ -8,7 +8,7 @@ import logging
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
 import covidcast
-from delphi_utils import read_params
+from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params
 
 # third party
 import numpy as np
@@ -21,7 +21,6 @@ from .sensor import EMRHospSensor
 from .weekday import Weekday
 from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, HRR, NA, FIPS
 
-from delphi_utils import GeoMapper
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
     """Write sensor values to csv.
@@ -282,3 +281,27 @@ class EMRHospSensorUpdator:
             write_to_csv(output_dict, self.se, signal, outpath)
         logging.debug(f"wrote files to {outpath}")
         return True
+        params = read_params()
+
+        arch_diff = S3ArchiveDiffer(
+        params["cache_dir"],
+        params["export_dir"],
+        params["bucket_name"], "emr",
+        params["aws_credentials"])
+        arch_diff.update_cache()
+
+        _, common_diffs, new_files = arch_diff.diff_exports()
+
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = arch_diff.archive_exports(to_archive)
+        print(fails)
+
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+        arch_diff.filter_exports(succ_common_diffs)
+
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive '{exported_file}'")

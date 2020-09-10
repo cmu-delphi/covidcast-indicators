@@ -280,7 +280,6 @@ class EMRHospSensorUpdator:
         for signal in self.updated_signal_names:
             write_to_csv(output_dict, self.se, signal, outpath)
         logging.debug(f"wrote files to {outpath}")
-        return True
         params = read_params()
 
         arch_diff = S3ArchiveDiffer(

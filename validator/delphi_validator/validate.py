@@ -167,7 +167,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
 
-def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
+def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
 
     export_files = read_filenames(export_dir)
     date_filter = make_date_filter(start_date, end_date)
@@ -179,10 +179,10 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
     check_missing_dates(validate_files, start_date, end_date)
     for filename, match in validate_files:
         df = load_csv(join(export_dir, filename))
-        check_bad_geo_id(df, match.groupdict()['geo_type'])
-        check_bad_val(df)
-        check_bad_se(df)
-        check_bad_sample_size(df)
+        # check_bad_geo_id(df, match.groupdict()['geo_type'])
+        # check_bad_val(df)
+        # check_bad_se(df)
+        # check_bad_sample_size(df)
         df['geo_type'] = match.groupdict()['geo_type']
         df['date'] = match.groupdict()['date']
         df['signal'] = match.groupdict()['signal']
@@ -190,7 +190,8 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
 
     # TODO: Multi-indexed dataframe for a given (signal, geo_type)
     all_frames = pd.concat(all_frames)
-
+ 
+    # TODO: Should be checking covidcast.meta() for all geo-sig combos to see if any CSVs are missing.
     geo_sig_cmbo = get_geo_sig_cmbo(all_frames)
     date_slist = df['date'].unique().tolist()
     date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
@@ -220,9 +221,9 @@ def validate(export_dir, start_date, end_date, max_check_lookbehind = timedelta(
         for checking_date in date_list:
             #print(recent_df.loc[checking_date,:])
             # -recent- dataframe run backwards from the checking_date
-            recent_end_date = checking_date - timedelta(days=1)
+            recent_end_date = checking_date - recent_lookbehind
             recent_begin_date = checking_date - max_check_lookbehind
-            recent_api_df = covidcast.signal(DATA_SOURCE, sig, recent_begin_date, recent_end_date, geo)
+            recent_api_df = covidcast.signal(data_source, sig, recent_begin_date, recent_end_date, geo)
             
             recent_api_df.rename(columns={'stderr': 'se', 'value': 'val'}, inplace = True)
             recent_api_df.drop(['direction', 'issue', 'lag'], axis=1, inplace = True)

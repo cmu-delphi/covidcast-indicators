@@ -18,4 +18,5 @@ def run_module():
     dtobj_sdate = datetime.strptime(params['start_date'], '%Y-%m-%d')
     dtobj_edate = datetime.strptime(params['end_date'], '%Y-%m-%d')
     max_check_lookbehind = int(params["ref_window_size"])
-    validate(parent_params["export_dir"], dtobj_sdate, dtobj_edate)
+    data_source = params['data_source']
+    validate(parent_params["export_dir"], dtobj_sdate, dtobj_edate, data_source)

@@ -304,9 +304,10 @@ create_complete_responses <- function(input_data, county_crosswalk)
 
   for (var in c(
     "A2", "A2b", "B2b", "Q40", "C10_1_1", "C10_2_1", "C10_3_1", "C10_4_1", "D3", "D4", "D5"
-  ))
-  {
-    data_full[[var]] <- as.numeric(data_full[[var]])
+  )) {
+    if (var %in% names(data_full)) {
+      data_full[[var]] <- as.numeric(data_full[[var]])
+    }
   }
 
   vars <- sapply(data_full, class)

@@ -52,7 +52,7 @@ produce_crosswalk_national <- function(zip_metadata)
 {
   crosswalk_national <- tibble(
     zip5 = zip_metadata$zip5,
-    geo_id = "usa",
+    geo_id = "us",
     weight_in_location = 1.0
   )
 

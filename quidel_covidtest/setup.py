@@ -9,7 +9,8 @@ required = [
     "pylint",
     "delphi-utils",
     "imap-tools",
-    "xlrd"
+    "xlrd",
+    "covidcast"
 ]
 
 setup(

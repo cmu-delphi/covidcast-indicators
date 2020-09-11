@@ -9,8 +9,8 @@
   "n_backfill_days": 60,
   "n_waiting_days": 3,
   "se": false,
-  "obfuscated_prefix": null,
   "parallel": false,
   "geos": ["state", "msa", "hrr", "county"],
-  "weekday": [true, false]
+  "weekday": [true, false],
+  "wip_signal": ""
 }

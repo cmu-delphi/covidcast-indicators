@@ -29,6 +29,10 @@ FB_CC=$(shell $(PYTHON) -m delphi_utils get qualtrics.notify-bad-weights)
 
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
 
+ANTIJOIN:="antijoin.cids.sorted.txt"
+CIDS_DEST:="fb-interchange/cmu_respondent_ids"
+INDIVID_DEST:="fb-public-results/"
+RAW_DEST:="raw"
 
 default:
 	@echo No default implemented yet
@@ -69,6 +73,12 @@ $(TODAY):
 	touch -d "$(TODAY) 01:00" tmp
 	source env/bin/activate && \
 	python -m delphi_facebook
+	BATCH=""; \
+	for f in `find $(QUALTRICS) -maxdepth 1 -newer tmp -type f -name "*.csv"`; do \
+	  BATCH="$${BATCH}put $$f $(RAW_DEST)\n"; \
+	done; \
+	$(SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo -e $${BATCH} | wc -l` raw files" >> $(MESSAGES)
 	mv tmp $@
 
 params.json: $(TODAY)
@@ -131,8 +141,6 @@ test: delphiFacebook_1.0.tar.gz
 delphiFacebook_1.0.tar.gz: $(wildcard delphiFacebook/R/*.R)
 	R CMD build delphiFacebook
 
-ANTIJOIN:="antijoin.cids.sorted.txt"
-CIDS_DEST:="fb-interchange/cmu_respondent_ids"
 post-cids: $(TODAY) $(CIDS)
 	rm -rf tmp
 	touch $(ANTIJOIN)
@@ -155,7 +163,6 @@ post-cids: $(TODAY) $(CIDS)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` cid files" >> $(MESSAGES)
 	touch $@
 
-INDIVID_DEST="fb-public-results/"
 post-individual: $(TODAY) $(INDIVIDUAL)
 	POST=`find $(INDIVIDUAL) -maxdepth 1 -newer $(TODAY) -name "cvid_responses_*.csv"`; \
 	[ -n "$${POST}" ]; \

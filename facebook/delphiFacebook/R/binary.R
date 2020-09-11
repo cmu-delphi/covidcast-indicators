@@ -12,7 +12,26 @@ get_binary_indicators <- function() {
     "smoothed_hh_cmnty_cli", "weight_unif", "hh_community_yes", 6, compute_binary_response, jeffreys_binary,
     "smoothed_nohh_cmnty_cli", "weight_unif", "community_yes", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whh_cmnty_cli", "weight", "hh_community_yes", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wnohh_cmnty_cli", "weight", "community_yes", 6 , compute_binary_response, jeffreys_binary
+    "smoothed_wnohh_cmnty_cli", "weight", "community_yes", 6 , compute_binary_response, jeffreys_binary,
+
+    # mask wearing
+    "wip_smoothed_wearing_mask", "weight_unif", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wwearing_mask", "weight", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
+
+    # mental health
+    "wip_smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wworried_become_ill", "weight", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
+
+    "wip_smoothed_anxious", "weight_unif", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_depressed", "weight_unif", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
+
+    # travel outside state
+    "wip_smoothed_travel_outside_state_5d", "weight_unif", "c_travel_state", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wtravel_outside_state_5d", "weight", "c_travel_state", 6, compute_binary_response, jeffreys_binary,
+
+    # work outside home
+    "wip_smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wwork_outside_home_5d", "weight", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary
   )
 
   ind$skip_mixing <- TRUE

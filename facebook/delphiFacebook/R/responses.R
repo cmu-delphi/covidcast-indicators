@@ -85,6 +85,30 @@ load_response_one <- function(input_filename, params)
   }
   input_data$zip5 <- input_data$A3
 
+  # create mental health variables
+  input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
+  input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
+  input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
+  if ("C8_3" %in% names(input_data)) {
+    input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
+  } else {
+    input_data$mh_isolated <- NA
+  }
+
+  # mask and contact variables
+  input_data$c_travel_state <- input_data$C6 == 1
+  if ("C14" %in% names(input_data)) {
+    input_data$c_mask_often <- input_data$C14 == 1 | input_data$C14 == 2
+  } else {
+    input_data$c_mask_often <- NA
+  }
+
+  if ("C3" %in% names(input_data)) {
+    input_data$c_work_outside_5d <- input_data$C3 == 1
+  } else {
+    input_data$c_work_outside_5d <- NA
+  }
+
   # When a token begins with a hyphen, Qualtrics CSVs contain a lone single
   # quote in front, for some mysterious reason. Strip these from the token,
   # since they are erroneous and won't match with CIDs in weights files.

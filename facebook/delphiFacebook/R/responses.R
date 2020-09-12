@@ -13,8 +13,7 @@
 #'
 #' @importFrom dplyr bind_rows
 #' @export
-load_responses_all <- function(params)
-{
+load_responses_all <- function(params) {
   input_data <- vector("list", length(params$input))
   for (i in seq_along(input_data))
   {
@@ -36,8 +35,7 @@ load_responses_all <- function(params)
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
-load_response_one <- function(input_filename, params)
-{
+load_response_one <- function(input_filename, params) {
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
   meta_data <- read_lines(full_path, skip = 2L, n_max = 1L)
@@ -64,7 +62,7 @@ load_response_one <- function(input_filename, params)
   }
   input_data <- arrange(input_data, desc(.data$StartDate))
 
-  # create new variables
+  # create symptom variables
   input_data$hh_fever <- (input_data$A1_1 == 1L)
   input_data$hh_soar_throat <- (input_data$A1_2 == 1L)
   input_data$hh_cough <- (input_data$A1_3 == 1L)
@@ -147,8 +145,7 @@ load_response_one <- function(input_filename, params)
 #' @importFrom dplyr anti_join
 #' @importFrom rlang .data
 #' @export
-filter_responses <- function(input_data, params)
-{
+filter_responses <- function(input_data, params) {
   # take only the first instance of each token
   input_data <- arrange(input_data, .data$StartDate)
   input_data <- input_data[input_data$token != "",]

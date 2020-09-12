@@ -98,7 +98,10 @@ load_response_one <- function(input_filename, params)
   # mask and contact variables
   input_data$c_travel_state <- input_data$C6 == 1
   if ("C14" %in% names(input_data)) {
+    # wearing mask most or all of the time; exclude respondents who have not
+    # been in public
     input_data$c_mask_often <- input_data$C14 == 1 | input_data$C14 == 2
+    input_data$c_mask_often <- ifelse(input_data$C14 == 6, NA, input_data$c_mask_often)
   } else {
     input_data$c_mask_often <- NA
   }

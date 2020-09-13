@@ -66,6 +66,7 @@ $(CIDS):
 
 init-qualtrics:
 	grep '"token": "..*"' params.json
+	git show --oneline HEAD >> $(MESSAGES)
 
 $(TODAY):
 	[ -f $(QUALTRICS) ] || mkdir -p $(QUALTRICS)

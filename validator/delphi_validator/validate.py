@@ -123,7 +123,7 @@ def check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, 
         raise ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
 
 def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
-    #print("recent_df dtypes", recent_df.dtypes)
+    # TODO: something is wrong with this check definition.
     recent_df = recent_df.drop(columns=['geo_id'])
     mean_recent_df = recent_df[['val', 'se', 'sample_size']].mean()
     recent_api_df = recent_api_df.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
@@ -133,15 +133,12 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
 
     mean_stddiff = ((mean_recent_df - mean_recent_api_df).mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
     mean_stdabsdiff = ((mean_recent_df - mean_recent_api_df).abs().mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
-    #print("mean_stddiff", mean_stddiff)
-    #print("mean_stdabsdiff", mean_stdabsdiff)
-    #print("type(mean_stdabsdiff)",type(mean_stdabsdiff))
 
     classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
     raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
 
     smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
-    
+
     # Code reference from R code
     # changesum.by.variable.with.flags = changesum.by.variable %>>%
     #         dplyr::mutate(mean.stddiff.high = abs(mean.stddiff) > thresholds[["mean.stddiff"]] |
@@ -162,7 +159,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
 
     
     if mean_stddiff_high or mean_stdabsdiff_high:
-        raise ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geoid between recent & semirecent data seem' \
+        raise ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & semirecent data seem' \
               + 'large --- either large increase tending toward one direction or large mean absolute' \
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
@@ -179,10 +176,10 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     check_missing_dates(validate_files, start_date, end_date)
     for filename, match in validate_files:
         df = load_csv(join(export_dir, filename))
-        # check_bad_geo_id(df, match.groupdict()['geo_type'])
-        # check_bad_val(df)
-        # check_bad_se(df)
-        # check_bad_sample_size(df)
+        check_bad_geo_id(df, match.groupdict()['geo_type'])
+        check_bad_val(df)
+        check_bad_se(df)
+        check_bad_sample_size(df)
         df['geo_type'] = match.groupdict()['geo_type']
         df['date'] = match.groupdict()['date']
         df['signal'] = match.groupdict()['signal']
@@ -194,6 +191,8 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     geo_sig_cmbo = get_geo_sig_cmbo(data_source)
     date_slist = df['date'].unique().tolist()
     date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
+
+    filenames = [name_match_pair[0] for name_match_pair in validate_files] 
 
     ## recent_lookbehind: start from the check date and working backward in time,
     ## how many days do we include in the window of date to check for anomalies?
@@ -211,10 +210,13 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     kroc = 0
 
     # TODO: Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
-    for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, validate_files, date_slist):
+    for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, filenames, date_slist):
          
         m = smooth_option_regex.match(sig)
         smooth_option = m.group(1)
+
+        if smooth_option not in ('raw', 'smoothed'):
+            smooth_option = 'smoothed' if '7dav' in sig else 'raw'
         
         #recent_df.set_index("time_value", inplace = True)
         print("Printing recent_df scenes:", recent_df.shape)

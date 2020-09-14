@@ -62,7 +62,7 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
         df_list = list()
 
         files = list(filter(lambda x: geo_sig[0] in x and geo_sig[1] in x, filenames))
-        if(len(files) == 0):
+        if (len(files) == 0):
             print("FILE_NOT_FOUND: File with geo_type:", geo_sig[0], " and signal:", geo_sig[1], " does not exist!")
             yield pd.DataFrame(), geo_sig[0], geo_sig[1]
             continue

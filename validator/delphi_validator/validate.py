@@ -9,6 +9,8 @@ from datetime import date, datetime, timedelta
 from .datafetcher import *
 import math
 
+import pdb
+
 negated_regex_dict = {
     'county': '^(?!\d{5}).*$',
     'hrr': '^(?!\d{1,3}).*$',
@@ -30,7 +32,8 @@ def make_date_filter(start_date, end_date):
         code = int(match.groupdict()['date'])
         return code > start_code and code < end_code
     return f
-        
+
+# TODO: not used.        
 def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_check_lookbehind = 7, sanity_check_rows_per_day = True, sanity_check_value_diffs = True, check_vs_working = True):
     
     # Perform some automated format and sanity checks of =df.to.test=
@@ -39,8 +42,8 @@ def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_c
 
     if( not isinstance(generation_date, datetime.date) or generation_date > date.today()):
         raise ValidationError(generation_date, f"generation.date ({generation.date}) must be a length 1 Date that is not in the future.")
+    
     # example: 20200624_county_smoothed_nohh_cmnty_cli
-
     pattern_found = filename_regex.match(nameformat)
     if (not nameformat or not pattern_found):
         raise ValidationError(nameformat, 'nameformat ({nameformat}) not recognized')
@@ -123,6 +126,8 @@ def check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, 
         raise ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
 
 def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
+    # pdb.set_trace()
+
     # TODO: something is wrong with this check definition.
     recent_df = recent_df.drop(columns=['geo_id'])
     mean_recent_df = recent_df[['val', 'se', 'sample_size']].mean()
@@ -153,8 +158,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     # Get the function from switcher dictionary
     thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
-    #print(np.absolute(mean_stddiff) > thres.loc['mean.stddiff'])
-    mean_stddiff_high = (np.absolute(mean_stddiff) > thres.loc['mean.stddiff']).bool() or (np.absolute(mean_stddiff) > thres.loc['val.mean.stddiff"']).bool()
+    mean_stddiff_high = (np.absolute(mean_stddiff) > thres.loc['mean.stddiff']).bool() # or (np.absolute(mean_stddiff) > thres.loc['val.mean.stddiff"']).bool()
     mean_stdabsdiff_high = (mean_stdabsdiff > thres.loc['mean.stdabsdiff']).bool()
 
     

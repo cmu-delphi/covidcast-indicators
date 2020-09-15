@@ -20,6 +20,7 @@ negated_regex_dict = {
 }
 
 class ValidationError(Exception):
+    """ Error raised when validation check fails. """
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
@@ -33,20 +34,39 @@ def make_date_filter(start_date, end_date):
         return code > start_code and code < end_code
     return f
 
-# TODO: not used.        
-def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_check_lookbehind = 7, sanity_check_rows_per_day = True, sanity_check_value_diffs = True, check_vs_working = True):
+# TODO: not used. Several arguments not used and should probably be moved to validate(). 
+def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_check_lookbehind = 7, sanity_check_rows_per_day = True, sanity_check_value_diffs = False, check_vs_working = True):
+    """
+    Perform some automated format & sanity checks of inputs.
     
-    # Perform some automated format and sanity checks of =df.to.test=
-    if(type(max_check_lookbehind) != int | len(str(max_check_look_behind) != 1)):
+    Arguments:
+        - df_to_test: pandas dataframe 
+        - nameformat: CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli"
+        - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+        - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
+        - sanity_check_rows_per_day
+        - sanity_check_value_diffs: detects false positives most of the time, defaults to False
+        - check_vs_working
+
+    Returns:
+        - None  
+    """
+    
+    if (type(max_check_lookbehind) != int or len(str(max_check_look_behind) != 1)):
         raise ValidationError(max_check_lookbehind, f"max_check_lookbehind ({max_check_lookbehind}) must be length 1, integer type")
 
     if( not isinstance(generation_date, datetime.date) or generation_date > date.today()):
-        raise ValidationError(generation_date, f"generation.date ({generation.date}) must be a length 1 Date that is not in the future.")
+        raise ValidationError(generation_date, f"generation.date ({generation.date}) must be a datetime.date type and not in the future.")
     
-    # example: 20200624_county_smoothed_nohh_cmnty_cli
     pattern_found = filename_regex.match(nameformat)
     if (not nameformat or not pattern_found):
         raise ValidationError(nameformat, 'nameformat ({nameformat}) not recognized')
+
+    if not isinstance(df_to_test, pd.DataFrame):
+        raise ValidationError(nameformat, 'df_to_test must be a pandas dataframe.')
+
+    # TODO: check column names and types in df_to_test. Currently skipped since load_csv() specifies field names and types on read. Extra columns will simply be ignored during later processing.
+
 
 def check_bad_geo_id(df_to_test, geo_type):
     if geo_type not in negated_regex_dict:

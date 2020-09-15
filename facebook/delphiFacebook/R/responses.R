@@ -31,7 +31,7 @@ load_responses_all <- function(params) {
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
 #' @importFrom readr read_lines cols locale col_character
-#' @importFrom dplyr arrange desc
+#' @importFrom dplyr arrange desc case_when
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
@@ -108,6 +108,33 @@ load_response_one <- function(input_filename, params) {
     input_data$c_work_outside_5d <- input_data$C3 == 1
   } else {
     input_data$c_work_outside_5d <- NA
+  }
+
+  # create testing variables
+  if ("B8" %in% names(input_data) && "B10" %in% names(input_data) &&
+        "B12" %in% names(input_data)) {
+    # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* B10
+    input_data$t_tested_14d <- case_when(
+      input_data$B8 == 2 | input_data$B10 == 2 ~ 0,
+      input_data$B10 == 1 ~ 1,
+      TRUE ~ NA_real_
+    )
+
+    # fraction, of those tested in past 14 days, who tested positive. yes == 1
+    # on B10a, no == 2 on B10a; option 3 is "I don't know", which is excluded
+    input_data$t_tested_positive_14d <- case_when(
+      input_data$B10a == 1 ~ 1,
+      input_data$B10a == 2 | input_data$B10a == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+
+    # fraction, of those not tested in past 14 days, who wanted to be tested but
+    # were not
+    input_data$t_wanted_test_14d <- input_data$B12 == 1
+  } else {
+    input_data$t_tested_14d <- NA
+    input_data$t_tested_positive_14d <- NA
+    input_data$t_wanted_test_14d <- NA
   }
 
   # When a token begins with a hyphen, Qualtrics CSVs contain a lone single

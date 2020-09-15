@@ -34,19 +34,16 @@ def make_date_filter(start_date, end_date):
         return code > start_code and code < end_code
     return f
 
-# TODO: not used. Several arguments not used and should probably be moved to validate(). 
-def validate_daily(df_to_test, nameformat, generation_date = date.today(), max_check_lookbehind = 7, sanity_check_rows_per_day = True, sanity_check_value_diffs = False, check_vs_working = True):
+# TODO: generation_date not used and should probably be moved to validate(). 
+def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date = date.today()):
     """
     Perform some automated format & sanity checks of inputs.
     
     Arguments:
         - df_to_test: pandas dataframe 
-        - nameformat: CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli"
-        - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+        - nameformat: CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
         - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
-        - sanity_check_rows_per_day
-        - sanity_check_value_diffs: detects false positives most of the time, defaults to False
-        - check_vs_working
+        - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
 
     Returns:
         - None  
@@ -188,7 +185,21 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
 
-def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = True):
+def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = False, check_vs_working = True):
+    """
+    Perform data checks.
+    
+    Arguments:
+
+        - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+        - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
+        - sanity_check_rows_per_day
+        - sanity_check_value_diffs: detects false positives most of the time, defaults to False
+        - check_vs_working
+
+    Returns:
+        - None  
+    """
 
     export_files = read_filenames(export_dir)
     date_filter = make_date_filter(start_date, end_date)
@@ -200,6 +211,8 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     check_missing_dates(validate_files, start_date, end_date)
     for filename, match in validate_files:
         df = load_csv(join(export_dir, filename))
+
+        validate_daily(df, filename, max_check_lookbehind)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
         check_bad_val(df)
         check_bad_se(df)

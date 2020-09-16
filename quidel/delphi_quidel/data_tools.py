@@ -59,7 +59,7 @@ def _slide_window_sum(arr, k):
     return sarr
 
 
-def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
+def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs, max_borrow_obs):
     """
     Calculates the proportion of parent samples (tests) that must be "borrowed"
     in order to properly compute the statistic.  If there are no samples
@@ -77,6 +77,8 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
             There should be no np.nan here.
         min_obs: int
             Minimum number of observations in order to compute a ratio
+        max_borrow_obs: int
+            Maximum number of observations can be borrowed in geographical pooling
     Returns:
         np.ndarray[float]
             Same length as tests; proportion of parent observations to borrow.
@@ -86,9 +88,15 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
         print(tpooled_ptests)
         raise ValueError('[parent] tests should be non-negative '
                          'with no np.nan')
+    if max_borrow_obs > min_obs:
+        raise ValueError('The maximum umber of observations can be borrowed '
+                         'in geographical pooling should be smaller than '
+                         'the minimum number of observations in order to '
+                         'compute a ratio')
     # STEP 1: "TOP UP" USING PARENT LOCATION
     # Number of observations we need to borrow to "top up"
-    borrow_tests = np.maximum(min_obs - tpooled_tests, 0)
+    borrow_tests = np.maximum(
+            np.minimum(min_obs - tpooled_tests, max_borrow_obs), 0)
     # There are many cases (a, b > 0):
     # Case 1: a / b => no problem
     # Case 2: a / 0 => np.inf => borrow_prop becomes 1
@@ -160,7 +168,7 @@ def raw_positive_prop(positives, tests, min_obs):
     return positive_prop, se, sample_size
 
 
-def smoothed_positive_prop(positives, tests, min_obs, pool_days,
+def smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs, pool_days,
                            parent_positives=None, parent_tests=None):
     """
     Calculates the proportion of negative tests for a single geographic
@@ -190,6 +198,8 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
             positives[t] <= tests[t] for all t.
         min_obs: int
             Minimum number of observations in order to compute a proportion.
+        max_borrow_obs: int
+            Maximum number of observations can be borrowed in geographical pooling
         pool_days: int
             Number of days in the past (including today) over which to pool data.
         parent_positives: np.ndarray
@@ -240,7 +250,8 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
     if has_parent:
         tpooled_ppositives = _slide_window_sum(parent_positives, pool_days)
         tpooled_ptests = _slide_window_sum(parent_tests, pool_days)
-        borrow_prop = _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs)
+        borrow_prop = _geographical_pooling(tpooled_tests, tpooled_ptests,
+                                            min_obs, max_borrow_obs)
         pooled_positives = (tpooled_positives
                             + borrow_prop * tpooled_ppositives)
         pooled_tests = (tpooled_tests
@@ -295,7 +306,7 @@ def raw_tests_per_device(devices, tests, min_obs):
 
     return tests_per_device, se, sample_size
 
-def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
+def smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs, pool_days,
                               parent_devices=None, parent_tests=None):
     """
     Calculates the ratio of tests per device for a single geographic
@@ -319,6 +330,8 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
             should be zero (never np.nan).
         min_obs: int
             Minimum number of observations in order to compute a ratio
+        max_borrow_obs: int
+            Maximum number of observations can be borrowed in geographical pooling
         pool_days: int
             Number of days in the past (including today) over which to pool data.
         parent_devices: np.ndarray
@@ -363,7 +376,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
         tpooled_pdevices = _slide_window_sum(parent_devices, pool_days)
         tpooled_ptests = _slide_window_sum(parent_tests, pool_days)
         borrow_prop = _geographical_pooling(tpooled_tests, tpooled_ptests,
-                                            min_obs)
+                                            min_obs, max_borrow_obs)
         pooled_devices = (tpooled_devices
                           + borrow_prop * tpooled_pdevices)
         pooled_tests = (tpooled_tests

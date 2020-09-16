@@ -1,7 +1,7 @@
 import pandas as pd
 from datetime import datetime
 
-from delphi_quidel.generate_sensor import (MIN_OBS, POOL_DAYS,
+from delphi_quidel.generate_sensor import (MIN_OBS, MAX_BORROW_OBS, POOL_DAYS,
                                                 generate_sensor_for_states,
                                                 generate_sensor_for_other_geores)
 
@@ -11,6 +11,8 @@ class TestGenerateSensor:
         # Test constants
         assert MIN_OBS > 0 
         assert isinstance(MIN_OBS, int)
+        assert MAX_BORROW_OBS > 0 
+        assert isinstance(MAX_BORROW_OBS, int)
         assert POOL_DAYS > 0
         assert isinstance(POOL_DAYS, int)
         

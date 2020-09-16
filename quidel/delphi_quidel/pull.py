@@ -244,7 +244,7 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
             as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
                 columns={"SofiaSerNum": "numUniqueDevices"}
             )
-  
+
         if test_type == "covid_ag":
             # Compute overallTotal
             overall_total = df.groupby(

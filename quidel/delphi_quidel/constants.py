@@ -1,6 +1,7 @@
 """Registry for constants"""
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
+MAX_BORROW_OBS = 20 # maximum number of observations can be borrowed in geographical pooling
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
 END_FROM_TODAY_MINUS = 5 # report data until - X days
 EXPORT_DAY_RANGE = 40 # Number of dates to report

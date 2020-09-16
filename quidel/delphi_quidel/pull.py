@@ -219,7 +219,7 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
         time_flag = datetime(2020, 8, 17)
         for test_type in ["covid_ag", "flu_ag"]:
             test_data_dir = f"./test_data/{test_type}_test_data.xlsx"
-            dfs[test_type] = pd.read_excel(test_data_dir),
+            dfs[test_type] = pd.read_excel(test_data_dir)
     else:
         # Get new data from email
         dfs, time_flag = get_from_email(COLUMN_NAMES, start_dates, end_dates,
@@ -298,8 +298,9 @@ def check_intermediate_file(cache_dir, pull_start_dates):
     previous_dfs = {}
     for test_type in TEST_TYPES:
         previous_dfs[test_type] = None
-        pull_start_dates[test_type] = datetime.strptime(
-                pull_start_dates[test_type], '%Y-%m-%d')
+        if pull_start_dates[test_type] is not None:
+            pull_start_dates[test_type] = datetime.strptime(
+                    pull_start_dates[test_type], '%Y-%m-%d')
 
     for filename in os.listdir(cache_dir):
         if ".csv" in filename:
@@ -344,9 +345,9 @@ def pull_quidel_data(params):
 
     # pull new data only that has not been ingested
     previous_dfs, pull_start_dates = check_intermediate_file(
-        cache_dir, params["pull_start_date"])
+        cache_dir, params["pull_start_date"].copy())
 
-    pull_end_dates = params["pull_end_date"]
+    pull_end_dates = params["pull_end_date"].copy()
     for test_type in TEST_TYPES:
         if pull_end_dates[test_type] == "":
             pull_end_dates[test_type] = datetime.today()

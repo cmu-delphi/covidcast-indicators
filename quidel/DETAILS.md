@@ -24,15 +24,17 @@ We estimate p across 3 temporal-spatial aggregation schemes:
 - daily, at the state level.
 We are able to make these aggregations accurately because each test is reported with its 5-digit ZIP code. We do not report estimates for individual counties, as typically each county has too few tests to make the estimated value statistically meaningful.
 
-**MSA and HRR levels**: In a given MSA or HRR, suppose N flu tests are taken in a certain time period, X is the number of tests taken with positive results. If N >= 50, we simply use:
+**MSA and HRR levels**: In a given MSA or HRR, suppose N flu tests are taken in a certain time period, X is the number of tests taken with positive results. 
+If N >= 50, we simply use:
 ```
 p = 100 * X / N 
 ```
-If N < 50, we lend 50 - N  fake samples from its home state to shrink the estimate to the state's mean, which means:
+If 30 <= N < 50, we lend 50 - N  fake samples from its home state to shrink the estimate to the state's mean, which means:
 ```
 p = 100 * [ N /50 * X/N + (50 - N)/50  * Xs /Ns ] 
 ```
 where Ns, Xs are the number of flu tests and the number of flu tests taken with positive results taken in its home state in the same time period.
+If N < 30, nothing will be reported.
 
 **State level**:  the states with sample sizes smaller than a certain threshold are discarded. (The threshold is set to be 50 temporarily). For the rest of the states with big enough sample sizes,
 ```

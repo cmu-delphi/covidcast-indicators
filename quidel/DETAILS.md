@@ -1,14 +1,20 @@
 # Quidel COVID Test
 
 ### Background
-Starting May 9, 2020, we began getting Quidel COVID Test data and started reporting it from May 26, 2020 due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device. The present Quidel COVID Test sensor concerns the positive rate in the test result.
+Starting from 2014-08, we began getting flu test data from Quidel. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device and we suspect that the device identifiers could potentially be useful to normalize the results over time.
+
+Starting from 2020-05-09, we began getting Quidel COVID Test data and started reporting it from May 26, 2020 due to limitation in the data volume. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device. The present Quidel COVID Test sensor concerns the positive rate in the test result.
 
 ### Signal names
 - covid_ag_raw_pct_positive: percent of tests returning positive that day
 - covid_ag_smoothed_pct_positive: same as above, but for the moving average of the most recent 7 days
+- flu_ag_raw_pct_positive: percent of tests returning positive that day
+- flu_ag_smoothed_pct_positive : same as above, but for the moving average of the most recent 7 days
+- flu_ag_raw_tests_per_device: average number of tests per active testing device (= device that performed at least one test this period) that day
+- flu_ag_smoothed_tests_per_device: same as above, but for the moving average of the most recent 7 days
 
 ### Estimating percent positive test proportion
-Let n be the number of total COVID tests taken over a given time period and a given location (the test result can be negative/positive/invalid). Let x be the number of tests taken with positive results in this location over the given time period. We are interested in estimating the percentage of positive tests which is defined as:
+Let n be the number of total tests taken over a given time period and a given location (the test result can be negative/positive/invalid). Let x be the number of tests taken with positive results in this location over the given time period. We are interested in estimating the percentage of positive tests which is defined as:
 ```
 p = 100 * x / n 
 ```
@@ -44,6 +50,7 @@ where we assume for each time point, the estimates follow a binomial distributio
 We conduct temporal and spatial pooling for the smoothed signal. The spatial pooling is described in the previous section where we shrink the estimates to the state's mean if the total test number is smaller than 50 for a certain location on a certain day. Additionally, as with the Quidel COVID Test signal, we consider smoothed estimates formed by pooling data over time. That is, daily, for each location, we first pool all data available in that location over the last 7 days, and we then recompute everything described in the last two subsections. Pooling in this data makes estimates available in more geographic areas.
 
 ### Exceptions
+#### Quidel COVID Test
 There are 9 special zip codes that are included in Quidel COVID raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
 
 |zip       |State| Number of Tests|
@@ -60,3 +67,7 @@ There are 9 special zip codes that are included in Quidel COVID raw data but are
 
 * Number of tests calculated until 08-05-2020
 * Until 08-05-2020, only 2,715 tests out of 942,293 tests for those zip codes. 
+
+#### Quidel Flu Test
+There are 89 special zip codes that are included in Quidel Flu raw data but are not included in our reports temporarily since we do not have enough mapping information for them. 
+* Until 08-05-2020, 133,000 tests out of 7,519,726 tests for those zip codes. 

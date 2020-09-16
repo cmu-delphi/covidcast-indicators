@@ -6,6 +6,8 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
 from os.path import join
+from os import remove
+from shutil import copytree
 
 import numpy as np
 import pandas as pd
@@ -36,16 +38,18 @@ def run_module():
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     export_dir = params["export_dir"]
+    daily_export_dir = params["daily_export_dir"]
     cache_dir = params["cache_dir"]
+    daily_cache_dir = params["daily_cache_dir"]
     static_file_dir = params["static_file_dir"]
     token = params["token"]
     test_mode = (params["mode"] == "test")
 
-    arch_diff = S3ArchiveDiffer(
-        cache_dir, export_dir,
-        params["bucket_name"], "usafacts",
+    daily_arch_diff = S3ArchiveDiffer(
+        daily_cache_dir, daily_export_dir,
+        params["bucket_name"], "nchs_mortality",
         params["aws_credentials"])
-    arch_diff.update_cache()
+    daily_arch_diff.update_cache()
 
     map_df = pd.read_csv(
         join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
@@ -62,7 +66,7 @@ def run_module():
             export_csv(
                 df,
                 geo_name=geo_res,
-                export_dir=export_dir,
+                export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
             )
@@ -79,30 +83,61 @@ def run_module():
                 export_csv(
                     df,
                     geo_name=geo_res,
-                    export_dir=export_dir,
+                    export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
                 )
-    
+
+    # Weekly run of archive utility on Monday
+    # - Does not upload to S3, that is handled by daily run of archive utility
+    # - Exports issues into receiving for the API
     if datetime.today().weekday() == 0:
-        # Upload files and upload diffs
-        update_cache = True
-    else:
-        # Only upload diffs
-        update_cache = False
-    
+        # Copy todays raw output to receiving
+        copytree(daily_export_dir, export_dir)
+
+        weekly_arch_diff = S3ArchiveDiffer(
+            cache_dir, export_dir,
+            params["bucket_name"], "nchs_mortality",
+            params["aws_credentials"])
+
+        # Dont update cache from S3 (has daily files), only simulate a update_cache() call
+        weekly_arch_diff._cache_updated = True
+
+        # Diff exports, and make incremental versions
+        _, common_diffs, new_files = weekly_arch_diff.diff_exports()
+
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = weekly_arch_diff.archive_exports(to_archive, update_s3=False)
+
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+        weekly_arch_diff.filter_exports(succ_common_diffs)
+
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive (weekly) '{exported_file}'")
+
+    # Daily run of archiving utility
+    # - Uploads changed files to S3
+    # - Does not export any issues into receiving
+
     # Diff exports, and make incremental versions
-    _, common_diffs, new_files = arch_diff.diff_exports()
+    _, common_diffs, new_files = daily_arch_diff.diff_exports()
 
     # Archive changed and new files only
     to_archive = [f for f, diff in common_diffs.items() if diff is not None]
     to_archive += new_files
-    _, fails = arch_diff.archive_exports(to_archive, update_cache=update_cache)
+    _, fails = daily_arch_diff.archive_exports(to_archive)
 
-    # Filter existing exports to exclude those that failed to archive
-    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-    arch_diff.filter_exports(succ_common_diffs)
+    # Daily output not needed anymore, remove them
+    for exported_file in new_files:
+        remove(exported_file)
+    for exported_file, diff_file in common_diffs.items():
+        remove(exported_file)
+        remove(diff_file)
 
     # Report failures: someone should probably look at them
     for exported_file in fails:
-        print(f"Failed to archive '{exported_file}'")
+        print(f"Failed to archive (daily) '{exported_file}'")

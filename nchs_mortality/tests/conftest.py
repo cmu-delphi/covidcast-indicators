@@ -13,10 +13,22 @@ from delphi_nchs_mortality.run import run_module
 
 @pytest.fixture(scope="session")
 def run_as_module():
-    # Clean receiving directory
+    # Clean directories
     for fname in listdir("receiving"):
         if ".csv" in fname:
             remove(join("receiving", fname))
+
+    for fname in listdir("cache"):
+        if ".csv" in fname:
+            remove(join("receiving", fname))
+
+    for fname in listdir("daily_cache"):
+        if ".csv" in fname:
+            remove(join("daily_cache", fname))
+
+    for fname in listdir("daily_receiving"):
+        if ".csv" in fname:
+            remove(join("daily_cache", fname))
 
     with mock_s3():
         # Create the fake bucket we will be using

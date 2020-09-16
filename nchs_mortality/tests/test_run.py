@@ -1,6 +1,6 @@
 import pytest
 
-from os import listdir
+from os import listdir, remove
 from os.path import join
 
 import pandas as pd
@@ -10,7 +10,7 @@ from delphi_nchs_mortality.run import run_module
 class TestRun:
     def test_output_files_exist(self, run_as_module):
 
-        csv_files = listdir("receiving")
+        csv_files = listdir("daily_cache")
 
         dates = [
             "202016",
@@ -47,6 +47,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "weekly_202026_state_wip_covid_deaths_prop.csv")
+            join("daily_cache", "weekly_202026_state_wip_covid_deaths_prop.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

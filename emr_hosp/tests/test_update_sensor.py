@@ -89,21 +89,22 @@ class TestEMRHospSensorUpdator:
                 self.weekday,
                 self.se
             )
-            su_inst.update_sensor(
-                EMR_FILEPATH,
-                CLAIMS_FILEPATH,
-                td.name,
-                PARAMS["static_file_dir"]
-            )
-            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
-            td.cleanup()
+
             with mock_s3():
                 # Create the fake bucket we will be using
                 params = read_params()
                 aws_credentials = params["aws_credentials"]
                 s3_client = Session(**aws_credentials).client("s3")
                 s3_client.create_bucket(Bucket=params["bucket_name"])
-                run_module()
+                su_inst.update_sensor(
+                    EMR_FILEPATH,
+                    CLAIMS_FILEPATH,
+                    td.name,
+                    PARAMS["static_file_dir"]
+                )
+
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
+            td.cleanup()
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):

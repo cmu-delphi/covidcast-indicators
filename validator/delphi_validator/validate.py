@@ -34,8 +34,7 @@ def make_date_filter(start_date, end_date):
         return code > start_code and code < end_code
     return f
 
-# TODO: generation_date not used and should probably be moved to validate(). 
-def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date = date.today()):
+def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date):
     """
     Perform some automated format & sanity checks of inputs.
     
@@ -49,10 +48,10 @@ def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date
         - None  
     """
     
-    if (type(max_check_lookbehind) != int or len(str(max_check_look_behind) != 1)):
-        raise ValidationError(max_check_lookbehind, f"max_check_lookbehind ({max_check_lookbehind}) must be length 1, integer type")
+    if (not isinstance(max_check_lookbehind, timedelta)):
+        raise ValidationError(max_check_lookbehind, f"max_check_lookbehind ({max_check_lookbehind}) must be of type datetime.timedelta")
 
-    if( not isinstance(generation_date, datetime.date) or generation_date > date.today()):
+    if( not isinstance(generation_date, date) or generation_date > date.today()):
         raise ValidationError(generation_date, f"generation.date ({generation.date}) must be a datetime.date type and not in the future.")
     
     pattern_found = filename_regex.match(nameformat)
@@ -126,11 +125,20 @@ def check_bad_sample_size(df):
     if not qresult.empty:
         raise ValidationError(None, "sample size must be >= 100")
 
-# Not currently checked.
-def check_min_allowed_max_date(generation_date, max_date, max_weighted_date):
-    if (max_weighted_date < generation_date - timedelta(days=4)
-        or max_date < generation_date - timedelta(days=1)):
+def check_min_allowed_max_date(max_date, generation_date, weighted_option='unweighted'):
+    switcher = {
+        'unweighted': timedelta(days=1),
+        'weighted': timedelta(days=4)
+    }
+    # Get the function from switcher dictionary
+    thres = switcher.get(weighted_option, lambda: "Invalid weighting option")
+
+    if (max_date < generation_date - thres):
         raise ValidationError(None, "latest date of generated file seems too long ago")
+
+def check_max_allowed_max_date(max_date, generation_date):
+    if (max_date < generation_date - timedelta(days=1)):
+        raise ValidationError(None, "latest date of generated file seems too recent")
 
 def reldiff_by_min(x, y):
     return (x - y) / min(x,y)
@@ -185,7 +193,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
 
-def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), sanity_check_rows_per_day = True, sanity_check_value_diffs = False, check_vs_working = True):
+def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), generation_date = date.today(), sanity_check_rows_per_day = True, sanity_check_value_diffs = True, check_vs_working = True):
     """
     Perform data checks.
     
@@ -194,7 +202,7 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
         - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
         - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
         - sanity_check_rows_per_day
-        - sanity_check_value_diffs: detects false positives most of the time, defaults to False
+        - sanity_check_value_diffs: 
         - check_vs_working
 
     Returns:
@@ -207,12 +215,16 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
 
     all_frames = []
     
+    # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+    check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
+    check_max_allowed_max_date(end_date, generation_date)
+
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
     for filename, match in validate_files:
         df = load_csv(join(export_dir, filename))
 
-        validate_daily(df, filename, max_check_lookbehind)
+        validate_daily(df, filename, max_check_lookbehind, generation_date)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
         check_bad_val(df)
         check_bad_se(df)

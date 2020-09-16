@@ -5,10 +5,10 @@ from datetime import datetime, date
 import numpy as np
 import pandas as pd
 
-from delphi_quidel_covidtest.pull import (
+from delphi_quidel.pull import (
     fix_zipcode,
     fix_date,
-    pull_quidel_covidtest,
+    pull_quidel_data,
     check_intermediate_file,
     check_export_end_date,
     check_export_start_date
@@ -37,12 +37,14 @@ class TestFixData:
                                             datetime(2020, 6, 11), datetime(2020, 7, 2)])
 
 class TestingPullData:
-    def test_pull_quidel_covidtest(self):
+    def test_pull_quidel_data(self):
         
         params = read_params()
         
-        df, _ = pull_quidel_covidtest(params) 
+        dfs, _ = pull_quidel_data(params) 
         
+        # For covid_ag
+        df = dfs["covid_ag"]
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 
         
@@ -50,39 +52,55 @@ class TestingPullData:
         assert [last_date.month, last_date.day] == [7, 23]
         assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
         
+        # For covid_ag
+        df = dfs["flu_ag"]
+        first_date = df["timestamp"].min().date() 
+        last_date = df["timestamp"].max().date() 
+        
+        assert [first_date.month, first_date.day] == [6, 22]
+        assert [last_date.month, last_date.day] == [8, 17]
+        assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
+        
 
     def test_check_intermediate_file(self):
         
-        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_with_file", None)
-        assert previous_df is not None
-        assert pull_start_date is not None
-        # Put the test file back
-        previous_df.to_csv("./cache/test_cache_with_file/pulled_until_20200710.csv", index=False)
+        previous_dfs, pull_start_dates = check_intermediate_file("./cache/test_cache_with_file",
+                                                                 {"covid_ag": None, "flu_ag":None})
+        assert previous_dfs["covid_ag"] is not None
+        assert previous_dfs["flu_ag"] is not None
+        assert pull_start_dates["covid_ag"] is not None
+        assert pull_start_dates["flu_ag"] is not None
 
-        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_without_file", None)
-        assert previous_df is None
-        assert pull_start_date is None
+        previous_dfs, pull_start_dates = check_intermediate_file("./cache/test_cache_without_file",
+                                                                 {"covid_ag": None, "flu_ag":None})
+        assert previous_dfs["covid_ag"] is None
+        assert previous_dfs["flu_ag"] is None
+        assert pull_start_dates["covid_ag"] is None
+        assert pull_start_dates["flu_ag"] is None
     
     def test_check_export_end_date(self):
         
         _end_date = datetime(2020, 7, 7)
-        export_end_dates = ["", "2020-07-07", "2020-06-15"]
+        test_dates = ["", "2020-07-07", "2020-06-15"]
         tested = []
-        for export_end_date in export_end_dates:
-            tested.append(check_export_end_date(export_end_date, _end_date,
-                                                END_FROM_TODAY_MINUS))
+        for test_date in test_dates:
+            export_end_dates = {"covid_ag": test_date, "flu_ag": ""}
+            tested.append(check_export_end_date(export_end_dates, _end_date,
+                                                END_FROM_TODAY_MINUS)["covid_ag"])
         expected = [datetime(2020, 7, 2), datetime(2020, 7, 2), datetime(2020, 6,15)]
         
         assert tested == expected
             
     def test_check_export_start_date(self):
         
-        export_end_date = datetime(2020, 7, 2)
-        export_start_dates = ["", "2020-06-20", "2020-04-20"]
+        test_dates = ["", "2020-06-20", "2020-04-20"]
         tested = []
-        for export_start_date in export_start_dates:
-            tested.append(check_export_start_date(export_start_date,
-                                                  export_end_date, EXPORT_DAY_RANGE))
+        for test_date in test_dates:
+            export_start_dates = {"covid_ag": test_date, "flu_ag": ""}
+            export_end_dates = {"covid_ag": datetime(2020, 7, 2), "flu_ag": datetime(2020, 7, 2)}
+            tested.append(check_export_start_date(export_start_dates,
+                                                  export_end_dates,
+                                                  EXPORT_DAY_RANGE)["covid_ag"])
         expected = [datetime(2020, 5, 26), datetime(2020, 6, 20), datetime(2020, 5, 26)]
         
         assert tested == expected

@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from delphi_quidel_covidtest import data_tools
+from delphi_quidel import data_tools
 
 
 class TestDataTools:

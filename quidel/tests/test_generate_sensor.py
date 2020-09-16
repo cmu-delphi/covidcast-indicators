@@ -1,9 +1,9 @@
 import pandas as pd
 from datetime import datetime
 
-from delphi_quidel_covidtest.generate_sensor import (MIN_OBS, POOL_DAYS,
-                                                     generate_sensor_for_states,
-                                                     generate_sensor_for_other_geores)
+from delphi_quidel.generate_sensor import (MIN_OBS, POOL_DAYS,
+                                                generate_sensor_for_states,
+                                                generate_sensor_for_other_geores)
 
 class TestGenerateSensor:
     def test_generate_sensor(self):

@@ -3,7 +3,7 @@ from os.path import join, exists
 import pandas as pd
 from datetime import datetime
 
-from delphi_quidel_covidtest.export import export_csv
+from delphi_quidel.export import export_csv
 
 
 class TestExport:

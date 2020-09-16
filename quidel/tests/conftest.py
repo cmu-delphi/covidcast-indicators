@@ -5,7 +5,7 @@ import pytest
 import os
 from os.path import join
 
-from delphi_quidel_covidtest.run import run_module
+from delphi_quidel.run import run_module
 
 
 @pytest.fixture(scope="session")

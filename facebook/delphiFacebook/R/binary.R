@@ -22,8 +22,12 @@ get_binary_indicators <- function() {
     "wip_smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
     "wip_smoothed_wworried_become_ill", "weight", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
 
-    "wip_smoothed_anxious", "weight_unif", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
-    "wip_smoothed_depressed", "weight_unif", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_anxious_5d", "weight_unif", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wanxious_5d", "weight", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_depressed_5d", "weight_unif", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wdepressed_5d", "weight", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_felt_isolated_5d", "weight_unif", "mh_isolated", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wfelt_isolated_5d", "weight", "mh_isolated", 6, compute_binary_response, jeffreys_binary,
 
     # travel outside state
     "wip_smoothed_travel_outside_state_5d", "weight_unif", "c_travel_state", 6, compute_binary_response, jeffreys_binary,

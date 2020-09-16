@@ -1,4 +1,4 @@
-# Quidel COVID Test
+# Quidel Test Data
 
 ### Background
 Starting from 2014-08, we began getting flu test data from Quidel. The data contains a number of features for every test, including localization at 5-digit Zip Code level, a TestDate and StorageDate, patient age, and several identifiers that uniquely identify the device on which the test was performed (SofiaSerNum, the individual test (FluTestNum), and the result (ResultID). Multiple tests are stored on each device and we suspect that the device identifiers could potentially be useful to normalize the results over time.

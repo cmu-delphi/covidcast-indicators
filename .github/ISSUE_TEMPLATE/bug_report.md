@@ -14,9 +14,7 @@ When I...
 
 **Steps to Reproduce the Bug:**
 
-<!--Steps to reproduce the behavior. Please copy paste the browser url as the first step-->
-
-1. go to **PASTE BROWSER URL HERE**
+<!-- -->
 
 **Expected behavior**
 
@@ -26,13 +24,13 @@ When I...
 
 <!--If applicable, add screenshots to help explain your problem.-->
 
-**Rating Scale (1 is minor, 7 is severe):**
+**Severity:**
 
 <!-- -->
 
 **Context**
 
-- Browser:
+<!-- -->
 
 **Additional context**
 

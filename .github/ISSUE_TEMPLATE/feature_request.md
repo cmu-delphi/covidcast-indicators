@@ -2,7 +2,7 @@
 name: 🚀 Feature Request
 about: Suggest an idea for this project
 title: ''
-labels: 'enhancement'
+labels: 'API addition'
 assignees: ''
 ---
 
@@ -12,7 +12,7 @@ It would be great if ...
 
 **User story**
 
-<!--Describe your problem, feature you are missing, and how you image to look like.-->
+<!--Describe your problem, feature you are missing, and how you imagine it working.-->
 
 **Additional context**
 

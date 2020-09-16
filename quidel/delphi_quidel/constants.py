@@ -9,15 +9,15 @@ EXPORT_DAY_RANGE = 40 # Number of dates to report
 SENSORS = {
     "covid_ag_smoothed_pct_positive": (False, True),
     "covid_ag_raw_pct_positive": (False, False),
-    "covid_ag_smoothed_test_per_device": (True, True),
-    "covid_ag_raw_test_per_device": (True, False),
-    "flu_ag_smoothed_pct_positive": (False, True),
-    "flu_ag_raw_pct_positive": (False, False),
-    "flu_ag_smoothed_test_per_device": (True, True),
-    "flu_ag_raw_test_per_device": (True, False)
+#    "covid_ag_smoothed_test_per_device": (True, True),
+#    "covid_ag_raw_test_per_device": (True, False),
+#    "flu_ag_smoothed_pct_positive": (False, True),
+#    "flu_ag_raw_pct_positive": (False, False),
+#    "flu_ag_smoothed_test_per_device": (True, True),
+#    "flu_ag_raw_test_per_device": (True, False)
 }
 GEO_RESOLUTIONS = [
-#    "county",
+    "county",
     "msa",
     "hrr"
 ]

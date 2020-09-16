@@ -97,6 +97,13 @@ class TestEMRHospSensorUpdator:
             )
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
             td.cleanup()
+            with mock_s3():
+                # Create the fake bucket we will be using
+                params = read_params()
+                aws_credentials = params["aws_credentials"]
+                s3_client = Session(**aws_credentials).client("s3")
+                s3_client.create_bucket(Bucket=params["bucket_name"])
+                run_module()
 
 class TestWriteToCsv:
     def test_write_to_csv_results(self):
@@ -263,12 +270,3 @@ class TestWriteToCsv:
         signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
-
-    def test_bucket(self):
-        with mock_s3():
-            # Create the fake bucket we will be using
-            params = read_params()
-            aws_credentials = params["aws_credentials"]
-            s3_client = Session(**aws_credentials).client("s3")
-            s3_client.create_bucket(Bucket=params["bucket_name"])
-            run_module()

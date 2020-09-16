@@ -5,8 +5,8 @@
   "input_emr_file": "./tests/test_data/SYNICUE_CMB_INPATIENT_11062020.csv.gz",
   "input_claims_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
   "start_date": "2020-02-01",
-  "end_date": "2020-02-01",
-  "drop_date": null,
+  "end_date": "2020-02-02",
+  "drop_date": "2020-02-02",
   "n_backfill_days": 60,
   "n_waiting_days": 3,
   "se": false,
@@ -15,8 +15,8 @@
   "weekday": [true, false],
   "wip_signal": "",
   "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
+    "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+    "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
   },
-  "bucket_name": ""
+  "bucket_name": "test_bucket"
 }

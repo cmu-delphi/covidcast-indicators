@@ -15,7 +15,7 @@ negated_regex_dict = {
     'county': '^(?!\d{5}).*$',
     'hrr': '^(?!\d{1,3}).*$',
     'msa': '^(?!\d{5}).*$',
-    'state': '^(?![A-Z]{2}).*$',
+    'state': '^(?![a-z]{2}).*$',
     'national': '(?!usa).*$'
 }
 

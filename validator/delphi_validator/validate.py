@@ -39,7 +39,7 @@ def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date
     Perform some automated format & sanity checks of inputs.
     
     Arguments:
-        - df_to_test: pandas dataframe 
+        - df_to_test: pandas dataframe of CSV source data
         - nameformat: CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
         - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
         - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
@@ -65,6 +65,16 @@ def validate_daily(df_to_test, nameformat, max_check_lookbehind, generation_date
 
 
 def check_bad_geo_id(df_to_test, geo_type):
+    """
+    Check validity of geo type and values, according to regex pattern.
+    
+    Arguments:
+        - df_to_test: pandas dataframe of CSV source data
+        - geo_type: string from CSV name specifying geo type (state, county, etc) of data
+
+    Returns:
+        - None  
+    """
     if geo_type not in negated_regex_dict:
         raise ValidationError(geo_type,"Unrecognized geo type")
     
@@ -93,34 +103,48 @@ def check_missing_dates(daily_filenames, sdate, edate):
         print("Missing dates are observed; if these dates are already in the API they would not be updated")
         print(check_dateholes)
 
-def check_bad_val(df_to_test):
-    # if (not df_to_test[(df_to_test['val'] > 100)].empty):
-    #     print("val column can't have any cell greater than 100")
-    #     sys.exit()
+def check_bad_val(df_to_test, signal_type):
+    """
+    Check value field for validity.
+    
+    Arguments:
+        - df_to_test: pandas dataframe of CSV source data
+        - signal_type: string from CSV name specifying signal type (smoothed_cli, etc) of data
+
+    Returns:
+        - None  
+    """
+    proportion_option = True if 'prop' in signal_type or 'pct' in signal_type else False
+
+    if proportion_option:
+        if (not df_to_test[(df_to_test['val'] > 100)].empty):
+            raise ValidationError(None,"val column can't have any cell greater than 100")
+
     if (df_to_test.isnull().values.any()):
         raise ValidationError(None,"val column can't have any cell set to null")
+    
     if (not df_to_test[(df_to_test['val'] < 0)].empty):
         raise ValidationError(None,"val column can't have any cell smaller than 0")
 
-def check_bad_se(df):
-    if (df['se'].isnull().values.any()):
+def check_bad_se(df_to_test):
+    if (df_to_test['se'].isnull().values.any()):
         raise ValidationError(None, "se must not be NA")
     
-    df.eval('se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
+    df_to_test.eval('se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
 
-    df['se']= df['se'].round(3)
-    df['se_upper_limit'] = df['se_upper_limit'].round(3)
+    df_to_test['se']= df_to_test['se'].round(3)
+    df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-    result = df.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+    result = df_to_test.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
     if not result.empty:
         raise ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")
 
-def check_bad_sample_size(df):
-    if(df['sample_size'].isnull().values.any()):
+def check_bad_sample_size(df_to_test):
+    if(df_to_test['sample_size'].isnull().values.any()):
         raise ValidationError(None, "sample size can't be NA")
     
-    qresult = df.query('(sample_size < 100)')
+    qresult = df_to_test.query('(sample_size < 100)')
 
     if not qresult.empty:
         raise ValidationError(None, "sample size must be >= 100")
@@ -226,7 +250,7 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
 
         validate_daily(df, filename, max_check_lookbehind, generation_date)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
-        check_bad_val(df)
+        check_bad_val(df, match.groupdict()['signal'])
         check_bad_se(df)
         check_bad_sample_size(df)
         df['geo_type'] = match.groupdict()['geo_type']
@@ -265,7 +289,7 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
         smooth_option = m.group(1)
 
         if smooth_option not in ('raw', 'smoothed'):
-            smooth_option = 'smoothed' if '7dav' in sig else 'raw'
+            smooth_option = 'smoothed' if '7dav' in sig or 'smoothed' in sig else 'raw'
         
         #recent_df.set_index("time_value", inplace = True)
         print("Printing recent_df scenes:", recent_df.shape)

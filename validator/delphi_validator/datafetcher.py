@@ -32,7 +32,7 @@ def get_geo_sig_cmbo(data_source):
     if data_source == 'fb-survey':
         ##### Currently metadata returns --*community*-- signals that don't get generated
         ##### in the new fb-pipeline. Seiving them out for now.
-        # Todo - Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+        # TODO: Include weighted whh_cmnty_cli and wnohh_cmnty_cli
         for sig in unique_signals:
             if "community" in sig:
                 unique_signals.remove(sig)

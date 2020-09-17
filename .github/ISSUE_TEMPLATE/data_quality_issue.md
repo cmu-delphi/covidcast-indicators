@@ -8,13 +8,9 @@ assignees: 'nmdefries'
 
 **Actual Behavior:**
 
-<!--A clear and concise description of what the problem is.-->
+<!--Provide a description of the problem and a minimal reproducible example, if relevant. Please include the source and signal names, as well as sample observations, with geo region name, date, and data, demonstrating the problem.-->
 
 When I...
-
-**Steps to Reproduce the Bug:**
-
-<!-- -->
 
 **Expected behavior**
 

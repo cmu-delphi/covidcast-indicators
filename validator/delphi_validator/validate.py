@@ -127,18 +127,24 @@ def check_bad_val(df_to_test, signal_type):
         raise ValidationError(None,"val column can't have any cell smaller than 0")
 
 def check_bad_se(df_to_test):
-    if (df_to_test['se'].isnull().values.any()):
-        raise ValidationError(None, "se must not be NA")
+    """
+    Check standard errors for validity.
     
+    Arguments:
+        - df_to_test: pandas dataframe of CSV source data
+
+    Returns:
+        - None  
+    """
     df_to_test.eval('se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
 
     df_to_test['se']= df_to_test['se'].round(3)
     df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-    result = df_to_test.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+    result = df_to_test.query('~(~se.isnull() & (((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
     if not result.empty:
-        raise ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")
+        raise ValidationError(None, "se must be NA or in (0,min(50,val*(1+eps))]")
 
 def check_bad_sample_size(df_to_test):
     if(df_to_test['sample_size'].isnull().values.any()):

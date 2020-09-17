@@ -105,7 +105,7 @@ $(WEIGHTS): $(TODAY)
 	sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu || exit 90; \
 	cd -; \
 	MAX_WEIGHTED=`$(MAX_WEIGHTED)`; \
-	EXPECTED_MAX_WEIGHTED=`date --date='2 days ago' +'%Y%m%d'`; \
+	EXPECTED_MAX_WEIGHTED=`date --date='3 days ago' +'%Y%m%d'`; \
 	if [[ $$EXPECTED_MAX_WEIGHTED -gt $$MAX_WEIGHTED ]]; then \
 	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED\nActual most recent file: $$MAX_WEIGHTED"; \
 	  echo "WARNING: $${MSG}" | tr "\n" ";" >> $(MESSAGES); \

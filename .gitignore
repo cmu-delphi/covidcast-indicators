@@ -116,6 +116,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# VSCode settings
+*.vscode
+
 # mypy
 .mypy_cache/
 

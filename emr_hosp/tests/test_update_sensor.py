@@ -8,6 +8,9 @@ from tempfile import TemporaryDirectory
 # third party
 import pandas as pd
 import numpy as np
+from boto3 import Session
+from moto import mock_s3
+import pytest
 
 # third party
 from delphi_utils import read_params
@@ -17,6 +20,7 @@ from delphi_emr_hosp.config import Config, Constants
 from delphi_emr_hosp.constants import *
 from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
 from delphi_emr_hosp.load_data import *
+from delphi_emr_hosp.run import run_module
 
 CONFIG = Config()
 CONSTANTS = Constants()
@@ -85,12 +89,20 @@ class TestEMRHospSensorUpdator:
                 self.weekday,
                 self.se
             )
-            su_inst.update_sensor(
-                EMR_FILEPATH,
-                CLAIMS_FILEPATH,
-                td.name,
-                PARAMS["static_file_dir"]
-            )
+
+            with mock_s3():
+                # Create the fake bucket we will be using
+                params = read_params()
+                aws_credentials = params["aws_credentials"]
+                s3_client = Session(**aws_credentials).client("s3")
+                s3_client.create_bucket(Bucket=params["bucket_name"])
+                su_inst.update_sensor(
+                    EMR_FILEPATH,
+                    CLAIMS_FILEPATH,
+                    td.name,
+                    PARAMS["static_file_dir"]
+                )
+
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
             td.cleanup()
 

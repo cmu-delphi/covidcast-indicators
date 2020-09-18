@@ -8,6 +8,7 @@ receiving/*.csv
 
 # Do not commit test files
 tests/receiving/*.csv
+tests/daily_cache/*.csv
 
 # Remove macOS files
 .DS_Store

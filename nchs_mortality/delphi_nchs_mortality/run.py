@@ -6,8 +6,8 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, timedelta
 from os.path import join
-from os import remove
-from shutil import copytree
+from os import remove, listdir
+from shutil import copy
 
 import numpy as np
 import pandas as pd
@@ -93,7 +93,10 @@ def run_module():
     # - Exports issues into receiving for the API
     if datetime.today().weekday() == 0:
         # Copy todays raw output to receiving
-        copytree(daily_export_dir, export_dir)
+        for output_file in listdir(daily_export_dir):
+            copy(
+                join(daily_export_dir, output_file),
+                join(export_dir, output_file))
 
         weekly_arch_diff = S3ArchiveDiffer(
             cache_dir, export_dir,

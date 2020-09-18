@@ -25,7 +25,9 @@ FIPS_MSA_URL = "https://www2.census.gov/programs-surveys/metro-micro/geographies
 JHU_FIPS_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = "https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv"
-FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
+FIPS_PUERTO_RICO_POPULATION_URL = (
+    "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
+)
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -222,9 +224,23 @@ def create_jhu_uid_fips_crosswalk():
     )
     unassigned_states = pd.DataFrame(
         [
-            # Map the Unassigned states FIPS to a custom megaFIPS XX000
+            # Map the Unassigned category to a custom megaFIPS XX000
             {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-            for x in range(84090001, 84090099)
+            for x in range(84090001, 84090057)
+        ]
+    )
+    out_of_state = pd.DataFrame(
+        [
+            # Map the Out of State category to a custom megaFIPS XX000
+            {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
+            for x in range(84080001, 84080057)
+        ]
+    )
+    puerto_rico_unassigned = pd.DataFrame(
+        [
+            # Map the Unassigned and Out of STate categories to the cusom megaFIPS 72000
+            {"jhu_uid": "63072888", "fips": "72000", "weight": 1.0},
+            {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
         ]
     )
 
@@ -248,15 +264,22 @@ def create_jhu_uid_fips_crosswalk():
     jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
 
     # Drop the JHU UIDs that were hand-modified
-    dup_ind = jhu_df["jhu_uid"].isin(hand_additions["jhu_uid"].values) | jhu_df[
-        "jhu_uid"
-    ].isin(unassigned_states["jhu_uid"].values)
+    dup_ind = jhu_df["jhu_uid"].isin(
+        pd.concat(
+            [
+                hand_additions,
+                unassigned_states,
+                out_of_state,
+                puerto_rico_unassigned,
+            ]
+        )["jhu_uid"].values
+    )
     jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
 
     # Add weights of 1.0 to everything not in hand additions, then merge in hand-additions
     # Finally, zero fill FIPS
     jhu_df["weight"] = 1.0
-    jhu_df = pd.concat((jhu_df, hand_additions, unassigned_states))
+    jhu_df = pd.concat((jhu_df, hand_additions, unassigned_states, out_of_state))
     jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
     jhu_df.to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), index=False)
 
@@ -381,7 +404,9 @@ def create_fips_population_table():
 
     # Get the file with Puerto Rico populations (and a few counties other small counties)
     df_pr = pd.read_csv(FIPS_PUERTO_RICO_POPULATION_URL)
-    df_pr["fips"] = df_pr["STATE"].astype(str).str.zfill(2) + df_pr["COUNTY"].astype(str).str.zfill(3)
+    df_pr["fips"] = df_pr["STATE"].astype(str).str.zfill(2) + df_pr["COUNTY"].astype(
+        str
+    ).str.zfill(3)
     df_pr["pop"] = df_pr["POPPT"]
     df_pr = df_pr[["fips", "pop"]]
     # Fill the missing data with 2010 information

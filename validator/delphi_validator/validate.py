@@ -126,12 +126,13 @@ def check_bad_val(df_to_test, signal_type):
     if (not df_to_test[(df_to_test['val'] < 0)].empty):
         raise ValidationError(None,"val column can't have any cell smaller than 0")
 
-def check_bad_se(df_to_test):
+def check_bad_se(df_to_test, missing_se_allowed):
     """
     Check standard errors for validity.
     
     Arguments:
         - df_to_test: pandas dataframe of CSV source data
+        - missing_se_allowed: boolean specified in params.json
 
     Returns:
         - None  
@@ -141,19 +142,34 @@ def check_bad_se(df_to_test):
     df_to_test['se']= df_to_test['se'].round(3)
     df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-    result = df_to_test.query('~(~se.isnull() & (((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+    if not missing_se_allowed:
+        if (df_to_test['se'].isnull().values.any()):
+            raise ValidationError(None, "se must not be NA")
+        
+        result = df_to_test.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+
+        if not result.empty:
+            raise ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")     
+
+    elif missing_se_allowed:
+        result = df_to_test.query('~(~se.isnull() & (((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+
+        if not result.empty:
+            raise ValidationError(None, "se must be NA or in (0,min(50,val*(1+eps))]")
+    
+    result = df_to_test.query('(val == 0) & (se == 0)')
 
     if not result.empty:
-        raise ValidationError(None, "se must be NA or in (0,min(50,val*(1+eps))]")
+        raise ValidationError(None, "when signal value is 0, se must be non-zero. please use Jeffreys correction to generate an appropriate se")     
 
-def check_bad_sample_size(df_to_test):
+def check_bad_sample_size(df_to_test, minimum_sample_size):
     if(df_to_test['sample_size'].isnull().values.any()):
         raise ValidationError(None, "sample size can't be NA")
     
-    qresult = df_to_test.query('(sample_size < 100)')
+    qresult = df_to_test.query('(sample_size < @minimum_sample_size)')
 
     if not qresult.empty:
-        raise ValidationError(None, "sample size must be >= 100")
+        raise ValidationError(None, "sample size must be >= {minimum_sample_size}")
 
 def check_min_allowed_max_date(max_date, generation_date, weighted_option='unweighted'):
     switcher = {
@@ -223,7 +239,7 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
 
-def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind = timedelta(days=7), generation_date = date.today(), sanity_check_rows_per_day = True, sanity_check_value_diffs = True, check_vs_working = True):
+def validate(export_dir, start_date, end_date, data_source, params, generation_date = date.today()):
     """
     Perform data checks.
     
@@ -238,6 +254,16 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
     Returns:
         - None  
     """
+    # Get user settings from params or if not provided, set default.
+    max_check_lookbehind = timedelta(days=params.get("ref_window_size", 7)) 
+    minimum_sample_size = params.get('minimum_sample_size', 100)
+    missing_se_allowed = params.get('missing_se_allowed', False)
+    missing_sample_size_allowed = params.get('missing_sample_size_allowed', False)
+
+    sanity_check_rows_per_day = params.get('sanity_check_rows_per_day', True)
+    sanity_check_value_diffs = params.get('sanity_check_value_diffs', True)
+    check_vs_working = params.get('check_vs_working', True)
+
 
     export_files = read_filenames(export_dir)
     date_filter = make_date_filter(start_date, end_date)
@@ -257,8 +283,8 @@ def validate(export_dir, start_date, end_date, data_source, max_check_lookbehind
         validate_daily(df, filename, max_check_lookbehind, generation_date)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
         check_bad_val(df, match.groupdict()['signal'])
-        check_bad_se(df)
-        check_bad_sample_size(df)
+        check_bad_se(df, missing_se_allowed)
+        check_bad_sample_size(df, minimum_sample_size, missing_sample_size_allowed)
         df['geo_type'] = match.groupdict()['geo_type']
         df['date'] = match.groupdict()['date']
         df['signal'] = match.groupdict()['signal']

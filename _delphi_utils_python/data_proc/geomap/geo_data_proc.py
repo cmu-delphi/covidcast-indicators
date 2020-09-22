@@ -277,7 +277,7 @@ def create_jhu_uid_fips_crosswalk():
 
 
 def create_state_codes_crosswalk():
-    """Creat the State ID -> State Name -> State code crosswalk file."""
+    """Create the State ID -> State Name -> State code crosswalk file."""
     df = (
         pd.read_csv(STATE_CODES_URL, delimiter="|")
         .drop(columns="STATENS")

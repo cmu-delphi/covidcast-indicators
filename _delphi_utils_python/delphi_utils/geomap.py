@@ -9,10 +9,10 @@ Partially based on code by Maria Jahja
 Created: 2020-06-01
 
 TODO:
-- add fast cross mappings
-- use a caching utility to store the crossfiles, like joblib:
-  https://joblib.readthedocs.io/en/latest/memory.html
+- use a caching utility to store the crossfiles
+  see: https://github.com/cmu-delphi/covidcast-indicators/issues/282
 - remove deprecated functions once integration into JHU and Quidel is refactored
+  see: https://github.com/cmu-delphi/covidcast-indicators/issues/283
 """
 
 from os.path import join

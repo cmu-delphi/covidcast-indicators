@@ -89,15 +89,12 @@ def check_missing_dates(daily_filenames, sdate, edate):
     number_of_dates = edate - sdate + timedelta(days=1)
     date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days)}
     unique_dates = set()
-    unique_dates_obj = set()
 
     for daily_filename in daily_filenames:
-        unique_dates.add(daily_filename[0][0:8])
-    for unique_date in unique_dates:
-        newdate_obj = datetime.strptime(unique_date, '%Y%m%d')
-        unique_dates_obj.add(newdate_obj)
+        unique_dates.add(datetime.strptime(daily_filename[0][0:8], '%Y%m%d'))
 
-    check_dateholes = date_seq.difference(unique_dates_obj)
+    check_dateholes = list(date_seq.difference(unique_dates))
+    check_dateholes.sort()
     
     if check_dateholes:
         print("Missing dates are observed; if these dates are already in the API they would not be updated")
@@ -278,9 +275,9 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
     all_frames = []
     
-    # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
-    check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
-    check_max_allowed_max_date(end_date, generation_date)
+    # # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+    # check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
+    # check_max_allowed_max_date(end_date, generation_date)
 
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)

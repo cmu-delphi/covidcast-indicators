@@ -214,31 +214,40 @@ def check_rapid_change(df_to_test, df_to_compare, checking_date, date_list, sig,
     if(abs(reldiff_by_min(test_rows_per_reporting_day, reference_rows_per_reporting_day)) > 0.35):
         raise ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (reference vs recent window of data)")
 
-def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
+def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
+    """
+    Compare average values in test dataframe vs reference dataframe.
+    
+    Arguments:
+        - df_to_test: pandas dataframe of "recent" CSV source data
+        - df_to_compare: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
+        - smooth_option: "raw" or "smoothed", choosen
+
+    Returns:
+        - None  
+    """
     # pdb.set_trace()
 
-    # TODO: something is wrong with this check definition.
-    recent_df = recent_df.drop(columns=['geo_id'])
-    mean_recent_df = recent_df[['val', 'se', 'sample_size']].mean()
-    recent_api_df = recent_api_df.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
-    recent_api_df = recent_api_df.drop(columns=['geo_value'])
+    # Average each of val, se, and sample_size over all dates for a given geo_id. Ignores NA values by default.
+    df_to_test = df_to_test.groupby(['geo_id'], as_index=False)[['val', 'se', 'sample_size']].mean()
+    df_to_test = df_to_test.drop(columns=['geo_id'])
 
-    mean_recent_api_df = recent_api_df.mean()
+    # Average val, se, and sample_size values together over all geo_ids.
+    test_mean = df_to_test.mean()
 
-    mean_stddiff = ((mean_recent_df - mean_recent_api_df).mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
-    mean_stdabsdiff = ((mean_recent_df - mean_recent_api_df).abs().mean() * 2) / (mean_recent_df.mean() + mean_recent_api_df.mean())
+    df_to_compare = df_to_compare.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
+    df_to_compare = df_to_compare.drop(columns=['geo_value'])
+
+    reference_mean = df_to_compare.mean()
+
+    # TODO: Look at reference code for this section.
+    mean_stddiff = ((test_mean - reference_mean).mean() * 2) / (test_mean.mean() + reference_mean.mean())
+    mean_stdabsdiff = ((test_mean - reference_mean).abs().mean() * 2) / (test_mean.mean() + reference_mean.mean())
 
     classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
     raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
 
     smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
-
-    # Code reference from R code
-    # changesum.by.variable.with.flags = changesum.by.variable %>>%
-    #         dplyr::mutate(mean.stddiff.high = abs(mean.stddiff) > thresholds[["mean.stddiff"]] |
-    #                           variable=="val" & abs(mean.stddiff) > thresholds[["val.mean.stddiff"]],
-    #                       mean.stdabsdiff.high = mean.stdabsdiff > thresholds[["mean.stdabsdiff"]]) %>>%
-    # Todo - Check whats the purpose of variable=="val" in the above statement
 
     switcher = {
     'raw': raw_thresholds,
@@ -246,7 +255,8 @@ def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     }
     # Get the function from switcher dictionary
     thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
-
+ 
+    # TODO: comparisons wrong here. Look at reference code.
     mean_stddiff_high = (np.absolute(mean_stddiff) > thres.loc['mean.stddiff']).bool() # or (np.absolute(mean_stddiff) > thres.loc['val.mean.stddiff"']).bool()
     mean_stdabsdiff_high = (mean_stdabsdiff > thres.loc['mean.stdabsdiff']).bool()
 
@@ -336,6 +346,7 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
     ## do we use to form the reference statistics?
     semirecent_lookbehind = timedelta(days=7)
 
+    # TODO: Check recent data against semirecent and API data.
     start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
         max(all_frames["date"]) - max_check_lookbehind + 1)
     end_checking_date = max(all_frames["date"])
@@ -356,8 +367,18 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
         if (recent_df_to_test["se"].isnull().mean() > 0.5):
             print('Recent se values are >50% NA')
 
+        if sanity_check_rows_per_day:
+            check_rapid_change(recent_df_to_test, semirecent_df_to_test)
 
-        recent_rows_per_reporting_day
+        recent_df_to_test["recency"] = "recent"
+        semirecent_df_to_test["recency"] = "semirecent"
+
+        recency_df = pd.concat([recent_df_to_test, semirecent_df_to_test])
+
+        # TODO: Continue with check_avg_val_diffs() here.
+
+
+
 
 
     smooth_option_regex = re.compile(r'([^_]+)')
@@ -382,7 +403,10 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
             recent_end_date = checking_date - recent_lookbehind
             recent_begin_date = checking_date - max_check_lookbehind
             recent_api_df = covidcast.signal(data_source, sig, recent_begin_date, recent_end_date, geo)
-            
+
+            # Replace None with NA to make numerical manipulation easier.
+            recent_api_df.replace(to_replace=[None], value=np.nan, inplace=True) 
+
             recent_api_df.rename(columns={'stderr': 'se', 'value': 'val'}, inplace = True)
             recent_api_df.drop(['direction', 'issue', 'lag'], axis=1, inplace = True)
             
@@ -399,7 +423,6 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)
 
-            # TODO: Add semirecent check?
         kroc += 1
         if kroc == 2:  
             break

@@ -208,11 +208,11 @@ def check_rapid_change(df_to_test, df_to_compare, checking_date, date_list, sig,
     Returns:
         - None  
     """
-    recent_rows_per_reporting_day = recent_df[recent_df['time_value'] == checking_date].shape[0]
-    recent_api_rows_per_reporting_day = recent_api_df.shape[0] / len(date_list)
+    test_rows_per_reporting_day = df_to_test[df_to_test['time_value'] == checking_date].shape[0]
+    reference_rows_per_reporting_day = df_to_compare.shape[0] / len(date_list)
     
-    if(abs(reldiff_by_min(recent_rows_per_reporting_day, recent_api_rows_per_reporting_day)) > 0.35):
-        raise ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (latest vs recent window of data)")
+    if(abs(reldiff_by_min(test_rows_per_reporting_day, reference_rows_per_reporting_day)) > 0.35):
+        raise ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (reference vs recent window of data)")
 
 def check_avg_val_diffs(recent_df, recent_api_df, smooth_option):
     # pdb.set_trace()

@@ -28,6 +28,7 @@ FIPS_POPULATION_URL = "https://www2.census.gov/programs-surveys/popest/datasets/
 FIPS_PUERTO_RICO_POPULATION_URL = (
     "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 )
+STATE_HHS_FILE = "hhs.txt"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -123,11 +124,7 @@ def create_fips_msa_crosswalk():
     }
     # The following line requires the xlrd package.
     msa_df = pd.read_excel(
-        FIPS_MSA_URL,
-        skiprows=2,
-        skipfooter=4,
-        usecols=msa_cols.keys(),
-        dtype=msa_cols,
+        FIPS_MSA_URL, skiprows=2, skipfooter=4, usecols=msa_cols.keys(), dtype=msa_cols,
     )
 
     metro_bool = (
@@ -266,12 +263,7 @@ def create_jhu_uid_fips_crosswalk():
     # Drop the JHU UIDs that were hand-modified
     dup_ind = jhu_df["jhu_uid"].isin(
         pd.concat(
-            [
-                hand_additions,
-                unassigned_states,
-                out_of_state,
-                puerto_rico_unassigned,
-            ]
+            [hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned,]
         )["jhu_uid"].values
     )
     jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
@@ -301,30 +293,18 @@ def create_state_codes_crosswalk():
     df["state_id"] = df["state_id"].astype(str).str.lower()
 
     # Add a few extra US state territories manually
-    df = pd.concat(
-        (
-            df,
-            pd.DataFrame(
-                [
-                    {
-                        "state_code": 70,
-                        "state_name": "Republic of Palau",
-                        "state_id": "pw",
-                    },
-                    {
-                        "state_code": 68,
-                        "state_name": "Marshall Islands",
-                        "state_id": "mh",
-                    },
-                    {
-                        "state_code": 64,
-                        "state_name": "Federated States of Micronesia",
-                        "state_id": "fm",
-                    },
-                ]
-            ),
-        )
+    territories = pd.DataFrame(
+        [
+            {"state_code": 70, "state_name": "Republic of Palau", "state_id": "pw",},
+            {"state_code": 68, "state_name": "Marshall Islands", "state_id": "mh",},
+            {
+                "state_code": 64,
+                "state_name": "Federated States of Micronesia",
+                "state_id": "fm",
+            },
+        ]
     )
+    df = pd.concat((df, territories))
 
     df.to_csv(join(OUTPUT_DIR, STATE_OUT_FILENAME), index=False)
 
@@ -341,12 +321,12 @@ def create_state_hhs_crosswalk():
         dtype={"state_code": str, "state_name": str, "state_id": str},
     )
 
-    with open("hhs.txt") as f:
-        temp = f.readlines()
+    with open(STATE_HHS_FILE) as temp_file:
+        temp = temp_file.readlines()
 
     # Process text from https://www.hhs.gov/about/agencies/iea/regional-offices/index.html
     temp = [int(s[7:9]) if "Region" in s else s for s in temp]
-    temp = [s.strip().split(", ") if type(s) == str else s for s in temp]
+    temp = [s.strip().split(", ") if isinstance(s, str) else s for s in temp]
     temp = {temp[i]: temp[i + 1] for i in range(0, len(temp), 2)}
     temp = {key: [x.lstrip(" and") for x in temp[key]] for key in temp}
     temp = [[(key, x) for x in temp[key]] for key in temp]
@@ -370,6 +350,11 @@ def create_state_hhs_crosswalk():
 
 
 def create_fips_population_table():
+    """
+    Build a table of populations by FIPS county codes. Uses US Census Bureau population
+    data from 2019, supplemented with 2010 population data for Puerto Rico, and a few
+    small counties.
+    """
     census_pop = pd.read_csv(FIPS_POPULATION_URL, encoding="ISO-8859-1")
     census_pop["fips"] = census_pop.apply(
         lambda x: f"{x['STATE']:02d}{x['COUNTY']:03d}", axis=1
@@ -377,39 +362,35 @@ def create_fips_population_table():
     census_pop["pop"] = census_pop["POPESTIMATE2019"]
     census_pop = census_pop[["fips", "pop"]]
     census_pop = pd.concat(
-        [
-            census_pop,
-            pd.DataFrame(
-                {
-                    "fips": ["70002", "70003"],
-                    "pop": [0, 0],
-                }
-            ),
-        ]
+        [census_pop, pd.DataFrame({"fips": ["70002", "70003"], "pop": [0, 0],}),]
     )
     census_pop = census_pop.reset_index(drop=True)
 
     # Set population for Dukes and Nantucket
-    DN_FIPS = "70002"
-    DUKES_FIPS = "25007"
-    NANTU_FIPS = "25019"
+    dn_fips = "70002"
+    dukes_fips = "25007"
+    nantu_fips = "25019"
 
-    census_pop.loc[census_pop["fips"] == DN_FIPS, "pop"] = (
-        census_pop.loc[census_pop["fips"] == DUKES_FIPS, "pop"].values
-        + census_pop.loc[census_pop["fips"] == NANTU_FIPS, "pop"].values
+    census_pop.loc[census_pop["fips"] == dn_fips, "pop"] = (
+        census_pop.loc[census_pop["fips"] == dukes_fips, "pop"].values
+        + census_pop.loc[census_pop["fips"] == nantu_fips, "pop"].values
     )
 
     # Set population for Kansas City
     census_pop.loc[census_pop["fips"] == "70003", "pop"] = 491918  # via Google
 
-    # Get the file with Puerto Rico populations (and a few counties other small counties)
+    # Get the file with Puerto Rico populations
     df_pr = pd.read_csv(FIPS_PUERTO_RICO_POPULATION_URL)
     df_pr["fips"] = df_pr["STATE"].astype(str).str.zfill(2) + df_pr["COUNTY"].astype(
         str
     ).str.zfill(3)
     df_pr["pop"] = df_pr["POPPT"]
     df_pr = df_pr[["fips", "pop"]]
-    # Fill the missing data with 2010 information
+    # Create the Puerto Rico megaFIPS
+    df_pr = df_pr[df_pr["fips"].isin([str(x) for x in range(72000, 72999)])]
+    df_pr = pd.concat([df_pr, pd.DataFrame([{"fips": "72000", "pop": df_pr["pop"].sum()}])])
+
+    # Fill the missing Puerto Rico data with 2010 information
     df_pr = df_pr.groupby("fips").sum().reset_index()
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
     census_pop_pr = pd.concat([census_pop, df_pr])
@@ -417,6 +398,10 @@ def create_fips_population_table():
 
 
 def derive_zip_population_table():
+    """
+    Builds a table of populations by ZIP code. Combines the tble of populations by
+    FIPS code with the FIPS to ZIP code mapping.
+    """
     if not isfile(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME)):
         create_fips_population_table()
 
@@ -452,8 +437,7 @@ def derive_fips_hrr_crosswalk():
         dtype={"fips": str, "zip": str, "weight": float},
     )
     zh_df = pd.read_csv(
-        join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME),
-        dtype={"zip": str, "hrr": str},
+        join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), dtype={"zip": str, "hrr": str},
     )
 
     (
@@ -467,6 +451,10 @@ def derive_fips_hrr_crosswalk():
 
 
 def derive_fips_state_crosswalk():
+    """
+    Builds a crosswalk between FIPS county codes and state information (number,
+    abbreviation, name).
+    """
     fips_pop = pd.read_csv(
         join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
     )
@@ -484,8 +472,10 @@ def derive_fips_state_crosswalk():
 
 
 def derive_zip_msa_crosswalk():
-    """Derives a crosswalk file from ZIP to MSA through ZIP -> FIPS -> HRR
-    from the crosswalk files made by the functions above."""
+    """
+    Derives a crosswalk file from ZIP to MSA through ZIP -> FIPS -> HRR
+    from the crosswalk files made by the functions above.
+    """
     if not isfile(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME)):
         create_fips_zip_crosswalk()
 
@@ -511,6 +501,10 @@ def derive_zip_msa_crosswalk():
 
 
 def derive_zip_to_state_code():
+    """
+    Builds a crosswalk between ZIP codes and state information (number, abbreviation,
+    name).
+    """
     if not isfile(join(OUTPUT_DIR, STATE_OUT_FILENAME)):
         create_state_codes_crosswalk()
     if not isfile(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME)):

@@ -203,10 +203,8 @@ class GeoMapper:
         ---------
         data: copy of dataframe
         """
-
-        assert (
-            "_thr_col_roll" not in data.columns
-        ), "column name '_thr_col_roll' is reserved"
+        if "_thr_col_roll" in data.columns:
+            raise ValueError("Column name '_thr_col_roll' is reserved.")
 
         def agg_sum_iter(data):
             data_gby = (

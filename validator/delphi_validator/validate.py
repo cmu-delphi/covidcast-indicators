@@ -193,7 +193,21 @@ def check_max_allowed_max_date(max_date, generation_date):
 def reldiff_by_min(x, y):
     return (x - y) / min(x,y)
 
-def check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo):
+def check_rapid_change(df_to_test, df_to_compare, checking_date, date_list, sig, geo):
+    """
+    Compare number of obervations per day in test dataframe vs reference dataframe.
+    
+    Arguments:
+        - df_to_test: pandas dataframe of "recent" CSV source data
+        - df_to_compare: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
+        - checking_date
+        - date_list
+        - sig
+        - geo
+
+    Returns:
+        - None  
+    """
     recent_rows_per_reporting_day = recent_df[recent_df['time_value'] == checking_date].shape[0]
     recent_api_rows_per_reporting_day = recent_api_df.shape[0] / len(date_list)
     
@@ -271,13 +285,14 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
     export_files = read_filenames(export_dir)
     date_filter = make_date_filter(start_date, end_date)
+    # List of tuples of CSV names and regex match objects.
     validate_files = [(f, m) for (f, m) in export_files if date_filter(f,m)]
 
     all_frames = []
     
-    # # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
-    # check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
-    # check_max_allowed_max_date(end_date, generation_date)
+    # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+    check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
+    check_max_allowed_max_date(end_date, generation_date)
 
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
@@ -289,18 +304,26 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
         check_bad_val(df, match.groupdict()['signal'])
         check_bad_se(df, missing_se_allowed)
         check_bad_sample_size(df, minimum_sample_size, missing_sample_size_allowed)
+
+        # Get geo_type, date, and signal name as specified by CSV name.
         df['geo_type'] = match.groupdict()['geo_type']
         df['date'] = match.groupdict()['date']
         df['signal'] = match.groupdict()['signal']
+
+        # Add current CSV data to all_frames.
         all_frames.append(df)    
 
     # TODO: Multi-indexed dataframe for a given (signal, geo_type)
     all_frames = pd.concat(all_frames)
  
+    # Get all expected combinations of geo_type and signal. 
     geo_sig_cmbo = get_geo_sig_cmbo(data_source)
+
+    # Get list of dates we expect to see in the CSV data.
     date_slist = df['date'].unique().tolist()
     date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
 
+    # Get list of CSV names.
     filenames = [name_match_pair[0] for name_match_pair in validate_files] 
 
     ## recent_lookbehind: start from the check date and working backward in time,
@@ -312,6 +335,29 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
     ## in time, how many days -- before subtracting out the "recent" days ---
     ## do we use to form the reference statistics?
     semirecent_lookbehind = timedelta(days=7)
+
+    start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
+        max(all_frames["date"]) - max_check_lookbehind + 1)
+    end_checking_date = max(all_frames["date"])
+
+    if (start_checking_date > end_checking_date):
+        raise ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks")
+
+
+    for checking_date in range(start_checking_date, end_checking_date):
+        known_irregularities = get_known_irregularities(checking_date, filename)
+
+        recent_cutoff_date = checking_date - recent_lookbehind + 1
+        semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
+
+        recent_df_to_test = df_to_test.query('date <= @checking_date & date >= @recent_cutoff_date')
+        semirecent_df_to_test = df_to_test.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
+
+        if (recent_df_to_test["se"].isnull().mean() > 0.5):
+            print('Recent se values are >50% NA')
+
+
+        recent_rows_per_reporting_day
 
 
     smooth_option_regex = re.compile(r'([^_]+)')
@@ -343,11 +389,12 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
             column_names = ["geo_value", "val", "se", "sample_size", "time_value"]
 
             recent_api_df = recent_api_df.reindex(columns=column_names)
+
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
             if sanity_check_rows_per_day:
-                check_rapid_change(checking_date, recent_df, recent_api_df, date_list, sig, geo)
+                check_rapid_change(recent_df, recent_api_df, checking_date, date_list, sig, geo)
 
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)

@@ -118,10 +118,10 @@ def check_bad_val(df_to_test, signal_type):
 
     if proportion_option:
         if (not df_to_test[(df_to_test['val'] > 100)].empty):
-            raise ValidationError(None,"val column can't have any cell greater than 100")
+            raise ValidationError(signal_type, "val column can't have any cell greater than 100")
 
-    if (df_to_test.isnull().values.any()):
-        raise ValidationError(None,"val column can't have any cell set to null")
+    if (df_to_test['val'].isnull().values.any()):
+        raise ValidationError(None,"val column can't have any cell that is NA")
     
     if (not df_to_test[(df_to_test['val'] < 0)].empty):
         raise ValidationError(None,"val column can't have any cell smaller than 0")
@@ -152,7 +152,7 @@ def check_bad_se(df_to_test, missing_se_allowed):
             raise ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")     
 
     elif missing_se_allowed:
-        result = df_to_test.query('~(~se.isnull() & (((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+        result = df_to_test.query('~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
         if not result.empty:
             raise ValidationError(None, "se must be NA or in (0,min(50,val*(1+eps))]")
@@ -162,14 +162,21 @@ def check_bad_se(df_to_test, missing_se_allowed):
     if not result.empty:
         raise ValidationError(None, "when signal value is 0, se must be non-zero. please use Jeffreys correction to generate an appropriate se")     
 
-def check_bad_sample_size(df_to_test, minimum_sample_size):
-    if(df_to_test['sample_size'].isnull().values.any()):
-        raise ValidationError(None, "sample size can't be NA")
-    
-    qresult = df_to_test.query('(sample_size < @minimum_sample_size)')
+def check_bad_sample_size(df_to_test, minimum_sample_size, missing_sample_size_allowed):
+    if not missing_sample_size_allowed:
+        if (df_to_test['sample_size'].isnull().values.any()):
+            raise ValidationError(None, "sample_size must not be NA")
+        
+        result = df_to_test.query('(sample_size < @minimum_sample_size)')
 
-    if not qresult.empty:
-        raise ValidationError(None, "sample size must be >= {minimum_sample_size}")
+        if not result.empty:
+            raise ValidationError(None, "sample size must be >= {minimum_sample_size}")    
+
+    elif missing_sample_size_allowed:
+        result = df_to_test.query('~(sample_size.isnull() | (sample_size >= @minimum_sample_size))')
+
+        if not result.empty:
+            raise ValidationError(None, "sample size must be NA or >= {minimum_sample_size}")
 
 def check_min_allowed_max_date(max_date, generation_date, weighted_option='unweighted'):
     switcher = {

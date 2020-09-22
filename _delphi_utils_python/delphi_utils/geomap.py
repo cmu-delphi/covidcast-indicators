@@ -202,6 +202,8 @@ class GeoMapper:
         Return
         ---------
         data: copy of dataframe
+            A dataframe with a new column, mega_col, that contains megaFIPS (aggregate
+            of FIPS clusters) values depending on the number of data samples available.
         """
         if "_thr_col_roll" in data.columns:
             raise ValueError("Column name '_thr_col_roll' is reserved.")
@@ -379,7 +381,7 @@ class GeoMapper:
             mega_col="megafips",
             count_cols=None,
     ):
-        """convert and aggregate from zip to fips (county)
+        """Convert and aggregate from FIPS to megaFIPS
 
         Parameters
         ---------
@@ -396,6 +398,8 @@ class GeoMapper:
         Return
         ---------
             data: copy of dataframe
+                A dataframe with data aggregated into megaFIPS codes (aggregate
+                of FIPS clusters) values depending on the number of data samples available.
         """
         data = data.copy()
         if count_cols:

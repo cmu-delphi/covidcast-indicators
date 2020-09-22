@@ -329,8 +329,8 @@ class GeoMapper:
             # Multiply and aggregate (this automatically zeros NAs)
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
-            df = df.groupby([date_col, new_col]).sum()
-            return df.reset_index()
+            df = df.groupby([date_col, new_col]).sum().reset_index()
+            return df
         else:
             df = df.groupby([date_col, new_col]).sum().reset_index()
             return df

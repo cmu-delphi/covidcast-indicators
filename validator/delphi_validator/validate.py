@@ -221,7 +221,7 @@ def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
     Arguments:
         - df_to_test: pandas dataframe of "recent" CSV source data
         - df_to_compare: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
-        - smooth_option: "raw" or "smoothed", choosen
+        - smooth_option: "raw" or "smoothed", choosen according to smoothing of signal (e.g. 7dav is "smoothed")
 
     Returns:
         - None  
@@ -235,7 +235,7 @@ def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
 
     df_all = pd.concat([df_to_compare, df_to_test])
 
-
+    # For each variable type (val, se, and sample size) where not missing, calculate the relative mean difference and mean absolute difference between the test data and the reference data across all geographic regions.
     df_all = pd.melt(df_all, id_vars=["geo_id", "type"], value_vars=["val","se","sample_size"]).pivot(index=("geo_id", "variable"), columns="type", values="value").reset_index(("geo_id","variable")).dropna().assign(
             type_diff=lambda x: x["test"] - x["reference"],
             abs_type_diff=lambda x: abs(x["type_diff"])
@@ -248,10 +248,10 @@ def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
             mean_stddiff=lambda x: 2 * x["mean_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"]),
             mean_stdabsdiff=lambda x: 2 * x["mean_abs_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"])
         )[["variable", "mean_stddiff", "mean_stdabsdiff"]]
- 
 
-    classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
-    raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
+    # Set thresholds for raw and smoothed variables.
+    classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
+    raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes).T
 
     smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
 
@@ -259,16 +259,18 @@ def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
     'raw': raw_thresholds,
     'smoothed': smoothed_thresholds,
     }
-    # Get the function from switcher dictionary
-    thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
- 
-    # TODO: comparisons wrong here. Look at reference code.
-    mean_stddiff_high = (np.absolute(mean_stddiff) > thres.loc['mean.stddiff']).bool() # or (np.absolute(mean_stddiff) > thres.loc['val.mean.stddiff"']).bool()
-    mean_stdabsdiff_high = (mean_stdabsdiff > thres.loc['mean.stdabsdiff']).bool()
 
+    # Get the selected thresholds from switcher dictionary
+    thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
+
+    # Check if the calculated mean differences are high, compared to the thresholds.
+    mean_stddiff_high = (abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]).bool() or ((df_all["variable"] == "val").bool() and (abs(df_all["mean_stddiff"]) > thres["val_mean_stddiff"]).bool())
+    mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).bool()
     
-    if mean_stddiff_high or mean_stdabsdiff_high:
-        raise ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & semirecent data seem' \
+    flag = mean_stddiff_high or mean_stdabsdiff_high
+
+    if flag:
+        raise ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & refernce data (either semirecent or from API) seem' \
               + 'large --- either large increase tending toward one direction or large mean absolute' \
               + 'difference, relative to average values of corresponding variables.  For the former' \
               + 'check, tolerances for `val` are more restrictive than those for other columns.')
@@ -306,9 +308,9 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
     all_frames = []
     
-    # # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
-    # check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
-    # check_max_allowed_max_date(end_date, generation_date)
+    # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+    check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
+    check_max_allowed_max_date(end_date, generation_date)
 
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
@@ -317,7 +319,7 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
         validate_daily(df, filename, max_check_lookbehind, generation_date)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
-        # check_bad_val(df, match.groupdict()['signal'])
+        check_bad_val(df, match.groupdict()['signal'])
         check_bad_se(df, missing_se_allowed)
         check_bad_sample_size(df, minimum_sample_size, missing_sample_size_allowed)
 
@@ -424,8 +426,8 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
-            # if sanity_check_rows_per_day:
-            #     check_rapid_change(recent_df, recent_api_df, checking_date, date_list, sig, geo)
+            if sanity_check_rows_per_day:
+                check_rapid_change(recent_df, recent_api_df, checking_date, date_list, sig, geo)
 
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)

@@ -226,23 +226,29 @@ def check_avg_val_diffs(df_to_test, df_to_compare, smooth_option):
     Returns:
         - None  
     """
-    # pdb.set_trace()
-
     # Average each of val, se, and sample_size over all dates for a given geo_id. Ignores NA values by default.
     df_to_test = df_to_test.groupby(['geo_id'], as_index=False)[['val', 'se', 'sample_size']].mean()
-    df_to_test = df_to_test.drop(columns=['geo_id'])
+    df_to_test["type"] = "test"
 
-    # Average val, se, and sample_size values together over all geo_ids.
-    test_mean = df_to_test.mean()
+    df_to_compare = df_to_compare.groupby(['geo_id'], as_index=False)[['val', 'se', 'sample_size']].mean()
+    df_to_compare["type"] = "reference"
 
-    df_to_compare = df_to_compare.groupby(['geo_value'], as_index=False)[['val', 'se', 'sample_size']].mean()
-    df_to_compare = df_to_compare.drop(columns=['geo_value'])
+    df_all = pd.concat([df_to_compare, df_to_test])
 
-    reference_mean = df_to_compare.mean()
 
-    # TODO: Look at reference code for this section.
-    mean_stddiff = ((test_mean - reference_mean).mean() * 2) / (test_mean.mean() + reference_mean.mean())
-    mean_stdabsdiff = ((test_mean - reference_mean).abs().mean() * 2) / (test_mean.mean() + reference_mean.mean())
+    df_all = pd.melt(df_all, id_vars=["geo_id", "type"], value_vars=["val","se","sample_size"]).pivot(index=("geo_id", "variable"), columns="type", values="value").reset_index(("geo_id","variable")).dropna().assign(
+            type_diff=lambda x: x["test"] - x["reference"],
+            abs_type_diff=lambda x: abs(x["type_diff"])
+        ).groupby("variable", as_index=False).agg(
+            mean_type_diff=("type_diff", "mean"),
+            mean_abs_type_diff=("abs_type_diff", "mean"),
+            mean_test_var=("test", "mean"),
+            mean_ref_var=("reference", "mean")
+        ).assign(
+            mean_stddiff=lambda x: 2 * x["mean_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"]),
+            mean_stdabsdiff=lambda x: 2 * x["mean_abs_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"])
+        )[["variable", "mean_stddiff", "mean_stdabsdiff"]]
+ 
 
     classes = ['mean.stddiff', 'val.mean.stddiff', 'mean.stdabsdiff']
     raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes)
@@ -300,9 +306,9 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
     all_frames = []
     
-    # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
-    check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
-    check_max_allowed_max_date(end_date, generation_date)
+    # # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+    # check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
+    # check_max_allowed_max_date(end_date, generation_date)
 
     # First, check file formats
     check_missing_dates(validate_files, start_date, end_date)
@@ -311,7 +317,7 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
 
         validate_daily(df, filename, max_check_lookbehind, generation_date)
         check_bad_geo_id(df, match.groupdict()['geo_type'])
-        check_bad_val(df, match.groupdict()['signal'])
+        # check_bad_val(df, match.groupdict()['signal'])
         check_bad_se(df, missing_se_allowed)
         check_bad_sample_size(df, minimum_sample_size, missing_sample_size_allowed)
 
@@ -346,36 +352,36 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
     ## do we use to form the reference statistics?
     semirecent_lookbehind = timedelta(days=7)
 
-    # TODO: Check recent data against semirecent and API data.
-    start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
-        max(all_frames["date"]) - max_check_lookbehind + 1)
-    end_checking_date = max(all_frames["date"])
+    # # TODO: Check recent data against semirecent and API data.
+    # start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
+    #     max(all_frames["date"]) - max_check_lookbehind + 1)
+    # end_checking_date = max(all_frames["date"])
 
-    if (start_checking_date > end_checking_date):
-        raise ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks")
+    # if (start_checking_date > end_checking_date):
+    #     raise ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks")
 
 
-    for checking_date in range(start_checking_date, end_checking_date):
-        known_irregularities = get_known_irregularities(checking_date, filename)
+    # for checking_date in range(start_checking_date, end_checking_date):
+    #     known_irregularities = get_known_irregularities(checking_date, filename)
 
-        recent_cutoff_date = checking_date - recent_lookbehind + 1
-        semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
+    #     recent_cutoff_date = checking_date - recent_lookbehind + 1
+    #     semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
 
-        recent_df_to_test = df_to_test.query('date <= @checking_date & date >= @recent_cutoff_date')
-        semirecent_df_to_test = df_to_test.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
+    #     recent_df_to_test = df_to_test.query('date <= @checking_date & date >= @recent_cutoff_date')
+    #     semirecent_df_to_test = df_to_test.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
 
-        if (recent_df_to_test["se"].isnull().mean() > 0.5):
-            print('Recent se values are >50% NA')
+    #     if (recent_df_to_test["se"].isnull().mean() > 0.5):
+    #         print('Recent se values are >50% NA')
 
-        if sanity_check_rows_per_day:
-            check_rapid_change(recent_df_to_test, semirecent_df_to_test)
+    #     if sanity_check_rows_per_day:
+    #         check_rapid_change(recent_df_to_test, semirecent_df_to_test)
 
-        recent_df_to_test["recency"] = "recent"
-        semirecent_df_to_test["recency"] = "semirecent"
+    #     recent_df_to_test["recency"] = "recent"
+    #     semirecent_df_to_test["recency"] = "semirecent"
 
-        recency_df = pd.concat([recent_df_to_test, semirecent_df_to_test])
+    #     recency_df = pd.concat([recent_df_to_test, semirecent_df_to_test])
 
-        # TODO: Continue with check_avg_val_diffs() here.
+    #     # TODO: Continue with check_avg_val_diffs() here.
 
 
 
@@ -407,18 +413,19 @@ def validate(export_dir, start_date, end_date, data_source, params, generation_d
             # Replace None with NA to make numerical manipulation easier.
             recent_api_df.replace(to_replace=[None], value=np.nan, inplace=True) 
 
-            recent_api_df.rename(columns={'stderr': 'se', 'value': 'val'}, inplace = True)
+            # Rename columns.
+            recent_api_df.rename(columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}, inplace = True)
             recent_api_df.drop(['direction', 'issue', 'lag'], axis=1, inplace = True)
             
-            column_names = ["geo_value", "val", "se", "sample_size", "time_value"]
+            column_names = ["geo_id", "val", "se", "sample_size", "time_value"]
 
             recent_api_df = recent_api_df.reindex(columns=column_names)
 
             if (recent_df["se"].isnull().mean() > 0.5):
                 print('Recent se values are >50% NA')
 
-            if sanity_check_rows_per_day:
-                check_rapid_change(recent_df, recent_api_df, checking_date, date_list, sig, geo)
+            # if sanity_check_rows_per_day:
+            #     check_rapid_change(recent_df, recent_api_df, checking_date, date_list, sig, geo)
 
             if sanity_check_value_diffs:
                 check_avg_val_diffs(recent_df, recent_api_df, smooth_option)

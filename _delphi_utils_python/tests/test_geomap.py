@@ -66,6 +66,23 @@ class TestGeoMapper:
     # jhu_big_data = pd.read_csv("test_dir/small_deaths.csv")
 
     # Loading tests updated 8/26
+    def test_crosswalks(self):
+        # These tests ensure that the one-to-many crosswalks have properly normalized weights
+        gmpr = GeoMapper()
+        # FIPS -> HRR is allowed to be an incomplete mapping, since some part of a FIPS code may not belong to an HRR
+        # cw = gmpr.load_crosswalk(from_code="fips", to_code="hrr")
+        # assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr.load_crosswalk(from_code="fips", to_code="zip")
+        assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr.load_crosswalk(from_code="jhu_uid", to_code="fips")
+        assert cw.groupby("jhu_uid")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr.load_crosswalk(from_code="zip", to_code="fips")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr.load_crosswalk(from_code="zip", to_code="msa")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr.load_crosswalk(from_code="zip", to_code="state_code")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+
     def test_load_zip_fips_table(self):
         gmpr = GeoMapper()
         fips_data = gmpr.load_crosswalk(from_code="zip", to_code="fips")

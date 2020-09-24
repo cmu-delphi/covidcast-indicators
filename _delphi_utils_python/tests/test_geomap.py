@@ -41,7 +41,7 @@ class TestGeoMapper:
     )
     fips_data_5 = pd.DataFrame(
         {
-            "fips": ["01123", "48253", 72003, "18181"],
+            "fips": [1123, 48253, 72003, 18181],
             "date": [pd.Timestamp("2018-01-01")] * 4,
             "count": [2, 1, np.nan, 10021],
             "total": [4, 1, np.nan, 100001],

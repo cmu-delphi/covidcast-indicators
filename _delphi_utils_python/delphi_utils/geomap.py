@@ -329,11 +329,8 @@ class GeoMapper:
             # Multiply and aggregate (this automatically zeros NAs)
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
-            df = df.groupby([date_col, new_col]).sum().reset_index()
-            return df
-        else:
-            df = df.groupby([date_col, new_col]).sum().reset_index()
-            return df
+        df = df.groupby([date_col, new_col]).sum().reset_index()
+        return df
 
     def add_population_column(self, data, geocode_type, geocode_col=None):
         """
@@ -356,6 +353,9 @@ class GeoMapper:
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
 
+        if geocode_type not in ["fips", "zip"]:
+            raise ValueError("Only fips and zip geocodes supported. For other codes, aggregate those.")
+
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
 
@@ -370,8 +370,8 @@ class GeoMapper:
         data_with_pop["population"] = data_with_pop["population"].astype(int)
         return data_with_pop
 
+    @staticmethod
     def fips_to_megacounty(
-            self,
             data,
             thr_count,
             thr_win_len,

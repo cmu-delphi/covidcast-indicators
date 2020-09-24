@@ -8,7 +8,7 @@ from datetime import datetime
 import numpy as np
 import pandas as pd
 from delphi_utils import read_params
-from .validate import validate
+from .validate import Validator
 from .datafetcher import read_filenames
 
 
@@ -20,4 +20,5 @@ def run_module():
     dtobj_sdate = datetime.date(datetime.strptime(params['start_date'], '%Y-%m-%d'))
     dtobj_edate = datetime.date(datetime.strptime(params['end_date'], '%Y-%m-%d'))
 
-    validate(parent_params["export_dir"], dtobj_sdate, dtobj_edate, data_source, params)
+    validator = Validator()
+    validator.validate(parent_params["export_dir"], dtobj_sdate, dtobj_edate, data_source, params)

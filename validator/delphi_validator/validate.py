@@ -453,6 +453,8 @@ class Validator(object):
 
     def exit(self):
         if self.raised:
+            print(len(self.raised), "messages")
+
             for message in self.raised:
                 print(message)
 

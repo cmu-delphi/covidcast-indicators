@@ -307,6 +307,7 @@ class GeoMapper:
             new_col=None,
             date_col="date",
             data_cols=None,
+            dropna=False
     ):
         """Replace a geocode column in a dataframe.
 
@@ -325,6 +326,10 @@ class GeoMapper:
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
+        dropna: bool, default False
+            Determines how the merge with the crosswalk file is done. If True, the join is inner,
+            and if False, the join is left. The inner join will drop records from the input database that
+            have no translation in the crosswalk, while the outer join will keep those records as NA.
 
         Return
         ---------
@@ -335,7 +340,7 @@ class GeoMapper:
         new_col = new_code if new_col is None else new_col
 
         df = self.add_geocode(
-            df, from_code, new_code, from_col=from_col, new_col=new_col
+            df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna
         ).drop(columns=from_col)
 
         if "weight" in df.columns:

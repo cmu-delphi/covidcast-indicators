@@ -93,7 +93,7 @@ class TestGeoMapper:
                     "count": np.arange(len(jan_month)),
                     "_thr_col_roll": np.arange(len(jan_month)),
                 }
-            )
+            ),
         )
     )
     jhu_uid_data = pd.DataFrame(
@@ -124,7 +124,9 @@ class TestGeoMapper:
         # cw = gmpr.load_crosswalk(from_code="fips", to_code="hrr")
         # assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="fips", to_code="hrr")
-        assert cw.groupby("fips")["weight"].sum().round(5).ge(.95).all() # some weight discrepancy is fine for HRR
+        assert (
+            cw.groupby("fips")["weight"].sum().round(5).ge(0.95).all()
+        )  # some weight discrepancy is fine for HRR
         cw = gmpr._load_crosswalk(from_code="fips", to_code="zip")
         assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="jhu_uid", to_code="fips")
@@ -132,7 +134,7 @@ class TestGeoMapper:
         cw = gmpr._load_crosswalk(from_code="zip", to_code="fips")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         # cw = gmpr.load_crosswalk(from_code="zip", to_code="msa") # weight discrepancy is fine for MSA
-        # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all() 
+        # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="zip", to_code="state")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
 
@@ -216,11 +218,14 @@ class TestGeoMapper:
             - self.mega_data[["count", "visits"]].sum()
         ).sum() < 1e-3
         with pytest.raises(ValueError):
-            new_data = gmpr.megacounty_creation(self.mega_data_2, 6, 50, thr_col="_thr_col_roll")
-        new_data = gmpr.fips_to_megacounty(self.mega_data, 6, 50, count_cols=["count", "visits"])
+            new_data = gmpr.megacounty_creation(
+                self.mega_data_2, 6, 50, thr_col="_thr_col_roll"
+            )
+        new_data = gmpr.fips_to_megacounty(
+            self.mega_data, 6, 50, count_cols=["count", "visits"]
+        )
         assert (
-            new_data[["count"]].sum()
-            - self.mega_data[["count"]].sum()
+            new_data[["count"]].sum() - self.mega_data[["count"]].sum()
         ).sum() < 1e-3
 
     def test_zip_to_hrr(self):
@@ -233,7 +238,6 @@ class TestGeoMapper:
 
     def test_jhu_uid_to_fips(self):
         gmpr = GeoMapper()
-        self.jhu_uid_data["jhu_uid"] = self.jhu_uid_data["jhu_uid"].astype(str)
         new_data = gmpr.jhu_uid_to_fips(self.jhu_uid_data)
         assert not (new_data["fips"].astype(int) > 90000).any()
         assert new_data["total"].sum() == self.jhu_uid_data["total"].sum()
@@ -383,3 +387,32 @@ class TestGeoMapper:
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
         assert new_data2["hhs_region_number"].unique().size == 2
+
+        # fips -> national
+        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "national")
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
+                    "national": {0: "United States"},
+                    "count": {0: 10024.0},
+                    "total": {0: 100006.0},
+                }
+            )
+        )
+
+        # zip -> national
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "national")
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "date": {
+                        0: pd.Timestamp("2018-01-01"),
+                        1: pd.Timestamp("2018-01-03"),
+                    },
+                    "national": {0: "United States", 1: "United States"},
+                    "count": {0: 900, 1: 886},
+                    "total": {0: 1800, 1: 1772},
+                }
+            )
+        )

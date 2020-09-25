@@ -20,6 +20,7 @@ import warnings
 import pkg_resources
 
 import pandas as pd
+import numpy as np
 from pandas.api.types import is_string_dtype
 
 DATA_PATH = "data"
@@ -230,7 +231,7 @@ class GeoMapper:
         return data_roll.set_index([fips_col, date_col])[mega_col]
 
     # Conversion functions
-    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None):
+    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=False):
         """Add a new geocode column to a dataframe.
 
         Parameters
@@ -247,6 +248,10 @@ class GeoMapper:
         new_col: str, default None
             Name of the column in dataframe containing new_code. If None, then the name
             is assumed to be new_code.
+        dropna: bool, default False
+            Determines how the merge with the crosswalk file is done. If True, the join is inner,
+            and if False, the join is left. The inner join will drop records from the input database that
+            have no translation in the crosswalk, while the outer join will keep those records as NA.
 
         Return
         ---------
@@ -264,16 +269,27 @@ class GeoMapper:
             else:
                 df[from_col] = df[from_col].astype(str)
 
+        # Assuming that the passed-in records are all United States data
+        if new_code is "national":
+            df[new_col] = df[from_col].isna().apply(lambda x: "United States" if not x else np.nan)
+            return df
+
         # state codes are all stored in one table
         if new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
+            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
         else:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code=new_code)
-        crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
+            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
 
-        df = df.merge(
-            crosswalk, left_on=from_col, right_on=from_col, how="left"
-        ).dropna(subset=[new_col])
+        if dropna:
+            df = df.merge(
+                crosswalk, left_on=from_col, right_on=from_col, how="inner"
+            )
+        else:
+            df = df.merge(
+                crosswalk, left_on=from_col, right_on=from_col, how="left"
+            )
 
         # Drop extra state columns
         if new_code in state_codes:
@@ -363,8 +379,7 @@ class GeoMapper:
 
         data_with_pop = (
             data.copy()
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how="left")
-            .dropna(subset=["pop"])
+            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how="inner")
             .rename(columns={"pop": "population"})
         )
         data_with_pop["population"] = data_with_pop["population"].astype(int)

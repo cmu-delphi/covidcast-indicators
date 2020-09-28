@@ -233,7 +233,7 @@ class ClaimsHospIndicatorUpdater:
                         assert not np.isnan(val), "value for included value is nan"
                         assert not np.isnan(se), "se for included rate is nan"
                         if val > 90:
-                            logging.warning("value suspicious, %d: %d", geo_id, val)
+                            logging.warning("value suspicious, %s: %d", geo_id, val)
                         assert se < 5, f"se suspicious, {geo_id}: {se}"
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"

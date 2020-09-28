@@ -15,8 +15,8 @@ class Config:
     Static configuration variables.
     """
 
-    signal_name = "smoothed_covid19"
-    signal_weekday_name = "smoothed_adj_covid19"
+    signal_name = "smoothed_claims_covid19"
+    signal_weekday_name = "smoothed_adj_claims_covid19"
 
     # max number of CPUs available for pool
     MAX_CPU_POOL = 10

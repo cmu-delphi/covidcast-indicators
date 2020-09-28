@@ -22,22 +22,47 @@ negated_regex_dict = {
 class ValidationError(Exception):
     """ Error raised when validation check fails. """
     def __init__(self, expression, message):
+        """
+        Arguments:
+            - expression: relevant variables to message, e.g., if a date doesn't pass a check, provide a list of the date and the filename of the CSV it originated from
+            - message: str explaining why an error was raised
+        """
         self.expression = expression
         self.message = message
 
 
 class Validator(object):
+    """ Class containing validation() function and supporting functions. Stores a list of all raised errors and warnings. """
 
     def __init__(self):
         self.raised = []
 
     def make_date_filter(self, start_date, end_date):
+        """
+        Create a function.
+        
+        Arguments:
+            - start_date: datetime date object
+            - end_date: datetime date object
+
+        Returns:
+            - None  
+        """
+        # Convert dates from datetime format to int.
         start_code = int(start_date.strftime("%Y%m%d"))
         end_code = int(end_date.strftime("%Y%m%d"))
+
+
         def f(filename, match):
-            if not match: return False
+            """
+
+            """
+            if not match:
+                return False
+
             code = int(match.groupdict()['date'])
             return code > start_code and code < end_code
+
         return f
 
     def validate_daily(self, df_to_test, nameformat, max_check_lookbehind, generation_date):
@@ -189,11 +214,19 @@ class Validator(object):
         thres = switcher.get(weighted_option, lambda: "Invalid weighting option")
 
         if (max_date < generation_date - thres):
-            self.raised.append(ValidationError(None, "latest date of generated file seems too long ago"))
+            self.raised.append(ValidationError(None, "most recent date of generated file seems too long ago"))
 
     def check_max_allowed_max_date(self, max_date, generation_date):
         if (max_date < generation_date - timedelta(days=1)):
-            self.raised.append(ValidationError(None, "latest date of generated file seems too recent"))
+            self.raised.append(ValidationError(None, "most recent date of generated file seems too recent"))
+
+    def check_max_date_vs_reference(self, df_to_test, df_to_reference):
+        if df_to_test["date"].max() < df_to_reference["date"].max():
+            self.raised.append(ValidationError((df_to_test["date"].max(), df_to_reference["date"].max()), 
+                'reference df has days beyond the max date in the =df_to_test=; checks are not constructed' + 
+                'to handle this case, and this situation may indicate that something locally is out of date,' + 
+                'or, if the local working files have already been compared against the reference,' + 
+                'that there is a bug somewhere'))  
 
     def reldiff_by_min(self, x, y):
         return (x - y) / min(x,y)
@@ -313,12 +346,13 @@ class Validator(object):
 
         all_frames = []
         
-        # TODO: What does unweighted vs weighted mean? 7dav vs not? Best place for these checks?
+        # TODO: What does unweighted vs weighted mean? See reference here: https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L207
         self.check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
         self.check_max_allowed_max_date(end_date, generation_date)
 
-        # First, check file formats
         self.check_missing_dates(validate_files, start_date, end_date)
+
+        # For every file, read in and do some basic format and value checks.
         for filename, match in validate_files:
             df = load_csv(join(export_dir, filename))
 
@@ -360,46 +394,51 @@ class Validator(object):
         semirecent_lookbehind = timedelta(days=7)
 
 
-        # ## New from reference code.
-        # # TODO: Check recent data against semirecent and API data.
-        # start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
-        #     max(all_frames["date"]) - max_check_lookbehind + 1)
-        # end_checking_date = max(all_frames["date"])
+        ## New from reference code.
+        # TODO: Check recent data against both semirecent and API data.
+        start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
+            max(all_frames["date"]) - max_check_lookbehind + 1)
+        end_checking_date = max(all_frames["date"])
 
-        # if (start_checking_date > end_checking_date):
-        #     self.raised.append(ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks"))
+        if (start_checking_date > end_checking_date):
+            self.raised.append(ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks"))
 
-        # # Loop over all sets of dates for a given CSV.
-        # for checking_date in range(start_checking_date, end_checking_date):
-        #     known_irregularities = get_known_irregularities(checking_date, filename)
+        # Loop over all sets of dates for a given CSV.
+        for checking_date in range(start_checking_date, end_checking_date):
+            # TODO: Implement get_known_irregularities(). Add irregularity flags to other checks.
+            known_irregularities = get_known_irregularities(checking_date, filename)
 
-        #     recent_cutoff_date = checking_date - recent_lookbehind + 1
-        #     semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
+            recent_cutoff_date = checking_date - recent_lookbehind + 1
+            semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
 
-        #     recent_df_to_test = df_to_test.query('date <= @checking_date & date >= @recent_cutoff_date')
-        #     semirecent_df_to_test = df_to_test.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
+            recent_df_to_test = all_frames.query('date <= @checking_date & date >= @recent_cutoff_date')
+            semirecent_df_to_test = all_frames.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
 
-        #     if (recent_df_to_test["se"].isnull().mean() > 0.5):
-        #         self.raised.append('Recent se values are >50% NA')
+            if (recent_df_to_test["se"].isnull().mean() > 0.5):
+                self.raised.append('Recent se values are >50% NA')
 
-        #     if sanity_check_rows_per_day:
-        #         self.check_rapid_change(recent_df_to_test, semirecent_df_to_test)
+            self.check_max_date_vs_reference(recent_df_to_test, semirecent_df_to_test) 
 
-        #     # TODO: Get smooth_option from CSV name.
-        #     if sanity_check_value_diffs:
-        #         self.check_avg_val_diffs(recent_df_to_test, semirecent_df_to_test, smooth_option)
+            if sanity_check_rows_per_day:
+                self.check_rapid_change(recent_df_to_test, semirecent_df_to_test)
 
-        # # ## Compare vs. covidcast in farther-back days:
-        # # if (max(covidalert.df.to.test[["date"]]) < max(covidcast.reference.df[["date"]])) {
-        # #     print(nameformat)
-        # #     print(max(covidalert.df.to.test[["date"]]))
-        # #     print(max(covidcast.reference.df[["date"]]))
-        # #     stop ('covidcast reference df has days beyond the max date in the =covidalert.df.to.test=; checks are not constructed to handle this case, and this situation may indicate that something locally is out-of-date, or, if the local working covidalert files have already been compared against covidcast, that there is a bug somewhere')
-        # # }
-        # # if (check.vs.working) {
-        # #     check_fbsurvey_generated_covidalert_vs_working(covidalert.df.to.test, specified.signal, geo, start.checking.date-1L)
-        # # }
+            # TODO: Get smooth_option from CSV name.
+            if sanity_check_value_diffs:
+                self.check_avg_val_diffs(recent_df_to_test, semirecent_df_to_test, smooth_option)
 
+            if check_vs_working:
+                pass
+
+                ## Goal is to see if past data has been changed.
+                # check_fbsurvey_generated_covidalert_vs_working(covidalert.df.to.test, specified.signal, geo, start.checking.date-1L)
+                        # Get all files for a given indicator.
+                #       get_working_covidalert_daily("fb-survey", signal, geo.type, fbsurvey.extra.listcolspec)
+                        # filter by date to keep only rows with date <= end_comparison_date, and date >= min date seen in both reference and test data
+                        # if, after filtering, the reference data has 0 rows, stop with a message "not any reference data in the reference period"
+
+                        # full join test and reference data on geo_id and date
+                        # create new columns checking whether a given field (val, se, sample_size) is missing in both test and reference data, or if it is within a set tolerance
+                        # filter data to keep only rows where one of the new columns is true. if df is not empty, raise error that "mismatches between less recent data in data frame to test and corresponding reference data frame"
 
 
         smooth_option_regex = re.compile(r'([^_]+)')
@@ -427,12 +466,12 @@ class Validator(object):
                 # Replace None with NA to make numerical manipulation easier.
                 recent_api_df.replace(to_replace=[None], value=np.nan, inplace=True) 
 
-                # Rename columns.
+                # Rename columns to match those in df_to_test.
                 recent_api_df.rename(columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}, inplace = True)
                 recent_api_df.drop(['direction', 'issue', 'lag'], axis=1, inplace = True)
                 
+                # Reorder columns.
                 column_names = ["geo_id", "val", "se", "sample_size", "time_value"]
-
                 recent_api_df = recent_api_df.reindex(columns=column_names)
 
                 if (recent_df["se"].isnull().mean() > 0.5):

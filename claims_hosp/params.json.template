@@ -2,5 +2,15 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "wip_signal": ""
+  "input_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+  "start_date": "2020-02-01",
+  "end_date": null,
+  "drop_date": null,
+  "n_backfill_days": 60,
+  "n_waiting_days": 3,
+  "write_se": false,
+  "obfuscated_prefix": "{obfuscation_name}",
+  "parallel": false,
+  "geos": ["state", "msa", "hrr", "county"],
+  "weekday": [true, false]
 }

@@ -4,6 +4,7 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
+    "cvxpy",
     "pytest",
     "pytest-cov",
     "pylint",
@@ -12,11 +13,11 @@ required = [
 ]
 
 setup(
-    name="delphi_NAME",
+    name="delphi_claims_hosp",
     version="0.1.0",
-    description="SHORT DESCRIPTION",
-    author="",
-    author_email="",
+    description="Create COVID-19 claims-based hospitalization indicator",
+    author="Maria Jahja",
+    author_email="maria@stat.cmu.edu",
     url="https://github.com/cmu-delphi/covidcast-indicators",
     install_requires=required,
     classifiers=[

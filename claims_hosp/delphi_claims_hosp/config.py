@@ -4,6 +4,7 @@ This file contains configuration variables used to generate the claims-based Hos
 Author: Maria Jahja
 Created: 2020-06-01
 Modified: 2020-09-27
+
 """
 
 from datetime import datetime, timedelta
@@ -58,6 +59,10 @@ class Config:
 
 
 class GeoConstants:
+    """
+    Constant geographical variables.
+    """
+
     # number of counties in usa, including megacounties
     NUM_COUNTIES = 3141 + 52
     NUM_HRRS = 308
@@ -68,5 +73,3 @@ class GeoConstants:
                "hrr": NUM_HRRS,
                "msa": NUM_MSAS,
                "state": NUM_STATES}
-
-

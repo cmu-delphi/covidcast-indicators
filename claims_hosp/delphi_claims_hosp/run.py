@@ -19,11 +19,16 @@ from .update_indicator import ClaimsHospIndicatorUpdater
 
 
 def run_module():
+    """
+    Read from params.json and generate the updated claims-based hospitalization
+    indicator values.
+    """
+
     params = read_params()
     logging.basicConfig(level=logging.DEBUG)
 
     # handle range of estimates to produce
-    # filenames are expected to be in the format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
+    # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
     if params["drop_date"] is None:
         dropdate_dt = datetime.strptime(
             Path(params["input_file"]).name.split("_")[3], "%d%m%Y")

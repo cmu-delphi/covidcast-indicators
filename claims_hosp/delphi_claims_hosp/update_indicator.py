@@ -3,6 +3,7 @@ Update claims-based hospitalization indicator.
 
 Author: Maria Jahja
 Created: 2020-09-27
+
 """
 
 # standard packages
@@ -12,7 +13,7 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, read_params
+from delphi_utils import GeoMapper
 
 # first party
 from .config import Config, GeoConstants
@@ -22,6 +23,10 @@ from .weekday import Weekday
 
 
 class ClaimsHospIndicatorUpdater:
+    """Updater class for claims-based hospitalization indicator."""
+
+    # pylint: disable=too-many-instance-attributes, too-many-arguments
+    # all variables are used
 
     def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday,
                  write_se, signal_name):
@@ -44,6 +49,10 @@ class ClaimsHospIndicatorUpdater:
 
         self.geo, self.parallel, self.weekday, self.write_se, self.signal_name = \
             geo.lower(), parallel, weekday, write_se, signal_name
+
+        # init in shift_dates, declared here for pylint
+        self.burnindate, self.fit_dates, self.burn_in_dates, self.output_dates = \
+            [None] * 4
 
         assert (
                 self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
@@ -97,16 +106,16 @@ class ClaimsHospIndicatorUpdater:
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
-            logging.error(
-                f"{self.geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
+            logging.error("%s is invalid, pick one of 'county', 'state', 'msa', 'hrr'",
+                          self.geo)
             return False
 
-        self.unique_geo_ids = pd.unique(data_frame[self.geo])
+        unique_geo_ids = pd.unique(data_frame[self.geo])
         data_frame.set_index([self.geo, 'date'], inplace=True)
 
         # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product(
-            (self.unique_geo_ids, self.fit_dates), names=[self.geo, "date"])
+        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
+                                                names=[self.geo, "date"])
         assert (
                 len(multiindex) <= (GeoConstants.MAX_GEO[self.geo] * len(self.fit_dates))
         ), "more loc-date pairs than maximum number of geographies x number of dates"
@@ -153,7 +162,7 @@ class ClaimsHospIndicatorUpdater:
                 valid_inds[geo_id] = np.array(res.loc[final_output_inds, "incl"])
         else:
             n_cpu = min(Config.MAX_CPU_POOL, cpu_count())
-            logging.debug(f"starting pool with {n_cpu} workers")
+            logging.debug("starting pool with %d workers", n_cpu)
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
@@ -186,19 +195,20 @@ class ClaimsHospIndicatorUpdater:
         }
 
         self.write_to_csv(output_dict, outpath)
-        logging.debug(f"wrote files to {outpath}")
+        logging.debug("wrote files to %s", outpath)
 
-    def write_to_csv(self, output_dict, output_path="."):
+    def write_to_csv(self, output_dict, output_path="./receiving"):
         """
         Write values to csv.
 
         Args:
             output_dict: dictionary containing values, se, unique dates, and unique geo_id
-            output_path: outfile path to write the csv (default is current directory)
+            output_path: outfile path to write the csv
 
         """
         if self.write_se:
-            logging.info(f"========= WARNING: WRITING SEs TO {self.signal_name} =========")
+            logging.info("========= WARNING: WRITING SEs TO %s =========",
+                         self.signal_name)
 
         geo_level = output_dict["geo_level"]
         dates = output_dict["dates"]
@@ -207,10 +217,10 @@ class ClaimsHospIndicatorUpdater:
         all_se = output_dict["se"]
         all_include = output_dict["include"]
         out_n = 0
-        for i, d in enumerate(dates):
+        for i, date in enumerate(dates):
             filename = "%s/%s_%s_%s.csv" % (
                 output_path,
-                (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
+                (date + Config.DAY_SHIFT).strftime("%Y%m%d"),
                 geo_level,
                 self.signal_name,
             )
@@ -223,7 +233,7 @@ class ClaimsHospIndicatorUpdater:
                         assert not np.isnan(val), "value for included value is nan"
                         assert not np.isnan(se), "se for included rate is nan"
                         if val > 90:
-                            logging.warning(f"value suspicious, {geo_id}: {val}")
+                            logging.warning("value suspicious, %d: %d", geo_id, val)
                         assert se < 5, f"se suspicious, {geo_id}: {se}"
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"
@@ -235,4 +245,4 @@ class ClaimsHospIndicatorUpdater:
                                 "%s,%f,%s,%s,%s\n" % (geo_id, val, "NA", "NA", "NA"))
                         out_n += 1
 
-        logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+        logging.debug("wrote %d rows for %d %s", out_n, len(geo_ids), geo_level)

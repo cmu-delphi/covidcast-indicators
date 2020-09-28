@@ -2,8 +2,8 @@
 Load hospitalization data.
 
 Author: Maria Jahja
-Created: 2020-06-12
-Modified: 2020-09-27
+Created: 2020-09-27
+
 """
 
 # third party
@@ -14,7 +14,8 @@ from .config import Config
 
 
 def load_claims_data(claims_filepath, dropdate, base_geo):
-    """Load in and set up claims data.
+    """
+    Load in and set up claims data.
 
     Args:
         claims_filepath: path to the aggregated claims data
@@ -54,7 +55,8 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
 
 
 def load_data(input_filepath, dropdate, base_geo):
-    """Load in claims data, and combine them.
+    """
+    Load in claims data, and combine them.
 
     Args:
         input_filepath: path to the aggregated data

@@ -2,8 +2,7 @@
 Indicator class to fit a signal using CLI counts from hospitalization data.
 
 Author: Maria Jahja
-Created: 2020-06-01
-Modified: 2020-09-27
+Created: 2020-09-27
 
 """
 
@@ -74,9 +73,9 @@ class ClaimsHospIndicator:
         revnum = num[::-1].reshape(-1, 1)
         new_num = np.full_like(revnum, np.nan, dtype=float)
         new_den = np.full_like(revden, np.nan, dtype=float)
-        n, p = revnum.shape
+        n_rows, n_cols = revnum.shape
 
-        for i in range(n):
+        for i in range(n_rows):
             visit_cumsum = revden[i:].cumsum()
 
             # calculate window to average over
@@ -89,13 +88,13 @@ class ClaimsHospIndicator:
             if closest_fill_day == 0:
                 new_den[i] = revden[i]
 
-                for j in range(p):
+                for j in range(n_cols):
                     new_num[i, j] = revnum[i, j]
             else:
                 den_bin = revden[i: (i + closest_fill_day + 1)]
                 new_den[i] = den_bin.sum()
 
-                for j in range(p):
+                for j in range(n_cols):
                     num_bin = revnum[i: (i + closest_fill_day + 1), j]
                     new_num[i, j] = num_bin.sum()
 
@@ -132,12 +131,8 @@ class ClaimsHospIndicator:
         )
 
         # checks - due to the smoother, the first value will be NA
-        assert (
-                np.sum(np.isnan(smoothed_total_rates[1:]) == True) == 0
-        ), "NAs in rate calculation"
-        assert (
-                np.sum(smoothed_total_rates[1:] <= 0) == 0
-        ), f"0 or negative value, {geo_id}"
+        assert np.all(~np.isnan(smoothed_total_rates[1:])), "NAs in rate calculation"
+        assert np.all(smoothed_total_rates[1:] > 0), f"0 or negative value, {geo_id}"
 
         # cut off at valid and requested indices
         rate_data = pd.DataFrame(
@@ -149,7 +144,7 @@ class ClaimsHospIndicator:
         se_valid = valid_rates.eval('sqrt(rate * (1 - rate) / den)')
         rate_data['se'] = se_valid
 
-        logging.debug(
-            f"{geo_id}: {rate_data['rate'][-1]:.3f},[{rate_data['se'][-1]:.3f}]")
+        logging.debug("%s: %05.3f, [%05.3f]",
+                      geo_id, rate_data['rate'][-1], rate_data['se'][-1])
         return {"geo_id": geo_id, "rate": 100 * rate_data['rate'],
                 "se": 100 * rate_data['se'], "incl": include}

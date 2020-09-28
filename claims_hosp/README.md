@@ -61,7 +61,12 @@ should not include critical sub-routines.
 
 ## Code tour
 
-- update_sensor.py: ClaimsHospSensorUpdator: reads the data, makes transformations, 
-- sensor.py: ClaimsHospSensor: methods for transforming data, including padding and smoothing
+- run.py: reads params.json to generated updated signal, run daily
+- update_indicator.py: 
+    ClaimsHospIndicatorUpdater: reads the data, makes transformations, writes output
+- indicator.py:
+    ClaimsHospIndicator: methods for transforming data, including padding and smoothing
 - load_data.py: methods for loading claims data
-- geo_maps.py: geo reindexing
+- smooth.py: left smoother for signal
+- weekday.py: poisson model for handling day-of-week effects
+- config.py: configuration variables

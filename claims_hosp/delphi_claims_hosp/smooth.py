@@ -4,6 +4,8 @@ Code is courtesy of Addison Hu (minor adjustments by Maria).
 
 Author: Maria Jahja
 Created: 2020-04-16
+Modified: 2020-09-27
+    - partially concede few naming changes for pylint
 
 """
 import numpy as np
@@ -11,26 +13,28 @@ import numpy as np
 from .config import Config
 
 
-def left_gauss_linear(s, h=Config.SMOOTHER_BANDWIDTH):
-    """Smooth the y-values using a local linear left Gaussian filter.
+def left_gauss_linear(arr, bandwidth=Config.SMOOTHER_BANDWIDTH):
+    """
+    Smooth the y-values using a local linear left Gaussian filter.
 
     Args:
-        y: one dimensional signal to smooth.
-        h: smoothing bandwidth (in terms of variance)
+        arr: one dimensional signal to smooth.
+        bandwidth: smoothing bandwidth (in terms of variance)
 
     Returns: a smoothed 1D signal.
+
     """
 
-    n = len(s)
-    t = np.zeros_like(s)
-    X = np.vstack([np.ones(n), np.arange(n)]).T
-    for idx in range(n):
-        wts = np.exp(-((np.arange(idx + 1) - idx) ** 2) / h)
-        XwX = np.dot(X[: (idx + 1), :].T * wts, X[: (idx + 1), :])
-        Xwy = np.dot(X[: (idx + 1), :].T * wts, s[: (idx + 1)].reshape(-1, 1))
+    n_rows = len(arr)
+    out_arr = np.zeros_like(arr)
+    X = np.vstack([np.ones(n_rows), np.arange(n_rows)]).T
+    for idx in range(n_rows):
+        weights = np.exp(-((np.arange(idx + 1) - idx) ** 2) / bandwidth)
+        XwX = np.dot(X[: (idx + 1), :].T * weights, X[: (idx + 1), :])
+        Xwy = np.dot(X[: (idx + 1), :].T * weights, arr[: (idx + 1)].reshape(-1, 1))
         try:
             beta = np.linalg.solve(XwX, Xwy)
-            t[idx] = np.dot(X[: (idx + 1), :], beta)[-1]
+            out_arr[idx] = np.dot(X[: (idx + 1), :], beta)[-1]
         except np.linalg.LinAlgError:
-            t[idx] = np.nan
-    return t
+            out_arr[idx] = np.nan
+    return out_arr

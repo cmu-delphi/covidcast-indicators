@@ -9,7 +9,7 @@
   "n_backfill_days": 60,
   "n_waiting_days": 3,
   "write_se": false,
-  "obfuscated_prefix": "{obfuscation_name}",
+  "obfuscated_prefix": "foo_obfuscated",
   "parallel": false,
   "geos": ["state", "msa", "hrr", "county"],
   "weekday": [true, false]

@@ -2,5 +2,10 @@
   "static_file_dir": "../static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "wip_signal": ""
+  "input_file": "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+  "drop_date": "2020-06-11",
+  "n_backfill_days": 60,
+  "n_waiting_days": 3,
+  "write_se": false,
+  "obfuscated_prefix": "foo_obfuscated"
 }

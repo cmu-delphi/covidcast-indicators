@@ -11,6 +11,7 @@ import math
 
 import pdb
 
+# Recognized geo types.
 negated_regex_dict = {
     'county': '^(?!\d{5}).*$',
     'hrr': '^(?!\d{1,3}).*$',
@@ -39,7 +40,7 @@ class Validator(object):
 
     def make_date_filter(self, start_date, end_date):
         """
-        Create a function.
+        Create a function to return a boolean of whether a filename of appropriate format contains a date within the specified date range.
         
         Arguments:
             - start_date: datetime date object
@@ -55,12 +56,23 @@ class Validator(object):
 
         def f(filename, match):
             """
+            Return a boolean of whether a filename of appropriate format contains a date within the specified date range.
+            
+            Arguments:
+                - filename: str
+                - match: regex match object based on filename_regex
 
+            Returns:
+                - boolean 
             """
+            # If regex match doesn't exist, current filename is not an appropriately formatted source data file.
             if not match:
                 return False
 
+            # Convert date found in CSV name to int.
             code = int(match.groupdict()['date'])
+
+            # Return boolean True if current file is within the defined date range.
             return code > start_code and code < end_code
 
         return f
@@ -70,8 +82,8 @@ class Validator(object):
         Perform some automated format & sanity checks of inputs.
         
         Arguments:
-            - df_to_test: pandas dataframe of CSV source data
-            - nameformat: CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
+            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
+            - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
             - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
             - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
 
@@ -101,7 +113,7 @@ class Validator(object):
         
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
-            - geo_type: string from CSV name specifying geo type (state, county, etc) of data
+            - geo_type: string from CSV name specifying geo type (state, county, msa, hrr) of data
 
         Returns:
             - None  
@@ -110,37 +122,56 @@ class Validator(object):
             self.raised.append(ValidationError(geo_type,"Unrecognized geo type"))
         
         def find_all_unexpected_geo_ids(df_to_test, negated_regex):
+            """
+            Check if any geo_ids in df_to_test aren't formatted correctly, according to the geo type dictionary negated_regex_dict.
+            """
             unexpected_geos = [ugeo[0] for ugeo in df_to_test['geo_id'].str.findall(negated_regex) if len(ugeo) > 0]
             if(len(unexpected_geos) > 0):
                 self.raised.append(ValidationError(unexpected_geos,"Non-conforming geo_ids exist!"))
         
         find_all_unexpected_geo_ids(df_to_test, negated_regex_dict[geo_type])
 
-    def check_missing_dates(self, daily_filenames, sdate, edate):
+    def check_missing_dates(self, daily_filenames, sdate, edate): 
+        """
+        Check for missing dates between the specified start and end dates.
+        
+        Arguments:
+            - daily_filenames: list of CSV source data filenames.
+            - sdate: start date, in datetime format
+            - edate: end date, in datetime format
+
+        Returns:
+            - None  
+        """
         number_of_dates = edate - sdate + timedelta(days=1)
+
+        # Create set of all expected dates.
         date_seq = {sdate + timedelta(days=x) for x in range(number_of_dates.days)}
         unique_dates = set()
 
+        # Add each date seen in CSV names to set.
         for daily_filename in daily_filenames:
             unique_dates.add(datetime.strptime(daily_filename[0][0:8], '%Y%m%d'))
 
+        # Diff expected and observed dates.
         check_dateholes = list(date_seq.difference(unique_dates))
         check_dateholes.sort()
         
         if check_dateholes:
-            self.raised.append((check_dateholes, "Missing dates are observed; if these dates are already in the API they would not be updated"))
+            self.raised.append(ValidationError(check_dateholes, "Missing dates are observed; if these dates are already in the API they would not be updated"))
 
     def check_bad_val(self, df_to_test, signal_type):
         """
         Check value field for validity.
         
         Arguments:
-            - df_to_test: pandas dataframe of CSV source data
+            - df_to_test: pandas dataframe of a single CSV of source data
             - signal_type: string from CSV name specifying signal type (smoothed_cli, etc) of data
 
         Returns:
             - None  
         """
+        # Determine if signal is a proportion or percent
         proportion_option = True if 'prop' in signal_type or 'pct' in signal_type else False
 
         if proportion_option:
@@ -159,11 +190,12 @@ class Validator(object):
         
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
-            - missing_se_allowed: boolean specified in params.json
+            - missing_se_allowed: boolean indicating if missing standard errors should raise an exception or not
 
         Returns:
             - None  
         """
+        # Add a new se_upper_limit column.
         df_to_test.eval('se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
 
         df_to_test['se']= df_to_test['se'].round(3)
@@ -173,16 +205,17 @@ class Validator(object):
             if (df_to_test['se'].isnull().values.any()):
                 self.raised.append(ValidationError(None, "se must not be NA"))
             
+            # Find rows not in the allowed range for se.
             result = df_to_test.query('~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
             if not result.empty:
-                self.raised.append(ValidationError(None, "se must be in (0,min(50,val*(1+eps))]")) 
+                self.raised.append(ValidationError(None, "se must be in (0, min(50,val*(1+eps))]")) 
 
         elif missing_se_allowed:
             result = df_to_test.query('~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
             if not result.empty:
-                self.raised.append(ValidationError(None, "se must be NA or in (0,min(50,val*(1+eps))]"))
+                self.raised.append(ValidationError(None, "se must be NA or in (0, min(50,val*(1+eps))]"))
         
         result = df_to_test.query('(val == 0) & (se == 0)')
 
@@ -190,10 +223,22 @@ class Validator(object):
             self.raised.append(ValidationError(None, "when signal value is 0, se must be non-zero. please use Jeffreys correction to generate an appropriate se")) 
 
     def check_bad_sample_size(self, df_to_test, minimum_sample_size, missing_sample_size_allowed):
+        """
+        Check sample sizes for validity.
+        
+        Arguments:
+            - df_to_test: pandas dataframe of a single CSV of source data
+            - minimum_sample_size: int
+            - missing_sample_size_allowed: boolean indicating if missing sample size should raise an exception or not
+
+        Returns:
+            - None  
+        """
         if not missing_sample_size_allowed:
             if (df_to_test['sample_size'].isnull().values.any()):
                 self.raised.append(ValidationError(None, "sample_size must not be NA"))
             
+            # Find rows with sample size less than minimum allowed
             result = df_to_test.query('(sample_size < @minimum_sample_size)')
 
             if not result.empty:
@@ -206,21 +251,52 @@ class Validator(object):
                 self.raised.append(ValidationError(None, "sample size must be NA or >= {minimum_sample_size}"))
 
     def check_min_allowed_max_date(self, max_date, generation_date, weighted_option='unweighted'):
+        """
+        Check if time since data was generated is reasonable or too long ago.
+        
+        Arguments:
+            - max_date: date of most recent data to be validated; datetime format.
+            - generation_date: date data to test was generated; datetime format.
+            - weighted_option: str; selects the "reasonable" threshold
+
+        Returns:
+            - None  
+        """
         switcher = {
             'unweighted': timedelta(days=1),
             'weighted': timedelta(days=4)
         }
-        # Get the function from switcher dictionary
+        # Get the setting from switcher dictionary
         thres = switcher.get(weighted_option, lambda: "Invalid weighting option")
 
         if (max_date < generation_date - thres):
             self.raised.append(ValidationError(None, "most recent date of generated file seems too long ago"))
 
     def check_max_allowed_max_date(self, max_date, generation_date):
+        """
+        Check if time since data was generated is reasonable or too recent.
+        
+        Arguments:
+            - max_date: date of most recent data to be validated; datetime format.
+            - generation_date: date data to test was generated; datetime format.
+
+        Returns:
+            - None  
+        """
         if (max_date < generation_date - timedelta(days=1)):
             self.raised.append(ValidationError(None, "most recent date of generated file seems too recent"))
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference):
+        """
+        Check if reference data is more recent than test data.
+        
+        Arguments:
+            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
+            - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
+
+        Returns:
+            - None  
+        """
         if df_to_test["date"].max() < df_to_reference["date"].max():
             self.raised.append(ValidationError((df_to_test["date"].max(), df_to_reference["date"].max()), 
                 'reference df has days beyond the max date in the =df_to_test=; checks are not constructed' + 
@@ -229,6 +305,9 @@ class Validator(object):
                 'that there is a bug somewhere'))  
 
     def reldiff_by_min(self, x, y):
+        """
+        Calculate relative difference between two numbers.
+        """
         return (x - y) / min(x,y)
 
     def check_rapid_change(self, df_to_test, df_to_reference, checking_date, date_list, sig, geo):
@@ -236,12 +315,12 @@ class Validator(object):
         Compare number of obervations per day in test dataframe vs reference dataframe.
         
         Arguments:
-            - df_to_test: pandas dataframe of "recent" CSV source data
+            - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
             - checking_date
-            - date_list
-            - sig
-            - geo
+            - date_list: list of dates to check
+            - sig: str; signal name as in the CSV name
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
 
         Returns:
             - None  
@@ -250,14 +329,14 @@ class Validator(object):
         reference_rows_per_reporting_day = df_to_reference.shape[0] / len(date_list)
         
         if(abs(self.reldiff_by_min(test_rows_per_reporting_day, reference_rows_per_reporting_day)) > 0.35):
-            self.raised.append(ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (reference vs recent window of data)"))
+            self.raised.append(ValidationError((checking_date,sig,geo), "Number of rows per day (-with-any-rows) seems to have changed rapidly (reference vs test data)"))
 
     def check_avg_val_diffs(self, df_to_test, df_to_reference, smooth_option):
         """
-        Compare average values in test dataframe vs reference dataframe.
+        Compare average values for each variable in test dataframe vs reference dataframe.
         
         Arguments:
-            - df_to_test: pandas dataframe of "recent" CSV source data
+            - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
             - smooth_option: "raw" or "smoothed", choosen according to smoothing of signal (e.g. 7dav is "smoothed")
 
@@ -273,11 +352,16 @@ class Validator(object):
 
         df_all = pd.concat([df_to_test, df_to_reference])
 
-        # For each variable type (val, se, and sample size) where not missing, calculate the relative mean difference and mean absolute difference between the test data and the reference data across all geographic regions.
-        df_all = pd.melt(df_all, id_vars=["geo_id", "type"], value_vars=["val","se","sample_size"]).pivot(index=("geo_id", "variable"), columns="type", values="value").reset_index(("geo_id","variable")).dropna().assign(
+        # For each variable (val, se, and sample size) where not missing, calculate the relative mean difference and mean absolute difference between the test data and the reference data across all geographic regions.
+        df_all = pd.melt(df_all, id_vars=["geo_id", "type"], value_vars=["val","se","sample_size"]
+            ).pivot(index=("geo_id", "variable"), columns="type", values="value"
+            ).reset_index(("geo_id","variable")
+            ).dropna(
+            ).assign(
                 type_diff=lambda x: x["test"] - x["reference"],
                 abs_type_diff=lambda x: abs(x["type_diff"])
-            ).groupby("variable", as_index=False).agg(
+            ).groupby("variable", as_index=False
+            ).agg(
                 mean_type_diff=("type_diff", "mean"),
                 mean_abs_type_diff=("abs_type_diff", "mean"),
                 mean_test_var=("test", "mean"),
@@ -290,7 +374,6 @@ class Validator(object):
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
         raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes).T
-
         smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
 
         switcher = {
@@ -301,7 +384,7 @@ class Validator(object):
         # Get the selected thresholds from switcher dictionary
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
-        # Check if the calculated mean differences are high, compared to the thresholds.
+        # Check if the calculated mean differences are high compared to the thresholds.
         mean_stddiff_high = (abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]).bool() or ((df_all["variable"] == "val").bool() and (abs(df_all["mean_stddiff"]) > thres["val_mean_stddiff"]).bool())
         mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).bool()
 
@@ -313,17 +396,17 @@ class Validator(object):
                   + 'difference, relative to average values of corresponding variables.  For the former' \
                   + 'check, tolerances for `val` are more restrictive than those for other columns.'))
 
-    def validate(self, export_dir, start_date, end_date, data_source, params, generation_date = date.today()):
+    def validate(self, export_dir, start_date, end_date, data_source, params={}, generation_date = date.today()):
         """
         Runs all data checks.
         
         Arguments:
-
+            - export_dir: path to data CSVs
+            - start_date: beginning date of data to check
+            - end_date: end date of data to check
+            - data_source: str; data source name, one of https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
+            - params: dictionary of user settings; if empty, defaults will be used
             - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
-            - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
-            - sanity_check_rows_per_day
-            - sanity_check_value_diffs: 
-            - check_vs_working
 
         Returns:
             - None  
@@ -346,7 +429,7 @@ class Validator(object):
 
         all_frames = []
         
-        # TODO: What does unweighted vs weighted mean? See reference here: https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L207
+        # TODO: Make weight_option based on signal name for Facebook data. See reference here: https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L207
         self.check_min_allowed_max_date(end_date, generation_date, weighted_option='unweighted')
         self.check_max_allowed_max_date(end_date, generation_date)
 
@@ -361,8 +444,8 @@ class Validator(object):
             self.check_bad_val(df, match.groupdict()['signal'])
             self.check_bad_se(df, missing_se_allowed)
             self.check_bad_sample_size(df, minimum_sample_size, missing_sample_size_allowed)
-
             # Get geo_type, date, and signal name as specified by CSV name.
+
             df['geo_type'] = match.groupdict()['geo_type']
             df['date'] = match.groupdict()['date']
             df['signal'] = match.groupdict()['signal']
@@ -376,8 +459,8 @@ class Validator(object):
         # Get all expected combinations of geo_type and signal. 
         geo_sig_cmbo = get_geo_sig_cmbo(data_source)
 
-        # Get list of dates we expect to see in the CSV data.
-        date_slist = df['date'].unique().tolist()
+        # Get list of dates we expect to see in all the CSV data.
+        date_slist = all_frames['date'].unique().tolist()
         date_list = list(map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
 
         # Get list of CSV names.
@@ -394,51 +477,51 @@ class Validator(object):
         semirecent_lookbehind = timedelta(days=7)
 
 
-        ## New from reference code.
-        # TODO: Check recent data against both semirecent and API data.
-        start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
-            max(all_frames["date"]) - max_check_lookbehind + 1)
-        end_checking_date = max(all_frames["date"])
+        # ## New from reference code.
+        # # TODO: Check recent data against both semirecent and API data.
+        # start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1, 
+        #     max(all_frames["date"]) - max_check_lookbehind + 1)
+        # end_checking_date = max(all_frames["date"])
 
-        if (start_checking_date > end_checking_date):
-            self.raised.append(ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks"))
+        # if (start_checking_date > end_checking_date):
+        #     self.raised.append(ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks"))
 
-        # Loop over all sets of dates for a given CSV.
-        for checking_date in range(start_checking_date, end_checking_date):
-            # TODO: Implement get_known_irregularities(). Add irregularity flags to other checks.
-            known_irregularities = get_known_irregularities(checking_date, filename)
+        # # Loop over all sets of dates for a given CSV.
+        # for checking_date in range(start_checking_date, end_checking_date):
+        #     # TODO: Implement get_known_irregularities(). Add irregularity flags to other checks.
+        #     known_irregularities = get_known_irregularities(checking_date, filename)
 
-            recent_cutoff_date = checking_date - recent_lookbehind + 1
-            semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
+        #     recent_cutoff_date = checking_date - recent_lookbehind + 1
+        #     semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
 
-            recent_df_to_test = all_frames.query('date <= @checking_date & date >= @recent_cutoff_date')
-            semirecent_df_to_test = all_frames.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
+        #     recent_df_to_test = all_frames.query('date <= @checking_date & date >= @recent_cutoff_date')
+        #     semirecent_df_to_test = all_frames.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
 
-            if (recent_df_to_test["se"].isnull().mean() > 0.5):
-                self.raised.append('Recent se values are >50% NA')
+        #     if (recent_df_to_test["se"].isnull().mean() > 0.5):
+        #         self.raised.append('Recent se values are >50% NA')
 
-            self.check_max_date_vs_reference(recent_df_to_test, semirecent_df_to_test) 
+        #     self.check_max_date_vs_reference(recent_df_to_test, semirecent_df_to_test) 
 
-            if sanity_check_rows_per_day:
-                self.check_rapid_change(recent_df_to_test, semirecent_df_to_test)
+        #     if sanity_check_rows_per_day:
+        #         self.check_rapid_change(recent_df_to_test, semirecent_df_to_test)
 
-            # TODO: Get smooth_option from CSV name.
-            if sanity_check_value_diffs:
-                self.check_avg_val_diffs(recent_df_to_test, semirecent_df_to_test, smooth_option)
+        #     # TODO: Get smooth_option from CSV name.
+        #     if sanity_check_value_diffs:
+        #         self.check_avg_val_diffs(recent_df_to_test, semirecent_df_to_test, smooth_option)
 
-            if check_vs_working:
-                pass
+        #     if check_vs_working:
+        #         pass
 
-                ## Goal is to see if past data has been changed.
-                # check_fbsurvey_generated_covidalert_vs_working(covidalert.df.to.test, specified.signal, geo, start.checking.date-1L)
-                        # Get all files for a given indicator.
-                #       get_working_covidalert_daily("fb-survey", signal, geo.type, fbsurvey.extra.listcolspec)
-                        # filter by date to keep only rows with date <= end_comparison_date, and date >= min date seen in both reference and test data
-                        # if, after filtering, the reference data has 0 rows, stop with a message "not any reference data in the reference period"
+        #         ## Goal is to see if past data has been changed.
+        #         # check_fbsurvey_generated_covidalert_vs_working(covidalert.df.to.test, specified.signal, geo, start.checking.date-1L)
+        #                 # Get all files for a given indicator.
+        #         #       get_working_covidalert_daily("fb-survey", signal, geo.type, fbsurvey.extra.listcolspec)
+        #                 # filter by date to keep only rows with date <= end_comparison_date, and date >= min date seen in both reference and test data
+        #                 # if, after filtering, the reference data has 0 rows, stop with a message "not any reference data in the reference period"
 
-                        # full join test and reference data on geo_id and date
-                        # create new columns checking whether a given field (val, se, sample_size) is missing in both test and reference data, or if it is within a set tolerance
-                        # filter data to keep only rows where one of the new columns is true. if df is not empty, raise error that "mismatches between less recent data in data frame to test and corresponding reference data frame"
+        #                 # full join test and reference data on geo_id and date
+        #                 # create new columns checking whether a given field (val, se, sample_size) is missing in both test and reference data, or if it is within a set tolerance
+        #                 # filter data to keep only rows where one of the new columns is true. if df is not empty, raise error that "mismatches between less recent data in data frame to test and corresponding reference data frame"
 
 
         smooth_option_regex = re.compile(r'([^_]+)')

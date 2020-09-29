@@ -14,7 +14,8 @@ import pandas as pd
 import covidcast
 from .errors import APIDataFetchError
 
-filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
+filename_regex = re.compile(
+    r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
 
 def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
@@ -46,7 +47,7 @@ def get_geo_sig_cmbo(data_source):
     combinations reported available by Covidcast metadata.
     """
     meta = covidcast.metadata()
-    source_meta = meta[meta['data_source']==data_source]
+    source_meta = meta[meta['data_source'] == data_source]
     unique_signals = source_meta['signal'].unique().tolist()
     unique_geotypes = source_meta['geo_type'].unique().tolist()
 
@@ -74,8 +75,10 @@ def read_filenames(path):
     Returns:
         - list of tuples
     """
-    daily_filenames = [ (f, filename_regex.match(f)) for f in listdir(path) if isfile(join(path, f))]
+    daily_filenames = [(f, filename_regex.match(f))
+                       for f in listdir(path) if isfile(join(path, f))]
     return daily_filenames
+
 
 def read_relevant_date_filenames(data_path, date_slist):
     """
@@ -97,6 +100,7 @@ def read_relevant_date_filenames(data_path, date_slist):
                 filenames.append(fl)
     return filenames
 
+
 def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
     """
     Generator that assembles data within the specified date range for a given geo_sig_cmbo.
@@ -116,10 +120,12 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
         df_list = list()
 
         # Get all filenames for this geo_type and signal_type
-        files = [file for file in filenames if geo_sig[0] in file and geo_sig[1] in file]
+        files = [file for file in filenames if geo_sig[0]
+                 in file and geo_sig[1] in file]
 
         if len(files) == 0:
-            print("FILE_NOT_FOUND: File with geo_type:", geo_sig[0], " and signal:", geo_sig[1], " does not exist!")
+            print("FILE_NOT_FOUND: File with geo_type:",
+                  geo_sig[0], " and signal:", geo_sig[1], " does not exist!")
             yield pd.DataFrame(), geo_sig[0], geo_sig[1]
             continue
 
@@ -136,6 +142,7 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
 
         yield pd.concat(df_list), geo_sig[0], geo_sig[1]
 
+
 def load_csv(path):
     """
     Load CSV with specified column types.
@@ -149,15 +156,17 @@ def load_csv(path):
             'sample_size': float,
         })
 
+
 def fetch_daily_data(data_source, survey_date, geo_type, signal):
     """
     Get API data for a specified date, source, signal, and geo type.
     """
-    data_to_reference = covidcast.signal(data_source, signal, survey_date, survey_date, geo_type)
+    data_to_reference = covidcast.signal(
+        data_source, signal, survey_date, survey_date, geo_type)
     if not isinstance(data_to_reference, pd.DataFrame):
-        custom_msg = "Error fetching data on" + str(survey_date)+ \
+        custom_msg = "Error fetching data on" + str(survey_date) + \
                      "for data source:" + data_source + \
-                     ", signal-type:"+ signal + \
+                     ", signal-type:" + signal + \
                      ", geography-type:" + geo_type
         raise APIDataFetchError(custom_msg)
     return data_to_reference

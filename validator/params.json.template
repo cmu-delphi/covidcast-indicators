@@ -1,9 +1,11 @@
 {
   "validation": {
-  "data_source": "fb-survey",
-  "start_date": "2020-06-13",
-  "end_date": "2020-06-19",
-  "ref_window_size": 7,
-  "minimum_sample_size": 100
+	"data_source": "usa-facts",
+	"start_date": "2020-09-05",
+	"end_date": "2020-09-08",
+	"ref_window_size": 7,
+	"minimum_sample_size": 100,
+	"missing_se_allowed": true,
+	"missing_sample_size_allowed": true
   }
 }

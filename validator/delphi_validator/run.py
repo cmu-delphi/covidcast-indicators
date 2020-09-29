@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
-"""Functions to call when running the function.
+"""Functions to call when running the tool.
 
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_validator`.
 """
 from datetime import datetime
-import numpy as np
-import pandas as pd
 from delphi_utils import read_params
 from .validate import Validator
-from .datafetcher import read_filenames
 
 
 def run_module():

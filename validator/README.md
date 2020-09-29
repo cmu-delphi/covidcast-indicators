@@ -2,8 +2,8 @@
 
 The validator performs two main tasks:
 1) Sanity checks on daily data generated from a pipeline of specific data
-   source. 
-2) Its does a comparative analysis with recent data from the API 
+   source.
+2) Its does a comparative analysis with recent data from the API
    to detect any anomalies such as spikes, significant value differences
 
 The validator validates against daily data thats already written in the disk

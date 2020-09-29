@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+"""
+Custom validator exceptions.
+"""
+
 class APIDataFetchError(Exception):
     """Exception raised for errors during validation.
 

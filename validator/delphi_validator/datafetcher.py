@@ -1,14 +1,18 @@
-from os import listdir, stat
-from os.path import isfile, join 
-import platform
-import covidcast
-import pandas as pd
-from datetime import date, datetime, timedelta
-from .errors import APIDataFetchError
+# -*- coding: utf-8 -*-
+"""
+Functions to get CSV filenames and data.
+"""
+
 import re
+from os import listdir
+from os.path import isfile, join
+from datetime import datetime
 from typing import List
-import json
 from itertools import product
+import pandas as pd
+
+import covidcast
+from .errors import APIDataFetchError
 
 filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
@@ -16,28 +20,30 @@ filename_regex = re.compile(r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+
 def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
     """
     Gets list of filenames in data folder and list of expected geo type-signal type combinations.
-    
+
     Arguments:
         - path: path to data CSVs
-        - data_source: str; data source name, one of https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
+        - data_source: str; data source name, one of
+        https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
         - date_slist: list of dates (formatted as strings) to check
 
     Returns:
         - list of filenames
-        - list of geo type-signal type combinations that we expect to see  
+        - list of geo type-signal type combinations that we expect to see
     """
-    geo_sig_cmbo = get_geo_sig_cmbo(data_source) 
+    geo_sig_cmbo = get_geo_sig_cmbo(data_source)
 
     for cmb in geo_sig_cmbo:
         print(cmb)
 
-    filenames = read_relevant_date_filenames(data_folder, date_slist[0])
+    filenames = read_relevant_date_filenames(path, date_slist[0])
     return filenames, geo_sig_cmbo
 
 
 def get_geo_sig_cmbo(data_source):
     """
-    Get list of geo type-signal type combinations that we expect to see, based on combinations reported available by Covidcast metadata.
+    Get list of geo type-signal type combinations that we expect to see, based on
+    combinations reported available by Covidcast metadata.
     """
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source']==data_source]
@@ -51,7 +57,7 @@ def get_geo_sig_cmbo(data_source):
         for sig in unique_signals:
             if "community" in sig:
                 unique_signals.remove(sig)
-        
+
     geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
     print("Number of mixed types:", len(geo_sig_cmbo))
 
@@ -72,7 +78,17 @@ def read_filenames(path):
     return daily_filenames
 
 def read_relevant_date_filenames(data_path, date_slist):
-    all_files = [f for f in listdir(path) if isfile(join(data_path, f))]
+    """
+    Return a list of tuples of every filename in the specified directory if the file is in the specified date range.
+
+    Arguments:
+        - data_path: path to the directory containing CSV data files.
+        - date_slist: list of dates (formatted as strings) to check
+
+    Returns:
+        - list
+    """
+    all_files = [f for f in listdir(data_path) if isfile(join(data_path, f))]
     filenames = list()
 
     for fl in all_files:
@@ -100,9 +116,9 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
         df_list = list()
 
         # Get all filenames for this geo_type and signal_type
-        files = list(filter(lambda x: geo_sig[0] in x and geo_sig[1] in x, filenames))
+        files = [file for file in filenames if geo_sig[0] in file and geo_sig[1] in file]
 
-        if (len(files) == 0):
+        if len(files) == 0:
             print("FILE_NOT_FOUND: File with geo_type:", geo_sig[0], " and signal:", geo_sig[1], " does not exist!")
             yield pd.DataFrame(), geo_sig[0], geo_sig[1]
             continue
@@ -116,7 +132,7 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
                 if f.find(dt) != -1:
                     gen_dt = datetime.strptime(dt, '%Y%m%d')
                     df['time_value'] = gen_dt
-            df_list.append(df)   
+            df_list.append(df)
 
         yield pd.concat(df_list), geo_sig[0], geo_sig[1]
 
@@ -145,4 +161,3 @@ def fetch_daily_data(data_source, survey_date, geo_type, signal):
                      ", geography-type:" + geo_type
         raise APIDataFetchError(custom_msg)
     return data_to_reference
-

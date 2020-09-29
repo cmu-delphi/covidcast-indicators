@@ -1,6 +1,39 @@
-# How to contribute to this repository
+# Contributing to COVIDcast indicator pipelines
+
+## Branches
+
+* `main`
+
+The primary/authoritative branch of this repository is called `main`, and contains up-to-date code and supporting libraries. This should be your starting point when creating a new indicator. It is protected so that only reviewed pull requests can be merged in.
+
+* `deploy-*`
+
+Each automated pipeline has a corresponding branch which automatically deploys to a runtime host which runs the pipeline at a designated time each day. New features and bugfixes are merged into this branch using a pull request, so that our CI system can run the lint and test cycles and make sure the package will run correctly on the runtime host. If an indicator does not have a branch named after it starting with `deploy-`, that means the indicator has not yet been automated, and has a designated human keeper who is responsible for making sure the indicator runs each day -- whether that is manually or using a scheduler like cron is the keeper's choice.
+
+* everything else
+
+All other branches are development branches. We don't enforce a naming policy.
+
+## Issues
+
+Issues are the main communication point when it comes to bugfixes, new features, or other possible changes. The repository has several issue templates that help to structure issues.
+
+If you ensure that each issue deals with a single topic (ie a single new proposed data source, or a single data quality problem), we'll all be less likely to drop subordinate tasks on the floor, but we also recognize that a lot of the people filing issues in this repository are new to large project management and not used to focusing their thoughts in this way. It's okay, we'll all learn and get better together.
+
+Admins will assign issues to one or more people based on balancing expediency, expertise, and team robustness. It may be faster for one person to fix something, but we can reduce the risk of having too many single points of failure if two people work on it together.
+
+## Project Boards
+
+The Delphi Engineering team uses project boards to structure its weekly calls and track active tasks.
+
+Immediate work is tracked on [Release Planning](https://github.com/cmu-delphi/covidcast-indicators/projects/2)
+
+Long-term work and modeling collaborations are tracked on [Refactoring](https://github.com/cmu-delphi/covidcast-indicators/projects/3)
+
 
 ## General workflow for indicators creation and deployment
+
+So, how does one go about developing a pipeline for a new data source?
 
 **tl;dr**
 
@@ -40,7 +73,7 @@ Once you have something that runs locally and passes tests you set up your remot
 git push -u origin dev-my-feature-branch
 ```
 
-You can then set draft public API documentation for people who would fetch this
+You can then draft public API documentation for people who would fetch this
 data from the API. Public API documentation is kept in the delphi-epidata
 repository, and there is a [template Markdown
 file](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md)

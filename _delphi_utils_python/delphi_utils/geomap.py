@@ -250,8 +250,9 @@ class GeoMapper:
             is assumed to be new_code.
         dropna: bool, default False
             Determines how the merge with the crosswalk file is done. If True, the join is inner,
-            and if False, the join is left. The inner join will drop records from the input database that
-            have no translation in the crosswalk, while the outer join will keep those records as NA.
+            and if False, the join is left. The inner join will drop records from the input database
+            that have no translation in the crosswalk, while the outer join will keep those records
+            as NA.
 
         Return
         ---------
@@ -328,8 +329,9 @@ class GeoMapper:
             None, then all the columns are used except for date_col and new_col.
         dropna: bool, default False
             Determines how the merge with the crosswalk file is done. If True, the join is inner,
-            and if False, the join is left. The inner join will drop records from the input database that
-            have no translation in the crosswalk, while the outer join will keep those records as NA.
+            and if False, the join is left. The inner join will drop records from the input database
+            that have no translation in the crosswalk, while the outer join will keep those records
+            as NA.
 
         Return
         ---------
@@ -375,7 +377,8 @@ class GeoMapper:
         geocode_col = geocode_type if geocode_col is None else geocode_col
 
         if geocode_type not in ["fips", "zip"]:
-            raise ValueError("Only fips and zip geocodes supported. For other codes, aggregate those.")
+            raise ValueError("Only fips and zip geocodes supported. \
+                For other codes, aggregate those.")
 
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)

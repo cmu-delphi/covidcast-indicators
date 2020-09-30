@@ -416,3 +416,7 @@ class TestGeoMapper:
                 }
             )
         )
+
+        # fips -> hrr (dropna=True/False check)
+        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any() == False
+        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any() == True

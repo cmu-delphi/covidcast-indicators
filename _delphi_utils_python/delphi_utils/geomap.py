@@ -70,7 +70,7 @@ class GeoMapper:
     - [x] fips -> msa : unweighted
     - [x] fips -> megacounty
     - [x] fips -> hrr
-    - [ ] national
+    - [x] national
     - [ ] zip -> dma (postponed)
 
     The GeoMapper instance loads crosswalk tables from the package data_dir. The
@@ -231,7 +231,7 @@ class GeoMapper:
         return data_roll.set_index([fips_col, date_col])[mega_col]
 
     # Conversion functions
-    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=False):
+    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=True):
         """Add a new geocode column to a dataframe.
 
         Parameters
@@ -307,7 +307,7 @@ class GeoMapper:
             new_col=None,
             date_col="date",
             data_cols=None,
-            dropna=False
+            dropna=True
     ):
         """Replace a geocode column in a dataframe.
 

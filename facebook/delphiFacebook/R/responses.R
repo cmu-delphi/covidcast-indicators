@@ -71,15 +71,28 @@ load_response_one <- function(input_filename, params) {
   suppressWarnings({ input_data$hh_number_sick <- as.integer(input_data$A2) })
 
   if ("A5_1" %in% names(input_data)) {
-    # This is Wave 4, where item A2b was replaced with 3 items asking about separate ages
+    # This is Wave 4, where item A2b was replaced with 3 items asking about
+    # separate ages. Many respondents leave blank the categories that do not
+    # apply to their household, rather than entering 0, so if at least one of
+    # the three items has a response, we impute 0 for the remaining items.
     suppressWarnings({
-      input_data$hh_number_total <- (as.integer(input_data$A5_1) +
-                                       as.integer(input_data$A5_2) +
-                                       as.integer(input_data$A5_3))
+      age18 <- as.integer(input_data$A5_1)
+      age1864 <- as.integer(input_data$A5_2)
+      age65 <- as.integer(input_data$A5_3)
     })
+
+    input_data$hh_number_total <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      (ifelse(is.na(age18), 0, age18) +
+         ifelse(is.na(age1864), 0, age1864) +
+         ifelse(is.na(age65), 0, age65)),
+      NA_integer_
+    )
   } else {
     # This is Wave <= 4, where item A2b measured household size
-    suppressWarnings({ input_data$hh_number_total <- as.integer(input_data$A2b) })
+    suppressWarnings({
+      input_data$hh_number_total <- as.integer(input_data$A2b)
+    })
   }
   input_data$zip5 <- input_data$A3
 

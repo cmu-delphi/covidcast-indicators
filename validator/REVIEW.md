@@ -20,8 +20,6 @@ flexible, but be consistent within a module
 within the directory `static`
 - [ ] any intermediate files that are created and stored by the module should
 be placed in the directory `cache`
-- [ ] final expected output files to be uploaded to the API are placed in the
-`receiving` directory; output files should not be committed to the respository
 - [ ] all options and API keys are passed through the file `params.json`
 - [ ] template parameter file (`params.json.template`) is checked into the
 code; no personal (i.e., usernames) or private (i.e., API keys) information is

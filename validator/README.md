@@ -20,7 +20,9 @@ directory from the main directory of the indicator of interest.
 The safest way to do this is to create a virtual environment,
 install the common DELPHI tools, install the indicator module and its
 dependencies, and then install the validator module and its
-dependencies to the virtual environment. To do this, navigate to the main directory of the indicator of interest and run the following code:
+dependencies to the virtual environment.
+
+To do this, navigate to the main directory of the indicator of interest and run the following code:
 
 ```
 python -m venv env
@@ -32,8 +34,7 @@ pip install -e ../validator
 
 All of the user-changable parameters are stored in the `validation` field of the indicator's `params.json` file. If `params.json` does not already include a `validation` field, please copy that provided in this module's `params.json.template`. Working defaults are provided for all but `data_source`, `start_date`, and `end_date`. The `data_source` should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls.
 
-To execute
-the module and validate source data (by default, in `receiving`), run the indicator to generate data files, then run
+To execute the module and validate source data (by default, in `receiving`), run the indicator to generate data files, then run
 the validator, as follows:
 
 ```
@@ -61,9 +62,17 @@ env/bin/pylint delphi_validator
 The most aggressive checks are turned off; only relatively important issues
 should be raised and they should be manually checked (or better, fixed).
 
+
 ## Code tour
 
 * run.py: sends params.json fields to and runs the validation process
 * datafetcher.py: methods for loading source data
 * validate.py: methods for validating source data. Includes the individual check functions.
 * errors.py: custom validation errors
+
+
+## Adding checks
+
+To add a new validation check, define the check as a `Validator` class method in `validate.py`. Each check should append a descriptive error message to the `raised` attribute if triggered. All checks should allow the user to override exception raising for a specific file using the `exception_override` setting in `params.json`.
+
+Add the newly defined check to the `validate()` method to be executed. It should go in one of two sections: data sanity checks where a data file is compared against static format settings, or data trend and value checks where a set of data is compared against API data.

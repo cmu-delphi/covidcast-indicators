@@ -1,11 +1,6 @@
 """Contains geographic mapping tools.
 
-NOTE:
-This file is mostly duplicated in the Quidel pipeline; bugs fixed here
-should be fixed there as well.
-
-Author: James Sharpnack @jsharpna
-Partially based on code by Maria Jahja
+Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna, Maria Jahja
 Created: 2020-06-01
 
 TODO:

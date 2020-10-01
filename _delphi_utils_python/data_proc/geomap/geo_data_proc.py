@@ -1,6 +1,5 @@
 """
-Author: James Sharpnack @jsharpna
-Refactored by: Dmitry Shemetov @dshemetov
+Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna
 """
 
 from io import BytesIO
@@ -184,32 +183,6 @@ def create_jhu_uid_fips_crosswalk():
             {"jhu_uid": "84002158", "fips": "02270", "weight": 1.0},
             # Oglala Lakota
             {"jhu_uid": "84046102", "fips": "46113", "weight": 1.0},
-            # Split aggregation of New York County (populations from JHU documentation)
-            {
-                "jhu_uid": "84036061",
-                "fips": "36005",
-                "weight": 1418207 / 8336817,
-            },  # Population: 1,418,207
-            {
-                "jhu_uid": "84036061",
-                "fips": "36047",
-                "weight": 2559903 / 8336817,
-            },  # 2,559,903
-            {
-                "jhu_uid": "84036061",
-                "fips": "36061",
-                "weight": 1628706 / 8336817,
-            },  # 1,628,706
-            {
-                "jhu_uid": "84036061",
-                "fips": "36081",
-                "weight": 2253858 / 8336817,
-            },  # 2,253,858
-            {
-                "jhu_uid": "84036061",
-                "fips": "36085",
-                "weight": 476143 / 8336817,
-            },  # 476,143
             # Aggregate Utah territories into a "State FIPS"
             {"jhu_uid": "84070015", "fips": "49000", "weight": 1.0},
             {"jhu_uid": "84070016", "fips": "49000", "weight": 1.0},

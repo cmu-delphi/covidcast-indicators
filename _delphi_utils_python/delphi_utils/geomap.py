@@ -15,7 +15,6 @@ import warnings
 import pkg_resources
 
 import pandas as pd
-import numpy as np
 from pandas.api.types import is_string_dtype
 
 DATA_PATH = "data"

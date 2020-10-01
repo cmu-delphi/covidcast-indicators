@@ -14,6 +14,7 @@ import numpy as np
 import covidcast
 from .datafetcher import load_csv, read_geo_sig_cmbo_files, read_filenames, get_geo_sig_cmbo, filename_regex
 
+import pdb
 
 # Recognized geo types.
 negated_regex_dict = {
@@ -190,20 +191,26 @@ class Validator():
             - None
         """
         # Determine if signal is a proportion or percent
-        proportion_option = bool('prop' in signal_type or 'pct' in signal_type)
+        percent_option = bool('pct' in signal_type)
+        proportion_option = bool('pct' in signal_type)
 
-        if proportion_option:
+        if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
                 self.raised.append(ValidationError(
-                    signal_type, "val column can't have any cell greater than 100"))
+                    signal_type, "val column can't have any cell greater than 100 for percents"))
+
+        if proportion_option:
+            if not df_to_test[(df_to_test['val'] > 100000)].empty:
+                self.raised.append(ValidationError(
+                    signal_type, "val column can't have any cell greater than 100000 for proportions"))
 
         if df_to_test['val'].isnull().values.any():
             self.raised.append(ValidationError(
-                None, "val column can't have any cell that is NA"))
+                signal_type, "val column can't have any cell that is NA"))
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
             self.raised.append(ValidationError(
-                None, "val column can't have any cell smaller than 0"))
+                signal_type, "val column can't have any cell smaller than 0"))
 
     def check_bad_se(self, df_to_test, missing_se_allowed):
         """
@@ -316,7 +323,7 @@ class Validator():
         Returns:
             - None
         """
-        if max_date < generation_date - timedelta(days=1):
+        if max_date > generation_date - timedelta(days=1):
             self.raised.append(ValidationError(
                 None, "most recent date of generated file seems too recent"))
 
@@ -338,7 +345,7 @@ class Validator():
                                                'or, if the local working files have already been compared against the reference,' +
                                                'that there is a bug somewhere'))
 
-    def check_rapid_change(self, df_to_test, df_to_reference, checking_date, date_list, sig, geo):
+    def check_rapid_change(self, df_to_test, df_to_reference, checking_date, sig, geo):
         """
         Compare number of obervations per day in test dataframe vs reference dataframe.
 
@@ -356,7 +363,7 @@ class Validator():
         test_rows_per_reporting_day = df_to_test[df_to_test['time_value']
                                                  == checking_date].shape[0]
         reference_rows_per_reporting_day = df_to_reference.shape[0] / len(
-            date_list)
+            set(df_to_reference["time_value"]))
 
         if abs(reldiff_by_min(test_rows_per_reporting_day, reference_rows_per_reporting_day)) > 0.35:
             self.raised.append(ValidationError((checking_date, sig, geo),
@@ -429,7 +436,7 @@ class Validator():
         flag = mean_stddiff_high or mean_stdabsdiff_high
 
         if flag:
-            self.raised.append(ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & refernce data (either semirecent or from API) seem'
+            self.raised.append(ValidationError((mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & reference data (either semirecent or from API) seem'
                                                + 'large --- either large increase tending toward one direction or large mean absolute'
                                                + 'difference, relative to average values of corresponding variables.  For the former'
                                                + 'check, tolerances for `val` are more restrictive than those for other columns.'))
@@ -449,6 +456,7 @@ class Validator():
         Returns:
             - None
         """
+        # Setup
         # Get user settings from params or if not provided, set default.
         max_check_lookbehind = timedelta(days=params.get("ref_window_size", 7))
         minimum_sample_size = params.get('minimum_sample_size', 100)
@@ -461,21 +469,23 @@ class Validator():
         sanity_check_value_diffs = params.get('sanity_check_value_diffs', True)
         check_vs_working = params.get('check_vs_working', True)
 
+        # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
         date_filter = self.make_date_filter(start_date, end_date)
         # List of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
+        # Get list of just CSV names.
+        filenames = [name_match_pair[0] for name_match_pair in validate_files]
 
-        all_frames = []
-
-        # TODO: Make weight_option based on signal name for Facebook data. See reference here: https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L207
-        self.check_min_allowed_max_date(
-            end_date, generation_date, weighted_option='unweighted')
-        self.check_max_allowed_max_date(end_date, generation_date)
+        # Get all expected combinations of geo_type and signal.
+        geo_sig_cmbo = get_geo_sig_cmbo(data_source)
 
         self.check_missing_dates(validate_files, start_date, end_date)
 
-        # For every file, read in and do some basic format and value checks.
+        all_frames = []
+
+        # Individual file checks
+        # For every daily file, read in and do some basic format and value checks.
         for filename, match in validate_files:
             df = load_csv(join(export_dir, filename))
 
@@ -486,8 +496,10 @@ class Validator():
             self.check_bad_se(df, missing_se_allowed)
             self.check_bad_sample_size(
                 df, minimum_sample_size, missing_sample_size_allowed)
-            # Get geo_type, date, and signal name as specified by CSV name.
 
+            # TODO: Check to see, if this date is in the API, values have been updated and changed significantly.
+
+            # Get geo_type, date, and signal name as specified by CSV name.
             df['geo_type'] = match.groupdict()['geo_type']
             df['date'] = match.groupdict()['date']
             df['signal'] = match.groupdict()['signal']
@@ -498,79 +510,29 @@ class Validator():
         # TODO: Multi-indexed dataframe for a given (signal, geo_type)
         all_frames = pd.concat(all_frames)
 
-        # Get all expected combinations of geo_type and signal.
-        geo_sig_cmbo = get_geo_sig_cmbo(data_source)
-
         # Get list of dates we expect to see in all the CSV data.
         date_slist = all_frames['date'].unique().tolist()
         date_list = list(
             map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
 
-        # Get list of CSV names.
-        filenames = [name_match_pair[0] for name_match_pair in validate_files]
-
         # recent_lookbehind: start from the check date and working backward in time,
-        # how many days do we include in the window of date to check for anomalies?
-        # Choosing 1 day checks just the check data itself.
+        # how many days do we want to check for anomalies?
+        # Choosing 1 day checks just the daily data.
         recent_lookbehind = timedelta(days=1)
 
         # semirecent_lookbehind: starting from the check date and working backward
-        # in time, how many days -- before subtracting out the "recent" days ---
-        # do we use to form the reference statistics?
+        # in time, how many days do we use to form the reference statistics.
         semirecent_lookbehind = timedelta(days=7)
-
-        # ## New from reference code.
-        # # TODO: Check recent data against both semirecent and API data.
-        # start_checking_date = max(min(all_frames["date"]) + semirecent_lookbehind - 1,
-        #     max(all_frames["date"]) - max_check_lookbehind + 1)
-        # end_checking_date = max(all_frames["date"])
-
-        # if (start_checking_date > end_checking_date):
-        #     self.raised.append(ValidationError((start_checking_date, end_checking_date), "not enough days included in the dataframe to perform sanity checks"))
-
-        # # Loop over all sets of dates for a given CSV.
-        # for checking_date in range(start_checking_date, end_checking_date):
-        #     # TODO: Implement get_known_irregularities(). Add irregularity flags to other checks.
-        #     known_irregularities = get_known_irregularities(checking_date, filename)
-
-        #     recent_cutoff_date = checking_date - recent_lookbehind + 1
-        #     semirecent_cutoff_date = checking_date - semirecent_lookbehind + 1
-
-        #     recent_df_to_test = all_frames.query('date <= @checking_date & date >= @recent_cutoff_date')
-        #     semirecent_df_to_test = all_frames.query('date <= @checking_date & date < @recent_cutoff_date & date >= @semirecent_cutoff_date')
-
-        #     if (recent_df_to_test["se"].isnull().mean() > 0.5):
-        #         self.raised.append('Recent se values are >50% NA')
-
-        #     self.check_max_date_vs_reference(recent_df_to_test, semirecent_df_to_test)
-
-        #     if sanity_check_rows_per_day:
-        #         self.check_rapid_change(recent_df_to_test, semirecent_df_to_test)
-
-        #     # TODO: Get smooth_option from CSV name.
-        #     if sanity_check_value_diffs:
-        #         self.check_avg_val_diffs(recent_df_to_test, semirecent_df_to_test, smooth_option)
-
-        #     if check_vs_working:
-        #         pass
-
-        #         ## Goal is to see if past data has been changed.
-        #         # check_fbsurvey_generated_covidalert_vs_working(covidalert.df.to.test, specified.signal, geo, start.checking.date-1L)
-        #                 # Get all files for a given indicator.
-        #         #       get_working_covidalert_daily("fb-survey", signal, geo.type, fbsurvey.extra.listcolspec)
-        #                 # filter by date to keep only rows with date <= end_comparison_date, and date >= min date seen in both reference and test data
-        #                 # if, after filtering, the reference data has 0 rows, stop with a message "not any reference data in the reference period"
-
-        #                 # full join test and reference data on geo_id and date
-        #                 # create new columns checking whether a given field (val, se, sample_size) is missing in both test and reference data, or if it is within a set tolerance
-        #                 # filter data to keep only rows where one of the new columns is true. if df is not empty, raise error that "mismatches between less recent data in data frame to test and corresponding reference data frame"
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
+        # TODO: Remove for actual version
         kroc = 0
 
+        # Comparison checks
         # TODO: Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
-        for recent_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, filenames, date_slist):
+        # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
+        for geo_sig_df, geo, sig in read_geo_sig_cmbo_files(geo_sig_cmbo, export_dir, filenames, date_slist):
 
             m = smooth_option_regex.match(sig)
             smooth_option = m.group(1)
@@ -578,42 +540,52 @@ class Validator():
             if smooth_option not in ('raw', 'smoothed'):
                 smooth_option = 'smoothed' if '7dav' in sig or 'smoothed' in sig else 'raw'
 
-            #recent_df.set_index("time_value", inplace = True)
-            print("Printing recent_df scenes:", recent_df.shape)
-            print(recent_df)
+            weight_option = 'weighted' if 'wili' in sig or 'wcli' in sig else 'unweighted'
+
+            print("Printing geo_sig_df scenes:", geo_sig_df.shape)
+            print(geo_sig_df)
+
+            max_date = geo_sig_df["time_value"].max()
+            self.check_min_allowed_max_date(
+                max_date, generation_date, weight_option)
+            self.check_max_allowed_max_date(max_date, generation_date)
+
+            # Check data from a group of dates against recent (previous 7 days, by default) data from the API.
             for checking_date in date_list:
-                # -recent- dataframe run backwards from the checking_date
-                recent_end_date = checking_date - recent_lookbehind
-                recent_begin_date = checking_date - max_check_lookbehind
-                recent_api_df = covidcast.signal(
-                    data_source, sig, recent_begin_date, recent_end_date, geo)
+                recent_cutoff_date = checking_date - recent_lookbehind
+                recent_df = geo_sig_df.query(
+                    'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
-                # Replace None with NA to make numerical manipulation easier.
-                recent_api_df.replace(
-                    to_replace=[None], value=np.nan, inplace=True)
+                # Reference dataframe runs backwards from the checking_date
+                reference_start_date = checking_date - \
+                    min(semirecent_lookbehind, max_check_lookbehind)
+                reference_end_date = recent_cutoff_date - timedelta(days=1)
+                reference_api_df = covidcast.signal(
+                    data_source, sig, reference_start_date, reference_end_date, geo)
 
-                # Rename columns to match those in df_to_test.
-                recent_api_df.rename(
-                    columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}, inplace=True)
-                recent_api_df.drop(
-                    ['direction', 'issue', 'lag'], axis=1, inplace=True)
-
-                # Reorder columns.
                 column_names = ["geo_id", "val",
                                 "se", "sample_size", "time_value"]
-                recent_api_df = recent_api_df.reindex(columns=column_names)
+
+                # Replace None with NA to make numerical manipulation easier.
+                # Rename and reorder columns to match those in df_to_test.
+                reference_api_df = reference_api_df.replace(
+                    to_replace=[None], value=np.nan).rename(
+                    columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}).drop(
+                    ['direction', 'issue', 'lag'], axis=1).reindex(columns=column_names)
 
                 if recent_df["se"].isnull().mean() > 0.5:
-                    self.raised.append('Recent se values are >50% NA')
+                    self.raised.append(
+                        ((sig, geo, checking_date), 'Recent se values are >50% NA'))
 
                 if sanity_check_rows_per_day:
                     self.check_rapid_change(
-                        recent_df, recent_api_df, checking_date, date_list, sig, geo)
+                        recent_df, reference_api_df, checking_date, sig, geo)
 
                 if sanity_check_value_diffs:
                     self.check_avg_val_diffs(
-                        recent_df, recent_api_df, smooth_option)
+                        recent_df, reference_api_df, smooth_option)
 
+            # TODO: Remove for actual version
             kroc += 1
             if kroc == 2:
                 break

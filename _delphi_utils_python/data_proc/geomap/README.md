@@ -24,13 +24,7 @@ We support the following geocodes.
   - We are reserving 10001-10099 for states codes of the form 100XX where XX is the FIPS code for the state (the current smallest CBSA is 10100). In the case that the CBSA codes change then it should be verified that these are not used. 
 - State codes are a series of equivalent identifiers for US state. They include the state name, the state number (state_id), and the state two-letter abbreviation (state_code). The state number is the state FIPS code. See [here](https://en.wikipedia.org/wiki/List_of_U.S._state_and_territory_abbreviations) for more.
 - The Hospital Referral Region (HRR) and the Hospital Service Area (HSA). More information [here](https://www.dartmouthatlas.org/covid-19/hrr-mapping/).
-- The JHU signal contains its own geographic identifier, labeled the UID. Documentation is provided at [their repo](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data#uid-lookup-table-logic). Its FIPS codes depart in some special cases, so add some hand additions.
-  - Dukes and Nantucket counties in Massachusets are aggregated, so we split them with population-proportional weights (approximately 2/3 Dukes and 1/3 Nantucket).
-  - The same procedure is followed by Kansas City and four of its counties.
-  - Kusilvak, Alaska is mapped to the FIPS code 02270.
-  - Ogalala Lakota is mapped to the FIPS code 46113.
-  - Utah reports at a territory level, so we only report it at in a state level megaFIPS 49000.
-  - JHU places cases and deaths that cannot be localized to a single county into "Out of State" and "Unassigned" categories. We map these to the "megaFIPS" code XX000, where XX is the state FIPS code. This way, the data is recovered when aggregating up to the state level, but does not interfere with other counties.
+- The JHU signal contains its own geographic identifier, labeled the UID. Documentation is provided at [their repo](https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data#uid-lookup-table-logic). Its FIPS codes depart in some special cases, so we produce manual changes listed below.
 
 ## Source files
 
@@ -45,6 +39,15 @@ The source files are requested from a government URL when `geo_data_proc.py` is 
 ## Derived files
 
 The rest of the crosswalk tables are derived from the mappings above. We provide crosswalk functions from granular to coarser codes, but not the other way around. This is because there is no information gained when crosswalking from coarse to granular.
+
+## JHU UID mapping changes
+
+- Dukes and Nantucket counties in Massachusets are aggregated, so we split them with population-proportional weights (approximately 2/3 Dukes and 1/3 Nantucket).
+- The same procedure is followed by Kansas City and four of its counties.
+- Kusilvak, Alaska is mapped to the FIPS code 02270.
+- Ogalala Lakota, South Dakota is mapped to the FIPS code 46113.
+- Utah reports at a territory level, so we only report it at in a state level megaFIPS 49000.
+- JHU places cases and deaths that cannot be localized to a single county into "Out of State" and "Unassigned" categories. We map these to the "megaFIPS" code XX000, where XX is the state FIPS code. This way, the data is recovered when aggregating up to the state level, but does not interfere with other counties.
 
 ## Deprecated source files
 

@@ -120,9 +120,8 @@ class TestGeoMapper:
     def test_crosswalks(self):
         # These tests ensure that the one-to-many crosswalks have properly normalized weights
         gmpr = GeoMapper()
-        # FIPS -> HRR is allowed to be an incomplete mapping, since some part of a FIPS code may not belong to an HRR
-        # cw = gmpr.load_crosswalk(from_code="fips", to_code="hrr")
-        # assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
+        # FIPS -> HRR is allowed to be an incomplete mapping, since only a fraction of a FIPS
+        # code can not belong to an HRR
         cw = gmpr._load_crosswalk(from_code="fips", to_code="hrr")
         assert (
             cw.groupby("fips")["weight"].sum().round(5).ge(0.95).all()
@@ -133,7 +132,8 @@ class TestGeoMapper:
         assert cw.groupby("jhu_uid")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="zip", to_code="fips")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
-        # cw = gmpr.load_crosswalk(from_code="zip", to_code="msa") # weight discrepancy is fine for MSA
+        # weight discrepancy is fine for MSA, for the same reasons as HRR
+        # cw = gmpr.load_crosswalk(from_code="zip", to_code="msa")
         # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="zip", to_code="state")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
@@ -183,7 +183,7 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         new_data = gmpr.convert_fips_to_state_code(self.fips_data)
         new_data = gmpr.convert_state_code_to_state_id(new_data)
-        assert new_data["state_id"].isnull()[2] == True
+        assert new_data["state_id"].isnull()[2]
         assert new_data["state_id"][3] == "in"
         assert len(pd.unique(new_data["state_id"])) == 4
 
@@ -324,7 +324,8 @@ class TestGeoMapper:
             new_data[["count", "total"]].values, new_data2[["count", "total"]].values
         )
 
-        # fips -> state_code (again, mostly to cover the test case of when fips codes aren't all strings)
+        # fips -> state_code (again, mostly to cover the test case of when fips 
+        # codes aren't all strings)
         new_data = gmpr.fips_to_state_code(self.fips_data_5)
         new_data2 = gmpr.replace_geocode(self.fips_data_5, "fips", "state_code")
         new_data2 = new_data2[new_data.columns]
@@ -376,13 +377,6 @@ class TestGeoMapper:
             new_data[["count", "total"]].values, new_data2[["count", "total"]].values
         )
 
-        # jhu_uid -> fips BIG DATA
-        # new_data = gmpr.jhu_uid_to_fips(self.jhu_big_data)
-        # data_cols = new_data.filter(regex="[2,3]/\d{0,2}\/20").columns
-        # new_data2 = gmpr.replace_geocode(self.jhu_big_data, "jhu_uid", "fips", data_cols=data_cols)
-        # new_data2 = new_data2[new_data.columns]
-        # assert np.allclose(new_data[["count", "total"]].values, new_data2[["count", "total"]].values)
-
         # state_code -> hhs
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
@@ -418,5 +412,5 @@ class TestGeoMapper:
         )
 
         # fips -> hrr (dropna=True/False check)
-        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any() == False
-        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any() == True
+        assert not gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any()
+        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()

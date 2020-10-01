@@ -53,7 +53,8 @@ def read_historical_data():
     Read historical flu antigen test data stored in
     midas /common/quidel-historical-raw
     """
-    pull_dir = "/common/quidel-historical-raw"
+#    pull_dir = "/common/quidel-historical-raw"
+    pull_dir = "../../tempt_files/quidel_raw/quidel-historical-raw"
     columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
                                'FluA', 'FluB', 'StorageDate']
     df = pd.DataFrame(columns=columns)
@@ -224,6 +225,13 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
         # Get new data from email
         dfs, time_flag = get_from_email(COLUMN_NAMES, start_dates, end_dates,
                                        mail_server, account, sender, password)
+
+        # Get historical data
+        if start_dates["flu_ag"] < datetime(2020, 5, 8):
+            print("Read historical data")
+            df_historical = read_historical_data()
+            df_historical = regulate_column_names(df_historical, "flu_ag")
+            dfs["flu_ag"] = dfs["flu_ag"].append(df_historical)
 
     # No new data can be pulled
     if time_flag is None:

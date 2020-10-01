@@ -10,7 +10,7 @@
   "n_waiting_days": 3,
   "se": false,
   "parallel": false,
-  "geos": ["state", "msa", "hrr", "county"],
+  "geos": ["state", "msa", "hrr", "fips"],
   "weekday": [true, false],
   "wip_signal": ""
 }

@@ -48,7 +48,7 @@ CROSSWALK_FILEPATHS = {
 
 
 class GeoMapper:
-    """Geo mapping tools commonly used in Delphi
+    """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
     geocodes. Supported geocodes:
@@ -79,13 +79,19 @@ class GeoMapper:
     just two colums. If the mapping IS one to many, then a third column, the weight column,
     exists (e.g. zip, fips, weight; satisfying (sum(weights) where zip==ZIP) == 1).
 
-    The main GeoMapper object methods act on dataframes with a geo code column. They can
-    be categorized as follows:
-    - load_* : load a crosswalk table into the instance (e.g. zip to fips).
-    - convert_* : add a new column to a dataframe by joining with a crosswalk table
-    - *_to_* : replace a geo code column with another, using weighted sum aggregation where
-               necessary (e.g. (sum(weights*count_column) groupby fips) would convert zip
-               level data to fips level data)
+    Example Usage
+    ==========
+    The main GeoMapper object loads and stores crosswalk dataframes on-demand.
+
+    Example 1: to add a new column with a new geocode, possibly with weights:
+    > gmpr = GeoMapper()
+    > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+                            date_col="timestamp", dropna=False)
+
+    Example 2: to replace a geocode column with a new one, aggregating the data with weights:
+    > gmpr = GeoMapper()
+    > df = gmpr.replace_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+                                date_col="timestamp", dropna=False)
     """
 
     def __init__(self):
@@ -234,13 +240,21 @@ class GeoMapper:
     def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=True):
         """Add a new geocode column to a dataframe.
 
+        Currently supported conversions:
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, national
+        - zip -> state_code, state_id, state_name, fips, msa, hrr, national
+        - jhu_uid -> fips
+        - state_x -> state_y, where x and y are in {code, id, name}
+        - state_code -> hhs_region_number
+
         Parameters
         ---------
         df: pd.DataFrame
             Input dataframe.
         from_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name'}
             Specifies the geocode type of the data in from_col.
-        new_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name', 'hrr', 'msa'}
+        new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
+                   'hhs_region_number'}
             Specifies the geocode type in new_col.
         from_col: str, default None
             Name of the column in dataframe containing from_code. If None, then the name
@@ -271,8 +285,8 @@ class GeoMapper:
                 df[from_col] = df[from_col].astype(str)
 
         # Assuming that the passed-in records are all United States data
-        if new_code is "national":
-            df[new_col] = df[from_col].isna().apply(lambda x: "United States" if not x else np.nan)
+        if new_code == "national":
+            df[new_col] = df[from_col].apply(lambda x: "United States")
             return df
 
         # state codes are all stored in one table
@@ -312,6 +326,13 @@ class GeoMapper:
     ):
         """Replace a geocode column in a dataframe.
 
+        Currently supported conversions:
+        - fips -> state_code, state_id, state_name, zip, msa, hrr
+        - zip -> state_code, state_id, state_name, fips, msa, hrr
+        - jhu_uid -> fips
+        - state_x -> state_y, where x and y are in {code, id, name}
+        - state_code -> hhs_region_number
+
         Parameters
         ---------
         df: pd.DataFrame
@@ -322,7 +343,8 @@ class GeoMapper:
             Specifies the geocode type of the data in from_col.
         new_col: str
             Name of the new column to add to data.
-        new_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name', 'hrr', 'msa'}
+        new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
+                   'hhs_region_number'}
             Specifies the geocode type of the data in new_col.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to

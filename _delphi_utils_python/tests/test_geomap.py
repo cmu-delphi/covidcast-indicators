@@ -39,6 +39,14 @@ class TestGeoMapper:
             "total": [4, 1, np.nan, 100001],
         }
     )
+    fips_data_5 = pd.DataFrame(
+        {
+            "fips": [1123, 48253, 72003, 18181],
+            "date": [pd.Timestamp("2018-01-01")] * 4,
+            "count": [2, 1, np.nan, 10021],
+            "total": [4, 1, np.nan, 100001],
+        }
+    )
     zip_data = pd.DataFrame(
         {
             "zip": ["45140", "95616", "95618"] * 2,
@@ -68,13 +76,25 @@ class TestGeoMapper:
             ),
         )
     )
-    jhu_data = pd.DataFrame(
-        {
-            "fips_jhu": ["48059", "48253", "72005", "10999", "90010", 70002],
-            "date": [pd.Timestamp("2018-01-01")] * 3 + [pd.Timestamp("2018-01-03")] * 3,
-            "count": [1, 2, 3, 4, 8, 5],
-            "total": [2, 4, 7, 11, 100, 10],
-        }
+    mega_data_2 = pd.concat(
+        (
+            pd.DataFrame(
+                {
+                    "fips": ["01001"] * len(jan_month),
+                    "date": jan_month,
+                    "count": np.arange(len(jan_month)),
+                    "_thr_col_roll": np.arange(len(jan_month)),
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "fips": [11001] * len(jan_month),
+                    "date": jan_month,
+                    "count": np.arange(len(jan_month)),
+                    "_thr_col_roll": np.arange(len(jan_month)),
+                }
+            ),
+        )
     )
     jhu_uid_data = pd.DataFrame(
         {
@@ -97,10 +117,30 @@ class TestGeoMapper:
     # jhu_big_data = pd.read_csv("test_dir/small_deaths.csv")
 
     # Loading tests updated 8/26
+    def test_crosswalks(self):
+        # These tests ensure that the one-to-many crosswalks have properly normalized weights
+        gmpr = GeoMapper()
+        # FIPS -> HRR is allowed to be an incomplete mapping, since only a fraction of a FIPS
+        # code can not belong to an HRR
+        cw = gmpr._load_crosswalk(from_code="fips", to_code="hrr")
+        assert (
+            cw.groupby("fips")["weight"].sum().round(5).ge(0.95).all()
+        )  # some weight discrepancy is fine for HRR
+        cw = gmpr._load_crosswalk(from_code="fips", to_code="zip")
+        assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr._load_crosswalk(from_code="jhu_uid", to_code="fips")
+        assert cw.groupby("jhu_uid")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr._load_crosswalk(from_code="zip", to_code="fips")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+        # weight discrepancy is fine for MSA, for the same reasons as HRR
+        # cw = gmpr.load_crosswalk(from_code="zip", to_code="msa")
+        # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr._load_crosswalk(from_code="zip", to_code="state")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+
     def test_load_zip_fips_table(self):
         gmpr = GeoMapper()
         fips_data = gmpr._load_crosswalk(from_code="zip", to_code="fips")
-        assert (fips_data.groupby("zip").sum()["weight"] == 0).sum() == 144
         assert set(fips_data.columns) == set(["zip", "fips", "weight"])
         assert pd.api.types.is_string_dtype(fips_data.zip)
         assert pd.api.types.is_string_dtype(fips_data.fips)
@@ -143,7 +183,7 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         new_data = gmpr.convert_fips_to_state_code(self.fips_data)
         new_data = gmpr.convert_state_code_to_state_id(new_data)
-        assert new_data["state_id"].isnull()[2] == True
+        assert new_data["state_id"].isnull()[2]
         assert new_data["state_id"][3] == "in"
         assert len(pd.unique(new_data["state_id"])) == 4
 
@@ -177,6 +217,16 @@ class TestGeoMapper:
             new_data[["count", "visits"]].sum()
             - self.mega_data[["count", "visits"]].sum()
         ).sum() < 1e-3
+        with pytest.raises(ValueError):
+            new_data = gmpr.megacounty_creation(
+                self.mega_data_2, 6, 50, thr_col="_thr_col_roll"
+            )
+        new_data = gmpr.fips_to_megacounty(
+            self.mega_data, 6, 50, count_cols=["count", "visits"]
+        )
+        assert (
+            new_data[["count"]].sum() - self.mega_data[["count"]].sum()
+        ).sum() < 1e-3
 
     def test_zip_to_hrr(self):
         gmpr = GeoMapper()
@@ -188,7 +238,6 @@ class TestGeoMapper:
 
     def test_jhu_uid_to_fips(self):
         gmpr = GeoMapper()
-        self.jhu_uid_data["jhu_uid"] = self.jhu_uid_data["jhu_uid"].astype(str)
         new_data = gmpr.jhu_uid_to_fips(self.jhu_uid_data)
         assert not (new_data["fips"].astype(int) > 90000).any()
         assert new_data["total"].sum() == self.jhu_uid_data["total"].sum()
@@ -232,6 +281,8 @@ class TestGeoMapper:
         assert new_data["population"].sum() == 274963
         new_data = gmpr.add_population_column(self.zip_data, "zip")
         assert new_data["population"].sum() == 274902
+        with pytest.raises(ValueError):
+            new_data = gmpr.add_population_column(self.zip_data, "hrr")
 
     def test_add_geocode(self):
         gmpr = GeoMapper()
@@ -268,6 +319,15 @@ class TestGeoMapper:
         # fips -> state_code
         new_data = gmpr.fips_to_state_code(self.fips_data_4)
         new_data2 = gmpr.replace_geocode(self.fips_data_4, "fips", "state_code")
+        new_data2 = new_data2[new_data.columns]
+        assert np.allclose(
+            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
+        )
+
+        # fips -> state_code (again, mostly to cover the test case of when fips 
+        # codes aren't all strings)
+        new_data = gmpr.fips_to_state_code(self.fips_data_5)
+        new_data2 = gmpr.replace_geocode(self.fips_data_5, "fips", "state_code")
         new_data2 = new_data2[new_data.columns]
         assert np.allclose(
             new_data[["count", "total"]].values, new_data2[["count", "total"]].values
@@ -317,14 +377,40 @@ class TestGeoMapper:
             new_data[["count", "total"]].values, new_data2[["count", "total"]].values
         )
 
-        # jhu_uid -> fips BIG DATA
-        # new_data = gmpr.jhu_uid_to_fips(self.jhu_big_data)
-        # data_cols = new_data.filter(regex="[2,3]/\d{0,2}\/20").columns
-        # new_data2 = gmpr.replace_geocode(self.jhu_big_data, "jhu_uid", "fips", data_cols=data_cols)
-        # new_data2 = new_data2[new_data.columns]
-        # assert np.allclose(new_data[["count", "total"]].values, new_data2[["count", "total"]].values)
-
         # state_code -> hhs
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
         assert new_data2["hhs_region_number"].unique().size == 2
+
+        # fips -> national
+        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "national")
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
+                    "national": {0: "United States"},
+                    "count": {0: 10024.0},
+                    "total": {0: 100006.0},
+                }
+            )
+        )
+
+        # zip -> national
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "national")
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "date": {
+                        0: pd.Timestamp("2018-01-01"),
+                        1: pd.Timestamp("2018-01-03"),
+                    },
+                    "national": {0: "United States", 1: "United States"},
+                    "count": {0: 900, 1: 886},
+                    "total": {0: 1800, 1: 1772},
+                }
+            )
+        )
+
+        # fips -> hrr (dropna=True/False check)
+        assert not gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any()
+        assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()

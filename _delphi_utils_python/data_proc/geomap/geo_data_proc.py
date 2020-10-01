@@ -76,16 +76,12 @@ def create_fips_zip_crosswalk():
     )
 
     # Rename and write to file
-    (
-        fips_zip.reset_index(level=["fips", "zip"])
-        .rename(columns={"pop": "weight"})
-        .to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
-    )
-    (
-        zip_fips.reset_index(level=["fips", "zip"])
-        .rename(columns={"pop": "weight"})
-        .to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
-    )
+    fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
+    fips_zip = fips_zip[fips_zip["weight"] > 0.0]
+    fips_zip.to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
+    zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
+    zip_fips = zip_fips[zip_fips["weight"] > 0.0]
+    zip_fips.to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
 
 
 def create_zip_hsa_hrr_crosswalk():

@@ -291,7 +291,6 @@ zip,weight,state_code,state_id,state_name
 01128,1.0,25,ma,Massachusetts
 01129,1.0,25,ma,Massachusetts
 01151,1.0,25,ma,Massachusetts
-01199,,25,ma,Massachusetts
 01201,1.0,25,ma,Massachusetts
 01220,1.0,25,ma,Massachusetts
 01222,1.0,25,ma,Massachusetts
@@ -584,7 +583,6 @@ zip,weight,state_code,state_id,state_name
 02145,1.0,25,ma,Massachusetts
 02148,1.0,25,ma,Massachusetts
 02149,1.0,25,ma,Massachusetts
-02149,0.0,25,ma,Massachusetts
 02150,1.0,25,ma,Massachusetts
 02151,1.0,25,ma,Massachusetts
 02152,1.0,25,ma,Massachusetts
@@ -602,7 +600,6 @@ zip,weight,state_code,state_id,state_name
 02190,1.0,25,ma,Massachusetts
 02191,1.0,25,ma,Massachusetts
 02199,1.0,25,ma,Massachusetts
-02203,,25,ma,Massachusetts
 02210,1.0,25,ma,Massachusetts
 02215,3.827751196172249e-05,25,ma,Massachusetts
 02215,0.9999617224880384,25,ma,Massachusetts
@@ -878,7 +875,6 @@ zip,weight,state_code,state_id,state_name
 03101,1.0,33,nh,New Hampshire
 03102,1.0,33,nh,New Hampshire
 03103,1.0,33,nh,New Hampshire
-03103,0.0,33,nh,New Hampshire
 03104,0.9976522958716996,33,nh,New Hampshire
 03104,0.002347704128300506,33,nh,New Hampshire
 03106,1.0,33,nh,New Hampshire
@@ -1422,7 +1418,6 @@ zip,weight,state_code,state_id,state_name
 04694,1.0,23,me,Maine
 04730,1.0,23,me,Maine
 04732,1.0,23,me,Maine
-04732,0.0,23,me,Maine
 04733,0.9276018099547512,23,me,Maine
 04733,0.07239819004524888,23,me,Maine
 04734,1.0,23,me,Maine
@@ -1692,7 +1687,6 @@ zip,weight,state_code,state_id,state_name
 05476,1.0,50,vt,Vermont
 05477,1.0,50,vt,Vermont
 05478,1.0,50,vt,Vermont
-05481,,50,vt,Vermont
 05482,1.0,50,vt,Vermont
 05483,1.0,50,vt,Vermont
 05485,1.0,50,vt,Vermont
@@ -1843,7 +1837,6 @@ zip,weight,state_code,state_id,state_name
 06016,1.0,09,ct,Connecticut
 06018,1.0,09,ct,Connecticut
 06019,1.0,09,ct,Connecticut
-06020,,09,ct,Connecticut
 06021,1.0,09,ct,Connecticut
 06022,1.0,09,ct,Connecticut
 06023,1.0,09,ct,Connecticut
@@ -1865,7 +1858,6 @@ zip,weight,state_code,state_id,state_name
 06053,1.0,09,ct,Connecticut
 06057,1.0,09,ct,Connecticut
 06058,1.0,09,ct,Connecticut
-06059,,09,ct,Connecticut
 06060,1.0,09,ct,Connecticut
 06061,1.0,09,ct,Connecticut
 06062,1.0,09,ct,Connecticut
@@ -1909,7 +1901,6 @@ zip,weight,state_code,state_id,state_name
 06118,1.0,09,ct,Connecticut
 06119,1.0,09,ct,Connecticut
 06120,1.0,09,ct,Connecticut
-06160,,09,ct,Connecticut
 06226,0.02212389380530973,09,ct,Connecticut
 06226,0.9778761061946902,09,ct,Connecticut
 06231,1.0,09,ct,Connecticut
@@ -2284,7 +2275,6 @@ zip,weight,state_code,state_id,state_name
 07470,1.0,34,nj,New Jersey
 07480,1.0,34,nj,New Jersey
 07481,1.0,34,nj,New Jersey
-07495,,34,nj,New Jersey
 07501,1.0,34,nj,New Jersey
 07502,1.0,34,nj,New Jersey
 07503,1.0,34,nj,New Jersey
@@ -2807,7 +2797,6 @@ zip,weight,state_code,state_id,state_name
 10017,1.0,36,ny,New York
 10018,1.0,36,ny,New York
 10019,1.0,36,ny,New York
-10020,,36,ny,New York
 10021,1.0,36,ny,New York
 10022,1.0,36,ny,New York
 10023,1.0,36,ny,New York
@@ -2833,30 +2822,13 @@ zip,weight,state_code,state_id,state_name
 10069,1.0,36,ny,New York
 10075,1.0,36,ny,New York
 10103,1.0,36,ny,New York
-10110,,36,ny,New York
-10111,,36,ny,New York
-10112,,36,ny,New York
-10115,,36,ny,New York
 10119,1.0,36,ny,New York
 10128,1.0,36,ny,New York
-10152,,36,ny,New York
-10153,,36,ny,New York
-10154,,36,ny,New York
 10162,1.0,36,ny,New York
 10165,1.0,36,ny,New York
-10167,,36,ny,New York
-10168,,36,ny,New York
-10169,,36,ny,New York
 10170,1.0,36,ny,New York
-10171,,36,ny,New York
-10172,,36,ny,New York
 10173,1.0,36,ny,New York
-10174,,36,ny,New York
-10177,,36,ny,New York
 10199,1.0,36,ny,New York
-10271,,36,ny,New York
-10278,,36,ny,New York
-10279,,36,ny,New York
 10280,1.0,36,ny,New York
 10282,1.0,36,ny,New York
 10301,1.0,36,ny,New York
@@ -2869,7 +2841,6 @@ zip,weight,state_code,state_id,state_name
 10308,1.0,36,ny,New York
 10309,1.0,36,ny,New York
 10310,1.0,36,ny,New York
-10311,,36,ny,New York
 10312,1.0,36,ny,New York
 10314,1.0,36,ny,New York
 10451,1.0,36,ny,New York
@@ -3103,13 +3074,11 @@ zip,weight,state_code,state_id,state_name
 11237,1.0,36,ny,New York
 11238,1.0,36,ny,New York
 11239,1.0,36,ny,New York
-11351,,36,ny,New York
 11354,1.0,36,ny,New York
 11355,1.0,36,ny,New York
 11356,1.0,36,ny,New York
 11357,1.0,36,ny,New York
 11358,1.0,36,ny,New York
-11359,,36,ny,New York
 11360,1.0,36,ny,New York
 11361,1.0,36,ny,New York
 11362,1.0,36,ny,New York
@@ -3122,7 +3091,6 @@ zip,weight,state_code,state_id,state_name
 11369,1.0,36,ny,New York
 11370,0.2794547470268091,36,ny,New York
 11370,0.7205452529731909,36,ny,New York
-11371,,36,ny,New York
 11372,1.0,36,ny,New York
 11373,1.0,36,ny,New York
 11374,1.0,36,ny,New York
@@ -3144,8 +3112,6 @@ zip,weight,state_code,state_id,state_name
 11421,1.0,36,ny,New York
 11422,1.0,36,ny,New York
 11423,1.0,36,ny,New York
-11424,,36,ny,New York
-11425,,36,ny,New York
 11426,1.0,36,ny,New York
 11427,1.0,36,ny,New York
 11428,1.0,36,ny,New York
@@ -3156,7 +3122,6 @@ zip,weight,state_code,state_id,state_name
 11434,1.0,36,ny,New York
 11435,1.0,36,ny,New York
 11436,1.0,36,ny,New York
-11451,,36,ny,New York
 11501,1.0,36,ny,New York
 11507,1.0,36,ny,New York
 11509,1.0,36,ny,New York
@@ -3848,7 +3813,6 @@ zip,weight,state_code,state_id,state_name
 12911,1.0,36,ny,New York
 12912,0.5540540540540541,36,ny,New York
 12912,0.4459459459459459,36,ny,New York
-12912,0.0,36,ny,New York
 12913,0.926534140017286,36,ny,New York
 12913,0.07346585998271392,36,ny,New York
 12914,0.9032567049808428,36,ny,New York
@@ -4075,7 +4039,6 @@ zip,weight,state_code,state_id,state_name
 13215,1.0,36,ny,New York
 13219,1.0,36,ny,New York
 13224,1.0,36,ny,New York
-13290,,36,ny,New York
 13301,1.0,36,ny,New York
 13302,1.0,36,ny,New York
 13303,1.0,36,ny,New York
@@ -4995,7 +4958,6 @@ zip,weight,state_code,state_id,state_name
 15085,0.013972809667673716,42,pa,Pennsylvania
 15085,0.9860271903323264,42,pa,Pennsylvania
 15086,1.0,42,pa,Pennsylvania
-15086,0.0,42,pa,Pennsylvania
 15087,1.0,42,pa,Pennsylvania
 15088,1.0,42,pa,Pennsylvania
 15089,0.014372404982433725,42,pa,Pennsylvania
@@ -5074,8 +5036,6 @@ zip,weight,state_code,state_id,state_name
 15241,0.9852905123804854,42,pa,Pennsylvania
 15241,0.014709487619514587,42,pa,Pennsylvania
 15243,1.0,42,pa,Pennsylvania
-15260,,42,pa,Pennsylvania
-15290,,42,pa,Pennsylvania
 15301,1.0,42,pa,Pennsylvania
 15310,1.0,42,pa,Pennsylvania
 15311,1.0,42,pa,Pennsylvania
@@ -6093,7 +6053,6 @@ zip,weight,state_code,state_id,state_name
 17111,1.0,42,pa,Pennsylvania
 17112,1.0,42,pa,Pennsylvania
 17113,1.0,42,pa,Pennsylvania
-17120,,42,pa,Pennsylvania
 17201,1.0,42,pa,Pennsylvania
 17202,1.0,42,pa,Pennsylvania
 17210,1.0,42,pa,Pennsylvania
@@ -6111,7 +6070,6 @@ zip,weight,state_code,state_id,state_name
 17222,0.9368313331472696,42,pa,Pennsylvania
 17223,1.0,42,pa,Pennsylvania
 17224,1.0,42,pa,Pennsylvania
-17224,0.0,42,pa,Pennsylvania
 17225,1.0,42,pa,Pennsylvania
 17228,1.0,42,pa,Pennsylvania
 17229,0.8667711598746082,42,pa,Pennsylvania
@@ -6336,7 +6294,6 @@ zip,weight,state_code,state_id,state_name
 17821,0.022284428344036447,42,pa,Pennsylvania
 17821,0.8632197156814315,42,pa,Pennsylvania
 17821,0.11449585597453207,42,pa,Pennsylvania
-17822,,42,pa,Pennsylvania
 17823,1.0,42,pa,Pennsylvania
 17824,0.15504252733900364,42,pa,Pennsylvania
 17824,0.8449574726609963,42,pa,Pennsylvania
@@ -6447,7 +6404,6 @@ zip,weight,state_code,state_id,state_name
 18014,1.0,42,pa,Pennsylvania
 18015,0.21871954191033136,42,pa,Pennsylvania
 18015,0.7812804580896686,42,pa,Pennsylvania
-18016,,42,pa,Pennsylvania
 18017,0.03235771924685078,42,pa,Pennsylvania
 18017,0.9676422807531492,42,pa,Pennsylvania
 18018,0.5592817696603215,42,pa,Pennsylvania
@@ -6523,7 +6479,6 @@ zip,weight,state_code,state_id,state_name
 18106,1.0,42,pa,Pennsylvania
 18109,0.9878336876919442,42,pa,Pennsylvania
 18109,0.012166312308055751,42,pa,Pennsylvania
-18195,,42,pa,Pennsylvania
 18201,0.0026166593981683385,42,pa,Pennsylvania
 18201,0.9932766390463729,42,pa,Pennsylvania
 18201,0.0041067015554586426,42,pa,Pennsylvania
@@ -6912,7 +6867,6 @@ zip,weight,state_code,state_id,state_name
 19104,1.0,42,pa,Pennsylvania
 19106,1.0,42,pa,Pennsylvania
 19107,1.0,42,pa,Pennsylvania
-19109,,42,pa,Pennsylvania
 19111,1.0,42,pa,Pennsylvania
 19112,1.0,42,pa,Pennsylvania
 19113,1.0,42,pa,Pennsylvania
@@ -6952,7 +6906,6 @@ zip,weight,state_code,state_id,state_name
 19147,1.0,42,pa,Pennsylvania
 19148,1.0,42,pa,Pennsylvania
 19149,1.0,42,pa,Pennsylvania
-19150,0.0,42,pa,Pennsylvania
 19150,1.0,42,pa,Pennsylvania
 19151,1.0,42,pa,Pennsylvania
 19152,1.0,42,pa,Pennsylvania
@@ -7193,9 +7146,7 @@ zip,weight,state_code,state_id,state_name
 20032,1.0,11,dc,District of Columbia
 20036,1.0,11,dc,District of Columbia
 20037,1.0,11,dc,District of Columbia
-20045,,11,dc,District of Columbia
 20052,1.0,11,dc,District of Columbia
-20053,,11,dc,District of Columbia
 20057,1.0,11,dc,District of Columbia
 20064,1.0,11,dc,District of Columbia
 20105,1.0,51,va,Virginia
@@ -7259,32 +7210,12 @@ zip,weight,state_code,state_id,state_name
 20194,1.0,51,va,Virginia
 20197,1.0,51,va,Virginia
 20198,1.0,51,va,Virginia
-20202,,11,dc,District of Columbia
-20204,,11,dc,District of Columbia
-20228,,11,dc,District of Columbia
-20230,,11,dc,District of Columbia
-20240,,11,dc,District of Columbia
-20245,,11,dc,District of Columbia
-20260,,11,dc,District of Columbia
 20307,1.0,11,dc,District of Columbia
 20317,1.0,11,dc,District of Columbia
 20319,1.0,11,dc,District of Columbia
 20373,1.0,11,dc,District of Columbia
 20390,1.0,11,dc,District of Columbia
-20405,,11,dc,District of Columbia
-20418,,11,dc,District of Columbia
-20427,,11,dc,District of Columbia
-20506,,11,dc,District of Columbia
-20510,,11,dc,District of Columbia
-20520,,11,dc,District of Columbia
 20535,1.0,11,dc,District of Columbia
-20540,,11,dc,District of Columbia
-20551,,11,dc,District of Columbia
-20553,,11,dc,District of Columbia
-20560,,11,dc,District of Columbia
-20565,,11,dc,District of Columbia
-20566,,11,dc,District of Columbia
-20593,,11,dc,District of Columbia
 20601,0.9880360986918364,24,md,Maryland
 20601,0.011963901308163605,24,md,Maryland
 20602,1.0,24,md,Maryland
@@ -7349,7 +7280,6 @@ zip,weight,state_code,state_id,state_name
 20692,1.0,24,md,Maryland
 20693,1.0,24,md,Maryland
 20695,1.0,24,md,Maryland
-20701,0.0,24,md,Maryland
 20701,1.0,24,md,Maryland
 20705,0.0064533374064457,24,md,Maryland
 20705,0.9935466625935544,24,md,Maryland
@@ -7604,7 +7534,6 @@ zip,weight,state_code,state_id,state_name
 21237,0.001563591603180412,24,md,Maryland
 21239,0.17393116382454069,24,md,Maryland
 21239,0.8260688361754593,24,md,Maryland
-21240,,24,md,Maryland
 21244,1.0,24,md,Maryland
 21250,1.0,24,md,Maryland
 21251,1.0,24,md,Maryland
@@ -7846,7 +7775,6 @@ zip,weight,state_code,state_id,state_name
 22032,0.9642577526636484,51,va,Virginia
 22032,0.03574224733635157,51,va,Virginia
 22033,1.0,51,va,Virginia
-22035,,51,va,Virginia
 22039,1.0,51,va,Virginia
 22041,1.0,51,va,Virginia
 22042,0.9915913766884336,51,va,Virginia
@@ -7875,7 +7803,6 @@ zip,weight,state_code,state_id,state_name
 22180,1.0,51,va,Virginia
 22181,1.0,51,va,Virginia
 22182,1.0,51,va,Virginia
-22185,,51,va,Virginia
 22191,1.0,51,va,Virginia
 22192,1.0,51,va,Virginia
 22193,1.0,51,va,Virginia
@@ -7892,7 +7819,6 @@ zip,weight,state_code,state_id,state_name
 22209,1.0,51,va,Virginia
 22211,1.0,51,va,Virginia
 22213,1.0,51,va,Virginia
-22214,,51,va,Virginia
 22301,1.0,51,va,Virginia
 22302,0.053806490749165915,51,va,Virginia
 22302,0.946193509250834,51,va,Virginia
@@ -8078,7 +8004,6 @@ zip,weight,state_code,state_id,state_name
 22831,1.0,51,va,Virginia
 22832,1.0,51,va,Virginia
 22834,1.0,51,va,Virginia
-22835,0.0,51,va,Virginia
 22835,1.0,51,va,Virginia
 22840,1.0,51,va,Virginia
 22841,0.037262629881762814,51,va,Virginia
@@ -8332,7 +8257,6 @@ zip,weight,state_code,state_id,state_name
 23237,1.0,51,va,Virginia
 23238,0.07778308267685208,51,va,Virginia
 23238,0.922216917323148,51,va,Virginia
-23250,,51,va,Virginia
 23294,1.0,51,va,Virginia
 23301,1.0,51,va,Virginia
 23302,1.0,51,va,Virginia
@@ -8617,7 +8541,6 @@ zip,weight,state_code,state_id,state_name
 24017,1.0,51,va,Virginia
 24018,0.8999231444883619,51,va,Virginia
 24018,0.10007685551163813,51,va,Virginia
-24018,0.0,51,va,Virginia
 24019,0.15655422232284355,51,va,Virginia
 24019,0.7107388121651196,51,va,Virginia
 24019,0.13270696551203684,51,va,Virginia
@@ -8900,7 +8823,6 @@ zip,weight,state_code,state_id,state_name
 24477,1.0,51,va,Virginia
 24479,1.0,51,va,Virginia
 24482,1.0,51,va,Virginia
-24482,0.0,51,va,Virginia
 24483,0.22146507666098808,51,va,Virginia
 24483,0.7785349233390121,51,va,Virginia
 24484,0.9109311740890688,51,va,Virginia
@@ -8928,7 +8850,6 @@ zip,weight,state_code,state_id,state_name
 24522,0.004341691088679041,51,va,Virginia
 24523,0.6716969185310258,51,va,Virginia
 24523,0.32830308146897424,51,va,Virginia
-24526,0.0,51,va,Virginia
 24526,1.0,51,va,Virginia
 24527,1.0,51,va,Virginia
 24528,0.8296875,51,va,Virginia
@@ -9326,7 +9247,6 @@ zip,weight,state_code,state_id,state_name
 25302,1.0,54,wv,West Virginia
 25303,1.0,54,wv,West Virginia
 25304,1.0,54,wv,West Virginia
-25305,,54,wv,West Virginia
 25306,1.0,54,wv,West Virginia
 25309,1.0,54,wv,West Virginia
 25311,1.0,54,wv,West Virginia
@@ -10249,7 +10169,6 @@ zip,weight,state_code,state_id,state_name
 27617,0.9924995065464832,37,nc,North Carolina
 27701,1.0,37,nc,North Carolina
 27703,1.0,37,nc,North Carolina
-27703,0.0,37,nc,North Carolina
 27704,1.0,37,nc,North Carolina
 27705,0.9043472624346398,37,nc,North Carolina
 27705,0.09565273756536018,37,nc,North Carolina
@@ -10601,7 +10520,6 @@ zip,weight,state_code,state_id,state_name
 28226,1.0,37,nc,North Carolina
 28227,0.9902286692857862,37,nc,North Carolina
 28227,0.00977133071421376,37,nc,North Carolina
-28244,,37,nc,North Carolina
 28262,7.98998588435827e-05,37,nc,North Carolina
 28262,0.9999201001411564,37,nc,North Carolina
 28269,0.05013511991892805,37,nc,North Carolina
@@ -10611,7 +10529,6 @@ zip,weight,state_code,state_id,state_name
 28277,1.0,37,nc,North Carolina
 28278,1.0,37,nc,North Carolina
 28280,1.0,37,nc,North Carolina
-28282,,37,nc,North Carolina
 28301,1.0,37,nc,North Carolina
 28303,1.0,37,nc,North Carolina
 28304,0.991762457264382,37,nc,North Carolina
@@ -11248,7 +11165,6 @@ zip,weight,state_code,state_id,state_name
 29145,1.0,45,sc,South Carolina
 29146,0.2563667232597623,45,sc,South Carolina
 29146,0.7436332767402377,45,sc,South Carolina
-29147,,45,sc,South Carolina
 29148,1.0,45,sc,South Carolina
 29150,1.0,45,sc,South Carolina
 29152,1.0,45,sc,South Carolina
@@ -11575,7 +11491,6 @@ zip,weight,state_code,state_id,state_name
 29673,0.5124270159381411,45,sc,South Carolina
 29676,1.0,45,sc,South Carolina
 29678,1.0,45,sc,South Carolina
-29678,0.0,45,sc,South Carolina
 29680,1.0,45,sc,South Carolina
 29681,1.0,45,sc,South Carolina
 29682,1.0,45,sc,South Carolina
@@ -12052,7 +11967,6 @@ zip,weight,state_code,state_id,state_name
 30332,1.0,13,ga,Georgia
 30334,1.0,13,ga,Georgia
 30336,1.0,13,ga,Georgia
-30337,0.0,13,ga,Georgia
 30337,1.0,13,ga,Georgia
 30338,0.9925335395781896,13,ga,Georgia
 30338,0.007466460421810393,13,ga,Georgia
@@ -12077,7 +11991,6 @@ zip,weight,state_code,state_id,state_name
 30401,1.0,13,ga,Georgia
 30410,1.0,13,ga,Georgia
 30411,0.05216197666437886,13,ga,Georgia
-30411,0.0,13,ga,Georgia
 30411,0.9478380233356212,13,ga,Georgia
 30412,1.0,13,ga,Georgia
 30413,0.753015873015873,13,ga,Georgia
@@ -12596,7 +12509,6 @@ zip,weight,state_code,state_id,state_name
 31210,0.08537845517954018,13,ga,Georgia
 31211,0.5415796585186095,13,ga,Georgia
 31211,0.4584203414813905,13,ga,Georgia
-31213,,13,ga,Georgia
 31216,1.0,13,ga,Georgia
 31217,0.6716644936983921,13,ga,Georgia
 31217,0.220013037809648,13,ga,Georgia
@@ -12663,7 +12575,6 @@ zip,weight,state_code,state_id,state_name
 31520,1.0,13,ga,Georgia
 31522,1.0,13,ga,Georgia
 31523,1.0,13,ga,Georgia
-31524,,13,ga,Georgia
 31525,1.0,13,ga,Georgia
 31527,1.0,13,ga,Georgia
 31532,1.0,13,ga,Georgia
@@ -12732,7 +12643,6 @@ zip,weight,state_code,state_id,state_name
 31631,0.012522361359570662,13,ga,Georgia
 31631,0.7710196779964222,13,ga,Georgia
 31631,0.2164579606440072,13,ga,Georgia
-31631,0.0,13,ga,Georgia
 31632,0.10587663914521613,13,ga,Georgia
 31632,0.8941233608547838,13,ga,Georgia
 31634,1.0,13,ga,Georgia
@@ -13068,7 +12978,6 @@ zip,weight,state_code,state_id,state_name
 32312,1.0,12,fl,Florida
 32317,1.0,12,fl,Florida
 32320,1.0,12,fl,Florida
-32321,0.0,12,fl,Florida
 32321,1.0,12,fl,Florida
 32322,1.0,12,fl,Florida
 32323,1.0,12,fl,Florida
@@ -13432,7 +13341,6 @@ zip,weight,state_code,state_id,state_name
 33071,1.0,12,fl,Florida
 33073,1.0,12,fl,Florida
 33076,1.0,12,fl,Florida
-33101,,12,fl,Florida
 33109,1.0,12,fl,Florida
 33122,1.0,12,fl,Florida
 33125,1.0,12,fl,Florida
@@ -13975,7 +13883,6 @@ zip,weight,state_code,state_id,state_name
 34743,1.0,12,fl,Florida
 34744,1.0,12,fl,Florida
 34746,1.0,12,fl,Florida
-34747,0.0,12,fl,Florida
 34747,1.0,12,fl,Florida
 34748,1.0,12,fl,Florida
 34753,1.0,12,fl,Florida
@@ -14602,7 +14509,6 @@ zip,weight,state_code,state_id,state_name
 36205,1.0,01,al,Alabama
 36206,1.0,01,al,Alabama
 36207,1.0,01,al,Alabama
-36207,0.0,01,al,Alabama
 36250,1.0,01,al,Alabama
 36251,1.0,01,al,Alabama
 36255,0.9814241486068112,01,al,Alabama
@@ -15067,7 +14973,6 @@ zip,weight,state_code,state_id,state_name
 37083,1.0,47,tn,Tennessee
 37085,0.8750929368029742,47,tn,Tennessee
 37085,0.12490706319702602,47,tn,Tennessee
-37086,0.0,47,tn,Tennessee
 37086,1.0,47,tn,Tennessee
 37087,0.023704171934260432,47,tn,Tennessee
 37087,0.005932120976368764,47,tn,Tennessee
@@ -15194,8 +15099,6 @@ zip,weight,state_code,state_id,state_name
 37221,0.0577711007921333,47,tn,Tennessee
 37228,1.0,47,tn,Tennessee
 37240,1.0,47,tn,Tennessee
-37243,,47,tn,Tennessee
-37246,,47,tn,Tennessee
 37301,1.0,47,tn,Tennessee
 37302,1.0,47,tn,Tennessee
 37303,1.0,47,tn,Tennessee
@@ -15673,7 +15576,6 @@ zip,weight,state_code,state_id,state_name
 38126,1.0,47,tn,Tennessee
 38127,1.0,47,tn,Tennessee
 38128,1.0,47,tn,Tennessee
-38131,,47,tn,Tennessee
 38132,1.0,47,tn,Tennessee
 38133,1.0,47,tn,Tennessee
 38134,1.0,47,tn,Tennessee
@@ -16393,7 +16295,6 @@ zip,weight,state_code,state_id,state_name
 39217,1.0,28,ms,Mississippi
 39218,1.0,28,ms,Mississippi
 39232,1.0,28,ms,Mississippi
-39269,,28,ms,Mississippi
 39272,1.0,28,ms,Mississippi
 39301,0.059018543480636815,28,ms,Mississippi
 39301,0.9409814565193632,28,ms,Mississippi
@@ -16893,7 +16794,6 @@ zip,weight,state_code,state_id,state_name
 40228,1.0,21,ky,Kentucky
 40229,0.37221860414631497,21,ky,Kentucky
 40229,0.6277813958536851,21,ky,Kentucky
-40231,,21,ky,Kentucky
 40241,0.989892369256244,21,ky,Kentucky
 40241,0.010107630743756035,21,ky,Kentucky
 40242,1.0,21,ky,Kentucky
@@ -19809,7 +19709,6 @@ zip,weight,state_code,state_id,state_name
 46237,1.0,18,in,Indiana
 46239,0.0015387650424146776,18,in,Indiana
 46239,0.9984612349575852,18,in,Indiana
-46240,0.0,18,in,Indiana
 46240,1.0,18,in,Indiana
 46241,1.0,18,in,Indiana
 46250,0.00959775692871778,18,in,Indiana
@@ -19820,7 +19719,6 @@ zip,weight,state_code,state_id,state_name
 46259,0.02849272617715417,18,in,Indiana
 46259,0.9373332185590084,18,in,Indiana
 46259,0.03417405526383748,18,in,Indiana
-46260,0.0,18,in,Indiana
 46260,1.0,18,in,Indiana
 46268,0.01794512317244142,18,in,Indiana
 46268,0.9820548768275584,18,in,Indiana
@@ -20697,7 +20595,6 @@ zip,weight,state_code,state_id,state_name
 47906,0.997536283820104,18,in,Indiana
 47906,0.0015379561607836109,18,in,Indiana
 47906,0.0009257600191124651,18,in,Indiana
-47907,,18,in,Indiana
 47909,1.0,18,in,Indiana
 47916,1.0,18,in,Indiana
 47917,0.6476578411405295,18,in,Indiana
@@ -20982,7 +20879,6 @@ zip,weight,state_code,state_id,state_name
 48228,1.0,26,mi,Michigan
 48229,1.0,26,mi,Michigan
 48230,1.0,26,mi,Michigan
-48233,,26,mi,Michigan
 48234,1.0,26,mi,Michigan
 48235,1.0,26,mi,Michigan
 48236,0.0025811088966576274,26,mi,Michigan
@@ -20991,8 +20887,6 @@ zip,weight,state_code,state_id,state_name
 48238,1.0,26,mi,Michigan
 48239,1.0,26,mi,Michigan
 48240,1.0,26,mi,Michigan
-48242,,26,mi,Michigan
-48243,,26,mi,Michigan
 48301,1.0,26,mi,Michigan
 48302,1.0,26,mi,Michigan
 48304,1.0,26,mi,Michigan
@@ -21047,7 +20941,6 @@ zip,weight,state_code,state_id,state_name
 48386,1.0,26,mi,Michigan
 48390,1.0,26,mi,Michigan
 48393,1.0,26,mi,Michigan
-48397,,26,mi,Michigan
 48401,1.0,26,mi,Michigan
 48411,1.0,26,mi,Michigan
 48412,1.0,26,mi,Michigan
@@ -21151,9 +21044,6 @@ zip,weight,state_code,state_id,state_name
 48519,1.0,26,mi,Michigan
 48529,1.0,26,mi,Michigan
 48532,1.0,26,mi,Michigan
-48551,,26,mi,Michigan
-48553,,26,mi,Michigan
-48554,,26,mi,Michigan
 48601,1.0,26,mi,Michigan
 48602,1.0,26,mi,Michigan
 48603,1.0,26,mi,Michigan
@@ -21239,14 +21129,12 @@ zip,weight,state_code,state_id,state_name
 48661,1.0,26,mi,Michigan
 48662,0.8030112923462986,26,mi,Michigan
 48662,0.19698870765370136,26,mi,Michigan
-48667,,26,mi,Michigan
 48701,1.0,26,mi,Michigan
 48703,1.0,26,mi,Michigan
 48705,1.0,26,mi,Michigan
 48706,1.0,26,mi,Michigan
 48708,0.9989729293522118,26,mi,Michigan
 48708,0.0010270706477881301,26,mi,Michigan
-48710,,26,mi,Michigan
 48720,1.0,26,mi,Michigan
 48721,1.0,26,mi,Michigan
 48722,1.0,26,mi,Michigan
@@ -21449,7 +21337,6 @@ zip,weight,state_code,state_id,state_name
 48915,1.0,26,mi,Michigan
 48917,0.8320129748612064,26,mi,Michigan
 48917,0.1679870251387936,26,mi,Michigan
-48921,,26,mi,Michigan
 48933,1.0,26,mi,Michigan
 49001,1.0,26,mi,Michigan
 49002,1.0,26,mi,Michigan
@@ -22498,7 +22385,6 @@ zip,weight,state_code,state_id,state_name
 50315,1.0,19,ia,Iowa
 50316,1.0,19,ia,Iowa
 50317,1.0,19,ia,Iowa
-50319,,19,ia,Iowa
 50320,0.9095720776951116,19,ia,Iowa
 50320,0.0904279223048884,19,ia,Iowa
 50321,1.0,19,ia,Iowa
@@ -23972,7 +23858,6 @@ zip,weight,state_code,state_id,state_name
 53718,1.0,55,wi,Wisconsin
 53719,1.0,55,wi,Wisconsin
 53726,1.0,55,wi,Wisconsin
-53792,,55,wi,Wisconsin
 53801,1.0,55,wi,Wisconsin
 53802,1.0,55,wi,Wisconsin
 53803,1.0,55,wi,Wisconsin
@@ -24192,7 +24077,6 @@ zip,weight,state_code,state_id,state_name
 54173,1.0,55,wi,Wisconsin
 54174,0.05874543644208431,55,wi,Wisconsin
 54174,0.9412545635579156,55,wi,Wisconsin
-54175,0.0,55,wi,Wisconsin
 54175,1.0,55,wi,Wisconsin
 54177,1.0,55,wi,Wisconsin
 54180,0.9472212513107304,55,wi,Wisconsin
@@ -24301,7 +24185,6 @@ zip,weight,state_code,state_id,state_name
 54451,0.9962569119523608,55,wi,Wisconsin
 54452,0.9220557851239668,55,wi,Wisconsin
 54452,0.07794421487603306,55,wi,Wisconsin
-54454,0.0,55,wi,Wisconsin
 54454,0.014073494917904612,55,wi,Wisconsin
 54454,0.9859265050820952,55,wi,Wisconsin
 54455,0.9783898056256972,55,wi,Wisconsin
@@ -24646,7 +24529,6 @@ zip,weight,state_code,state_id,state_name
 54836,1.0,55,wi,Wisconsin
 54837,0.11725780836421387,55,wi,Wisconsin
 54837,0.8827421916357862,55,wi,Wisconsin
-54838,0.0,55,wi,Wisconsin
 54838,1.0,55,wi,Wisconsin
 54839,1.0,55,wi,Wisconsin
 54840,0.9888003446047814,55,wi,Wisconsin
@@ -24699,7 +24581,6 @@ zip,weight,state_code,state_id,state_name
 54891,1.0,55,wi,Wisconsin
 54893,1.0,55,wi,Wisconsin
 54895,1.0,55,wi,Wisconsin
-54896,0.0,55,wi,Wisconsin
 54896,1.0,55,wi,Wisconsin
 54901,1.0,55,wi,Wisconsin
 54902,1.0,55,wi,Wisconsin
@@ -24910,7 +24791,6 @@ zip,weight,state_code,state_id,state_name
 55110,0.014301226197727694,27,mn,Minnesota
 55110,0.8922905797293359,27,mn,Minnesota
 55110,0.09340819407293624,27,mn,Minnesota
-55111,,27,mn,Minnesota
 55112,1.0,27,mn,Minnesota
 55113,1.0,27,mn,Minnesota
 55114,1.0,27,mn,Minnesota
@@ -24933,7 +24813,6 @@ zip,weight,state_code,state_id,state_name
 55129,1.0,27,mn,Minnesota
 55130,1.0,27,mn,Minnesota
 55150,1.0,27,mn,Minnesota
-55155,,27,mn,Minnesota
 55301,1.0,27,mn,Minnesota
 55302,1.0,27,mn,Minnesota
 55303,1.0,27,mn,Minnesota
@@ -25109,7 +24988,6 @@ zip,weight,state_code,state_id,state_name
 55447,1.0,27,mn,Minnesota
 55448,1.0,27,mn,Minnesota
 55449,1.0,27,mn,Minnesota
-55449,0.0,27,mn,Minnesota
 55450,1.0,27,mn,Minnesota
 55454,1.0,27,mn,Minnesota
 55455,1.0,27,mn,Minnesota
@@ -25230,7 +25108,6 @@ zip,weight,state_code,state_id,state_name
 55901,1.0,27,mn,Minnesota
 55902,1.0,27,mn,Minnesota
 55904,1.0,27,mn,Minnesota
-55905,,27,mn,Minnesota
 55906,0.9964200477326968,27,mn,Minnesota
 55906,0.0035799522673031032,27,mn,Minnesota
 55909,1.0,27,mn,Minnesota
@@ -25989,7 +25866,6 @@ zip,weight,state_code,state_id,state_name
 56646,1.0,27,mn,Minnesota
 56647,1.0,27,mn,Minnesota
 56649,1.0,27,mn,Minnesota
-56649,0.0,27,mn,Minnesota
 56650,1.0,27,mn,Minnesota
 56651,0.5185873605947955,27,mn,Minnesota
 56651,0.4814126394052045,27,mn,Minnesota
@@ -27143,7 +27019,6 @@ zip,weight,state_code,state_id,state_name
 58656,0.09836065573770493,38,nd,North Dakota
 58656,0.9016393442622952,38,nd,North Dakota
 58701,1.0,38,nd,North Dakota
-58702,,38,nd,North Dakota
 58703,1.0,38,nd,North Dakota
 58704,1.0,38,nd,North Dakota
 58705,1.0,38,nd,North Dakota
@@ -27517,7 +27392,6 @@ zip,weight,state_code,state_id,state_name
 59461,1.0,30,mt,Montana
 59462,1.0,30,mt,Montana
 59463,1.0,30,mt,Montana
-59463,0.0,30,mt,Montana
 59464,0.96,30,mt,Montana
 59464,0.04,30,mt,Montana
 59465,1.0,30,mt,Montana
@@ -27736,7 +27610,6 @@ zip,weight,state_code,state_id,state_name
 60004,1.0,17,il,Illinois
 60005,1.0,17,il,Illinois
 60007,1.0,17,il,Illinois
-60007,0.0,17,il,Illinois
 60008,1.0,17,il,Illinois
 60010,0.4429073591110103,17,il,Illinois
 60010,0.003106928223154553,17,il,Illinois
@@ -28922,7 +28795,6 @@ zip,weight,state_code,state_id,state_name
 62058,1.0,17,il,Illinois
 62059,1.0,17,il,Illinois
 62060,1.0,17,il,Illinois
-62060,0.0,17,il,Illinois
 62061,1.0,17,il,Illinois
 62062,1.0,17,il,Illinois
 62063,0.3319604612850082,17,il,Illinois
@@ -29123,7 +28995,6 @@ zip,weight,state_code,state_id,state_name
 62362,1.0,17,il,Illinois
 62363,1.0,17,il,Illinois
 62365,1.0,17,il,Illinois
-62366,0.0,17,il,Illinois
 62366,1.0,17,il,Illinois
 62367,0.5204460966542751,17,il,Illinois
 62367,0.3278810408921933,17,il,Illinois
@@ -29787,7 +29658,6 @@ zip,weight,state_code,state_id,state_name
 63144,1.0,29,mo,Missouri
 63146,1.0,29,mo,Missouri
 63147,1.0,29,mo,Missouri
-63155,,29,mo,Missouri
 63301,1.0,29,mo,Missouri
 63303,1.0,29,mo,Missouri
 63304,1.0,29,mo,Missouri
@@ -30141,7 +30011,6 @@ zip,weight,state_code,state_id,state_name
 63882,1.0,29,mo,Missouri
 63901,0.9989614885331024,29,mo,Missouri
 63901,0.0010385114668974471,29,mo,Missouri
-63902,,29,mo,Missouri
 63932,1.0,29,mo,Missouri
 63933,1.0,29,mo,Missouri
 63934,1.0,29,mo,Missouri
@@ -30265,7 +30134,6 @@ zip,weight,state_code,state_id,state_name
 64097,1.0,29,mo,Missouri
 64098,1.0,29,mo,Missouri
 64101,1.0,29,mo,Missouri
-64102,,29,mo,Missouri
 64105,1.0,29,mo,Missouri
 64106,1.0,29,mo,Missouri
 64108,1.0,29,mo,Missouri
@@ -31323,7 +31191,6 @@ zip,weight,state_code,state_id,state_name
 66109,0.99462890625,20,ks,Kansas
 66111,1.0,20,ks,Kansas
 66112,1.0,20,ks,Kansas
-66115,,20,ks,Kansas
 66118,1.0,20,ks,Kansas
 66202,1.0,20,ks,Kansas
 66203,1.0,20,ks,Kansas
@@ -31849,7 +31716,6 @@ zip,weight,state_code,state_id,state_name
 67230,1.0,20,ks,Kansas
 67232,1.0,20,ks,Kansas
 67235,1.0,20,ks,Kansas
-67260,,20,ks,Kansas
 67301,1.0,20,ks,Kansas
 67330,1.0,20,ks,Kansas
 67332,1.0,20,ks,Kansas
@@ -33171,8 +33037,6 @@ zip,weight,state_code,state_id,state_name
 70129,1.0,22,la,Louisiana
 70130,1.0,22,la,Louisiana
 70131,1.0,22,la,Louisiana
-70139,,22,la,Louisiana
-70163,,22,la,Louisiana
 70301,0.019123080140344355,22,la,Louisiana
 70301,0.9093105932104932,22,la,Louisiana
 70301,0.07156632664916235,22,la,Louisiana
@@ -33491,7 +33355,6 @@ zip,weight,state_code,state_id,state_name
 70818,1.0,22,la,Louisiana
 70819,1.0,22,la,Louisiana
 70820,1.0,22,la,Louisiana
-70836,,22,la,Louisiana
 71001,0.8373427499448245,22,la,Louisiana
 71001,0.07834915029794748,22,la,Louisiana
 71001,0.08430809975722799,22,la,Louisiana
@@ -33661,7 +33524,6 @@ zip,weight,state_code,state_id,state_name
 71326,0.7036082474226805,22,la,Louisiana
 71327,1.0,22,la,Louisiana
 71328,0.06190990018883194,22,la,Louisiana
-71328,0.0,22,la,Louisiana
 71328,0.938090099811168,22,la,Louisiana
 71331,1.0,22,la,Louisiana
 71333,1.0,22,la,Louisiana
@@ -34133,7 +33995,6 @@ zip,weight,state_code,state_id,state_name
 72142,0.4941976790716287,05,ar,Arkansas
 72143,0.0007961557053086525,05,ar,Arkansas
 72143,0.9992038442946912,05,ar,Arkansas
-72149,,05,ar,Arkansas
 72150,0.9900882891887388,05,ar,Arkansas
 72150,0.009911710811261036,05,ar,Arkansas
 72152,1.0,05,ar,Arkansas
@@ -34637,7 +34498,6 @@ zip,weight,state_code,state_id,state_name
 73017,0.008988764044943821,40,ok,Oklahoma
 73017,0.3955056179775281,40,ok,Oklahoma
 73018,1.0,40,ok,Oklahoma
-73019,,40,ok,Oklahoma
 73020,0.016770783277270544,40,ok,Oklahoma
 73020,0.9832292167227294,40,ok,Oklahoma
 73021,0.125,40,ok,Oklahoma
@@ -34776,9 +34636,7 @@ zip,weight,state_code,state_id,state_name
 73141,1.0,40,ok,Oklahoma
 73142,1.0,40,ok,Oklahoma
 73145,1.0,40,ok,Oklahoma
-73149,0.0,40,ok,Oklahoma
 73149,1.0,40,ok,Oklahoma
-73150,0.0,40,ok,Oklahoma
 73150,1.0,40,ok,Oklahoma
 73151,1.0,40,ok,Oklahoma
 73159,0.296836902800659,40,ok,Oklahoma
@@ -35760,11 +35618,8 @@ zip,weight,state_code,state_id,state_name
 75252,0.025588918380889183,48,tx,Texas
 75253,1.0,48,tx,Texas
 75254,1.0,48,tx,Texas
-75270,,48,tx,Texas
 75287,0.4724512284711452,48,tx,Texas
-75287,0.0,48,tx,Texas
 75287,0.5275487715288548,48,tx,Texas
-75390,,48,tx,Texas
 75401,1.0,48,tx,Texas
 75402,1.0,48,tx,Texas
 75407,1.0,48,tx,Texas
@@ -36167,7 +36022,6 @@ zip,weight,state_code,state_id,state_name
 76050,0.0374468085106383,48,tx,Texas
 76050,0.05395744680851064,48,tx,Texas
 76050,0.9085957446808509,48,tx,Texas
-76051,0.0,48,tx,Texas
 76051,1.0,48,tx,Texas
 76052,0.037324163801187867,48,tx,Texas
 76052,0.9262894654579557,48,tx,Texas
@@ -36420,7 +36274,6 @@ zip,weight,state_code,state_id,state_name
 76475,0.9733879222108496,48,tx,Texas
 76475,0.004094165813715456,48,tx,Texas
 76476,1.0,48,tx,Texas
-76481,0.0,48,tx,Texas
 76481,1.0,48,tx,Texas
 76483,1.0,48,tx,Texas
 76484,1.0,48,tx,Texas
@@ -36435,7 +36288,6 @@ zip,weight,state_code,state_id,state_name
 76501,1.0,48,tx,Texas
 76502,1.0,48,tx,Texas
 76504,1.0,48,tx,Texas
-76508,,48,tx,Texas
 76511,0.30027132951462165,48,tx,Texas
 76511,0.0485378353934278,48,tx,Texas
 76511,0.6511908350919505,48,tx,Texas
@@ -36692,7 +36544,6 @@ zip,weight,state_code,state_id,state_name
 76943,0.9853777416734364,48,tx,Texas
 76943,0.014622258326563768,48,tx,Texas
 76945,1.0,48,tx,Texas
-76945,0.0,48,tx,Texas
 76949,1.0,48,tx,Texas
 76950,0.010526315789473684,48,tx,Texas
 76950,0.9875598086124402,48,tx,Texas
@@ -36802,7 +36653,6 @@ zip,weight,state_code,state_id,state_name
 77098,1.0,48,tx,Texas
 77099,0.04408485697904058,48,tx,Texas
 77099,0.9559151430209594,48,tx,Texas
-77201,,48,tx,Texas
 77301,1.0,48,tx,Texas
 77302,1.0,48,tx,Texas
 77303,1.0,48,tx,Texas
@@ -36972,7 +36822,6 @@ zip,weight,state_code,state_id,state_name
 77504,1.0,48,tx,Texas
 77505,1.0,48,tx,Texas
 77506,1.0,48,tx,Texas
-77507,,48,tx,Texas
 77510,1.0,48,tx,Texas
 77511,0.9387693825465931,48,tx,Texas
 77511,0.06123061745340683,48,tx,Texas
@@ -37205,7 +37054,6 @@ zip,weight,state_code,state_id,state_name
 78027,1.0,48,tx,Texas
 78028,0.0195906432748538,48,tx,Texas
 78028,0.9804093567251462,48,tx,Texas
-78029,,48,tx,Texas
 78039,0.07604103802051901,48,tx,Texas
 78039,0.923958961979481,48,tx,Texas
 78040,1.0,48,tx,Texas
@@ -37636,7 +37484,6 @@ zip,weight,state_code,state_id,state_name
 78724,1.0,48,tx,Texas
 78725,1.0,48,tx,Texas
 78726,1.0,48,tx,Texas
-78726,0.0,48,tx,Texas
 78727,0.9992506275993857,48,tx,Texas
 78727,0.0007493724006144854,48,tx,Texas
 78728,0.9137888565939208,48,tx,Texas
@@ -37827,7 +37674,6 @@ zip,weight,state_code,state_id,state_name
 79057,0.03648424543946932,48,tx,Texas
 79057,0.9179104477611941,48,tx,Texas
 79057,0.04560530679933665,48,tx,Texas
-79058,0.0,48,tx,Texas
 79058,1.0,48,tx,Texas
 79059,0.03345280764635603,48,tx,Texas
 79059,0.9665471923536441,48,tx,Texas
@@ -38163,7 +38009,6 @@ zip,weight,state_code,state_id,state_name
 79755,1.0,48,tx,Texas
 79756,0.000772115596735054,48,tx,Texas
 79756,0.9992278844032648,48,tx,Texas
-79756,0.0,48,tx,Texas
 79758,1.0,48,tx,Texas
 79759,1.0,48,tx,Texas
 79761,1.0,48,tx,Texas
@@ -38176,7 +38021,6 @@ zip,weight,state_code,state_id,state_name
 79766,0.963205233033524,48,tx,Texas
 79766,0.00784955028618152,48,tx,Texas
 79770,1.0,48,tx,Texas
-79772,0.0,48,tx,Texas
 79772,0.9971758060720171,48,tx,Texas
 79772,0.002824193927983055,48,tx,Texas
 79777,1.0,48,tx,Texas
@@ -38266,7 +38110,6 @@ zip,weight,state_code,state_id,state_name
 80017,1.0,08,co,Colorado
 80018,1.0,08,co,Colorado
 80019,1.0,08,co,Colorado
-80020,0.0,08,co,Colorado
 80020,0.003136267628170937,08,co,Colorado
 80020,0.8225768598920441,08,co,Colorado
 80020,0.17428687247978494,08,co,Colorado
@@ -38279,7 +38122,6 @@ zip,weight,state_code,state_id,state_name
 80025,1.0,08,co,Colorado
 80026,1.0,08,co,Colorado
 80027,1.0,08,co,Colorado
-80027,0.0,08,co,Colorado
 80030,1.0,08,co,Colorado
 80031,0.9439467169633384,08,co,Colorado
 80031,0.056053283036661565,08,co,Colorado
@@ -38304,7 +38146,6 @@ zip,weight,state_code,state_id,state_name
 80110,0.94944170220923,08,co,Colorado
 80110,0.05055829779077012,08,co,Colorado
 80111,1.0,08,co,Colorado
-80111,0.0,08,co,Colorado
 80112,0.9298353698189409,08,co,Colorado
 80112,0.07016463018105898,08,co,Colorado
 80113,1.0,08,co,Colorado
@@ -38324,7 +38165,6 @@ zip,weight,state_code,state_id,state_name
 80127,1.0,08,co,Colorado
 80128,0.05213215959757631,08,co,Colorado
 80128,0.9478678404024236,08,co,Colorado
-80129,0.0,08,co,Colorado
 80129,1.0,08,co,Colorado
 80130,1.0,08,co,Colorado
 80131,1.0,08,co,Colorado
@@ -38386,10 +38226,8 @@ zip,weight,state_code,state_id,state_name
 80235,0.56267335886937,08,co,Colorado
 80236,0.08038206289152143,08,co,Colorado
 80236,0.9196179371084786,08,co,Colorado
-80237,0.0,08,co,Colorado
 80237,1.0,08,co,Colorado
 80238,1.0,08,co,Colorado
-80239,0.0,08,co,Colorado
 80239,1.0,08,co,Colorado
 80241,1.0,08,co,Colorado
 80246,0.32497087378640777,08,co,Colorado
@@ -38398,10 +38236,6 @@ zip,weight,state_code,state_id,state_name
 80247,0.4787221501827184,08,co,Colorado
 80249,1.0,08,co,Colorado
 80260,1.0,08,co,Colorado
-80264,,08,co,Colorado
-80290,,08,co,Colorado
-80293,,08,co,Colorado
-80294,,08,co,Colorado
 80301,1.0,08,co,Colorado
 80302,1.0,08,co,Colorado
 80303,1.0,08,co,Colorado
@@ -38412,7 +38246,6 @@ zip,weight,state_code,state_id,state_name
 80403,0.0476635000823678,08,co,Colorado
 80403,0.022019658448190656,08,co,Colorado
 80403,0.9303168414694416,08,co,Colorado
-80419,,08,co,Colorado
 80420,1.0,08,co,Colorado
 80421,0.0018652076597861227,08,co,Colorado
 80421,0.998134792340214,08,co,Colorado
@@ -38423,7 +38256,6 @@ zip,weight,state_code,state_id,state_name
 80424,1.0,08,co,Colorado
 80425,1.0,08,co,Colorado
 80426,1.0,08,co,Colorado
-80426,0.0,08,co,Colorado
 80427,1.0,08,co,Colorado
 80428,1.0,08,co,Colorado
 80432,1.0,08,co,Colorado
@@ -38679,7 +38511,6 @@ zip,weight,state_code,state_id,state_name
 80929,1.0,08,co,Colorado
 80930,1.0,08,co,Colorado
 80938,1.0,08,co,Colorado
-80939,,08,co,Colorado
 80951,1.0,08,co,Colorado
 81001,1.0,08,co,Colorado
 81003,1.0,08,co,Colorado
@@ -38871,7 +38702,6 @@ zip,weight,state_code,state_id,state_name
 81432,0.9977628635346756,08,co,Colorado
 81432,0.0022371364653243847,08,co,Colorado
 81433,1.0,08,co,Colorado
-81434,0.0,08,co,Colorado
 81434,1.0,08,co,Colorado
 81435,1.0,08,co,Colorado
 81501,1.0,08,co,Colorado
@@ -39045,7 +38875,6 @@ zip,weight,state_code,state_id,state_name
 82635,1.0,56,wy,Wyoming
 82636,0.00929414719919618,56,wy,Wyoming
 82636,0.9907058528008038,56,wy,Wyoming
-82637,0.0,56,wy,Wyoming
 82637,1.0,56,wy,Wyoming
 82638,1.0,56,wy,Wyoming
 82639,0.9428571428571428,56,wy,Wyoming
@@ -39059,14 +38888,12 @@ zip,weight,state_code,state_id,state_name
 82648,1.0,56,wy,Wyoming
 82649,1.0,56,wy,Wyoming
 82701,0.005499541704857928,46,sd,South Dakota
-82701,0.0,46,sd,South Dakota
 82701,0.008065994500458295,56,wy,Wyoming
 82701,0.9864344637946838,56,wy,Wyoming
 82710,1.0,56,wy,Wyoming
 82711,1.0,56,wy,Wyoming
 82712,1.0,56,wy,Wyoming
 82714,1.0,56,wy,Wyoming
-82715,,56,wy,Wyoming
 82716,1.0,56,wy,Wyoming
 82718,1.0,56,wy,Wyoming
 82720,1.0,56,wy,Wyoming
@@ -39105,7 +38932,6 @@ zip,weight,state_code,state_id,state_name
 82929,1.0,56,wy,Wyoming
 82930,0.0023949637334063226,49,ut,Utah
 82930,0.9976050362665936,56,wy,Wyoming
-82932,0.0,56,wy,Wyoming
 82932,1.0,56,wy,Wyoming
 82933,1.0,56,wy,Wyoming
 82934,1.0,56,wy,Wyoming
@@ -39192,7 +39018,6 @@ zip,weight,state_code,state_id,state_name
 83253,0.4060606060606061,16,id,Idaho
 83253,0.5939393939393941,16,id,Idaho
 83254,1.0,16,id,Idaho
-83254,0.0,16,id,Idaho
 83255,0.7328936521022259,16,id,Idaho
 83255,0.2671063478977741,16,id,Idaho
 83261,1.0,16,id,Idaho
@@ -39413,7 +39238,6 @@ zip,weight,state_code,state_id,state_name
 83655,1.0,16,id,Idaho
 83656,1.0,16,id,Idaho
 83657,1.0,16,id,Idaho
-83657,0.0,16,id,Idaho
 83660,0.8908319185059422,16,id,Idaho
 83660,0.10916808149405773,16,id,Idaho
 83661,0.996660257059002,16,id,Idaho
@@ -39462,7 +39286,6 @@ zip,weight,state_code,state_id,state_name
 83815,1.0,16,id,Idaho
 83821,1.0,16,id,Idaho
 83822,1.0,16,id,Idaho
-83823,0.0,16,id,Idaho
 83823,1.0,16,id,Idaho
 83824,1.0,16,id,Idaho
 83825,1.0,16,id,Idaho
@@ -39589,7 +39412,6 @@ zip,weight,state_code,state_id,state_name
 84074,1.0,49,ut,Utah
 84075,1.0,49,ut,Utah
 84076,1.0,49,ut,Utah
-84078,0.0,49,ut,Utah
 84078,1.0,49,ut,Utah
 84080,1.0,49,ut,Utah
 84081,1.0,49,ut,Utah
@@ -39631,8 +39453,6 @@ zip,weight,state_code,state_id,state_name
 84123,1.0,49,ut,Utah
 84124,1.0,49,ut,Utah
 84128,1.0,49,ut,Utah
-84144,,49,ut,Utah
-84180,,49,ut,Utah
 84301,1.0,49,ut,Utah
 84302,1.0,49,ut,Utah
 84304,1.0,49,ut,Utah
@@ -40120,9 +39940,6 @@ zip,weight,state_code,state_id,state_name
 85716,1.0,04,az,Arizona
 85718,1.0,04,az,Arizona
 85719,1.0,04,az,Arizona
-85723,,04,az,Arizona
-85724,,04,az,Arizona
-85726,,04,az,Arizona
 85730,1.0,04,az,Arizona
 85735,1.0,04,az,Arizona
 85736,1.0,04,az,Arizona
@@ -40747,7 +40564,6 @@ zip,weight,state_code,state_id,state_name
 89015,1.0,32,nv,Nevada
 89017,1.0,32,nv,Nevada
 89018,1.0,32,nv,Nevada
-89019,0.0,06,ca,California
 89019,0.025813692480359147,06,ca,California
 89019,0.9741863075196407,32,nv,Nevada
 89020,1.0,32,nv,Nevada
@@ -40910,7 +40726,6 @@ zip,weight,state_code,state_id,state_name
 89521,0.9510421527453724,32,nv,Nevada
 89523,1.0,32,nv,Nevada
 89701,1.0,32,nv,Nevada
-89702,,32,nv,Nevada
 89703,1.0,32,nv,Nevada
 89704,1.0,32,nv,Nevada
 89705,0.9909438518816664,32,nv,Nevada
@@ -40999,9 +40814,7 @@ zip,weight,state_code,state_id,state_name
 90071,1.0,06,ca,California
 90073,1.0,06,ca,California
 90077,1.0,06,ca,California
-90079,,06,ca,California
 90089,1.0,06,ca,California
-90090,,06,ca,California
 90094,1.0,06,ca,California
 90095,1.0,06,ca,California
 90201,1.0,06,ca,California
@@ -41055,7 +40868,6 @@ zip,weight,state_code,state_id,state_name
 90503,1.0,06,ca,California
 90504,1.0,06,ca,California
 90505,1.0,06,ca,California
-90506,,06,ca,California
 90601,1.0,06,ca,California
 90602,1.0,06,ca,California
 90603,1.0,06,ca,California
@@ -41098,7 +40910,6 @@ zip,weight,state_code,state_id,state_name
 90744,1.0,06,ca,California
 90745,1.0,06,ca,California
 90746,1.0,06,ca,California
-90747,,06,ca,California
 90755,1.0,06,ca,California
 90802,1.0,06,ca,California
 90803,1.0,06,ca,California
@@ -41113,7 +40924,6 @@ zip,weight,state_code,state_id,state_name
 90815,0.9976593763370498,06,ca,California
 90815,0.002340623662950193,06,ca,California
 90822,1.0,06,ca,California
-90831,,06,ca,California
 91001,1.0,06,ca,California
 91006,1.0,06,ca,California
 91007,1.0,06,ca,California
@@ -41206,7 +41016,6 @@ zip,weight,state_code,state_id,state_name
 91605,1.0,06,ca,California
 91606,1.0,06,ca,California
 91607,1.0,06,ca,California
-91608,,06,ca,California
 91701,1.0,06,ca,California
 91702,1.0,06,ca,California
 91706,1.0,06,ca,California
@@ -41356,7 +41165,6 @@ zip,weight,state_code,state_id,state_name
 92129,1.0,06,ca,California
 92130,1.0,06,ca,California
 92131,1.0,06,ca,California
-92132,,06,ca,California
 92134,1.0,06,ca,California
 92135,1.0,06,ca,California
 92139,1.0,06,ca,California
@@ -41738,7 +41546,6 @@ zip,weight,state_code,state_id,state_name
 93401,1.0,06,ca,California
 93402,1.0,06,ca,California
 93405,1.0,06,ca,California
-93410,,06,ca,California
 93420,1.0,06,ca,California
 93422,1.0,06,ca,California
 93424,1.0,06,ca,California
@@ -41862,7 +41669,6 @@ zip,weight,state_code,state_id,state_name
 93631,0.8234740605984568,06,ca,California
 93631,0.04849131171193777,06,ca,California
 93631,0.1280346276896054,06,ca,California
-93633,0.0,06,ca,California
 93633,1.0,06,ca,California
 93634,1.0,06,ca,California
 93635,1.0,06,ca,California
@@ -42136,7 +41942,6 @@ zip,weight,state_code,state_id,state_name
 94804,1.0,06,ca,California
 94805,1.0,06,ca,California
 94806,1.0,06,ca,California
-94850,,06,ca,California
 94901,1.0,06,ca,California
 94903,1.0,06,ca,California
 94904,1.0,06,ca,California
@@ -42264,7 +42069,6 @@ zip,weight,state_code,state_id,state_name
 95222,1.0,06,ca,California
 95223,0.026235906331309625,06,ca,California
 95223,0.9737640936686904,06,ca,California
-95223,0.0,06,ca,California
 95224,1.0,06,ca,California
 95225,1.0,06,ca,California
 95226,1.0,06,ca,California
@@ -42304,7 +42108,6 @@ zip,weight,state_code,state_id,state_name
 95311,0.02139280837505689,06,ca,California
 95312,1.0,06,ca,California
 95313,1.0,06,ca,California
-95314,,06,ca,California
 95315,1.0,06,ca,California
 95316,1.0,06,ca,California
 95317,1.0,06,ca,California
@@ -42951,7 +42754,6 @@ zip,weight,state_code,state_id,state_name
 96822,1.0,15,hi,Hawaii
 96825,1.0,15,hi,Hawaii
 96826,1.0,15,hi,Hawaii
-96850,,15,hi,Hawaii
 96853,1.0,15,hi,Hawaii
 96857,1.0,15,hi,Hawaii
 96859,1.0,15,hi,Hawaii
@@ -43092,7 +42894,6 @@ zip,weight,state_code,state_id,state_name
 97205,1.0,41,or,Oregon
 97206,0.03546516513992772,41,or,Oregon
 97206,0.9645348348600724,41,or,Oregon
-97208,,41,or,Oregon
 97209,1.0,41,or,Oregon
 97210,0.9729034628455956,41,or,Oregon
 97210,0.027096537154404337,41,or,Oregon
@@ -43438,7 +43239,6 @@ zip,weight,state_code,state_id,state_name
 97867,0.15465268676277852,41,or,Oregon
 97867,0.8453473132372215,41,or,Oregon
 97868,1.0,41,or,Oregon
-97869,0.0,41,or,Oregon
 97869,1.0,41,or,Oregon
 97870,1.0,41,or,Oregon
 97873,1.0,41,or,Oregon
@@ -43557,17 +43357,13 @@ zip,weight,state_code,state_id,state_name
 98144,1.0,53,wa,Washington
 98146,1.0,53,wa,Washington
 98148,1.0,53,wa,Washington
-98154,,53,wa,Washington
 98155,1.0,53,wa,Washington
-98158,,53,wa,Washington
 98164,1.0,53,wa,Washington
 98166,1.0,53,wa,Washington
 98168,1.0,53,wa,Washington
-98174,,53,wa,Washington
 98177,1.0,53,wa,Washington
 98178,1.0,53,wa,Washington
 98188,1.0,53,wa,Washington
-98195,,53,wa,Washington
 98198,1.0,53,wa,Washington
 98199,1.0,53,wa,Washington
 98201,1.0,53,wa,Washington
@@ -43933,7 +43729,6 @@ zip,weight,state_code,state_id,state_name
 98859,1.0,53,wa,Washington
 98860,1.0,53,wa,Washington
 98862,1.0,53,wa,Washington
-98862,0.0,53,wa,Washington
 98901,0.0019556498392389533,53,wa,Washington
 98901,0.9980443501607612,53,wa,Washington
 98902,1.0,53,wa,Washington
@@ -43944,7 +43739,6 @@ zip,weight,state_code,state_id,state_name
 98923,1.0,53,wa,Washington
 98925,1.0,53,wa,Washington
 98926,1.0,53,wa,Washington
-98929,,53,wa,Washington
 98930,0.058549698400209814,53,wa,Washington
 98930,0.9414503015997902,53,wa,Washington
 98932,1.0,53,wa,Washington
@@ -43952,7 +43746,6 @@ zip,weight,state_code,state_id,state_name
 98934,1.0,53,wa,Washington
 98935,1.0,53,wa,Washington
 98936,1.0,53,wa,Washington
-98937,0.0,53,wa,Washington
 98937,1.0,53,wa,Washington
 98938,1.0,53,wa,Washington
 98939,1.0,53,wa,Washington
@@ -44025,7 +43818,6 @@ zip,weight,state_code,state_id,state_name
 99115,0.1373578302712161,53,wa,Washington
 99115,0.8626421697287839,53,wa,Washington
 99116,0.1299513551077137,53,wa,Washington
-99116,0.0,53,wa,Washington
 99116,0.8700486448922863,53,wa,Washington
 99117,1.0,53,wa,Washington
 99118,1.0,53,wa,Washington
@@ -44076,7 +43868,6 @@ zip,weight,state_code,state_id,state_name
 99160,1.0,53,wa,Washington
 99161,1.0,53,wa,Washington
 99163,1.0,53,wa,Washington
-99164,,53,wa,Washington
 99166,0.9823091247672252,53,wa,Washington
 99166,0.017690875232774673,53,wa,Washington
 99167,1.0,53,wa,Washington
@@ -44168,7 +43959,6 @@ zip,weight,state_code,state_id,state_name
 99507,1.0,02,ak,Alaska
 99508,1.0,02,ak,Alaska
 99510,1.0,02,ak,Alaska
-99513,,02,ak,Alaska
 99515,1.0,02,ak,Alaska
 99516,1.0,02,ak,Alaska
 99517,1.0,02,ak,Alaska
@@ -44296,7 +44086,6 @@ zip,weight,state_code,state_id,state_name
 99690,1.0,02,ak,Alaska
 99691,1.0,02,ak,Alaska
 99692,1.0,02,ak,Alaska
-99693,0.0,02,ak,Alaska
 99693,1.0,02,ak,Alaska
 99694,1.0,02,ak,Alaska
 99695,1.0,02,ak,Alaska
@@ -44327,7 +44116,6 @@ zip,weight,state_code,state_id,state_name
 99737,0.9914188784673718,02,ak,Alaska
 99737,0.008581121532628218,02,ak,Alaska
 99738,1.0,02,ak,Alaska
-99738,0.0,02,ak,Alaska
 99739,1.0,02,ak,Alaska
 99740,1.0,02,ak,Alaska
 99741,1.0,02,ak,Alaska

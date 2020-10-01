@@ -15,6 +15,7 @@ import warnings
 import pkg_resources
 
 import pandas as pd
+import numpy as np
 from pandas.api.types import is_string_dtype
 
 DATA_PATH = "data"
@@ -42,7 +43,7 @@ CROSSWALK_FILEPATHS = {
 
 
 class GeoMapper:
-    """Geo mapping tools commonly used in Delphi
+    """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
     geocodes. Supported geocodes:
@@ -64,7 +65,7 @@ class GeoMapper:
     - [x] fips -> msa : unweighted
     - [x] fips -> megacounty
     - [x] fips -> hrr
-    - [ ] national
+    - [x] national
     - [ ] zip -> dma (postponed)
 
     The GeoMapper instance loads crosswalk tables from the package data_dir. The
@@ -73,13 +74,19 @@ class GeoMapper:
     just two colums. If the mapping IS one to many, then a third column, the weight column,
     exists (e.g. zip, fips, weight; satisfying (sum(weights) where zip==ZIP) == 1).
 
-    The main GeoMapper object methods act on dataframes with a geo code column. They can
-    be categorized as follows:
-    - load_* : load a crosswalk table into the instance (e.g. zip to fips).
-    - convert_* : add a new column to a dataframe by joining with a crosswalk table
-    - *_to_* : replace a geo code column with another, using weighted sum aggregation where
-               necessary (e.g. (sum(weights*count_column) groupby fips) would convert zip
-               level data to fips level data)
+    Example Usage
+    ==========
+    The main GeoMapper object loads and stores crosswalk dataframes on-demand.
+
+    Example 1: to add a new column with a new geocode, possibly with weights:
+    > gmpr = GeoMapper()
+    > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+                            date_col="timestamp", dropna=False)
+
+    Example 2: to replace a geocode column with a new one, aggregating the data with weights:
+    > gmpr = GeoMapper()
+    > df = gmpr.replace_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
+                                date_col="timestamp", dropna=False)
     """
 
     def __init__(self):
@@ -225,8 +232,15 @@ class GeoMapper:
         return data_roll.set_index([fips_col, date_col])[mega_col]
 
     # Conversion functions
-    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None):
+    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=True):
         """Add a new geocode column to a dataframe.
+
+        Currently supported conversions:
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, national
+        - zip -> state_code, state_id, state_name, fips, msa, hrr, national
+        - jhu_uid -> fips
+        - state_x -> state_y, where x and y are in {code, id, name}
+        - state_code -> hhs_region_number
 
         Parameters
         ---------
@@ -234,7 +248,8 @@ class GeoMapper:
             Input dataframe.
         from_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name'}
             Specifies the geocode type of the data in from_col.
-        new_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name', 'hrr', 'msa'}
+        new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
+                   'hhs_region_number'}
             Specifies the geocode type in new_col.
         from_col: str, default None
             Name of the column in dataframe containing from_code. If None, then the name
@@ -242,6 +257,11 @@ class GeoMapper:
         new_col: str, default None
             Name of the column in dataframe containing new_code. If None, then the name
             is assumed to be new_code.
+        dropna: bool, default False
+            Determines how the merge with the crosswalk file is done. If True, the join is inner,
+            and if False, the join is left. The inner join will drop records from the input database
+            that have no translation in the crosswalk, while the outer join will keep those records
+            as NA.
 
         Return
         ---------
@@ -259,16 +279,27 @@ class GeoMapper:
             else:
                 df[from_col] = df[from_col].astype(str)
 
+        # Assuming that the passed-in records are all United States data
+        if new_code == "national":
+            df[new_col] = df[from_col].apply(lambda x: "United States")
+            return df
+
         # state codes are all stored in one table
         if new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
+            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
         else:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code=new_code)
-        crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
+            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
 
-        df = df.merge(
-            crosswalk, left_on=from_col, right_on=from_col, how="left"
-        ).dropna(subset=[new_col])
+        if dropna:
+            df = df.merge(
+                crosswalk, left_on=from_col, right_on=from_col, how="inner"
+            )
+        else:
+            df = df.merge(
+                crosswalk, left_on=from_col, right_on=from_col, how="left"
+            )
 
         # Drop extra state columns
         if new_code in state_codes:
@@ -286,8 +317,16 @@ class GeoMapper:
             new_col=None,
             date_col="date",
             data_cols=None,
+            dropna=True
     ):
         """Replace a geocode column in a dataframe.
+
+        Currently supported conversions:
+        - fips -> state_code, state_id, state_name, zip, msa, hrr
+        - zip -> state_code, state_id, state_name, fips, msa, hrr
+        - jhu_uid -> fips
+        - state_x -> state_y, where x and y are in {code, id, name}
+        - state_code -> hhs_region_number
 
         Parameters
         ---------
@@ -299,11 +338,17 @@ class GeoMapper:
             Specifies the geocode type of the data in from_col.
         new_col: str
             Name of the new column to add to data.
-        new_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name', 'hrr', 'msa'}
+        new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
+                   'hhs_region_number'}
             Specifies the geocode type of the data in new_col.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
+        dropna: bool, default False
+            Determines how the merge with the crosswalk file is done. If True, the join is inner,
+            and if False, the join is left. The inner join will drop records from the input database
+            that have no translation in the crosswalk, while the outer join will keep those records
+            as NA.
 
         Return
         ---------
@@ -314,7 +359,7 @@ class GeoMapper:
         new_col = new_code if new_col is None else new_col
 
         df = self.add_geocode(
-            df, from_code, new_code, from_col=from_col, new_col=new_col
+            df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna
         ).drop(columns=from_col)
 
         if "weight" in df.columns:
@@ -324,11 +369,8 @@ class GeoMapper:
             # Multiply and aggregate (this automatically zeros NAs)
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
-            df = df.groupby([date_col, new_col]).sum().reset_index()
-            return df
-        else:
-            df = df.groupby([date_col, new_col]).sum().reset_index()
-            return df
+        df = df.groupby([date_col, new_col]).sum().reset_index()
+        return df
 
     def add_population_column(self, data, geocode_type, geocode_col=None):
         """
@@ -351,6 +393,10 @@ class GeoMapper:
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
 
+        if geocode_type not in ["fips", "zip"]:
+            raise ValueError("Only fips and zip geocodes supported. \
+                For other codes, aggregate those.")
+
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
 
@@ -358,15 +404,14 @@ class GeoMapper:
 
         data_with_pop = (
             data.copy()
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how="left")
-            .dropna(subset=["pop"])
+            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how="inner")
             .rename(columns={"pop": "population"})
         )
         data_with_pop["population"] = data_with_pop["population"].astype(int)
         return data_with_pop
 
+    @staticmethod
     def fips_to_megacounty(
-            self,
             data,
             thr_count,
             thr_win_len,

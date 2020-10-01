@@ -59,7 +59,7 @@ SMOOTHERS_MAP = {
     "seven_day_average":    (seven_day_moving_average, '7dav_'),
 }
 GEO_RESOLUTIONS = [
-    "county",
+    "fips",
     "state",
     "msa",
     "hrr",

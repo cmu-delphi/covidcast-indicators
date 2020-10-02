@@ -18,29 +18,6 @@ filename_regex = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
 
-def get_filenames_with_geo_signal(path, data_source, date_slist: List[str]):
-    """
-    Gets list of filenames in data folder and list of expected geo type-signal type combinations.
-
-    Arguments:
-        - path: path to data CSVs
-        - data_source: str; data source name, one of
-        https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
-        - date_slist: list of dates (formatted as strings) to check
-
-    Returns:
-        - list of filenames
-        - list of geo type-signal type combinations that we expect to see
-    """
-    geo_sig_cmbo = get_geo_sig_cmbo(data_source)
-
-    for cmb in geo_sig_cmbo:
-        print(cmb)
-
-    filenames = read_relevant_date_filenames(path, date_slist[0])
-    return filenames, geo_sig_cmbo
-
-
 def get_geo_sig_cmbo(data_source):
     """
     Get list of geo type-signal type combinations that we expect to see, based on
@@ -78,27 +55,6 @@ def read_filenames(path):
     daily_filenames = [(f, filename_regex.match(f))
                        for f in listdir(path) if isfile(join(path, f))]
     return daily_filenames
-
-
-def read_relevant_date_filenames(data_path, date_slist):
-    """
-    Return a list of tuples of every filename in the specified directory if the file is in the specified date range.
-
-    Arguments:
-        - data_path: path to the directory containing CSV data files.
-        - date_slist: list of dates (formatted as strings) to check
-
-    Returns:
-        - list
-    """
-    all_files = [f for f in listdir(data_path) if isfile(join(data_path, f))]
-    filenames = list()
-
-    for fl in all_files:
-        for dt in date_slist:
-            if fl.find(dt) != -1:
-                filenames.append(fl)
-    return filenames
 
 
 def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):

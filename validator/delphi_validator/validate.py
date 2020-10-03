@@ -36,12 +36,14 @@ def reldiff_by_min(x, y):
 class ValidationError(Exception):
     """ Error raised when validation check fails. """
 
-    def __init__(self, expression, message):
+    def __init__(self, check_data_id, expression, message):
         """
         Arguments:
-            - expression: relevant variables to message, e.g., if a date doesn't pass a check, provide a list of the date and the filename of the CSV it originated from
+            - check_data_id: str or tuple/list of str uniquely identifying the check that was run and on what data
+            - expression: relevant variables to message, e.g., if a date doesn't pass a check, provide the date
             - message: str explaining why an error was raised
         """
+        self.check_data_id = tuple(check_data_id)
         self.expression = expression
         self.message = message
 
@@ -104,20 +106,30 @@ class Validator():
         """
         if not isinstance(max_check_lookbehind, timedelta):
             self.raised.append(ValidationError(
-                max_check_lookbehind, "max_check_lookbehind must be of type datetime.timedelta"))
+                ("check_type_max_check_lookbehind", nameformat),
+                max_check_lookbehind,
+                "max_check_lookbehind must be of type datetime.timedelta"))
 
-        if not isinstance(generation_date, date) or generation_date > date.today():
+        if not isinstance(generation_date, date):
             self.raised.append(ValidationError(
-                generation_date, "generation_date must be a datetime.date type and not in the future."))
+                ("check_type_generation_date", nameformat), generation_date,
+                "generation_date must be a datetime.date type"))
+
+        if not generation_date > date.today():
+            self.raised.append(ValidationError(
+                ("check_future_generation_date", nameformat), generation_date,
+                "generation_date must not be in the future"))
 
         pattern_found = filename_regex.match(nameformat)
         if not nameformat or not pattern_found:
             self.raised.append(ValidationError(
+                ("check_filename_format", nameformat),
                 nameformat, 'nameformat not recognized'))
 
         if not isinstance(df_to_test, pd.DataFrame):
             self.raised.append(ValidationError(
-                nameformat, 'df_to_test must be a pandas dataframe.'))
+                ("check_file_data_format", nameformat),
+                type(df_to_test), 'df_to_test must be a pandas dataframe.'))
 
     def check_missing_dates(self, daily_filenames, start_date, end_date):
         """
@@ -146,7 +158,10 @@ class Validator():
 
         if check_dateholes:
             self.raised.append(ValidationError(
-                check_dateholes, "Missing dates are observed; if these dates are already in the API they would not be updated"))
+                "check_missing_date_files",
+                check_dateholes,
+                "Missing dates are observed; if these dates are" +
+                " already in the API they would not be updated"))
 
     def check_bad_geo_id(self, df_to_test, nameformat, geo_type):
         """
@@ -161,7 +176,8 @@ class Validator():
         """
         if geo_type not in negated_regex_dict:
             self.raised.append(ValidationError(
-                (nameformat, geo_type), "Unrecognized geo type"))
+                ("check_geo_type", nameformat),
+                geo_type, "Unrecognized geo type"))
 
         def find_all_unexpected_geo_ids(df_to_test, negated_regex):
             """
@@ -171,7 +187,8 @@ class Validator():
                 negated_regex) if len(ugeo) > 0]
             if len(unexpected_geos) > 0:
                 self.raised.append(ValidationError(
-                    (nameformat, unexpected_geos), "Non-conforming geo_ids found"))
+                    ("check_geo_id_format", nameformat),
+                    unexpected_geos, "Non-conforming geo_ids found"))
 
         find_all_unexpected_geo_ids(df_to_test, negated_regex_dict[geo_type])
 
@@ -193,20 +210,27 @@ class Validator():
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
                 self.raised.append(ValidationError(
-                    nameformat, "val column can't have any cell greater than 100 for percents"))
+                    ("check_val_pct_gt_100", nameformat),
+                    df_to_test[(df_to_test['val'] > 100)],
+                    "val column can't have any cell greater than 100 for percents"))
 
         if proportion_option:
             if not df_to_test[(df_to_test['val'] > 100000)].empty:
                 self.raised.append(ValidationError(
-                    signal_type, "val column can't have any cell greater than 100000 for nameformat"))
+                    ("check_val_prop_gt_100k", nameformat),
+                    df_to_test[(df_to_test['val'] > 100000)],
+                    "val column can't have any cell greater than 100000 for nameformat"))
 
         if df_to_test['val'].isnull().values.any():
             self.raised.append(ValidationError(
-                nameformat, "val column can't have any cell that is NA"))
+                ("check_val_missing", nameformat),
+                None, "val column can't have any cell that is NA"))
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
             self.raised.append(ValidationError(
-                nameformat, "val column can't have any cell smaller than 0"))
+                ("check_val_lt_0", nameformat),
+                df_to_test[(df_to_test['val'] < 0)],
+                "val column can't have any cell smaller than 0"))
 
     def check_bad_se(self, df_to_test, nameformat, missing_se_allowed):
         """
@@ -229,7 +253,8 @@ class Validator():
         if not missing_se_allowed:
             if df_to_test['se'].isnull().values.any():
                 self.raised.append(ValidationError(
-                    nameformat, "se must not be NA"))
+                    ("check_se_missing", nameformat),
+                    None, "se must not be NA"))
 
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
@@ -237,7 +262,8 @@ class Validator():
 
             if not result.empty:
                 self.raised.append(ValidationError(
-                    nameformat, "se must be in (0, min(50,val*(1+eps))]"))
+                    ("check_se_in_range", nameformat),
+                    result, "se must be in (0, min(50,val*(1+eps))]"))
 
         elif missing_se_allowed:
             result = df_to_test.query(
@@ -245,13 +271,20 @@ class Validator():
 
             if not result.empty:
                 self.raised.append(ValidationError(
-                    nameformat, "se must be NA or in (0, min(50,val*(1+eps))]"))
+                    ("check_se_missing_or_in_range", nameformat),
+                    result, "se must be NA or in (0, min(50,val*(1+eps))]"))
 
-        result = df_to_test.query('(val == 0) & (se == 0)')
+        result_jeffreys = df_to_test.query('(val == 0) & (se == 0)')
+        result_alt = df_to_test.query('se == 0')
 
-        if not result.empty:
+        if not result_jeffreys.empty:
             self.raised.append(ValidationError(
-                nameformat, "when signal value is 0, se must be non-zero. please use Jeffreys correction to generate an appropriate se"))
+                ("check_se_0_when_val_0", nameformat),
+                None, "when signal value is 0, se must be non-zero. please use Jeffreys correction to generate an appropriate se"))
+        elif not result_alt.empty:
+            self.raised.append(ValidationError(
+                ("check_se_0", nameformat),
+                result_alt, "se must be non-zero"))
 
     def check_bad_sample_size(self, df_to_test, nameformat, minimum_sample_size, missing_sample_size_allowed):
         """
@@ -268,14 +301,16 @@ class Validator():
         if not missing_sample_size_allowed:
             if df_to_test['sample_size'].isnull().values.any():
                 self.raised.append(ValidationError(
-                    nameformat, "sample_size must not be NA"))
+                    ("check_n_missing", nameformat),
+                    None, "sample_size must not be NA"))
 
             # Find rows with sample size less than minimum allowed
             result = df_to_test.query('(sample_size < @minimum_sample_size)')
 
             if not result.empty:
                 self.raised.append(ValidationError(
-                    nameformat, "sample size must be >= {minimum_sample_size}"))
+                    ("check_n_gt_min", nameformat),
+                    result, "sample size must be >= {minimum_sample_size}"))
 
         elif missing_sample_size_allowed:
             result = df_to_test.query(
@@ -283,7 +318,9 @@ class Validator():
 
             if not result.empty:
                 self.raised.append(ValidationError(
-                    nameformat, "sample size must be NA or >= {minimum_sample_size}"))
+                    ("check_n_missing_or_gt_min", nameformat),
+                    result,
+                    "sample size must be NA or >= {minimum_sample_size}"))
 
     def check_min_allowed_max_date(self, max_date, generation_date, weighted_option, geo, sig):
         """
@@ -307,7 +344,9 @@ class Validator():
 
         if max_date < generation_date - thres:
             self.raised.append(ValidationError(
-                (geo, sig, max_date), "most recent date of generated file seems too long ago"))
+                ("check_min_max_date", geo, sig),
+                max_date,
+                "most recent date of generated file seems too long ago"))
 
     def check_max_allowed_max_date(self, max_date, generation_date, geo, sig):
         """
@@ -322,7 +361,9 @@ class Validator():
         """
         if max_date > generation_date - timedelta(days=1):
             self.raised.append(ValidationError(
-                (geo, sig, max_date), "most recent date of generated file seems too recent"))
+                ("check_max_max_date", geo, sig),
+                max_date,
+                "most recent date of generated file seems too recent"))
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date, geo, sig):
         """
@@ -336,11 +377,15 @@ class Validator():
             - None
         """
         if df_to_test["time_value"].max() < df_to_reference["time_value"].max():
-            self.raised.append(ValidationError((checking_date.date(), geo, sig, df_to_test["time_value"].max(), df_to_reference["time_value"].max()),
-                                               'reference df has days beyond the max date in the =df_to_test=; checks are not constructed' +
-                                               'to handle this case, and this situation may indicate that something locally is out of date,' +
-                                               'or, if the local working files have already been compared against the reference,' +
-                                               'that there is a bug somewhere'))
+            self.raised.append(ValidationError(
+                ("check_max_date_vs_reference", checking_date.date(), geo, sig),
+                (df_to_test["time_value"].max(),
+                 df_to_reference["time_value"].max()),
+                'reference df has days beyond the max date in the =df_to_test=; ' +
+                'checks are not constructed to handle this case, and this situation ' +
+                'may indicate that something locally is out of date, or, if the local ' +
+                'working files have already been compared against the reference, ' +
+                'that there is a bug somewhere'))
 
     def check_rapid_change(self, df_to_test, df_to_reference, checking_date, geo, sig):
         """
@@ -363,8 +408,11 @@ class Validator():
             set(df_to_reference["time_value"]))
 
         if abs(reldiff_by_min(test_rows_per_reporting_day, reference_rows_per_reporting_day)) > 0.35:
-            self.raised.append(ValidationError((checking_date.date(), sig, geo),
-                                               "Number of rows per day (-with-any-rows) seems to have changed rapidly (reference vs test data)"))
+            self.raised.append(ValidationError(
+                ("check_rapid_change_num_rows", checking_date.date(), geo, sig),
+                (test_rows_per_reporting_day, reference_rows_per_reporting_day),
+                "Number of rows per day (-with-any-rows) seems to have changed " +
+                "rapidly (reference vs test data)"))
 
     def check_avg_val_diffs(self, df_to_test, df_to_reference, smooth_option, checking_date, geo, sig):
         """
@@ -378,7 +426,7 @@ class Validator():
         Returns:
             - None
         """
-        # Average each of val, se, and sample_size over all dates for a given geo_id. Ignores NA values by default.
+        # Average each of val, se, and sample_size over all dates for a given geo_id. Ignores NA by default.
         df_to_test = df_to_test.groupby(['geo_id'], as_index=False)[
             ['val', 'se', 'sample_size']].mean()
         df_to_test["type"] = "test"
@@ -390,10 +438,11 @@ class Validator():
         df_all = pd.concat([df_to_test, df_to_reference])
 
         # For each variable (val, se, and sample size) where not missing, calculate the relative mean difference and mean absolute difference between the test data and the reference data across all geographic regions.
-        df_all = pd.melt(df_all, id_vars=["geo_id", "type"], value_vars=["val", "se", "sample_size"]
-                         ).pivot(index=("geo_id", "variable"), columns="type", values="value"
-                                 ).reset_index(("geo_id", "variable")
-                                               ).dropna(
+        df_all = pd.melt(
+            df_all, id_vars=["geo_id", "type"], value_vars=["val", "se", "sample_size"]
+        ).pivot(index=("geo_id", "variable"), columns="type", values="value"
+                ).reset_index(("geo_id", "variable")
+                              ).dropna(
         ).assign(
             type_diff=lambda x: x["test"] - x["reference"],
             abs_type_diff=lambda x: abs(x["type_diff"])
@@ -433,10 +482,14 @@ class Validator():
         flag = mean_stddiff_high or mean_stdabsdiff_high
 
         if flag:
-            self.raised.append(ValidationError((checking_date.date(), sig, geo, mean_stddiff_high, mean_stdabsdiff_high), 'Average differences in variables by geo_id between recent & reference data (either semirecent or from API) seem'
-                                               + 'large --- either large increase tending toward one direction or large mean absolute'
-                                               + 'difference, relative to average values of corresponding variables.  For the former'
-                                               + 'check, tolerances for `val` are more restrictive than those for other columns.'))
+            self.raised.append(ValidationError(
+                ("check_test_vs_reference_avg_changed",
+                 checking_date.date(), geo, sig),
+                (mean_stddiff_high, mean_stdabsdiff_high),
+                'Average differences in variables by geo_id between recent & reference data (either semirecent or from API) seem'
+                + 'large --- either large increase tending toward one direction or large mean absolute'
+                + 'difference, relative to average values of corresponding variables.  For the former'
+                + 'check, tolerances for `val` are more restrictive than those for other columns.'))
 
     def validate(self, export_dir, start_date, end_date, data_source, params, generation_date=date.today()):
         """
@@ -466,6 +519,8 @@ class Validator():
         sanity_check_value_diffs = params.get('sanity_check_value_diffs', True)
         # TODO: use for something... See https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L439
         check_vs_working = params.get('check_vs_working', True)
+
+        suppressed_errors = set(params.get('suppressed_errors', []))
 
         # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
@@ -575,8 +630,9 @@ class Validator():
                     ['direction', 'issue', 'lag'], axis=1).reindex(columns=column_names)
 
                 if recent_df["se"].isnull().mean() > 0.5:
-                    self.raised.append(
-                        ((checking_date.date(), geo, sig), 'Recent se values are >50% NA'))
+                    self.raised.append(ValidationError(
+                        ("check_se_many_missing", checking_date.date(), geo, sig),
+                        None, 'Recent se values are >50% NA'))
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo, sig)
@@ -594,9 +650,9 @@ class Validator():
             if kroc == 2:
                 break
 
-        self.exit()
+        self.exit(suppressed_errors)
 
-    def exit(self):
+    def exit(self, suppressed_errors):
         """
         If any exceptions were raised, print and exit with non-zero status.
         """

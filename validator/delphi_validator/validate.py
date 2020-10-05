@@ -12,7 +12,7 @@ import pandas as pd
 import numpy as np
 
 import covidcast
-from .datafetcher import load_csv, read_geo_sig_cmbo_files, read_filenames, get_geo_sig_cmbo, filename_regex
+from .datafetcher import *
 
 import pdb
 
@@ -265,6 +265,11 @@ class Validator():
                     ("check_se_in_range", nameformat),
                     result, "se must be in (0, min(50,val*(1+eps))]"))
 
+            if df_to_test["se"].isnull().mean() > 0.5:
+                self.raised.append(ValidationError(
+                    ("check_se_many_missing", nameformat),
+                    None, 'Recent se values are >50% NA'))
+
         elif missing_se_allowed:
             result = df_to_test.query(
                 '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
@@ -345,7 +350,7 @@ class Validator():
         if max_date < generation_date - thres:
             self.raised.append(ValidationError(
                 ("check_min_max_date", geo, sig),
-                max_date,
+                max_date.date(),
                 "most recent date of generated file seems too long ago"))
 
     def check_max_allowed_max_date(self, max_date, generation_date, geo, sig):
@@ -362,7 +367,7 @@ class Validator():
         if max_date > generation_date - timedelta(days=1):
             self.raised.append(ValidationError(
                 ("check_max_max_date", geo, sig),
-                max_date,
+                max_date.date(),
                 "most recent date of generated file seems too recent"))
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date, geo, sig):
@@ -520,7 +525,8 @@ class Validator():
         # TODO: use for something... See https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L439
         check_vs_working = params.get('check_vs_working', True)
 
-        suppressed_errors = set(params.get('suppressed_errors', []))
+        suppressed_errors = set([tuple(item)
+                                 for item in params.get('suppressed_errors', [])])
 
         # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
@@ -616,23 +622,8 @@ class Validator():
                 reference_start_date = checking_date - \
                     min(semirecent_lookbehind, max_check_lookbehind)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
-                reference_api_df = covidcast.signal(
-                    data_source, sig, reference_start_date, reference_end_date, geo)
-
-                column_names = ["geo_id", "val",
-                                "se", "sample_size", "time_value"]
-
-                # Replace None with NA to make numerical manipulation easier.
-                # Rename and reorder columns to match those in df_to_test.
-                reference_api_df = reference_api_df.replace(
-                    to_replace=[None], value=np.nan).rename(
-                    columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}).drop(
-                    ['direction', 'issue', 'lag'], axis=1).reindex(columns=column_names)
-
-                if recent_df["se"].isnull().mean() > 0.5:
-                    self.raised.append(ValidationError(
-                        ("check_se_many_missing", checking_date.date(), geo, sig),
-                        None, 'Recent se values are >50% NA'))
+                reference_api_df = fetch_api_reference(
+                    data_source, reference_start_date, reference_end_date, geo, sig)
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo, sig)

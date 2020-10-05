@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import List
 from itertools import product
 import pandas as pd
+import numpy as np
 
 import covidcast
 from .errors import APIDataFetchError
@@ -113,16 +114,30 @@ def load_csv(path):
         })
 
 
-def fetch_daily_data(data_source, survey_date, geo_type, signal):
+def fetch_api_reference(data_source, start_date, end_date, geo, sig):
     """
-    Get API data for a specified date, source, signal, and geo type.
+    Get and process API data for use as a reference. Formatting is changed to match that of source data CSVs.
     """
-    data_to_reference = covidcast.signal(
-        data_source, signal, survey_date, survey_date, geo_type)
-    if not isinstance(data_to_reference, pd.DataFrame):
-        custom_msg = "Error fetching data on" + str(survey_date) + \
-                     "for data source:" + data_source + \
-                     ", signal-type:" + signal + \
-                     ", geography-type:" + geo_type
+    api_df = covidcast.signal(
+        data_source, sig, start_date, end_date, geo)
+
+    if not isinstance(api_df, pd.DataFrame):
+        custom_msg = "Error fetching data from " + str(survey_date) + \
+                     " to " + str(end_date) + \
+                     "for data source: " + data_source + \
+                     ", signal-type: " + sig + \
+                     ", geography-type: " + geo
+
         raise APIDataFetchError(custom_msg)
-    return data_to_reference
+
+    column_names = ["geo_id", "val",
+                    "se", "sample_size", "time_value"]
+
+    # Replace None with NA to make numerical manipulation easier.
+    # Rename and reorder columns to match those in df_to_test.
+    api_df = api_df.replace(
+        to_replace=[None], value=np.nan).rename(
+        columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}).drop(
+        ['direction', 'issue', 'lag'], axis=1).reindex(columns=column_names)
+
+    return(api_df)

@@ -36,3 +36,7 @@ params.json
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+*.tgz
+post-*
+*.done
+*.messages

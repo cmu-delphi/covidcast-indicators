@@ -50,16 +50,37 @@ class ValidationError(Exception):
 
 
 class Validator():
-    """ Class containing validation() function and supporting functions. Stores a list of all raised errors and warnings. """
+    """ Class containing validation() function and supporting functions. Stores a list of all raised errors, and user settings. """
 
-    def __init__(self, params, generation_date=date.today()):
+    def __init__(self, params):
+        """
+        Initialize object and set parameters.
+
+        Arguments:
+            - params: dictionary of user settings; if empty, defaults will be used
+
+        Attributes:
+            - data_source: str; data source name, one of https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
+            - start_date: beginning date of data to check, in datetime date format
+            - end_date: end date of data to check, in datetime date format
+            - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+            - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
+            - minimum_sample_size: int
+            - missing_se_allowed: boolean indicating if missing standard errors should raise an exception or not
+            - missing_sample_size_allowed: boolean indicating if missing sample size should raise an exception or not
+            - sanity_check_rows_per_day: boolean; check flag
+            - sanity_check_value_diffs: boolean; check flag
+            - check_vs_working: boolean; check flag
+            - suppressed_errors: set of check_data_ids used to identify error messages to ignore
+            - raised_errors: list to append errors to as they are raised
+        """
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
         self.start_date = datetime.date(
             datetime.strptime(params['start_date'], '%Y-%m-%d'))
         self.end_date = datetime.date(
             datetime.strptime(params['end_date'], '%Y-%m-%d'))
-        self.generation_date = generation_date
+        self.generation_date = params.get('generation_date', date.today())
 
         self.max_check_lookbehind = timedelta(
             days=params.get("ref_window_size", 7))
@@ -89,7 +110,7 @@ class Validator():
             - end_date: datetime date object
 
         Returns:
-            - None
+            - Custom function object
         """
         # Convert dates from datetime format to int.
         start_code = int(start_date.strftime("%Y%m%d"))
@@ -117,22 +138,20 @@ class Validator():
 
         return f
 
-    def check_missing_dates(self, daily_filenames, start_date, end_date):
+    def check_missing_dates(self, daily_filenames):
         """
         Check for missing dates between the specified start and end dates.
 
         Arguments:
             - daily_filenames: list of CSV source data filenames.
-            - sdate: start date, in datetime format
-            - edate: end date, in datetime format
 
         Returns:
             - None
         """
-        number_of_dates = end_date - start_date + timedelta(days=1)
+        number_of_dates = self.end_date - self.start_date + timedelta(days=1)
 
         # Create set of all expected dates.
-        date_seq = {start_date + timedelta(days=x)
+        date_seq = {self.start_date + timedelta(days=x)
                     for x in range(number_of_dates.days)}
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
@@ -149,36 +168,43 @@ class Validator():
                 "Missing dates are observed; if these dates are" +
                 " already in the API they would not be updated"))
 
-    def check_settings(self, max_check_lookbehind, generation_date):
+    def check_settings(self):
         """
-        Perform some automated format & sanity checks of inputs.
+        Perform some automated format & sanity checks of parameters.
 
         Arguments:
-            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
-            - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
-            - max_check_lookbehind: number of days back to perform sanity checks, starting from the last date appearing in df_to_test
-            - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+            - None
 
         Returns:
             - None
         """
-        if not isinstance(max_check_lookbehind, timedelta):
+        if not isinstance(self.max_check_lookbehind, timedelta):
             self.raised_errors.append(ValidationError(
                 ("check_type_max_check_lookbehind"),
-                max_check_lookbehind,
+                self.max_check_lookbehind,
                 "max_check_lookbehind must be of type datetime.timedelta"))
 
-        if not isinstance(generation_date, date):
+        if not isinstance(self.generation_date, date):
             self.raised_errors.append(ValidationError(
-                ("check_type_generation_date"), generation_date,
+                ("check_type_generation_date"), self.generation_date,
                 "generation_date must be a datetime.date type"))
 
-        if generation_date > date.today():
+        if self.generation_date > date.today():
             self.raised_errors.append(ValidationError(
-                ("check_future_generation_date"), generation_date,
+                ("check_future_generation_date"), self.generation_date,
                 "generation_date must not be in the future"))
 
     def check_df_format(self, df_to_test, nameformat):
+        """
+        Check basic format of source data CSV df.
+
+        Arguments:
+            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
+            - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
+
+        Returns:
+            - None
+        """
         pattern_found = filename_regex.match(nameformat)
         if not nameformat or not pattern_found:
             self.raised_errors.append(ValidationError(
@@ -259,13 +285,13 @@ class Validator():
                 df_to_test[(df_to_test['val'] < 0)],
                 "val column can't have any cell smaller than 0"))
 
-    def check_bad_se(self, df_to_test, nameformat, missing_se_allowed):
+    def check_bad_se(self, df_to_test, nameformat):
         """
         Check standard errors for validity.
 
         Arguments:
-            - df_to_test: pandas dataframe of CSV source data
-            - missing_se_allowed: boolean indicating if missing standard errors should raise an exception or not
+            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
+            - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
 
         Returns:
             - None
@@ -277,7 +303,7 @@ class Validator():
         df_to_test['se'] = df_to_test['se'].round(3)
         df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-        if not missing_se_allowed:
+        if not self.missing_se_allowed:
             if df_to_test['se'].isnull().values.any():
                 self.raised_errors.append(ValidationError(
                     ("check_se_missing", nameformat),
@@ -297,7 +323,7 @@ class Validator():
                     ("check_se_many_missing", nameformat),
                     None, 'Recent se values are >50% NA'))
 
-        elif missing_se_allowed:
+        elif self.missing_se_allowed:
             result = df_to_test.query(
                 '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
@@ -318,50 +344,51 @@ class Validator():
                 ("check_se_0", nameformat),
                 result_alt, "se must be non-zero"))
 
-    def check_bad_sample_size(self, df_to_test, nameformat, minimum_sample_size, missing_sample_size_allowed):
+    def check_bad_sample_size(self, df_to_test, nameformat):
         """
         Check sample sizes for validity.
 
         Arguments:
-            - df_to_test: pandas dataframe of a single CSV of source data
-            - minimum_sample_size: int
-            - missing_sample_size_allowed: boolean indicating if missing sample size should raise an exception or not
+            - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
+            - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
 
         Returns:
             - None
         """
-        if not missing_sample_size_allowed:
+        if not self.missing_sample_size_allowed:
             if df_to_test['sample_size'].isnull().values.any():
                 self.raised_errors.append(ValidationError(
                     ("check_n_missing", nameformat),
                     None, "sample_size must not be NA"))
 
             # Find rows with sample size less than minimum allowed
-            result = df_to_test.query('(sample_size < @minimum_sample_size)')
+            result = df_to_test.query(
+                '(sample_size < @self.minimum_sample_size)')
 
             if not result.empty:
                 self.raised_errors.append(ValidationError(
                     ("check_n_gt_min", nameformat),
-                    result, "sample size must be >= {minimum_sample_size}"))
+                    result, "sample size must be >= {self.minimum_sample_size}"))
 
-        elif missing_sample_size_allowed:
+        elif self.missing_sample_size_allowed:
             result = df_to_test.query(
-                '~(sample_size.isnull() | (sample_size >= @minimum_sample_size))')
+                '~(sample_size.isnull() | (sample_size >= @self.minimum_sample_size))')
 
             if not result.empty:
                 self.raised_errors.append(ValidationError(
                     ("check_n_missing_or_gt_min", nameformat),
                     result,
-                    "sample size must be NA or >= {minimum_sample_size}"))
+                    "sample size must be NA or >= {self.minimum_sample_size}"))
 
-    def check_min_allowed_max_date(self, max_date, generation_date, weighted_option, geo, sig):
+    def check_min_allowed_max_date(self, max_date, weighted_option, geo, sig):
         """
         Check if time since data was generated is reasonable or too long ago.
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
-            - generation_date: date data to test was generated; datetime format.
-            - weighted_option: str; selects the "reasonable" threshold
+            - weighted_option: str; selects the "reasonable" threshold based on signal name
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
 
         Returns:
             - None
@@ -374,24 +401,25 @@ class Validator():
         thres = switcher.get(
             weighted_option, lambda: "Invalid weighting option")
 
-        if max_date < generation_date - thres:
+        if max_date < self.generation_date - thres:
             self.raised_errors.append(ValidationError(
                 ("check_min_max_date", geo, sig),
                 max_date.date(),
                 "most recent date of generated file seems too long ago"))
 
-    def check_max_allowed_max_date(self, max_date, generation_date, geo, sig):
+    def check_max_allowed_max_date(self, max_date, geo, sig):
         """
         Check if time since data was generated is reasonable or too recent.
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
-            - generation_date: date data to test was generated; datetime format.
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
 
         Returns:
             - None
         """
-        if max_date > generation_date - timedelta(days=1):
+        if max_date > self.generation_date - timedelta(days=1):
             self.raised_errors.append(ValidationError(
                 ("check_max_max_date", geo, sig),
                 max_date.date(),
@@ -404,6 +432,8 @@ class Validator():
         Arguments:
             - df_to_test: pandas dataframe of a single CSV of source data (one day-signal-geo_type combo)
             - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
 
         Returns:
             - None
@@ -426,10 +456,9 @@ class Validator():
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
-            - checking_date
-            - date_list: list of dates to check
-            - sig: str; signal name as in the CSV name
+            - checking_date: datetime date
             - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
 
         Returns:
             - None
@@ -454,6 +483,8 @@ class Validator():
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the COVIDcast API or semirecent data
             - smooth_option: "raw" or "smoothed", choosen according to smoothing of signal (e.g. 7dav is "smoothed")
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
 
         Returns:
             - None
@@ -529,11 +560,6 @@ class Validator():
 
         Arguments:
             - export_dir: path to data CSVs
-            - start_date: beginning date of data to check
-            - end_date: end date of data to check
-            - data_source: str; data source name, one of https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
-            - params: dictionary of user settings; if empty, defaults will be used
-            - generation_date: date that this df_to_test was generated; typically 1 day after the last date in df_to_test
 
         Returns:
             - None
@@ -541,17 +567,18 @@ class Validator():
         # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
         date_filter = self.make_date_filter(self.start_date, self.end_date)
+
         # List of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
+
         # Get list of just CSV names.
         filenames = [name_match_pair[0] for name_match_pair in validate_files]
 
         # Get all expected combinations of geo_type and signal.
         geo_sig_cmbo = get_geo_sig_cmbo(self.data_source)
 
-        self.check_missing_dates(
-            validate_files, self.start_date, self.end_date)
-        self.check_settings(self.max_check_lookbehind, self.generation_date)
+        self.check_missing_dates(validate_files)
+        self.check_settings()
 
         all_frames = []
 
@@ -563,9 +590,8 @@ class Validator():
             self.check_df_format(df, filename)
             self.check_bad_geo_id(df, filename, match.groupdict()['geo_type'])
             self.check_bad_val(df, filename, match.groupdict()['signal'])
-            self.check_bad_se(df, filename, self.missing_se_allowed)
-            self.check_bad_sample_size(
-                df, filename, self.minimum_sample_size, self.missing_sample_size_allowed)
+            self.check_bad_se(df, filename)
+            self.check_bad_sample_size(df, filename)
 
             # Get geo_type, date, and signal name as specified by CSV name.
             df['geo_type'] = match.groupdict()['geo_type']
@@ -594,9 +620,6 @@ class Validator():
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
-        # TODO: Remove for actual version
-        kroc = 0
-
         # Comparison checks
         # TODO: Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
         # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
@@ -614,10 +637,8 @@ class Validator():
             print(geo_sig_df)
 
             max_date = geo_sig_df["time_value"].max()
-            self.check_min_allowed_max_date(
-                max_date, self.generation_date, weight_option, geo, sig)
-            self.check_max_allowed_max_date(
-                max_date, self.generation_date, geo, sig)
+            self.check_min_allowed_max_date(max_date, weight_option, geo, sig)
+            self.check_max_allowed_max_date(max_date, geo, sig)
 
             # TODO: Check to see, if this date is in the API, if values have been updated and changed significantly.
 
@@ -646,11 +667,6 @@ class Validator():
                 if self.sanity_check_value_diffs:
                     self.check_avg_val_diffs(
                         recent_df, reference_api_df, smooth_option, checking_date, geo, sig)
-
-            # TODO: Remove for actual version
-            kroc += 1
-            if kroc == 2:
-                break
 
         self.exit()
 

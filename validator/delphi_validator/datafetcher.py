@@ -19,6 +19,35 @@ filename_regex = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
 
+def read_filenames(path):
+    """
+    Return a list of tuples of every filename and regex match to the CSV filename format in the specified directory.
+
+    Arguments:
+        - path: path to the directory containing CSV data files.
+
+    Returns:
+        - list of tuples
+    """
+    daily_filenames = [(f, filename_regex.match(f))
+                       for f in listdir(path) if isfile(join(path, f))]
+    return daily_filenames
+
+
+def load_csv(path):
+    """
+    Load CSV with specified column types.
+    """
+    return pd.read_csv(
+        path,
+        dtype={
+            'geo_id': str,
+            'val': float,
+            'se': float,
+            'sample_size': float,
+        })
+
+
 def get_geo_sig_cmbo(data_source):
     """
     Get list of geo type-signal type combinations that we expect to see, based on
@@ -41,21 +70,6 @@ def get_geo_sig_cmbo(data_source):
     print("Number of mixed types:", len(geo_sig_cmbo))
 
     return geo_sig_cmbo
-
-
-def read_filenames(path):
-    """
-    Return a list of tuples of every filename and regex match to the CSV filename format in the specified directory.
-
-    Arguments:
-        - path: path to the directory containing CSV data files.
-
-    Returns:
-        - list of tuples
-    """
-    daily_filenames = [(f, filename_regex.match(f))
-                       for f in listdir(path) if isfile(join(path, f))]
-    return daily_filenames
 
 
 def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
@@ -98,20 +112,6 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
             df_list.append(df)
 
         yield pd.concat(df_list), geo_sig[0], geo_sig[1]
-
-
-def load_csv(path):
-    """
-    Load CSV with specified column types.
-    """
-    return pd.read_csv(
-        path,
-        dtype={
-            'geo_id': str,
-            'val': float,
-            'se': float,
-            'sample_size': float,
-        })
 
 
 def fetch_api_reference(data_source, start_date, end_date, geo, sig):

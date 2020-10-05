@@ -43,7 +43,8 @@ class ValidationError(Exception):
             - expression: relevant variables to message, e.g., if a date doesn't pass a check, provide the date
             - message: str explaining why an error was raised
         """
-        self.check_data_id = tuple(check_data_id)
+        self.check_data_id = (check_data_id,) if not isinstance(
+            check_data_id, tuple) and not isinstance(check_data_id, list) else tuple(check_data_id)
         self.expression = expression
         self.message = message
 
@@ -74,8 +75,8 @@ class Validator():
         # TODO: use for something... See https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L439
         self.check_vs_working = params.get('check_vs_working', True)
 
-        self.suppressed_errors = set([tuple(item)
-                                      for item in params.get('suppressed_errors', [])])
+        self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
+            item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
 
         self.raised_errors = []
 
@@ -655,14 +656,31 @@ class Validator():
 
     def exit(self):
         """
-        If any exceptions were raised, print and exit with non-zero status.
+        If any not-suppressed exceptions were raised, print and exit with non-zero status.
         """
         if self.raised_errors:
-            print(len(self.raised_errors), "messages")
+            suppressed_counter = 0
+            subset_raised_errors = []
 
-            for message in self.raised_errors:
-                print(message)
+            for val_error in set(self.raised_errors):
+                raised_check_id = tuple(item.strftime("%Y-%m-%d") if isinstance(
+                    item, date) or isinstance(item, datetime) else item for item in val_error.check_data_id)
 
-            sys.exit(1)
+                if raised_check_id not in self.suppressed_errors:
+                    subset_raised_errors.append(val_error)
+                else:
+                    self.suppressed_errors.remove(raised_check_id)
+                    suppressed_counter += 1
+
+            print(len(subset_raised_errors), "messages")
+            print(suppressed_counter, "suppressed messages")
+
+            if len(subset_raised_errors) == 0:
+                sys.exit(0)
+            else:
+                for message in subset_raised_errors:
+                    print(message)
+
+                sys.exit(1)
         else:
             sys.exit(0)

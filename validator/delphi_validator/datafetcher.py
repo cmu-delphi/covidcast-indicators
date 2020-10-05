@@ -7,7 +7,6 @@ import re
 from os import listdir
 from os.path import isfile, join
 from datetime import datetime
-from typing import List
 from itertools import product
 import pandas as pd
 import numpy as np
@@ -21,7 +20,8 @@ filename_regex = re.compile(
 
 def read_filenames(path):
     """
-    Return a list of tuples of every filename and regex match to the CSV filename format in the specified directory.
+    Return a list of tuples of every filename and regex match to the CSV filename
+     format in the specified directory.
 
     Arguments:
         - path: path to the directory containing CSV data files.
@@ -77,13 +77,15 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
     Generator that assembles data within the specified date range for a given geo_sig_cmbo.
 
     Arguments:
-        - geo_sig_cmbo: list of geo type-signal type combinations that we expect to see, based on combinations reported available by Covidcast metadata
+        - geo_sig_cmbo: list of geo type-signal type combinations that we expect to see,
+        based on combinations reported available by Covidcast metadata
         - data_folder: path to the directory containing CSV data files.
         - filenames: list of filenames
         - date_slist: list of dates (formatted as strings) to check
 
     Returns:
-        - dataframe containing data for all dates in date_slist for a given geo type-signal type combination
+        - dataframe containing data for all dates in date_slist for a given
+        geo type-signal type combination
         - relevant geo type (str)
         - relevant signal type (str)
     """
@@ -116,13 +118,14 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
 
 def fetch_api_reference(data_source, start_date, end_date, geo, sig):
     """
-    Get and process API data for use as a reference. Formatting is changed to match that of source data CSVs.
+    Get and process API data for use as a reference. Formatting is changed
+    to match that of source data CSVs.
     """
     api_df = covidcast.signal(
         data_source, sig, start_date, end_date, geo)
 
     if not isinstance(api_df, pd.DataFrame):
-        custom_msg = "Error fetching data from " + str(survey_date) + \
+        custom_msg = "Error fetching data from " + str(start_date) + \
                      " to " + str(end_date) + \
                      "for data source: " + data_source + \
                      ", signal-type: " + sig + \
@@ -140,4 +143,4 @@ def fetch_api_reference(data_source, start_date, end_date, geo, sig):
         columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}).drop(
         ['direction', 'issue', 'lag'], axis=1).reindex(columns=column_names)
 
-    return(api_df)
+    return api_df

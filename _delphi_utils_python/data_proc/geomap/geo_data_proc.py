@@ -204,7 +204,7 @@ def create_jhu_uid_fips_crosswalk():
     )
     puerto_rico_unassigned = pd.DataFrame(
         [
-            # Map the Unassigned and Out of STate categories to the cusom megaFIPS 72000
+            # Map the Unassigned and Out of State categories to the cusom megaFIPS 72000
             {"jhu_uid": "63072888", "fips": "72000", "weight": 1.0},
             {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
         ]

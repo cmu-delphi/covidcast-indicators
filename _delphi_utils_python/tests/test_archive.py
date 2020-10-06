@@ -15,6 +15,50 @@ from delphi_utils import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer
 
 CSV_DTYPES = {"geo_id": str, "val": float, "se": float, "sample_size": float}
 
+CSVS_BEFORE = {
+    # Common
+    "csv0": pd.DataFrame({
+        "geo_id": ["1", "2", "3"],
+        "val": [1.0, 2.0, 3.0],
+        "se": [0.1, 0.2, 0.3],
+        "sample_size": [10.0, 20.0, 30.0]}),
+
+    "csv1": pd.DataFrame({
+        "geo_id": ["1", "2", "3"],
+        "val": [1.0, 2.0, 3.0],
+        "se": [np.nan, 0.2, 0.3],
+        "sample_size": [10.0, 20.0, 30.0]}),
+
+    # Deleted
+    "csv2": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0]}),
+}
+
+CSVS_AFTER = {
+    # Common
+    "csv0": pd.DataFrame({
+        "geo_id": ["1", "2", "3"],
+        "val": [1.0, 2.0, 3.0],
+        "se": [0.1, 0.2, 0.3],
+        "sample_size": [10.0, 20.0, 30.0]}),
+
+    "csv1": pd.DataFrame({
+        "geo_id": ["1", "2", "4"],
+        "val": [1.0, 2.1, 4.0],
+        "se": [np.nan, 0.21, np.nan],
+        "sample_size": [10.0, 21.0, 40.0]}),
+
+    # Added
+    "csv3": pd.DataFrame({
+        "geo_id": ["2"],
+        "val": [2.0],
+        "se": [0.2],
+        "sample_size": [20.0]}),
+}
+
 class TestArchiveDiffer:
 
     def test_stubs(self):
@@ -33,49 +77,6 @@ class TestArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
-        csvs_before = {
-            # Common
-            "csv0": pd.DataFrame({
-                "geo_id": ["1", "2", "3"],
-                "val": [1.0, 2.0, 3.0],
-                "se": [0.1, 0.2, 0.3],
-                "sample_size": [10.0, 20.0, 30.0]}),
-
-            "csv1": pd.DataFrame({
-                "geo_id": ["1", "2", "3"],
-                "val": [1.0, 2.0, 3.0],
-                "se": [np.nan, 0.2, 0.3],
-                "sample_size": [10.0, 20.0, 30.0]}),
-
-            # Deleted
-            "csv2": pd.DataFrame({
-                "geo_id": ["1"],
-                "val": [1.0],
-                "se": [0.1],
-                "sample_size": [10.0]}),
-        }
-
-        csvs_after = {
-            # Common
-            "csv0": pd.DataFrame({
-                "geo_id": ["1", "2", "3"],
-                "val": [1.0, 2.0, 3.0],
-                "se": [0.1, 0.2, 0.3],
-                "sample_size": [10.0, 20.0, 30.0]}),
-
-            "csv1": pd.DataFrame({
-                "geo_id": ["1", "2", "4"],
-                "val": [1.0, 2.1, 4.0],
-                "se": [np.nan, 0.21, np.nan],
-                "sample_size": [10.0, 21.0, 40.0]}),
-
-            # Added
-            "csv3": pd.DataFrame({
-                "geo_id": ["2"],
-                "val": [2.0],
-                "se": [0.2],
-                "sample_size": [20.0]}),
-        }
         csv1_diff = pd.DataFrame({
             "geo_id": ["2", "4"],
             "val": [2.1, 4.0],
@@ -92,9 +93,9 @@ class TestArchiveDiffer:
             arch_diff.diff_exports()
 
         # Simulate cache updated, and signal ran finish
-        for csv_name, df in csvs_before.items():
+        for csv_name, df in CSVS_BEFORE.items():
             df.to_csv(join(cache_dir, f"{csv_name}.csv"), index=False)
-        for csv_name, df in csvs_after.items():
+        for csv_name, df in CSVS_AFTER.items():
             df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
         arch_diff._cache_updated = True
 
@@ -144,16 +145,6 @@ def s3_client():
 class TestS3ArchiveDiffer:
     bucket_name = "test-bucket"
     indicator_prefix = "test"
-    csv1 = pd.DataFrame({
-            "geo_id": ["1", "2", "3"],
-            "val": [1.0, 2.0, 3.0],
-            "se": [0.1, 0.2, 0.3],
-            "sample_size": [10.0, 20.0, 30.0]})
-    csv2 = pd.DataFrame({
-            "geo_id": ["1", "2", "4"],
-            "val": [1.0, 2.1, 4.0],
-            "se": [0.1, 0.21, 0.4],
-            "sample_size": [10.0, 21.0, 40.0]})
     
     @mock_s3
     def test_update_cache(self, tmp_path, s3_client):
@@ -162,10 +153,12 @@ class TestS3ArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
+        csv1 = CSVS_BEFORE["csv1"]
+        csv2 = CSVS_AFTER["csv1"]
         csv1_buf = StringIO()
         csv2_buf = StringIO()
-        self.csv1.to_csv(csv1_buf, index=False)
-        self.csv2.to_csv(csv2_buf, index=False)
+        csv1.to_csv(csv1_buf, index=False)
+        csv2.to_csv(csv2_buf, index=False)
 
         # Set up bucket with both objects
         s3_client.create_bucket(Bucket=self.bucket_name)
@@ -179,7 +172,7 @@ class TestS3ArchiveDiffer:
             Body=BytesIO(csv2_buf.getvalue().encode()))
 
         # Save only csv1 into cache folder
-        self.csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
+        csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
         assert set(listdir(cache_dir)) == {"csv1.csv"}
 
         arch_diff = S3ArchiveDiffer(
@@ -198,7 +191,8 @@ class TestS3ArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
-        self.csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
+        csv1 = CSVS_BEFORE["csv1"]
+        csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
 
         s3_client.create_bucket(Bucket=self.bucket_name)
 
@@ -219,7 +213,51 @@ class TestS3ArchiveDiffer:
             Bucket=self.bucket_name,
             Key=f"{self.indicator_prefix}/csv1.csv")["Body"]
 
-        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), self.csv1)        
+        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)        
+
+    def test_run(self, tmp_path, s3_client):
+        cache_dir = join(str(tmp_path), "cache")
+        export_dir = join(str(tmp_path), "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+        
+        # Set up bucket with all objects in `CSVS_BEFORE`.
+        s3_client.create_bucket(Bucket=self.bucket_name)
+        for csv_name, df in CSVS_BEFORE.items():
+            csv_buf = StringIO()
+            df.to_csv(csv_buf, index=False)
+            s3_client.put_object(
+                Bucket=self.bucket_name,
+                Key=f"{self.indicator_prefix}/{csv_name}.csv",
+                Body=BytesIO(csv_buf.getvalue().encode()))
+
+        
+        # Set up export dir with all objects in `CSVS_AFTER`.
+        for csv_name, df in CSVS_AFTER.items():
+            df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
+
+        arch_diff = S3ArchiveDiffer(
+            cache_dir, export_dir,
+            self.bucket_name, self.indicator_prefix,
+            AWS_CREDENTIALS)
+        arch_diff.run()
+
+        for csv_name, df in CSVS_AFTER.items():
+            body = s3_client.get_object(
+                Bucket=self.bucket_name,
+                Key=f"{self.indicator_prefix}/{csv_name}.csv")["Body"]
+            assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), df)        
+
+        # Check exports directory just has incremental changes
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
+        csv1_diff = pd.DataFrame({
+            "geo_id": ["2", "4"],
+            "val": [2.1, 4.0],
+            "se": [0.21, np.nan],
+            "sample_size": [21.0, 40.0]})        
+        assert_frame_equal(
+            pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
+            csv1_diff)
 
 class TestGitArchiveDiffer:
 

@@ -144,7 +144,17 @@ def s3_client():
 class TestS3ArchiveDiffer:
     bucket_name = "test-bucket"
     indicator_prefix = "test"
-
+    csv1 = pd.DataFrame({
+            "geo_id": ["1", "2", "3"],
+            "val": [1.0, 2.0, 3.0],
+            "se": [0.1, 0.2, 0.3],
+            "sample_size": [10.0, 20.0, 30.0]})
+    csv2 = pd.DataFrame({
+            "geo_id": ["1", "2", "4"],
+            "val": [1.0, 2.1, 4.0],
+            "se": [0.1, 0.21, 0.4],
+            "sample_size": [10.0, 21.0, 40.0]})
+    
     @mock_s3
     def test_update_cache(self, tmp_path, s3_client):
         cache_dir = join(str(tmp_path), "cache")
@@ -152,21 +162,10 @@ class TestS3ArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
-        csv1 = pd.DataFrame({
-            "geo_id": ["1", "2", "3"],
-            "val": [1.0, 2.0, 3.0],
-            "se": [0.1, 0.2, 0.3],
-            "sample_size": [10.0, 20.0, 30.0]})
         csv1_buf = StringIO()
-        csv1.to_csv(csv1_buf, index=False)
-
-        csv2 = pd.DataFrame({
-            "geo_id": ["1", "2", "4"],
-            "val": [1.0, 2.1, 4.0],
-            "se": [0.1, 0.21, 0.4],
-            "sample_size": [10.0, 21.0, 40.0]})
         csv2_buf = StringIO()
-        csv2.to_csv(csv2_buf, index=False)
+        self.csv1.to_csv(csv1_buf, index=False)
+        self.csv2.to_csv(csv2_buf, index=False)
 
         # Set up bucket with both objects
         s3_client.create_bucket(Bucket=self.bucket_name)
@@ -180,7 +179,7 @@ class TestS3ArchiveDiffer:
             Body=BytesIO(csv2_buf.getvalue().encode()))
 
         # Save only csv1 into cache folder
-        csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
+        self.csv1.to_csv(join(cache_dir, "csv1.csv"), index=False)
         assert set(listdir(cache_dir)) == {"csv1.csv"}
 
         arch_diff = S3ArchiveDiffer(
@@ -199,12 +198,7 @@ class TestS3ArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
-        csv1 = pd.DataFrame({
-            "geo_id": ["1", "2", "3"],
-            "val": [1.0, 2.0, 3.0],
-            "se": [0.1, 0.2, 0.3],
-            "sample_size": [10.0, 20.0, 30.0]})
-        csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
+        self.csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
 
         s3_client.create_bucket(Bucket=self.bucket_name)
 
@@ -225,7 +219,7 @@ class TestS3ArchiveDiffer:
             Bucket=self.bucket_name,
             Key=f"{self.indicator_prefix}/csv1.csv")["Body"]
 
-        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
+        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), self.csv1)        
 
 class TestGitArchiveDiffer:
 

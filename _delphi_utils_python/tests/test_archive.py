@@ -59,6 +59,7 @@ CSVS_AFTER = {
         "sample_size": [20.0]}),
 }
 
+
 class TestArchiveDiffer:
 
     def test_stubs(self):
@@ -69,7 +70,6 @@ class TestArchiveDiffer:
 
         with pytest.raises(NotImplementedError):
             arch_diff.archive_exports(None)
-
 
     def test_diff_and_filter_exports(self, tmp_path):
         cache_dir = join(str(tmp_path), "cache")
@@ -103,13 +103,16 @@ class TestArchiveDiffer:
 
         # Check return values
         assert set(deleted_files) == {join(cache_dir, "csv2.csv")}
-        assert set(common_diffs.keys()) == {join(export_dir, f) for f in ["csv0.csv", "csv1.csv"]}
+        assert set(common_diffs.keys()) == {
+            join(export_dir, f) for f in ["csv0.csv", "csv1.csv"]}
         assert set(new_files) == {join(export_dir, "csv3.csv")}
         assert common_diffs[join(export_dir, "csv0.csv")] is None
-        assert common_diffs[join(export_dir, "csv1.csv")] == join(export_dir, "csv1.csv.diff")
+        assert common_diffs[join(export_dir, "csv1.csv")] == join(
+            export_dir, "csv1.csv.diff")
 
         # Check filesystem for actual files
-        assert set(listdir(export_dir)) == {"csv0.csv", "csv1.csv", "csv1.csv.diff", "csv3.csv"}
+        assert set(listdir(export_dir)) == {
+            "csv0.csv", "csv1.csv", "csv1.csv.diff", "csv3.csv"}
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv.diff"), dtype=CSV_DTYPES),
             csv1_diff)
@@ -132,20 +135,23 @@ class TestArchiveDiffer:
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
 
+
 AWS_CREDENTIALS = {
     "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
     "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY",
 }
+
 
 @pytest.fixture(scope="function")
 def s3_client():
     with mock_s3():
         yield Session(**AWS_CREDENTIALS).client("s3")
 
+
 class TestS3ArchiveDiffer:
     bucket_name = "test-bucket"
     indicator_prefix = "test"
-    
+
     @mock_s3
     def test_update_cache(self, tmp_path, s3_client):
         cache_dir = join(str(tmp_path), "cache")
@@ -213,14 +219,14 @@ class TestS3ArchiveDiffer:
             Bucket=self.bucket_name,
             Key=f"{self.indicator_prefix}/csv1.csv")["Body"]
 
-        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)        
+        assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
 
     def test_run(self, tmp_path, s3_client):
         cache_dir = join(str(tmp_path), "cache")
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)
         mkdir(export_dir)
-        
+
         # Set up bucket with all objects in `CSVS_BEFORE`.
         s3_client.create_bucket(Bucket=self.bucket_name)
         for csv_name, df in CSVS_BEFORE.items():
@@ -231,7 +237,6 @@ class TestS3ArchiveDiffer:
                 Key=f"{self.indicator_prefix}/{csv_name}.csv",
                 Body=BytesIO(csv_buf.getvalue().encode()))
 
-        
         # Set up export dir with all objects in `CSVS_AFTER`.
         for csv_name, df in CSVS_AFTER.items():
             df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
@@ -246,7 +251,7 @@ class TestS3ArchiveDiffer:
             body = s3_client.get_object(
                 Bucket=self.bucket_name,
                 Key=f"{self.indicator_prefix}/{csv_name}.csv")["Body"]
-            assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), df)        
+            assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), df)
 
         # Check exports directory just has incremental changes
         assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
@@ -254,10 +259,11 @@ class TestS3ArchiveDiffer:
             "geo_id": ["2", "4"],
             "val": [2.1, 4.0],
             "se": [0.21, np.nan],
-            "sample_size": [21.0, 40.0]})        
+            "sample_size": [21.0, 40.0]})
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
+
 
 class TestGitArchiveDiffer:
 
@@ -268,7 +274,8 @@ class TestGitArchiveDiffer:
         mkdir(export_dir)
 
         with pytest.raises(AssertionError):
-            GitArchiveDiffer(cache_dir, export_dir, override_dirty=False, commit_partial_success=True)
+            GitArchiveDiffer(cache_dir, export_dir,
+                             override_dirty=False, commit_partial_success=True)
 
         with pytest.raises(exc.InvalidGitRepositoryError):
             GitArchiveDiffer(cache_dir, export_dir)
@@ -291,11 +298,13 @@ class TestGitArchiveDiffer:
         with open(join(cache_dir, "test.txt"), "w") as f:
             f.write("123")
 
-        arch_diff1 = GitArchiveDiffer(cache_dir, export_dir, override_dirty=False)
+        arch_diff1 = GitArchiveDiffer(
+            cache_dir, export_dir, override_dirty=False)
         with pytest.raises(AssertionError):
             arch_diff1.update_cache()
 
-        arch_diff2 = GitArchiveDiffer(cache_dir, export_dir, override_dirty=True)
+        arch_diff2 = GitArchiveDiffer(
+            cache_dir, export_dir, override_dirty=True)
         arch_diff2.update_cache()
         assert arch_diff2._cache_updated
 
@@ -376,7 +385,8 @@ class TestGitArchiveDiffer:
         csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
 
         # Try to archive csv1.csv and non-existant csv2.csv
-        exported_files = [join(export_dir, "csv1.csv"), join(export_dir, "csv2.csv")]
+        exported_files = [join(export_dir, "csv1.csv"),
+                          join(export_dir, "csv2.csv")]
 
         # All should fail, cannot override dirty and file not found
         arch_diff1 = GitArchiveDiffer(

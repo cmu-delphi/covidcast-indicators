@@ -382,21 +382,21 @@ class TestGeoMapper:
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
         assert new_data2["hhs_region_number"].unique().size == 2
 
-        # fips -> national
-        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "national")
+        # fips -> nation
+        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "nation")
         assert new_data.equals(
             pd.DataFrame().from_dict(
                 {
                     "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
-                    "national": {0: "United States"},
+                    "nation": {0: "us"},
                     "count": {0: 10024.0},
                     "total": {0: 100006.0},
                 }
             )
         )
 
-        # zip -> national
-        new_data = gmpr.replace_geocode(self.zip_data, "zip", "national")
+        # zip -> nation
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "nation")
         assert new_data.equals(
             pd.DataFrame().from_dict(
                 {
@@ -404,7 +404,7 @@ class TestGeoMapper:
                         0: pd.Timestamp("2018-01-01"),
                         1: pd.Timestamp("2018-01-03"),
                     },
-                    "national": {0: "United States", 1: "United States"},
+                    "nation": {0: "us", 1: "us"},
                     "count": {0: 900, 1: 886},
                     "total": {0: 1800, 1: 1772},
                 }

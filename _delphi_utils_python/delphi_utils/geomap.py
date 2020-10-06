@@ -64,7 +64,7 @@ class GeoMapper:
     - [x] fips -> msa : unweighted
     - [x] fips -> megacounty
     - [x] fips -> hrr
-    - [x] national
+    - [x] nation
     - [ ] zip -> dma (postponed)
 
     The GeoMapper instance loads crosswalk tables from the package data_dir. The
@@ -115,32 +115,43 @@ class GeoMapper:
         if self.crosswalks[from_code][to_code] is None:
             # Weighted crosswalks
             if (from_code, to_code) in [
-                    ("zip", "fips"),
-                    ("fips", "zip"),
-                    ("jhu_uid", "fips"),
-                    ("zip", "msa"),
-                    ("fips", "hrr"),
+                ("zip", "fips"),
+                ("fips", "zip"),
+                ("jhu_uid", "fips"),
+                ("zip", "msa"),
+                ("fips", "hrr"),
             ]:
                 self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream, dtype={from_code: str, to_code: str, "weight": float,},
+                    stream,
+                    dtype={
+                        from_code: str,
+                        to_code: str,
+                        "weight": float,
+                    },
                 )
             # Unweighted crosswalks
             elif (from_code, to_code) in [
-                    ("zip", "hrr"),
-                    ("fips", "msa"),
+                ("zip", "hrr"),
+                ("fips", "msa"),
             ]:
                 self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream, dtype={from_code: str, to_code: str},
+                    stream,
+                    dtype={from_code: str, to_code: str},
                 )
             # Special table of state codes, state IDs, and state names
             elif (from_code, to_code) == ("state", "state"):
                 self.crosswalks[from_code][to_code] = pd.read_csv(
                     stream,
-                    dtype={"state_code": str, "state_id": str, "state_name": str,},
+                    dtype={
+                        "state_code": str,
+                        "state_id": str,
+                        "state_name": str,
+                    },
                 )
             elif (from_code, to_code) == ("state_code", "hhs_region_number"):
                 self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream, dtype={"state_code": str, "hhs_region_number": str},
+                    stream,
+                    dtype={"state_code": str, "hhs_region_number": str},
                 )
             elif (from_code, to_code) == ("zip", "state"):
                 self.crosswalks[from_code][to_code] = pd.read_csv(
@@ -166,7 +177,11 @@ class GeoMapper:
             # Population tables
             elif (from_code, to_code) in [("fips", "pop"), ("zip", "pop")]:
                 self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream, dtype={from_code: str, "pop": int,},
+                    stream,
+                    dtype={
+                        from_code: str,
+                        "pop": int,
+                    },
                 )
         return self.crosswalks[from_code][to_code]
 
@@ -180,13 +195,13 @@ class GeoMapper:
 
     @staticmethod
     def megacounty_creation(
-            data,
-            thr_count,
-            thr_win_len,
-            thr_col="visits",
-            fips_col="fips",
-            date_col="date",
-            mega_col="megafips",
+        data,
+        thr_count,
+        thr_win_len,
+        thr_col="visits",
+        fips_col="fips",
+        date_col="date",
+        mega_col="megafips",
     ):
         """create megacounty column
 
@@ -231,12 +246,14 @@ class GeoMapper:
         return data_roll.set_index([fips_col, date_col])[mega_col]
 
     # Conversion functions
-    def add_geocode(self, df, from_code, new_code, from_col=None, new_col=None, dropna=True):
+    def add_geocode(
+        self, df, from_code, new_code, from_col=None, new_col=None, dropna=True
+    ):
         """Add a new geocode column to a dataframe.
 
         Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr, national
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, national
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
+        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
         - state_x -> state_y, where x and y are in {code, id, name}
         - state_code -> hhs_region_number
@@ -278,27 +295,31 @@ class GeoMapper:
             else:
                 df[from_col] = df[from_col].astype(str)
 
-        # Assuming that the passed-in records are all United States data
-        if new_code == "national":
-            df[new_col] = df[from_col].apply(lambda x: "United States")
+        # Assuming that the passed-in records are all United States data, at the moment
+        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]:
+            df[new_col] = df[from_col].apply(lambda x: "us")
             return df
+        elif new_code == "nation":
+            raise ValueError(
+                "Conversion to the nation level is only supported from the FIPS and ZIP codes."
+            )
 
         # state codes are all stored in one table
         if new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
-            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
+            crosswalk = crosswalk.rename(
+                columns={from_code: from_col, new_code: new_col}
+            )
         else:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code=new_code)
-            crosswalk = crosswalk.rename(columns={from_code: from_col, new_code: new_col})
+            crosswalk = crosswalk.rename(
+                columns={from_code: from_col, new_code: new_col}
+            )
 
         if dropna:
-            df = df.merge(
-                crosswalk, left_on=from_col, right_on=from_col, how="inner"
-            )
+            df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="inner")
         else:
-            df = df.merge(
-                crosswalk, left_on=from_col, right_on=from_col, how="left"
-            )
+            df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="left")
 
         # Drop extra state columns
         if new_code in state_codes:
@@ -308,21 +329,21 @@ class GeoMapper:
         return df
 
     def replace_geocode(
-            self,
-            df,
-            from_code,
-            new_code,
-            from_col=None,
-            new_col=None,
-            date_col="date",
-            data_cols=None,
-            dropna=True
+        self,
+        df,
+        from_code,
+        new_code,
+        from_col=None,
+        new_col=None,
+        date_col="date",
+        data_cols=None,
+        dropna=True,
     ):
         """Replace a geocode column in a dataframe.
 
         Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr
-        - zip -> state_code, state_id, state_name, fips, msa, hrr
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
+        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
         - state_x -> state_y, where x and y are in {code, id, name}
         - state_code -> hhs_region_number
@@ -393,8 +414,10 @@ class GeoMapper:
         geocode_col = geocode_type if geocode_col is None else geocode_col
 
         if geocode_type not in ["fips", "zip"]:
-            raise ValueError("Only fips and zip geocodes supported. \
-                For other codes, aggregate those.")
+            raise ValueError(
+                "Only fips and zip geocodes supported. \
+                For other codes, aggregate those."
+            )
 
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
@@ -411,14 +434,14 @@ class GeoMapper:
 
     @staticmethod
     def fips_to_megacounty(
-            data,
-            thr_count,
-            thr_win_len,
-            thr_col="visits",
-            fips_col="fips",
-            date_col="date",
-            mega_col="megafips",
-            count_cols=None,
+        data,
+        thr_count,
+        thr_win_len,
+        thr_col="visits",
+        fips_col="fips",
+        date_col="date",
+        mega_col="megafips",
+        count_cols=None,
     ):
         """Convert and aggregate from FIPS to megaFIPS
 
@@ -464,7 +487,7 @@ class GeoMapper:
     ### DEPRECATED FUNCTIONS BELOW
 
     def convert_fips_to_state_code(
-            self, data, fips_col="fips", state_code_col="state_code"
+        self, data, fips_col="fips", state_code_col="state_code"
     ):
         """DEPRECATED
         Add a state_code column to a dataframe with fips column.
@@ -499,12 +522,12 @@ class GeoMapper:
         return data
 
     def fips_to_state_code(
-            self,
-            data,
-            fips_col="fips",
-            date_col="date",
-            count_cols=None,
-            state_code_col="state_code",
+        self,
+        data,
+        fips_col="fips",
+        date_col="date",
+        count_cols=None,
+        state_code_col="state_code",
     ):
         """DEPRECATED
         Translate dataframe from fips to state.
@@ -569,7 +592,7 @@ class GeoMapper:
         return data
 
     def convert_fips_to_msa(
-            self, data, fips_col="fips", msa_col="msa", create_mega=False
+        self, data, fips_col="fips", msa_col="msa", create_mega=False
     ):
         """DEPRECATED
         Translate dataframe from fips to msa.
@@ -618,7 +641,7 @@ class GeoMapper:
         return data
 
     def convert_fips_to_zip(
-            self, data, fips_col="fips", zip_col="zip", weight_col="weight"
+        self, data, fips_col="fips", zip_col="zip", weight_col="weight"
     ):
         """DEPRECATED
         Create ZIP column from FIPS column.
@@ -656,7 +679,7 @@ class GeoMapper:
         return data
 
     def convert_state_code_to_state_id(
-            self, data, state_code_col="state_code", state_id_col="state_id"
+        self, data, state_code_col="state_code", state_id_col="state_id"
     ):
         """DEPRECATED
         create state_id column from state_code column
@@ -688,7 +711,7 @@ class GeoMapper:
         return data
 
     def convert_zip_to_fips(
-            self, data, zip_col="zip", fips_col="fips", weight_col="weight"
+        self, data, zip_col="zip", fips_col="fips", weight_col="weight"
     ):
         """DEPRECATED
         Create FIPS column from ZIP column.
@@ -749,7 +772,7 @@ class GeoMapper:
         return data
 
     def convert_zip_to_msa(
-            self, data, zip_col="zip", msa_col="msa", date_col="date", count_cols=None
+        self, data, zip_col="zip", msa_col="msa", date_col="date", count_cols=None
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -770,7 +793,7 @@ class GeoMapper:
         return data
 
     def zip_to_msa(
-            self, data, zip_col="zip", msa_col="msa", date_col="date", count_cols=None
+        self, data, zip_col="zip", msa_col="msa", date_col="date", count_cols=None
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -796,12 +819,12 @@ class GeoMapper:
         return data.reset_index()
 
     def convert_zip_to_state_code(
-            self,
-            data,
-            zip_col="zip",
-            state_code_col="state_code",
-            date_col="date",
-            count_cols=None,
+        self,
+        data,
+        zip_col="zip",
+        state_code_col="state_code",
+        date_col="date",
+        count_cols=None,
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -826,12 +849,12 @@ class GeoMapper:
         return data
 
     def zip_to_state_code(
-            self,
-            data,
-            zip_col="zip",
-            state_code_col="state_code",
-            date_col="date",
-            count_cols=None,
+        self,
+        data,
+        zip_col="zip",
+        state_code_col="state_code",
+        date_col="date",
+        count_cols=None,
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -857,12 +880,12 @@ class GeoMapper:
         return data.reset_index()
 
     def convert_zip_to_state_id(
-            self,
-            data,
-            zip_col="zip",
-            state_id_col="state_id",
-            date_col="date",
-            count_cols=None,
+        self,
+        data,
+        zip_col="zip",
+        state_id_col="state_id",
+        date_col="date",
+        count_cols=None,
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -887,12 +910,12 @@ class GeoMapper:
         return data
 
     def zip_to_state_id(
-            self,
-            data,
-            zip_col="zip",
-            state_id_col="state_id",
-            date_col="date",
-            count_cols=None,
+        self,
+        data,
+        zip_col="zip",
+        state_id_col="state_id",
+        date_col="date",
+        count_cols=None,
     ):
         """DEPRECATED"""
         warnings.warn(
@@ -918,12 +941,12 @@ class GeoMapper:
         return data.reset_index()
 
     def fips_to_state_id(
-            self,
-            data,
-            fips_col="fips",
-            date_col="date",
-            count_cols=None,
-            state_id_col="state_id",
+        self,
+        data,
+        fips_col="fips",
+        date_col="date",
+        count_cols=None,
+        state_id_col="state_id",
     ):
         """DEPRECATED
         Translate dataframe from fips to state.
@@ -962,13 +985,13 @@ class GeoMapper:
         return data.reset_index()
 
     def fips_to_msa(
-            self,
-            data,
-            fips_col="fips",
-            date_col="date",
-            count_cols=None,
-            create_mega=False,
-            msa_col="msa",
+        self,
+        data,
+        fips_col="fips",
+        date_col="date",
+        count_cols=None,
+        create_mega=False,
+        msa_col="msa",
     ):
         """DEPRECATED
         Translate dataframe from fips to metropolitan statistical area (msa).
@@ -1015,7 +1038,7 @@ class GeoMapper:
         return data.reset_index()
 
     def zip_to_fips(
-            self, data, zip_col="zip", fips_col="fips", date_col="date", count_cols=None
+        self, data, zip_col="zip", fips_col="fips", date_col="date", count_cols=None
     ):
         """DEPRECATED
         Convert and aggregate from ZIP to FIPS.
@@ -1059,7 +1082,7 @@ class GeoMapper:
         return data.reset_index()
 
     def zip_to_hrr(
-            self, data, zip_col="zip", hrr_col="hrr", date_col="date", count_cols=None
+        self, data, zip_col="zip", hrr_col="hrr", date_col="date", count_cols=None
     ):
         """DEPRECATED
         Convert and aggregate from ZIP to FIPS.
@@ -1093,7 +1116,7 @@ class GeoMapper:
         return data.reset_index()
 
     def convert_jhu_uid_to_fips(
-            self, data, jhu_col="jhu_uid", fips_col="fips", weight_col="weight"
+        self, data, jhu_col="jhu_uid", fips_col="fips", weight_col="weight"
     ):
         """DEPRECATED
         create fips (county) column from jhu uid column
@@ -1127,7 +1150,7 @@ class GeoMapper:
         return data
 
     def jhu_uid_to_fips(
-            self, data, jhu_col="jhu_uid", fips_col="fips", date_col="date", count_cols=None
+        self, data, jhu_col="jhu_uid", fips_col="fips", date_col="date", count_cols=None
     ):
         """DEPRECATED
         Convert and aggregate from zip to fips
@@ -1165,7 +1188,7 @@ class GeoMapper:
         return data.reset_index()
 
     def fips_to_zip(
-            self, data, fips_col="fips", date_col="date", count_cols=None, zip_col="zip"
+        self, data, fips_col="fips", date_col="date", count_cols=None, zip_col="zip"
     ):
         """DEPRECATED
         Convert and aggregate from fips to zip
@@ -1220,14 +1243,22 @@ class GeoMapper:
             DeprecationWarning,
         )
 
-        data = self.convert_fips_to_zip(data, fips_col=fips_col, zip_col="zip",)
-        data = self.convert_zip_to_hrr(data, zip_col="zip", hrr_col=hrr_col,)
+        data = self.convert_fips_to_zip(
+            data,
+            fips_col=fips_col,
+            zip_col="zip",
+        )
+        data = self.convert_zip_to_hrr(
+            data,
+            zip_col="zip",
+            hrr_col=hrr_col,
+        )
         data.drop(columns="zip")
         data = data.groupby([fips_col, hrr_col]).sum().reset_index()
         return data
 
     def fips_to_hrr(
-            self, data, fips_col="fips", date_col="date", count_cols=None, hrr_col="hrr"
+        self, data, fips_col="fips", date_col="date", count_cols=None, hrr_col="hrr"
     ):
         """DEPRECATED
         convert and aggregate from fips to hrr

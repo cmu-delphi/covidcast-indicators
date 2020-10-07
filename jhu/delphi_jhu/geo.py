@@ -38,7 +38,6 @@ def geo_map(df: pd.DataFrame, geo_res: str):
         df = gmpr.replace_geocode(df, "fips", "state_id", new_col="geo_id", date_col="timestamp")
     else:
         df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
-    
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     df['new_counts'] = df['new_counts']

@@ -227,7 +227,7 @@ class TestS3ArchiveDiffer:
         mkdir(cache_dir)
         mkdir(export_dir)
 
-        # Set up bucket with all objects in `CSVS_BEFORE`.
+        # Set up current buckets to be `CSVS_BEFORE`.
         s3_client.create_bucket(Bucket=self.bucket_name)
         for csv_name, df in CSVS_BEFORE.items():
             csv_buf = StringIO()
@@ -237,16 +237,18 @@ class TestS3ArchiveDiffer:
                 Key=f"{self.indicator_prefix}/{csv_name}.csv",
                 Body=BytesIO(csv_buf.getvalue().encode()))
 
-        # Set up export dir with all objects in `CSVS_AFTER`.
+        # Set up the exported files to be `CSVS_AFTER`.
         for csv_name, df in CSVS_AFTER.items():
             df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
 
+        # Create and run differ.
         arch_diff = S3ArchiveDiffer(
             cache_dir, export_dir,
             self.bucket_name, self.indicator_prefix,
             AWS_CREDENTIALS)
         arch_diff.run()
 
+        # Check that the buckets now contain the exported files.
         for csv_name, df in CSVS_AFTER.items():
             body = s3_client.get_object(
                 Bucket=self.bucket_name,
@@ -432,18 +434,21 @@ class TestGitArchiveDiffer:
         repo.index.commit(message="Initial commit")
         original_branch = repo.active_branch
 
-        arch_diff = GitArchiveDiffer(
-            cache_dir, export_dir,
-            branch_name=branch_name, override_dirty=True)
-
+        # Set up the current cache to contain `CSVS_BEFORE`.
         for csv_name, df in CSVS_BEFORE.items():
             df.to_csv(join(cache_dir, f"{csv_name}.csv"), index=False)
 
+        # Set up the current cache to contain `CSVS_AFTER`.
         for csv_name, df in CSVS_AFTER.items():
             df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
 
+        # Create and run differ.
+        arch_diff = GitArchiveDiffer(
+            cache_dir, export_dir,
+            branch_name=branch_name, override_dirty=True)
         arch_diff.run()
 
+        # Check that the archive branch contains `CSVS_AFTER`.
         arch_diff.get_branch(branch_name).checkout()
         for csv_name, df in CSVS_AFTER.items():
             assert_frame_equal(

@@ -221,6 +221,7 @@ class TestS3ArchiveDiffer:
 
         assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
 
+    @mock_s3
     def test_run(self, tmp_path, s3_client):
         cache_dir = join(str(tmp_path), "cache")
         export_dir = join(str(tmp_path), "export")

@@ -68,7 +68,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     df["timestamp"] = pd.to_datetime(df["timestamp"])
 
     gmpr = GeoMapper()
-    df = gmpr.jhu_uid_to_county(df, jhu_col="UID", date_col='timestamp')
+    df = gmpr.replace_geocode(df, "jhu_uid", "fips", from_col="UID", date_col="timestamp")
 
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Set population as NAN for fake fips

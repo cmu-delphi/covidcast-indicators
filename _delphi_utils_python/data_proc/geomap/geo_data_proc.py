@@ -76,10 +76,14 @@ def create_fips_zip_crosswalk():
     )
 
     # Rename and write to file
-    fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
+    fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(
+        columns={"pop": "weight"}
+    )
     fips_zip = fips_zip[fips_zip["weight"] > 0.0]
     fips_zip.to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
-    zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
+    zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(
+        columns={"pop": "weight"}
+    )
     zip_fips = zip_fips[zip_fips["weight"] > 0.0]
     zip_fips.to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
 
@@ -119,7 +123,11 @@ def create_fips_msa_crosswalk():
     }
     # The following line requires the xlrd package.
     msa_df = pd.read_excel(
-        FIPS_MSA_URL, skiprows=2, skipfooter=4, usecols=msa_cols.keys(), dtype=msa_cols,
+        FIPS_MSA_URL,
+        skiprows=2,
+        skipfooter=4,
+        usecols=msa_cols.keys(),
+        dtype=msa_cols,
     )
 
     metro_bool = (
@@ -218,21 +226,15 @@ def create_jhu_uid_fips_crosswalk():
     )
 
     # FIPS Codes that are just two digits long should be zero filled on the right.
-    # These are US states and territories Guam (66), Northern Mariana Islands (69),
+    # These are US state codes (XX) and the territories Guam (66), Northern Mariana Islands (69),
     # Virgin Islands (78), and Puerto Rico (72).
     fips_st = jhu_df["fips"].str.len() <= 2
     jhu_df.loc[fips_st, "fips"] = jhu_df.loc[fips_st, "fips"].str.ljust(5, "0")
 
-    # Drop the two FIPS codes in JHU (see above) that diverged from the official FIPS map
-    dup_ind = jhu_df["fips"].isin(hand_additions["fips"].values) | jhu_df["fips"].isin(
-        ["02158", "46102"]
-    )
-    jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
-
     # Drop the JHU UIDs that were hand-modified
     dup_ind = jhu_df["jhu_uid"].isin(
         pd.concat(
-            [hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned,]
+            [hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned]
         )["jhu_uid"].values
     )
     jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
@@ -240,7 +242,15 @@ def create_jhu_uid_fips_crosswalk():
     # Add weights of 1.0 to everything not in hand additions, then merge in hand-additions
     # Finally, zero fill FIPS
     jhu_df["weight"] = 1.0
-    jhu_df = pd.concat((jhu_df, hand_additions, unassigned_states, out_of_state))
+    jhu_df = pd.concat(
+        (
+            jhu_df,
+            hand_additions,
+            unassigned_states,
+            out_of_state,
+            puerto_rico_unassigned,
+        )
+    )
     jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
     jhu_df.to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), index=False)
 
@@ -264,8 +274,16 @@ def create_state_codes_crosswalk():
     # Add a few extra US state territories manually
     territories = pd.DataFrame(
         [
-            {"state_code": 70, "state_name": "Republic of Palau", "state_id": "pw",},
-            {"state_code": 68, "state_name": "Marshall Islands", "state_id": "mh",},
+            {
+                "state_code": 70,
+                "state_name": "Republic of Palau",
+                "state_id": "pw",
+            },
+            {
+                "state_code": 68,
+                "state_name": "Marshall Islands",
+                "state_id": "mh",
+            },
             {
                 "state_code": 64,
                 "state_name": "Federated States of Micronesia",
@@ -331,7 +349,15 @@ def create_fips_population_table():
     census_pop["pop"] = census_pop["POPESTIMATE2019"]
     census_pop = census_pop[["fips", "pop"]]
     census_pop = pd.concat(
-        [census_pop, pd.DataFrame({"fips": ["70002", "70003"], "pop": [0, 0],}),]
+        [
+            census_pop,
+            pd.DataFrame(
+                {
+                    "fips": ["70002", "70003"],
+                    "pop": [0, 0],
+                }
+            ),
+        ]
     )
     census_pop = census_pop.reset_index(drop=True)
 
@@ -357,7 +383,9 @@ def create_fips_population_table():
     df_pr = df_pr[["fips", "pop"]]
     # Create the Puerto Rico megaFIPS
     df_pr = df_pr[df_pr["fips"].isin([str(x) for x in range(72000, 72999)])]
-    df_pr = pd.concat([df_pr, pd.DataFrame([{"fips": "72000", "pop": df_pr["pop"].sum()}])])
+    df_pr = pd.concat(
+        [df_pr, pd.DataFrame([{"fips": "72000", "pop": df_pr["pop"].sum()}])]
+    )
 
     # Fill the missing Puerto Rico data with 2010 information
     df_pr = df_pr.groupby("fips").sum().reset_index()
@@ -406,7 +434,8 @@ def derive_fips_hrr_crosswalk():
         dtype={"fips": str, "zip": str, "weight": float},
     )
     zh_df = pd.read_csv(
-        join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), dtype={"zip": str, "hrr": str},
+        join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME),
+        dtype={"zip": str, "hrr": str},
     )
 
     (

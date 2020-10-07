@@ -8,7 +8,7 @@ import logging
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
 import covidcast
-from delphi_utils import read_params
+from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params
 
 # third party
 import numpy as np
@@ -21,7 +21,6 @@ from .sensor import EMRHospSensor
 from .weekday import Weekday
 from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, HRR, NA, FIPS
 
-from delphi_utils import GeoMapper
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
     """Write sensor values to csv.
@@ -171,7 +170,8 @@ class EMRHospSensorUpdator:
         self.burn_in_dates = drange(self.burnindate, self.dropdate)
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
-    def geo_reindex(self,data):
+
+    def geo_reindex(self, data):
         """Reindex based on geography, include all date, geo pairs
         Args:
             data: dataframe, the output of loadcombineddata
@@ -182,19 +182,20 @@ class EMRHospSensorUpdator:
         # get right geography
         geo = self.geo
         gmpr = GeoMapper()
-        if geo == "county":
-            data_frame = gmpr.county_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
-        elif geo == "state":
-            data_frame = gmpr.county_to_state(data,state_id_col=geo)
-        elif geo == "msa":
-            data_frame = gmpr.county_to_msa(data,msa_col=geo)
-        elif geo == "hrr":
-            data_frame = data  # data is already adjusted in aggregation step above
-        else:
+        if geo not in {"fips", "state", "msa", "hrr"}: 
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
             return False
+        elif geo == "county":
+            data_frame = gmpr.fips_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
+        elif geo == "state":
+            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
+        elif geo == "msa":
+            data_frame = gmpr.replace_geocode(data, "fips", "msa")
+        elif geo == "hrr":
+            data_frame = data  # data is already adjusted in aggregation step above
+
         self.unique_geo_ids = pd.unique(data_frame[geo])
-        data_frame.set_index([geo,'date'],inplace=True)
+        data_frame.set_index([geo, 'date'],inplace=True)
         # for each location, fill in all missing dates with 0 values
         multiindex = pd.MultiIndex.from_product((self.unique_geo_ids, self.fit_dates),
                                                 names=[geo, "date"])
@@ -281,4 +282,27 @@ class EMRHospSensorUpdator:
         for signal in self.updated_signal_names:
             write_to_csv(output_dict, self.se, signal, outpath)
         logging.debug(f"wrote files to {outpath}")
-        return True
+        params = read_params()
+
+        arch_diff = S3ArchiveDiffer(
+        params["cache_dir"],
+        params["export_dir"],
+        params["bucket_name"], "emr",
+        params["aws_credentials"])
+        arch_diff.update_cache()
+
+        _, common_diffs, new_files = arch_diff.diff_exports()
+
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = arch_diff.archive_exports(to_archive)
+        print(fails)
+
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+        arch_diff.filter_exports(succ_common_diffs)
+
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive '{exported_file}'")

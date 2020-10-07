@@ -50,24 +50,31 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
                 brand_df["naics_code"] == naics_code, "safegraph_brand_id"]
         filtered_df = df[df["safegraph_brand_ids"].isin(selected_brand_id)]
         metric_count_name = "_".join([metric, "num"])
-        result_dfs[metric] = pd.DataFrame(columns=[
-                "timestamp", metric_count_name, "zip"])
-        tempt_dfs = []
-        for idx in filtered_df.index:
-            visits = list(map(int, re.split(r"\[|,|\]",
-                        filtered_df.loc[idx]["visits_by_day"])[1:-1]))
-            start_date = filtered_df.loc[idx]["date_range_start"].date()
 
-            tempt_df = pd.DataFrame({
-                "timestamp": [pd.to_datetime(start_date) \
-                              + timedelta(days=i) for i in range(7)],
-                metric_count_name: visits,
-                "zip": filtered_df.loc[idx]["postal_code"]
-            })
-            tempt_dfs.append(tempt_df)
-        result_dfs[metric] = pd.concat(tempt_dfs)
-        result_dfs[metric] = result_dfs[metric].groupby(
-                                    ["timestamp", "zip"]).sum().reset_index()
+        # Create wide df of visit counts for each day of week, along with zip and date info
+        # The counts end up as object by default, so explicitly cast as ints
+        visits_df = pd.DataFrame(
+                filtered_df["visits_by_day"].str[1:-1].str.split(",").tolist(),
+                index=filtered_df.index).astype("int")
+        visits_df["zip"] = filtered_df["postal_code"]
+        # Just keep date only
+        visits_df["start_date"] = pd.to_datetime(filtered_df["date_range_start"], utc=True)
+        visits_df["start_date"] = visits_df["start_date"].dt.normalize().dt.tz_localize(None)
+
+        # Turn df into long format and calculate actual dates from start_date and day of week
+        visits_long = visits_df.melt(
+                id_vars=["zip", "start_date"],
+                var_name="day_of_week",
+                value_name=metric_count_name)
+        visits_long[metric_count_name] = visits_long[metric_count_name].astype("int")
+        day_offsets = pd.to_timedelta(visits_long["day_of_week"], "d")
+        visits_long["timestamp"] = visits_long["start_date"] + day_offsets
+        visits_long.drop(["start_date", "day_of_week"], axis=1, inplace=True)
+
+        # Aggregate sum across same timestamps and zips
+        result_dfs[metric] = visits_long.groupby(
+                ["timestamp", "zip"]).sum().reset_index()
+
     # Can have ~30k visits in restaurants missed in those zips in one week.
     # only ~200 visits missed for bars.
     return result_dfs
@@ -150,8 +157,11 @@ def process(fname, sensors, metrics, geo_resolutions,
     None
     """
     metric_names, naics_codes, wips = (list(x) for x in zip(*metrics))
+    used_cols = ["safegraph_brand_ids", "visits_by_day", "date_range_start", "date_range_end", "postal_code"]
+
     if ".csv.gz" in fname:
         df = pd.read_csv(fname,
+                         usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
         dfs = construct_signals(df, metric_names, naics_codes, brand_df)
         print("Finished pulling data from " + fname)
@@ -160,6 +170,7 @@ def process(fname, sensors, metrics, geo_resolutions,
         dfs_dict = {"bars_visit": [], "restaurants_visit": []}
         for fn in files:
             df = pd.read_csv(fn,
+                         usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
             dfs = construct_signals(df, metric_names, naics_codes, brand_df)
             dfs_dict["bars_visit"].append(dfs["bars_visit"])

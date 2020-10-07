@@ -419,3 +419,45 @@ class TestGitArchiveDiffer:
         assert set(succs) == {join(export_dir, "csv1.csv")}
         assert set(fails) == {join(export_dir, "csv2.csv")}
         assert repo.active_branch.set_commit("HEAD~1").commit == orig_commit
+
+    def test_run(self, tmp_path):
+        cache_dir = str(tmp_path / "cache")
+        export_dir = str(tmp_path / "export")
+        mkdir(cache_dir)
+        mkdir(export_dir)
+
+        branch_name = "test-branch"
+
+        repo = Repo.init(cache_dir)
+        repo.index.commit(message="Initial commit")
+        original_branch = repo.active_branch
+
+        arch_diff = GitArchiveDiffer(
+            cache_dir, export_dir,
+            branch_name=branch_name, override_dirty=True)
+
+        for csv_name, df in CSVS_BEFORE.items():
+            df.to_csv(join(cache_dir, f"{csv_name}.csv"), index=False)
+
+        for csv_name, df in CSVS_AFTER.items():
+            df.to_csv(join(export_dir, f"{csv_name}.csv"), index=False)
+
+        arch_diff.run()
+
+        arch_diff.get_branch(branch_name).checkout()
+        for csv_name, df in CSVS_AFTER.items():
+            assert_frame_equal(
+                pd.read_csv(
+                    join(cache_dir, f"{csv_name}.csv"), dtype=CSV_DTYPES), df)
+        original_branch.checkout()
+
+        # Check exports directory just has incremental changes
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
+        csv1_diff = pd.DataFrame({
+            "geo_id": ["2", "4"],
+            "val": [2.1, 4.0],
+            "se": [0.21, np.nan],
+            "sample_size": [21.0, 40.0]})
+        assert_frame_equal(
+            pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
+            csv1_diff)

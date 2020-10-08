@@ -83,13 +83,19 @@ The output will show the number of unit tests that passed and failed, along with
 ## Code tour
 
 * run.py: sends params.json fields to and runs the validation process
-* datafetcher.py: methods for loading source data
-* validate.py: methods for validating source data. Includes the individual check functions.
-* errors.py: custom validation errors
+* datafetcher.py: methods for loading source and API data
+* validate.py: methods for validating data. Includes the individual check methods and supporting functions.
+* errors.py: custom errors
 
 
 ## Adding checks
 
 To add a new validation check, define the check as a `Validator` class method in `validate.py`. Each check should append a descriptive error message to the `raised` attribute if triggered. All checks should allow the user to override exception raising for a specific file using the `exception_override` setting in `params.json`.
 
-Add the newly defined check to the `validate()` method to be executed. It should go in one of two sections: data sanity checks where a data file is compared against static format settings, or data trend and value checks where a set of data is compared against API data.
+This features requires that the `check_data_id` defined for an error uniquely identifies that combination of check and test data. This usually takes the form of a tuple of strings with the check method and test identifier, and test data filename or date, geo type, and signal name.
+
+Add the newly defined check to the `validate()` method to be executed. It should go in one of three sections:
+
+* data sanity checks where a data file is compared against static format settings,
+* data trend and value checks where a set of data is compared against recent API data, from the previous few days,
+* data trend and value checks where a set of data is compared against long term API data, from a few months ago

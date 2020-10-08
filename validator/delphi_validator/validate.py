@@ -10,6 +10,7 @@ from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
 
+from .errors import ValidationError
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_sig_cmbo, \
     read_geo_sig_cmbo_files, fetch_api_reference
@@ -71,24 +72,6 @@ def make_date_filter(start_date, end_date):
         return start_code <= code <= end_code
 
     return f
-
-
-class ValidationError(Exception):
-    """ Error raised when validation check fails. """
-
-    def __init__(self, check_data_id, expression, message):
-        """
-        Arguments:
-            - check_data_id: str or tuple/list of str uniquely identifying the
-            check that was run and on what data
-            - expression: relevant variables to message, e.g., if a date doesn't
-            pass a check, provide the date
-            - message: str explaining why an error was raised
-        """
-        self.check_data_id = (check_data_id,) if not isinstance(
-            check_data_id, tuple) and not isinstance(check_data_id, list) else tuple(check_data_id)
-        self.expression = expression
-        self.message = message
 
 
 class Validator():

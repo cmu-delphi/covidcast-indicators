@@ -3,8 +3,9 @@
 Custom validator exceptions.
 """
 
+
 class APIDataFetchError(Exception):
-    """Exception raised for errors during validation.
+    """Exception raised when reading API data goes wrong.
 
     Attributes:
         custom_msg -- parameters which caused the error
@@ -16,3 +17,22 @@ class APIDataFetchError(Exception):
 
     def __str__(self):
         return '{}'.format(self.custom_msg)
+
+
+class ValidationError(Exception):
+    """ Error raised when validation check fails. """
+
+    def __init__(self, check_data_id, expression, message):
+        """
+        Arguments:
+            - check_data_id: str or tuple/list of str uniquely identifying the
+            check that was run and on what data
+            - expression: relevant variables to message, e.g., if a date doesn't
+            pass a check, provide the date
+            - message: str explaining why an error was raised
+        """
+        self.check_data_id = (check_data_id,) if not isinstance(
+            check_data_id, tuple) and not isinstance(check_data_id, list) else tuple(check_data_id)
+        self.expression = expression
+        self.message = message
+        super().__init__(self.message)

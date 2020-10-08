@@ -2,6 +2,7 @@
 
 ## Current checks for indicator source data
 
+* Missing dates within the selected range
 * Appropriate file name
 * Recognized geographical type (county, state, etc)
 * Recognized geo id format (e.g. state is two lowercase letters)
@@ -15,22 +16,21 @@
 * If signal and stderr both = 0 (seen in Quidel data due to lack of Jeffreys correction, [issue 255](https://github.com/cmu-delphi/covidcast-indicators/issues/255#issuecomment-692196541))
 * Missing ‘sample_size’ values
 * Appropriate ‘sample_size’ values, ≥ 100 (default) or user-defined threshold
-* Similar number of obs per day as recent API data
-* Similar average values as API data
-* Missing dates within the selected range
+* Similar number of obs per day as recent API data (static threshold)
+* Similar average values as API data (static threshold)
 
 ## Current features
 
-* Errors are summarized in class attribute
+* Errors are summarized in class attribute and printed on exit
 * Various check settings are controllable via indicator-specific params.json files
+* User can manually disable certain checks for certain sets of data using a field in the params.json file
 
 ## Checks + features wishlist, and problems to think about:
 
 * check for large jumps
 * Which, if any, specific geo_ids are missing
 * different thresholds for different files?
-* flags to disable certain checks
-* re-adjust thresholds to not pass for some previous days that did have issues
+* use known erroneous/anomalous days of source data to re-adjust thresholds to not pass
 * check number of observations
 * tests
 * check for duplicate rows

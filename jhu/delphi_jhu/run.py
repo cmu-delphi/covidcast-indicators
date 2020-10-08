@@ -17,6 +17,7 @@ from delphi_utils import (
     S3ArchiveDiffer,
 )
 
+from delphi_utils import GeoMapper
 from .geo import geo_map
 from .pull import pull_jhu_data
 from .smooth import (
@@ -84,10 +85,7 @@ def run_module():
     else:
         arch_diff = None
 
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    )
+    pop_df = GeoMapper().add_population_column("fips")
 
     dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(

@@ -59,7 +59,7 @@ SMOOTHERS_MAP = {
     "seven_day_average":    (seven_day_moving_average, '7dav_'),
 }
 GEO_RESOLUTIONS = [
-    "county",
+    "fips",
     "state",
     "msa",
     "hrr",
@@ -75,11 +75,14 @@ def run_module():
     static_file_dir = params["static_file_dir"]
     cache_dir = params["cache_dir"]
 
-    arch_diff = S3ArchiveDiffer(
-        cache_dir, export_dir,
-        params["bucket_name"], "jhu",
-        params["aws_credentials"])
-    arch_diff.update_cache()
+    if len(params["bucket_name"]) > 0:
+        arch_diff = S3ArchiveDiffer(
+            cache_dir, export_dir,
+            params["bucket_name"], "jhu",
+            params["aws_credentials"])
+        arch_diff.update_cache()
+    else:
+        arch_diff = None
 
     pop_df = pd.read_csv(
         join(static_file_dir, "fips_population.csv"),
@@ -114,18 +117,19 @@ def run_module():
             sensor=sensor_name,
         )
 
-    # Diff exports, and make incremental versions
-    _, common_diffs, new_files = arch_diff.diff_exports()
+    if not arch_diff is None:
+        # Diff exports, and make incremental versions
+        _, common_diffs, new_files = arch_diff.diff_exports()
 
-    # Archive changed and new files only
-    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-    to_archive += new_files
-    _, fails = arch_diff.archive_exports(to_archive)
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = arch_diff.archive_exports(to_archive)
 
-    # Filter existing exports to exclude those that failed to archive
-    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-    arch_diff.filter_exports(succ_common_diffs)
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+        arch_diff.filter_exports(succ_common_diffs)
 
-    # Report failures: someone should probably look at them
-    for exported_file in fails:
-        print(f"Failed to archive '{exported_file}'")
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive '{exported_file}'")

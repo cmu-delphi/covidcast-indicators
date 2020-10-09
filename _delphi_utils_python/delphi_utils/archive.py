@@ -106,7 +106,7 @@ def run_module(archive_type: str,
     archive_type: str
         Type of ArchiveDiffer to run.  Must be one of ["git", "s3"] which correspond to `GitArchiveDiffer` and `S3ArchiveDiffer`, respectively.
     cache_dir: str
-        The directory for storing most recent archived/uploaded CSVs to do start diffing from.
+        The directory for storing most recent archived/uploaded CSVs to start diffing from.
     export_dir: str
         The directory with most recent exported CSVs to diff to.
     **kwargs:

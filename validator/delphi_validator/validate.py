@@ -101,7 +101,6 @@ class Validator():
             raise an exception or not
             - sanity_check_rows_per_day: boolean; check flag
             - sanity_check_value_diffs: boolean; check flag
-            - check_vs_working: boolean; check flag
             - suppressed_errors: set of check_data_ids used to identify error messages to ignore
             - raised_errors: list to append errors to as they are raised
         """
@@ -111,7 +110,7 @@ class Validator():
             datetime.strptime(params['start_date'], '%Y-%m-%d'))
         self.end_date = datetime.date(
             datetime.strptime(params['end_date'], '%Y-%m-%d'))
-        self.generation_date = params.get('generation_date', date.today())
+        self.generation_date = date.today()
 
         self.max_check_lookbehind = timedelta(
             days=params.get("ref_window_size", 7))
@@ -124,8 +123,6 @@ class Validator():
             'sanity_check_rows_per_day', True)
         self.sanity_check_value_diffs = params.get(
             'sanity_check_value_diffs', True)
-        # TODO: use for something... See https://github.com/cmu-delphi/covid-19/blob/fb-survey/facebook/prepare-extracts/covidalert-io-funs.R#L439
-        self.check_vs_working = params.get('check_vs_working', True)
 
         self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
@@ -137,7 +134,8 @@ class Validator():
         Check for missing dates between the specified start and end dates.
 
         Arguments:
-            - daily_filenames: list of CSV source data filenames.
+            - daily_filenames: list of tuples, each containing CSV source data filename
+            and the regex match object corresponding to filename_regex.
 
         Returns:
             - None

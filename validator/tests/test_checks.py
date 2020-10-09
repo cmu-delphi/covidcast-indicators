@@ -405,51 +405,125 @@ class TestCheckBadN:
             err.check_data_id[0] for err in validator.raised_errors]
 
 
-# class TestCheckMinDate:
+class TestCheckRapidChange:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_same_df(self):
+        validator = Validator(self.params)
+        test_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
+        ref_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
+        validator.check_rapid_change(
+            test_df, ref_df, date.today(), "geo", "signal")
 
-#         assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 0
 
+    def test_0_vs_many(self):
+        validator = Validator(self.params)
 
-# class TestCheckMaxDate:
+        time_value = datetime.combine(date.today(), datetime.min.time())
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+        test_df = pd.DataFrame([time_value] * 5, columns=["time_value"])
+        ref_df = pd.DataFrame([time_value] * 1, columns=["time_value"])
+        validator.check_rapid_change(
+            test_df, ref_df, time_value, "geo", "signal")
 
-#         assert len(self.validator.raised_errors) == 0
-
-
-# class TestCheckMaxReferenceDate:
-
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
-
-#         assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 1
+        assert "check_rapid_change_num_rows" in [
+            err.check_data_id[0] for err in validator.raised_errors]
 
 
-# class TestCheckRapidChange:
+class TestCheckAvgValDiffs:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_same_val(self):
+        validator = Validator(self.params)
 
-#         assert len(self.validator.raised_errors) == 0
+        data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
 
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
 
-# class TestCheckAvgValDiffs:
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw", date.today(), "geo", "signal")
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+        assert len(validator.raised_errors) == 0
 
-#         assert len(self.validator.raised_errors) == 0
+    def test_same_se(self):
+        validator = Validator(self.params)
+
+        data = {"val": [np.nan] * 6, "se": [1, 1, 1, 2, 0, 1],
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
+
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw", date.today(), "geo", "signal")
+
+        assert len(validator.raised_errors) == 0
+
+    def test_same_n(self):
+        validator = Validator(self.params)
+
+        data = {"val": [np.nan] * 6, "se": [np.nan] * 6,
+                "sample_size": [1, 1, 1, 2, 0, 1], "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
+
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw", date.today(), "geo", "signal")
+
+        assert len(validator.raised_errors) == 0
+
+    def test_10x_val(self):
+        validator = Validator(self.params)
+        test_data = {"val": [1, 1, 1, 20, 0, 1], "se": [np.nan] * 6,
+                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(test_data)
+        ref_df = pd.DataFrame(ref_data)
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw",
+            datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
+
+        assert len(validator.raised_errors) == 0
+
+    def test_100x_val(self):
+        validator = Validator(self.params)
+        test_data = {"val": [1, 1, 1, 200, 0, 1], "se": [np.nan] * 6,
+                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(test_data)
+        ref_df = pd.DataFrame(ref_data)
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw",
+            datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_test_vs_reference_avg_changed" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_1000x_val(self):
+        validator = Validator(self.params)
+        test_data = {"val": [1, 1, 1, 2000, 0, 1], "se": [np.nan] * 6,
+                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(test_data)
+        ref_df = pd.DataFrame(ref_data)
+        validator.check_avg_val_diffs(
+            test_df, ref_df, "raw",
+            datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_test_vs_reference_avg_changed" in [
+            err.check_data_id[0] for err in validator.raised_errors]

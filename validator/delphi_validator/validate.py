@@ -469,7 +469,7 @@ class Validator():
                 test_rows_per_reporting_day,
                 reference_rows_per_reporting_day)) > 0.35:
             self.raised_errors.append(ValidationError(
-                ("check_rapid_change_num_rows", checking_date.date(), geo, sig),
+                ("check_rapid_change_num_rows", checking_date, geo, sig),
                 (test_rows_per_reporting_day, reference_rows_per_reporting_day),
                 "Number of rows per day (-with-any-rows) seems to have changed " +
                 "rapidly (reference vs test data)"))
@@ -532,7 +532,7 @@ class Validator():
 
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
-        raw_thresholds = pd.DataFrame([0.50, 0.30, 0.80], classes).T
+        raw_thresholds = pd.DataFrame([1.50, 1.30, 1.80], classes).T
         smoothed_thresholds = raw_thresholds.apply(
             lambda x: x/(math.sqrt(7) * 1.5))
 

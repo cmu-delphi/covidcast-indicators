@@ -14,7 +14,6 @@ from .errors import ValidationError
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_sig_cmbo, \
     read_geo_sig_cmbo_files, fetch_api_reference
-import pdb
 
 # Recognized geo types.
 geo_regex_dict = {
@@ -49,7 +48,7 @@ def make_date_filter(start_date, end_date):
     start_code = int(start_date.strftime("%Y%m%d"))
     end_code = int(end_date.strftime("%Y%m%d"))
 
-    def f(match):
+    def temp_function(match):
         """
         Return a boolean of whether a filename of appropriate format contains a date
         within the specified date range.
@@ -71,7 +70,7 @@ def make_date_filter(start_date, end_date):
         # Return boolean True if current file date "code" is within the defined date range.
         return start_code <= code <= end_code
 
-    return f
+    return temp_function
 
 
 class Validator():
@@ -594,23 +593,23 @@ class Validator():
         # Individual file checks
         # For every daily file, read in and do some basic format and value checks.
         for filename, match in validate_files:
-            df = load_csv(join(export_dir, filename))
+            data_df = load_csv(join(export_dir, filename))
 
-            self.check_df_format(df, filename)
-            self.check_bad_geo_id(df, filename, match.groupdict()['geo_type'])
-            self.check_bad_val(df, filename, match.groupdict()['signal'])
-            self.check_bad_se(df, filename)
-            self.check_bad_sample_size(df, filename)
+            self.check_df_format(data_df, filename)
+            self.check_bad_geo_id(
+                data_df, filename, match.groupdict()['geo_type'])
+            self.check_bad_val(data_df, filename, match.groupdict()['signal'])
+            self.check_bad_se(data_df, filename)
+            self.check_bad_sample_size(data_df, filename)
 
             # Get geo_type, date, and signal name as specified by CSV name.
-            df['geo_type'] = match.groupdict()['geo_type']
-            df['date'] = match.groupdict()['date']
-            df['signal'] = match.groupdict()['signal']
+            data_df['geo_type'] = match.groupdict()['geo_type']
+            data_df['date'] = match.groupdict()['date']
+            data_df['signal'] = match.groupdict()['signal']
 
             # Add current CSV data to all_frames.
-            all_frames.append(df)
+            all_frames.append(data_df)
 
-        # TODO: Multi-indexed dataframe for a given (signal, geo_type)
         all_frames = pd.concat(all_frames)
 
         # Get list of dates we expect to see in all the CSV data.
@@ -629,12 +628,6 @@ class Validator():
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
-        # TODO: Remove for actual version
-        kroc = 0
-
-        # TODO: Improve efficiency by grouping all_frames by geo and sig instead
-        # of reading data in again via read_geo_sig_cmbo_files().
-
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
         for geo_sig_df, geo, sig in read_geo_sig_cmbo_files(
@@ -643,8 +636,8 @@ class Validator():
                 [name_match_pair[0] for name_match_pair in validate_files],
                 date_slist):
 
-            m = smooth_option_regex.match(sig)
-            smooth_option = m.group(1)
+            match_obj = smooth_option_regex.match(sig)
+            smooth_option = match_obj.group(1)
 
             if smooth_option not in ('raw', 'smoothed'):
                 smooth_option = 'smoothed' if '7dav' in sig or 'smoothed' in sig else 'raw'
@@ -657,11 +650,6 @@ class Validator():
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, weight_option, geo, sig)
             self.check_max_allowed_max_date(max_date, geo, sig)
-
-            # TODO: Check to see, if this date is in the API, if values have been updated
-            # and changed significantly.
-
-            # TODO: Compare data against long-ago (3 months?) API data for changes in trends.
 
             # Check data from a group of dates against recent (previous 7 days, by default)
             # data from the API.
@@ -687,11 +675,6 @@ class Validator():
                 if self.sanity_check_value_diffs:
                     self.check_avg_val_diffs(
                         recent_df, reference_api_df, smooth_option, checking_date, geo, sig)
-
-            # TODO: Remove for actual version
-            kroc += 1
-            if kroc == 2:
-                break
 
         self.exit()
 

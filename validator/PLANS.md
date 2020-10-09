@@ -27,15 +27,16 @@
 
 ## Checks + features wishlist, and problems to think about:
 
+* Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
 * check for large jumps
-* Which, if any, specific geo_ids are missing
+* Which, if any, specific geo_ids are missing (get list from historical data)
 * different thresholds for different files?
 * use known erroneous/anomalous days of source data to re-adjust thresholds to not pass
 * check number of observations
 * tests
 * check for duplicate rows
-* Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced
-* Data correctness and consistency over longer time periods (weeks to months)
+* Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values been changed significantly
+* Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends
   * Currently, checks look at a data window of a few days
   * Ryan’s [correlation notebook](https://github.com/cmu-delphi/covidcast/tree/main/R-notebooks) for ideas

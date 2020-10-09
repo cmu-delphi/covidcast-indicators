@@ -60,8 +60,7 @@ def get_geo_sig_cmbo(data_source):
 
     if data_source == 'fb-survey':
         # Currently metadata returns --*community*-- signals that don't get generated
-        # in the new fb-pipeline. Seiving them out for now.
-        # TODO: Include weighted whh_cmnty_cli and wnohh_cmnty_cli
+        # in the new fb-pipeline. Sieving them out for now.
         for sig in unique_signals:
             if "community" in sig:
                 unique_signals.remove(sig)
@@ -103,15 +102,15 @@ def read_geo_sig_cmbo_files(geo_sig_cmbo, data_folder, filenames, date_slist):
             continue
 
         # Load data from all found files.
-        for f in files:
-            df = load_csv(join(data_folder, f))
-            for dt in date_slist:
+        for file in files:
+            data_df = load_csv(join(data_folder, file))
+            for date in date_slist:
 
                 # Add data's date, from CSV name, as new column
-                if f.find(dt) != -1:
-                    gen_dt = datetime.strptime(dt, '%Y%m%d')
-                    df['time_value'] = gen_dt
-            df_list.append(df)
+                if file.find(date) != -1:
+                    source_date = datetime.strptime(date, '%Y%m%d')
+                    data_df['time_value'] = source_date
+            df_list.append(data_df)
 
         yield pd.concat(df_list), geo_sig[0], geo_sig[1]
 

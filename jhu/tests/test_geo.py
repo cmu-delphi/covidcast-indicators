@@ -45,7 +45,7 @@ class TestGeoMap:
 
         df = df.append(df_mega)
 
-        new_df = geo_map(df, "fips")
+        new_df = geo_map(df, "county")
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000

@@ -27,12 +27,12 @@ def geo_map(df: pd.DataFrame, geo_res: str):
         Columns: geo_id, timestamp, ...
     """
     df = df.copy()
-    VALID_GEO_RES = ("fips", "state", "msa", "hrr")
+    VALID_GEO_RES = ("county", "state", "msa", "hrr")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 
     gmpr = GeoMapper()
-    if geo_res == "fips":
+    if geo_res == "county":
         df.rename(columns={'fips': 'geo_id'}, inplace=True)
     elif geo_res == "state":
         df = gmpr.replace_geocode(df, "fips", "state_id", new_col="geo_id", date_col="timestamp")

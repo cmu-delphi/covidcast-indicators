@@ -628,6 +628,8 @@ class Validator():
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
+        kroc = 0
+
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
         for geo_sig_df, geo, sig in read_geo_sig_cmbo_files(
@@ -675,6 +677,10 @@ class Validator():
                 if self.sanity_check_value_diffs:
                     self.check_avg_val_diffs(
                         recent_df, reference_api_df, smooth_option, checking_date, geo, sig)
+
+            kroc += 1
+            if kroc == 2:
+                break
 
         self.exit()
 

@@ -251,7 +251,7 @@ class Validator():
         Returns:
             - None
         """
-        # Determine if signal is a proportion or percent
+        # Determine if signal is a proportion (# of x out of 100k people) or percent
         percent_option = bool('pct' in signal_type)
         proportion_option = bool('prop' in signal_type)
 
@@ -267,7 +267,7 @@ class Validator():
                 self.raised_errors.append(ValidationError(
                     ("check_val_prop_gt_100k", nameformat),
                     df_to_test[(df_to_test['val'] > 100000)],
-                    "val column can't have any cell greater than 100000 for nameformat"))
+                    "val column can't have any cell greater than 100000 for proportions"))
 
         if df_to_test['val'].isnull().values.any():
             self.raised_errors.append(ValidationError(
@@ -300,19 +300,14 @@ class Validator():
         df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
         if not self.missing_se_allowed:
-            if df_to_test['se'].isnull().values.any():
-                self.raised_errors.append(ValidationError(
-                    ("check_se_missing", nameformat),
-                    None, "se must not be NA"))
-
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
                 '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
             if not result.empty:
                 self.raised_errors.append(ValidationError(
-                    ("check_se_in_range", nameformat),
-                    result, "se must be in (0, min(50,val*(1+eps))]"))
+                    ("check_se_not_missing_and_in_range", nameformat),
+                    result, "se must be in (0, min(50,val*(1+eps))] and not missing"))
 
             if df_to_test["se"].isnull().mean() > 0.5:
                 self.raised_errors.append(ValidationError(

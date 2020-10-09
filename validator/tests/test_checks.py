@@ -1,5 +1,6 @@
 import pytest
 from datetime import date, datetime, timedelta
+import numpy as np
 import pandas as pd
 
 from delphi_validator.datafetcher import filename_regex
@@ -228,33 +229,180 @@ class TestCheckBadGeoId:
 
 
 class TestCheckBadVal:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
     def test_empty_df(self):
-        validator = Validator()
+        validator = Validator(self.params)
         empty_df = pd.DataFrame(columns=["val"])
-        self.validator.check_bad_val(empty_df, "")
+        validator.check_bad_val(empty_df, "", "")
+        validator.check_bad_val(empty_df, "", "prop")
+        validator.check_bad_val(empty_df, "", "pct")
 
-        assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 0
+
+    def test_missing(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([np.nan], columns=["val"])
+        validator.check_bad_val(df, "name", "signal")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_val_missing" in validator.raised_errors[0].check_data_id
+
+    def test_lt_0(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([-5], columns=["val"])
+        validator.check_bad_val(df, "name", "signal")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_val_lt_0" in validator.raised_errors[0].check_data_id
+
+    def test_gt_max_pct(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([1e7], columns=["val"])
+        validator.check_bad_val(df, "name", "pct")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_val_pct_gt_100" in validator.raised_errors[0].check_data_id
+
+    def test_gt_max_prop(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([1e7], columns=["val"])
+        validator.check_bad_val(df, "name", "prop")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_val_prop_gt_100k" in validator.raised_errors[0].check_data_id
 
 
-# class TestCheckBadSe:
+class TestCheckBadSe:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_empty_df(self):
+        validator = Validator(self.params)
+        empty_df = pd.DataFrame(
+            columns=["val", "se", "sample_size"], dtype=float)
+        validator.check_bad_se(empty_df, "")
 
-#         assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 0
+
+        validator.missing_se_allowed = True
+        validator.check_bad_se(empty_df, "")
+
+        assert len(validator.raised_errors) == 0
+
+    def test_missing(self):
+        validator = Validator(self.params)
+        validator.missing_se_allowed = True
+        df = pd.DataFrame([[np.nan, np.nan, np.nan]], columns=[
+                          "val", "se", "sample_size"])
+        validator.check_bad_se(df, "name")
+
+        assert len(validator.raised_errors) == 0
+
+        validator.missing_se_allowed = False
+        validator.check_bad_se(df, "name")
+
+        assert len(validator.raised_errors) == 2
+        assert "check_se_not_missing_and_in_range" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        assert "check_se_many_missing" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_e_0_missing_allowed(self):
+        validator = Validator(self.params)
+        validator.missing_se_allowed = True
+        df = pd.DataFrame([[1, 0, 200], [1, np.nan, np.nan], [
+                          1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
+        validator.check_bad_se(df, "name")
+
+        assert len(validator.raised_errors) == 2
+        assert "check_se_missing_or_in_range" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        assert "check_se_0" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_e_0_missing_not_allowed(self):
+        validator = Validator(self.params)
+        validator.missing_se_allowed = False
+        df = pd.DataFrame([[1, 0, 200], [1, 0, np.nan], [
+                          1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
+        validator.check_bad_se(df, "name")
+
+        assert len(validator.raised_errors) == 2
+        assert "check_se_not_missing_and_in_range" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        assert "check_se_0" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_jeffreys(self):
+        validator = Validator(self.params)
+        validator.missing_se_allowed = False
+        df = pd.DataFrame([[0, 0, 200], [1, 0, np.nan], [
+                          1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
+        validator.check_bad_se(df, "name")
+
+        assert len(validator.raised_errors) == 2
+        assert "check_se_not_missing_and_in_range" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        assert "check_se_0_when_val_0" in [
+            err.check_data_id[0] for err in validator.raised_errors]
 
 
-# class TestCheckBadN:
+class TestCheckBadN:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_empty_df(self):
+        validator = Validator(self.params)
+        empty_df = pd.DataFrame(
+            columns=["val", "se", "sample_size"], dtype=float)
+        validator.check_bad_sample_size(empty_df, "")
 
-#         assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 0
+
+        validator.missing_sample_size_allowed = True
+        validator.check_bad_sample_size(empty_df, "")
+
+        assert len(validator.raised_errors) == 0
+
+    def test_missing(self):
+        validator = Validator(self.params)
+        validator.missing_sample_size_allowed = True
+        df = pd.DataFrame([[np.nan, np.nan, np.nan]], columns=[
+                          "val", "se", "sample_size"])
+        validator.check_bad_sample_size(df, "name")
+
+        assert len(validator.raised_errors) == 0
+
+        validator.missing_sample_size_allowed = False
+        validator.check_bad_sample_size(df, "name")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_n_missing" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_lt_min_missing_allowed(self):
+        validator = Validator(self.params)
+        validator.missing_sample_size_allowed = True
+        df = pd.DataFrame([[1, 0, 10], [1, np.nan, np.nan], [
+                          1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
+        validator.check_bad_sample_size(df, "name")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_n_missing_or_gt_min" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+
+    def test_lt_min_missing_not_allowed(self):
+        validator = Validator(self.params)
+        validator.missing_sample_size_allowed = False
+        df = pd.DataFrame([[1, 0, 10], [1, np.nan, 240], [
+                          1, np.nan, 245]], columns=["val", "se", "sample_size"])
+        validator.check_bad_sample_size(df, "name")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_n_gt_min" in [
+            err.check_data_id[0] for err in validator.raised_errors]
 
 
 # class TestCheckMinDate:
@@ -298,28 +446,6 @@ class TestCheckBadVal:
 
 
 # class TestCheckAvgValDiffs:
-
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
-
-#         assert len(self.validator.raised_errors) == 0
-
-
-# # How?
-# class TestValidate:
-
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
-
-#         assert len(self.validator.raised_errors) == 0
-
-
-# # How?
-# class TestExit:
 
 #     def test_empty_df(self):
 #         validator = Validator()

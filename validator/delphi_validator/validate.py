@@ -14,15 +14,15 @@ from .errors import ValidationError
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_sig_cmbo, \
     read_geo_sig_cmbo_files, fetch_api_reference
-
+import pdb
 
 # Recognized geo types.
-negated_regex_dict = {
-    'county': '^(?!\d{5}).*$',
-    'hrr': '^(?!\d{1,3}).*$',
-    'msa': '^(?!\d{5}).*$',
-    'state': '^(?![a-z]{2}).*$',
-    'national': '(?!usa).*$'
+geo_regex_dict = {
+    'county': '^\d{5}$',
+    'hrr': '^\d{1,3}$',
+    'msa': '^\d{5}$',
+    'state': '^[a-z]{2}$',
+    'national': '^usa$'
 }
 
 
@@ -220,25 +220,29 @@ class Validator():
         Returns:
             - None
         """
-        def find_all_unexpected_geo_ids(df_to_test, negated_regex):
+        def find_all_unexpected_geo_ids(df_to_test, geo_regex):
             """
             Check if any geo_ids in df_to_test aren't formatted correctly, according
             to the geo type dictionary negated_regex_dict.
             """
-            unexpected_geos = [ugeo[0] for ugeo in df_to_test['geo_id'].str.findall(
-                negated_regex) if len(ugeo) > 0]
+            expected_geos = [geo[0] for geo in df_to_test['geo_id'].str.findall(
+                geo_regex) if len(geo) > 0]
+
+            unexpected_geos = {geo for geo in set(
+                df_to_test['geo_id']) if geo not in expected_geos}
+
             if len(unexpected_geos) > 0:
                 self.raised_errors.append(ValidationError(
                     ("check_geo_id_format", nameformat),
-                    set(unexpected_geos), "Non-conforming geo_ids found"))
+                    unexpected_geos, "Non-conforming geo_ids found"))
 
-        if geo_type not in negated_regex_dict:
+        if geo_type not in geo_regex_dict:
             self.raised_errors.append(ValidationError(
                 ("check_geo_type", nameformat),
                 geo_type, "Unrecognized geo type"))
         else:
             find_all_unexpected_geo_ids(
-                df_to_test, negated_regex_dict[geo_type])
+                df_to_test, geo_regex_dict[geo_type])
 
     def check_bad_val(self, df_to_test, nameformat, signal_type):
         """

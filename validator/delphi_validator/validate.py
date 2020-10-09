@@ -220,11 +220,6 @@ class Validator():
         Returns:
             - None
         """
-        if geo_type not in negated_regex_dict:
-            self.raised_errors.append(ValidationError(
-                ("check_geo_type", nameformat),
-                geo_type, "Unrecognized geo type"))
-
         def find_all_unexpected_geo_ids(df_to_test, negated_regex):
             """
             Check if any geo_ids in df_to_test aren't formatted correctly, according
@@ -235,9 +230,15 @@ class Validator():
             if len(unexpected_geos) > 0:
                 self.raised_errors.append(ValidationError(
                     ("check_geo_id_format", nameformat),
-                    unexpected_geos, "Non-conforming geo_ids found"))
+                    set(unexpected_geos), "Non-conforming geo_ids found"))
 
-        find_all_unexpected_geo_ids(df_to_test, negated_regex_dict[geo_type])
+        if geo_type not in negated_regex_dict:
+            self.raised_errors.append(ValidationError(
+                ("check_geo_type", nameformat),
+                geo_type, "Unrecognized geo type"))
+        else:
+            find_all_unexpected_geo_ids(
+                df_to_test, negated_regex_dict[geo_type])
 
     def check_bad_val(self, df_to_test, nameformat, signal_type):
         """
@@ -252,7 +253,7 @@ class Validator():
         """
         # Determine if signal is a proportion or percent
         percent_option = bool('pct' in signal_type)
-        proportion_option = bool('pct' in signal_type)
+        proportion_option = bool('prop' in signal_type)
 
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:

@@ -8,11 +8,6 @@ from delphi_validator.validate import Validator, make_date_filter
 import pdb
 
 
-# # Define constants.
-# PARAMS = read_params()
-# DATA_FILEPATH = PARAMS["input_file"]
-
-
 class TestDateFilter:
 
     def test_same_day(self):
@@ -129,29 +124,117 @@ class TestCheckMissingDates:
 
 class TestNameFormat:
 
-    def test_empty_df(self):
+    def test_match_existence(self):
         pattern_found = filename_regex.match("20200903_usa_signal_signal.csv")
-        pdb.set_trace()
+        assert pattern_found
+
+        pattern_found = filename_regex.match("2020090_usa_signal_signal.csv")
+        assert not pattern_found
+
+        pattern_found = filename_regex.match("20200903_usa_signal_signal.pdf")
+        assert not pattern_found
+
+        pattern_found = filename_regex.match("20200903_usa_.csv")
+        assert not pattern_found
+
+    def test_expected_groups(self):
+        pattern_found = filename_regex.match(
+            "20200903_usa_signal_signal.csv").groupdict()
+        assert pattern_found["date"] == "20200903"
+        assert pattern_found["geo_type"] == "usa"
+        assert pattern_found["signal"] == "signal_signal"
 
 
-# class TestCheckBadGeoId:
+class TestCheckBadGeoId:
+    params = {"data_source": "", "start_date": "2020-09-01",
+              "end_date": "2020-09-02"}
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_empty_df(self):
+        validator = Validator(self.params)
+        empty_df = pd.DataFrame(columns=["geo_id"])
+        validator.check_bad_geo_id(empty_df, "name", "county")
 
-#         assert len(self.validator.raised_errors) == 0
+        assert len(validator.raised_errors) == 0
+
+    def test_invalid_geo_type(self):
+        validator = Validator(self.params)
+        empty_df = pd.DataFrame(columns=["geo_id"])
+        validator.check_bad_geo_id(empty_df, "name", "hello")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_type" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        assert [err.expression for
+                err in validator.raised_errors if err.check_data_id[0] ==
+                "check_geo_type"][0] == "hello"
+
+    def test_invalid_geo_id_county(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["0", "54321", "123", ".0000",
+                           "abc12"], columns=["geo_id"])
+        validator.check_bad_geo_id(df, "name", "county")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 4
+        assert "54321" not in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_msa(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["0", "54321", "123", ".0000",
+                           "abc12"], columns=["geo_id"])
+        validator.check_bad_geo_id(df, "name", "msa")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 4
+        assert "54321" not in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_hrr(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["1", "12", "123", "1234", "12345",
+                           "a", ".", "ab1"], columns=["geo_id"])
+        validator.check_bad_geo_id(df, "name", "hrr")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 5
+        assert "1" not in validator.raised_errors[0].expression
+        assert "12" not in validator.raised_errors[0].expression
+        assert "123" not in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_state(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["aa", "hi", "HI", "hawaii",
+                           "Hawaii", "a", "H.I."], columns=["geo_id"])
+        validator.check_bad_geo_id(df, "name", "state")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 5
+        assert "aa" not in validator.raised_errors[0].expression
+        assert "hi" not in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_national(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["usa", "USA", " usa", "us",
+                           "usausa", "America"], columns=["geo_id"])
+        validator.check_bad_geo_id(df, "name", "national")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 5
+        assert "usa" not in validator.raised_errors[0].expression
 
 
-# class TestCheckBadVal:
+class TestCheckBadVal:
 
-#     def test_empty_df(self):
-#         validator = Validator()
-#         empty_df = pd.DataFrame(columns=["val"])
-#         self.validator.check_bad_val(empty_df, "")
+    def test_empty_df(self):
+        validator = Validator()
+        empty_df = pd.DataFrame(columns=["val"])
+        self.validator.check_bad_val(empty_df, "")
 
-#         assert len(self.validator.raised_errors) == 0
+        assert len(self.validator.raised_errors) == 0
 
 
 # class TestCheckBadSe:

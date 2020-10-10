@@ -24,6 +24,7 @@
 * Errors are summarized in class attribute and printed on exit
 * Various check settings are controllable via indicator-specific params.json files
 * User can manually disable certain checks for certain sets of data using a field in the params.json file
+* User can enable test mode (only a small number of data files are checked) using a field in the params.json file
 
 ## Checks + features wishlist, and problems to think about:
 

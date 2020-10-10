@@ -7,6 +7,7 @@
       "minimum_sample_size": 100,
     "missing_se_allowed": true,
     "missing_sample_size_allowed": true,
+    "test_mode": true,
     "suppressed_errors": [["check_min_max_date", "county", "confirmed_7dav_cumulative_prop"], ["check_val_lt_0", "20200906_county_deaths_7dav_incidence_num.csv"]]
   }
 }

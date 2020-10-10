@@ -122,6 +122,7 @@ class Validator():
             'sanity_check_rows_per_day', True)
         self.sanity_check_value_diffs = params.get(
             'sanity_check_value_diffs', True)
+        self.test_mode = params.get("test_mode", False)
 
         self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
@@ -628,8 +629,9 @@ class Validator():
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
-        # TODO: Keeps script from checking all files in a test run. Remove when production-ready.
-        kroc = 0
+        # Keeps script from checking all files in a test run.
+        if self.test_mode:
+            kroc = 0
 
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
@@ -679,9 +681,11 @@ class Validator():
                     self.check_avg_val_diffs(
                         recent_df, reference_api_df, smooth_option, checking_date, geo, sig)
 
-            kroc += 1
-            if kroc == 2:
-                break
+            # Keeps script from checking all files in a test run.
+            if self.test_mode:
+                kroc += 1
+                if kroc == 2:
+                    break
 
         self.exit()
 

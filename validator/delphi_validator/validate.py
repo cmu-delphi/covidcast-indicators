@@ -628,6 +628,7 @@ class Validator():
 
         smooth_option_regex = re.compile(r'([^_]+)')
 
+        # TODO: Keeps script from checking all files in a test run. Remove when production-ready.
         kroc = 0
 
         # Comparison checks

@@ -13,7 +13,7 @@ for POIs are provided in **Places Schema** dataset which is documented [here]
 list of POIs frequently but there does exist versioning issue. The release 
 version can be found in `release-metadata` in Weekly Patterns dataset and there
 are correspounding `brand_info.csv` provided in Places Schema dataset. To save 
-storage space, we won't donwload the whole Places Schema dataset, but only add 
+storage space, we do not download the whole Places Schema dataset, but only add 
 new necesary `brand_info.csv` in `./statics` with suffix YYYYMM(release version).
 
 ## Geographical Levels

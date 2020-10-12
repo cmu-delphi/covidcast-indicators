@@ -52,7 +52,7 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
     """
     result_dfs = {}
     for metric, naics_code in zip(metric_names, naics_codes):
-        # Bar or restaurances
+        # Bar or restaurants
         selected_brand_id = brand_df.loc[
                 brand_df["naics_code"] == naics_code, "safegraph_brand_id"]
         filtered_df = df[df["safegraph_brand_ids"].isin(selected_brand_id)]

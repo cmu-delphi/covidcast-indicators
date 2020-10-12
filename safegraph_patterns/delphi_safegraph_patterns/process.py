@@ -11,6 +11,13 @@ from delphi_utils import create_export_csv, GeoMapper
 
 INCIDENCE_BASE = 100000
 
+GEO_KEY_DICT = {
+        "county": "fips",
+        "msa": "msa",
+        "hrr": "hrr",
+        "state": "state_id"
+}
+
 def construct_signals(df, metric_names, naics_codes, brand_df):
     """
     Construct Zip Code level signals.
@@ -107,19 +114,11 @@ def aggregate(df, metric, geo_res, map_df):
 
     ############################ Use GeoMapper in utils #####################
 #    gmpr = GeoMapper()
-#    df = gmpr.add_population_column(df, "zip")
-#    if geo_res == "county":
-#        df = gmpr.zip_to_fips(df, date_col = "timestamp",
-#                              count_cols = [metric_count_name, "population"])
-#    elif geo_res == "hrr":
-#        df = gmpr.zip_to_hrr(df, date_col = "timestamp",
-#                              count_cols = [metric_count_name, "population"])
-#    elif geo_res == "msa":
-#        df = gmpr.zip_to_msa(df, date_col = "timestamp",
-#                              count_cols = [metric_count_name, "population"])
-#    else:
-#        df = gmpr.zip_to_state_id(df, date_col = "timestamp",
-#                              count_cols = [metric_count_name, "population"])
+#    geo_key = GEO_KEY_DICT[geo_res]
+#    df = gmpr.add_population_column(df, "zip")   
+#    df = gmpr.replace_geocode(df, "zip", geo_key,
+#                              date_col="timestamp",
+#                              data_cols=[metric_count_name, "population"]) 
 
     ############################ Use mapping file in ./static ###############
     # Add pop info

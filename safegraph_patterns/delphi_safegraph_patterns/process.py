@@ -27,7 +27,7 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
     - bars_visit_num defined as:
         number of visits by day in bars (naics_code = 722410)
     - restaurants_visit_num defined as:
-        number of visits by day in bars (naics_code = 722511)
+        number of visits by day in restaurants (naics_code = 722511)
 
     Documentation for the weekly patterns metrics:
     https://docs.safegraph.com/docs/weekly-patterns

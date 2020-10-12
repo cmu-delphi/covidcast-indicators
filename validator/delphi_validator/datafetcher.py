@@ -58,12 +58,6 @@ def get_geo_sig_cmbo(data_source):
     unique_signals = source_meta['signal'].unique().tolist()
     unique_geotypes = source_meta['geo_type'].unique().tolist()
 
-    if data_source == 'fb-survey':
-        # Currently metadata returns --*community*-- signals that don't get generated
-        # in the new fb-pipeline. Sieving them out for now.
-        for sig in unique_signals:
-            if "community" in sig:
-                unique_signals.remove(sig)
 
     geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
     print("Number of mixed types:", len(geo_sig_cmbo))

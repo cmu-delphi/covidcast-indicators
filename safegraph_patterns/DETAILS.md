@@ -5,7 +5,7 @@ Patterns** dataset, calculate functions of the raw data, and then aggregate
 he data to the county, hrr, msa and state levels.
 
 ## Brand Information
-Safegraph provides daily number of visits to pionts of interest(POIS) in Weekly 
+Safegraph provides daily number of visits to points of interest (POIs) in Weekly
 Patterns datasets which is documanted [here](https://docs.safegraph.com/docs/weekly-patterns).
 Base information such as location name, address, category, and brand association 
 for POIs are provided in **Places Schema** dataset which is documented [here]

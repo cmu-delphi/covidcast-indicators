@@ -9,7 +9,7 @@ Safegraph provides daily number of visits to points of interest (POIs) in Weekly
 Patterns datasets which is documanted [here](https://docs.safegraph.com/docs/weekly-patterns).
 Base information such as location name, address, category, and brand association 
 for POIs are provided in **Places Schema** dataset which is documented [here]
-(https://docs.safegraph.com/docs/places-schema). Safegraph do not update there
+(https://docs.safegraph.com/docs/places-schema). Safegraph does not update their
 list of POIs frequently but there does exist versioning issue. The release 
 version can be found in `release-metadata` in Weekly Patterns dataset and there
 are correspounding `brand_info.csv` provided in Places Schema dataset. To save 

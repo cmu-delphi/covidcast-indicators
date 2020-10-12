@@ -21,7 +21,7 @@ geo_regex_dict = {
     'hrr': '^\d{1,3}$',
     'msa': '^\d{5}$',
     'state': '^[a-z]{2}$',
-    'national': '^usa$'
+    'national': '^[a-z]{2}$'
 }
 
 

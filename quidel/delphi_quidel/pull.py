@@ -53,8 +53,7 @@ def read_historical_data():
     Read historical flu antigen test data stored in
     midas /common/quidel-historical-raw
     """
-#    pull_dir = "/common/quidel-historical-raw"
-    pull_dir = "../../tempt_files/quidel_raw/quidel-historical-raw"
+    pull_dir = "/common/quidel-historical-raw"
     columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
                                'FluA', 'FluB', 'StorageDate']
     df = pd.DataFrame(columns=columns)

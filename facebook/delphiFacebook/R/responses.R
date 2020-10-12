@@ -126,9 +126,10 @@ load_response_one <- function(input_filename, params) {
   # create testing variables
   if ("B8" %in% names(input_data) && "B10" %in% names(input_data) &&
         "B12" %in% names(input_data)) {
-    # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* B10
+    # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
+    # B10 (which codes "no" as 3 for some reason)
     input_data$t_tested_14d <- case_when(
-      input_data$B8 == 2 | input_data$B10 == 2 ~ 0,
+      input_data$B8 == 2 | input_data$B10 == 3 ~ 0,
       input_data$B10 == 1 ~ 1,
       TRUE ~ NA_real_
     )

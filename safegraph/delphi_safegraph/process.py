@@ -49,11 +49,11 @@ def files_in_past_week(current_filename) -> List[str]:
     one_day = datetime.timedelta(days=1)
     for _ in range(1, 7):
         current_date = current_date - one_day
-        y, m, d = (current_date.year, current_date.month, current_date.day)
-        new_filename = f'{path}/{y}/{m}/{d}/{current_date.isoformat()}-'\
+        date_str = current_date.isoformat()
+        date_path = date_str.replace('-', '/')
+        new_filename = f'{path}/{date_path}/{date_str}-'\
             'social-distancing.csv.gz'
-        if os.path.exists(new_filename):
-            yield new_filename
+        yield new_filename
 
 
 def add_prefix(signal_names, wip_signal, prefix: str):

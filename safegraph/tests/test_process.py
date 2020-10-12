@@ -8,7 +8,8 @@ import pandas as pd
 from delphi_safegraph.process import (
     construct_signals,
     aggregate,
-    add_prefix
+    add_prefix,
+    files_in_past_week
 )
 from delphi_safegraph.run import SIGNALS
 from delphi_utils import read_params
@@ -62,5 +63,12 @@ class TestProcess:
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
 
-
-
+    def test_files_in_past_week(self):
+        assert tuple(files_in_past_week(
+            "data_dir/2020/07/04/2020-07-04-social-distancing.csv.gz")) ==\
+            ("data_dir/2020/07/03/2020-07-03-social-distancing.csv.gz",
+             "data_dir/2020/07/02/2020-07-02-social-distancing.csv.gz",
+             "data_dir/2020/07/01/2020-07-01-social-distancing.csv.gz",
+             "data_dir/2020/06/30/2020-06-30-social-distancing.csv.gz",
+             "data_dir/2020/06/29/2020-06-29-social-distancing.csv.gz",
+             "data_dir/2020/06/28/2020-06-28-social-distancing.csv.gz")

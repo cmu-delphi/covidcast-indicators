@@ -137,8 +137,9 @@ load_response_one <- function(input_filename, params) {
     # fraction, of those tested in past 14 days, who tested positive. yes == 1
     # on B10a, no == 2 on B10a; option 3 is "I don't know", which is excluded
     input_data$t_tested_positive_14d <- case_when(
-      input_data$B10a == 1 ~ 1,
-      input_data$B10a == 2 | input_data$B10a == 3 ~ 0,
+      input_data$B10a == 1 ~ 1, # yes
+      input_data$B10a == 2 ~ 0, # no
+      input_data$B10a == 3 ~ NA_real_, # I don't know
       TRUE ~ NA_real_
     )
 

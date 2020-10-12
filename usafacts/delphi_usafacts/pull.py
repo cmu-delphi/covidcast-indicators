@@ -142,6 +142,18 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
             f"Not every day between {min_timestamp} and "
             "{max_timestamp} is represented."
         )
+
+    # Temporarily fix October 2nd data by using October 1st data
+    # for x in df.reset_index()["geo_value"].unique():
+    #     df.at[("20201002", x), "value"] = df.loc["20201001", x]["value"]
+    if metric == "deaths":
+        fips_codes = df["fips"].unique()
+        df = df.set_index(["timestamp", "fips"])
+        for fips_code in fips_codes:
+            df.at[("20201002", fips_code), "cumulative_counts"] = df.loc["20201001", fips_code]["cumulative_counts"]
+            df.at[("20201002", fips_code), "new_counts"] = df.loc["20201001", fips_code]["new_counts"]
+        df = df.reset_index()
+
     return df.loc[
         df["timestamp"] >= min_ts,
         [  # Reorder

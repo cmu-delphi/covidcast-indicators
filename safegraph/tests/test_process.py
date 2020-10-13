@@ -13,6 +13,7 @@ from delphi_safegraph.run import SIGNALS
 
 
 class TestProcess:
+    """Tests for processing Safegraph indicators."""
     def test_construct_signals_present(self):
         """Tests that all signals are constructed."""
         cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
@@ -42,7 +43,7 @@ class TestProcess:
         assert np.all(x[~np.isnan(x)] >= 0)
 
     def test_aggregate_state(self):
-        """Tests that aggregation at the state level creates non-zero-valued 
+        """Tests that aggregation at the state level creates non-zero-valued
         signals."""
         cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
                                    SIGNALS)
@@ -68,7 +69,7 @@ class TestProcess:
         assert all(not s.startswith("wip_") for s in signal_names[1:])
 
     def test_files_in_past_week(self):
-        """Tests that `files_in_past_week()` finds the file names corresponding 
+        """Tests that `files_in_past_week()` finds the file names corresponding
         to the previous 6 days."""
         assert tuple(files_in_past_week(
             'x/y/z/2020/07/04/2020-07-04-social-distancing.csv.gz')) ==\

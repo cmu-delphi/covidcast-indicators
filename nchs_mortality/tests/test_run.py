@@ -1,11 +1,10 @@
 import pytest
 
 import datetime as dt
-from os import listdir, remove
+from os import listdir
 from os.path import join
 
 import pandas as pd
-from delphi_nchs_mortality.run import run_module
 
 
 class TestRun:
@@ -35,7 +34,7 @@ class TestRun:
             ]
             metrics = [
                     'covid_deaths', 'total_deaths', 'pneumonia_deaths',
-                    'pneumonia_and_covid_deaths', 'influenza_deaths', 
+                    'pneumonia_and_covid_deaths', 'influenza_deaths',
                     'pneumonia_influenza_or_covid_19_deaths'
             ]
             sensors = ["num", "prop"]

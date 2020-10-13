@@ -1,5 +1,6 @@
 """Internal functions for creating Safegraph indicator."""
 import datetime
+import os
 from typing import List
 import numpy as np
 import pandas as pd
@@ -259,7 +260,9 @@ def process(current_filename: str,
     single date values and one for the data averaged over the previous week.
     """
     past_week = [pd.read_csv(current_filename)]
-    past_week.extend(pd.read_csv(f) for f in previous_filenames)
+    for fname in previous_filenames:
+        if os.path.exists(fname):
+            past_week.append(pd.read_csv(fname))
 
     # First process the current file alone...
     process_window(past_week[:1], signal_names, geo_resolutions, export_dir)

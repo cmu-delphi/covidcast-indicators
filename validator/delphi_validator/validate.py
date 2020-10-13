@@ -88,6 +88,7 @@ class Validator():
             - data_source: str; data source name, one of
             https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
             - start_date: beginning date of data to check, in datetime date format
+            - span_length: number of days before the end date to include in checking
             - end_date: end date of data to check, in datetime date format
             - generation_date: date that this df_to_test was generated; typically 1 day
             after the last date in df_to_test
@@ -105,10 +106,11 @@ class Validator():
         """
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
-        self.start_date = datetime.date(
-            datetime.strptime(params['start_date'], '%Y-%m-%d'))
-        self.end_date = datetime.date(
-            datetime.strptime(params['end_date'], '%Y-%m-%d'))
+
+        span_length = timedelta(days=params['span_length'])
+        self.end_date = date.today() if params['end_date'] == "latest" else datetime.strptime(
+            params['end_date'], '%Y-%m-%d').date()
+        self.start_date = self.end_date - span_length
         self.generation_date = date.today()
 
         self.max_check_lookbehind = timedelta(
@@ -403,7 +405,7 @@ class Validator():
             self.raised_errors.append(ValidationError(
                 ("check_min_max_date", geo, sig),
                 max_date.date(),
-                "most recent date of generated file seems too long ago"))
+                "date of most recent generated file seems too long ago"))
 
     def check_max_allowed_max_date(self, max_date, geo, sig):
         """
@@ -417,11 +419,11 @@ class Validator():
         Returns:
             - None
         """
-        if max_date > self.generation_date - timedelta(days=1):
+        if max_date > self.generation_date:
             self.raised_errors.append(ValidationError(
                 ("check_max_max_date", geo, sig),
                 max_date.date(),
-                "most recent date of generated file seems too recent"))
+                "date of most recent generated file seems too recent"))
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date, geo, sig):
         """
@@ -449,7 +451,7 @@ class Validator():
                 'working files have already been compared against the reference, ' +
                 'that there is a bug somewhere'))
 
-    def check_rapid_change(self, df_to_test, df_to_reference, checking_date, geo, sig):
+    def check_rapid_change_num_rows(self, df_to_test, df_to_reference, checking_date, geo, sig):
         """
         Compare number of obervations per day in test dataframe vs reference dataframe.
 
@@ -513,16 +515,39 @@ class Validator():
         # For each variable (val, se, and sample size) where not missing, calculate the
         # relative mean difference and mean absolute difference between the test data
         # and the reference data across all geographic regions.
+        #
+        # Steps:
+        #   - melt: creates a long version of df, where 'variable' specifies variable
+        # name (val, se, sample size) and 'value' specifies the value of said variable;
+        # geo_id and type columns are unchanged
+        #   - pivot: each row is the test and reference values for a given geo
+        # region-variable type combo
+        #   - reset_index: index is set to auto-incrementing int; geo_id and variable
+        # names are back as normal columns
+        #   - dropna: drop all rows with at least one missing value (makes it
+        # impossible to compare reference and test)
+        #   - assign: create new temporary columns, raw and abs value of difference
+        # between test and reference columns
+        #   - groupby: group by variable name
+        #   - agg: for every variable name group (across geo regions), calculate the
+        # mean of each of the raw difference between test and reference columns, the
+        # abs value of the difference between test and reference columns, all test
+        # values, all reference values
+        #   - assign: use the new aggregate vars to calculate the relative mean
+        # difference, 2 * mean(differences) / difference(means) of two groups.
         df_all = pd.melt(
             df_all, id_vars=["geo_id", "type"], value_vars=["val", "se", "sample_size"]
-        ).pivot(index=("geo_id", "variable"), columns="type", values="value"
-                ).reset_index(("geo_id", "variable")
-                              ).dropna(
+        ).pivot(
+            index=("geo_id", "variable"), columns="type", values="value"
+        ).reset_index(
+            ("geo_id", "variable")
+        ).dropna(
         ).assign(
             type_diff=lambda x: x["test"] - x["reference"],
             abs_type_diff=lambda x: abs(x["type_diff"])
-        ).groupby("variable", as_index=False
-                  ).agg(
+        ).groupby(
+            "variable", as_index=False
+        ).agg(
             mean_type_diff=("type_diff", "mean"),
             mean_abs_type_diff=("abs_type_diff", "mean"),
             mean_test_var=("test", "mean"),
@@ -613,7 +638,7 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
-        # Get list of dates we expect to see in all the CSV data.
+        # Get list of dates we expect to see in the source data.
         date_slist = all_frames['date'].unique().tolist()
         date_list = list(
             map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
@@ -649,9 +674,6 @@ class Validator():
 
             weight_option = 'weighted' if 'wili' in sig or 'wcli' in sig else 'unweighted'
 
-            print("Printing geo_sig_df scenes:", geo_sig_df.shape)
-            print(geo_sig_df)
-
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, weight_option, geo, sig)
             self.check_max_allowed_max_date(max_date, geo, sig)
@@ -674,7 +696,7 @@ class Validator():
                     recent_df, reference_api_df, checking_date, geo, sig)
 
                 if self.sanity_check_rows_per_day:
-                    self.check_rapid_change(
+                    self.check_rapid_change_num_rows(
                         recent_df, reference_api_df, checking_date, geo, sig)
 
                 if self.sanity_check_value_diffs:
@@ -698,8 +720,11 @@ class Validator():
             subset_raised_errors = []
 
             for val_error in self.raised_errors:
-                raised_check_id = tuple(item.strftime("%Y-%m-%d") if isinstance(
-                    item, (date, datetime)) else item for item in val_error.check_data_id)
+                # Convert any dates in check_data_id to strings for the purpose of comparing
+                # to manually suppressed errors.
+                raised_check_id = tuple([
+                    item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
+                    else item for item in val_error.check_data_id])
 
                 if raised_check_id not in self.suppressed_errors:
                     subset_raised_errors.append(val_error)

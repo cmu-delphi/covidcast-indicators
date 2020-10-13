@@ -13,7 +13,7 @@ from .process import process, add_prefix, files_in_past_week
 
 
 def run_module():
-
+    """Creates the Safegraph indicator."""
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
@@ -46,6 +46,7 @@ def run_module():
             'AWS_DEFAULT_REGION': aws_default_region,
         },
         shell=True,
+        check=True,
     )
 
     files = glob.glob(f'{raw_data_dir}/social-distancing/**/*.csv.gz',

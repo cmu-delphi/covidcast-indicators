@@ -10,6 +10,8 @@ from .geo import FIPS_TO_STATE
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
+# Geo resolutions allowed for aggregation.
+VALID_GEO_RESOLUTIONS = ('county', 'state')
 
 
 def validate(df):
@@ -149,7 +151,7 @@ def construct_signals(cbg_df, signal_names):
 
 
 def aggregate(df, signal_names, geo_resolution='county'):
-    '''Aggregate signals to appropriate resolution and produce standard errors.
+    """Aggregate signals to appropriate resolution and produce standard errors.
     Parameters
     ----------
     df: pd.DataFrame
@@ -164,16 +166,16 @@ def aggregate(df, signal_names, geo_resolution='county'):
     pd.DataFrame:
         DataFrame with one row per geo_id, with columns for the individual
         signals, standard errors, and sample sizes.
-    '''
+    """
     # Prepare geo resolution
-    GEO_RESOLUTION = ('county', 'state')
     if geo_resolution == 'county':
         df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
         df['geo_id'] = df['county_fips'].apply(lambda x:
                                                FIPS_TO_STATE[x[:2]])
     else:
-        raise ValueError(f'`geo_resolution` must be one of {GEO_RESOLUTION}.')
+        raise ValueError(
+            f'`geo_resolution` must be one of {VALID_GEO_RESOLUTIONS}.')
 
     # Aggregation and signal creation
     grouped_df = df.groupby(['geo_id'])[signal_names]
@@ -210,7 +212,8 @@ def process_window(df_list: List[pd.DataFrame],
         path where the output files are saved
     Returns
     -------
-    None
+    None.  One file is written per (signal, resolution) pair containing the
+    aggregated data from `df`.
     """
     for df in df_list:
         validate(df)
@@ -232,8 +235,31 @@ def process_window(df_list: List[pd.DataFrame],
                              index=False, )
 
 
-def process(current_filename, previous_filenames, signal_names,
-            geo_resolutions, export_dir):
+def process(current_filename: str,
+            previous_filenames: List[str],
+            signal_names: List[str],
+            geo_resolutions: List[str],
+            export_dir: str):
+    """Creates and exports signals corresponding both to a single day as well
+    as averaged over the previous week.
+    Parameters
+    ----------
+    current_filename: str
+        path to file holding the target date's data.
+    previous_filenames: List[str]
+        paths to files holding data from each day in the week preceding the
+        target date.
+    signal_names: List[str]
+        signal names to be processed
+    geo_resolutions: List[str]
+        List of geo resolutions to export the data.
+    export_dir
+        path where the output files are saved.
+    Returns
+    -------
+    None.  Two files are written per (signal, resolution) pair, one for the
+    single date values and one for the data averaged over the previous week.
+    """
     past_week = [pd.read_csv(current_filename)]
     past_week.extend(pd.read_csv(f) for f in previous_filenames)
 

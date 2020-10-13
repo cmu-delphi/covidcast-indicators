@@ -71,6 +71,7 @@ class TestProcess:
     def test_files_in_past_week(self):
         """Tests that `files_in_past_week()` finds the file names corresponding
         to the previous 6 days."""
+        # Week that stretches over a month boundary.
         assert tuple(files_in_past_week(
             'x/y/z/2020/07/04/2020-07-04-social-distancing.csv.gz')) ==\
             ('x/y/z/2020/07/03/2020-07-03-social-distancing.csv.gz',
@@ -79,6 +80,24 @@ class TestProcess:
              'x/y/z/2020/06/30/2020-06-30-social-distancing.csv.gz',
              'x/y/z/2020/06/29/2020-06-29-social-distancing.csv.gz',
              'x/y/z/2020/06/28/2020-06-28-social-distancing.csv.gz')
+        # Week that stretches over a year boundary.
+        assert tuple(files_in_past_week(
+            'x/y/z/2020/01/04/2020-01-04-social-distancing.csv.gz')) ==\
+            ('x/y/z/2020/01/03/2020-01-03-social-distancing.csv.gz',
+             'x/y/z/2020/01/02/2020-01-02-social-distancing.csv.gz',
+             'x/y/z/2020/01/01/2020-01-01-social-distancing.csv.gz',
+             'x/y/z/2019/12/31/2019-12-31-social-distancing.csv.gz',
+             'x/y/z/2019/12/30/2019-12-30-social-distancing.csv.gz',
+             'x/y/z/2019/12/29/2019-12-29-social-distancing.csv.gz')
+        # Week that includes a leap day.
+        assert tuple(files_in_past_week(
+            'x/y/z/2020/03/01/2020-03-01-social-distancing.csv.gz')) ==\
+            ('x/y/z/2020/02/29/2020-02-29-social-distancing.csv.gz',
+             'x/y/z/2020/02/28/2020-02-28-social-distancing.csv.gz',
+             'x/y/z/2020/02/27/2020-02-27-social-distancing.csv.gz',
+             'x/y/z/2020/02/26/2020-02-26-social-distancing.csv.gz',
+             'x/y/z/2020/02/25/2020-02-25-social-distancing.csv.gz',
+             'x/y/z/2020/02/24/2020-02-24-social-distancing.csv.gz')
 
     def test_process_window(self, tmp_path):
         """Tests that processing over a window correctly aggregates signals."""

@@ -12,6 +12,8 @@ from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
 
+# Base file name for raw data CSVs.
+CSV_NAME = 'social-distancing.csv.gz'
 
 def validate(df):
     """Confirms that a data frame has only one date."""
@@ -30,7 +32,7 @@ def files_in_past_week(current_filename) -> List[str]:
     ----------
     current_filename: str
         name of CSV file.  Must be of the form
-        {path}/{YYYY}/{MM}/{DD}/{YYYY}-{MM}-{DD}-social-distancing.csv.gz
+        {path}/{YYYY}/{MM}/{DD}/{YYYY}-{MM}-{DD}-{CSV_NAME}
     Returns
     -------
     List of file names corresponding to the 6 days prior to YYYY-MM-DD.
@@ -42,8 +44,7 @@ def files_in_past_week(current_filename) -> List[str]:
         current_date = current_date - one_day
         date_str = current_date.isoformat()
         date_path = date_str.replace('-', '/')
-        new_filename = f'{path}/{date_path}/{date_str}-'\
-            'social-distancing.csv.gz'
+        new_filename = f'{path}/{date_path}/{date_str}-{CSV_NAME}'
         yield new_filename
 
 

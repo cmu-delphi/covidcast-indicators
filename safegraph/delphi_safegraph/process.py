@@ -197,8 +197,8 @@ def process_window(df_list: List[pd.DataFrame],
                    signal_names: List[str],
                    geo_resolutions: List[str],
                    export_dir: str):
-    """Processes a list of input census block group-level CSVs as a single
-    data set and exports it.  Assumes each data file has _only_ one date
+    """Processes a list of input census block group-level data frames as a single
+    data set and exports it.  Assumes each data frame has _only_ one date
     of data.
     Parameters
     ----------

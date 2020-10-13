@@ -382,6 +382,11 @@ class TestGeoMapper:
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
         assert new_data2["hhs_region_number"].unique().size == 2
 
+        # state_name -> state_id
+        new_data = gmpr.add_geocode(self.zip_data, "zip", "state_name")
+        new_data2 = gmpr.add_geocode(new_data, "state_name", "state_id")
+        assert new_data2.shape == (12, 6)
+
         # fips -> nation
         new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "nation")
         assert new_data.equals(

@@ -43,7 +43,7 @@ def run_module():
     daily_cache_dir = params["daily_cache_dir"]
     static_file_dir = params["static_file_dir"]
     token = params["token"]
-    test_mode = (params["mode"] == "test")
+    test_mode = params["mode"]
 
     daily_arch_diff = S3ArchiveDiffer(
         daily_cache_dir, daily_export_dir,

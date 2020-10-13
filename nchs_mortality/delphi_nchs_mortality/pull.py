@@ -39,14 +39,14 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     TYPE_DICT = {key: float for key in KEEP_COLUMNS}
     TYPE_DICT["timestamp"] = 'datetime64[ns]'
 
-    if test_mode:
-        df = pd.read_csv("./test_data/test_data.csv")
-    else:
+    if test_mode == "":
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results).rename(
                 {"start_week": "timestamp"}, axis=1)
+    else:
+        df = pd.read_csv("./test_data/%s"%test_mode)
 
     # Check missing start_week == end_week
     try:

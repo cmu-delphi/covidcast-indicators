@@ -6,7 +6,7 @@
   "daily_export_dir": "./daily_receiving",
   "daily_cache_dir": "./daily_cache",
   "token": "",
-  "mode":"test",
+  "mode":"test_data.csv",
   "aws_credentials": {
     "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
     "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"

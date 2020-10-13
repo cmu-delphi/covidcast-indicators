@@ -1,10 +1,9 @@
-from os import listdir, remove
+from os import listdir
 from os.path import join
 
 import pandas as pd
 
 from delphi_utils import read_params
-from delphi_quidel_covidtest.run import run_module
 from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
 from delphi_quidel_covidtest.handle_wip_sensor import add_prefix
 

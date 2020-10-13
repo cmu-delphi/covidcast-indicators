@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """Call the function run_module when executed.
 
-This file indicates that calling the module (`python -m MODULE_NAME`) will
-call the function `run_module` found within the run.py file. There should be
-no need to change this template.
+This file indicates that running the module (`python -m delphi_validator`) will
+call the function `run_module` found within the run.py file.
 """
 
-from .run import run_module  # pragma: no cover
+from .run import run_module
 
-run_module()  # pragma: no cover
+run_module()

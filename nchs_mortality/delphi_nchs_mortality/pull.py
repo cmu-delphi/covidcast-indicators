@@ -56,7 +56,13 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
             "end_week is not always the same as start_week, check the raw file"
         )
 
-    df = df.astype(TYPE_DICT)
+    try:
+        df = df.astype(TYPE_DICT)
+    except KeyError:
+        raise ValueError("Expected column(s) missed, The dataset "
+            "schema may have changed. Please investigate and "
+            "amend the code.")
+    
     df = df[df["state"] != "United States"]
     df.loc[df["state"] == "New York City", "state"] = "New York"
 
@@ -85,10 +91,6 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
 
     # Add population info
     KEEP_COLUMNS.extend(["timestamp", "geo_id", "population"])
-    try:
-        df = df.merge(map_df, on="state")[KEEP_COLUMNS]
-    except KeyError:
-        raise ValueError("Expected column(s) missed, The dataset "
-            "schema may have changed. Please investigate and "
-            "amend the code.")
+    df = df.merge(map_df, on="state")[KEEP_COLUMNS]
+    
     return df

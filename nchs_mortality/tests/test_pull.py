@@ -31,3 +31,8 @@ class TestPullUSAFacts:
         with pytest.raises(ValueError):
             df = pull_nchs_mortality_data(token, map_df,
                                           "bad_data_with_inconsistent_time_col.csv")
+      
+    def test_bad_file_with_inconsistent_time_col(self):
+        with pytest.raises(ValueError):
+            df = pull_nchs_mortality_data(token, map_df,
+                                          "bad_data_with_missing_cols.csv")

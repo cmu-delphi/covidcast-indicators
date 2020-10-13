@@ -5,12 +5,12 @@ when the module is run with `python -m MODULE_NAME`.
 import glob
 import multiprocessing as mp
 import subprocess
-from functools import partial
 
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, add_prefix
+from .process import process, add_prefix, files_in_past_week
+
 
 def run_module():
 
@@ -24,11 +24,14 @@ def run_module():
     aws_endpoint = params["aws_endpoint"]
     wip_signal = params["wip_signal"]
 
-    process_file = partial(process,
-                           signal_names=add_prefix(SIGNALS, wip_signal, prefix='wip_'),
-                           geo_resolutions=GEO_RESOLUTIONS,
-                           export_dir=export_dir,
-                           )
+    def process_file(current_filename):
+        return process(current_filename,
+                       files_in_past_week(current_filename),
+                       signal_names=add_prefix(
+                           SIGNALS, wip_signal, prefix='wip_'),
+                       geo_resolutions=GEO_RESOLUTIONS,
+                       export_dir=export_dir,
+                       )
 
     # Update raw data
     # Why call subprocess rather than using a native Python client, e.g. boto3?

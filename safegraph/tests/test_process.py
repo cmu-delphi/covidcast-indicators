@@ -1,15 +1,15 @@
-import pytest
-
-from os import listdir
-from os.path import join
-
+"""Tests for Safegraph process functions."""
+import os
 import numpy as np
 import pandas as pd
+import pytest
+
 from delphi_safegraph.process import (
-    construct_signals,
-    aggregate,
     add_prefix,
-    files_in_past_week
+    aggregate,
+    construct_signals,
+    files_in_past_week,
+    process_window
 )
 from delphi_safegraph.run import SIGNALS
 from delphi_utils import read_params
@@ -65,10 +65,40 @@ class TestProcess:
 
     def test_files_in_past_week(self):
         assert tuple(files_in_past_week(
-            "data_dir/2020/07/04/2020-07-04-social-distancing.csv.gz")) ==\
-            ("data_dir/2020/07/03/2020-07-03-social-distancing.csv.gz",
-             "data_dir/2020/07/02/2020-07-02-social-distancing.csv.gz",
-             "data_dir/2020/07/01/2020-07-01-social-distancing.csv.gz",
-             "data_dir/2020/06/30/2020-06-30-social-distancing.csv.gz",
-             "data_dir/2020/06/29/2020-06-29-social-distancing.csv.gz",
-             "data_dir/2020/06/28/2020-06-28-social-distancing.csv.gz")
+            'x/y/z/2020/07/04/2020-07-04-social-distancing.csv.gz')) ==\
+            ('x/y/z/2020/07/03/2020-07-03-social-distancing.csv.gz',
+             'x/y/z/2020/07/02/2020-07-02-social-distancing.csv.gz',
+             'x/y/z/2020/07/01/2020-07-01-social-distancing.csv.gz',
+             'x/y/z/2020/06/30/2020-06-30-social-distancing.csv.gz',
+             'x/y/z/2020/06/29/2020-06-29-social-distancing.csv.gz',
+             'x/y/z/2020/06/28/2020-06-28-social-distancing.csv.gz')
+
+    def test_process_window(self, tmp_path):
+        export_dir = tmp_path / 'export'
+        export_dir.mkdir()
+        df1 = pd.DataFrame(data={
+            'date_range_start': ['2020-06-12T00:00:00-05:00:00']*3,
+            'origin_census_block_group': [10539707003, 10539707003, 10730144081],
+            'device_count': [10, 20, 100],
+            'completely_home_device_count': [20, 120, 400]
+        })
+        df2 = pd.DataFrame(data={
+            'date_range_start': ['2020-06-11T00:00:00-05:00:00'],
+            'origin_census_block_group': [10730144081],
+            'device_count': [200],
+            'completely_home_device_count': [4800]
+        })
+        process_window([df1, df2], ['completely_home_prop'], ['county'],
+                       export_dir)
+        expected = pd.DataFrame(data={
+            'geo_id': [1053, 1073],
+            'val': [4.0, 14.0],
+            'se': [2.0, 10.0],
+            'sample_size': [2, 2]
+        })
+        actual = pd.read_csv(
+            export_dir / '2020-06-12_county_completely_home_prop.csv')
+        print(expected)
+        print(actual)
+        assert set(expected.columns) == set(actual.columns)
+        assert expected.equals(actual)

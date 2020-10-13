@@ -1,5 +1,5 @@
+"""Internal functions for creating Safegraph indicator."""
 import datetime
-import os
 from typing import List
 import numpy as np
 import pandas as pd
@@ -12,25 +12,15 @@ from .geo import FIPS_TO_STATE
 MOD = 10000000
 
 
-def date_from_fname(fname) -> datetime.date:
-    _, year, month, day, __ = fname.rsplit('/', 4)
-    return datetime.date(int(year), int(month), int(day))
+def validate(df):
+    """Confirms that a data frame has only one date."""
+    timestamps = df['date_range_start'].apply(date_from_timestamp)
+    assert len(timestamps.unique()) == 1
 
 
 def date_from_timestamp(timestamp) -> datetime.date:
+    """Extracts the date from a timestamp beginning with {YYYY}-{MM}-{DD}T."""
     return datetime.date.fromisoformat(timestamp.split('T')[0])
-
-
-def read_and_validate_file(fname) -> pd.DataFrame:
-    df = pd.read_csv(fname)
-    unique_date = df['timestamp'].unique()
-    if len(unique_date) != 1:
-        raise ValueError(
-            f'More than one timestamp found in input file {fname}.')
-    # assert date_from_timestamp(unique_date[0]) == date_from_fname(fname),\
-    #     f'The name of input file {fname} does not correspond to the date'\
-    #     'contained inside.'
-    return df
 
 
 def files_in_past_week(current_filename) -> List[str]:
@@ -201,43 +191,30 @@ def aggregate(df, signal_names, geo_resolution='county'):
     return agg_df.reset_index()
 
 
-def process_single_date(df, signal_names, geo_resolutions, export_dir):
-    """Process an input census block group-level CSV and export it.  Assumes
-    that the input file has _only_ one date of data.
+def process_window(df_list: List[pd.DataFrame],
+                   signal_names: List[str],
+                   geo_resolutions: List[str],
+                   export_dir: str):
+    """Processes a list of input census block group-level CSVs as a single
+    data set and exports it.  Assumes each data file has _only_ one date
+    of data.
     Parameters
     ----------
-    export_dir
-        path where the output files are saved
-    signal_names : List[str]
-        signal names to be processed
     cbg_df: pd.DataFrame
-        census block group-level CSV.
+        list of census block group-level CSVs.
+    signal_names: List[str]
+        signal names to be processed
     geo_resolutions: List[str]
         List of geo resolutions to export the data.
+    export_dir
+        path where the output files are saved
     Returns
     -------
     None
     """
-    date = date_from_timestamp(df.at[0, 'timestamp'])
-    cbg_df = construct_signals(df, signal_names)
-    for geo_res in geo_resolutions:
-        aggregated_df = aggregate(cbg_df, signal_names, geo_res)
-        for signal in signal_names:
-            df_export = aggregated_df[
-                ['geo_id']
-                + [f'{signal}_{x}' for x in ('mean', 'se', 'n')]
-            ].rename({
-                f'{signal}_mean': 'val',
-                f'{signal}_se': 'se',
-                f'{signal}_n': 'sample_size',
-            }, axis=1)
-            df_export.to_csv(f'{export_dir}/{date}_{geo_res}_{signal}.csv',
-                             na_rep='NA',
-                             index=False, )
-
-
-def process_windowed_average(df_list, signal_names, geo_resolutions, export_dir):
-    date = date_from_timestamp(df_list[0].at[0, 'timestamp'])
+    for df in df_list:
+        validate(df)
+    date = date_from_timestamp(df_list[0].at[0, 'date_range_start'])
     cbg_df = pd.concat(construct_signals(df, signal_names) for df in df_list)
     for geo_res in geo_resolutions:
         aggregated_df = aggregate(cbg_df, signal_names, geo_res)
@@ -255,12 +232,12 @@ def process_windowed_average(df_list, signal_names, geo_resolutions, export_dir)
                              index=False, )
 
 
-def process(fname, signal_names, geo_resolutions, export_dir):
-    past_week = [pd.read_csv(fname)]
-    # past_week.extend(pd.read_csv(f)
-    #                  for f in files_in_past_week(fname))
+def process(current_filename, previous_filenames, signal_names,
+            geo_resolutions, export_dir):
+    past_week = [pd.read_csv(current_filename)]
+    past_week.extend(pd.read_csv(f) for f in previous_filenames)
 
-    process_single_date(past_week[0], signal_names,
-                        geo_resolutions, export_dir)
-    # process_windowed_average(past_week, signal_names,
-    #                          geo_resolutions, export_dir)
+    # First process the current file alone...
+    process_window(past_week[:1], signal_names, geo_resolutions, export_dir)
+    # ...then as part of the whole window.
+    process_window(past_week, signal_names, geo_resolutions, export_dir)

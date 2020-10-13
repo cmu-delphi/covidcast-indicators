@@ -17,13 +17,12 @@ def geo_map(geo_res, df):
     data = gmpr.add_population_column(data, "zip")
     # zip -> geo_res
     data = gmpr.replace_geocode(data, "zip", geo_key,
-                                date_col=date_col, data_cols=data_cols)        
+                                date_col=date_col, data_cols=data_cols)
     if geo_res == "state":
         return data
-    else:
-        # Add parent state
-        data = add_parent_state(data, geo_res, geo_key)
-        return data, geo_key
+    # Add parent state
+    data = add_parent_state(data, geo_res, geo_key)
+    return data, geo_key
 
 def add_parent_state(data, geo_res, geo_key):
     """
@@ -35,7 +34,7 @@ def add_parent_state(data, geo_res, geo_key):
     if geo_res == "county":
         mix_map = fips_to_state[["fips", "state_id"]]
     else:
-        fips_to_geo_res = gmpr._load_crosswalk(from_code="fips", to_code=geo_res)    
+        fips_to_geo_res = gmpr._load_crosswalk(from_code="fips", to_code=geo_res)
         mix_map = fips_to_geo_res[["fips", geo_res]].merge(
                 fips_to_state[["fips", "state_id"]],
                 on="fips",

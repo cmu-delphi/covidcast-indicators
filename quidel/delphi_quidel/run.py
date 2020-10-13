@@ -4,9 +4,6 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from os.path import join
-
-import pandas as pd
 from delphi_utils import read_params
 
 from .geo_maps import geo_map
@@ -47,14 +44,14 @@ def run_module():
     for test_type in ["covid_ag", "flu_ag"]:
         print("For %s:"%test_type)
         data = dfs[test_type].copy()
-        
+
         # For State Level
         state_groups = geo_map("state", data).groupby("state_id")
         first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
         for sensor in sensors:
-            print("state", sensor)
-            if "test_type" not in sensor:
+            if test_type not in sensor:
                 continue
+            print("state", sensor)
             state_df = generate_sensor_for_states(
                 state_groups, smooth=SENSORS[sensor][1],
                 device=SENSORS[sensor][0], first_date=first_date,
@@ -65,12 +62,11 @@ def run_module():
 
         # County/HRR/MSA level
         for geo_res in GEO_RESOLUTIONS:
-            print(geo_res, sensor)
             geo_data, res_key = geo_map(geo_res, data)
             for sensor in sensors:
-                print(geo_res, sensor)
-                if "test_type" not in sensor:
+                if test_type not in sensor:
                     continue
+                print(geo_res, sensor)
                 res_df = generate_sensor_for_other_geores(
                     state_groups, geo_data, res_key, smooth=SENSORS[sensor][1],
                     device=SENSORS[sensor][0], first_date=first_date,

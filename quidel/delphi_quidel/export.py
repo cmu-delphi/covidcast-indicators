@@ -23,10 +23,8 @@ def export_csv(df, geo_name, sensor, receiving_dir, start_date, end_date):
     end_date: datetime.datetime
         The last date to report
     """
-
-    df = df.copy()
     df = df[np.logical_and(df["timestamp"] >= start_date,
-                           df["timestamp"] <= end_date)]
+                           df["timestamp"] <= end_date)].copy()
 
     for date in df["timestamp"].unique():
         t = pd.to_datetime(str(date))

@@ -6,12 +6,10 @@ import pandas as pd
 import covidcast
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
-from .geo import FIPS_TO_STATE
+from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
-# Geo resolutions allowed for aggregation.
-VALID_GEO_RESOLUTIONS = ('county', 'state')
 
 
 def validate(df):
@@ -197,13 +195,13 @@ def process_window(df_list: List[pd.DataFrame],
                    signal_names: List[str],
                    geo_resolutions: List[str],
                    export_dir: str):
-    """Processes a list of input census block group-level data frames as a single
-    data set and exports it.  Assumes each data frame has _only_ one date
-    of data.
+    """Processes a list of input census block group-level data frames as a
+    single data set and exports it.  Assumes each data frame has _only_ one
+    date of data.
     Parameters
     ----------
     cbg_df: pd.DataFrame
-        list of census block group-level CSVs.
+        list of census block group-level frames.
     signal_names: List[str]
         signal names to be processed
     geo_resolutions: List[str]

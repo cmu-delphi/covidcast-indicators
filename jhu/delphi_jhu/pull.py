@@ -69,12 +69,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
 
     gmpr = GeoMapper()
     df = gmpr.replace_geocode(df, "jhu_uid", "fips", from_col="UID", date_col="timestamp")
-
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Set population as NAN for fake fips
-    pop_df.rename(columns={'FIPS':'fips'}, inplace=True)
-    pop_df['fips'] = pop_df['fips'].astype(int).\
-        astype(str).str.zfill(5)
+    # Merge in population, set population as NAN for fake fips
     df = pd.merge(df, pop_df, on="fips", how='left')
 
     # Add a dummy first row here on day before first day

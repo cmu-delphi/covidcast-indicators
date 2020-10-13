@@ -4,12 +4,9 @@ from os.path import join
 
 import pandas as pd
 from delphi_jhu.pull import pull_jhu_data, detect_date_col
+from delphi_utils import GeoMapper
 
-pop_df = pd.read_csv(
-    join("..", "static", "fips_population.csv"),
-    dtype={"fips": float, "population": float}
-).rename({"fips": "FIPS"}, axis=1)
-
+pop_df = GeoMapper().add_population_column("fips")
 
 class TestPullJHU:
     test_date_cols = ['2/29/20', '3/1/20', '3/2/20', '3/3/20', '3/4/20', '3/5/20', '3/6/20',

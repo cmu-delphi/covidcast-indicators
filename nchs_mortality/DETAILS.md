@@ -55,7 +55,8 @@ for Alaska in a week starting from date D, we will report the timestamp of this 
 as the corresponding epiweek of date(D + 1).
 
 ### Data Versioning
-We check for updates for NCHS mortality data every weekday as how it is reported by 
-CDC and stash them on AWS. We merge them with the data stashed previously and keep track of 
-the changes. Every Mondays, we upload both the most recent version of data and the 
-changes made over the past week due to backfill to our API.
+Data versions are tracked on both a daily and weekly level.
+On a daily level, we check for updates for NCHS mortality data every weekday as how it is reported by 
+CDC and stash these daily updates on S3, but not our API.
+On a weekly level (on Mondays), we additionally upload the changes to the data 
+made over the past week (due to backfill) to our API.

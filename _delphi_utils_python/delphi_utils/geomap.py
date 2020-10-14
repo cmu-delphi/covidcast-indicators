@@ -77,6 +77,11 @@ class GeoMapper:
     ==========
     The main GeoMapper object loads and stores crosswalk dataframes on-demand.
 
+    When replacing geocodes with a new one an aggregation step is performed on the data columns
+    to merge entries  (i.e. in the case of a many to one mapping or a weighted mapping). This
+    requires a specification of the data columns, which are assumed to be all the columns that
+    are not the geocodes or the date column specified in date_col.
+
     Example 1: to add a new column with a new geocode, possibly with weights:
     > gmpr = GeoMapper()
     > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
@@ -327,8 +332,12 @@ class GeoMapper:
             df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="left")
 
         # Drop extra state columns
-        if new_code in state_codes:
+        if new_code in state_codes and not from_code in state_codes:
             state_codes.remove(new_code)
+            df.drop(columns=state_codes, inplace=True)
+        elif new_code in state_codes and from_code in state_codes:
+            state_codes.remove(new_code)
+            state_codes.remove(from_code)
             df.drop(columns=state_codes, inplace=True)
 
         return df

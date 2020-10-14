@@ -7,6 +7,7 @@ from delphi_safegraph.process import (
     aggregate,
     construct_signals,
     files_in_past_week,
+    process,
     process_window
 )
 from delphi_safegraph.run import SIGNALS
@@ -14,6 +15,7 @@ from delphi_safegraph.run import SIGNALS
 
 class TestProcess:
     """Tests for processing Safegraph indicators."""
+
     def test_construct_signals_present(self):
         """Tests that all signals are constructed."""
         cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
@@ -104,30 +106,75 @@ class TestProcess:
         export_dir = tmp_path / 'export'
         export_dir.mkdir()
         df1 = pd.DataFrame(data={
-            'date_range_start': ['2020-06-12T00:00:00-05:00:00']*3,
+            'date_range_start': ['2020-02-14T00:00:00-05:00:00']*3,
             'origin_census_block_group': [10539707003,
                                           10539707003,
                                           10730144081],
-            'device_count': [10, 20, 100],
-            'completely_home_device_count': [20, 120, 400]
+            'device_count': [100, 200, 1000],
+            'completely_home_device_count': [2, 12, 40]
         })
         df2 = pd.DataFrame(data={
-            'date_range_start': ['2020-06-11T00:00:00-05:00:00'],
+            'date_range_start': ['2020-02-14T00:00:00-05:00:00'],
             'origin_census_block_group': [10730144081],
-            'device_count': [200],
-            'completely_home_device_count': [4800]
+            'device_count': [2000],
+            'completely_home_device_count': [480]
         })
         process_window([df1, df2], ['completely_home_prop'], ['county'],
                        export_dir)
         expected = pd.DataFrame(data={
             'geo_id': [1053, 1073],
-            'val': [4.0, 14.0],
-            'se': [2.0, 10.0],
+            'val': [0.04, 0.14],
+            'se': [0.02, 0.10],
             'sample_size': [2, 2]
         })
         actual = pd.read_csv(
-            export_dir / '2020-06-12_county_completely_home_prop.csv')
+            export_dir / '2020-02-14_county_completely_home_prop.csv')
         print(expected)
         print(actual)
-        assert set(expected.columns) == set(actual.columns)
-        assert expected.equals(actual)
+        pd.testing.assert_frame_equal(expected, actual)
+
+    def test_process(self, tmp_path):
+        """Tests that processing a list of current and previous file names
+        correctly reads and aggregates signals."""
+        export_dir = tmp_path / 'export'
+        export_dir.mkdir()
+
+        process('raw_data/small_raw_data_0.csv',
+                # File 2 does not exist.
+                ['raw_data/small_raw_data_1.csv',
+                 'raw_data/small_raw_data_2.csv',
+                 'raw_data/small_raw_data_3.csv', ],
+                SIGNALS,
+                ['state'],
+                export_dir)
+
+        expected = {
+            'median_home_dwell_time': pd.DataFrame(data={
+                'geo_id': ['al', 'pa'],
+                'val': [4.5, 7.5],
+                'se': [1.5, 0.5],
+                'sample_size': [2, 2]
+            }),
+            'completely_home_prop': pd.DataFrame(data={
+                'geo_id': ['al', 'pa'],
+                'val': [0.1, 0.15],
+                'se': [0.05, 0.05],
+                'sample_size': [2, 2]
+            }),
+            'part_time_work_prop': pd.DataFrame(data={
+                'geo_id': ['al', 'pa'],
+                'val': [0.25, 0.25],
+                'se': [0.1, 0.05],
+                'sample_size': [2, 2]
+            }),
+            'full_time_work_prop': pd.DataFrame(data={
+                'geo_id': ['al', 'pa'],
+                'val': [0.35, 0.35],
+                'se': [0.1, 0.05],
+                'sample_size': [2, 2]
+            })
+        }
+        actual = {signal: pd.read_csv(
+            export_dir / f'2020-06-12_state_{signal}.csv') for signal in SIGNALS}
+        for signal in SIGNALS:
+            pd.testing.assert_frame_equal(expected[signal], actual[signal])

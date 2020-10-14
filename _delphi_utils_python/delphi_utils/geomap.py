@@ -307,6 +307,9 @@ class GeoMapper:
         # state codes are all stored in one table
         if from_code in state_codes and new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code="state", to_code="state")
+            crosswalk = crosswalk.rename(
+                columns={from_code: from_col, new_code: new_col}
+            )
         elif new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
             crosswalk = crosswalk.rename(

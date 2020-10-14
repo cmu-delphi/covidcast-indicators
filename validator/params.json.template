@@ -2,7 +2,7 @@
   "validation": {
     "data_source": "usa-facts",
     "end_date": "2020-09-08",
-    "span_length": "7",
+    "span_length": 7,
     "ref_window_size": 7,
     "minimum_sample_size": 100,
     "missing_se_allowed": true,

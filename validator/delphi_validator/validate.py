@@ -101,6 +101,10 @@ class Validator():
             raise an exception or not
             - sanity_check_rows_per_day: boolean; check flag
             - sanity_check_value_diffs: boolean; check flag
+            - smoothed_signals: set of strings; names of signals that are smoothed (7-day
+            avg, etc)
+            - expected_lag: dict of signal names: int pairs; how many days behind do we
+            expect each signal to be
             - suppressed_errors: set of check_data_ids used to identify error messages to ignore
             - raised_errors: list to append errors to as they are raised
         """
@@ -125,6 +129,9 @@ class Validator():
         self.sanity_check_value_diffs = params.get(
             'sanity_check_value_diffs', True)
         self.test_mode = params.get("test_mode", False)
+
+        self.smoothed_signals = set(params.get("smoothed_signals", []))
+        self.expected_lag = params["expected_lag"]
 
         self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
@@ -380,26 +387,20 @@ class Validator():
                     result,
                     "sample size must be NA or >= {self.minimum_sample_size}"))
 
-    def check_min_allowed_max_date(self, max_date, weighted_option, geo, sig):
+    def check_min_allowed_max_date(self, max_date, geo, sig):
         """
         Check if time since data was generated is reasonable or too long ago.
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
-            - weighted_option: str; selects the "reasonable" threshold based on signal name
             - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
             - sig: str; signal name as in the CSV name
 
         Returns:
             - None
         """
-        switcher = {
-            'unweighted': timedelta(days=1),
-            'weighted': timedelta(days=4)
-        }
-        # Get the setting from switcher dictionary
-        thres = switcher.get(
-            weighted_option, lambda: "Invalid weighting option")
+        thres = timedelta(
+            days=self.expected_lag[sig] if sig in self.expected_lag else 1)
 
         if max_date < self.generation_date - thres:
             self.raised_errors.append(ValidationError(
@@ -471,9 +472,11 @@ class Validator():
         reference_rows_per_reporting_day = df_to_reference.shape[0] / len(
             set(df_to_reference["time_value"]))
 
-        if abs(reldiff_by_min(
-                test_rows_per_reporting_day,
-                reference_rows_per_reporting_day)) > 0.35:
+        compare_rows = reldiff_by_min(
+            test_rows_per_reporting_day,
+            reference_rows_per_reporting_day)
+
+        if abs(compare_rows) > 0.35:
             self.raised_errors.append(ValidationError(
                 ("check_rapid_change_num_rows", checking_date, geo, sig),
                 (test_rows_per_reporting_day, reference_rows_per_reporting_day),
@@ -482,7 +485,6 @@ class Validator():
 
     def check_avg_val_diffs(self,
                             df_to_test, df_to_reference,
-                            smooth_option,
                             checking_date,
                             geo, sig):
         """
@@ -492,8 +494,6 @@ class Validator():
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the
             COVIDcast API or semirecent data
-            - smooth_option: "raw" or "smoothed", choosen according to smoothing of signal
-            (e.g. 7dav is "smoothed")
             - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
             - sig: str; signal name as in the CSV name
 
@@ -534,7 +534,7 @@ class Validator():
         # abs value of the difference between test and reference columns, all test
         # values, all reference values
         #   - assign: use the new aggregate vars to calculate the relative mean
-        # difference, 2 * mean(differences) / difference(means) of two groups.
+        # difference, 2 * mean(differences) / sum(means) of two groups.
         df_all = pd.melt(
             df_all, id_vars=["geo_id", "type"], value_vars=["val", "se", "sample_size"]
         ).pivot(
@@ -571,6 +571,7 @@ class Validator():
         }
 
         # Get the selected thresholds from switcher dictionary
+        smooth_option = "smoothed" if sig in self.smoothed_signals else "raw"
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.
@@ -652,8 +653,6 @@ class Validator():
         # in time, how many days do we use to form the reference statistics.
         semirecent_lookbehind = timedelta(days=7)
 
-        smooth_option_regex = re.compile(r'([^_]+)')
-
         # Keeps script from checking all files in a test run.
         if self.test_mode:
             kroc = 0
@@ -666,16 +665,8 @@ class Validator():
                 [name_match_pair[0] for name_match_pair in validate_files],
                 date_slist):
 
-            match_obj = smooth_option_regex.match(sig)
-            smooth_option = match_obj.group(1)
-
-            if smooth_option not in ('raw', 'smoothed'):
-                smooth_option = 'smoothed' if '7dav' in sig or 'smoothed' in sig else 'raw'
-
-            weight_option = 'weighted' if 'wili' in sig or 'wcli' in sig else 'unweighted'
-
             max_date = geo_sig_df["time_value"].max()
-            self.check_min_allowed_max_date(max_date, weight_option, geo, sig)
+            self.check_min_allowed_max_date(max_date, geo, sig)
             self.check_max_allowed_max_date(max_date, geo, sig)
 
             # Check data from a group of dates against recent (previous 7 days, by default)
@@ -684,6 +675,14 @@ class Validator():
                 recent_cutoff_date = checking_date - recent_lookbehind
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
+
+                if recent_df.empty:
+                    self.raised_errors.append(ValidationError(
+                        ("check_missing_geo_sig_date_combo",
+                         checking_date, geo, sig),
+                        None,
+                        "Test data for a given checking date-geo-sig combination is missing"))
+                    continue
 
                 # Reference dataframe runs backwards from the checking_date
                 reference_start_date = checking_date - \
@@ -701,7 +700,7 @@ class Validator():
 
                 if self.sanity_check_value_diffs:
                     self.check_avg_val_diffs(
-                        recent_df, reference_api_df, smooth_option, checking_date, geo, sig)
+                        recent_df, reference_api_df, checking_date, geo, sig)
 
             # Keeps script from checking all files in a test run.
             if self.test_mode:

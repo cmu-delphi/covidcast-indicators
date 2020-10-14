@@ -58,9 +58,8 @@ def get_geo_sig_cmbo(data_source):
     unique_signals = source_meta['signal'].unique().tolist()
     unique_geotypes = source_meta['geo_type'].unique().tolist()
 
-
     geo_sig_cmbo = list(product(unique_geotypes, unique_signals))
-    print("Number of mixed types:", len(geo_sig_cmbo))
+    print("Number of expected geo region-signal combinations:", len(geo_sig_cmbo))
 
     return geo_sig_cmbo
 

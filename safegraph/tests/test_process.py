@@ -175,6 +175,7 @@ class TestProcess:
             })
         }
         actual = {signal: pd.read_csv(
-            export_dir / f'2020-06-12_state_{signal}.csv') for signal in SIGNALS}
+            export_dir / f'2020-06-12_state_{signal}.csv')
+            for signal in SIGNALS}
         for signal in SIGNALS:
             pd.testing.assert_frame_equal(expected[signal], actual[signal])

@@ -48,7 +48,7 @@ def make_date_filter(start_date, end_date):
     start_code = int(start_date.strftime("%Y%m%d"))
     end_code = int(end_date.strftime("%Y%m%d"))
 
-    def temp_function(match):
+    def date_filter(match):
         """
         Return a boolean of whether a filename of appropriate format contains a date
         within the specified date range.
@@ -70,7 +70,7 @@ def make_date_filter(start_date, end_date):
         # Return boolean True if current file date "code" is within the defined date range.
         return start_code <= code <= end_code
 
-    return temp_function
+    return date_filter
 
 
 class Validator():

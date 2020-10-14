@@ -32,8 +32,7 @@
       "deaths_cumulative_num": 1,
       "deaths_cumulative_prop": 1,
       "deaths_incidence_num": 1,
-      "deaths_incidence_prop": 1,
-      },
+      "deaths_incidence_prop": 1},
     "test_mode": true,
     "suppressed_errors": [
       ["check_min_max_date", "county", "confirmed_7dav_cumulative_prop"],

@@ -13,13 +13,13 @@ class TestSmooth:
         dates = [str(x) for x in range(20200304, 20200311)]
 
         smoothed = pd.read_csv(
-            join("receiving",
+            join("../receiving",
                 f"{dates[-1]}_state_confirmed_7dav_cumulative_num.csv")
         )
 
         raw = pd.concat([
             pd.read_csv(
-                join("receiving",
+                join("../receiving",
                     f"{date}_state_confirmed_cumulative_num.csv")
             ) for date in dates
         ])

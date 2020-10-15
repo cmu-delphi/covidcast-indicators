@@ -10,7 +10,7 @@ source ~/.bash_profile
 # Build
 #
 
-local_indicator="quidel"
+local_indicator="quidel_covidtest"
 
 cd "${WORKSPACE}/${local_indicator}" || exit
 

@@ -75,10 +75,7 @@ class TestUpdateSensor:
             end_date = datetime(year=2020, month=3, day=17)
 
             # Generate the csvs
-            hosp_df = update_sensor(
-                state_files, mmwr_info,
-                temp_dir, STATIC_DIR,
-                start_date, end_date)
+            hosp_df = update_sensor(state_files, mmwr_info, temp_dir, start_date, end_date)
 
             # Check dataframe returned
             assert hosp_df.index.nlevels == 2

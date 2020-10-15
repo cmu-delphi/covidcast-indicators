@@ -48,9 +48,11 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
 
 
 def update_sensor(
-        state_files: List[str], mmwr_info: pd.DataFrame,
-        output_path: str, static_path: str,
-        start_date: datetime, end_date: datetime) -> pd.DataFrame:
+        state_files: List[str],
+        mmwr_info: pd.DataFrame,
+        output_path: str,
+        start_date: datetime,
+        end_date: datetime) -> pd.DataFrame:
     """
     Generate sensor values, and write to csv format.
 
@@ -58,7 +60,6 @@ def update_sensor(
         state_files: List of JSON files representing COVID-NET hospitalization data for each state
         mmwr_info: Mappings from MMWR week to actual dates, as a pd.DataFrame
         output_path: Path to write the csvs to
-        static_path: Path for the static geographic fiels
         start_date: First sensor date (datetime.datetime)
         end_date: Last sensor date (datetime.datetime)
 

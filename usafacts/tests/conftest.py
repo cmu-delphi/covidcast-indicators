@@ -11,7 +11,9 @@ from delphi_usafacts.run import run_module
 @pytest.fixture(scope="session")
 def run_as_module():
     # Clean receiving directory
-    for fname in listdir("receiving"):
-        remove(join("receiving", fname))
+    for fname in listdir("../receiving"):
+        if fname[0] == ".":
+            continue
+        remove(join("../receiving", fname))
 
     run_module()

@@ -88,7 +88,8 @@ def update_sensor(
     hosp_df = gmpr.add_geocode(hosp_df,
                                from_col=APIConfig.STATE_COL,
                                from_code="state_name",
-                               new_code="state_id")
+                               new_code="state_id",
+                               dropna=False)
     # To preserve column order, reassign original column and drop new one
     hosp_df[APIConfig.STATE_COL] = hosp_df["state_id"].str.upper()
     hosp_df.drop("state_id", axis=1, inplace=True)

@@ -33,7 +33,7 @@
 ## Checks + features wishlist, and problems to think about:
 
 * Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
-* Check for large jumps
+* Check explicitly for large spikes (avg_val check can detect large jumps and especially large spikes)
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Use known erroneous/anomalous days of source data to tune static thresholds
@@ -44,10 +44,10 @@
   * Ryan’s [correlation notebook](https://github.com/cmu-delphi/covidcast/tree/main/R-notebooks) for ideas
   * E.g. Doctor visits decreasing correlation with cases
   * E.g. WY/RI missing or very low compared to historical
-* Use hypothesis testing p-values to decide when to raise error or not, instead of static thresholds. Many low but non-significant p-values will also raise error.
-* Order raised exceptions by p-value
-* Correct p-values for multiple testing
-* Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (differeng geo regions, e.g.) are "close" to significant
+* Use hypothesis testing p-values to decide when to raise error or not, instead of static thresholds. Many low but non-significant p-values will also raise error. See [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1601307675021000?thread_ts=1600277030.103500&cid=CV1SYBC90) and [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1600978037007500?thread_ts=1600277030.103500&cid=CV1SYBC90) for more background.
+  * Order raised exceptions by p-value
+  * Correct p-values for multiple testing
+  * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (differeng geo regions, e.g.) are "close" to significant
 * Nicer formatting for error “report”
 * Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)

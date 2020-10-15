@@ -25,6 +25,14 @@ def run_module():
     wip_signal = params["wip_signal"]
 
     def process_file(current_filename):
+        """Wrapper around `process()` that only takes a single argument.
+
+        A single argument function is necessary to use `pool.map()` below.
+        Because each call to `process()` has two arguments that are dependent
+        on the input file name (`current_filename` and `previous_filenames`),
+        we choose to use this wrapper rather than something like
+        `functools.partial()`.
+        """
         return process(current_filename,
                        files_in_past_week(current_filename),
                        signal_names=add_prefix(

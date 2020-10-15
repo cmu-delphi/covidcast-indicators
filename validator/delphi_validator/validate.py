@@ -483,10 +483,7 @@ class Validator():
                 "Number of rows per day (-with-any-rows) seems to have changed " +
                 "rapidly (reference vs test data)"))
 
-    def check_avg_val_diffs(self,
-                            df_to_test, df_to_reference,
-                            checking_date,
-                            geo, sig):
+    def check_avg_val_diffs(self, df_to_test, df_to_reference, checking_date, geo, sig):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
 
@@ -609,9 +606,6 @@ class Validator():
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
 
-        # Get all expected combinations of geo_type and signal.
-        geo_sig_cmbo = get_geo_sig_cmbo(self.data_source)
-
         self.check_missing_dates(validate_files)
         self.check_settings()
 
@@ -652,6 +646,9 @@ class Validator():
         # semirecent_lookbehind: starting from the check date and working backward
         # in time, how many days do we use to form the reference statistics.
         semirecent_lookbehind = timedelta(days=7)
+
+        # Get all expected combinations of geo_type and signal.
+        geo_sig_cmbo = get_geo_sig_cmbo(self.data_source)
 
         # Keeps script from checking all files in a test run.
         if self.test_mode:

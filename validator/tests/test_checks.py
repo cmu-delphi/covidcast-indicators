@@ -59,8 +59,8 @@ class TestDateFilter:
 class TestValidatorInitialization:
 
     def test_default_settings(self):
-        params = {"data_source": "", "start_date": "2020-09-01",
-                  "end_date": "2020-09-01"}
+        params = {"data_source": "", "span_length": 0,
+                  "end_date": "2020-09-01", "expected_lag": {}}
         validator = Validator(params)
 
         assert validator.max_check_lookbehind == timedelta(days=7)
@@ -77,8 +77,8 @@ class TestValidatorInitialization:
 class TestCheckMissingDates:
 
     def test_empty_filelist(self):
-        params = {"data_source": "", "start_date": "2020-09-01",
-                  "end_date": "2020-09-09"}
+        params = {"data_source": "", "span_length": 8,
+                  "end_date": "2020-09-09", "expected_lag": {}}
         validator = Validator(params)
 
         filenames = list()
@@ -90,8 +90,8 @@ class TestCheckMissingDates:
         assert len(validator.raised_errors[0].expression) == 9
 
     def test_same_day(self):
-        params = {"data_source": "", "start_date": "2020-09-01",
-                  "end_date": "2020-09-01"}
+        params = {"data_source": "", "span_length": 0,
+                  "end_date": "2020-09-01", "expected_lag": {}}
         validator = Validator(params)
 
         filenames = [("20200901_county_signal_signal.csv", "match_obj")]
@@ -102,8 +102,8 @@ class TestCheckMissingDates:
             err.check_data_id[0] for err in validator.raised_errors]
 
     def test_duplicate_dates(self):
-        params = {"data_source": "", "start_date": "2020-09-01",
-                  "end_date": "2020-09-02"}
+        params = {"data_source": "", "span_length": 1,
+                  "end_date": "2020-09-02", "expected_lag": {}}
         validator = Validator(params)
 
         filenames = [("20200901_county_signal_signal.csv", "match_obj"),
@@ -147,8 +147,8 @@ class TestNameFormat:
 
 
 class TestCheckBadGeoId:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 0,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -218,19 +218,19 @@ class TestCheckBadGeoId:
 
     def test_invalid_geo_id_national(self):
         validator = Validator(self.params)
-        df = pd.DataFrame(["usa", "USA", " usa", "us",
-                           "usausa", "America"], columns=["geo_id"])
+        df = pd.DataFrame(["usa", "SP", " us", "us",
+                           "usausa", "US"], columns=["geo_id"])
         validator.check_bad_geo_id(df, "name", "national")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
         assert len(validator.raised_errors[0].expression) == 5
-        assert "usa" not in validator.raised_errors[0].expression
+        assert "us" not in validator.raised_errors[0].expression
 
 
 class TestCheckBadVal:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -275,8 +275,8 @@ class TestCheckBadVal:
 
 
 class TestCheckBadSe:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -350,8 +350,8 @@ class TestCheckBadSe:
 
 
 class TestCheckBadN:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -406,14 +406,14 @@ class TestCheckBadN:
 
 
 class TestCheckRapidChange:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_same_df(self):
         validator = Validator(self.params)
         test_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
         ref_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
-        validator.check_rapid_change(
+        validator.check_rapid_change_num_rows(
             test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
@@ -425,7 +425,7 @@ class TestCheckRapidChange:
 
         test_df = pd.DataFrame([time_value] * 5, columns=["time_value"])
         ref_df = pd.DataFrame([time_value] * 1, columns=["time_value"])
-        validator.check_rapid_change(
+        validator.check_rapid_change_num_rows(
             test_df, ref_df, time_value, "geo", "signal")
 
         assert len(validator.raised_errors) == 1
@@ -434,8 +434,8 @@ class TestCheckRapidChange:
 
 
 class TestCheckAvgValDiffs:
-    params = {"data_source": "", "start_date": "2020-09-01",
-              "end_date": "2020-09-02"}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_same_val(self):
         validator = Validator(self.params)
@@ -447,7 +447,7 @@ class TestCheckAvgValDiffs:
         ref_df = pd.DataFrame(data)
 
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw", date.today(), "geo", "signal")
+            test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
 
@@ -461,7 +461,7 @@ class TestCheckAvgValDiffs:
         ref_df = pd.DataFrame(data)
 
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw", date.today(), "geo", "signal")
+            test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
 
@@ -475,7 +475,7 @@ class TestCheckAvgValDiffs:
         ref_df = pd.DataFrame(data)
 
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw", date.today(), "geo", "signal")
+            test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
 
@@ -489,7 +489,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw",
+            test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
@@ -504,7 +504,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw",
+            test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 
         assert len(validator.raised_errors) == 1
@@ -521,7 +521,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
         validator.check_avg_val_diffs(
-            test_df, ref_df, "raw",
+            test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 
         assert len(validator.raised_errors) == 1

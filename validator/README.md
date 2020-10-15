@@ -57,9 +57,9 @@ Please update the follow settings:
 * `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)
 * `expected_lag`: dictionary of signal name-int pairs specifying the number of days of expected lag (time between event occurrence and when data about that event was published) for that signal
 * `test_mode`: boolean; `true` checks only a small number of data files
-* `suppressed_errors`: list of lists uniquely specifying errors that have been manually verified as false positives or acceptable
+* `suppressed_errors`: list of lists uniquely specifying errors that have been manually verified as false positives or acceptable deviations from expected
 
-All other fields contain working defaults.
+All other fields contain working defaults, to be modified as needed.
 
 ## Testing the code
 
@@ -101,12 +101,12 @@ The output will show the number of unit tests that passed and failed, along with
 
 ## Adding checks
 
-To add a new validation check, define the check as a `Validator` class method in `validate.py`. Each check should append a descriptive error message to the `raised` attribute if triggered. All checks should allow the user to override exception raising for a specific file using the `exception_override` setting in `params.json`.
+To add a new validation check, define the check as a `Validator` class method in `validate.py`. Each check should append a descriptive error message to the `raised` attribute if triggered. All checks should allow the user to override exception raising for a specific file using the `suppressed_errors` setting in `params.json`.
 
 This features requires that the `check_data_id` defined for an error uniquely identifies that combination of check and test data. This usually takes the form of a tuple of strings with the check method and test identifier, and test data filename or date, geo type, and signal name.
 
 Add the newly defined check to the `validate()` method to be executed. It should go in one of three sections:
 
 * data sanity checks where a data file is compared against static format settings,
-* data trend and value checks where a set of data is compared against recent API data, from the previous few days,
-* data trend and value checks where a set of data is compared against long term API data, from a few months ago
+* data trend and value checks where a set of source data (can be one or several days) is compared against recent API data, from the previous few days,
+* data trend and value checks where a set of source data is compared against long term API data, from the last few months

@@ -133,7 +133,6 @@ def aggregate(df, signal_names, geo_resolution='county'):
     '''
     # Prepare geo resolution
     GEO_RESOLUTION = ('county', 'state')
-
     if geo_resolution == 'county':
         df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':

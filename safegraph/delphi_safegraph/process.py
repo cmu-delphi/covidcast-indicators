@@ -2,8 +2,9 @@ import covidcast
 import numpy as np
 import pandas as pd
 
+from delphi_utils import GeoMapper
+
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
-from .geo import FIPS_TO_STATE
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
@@ -132,11 +133,17 @@ def aggregate(df, signal_names, geo_resolution='county'):
     '''
     # Prepare geo resolution
     GEO_RESOLUTION = ('county', 'state')
+
     if geo_resolution == 'county':
         df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        df['geo_id'] = df['county_fips'].apply(lambda x:
-                                               FIPS_TO_STATE[x[:2]])
+        gmpr = GeoMapper()
+        df = gmpr.add_geocode(df,
+                              from_col='county_fips',
+                              from_code='fips',
+                              new_code='state_id',
+                              new_col='geo_id')
+
     else:
         raise ValueError(f'`geo_resolution` must be one of {GEO_RESOLUTION}.')
 

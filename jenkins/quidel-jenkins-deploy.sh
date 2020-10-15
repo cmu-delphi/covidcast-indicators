@@ -10,7 +10,7 @@ source ~/.bash_profile
 # Deploy
 #
 
-local_indicator="quidel"
+local_indicator="quidel_covidtest"
 
 cd "${WORKSPACE}/ansible" || exit
 

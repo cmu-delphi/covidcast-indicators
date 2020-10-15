@@ -49,7 +49,7 @@ def run_module():
                          wip_signal=read_params()["wip_signal"],
                          prefix="wip_")
     smoothers = SMOOTHERS.copy()
-    
+
     for sensor in sensors:
         # For State Level
         print("state", sensor)
@@ -68,17 +68,17 @@ def run_module():
         export_csv(state_df, "state", sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
 
-        # County/HRR/MSA level
-        for geo_res in GEO_RESOLUTIONS:
-            geo_data, res_key = geo_map(geo_res, data)
-            for sensor in sensors:
-                print(geo_res, sensor)
-                res_df = generate_sensor_for_other_geores(
+    # County/HRR/MSA level
+    for geo_res in GEO_RESOLUTIONS:
+        geo_data, res_key = geo_map(geo_res, data)
+        for sensor in sensors:
+            print(geo_res, sensor)
+            res_df = generate_sensor_for_other_geores(
                     state_groups, geo_data, res_key, smooth=smoothers[sensor][1],
                     device=smoothers[sensor][0], first_date=first_date,
                     last_date=last_date)
-                export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
-                           start_date=export_start_date, end_date=export_end_date)
+            export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
+                       start_date=export_start_date, end_date=export_end_date)
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

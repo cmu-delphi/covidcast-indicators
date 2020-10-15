@@ -142,8 +142,8 @@ def aggregate(df, signal_names, geo_resolution='county'):
                               from_col='county_fips',
                               from_code='fips',
                               new_code='state_id',
-                              new_col='geo_id')
-
+                              new_col='geo_id',
+                              dropna=False)
     else:
         raise ValueError(f'`geo_resolution` must be one of {GEO_RESOLUTION}.')
 

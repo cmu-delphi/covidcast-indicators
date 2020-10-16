@@ -26,14 +26,15 @@ class Smoother:
 
     Parameters
     ----------
-    smoother_name: {'savgol', 'left_gauss_linear', 'moving_average', 'identity'}
+    smoother_name: {'savgol', 'moving_average', 'identity', 'left_gauss_linear'}
         This variable specifies the smoother. We have four smoothers, currently:
         * 'savgol' or a Savtizky-Golay smoother (default)
-        * 'left_gauss_linear' or a Gaussian-weight linear regression smoother
         * 'moving_average' or a moving window average smoother
         * 'identity' or the trivial smoother (no smoothing)
-        Descriptions of the smoothers are available in the doc strings. Full details are
-        in: https://github.com/cmu-delphi/covidcast-modeling/indicators_smoother.
+        * 'left_gauss_linear' or a Gaussian-weight linear regression smoother
+        Descriptions of the smoothers are available in the doc strings. Full mathematical
+        details are in: https://github.com/cmu-delphi/covidcast-modeling/ in the folder
+        'indicator_smoother'.
     window_length: int
         The length of the averaging window for 'savgol' and 'moving_average'.
         This value is in the units of the data, which tends to be days.
@@ -55,7 +56,8 @@ class Smoother:
         If None, leaves the nans in place.
     minval: float or None
         The smallest value to allow in a signal. If None, there is no smallest value.
-        Currently only implemented for 'left_gauss_linear'.
+        Currently only implemented for 'left_gauss_linear'. This should probably not be in the scope
+        of the smoothing utility.
     poly_fit_degree: int
         A parameter for the 'savgol' smoother which sets the degree of the polynomial fit.
 
@@ -71,7 +73,7 @@ class Smoother:
     >>> smoothed_signal = smoother.smooth(signal)
 
     Example 2. Smooth a dataframe column.
-    >>> smoother = Smoother(smoother_name="savgol")
+    >>> smoother = Smoother(smoother_name='savgol')
     >>> df[col] = pd.Series(smoother.smooth(df[col].to_numpy()))
 
     Example 3. Apply a rolling weighted average smoother, with 95% weight on the recent 2 weeks and
@@ -87,7 +89,7 @@ class Smoother:
     >>> smoothed_signal = smoother.smooth(signal)
 
     Example 5. Apply the identity function (simplifies code that iterates through smoothers _and_
-               raw data).
+               expects a copy of the raw data).
     >>> smoother = Smoother(smoother_name='identity')
     >>> smoothed_signal = smoother.smooth(signal)
     """
@@ -211,6 +213,9 @@ class Smoother:
 
     def left_gauss_linear_smoother(self, signal):
         """
+        DEPRECATED: This method is available to help sanity check the 'savgol' method.
+        It is a little slow, so use 'savgol' with poly_fit_degree=1 instead.
+
         Smooth the y-values using a local linear regression with Gaussian weights.
 
         At each time t, we use the data from times 1, ..., t-dt, weighted
@@ -228,6 +233,10 @@ class Smoother:
         signal_smoothed: np.ndarray
             A smoothed 1D signal.
         """
+        warnings.warn(
+            "Use the savgol smoother with poly_fit_degree=1 instead.",
+            DeprecationWarning,
+        )
         n = len(signal)
         signal_smoothed = np.zeros_like(signal)
         A = np.vstack([np.ones(n), np.arange(n)]).T  # the regression design matrix

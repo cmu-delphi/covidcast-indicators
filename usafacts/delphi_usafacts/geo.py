@@ -86,7 +86,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
 
     # State-level records unassigned to specific counties are coded as fake
     # counties with fips XX000.
-    unassigned_counties = df[df['fips'].astype(int) % 1000 == 0].copy()
+    unassigned_counties = df[df['fips'].str.endswith('000')].copy()
 
     df = df[df['fips'].astype(int) % 1000 != 0].copy()
     # Disburse unallocated cases/deaths in NYC to NYC counties

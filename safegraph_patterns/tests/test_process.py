@@ -13,12 +13,6 @@ from delphi_safegraph_patterns.run import METRICS
 
 metric_names, naics_codes, _ = (list(x) for x in zip(*METRICS))
 
-map_df = pd.read_csv(
-        join("../static", "mapping_and_pop_info.csv"), dtype={"fips": int}
-    ).rename({
-            "fips":"county", "hrrnum":"hrr",
-            "cbsa_id":"msa", "state_id":"state"
-    }, axis = 1)
 brand_df = pd.read_csv(
                 join("../static", f"brand_info/brand_info_202004.csv")
         )
@@ -39,7 +33,7 @@ class TestProcess:
     def test_aggregate_county(self):
     
         df = pd.read_csv('sample_filtered_data.csv', parse_dates=["timestamp"])
-        df_export = aggregate(df, "bars_visit", "county", map_df)
+        df_export = aggregate(df, "bars_visit", "county")
 
         assert np.all(df_export["bars_visit_num"].values >= 0)
         assert np.all(df_export["bars_visit_prop"].dropna().values <= INCIDENCE_BASE)
@@ -49,7 +43,7 @@ class TestProcess:
     def test_aggregate_state(self):
     
         df = pd.read_csv('sample_filtered_data.csv', parse_dates=["timestamp"])
-        df_export = aggregate(df, "bars_visit", "state", map_df)
+        df_export = aggregate(df, "bars_visit", "state")
 
         assert np.all(df_export["bars_visit_num"].values >= 0)
         assert np.all(df_export["bars_visit_prop"].dropna().values <= INCIDENCE_BASE)

@@ -127,7 +127,6 @@ class ClaimsHospIndicatorUpdater:
         assert (
                 len(multiindex) <= (GeoConstants.MAX_GEO[self.geo] * len(self.fit_dates))
         ), "more loc-date pairs than maximum number of geographies x number of dates"
-        print(data_frame)
         # fill dataframe with missing dates using 0
         data_frame = data_frame.reindex(multiindex, fill_value=0)
         data_frame.fillna(0, inplace=True)

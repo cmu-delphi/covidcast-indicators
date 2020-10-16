@@ -112,19 +112,12 @@ def aggregate(df, metric, geo_res, map_df):
     metric_count_name = "_".join([metric, "num"])
     metric_prop_name = "_".join([metric, "prop"])
 
-    ############################ Use GeoMapper in utils #####################
-#    gmpr = GeoMapper()
-#    geo_key = GEO_KEY_DICT[geo_res]
-#    df = gmpr.add_population_column(df, "zip")   
-#    df = gmpr.replace_geocode(df, "zip", geo_key,
-#                              date_col="timestamp",
-#                              data_cols=[metric_count_name, "population"]) 
-
-    ############################ Use mapping file in ./static ###############
-    # Add pop info
-    df = df.merge(map_df[["zip", geo_res, "population"]], on="zip"
-                  ).drop("zip", axis=1).dropna()
-    df = df.groupby(["timestamp", geo_res]).sum().reset_index()
+    gmpr = GeoMapper()
+    geo_key = GEO_KEY_DICT[geo_res]
+    df = gmpr.add_population_column(df, "zip")   
+    df = gmpr.replace_geocode(df, "zip", geo_key,
+                              date_col="timestamp",
+                              data_cols=[metric_count_name, "population"]) 
 
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE

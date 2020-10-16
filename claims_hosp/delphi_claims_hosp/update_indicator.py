@@ -96,13 +96,21 @@ class ClaimsHospIndicatorUpdater:
         """
         geo_map = GeoMapper()
         if self.geo == "county":
-            data_frame = geo_map.county_to_megacounty(
-                data, Config.MIN_DEN, Config.MAX_BACKWARDS_PAD_LENGTH,
-                thr_col="den", mega_col=self.geo)
+            data_frame = geo_map.fips_to_megacounty(data,
+                                                    Config.MIN_DEN,
+                                                    Config.MAX_BACKWARDS_PAD_LENGTH,
+                                                    thr_col="den",
+                                                    mega_col=self.geo)
         elif self.geo == "state":
-            data_frame = geo_map.county_to_state(data, state_id_col=self.geo)
+            data_frame = geo_map.replace_geocode(data,
+                                                 from_code="fips",
+                                                 new_col=self.geo,
+                                                 new_code="state_id")
+            data_frame[self.geo] = data_frame[self.geo].str.upper()
         elif self.geo == "msa":
-            data_frame = geo_map.county_to_msa(data, msa_col=self.geo)
+            data_frame = geo_map.replace_geocode(data,
+                                                 from_code="fips",
+                                                 new_col=self.geo)
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
@@ -119,7 +127,7 @@ class ClaimsHospIndicatorUpdater:
         assert (
                 len(multiindex) <= (GeoConstants.MAX_GEO[self.geo] * len(self.fit_dates))
         ), "more loc-date pairs than maximum number of geographies x number of dates"
-
+        print(data_frame)
         # fill dataframe with missing dates using 0
         data_frame = data_frame.reindex(multiindex, fill_value=0)
         data_frame.fillna(0, inplace=True)

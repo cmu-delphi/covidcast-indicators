@@ -68,7 +68,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         Columns: fips, timestamp, new_counts, cumulative_counts, population ...
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
-        ('county', 'state', 'msa', 'hrr').
+        ("county", "state", "msa", "hrr").
     map_df: pd.DataFrame
         Loaded from static file "fips_prop_pop.csv".
     sensor: str
@@ -86,12 +86,12 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
 
     # State-level records unassigned to specific counties are coded as fake
     # counties with fips XX000.
-    unassigned_counties = df[df['fips'].str.endswith('000')].copy()
+    unassigned_counties = df[df["fips"].str.endswith("000")].copy()
 
-    df = df[df['fips'].astype(int) % 1000 != 0].copy()
+    df = df[df["fips"].astype(int) % 1000 != 0].copy()
     # Disburse unallocated cases/deaths in NYC to NYC counties
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
-    df = df[df['fips'] != NYC_FIPS[0][0]]
+    df = df[df["fips"] != NYC_FIPS[0][0]]
 
     if geo_res == "county":
         if sensor not in PROP_SENSORS:

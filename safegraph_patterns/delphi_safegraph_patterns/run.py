@@ -51,12 +51,6 @@ def run_module():
             'AWS_SECRET_ACCESS_KEY': params["aws_secret_access_key"],
             'AWS_DEFAULT_REGION': params["aws_default_region"],
     }
-    map_df = pd.read_csv(
-        join(static_file_dir, "mapping_and_pop_info.csv"), dtype={"fips": int}
-    ).rename({
-            "fips":"county", "hrrnum":"hrr",
-            "cbsa_id":"msa", "state_id":"state"
-    }, axis=1)
 
     for ver in VERSIONS:
         # Update raw data
@@ -78,7 +72,7 @@ def run_module():
                 recursive=True)
 
         process_file = partial(process, brand_df=brand_df,
-                               map_df=map_df, metrics=METRICS,
+                               metrics=METRICS,
                                sensors=SENSORS,
                                geo_resolutions=GEO_RESOLUTIONS,
                                export_dir=export_dir,

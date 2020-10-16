@@ -14,7 +14,7 @@ from delphi_safegraph_patterns.run import METRICS
 metric_names, naics_codes, _ = (list(x) for x in zip(*METRICS))
 
 brand_df = pd.read_csv(
-                join("../static", f"brand_info/brand_info_202004.csv")
+                join("./static", f"brand_info/brand_info_202004.csv")
         )
 
 class TestProcess:

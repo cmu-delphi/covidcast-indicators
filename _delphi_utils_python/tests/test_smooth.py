@@ -97,7 +97,9 @@ class TestSmoothers:
 
         # The savgol method should match the linear regression method on the first
         # window_length-many values of the signal, if the savgol_weighting is set to true,
-        # and the polynomial fit degree is set to 1.
+        # and the polynomial fit degree is set to 1. Beyond that, there will be very small
+        # differences between the signals (due to "left_gauss_linear" not having a window_length
+        # cutoff).
         window_length = 20
         signal = np.arange(window_length) + np.random.randn(window_length)
         smoother = Smoother(smoother_name="left_gauss_linear")
@@ -172,6 +174,7 @@ class TestSmoothers:
 
         # test the boundary methods
         signal = np.arange(20)
-        smoother = Smoother(smoother_name="savgol", poly_fit_degree=0, boundary_method="identity", window_length=10)
+        smoother = Smoother(smoother_name="savgol", poly_fit_degree=0,
+                            boundary_method="identity", window_length=10)
         smoothed_signal = smoother.savgol_impute(signal)
         assert np.allclose(smoothed_signal, signal)

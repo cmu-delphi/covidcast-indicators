@@ -106,7 +106,7 @@ class ClaimsHospIndicatorUpdater:
                                                  from_code="fips",
                                                  new_col=self.geo,
                                                  new_code="state_id")
-            data_frame[self.geo] = data_frame[self.geo].str.upper()
+            data_frame[self.geo] = data_frame[self.geo]
         elif self.geo == "msa":
             data_frame = geo_map.replace_geocode(data,
                                                  from_code="fips",

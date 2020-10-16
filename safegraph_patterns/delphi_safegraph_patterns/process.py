@@ -86,7 +86,7 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
     # only ~200 visits missed for bars.
     return result_dfs
 
-def aggregate(df, metric, geo_res, map_df):
+def aggregate(df, metric, geo_res):
     """
     Aggregate signals to appropriate resolution.
 
@@ -99,8 +99,6 @@ def aggregate(df, metric, geo_res, map_df):
         Name of metric to be exported.
     geo_resolution: str
         One of ('county', 'hrr, 'msa', 'state')
-    map_df: pd.DataFrame
-        population information and mapping info among different geo levels
 
     Returns
     -------
@@ -121,10 +119,10 @@ def aggregate(df, metric, geo_res, map_df):
 
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE
-    return df.rename({geo_res: "geo_id"}, axis=1)
+    return df.rename({geo_key: "geo_id"}, axis=1)
 
 def process(fname, sensors, metrics, geo_resolutions,
-            export_dir, brand_df, map_df):
+            export_dir, brand_df):
     """
     Process an input census block group-level CSV and export it.  Assumes
     that the input file has _only_ one date of data.
@@ -141,8 +139,6 @@ def process(fname, sensors, metrics, geo_resolutions,
         List of geo resolutions to export the data.
     brand_df: pd.DataFrame
         mapping info from naics_code to safegraph_brand_id
-    map_df: pd.DataFrame
-        population information and mapping info among different geo levels
 
     Returns
     -------
@@ -175,7 +171,7 @@ def process(fname, sensors, metrics, geo_resolutions,
         print("Finished pulling data from " + fname)
     for geo_res, sensor in product(geo_resolutions, sensors):
         for metric, wip in zip(metric_names, wips):
-            df_export = aggregate(dfs[metric], metric, geo_res, map_df)
+            df_export = aggregate(dfs[metric], metric, geo_res)
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
             df_export["sample_size"] = np.nan

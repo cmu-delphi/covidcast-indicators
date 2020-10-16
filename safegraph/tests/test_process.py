@@ -129,8 +129,6 @@ class TestProcess:
         })
         actual = pd.read_csv(
             export_dir / '2020-02-14_county_completely_home_prop.csv')
-        print(expected)
-        print(actual)
         pd.testing.assert_frame_equal(expected, actual)
 
     def test_process(self, tmp_path):

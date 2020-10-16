@@ -20,7 +20,7 @@ brand_df = pd.read_csv(
 class TestProcess:
     def test_construct_signals_present(self):
 
-        df = pd.read_csv('sample_raw_data.csv',
+        df = pd.read_csv('test_data/sample_raw_data.csv',
                          parse_dates=["date_range_start", "date_range_end"])
         dfs = construct_signals(df, metric_names, naics_codes, brand_df)
         assert set(["timestamp", "zip", 
@@ -32,7 +32,7 @@ class TestProcess:
 
     def test_aggregate_county(self):
     
-        df = pd.read_csv('sample_filtered_data.csv', parse_dates=["timestamp"])
+        df = pd.read_csv('test_data/sample_filtered_data.csv', parse_dates=["timestamp"])
         df_export = aggregate(df, "bars_visit", "county")
 
         assert np.all(df_export["bars_visit_num"].values >= 0)
@@ -42,7 +42,7 @@ class TestProcess:
 
     def test_aggregate_state(self):
     
-        df = pd.read_csv('sample_filtered_data.csv', parse_dates=["timestamp"])
+        df = pd.read_csv('test_data/sample_filtered_data.csv', parse_dates=["timestamp"])
         df_export = aggregate(df, "bars_visit", "state")
 
         assert np.all(df_export["bars_visit_num"].values >= 0)

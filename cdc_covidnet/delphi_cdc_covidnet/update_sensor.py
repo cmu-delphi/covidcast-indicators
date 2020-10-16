@@ -91,7 +91,7 @@ def update_sensor(
                                from_code="state_name",
                                new_code="state_id",
                                dropna=False)
-    # To preserve column order, reassign original column and drop new one
+    # To use the original column name, reassign original column and drop new one
     hosp_df[APIConfig.STATE_COL] = hosp_df["state_id"].str.upper()
     hosp_df.drop("state_id", axis=1, inplace=True)
     assert not hosp_df.duplicated(["date", "geo_id"]).any(), "Non-unique (date, geo_id) pairs"

@@ -22,7 +22,7 @@ def run_module():
 
     complaints = []
     for data_source in params["sources"].keys():
-        complaints.extend(check_source(data_source, meta, params["sources"], params.get("grace",0)))
+        complaints.extend(check_source(data_source, meta, params["sources"], params.get("grace", 0)))
 
     if len(complaints) > 0:
         for complaint in complaints:

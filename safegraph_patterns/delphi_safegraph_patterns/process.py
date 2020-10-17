@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-import re
 import glob
-from datetime import timedelta
 from itertools import product
 
 import numpy as np

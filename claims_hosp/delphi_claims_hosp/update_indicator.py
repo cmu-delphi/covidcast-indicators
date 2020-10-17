@@ -110,7 +110,7 @@ class ClaimsHospIndicatorUpdater:
         elif self.geo == "msa":
             data_frame = geo_map.replace_geocode(data,
                                                  from_code="fips",
-                                                 new_col=self.geo)
+                                                 new_code=self.geo)
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:

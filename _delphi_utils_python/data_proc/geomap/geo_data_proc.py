@@ -391,6 +391,10 @@ def create_fips_population_table():
     df_pr = df_pr.groupby("fips").sum().reset_index()
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
     census_pop_pr = pd.concat([census_pop, df_pr])
+
+    # Zero out the populations for the state FIPS codes XX000 to avoid double counting
+    megafips_codes = [str(x).zfill(2) + "000" for x in range(1, 73)]
+    census_pop_pr.loc[census_pop_pr["fips"].isin(megafips_codes), "pop"] = 0
     census_pop_pr.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
 
 

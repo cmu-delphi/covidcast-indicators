@@ -16,34 +16,34 @@ import pytest
 from delphi_utils import read_params
 
 # first party
-from delphi_emr_hosp.config import Config, Constants
-from delphi_emr_hosp.constants import *
-from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
-from delphi_emr_hosp.load_data import *
-from delphi_emr_hosp.run import run_module
+from delphi_changehc.config import Config, Constants
+from delphi_changehc.constants import *
+from delphi_changehc.update_sensor import write_to_csv, add_prefix, CHCSensorUpdator
+from delphi_changehc.load_data import *
+from delphi_changehc.run import run_module
 
 CONFIG = Config()
 CONSTANTS = Constants()
 PARAMS = read_params()
-CLAIMS_FILEPATH = PARAMS["input_claims_file"]
-EMR_FILEPATH = PARAMS["input_emr_file"]
+COVID_FILEPATH = PARAMS["input_covid_file"]
+DENOM_FILEPATH = PARAMS["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 OUTPATH="test_data/"
 
-class TestEMRHospSensorUpdator:
-    geo = "hrr"
+class TestCHCSensorUpdator:
+    geo = "county"
     parallel = False
     weekday = False
     se = False
     prefix = "foo"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
-        "hrr": [1.0] * 7 + [2.0] * 6,
+        "fips": [1.0] * 7 + [2.0] * 6,
         "den": [1000] * 7 + [2000] * 6,
-        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["hrr","date"])
+        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
 
     def test_shift_dates(self):
-        su_inst = EMRHospSensorUpdator(
+        su_inst = CHCSensorUpdator(
             "02-01-2020",
             "06-01-2020",
             "06-12-2020",
@@ -63,11 +63,11 @@ class TestEMRHospSensorUpdator:
         assert su_inst.sensor_dates[-1] == su_inst.enddate - pd.Timedelta(days=1)
 
     def test_geo_reindex(self):
-        su_inst = EMRHospSensorUpdator(
+        su_inst = CHCSensorUpdator(
             "02-01-2020",
             "06-01-2020",
             "06-12-2020",
-            'hrr',
+            'county',
             self.parallel,
             self.weekday,
             self.se
@@ -80,7 +80,7 @@ class TestEMRHospSensorUpdator:
     def test_update_sensor(self):
         for geo in ["state","hrr"]:
             td = TemporaryDirectory()
-            su_inst = EMRHospSensorUpdator(
+            su_inst = CHCSensorUpdator(
                 "02-01-2020",
                 "06-01-2020",
                 "06-12-2020",
@@ -97,8 +97,8 @@ class TestEMRHospSensorUpdator:
                 s3_client = Session(**aws_credentials).client("s3")
                 s3_client.create_bucket(Bucket=params["bucket_name"])
                 su_inst.update_sensor(
-                    EMR_FILEPATH,
-                    CLAIMS_FILEPATH,
+                    DENOM_FILEPATH,
+                    COVID_FILEPATH,
                     td.name,
                     PARAMS["static_file_dir"]
                 )
@@ -268,6 +268,7 @@ class TestWriteToCsv:
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
         # Test wip_signal = False (only unpublished signals should receive prefix)
+        # No CHC signal is published now, so both should get prefix
         signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
         assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
+        assert all(s.startswith("wip_") for s in signal_names[1:])

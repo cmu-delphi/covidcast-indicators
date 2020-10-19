@@ -5,7 +5,7 @@ import pytest
 import numpy as np
 
 # first party
-from delphi_emr_hosp.smooth import left_gauss_linear
+from delphi_changehc.smooth import left_gauss_linear
 
 
 class TestLeftGaussSmoother:

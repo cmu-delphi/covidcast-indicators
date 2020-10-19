@@ -2,7 +2,7 @@
 import pytest
 
 # first party
-from delphi_emr_hosp.config import Config
+from delphi_changehc.config import Config
 
 
 class TestConfigValues:

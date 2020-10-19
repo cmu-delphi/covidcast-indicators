@@ -48,6 +48,11 @@ def files_in_past_week(current_filename) -> List[str]:
         yield new_filename
 
 
+def add_suffix(signals, suffix):
+    """Adds `suffix` to every element of `signals`."""
+    return [s + suffix for s in signals]
+
+
 def add_prefix(signal_names, wip_signal, prefix: str):
     """Adds prefix to signal if there is a WIP signal
     Parameters
@@ -134,16 +139,16 @@ def construct_signals(cbg_df, signal_names):
 
     # Transformation: create signal not available in raw data
     for signal in signal_names:
-        if signal.endswith(FULL_TIME_WORK):
+        if signal.contains(FULL_TIME_WORK):
             cbg_df[signal] = (cbg_df['full_time_work_behavior_devices']
                               / cbg_df['device_count'])
-        elif signal.endswith(COMPLETELY_HOME):
+        elif signal.contains(COMPLETELY_HOME):
             cbg_df[signal] = (cbg_df['completely_home_device_count']
                               / cbg_df['device_count'])
-        elif signal.endswith(PART_TIME_WORK):
+        elif signal.contains(PART_TIME_WORK):
             cbg_df[signal] = (cbg_df['part_time_work_behavior_devices']
                               / cbg_df['device_count'])
-        elif signal.endswith(HOME_DWELL):
+        elif signal.contains(HOME_DWELL):
             cbg_df[signal] = (cbg_df['median_home_dwell_time'])
 
     # Subsetting
@@ -238,6 +243,7 @@ def process_window(df_list: List[pd.DataFrame],
 def process(current_filename: str,
             previous_filenames: List[str],
             signal_names: List[str],
+            wip_signal,
             geo_resolutions: List[str],
             export_dir: str):
     """Creates and exports signals corresponding both to a single day as well
@@ -250,15 +256,23 @@ def process(current_filename: str,
         paths to files holding data from each day in the week preceding the
         target date.
     signal_names: List[str]
-        signal names to be processed
+        signal names to be processed for a single date.
+        A second version of each such signal named {SIGNAL}_7d_avg will be
+        created averaging {SIGNAL} over the past 7 days.
+    wip_signal : List[str] or bool
+        a list of wip signals: [], OR
+        all signals in the registry: True OR
+        only signals that have never been published: False
     geo_resolutions: List[str]
         List of geo resolutions to export the data.
     export_dir
         path where the output files are saved.
     Returns
     -------
-    None.  Two files are written per (signal, resolution) pair, one for the
-    single date values and one for the data averaged over the previous week.
+    None.  For each (signal, resolution) pair, one file is written for the
+    single date values to {export_dir}/{date}_{resolution}_{signal}.csv and
+    one for the data averaged over the previous week to
+    {export_dir}/{date}_{resolution}_{signal}_7d_avg.csv.
     """
     past_week = [pd.read_csv(current_filename)]
     for fname in previous_filenames:
@@ -266,6 +280,14 @@ def process(current_filename: str,
             past_week.append(pd.read_csv(fname))
 
     # First process the current file alone...
-    process_window(past_week[:1], signal_names, geo_resolutions, export_dir)
+    process_window(past_week[:1],
+                   add_prefix(signal_names, wip_signal, 'wip_'),
+                   geo_resolutions,
+                   export_dir)
     # ...then as part of the whole window.
-    process_window(past_week, signal_names, geo_resolutions, export_dir)
+    process_window(past_week,
+                  add_prefix(add_suffix(signal_names, '_7d_avg'),
+                             wip_signal,
+                             'wip_'),
+                  geo_resolutions,
+                  export_dir)

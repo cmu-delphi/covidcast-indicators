@@ -35,8 +35,8 @@ def run_module():
         """
         return process(current_filename,
                        files_in_past_week(current_filename),
-                       signal_names=add_prefix(
-                           SIGNALS, wip_signal, prefix='wip_'),
+                       signal_names=SIGNALS,
+                       wip_signal=wip_signal,
                        geo_resolutions=GEO_RESOLUTIONS,
                        export_dir=export_dir,
                        )

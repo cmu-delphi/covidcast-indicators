@@ -45,6 +45,10 @@ class Config:
 
 
 class Constants:
+    """
+    Contains the maximum number of geo units for each geo type
+    Used for sanity checks
+    """
     # number of counties in usa, including megacounties
     NUM_COUNTIES = 3141 + 52
     NUM_HRRS = 308

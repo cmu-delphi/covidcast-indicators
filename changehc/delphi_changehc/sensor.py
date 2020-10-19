@@ -112,8 +112,6 @@ class CHCSensor:
         """
         # backfill
         total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values, y_data[den_col].values)
-        # total_counts = pd.Series(total_counts.flatten(), name=num_col, index=y_data.index)
-        # total_visits = pd.Series(total_visits, index=y_data.index)
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0

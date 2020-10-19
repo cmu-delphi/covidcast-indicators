@@ -42,9 +42,9 @@ def load_denom_data(denom_filepath, dropdate, base_geo):
         (denom_data[Config.DATE_COL] < dropdate)
         ]
 
-    # counts between 1 and 3 are coded as '3 or less', we convert to 1
+    # counts between 1 and 3 are coded as "3 or less", we convert to 1
     denom_data[Config.DENOM_COL][
-        denom_data[Config.DENOM_COL] == '3 or less'
+        denom_data[Config.DENOM_COL] == "3 or less"
         ] = "1"
     denom_data[Config.DENOM_COL] = denom_data[Config.DENOM_COL].astype(int)
 
@@ -89,9 +89,9 @@ def load_covid_data(covid_filepath, dropdate, base_geo):
         (covid_data[Config.DATE_COL] < dropdate)
         ]
 
-    # counts between 1 and 3 are coded as '3 or less', we convert to 1
+    # counts between 1 and 3 are coded as "3 or less", we convert to 1
     covid_data[Config.COVID_COL][
-        covid_data[Config.COVID_COL] == '3 or less'
+        covid_data[Config.COVID_COL] == "3 or less"
         ] = "1"
     covid_data[Config.COVID_COL] = covid_data[Config.COVID_COL].astype(int)
 
@@ -132,6 +132,6 @@ def load_combined_data(denom_filepath, covid_filepath, dropdate, base_geo):
     data.fillna(0, inplace=True)
     data["num"] = data[Config.COVID_COL]
     data["den"] = data[Config.DENOM_COL]
-    data = data[['num', 'den']]
+    data = data[["num", "den"]]
 
     return data

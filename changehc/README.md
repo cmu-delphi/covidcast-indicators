@@ -67,6 +67,11 @@ should not include critical sub-routines.
 
 ## Code tour
 
-- update_sensor.py: CHCSensorUpdator: reads the data, makes transformations, 
+- update_sensor.py: CHCSensorUpdator: reads the data, makes transformations, writes results to file
 - sensor.py: CHCSensor: methods for transforming data, including backfill and smoothing
-- load_data.py: methods for loading claims and EHR data
+- smooth.py: implements local linear left Gaussian filter
+- load_data.py: methods for loading denominator and covid data
+- config.py: Config: constants for reading data and transformations, Constants: constants for sanity checks
+- constants.py: constants for signal names
+- weekday.py: Weekday: Adjusts for weekday effect
+

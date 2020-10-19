@@ -375,6 +375,9 @@ class GeoMapper:
         new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
                    'hhs_region_number'}
             Specifies the geocode type of the data in new_col.
+        date_col: str or None, default "date"
+            Specify which column contains the date values. Used for value aggregation.
+            If None, then the aggregation is done only on geo_id.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
@@ -403,7 +406,11 @@ class GeoMapper:
             # Multiply and aggregate (this automatically zeros NAs)
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
-        df = df.groupby([date_col, new_col]).sum().reset_index()
+
+        if not date_col is None:
+            df = df.groupby([date_col, new_col]).sum().reset_index()
+        else:
+            df = df.groupby([new_col]).sum().reset_index()
         return df
 
     def add_population_column(self, data, geocode_type, geocode_col=None):

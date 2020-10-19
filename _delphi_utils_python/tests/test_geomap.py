@@ -439,4 +439,14 @@ class TestGeoMapper:
         assert not gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any()
         assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()
 
-TestGeoMapper().test_add_geocode()
+        # fips -> zip (date_col=None chech)
+        new_data = gmpr.replace_geocode(self.fips_data_5.drop(columns=["date"]), "fips", "hrr", date_col=None)
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    'hrr': {0: '1', 1: '183', 2: '184', 3: '382', 4: '7'},
+                    'count': {0: 1.772347174163783, 1: 7157.392403522299, 2: 2863.607596477701, 3: 1.0, 4: 0.22765282583621685},
+                    'total': {0: 3.544694348327566, 1: 71424.64801363471, 2: 28576.35198636529, 3: 1.0, 4: 0.4553056516724337}
+                }
+            )
+        )

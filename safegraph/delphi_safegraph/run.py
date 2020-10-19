@@ -9,7 +9,7 @@ import subprocess
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, add_prefix, files_in_past_week
+from .process import process, files_in_past_week
 
 
 def run_module():

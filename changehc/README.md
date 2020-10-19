@@ -67,7 +67,6 @@ should not include critical sub-routines.
 
 ## Code tour
 
-- update_sensor.py: ChangeHCSensorUpdator: reads the data, makes transformations, 
-- sensor.py: ChangeHCSensor: methods for transforming data, including backfill and smoothing
+- update_sensor.py: CHCSensorUpdator: reads the data, makes transformations, 
+- sensor.py: CHCSensor: methods for transforming data, including backfill and smoothing
 - load_data.py: methods for loading claims and EHR data
-- geo_maps.py: geo reindexing

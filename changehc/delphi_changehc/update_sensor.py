@@ -15,7 +15,6 @@ import numpy as np
 import pandas as pd
 # first party
 from .config import Config, Constants
-from .geo_maps import GeoMaps
 from .load_data import load_combined_data
 from .sensor import CHCSensor
 from .weekday import Weekday

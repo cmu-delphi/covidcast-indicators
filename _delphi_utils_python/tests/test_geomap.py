@@ -425,16 +425,6 @@ class TestGeoMapper:
             new_data = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
             new_data2 = gmpr.replace_geocode(new_data, "hrr", "nation")
 
-        # hrr -> nation
-        with pytest.raises(ValueError):    
-            new_data = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
-            new_data2 = gmpr.replace_geocode(new_data, "hrr", "nation")
-
-        # hrr -> nation
-        with pytest.raises(ValueError):    
-            new_data = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
-            new_data2 = gmpr.replace_geocode(new_data, "hrr", "nation")
-
         # fips -> hrr (dropna=True/False check)
         assert not gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any()
         assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()

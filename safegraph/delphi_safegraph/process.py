@@ -139,16 +139,16 @@ def construct_signals(cbg_df, signal_names):
 
     # Transformation: create signal not available in raw data
     for signal in signal_names:
-        if signal.contains(FULL_TIME_WORK):
+        if FULL_TIME_WORK in signal:
             cbg_df[signal] = (cbg_df['full_time_work_behavior_devices']
                               / cbg_df['device_count'])
-        elif signal.contains(COMPLETELY_HOME):
+        elif COMPLETELY_HOME in signal:
             cbg_df[signal] = (cbg_df['completely_home_device_count']
                               / cbg_df['device_count'])
-        elif signal.contains(PART_TIME_WORK):
+        elif PART_TIME_WORK in signal:
             cbg_df[signal] = (cbg_df['part_time_work_behavior_devices']
                               / cbg_df['device_count'])
-        elif signal.contains(HOME_DWELL):
+        elif HOME_DWELL in signal:
             cbg_df[signal] = (cbg_df['median_home_dwell_time'])
 
     # Subsetting

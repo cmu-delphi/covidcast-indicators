@@ -143,37 +143,63 @@ class TestProcess:
                  'raw_data/small_raw_data_2.csv',
                  'raw_data/small_raw_data_3.csv', ],
                 SIGNALS,
+                ['median_home_dwell_time',
+                 'completely_home_prop_7d_avg'],
                 ['state'],
                 export_dir)
 
         expected = {
-            'median_home_dwell_time': pd.DataFrame(data={
-                'geo_id': ['al', 'pa'],
-                'val': [4.5, 7.5],
-                'se': [1.5, 0.5],
-                'sample_size': [2, 2]
+            'wip_median_home_dwell_time': pd.DataFrame(data={
+                'geo_id': ['al', 'ga'],
+                'val': [6, 3.5],
+                'se': [None, 0.5],
+                'sample_size': [1, 2]
             }),
             'completely_home_prop': pd.DataFrame(data={
-                'geo_id': ['al', 'pa'],
-                'val': [0.1, 0.15],
-                'se': [0.05, 0.05],
-                'sample_size': [2, 2]
+                'geo_id': ['al', 'ga'],
+                'val': [0.15, 0.055],
+                'se': [None, 0.005],
+                'sample_size': [1, 2]
             }),
             'part_time_work_prop': pd.DataFrame(data={
-                'geo_id': ['al', 'pa'],
-                'val': [0.25, 0.25],
-                'se': [0.1, 0.05],
-                'sample_size': [2, 2]
+                'geo_id': ['al', 'ga'],
+                'val': [0.35, 0.055],
+                'se': [None, 0.005],
+                'sample_size': [1, 2]
             }),
             'full_time_work_prop': pd.DataFrame(data={
-                'geo_id': ['al', 'pa'],
-                'val': [0.35, 0.35],
-                'se': [0.1, 0.05],
-                'sample_size': [2, 2]
+                'geo_id': ['al', 'ga'],
+                'val': [0.45, 0.055],
+                'se': [None, 0.005],
+                'sample_size': [1, 2]
+            }),
+            'median_home_dwell_time_7d_avg': pd.DataFrame(data={
+                'geo_id': ['al', 'ga', 'pa'],
+                'val': [4.5, 3.5, 7.5],
+                'se': [1.5, 0.5, 0.5],
+                'sample_size': [2, 2, 2]
+            }),
+            'wip_completely_home_prop_7d_avg': pd.DataFrame(data={
+                'geo_id': ['al', 'ga', 'pa'],
+                'val': [0.1, 0.055, 0.15],
+                'se': [0.05, 0.005, 0.05],
+                'sample_size': [2, 2, 2]
+            }),
+            'part_time_work_prop_7d_avg': pd.DataFrame(data={
+                'geo_id': ['al', 'ga', 'pa'],
+                'val': [0.25, 0.055, 0.25],
+                'se': [0.1, 0.005, 0.05],
+                'sample_size': [2, 2, 2]
+            }),
+            'full_time_work_prop_7d_avg': pd.DataFrame(data={
+                'geo_id': ['al', 'ga', 'pa'],
+                'val': [0.35, 0.055, 0.35],
+                'se': [0.1, 0.005, 0.05],
+                'sample_size': [2, 2, 2]
             })
         }
         actual = {signal: pd.read_csv(
             export_dir / f'2020-06-12_state_{signal}.csv')
-            for signal in SIGNALS}
-        for signal in SIGNALS:
+            for signal in expected}
+        for signal in expected:
             pd.testing.assert_frame_equal(expected[signal], actual[signal])

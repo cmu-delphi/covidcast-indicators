@@ -2,7 +2,7 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-import pdb
+
 import sys
 import re
 import math

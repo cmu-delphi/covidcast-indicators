@@ -119,8 +119,8 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         custom_msg = "Error fetching data from " + str(start_date) + \
                      " to " + str(end_date) + \
                      "for data source: " + data_source + \
-                     ", signal-type: " + signal_type + \
-                     ", geography-type: " + geo_type
+                     ", signal type: " + signal_type + \
+                     ", geo type: " + geo_type
 
         raise APIDataFetchError(custom_msg)
 

@@ -56,7 +56,7 @@ def run_module():
     if params["end_date"] is not None:
         enddate = params["end_date"]
     if params["start_date"] is not None:
-        startdate = params['start_date']
+        startdate = params["start_date"]
 
     logging.info("first sensor date:\t%s", startdate)
     logging.info("last sensor date:\t%s", enddate)

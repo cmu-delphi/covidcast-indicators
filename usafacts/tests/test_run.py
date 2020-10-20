@@ -10,7 +10,7 @@ from delphi_usafacts.run import run_module
 class TestRun:
     def test_output_files_exist(self, run_as_module):
 
-        csv_files = listdir("../receiving")
+        csv_files = listdir("receiving")
 
         dates = [
             "20200229",
@@ -48,6 +48,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("../receiving", "20200310_state_confirmed_cumulative_num.csv")
+            join("receiving", "20200310_state_confirmed_cumulative_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

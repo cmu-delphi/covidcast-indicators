@@ -8,16 +8,19 @@ from tempfile import TemporaryDirectory
 # third party
 import pandas as pd
 import numpy as np
+from boto3 import Session
+from moto import mock_s3
+import pytest
 
 # third party
 from delphi_utils import read_params
 
 # first party
 from delphi_emr_hosp.config import Config, Constants
-
-# first party
-from delphi_emr_hosp.update_sensor import write_to_csv, EMRHospSensorUpdator
+from delphi_emr_hosp.constants import *
+from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
 from delphi_emr_hosp.load_data import *
+from delphi_emr_hosp.run import run_module
 
 CONFIG = Config()
 CONSTANTS = Constants()
@@ -47,8 +50,7 @@ class TestEMRHospSensorUpdator:
             self.geo,
             self.parallel,
             self.weekday,
-            self.se,
-            self.prefix
+            self.se
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -68,8 +70,7 @@ class TestEMRHospSensorUpdator:
             'hrr',
             self.parallel,
             self.weekday,
-            self.se,
-            self.prefix
+            self.se
         )
         su_inst.shift_dates()
         data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
@@ -86,15 +87,22 @@ class TestEMRHospSensorUpdator:
                 geo,
                 self.parallel,
                 self.weekday,
-                self.se,
-                self.prefix
+                self.se
             )
-            su_inst.update_sensor(
-                EMR_FILEPATH,
-                CLAIMS_FILEPATH,
-                td.name,
-                PARAMS["static_file_dir"]
-            )
+
+            with mock_s3():
+                # Create the fake bucket we will be using
+                params = read_params()
+                aws_credentials = params["aws_credentials"]
+                s3_client = Session(**aws_credentials).client("s3")
+                s3_client.create_bucket(Bucket=params["bucket_name"])
+                su_inst.update_sensor(
+                    EMR_FILEPATH,
+                    CLAIMS_FILEPATH,
+                    td.name,
+                    PARAMS["static_file_dir"]
+                )
+
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
             td.cleanup()
 
@@ -250,3 +258,16 @@ class TestWriteToCsv:
             write_to_csv(res3, False, "name_of_signal", td.name)
 
         td.cleanup()
+
+    def test_handle_wip_signal(self):
+        # Test wip_signal = True (all signals should receive prefix)
+        signal_names = add_prefix(SIGNALS, True)
+        assert all(s.startswith("wip_") for s in signal_names)
+        # Test wip_signal = list (only listed signals should receive prefix)
+        signal_names = add_prefix(SIGNALS, [SIGNALS[0]])
+        assert signal_names[0].startswith("wip_")
+        assert all(not s.startswith("wip_") for s in signal_names[1:])
+        # Test wip_signal = False (only unpublished signals should receive prefix)
+        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
+        assert signal_names[0].startswith("wip_")
+        assert all(not s.startswith("wip_") for s in signal_names[1:])

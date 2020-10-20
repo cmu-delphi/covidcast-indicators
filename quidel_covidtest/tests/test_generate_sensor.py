@@ -14,41 +14,47 @@ class TestGenerateSensor:
         assert POOL_DAYS > 0
         assert isinstance(POOL_DAYS, int)
         
-        # State Level
-        state_data = pd.read_csv("./test_data/state_data.csv", sep = ",", 
-                                 parse_dates=['timestamp'])
-        raw_state_df, state_groups = generate_sensor_for_states(state_data, smooth = False,
-                                                                first_date = datetime(2020, 6, 10),
-                                                                last_date = datetime(2020, 6, 20))
+        # State Level 
+        state_groups = pd.read_csv("./test_data/state_data.csv", sep = ",", 
+                                 parse_dates=['timestamp']).groupby("state_id")
 
-        assert (raw_state_df.dropna()["val"] < 100).all
-        assert (raw_state_df.columns == ["geo_id", "val", "se", "sample_size", "timestamp"]).all()
-        assert len(raw_state_df.groupby("geo_id").count()["timestamp"].unique()) == 1
+        # raw pct_positive
+        state_pct_positive = generate_sensor_for_states(
+            state_groups, smooth = False, device = False,
+            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+
+        assert (state_pct_positive.dropna()["val"] < 100).all()
+        assert set(state_pct_positive.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
+        assert len(state_pct_positive.groupby("geo_id").count()["timestamp"].unique()) == 1
         
-        smoothed_state_df, state_groups = generate_sensor_for_states(state_data, smooth = True,
-                                                                first_date = datetime(2020, 6, 10),
-                                                                last_date = datetime(2020, 6, 20))
-        assert (smoothed_state_df.dropna()["val"] < 100).all
-        assert (smoothed_state_df.columns == ["geo_id", "val", "se", "sample_size", "timestamp"]).all()
-        assert len(smoothed_state_df.groupby("geo_id").count()["timestamp"].unique()) == 1
+        # raw test_per_device
+        state_test_per_device = generate_sensor_for_states(
+            state_groups, smooth = False, device = True,
+            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+
+        assert state_test_per_device["se"].isnull().all()
+        assert set(state_test_per_device.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
+        assert len(state_test_per_device.groupby("geo_id").count()["timestamp"].unique()) == 1
         
         
-        # MSA level   
+        # MSA level
+        # smoothed pct_positive
         msa_data = pd.read_csv("./test_data/msa_data.csv", sep = ",", 
                                  parse_dates=['timestamp'])
-        raw_msa_df = generate_sensor_for_other_geores(state_groups, msa_data, "cbsa_id", 
-                                                      smooth = False,
-                                                      first_date = datetime(2020, 6, 10),
-                                                      last_date = datetime(2020, 6, 20))
-        assert (raw_msa_df.dropna()["val"] < 100).all
-        assert (raw_msa_df.columns == ["geo_id", "val", "se", "sample_size", "timestamp"]).all()
-        assert len(raw_msa_df.groupby("geo_id").count()["timestamp"].unique()) == 1
+        msa_pct_positive = generate_sensor_for_other_geores(
+            state_groups, msa_data, "cbsa_id", smooth = True, device = False,
+            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
         
-        smoothed_msa_df = generate_sensor_for_other_geores(state_groups, msa_data, "cbsa_id", 
-                                                      smooth = True,
-                                                      first_date = datetime(2020, 6, 10),
-                                                      last_date = datetime(2020, 6, 20))
-        assert (smoothed_msa_df.dropna()["val"] < 100).all
-        assert (smoothed_msa_df.columns == ["geo_id", "val", "se", "sample_size", "timestamp"]).all()
-        assert len(smoothed_msa_df.groupby("geo_id").count()["timestamp"].unique()) == 1
+        assert (msa_pct_positive.dropna()["val"] < 100).all()
+        assert set(msa_pct_positive.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
+        assert len(msa_pct_positive.groupby("geo_id").count()["timestamp"].unique()) == 1
+        
+        # smoothed test_per_device
+        msa_test_per_device = generate_sensor_for_other_geores(
+            state_groups, msa_data, "cbsa_id", smooth = True, device = True,
+            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+        
+        assert msa_test_per_device["se"].isnull().all()     
+        assert set(msa_test_per_device.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
+        assert len(msa_test_per_device.groupby("geo_id").count()["timestamp"].unique()) == 1
         

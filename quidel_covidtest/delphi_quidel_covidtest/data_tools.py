@@ -250,3 +250,126 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
         pooled_tests = tpooled_tests
     ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
     return raw_positive_prop(pooled_positives, pooled_tests, min_obs)
+
+
+def raw_tests_per_device(devices, tests, min_obs):
+    '''
+    Calculates the tests per device for a single geographic
+    location, without any temporal smoothing.
+
+    If on any day t, tests[t] < min_obs, then we report np.nan.
+    The second and third returned np.ndarray are the standard errors,
+    currently all np.nan; and the sample size.
+    Args:
+        devices: np.ndarray[float]
+            Number of devices, ordered in time, where each array element
+            represents a subsequent day.  If there were no devices, this should
+            be zero (never np.nan).
+        tests: np.ndarray[float]
+            Number of tests performed.  If there were no tests performed, this
+            should be zero (never np.nan).
+        min_obs: int
+            Minimum number of observations in order to compute a ratio
+    Returns:
+        np.ndarray
+            Tests per device on each day, with the same length
+            as devices and tests.
+        np.ndarray
+            Placeholder for standard errors
+        np.ndarray
+            Sample size used to compute estimates.
+    '''
+    devices = devices.astype(float)
+    tests = tests.astype(float)
+    if (np.any(np.isnan(devices)) or np.any(np.isnan(tests))):
+        print(devices)
+        print(tests)
+        raise ValueError('devices and tests should be non-negative '
+                         'with no np.nan')
+    if min_obs <= 0:
+        raise ValueError('min_obs should be positive')
+    tests[tests < min_obs] = np.nan
+    tests_per_device = tests / devices
+    se = np.repeat(np.nan, len(devices))
+    sample_size = tests
+
+    return tests_per_device, se, sample_size
+
+def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
+                              parent_devices=None, parent_tests=None):
+    """
+    Calculates the ratio of tests per device for a single geographic
+    location, with temporal smoothing.
+    For a given day t, if sum(tests[(t-pool_days+1):(t+1)]) < min_obs, then we
+    'borrow' min_obs - sum(tests[(t-pool_days+1):(t+1)]) observations from the
+    parents over the same timespan.  Importantly, it will make sure NOT to
+    borrow observations that are _already_ in the current geographic partition
+    being considered.
+    If min_obs is specified but not satisfied over the pool_days, and
+    parent arrays are not provided, then we report np.nan.
+    The second and third returned np.ndarray are the standard errors,
+    currently all placeholder np.nan; and the reported sample_size.
+    Args:
+        devices: np.ndarray[float]
+            Number of devices, ordered in time, where each array element
+            represents a subsequent day.  If there were no devices, this should
+            be zero (never np.nan).
+        tests: np.ndarray[float]
+            Number of tests performed.  If there were no tests performed, this
+            should be zero (never np.nan).
+        min_obs: int
+            Minimum number of observations in order to compute a ratio
+        pool_days: int
+            Number of days in the past (including today) over which to pool data.
+        parent_devices: np.ndarray
+            Like devices, but for the parent geographic partition (e.g., State)
+            If this is None, then this shall have 0 devices uniformly.
+        parent_tests: np.ndarray
+            Like tests, but for the parent geographic partition (e.g., State)
+            If this is None, then this shall have 0 tests uniformly.
+    Returns:
+        np.ndarray
+            Tests per device after the pool_days pooling, with the same
+            length as devices and tests.
+        np.ndarray
+            Standard errors, currently uniformly np.nan (placeholder).
+        np.ndarray
+            Effective sample size (after temporal and geographic pooling).
+    """
+    devices = devices.astype(float)
+    tests = tests.astype(float)
+    if (parent_devices is None) or (parent_tests is None):
+        has_parent = False
+    else:
+        has_parent = True
+        parent_devices = parent_devices.astype(float)
+        parent_tests = parent_tests.astype(float)
+    if (np.any(np.isnan(devices)) or np.any(np.isnan(tests))):
+        raise ValueError('devices and tests '
+                         'should be non-negative with no np.nan')
+    if has_parent:
+        if (np.any(np.isnan(parent_devices))
+            or np.any(np.isnan(parent_tests))):
+            raise ValueError('parent devices and parent tests '
+                       'should be non-negative with no np.nan')
+    if min_obs <= 0:
+        raise ValueError('min_obs should be positive')
+    if (pool_days <= 0) or not isinstance(pool_days, int):
+        raise ValueError('pool_days should be a positive int')
+    # STEP 0: DO THE TEMPORAL POOLING
+    tpooled_devices = _slide_window_sum(devices, pool_days)
+    tpooled_tests = _slide_window_sum(tests, pool_days)
+    if has_parent:
+        tpooled_pdevices = _slide_window_sum(parent_devices, pool_days)
+        tpooled_ptests = _slide_window_sum(parent_tests, pool_days)
+        borrow_prop = _geographical_pooling(tpooled_tests, tpooled_ptests,
+                                            min_obs)
+        pooled_devices = (tpooled_devices
+                          + borrow_prop * tpooled_pdevices)
+        pooled_tests = (tpooled_tests
+                        + borrow_prop * tpooled_ptests)
+    else:
+        pooled_devices = tpooled_devices
+        pooled_tests = tpooled_tests
+    ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
+    return raw_tests_per_device(pooled_devices, pooled_tests, min_obs)

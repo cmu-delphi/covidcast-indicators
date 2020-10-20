@@ -11,7 +11,7 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import read_params, create_export_csv, GeoMapper
 
 from .geo import geo_map
 from .pull import pull_usafacts_data
@@ -77,12 +77,10 @@ def run_module():
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
 
-    dfs = {metric: pull_usafacts_data(base_url, metric, pop_df) for metric in METRICS}
+    geo_mapper = GeoMapper()
+
+    dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         print(geo_res, metric, sensor, smoother)

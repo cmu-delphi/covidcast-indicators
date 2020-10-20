@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper
 
 
-def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.DataFrame:
     """Pulls the latest USA Facts data, and conforms it into a dataset
 
     The output dataset has:
@@ -72,16 +73,19 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         & (df["FIPS"] != 2270)
     ]
 
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Population for unassigned cases/deaths is NAN
-    df = pd.merge(df, pop_df, on="FIPS", how="left")
-
     # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
     unassigned_index = (df['FIPS'] == 0)
     df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000
 
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
+
+    # Merge in population LOWERCASE, consistent across confirmed and deaths
+    # Population for unassigned cases/deaths is NAN
+    pop_df = geo_mapper._load_crosswalk("fips", "pop").rename(columns={"pop": "population"})
+
+    df = pd.merge(df, pop_df, on="fips", how="left")
+
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
         df.drop(DROP_COLUMNS, axis=1, inplace=True)

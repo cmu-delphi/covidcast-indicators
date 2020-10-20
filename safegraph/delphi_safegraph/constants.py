@@ -1,4 +1,4 @@
-"""Constants for constructing Safegraph indicator."""
+
 
 HOME_DWELL = 'median_home_dwell_time'
 COMPLETELY_HOME = 'completely_home_prop'

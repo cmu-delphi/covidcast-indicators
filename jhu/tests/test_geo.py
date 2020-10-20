@@ -22,7 +22,7 @@ class TestGeoMap:
         with pytest.raises(ValueError):
             geo_map(df, "département")
 
-    def test_fips(self):
+    def test_county(self):
         df = pd.DataFrame(
             {
                 "fips": ["53003", "48027", "50103"],
@@ -83,7 +83,7 @@ class TestGeoMap:
         exp_incidence = np.array([27 + 5, 13 + 10]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165 + 30, 60 + 100]) / np.array([2500, 25]) * 100000
 
-        assert set(new_df["geo_id"].values) == set(["az", "ma", "al", "ga"])
+        assert set(new_df["geo_id"].values) == set(["AZ", "MA", "AL", "GA"])
         assert set(new_df["timestamp"].values) == set(["2020-02-15"])
         assert set(new_df["new_counts"].values) == set([32, 23, 2, 8])
         assert set(new_df["cumulative_counts"].values) == set([195, 160, 12, 80])
@@ -119,7 +119,7 @@ class TestGeoMap:
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
 
-        assert new_df["geo_id"].isin(["110", "123", "140", "145", "147"]).all()
+        assert new_df["geo_id"].isin([110, 123, 140, 145, 147]).all()
         assert new_df["timestamp"].isin(["2020-02-15"]).all()
 
     def test_msa(self):
@@ -147,5 +147,5 @@ class TestGeoMap:
 
         new_df = geo_map(df, "msa")
 
-        assert new_df["geo_id"].isin(["31420", "49340"]).all()
+        assert new_df["geo_id"].isin([31420, 49340]).all()
         assert new_df["timestamp"].isin(["2020-02-15"]).all()

@@ -80,11 +80,17 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
 
+    # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
+    # a corresponding population entry in the GeoMapper so it will be dropped
+    # in the call to `add_population_column()`.  We pull it out here to
+    # reinsert it after the population data is added.
+    nyc_dummy_row = df[df["fips"] == "00001"]
+    assert len(nyc_dummy_row) == 1
+
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Population for unassigned cases/deaths is NAN
-    pop_df = geo_mapper._load_crosswalk("fips", "pop").rename(columns={"pop": "population"})
-
-    df = pd.merge(df, pop_df, on="fips", how="left")
+    df = geo_mapper.add_population_column(df, "fips")
+    df = df.append(nyc_dummy_row, ignore_index=True)
 
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:

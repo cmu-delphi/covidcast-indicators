@@ -36,8 +36,8 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
-    pop_df: pd.DataFrame
-        Read from static file "fips_population.csv".
+    geo_mapper: GeoMapper
+        GeoMapper object with population info.
 
     Returns
     -------

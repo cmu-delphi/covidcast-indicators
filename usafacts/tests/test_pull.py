@@ -6,11 +6,6 @@ import pandas as pd
 from delphi_utils import GeoMapper
 from delphi_usafacts.pull import pull_usafacts_data
 
-pop_df = pd.read_csv(
-    join("..", "static", "fips_population.csv"),
-    dtype={"fips": float, "population": float}
-).rename({"fips": "FIPS"}, axis=1)
-
 base_url_good = "test_data/small_{metric}.csv"
 
 base_url_bad = {

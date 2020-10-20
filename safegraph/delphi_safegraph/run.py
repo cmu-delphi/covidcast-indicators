@@ -9,7 +9,7 @@ import subprocess
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, add_prefix, files_in_past_week
+from .process import process, files_in_past_week
 
 
 def run_module():
@@ -35,8 +35,8 @@ def run_module():
         """
         return process(current_filename,
                        files_in_past_week(current_filename),
-                       signal_names=add_prefix(
-                           SIGNALS, wip_signal, prefix='wip_'),
+                       signal_names=SIGNALS,
+                       wip_signal=wip_signal,
                        geo_resolutions=GEO_RESOLUTIONS,
                        export_dir=export_dir,
                        )

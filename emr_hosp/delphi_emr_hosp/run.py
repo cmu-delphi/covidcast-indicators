@@ -69,6 +69,7 @@ def run_module():
     logging.info("parallel:\t\t%s", params["parallel"])
     logging.info("weekday:\t\t%s", params["weekday"])
     logging.info("se:\t\t\t%s", params["se"])
+    logging.info("prefix:\t\t%s", params["obfuscated_prefix"])
 
     ## start generating
     for geo in params["geos"]:
@@ -84,7 +85,8 @@ def run_module():
                 geo,
                 params["parallel"],
                 weekday,
-                params["se"]
+                params["se"],
+                params["obfuscated_prefix"]
             )
             su_inst.update_sensor(
                 params["input_emr_file"],

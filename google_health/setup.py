@@ -11,8 +11,7 @@ required = [
     "delphi-utils",
     "covidcast",
     "boto3",
-    "moto",
-    "tenacity"
+    "moto"
 ]
 
 setup(

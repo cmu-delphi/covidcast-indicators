@@ -22,7 +22,7 @@ def run_module():
 
     complaints = []
     for data_source in params["sources"].keys():
-        complaints.extend(check_source(data_source, meta, params["sources"], params.get("grace",0)))
+        complaints.extend(check_source(data_source, meta, params["sources"]))
 
     if len(complaints) > 0:
         for complaint in complaints:
@@ -34,9 +34,6 @@ def run_module():
 
 def report_complaints(complaints, params):
     """Post complaints to Slack."""
-    if not params["slack_token"]:
-        print("\b (dry-run)")
-        return
 
     blocks = format_complaints(complaints)
 

@@ -107,7 +107,7 @@ def run_module():
         print(f"Failed to archive '{exported_file}'")
 
 
-def add_prefix(signal_names, wip_signal, prefix):
+def add_prefix(signal_names, wip_signal, prefix="wip_"):
     """Adds prefix to signal if there is a WIP signal
     Parameters
     ----------

@@ -15,7 +15,7 @@ def geo_map(df: pd.DataFrame, geo_res: str):
         Columns: fips, timestamp, new_counts, cumulative_counts, population ...
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
-        ('fips', 'state', 'msa', 'hrr').
+        ('county', 'state', 'msa', 'hrr').
     sensor: str
         sensor type. Valid options:
         ("new_counts", "cumulative_counts",
@@ -32,12 +32,17 @@ def geo_map(df: pd.DataFrame, geo_res: str):
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 
     gmpr = GeoMapper()
-    if geo_res == "county":
+    if geo_res == "state":
+        df = gmpr.county_to_state(df, fips_col="fips", state_id_col="geo_id", date_col="timestamp")
+    elif geo_res == "msa":
+        df = gmpr.county_to_msa(df, fips_col="fips", msa_col="geo_id", date_col="timestamp")
+        df['geo_id'] = df['geo_id'].astype(int)
+        print(df[df['population'] == 0])
+    elif geo_res == 'hrr':
+        df = gmpr.county_to_hrr(df, fips_col="fips", hrr_col="geo_id", date_col="timestamp")
+        df['geo_id'] = df['geo_id'].astype(int)
+    elif geo_res == 'county':
         df.rename(columns={'fips': 'geo_id'}, inplace=True)
-    elif geo_res == "state":
-        df = gmpr.replace_geocode(df, "fips", "state_id", new_col="geo_id", date_col="timestamp")
-    else:
-        df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     df['new_counts'] = df['new_counts']

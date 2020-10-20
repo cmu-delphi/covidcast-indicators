@@ -5,15 +5,15 @@ when the module is run with `python -m MODULE_NAME`.
 import glob
 import multiprocessing as mp
 import subprocess
+from functools import partial
 
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, files_in_past_week
-
+from .process import process, add_prefix
 
 def run_module():
-    """Creates the Safegraph indicator."""
+
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
@@ -24,22 +24,11 @@ def run_module():
     aws_endpoint = params["aws_endpoint"]
     wip_signal = params["wip_signal"]
 
-    def process_file(current_filename):
-        """Wrapper around `process()` that only takes a single argument.
-
-        A single argument function is necessary to use `pool.map()` below.
-        Because each call to `process()` has two arguments that are dependent
-        on the input file name (`current_filename` and `previous_filenames`),
-        we choose to use this wrapper rather than something like
-        `functools.partial()`.
-        """
-        return process(current_filename,
-                       files_in_past_week(current_filename),
-                       signal_names=SIGNALS,
-                       wip_signal=wip_signal,
-                       geo_resolutions=GEO_RESOLUTIONS,
-                       export_dir=export_dir,
-                       )
+    process_file = partial(process,
+                           signal_names=add_prefix(SIGNALS, wip_signal, prefix='wip_'),
+                           geo_resolutions=GEO_RESOLUTIONS,
+                           export_dir=export_dir,
+                           )
 
     # Update raw data
     # Why call subprocess rather than using a native Python client, e.g. boto3?
@@ -54,7 +43,6 @@ def run_module():
             'AWS_DEFAULT_REGION': aws_default_region,
         },
         shell=True,
-        check=True,
     )
 
     files = glob.glob(f'{raw_data_dir}/social-distancing/**/*.csv.gz',

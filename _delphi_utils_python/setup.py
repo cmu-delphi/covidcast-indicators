@@ -6,10 +6,9 @@ required = [
     "gitpython",
     "moto",
     "numpy",
-    "pandas>=1.1.0",
+    "pandas",
     "pytest",
     "pytest-cov",
-    "xlrd"
 ]
 
 setup(

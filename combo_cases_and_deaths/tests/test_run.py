@@ -2,11 +2,12 @@ from datetime import date
 from itertools import product
 import pytest
 import unittest
+import pandas as pd
 
-from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal
+from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal, combine_usafacts_and_jhu, COLUMN_MAPPING
 from delphi_combo_cases_and_deaths.handle_wip_signal import add_prefix
 from delphi_utils import read_params
-from delphi_combo_cases_and_deaths.constants import *
+from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
 
 def test_issue_dates():
@@ -49,6 +50,33 @@ def test_handle_wip_signal():
     assert signal_names[0].startswith("wip_")
     assert all(not s.startswith("wip_") for s in signal_names[1:])
 
+def test_unstable_sources():
+    placeholder = lambda geo: pd.DataFrame(
+        [(date.today(),"pr" if geo == "state" else "72000",1,1,1,0)],
+        columns="time_value geo_value value stderr sample_size direction".split())
+    fetcher10 = lambda *x: placeholder(x[-1]) if x[0] == "usa-facts" else None
+    fetcher01 = lambda *x: placeholder(x[-1]) if x[0] == "jhu-csse" else None
+    fetcher11 = lambda *x: placeholder(x[-1])
+    fetcher00 = lambda *x: None
+
+    date_range = [date.today(), date.today()]
+
+    for geo in "state county msa".split():
+        for (fetcher, expected_size) in [
+                (fetcher00, 0),
+                (fetcher01, 0 if geo == "msa" else 1),
+                (fetcher10, 1),
+                (fetcher11, 1 if geo == "msa" else 2)
+        ]:
+            df = combine_usafacts_and_jhu("", geo, date_range, fetcher)
+            assert df.size == expected_size * len(COLUMN_MAPPING), f"""
+input for {geo}:
+{fetcher('usa-facts',geo)}
+{fetcher('jhu-csse',geo)}
+
+output:
+{df}
+"""
 
 class MyTestCase(unittest.TestCase):
     pass

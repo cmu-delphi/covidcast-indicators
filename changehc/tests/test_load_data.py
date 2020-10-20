@@ -28,7 +28,13 @@ class TestLoadData:
             load_denom_data(DENOM_FILEPATH, DROP_DATE, "foo")
 
         with pytest.raises(AssertionError):
+            load_denom_data("test_data/20200101_foo.dat", DROP_DATE, "fips")
+
+        with pytest.raises(AssertionError):
             load_covid_data(COVID_FILEPATH, DROP_DATE, "foo")
+
+        with pytest.raises(AssertionError):
+            load_covid_data("test_data/20200101_foo.dat", DROP_DATE, "fips")
 
         with pytest.raises(AssertionError):
             load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo")

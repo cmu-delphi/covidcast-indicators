@@ -25,6 +25,11 @@ def load_denom_data(denom_filepath, dropdate, base_geo):
     """
     assert base_geo == "fips", "base unit must be 'fips'"
 
+    denom_suffix = denom_filepath.split("/")[-1].split(".")[0][9:]
+    assert denom_suffix == "All_Outpatients_By_County"
+    denom_filetype = denom_filepath.split("/")[-1].split(".")[1]
+    assert denom_filetype == "dat"
+
     denom_data = pd.read_csv(
         denom_filepath,
         sep="|",
@@ -70,6 +75,11 @@ def load_covid_data(covid_filepath, dropdate, base_geo):
         cleaned denominator dataframe
     """
     assert base_geo == "fips", "base unit must be 'fips'"
+
+    covid_suffix = covid_filepath.split("/")[-1].split(".")[0][9:]
+    assert covid_suffix == "Covid_Outpatients_By_County"
+    covid_filetype = covid_filepath.split("/")[-1].split(".")[1]
+    assert covid_filetype == "dat"
 
     covid_data = pd.read_csv(
         covid_filepath,

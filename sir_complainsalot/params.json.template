@@ -6,11 +6,20 @@
       "max_age": 5,
       "maintainers": ["U010VE2T51N"]
     },
+    "hospital-admissions": {
+      "max_age": 5,
+      "maintainers": ["U010VE2T51N"],
+      "retired-signals": ["smoothed_covid19", "smoothed_adj_covid19"]
+    },
     "ght": {
       "max_age": 5,
       "maintainers": ["U010VE2T51N"]
     },
     "jhu-csse": {
+      "max_age": 2,
+      "maintainers": ["UUCGWMJ5P"]
+    },
+    "usa-facts": {
       "max_age": 2,
       "maintainers": ["UUCGWMJ5P"]
     },

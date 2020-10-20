@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Geo location constants for constructing Safegraph indicator."""
 
 # https://code.activestate.com/recipes/577775-state-fips-codes-dict/
 STATE_TO_FIPS = {
@@ -62,3 +63,4 @@ STATE_TO_FIPS = {
 
 FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
+VALID_GEO_RESOLUTIONS = ('county', 'state')

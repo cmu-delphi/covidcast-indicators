@@ -2,7 +2,7 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-
+import pdb
 import sys
 import re
 import math
@@ -724,6 +724,15 @@ class Validator():
                 export_dir,
                 [name_match_pair[0] for name_match_pair in validate_files],
                 date_slist):
+
+            self.increment_total_checks()
+
+            if geo_sig_df.empty:
+                self.raised_errors.append(ValidationError(
+                    ("check_missing_geo_sig_combo", geo_type, signal_type),
+                    None,
+                    "File with geo_type-signal combo does not exist!"))
+                continue
 
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)

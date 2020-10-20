@@ -90,9 +90,6 @@ def read_geo_signal_combo_files(geo_signal_combos, data_folder, filenames, date_
                  in file and geo_signal_combo[1] in file]
 
         if len(files) == 0:
-            print("FILE_NOT_FOUND: File with geo_type:",
-                  geo_signal_combo[0], " and signal:", geo_signal_combo[1],
-                  " does not exist!")
             yield pd.DataFrame(), geo_signal_combo[0], geo_signal_combo[1]
             continue
 

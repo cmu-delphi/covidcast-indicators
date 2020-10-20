@@ -446,7 +446,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
 
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
@@ -460,7 +460,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
 
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
@@ -474,7 +474,7 @@ class TestCheckAvgValDiffs:
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
 
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df, date.today(), "geo", "signal")
 
         assert len(validator.raised_errors) == 0
@@ -488,7 +488,7 @@ class TestCheckAvgValDiffs:
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 
@@ -503,7 +503,7 @@ class TestCheckAvgValDiffs:
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 
@@ -520,7 +520,7 @@ class TestCheckAvgValDiffs:
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
-        validator.check_avg_val_diffs(
+        validator.check_avg_val_vs_reference(
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal")
 

@@ -26,14 +26,15 @@
 ## Current features
 
 * Errors are summarized in class attribute and printed on exit
+* If any non-suppressed errors are raised, the validation process exits with non-zero status
 * Various check settings are controllable via indicator-specific params.json files
 * User can manually disable certain checks for certain sets of data using a field in the params.json file
 * User can enable test mode (checks only a small number of data files) using a field in the params.json file
 
 ## Checks + features wishlist, and problems to think about:
 
-* Improve efficiency by grouping all_frames by geo and sig instead of reading data in again via read_geo_sig_cmbo_files().
-* Check explicitly for large spikes (avg_val check can detect large jumps and especially large spikes)
+* Improve efficiency by grouping all_frames by geo type and signal name instead of reading data in again via read_geo_signal_combo_files().
+* Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Use known erroneous/anomalous days of source data to tune static thresholds
@@ -46,8 +47,9 @@
   * E.g. WY/RI missing or very low compared to historical
 * Use hypothesis testing p-values to decide when to raise error or not, instead of static thresholds. Many low but non-significant p-values will also raise error. See [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1601307675021000?thread_ts=1600277030.103500&cid=CV1SYBC90) and [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1600978037007500?thread_ts=1600277030.103500&cid=CV1SYBC90) for more background.
   * Order raised exceptions by p-value
-  * Correct p-values for multiple testing
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (differeng geo regions, e.g.) are "close" to significant
+  * Correct p-values for multiple testing
+  * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"
 * Nicer formatting for error “report”
 * Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)

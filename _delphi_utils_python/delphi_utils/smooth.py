@@ -42,7 +42,8 @@ class Smoother:
         If float, all regression is done with Gaussian weights whose variance is
         half the gaussian_bandwidth. If None, performs unweighted regression. (Applies
         to 'left_gauss_linear' and 'savgol'.)
-        Here are some reference values:
+        Here are some reference values (the given bandwidth produces a 95% weighting on
+        the data of length time window into the past):
         time window    |     bandwidth
         7                        36
         14                       144
@@ -82,8 +83,9 @@ class Smoother:
                           gaussian_bandwidth=144)
     >>> smoothed_signal = smoother.smooth(signal)
 
-    Example 4. Apply a local linear regression smoother (equivalent to `left_gauss_linear`), with
-               95% weight on the recent week and a sharp cutoff after 3 weeks.
+    Example 4. Apply a local linear regression smoother (essentially equivalent to
+               `left_gauss_linear`), with 95% weight on the recent week and a sharp
+               cutoff after 3 weeks.
     >>> smoother = Smoother(smoother_name='savgol', poly_fit_degree=1, window_length=21,
                           gaussian_bandwidth=36)
     >>> smoothed_signal = smoother.smooth(signal)
@@ -111,25 +113,18 @@ class Smoother:
         self.impute_method = impute_method
         self.minval = minval
         self.boundary_method = boundary_method
-        if smoother_name == "savgol":
-            self.coeffs = self.savgol_coeffs(
-                -self.window_length + 1,
-                0,
-                self.poly_fit_degree,
-                self.gaussian_bandwidth,
-            )
-        else:
-            self.coeffs = None
 
         valid_smoothers = {"savgol", "left_gauss_linear", "moving_average", "identity"}
-
+        valid_impute_methods = {"savgol", "zeros", None}
         if self.smoother_name not in valid_smoothers:
             raise ValueError("Invalid smoother name given.")
-
-        valid_impute_methods = {"savgol", "zeros", None}
-
         if self.impute_method not in valid_impute_methods:
             raise ValueError("Invalid impute method given.")
+
+        if smoother_name == "savgol":
+            self.coeffs = self.savgol_coeffs(-self.window_length + 1, 0)
+        else:
+            self.coeffs = None
 
     def smooth(self, signal):
         """
@@ -145,7 +140,9 @@ class Smoother:
             A smoothed 1D signal.
         """
         if len(signal) < self.window_length:
-            raise ValueError("The window_length must be smaller than the length of the signal.")
+            raise ValueError(
+                "The window_length must be smaller than the length of the signal."
+            )
 
         signal = self.impute(signal)
 
@@ -175,6 +172,10 @@ class Smoother:
             Imputed signal.
         """
         if self.impute_method == "savgol":
+            # We cannot impute if the signal begins with a NaN (there is no information to go by).
+            # To preserve input-output array lengths, this util will not drop NaNs for you.
+            if np.isnan(signal[0]):
+                raise ValueError("The signal should not begin with a nan value.")
             imputed_signal = self.savgol_impute(signal)
         elif self.impute_method == "zeros":
             imputed_signal = np.nan_to_num(signal)
@@ -221,8 +222,6 @@ class Smoother:
         At each time t, we use the data from times 1, ..., t-dt, weighted
         using the Gaussian kernel, to produce the estimate at time t.
 
-        For math details, see the smoothing_docs folder.
-
         Parameters
         ----------
         signal: np.ndarray
@@ -261,8 +260,8 @@ class Smoother:
         """
         Fits a polynomial through the values given by the signal and returns the value
         of the polynomial at the right-most signal-value. More precisely, fits a polynomial
-        f(t) of degree poly_fit_degree through the points signal[0], signal[1] ..., signal[-1],
-        and returns the evaluation of the polynomial at the location of signal[-1].
+        f(t) of degree poly_fit_degree through the points signal[-n], signal[-n+1] ..., signal[-1],
+        and returns the evaluation of the polynomial at the location of signal[0].
 
         Parameters
         ----------
@@ -271,23 +270,20 @@ class Smoother:
 
         Returns
         ----------
-        coeffs: np.ndarray
-            A vector of coefficients of length nl that determines the savgol
-            convolution filter.
+        predicted_value: float
+            The anticipated value that comes after the end of the signal based on a polynomial fit.
         """
-        coeffs = self.savgol_coeffs(
-            -len(signal) + 1, 0, self.poly_fit_degree, self.gaussian_bandwidth
-        )
-        return signal @ coeffs
+        coeffs = self.savgol_coeffs(-len(signal) + 1, 0)
+        predicted_value = signal @ coeffs
+        return predicted_value
 
-    @classmethod
-    def savgol_coeffs(cls, nl, nr, poly_fit_degree, gaussian_bandwidth=100):
+    def savgol_coeffs(self, nl, nr):
         """
         Solves for the Savitzky-Golay coefficients. The coefficients c_i
         give a filter so that
             y = \sum_{i=-{n_l}}^{n_r} c_i x_i
         is the value at 0 (thus the constant term) of the polynomial fit
-        through the points {x_i}. The coefficients are c_i are caluclated as
+        through the points {x_i}. The coefficients are c_i are calculated as
             c_i =  ((A.T @ A)^(-1) @ (A.T @ e_i))_0
         where A is the design matrix of the polynomial fit and e_i is the standard
         basis vector i. This is currently done via a full inversion, which can be
@@ -317,16 +313,15 @@ class Smoother:
             raise warnings.warn("The filter is no longer causal.")
 
         A = np.vstack(
-            [np.arange(nl, nr + 1) ** j for j in range(poly_fit_degree + 1)]
+            [np.arange(nl, nr + 1) ** j for j in range(self.poly_fit_degree + 1)]
         ).T
 
-        if gaussian_bandwidth is None:
+        if self.gaussian_bandwidth is None:
             mat_inverse = np.linalg.inv(A.T @ A) @ A.T
         else:
-            weights = np.exp(-((np.arange(nl, nr + 1)) ** 2) / gaussian_bandwidth)
+            weights = np.exp(-((np.arange(nl, nr + 1)) ** 2) / self.gaussian_bandwidth)
             mat_inverse = np.linalg.inv((A.T * weights) @ A) @ (A.T * weights)
         window_length = nr - nl + 1
-        basis_vector = np.zeros(window_length)
         coeffs = np.zeros(window_length)
         for i in range(window_length):
             basis_vector = np.zeros(window_length)
@@ -412,23 +407,20 @@ class Smoother:
             An imputed 1D signal.
         """
         signal_imputed = np.copy(signal)
-        if np.isnan(signal[0]):
-            raise ValueError("The signal should not begin with a nan value.")
         for ix in np.where(np.isnan(signal))[0]:
+            # Boundary cases
             if ix < self.window_length:
+                # A nan following a single value should just be extended
                 if ix == 1:
                     signal_imputed[ix] = signal_imputed[0]
+                # Otherwise, use savgol fitting
                 else:
-                    coeffs = self.savgol_coeffs(
-                        -ix, -1, self.poly_fit_degree, self.gaussian_bandwidth
-                    )
+                    coeffs = self.savgol_coeffs(-ix, -1)
                     signal_imputed[ix] = signal_imputed[:ix] @ coeffs
+            # Use a polynomial fit on the past window length to impute
             else:
-                coeffs = self.savgol_coeffs(
-                    -self.window_length,
-                    -1,
-                    self.poly_fit_degree,
-                    self.gaussian_bandwidth,
+                coeffs = self.savgol_coeffs(-self.window_length, -1)
+                signal_imputed[ix] = (
+                    signal_imputed[ix - self.window_length : ix] @ coeffs
                 )
-                signal_imputed[ix] = signal_imputed[ix - self.window_length : ix] @ coeffs
         return signal_imputed

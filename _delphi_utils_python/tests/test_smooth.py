@@ -42,7 +42,7 @@ class TestSmoothers:
 
         # The smoother should basically be the identity when the Gaussian kernel
         # is set to weigh the present value overwhelmingly
-        signal = np.arange(1, 10) + np.random.normal(0, 1, 9)
+        signal = np.arange(1, 30) + np.random.normal(0, 1, 29)
         smoother = Smoother(smoother_name="left_gauss_linear", gaussian_bandwidth=0.1)
         assert np.allclose(smoother.smooth(signal)[1:], signal[1:])
 
@@ -100,7 +100,7 @@ class TestSmoothers:
         # and the polynomial fit degree is set to 1. Beyond that, there will be very small
         # differences between the signals (due to "left_gauss_linear" not having a window_length
         # cutoff).
-        window_length = 20
+        window_length = 50
         signal = np.arange(window_length) + np.random.randn(window_length)
         smoother = Smoother(smoother_name="left_gauss_linear")
         smoothed_signal1 = smoother.smooth(signal)

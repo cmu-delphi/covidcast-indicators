@@ -34,9 +34,9 @@
 ## Checks + features wishlist, and problems to think about:
 
 * Improve efficiency by grouping all_frames by geo type and signal name instead of reading data in again via read_geo_signal_combo_files().
-* Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
+* Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Use known erroneous/anomalous days of source data to tune static thresholds
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values been changed significantly

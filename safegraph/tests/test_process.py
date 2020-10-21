@@ -137,9 +137,9 @@ class TestProcess:
         export_dir = tmp_path / 'export'
         export_dir.mkdir()
 
-        process('raw_data/small_raw_data_0.csv',
-                # File 2 does not exist.
-                ['raw_data/small_raw_data_1.csv',
+        process(['raw_data/small_raw_data_0.csv',
+                 'raw_data/small_raw_data_1.csv',
+                 # File 2 does not exist.
                  'raw_data/small_raw_data_2.csv',
                  'raw_data/small_raw_data_3.csv', ],
                 SIGNALS,

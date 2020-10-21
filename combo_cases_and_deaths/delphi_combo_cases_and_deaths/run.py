@@ -6,17 +6,17 @@ This module produces a combined signal for jhu-csse and usa-facts.  This signal
 is only used for visualization.  It sources Puerto Rico from jhu-csse and
 everything else from usa-facts.
 """
-from datetime import date, timedelta, datetime
-from itertools import product
 import re
 import sys
+from datetime import date, timedelta, datetime
+from itertools import product
 
 import covidcast
 import pandas as pd
+from delphi_utils import read_params
 
-from delphi_utils import read_params, create_export_csv
-from .constants import *
-from .handle_wip_signal import *
+from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
+from .handle_wip_signal import add_prefix
 
 
 def check_not_none(data_frame, label, date_range):
@@ -119,12 +119,12 @@ def run_module():
                 "Invalid date_range parameter. Please choose from (new, all, yyyymmdd-yyyymmdd).")
         try:
             date1 = datetime.strptime(params['date_range'][:8], '%Y%m%d').date()
-        except ValueError:
-            raise ValueError("Invalid date_range parameter. Please check the first date.")
+        except ValueError as exc:
+            raise ValueError("Invalid date_range parameter. Please check the first date.") from exc
         try:
             date2 = datetime.strptime(params['date_range'][-8:], '%Y%m%d').date()
-        except ValueError:
-            raise ValueError("Invalid date_range parameter. Please check the second date.")
+        except ValueError as exc:
+            raise ValueError("Invalid date_range parameter. Please check the second date.") from exc
 
         #The the valid start date
         if date1 < params['export_start_date']:
@@ -149,4 +149,3 @@ def run_module():
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
-

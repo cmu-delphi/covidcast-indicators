@@ -620,7 +620,7 @@ class Validator():
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
         raw_thresholds = pd.DataFrame(
-            [[1.50, 1.30, 1.80] * len(df_all.index)], classes, index=df_all.index)
+            [[1.50, 1.30, 1.80]], classes, index=df_all.index)
         smoothed_thresholds = raw_thresholds.apply(
             lambda x: x/(math.sqrt(7) * 1.5))
 

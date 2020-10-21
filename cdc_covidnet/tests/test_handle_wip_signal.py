@@ -1,6 +1,6 @@
 import unittest
 from delphi_cdc_covidnet.update_sensor import add_prefix
-from delphi_cdc_covidnet.constants import *
+from delphi_cdc_covidnet.constants import SIGNALS
 
 def test_handle_wip_signal():
     # Test wip_signal = True, add prefix to all signals

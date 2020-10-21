@@ -236,7 +236,8 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            df_export.to_csv(f'{export_dir}/{date}_{geo_res}_{signal}.csv',
+            date_str = date.strftime('%Y%m%d')
+            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
                              na_rep='NA',
                              index=False, )
 

@@ -37,9 +37,9 @@
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
+* Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Use known erroneous/anomalous days of source data to tune static thresholds
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
-* Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values been changed significantly
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days
   * Any relevant anomaly detection packages already exist?

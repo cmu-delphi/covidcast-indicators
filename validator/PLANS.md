@@ -43,7 +43,7 @@
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days
   * Any relevant anomaly detection packages already exist?
-  * What sorts of hypothesis tests to use?
+  * What sorts of hypothesis tests to use? See [time series trend analysis](https://www.genasis.cz/time-series/index.php?pg=home--trend-analysis).
   * See data-quality GitHub issues, Ryan’s [correlation notebook](https://github.com/cmu-delphi/covidcast/tree/main/R-notebooks), and Dmitry's [indicator validation notebook](https://github.com/cmu-delphi/covidcast-indicators/blob/deploy-jhu/testing_utils/indicator_validation.template.ipynb) for ideas
   * E.g. Doctor visits decreasing correlation with cases
   * E.g. WY/RI missing or very low compared to historical

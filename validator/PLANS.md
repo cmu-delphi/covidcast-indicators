@@ -55,3 +55,4 @@
 * Nicer formatting for error “report”
 * Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)
+* Run timing tests, check if saving intermediate files will improve effeciency 

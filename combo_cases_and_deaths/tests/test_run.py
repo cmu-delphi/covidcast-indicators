@@ -1,12 +1,10 @@
+import unittest
 from datetime import date
 from itertools import product
-import pytest
-import unittest
 
-from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal
+from delphi_combo_cases_and_deaths.constants import METRICS, SENSORS, SMOOTH_TYPES
 from delphi_combo_cases_and_deaths.handle_wip_signal import add_prefix
-from delphi_utils import read_params
-from delphi_combo_cases_and_deaths.constants import *
+from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal
 
 
 def test_issue_dates():

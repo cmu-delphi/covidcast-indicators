@@ -128,7 +128,7 @@ class TestProcess:
             'sample_size': [2, 2]
         })
         actual = pd.read_csv(
-            export_dir / '2020-02-14_county_completely_home_prop.csv')
+            export_dir / '20200214_county_completely_home_prop.csv')
         pd.testing.assert_frame_equal(expected, actual)
 
     def test_process(self, tmp_path):
@@ -141,7 +141,7 @@ class TestProcess:
                  'raw_data/small_raw_data_1.csv',
                  # File 2 does not exist.
                  'raw_data/small_raw_data_2.csv',
-                 'raw_data/small_raw_data_3.csv', ],
+                 'raw_data/small_raw_data_3.csv'],
                 SIGNALS,
                 ['median_home_dwell_time',
                  'completely_home_prop_7d_avg'],
@@ -199,7 +199,7 @@ class TestProcess:
             })
         }
         actual = {signal: pd.read_csv(
-            export_dir / f'2020-06-12_state_{signal}.csv')
+            export_dir / f'20200612_state_{signal}.csv')
             for signal in expected}
         for signal in expected:
             pd.testing.assert_frame_equal(expected[signal], actual[signal])

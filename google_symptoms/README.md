@@ -19,8 +19,7 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
-All of the user-changable parameters are stored in `params.json`. (NOTE: In
-production we specify `"export_start_date": "latest",`). To execute the module
+All of the user-changable parameters are stored in `params.json`. To execute the module
 and produce the output datasets (by default, in `receiving`), run the following.
 
 ```

@@ -620,7 +620,7 @@ class Validator():
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
         raw_thresholds = pd.DataFrame(
-            [[1.50, 1.30, 1.80]], classes, index=df_all.index)
+            [[1.50, 1.30, 1.80]], columns=classes, index=df_all.index)
         smoothed_thresholds = raw_thresholds.apply(
             lambda x: x/(math.sqrt(7) * 1.5))
 
@@ -634,11 +634,10 @@ class Validator():
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.
-        mean_stddiff_high = (abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]).bool() or (
-            (df_all["variable"] == "val").bool() and (
-                abs(df_all["mean_stddiff"]) > thres["val_mean_stddiff"]).bool())
+        mean_stddiff_high = (abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]).any() or (
+            abs(df_all[df_all["variable"] == "val"]["mean_stddiff"]) > thres["val_mean_stddiff"]).any()
         mean_stdabsdiff_high = (
-            df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).bool()
+            df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
             self.raised_errors.append(ValidationError(
@@ -646,9 +645,9 @@ class Validator():
                  checking_date.date(), geo_type, signal_type),
                 (mean_stddiff_high, mean_stdabsdiff_high),
                 'Average differences in variables by geo_id between recent & reference data '
-                + '(either semirecent or from API) seem large --- either large increase '
+                + 'seem large --- either large increase '
                 + 'tending toward one direction or large mean absolute difference, relative '
-                + 'to average values of corresponding variables.  For the former check, '
+                + 'to average values of corresponding variables. For the former check, '
                 + 'tolerances for `val` are more restrictive than those for other columns.'))
 
         self.increment_total_checks()

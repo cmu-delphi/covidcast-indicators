@@ -14,6 +14,7 @@ from pathlib import Path
 from delphi_utils import read_params
 
 # first party
+from .download_ftp_files import download
 from .update_sensor import CHCSensorUpdator
 
 
@@ -24,6 +25,10 @@ def run_module():
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)
+
+    ## download recent files from FTP server
+    logging.info("downloading recent files through SFTP")
+    download(params["cache_dir"], params["ftp_conn"])
 
     ## get end date from input file
     # the filenames are expected to be in the format:

@@ -655,11 +655,11 @@ class Validator():
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.
-        mean_stddiff_high =
-        (abs(df_all["mean_stddiff"]) > float(thres["mean_stddiff"])).any() or (
-            (df_all["variable"] == "val").any() and
-            (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
-             > float(thres["val_mean_stddiff"])).any()
+        mean_stddiff_high = (
+            abs(df_all["mean_stddiff"]) > float(thres["mean_stddiff"])).any() or (
+                (df_all["variable"] == "val").any() and
+                (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
+                 > float(thres["val_mean_stddiff"])).any()
         )
         mean_stdabsdiff_high = (
             df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()

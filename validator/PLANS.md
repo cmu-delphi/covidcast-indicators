@@ -55,6 +55,6 @@
 * Nicer formatting for error “report”
 * Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)
-* Run timing tests, check if saving intermediate files will improve effeciency
+* Run timing tests, check if saving intermediate files will improve effeciency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials
 * Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in for loop

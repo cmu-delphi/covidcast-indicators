@@ -77,8 +77,7 @@ def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
     dataset.
 
     We filter the data such that we only keep rows with valid FIPS or "FIPS"
-    codes defined under the exceptions of the README.  The current  exceptions
-    include:
+    codes defined under the exceptions of the README.
 
     Parameters
     ----------

@@ -18,12 +18,12 @@ from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 from .handle_wip_signal import add_prefix
 
 
-def check_not_none(data_frame, label, date_range):
-    """Exit gracefully if a data frame we attempted to retrieve is empty"""
+def check_none_data_frame(data_frame, label, date_range):
+    """Log and return True when a data frame is None."""
     if data_frame is None:
-        print(f"{label} not available in range {date_range}")
-        return False
-    return True
+        print(f"{label} completely unavailable in range {date_range}")
+        return True
+    return False
 
 def maybe_append(df1, df2):
     """
@@ -50,9 +50,9 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     print("Fetching jhu-csse...")
     jhu_df = fetcher("jhu-csse", signal, date_range[0], date_range[1], geo)
 
-    if (not check_not_none(usafacts_df, "USA-FACTS", date_range)) and \
+    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
        (geo not in ('state', 'county') or \
-        (not check_not_none(jhu_df, "JHU", date_range))):
+        check_none_data_frame(jhu_df, "JHU", date_range)):
         return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
 
     # State level
@@ -161,8 +161,6 @@ def run_module():
     params = configure(variants)
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal, geo_res, extend_raw_date_range(params, sensor_name)) # pylint: disable=invalid-name
-
-        df = df.copy() # pylint: disable=invalid-name
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         start_date = pd.to_datetime(params['export_start_date'])
         export_dir = params["export_dir"]

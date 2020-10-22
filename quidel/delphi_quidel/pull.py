@@ -33,10 +33,9 @@ def compare_dates(date1, date2, flag):
         if flag == "l":
             return date1
         return date2
-    else:
-        if flag == "l":
-            return date2
-        return date1
+    if flag == "l":
+        return date2
+    return date1
 
 def check_whether_date_in_range(search_date, start_date, end_date):
     """
@@ -53,8 +52,7 @@ def read_historical_data():
     Read historical flu antigen test data stored in
     midas /common/quidel-historical-raw
     """
-#    pull_dir = "/common/quidel-historical-raw"
-    pull_dir = "../../tempt_files/quidel_raw/quidel-historical-raw"
+    pull_dir = "/common/quidel-historical-raw"
     columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
                                'FluA', 'FluB', 'StorageDate']
     df = pd.DataFrame(columns=columns)

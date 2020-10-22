@@ -2,11 +2,8 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.
+when the module is run with `python -m delphi_quidel`.
 """
-from os.path import join
-
-import pandas as pd
 from delphi_utils import read_params
 
 from .geo_maps import geo_map
@@ -25,12 +22,8 @@ def run_module():
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
-    static_file_dir = params["static_file_dir"]
     export_start_dates = params["export_start_date"]
     export_end_dates = params["export_end_date"]
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
 
     # Pull data and update export date
     dfs, _end_date = pull_quidel_data(params)
@@ -48,35 +41,39 @@ def run_module():
                          wip_signal=params["wip_signal"],
                          prefix="wip_")
 
-    for sensor in sensors:
-        # Check either covid_ag or flu_ag
-        test_type = "covid_ag" if "covid_ag" in sensor else "flu_ag"
-        print("state", sensor)
+    for test_type in ["covid_ag", "flu_ag"]:
+        print("For %s:"%test_type)
         data = dfs[test_type].copy()
-        state_groups = geo_map("state", data, map_df).groupby("state_id")
-        first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
 
         # For State Level
-        state_df = generate_sensor_for_states(
-            state_groups, smooth=SENSORS[sensor][1],
-            device=SENSORS[sensor][0], first_date=first_date,
-            last_date=last_date)
-        export_csv(state_df, "state", sensor, receiving_dir=export_dir,
-                   start_date=export_start_dates[test_type],
-                   end_date=export_end_dates[test_type])
+        state_groups = geo_map("state", data).groupby("state_id")
+        first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
+        for sensor in sensors:
+            if test_type not in sensor:
+                continue
+            print("state", sensor)
+            state_df = generate_sensor_for_states(
+                state_groups, smooth=SENSORS[sensor][1],
+                device=SENSORS[sensor][0], first_date=first_date,
+                last_date=last_date)
+            export_csv(state_df, "state", sensor, receiving_dir=export_dir,
+                       start_date=export_start_dates[test_type],
+                       end_date=export_end_dates[test_type])
 
         # County/HRR/MSA level
         for geo_res in GEO_RESOLUTIONS:
-            print(geo_res, sensor)
-            data = dfs[test_type].copy()
-            data, res_key = geo_map(geo_res, data, map_df)
-            res_df = generate_sensor_for_other_geores(
-                state_groups, data, res_key, smooth=SENSORS[sensor][1],
-                device=SENSORS[sensor][0], first_date=first_date,
-                last_date=last_date)
-            export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
-                       start_date=export_start_dates[test_type],
-                       end_date=export_end_dates[test_type])
+            geo_data, res_key = geo_map(geo_res, data)
+            for sensor in sensors:
+                if test_type not in sensor:
+                    continue
+                print(geo_res, sensor)
+                res_df = generate_sensor_for_other_geores(
+                    state_groups, geo_data, res_key, smooth=SENSORS[sensor][1],
+                    device=SENSORS[sensor][0], first_date=first_date,
+                    last_date=last_date)
+                export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
+                           start_date=export_start_dates[test_type],
+                           end_date=export_end_dates[test_type])
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

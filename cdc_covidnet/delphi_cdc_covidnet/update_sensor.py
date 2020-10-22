@@ -92,7 +92,7 @@ def update_sensor(
                                new_code="state_id",
                                dropna=False)
     # To use the original column name, reassign original column and drop new one
-    hosp_df[APIConfig.STATE_COL] = hosp_df["state_id"].str.upper()
+    hosp_df[APIConfig.STATE_COL] = hosp_df["state_id"]
     hosp_df.drop("state_id", axis=1, inplace=True)
     assert not hosp_df.duplicated(["date", "geo_id"]).any(), "Non-unique (date, geo_id) pairs"
     hosp_df.set_index(["date", "geo_id"], inplace=True)
@@ -105,7 +105,7 @@ def update_sensor(
     signals = add_prefix(SIGNALS, wip_signal=read_params()["wip_signal"], prefix="wip_")
     for signal in signals:
         write_to_csv(hosp_df, signal, output_path)
-
+    print(hosp_df)
     return hosp_df
 
 

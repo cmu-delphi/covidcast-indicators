@@ -105,7 +105,6 @@ def update_sensor(
     signals = add_prefix(SIGNALS, wip_signal=read_params()["wip_signal"], prefix="wip_")
     for signal in signals:
         write_to_csv(hosp_df, signal, output_path)
-    print(hosp_df)
     return hosp_df
 
 

@@ -641,7 +641,7 @@ class Validator():
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
         raw_thresholds = pd.DataFrame(
-            [[1.50, 1.30, 1.80]], columns=classes, index=df_all.index)
+            [[1.50, 1.30, 1.80]], columns=classes)
         smoothed_thresholds = raw_thresholds.apply(
             lambda x: x/(math.sqrt(7) * 1.5))
 
@@ -655,14 +655,14 @@ class Validator():
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.
-        mean_stddiff_high = (
-            abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]
-        ).any() or ((df_all["variable"] == "val").any() and (
-            abs(df_all[df_all["variable"] == "val"]
-                ["mean_stddiff"]) > thres["val_mean_stddiff"]
-        ).any())
+        mean_stddiff_high =
+        (abs(df_all["mean_stddiff"]) > float(thres["mean_stddiff"])).any() or (
+            (df_all["variable"] == "val").any() and
+            (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
+             > float(thres["val_mean_stddiff"])).any()
+        )
         mean_stdabsdiff_high = (
-            df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).any()
+            df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
             self.raised_errors.append(ValidationError(

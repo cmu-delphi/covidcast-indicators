@@ -482,6 +482,20 @@ class TestCheckAvgValDiffs:
 
         assert len(validator.raised_errors) == 0
 
+    def test_same_val_se_n(self):
+        validator = Validator(self.params)
+
+        data = {"val": [1, 1, 1, 2, 0, 1], "se": [1, 1, 1, 2, 0, 1],
+                "sample_size": [1, 1, 1, 2, 0, 1], "geo_id": ["1"] * 6}
+
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
+
+        validator.check_avg_val_vs_reference(
+            test_df, ref_df, date.today(), "geo", "signal")
+
+        assert len(validator.raised_errors) == 0
+
     def test_10x_val(self):
         validator = Validator(self.params)
         test_data = {"val": [1, 1, 1, 20, 0, 1], "se": [np.nan] * 6,

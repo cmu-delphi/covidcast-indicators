@@ -6,6 +6,7 @@ import pytest
 
 from os import listdir, remove
 from os.path import join
+import pandas as pd
 
 from delphi_utils import read_params
 from delphi_jhu.run import run_module
@@ -25,3 +26,9 @@ def run_as_module():
         s3_client.create_bucket(Bucket=params["bucket_name"])
 
         run_module()
+
+@pytest.fixture
+def jhu_confirmed_test_data():
+    df = pd.read_csv("test_data/jhu_confirmed.csv", dtype={"fips": str})
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    return df

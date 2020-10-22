@@ -392,7 +392,7 @@ class GeoMapper:
         df = df.groupby([date_col, new_col]).sum().reset_index()
         return df
 
-    def add_population_column(self, geocode_type, data=None, geocode_col=None):
+    def add_population_column(self, geocode_type, data=None, geocode_col=None, dropna=True):
         """
         Appends a population column to a dataframe, based on the FIPS or ZIP code. If no
         dataframe is provided, the full crosswalk from geocode to population is returned.
@@ -428,12 +428,13 @@ class GeoMapper:
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
 
+        merge_type = "left" if dropna else "inner"
         data_with_pop = (
             data.copy()
-            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how="inner")
+            .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
             .rename(columns={"pop": "population"})
         )
-        data_with_pop["population"] = data_with_pop["population"].astype(int)
+
         return data_with_pop
 
     @staticmethod

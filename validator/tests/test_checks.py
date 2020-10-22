@@ -212,9 +212,10 @@ class TestCheckBadGeoId:
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
-        assert len(validator.raised_errors[0].expression) == 5
+        assert len(validator.raised_errors[0].expression) == 4
         assert "aa" not in validator.raised_errors[0].expression
         assert "hi" not in validator.raised_errors[0].expression
+        assert "HI" not in validator.raised_errors[0].expression
 
     def test_invalid_geo_id_national(self):
         validator = Validator(self.params)
@@ -224,8 +225,10 @@ class TestCheckBadGeoId:
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
-        assert len(validator.raised_errors[0].expression) == 5
+        assert len(validator.raised_errors[0].expression) == 3
         assert "us" not in validator.raised_errors[0].expression
+        assert "US" not in validator.raised_errors[0].expression
+        assert "SP" not in validator.raised_errors[0].expression
 
 
 class TestCheckBadVal:

@@ -106,7 +106,9 @@ class Validator():
             - expected_lag: dict of signal names: int pairs; how many days behind do we
             expect each signal to be
             - suppressed_errors: set of check_data_ids used to identify error messages to ignore
-            - raised_errors: list to append errors to as they are raised
+            - raised_errors: list to append data upload-blocking errors to as they are raised
+            - total_checks: incremental counter to track total number of checks run
+            - raised_warnings: list to append non-data upload-blocking errors to as they are raised
         """
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
@@ -142,6 +144,8 @@ class Validator():
         # Output
         self.raised_errors = []
         self.total_checks = 0
+
+        self.raised_warnings = []
 
     def increment_total_checks(self):
         """ Add 1 to total_checks counter """
@@ -250,11 +254,28 @@ class Validator():
         Returns:
             - None
         """
-        def find_all_unexpected_geo_ids(df_to_test, geo_regex):
+        def find_all_unexpected_geo_ids(df_to_test, geo_regex, geo_type):
             """
             Check if any geo_ids in df_to_test aren't formatted correctly, according
             to the geo type dictionary negated_regex_dict.
             """
+            numeric_geo_types = {"msa", "county", "hrr"}
+
+            if geo_type in numeric_geo_types:
+                # Check if geo_ids were stored as floats (contain decimal point) and
+                # contents before decimal match the specified regex pattern.
+                leftover = [geo[1] for geo in df_to_test["geo_id"].str.split(
+                    ".") if len(geo) > 1 and re.match(geo_regex, geo[0])]
+
+                # If any floats found, remove decimal and anything after.
+                if len(leftover) > 0:
+                    df_to_test["geo_id"] = [geo[0]
+                                            for geo in df_to_test["geo_id"].str.split(".")]
+
+                    self.raised_warnings.append(ValidationError(
+                        ("check_geo_id_type", nameformat),
+                        None, "geo_ids saved as floats; strings preferred"))
+
             expected_geos = [geo[0] for geo in df_to_test['geo_id'].str.findall(
                 geo_regex) if len(geo) > 0]
 
@@ -272,7 +293,7 @@ class Validator():
                 geo_type, "Unrecognized geo type"))
         else:
             find_all_unexpected_geo_ids(
-                df_to_test, geo_regex_dict[geo_type])
+                df_to_test, geo_regex_dict[geo_type], geo_type)
 
         self.increment_total_checks()
 
@@ -634,8 +655,12 @@ class Validator():
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.
-        mean_stddiff_high = (abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]).any() or (
-            abs(df_all[df_all["variable"] == "val"]["mean_stddiff"]) > thres["val_mean_stddiff"]).any()
+        mean_stddiff_high = (
+            abs(df_all["mean_stddiff"]) > thres["mean_stddiff"]
+        ).any() or ((df_all["variable"] == "val").any() and (
+            abs(df_all[df_all["variable"] == "val"]
+                ["mean_stddiff"]) > thres["val_mean_stddiff"]
+        ).any())
         mean_stdabsdiff_high = (
             df_all["mean_stdabsdiff"] > thres["mean_stdabsdiff"]).any()
 
@@ -787,31 +812,33 @@ class Validator():
         """
         If any not-suppressed exceptions were raised, print and exit with non-zero status.
         """
-        if self.raised_errors:
-            suppressed_counter = 0
-            subset_raised_errors = []
+        suppressed_counter = 0
+        subset_raised_errors = []
 
-            for val_error in self.raised_errors:
-                # Convert any dates in check_data_id to strings for the purpose of comparing
-                # to manually suppressed errors.
-                raised_check_id = tuple([
-                    item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
-                    else item for item in val_error.check_data_id])
+        for val_error in self.raised_errors:
+            # Convert any dates in check_data_id to strings for the purpose of comparing
+            # to manually suppressed errors.
+            raised_check_id = tuple([
+                item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
+                else item for item in val_error.check_data_id])
 
-                if raised_check_id not in self.suppressed_errors:
-                    subset_raised_errors.append(val_error)
-                else:
-                    self.suppressed_errors.remove(raised_check_id)
-                    suppressed_counter += 1
+            if raised_check_id not in self.suppressed_errors:
+                subset_raised_errors.append(val_error)
+            else:
+                self.suppressed_errors.remove(raised_check_id)
+                suppressed_counter += 1
 
-            print(self.total_checks, "checks run")
-            print(len(subset_raised_errors), "checks failed")
-            print(suppressed_counter, "checks suppressed")
+        print(self.total_checks, "checks run")
+        print(len(subset_raised_errors), "checks failed")
+        print(suppressed_counter, "checks suppressed")
+        print(len(self.raised_warnings), "warnings")
 
-            if len(subset_raised_errors) != 0:
-                for message in subset_raised_errors:
-                    print(message)
+        for message in subset_raised_errors:
+            print(message)
+        for message in self.raised_warnings:
+            print(message)
 
-                sys.exit(1)
+        if len(subset_raised_errors) != 0:
+            sys.exit(1)
         else:
             sys.exit(0)

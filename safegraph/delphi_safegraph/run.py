@@ -3,17 +3,18 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 import glob
+import functools
 import multiprocessing as mp
 import subprocess
-from functools import partial
 
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, add_prefix
+from .process import process, files_in_past_week
+
 
 def run_module():
-
+    """Creates the Safegraph indicator."""
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
@@ -24,11 +25,13 @@ def run_module():
     aws_endpoint = params["aws_endpoint"]
     wip_signal = params["wip_signal"]
 
-    process_file = partial(process,
-                           signal_names=add_prefix(SIGNALS, wip_signal, prefix='wip_'),
-                           geo_resolutions=GEO_RESOLUTIONS,
-                           export_dir=export_dir,
-                           )
+    single_arg_process = functools.partial(
+        process,
+        signal_names=SIGNALS,
+        wip_signal=wip_signal,
+        geo_resolutions=GEO_RESOLUTIONS,
+        export_dir=export_dir,
+    )
 
     # Update raw data
     # Why call subprocess rather than using a native Python client, e.g. boto3?
@@ -43,10 +46,17 @@ def run_module():
             'AWS_DEFAULT_REGION': aws_default_region,
         },
         shell=True,
+        check=True,
     )
 
     files = glob.glob(f'{raw_data_dir}/social-distancing/**/*.csv.gz',
                       recursive=True)
 
+    files_with_previous_weeks = []
+    for fname in files:
+        previous_week = [fname]
+        previous_week.extend(files_in_past_week(fname))
+        files_with_previous_weeks.append(previous_week)
+
     with mp.Pool(n_core) as pool:
-        pool.map(process_file, files)
+        pool.map(single_arg_process, files_with_previous_weeks)

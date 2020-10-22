@@ -26,7 +26,7 @@ class Complaint:
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
 
-def check_source(data_source, meta, params):
+def check_source(data_source, meta, params, grace):
     """Iterate over all signals from a source and check if they exceed max age."""
 
     source_config = params[data_source]
@@ -44,7 +44,7 @@ def check_source(data_source, meta, params):
 
         age = (now - row["max_time"]).days
 
-        if age > source_config["max_age"]:
+        if age > source_config["max_age"] + grace:
             if row["signal"] not in complaints:
                 complaints[row["signal"]] = Complaint(
                     "is more than {age} days old".format(age=age),

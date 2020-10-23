@@ -440,7 +440,7 @@ class Validator():
             if not result.empty:
                 self.raised_errors.append(ValidationError(
                     ("check_n_gt_min", nameformat),
-                    result, "sample size must be >= {self.minimum_sample_size}"))
+                    result, f"sample size must be >= {self.minimum_sample_size}"))
 
             self.increment_total_checks()
 
@@ -452,7 +452,7 @@ class Validator():
                 self.raised_errors.append(ValidationError(
                     ("check_n_missing_or_gt_min", nameformat),
                     result,
-                    "sample size must be NA or >= {self.minimum_sample_size}"))
+                    f"sample size must be NA or >= {self.minimum_sample_size}"))
 
             self.increment_total_checks()
 

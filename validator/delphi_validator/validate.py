@@ -20,6 +20,7 @@ geo_regex_dict = {
     'county': '^\d{5}$',
     'hrr': '^\d{1,3}$',
     'msa': '^\d{5}$',
+    'dma': '^\d{3}$',
     'state': '^[a-zA-Z]{2}$',
     'national': '^[a-zA-Z]{2}$'
 }

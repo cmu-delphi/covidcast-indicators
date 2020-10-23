@@ -37,6 +37,7 @@
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
+* Add regex option in `geo_regex_dict` for [DMA regions](https://www.nielsen.com/us/en/intl-campaigns/dma-maps/), used in GHT.
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
 * Use known erroneous/anomalous days of source data to tune static thresholds

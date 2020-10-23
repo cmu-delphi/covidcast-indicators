@@ -37,7 +37,6 @@
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
-* Add regex option in `geo_regex_dict` for [DMA regions](https://www.nielsen.com/us/en/intl-campaigns/dma-maps/), used in GHT.
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
 * Use known erroneous/anomalous days of source data to tune static thresholds
@@ -57,6 +56,6 @@
 * Nicer formatting for error “report”
 * Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)
-* Run timing tests, check if saving intermediate files will improve effeciency (currently a bottleneck at "individual file checks" section)
+* Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials
-* Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checing_date loop
+* Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checking_date loop

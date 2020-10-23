@@ -1,5 +1,5 @@
 """
-Downloads files modified in the last 24 hours from the delphi ftp server."""
+Downloads files modified in the last 24 hours from the specified ftp server."""
 
 # standard
 import datetime

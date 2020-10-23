@@ -786,9 +786,33 @@ class Validator():
                 reference_start_date = checking_date - \
                     min(semirecent_lookbehind, self.max_check_lookbehind)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
-                reference_api_df = fetch_api_reference(
-                    self.data_source, reference_start_date, reference_end_date,
-                    geo_type, signal_type)
+
+                try:
+                    reference_api_df = fetch_api_reference(
+                        self.data_source, reference_start_date, reference_end_date,
+                        geo_type, signal_type)
+                except APIDataFetchError as e:
+                    self.increment_total_checks()
+                    self.raised_errors.append(ValidationError(
+                        ("api_data_fetch_error",
+                         checking_date, geo_type, signal_type), None, e))
+
+                    self.increment_total_checks()
+                    self.raised_errors.append(ValidationError(
+                        ("missing_reference_data",
+                         checking_date, geo_type, signal_type), None,
+                        "reference data is unavailable; comparative checks could not be performed"))
+
+                    continue
+
+                if reference_api_df.empty:
+                    self.increment_total_checks()
+                    self.raised_errors.append(ValidationError(
+                        ("empty_reference_data",
+                         checking_date, geo_type, signal_type), None,
+                        "reference data is empty; comparative checks could not be performed"))
+
+                    continue
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type)

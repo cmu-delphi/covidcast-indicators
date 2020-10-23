@@ -57,9 +57,8 @@
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"
 * Nicer formatting for error “report”
 * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
-* Ensure validator runs on signals that require AWS credentials
+* Ensure validator runs on signals that require AWS credentials (in progress)
 * Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checking_date loop
 * Combination indicator and jhu running into divide-by-zero error in relative_difference_by_min
-* Don't want APIDataFetchError to stop validation.
-  * Wrap API fetch in try catch, add APIDataFetchError to raised_errors and use previous loop's version of reference_data to do checks?
-  * Wrap API fetch in try catch, and leave current loop if unable to perform checks?
+* If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
+  * Currently, any API fetch problems just doesn't do comparative checks at all.

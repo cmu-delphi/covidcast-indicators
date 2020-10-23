@@ -35,7 +35,7 @@
 
 * Improve efficiency by grouping all_frames by geo type and signal name instead of reading data in again via read_geo_signal_combo_files().
 * Fix deprecated signals being tested for checking_dates after their deprecation date
-  * covidcast.metadata includes flag for deprecation?
+  * Does covidcast.metadata include flag for deprecation?
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
@@ -59,3 +59,7 @@
 * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials
 * Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checking_date loop
+* Combination indicator and jhu running into divide-by-zero error in relative_difference_by_min
+* Don't want APIDataFetchError to stop validation.
+  * Wrap API fetch in try catch, add APIDataFetchError to raised_errors and use previous loop's version of reference_data to do checks?
+  * Wrap API fetch in try catch, and leave current loop if unable to perform checks?

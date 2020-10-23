@@ -38,6 +38,7 @@
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
+* Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
 * Use known erroneous/anomalous days of source data to tune static thresholds
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
@@ -57,4 +58,4 @@
 * Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)
 * Run timing tests, check if saving intermediate files will improve effeciency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials
-* Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in for loop
+* Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checing_date loop

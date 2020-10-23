@@ -34,6 +34,8 @@
 ## Checks + features wishlist, and problems to think about:
 
 * Improve efficiency by grouping all_frames by geo type and signal name instead of reading data in again via read_geo_signal_combo_files().
+* Fix deprecated signals being tested for checking_dates after their deprecation date
+  * covidcast.metadata includes flag for deprecation?
 * Which, if any, specific geo_ids are missing (get list from historical data)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
@@ -54,8 +56,6 @@
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"
 * Nicer formatting for error “report”
-* Have separate error report sections for data validation checks (which are boolean) and statistical checks, where we want to present the most serious and significant issues first
-* Statistical/anomaly checks should be included in the error report but should not block source data upload (i.e. not cause non-zero exit status)
 * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials
 * Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checking_date loop

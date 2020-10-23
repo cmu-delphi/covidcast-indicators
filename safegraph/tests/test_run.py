@@ -15,7 +15,6 @@ class TestRun:
         """Tests that the outputs of `run_module` exist."""
         csv_files = set(
             x for x in os.listdir("receiving") if x.endswith(".csv"))
-        print(csv_files)
         expected_files = set()
         for date in ("20200612", "20200611", "20200610"):
             for geo in GEO_RESOLUTIONS:
@@ -35,6 +34,8 @@ class TestRun:
         for filename in csv_files:
             if not filename.endswith(".csv"):
                 continue
+            # Print the file name so that we can tell which file (if any)
+            # triggered the error.
             print(filename)
             df = pd.read_csv(os.path.join("receiving", filename))
             assert (df.columns.values ==

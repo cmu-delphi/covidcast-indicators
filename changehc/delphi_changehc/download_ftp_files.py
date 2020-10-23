@@ -33,7 +33,7 @@ def get_files_from_dir(sftp, out_path):
         file_time = datetime.datetime.fromtimestamp(fileattr.st_mtime)
         filename = fileattr.filename
         if current_time - file_time < datetime.timedelta(days=1) and \
-                not path.exists(filename):
+                not path.exists(path.join(out_path, filename)):
             filepaths_to_download[filename] = path.join(out_path, filename)
 
     # make sure we don't download more than 2 files per day

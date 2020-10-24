@@ -428,7 +428,7 @@ class GeoMapper:
 
         merge_type = "inner" if dropna else "left"
         data_with_pop = (
-            data.copy()
+            data
             .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
             .rename(columns={"pop": "population"})
         )

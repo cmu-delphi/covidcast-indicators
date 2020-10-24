@@ -392,17 +392,17 @@ class GeoMapper:
         df = df.groupby([date_col, new_col]).sum().reset_index()
         return df
 
-    def add_population_column(self, geocode_type, data=None, geocode_col=None, dropna=True):
+    def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
         """
         Appends a population column to a dataframe, based on the FIPS or ZIP code. If no
         dataframe is provided, the full crosswalk from geocode to population is returned.
 
         Parameters
         ---------
-        geocode_type: {"fips", "zip"}
-            The type of the geocode contained in geocode_col.
         data: pd.DataFrame
             The dataframe with a FIPS code column.
+        geocode_type: {"fips", "zip"}
+            The type of the geocode contained in geocode_col.
         geocode_col: str, default None
             The name of the column containing the geocodes. If None, uses the geocode_type
             as the name.
@@ -413,6 +413,7 @@ class GeoMapper:
             A dataframe with a population column appended.
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
+        data = data.copy()
 
         if geocode_type not in ["fips", "zip"]:
             raise ValueError(
@@ -422,13 +423,10 @@ class GeoMapper:
 
         pop_df = self._load_crosswalk(from_code=geocode_type, to_code="pop")
 
-        if data is None:
-            return pop_df.rename(columns={"pop": "population"})
-
         if not is_string_dtype(data[geocode_col]):
             data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
 
-        merge_type = "left" if dropna else "inner"
+        merge_type = "inner" if dropna else "left"
         data_with_pop = (
             data.copy()
             .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)

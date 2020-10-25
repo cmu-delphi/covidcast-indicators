@@ -1,8 +1,8 @@
 # Google Symptoms
 
-We import the confirmed case and deaths data from the Google Research's
-Open COVID-19 Data project and export the county-level and state-level data
-as-is.  
+We import the normalized symptom search term popularity data from the Google 
+Research's Open COVID-19 Data project and export the county-level and state-level 
+data as-is.  
 
 ## Geographical Levels (`geo`)
 * `county`: reported using zero-padded FIPS codes.  The county level data is derived 
@@ -14,8 +14,6 @@ from `/subregions/state/2020_US_state_daily_symptoms_dataset.csv`.
 * `Anosmia`: Google search volume for Anosmia-related searches
 * `Ageusia`: Google search volume for Ageusia-related searches
 
-Recoveries are _not_ reported.
-
 ## Metrics, Level 2 (`m2`)
 * `raw_search`:  Google search volume reported as-is
 * `smoothed_search`:  Google search volume using 7-day moving average
@@ -23,4 +21,6 @@ Recoveries are _not_ reported.
 This data reflects the volume of Google searches mapped to symptoms such Anosmia
 and Ageusia. The resulting daily dataset for each region showing the relative frequency
 of searches for each symptom.  This signal is measured in arbitrary units that are normalized
-for population. Larger numbers represent higher numbers of symptom-related searches.
+for population and for the most popular symptom search term within a geographic region. Thus, 
+values are not comparable between geographic regions. Larger numbers represent higher 
+numbers of symptom-related searches.

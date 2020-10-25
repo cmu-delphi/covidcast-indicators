@@ -1,8 +1,8 @@
 # Google Symptoms
 
-We import the confirmed case and deaths data from the Google Research's
-Open COVID-19 Data project and export the county-level and state-level data
-as-is.  For detailed information see the files `DETAILS.md` contained
+We import the normalized symptom search term popularity data from the Google 
+Research's Open COVID-19 Data project and export the county-level and state-level 
+data as-is.  For detailed information see the files `DETAILS.md` contained
 in this directory.
 
 ## Running the Indicator

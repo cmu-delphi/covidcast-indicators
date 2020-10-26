@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [usafacts, _delphi_utils_python]
+        packages: [usafacts]
 #        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
@@ -40,6 +40,8 @@ jobs:
         pip install pylint pytest
     - name: Lint with pylint
       run: |
+      # https://stackoverflow.com/questions/36496192/pylint-infinite-recursion-in-astriod-package
+        pylint --version
         pylint * init-hook='import sys; sys.setrecursionlimit(8 * sys.getrecursionlimit())'
     - name: Test with pytest
       run: |

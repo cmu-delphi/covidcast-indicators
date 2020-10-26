@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [usafacts, cdc_covidnet, _delphi_utils_python]
+        packages: [usafacts, _delphi_utils_python]
+#        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}
@@ -34,6 +35,9 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install .
+    - name: Lint with pylint
+      run: |
+        pylint delphi_${{ matrix.packages }}
     - name: Test with pytest
       run: |
         (cd tests && pytest)

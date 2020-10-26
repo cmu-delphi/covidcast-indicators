@@ -31,9 +31,7 @@ jobs:
         pip install pylint pytest --upgrade
         pip install ../_delphi_utils_python/
         pip install .
-    - name: Lint with pylint
-      run: |
-        pylint delphi_${{ matrix.packages }}
+
     - name: Test with pytest
       run: |
         (cd tests && pytest)

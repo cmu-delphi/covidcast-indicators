@@ -13,12 +13,12 @@ from moto import mock_s3
 import pytest
 
 # third party
-from delphi_utils import read_params
+from delphi_utils import read_params, add_prefix
 
 # first party
 from delphi_changehc.config import Config, Constants
 from delphi_changehc.constants import *
-from delphi_changehc.update_sensor import write_to_csv, add_prefix, CHCSensorUpdator
+from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 from delphi_changehc.load_data import *
 from delphi_changehc.run import run_module
 
@@ -258,17 +258,3 @@ class TestWriteToCsv:
             write_to_csv(res3, False, "name_of_signal", td.name)
 
         td.cleanup()
-
-    def test_handle_wip_signal(self):
-        # Test wip_signal = True (all signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, True)
-        assert all(s.startswith("wip_") for s in signal_names)
-        # Test wip_signal = list (only listed signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, [SIGNALS[0]])
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
-        # Test wip_signal = False (only unpublished signals should receive prefix)
-        # No CHC signal is published now, so both should get prefix
-        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
-        assert signal_names[0].startswith("wip_")
-        assert all(s.startswith("wip_") for s in signal_names[1:])

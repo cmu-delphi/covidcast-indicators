@@ -21,6 +21,7 @@ from .constants import SIGNALS
 def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """
     Write sensor values to csv.
+
     The dataframe be indexed by (date, geo_id), with columns
     values, se, sample_size
 
@@ -29,7 +30,6 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
         output_name: Suffix name to add to each output file
         output_path: Path to write the csvs to
     """
-
     # Each date is a csv file
     dates = data.index.get_level_values("date").unique()
     for date in dates:
@@ -109,7 +109,8 @@ def update_sensor(
 
 
 def add_prefix(signal_names, wip_signal, prefix):
-    """Adds prefix to signal if there is a WIP signal
+    """Add prefix to signal if there is a WIP signal.
+
     Parameters
     ----------
     signal_names: List[str]
@@ -125,7 +126,6 @@ def add_prefix(signal_names, wip_signal, prefix):
     List of signal names
         wip/non wip signals for further computation
     """
-
     if wip_signal is True:
         return [prefix + signal for signal in signal_names]
     if isinstance(wip_signal, list):
@@ -144,7 +144,8 @@ def add_prefix(signal_names, wip_signal, prefix):
 
 
 def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
+    """Check if the signal name is already public using COVIDcast.
+
     Parameters
     ----------
     signal_ : str

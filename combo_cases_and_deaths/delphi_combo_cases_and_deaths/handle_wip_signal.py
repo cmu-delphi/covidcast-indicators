@@ -9,7 +9,8 @@ import covidcast
 
 
 def add_prefix(signal_names, wip_signal, prefix="wip_"):
-    """Adds prefix to signal if there is a WIP signal
+    """Add prefix to signal if there is a WIP signal.
+
     Parameters
     ----------
     signal_names: List[str]
@@ -25,7 +26,6 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
     List of signal names
         wip/non wip signals for further computation
     """
-
     if wip_signal is True:
         return [prefix + signal for signal in signal_names]
     if isinstance(wip_signal, list):
@@ -44,7 +44,8 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
 
 
 def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
+    """Check if the signal name is already public using COVIDcast.
+
     Parameters
     ----------
     signal_ : str

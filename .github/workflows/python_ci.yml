@@ -40,7 +40,7 @@ jobs:
         pip install pylint pytest
     - name: Lint with pylint
       run: |
-        pylint delphi_${{ matrix.packages }}
+        pylint *
     - name: Test with pytest
       run: |
         (cd tests && pytest)

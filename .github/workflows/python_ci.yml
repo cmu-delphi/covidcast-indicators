@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [usafacts, cdc_covidnet]
+        packages: [usafacts, cdc_covidnet, _delphi_utils_python]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}
@@ -25,13 +25,15 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
+    - name: Install utils
+      if: ${{ matrix.packages }} != '_delphi_utils_python'
+      run: |
+        python -m pip install --upgrade pip
+        pip install ../_delphi_utils_python/
     - name: Install package and dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pylint pytest --upgrade
-        pip install ../_delphi_utils_python/
         pip install .
-
     - name: Test with pytest
       run: |
         (cd tests && pytest)

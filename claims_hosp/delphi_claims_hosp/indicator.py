@@ -19,13 +19,11 @@ from .smooth import left_gauss_linear
 
 
 class ClaimsHospIndicator:
-    """
-    Class to fit a hospitalizations indicator using CLI counts from claims-based data.
-    """
+    """Class to fit a hospitalizations indicator using CLI counts from claims-based data."""
 
     @staticmethod
     def gauss_smooth(num, den):
-        """smooth using the left_gauss_linear
+        """Smooth using the left_gauss_linear.
 
         Args:
             num: array of numerator counts
@@ -48,8 +46,9 @@ class ClaimsHospIndicator:
             k=Config.MAX_BACKWARDS_PAD_LENGTH,
             min_visits_to_fill=Config.MIN_CUM_VISITS):
         """
-         Adjust for small denominators by using a
-         variable length smoother, which starts from the RHS and moves
+         Adjust for small denominators by using a variable length smoother.
+
+         This smoother starts from the RHS and moves
          leftwards (backwards through time). We cumulatively sum the total
          visits (denominator), until we have observed some minimum number of
          counts, then calculate the sum over that bin. We restrict the

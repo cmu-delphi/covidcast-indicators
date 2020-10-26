@@ -18,7 +18,7 @@ jobs:
         packages: [usafacts, cdc_covidnet]
     defaults:
       run:
-        working-directory: Python-packages/covidcast-py/${{ matrix.packages }}
+        working-directory: ${{ matrix.packages }}
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python 3.8

@@ -37,6 +37,7 @@ jobs:
         pip install .
     - name: Lint with pylint
       run: |
+        pylint --version
         pylint delphi_${{ matrix.packages }}
     - name: Test with pytest
       run: |

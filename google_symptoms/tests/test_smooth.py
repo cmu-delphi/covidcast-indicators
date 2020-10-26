@@ -20,7 +20,7 @@ class TestSmooth:
             ) for date in dates
         ])
 
-        raw = raw.groupby('geo_id')['val'].mean()
+        raw = raw.groupby('geo_id')['val'].sum()/7.0
         df = pd.merge(smoothed, raw, on='geo_id', suffixes=('_smoothed', '_raw'))
         
         assert np.allclose(df['val_smoothed'].values, df['val_raw'].values)

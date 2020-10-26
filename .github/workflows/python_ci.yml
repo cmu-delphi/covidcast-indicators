@@ -32,7 +32,7 @@ jobs:
         pip install .
     - name: Lint with pylint
       run: |
-        pylint ${{ matrix.packages }}
+        pylint delphi_${{ matrix.packages }}
     - name: Test with pytest
       run: |
-        (cd tests && ../env/bin/pytest)
+        (cd tests && pytest)

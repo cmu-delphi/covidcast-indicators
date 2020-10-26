@@ -76,17 +76,16 @@ class TestUpdateSensor:
 
             # Generate the csvs
             hosp_df = update_sensor(state_files, mmwr_info, temp_dir, start_date, end_date)
-
             # Check dataframe returned
             assert hosp_df.index.nlevels == 2
             assert set(hosp_df.index.names) == {"date", "geo_id"}
-            assert set(hosp_df.index.get_level_values("geo_id")) == {"CA", "PA"}
+            assert set(hosp_df.index.get_level_values("geo_id")) == {"ca", "pa"}
             assert set(hosp_df.index.get_level_values("date")) == \
                     {datetime(2020, 3, 7), datetime(2020, 3, 14)}
             assert set(hosp_df["epiweek"].unique()) == {10, 11}
             geo_index = hosp_df.index.get_level_values("geo_id")
-            assert np.allclose(hosp_df.loc[geo_index == "CA", "val"], [2.5, 3.5])
-            assert np.allclose(hosp_df.loc[geo_index == "PA", "val"], [10.3, 11.2])
+            assert np.allclose(hosp_df.loc[geo_index == "ca", "val"], [2.5, 3.5])
+            assert np.allclose(hosp_df.loc[geo_index == "pa", "val"], [10.3, 11.2])
             assert pd.isna(hosp_df["se"]).all()
             assert pd.isna(hosp_df["sample_size"]).all()
 
@@ -108,7 +107,7 @@ class TestUpdateSensor:
                 assert pd.isna(data["sample_size"]).all()
 
                 # Check values are right
-                assert set(data["geo_id"].unique()) == {"CA", "PA"}
+                assert set(data["geo_id"].unique()) == {"ca", "pa"}
                 assert np.allclose(
                     data["val"], [
                         state_1["datadownload"][i]["cumulative-rate"],

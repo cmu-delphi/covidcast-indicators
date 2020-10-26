@@ -25,14 +25,17 @@ def run_module():
         df_pull = pull_gs_data(base_url, METRICS, geo_res)
         for metric, smoother in product(METRICS, SMOOTHERS):
             print(geo_res, metric, smoother)
-            df = df_pull.copy()
-            if smoother == "smoothed":
-                df = df.fillna(0)
-            df["val"] = SMOOTHERS_MAP[smoother][0](df["symptom:"+metric].values)
+#            df = df_pull.copy()
+#            if smoother == "smoothed":
+#                df = df.fillna(0)  
+            df = df_pull.set_index(["timestamp", "geo_id"])
+            df["val"] = df["symptom:"+metric].groupby(level=1
+                         ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing
             df = df.loc[~df["val"].isnull(), :]
+            df = df.reset_index()
             sensor_name = "_".join(["wip", smoother, "search"])
             create_export_csv(
                 df,

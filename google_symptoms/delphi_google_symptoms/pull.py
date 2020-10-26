@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import re
-from datetime import timedelta
 
 import numpy as np
 import pandas as pd
@@ -94,7 +93,7 @@ def pull_gs_data(base_url, metrics, level):
 
     # Make sure each FIPS/state has same number of rows
     geo_list = df["geo_id"].unique()
-    date_list = pd.date_range(start=df["date"].min()-timedelta(days=7),
+    date_list = pd.date_range(start=df["date"].min(),
                               end=df["date"].max(),
                               freq='D')
     index_df = pd.MultiIndex.from_product(

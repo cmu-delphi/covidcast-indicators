@@ -1,14 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
 
 from .constants import STATE_TO_ABBREV
-
-REPLACE_FIPS = [
-    ("46102", "46113"),
-]
 
 def get_geo_id(region_code):
     """
@@ -95,17 +92,16 @@ def pull_gs_data(base_url, metrics, level):
             "schema may have changed.  Please investigate."
         )
 
-    # Let each FIPS/state has same number of rows
+    # Make sure each FIPS/state has same number of rows
     geo_list = df["geo_id"].unique()
-    date_list = pd.date_range(start=df["date"].min(),
+    date_list = pd.date_range(start=df["date"].min()-timedelta(days=7),
                               end=df["date"].max(),
                               freq='D')
     index_df = pd.MultiIndex.from_product(
         [geo_list, date_list], names=['geo_id', 'date']
     )
-    df = df.groupby(
-            ["geo_id", "date"]
-        ).sum().reindex(
+    df = df.set_index(["geo_id", "date"]
+        ).reindex(
             index_df
         ).reset_index(
         ).rename({"date": "timestamp"}, axis = 1)

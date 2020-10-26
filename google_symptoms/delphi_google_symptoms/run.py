@@ -22,9 +22,12 @@ def run_module():
     base_url = params["base_url"]
 
     for geo_res in GEO_RESOLUTIONS:
-        df = pull_gs_data(base_url, METRICS, geo_res)
+        df_pull = pull_gs_data(base_url, METRICS, geo_res)
         for metric, smoother in product(METRICS, SMOOTHERS):
             print(geo_res, metric, smoother)
+            df = df_pull.copy()
+            if smoother == "smoothed":
+                df = df.fillna(0)
             df["val"] = SMOOTHERS_MAP[smoother][0](df["symptom:"+metric].values)
             df["se"] = np.nan
             df["sample_size"] = np.nan

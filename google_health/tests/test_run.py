@@ -4,9 +4,8 @@ from os.path import join, exists
 
 import pandas as pd
 from pandas.testing import assert_frame_equal
-from delphi_google_health.run import run_module, add_prefix, public_signal
-from delphi_google_health.constants import SIGNALS
-from delphi_utils import read_params
+from delphi_google_health.run import run_module
+from delphi_utils import read_params, public_signal
 
 
 class TestRunModule:

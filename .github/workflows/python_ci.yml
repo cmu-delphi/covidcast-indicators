@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [usafacts]
+        packages: [usafacts, _delphi_utils_python]
 #        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:

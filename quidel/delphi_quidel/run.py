@@ -7,7 +7,7 @@ when the module is run with `python -m MODULE_NAME`.
 from os.path import join
 
 import pandas as pd
-from delphi_utils import read_params
+from delphi_utils import read_params, add_prefix
 
 from .geo_maps import geo_map
 from .pull import (pull_quidel_data,
@@ -19,7 +19,6 @@ from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
 from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         GEO_RESOLUTIONS, SENSORS)
-from .handle_wip_sensor import add_prefix
 
 def run_module():
     params = read_params()

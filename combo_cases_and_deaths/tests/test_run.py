@@ -5,7 +5,6 @@ import unittest
 import pandas as pd
 
 from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal, combine_usafacts_and_jhu, COLUMN_MAPPING
-from delphi_combo_cases_and_deaths.handle_wip_signal import add_prefix
 from delphi_utils import read_params
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
@@ -35,28 +34,6 @@ All variants: {variants}
 Date-extended variants: {variants_changed}
 """
 
-
-def test_handle_wip_signal():
-    """Verify that "wip_" prefixes are being applied appropriately.
-    """
-    signal_list = [sensor_signal(metric, sensor, smoother)[1]
-                   for (metric, sensor, smoother) in
-                   product(METRICS, SENSORS, SMOOTH_TYPES)]
-
-    # Test wip_signal = True (all signals should receive prefix)
-    signal_names = add_prefix(signal_list, True, prefix="wip_")
-    assert all(s.startswith("wip_") for s in signal_names)
-
-    # Test wip_signal = list (only listed signals should receive prefix)
-    signal_names = add_prefix(signal_list, [signal_list[0]], prefix="wip_")
-    print(signal_names)
-    assert signal_names[0].startswith("wip_")
-    assert all(not s.startswith("wip_") for s in signal_names[1:])
-
-    # Test wip_signal = False (only unpublished signals should receive prefix)
-    signal_names = add_prefix(["xyzzy", signal_list[0]], False, prefix="wip_")
-    assert signal_names[0].startswith("wip_")
-    assert all(not s.startswith("wip_") for s in signal_names[1:])
 
 def test_unstable_sources():
     """Verify that combine_usafacts_and_jhu assembles the combined data

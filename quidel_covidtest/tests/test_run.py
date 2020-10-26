@@ -3,10 +3,9 @@ from os.path import join
 
 import pandas as pd
 
-from delphi_utils import read_params
+from delphi_utils import read_params, add_prefix
 from delphi_quidel_covidtest.run import run_module
 from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
-from delphi_quidel_covidtest.handle_wip_sensor import add_prefix
 
 
 class TestRun:

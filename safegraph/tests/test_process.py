@@ -55,21 +55,6 @@ class TestProcess:
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
 
-    def test_handle_wip_signal(self):
-        """Tests that `add_prefix()` derives work-in-progress signals."""
-        # Test wip_signal = True
-        signal_names = SIGNALS
-        signal_names = add_prefix(SIGNALS, True, prefix="wip_")
-        assert all(s.startswith("wip_") for s in signal_names)
-        # Test wip_signal = list
-        signal_names = add_prefix(SIGNALS, [SIGNALS[0]], prefix="wip_")
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
-        # Test wip_signal = False
-        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False, prefix="wip_")
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
-
     def test_files_in_past_week(self):
         """Tests that `files_in_past_week()` finds the file names corresponding
         to the previous 6 days."""

@@ -2,7 +2,7 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-
+import pdb
 import sys
 import re
 import math
@@ -551,9 +551,13 @@ class Validator():
         reference_rows_per_reporting_day = df_to_reference.shape[0] / len(
             set(df_to_reference["time_value"]))
 
-        compare_rows = relative_difference_by_min(
-            test_rows_per_reporting_day,
-            reference_rows_per_reporting_day)
+        try:
+            compare_rows = relative_difference_by_min(
+                test_rows_per_reporting_day,
+                reference_rows_per_reporting_day)
+        except ZeroDivisionError as e:
+            print(checking_date, geo_type, signal_type)
+            raise e
 
         if abs(compare_rows) > 0.35:
             self.raised_errors.append(ValidationError(
@@ -722,7 +726,7 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
-        # Get list of dates we expect to see in the source data.
+        # Get list of dates seen in the source data.
         date_slist = all_frames['date'].unique().tolist()
         date_list = list(
             map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
@@ -744,7 +748,8 @@ class Validator():
             kroc = 0
 
         # Comparison checks
-        # Run checks for recent dates in each geo-sig combo vs semirecent (last week) API data.
+        # Run checks for recent dates in each geo-sig combo vs semirecent (last week)
+        # API data.
         for geo_sig_df, geo_type, signal_type in read_geo_signal_combo_files(
                 geo_signal_combos,
                 export_dir,
@@ -764,10 +769,11 @@ class Validator():
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
 
-            # Check data from a group of dates against recent (previous 7 days, by default)
-            # data from the API.
+            # Check data from a group of dates against recent (previous 7 days,
+            # by default) data from the API.
             for checking_date in date_list:
-                recent_cutoff_date = checking_date - recent_lookbehind
+                recent_cutoff_date = checking_date - \
+                    recent_lookbehind + timedelta(days=1)
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
@@ -778,8 +784,9 @@ class Validator():
                         ("check_missing_geo_sig_date_combo",
                          checking_date, geo_type, signal_type),
                         None,
-                        "Test data for a given checking date-geo type-signal type"
-                        + " combination is missing"))
+                        "test data for a given checking date-geo type-signal type"
+                        + " combination is missing. Source data may be missing"
+                        + " for one or more dates"))
                     continue
 
                 # Reference dataframe runs backwards from the checking_date

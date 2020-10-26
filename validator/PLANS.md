@@ -54,7 +54,7 @@
   * Order raised exceptions by p-value
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (differeng geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
-  * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"
+  * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
 * Nicer formatting for error “report”
 * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials (in progress)

@@ -10,7 +10,7 @@ from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
 
-from .errors import ValidationError
+from .errors import ValidationError, APIDataFetchError
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_signal_combos, \
     read_geo_signal_combo_files, fetch_api_reference

@@ -62,3 +62,4 @@
 * Combination indicator and jhu running into divide-by-zero error in relative_difference_by_min
 * If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
+* Potentially implement a check for erratic data sources that wrongly report all 0's (like the error with the Wisconsin data for the 10/26 forecasts)

@@ -33,7 +33,6 @@ jobs:
     - name: Install Delphi utils
       if: ${{ matrix.packages }} != '_delphi_utils_python'
       run: |
-        pip install pandas==1.1.0
         pip install ../_delphi_utils_python/
     - name: Install package
       run: |

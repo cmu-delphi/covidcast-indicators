@@ -88,14 +88,11 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
     for loc in loc_list:
         res_group = res_groups.get_group(loc)
         parent_state = res_group['state_id'].values[0]
-        try:
-            parent_group = state_groups.get_group(parent_state)
-            res_group = res_group.merge(parent_group, how="left",
-                                        on="timestamp", suffixes=('', '_parent'))
-            res_group = res_group.drop(columns=[res_key, "state_id", "state_id" + '_parent'])
-        except:
-            has_parent = False
-            res_group = res_group.drop(columns=[res_key, "state_id"])
+        parent_group = state_groups.get_group(parent_state)
+        res_group = res_group.merge(parent_group, how="left",
+                                    on="timestamp", suffixes=('', '_parent'))
+            res_group = res_group.drop(columns=[res_key, "state_id",
+                                                "state_id" + '_parent'])
         res_group.set_index("timestamp", inplace=True)
         res_group = fill_dates(res_group, first_date, last_date)
 

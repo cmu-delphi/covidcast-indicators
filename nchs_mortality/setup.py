@@ -9,7 +9,8 @@ required = [
     "pylint",
     "delphi-utils",
     "sodapy",
-    "epiweeks"
+    "epiweeks",
+    "freezegun",
 ]
 
 setup(

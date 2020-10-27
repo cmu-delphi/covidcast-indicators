@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Functions to retrieve USAFacts data."""
 import numpy as np
 import pandas as pd
 
 
 def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Pulls the latest USA Facts data, and conforms it into a dataset
+    """Pull the latest USA Facts data, and conforms it into a dataset.
 
     The output dataset has:
 

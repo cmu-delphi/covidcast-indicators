@@ -1,16 +1,17 @@
-from os import listdir, remove
+"""Tests for running the quidel module."""
+from os import listdir
 from os.path import join
 
 import pandas as pd
 
 from delphi_utils import read_params, add_prefix
-from delphi_quidel.run import run_module
 from delphi_quidel.constants import GEO_RESOLUTIONS, SENSORS
 
 
 class TestRun:
+    """Tests for running the module."""
     def test_output_files(self, run_as_module):
-        
+        """Tests that the output files contain the correct results of the run."""
         params = read_params()
         # Test output exists
         csv_files = listdir("receiving")
@@ -25,7 +26,7 @@ class TestRun:
             "20200708",
             "20200709"
         ]
-        
+
         dates_for_flu_ag = [
             "20200623",
             "20200624",

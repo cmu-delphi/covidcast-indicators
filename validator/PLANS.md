@@ -25,10 +25,10 @@
 
 ## Current features
 
-* Errors are summarized in class attribute and printed on exit
+* Errors and warnings are summarized in class attribute and printed on exit
 * If any non-suppressed errors are raised, the validation process exits with non-zero status
 * Various check settings are controllable via indicator-specific params.json files
-* User can manually disable certain checks for certain sets of data using a field in the params.json file
+* User can manually disable specific checks for specific datasets using a field in the params.json file
 * User can enable test mode (checks only a small number of data files) using a field in the params.json file
 
 ## Checks + features wishlist, and problems to think about:
@@ -57,7 +57,8 @@
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (different geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
-* Nicer formatting for error “report”
+* Nicer formatting for error “report”. E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each
+* Easier suppression of many errors
 * Ensure validator runs on signals that require AWS credentials (in progress)
 * If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.

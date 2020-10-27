@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install .
         pip install wheel
-        python -m pip install git+https://github.com/PyCQA/astroid.git@7e171621e624f1bee5bd93b361d29b443c6a5820
+        pip install astroid==2.3.0
         pip install pylint pytest
     - name: Lint with pylint
       run: |

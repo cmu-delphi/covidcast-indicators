@@ -30,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pandas==1.1.1
-        pip install pylint pytest
+        pip install pylint pytest pydocstyle
     - name: Install Delphi utils
       if: ${{ matrix.packages }} != '_delphi_utils_python'
       run: |
@@ -39,9 +39,10 @@ jobs:
     - name: Install package
       run: |
         pip install .
-    - name: Lint with pylint
+    - name: Lint
       run: |
-        pylint *delphi_*
-    - name: Test with pytest
+        pylint delphi_*
+        pydocstyle delphi*
+    - name: Test
       run: |
         (cd tests && pytest)

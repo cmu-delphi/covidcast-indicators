@@ -13,7 +13,6 @@ import numpy as np
 import pandas as pd
 
 from delphi_utils import read_params, add_prefix
-import covidcast
 from .api_config import APIConfig
 from .covidnet import CovidNet
 from .geo_maps import GeoMaps

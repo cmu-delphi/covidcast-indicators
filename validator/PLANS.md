@@ -33,15 +33,17 @@
 
 ## Checks + features wishlist, and problems to think about:
 
-* Improve efficiency by grouping all_frames by geo type and signal name instead of reading data in again via read_geo_signal_combo_files().
-* Fix deprecated signals being tested for checking_dates after their deprecation date
-  * Does covidcast.metadata include flag for deprecation?
-* Which, if any, specific geo_ids are missing (get list from historical data)
+* Improve performance and reduce runtime
+  * General profiling
+  * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
+  * Group `all_frames` by geo type and signal name instead of reading data in again via read_geo_signal_combo_files(). A MultiIndex dataframe may improve performance even more.
+  * Pull all checking_date ranges from API at once and subset checking_date loop
+* Which, if any, *specific* geo_ids are missing (get unique geo ids from historical data or delphi_utils)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
-* Use known erroneous/anomalous days of source data to tune static thresholds
+* Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days
@@ -52,14 +54,11 @@
   * E.g. WY/RI missing or very low compared to historical
 * Use hypothesis testing p-values to decide when to raise error or not, instead of static thresholds. Many low but non-significant p-values will also raise error. See [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1601307675021000?thread_ts=1600277030.103500&cid=CV1SYBC90) and [here](https://delphi-org.slack.com/archives/CV1SYBC90/p1600978037007500?thread_ts=1600277030.103500&cid=CV1SYBC90) for more background.
   * Order raised exceptions by p-value
-  * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (differeng geo regions, e.g.) are "close" to significant
+  * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (different geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
 * Nicer formatting for error “report”
-* Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
 * Ensure validator runs on signals that require AWS credentials (in progress)
-* Improve efficiency and reduce load on API by pulling all checking_date ranges from API at once and subsetting in checking_date loop
-* Combination indicator and jhu running into divide-by-zero error in relative_difference_by_min
 * If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
 * Potentially implement a check for erratic data sources that wrongly report all 0's (like the error with the Wisconsin data for the 10/26 forecasts)

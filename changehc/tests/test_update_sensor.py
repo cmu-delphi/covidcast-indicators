@@ -108,7 +108,7 @@ class TestCHCSensorUpdator:
 class TestWriteToCsv:
     """Tests for writing output files to CSV."""
     def test_write_to_csv_results(self):
-        """Tests that the computed data written."""
+        """Tests that the computed data are written correctly."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],

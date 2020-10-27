@@ -1,4 +1,4 @@
-"""Registry for constants"""
+"""Registry for constants."""
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over

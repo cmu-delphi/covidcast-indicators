@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""Function to export the dataset in the format expected of the API.
-"""
+"""Function to export the dataset in the format expected of the API."""
 import numpy as np
 import pandas as pd
 
 def export_csv(df, geo_name, sensor, receiving_dir, start_date, end_date):
-    """Export data set in format expected for injestion by the API
+    """Export data set in format expected for ingestion by the API.
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -23,7 +23,6 @@ def export_csv(df, geo_name, sensor, receiving_dir, start_date, end_date):
     end_date: datetime.datetime
         The last date to report
     """
-
     df = df.copy()
     df = df[np.logical_and(df["timestamp"] >= start_date,
                            df["timestamp"] <= end_date)]

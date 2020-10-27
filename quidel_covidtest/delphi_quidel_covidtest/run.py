@@ -26,6 +26,7 @@ from .handle_wip_sensor import add_prefix
 
 
 def run_module():
+    """Run module for processing Quidel COVID test data."""
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]

@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [_delphi_utils_python, cdc_covidnet, usafacts]
+        packages: [usafacts]
 #        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
@@ -38,7 +38,8 @@ jobs:
         pip install pylint pytest
     - name: Lint with pylint
       run: |
-        pylint *delphi_* –optimize-ast=y
+        pylint --version
+        pylint *delphi_* –-optimize-ast=y
     - name: Test with pytest
       run: |
         (cd tests && pytest)

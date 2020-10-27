@@ -1,13 +1,21 @@
 """Tests for delphi_utils.signal."""
+import pandas as pd
+from unittest.mock import patch
 
 from delphi_utils.signal import add_prefix, public_signal
 
-SIGNALS = ["median_home_dwell_time", "completely_home_prop", "full_time_work_prop"]
+# Constants for mocking out the call to `covidcast.metadata` within `public_signal()`.
+SIGNALS = ["sig1", "sig2", "sig3"]
+SIGNALS_FRAME = pd.DataFrame(data={"signal": SIGNALS})
 
 class TestSignal:
     """Tests for signal.py."""
-    def test_handle_wip_signal(self):
+
+    @patch("covidcast.metadata")
+    def test_handle_wip_signal(self, metadata):
         """Tests that `add_prefix()` derives work-in-progress signals."""
+        metadata.return_value = SIGNALS_FRAME
+
         # Test wip_signal = True
         signal_names = SIGNALS
         signal_names = add_prefix(SIGNALS, True, prefix="wip_")
@@ -21,7 +29,10 @@ class TestSignal:
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
 
-    def test_public_signal(self):
+    @patch("covidcast.metadata")
+    def test_public_signal(self, metadata):
         """Tests that `public_signal()` identifies public vs. private signals."""
-        assert not public_signal("junk")
-        assert public_signal("covid_ag_smoothed_pct_positive")
+        metadata.return_value = SIGNALS_FRAME
+
+        assert not public_signal("sig0")
+        assert public_signal("sig2")

@@ -1,4 +1,5 @@
 """Functions to call when running the function.
+
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
@@ -13,7 +14,7 @@ from .process import process, files_in_past_week
 
 
 def run_module():
-    """Creates the Safegraph indicator."""
+    """Create the Safegraph indicator."""
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
@@ -25,7 +26,7 @@ def run_module():
     wip_signal = params["wip_signal"]
 
     def process_file(current_filename):
-        """Wrapper around `process()` that only takes a single argument.
+        """Process a single file through a wrapper around `process()`.
 
         A single argument function is necessary to use `pool.map()` below.
         Because each call to `process()` has two arguments that are dependent

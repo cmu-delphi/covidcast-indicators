@@ -16,18 +16,19 @@ MOD = 10000000
 CSV_NAME = 'social-distancing.csv.gz'
 
 def validate(df):
-    """Confirms that a data frame has only one date."""
+    """Confirm that a data frame has only one date."""
     timestamps = df['date_range_start'].apply(date_from_timestamp)
     assert len(timestamps.unique()) == 1
 
 
 def date_from_timestamp(timestamp) -> datetime.date:
-    """Extracts the date from a timestamp beginning with {YYYY}-{MM}-{DD}T."""
+    """Extract the date from a timestamp beginning with {YYYY}-{MM}-{DD}T."""
     return datetime.date.fromisoformat(timestamp.split('T')[0])
 
 
 def files_in_past_week(current_filename) -> List[str]:
-    """Constructs file paths from previous 6 days.
+    """Construct file paths from previous 6 days.
+
     Parameters
     ----------
     current_filename: str
@@ -49,12 +50,13 @@ def files_in_past_week(current_filename) -> List[str]:
 
 
 def add_suffix(signals, suffix):
-    """Adds `suffix` to every element of `signals`."""
+    """Add `suffix` to every element of `signals`."""
     return [s + suffix for s in signals]
 
 
 def add_prefix(signal_names, wip_signal, prefix: str):
-    """Adds prefix to signal if there is a WIP signal
+    """Add prefix to signal if there is a WIP signal.
+
     Parameters
     ----------
     signal_names: List[str]
@@ -70,7 +72,6 @@ def add_prefix(signal_names, wip_signal, prefix: str):
     List of signal names
         wip/non wip signals for further computation
     """
-
     if wip_signal is True:
         return [prefix + signal for signal in signal_names]
     if isinstance(wip_signal, list):
@@ -89,7 +90,8 @@ def add_prefix(signal_names, wip_signal, prefix: str):
 
 
 def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
+    """Check if the signal name is already public using COVIDcast.
+
     Parameters
     ----------
     signal_ : str
@@ -109,6 +111,7 @@ def public_signal(signal_):
 
 def construct_signals(cbg_df, signal_names):
     """Construct Census-block level signals.
+
     In its current form, we prepare the following signals in addition to those
     already available in raw form from Safegraph:
     - completely_home_prop, defined as:
@@ -132,7 +135,6 @@ def construct_signals(cbg_df, signal_names):
         Dataframe with columns: timestamp, county_fips, and
         {each signal described above}.
     """
-
     # Preparation
     cbg_df['county_fips'] = (cbg_df['origin_census_block_group'] // MOD).apply(
         lambda x: f'{int(x):05d}')
@@ -157,6 +159,7 @@ def construct_signals(cbg_df, signal_names):
 
 def aggregate(df, signal_names, geo_resolution='county'):
     """Aggregate signals to appropriate resolution and produce standard errors.
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -202,8 +205,9 @@ def process_window(df_list: List[pd.DataFrame],
                    signal_names: List[str],
                    geo_resolutions: List[str],
                    export_dir: str):
-    """Processes a list of input census block group-level data frames as a
-    single data set and exports it.  Assumes each data frame has _only_ one
+    """Process a list of input census block group-level data frames as a single data set and export.
+
+    Assumes each data frame has _only_ one
     date of data.
     Parameters
     ----------
@@ -246,8 +250,8 @@ def process(current_filename: str,
             wip_signal,
             geo_resolutions: List[str],
             export_dir: str):
-    """Creates and exports signals corresponding both to a single day as well
-    as averaged over the previous week.
+    """Create and exports signals corresponding both single day and averaged over the previous week.
+
     Parameters
     ----------
     current_filename: str

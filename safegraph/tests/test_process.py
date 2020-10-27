@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 from delphi_safegraph.process import (
-    add_prefix,
     aggregate,
     construct_signals,
     files_in_past_week,

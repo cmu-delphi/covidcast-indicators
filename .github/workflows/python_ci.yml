@@ -40,7 +40,6 @@ jobs:
         pip install .
     - name: Lint
       run: |
-#        pylint delphi_*
         pydocstyle delphi_*
     - name: Test
       run: |

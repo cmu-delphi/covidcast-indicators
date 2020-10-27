@@ -30,7 +30,7 @@ INCIDENCE_BASE = 100000
 geo_res = "state"
 
 def run_module():
-
+    """Run module for processing NCHS mortality data."""
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday

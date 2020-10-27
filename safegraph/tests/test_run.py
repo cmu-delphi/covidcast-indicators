@@ -3,7 +3,6 @@ import os
 
 import pandas as pd
 
-from delphi_safegraph.run import run_module
 from delphi_safegraph.constants import (SIGNALS,
                                         GEO_RESOLUTIONS)
 

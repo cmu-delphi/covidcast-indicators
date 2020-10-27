@@ -31,7 +31,8 @@ def run_module():
     aws_default_region = params["aws_default_region"]
     aws_endpoint = params["aws_endpoint"]
     # Whether to sync `raw_data_dir` with an AWS backend.
-    sync = bool(params["sync"])
+    # Must be a bool in the JSON file (rather than the string "True" or "False")
+    sync = params["sync"]
 
     # List of work-in-progress signal names.
     wip_signal = params["wip_signal"]
@@ -49,7 +50,7 @@ def run_module():
     # Why call subprocess rather than using a native Python client, e.g. boto3?
     # Because boto3 does not have a simple rsync-like call that can perform
     # the following behavior elegantly.
-    if (sync):
+    if sync:
         subprocess.run(
             f'aws s3 sync s3://sg-c19-response/social-distancing/v2/ '
             f'{raw_data_dir}/social-distancing/ --endpoint {aws_endpoint}',

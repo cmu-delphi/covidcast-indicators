@@ -5,9 +5,7 @@ Created: 2020-06-01
 """
 # standard packages
 import logging
-from datetime import timedelta
 from multiprocessing import Pool, cpu_count
-import covidcast
 from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params, add_prefix
 
 # third party
@@ -15,7 +13,6 @@ import numpy as np
 import pandas as pd
 # first party
 from .config import Config, Constants
-from .geo_maps import GeoMaps
 from .load_data import load_combined_data
 from .sensor import EMRHospSensor
 from .weekday import Weekday
@@ -71,7 +68,7 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
 
 
 class EMRHospSensorUpdator:
-
+    """Manager for sensor updates."""
     def __init__(self,
                  startdate,
                  enddate,
@@ -90,13 +87,15 @@ class EMRHospSensorUpdator:
             weekday: boolean to adjust for weekday effects
             se: boolean to write out standard errors, if true, use an obfuscated name
         """
-        self.startdate, self.enddate, self.dropdate = [pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
+        self.startdate, self.enddate, self.dropdate = [
+            pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
         # handle dates
         assert (self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
-        assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
+        assert geo in ['county', 'state', 'msa', 'hrr'],\
+            f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
         self.geo, self.parallel, self.weekday, self.se = geo.lower(), parallel, weekday, se
 
         # output file naming
@@ -106,6 +105,12 @@ class EMRHospSensorUpdator:
             signals,
             wip_signal=read_params()["wip_signal"])
         self.updated_signal_names = signal_names
+
+        # initialize members set in shift_dates().
+        self.burnindate = None
+        self.fit_dates = None
+        self.burn_in_dates = None
+        self.sensor_dates = None
 
     def shift_dates(self):
         """shift estimates forward to account for time lag, compute burnindates, sensordates
@@ -122,18 +127,21 @@ class EMRHospSensorUpdator:
         """Reindex based on geography, include all date, geo pairs
         Args:
             data: dataframe, the output of loadcombineddata
-            staticpath: path for the static geographic files
         Returns:
             dataframe
         """
         # get right geography
         geo = self.geo
         gmpr = GeoMapper()
-        if geo not in {"fips", "state", "msa", "hrr"}: 
+        if geo not in {"fips", "state", "msa", "hrr"}:
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
             return False
-        elif geo == "county":
-            data_frame = gmpr.fips_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
+        if geo == "county":
+            data_frame = gmpr.fips_to_megacounty(data,
+                                                 Config.MIN_DEN,
+                                                 Config.MAX_BACKFILL_WINDOW,
+                                                 thr_col="den",
+                                                 mega_col=geo)
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
         elif geo == "msa":
@@ -141,10 +149,10 @@ class EMRHospSensorUpdator:
         elif geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
 
-        self.unique_geo_ids = pd.unique(data_frame[geo])
+        unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, 'date'],inplace=True)
         # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product((self.unique_geo_ids, self.fit_dates),
+        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
                                                 names=[geo, "date"])
         assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
                 ), "more loc-date pairs than maximum number of geographies x number of dates"
@@ -158,17 +166,16 @@ class EMRHospSensorUpdator:
     def update_sensor(self,
             emr_filepath,
             claims_filepath,
-            outpath,
-            staticpath):
+            outpath):
         """Generate sensor values, and write to csv format.
         Args:
             emr_filepath: path to the aggregated EMR data
             claims_filepath: path to the aggregated claims data
             outpath: output path for the csv results
-            staticpath: path for the static geographic files
         """
         self.shift_dates()
-        final_sensor_idxs = (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
+        final_sensor_idxs = (self.burn_in_dates >= self.startdate) &\
+            (self.burn_in_dates <= self.enddate)
 
         # load data
         ## JS: If the data is in fips then can we also put it into hrr?

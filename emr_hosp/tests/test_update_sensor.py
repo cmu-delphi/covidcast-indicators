@@ -2,7 +2,6 @@
 from copy import deepcopy
 import os
 from os.path import join, exists
-import pytest
 from tempfile import TemporaryDirectory
 
 # third party
@@ -17,10 +16,7 @@ from delphi_utils import read_params
 
 # first party
 from delphi_emr_hosp.config import Config, Constants
-from delphi_emr_hosp.constants import *
 from delphi_emr_hosp.update_sensor import write_to_csv, add_prefix, EMRHospSensorUpdator
-from delphi_emr_hosp.load_data import *
-from delphi_emr_hosp.run import run_module
 
 CONFIG = Config()
 CONSTANTS = Constants()
@@ -31,6 +27,7 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 OUTPATH="test_data/"
 
 class TestEMRHospSensorUpdator:
+    """Tests for updating the sensors."""
     geo = "hrr"
     parallel = False
     weekday = False
@@ -43,6 +40,7 @@ class TestEMRHospSensorUpdator:
         "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["hrr","date"])
 
     def test_shift_dates(self):
+        """Tests that dates in the data are shifted according to the burn-in and lag."""
         su_inst = EMRHospSensorUpdator(
             "02-01-2020",
             "06-01-2020",
@@ -63,6 +61,7 @@ class TestEMRHospSensorUpdator:
         assert su_inst.sensor_dates[-1] == su_inst.enddate - pd.Timedelta(days=1)
 
     def test_geo_reindex(self):
+        """Tests that the geo reindexer changes the geographic resolution."""
         su_inst = EMRHospSensorUpdator(
             "02-01-2020",
             "06-01-2020",
@@ -78,6 +77,7 @@ class TestEMRHospSensorUpdator:
         assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
+        """Tests that the sensors are properly updated."""
         for geo in ["state","hrr"]:
             td = TemporaryDirectory()
             su_inst = EMRHospSensorUpdator(
@@ -99,15 +99,16 @@ class TestEMRHospSensorUpdator:
                 su_inst.update_sensor(
                     EMR_FILEPATH,
                     CLAIMS_FILEPATH,
-                    td.name,
-                    PARAMS["static_file_dir"]
-                )
+                    td.name)
 
-            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
+                f"failed {geo} update sensor test"
             td.cleanup()
 
 class TestWriteToCsv:
+    """Tests for writing output files to CSV."""
     def test_write_to_csv_results(self):
+        """Tests that the computed data written."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],
@@ -175,6 +176,7 @@ class TestWriteToCsv:
         td.cleanup()
 
     def test_write_to_csv_with_se_results(self):
+        """Tests that the standard error is written when requested."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],
@@ -215,6 +217,7 @@ class TestWriteToCsv:
         td.cleanup()
 
     def test_write_to_csv_wrong_results(self):
+        """Tests that nonsensical inputs trigger exceptions."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],

@@ -89,8 +89,7 @@ def run_module():
             su_inst.update_sensor(
                 params["input_emr_file"],
                 params["input_claims_file"],
-                params["export_dir"],
-                params["static_file_dir"]
+                params["export_dir"]
             )
         logging.info("finished %s", geo)
 

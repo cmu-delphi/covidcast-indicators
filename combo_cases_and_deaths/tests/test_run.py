@@ -1,12 +1,15 @@
+"""Tests for running combo cases and deaths indicator."""
 from datetime import date
 from itertools import product
-import pytest
 import unittest
 import pandas as pd
 
-from delphi_combo_cases_and_deaths.run import extend_raw_date_range, sensor_signal, combine_usafacts_and_jhu, COLUMN_MAPPING
-from delphi_utils import read_params
-from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
+from delphi_combo_cases_and_deaths.run import (
+    extend_raw_date_range,
+    sensor_signal,
+    combine_usafacts_and_jhu,
+    COLUMN_MAPPING)
+from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
 
 
 def test_issue_dates():
@@ -23,7 +26,7 @@ def test_issue_dates():
                 metric, sensor, smoother in
                 product(METRICS, SENSORS, SMOOTH_TYPES)]
     variants_changed = []
-    for sensor_name, signal in variants:
+    for sensor_name, _ in variants:
         dr = extend_raw_date_range(params, sensor_name)
         if dr[0] != reference_dr[0]:
             n_changed += 1

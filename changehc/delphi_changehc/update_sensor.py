@@ -5,7 +5,6 @@ Created: 2020-10-14
 """
 # standard packages
 import logging
-from datetime import timedelta
 from multiprocessing import Pool, cpu_count
 import covidcast
 from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params
@@ -18,7 +17,7 @@ from .config import Config, Constants
 from .load_data import load_combined_data
 from .sensor import CHCSensor
 from .weekday import Weekday
-from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, HRR, NA, FIPS
+from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, NA
 
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
@@ -123,6 +122,8 @@ def public_signal(signal_):
 
 
 class CHCSensorUpdator:
+    """Contains methods to update sensor and write results to csv
+    """
 
     def __init__(self,
                  startdate,
@@ -181,10 +182,10 @@ class CHCSensorUpdator:
         # get right geography
         geo = self.geo
         gmpr = GeoMapper()
-        if geo not in {"county", "state", "msa", "hrr"}: 
+        if geo not in {"county", "state", "msa", "hrr"}:
             logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
             return False
-        elif geo == "county":
+        if geo == "county":
             data_frame = gmpr.fips_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
@@ -305,4 +306,3 @@ class CHCSensorUpdator:
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
         '''
-        return

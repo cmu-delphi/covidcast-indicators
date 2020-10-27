@@ -34,7 +34,7 @@ def run_module():
     # the filenames are expected to be in the format:
     # Denominator: "YYYYMMDD_All_Outpatients_By_County.dat.gz"
     # Numerator: "YYYYMMDD_Covid_Outpatients_By_County.dat.gz"
-    
+
     if params["drop_date"] is None:
         dropdate_denom = datetime.strptime(
             Path(params["input_denom_file"]).name.split("_")[0], "%Y%m%d"

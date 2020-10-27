@@ -4,7 +4,6 @@ Downloads files modified in the last 24 hours from the specified ftp server."""
 # standard
 import datetime
 import functools
-import sys
 from os import path
 
 # third party
@@ -68,7 +67,7 @@ def download(out_path, ftp_conn):
 
         sftp.chdir('/dailycounts/Covid_Outpatients_By_County')
         get_files_from_dir(sftp, out_path)
-    
+
     finally:
         if client:
             client.close()

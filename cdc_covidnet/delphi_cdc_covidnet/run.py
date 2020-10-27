@@ -54,7 +54,6 @@ def run_module():
         state_files,
         mmwr_info,
         params["export_dir"],
-        params["static_file_dir"],
         start_date,
         end_date)
 

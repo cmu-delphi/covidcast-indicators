@@ -129,7 +129,7 @@ class CHCSensor:
 
         # checks - due to the smoother, the first value will be NA
         assert (
-                np.sum(np.isnan(smoothed_total_rates[1:]) == True) == 0
+                np.sum(np.isnan(smoothed_total_rates[1:])) == 0
         ), "NAs in rate calculation"
         assert (
                 np.sum(smoothed_total_rates[1:] <= 0) == 0

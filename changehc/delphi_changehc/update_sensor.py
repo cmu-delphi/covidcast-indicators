@@ -68,6 +68,8 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
 
 
 class CHCSensorUpdator:
+    """Contains methods to update sensor and write results to csv
+    """
 
     def __init__(self,
                  startdate,

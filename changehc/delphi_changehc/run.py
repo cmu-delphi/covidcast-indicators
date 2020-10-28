@@ -14,6 +14,7 @@ from pathlib import Path
 from delphi_utils import read_params
 
 # first party
+from .download_ftp_files import download
 from .update_sensor import CHCSensorUpdator
 
 
@@ -25,11 +26,15 @@ def run_module():
 
     logging.basicConfig(level=logging.DEBUG)
 
+    ## download recent files from FTP server
+    logging.info("downloading recent files through SFTP")
+    download(params["cache_dir"], params["ftp_conn"])
+
     ## get end date from input file
     # the filenames are expected to be in the format:
     # Denominator: "YYYYMMDD_All_Outpatients_By_County.dat.gz"
     # Numerator: "YYYYMMDD_Covid_Outpatients_By_County.dat.gz"
-    
+
     if params["drop_date"] is None:
         dropdate_denom = datetime.strptime(
             Path(params["input_denom_file"]).name.split("_")[0], "%Y%m%d"

@@ -38,9 +38,7 @@ class CovidNet:
     @staticmethod
     def read_mappings(infile: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Read the mappings JSON file from disk to produce formatted.
-
-        pd.DataFrame for relevant mappings
+        Read the mappings JSON file from disk to produce formatted DataFrames for relevant mappings.
 
         Args:
             infile: Mappings JSON file

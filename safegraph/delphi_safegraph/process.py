@@ -207,8 +207,8 @@ def process_window(df_list: List[pd.DataFrame],
                    export_dir: str):
     """Process a list of input census block group-level data frames as a single data set and export.
 
-    Assumes each data frame has _only_ one
-    date of data.
+    Assumes each data frame has _only_ one date of data.
+
     Parameters
     ----------
     cbg_df: pd.DataFrame

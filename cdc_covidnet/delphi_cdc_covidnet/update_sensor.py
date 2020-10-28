@@ -12,11 +12,10 @@ from typing import List
 import numpy as np
 import pandas as pd
 
-from delphi_utils import read_params
+from delphi_utils import read_params, GeoMapper
 import covidcast
 from .api_config import APIConfig
 from .covidnet import CovidNet
-from .geo_maps import GeoMaps
 from .constants import SIGNALS
 
 def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
@@ -49,9 +48,11 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
 
 
 def update_sensor(
-        state_files: List[str], mmwr_info: pd.DataFrame,
-        output_path: str, static_path: str,
-        start_date: datetime, end_date: datetime) -> pd.DataFrame:
+        state_files: List[str],
+        mmwr_info: pd.DataFrame,
+        output_path: str,
+        start_date: datetime,
+        end_date: datetime) -> pd.DataFrame:
     """
     Generate sensor values, and write to csv format.
 
@@ -59,7 +60,6 @@ def update_sensor(
         state_files: List of JSON files representing COVID-NET hospitalization data for each state
         mmwr_info: Mappings from MMWR week to actual dates, as a pd.DataFrame
         output_path: Path to write the csvs to
-        static_path: Path for the static geographic fiels
         start_date: First sensor date (datetime.datetime)
         end_date: Last sensor date (datetime.datetime)
 
@@ -85,9 +85,15 @@ def update_sensor(
     ]
 
     # Set state id to two-letter abbreviation
-    geo_map = GeoMaps(static_path)
-    hosp_df = geo_map.state_name_to_abbr(hosp_df)
-
+    gmpr = GeoMapper()
+    hosp_df = gmpr.add_geocode(hosp_df,
+                               from_col=APIConfig.STATE_COL,
+                               from_code="state_name",
+                               new_code="state_id",
+                               dropna=False)
+    # To use the original column name, reassign original column and drop new one
+    hosp_df[APIConfig.STATE_COL] = hosp_df["state_id"]
+    hosp_df.drop("state_id", axis=1, inplace=True)
     assert not hosp_df.duplicated(["date", "geo_id"]).any(), "Non-unique (date, geo_id) pairs"
     hosp_df.set_index(["date", "geo_id"], inplace=True)
 
@@ -99,7 +105,6 @@ def update_sensor(
     signals = add_prefix(SIGNALS, wip_signal=read_params()["wip_signal"], prefix="wip_")
     for signal in signals:
         write_to_csv(hosp_df, signal, output_path)
-
     return hosp_df
 
 

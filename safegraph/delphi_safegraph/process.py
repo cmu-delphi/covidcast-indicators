@@ -15,6 +15,7 @@ MOD = 10000000
 # Base file name for raw data CSVs.
 CSV_NAME = 'social-distancing.csv.gz'
 
+
 def validate(df):
     """Confirms that a data frame has only one date."""
     timestamps = df['date_range_start'].apply(date_from_timestamp)
@@ -235,13 +236,13 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            df_export.to_csv(f'{export_dir}/{date}_{geo_res}_{signal}.csv',
+            date_str = date.strftime('%Y%m%d')
+            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
                              na_rep='NA',
                              index=False, )
 
 
-def process(current_filename: str,
-            previous_filenames: List[str],
+def process(filenames: List[str],
             signal_names: List[str],
             wip_signal,
             geo_resolutions: List[str],
@@ -250,11 +251,11 @@ def process(current_filename: str,
     as averaged over the previous week.
     Parameters
     ----------
-    current_filename: str
-        path to file holding the target date's data.
-    previous_filenames: List[str]
-        paths to files holding data from each day in the week preceding the
-        target date.
+    current_filename: List[str]
+        paths to files holding data.
+        The first entry of the list should correspond to the target date while
+        the remaining entries should correspond to the dates from each day in
+        the week preceding the target date.
     signal_names: List[str]
         signal names to be processed for a single date.
         A second version of each such signal named {SIGNAL}_7d_avg will be
@@ -274,8 +275,8 @@ def process(current_filename: str,
     one for the data averaged over the previous week to
     {export_dir}/{date}_{resolution}_{signal}_7d_avg.csv.
     """
-    past_week = [pd.read_csv(current_filename)]
-    for fname in previous_filenames:
+    past_week = []
+    for fname in filenames:
         if os.path.exists(fname):
             past_week.append(pd.read_csv(fname))
 
@@ -286,8 +287,8 @@ def process(current_filename: str,
                    export_dir)
     # ...then as part of the whole window.
     process_window(past_week,
-                  add_prefix(add_suffix(signal_names, '_7d_avg'),
-                             wip_signal,
-                             'wip_'),
-                  geo_resolutions,
-                  export_dir)
+                   add_prefix(add_suffix(signal_names, '_7d_avg'),
+                              wip_signal,
+                              'wip_'),
+                   geo_resolutions,
+                   export_dir)

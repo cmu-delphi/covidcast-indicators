@@ -6,7 +6,6 @@ Created: 2020-10-14
 """
 
 from datetime import datetime, timedelta
-import numpy as np
 
 
 class Config:

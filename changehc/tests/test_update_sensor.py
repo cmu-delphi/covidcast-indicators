@@ -268,7 +268,6 @@ class TestWriteToCsv:
         assert signal_names[0].startswith("wip_")
         assert all(not s.startswith("wip_") for s in signal_names[1:])
         # Test wip_signal = False (only unpublished signals should receive prefix)
-        # No CHC signal is published now, so both should get prefix
         signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
         assert signal_names[0].startswith("wip_")
-        assert all(s.startswith("wip_") for s in signal_names[1:])
+        assert all(not s.startswith("wip_") for s in signal_names[1:])

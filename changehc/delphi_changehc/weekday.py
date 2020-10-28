@@ -7,6 +7,7 @@ Created: 2020-05-06
 # third party
 import cvxpy as cp
 import numpy as np
+from cvxpy.error import SolverError
 
 # first party
 from .config import Config
@@ -83,7 +84,7 @@ class Weekday:
         try:
             prob = cp.Problem(cp.Minimize(-ll + lmbda * penalty))
             _ = prob.solve()
-        except:
+        except SolverError:
             # If the magnitude of the objective function is too large, an error is
             # thrown; Rescale the objective function
             prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / 1e5))

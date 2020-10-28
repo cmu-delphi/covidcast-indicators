@@ -1,0 +1,12 @@
+{
+  "export_start_date": "2020-02-20",
+  "static_file_dir": "./static",
+  "export_dir": "/common/covidcast/receiving/jhu-csse/",
+  "cache_dir": "./cache",
+  "base_url": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_{metric}_US.csv",
+  "aws_credentials": {
+    "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+    "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+  },
+  "bucket_name": "delphi-covidcast-indicator-output"
+}

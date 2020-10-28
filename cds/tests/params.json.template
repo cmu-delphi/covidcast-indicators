@@ -1,0 +1,8 @@
+{
+    "confirmed_export_start_date":"2020-06-03",
+    "tested_export_start_date": "2020-06-03",
+    "static_file_dir": "../static",
+    "export_dir": "./receiving",
+    "cache_dir": "./cache",
+    "base_url": "./test_data/small.csv"
+}

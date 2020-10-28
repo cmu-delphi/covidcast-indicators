@@ -2,10 +2,14 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "boto3",
+    "gitpython",
+    "moto",
     "numpy",
-    "pandas",
+    "pandas>=1.1.0",
     "pytest",
     "pytest-cov",
+    "xlrd"
 ]
 
 setup(
@@ -22,4 +26,5 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     packages=find_packages(),
+    package_data={'': ['data/*.csv']}
 )

@@ -2,7 +2,14 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "start_date": "2020-02-01",
-  "end_date": "2020-05-15",
-  "ght_key": ""
+  "data_dir": "./data",
+  "start_date": "2020-01-05",
+  "end_date": "",
+  "ght_key": "",
+  "wip_signal" : "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": ""
 }

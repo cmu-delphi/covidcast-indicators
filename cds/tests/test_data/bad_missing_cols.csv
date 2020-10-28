@@ -1,0 +1,757 @@
+slug,name,level,city,county,state,country,population,aggregate,tz,cases,deaths,recovered,active,tested,hospitalized,hospitalized_current,discharged,icu,icu_current,date
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1111,16,544,,122732,,23,,,,7/4/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1138,16,548,,123753,,19,,,,7/5/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1138,16,548,,123753,,19,,,,7/6/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1184,17,560,,131420,,25,,,,7/7/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1226,17,563,,133401,,30,,,,7/8/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1272,17,571,,135744,,28,,,,7/9/20
+alaska-us,"Alaska, US",state,,,Alaska,United States,731545,,America/Anchorage,1323,17,588,,141931,,30,,,,7/10/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,42862,1007,22082,,442088,2906,818,,843,,7/4/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,43953,1007,22082,,449886,2909,919,,843,,7/5/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,44878,1007,22082,,455095,2914,1025,,843,,7/6/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,45785,1033,22082,,461364,2961,1078,,858,,7/7/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,46962,1058,22082,,468292,3006,1116,,871,,7/8/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,49174,1068,25783,,470504,3039,1135,,877,,7/9/20
+alabama-us,"Alabama, US",state,,,Alabama,United States,4903185,,America/Chicago,50508,1104,25783,,492216,3089,1201,,888,,7/10/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,23209,286,16726,,338893,1536,285,,,,7/4/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,23209,286,16726,,338893,1536,285,,,,7/5/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,24253,292,17834,,344968,1575,337,,,,7/6/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,24512,292,17834,,350655,1604,369,,,,7/7/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,24512,301,18725,,353272,1655,358,,,,7/8/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,26052,309,19992,,364661,1705,394,,,,7/9/20
+arkansas-us,"Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,26803,313,20642,,365412,1743,402,,,,7/10/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,887,0,473,,54225,,,,,,7/4/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,907,0,491,,54658,,,,,,7/5/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,965,0,523,,54474,,,,,,7/6/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,965,0,523,,54474,,,,,,7/7/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,945,0,575,,55328,,,,,,7/8/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,935,0,590,,55785,,,,,,7/9/20
+unassigned-arkansas-us,"Unassigned cases, Arkansas, US",state,,,Arkansas,United States,3017804,,America/Chicago,966,0,604,,56162,,,,,,7/10/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,696,,,,,,7/4/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,696,,,,,,7/5/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,696,,,,,,7/6/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,696,,,,,,7/7/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,816,,,,,,7/8/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,816,,,,,,7/9/20
+american-samoa-us,"American Samoa, US",state,,,American Samoa,United States,55689,,Pacific/Pago_Pago,0,0,,,816,,,,,,7/10/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,94553,1805,10903,,589508,5068,3113,,,796,7/4/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,98089,1809,11361,,604362,5161,3182,,,821,7/5/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,101441,1810,11836,,617841,5188,3212,,,839,7/6/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,105094,1927,12260,,628797,5272,3356,,,869,7/7/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,108614,1963,12803,,641070,5387,3421,,,871,7/8/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,112671,2038,13341,,653061,5526,3437,,,861,7/9/20
+arizona-us,"Arizona, US",state,,,Arizona,United States,7278717,,America/Phoenix,116892,2082,13853,,669211,5659,3432,,,876,7/10/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,251236,6330,47050,,3264800,3164,7092,,503,1888,7/4/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,255252,6337,47314,,3303694,3234,7149,,510,1907,7/5/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,271889,6446,49281,,3532326,3305,7278,,516,1937,7/6/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,282297,6564,51092,,3621952,3347,7499,,517,1984,7/7/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,290884,6715,61766,,3696130,3359,7705,,524,1976,7/8/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,300653,6850,63879,,3756199,3396,7821,,525,1957,7/9/20
+california-us,"California, US",state,,,California,United States,39512223,,America/Los_Angeles,310175,6945,65225,,3834965,3549,7896,,529,2005,7/10/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,33619,1521,4557,,345754,5537,270,,,,7/4/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,33866,1521,4568,,350717,5550,283,,,,7/5/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,34065,1521,4603,,355655,5565,286,,,,7/6/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,34257,1542,4636,,360640,5591,327,,,,7/7/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,34664,1542,4669,,365073,5741,335,,,,7/8/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,35116,1544,4669,,370702,5820,335,,,,7/9/20
+colorado-us,"Colorado, US",state,,,Colorado,United States,5758736,,America/Denver,35525,1581,4691,,377140,5831,318,,,,7/10/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,46717,4335,8210,,500026,10411,95,,,,7/4/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,46717,4335,8210,,524568,10411,95,,,,7/5/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,46976,4338,8210,,530513,10411,69,,,,7/6/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,47033,4338,8210,,537826,10411,83,,,,7/7/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,47108,4343,8210,,546003,10411,88,,,,7/8/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,47209,4348,8351,,558442,10552,90,,,,7/9/20
+connecticut-us,"Connecticut, US",state,,,Connecticut,United States,3565287,,America/New_York,47287,4348,8351,,558461,10552,77,,,,7/10/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10447,557,1523,,104554,,95,,,28,7/4/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10482,559,1542,,105993,,87,,,26,7/5/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10515,561,1553,,107650,,88,,,23,7/6/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10569,561,1574,,110377,,90,,,25,7/7/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10642,564,1625,,114289,,86,,,30,7/8/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10679,568,1662,,115923,,92,,,26,7/9/20
+washington-d.c.-us,"Washington, D.C., US",state,,,"Washington, D.C.",United States,705749,,America/New_York,10743,568,1703,,120884,,96,,,26,7/10/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,11996,512,6711,,120693,,54,,,13,7/4/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12128,512,6740,,123941,,53,,,15,7/5/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12293,512,6778,,127179,,54,,,15,7/6/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12414,514,6815,,128685,,56,,,15,7/7/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12462,515,6851,,129034,,57,,,11,7/8/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12531,517,6901,,130205,,63,,,12,7/9/20
+delaware-us,"Delaware, US",state,,,Delaware,United States,973764,,America/New_York,12652,517,6949,,132708,,58,,,11,7/10/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,190052,3803,,,2148169,16040,,,,,7/4/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,200111,3832,,,2201707,16201,,,,,7/5/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,206447,3880,,,2235456,16352,,,,,7/6/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,213794,3943,,,2270798,16733,,,,,7/7/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,223783,3991,,,2321980,17068,,,,,7/8/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,232718,4009,,,2359636,17479,,,,,7/9/20
+florida-us,"Florida, US",state,,,Florida,United States,21477737,,America/New_York,244151,4102,,,2423992,17916,6974,,,,7/10/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,93319,2857,,,926359,11743,1726,,2425,,7/4/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,95516,2860,,,949185,11775,1805,,2429,,7/5/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,97064,2878,,,958953,11919,1962,,2441,,7/6/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,100470,2899,,,979452,12226,2096,,2471,,7/7/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,103890,2922,,,1000409,12500,2215,,2502,,7/8/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,106727,2930,,,1019422,12606,2322,,2519,,7/9/20
+georgia-us,"Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,111211,2965,,,1046348,12937,2443,,2565,,7/10/20
+unassigned-georgia-us,"Unassigned cases, Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,1211,2,,,,34,,,,,7/9/20
+unassigned-georgia-us,"Unassigned cases, Georgia, US",state,,,Georgia,United States,10617423,,America/New_York,1363,1,,,,35,,,,,7/10/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,288,5,179,,14954,,3,,,,7/4/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,288,5,179,,14954,,3,,,,7/5/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,301,5,179,,15549,,2,,,,7/6/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,303,5,184,,15911,,3,,,,7/7/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,307,5,202,,16140,,3,,,,7/8/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,309,5,202,,16532,,3,,,,7/9/20
+guam-us,"Guam, US",state,,,Guam,United States,167772,,Pacific/Guam,310,5,202,,16866,,3,,,,7/10/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,981,19,754,,83476,118,,,,,7/4/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1005,19,756,,84325,118,,,,,7/5/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1012,19,777,,85058,118,,,,,7/6/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1053,19,781,,85673,119,,,,,7/7/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1076,19,797,,87096,119,,,,,7/8/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1112,19,811,,89152,122,,,,,7/9/20
+hawaii-us,"Hawaii, US",state,,,Hawaii,United States,1415872,,Pacific/Honolulu,1139,19,840,,90595,123,,,,,7/10/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,31041,721,24604,,329011,,134,,,40,7/4/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,31353,721,24739,,332472,,141,,,43,7/5/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,31657,723,25121,,335462,,151,,,41,7/6/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,32029,725,25594,,339298,,165,,,44,7/7/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,32509,735,25974,,346351,,165,,,44,7/8/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,33240,739,26340,,354659,,168,,,49,7/9/20
+iowa-us,"Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,33984,743,25891,,362248,,169,,,54,7/10/20
+unassigned-iowa-us,"Unassigned cases, Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,27,0,4,,,,,,,,7/9/20
+unassigned-iowa-us,"Unassigned cases, Iowa, US",state,,,Iowa,United States,3155070,,America/Chicago,27,0,2,,,,,,,,7/10/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,6994,93,2831,,101067,355,67,,121,23,7/4/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,7370,93,2858,,104266,359,71,,122,19,7/5/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,7733,93,2886,,106465,369,85,,124,22,7/6/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,8052,94,2907,,108541,387,105,,130,25,7/7/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,8539,94,2932,,111331,396,118,,130,26,7/8/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,8969,98,2978,,114620,411,120,,133,28,7/9/20
+idaho-us,"Idaho, US",state,,,Idaho,United States,1787065,,America/Boise,9428,100,3022,,118078,432,124,,137,29,7/10/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,147734,7224,,,1735593,,1346,,,336,7/4/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,148373,7230,,,1762828,,1326,,,304,7/5/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,148987,7236,,,1783962,,1395,,,321,7/6/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,149574,7273,,,1810956,,1385,,,320,7/7/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,150554,7309,,,1843698,,1385,,,320,7/8/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,150449,7118,,,1789167,,1507,,,317,7/9/20
+illinois-us,"Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,151765,7144,,,1821628,,1436,,,306,7/10/20
+unassigned-illinois-us,"Unassigned cases, Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,48,0,,,42974,,,,,,7/9/20
+unassigned-illinois-us,"Unassigned cases, Illinois, US",state,,,Illinois,United States,12671821,,America/Chicago,43,0,,,43298,,,,,,7/10/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,36076,,512288,7216,632,,1516,218,7/4/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,36475,,521722,7254,632,,1526,218,7/5/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,36788,,526592,7285,613,,1526,229,7/6/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,36999,,530075,7333,655,,1540,213,7/7/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,37462,,535857,7365,667,,1551,217,7/8/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,37795,,542292,7386,686,,1556,226,7/9/20
+indiana-us,"Indiana, US",state,,,Indiana,United States,6732219,,America/Indiana/Indianapolis,12438,661,38120,,550562,7458,667,,1577,217,7/10/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,15919,277,842,,191561,1219,,,377,,7/4/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,15919,277,842,,191561,1219,,,377,,7/5/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,16901,280,859,,202219,1235,,,384,,7/6/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,16901,280,859,,202219,1235,,,384,,7/7/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,17618,282,879,,208482,1269,,,397,,7/8/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,17618,282,879,,208482,1269,,,397,,7/9/20
+kansas-us,"Kansas, US",state,,,Kansas,United States,2913314,,America/Chicago,18611,284,905,,217779,1304,,,405,,7/10/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,16376,585,4747,,395647,2685,455,,996,99,7/4/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,16376,585,4747,,395647,2685,455,,996,99,7/5/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,17152,593,4785,,400342,2699,433,,1000,109,7/6/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,17519,602,4841,,409872,2708,421,,1003,110,7/7/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,17919,608,4912,,415921,2737,453,,1007,111,7/8/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,18245,612,4939,,424013,2747,457,,1007,105,7/9/20
+kentucky-us,"Kentucky, US",state,,,Kentucky,United States,4467673,,America/New_York,18670,620,5258,,432690,2763,409,,1012,70,7/10/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,63289,3278,43026,,784142,,852,,,,7/4/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,65226,3288,43026,,802454,,926,,,,7/5/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,66327,3296,43026,,813645,,964,,,,7/6/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,68263,3319,43026,,847598,,1025,,,,7/7/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,70151,3339,46334,,865737,,1022,,,,7/8/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,71994,3355,46334,,880140,,1042,,,,7/9/20
+louisiana-us,"Louisiana, US",state,,,Louisiana,United States,4648794,,America/Chicago,74636,3380,46334,,905248,,1117,,,,7/10/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,109838,8172,93157,,885767,11461,640,,,107,7/4/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,109974,8183,93157,,891685,11463,636,,,100,7/5/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,110137,8198,93157,,899417,11469,603,,,99,7/6/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,110338,8213,93157,,906760,11489,621,,,104,7/7/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,110602,8243,94347,,915995,11517,662,,,102,7/8/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,110897,8268,94347,,925761,11559,635,,,103,7/9/20
+massachusetts-us,"Massachusetts, US",state,,,Massachusetts,United States,6892503,,America/New_York,111110,8296,94347,,938616,11582,632,,,98,7/10/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,69341,3236,5025,,573342,11034,410,,,143,7/4/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,69632,3243,5029,,579962,11071,409,,,144,7/5/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,69904,3246,5029,,587361,11096,403,,,142,7/6/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,70396,3266,5036,,594378,11111,404,,,145,7/7/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,70861,3275,5085,,603108,11184,398,,,136,7/8/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,71447,3288,5132,,612581,11221,406,,,139,7/9/20
+maryland-us,"Maryland, US",state,,,Maryland,United States,6045680,,America/New_York,71910,3303,5157,,621063,11300,385,,,122,7/10/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3397,107,2751,,105945,358,27,,,9,7/4/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3415,109,2772,,107932,359,25,,,9,7/5/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3423,109,2787,,109550,359,21,,,9,7/6/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3440,110,2816,,110906,360,22,,,9,7/7/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3460,110,2856,,112938,363,22,,,8,7/8/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3486,111,2901,,115758,365,16,,,7,7/9/20
+maine-us,"Maine, US",state,,,Maine,United States,1344212,,America/New_York,3499,111,2931,,118406,366,15,,,7,7/10/20
+unassigned-maine-us,"Unassigned cases, Maine, US",state,,,Maine,United States,1344212,,America/New_York,6,0,0,,,0,,,,,7/10/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,72581,6218,52841,,1130154,,548,,,193,7/4/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,72941,6218,52841,,1146819,,548,,,193,7/5/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,73269,6221,52841,,1159363,,505,,,174,7/6/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,73900,6251,52841,,1176511,,505,,,174,7/7/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,74551,6262,52841,,1200003,,505,,,174,7/8/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,75063,6271,52841,,1223553,,505,,,174,7/9/20
+michigan-us,"Michigan, US",state,,,Michigan,United States,9986857,,America/Detroit,75685,6285,52841,,1246805,,505,,,174,7/10/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,37624,1503,32347,,645172,4139,270,,1277,132,7/4/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,38136,1508,33408,,674015,4170,253,,1287,132,7/5/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,38569,1511,33907,,679693,4219,258,,1290,125,7/6/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,39133,1514,34377,,685247,4252,267,,1295,121,7/7/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,39589,1523,34902,,692970,4272,265,,1302,122,7/8/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,40163,1528,35193,,705440,4305,251,,1312,116,7/9/20
+minnesota-us,"Minnesota, US",state,,,Minnesota,United States,5639632,,America/Chicago,40767,1533,35442,,725825,4329,227,,1320,124,7/10/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,23215,1027,,,412261,,740,,,,7/4/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,23436,1028,,,419509,,739,,,,7/5/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,23856,1028,,,426745,,740,,,,7/6/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,24629,1042,,,435348,,676,,,,7/7/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,25204,1046,,,442340,,694,,,,7/8/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,25999,1051,,,454825,,811,,,,7/9/20
+missouri-us,"Missouri, US",state,,,Missouri,United States,6137428,,America/Chicago,25999,1051,,,454825,,886,,,,7/10/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,8218,,,,,,7/4/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,8218,,,,,,7/5/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,8218,,,,,,7/6/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,8218,,,,,,7/7/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,10765,,,,,,7/8/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,10765,4,,,,,7/9/20
+northern-mariana-islands-us,"Northern Mariana Islands, US",state,,,Northern Mariana Islands,United States,55144,,Pacific/Saipan,31,2,19,,10765,4,,,,,7/10/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,30674,1107,19388,,309915,3268,872,,,175,7/4/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,30900,1111,19388,,310141,3268,872,,,175,7/5/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,31257,1114,22167,,314688,3280,825,,,165,7/6/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,32214,1158,22167,,315645,3315,885,,,173,7/7/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,32888,1188,22167,,316319,3365,883,,,190,7/8/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,33591,1204,22167,,324804,3414,941,,,187,7/9/20
+mississippi-us,"Mississippi, US",state,,,Mississippi,United States,2976149,,America/Chicago,34622,1215,22167,,330312,3455,981,,,205,7/10/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1167,23,678,,98950,112,20,,,,7/4/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1212,23,678,,100106,112,20,,,,7/5/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1249,23,678,,102926,112,20,,,,7/6/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1327,23,716,,105327,117,22,,,,7/7/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1371,23,759,,106421,117,22,,,,7/8/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1466,25,796,,108765,120,24,,,,7/9/20
+montana-us,"Montana, US",state,,,Montana,United States,1068778,,America/Denver,1593,28,855,,112178,123,21,,,,7/10/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,71654,1395,45538,,1018296,,945,,,,7/4/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,72983,1396,45538,,1036838,,949,,,,7/5/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,74529,1398,55318,,1051846,,982,,,,7/6/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,75875,1420,55318,,1071290,,989,,,,7/7/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,77310,1441,55318,,1096682,,994,,,,7/8/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,79349,1461,55318,,1121811,,1034,,,,7/9/20
+north-carolina-us,"North Carolina, US",state,,,North Carolina,United States,10488084,,America/New_York,81330,1479,55318,,1150612,,1046,,,,7/10/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,3779,78,3288,,111928,241,22,,,,7/4/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,3816,78,3324,,113128,242,22,,,,7/5/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,3849,78,3350,,113582,245,22,,,,7/6/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,3898,81,3413,,114357,248,24,,,,7/7/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,3971,78,3447,,115839,252,26,,,,7/8/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,4070,78,3464,,117849,257,30,,,,7/9/20
+north-dakota-us,"North Dakota, US",state,,,North Dakota,United States,762062,,America/Chicago,4154,78,3496,,119596,260,33,,,,7/10/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,19660,284,14200,,187588,1365,111,,,,7/4/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,19827,284,14340,,189928,1368,109,,,,7/5/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,19929,284,14641,,191740,1369,101,,,,7/6/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,20046,283,14759,,193073,1369,109,,,,7/7/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,20201,282,14927,,195048,1398,102,,,,7/8/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,20425,282,15031,,197835,1405,97,,,,7/9/20
+nebraska-us,"Nebraska, US",state,,,Nebraska,United States,1934408,,America/Chicago,20623,284,15206,,201014,1419,100,,,,7/10/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5857,376,4597,,123749,569,25,,163,,7/4/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5857,376,4597,,123749,569,25,,163,,7/5/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5897,381,4684,,125235,570,25,,163,,7/6/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5914,382,4706,,127880,574,25,,163,,7/7/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5932,384,4758,,128511,577,24,,164,,7/8/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5952,386,4817,,129628,578,22,,164,,7/9/20
+new-hampshire-us,"New Hampshire, US",state,,,New Hampshire,United States,1359711,,America/New_York,5973,387,4831,,131051,581,24,,189,,7/10/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,173033,15189,30565,,1508548,20233,983,,,205,7/4/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,173402,15211,30660,,1534640,20237,917,,,210,7/5/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,173611,15229,30729,,1549209,20237,861,,,187,7/6/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,173878,15281,30774,,1560133,20246,903,,,169,7/7/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,174039,15423,30844,,1577848,20426,935,,,175,7/8/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,174240,15448,30938,,1599417,20505,963,,,170,7/9/20
+new-jersey-us,"New Jersey, US",state,,,New Jersey,United States,8882190,,America/New_York,174628,15479,31014,,1623158,20567,904,,,162,7/10/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,12776,511,5802,,363374,1970,130,,,,7/4/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,13063,513,5845,,372288,1988,121,,,,7/5/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,13256,513,5860,,375054,2006,119,,,,7/6/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,13507,515,5902,,380240,2033,129,,,,7/7/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,13727,519,5986,,385242,2056,133,,,,7/8/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,14017,527,6051,,389687,2101,154,,,,7/9/20
+new-mexico-us,"New Mexico, US",state,,,New Mexico,United States,2096829,,America/Denver,14251,533,6118,,395881,2137,154,,,,7/10/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,21575,530,727,,301229,,749,,,205,7/4/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,22418,534,727,,307697,,760,,,226,7/5/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,22909,537,742,,311481,,748,,,201,7/6/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,23785,548,743,,316546,,849,,,236,7/7/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,24301,553,754,,323653,,876,,,233,7/8/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,24904,571,759,,329778,,935,,,237,7/9/20
+nevada-us,"Nevada, US",state,,,Nevada,United States,3080156,,America/Los_Angeles,25908,579,764,,335491,,924,,,248,7/10/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,396598,24896,70877,,4170388,89995,844,,,190,7/4/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,397131,24904,70968,,4233803,89995,832,,,178,7/5/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,397649,24913,71040,,4288131,89995,817,,,170,7/6/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,398237,24924,71091,,4344867,89995,836,,,160,7/7/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,398929,24944,71185,,4402452,89995,841,,,166,7/8/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,399513,24959,71279,,4468016,89995,851,,,173,7/9/20
+new-york-us,"New York, US",state,,,New York,United States,19453561,,America/New_York,400299,24968,71371,,4541574,89995,826,,,178,7/10/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,56183,2907,39903,,848370,8111,691,,2052,226,7/4/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,57151,2911,40460,,868762,8172,693,,2058,236,7/5/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,57956,2927,40813,,881412,8249,837,,2077,267,7/6/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,58904,2970,41438,,896485,8383,849,,2101,289,7/7/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,60181,2991,42111,,915252,8489,890,,2127,289,7/8/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,61331,3006,42111,,916402,8570,890,,2146,289,7/9/20
+ohio-us,"Ohio, US",state,,,Ohio,United States,11689100,,America/New_York,62856,3032,43435,,959553,8701,928,,2161,289,7/10/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,15645,398,11965,,364434,1676,391,,,165,7/4/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,15928,398,12246,,364717,1685,391,,,165,7/5/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,16362,399,12432,,365151,1689,391,,,165,7/6/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,17220,404,13005,,389018,1741,426,,,182,7/7/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,17893,407,13538,,394823,1804,458,,,209,7/8/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,18496,410,14100,,401754,1893,453,,,215,7/9/20
+oklahoma-us,"Oklahoma, US",state,,,Oklahoma,United States,3956971,,America/Chicago,19092,416,14648,,411074,1949,487,,,217,7/10/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,9294,209,2759,,251054,1069,173,,,52,7/4/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,9294,209,2759,,251054,1069,173,,,52,7/5/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,10395,215,2846,,267721,1125,183,,,61,7/6/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,10605,220,2877,,271906,1141,191,,,55,7/7/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,10817,224,2877,,276267,1155,188,,,57,7/8/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,11188,230,2977,,282075,1162,192,,,59,7/9/20
+oregon-us,"Oregon, US",state,,,Oregon,United States,4217737,,America/Los_Angeles,11454,232,3009,,286770,1180,208,,,56,7/10/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,89375,6749,69712,,814823,,589,,,,7/4/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,89854,6753,70086,,824700,,592,,,,7/5/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,90304,6754,70437,,833324,,598,,,,7/6/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,91299,6787,70437,,850102,,637,,,,7/7/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,92148,6812,70953,,866526,,649,,,,7/8/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,92867,6848,71507,,880023,,650,,,,7/9/20
+pennsylvania-us,"Pennsylvania, US",state,,,Pennsylvania,United States,12801989,,America/New_York,93876,6880,72284,,898640,,653,,,,7/10/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,7787,155,,,200473,,100,,,8,7/4/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,7916,155,,,200602,,118,,,9,7/5/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,8585,155,,,201271,,115,,,18,7/6/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,8714,157,,,201400,,122,,,19,7/7/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,8745,159,,,201431,,127,,,9,7/8/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,8862,159,,,264628,,147,,,11,7/9/20
+puerto-rico-us,"Puerto Rico, US",state,,,Puerto Rico,United States,3411307,,America/Puerto_Rico,9137,159,,,264903,,140,,,12,7/10/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17084,960,1657,,158757,2019,61,,,9,7/4/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17108,960,1657,,160155,2019,61,,,9,7/5/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17163,960,1657,,161714,2019,61,,,9,7/6/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17204,969,1677,,163270,2036,55,,,4,7/7/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17204,971,1683,,163270,2043,56,,,5,7/8/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17243,974,1684,,165137,2043,55,,,4,7/9/20
+rhode-island-us,"Rhode Island, US",state,,,Rhode Island,United States,1059361,,America/New_York,17312,976,1685,,166655,2051,61,,,4,7/10/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,43386,813,16994,,420693,2882,1190,,,,7/4/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,44847,820,16994,,430809,2882,1251,,,,7/5/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,46380,827,16994,,439857,2882,1260,,,,7/6/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,47352,846,19181,,445291,3090,1324,,,,7/7/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,48909,884,19181,,453840,3090,1404,,,,7/8/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,50691,905,19181,,463765,3090,1433,,,,7/9/20
+south-carolina-us,"South Carolina, US",state,,,South Carolina,United States,5148714,,America/New_York,52419,929,20956,,475235,3398,1438,,,,7/10/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7028,97,6062,,83830,689,54,,,,7/4/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7063,97,6063,,84003,691,59,,,,7/5/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7105,97,6063,,84303,692,59,,,,7/6/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7163,98,6190,,85365,699,64,,,,7/7/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7242,98,6280,,86226,709,54,,,,7/8/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7336,101,6331,,87310,718,61,,,,7/9/20
+south-dakota-us,"South Dakota, US",state,,,South Dakota,United States,884659,,America/Chicago,7401,107,6408,,88542,726,65,,,,7/10/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,50140,637,30043,,878604,2860,949,,,,7/4/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,51431,646,30254,,896166,2871,949,,,,7/5/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,52155,653,31020,,904618,2897,940,,,,7/6/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,53514,665,31827,,921199,2950,1112,,,,7/7/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,55986,685,32736,,950959,3023,1160,,,,7/8/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,57591,710,33609,,972714,3088,1135,,,,7/9/20
+tennessee-us,"Tennessee, US",state,,,Tennessee,United States,6829174,,America/Chicago,59546,723,34740,,994575,3146,1184,,,,7/10/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,191790,2608,97430,,2071809,,7890,,,,7/4/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,195239,2637,100843,,2133457,,8181,,,,7/5/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,200557,2655,103782,,2163729,,8698,,,,7/6/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,210585,2715,108485,,2221287,,9286,,,,7/7/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,220564,2813,113284,,2258708,,9610,,,,7/8/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,230346,2918,118326,,2313212,,9689,,,,7/9/20
+texas-us,"Texas, US",state,,,Texas,United States,28995881,,America/Chicago,240111,3013,122996,,2389789,,10002,,,,7/10/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,24542,181,13807,,366716,1565,255,,436,88,7/4/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,24952,184,14147,,371308,1582,237,,438,84,7/5/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,25469,190,14448,,375842,1604,244,,438,83,7/6/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,26033,194,14764,,382849,1653,248,,455,84,7/7/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,26755,201,15178,,385760,1678,236,,465,76,7/8/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,27356,205,15661,,388733,1700,207,,472,74,7/9/20
+utah-us,"Utah, US",state,,,Utah,United States,3205958,,America/Denver,28223,207,16261,,395974,1748,229,,477,79,7/10/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,65109,1849,8741,,699509,9549,808,,,207,7/4/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,65748,1853,8784,,709601,9576,792,,,202,7/5/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,66102,1853,8809,,715331,9592,783,,,194,7/6/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,66740,1881,8913,,728430,9815,902,,,221,7/7/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,67375,1905,9011,,738376,9982,971,,,230,7/8/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,67988,1937,9065,,753798,10021,956,,,215,7/9/20
+virginia-us,"Virginia, US",state,,,Virginia,United States,8535519,,America/New_York,68931,1958,9189,,769103,10195,1006,,,234,7/10/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,111,6,76,,3173,,,,,,7/4/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,111,6,76,,3173,,,,,,7/5/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,112,6,79,,3231,,,,,,7/6/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,116,6,79,,3354,,,,,,7/7/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,122,6,80,,3453,,,,,,7/8/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,144,6,81,,3610,,,,,,7/9/20
+united-states-virgin-islands-us,"United States Virgin Islands, US",state,,,United States Virgin Islands,United States,104901,,America/St_Thomas,153,6,87,,3679,,,,,,7/10/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1238,56,999,,69397,,16,,,,7/4/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1249,56,1007,,70024,,15,,,,7/5/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1251,56,1022,,70353,,24,,,,7/6/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1254,56,1039,,71113,,13,,,,7/7/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1256,56,1049,,71756,,14,,,,7/8/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1272,56,1054,,72749,,15,,,,7/9/20
+vermont-us,"Vermont, US",state,,,Vermont,United States,623989,,America/New_York,1277,56,1066,,74098,,11,,,,7/10/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,34778,1352,,,599975,4463,315,,,,7/4/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,35247,1354,,,607276,4473,305,,,,7/5/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,35898,1359,,,612706,4482,248,,,,7/6/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,36985,1370,,,629256,4544,222,,,,7/7/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,37420,1384,,,635524,4582,318,,,,7/8/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,37941,1394,,,645072,4630,329,,,,7/9/20
+washington-us,"Washington, US",state,,,Washington,United States,7614893,,America/Los_Angeles,38581,1409,,,660330,4665,326,,,,7/10/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,34207,803,24491,,613973,3574,235,,771,67,7/4/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,34740,803,24899,,618980,3586,244,,771,65,7/5/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,35230,803,25242,,624315,3602,254,,772,66,7/6/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,35765,812,25758,,636941,3639,254,,777,69,7/7/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,36410,814,26305,,647712,3683,276,,787,74,7/8/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,37210,816,26792,,660932,3726,285,,787,76,7/9/20
+wisconsin-us,"Wisconsin, US",state,,,Wisconsin,United States,5822434,,America/Chicago,38099,821,27329,,673661,3766,274,,792,77,7/10/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3141,94,2402,,181429,,25,,,11,7/4/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3262,94,2421,,184821,,27,,,12,7/5/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3442,95,2518,,188981,,41,,,13,7/6/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3461,95,2535,,189847,,41,,,13,7/7/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3707,95,2648,,193915,,48,,,13,7/8/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3826,95,2718,,197189,,50,,,15,7/9/20
+west-virginia-us,"West Virginia, US",state,,,West Virginia,United States,1792147,,America/New_York,3983,95,2756,,201203,,56,,,16,7/10/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1606,20,1169,,35299,119,8,,,,7/4/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1634,20,1172,,35327,119,8,,,,7/5/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1634,20,1172,,35327,119,9,,,,7/6/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1711,20,1274,,37789,119,10,,,,7/7/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1740,21,1291,,37818,120,13,,,,7/8/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1774,21,1313,,39045,121,12,,,,7/9/20
+wyoming-us,"Wyoming, US",state,,,Wyoming,United States,578759,,America/Denver,1790,21,1327,,39867,121,12,,,,7/10/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,2961,20,2295,,37660,,,,,,7/4/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3000,20,2365,,38189,,,,,,7/5/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3043,20,2426,,38822,,,,,,7/6/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3043,20,2426,,38822,,,,,,7/7/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3164,21,2615,,39817,,,,,,7/8/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3270,22,2705,,40433,,,,,,7/9/20
+benton-county-arkansas-us,"Benton County, Arkansas, US",county,,Benton County,Arkansas,United States,279141,,America/Chicago,3355,22,2800,,41159,,,,,,7/10/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,208,1,117,,4547,,,,,,7/4/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,215,1,120,,4689,,,,,,7/5/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,216,1,133,,4800,,,,,,7/6/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,216,1,133,,4800,,,,,,7/7/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,227,1,151,,4980,,,,,,7/8/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,247,1,163,,5121,,,,,,7/9/20
+crawford-county-arkansas-us,"Crawford County, Arkansas, US",county,,Crawford County,Arkansas,United States,63257,,America/Chicago,260,2,167,,5224,,,,,,7/10/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,121,0,99,,4206,,,,,,7/4/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,122,0,102,,4219,,,,,,7/5/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,124,0,102,,4266,,,,,,7/6/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,124,0,102,,4266,,,,,,7/7/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,134,0,112,,4332,,,,,,7/8/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,141,0,115,,4386,,,,,,7/9/20
+greene-county-arkansas-us,"Greene County, Arkansas, US",county,,Greene County,Arkansas,United States,45325,,America/Chicago,145,0,120,,4427,,,,,,7/10/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,129,2,100,,2217,,,,,,7/4/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,220,2,102,,2568,,,,,,7/5/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,228,2,106,,2616,,,,,,7/6/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,228,2,106,,2616,,,,,,7/7/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,233,2,112,,2666,,,,,,7/8/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,237,2,120,,2699,,,,,,7/9/20
+miller-county-arkansas-us,"Miller County, Arkansas, US",county,,Miller County,Arkansas,United States,43257,,America/Chicago,241,2,123,,2741,,,,,,7/10/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,104,3,81,,1296,,,,,,7/4/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,104,3,81,,1298,,,,,,7/5/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,104,3,82,,1316,,,,,,7/6/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,104,3,82,,1316,,,,,,7/7/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,106,3,81,,1321,,,,,,7/8/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,107,3,82,,1330,,,,,,7/9/20
+nevada-county-arkansas-us,"Nevada County, Arkansas, US",county,,Nevada County,Arkansas,United States,8252,,America/Chicago,108,3,86,,1338,,,,,,7/10/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,8,0,5,,503,,,,,,7/4/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,7,0,5,,514,,,,,,7/5/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,7,0,5,,530,,,,,,7/6/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,7,0,5,,530,,,,,,7/7/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,7,0,6,,538,,,,,,7/8/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,7,0,7,,543,,,,,,7/9/20
+newton-county-arkansas-us,"Newton County, Arkansas, US",county,,Newton County,Arkansas,United States,7753,,America/Chicago,8,0,7,,549,,,,,,7/10/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,76,0,69,,1601,,,,,,7/4/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,77,0,70,,1617,,,,,,7/5/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,80,0,71,,1643,,,,,,7/6/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,80,0,71,,1643,,,,,,7/7/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,81,0,72,,1667,,,,,,7/8/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,84,0,76,,1678,,,,,,7/9/20
+polk-county-arkansas-us,"Polk County, Arkansas, US",county,,Polk County,Arkansas,United States,19964,,America/Chicago,86,0,76,,1698,,,,,,7/10/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,21,0,16,,585,,,,,,7/4/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,22,0,17,,606,,,,,,7/5/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,22,0,17,,628,,,,,,7/6/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,22,0,17,,628,,,,,,7/7/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,25,0,18,,647,,,,,,7/8/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,26,0,19,,654,,,,,,7/9/20
+prairie-county-arkansas-us,"Prairie County, Arkansas, US",county,,Prairie County,Arkansas,United States,8062,,America/Chicago,28,0,21,,662,,,,,,7/10/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2345,60,1563,,37542,,,,,,7/4/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2425,60,1602,,38291,,,,,,7/5/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2472,61,1653,,39188,,,,,,7/6/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2472,61,1653,,39188,,,,,,7/7/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2611,62,1808,,40638,,,,,,7/8/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2713,63,1884,,41358,,,,,,7/9/20
+pulaski-county-arkansas-us,"Pulaski County, Arkansas, US",county,,Pulaski County,Arkansas,United States,391911,,America/Chicago,2810,63,1954,,42151,,,,,,7/10/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,881,3,848,,5428,,,,,,7/4/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,883,3,848,,5450,,,,,,7/5/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,892,3,856,,5160,,,,,,7/6/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,892,3,856,,5160,,,,,,7/7/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,894,3,866,,5194,,,,,,7/8/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,898,3,868,,5241,,,,,,7/9/20
+st.-francis-county-arkansas-us,"St. Francis County, Arkansas, US",county,,St. Francis County,Arkansas,United States,24994,,America/Chicago,901,3,869,,5281,,,,,,7/10/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,732,7,621,,4179,,,,,,7/4/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,743,8,635,,4230,,,,,,7/5/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,748,9,650,,4260,,,,,,7/6/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,748,9,650,,4260,,,,,,7/7/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,769,9,671,,4328,,,,,,7/8/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,781,9,684,,4370,,,,,,7/9/20
+sevier-county-arkansas-us,"Sevier County, Arkansas, US",county,,Sevier County,Arkansas,United States,17007,,America/Chicago,788,9,696,,4392,,,,,,7/10/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,33,2,29,,1135,,,,,,7/4/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,33,2,29,,1139,,,,,,7/5/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,34,2,30,,1153,,,,,,7/6/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,34,2,30,,1153,,,,,,7/7/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,36,2,31,,1175,,,,,,7/8/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,36,2,31,,1188,,,,,,7/9/20
+van-buren-county-arkansas-us,"Van Buren County, Arkansas, US",county,,Van Buren County,Arkansas,United States,16545,,America/Chicago,36,2,31,,1193,,,,,,7/10/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,122,0,89,,1160,0,,,0,,7/4/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,122,0,89,,1160,0,,,0,,7/5/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,146,0,89,,0,0,,,0,,7/6/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,146,0,112,,1337,0,,,0,,7/7/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,153,0,116,,1393,0,,,0,,7/8/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,159,0,117,,1427,0,,,0,,7/9/20
+glenn-county-california-us,"Glenn County, California, US",county,,Glenn County,California,United States,28393,,America/Los_Angeles,164,0,118,,1448,0,,,0,,7/10/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1476,25,0,,31863,105,,,0,,7/4/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1476,25,0,,31863,105,,,0,,7/5/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1740,25,0,,33874,107,,,0,,7/6/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1826,27,0,,34329,107,,,0,,7/7/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1922,27,0,,35124,108,,,0,,7/8/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,1985,27,0,,35680,108,,,0,,7/9/20
+solano-county-california-us,"Solano County, California, US",county,,Solano County,California,United States,447643,,America/Los_Angeles,2075,28,0,,35840,111,,,0,,7/10/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1352,11,620,721,51615,0,,,0,,7/4/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1405,11,620,774,51615,0,,,0,,7/5/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1430,11,773,646,51615,0,,,0,,7/6/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1466,12,773,681,52935,0,,,0,,7/7/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1487,14,773,700,55059,0,,,0,,7/8/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1519,14,773,732,56687,0,,,0,,7/9/20
+sonoma-county-california-us,"Sonoma County, California, US",county,,Sonoma County,California,United States,494336,,America/Los_Angeles,1561,14,773,774,57209,0,,,0,,7/10/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,93,6,,,,,,,,,7/4/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,97,6,,,,,,,,,7/5/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,97,6,,,,,,,,,7/6/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,101,6,,,,,,,,,7/7/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,106,6,,,,,,,,,7/8/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,122,7,,,1083,,,,,,7/9/20
+calhoun-county-florida-us,"Calhoun County, Florida, US",county,,Calhoun County,Florida,United States,14105,,America/Chicago,133,7,,,1167,,,,,,7/10/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,887,76,,,,,,,,,7/4/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,922,76,,,,,,,,,7/5/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,935,77,,,,,,,,,7/6/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,944,77,,,,,,,,,7/7/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,974,77,,,,,,,,,7/8/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,1004,77,,,14238,,,,,,7/9/20
+charlotte-county-florida-us,"Charlotte County, Florida, US",county,,Charlotte County,Florida,United States,188910,,America/New_York,1048,78,,,14636,,,,,,7/10/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,8116,184,,,,,,,,,7/4/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,8533,198,,,,,,,,,7/5/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,8759,199,,,,,,,,,7/6/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,9032,206,,,,,,,,,7/7/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,9395,209,,,,,,,,,7/8/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,9826,221,,,112346,,,,,,7/9/20
+pinellas-county-florida-us,"Pinellas County, Florida, US",county,,Pinellas County,Florida,United States,974996,,America/New_York,10293,223,,,115481,,,,,,7/10/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,815,9,,,,,,,,,7/4/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,867,9,,,,,,,,,7/5/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,902,9,,,,,,,,,7/6/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,941,9,,,,,,,,,7/7/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,993,10,,,,,,,,,7/8/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,1033,10,,,14964,,,,,,7/9/20
+santa-rosa-county-florida-us,"Santa Rosa County, Florida, US",county,,Santa Rosa County,Florida,United States,184313,,America/Chicago,1085,10,,,15319,,,,,,7/10/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2059,98,,,,,,,,,7/4/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2160,98,,,,,,,,,7/5/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2191,98,,,,,,,,,7/6/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2249,98,,,,,,,,,7/7/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2334,98,,,,,,,,,7/8/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2431,100,,,42523,,,,,,7/9/20
+sarasota-county-florida-us,"Sarasota County, Florida, US",county,,Sarasota County,Florida,United States,433742,,America/New_York,2548,100,,,43336,,,,,,7/10/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,,,,,,,7/4/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,,,,,,,7/5/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,,,,,,,7/6/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,,,,,,,7/7/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,,,,,,,7/8/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,18,0,,,1042,,,,,,7/9/20
+crawford-county-illinois-us,"Crawford County, Illinois, US",county,,Crawford County,Illinois,United States,18667,,America/Chicago,19,0,,,1049,,,,,,7/10/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,137,0,,,,,,,,,7/4/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,140,0,,,,,,,,,7/5/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,147,0,,,,,,,,,7/6/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,149,0,,,,,,,,,7/7/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,149,0,,,,,,,,,7/8/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,152,0,,,4139,,,,,,7/9/20
+knox-county-illinois-us,"Knox County, Illinois, US",county,,Knox County,Illinois,United States,49699,,America/Chicago,157,0,,,4171,,,,,,7/10/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,52,2,,,,,,,,,7/4/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,52,2,,,,,,,,,7/5/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,52,2,,,,,,,,,7/6/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,53,2,,,,,,,,,7/7/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,53,2,,,,,,,,,7/8/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,54,2,,,3044,,,,,,7/9/20
+livingston-county-illinois-us,"Livingston County, Illinois, US",county,,Livingston County,Illinois,United States,35648,,America/Chicago,54,2,,,3085,,,,,,7/10/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,48,1,,,,,,,,,7/4/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,48,1,,,,,,,,,7/5/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,49,1,,,,,,,,,7/6/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,56,1,,,,,,,,,7/7/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,59,1,,,,,,,,,7/8/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,64,1,,,3643,,,,,,7/9/20
+montgomery-county-illinois-us,"Montgomery County, Illinois, US",county,,Montgomery County,Illinois,United States,28414,,America/Chicago,69,1,,,3710,,,,,,7/10/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,20,0,,,,,,,,,7/4/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,20,0,,,,,,,,,7/5/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,20,0,,,,,,,,,7/6/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,20,0,,,,,,,,,7/7/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,20,0,,,,,,,,,7/8/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,21,0,,,2116,,,,,,7/9/20
+piatt-county-illinois-us,"Piatt County, Illinois, US",county,,Piatt County,Illinois,United States,16344,,America/Chicago,21,0,,,2149,,,,,,7/10/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,76,0,,,,,,,,,7/4/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,79,0,,,,,,,,,7/5/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,79,0,,,,,,,,,7/6/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,80,0,,,,,,,,,7/7/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,79,0,,,,,,,,,7/8/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,79,0,,,572,,,,,,7/9/20
+pulaski-county-illinois-us,"Pulaski County, Illinois, US",county,,Pulaski County,Illinois,United States,5335,,America/Chicago,81,0,,,578,,,,,,7/10/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,1988,137,,,,,,,,,7/4/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2017,137,,,,,,,,,7/5/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2037,137,,,,,,,,,7/6/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2054,138,,,,,,,,,7/7/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2089,143,,,,,,,,,7/8/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2128,144,,,24328,,,,,,7/9/20
+st.-clair-county-illinois-us,"St. Clair County, Illinois, US",county,,St. Clair County,Illinois,United States,259686,,America/Chicago,2202,144,,,24868,,,,,,7/10/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,4,0,,,,,,,,,7/4/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,4,0,,,,,,,,,7/5/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,4,0,,,,,,,,,7/6/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,6,0,,,,,,,,,7/7/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,6,0,,,,,,,,,7/8/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,6,0,,,480,,,,,,7/9/20
+stark-county-illinois-us,"Stark County, Illinois, US",county,,Stark County,Illinois,United States,5342,,America/Chicago,7,0,,,485,,,,,,7/10/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,77,2,,,,,,,,,7/4/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,78,2,,,,,,,,,7/5/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,79,2,,,,,,,,,7/6/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,79,2,,,,,,,,,7/7/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,82,2,,,,,,,,,7/8/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,85,2,,,6895,,,,,,7/9/20
+vermilion-county-illinois-us,"Vermilion County, Illinois, US",county,,Vermilion County,Illinois,United States,75758,,America/Chicago,86,2,,,6955,,,,,,7/10/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4243,151,,,64543,,,,,,7/4/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4246,152,,,65639,,,,,,7/5/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4248,152,,,66411,,,,,,7/6/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4250,152,,,67110,,,,,,7/7/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4255,152,,,68162,,,,,,7/8/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4262,152,,,69203,,,,,,7/9/20
+dutchess-county-new-york-us,"Dutchess County, New York, US",county,,Dutchess County,New York,United States,294218,,America/New_York,4269,152,,,70432,,,,,,7/10/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,239,5,,,10154,,,,,,7/4/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,242,5,,,10367,,,,,,7/5/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,242,5,,,10779,,,,,,7/6/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,244,5,,,10957,,,,,,7/7/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,244,5,,,11203,,,,,,7/8/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,246,5,,,11388,,,,,,7/9/20
+genesee-county-new-york-us,"Genesee County, New York, US",county,,Genesee County,New York,United States,57280,,America/New_York,247,5,,,11502,,,,,,7/10/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60149,0,,,558504,,,,,,7/4/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60211,0,,,565777,,,,,,7/5/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60281,0,,,573450,,,,,,7/6/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60386,0,,,580364,,,,,,7/7/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60461,0,,,587592,,,,,,7/8/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60560,0,,,596387,,,,,,7/9/20
+kings-county-new-york-us,"Kings County, New York, US",county,,Kings County,New York,United States,2559903,,America/New_York,60647,0,,,603930,,,,,,7/10/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,363,17,,,11201,,,,,,7/4/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,364,17,,,11297,,,,,,7/5/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,367,17,,,11552,,,,,,7/6/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,368,17,,,11859,,,,,,7/7/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,368,17,,,12048,,,,,,7/8/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,371,17,,,12192,,,,,,7/9/20
+madison-county-new-york-us,"Madison County, New York, US",county,,Madison County,New York,United States,70941,,America/New_York,374,17,,,12351,,,,,,7/10/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10775,478,,,78384,,,,,,7/4/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10781,484,,,79006,,,,,,7/5/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10798,484,,,79648,,,,,,7/6/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10806,484,,,80382,,,,,,7/7/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10810,484,,,81248,,,,,,7/8/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10820,484,,,82207,,,,,,7/9/20
+orange-county-new-york-us,"Orange County, New York, US",county,,Orange County,New York,United States,384940,,America/New_York,10830,484,,,83214,,,,,,7/10/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,565,30,,,22623,,,,,,7/4/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,568,30,,,23012,,,,,,7/5/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,571,30,,,23174,,,,,,7/6/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,580,30,,,23478,,,,,,7/7/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,586,30,,,23877,,,,,,7/8/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,588,30,,,24129,,,,,,7/9/20
+rensselaer-county-new-york-us,"Rensselaer County, New York, US",county,,Rensselaer County,New York,United States,158714,,America/New_York,593,30,,,24460,,,,,,7/10/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,773,24,,,24421,,,,,,7/4/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,773,24,,,24421,,,,,,7/5/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,861,25,,,25875,,,,,,7/6/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,877,25,,,26322,,,,,,7/7/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,894,25,,,26816,,,,,,7/8/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,914,27,,,27264,,,,,,7/9/20
+clackamas-county-oregon-us,"Clackamas County, Oregon, US",county,,Clackamas County,Oregon,United States,418187,,America/Los_Angeles,925,27,,,27711,,,,,,7/10/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,7,0,,,729,,,,,,7/4/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,7,0,,,729,,,,,,7/5/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,8,0,,,746,,,,,,7/6/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,8,0,,,757,,,,,,7/7/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,9,0,,,769,,,,,,7/8/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,9,0,,,780,,,,,,7/9/20
+curry-county-oregon-us,"Curry County, Oregon, US",county,,Curry County,Oregon,United States,22925,,America/Los_Angeles,9,0,,,786,,,,,,7/10/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,41,1,,,4316,,,,,,7/4/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,41,1,,,4316,,,,,,7/5/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,56,1,,,4640,,,,,,7/6/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,59,1,,,4704,,,,,,7/7/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,61,1,,,4805,,,,,,7/8/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,54,1,,,4885,,,,,,7/9/20
+josephine-county-oregon-us,"Josephine County, Oregon, US",county,,Josephine County,Oregon,United States,87487,,America/Los_Angeles,55,1,,,4942,,,,,,7/10/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,674,3,,,,,,,,,7/4/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,707,3,,,,,,,,,7/5/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,745,4,,,,,,,,,7/6/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,773,4,,,,,,,,,7/7/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,874,4,,,,,,,,,7/8/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,889,4,464,,8770,44,,,,,7/9/20
+bradley-county-tennessee-us,"Bradley County, Tennessee, US",county,,Bradley County,Tennessee,United States,108110,,America/New_York,925,4,487,,8927,45,,,,,7/10/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,35,3,,,,,,,,,7/4/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,38,3,,,,,,,,,7/5/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,40,3,,,,,,,,,7/6/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,40,3,,,,,,,,,7/7/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,44,3,,,,,,,,,7/8/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,48,3,23,,998,4,,,,,7/9/20
+crockett-county-tennessee-us,"Crockett County, Tennessee, US",county,,Crockett County,Tennessee,United States,14230,,America/Chicago,49,3,23,,1019,4,,,,,7/10/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,248,1,,,,,,,,,7/4/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,251,1,,,,,,,,,7/5/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,254,3,,,,,,,,,7/6/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,261,3,,,,,,,,,7/7/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,270,3,,,,,,,,,7/8/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,274,3,122,,3574,22,,,,,7/9/20
+dyer-county-tennessee-us,"Dyer County, Tennessee, US",county,,Dyer County,Tennessee,United States,37159,,America/Chicago,280,3,127,,3657,22,,,,,7/10/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,84,3,,,,,,,,,7/4/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,87,3,,,,,,,,,7/5/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,88,3,,,,,,,,,7/6/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,90,3,,,,,,,,,7/7/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,101,3,,,,,,,,,7/8/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,104,3,65,,3542,8,,,,,7/9/20
+franklin-county-tennessee-us,"Franklin County, Tennessee, US",county,,Franklin County,Tennessee,United States,42208,,America/Chicago,110,3,68,,3589,8,,,,,7/10/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,42,0,,,,,,,,,7/4/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,42,0,,,,,,,,,7/5/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,41,0,,,,,,,,,7/6/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,47,0,,,,,,,,,7/7/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,48,0,,,,,,,,,7/8/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,50,0,29,,1709,5,,,,,7/9/20
+grainger-county-tennessee-us,"Grainger County, Tennessee, US",county,,Grainger County,Tennessee,United States,23320,,America/New_York,55,0,29,,1767,6,,,,,7/10/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,59,1,,,,,,,,,7/4/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,62,1,,,,,,,,,7/5/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,61,1,,,,,,,,,7/6/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,63,1,,,,,,,,,7/7/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,65,2,,,,,,,,,7/8/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,65,2,50,,1050,10,,,,,7/9/20
+grundy-county-tennessee-us,"Grundy County, Tennessee, US",county,,Grundy County,Tennessee,United States,13427,,America/Chicago,65,2,53,,1054,10,,,,,7/10/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,317,4,,,,,,,,,7/4/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,340,4,,,,,,,,,7/5/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,343,4,,,,,,,,,7/6/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,374,4,,,,,,,,,7/7/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,397,4,,,,,,,,,7/8/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,422,4,204,,6778,29,,,,,7/9/20
+hamblen-county-tennessee-us,"Hamblen County, Tennessee, US",county,,Hamblen County,Tennessee,United States,64934,,America/New_York,447,4,223,,7051,29,,,,,7/10/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,109,7,,,,,,,,,7/4/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,108,7,,,,,,,,,7/5/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,109,7,,,,,,,,,7/6/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,115,7,,,,,,,,,7/7/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,119,7,,,,,,,,,7/8/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,120,7,40,,3401,10,,,,,7/9/20
+hardin-county-tennessee-us,"Hardin County, Tennessee, US",county,,Hardin County,Tennessee,United States,25652,,America/Chicago,125,7,42,,3501,11,,,,,7/10/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,510,0,,,,,,,,,7/4/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,515,0,,,,,,,,,7/5/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,519,0,,,,,,,,,7/6/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,524,0,,,,,,,,,7/7/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,540,0,,,,,,,,,7/8/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,556,0,,,14064,,,,,,7/9/20
+la-crosse-county-wisconsin-us,"La Crosse County, Wisconsin, US",county,,La Crosse County,Wisconsin,United States,118016,,America/Chicago,565,0,,,14288,,,,,,7/10/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,2,0,,,,,,,,,7/4/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,2,0,,,,,,,,,7/5/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,2,0,,,,,,,,,7/6/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,2,0,,,,,,,,,7/7/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,2,0,,,,,,,,,7/8/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,4,0,,,1069,,,,,,7/9/20
+price-county-wisconsin-us,"Price County, Wisconsin, US",county,,Price County,Wisconsin,United States,13351,,America/Chicago,6,0,,,1089,,,,,,7/10/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,129,0,,,,,,,,,7/4/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,131,0,,,,,,,,,7/5/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,137,0,,,,,,,,,7/6/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,140,0,,,,,,,,,7/7/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,158,0,,,,,,,,,7/8/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,168,0,,,3839,,,,,,7/9/20
+trempealeau-county-wisconsin-us,"Trempealeau County, Wisconsin, US",county,,Trempealeau County,Wisconsin,United States,29649,,America/Chicago,172,0,,,3886,,,,,,7/10/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,422,16,,,,,,,,,7/4/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,430,16,,,,,,,,,7/5/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,436,16,,,,,,,,,7/6/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,443,16,,,,,,,,,7/7/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,451,17,,,,,,,,,7/8/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,461,17,,,10102,,,,,,7/9/20
+washington-county-wisconsin-us,"Washington County, Wisconsin, US",county,,Washington County,Wisconsin,United States,136034,,America/Chicago,466,17,,,10110,,,,,,7/10/20

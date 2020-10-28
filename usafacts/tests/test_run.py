@@ -1,16 +1,15 @@
-import pytest
-
+"""Tests for running the USAFacts indicator."""
 from itertools import product
 from os import listdir
 from os.path import join
 
 import pandas as pd
-from delphi_usafacts.run import run_module
 
 
 class TestRun:
+    """Tests for the `run_module()` function."""
     def test_output_files_exist(self, run_as_module):
-
+        """Test that the expected output files exist."""
         csv_files = [f for f in listdir("receiving") if f.endswith(".csv")]
 
         dates = [
@@ -45,7 +44,7 @@ class TestRun:
         assert set(csv_files) == set(expected_files)
 
     def test_output_file_format(self, run_as_module):
-
+        """Test that the output files have the proper format."""
         df = pd.read_csv(
             join("receiving", "20200310_state_confirmed_cumulative_num.csv")
         )

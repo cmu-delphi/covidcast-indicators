@@ -77,6 +77,11 @@ class GeoMapper:
     ==========
     The main GeoMapper object loads and stores crosswalk dataframes on-demand.
 
+    When replacing geocodes with a new one an aggregation step is performed on the data columns
+    to merge entries  (i.e. in the case of a many to one mapping or a weighted mapping). This
+    requires a specification of the data columns, which are assumed to be all the columns that
+    are not the geocodes or the date column specified in date_col.
+
     Example 1: to add a new column with a new geocode, possibly with weights:
     > gmpr = GeoMapper()
     > df = gmpr.add_geocode(df, "fips", "zip", from_col="fips", new_col="geo_id",
@@ -305,7 +310,12 @@ class GeoMapper:
             )
 
         # state codes are all stored in one table
-        if new_code in state_codes:
+        if from_code in state_codes and new_code in state_codes:
+            crosswalk = self._load_crosswalk(from_code="state", to_code="state")
+            crosswalk = crosswalk.rename(
+                columns={from_code: from_col, new_code: new_col}
+            )
+        elif new_code in state_codes:
             crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
             crosswalk = crosswalk.rename(
                 columns={from_code: from_col, new_code: new_col}
@@ -322,8 +332,12 @@ class GeoMapper:
             df = df.merge(crosswalk, left_on=from_col, right_on=from_col, how="left")
 
         # Drop extra state columns
-        if new_code in state_codes:
+        if new_code in state_codes and not from_code in state_codes:
             state_codes.remove(new_code)
+            df.drop(columns=state_codes, inplace=True)
+        elif new_code in state_codes and from_code in state_codes:
+            state_codes.remove(new_code)
+            state_codes.remove(from_code)
             df.drop(columns=state_codes, inplace=True)
 
         return df
@@ -361,6 +375,9 @@ class GeoMapper:
         new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
                    'hhs_region_number'}
             Specifies the geocode type of the data in new_col.
+        date_col: str or None, default "date"
+            Specify which column contains the date values. Used for value aggregation.
+            If None, then the aggregation is done only on geo_id.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
@@ -389,7 +406,11 @@ class GeoMapper:
             # Multiply and aggregate (this automatically zeros NAs)
             df[data_cols] = df[data_cols].multiply(df["weight"], axis=0)
             df.drop("weight", axis=1, inplace=True)
-        df = df.groupby([date_col, new_col]).sum().reset_index()
+
+        if not date_col is None:
+            df = df.groupby([date_col, new_col]).sum().reset_index()
+        else:
+            df = df.groupby([new_col]).sum().reset_index()
         return df
 
     def add_population_column(self, data, geocode_type, geocode_col=None):

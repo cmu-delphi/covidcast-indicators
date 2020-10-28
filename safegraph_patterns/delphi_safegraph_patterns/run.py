@@ -39,7 +39,7 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-
+    """Run module for Safegraph patterns data."""
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]

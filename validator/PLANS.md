@@ -34,10 +34,11 @@
 ## Checks + features wishlist, and problems to think about:
 
 * Improve performance and reduce runtime
-  * General profiling
+  * Profiling (iterate)
   * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
   * Group `all_frames` by geo type and signal name instead of reading data in again via read_geo_signal_combo_files(). A MultiIndex dataframe may improve performance even more.
   * Pull all checking_date ranges from API at once and subset checking_date loop
+  * Parallelize?
 * Which, if any, *specific* geo_ids are missing (get unique geo ids from historical data or delphi_utils)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
@@ -57,9 +58,11 @@
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (different geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
-* Nicer formatting for error “report”. E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each
-* Easier suppression of many errors
-* Ensure validator runs on signals that require AWS credentials (in progress)
+* Nicer formatting for error “report”.
+  * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each
+* Easier suppression of many errors at once
+* Ensure validator runs on signals that require AWS credentials (iterate)
+* Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
 * If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
 * Potentially implement a check for erratic data sources that wrongly report all 0's (like the error with the Wisconsin data for the 10/26 forecasts)

@@ -12,6 +12,7 @@ from os.path import join
 
 import pandas as pd
 import numpy as np
+from delphi_utils.geomap import GeoMapper
 
 from .config import Config
 from .sensor import DoctorVisitsSensor
@@ -22,6 +23,7 @@ class GeoMaps:
 
     def __init__(self, geo_filepath):
         self.geo_filepath = geo_filepath
+        self.gmpr = GeoMapper()
 
     @staticmethod
     def convert_fips(x):
@@ -43,9 +45,12 @@ class GeoMaps:
             converters={"fips": GeoMaps.convert_fips},
         )
         msa_map.drop_duplicates(inplace=True)
-        data = data.merge(msa_map, how="left", left_on="PatCountyFIPS", right_on="fips")
-        data.dropna(inplace=True)
-        data.drop(columns=["fips", "PatCountyFIPS"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "msa",
+                                     from_col="PatCountyFIPS",
+                                     new_col="cbsa_id")
+        data.drop(columns="PatCountyFIPS", inplace=True)
         data = data.groupby(["ServiceDate", "cbsa_id"]).sum().reset_index()
 
         return data.groupby("cbsa_id"), "cbsa_id"

@@ -26,7 +26,7 @@ class TestGeoMap:
 
         out, name = GM.county_to_msa(DATA)
         assert name == "cbsa_id"
-        assert set(out.groups.keys()) == set([11500.0, 13820.0, 19300.0, 33860.0])
+        assert set(out.groups.keys()) == {"11500", "13820", "19300", "33860"}
 
     def test_county_to_state(self):
 

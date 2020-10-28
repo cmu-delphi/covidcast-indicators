@@ -1,12 +1,5 @@
-"""
-Handle signal names.
-
-Author: Vishakha
-Created: 2020-08-07
-"""
-
+"""Functions for understanding and creating signal names."""
 import covidcast
-
 
 def add_prefix(signal_names, wip_signal, prefix="wip_"):
     """Adds prefix to signal if there is a WIP signal
@@ -14,7 +7,7 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
     ----------
     signal_names: List[str]
         Names of signals to be exported
-    prefix : 'wip_'
+    prefix : "wip_"
         prefix for new/non public signals
     wip_signal : List[str] or bool
         a list of wip signals: [], OR
@@ -30,8 +23,8 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
         return [prefix + signal for signal in signal_names]
     if isinstance(wip_signal, list):
         make_wip = set(wip_signal)
-        return[
-            prefix + signal if signal in make_wip else signal
+        return [
+            (prefix if signal in make_wip else "") + signal
             for signal in signal_names
         ]
     if wip_signal in {False, ""}:
@@ -43,11 +36,11 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
     raise ValueError("Supply True | False or '' or [] | list()")
 
 
-def public_signal(signal_):
+def public_signal(signal):
     """Checks if the signal name is already public using COVIDcast
     Parameters
     ----------
-    signal_ : str
+    signal : str
         Name of the signal
     Returns
     -------
@@ -57,6 +50,6 @@ def public_signal(signal_):
     """
     epidata_df = covidcast.metadata()
     for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
+        if epidata_df["signal"][index] == signal:
             return True
     return False

@@ -1,16 +1,17 @@
-from os import listdir, remove
+"""Tests for running the quidel covidtest indicator."""
+from os import listdir
 from os.path import join
 
 import pandas as pd
 
-from delphi_utils import read_params
-from delphi_quidel_covidtest.run import run_module
+from delphi_utils import read_params, add_prefix
 from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
-from delphi_quidel_covidtest.handle_wip_sensor import add_prefix
 
 
 class TestRun:
+    """Tests for run_module()."""
     def test_output_files(self, run_as_module):
+        """Tests that the proper files are output."""
 
         # Test output exists
         csv_files = listdir("receiving")

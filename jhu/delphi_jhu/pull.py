@@ -75,7 +75,7 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     pop_df.rename(columns={'FIPS':'fips'}, inplace=True)
     pop_df['fips'] = pop_df['fips'].astype(int).\
         astype(str).str.zfill(5)
-    df = pd.merge(df, pop_df, on="fips", how='left')
+    df = df.merge(pop_df, on="fips", how='left')
 
     # Add a dummy first row here on day before first day
     # code below could be cleaned with groupby.diff

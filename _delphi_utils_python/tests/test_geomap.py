@@ -277,14 +277,12 @@ class TestGeoMapper:
 
     def test_add_population_column(self):
         gmpr = GeoMapper()
-        new_data = gmpr.add_population_column("fips", self.fips_data_3)
+        new_data = gmpr.add_population_column(self.fips_data_3, "fips")
         assert new_data["population"].sum() == 274963
-        new_data = gmpr.add_population_column("zip", self.zip_data)
+        new_data = gmpr.add_population_column(self.zip_data, "zip")
         assert new_data["population"].sum() == 274902
         with pytest.raises(ValueError):
-            new_data = gmpr.add_population_column("hrr", self.zip_data)
-        pop_df = gmpr.add_population_column("fips")
-        assert pop_df.shape == (3274, 2)
+            new_data = gmpr.add_population_column(self.zip_data, "hrr")
 
     def test_add_geocode(self):
         gmpr = GeoMapper()

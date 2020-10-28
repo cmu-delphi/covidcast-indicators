@@ -101,7 +101,7 @@ def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
     )
 
     # Merge in population, set population as NAN for fake fips
-    df = gmpr.add_population_column("fips", df)
+    df = gmpr.add_population_column(df, "fips")
 
     df = create_diffs_column(df)
 

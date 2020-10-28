@@ -71,11 +71,11 @@ class GeoMaps:
             converters={"fips": GeoMaps.convert_fips},
         )
         state_map.drop_duplicates(inplace=True)
-        data = data.merge(
-            state_map, how="left", left_on="PatCountyFIPS", right_on="fips"
-        )
-        data.dropna(inplace=True)
-        data.drop(columns=["PatCountyFIPS", "fips"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "state_id",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
         data = data.groupby(["ServiceDate", "state_id"]).sum().reset_index()
 
         return data.groupby("state_id"), "state_id"
@@ -109,15 +109,15 @@ class GeoMaps:
 
         hrr_map = hrr_map.melt(["fips"], var_name="hrr", value_name="wpop")
         hrr_map = hrr_map[hrr_map["wpop"] > 0]
-
-        data = data.merge(hrr_map, how="left", left_on="PatCountyFIPS", right_on="fips")
-        ## drops rows with no matching HRR, which should not be many
-        data.dropna(inplace=True)
-        data.drop(columns=["PatCountyFIPS", "fips"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "hrr",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
 
         ## do a weighted sum by the wpop column to get each HRR's contribution
         tmp = data.groupby(["ServiceDate", "hrr"])
-        wtsum = lambda g: g["wpop"].values @ g[Config.COUNT_COLS]
+        wtsum = lambda g: g["weight"].values @ g[Config.COUNT_COLS]
         data = tmp.apply(wtsum).reset_index()
 
         return data.groupby("hrr"), "hrr"

@@ -3,7 +3,6 @@
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
-from delphi_utils import GeoMapper
 
 def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
@@ -92,11 +91,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         )
 
     # Add population info
-    gmpr = GeoMapper()
     KEEP_COLUMNS.extend(["timestamp", "geo_id", "population"])
-    df.rename({"state":"state_name"}, axis=1, inplace=True)
-    df = gmpr.add_geocode(df, "state_name", "state_id")
-    df = gmpr.add_population_column(df, "state_id")
-    df.rename({"state_id":"geo_id"}, axis=1, inplace=True)
+    df = df.merge(map_df, on="state")[KEEP_COLUMNS]
     
-    return df[KEEP_COLUMNS]
+    return df

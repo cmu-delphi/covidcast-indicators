@@ -42,16 +42,12 @@ class TestGeoMap:
 
     def test_county_to_megacounty(self):
 
-        out, name = GM.county_to_megacounty(DATA, 10, 10)
+        out, name = GM.county_to_megacounty(DATA, 100000, 10)
         assert name == "PatCountyFIPS"
         assert set(out.groups.keys()) == {
                 "01001",
-                "01003",
                 "01005",
-                "01007",
                 "01009",
-                "01011",
-                "01013",
                 "01015",
-                "01017",
+                "01000"
         }

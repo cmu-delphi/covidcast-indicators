@@ -165,37 +165,11 @@ class GeoMaps:
             recent_visits_df, how="left", on=["ServiceDate", "PatCountyFIPS"]
         )
 
-        # mark date-fips points to exclude if we see less than threshold visits that day
-        data["ToExclude"] = data["RecentVisits"] < threshold_visits
-
-        # now to convert to megacounties
-        state_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "state_id"],
-            dtype={"state_id": str},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        state_map.drop_duplicates(inplace=True)
-        data = data.merge(
-            state_map, how="left", left_on="PatCountyFIPS", right_on="fips"
-        )
-        # drops rows with no matches, which should not be many
-        data.dropna(inplace=True)
-        data.drop(columns=["fips"], inplace=True)
-        data["StateFIPS"] = data["PatCountyFIPS"].apply(
-            lambda f: str((int(f) // 1000) * 1000).zfill(5)
-        )
-
-        megacounty_df = (
-            data[data["ToExclude"]]
-            .groupby(["ServiceDate", "StateFIPS"])
-            .sum()
-            .reset_index()
-        )
-        megacounty_df["ToExclude"] = False
-        megacounty_df.rename(columns={"StateFIPS": "PatCountyFIPS"}, inplace=True)
-
-        result = pd.concat([data, megacounty_df])
-        result.drop(columns=["StateFIPS", "state_id"], inplace=True)
-
-        return result.groupby("PatCountyFIPS"), "PatCountyFIPS"
+        data = self.gmpr.fips_to_megacounty(data,
+                                            threshold_visits,
+                                            threshold_len,
+                                            fips_col="PatCountyFIPS",
+                                            thr_col="RecentVisits",
+                                            date_col="ServiceDate")
+        data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
+        return data.groupby("PatCountyFIPS"), "PatCountyFIPS"

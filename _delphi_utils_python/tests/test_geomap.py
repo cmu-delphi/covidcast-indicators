@@ -278,11 +278,13 @@ class TestGeoMapper:
     def test_add_population_column(self):
         gmpr = GeoMapper()
         new_data = gmpr.add_population_column(self.fips_data_3, "fips")
-        assert new_data["population"].sum() == 274963
+        assert new_data.shape == (5, 5)
         new_data = gmpr.add_population_column(self.zip_data, "zip")
-        assert new_data["population"].sum() == 274902
+        assert new_data.shape == (6, 5)
         with pytest.raises(ValueError):
             new_data = gmpr.add_population_column(self.zip_data, "hrr")
+        new_data = gmpr.add_population_column(self.fips_data_5, "fips")
+        assert new_data.shape == (4, 5)
 
     def test_add_geocode(self):
         gmpr = GeoMapper()
@@ -382,13 +384,20 @@ class TestGeoMapper:
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
         assert new_data2["hhs_region_number"].unique().size == 2
 
+        # state_name -> state_id
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "state_name")
+        new_data2 = gmpr.add_geocode(new_data, "state_name", "state_id")
+        assert new_data2.shape == (4, 5)
+        new_data2 = gmpr.replace_geocode(new_data, "state_name", "state_id", new_col="abbr")
+        assert "abbr" in new_data2.columns
+
         # fips -> nation
-        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "nation")
+        new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "nation", new_col="NATION")
         assert new_data.equals(
             pd.DataFrame().from_dict(
                 {
                     "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
-                    "nation": {0: "us"},
+                    "NATION": {0: "us"},
                     "count": {0: 10024.0},
                     "total": {0: 100006.0},
                 }
@@ -411,6 +420,23 @@ class TestGeoMapper:
             )
         )
 
+        # hrr -> nation
+        with pytest.raises(ValueError):    
+            new_data = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
+            new_data2 = gmpr.replace_geocode(new_data, "hrr", "nation")
+
         # fips -> hrr (dropna=True/False check)
         assert not gmpr.add_geocode(self.fips_data_3, "fips", "hrr").isna().any().any()
         assert gmpr.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()
+
+        # fips -> zip (date_col=None chech)
+        new_data = gmpr.replace_geocode(self.fips_data_5.drop(columns=["date"]), "fips", "hrr", date_col=None)
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    'hrr': {0: '1', 1: '183', 2: '184', 3: '382', 4: '7'},
+                    'count': {0: 1.772347174163783, 1: 7157.392403522299, 2: 2863.607596477701, 3: 1.0, 4: 0.22765282583621685},
+                    'total': {0: 3.544694348327566, 1: 71424.64801363471, 2: 28576.35198636529, 3: 1.0, 4: 0.4553056516724337}
+                }
+            )
+        )

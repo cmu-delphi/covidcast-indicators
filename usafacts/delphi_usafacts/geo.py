@@ -188,7 +188,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         map_df = map_df.loc[~pd.isnull(map_df[colname])].copy()
         map_df["geo_id"] = map_df[colname].astype(int)
         df["fips"] = df["fips"].astype(int)
-        merged = pd.merge(df, map_df, on="fips")
+        merged = df.merge(map_df, on="fips")
         merged["cumulative_counts"] = merged["cumulative_counts"] * merged["pop_prop"]
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
         merged["population"] = merged["population"] * merged["pop_prop"]

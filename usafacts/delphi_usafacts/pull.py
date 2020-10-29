@@ -74,7 +74,7 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
 
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Population for unassigned cases/deaths is NAN
-    df = pd.merge(df, pop_df, on="FIPS", how="left")
+    df = df.merge(pop_df, on="FIPS", how="left")
 
     # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
     unassigned_index = (df['FIPS'] == 0)

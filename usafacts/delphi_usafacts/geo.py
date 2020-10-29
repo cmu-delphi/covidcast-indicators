@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Functions for converting geocodes."""
 import pandas as pd
 
 
@@ -78,6 +79,11 @@ REPLACE_FIPS = [
 
 FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
+# Valid geographical resolutions output by this indicator.
+VALID_GEO_RES = ("county", "state", "msa", "hrr")
+# Sensors that report proportions.  For geo resolutions with unallocated cases
+# or deaths, we avoid reporting these sensors.
+PROP_SENSORS = ("incidence", "cumulative_prop")
 
 def fips_to_state(fips: str) -> str:
     """Wrapper that handles exceptions to the FIPS scheme in the USAFacts data.
@@ -121,9 +127,9 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     pd.DataFrame
         Dataframe with same schema as df, with the counts disbursed.
     """
-    COLS = ["new_counts", "cumulative_counts"]
+    cols = ["new_counts", "cumulative_counts"]
     df = df.copy().sort_values(["fips", "timestamp"])
-    for col in COLS:
+    for col in cols:
         # Get values from the aggregated county:
         vals = df.loc[df["fips"] == pooled_fips, col].values / len(fips_list)
         for fips in fips_list:
@@ -155,9 +161,6 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     pd.DataFrame
         Columns: geo_id, timestamp, ...
     """
-    VALID_GEO_RES = ("county", "state", "msa", "hrr")
-    #It is not clear how to calculate the proportion for unallocated cases/deaths
-    PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 

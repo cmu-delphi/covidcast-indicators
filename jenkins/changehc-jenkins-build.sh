@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# ChangeHC: Jenkins build
+# Change HC: Jenkins build
 #
 
 set -eo pipefail

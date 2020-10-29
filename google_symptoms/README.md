@@ -2,8 +2,8 @@
 
 We import the normalized symptom search term popularity data from the Google 
 Research's Open COVID-19 Data project and export the county-level and state-level 
-data as-is.  For detailed information see the files `DETAILS.md` contained
-in this directory.
+data as-is.  We also aggregate the data to the MSA and HRR levels. For detailed 
+information see the files `DETAILS.md` contained in this directory.
 
 ## Running the Indicator
 

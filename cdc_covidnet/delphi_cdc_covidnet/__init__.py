@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 from . import run
 from . import api_config
-from . import geo_maps
 from . import update_sensor
 from . import covidnet
 

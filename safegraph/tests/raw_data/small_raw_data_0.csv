@@ -1,0 +1,4 @@
+origin_census_block_group,date_range_start,date_range_end,device_count,completely_home_device_count,median_home_dwell_time,part_time_work_behavior_devices,full_time_work_behavior_devices
+10539707003,2020-06-12T00:00:00-05:00,2020-06-13T00:00:00-05:00,100,15,6,35,45
+131510702031,2020-06-12T00:00:00-05:00,2020-06-13T00:00:00-05:00,100,5,3,5,5
+131510702031,2020-06-12T00:00:00-05:00,2020-06-13T00:00:00-05:00,100,6,4,6,6

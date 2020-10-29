@@ -12,7 +12,6 @@ import pytest
 
 # first party
 from delphi_claims_hosp.config import Config, GeoConstants
-from delphi_claims_hosp.load_data import *
 from delphi_claims_hosp.update_indicator import ClaimsHospIndicatorUpdater
 
 CONFIG = Config()

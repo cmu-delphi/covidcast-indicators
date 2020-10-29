@@ -217,6 +217,12 @@ def create_jhu_uid_fips_crosswalk():
             {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
         ]
     )
+    cruise_ships = pd.DataFrame(
+        [
+            {"jhu_uid": "84088888", "fips": "88888", "weight": 1.0},
+            {"jhu_uid": "84099999", "fips": "99999", "weight": 1.0},
+        ]
+    )
 
     jhu_df = (
         pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str})
@@ -234,7 +240,7 @@ def create_jhu_uid_fips_crosswalk():
     # Drop the JHU UIDs that were hand-modified
     dup_ind = jhu_df["jhu_uid"].isin(
         pd.concat(
-            [hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned]
+            [hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned, cruise_ships]
         )["jhu_uid"].values
     )
     jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
@@ -391,6 +397,7 @@ def create_fips_population_table():
     df_pr = df_pr.groupby("fips").sum().reset_index()
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
     census_pop_pr = pd.concat([census_pop, df_pr])
+
     census_pop_pr.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
 
 

@@ -35,6 +35,12 @@ def geo_map(df: pd.DataFrame, geo_res: str):
     if geo_res == "county":
         df.rename(columns={'fips': 'geo_id'}, inplace=True)
     elif geo_res == "state":
+        df = df.set_index("fips")
+        # Zero out the state FIPS population to avoid double counting.
+        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1,73)}
+        subset_state_fips_codes = set(df.index.values) & state_fips_codes
+        df.loc[subset_state_fips_codes, "population"] = 0
+        df = df.reset_index()
         df = gmpr.replace_geocode(df, "fips", "state_id", new_col="geo_id", date_col="timestamp")
     else:
         df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")

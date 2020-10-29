@@ -25,6 +25,7 @@ from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
 
 
 def run_module():
+    """Run the quidel_covidtest indicator."""
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]

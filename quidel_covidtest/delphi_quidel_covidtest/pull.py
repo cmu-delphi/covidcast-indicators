@@ -193,9 +193,9 @@ def pull_quidel_covidtest(params):
     Parameters:
         params: dict
             including all the information read from params.json
-        END_FROM_TODAY_MINUS: int
+        end_from_today_minus: int
             report data until - X days
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             number of dates to report
 
     Returns:
@@ -238,11 +238,11 @@ def pull_quidel_covidtest(params):
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,
-                          END_FROM_TODAY_MINUS):
+                          end_from_today_minus):
     """
     Update the export_end_date according to the data received
     By default, set the export end date to be the last pulling date - 5 days
-    (END_FROM_TODAY_MINUS = 5).
+    (end_from_today_minus = 5).
     Otherwise, use the required date if it is earlier than the default one.
 
     Parameter:
@@ -250,14 +250,14 @@ def check_export_end_date(input_export_end_date, _end_date,
             read from params
         _end_date: datetime.datetime
             updated according the data received
-        END_FROM_TODAY_MINUS: int
+        end_from_today_minus: int
             report data until - X days
 
     Returns:
         datetime.datetime
             export data from which date
     """
-    export_end_date = _end_date - timedelta(days=END_FROM_TODAY_MINUS)
+    export_end_date = _end_date - timedelta(days=end_from_today_minus)
     if input_export_end_date != "":
         input_export_end_date = datetime.strptime(input_export_end_date, '%Y-%m-%d')
         if input_export_end_date < export_end_date:
@@ -265,17 +265,17 @@ def check_export_end_date(input_export_end_date, _end_date,
     return export_end_date
 
 def check_export_start_date(export_start_date, export_end_date,
-                            EXPORT_DAY_RANGE):
+                            export_day_range):
     """
     Update the export_start_date according to the export_end_date so that it
-    could be export_end_date - EXPORT_DAY_RANGE
+    could be export_end_date - export_day_range
 
     Parameters:
         export_start_date: str
             Read from params
         export_end_date: datetime.datetime
             Calculated according to the data received
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             Number of days to report
 
     Returns:
@@ -287,8 +287,8 @@ def check_export_start_date(export_start_date, export_end_date,
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
      # Only export data from -45 days to -5 days
-    if (export_end_date - export_start_date).days > EXPORT_DAY_RANGE:
-        export_start_date = export_end_date - timedelta(days=EXPORT_DAY_RANGE)
+    if (export_end_date - export_start_date).days > export_day_range:
+        export_start_date = export_end_date - timedelta(days=export_day_range)
 
     if export_start_date < datetime(2020, 5, 26):
         return datetime(2020, 5, 26)

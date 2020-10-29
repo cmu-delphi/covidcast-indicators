@@ -5,6 +5,7 @@ Authors: Dmitry Shemetov, Addison Hu, Maria Jahja
 import pytest
 
 import numpy as np
+import pandas as pd
 from delphi_utils import Smoother
 
 
@@ -178,3 +179,47 @@ class TestSmoothers:
                             boundary_method="identity", window_length=10)
         smoothed_signal = smoother.savgol_impute(signal)
         assert np.allclose(smoothed_signal, signal)
+
+    def test_pandas_series_input(self):
+        # The savgol method should match the linear regression method on the first
+        # window_length-many values of the signal, if the savgol_weighting is set to true,
+        # and the polynomial fit degree is set to 1. Beyond that, there will be very small
+        # differences between the signals (due to "left_gauss_linear" not having a window_length
+        # cutoff).
+        window_length = 50
+        signal = pd.Series(np.arange(window_length) + np.random.randn(window_length))
+        smoother = Smoother(smoother_name="left_gauss_linear")
+        smoothed_signal1 = smoother.smooth(signal)
+        smoother = Smoother(
+            smoother_name="savgol", window_length=window_length, poly_fit_degree=1,
+        )
+        smoothed_signal2 = smoother.smooth(signal)
+
+        assert np.allclose(smoothed_signal1, smoothed_signal2)
+
+        window_length = 50
+        signal = pd.Series(np.arange(window_length) + np.random.randn(window_length))
+        smoother = Smoother(smoother_name="left_gauss_linear")
+        smoothed_signal1 = signal.transform(smoother.smooth)
+        smoother = Smoother(
+            smoother_name="savgol", window_length=window_length, poly_fit_degree=1,
+        )
+        smoothed_signal2 = signal.transform(smoother.smooth)
+
+        assert np.allclose(smoothed_signal1, smoothed_signal2)
+
+        # The raw and smoothed lengths should match
+        signal = pd.Series(np.ones(30))
+        smoother = Smoother(smoother_name="moving_average")
+        smoothed_signal = signal.transform(smoother.smooth)
+        assert len(signal) == len(smoothed_signal)
+
+        # The raw and smoothed arrays should be identical on constant data
+        # modulo the nans
+        signal = pd.Series(np.ones(30))
+        window_length = 10
+        smoother = Smoother(smoother_name="moving_average", window_length=window_length)
+        smoothed_signal = signal.transform(smoother.smooth)
+        assert np.allclose(
+            signal[window_length - 1 :], smoothed_signal[window_length - 1 :]
+        )

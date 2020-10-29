@@ -13,6 +13,7 @@ docstrings for details.
 import warnings
 
 import numpy as np
+import pandas as pd
 
 
 class Smoother:
@@ -20,9 +21,9 @@ class Smoother:
     This is the smoothing utility class. This class holds the parameter settings for its smoother
     methods and provides reasonable defaults. Basic usage can be found in the examples below.
 
-    The smoother function takes numpy arrays as input, expecting the values to come from a
-    regularly-spaced time grid. NANs are ok, as long as the array does not begin with a NAN. The
-    rest of the NANs will be handled via imputation by default, though this can be turned off.
+    The smoother function takes numpy arrays or pandas Series as input, expecting the values to be
+    on a regularly-spaced time grid. NANs are ok, as long as the array does not begin with a NAN.
+    The rest of the NANs will be handled via imputation by default, though this can be turned off.
 
     Parameters
     ----------
@@ -64,8 +65,9 @@ class Smoother:
 
     Methods
     ----------
-    smooth: np.ndarray
-        Takes a 1D signal and returns a smoothed version. Both arrays have the same length.
+    smooth: np.ndarray or pd.Series
+        Takes a 1D signal and returns a smoothed version. The input and the output have the same length
+        and type.
 
     Example Usage
     -------------
@@ -75,7 +77,7 @@ class Smoother:
 
     Example 2. Smooth a dataframe column.
     >>> smoother = Smoother(smoother_name='savgol')
-    >>> df[col] = pd.Series(smoother.smooth(df[col].to_numpy()))
+    >>> df[col] = df[col].transform(smoother.smooth)
 
     Example 3. Apply a rolling weighted average smoother, with 95% weight on the recent 2 weeks and
                a sharp cutoff after 4 weeks.
@@ -133,16 +135,20 @@ class Smoother:
 
         Parameters
         ----------
-        signal: np.ndarray
+        signal: np.ndarray or pd.Series
             A 1D signal to be smoothed.
 
-        signal_smoothed: np.ndarray
-            A smoothed 1D signal.
+        signal_smoothed: np.ndarray or pd.Series
+            A smoothed 1D signal. Returns an array of the same type and length as
+            the input.
         """
         if len(signal) < self.window_length:
             raise ValueError(
                 "The window_length must be smaller than the length of the signal."
             )
+
+        is_pandas_series = isinstance(signal, pd.Series)
+        signal = signal.to_numpy() if is_pandas_series else signal
 
         signal = self.impute(signal)
 
@@ -155,7 +161,7 @@ class Smoother:
         elif self.smoother_name == "identity":
             signal_smoothed = signal
 
-        return signal_smoothed
+        return signal_smoothed if not is_pandas_series else pd.Series(signal_smoothed)
 
     def impute(self, signal):
         """
@@ -281,7 +287,7 @@ class Smoother:
         """
         Solves for the Savitzky-Golay coefficients. The coefficients c_i
         give a filter so that
-            y = \sum_{i=-{n_l}}^{n_r} c_i x_i
+            y = sum_{i=-{n_l}}^{n_r} c_i x_i
         is the value at 0 (thus the constant term) of the polynomial fit
         through the points {x_i}. The coefficients are c_i are calculated as
             c_i =  ((A.T @ A)^(-1) @ (A.T @ e_i))_0

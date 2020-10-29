@@ -11,8 +11,10 @@ from .smooth import (
 METRICS = ["Anosmia", "Ageusia"]
 SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [
-    "county",
-    "state",
+        "state",
+        "county",
+        "msa",
+        "hrr"
 ]
 
 seven_day_moving_average = partial(kday_moving_average, k=7)
@@ -77,3 +79,5 @@ STATE_TO_ABBREV = {'Alabama':'al',
                    'West_Virginia': 'wv',
                    'Wisconsin': 'wi',
                    'Wyoming': 'wy'}
+
+DC_FIPS = "11001"

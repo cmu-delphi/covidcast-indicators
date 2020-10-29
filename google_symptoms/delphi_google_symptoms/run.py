@@ -11,6 +11,7 @@ import numpy as np
 from delphi_utils import read_params, create_export_csv
 
 from .pull import pull_gs_data
+from .geo import geo_map
 from .constants import METRICS, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
 
 
@@ -21,16 +22,22 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
 
+    # Pull GS data
+    dfs = pull_gs_data(base_url)    
     for geo_res in GEO_RESOLUTIONS:
-        df_pull = pull_gs_data(base_url, METRICS, geo_res)
-        for metric, smoother in product(METRICS, SMOOTHERS):
+        if geo_res == "state":
+            df_pull = dfs["state"]
+        else:
+            df_pull = dfs["county"]
+            df_pull = geo_map(df_pull, geo_res)
+        for metric, smoother in product(
+                METRICS+["combined_symptoms"], SMOOTHERS):
             print(geo_res, metric, smoother)
-#            df = df_pull.copy()
-#            if smoother == "smoothed":
-#                df = df.fillna(0)  
             df = df_pull.set_index(["timestamp", "geo_id"])
-            df["val"] = df["symptom:"+metric].groupby(level=1
-                         ).transform(SMOOTHERS_MAP[smoother][0])
+            if smoother == "smoothed":
+                df[metric] = df[metric].fillna(0)
+            df["val"] = df[metric].groupby(level=1
+                                 ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing
@@ -43,5 +50,4 @@ def run_module():
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
-                sensor=sensor_name,
-            )
+                sensor=sensor_name)

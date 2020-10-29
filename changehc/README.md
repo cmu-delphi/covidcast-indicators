@@ -75,3 +75,4 @@ should not include critical sub-routines.
 - constants.py: constants for signal names
 - weekday.py: Weekday: Adjusts for weekday effect
 
+- test Jenkins pipeline

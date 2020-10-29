@@ -1,8 +1,8 @@
 import pytest
 
+import pandas as pd
 
-from delphi_google_symptoms.pull import pull_gs_data
-from delphi_google_symptoms.constants import METRICS
+from delphi_google_symptoms.pull import pull_gs_data, preprocess
 
 base_url_good = "./test_data{sub_url}small_{state}symptoms_dataset.csv"
 
@@ -13,25 +13,37 @@ base_url_bad = {
 
 
 class TestPullGoogleSymptoms:
-    def test_state_good_file(self):
-        df = pull_gs_data(base_url_good, METRICS, "state")
-        assert (
-            df.columns.values
-            == ["geo_id", "timestamp", "symptom:Anosmia", "symptom:Ageusia"]
-        ).all()
+    def test_good_file(self):
+        dfs = pull_gs_data(base_url_good)
+        
+        for level in set(["county", "state"]):
+            df = dfs[level]
+            assert (
+                df.columns.values
+                == ["geo_id", "timestamp", "Anosmia", "Ageusia", "combined_symptoms"]
+            ).all()
+    
+            # combined_symptoms is nan when both Anosmia and Ageusia are nan
+            assert sum(~df.loc[
+                                  (df["Anosmia"].isnull())
+                                  & (df["Ageusia"].isnull())
+                               , "combined_symptoms"].isnull()) == 0
+            # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
+            assert sum(df.loc[
+                                  (~df["Anosmia"].isnull())
+                                  & (df["Ageusia"].isnull())
+                              , "combined_symptoms"].isnull()) == 0
+            assert sum(df.loc[
+                                  (df["Anosmia"].isnull())
+                                  & (~df["Ageusia"].isnull())
+                              , "combined_symptoms"].isnull()) == 0
 
-    def test_county_good_file(self):
-        df = pull_gs_data(base_url_good, METRICS, "county")
-
-        assert (
-            df.columns.values
-            == ["geo_id", "timestamp", "symptom:Anosmia", "symptom:Ageusia"]
-        ).all()
-
-    def test_missing_days(self):        
-        with pytest.raises(ValueError):
-            pull_gs_data(base_url_bad["missing_cols"], METRICS, "state")
+    def test_missing_cols(self):        
+        df = pd.read_csv(base_url_bad["missing_cols"])       
+        with pytest.raises(KeyError):
+            preprocess(df, "state")
 
     def test_invalid_fips(self):
+        df = pd.read_csv(base_url_bad["invalid_fips"])
         with pytest.raises(AssertionError):
-            pull_gs_data(base_url_bad["invalid_fips"], METRICS, "county")
+            preprocess(df, "county")

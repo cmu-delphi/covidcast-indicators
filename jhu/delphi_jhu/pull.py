@@ -14,7 +14,7 @@ def download_data(base_url: str, metric: str) -> pd.DataFrame:
     df = pd.read_csv(base_url.format(metric=metric))
     # Keep the UID and the time series columns only
     # The regex filters for columns with the date format MM-DD-YY or M-D-YY
-    df = df.filter(regex="\d{1,2}\/\d{1,2}\/\d{2}|UID").melt(
+    df = df.filter(regex=r"\d{1,2}\/\d{1,2}\/\d{2}|UID").melt(
         id_vars=["UID"], var_name="timestamp", value_name="cumulative_counts"
     )
     df["timestamp"] = pd.to_datetime(df["timestamp"])

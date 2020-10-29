@@ -7,10 +7,8 @@ when the module is run with `python -m MODULE_NAME`.
 from datetime import datetime
 from itertools import product
 from functools import partial
-from os.path import join
 
 import numpy as np
-import pandas as pd
 from delphi_utils import (
     read_params,
     create_export_csv,

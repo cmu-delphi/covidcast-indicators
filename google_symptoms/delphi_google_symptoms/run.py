@@ -34,8 +34,6 @@ def run_module():
                 METRICS+["combined_symptoms"], SMOOTHERS):
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
-            if smoother == "smoothed":
-                df[metric] = df[metric].fillna(0)
             df["val"] = df[metric].groupby(level=1
                                  ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan

@@ -60,7 +60,7 @@ def geo_map(df, geo_res):
         return df
     
     map_df = generate_transition_matrix(geo_res)
-    dfList = []
+    converted_df = pd.DataFrame(columns = df.columns)
     for _date in df["timestamp"].unique():
         newdf = pd.DataFrame({
                               "timestamp": _date,
@@ -77,6 +77,6 @@ def geo_map(df, geo_res):
         newdf["geo_id"] = list(map_df.keys())[1:]
         mask = (newdf[METRICS].sum(axis=1) == 0)
         newdf.loc[mask, METRICS + ["combined_symptoms"]] = np.nan
-        dfList.append(newdf)
-    return pd.concat(dfList)
+        converted_df = converted_df.append(newdf)
+    return converted_df
     

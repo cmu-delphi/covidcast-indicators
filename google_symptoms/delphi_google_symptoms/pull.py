@@ -123,15 +123,14 @@ def pull_gs_data(base_url):
     dfs["state"] = preprocess(df, "state")
 
     # For county level data
-    dfList = []
+    dfs["county"] = pd.DataFrame(columns = dfs["state"].columns)
     for state in list(STATE_TO_ABBREV.keys()):
         sub_url = "/subregions/" + "%20".join(state.split("_")) + "/"
-        dfList.append(pd.read_csv(base_url.format(sub_url=sub_url,
-                                                  state=state+"_"),
-                                  parse_dates = ["date"]))
-    df = pd.concat(dfList)
-    df["geo_id"] = df["open_covid_region_code"].apply(get_geo_id)
-    dfs["county"] = preprocess(df, "county")
+        df = pd.read_csv(base_url.format(sub_url=sub_url,
+                                         state=state+"_"),
+                         parse_dates = ["date"])
+        df["geo_id"] = df["open_covid_region_code"].apply(get_geo_id)
+        dfs["county"] = dfs["county"].append(preprocess(df, "county"))
 
     # Add District of Columbia County
     try:

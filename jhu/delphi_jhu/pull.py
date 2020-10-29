@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Functions to pull data from JHU website."""
 
 import re
 import pandas as pd

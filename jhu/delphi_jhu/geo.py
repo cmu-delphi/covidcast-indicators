@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+"""Functions for translating between geocodes."""
 import pandas as pd
 from delphi_utils import GeoMapper
 
+VALID_GEO_RES = ("county", "state", "msa", "hrr")
 INCIDENCE_BASE = 100000
 
 def geo_map(df: pd.DataFrame, geo_res: str):
@@ -27,7 +29,6 @@ def geo_map(df: pd.DataFrame, geo_res: str):
         Columns: geo_id, timestamp, ...
     """
     df = df.copy()
-    VALID_GEO_RES = ("county", "state", "msa", "hrr")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 

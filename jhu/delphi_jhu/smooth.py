@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+'''Functions to smooth signals.'''
+
 import numpy as np
 
 def identity(x):

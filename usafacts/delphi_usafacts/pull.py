@@ -2,6 +2,7 @@
 """Functions for pulling data from the USAFacts website."""
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper
 
 # Columns to drop the the data frame.
 DROP_COLUMNS = [
@@ -12,7 +13,7 @@ DROP_COLUMNS = [
 ]
 
 
-def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.DataFrame:
     """Pulls the latest USA Facts data, and conforms it into a dataset
 
     The output dataset has:
@@ -44,8 +45,8 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
-    pop_df: pd.DataFrame
-        Read from static file "fips_population.csv".
+    geo_mapper: GeoMapper
+        GeoMapper object with population info.
 
     Returns
     -------
@@ -82,6 +83,19 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
 
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
+
+    # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
+    # a corresponding population entry in the GeoMapper so it will be dropped
+    # in the call to `add_population_column()`.  We pull it out here to
+    # reinsert it after the population data is added.
+    nyc_dummy_row = df[df["fips"] == "00001"]
+    assert len(nyc_dummy_row) == 1
+
+    # Merge in population LOWERCASE, consistent across confirmed and deaths
+    # Population for unassigned cases/deaths is NAN
+    df = geo_mapper.add_population_column(df, "fips")
+    df = df.append(nyc_dummy_row, ignore_index=True)
+
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
         df.drop(DROP_COLUMNS, axis=1, inplace=True)

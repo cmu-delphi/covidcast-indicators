@@ -37,7 +37,7 @@
   * Profiling (iterate)
   * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
   * Group `all_frames` by geo type and signal name instead of reading data in again via read_geo_signal_combo_files(). A MultiIndex dataframe may improve performance even more.
-  * Reduce number of/combine API calls. Pull all checking_date ranges from API at once and subset checking_date loop
+  * Reduce number of API calls by combining.
   * Parallelize?
 * Which, if any, *specific* geo_ids are missing (get unique geo ids from historical data or delphi_utils)
 * Check for duplicate rows

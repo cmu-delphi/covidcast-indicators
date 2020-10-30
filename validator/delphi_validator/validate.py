@@ -772,9 +772,24 @@ class Validator():
                     "File with geo_type-signal combo does not exist!"))
                 continue
 
+            min_date = geo_sig_df["time_value"].min()
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
+
+            # Pull relevant reference data from API for all dates.
+            try:
+                geo_sig_api_df = fetch_api_reference(
+                    self.data_source,
+                    min_date - min(semirecent_lookbehind,
+                                   self.max_check_lookbehind),
+                    max_date, geo_type, signal_type)
+            except APIDataFetchError as e:
+                self.increment_total_checks()
+                self.raised_errors.append(ValidationError(
+                    ("api_data_fetch_error", geo_type, signal_type), None, e))
+
+                continue
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -801,23 +816,9 @@ class Validator():
                     min(semirecent_lookbehind, self.max_check_lookbehind)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
 
-                try:
-                    reference_api_df = fetch_api_reference(
-                        self.data_source, reference_start_date, reference_end_date,
-                        geo_type, signal_type)
-                except APIDataFetchError as e:
-                    self.increment_total_checks()
-                    self.raised_errors.append(ValidationError(
-                        ("api_data_fetch_error",
-                         checking_date, geo_type, signal_type), None, e))
-
-                    self.increment_total_checks()
-                    self.raised_errors.append(ValidationError(
-                        ("missing_reference_data",
-                         checking_date, geo_type, signal_type), None,
-                        "reference data is unavailable; comparative checks could not be performed"))
-
-                    continue
+                # Subset API data to relevant range of dates.
+                reference_api_df = geo_sig_api_df.query(
+                    "time_value <= @reference_start_date & time_value >= @reference_end_date")
 
                 if reference_api_df.empty:
                     self.increment_total_checks()

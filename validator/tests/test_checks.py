@@ -152,14 +152,14 @@ class TestCheckBadGeoId:
 
     def test_empty_df(self):
         validator = Validator(self.params)
-        empty_df = pd.DataFrame(columns=["geo_id"])
+        empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
         validator.check_bad_geo_id(empty_df, "name", "county")
 
         assert len(validator.raised_errors) == 0
 
     def test_invalid_geo_type(self):
         validator = Validator(self.params)
-        empty_df = pd.DataFrame(columns=["geo_id"])
+        empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
         validator.check_bad_geo_id(empty_df, "name", "hello")
 
         assert len(validator.raised_errors) == 1
@@ -177,7 +177,7 @@ class TestCheckBadGeoId:
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
-        assert len(validator.raised_errors[0].expression) == 4
+        assert len(validator.raised_errors[0].expression) == 2
         assert "54321" not in validator.raised_errors[0].expression
 
     def test_invalid_geo_id_msa(self):
@@ -188,7 +188,7 @@ class TestCheckBadGeoId:
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
-        assert len(validator.raised_errors[0].expression) == 4
+        assert len(validator.raised_errors[0].expression) == 2
         assert "54321" not in validator.raised_errors[0].expression
 
     def test_invalid_geo_id_hrr(self):

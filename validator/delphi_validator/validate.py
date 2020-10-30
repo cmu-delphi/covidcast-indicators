@@ -260,7 +260,8 @@ class Validator():
             Check if any geo_ids in df_to_test aren't formatted correctly, according
             to the geo type dictionary negated_regex_dict.
             """
-            numeric_geo_types = {"msa", "county", "hrr"}
+            numeric_geo_types = {"msa", "county", "hrr", "dma"}
+            fill_len = {"msa": 5, "county": 5, "dma": 3}
 
             if geo_type in numeric_geo_types:
                 # Check if geo_ids were stored as floats (contain decimal point) and
@@ -276,6 +277,12 @@ class Validator():
                     self.raised_warnings.append(ValidationError(
                         ("check_geo_id_type", nameformat),
                         None, "geo_ids saved as floats; strings preferred"))
+
+            if geo_type in fill_len.keys():
+                # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
+                # caused by FIPS codes saved as numeric.
+                df_to_test["geo_id"] = [geo.zfill(fill_len["geo_type"])
+                                        for geo in df_to_test["geo_id"]]
 
             expected_geos = [geo[0] for geo in df_to_test['geo_id'].str.findall(
                 geo_regex) if len(geo) > 0]

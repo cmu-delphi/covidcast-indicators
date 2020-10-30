@@ -281,7 +281,7 @@ class Validator():
             if geo_type in fill_len.keys():
                 # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
                 # caused by FIPS codes saved as numeric.
-                df_to_test["geo_id"] = [geo.zfill(fill_len["geo_type"])
+                df_to_test["geo_id"] = [geo.zfill(fill_len[geo_type])
                                         for geo in df_to_test["geo_id"]]
 
             expected_geos = [geo[0] for geo in df_to_test['geo_id'].str.findall(

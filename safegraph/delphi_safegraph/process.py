@@ -4,7 +4,7 @@ import os
 from typing import List
 import numpy as np
 import pandas as pd
-import covidcast
+from delphi_utils.signal import add_prefix
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
 from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
@@ -14,6 +14,7 @@ MOD = 10000000
 
 # Base file name for raw data CSVs.
 CSV_NAME = 'social-distancing.csv.gz'
+
 
 def validate(df):
     """Confirms that a data frame has only one date."""
@@ -51,60 +52,6 @@ def files_in_past_week(current_filename) -> List[str]:
 def add_suffix(signals, suffix):
     """Adds `suffix` to every element of `signals`."""
     return [s + suffix for s in signals]
-
-
-def add_prefix(signal_names, wip_signal, prefix: str):
-    """Adds prefix to signal if there is a WIP signal
-    Parameters
-    ----------
-    signal_names: List[str]
-        Names of signals to be exported
-    prefix : 'wip_'
-        prefix for new/non public signals
-    wip_signal : List[str] or bool
-        a list of wip signals: [], OR
-        all signals in the registry: True OR
-        only signals that have never been published: False
-    Returns
-    -------
-    List of signal names
-        wip/non wip signals for further computation
-    """
-
-    if wip_signal is True:
-        return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal, list):
-        make_wip = set(wip_signal)
-        return [
-            (prefix if signal in make_wip else "") + signal
-            for signal in signal_names
-        ]
-    if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
-    raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
-    Parameters
-    ----------
-    signal_ : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
-            return True
-    return False
 
 
 def construct_signals(cbg_df, signal_names):
@@ -235,13 +182,13 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            df_export.to_csv(f'{export_dir}/{date}_{geo_res}_{signal}.csv',
+            date_str = date.strftime('%Y%m%d')
+            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
                              na_rep='NA',
                              index=False, )
 
 
-def process(current_filename: str,
-            previous_filenames: List[str],
+def process(filenames: List[str],
             signal_names: List[str],
             wip_signal,
             geo_resolutions: List[str],
@@ -250,11 +197,11 @@ def process(current_filename: str,
     as averaged over the previous week.
     Parameters
     ----------
-    current_filename: str
-        path to file holding the target date's data.
-    previous_filenames: List[str]
-        paths to files holding data from each day in the week preceding the
-        target date.
+    current_filename: List[str]
+        paths to files holding data.
+        The first entry of the list should correspond to the target date while
+        the remaining entries should correspond to the dates from each day in
+        the week preceding the target date.
     signal_names: List[str]
         signal names to be processed for a single date.
         A second version of each such signal named {SIGNAL}_7d_avg will be
@@ -274,8 +221,8 @@ def process(current_filename: str,
     one for the data averaged over the previous week to
     {export_dir}/{date}_{resolution}_{signal}_7d_avg.csv.
     """
-    past_week = [pd.read_csv(current_filename)]
-    for fname in previous_filenames:
+    past_week = []
+    for fname in filenames:
         if os.path.exists(fname):
             past_week.append(pd.read_csv(fname))
 
@@ -286,8 +233,8 @@ def process(current_filename: str,
                    export_dir)
     # ...then as part of the whole window.
     process_window(past_week,
-                  add_prefix(add_suffix(signal_names, '_7d_avg'),
-                             wip_signal,
-                             'wip_'),
-                  geo_resolutions,
-                  export_dir)
+                   add_prefix(add_suffix(signal_names, '_7d_avg'),
+                              wip_signal,
+                              'wip_'),
+                   geo_resolutions,
+                   export_dir)

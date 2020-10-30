@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Functions for converting geocodes."""
 import pandas as pd
 
 from delphi_utils import GeoMapper
@@ -23,12 +24,38 @@ REPLACE_FIPS = [
     ("46102", "46113"),
 ]
 
+
+FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
+
 # Valid geographical resolutions output by this indicator.
 VALID_GEO_RES = ("county", "state", "msa", "hrr")
 # Sensors that report proportions.  For geo resolutions with unallocated cases
 # or deaths, we avoid reporting these sensors.
 PROP_SENSORS = ("incidence", "cumulative_prop")
 
+def fips_to_state(fips: str) -> str:
+    """Wrapper that handles exceptions to the FIPS scheme in the USAFacts data.
+
+    All the county FIPS codes are mapped to state by taking the first two
+    digits of the five digit, zero-padded county FIPS and applying
+    FIPS_TO_STATE to map it to the two-letter postal abbreviation.
+
+    Parameters
+    ----------
+    fips: str
+        Five digit, zero padded county FIPS code
+
+    Returns
+    -------
+    str
+        Two-letter postal abbreviation, lower case.
+
+    Raises
+    ------
+    KeyError
+        Inputted FIPS code not recognized.
+    """
+    return FIPS_TO_STATE[fips[:2]]
 
 def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     """Disburse counts from POOLED_FIPS equally to the counties in FIPS_LIST.
@@ -116,7 +143,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         map_df = map_df.loc[~pd.isnull(map_df[colname])].copy()
         map_df["geo_id"] = map_df[colname].astype(int)
         df["fips"] = df["fips"].astype(int)
-        merged = pd.merge(df, map_df, on="fips")
+        merged = df.merge(map_df, on="fips")
         merged["cumulative_counts"] =\
              merged["cumulative_counts"] * merged["pop_prop"]
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]

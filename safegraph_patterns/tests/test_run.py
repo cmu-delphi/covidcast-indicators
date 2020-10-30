@@ -5,7 +5,7 @@ import pandas as pd
 
 from delphi_safegraph_patterns.run import (run_module, METRICS,
                                            SENSORS, GEO_RESOLUTIONS)
-                                           
+                                         
 
 class TestRun:
     def test_output_files(self, run_as_module):

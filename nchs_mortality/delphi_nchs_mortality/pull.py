@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Functions for pulling NCHS mortality data API."""
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
-def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
-    """Pulls the latest NCHS Mortality data, and conforms it into a dataset
+def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
+    """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
 
@@ -23,6 +24,8 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
         My App Token for pulling the NCHS mortality data
     map_df: pd.DataFrame
         Read from static file "state_pop.csv".
+    test_mode:str
+        Check whether to run in a test mode
 
     Returns
     -------
@@ -30,17 +33,21 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ['covid_deaths', 'total_deaths', 'pneumonia_deaths',
+    KEEP_COLUMNS = ['covid_deaths', 'total_deaths',
+                    'percent_of_expected_deaths', 'pneumonia_deaths',
                     'pneumonia_and_covid_deaths', 'influenza_deaths',
                     'pneumonia_influenza_or_covid_19_deaths']
     TYPE_DICT = {key: float for key in KEEP_COLUMNS}
     TYPE_DICT["timestamp"] = 'datetime64[ns]'
 
-    # Pull data from Socrata API
-    client = Socrata("data.cdc.gov", token)
-    results = client.get("r8kw-7aab", limit=10**10)
-    df = pd.DataFrame.from_records(results).rename(
-            {"start_week": "timestamp"}, axis=1)
+    if test_mode == "":
+        # Pull data from Socrata API
+        client = Socrata("data.cdc.gov", token)
+        results = client.get("r8kw-7aab", limit=10**10)
+        df = pd.DataFrame.from_records(results).rename(
+                {"start_week": "timestamp"}, axis=1)
+    else:
+        df = pd.read_csv("./test_data/%s"%test_mode)
 
     # Check missing start_week == end_week
     try:
@@ -50,7 +57,13 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
             "end_week is not always the same as start_week, check the raw file"
         )
 
-    df = df.astype(TYPE_DICT)
+    try:
+        df = df.astype(TYPE_DICT)
+    except KeyError:
+        raise ValueError("Expected column(s) missed, The dataset "
+            "schema may have changed. Please investigate and "
+            "amend the code.")
+    
     df = df[df["state"] != "United States"]
     df.loc[df["state"] == "New York City", "state"] = "New York"
 
@@ -79,10 +92,6 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame) -> pd.DataFrame:
 
     # Add population info
     KEEP_COLUMNS.extend(["timestamp", "geo_id", "population"])
-    try:
-        df = df.merge(map_df, on="state")[KEEP_COLUMNS]
-    except KeyError:
-        raise ValueError("Expected column(s) missed, The dataset "
-            "schema may have changed. Please investigate and "
-            "amend the code.")
+    df = df.merge(map_df, on="state")[KEEP_COLUMNS]
+    
     return df

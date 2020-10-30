@@ -1,6 +1,15 @@
 # -*- coding: utf-8 -*-
+"""Functions for pulling data from the USAFacts website."""
 import numpy as np
 import pandas as pd
+
+# Columns to drop the the data frame.
+DROP_COLUMNS = [
+    "FIPS",
+    "County Name",
+    "State",
+    "stateFIPS"
+]
 
 
 def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
@@ -43,15 +52,6 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    DROP_COLUMNS = [
-        "FIPS",
-        "County Name",
-        "State",
-        "stateFIPS"
-    ]
-    # MIN_FIPS = 1000
-    # MAX_FIPS = 57000
 
     # Read data
     df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
@@ -59,8 +59,8 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0
 
-    UNEXPECTED_COLUMNS = [x for x in df.columns if "Unnamed" in x]
-    DROP_COLUMNS.extend(UNEXPECTED_COLUMNS)
+    unexpected_columns = [x for x in df.columns if "Unnamed" in x]
+    unexpected_columns.extend(DROP_COLUMNS)
 
     # Assign Grand Princess Cruise Ship a special FIPS 90000
     # df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
@@ -90,7 +90,7 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
             "Tried to drop non-existent columns. The dataset "
             "schema may have changed.  Please investigate and "
             "amend DROP_COLUMNS."
-        )
+        ) from e
     # Check that columns are either FIPS or dates
     try:
         columns = list(df.columns)
@@ -99,13 +99,12 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         # Detects whether there is a non-date string column -- not perfect
         _ = [int(x.replace("/", "")) for x in columns]
     except ValueError as e:
-        print(e)
         raise ValueError(
             "Detected unexpected column(s) "
             "after dropping DROP_COLUMNS. The dataset "
             "schema may have changed. Please investigate and "
             "amend DROP_COLUMNS."
-        )
+        ) from e
     # Reshape dataframe
     df = df.melt(
         id_vars=["fips", "population"],

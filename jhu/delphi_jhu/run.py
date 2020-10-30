@@ -66,7 +66,7 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-
+    """Run the JHU indicator module."""
     params = read_params()
     export_start_date = params["export_start_date"]
     export_dir = params["export_dir"]

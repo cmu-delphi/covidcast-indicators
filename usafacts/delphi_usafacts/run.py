@@ -67,7 +67,7 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-
+    """Run the usafacts indicator."""
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":

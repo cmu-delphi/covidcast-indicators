@@ -33,16 +33,15 @@
 
 ## Checks + features wishlist, and problems to think about:
 
-* Improve performance and reduce runtime
+* Improve performance and reduce runtime (what's the goal?)
   * Profiling (iterate)
-  * Run timing tests, check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
-  * Group `all_frames` by geo type and signal name instead of reading data in again via read_geo_signal_combo_files(). A MultiIndex dataframe may improve performance even more.
+  * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
+  * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance.
 * Which, if any, *specific* geo_ids are missing (get unique geo ids from historical data or delphi_utils)
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
-* Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days
@@ -60,6 +59,7 @@
   * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each
 * Easier suppression of many errors at once
 * Ensure validator runs on signals that require AWS credentials (iterate)
+* Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
 * If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.

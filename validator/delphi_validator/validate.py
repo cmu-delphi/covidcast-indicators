@@ -2,7 +2,6 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-
 import sys
 import re
 import math
@@ -14,7 +13,7 @@ import pandas as pd
 from .errors import ValidationError, APIDataFetchError
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_signal_combos, \
-    read_geo_signal_combo_files, fetch_api_reference
+    fetch_api_reference
 
 # Recognized geo types.
 geo_regex_dict = {
@@ -116,10 +115,10 @@ class Validator():
         self.data_source = params['data_source']
 
         # Date/time settings
-        span_length = timedelta(days=params['span_length'])
+        self.span_length = timedelta(days=params['span_length'])
         self.end_date = date.today() if params['end_date'] == "latest" else datetime.strptime(
             params['end_date'], '%Y-%m-%d').date()
-        self.start_date = self.end_date - span_length
+        self.start_date = self.end_date - self.span_length
         self.generation_date = date.today()
 
         # General options: flags, thresholds
@@ -153,7 +152,7 @@ class Validator():
         """ Add 1 to total_checks counter """
         self.total_checks += 1
 
-    def check_missing_dates(self, daily_filenames):
+    def check_missing_date_files(self, daily_filenames):
         """
         Check for missing dates between the specified start and end dates.
 
@@ -421,6 +420,9 @@ class Validator():
 
         self.increment_total_checks()
 
+        # Remove se_upper_limit column.
+        df_to_test.drop(columns=["se_upper_limit"])
+
     def check_bad_sample_size(self, df_to_test, nameformat):
         """
         Check sample sizes for validity.
@@ -483,7 +485,7 @@ class Validator():
         if max_date < self.generation_date - thres:
             self.raised_errors.append(ValidationError(
                 ("check_min_max_date", geo_type, signal_type),
-                max_date.date(),
+                max_date,
                 "date of most recent generated file seems too long ago"))
 
         self.increment_total_checks()
@@ -503,7 +505,7 @@ class Validator():
         if max_date > self.generation_date:
             self.raised_errors.append(ValidationError(
                 ("check_max_max_date", geo_type, signal_type),
-                max_date.date(),
+                max_date,
                 "date of most recent generated file seems too recent"))
 
         self.increment_total_checks()
@@ -680,7 +682,7 @@ class Validator():
         if mean_stddiff_high or mean_stdabsdiff_high:
             self.raised_errors.append(ValidationError(
                 ("check_test_vs_reference_avg_changed",
-                 checking_date.date(), geo_type, signal_type),
+                 checking_date, geo_type, signal_type),
                 (mean_stddiff_high, mean_stdabsdiff_high),
                 'Average differences in variables by geo_id between recent & reference data '
                 + 'seem large --- either large increase '
@@ -707,7 +709,7 @@ class Validator():
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
 
-        self.check_missing_dates(validate_files)
+        self.check_missing_date_files(validate_files)
         self.check_settings()
 
         all_frames = []
@@ -726,7 +728,8 @@ class Validator():
 
             # Get geo_type, date, and signal name as specified by CSV name.
             data_df['geo_type'] = match.groupdict()['geo_type']
-            data_df['date'] = match.groupdict()['date']
+            data_df['time_value'] = datetime.strptime(
+                match.groupdict()['date'], "%Y%m%d").date()
             data_df['signal'] = match.groupdict()['signal']
 
             # Add current CSV data to all_frames.
@@ -734,13 +737,8 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
-        # Get list of dates seen in the source data.
-        date_slist = all_frames['date'].unique().tolist()
-        date_list = list(
-            map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
-
         # recent_lookbehind: start from the check date and working backward in time,
-        # how many days do we want to check for anomalies?
+        # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
         recent_lookbehind = timedelta(days=1)
 
@@ -748,24 +746,30 @@ class Validator():
         # in time, how many days do we use to form the reference statistics.
         semirecent_lookbehind = timedelta(days=7)
 
+        # Get list of dates we want to check.
+        date_list = [self.start_date + timedelta(days=days)
+                     for days in range(self.span_length.days + 1)]
+
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
         all_api_df = self.threaded_api_calls(
-            min(date_list), max(date_list), semirecent_lookbehind, geo_signal_combos)
+            self.start_date - min(semirecent_lookbehind,
+                                  self.max_check_lookbehind),
+            self.end_date, geo_signal_combos)
 
         # Keeps script from checking all files in a test run.
         if self.test_mode:
             kroc = 0
 
         # Comparison checks
-        # Run checks for recent dates in each geo-sig combo vs semirecent (last week)
-        # API data.
-        for geo_sig_df, geo_type, signal_type in read_geo_signal_combo_files(
-                geo_signal_combos,
-                export_dir,
-                [name_match_pair[0] for name_match_pair in validate_files],
-                date_slist):
+        # Run checks for recent dates in each geo-sig combo vs semirecent (previous
+        # week) API data.
+        for geo_type, signal_type in geo_signal_combos:
+            geo_sig_df = all_frames.query(
+                "geo_type == @geo_type & signal == @signal_type")
+            # Drop unused columns.
+            geo_sig_df.drop(columns=["geo_type", "signal"])
 
             self.increment_total_checks()
 
@@ -816,13 +820,13 @@ class Validator():
                 reference_api_df = geo_sig_api_df.query(
                     "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
+                self.increment_total_checks()
+
                 if reference_api_df.empty:
-                    self.increment_total_checks()
                     self.raised_errors.append(ValidationError(
                         ("empty_reference_data",
                          checking_date, geo_type, signal_type), None,
                         "reference data is empty; comparative checks could not be performed"))
-
                     continue
 
                 self.check_max_date_vs_reference(
@@ -844,8 +848,9 @@ class Validator():
 
         self.exit()
 
-    def get_one_api_df(self, min_date, max_date, semirecent_lookbehind,
-                       geo_type, signal_type, api_semaphore, dict_lock, output_dict):
+    def get_one_api_df(self, min_date, max_date,
+                       geo_type, signal_type,
+                       api_semaphore, dict_lock, output_dict):
         """
         Pull API data for a single geo type-signal combination. Raises
         error if data couldn't be retrieved. Saves data to data dict.
@@ -855,10 +860,7 @@ class Validator():
         # Pull reference data from API for all dates.
         try:
             geo_sig_api_df = fetch_api_reference(
-                self.data_source,
-                min_date - min(semirecent_lookbehind,
-                               self.max_check_lookbehind),
-                max_date, geo_type, signal_type)
+                self.data_source, min_date, max_date, geo_type, signal_type)
 
         except APIDataFetchError as e:
             self.increment_total_checks()
@@ -874,7 +876,7 @@ class Validator():
         output_dict[(geo_type, signal_type)] = geo_sig_api_df
         dict_lock.release()
 
-    def threaded_api_calls(self, min_date, max_date, semirecent_lookbehind,
+    def threaded_api_calls(self, min_date, max_date,
                            geo_signal_combos, n_threads=32):
         """
         Get data from API for all geo-signal combinations in a threaded way
@@ -891,7 +893,6 @@ class Validator():
 
         thread_objs = [threading.Thread(
             target=self.get_one_api_df, args=(min_date, max_date,
-                                              semirecent_lookbehind,
                                               geo_type, signal_type,
                                               api_semaphore,
                                               dict_lock, output_dict)

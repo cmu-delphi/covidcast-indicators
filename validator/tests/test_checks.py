@@ -2,7 +2,7 @@ import pytest
 from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
-import pdb
+
 from delphi_validator.datafetcher import filename_regex
 from delphi_validator.validate import Validator, make_date_filter
 
@@ -153,7 +153,6 @@ class TestCheckBadGeoId:
     def test_empty_df(self):
         validator = Validator(self.params)
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        pdb.set_trace()
         validator.check_bad_geo_id(empty_df, "name", "county")
 
         assert len(validator.raised_errors) == 0

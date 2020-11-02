@@ -254,7 +254,7 @@ class Validator():
         """
         file_path = join(r'../validator/csv', geo_type + '_geo.csv')
         valid_geo_df = pd.read_csv(file_path, dtype = {'geo_id': str})
-        valid_geos = valid_geo_df['geo_value'].values
+        valid_geos = valid_geo_df['geo_id'].values
         unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo not in valid_geos]
         if len(unexpected_geos) > 0:
             self.raised_errors.append(ValidationError(

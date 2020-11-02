@@ -122,10 +122,11 @@ def aggregate(df, signal_names, geo_resolution='county'):
     """
     # Prepare geo resolution
     if geo_resolution == 'county':
-        df['geo_id'] = df['county_fips']
+        geo_transformed_df = df.copy()
+        geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
         gmpr = GeoMapper()
-        df = gmpr.add_geocode(df,
+        geo_transformed_df = gmpr.add_geocode(df,
                               from_col='county_fips',
                               from_code='fips',
                               new_code='state_id',
@@ -136,7 +137,7 @@ def aggregate(df, signal_names, geo_resolution='county'):
             f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')
 
     # Aggregation and signal creation
-    grouped_df = df.groupby(['geo_id'])[signal_names]
+    grouped_df = geo_transformed_df.groupby(['geo_id'])[signal_names]
     df_mean = grouped_df.mean()
     df_sd = grouped_df.std()
     df_n = grouped_df.count()

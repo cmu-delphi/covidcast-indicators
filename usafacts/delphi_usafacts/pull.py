@@ -73,10 +73,6 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         & (df["FIPS"] != 2270)
     ]
 
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Population for unassigned cases/deaths is NAN
-    df = df.merge(pop_df, on="FIPS", how="left")
-
     # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
     unassigned_index = (df['FIPS'] == 0)
     df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000

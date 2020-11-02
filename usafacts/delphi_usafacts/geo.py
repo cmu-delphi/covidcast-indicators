@@ -25,37 +25,12 @@ REPLACE_FIPS = [
 ]
 
 
-FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
-
 # Valid geographical resolutions output by this indicator.
 VALID_GEO_RES = ("county", "state", "msa", "hrr")
 # Sensors that report proportions.  For geo resolutions with unallocated cases
 # or deaths, we avoid reporting these sensors.
 PROP_SENSORS = ("incidence", "cumulative_prop")
 
-def fips_to_state(fips: str) -> str:
-    """Wrapper that handles exceptions to the FIPS scheme in the USAFacts data.
-
-    All the county FIPS codes are mapped to state by taking the first two
-    digits of the five digit, zero-padded county FIPS and applying
-    FIPS_TO_STATE to map it to the two-letter postal abbreviation.
-
-    Parameters
-    ----------
-    fips: str
-        Five digit, zero padded county FIPS code
-
-    Returns
-    -------
-    str
-        Two-letter postal abbreviation, lower case.
-
-    Raises
-    ------
-    KeyError
-        Inputted FIPS code not recognized.
-    """
-    return FIPS_TO_STATE[fips[:2]]
 
 def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     """Disburse counts from POOLED_FIPS equally to the counties in FIPS_LIST.

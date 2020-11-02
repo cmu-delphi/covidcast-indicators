@@ -6,6 +6,7 @@ Tools to validate CSV source data, including various check methods.
 import sys
 import re
 import math
+import threading
 from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
@@ -750,6 +751,9 @@ class Validator():
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
+        all_api_df = self.threaded_api_calls(
+            min(date_list), max(date_list), semirecent_lookbehind, geo_signal_combos)
+
         # Keeps script from checking all files in a test run.
         if self.test_mode:
             kroc = 0
@@ -769,26 +773,17 @@ class Validator():
                 self.raised_errors.append(ValidationError(
                     ("check_missing_geo_sig_combo", geo_type, signal_type),
                     None,
-                    "File with geo_type-signal combo does not exist!"))
+                    "file with geo_type-signal combo does not exist"))
                 continue
 
-            min_date = geo_sig_df["time_value"].min()
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
 
-            # Pull relevant reference data from API for all dates.
-            try:
-                geo_sig_api_df = fetch_api_reference(
-                    self.data_source,
-                    min_date - min(semirecent_lookbehind,
-                                   self.max_check_lookbehind),
-                    max_date, geo_type, signal_type)
-            except APIDataFetchError as e:
-                self.increment_total_checks()
-                self.raised_errors.append(ValidationError(
-                    ("api_data_fetch_error", geo_type, signal_type), None, e))
+            # Get relevant reference data from API dictionary.
+            geo_sig_api_df = all_api_df[(geo_type, signal_type)]
 
+            if geo_sig_api_df is None:
                 continue
 
             # Check data from a group of dates against recent (previous 7 days,
@@ -847,6 +842,64 @@ class Validator():
                     break
 
         self.exit()
+
+    def get_one_api_df(self, min_date, max_date, semirecent_lookbehind,
+                       geo_type, signal_type, dict_lock, output_dict):
+        """
+        Pull API data for a single geo type-signal combination. Raises
+        error if data couldn't be retrieved. Saves data to data dict.
+        """
+        # Pull reference data from API for all dates.
+        try:
+            geo_sig_api_df = fetch_api_reference(
+                self.data_source,
+                min_date - min(semirecent_lookbehind,
+                               self.max_check_lookbehind),
+                max_date, geo_type, signal_type)
+
+        except APIDataFetchError as e:
+            self.increment_total_checks()
+            self.raised_errors.append(ValidationError(
+                ("api_data_fetch_error", geo_type, signal_type), None, e))
+
+            geo_sig_api_df = None
+
+        # Use a lock so only one thread can access the dictionary.
+        dict_lock.acquire()
+        output_dict[(geo_type, signal_type)] = geo_sig_api_df
+        dict_lock.release()
+
+    def threaded_api_calls(self, min_date, max_date, semirecent_lookbehind,
+                           geo_signal_combos, n_threads=32):
+        """
+        Get data from API for all geo-signal combinations in a threaded way
+        to save time.
+        """
+        if n_threads > 32:
+            n_threads = 32
+            print("Warning: Don't run more than 32 threads at once due "
+                  + "to API resource limitations")
+
+        output_dict = dict()
+        dict_lock = threading.Lock()
+
+        thread_objs = [threading.Thread(
+            target=self.get_one_api_df, args=(min_date, max_date,
+                                              semirecent_lookbehind,
+                                              geo_type, signal_type,
+                                              dict_lock, output_dict)
+        ) for geo_type, signal_type in geo_signal_combos]
+
+        for i in range(len(geo_signal_combos) // n_threads + 1):
+            # Start subset of threads.
+            for thread in thread_objs[n_threads * i:n_threads * (i + 1)]:
+                thread.start()
+
+            # Wait until all threads in subset are finished.
+            for thread in thread_objs[n_threads * i:n_threads * (i + 1)]:
+                thread.join()
+
+        return output_dict
 
     def exit(self):
         """

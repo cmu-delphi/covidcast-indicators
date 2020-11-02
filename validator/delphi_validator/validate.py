@@ -806,14 +806,15 @@ class Validator():
                         + " for one or more dates"))
                     continue
 
-                # Reference dataframe runs backwards from the checking_date
-                reference_start_date = checking_date - \
-                    min(semirecent_lookbehind, self.max_check_lookbehind)
+                # Reference dataframe runs backwards from the recent_cutoff_date
+                reference_start_date = recent_cutoff_date - \
+                    min(semirecent_lookbehind, self.max_check_lookbehind) - \
+                    timedelta(days=1)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
 
                 # Subset API data to relevant range of dates.
                 reference_api_df = geo_sig_api_df.query(
-                    "time_value <= @reference_start_date & time_value >= @reference_end_date")
+                    "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
                 if reference_api_df.empty:
                     self.increment_total_checks()
@@ -844,11 +845,13 @@ class Validator():
         self.exit()
 
     def get_one_api_df(self, min_date, max_date, semirecent_lookbehind,
-                       geo_type, signal_type, dict_lock, output_dict):
+                       geo_type, signal_type, api_semaphore, dict_lock, output_dict):
         """
         Pull API data for a single geo type-signal combination. Raises
         error if data couldn't be retrieved. Saves data to data dict.
         """
+        api_semaphore.acquire()
+
         # Pull reference data from API for all dates.
         try:
             geo_sig_api_df = fetch_api_reference(
@@ -863,6 +866,8 @@ class Validator():
                 ("api_data_fetch_error", geo_type, signal_type), None, e))
 
             geo_sig_api_df = None
+
+        api_semaphore.release()
 
         # Use a lock so only one thread can access the dictionary.
         dict_lock.acquire()
@@ -882,22 +887,23 @@ class Validator():
 
         output_dict = dict()
         dict_lock = threading.Lock()
+        api_semaphore = threading.Semaphore(value=n_threads)
 
         thread_objs = [threading.Thread(
             target=self.get_one_api_df, args=(min_date, max_date,
                                               semirecent_lookbehind,
                                               geo_type, signal_type,
+                                              api_semaphore,
                                               dict_lock, output_dict)
         ) for geo_type, signal_type in geo_signal_combos]
 
-        for i in range(len(geo_signal_combos) // n_threads + 1):
-            # Start subset of threads.
-            for thread in thread_objs[n_threads * i:n_threads * (i + 1)]:
-                thread.start()
+        # Start all threads.
+        for thread in thread_objs:
+            thread.start()
 
-            # Wait until all threads in subset are finished.
-            for thread in thread_objs[n_threads * i:n_threads * (i + 1)]:
-                thread.join()
+        # Wait until all threads are finished.
+        for thread in thread_objs:
+            thread.join()
 
         return output_dict
 

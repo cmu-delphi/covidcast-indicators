@@ -6,8 +6,9 @@ import numpy as np
 import pandas as pd
 from delphi_utils.signal import add_prefix
 
-from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
-from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
+from delphi_utils import GeoMapper
+
+from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
@@ -121,16 +122,22 @@ def aggregate(df, signal_names, geo_resolution='county'):
     """
     # Prepare geo resolution
     if geo_resolution == 'county':
-        df['geo_id'] = df['county_fips']
+        geo_transformed_df = df.copy()
+        geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        df['geo_id'] = df['county_fips'].apply(lambda x:
-                                               FIPS_TO_STATE[x[:2]])
+        gmpr = GeoMapper()
+        geo_transformed_df = gmpr.add_geocode(df,
+                              from_col='county_fips',
+                              from_code='fips',
+                              new_code='state_id',
+                              new_col='geo_id',
+                              dropna=False)
     else:
         raise ValueError(
-            f'`geo_resolution` must be one of {VALID_GEO_RESOLUTIONS}.')
+            f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')
 
     # Aggregation and signal creation
-    grouped_df = df.groupby(['geo_id'])[signal_names]
+    grouped_df = geo_transformed_df.groupby(['geo_id'])[signal_names]
     df_mean = grouped_df.mean()
     df_sd = grouped_df.std()
     df_n = grouped_df.count()

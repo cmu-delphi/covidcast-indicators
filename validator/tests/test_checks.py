@@ -82,7 +82,7 @@ class TestCheckMissingDates:
         validator = Validator(params)
 
         filenames = list()
-        validator.check_missing_dates(filenames)
+        validator.check_missing_date_files(filenames)
 
         assert len(validator.raised_errors) == 1
         assert "check_missing_date_files" in [
@@ -95,7 +95,7 @@ class TestCheckMissingDates:
         validator = Validator(params)
 
         filenames = [("20200901_county_signal_signal.csv", "match_obj")]
-        validator.check_missing_dates(filenames)
+        validator.check_missing_date_files(filenames)
 
         assert len(validator.raised_errors) == 0
         assert "check_missing_date_files" not in [
@@ -110,7 +110,7 @@ class TestCheckMissingDates:
                      ("20200903_county_signal_signal.csv", "match_obj"),
                      ("20200903_usa_signal_signal.csv", "match_obj"),
                      ("20200903_usa_signal_signal.csv", "match_obj")]
-        validator.check_missing_dates(filenames)
+        validator.check_missing_date_files(filenames)
 
         assert len(validator.raised_errors) == 1
         assert "check_missing_date_files" in [

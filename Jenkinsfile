@@ -64,7 +64,7 @@ pipeline {
                 changeRequest target: "deploy-*", comparator: "GLOB"
             }
             steps {
-                sh "jenkins/jenkins-deploy-staging.sh"
+                sh "jenkins/jenkins-deploy-staging.sh ${INDICATOR}"
             }
         }
 

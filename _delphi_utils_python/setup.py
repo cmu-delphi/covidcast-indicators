@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "boto3",
+    "covidcast",
     "gitpython",
     "moto",
     "numpy",

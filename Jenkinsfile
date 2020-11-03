@@ -59,6 +59,15 @@ pipeline {
             }
         }
 
+        stage('Deploy to staging env') {
+            when {
+                changeRequest target: "deploy-*", comparator: "GLOB"
+            }
+            steps {
+                sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
+            }
+        }
+
         stage('Deploy') {
             when {
                 branch "deploy-*"

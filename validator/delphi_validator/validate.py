@@ -113,6 +113,7 @@ class Validator():
         """
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
+        self.validator_static_file_dir = params.get('validator_static_file_dir', '../validator/static')
 
         # Date/time settings
         self.span_length = timedelta(days=params['span_length'])
@@ -252,7 +253,7 @@ class Validator():
             - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
         """
-        file_path = join(r'../validator/static', geo_type + '_geo.csv')
+        file_path = join(self.validator_static_file_dir, geo_type + '_geo.csv')
         valid_geo_df = pd.read_csv(file_path, dtype = {'geo_id': str})
         valid_geos = valid_geo_df['geo_id'].values
         unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo not in valid_geos]

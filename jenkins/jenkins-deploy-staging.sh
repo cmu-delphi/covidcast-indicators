@@ -10,7 +10,7 @@ source ~/.bash_profile
 # Deploy
 #
 
-local_indicator=${INDICATOR}
+local_indicator=$1
 
 echo "${local_indicator}"
 

@@ -3,7 +3,7 @@
 # Jenkins deploy
 #
 
-set -exo pipefail
+set -eox pipefail
 source ~/.bash_profile
 
 #
@@ -11,6 +11,8 @@ source ~/.bash_profile
 #
 
 local_indicator=${INDICATOR}
+
+echo "${local_indicator}"
 
 cd "${WORKSPACE}/ansible" || exit
 

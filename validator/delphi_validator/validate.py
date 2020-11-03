@@ -244,26 +244,26 @@ class Validator():
 
         self.increment_total_checks()
 
-    def check_bad_geo_value(self, geo_type, df_to_test):
+    def check_bad_geo_id_value(self, df_to_test, geo_type):
         """
-        Check for unknown geo_ids, by comparing to historic data
+        Check for bad geo_id values, by comparing to a list of known values (drawn from historical data)
 
         Arguments:
+            - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
-            - df_to_test: pandas dataframe of CSV source data containing the geo_ids to check
         """
-        file_path = join(r'../validator/csv', geo_type + '_geo.csv')
+        file_path = join(r'../validator/static', geo_type + '_geo.csv')
         valid_geo_df = pd.read_csv(file_path, dtype = {'geo_id': str})
         valid_geos = valid_geo_df['geo_id'].values
         unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo not in valid_geos]
         if len(unexpected_geos) > 0:
             self.raised_errors.append(ValidationError(
-                ("check_bad_geo_value", geo_type),
-                unexpected_geos, "invalid geo_ids found"))
+                ("check_bad_geo_id_value", filename),
+                unexpected_geos, "Unrecognized geo_ids (not in historical data)"))
 
-    def check_bad_geo_id(self, df_to_test, nameformat, geo_type):
+    def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type):
         """
-        Check validity of geo type and values, according to regex pattern.
+        Check validity of geo_type and format of geo_ids, according to regex pattern.
 
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
@@ -737,9 +737,9 @@ class Validator():
             data_df = load_csv(join(export_dir, filename))
 
             self.check_df_format(data_df, filename)
-            self.check_bad_geo_id(
+            self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
-            self.check_bad_geo_value(match.groupdict()['geo_type'], data_df)
+            self.check_bad_geo_id_value(data_df, match.groupdict()['geo_type'])
             self.check_bad_val(data_df, filename, match.groupdict()['signal'])
             self.check_bad_se(data_df, filename)
             self.check_bad_sample_size(data_df, filename)

@@ -52,6 +52,7 @@
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
   * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
 * Easier suppression of many errors at once
+  * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
 * Nicer formatting for error “report”.
   * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior

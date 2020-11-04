@@ -626,3 +626,62 @@ class TestCheckAvgValDiffs:
         assert len(validator.raised_errors) == 1
         assert "check_test_vs_reference_avg_changed" in [
             err.check_data_id[0] for err in validator.raised_errors]
+
+
+class TestDataCorrections:
+        params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
+        # Test to make sure only county or state signal data is used
+        def test_signal_correct(self):
+            validator = Validator(self.params)
+             #Data from 51580 between 9/24 and 10/26 (10/25 query date)
+            val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714, 31.42857143, 31.71428571, 32, 32, 32.14285714,
+                    32.28571429, 32.42857143, 32.57142857, 32.71428571, 32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                    33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+            ref_val = [34.42857143, 34.71428571, 35]
+
+
+            data = {"val": val , "se": [np.nan] * len(val),
+                    "sample_size": [np.nan] * len(val), "geo_id": ["1"] * len(val), "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+            ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": [np.nan] * len(ref_val), "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+            test_df = pd.DataFrame(data)
+            ref_df = pd.DataFrame(ref_data)
+
+            validator.data_corrections(
+                 ref_df, test_df, "country", "signal", datetime.strptime("20201024", "%Y%m%d"))
+            print(validator.raised_errors)
+            assert len(validator.raised_errors) == 1
+            assert "data_corrections_sig" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+        
+
+        # Test to determine outliers based on the row data, has lead and lag outlier
+        def test_outlier(self):
+            validator = Validator(self.params)
+
+            #Data from 51580 between 9/24 and 10/26 (10/25 query date)
+            val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714, 31.42857143, 31.71428571, 32, 32, 32.14285714,
+                    32.28571429, 32.42857143, 32.57142857, 32.71428571, 32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                    33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+            ref_val = [34.42857143, 34.71428571, 35]
+
+
+            data = {"val": val , "se": [np.nan] * len(val),
+                    "sample_size": [np.nan] * len(val), "geo_id": ["1"] * len(val), "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+            ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": [np.nan] * len(ref_val), "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+            test_df = pd.DataFrame(data)
+            ref_df = pd.DataFrame(ref_data)
+
+
+            validator.data_corrections(
+                ref_df, test_df, "state", "signal", datetime.strptime("20201024", "%Y%m%d"))
+
+            assert len(validator.raised_errors) == 1
+            assert "data_corrections_range" in [
+            err.check_data_id[0] for err in validator.raised_errors]
+            print([err.check_data_id[0] for err in validator.raised_errors])
+            assert [err.expression.shape[0] == 4 for err in validator.raised_errors]

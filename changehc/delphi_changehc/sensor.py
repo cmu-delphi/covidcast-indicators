@@ -18,7 +18,9 @@ import pandas as pd
 from .config import Config
 
 
-SMOOTHER = Smoother("savgol", poly_fit_degree=1, gaussian_bandwidth=100)
+SMOOTHER = Smoother("savgol",
+                    poly_fit_degree=1,
+                    gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
 class CHCSensor:
     """Sensor class to fit a signal using Covid counts from Change HC outpatient data.

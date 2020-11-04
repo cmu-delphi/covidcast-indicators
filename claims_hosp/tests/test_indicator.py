@@ -19,10 +19,11 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 class TestLoadData:
     fips_data = load_data(DATA_FILEPATH, DROP_DATE, "fips")
     hrr_data = load_data(DATA_FILEPATH, DROP_DATE, "hrr")
+    # change smoother window length for test data
     ClaimsHospIndicator.smoother = Smoother("savgol",
                                             poly_fit_degree=1,
-                                            gaussian_bandwidth=100,
-                                            window_length=10)
+                                            gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH,
+                                            window_length=20)
 
     def test_backwards_pad(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

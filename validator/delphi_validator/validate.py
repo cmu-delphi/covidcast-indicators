@@ -9,8 +9,13 @@ import threading
 from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
+<<<<<<< HEAD
 
 from .errors import ValidationError, APIDataFetchError
+=======
+import time
+from .errors import ValidationError
+>>>>>>> finished outliers and tests
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_signal_combos, \
     fetch_api_reference
@@ -579,18 +584,149 @@ class Validator():
 
         self.increment_total_checks()
 
+
+
+    def data_corrections(self, source_df, api_frames, geo, sig, checking_date):
+        """
+        Adapt Dan's/Balasubramanian's corrections package to Python (only consider spikes) : https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
+
+        Arguments: 
+            - df_to_test: pandas dataframe of CSV source data
+            - df_to_reference: pandas dataframe of reference data, either from the
+            COVIDcast API or semirecent data
+            - checking_date: datetime date
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
+
+        """
+        # Check inputs: 
+        if not (geo == "state" or geo =="county"):
+            self.increment_total_checks()
+            self.raised_errors.append(ValidationError(
+                        ("data_corrections_sig", geo, sig),
+                        None,
+                        "geo_type should be one of 'state' or 'county'!"))
+
+            return 
+
+        source_df.to_csv("source" +  str(checking_date.date()) +  ".csv")
+        # Combine all possible frames so that the rolling window calculations make sense, even if the before or after source frame is None
+        all_frames = pd.concat([api_frames, source_df]).drop_duplicates().sort_values(by=['time_value'])
+
+        # Tuned Variables from Dan's Code 
+        size_cut = 20
+        sig_cut = 3
+        sig_consec = 2.25
+
+        # A function mapped to each row to determine outliers based on fstat and ststat values 
+        def outlier_flag(frame):
+            if (abs(frame["val"]) > size_cut) and not (pd.isna(frame["ststat"])) and (frame["ststat"] > sig_cut):
+                return 1
+            if (abs(frame["val"]) > size_cut) and (pd.isna(frame["ststat"])) and not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
+                return 1
+            if (frame["val"] < -size_cut) and not (pd.isna(frame["ststat"])) and not (pd.isna(frame["ftstat"])):
+                return 1
+            return 0
+
+        # Calculate ftstat and ststat values for the rolling windows, group fames by geo region 
+        region_group = all_frames.groupby("geo_id")
+        window_size = 14
+        shift_val = 0
+        # Shift the window to match how R calculates rolling windows with even numbers
+        if (window_size%2 == 0):
+            shift_val = -1
+
+        all_full_frames = []
+        for cat, group in region_group:
+            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
+            fmean = rolling_windows.mean()
+            fmedian = rolling_windows.median()
+            smedian = center_windows.median().shift(shift_val)
+            fsd = rolling_windows.std()
+            ssd = center_windows.std().shift(shift_val)
+            vals_modified_f = group["val"] - fmedian.fillna(0)
+            vals_modified_s = group["val"] - smedian.fillna(0)
+            rolling_windows_f = vals_modified_f.rolling(window_size, min_periods=window_size)
+            center_windows_s = vals_modified_s.rolling(window_size, min_periods=window_size, center=True)
+            fmad = rolling_windows_f.median()
+            smad = center_windows_s.median().shift(shift_val)
+            ftstat = abs(vals_modified_f)/fsd
+            ststat = abs(vals_modified_s)/ssd
+            #print(vals_modified_f)
+            group['fmean'] = fmean
+            group['fmedian'] = fmedian
+            group['smedian'] = smedian
+            group['fsd'] = fsd
+            group['ssd'] = ssd
+            group['fmad'] = fmad
+            group['smad'] = smad
+            group['ftstat'] = ftstat
+            group['ststat'] = ststat 
+            all_full_frames.append(group) 
+
+        all_frames = pd.concat(all_full_frames)
+
+        # Determine outliers
+        outlier_source_df = all_frames.sort_values(by=['time_value']).copy()
+        outlier_source_df["flag"] = outlier_source_df.apply(outlier_flag, axis = 1)
+        outlier_group = outlier_source_df.groupby("geo_id")
+
+        outlier_append = pd.DataFrame()
+        for cat, group in outlier_group:
+            group = group.reset_index()
+            for index, row in group.iterrows():
+                if row["flag"] == 1:
+                    try: 
+                        eval_next = group.iloc[index+1, :]
+                        if (not pd.isna(eval_next['ststat'])) and (eval_next['ststat'] > sig_consec):
+                            eval_next["flag"] == 1
+                            outlier_append = outlier_append.append(eval_next, ignore_index=True)
+
+                        if pd.isna(eval_next['ststat']) and  (eval_next['ftstat'] > sig_consec):
+                            eval_next["flag"] == 1
+                            outlier_append = outlier_append.append(eval_next, ignore_index=True)
+
+                    except: 
+                        continue
+                    try: 
+                        eval_prev = group.iloc[index-1, :]
+                        if (not pd.isna(eval_prev['ststat'])) and (eval_prev['ststat'] > sig_consec):
+                            eval_prev["flag"] == 1
+                            outlier_append = outlier_append.append(eval_prev, ignore_index=True)
+                        if pd.isna(eval_prev['ststat']) and  (eval_prev['ftstat'] > sig_consec):
+                            eval_prev["flag"] == 1
+                            outlier_append = outlier_append.append(eval_prev, ignore_index=True)
+                    except: 
+                        continue                 
+
+        outlier_append["flag"] = 1
+        outliers = outlier_source_df[outlier_source_df["flag"] == 1]
+        all_o = pd.concat([outliers, outlier_append]).drop(columns=['index']).sort_values(by=['time_value','geo_id']).drop_duplicates()
+        all_o = all_o.reset_index().drop(columns=['index'])
+        all_o.to_csv(str(checking_date.date()) + sig + "outliers.csv")
+        all_frames.to_csv(str(checking_date.date()) + sig + "all_frames.csv")
+
+        if outliers.shape[0] > 0:
+            self.raised_errors.append(ValidationError(
+                ("data_corrections_range",
+                 (checking_date.date()-timedelta(days=1), checking_date.date()+timedelta(days=1)), geo, sig),
+                (outliers),
+                'Dates with flagged ouliers based on the previous 30 days of source data available'))
+        self.increment_total_checks()
+
+
+    
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
-
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the
             COVIDcast API or semirecent data
             - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
             - signal_type: str; signal name as in the CSV name
-
         Returns:
             - None
         """
@@ -702,14 +838,16 @@ class Validator():
         Returns:
             - None
         """
+
         # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
         date_filter = make_date_filter(self.start_date, self.end_date)
+     
 
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
-
         self.check_missing_date_files(validate_files)
+        self.check_missing_dates(validate_files)
         self.check_settings()
 
         all_frames = []
@@ -718,7 +856,6 @@ class Validator():
         # For every daily file, read in and do some basic format and value checks.
         for filename, match in validate_files:
             data_df = load_csv(join(export_dir, filename))
-
             self.check_df_format(data_df, filename)
             self.check_bad_geo_id(
                 data_df, filename, match.groupdict()['geo_type'])
@@ -737,6 +874,12 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
+        # Get list of dates we expect to see in the source data.
+        date_slist = all_frames['date'].unique().tolist()
+        date_list = list(
+            map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
+        date_list.sort()
+
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
@@ -750,6 +893,9 @@ class Validator():
         date_list = [self.start_date + timedelta(days=days)
                      for days in range(self.span_length.days + 1)]
 
+        #get 30 days prior to the earliest list date 
+        outlier_lookbehind = timedelta(days=30)
+
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
@@ -762,6 +908,9 @@ class Validator():
         if self.test_mode:
             kroc = 0
 
+
+        prev_df = None
+        next_df = None
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
         # week) API data.
@@ -780,6 +929,7 @@ class Validator():
                     "file with geo_type-signal combo does not exist"))
                 continue
 
+            
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
@@ -787,6 +937,7 @@ class Validator():
             # Get relevant reference data from API dictionary.
             geo_sig_api_df = all_api_df[(geo_type, signal_type)]
 
+<<<<<<< HEAD
             if geo_sig_api_df is None:
                 continue
 
@@ -795,6 +946,13 @@ class Validator():
             for checking_date in date_list:
                 recent_cutoff_date = checking_date - \
                     recent_lookbehind + timedelta(days=1)
+=======
+            
+            # Check data from a group of dates against recent (previous 7 days, by default) and against all 
+            # data from the API.
+            for index, checking_date in enumerate(date_list):
+                recent_cutoff_date = checking_date - recent_lookbehind
+>>>>>>> finished outliers and tests
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
@@ -829,6 +987,29 @@ class Validator():
                         "reference data is empty; comparative checks could not be performed"))
                     continue
 
+
+                
+                
+                # Source frame with the day before and after
+                next_cutoff_date = checking_date + recent_lookbehind
+                source_prev_next_df = geo_sig_df.query(
+                    'time_value <= @next_cutoff_date & time_value >= @recent_cutoff_date')
+
+
+                earliest_available_date = source_prev_next_df["time_value"].min()
+                # Outlier dataframe runs backwards from the checking date, in the future we should reduce the number of api calls
+                outlier_start_date = recent_cutoff_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = fetch_api_reference(
+                    self.data_source, outlier_start_date, outlier_end_date, geo, sig)
+
+                print(outlier_start_date, outlier_end_date, recent_cutoff_date, next_cutoff_date, earliest_available_date)
+                self.data_corrections(source_prev_next_df, outlier_api_df, geo, sig, checking_date)
+                prev_df = recent_df
+
+
+
+
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
@@ -840,11 +1021,16 @@ class Validator():
                     self.check_avg_val_vs_reference(
                         recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
-            # Keeps script from checking all files in a test run.
+            
+
+            # Keeps script from checking all files in a test run. 
             if self.test_mode:
                 kroc += 1
                 if kroc == 2:
                     break
+
+
+
 
         self.exit()
 

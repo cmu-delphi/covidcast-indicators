@@ -9,13 +9,8 @@ import threading
 from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
-<<<<<<< HEAD
-
 from .errors import ValidationError, APIDataFetchError
-=======
 import time
-from .errors import ValidationError
->>>>>>> finished outliers and tests
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_signal_combos, \
     fetch_api_reference
@@ -937,7 +932,6 @@ class Validator():
             # Get relevant reference data from API dictionary.
             geo_sig_api_df = all_api_df[(geo_type, signal_type)]
 
-<<<<<<< HEAD
             if geo_sig_api_df is None:
                 continue
 
@@ -946,13 +940,10 @@ class Validator():
             for checking_date in date_list:
                 recent_cutoff_date = checking_date - \
                     recent_lookbehind + timedelta(days=1)
-=======
-            
             # Check data from a group of dates against recent (previous 7 days, by default) and against all 
             # data from the API.
             for index, checking_date in enumerate(date_list):
                 recent_cutoff_date = checking_date - recent_lookbehind
->>>>>>> finished outliers and tests
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 

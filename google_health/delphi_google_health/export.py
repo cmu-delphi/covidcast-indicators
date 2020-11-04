@@ -44,7 +44,7 @@ def export_csv(
     df["val"] /= RESCALE_VAL
     df["se"] = np.nan
     df["sample_size"] = np.nan
-    
+
     start_date = datetime.strptime(start_date, "%Y-%m-%d")
 
     for date in df["timestamp"].unique():

@@ -41,12 +41,12 @@ def run_module():
     wip_signal = params["wip_signal"]
     cache_dir = params["cache_dir"]
 
-#    arch_diff = S3ArchiveDiffer(
-#        cache_dir, export_dir,
-#        params["bucket_name"], "ght",
-#        params["aws_credentials"])
-#    arch_diff.update_cache()
-#    print(arch_diff)
+    arch_diff = S3ArchiveDiffer(
+        cache_dir, export_dir,
+        params["bucket_name"], "ght",
+        params["aws_credentials"])
+    arch_diff.update_cache()
+    print(arch_diff)
     # if missing start_date, set to today (GMT) minus 5 days
     if start_date == "":
         now = datetime.datetime.now(datetime.timezone.utc)
@@ -100,18 +100,18 @@ def run_module():
                        start_date=start_date, receiving_dir=export_dir)
             export_csv(df_msa, MSA, signal, smooth=False,
                        start_date=start_date, receiving_dir=export_dir)
-#    # Diff exports, and make incremental versions
-#    _, common_diffs, new_files = arch_diff.diff_exports()
-#
-#    # Archive changed and new files only
-#    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-#    to_archive += new_files
-#    _, fails = arch_diff.archive_exports(to_archive)
-#
-#    # Filter existing exports to exclude those that failed to archive
-#    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-#    arch_diff.filter_exports(succ_common_diffs)
-#
-#    # Report failures: someone should probably look at them
-#    for exported_file in fails:
-#        print(f"Failed to archive '{exported_file}'")
+    # Diff exports, and make incremental versions
+    _, common_diffs, new_files = arch_diff.diff_exports()
+
+    # Archive changed and new files only
+    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+    to_archive += new_files
+    _, fails = arch_diff.archive_exports(to_archive)
+
+    # Filter existing exports to exclude those that failed to archive
+    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+    arch_diff.filter_exports(succ_common_diffs)
+
+    # Report failures: someone should probably look at them
+    for exported_file in fails:
+        print(f"Failed to archive '{exported_file}'")

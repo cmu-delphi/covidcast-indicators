@@ -8,11 +8,11 @@ Created: 2020-10-14
 
 # standard packages
 import logging
-from delphi_utils import Smoother
 
 # third party
 import numpy as np
 import pandas as pd
+from delphi_utils import Smoother
 
 # first party
 from .config import Config
@@ -118,7 +118,7 @@ class CHCSensor:
         total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values, y_data[den_col].values)
 
         # calculate smoothed counts and jeffreys rate
-        # the SMOOTHER.smooth smoother is not guaranteed to return values greater than 0
+        # the left_gauss_linear smoother is not guaranteed to return values greater than 0
 
         smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(total_counts.flatten(),total_visits)
 

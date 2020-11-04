@@ -8,6 +8,7 @@ Created: 2020-10-14
 
 # standard packages
 import logging
+from delphi_utils import Smoother
 
 # third party
 import numpy as np
@@ -15,8 +16,9 @@ import pandas as pd
 
 # first party
 from .config import Config
-from .smooth import left_gauss_linear
 
+
+SMOOTHER = Smoother("savgol", poly_fit_degree=1, gaussian_bandwidth=100)
 
 class CHCSensor:
     """Sensor class to fit a signal using Covid counts from Change HC outpatient data.
@@ -24,13 +26,13 @@ class CHCSensor:
 
     @staticmethod
     def gauss_smooth(count,total):
-        """smooth using the left_gauss_linear
+        """smooth using the SMOOTHER.smooth
 
         Args:
             count, total: array
             """
-        count_smooth = left_gauss_linear(count)
-        total_smooth = left_gauss_linear(total)
+        count_smooth = SMOOTHER.smooth(count)
+        total_smooth = SMOOTHER.smooth(total)
         total_clip = np.clip(total_smooth, 0, None)
         count_clip = np.clip(count_smooth, 0, total_clip)
         return count_clip, total_clip
@@ -114,7 +116,7 @@ class CHCSensor:
         total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values, y_data[den_col].values)
 
         # calculate smoothed counts and jeffreys rate
-        # the left_gauss_linear smoother is not guaranteed to return values greater than 0
+        # the SMOOTHER.smooth smoother is not guaranteed to return values greater than 0
 
         smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(total_counts.flatten(),total_visits)
 

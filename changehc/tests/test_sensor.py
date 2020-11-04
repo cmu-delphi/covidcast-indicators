@@ -20,7 +20,7 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
-                                            "fips")
+                                       "fips")
 
     def test_backfill(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)
@@ -49,8 +49,8 @@ class TestLoadData:
         assert np.array_equal(exp_den4, den4)
 
     def test_fit_fips(self):
-        date_range = pd.date_range("2020-05-01", "2020-05-20")
-        all_fips = self.combined_data.index.get_level_values('fips').unique()
+        date_range = pd.date_range("2020-05-01", "2020-06-01")
+        all_fips = self.combined_data.index.get_level_values("fips").unique()
         sample_fips = nr.choice(all_fips, 10)
 
         for fips in sample_fips:
@@ -60,7 +60,6 @@ class TestLoadData:
             # first value is burn-in
             assert np.min(res0["rate"][1:]) > 0
             assert np.max(res0["rate"][1:]) <= 100
-
             if np.all(np.isnan(res0["se"])):
                 assert res0["incl"].sum() == 0
             else:

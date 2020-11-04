@@ -36,7 +36,7 @@
 
 ## Checks + features wishlist, and problems to think about:
 
-* Improve performance and reduce runtime (what's the target time?)
+* Improve performance and reduce runtime (what's the target time? Just want to not be painfully slow...)
   * Profiling (iterate)
   * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section. Parallelize?)
   * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.

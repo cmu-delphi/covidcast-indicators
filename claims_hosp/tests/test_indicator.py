@@ -1,5 +1,5 @@
 # third party
-from delphi_utils import read_params
+from delphi_utils import read_params, Smoother
 import numpy as np
 import numpy.random as nr
 import pandas as pd
@@ -19,6 +19,10 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 class TestLoadData:
     fips_data = load_data(DATA_FILEPATH, DROP_DATE, "fips")
     hrr_data = load_data(DATA_FILEPATH, DROP_DATE, "hrr")
+    ClaimsHospIndicator.smoother = Smoother("savgol",
+                                            poly_fit_degree=1,
+                                            gaussian_bandwidth=100,
+                                            window_length=10)
 
     def test_backwards_pad(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

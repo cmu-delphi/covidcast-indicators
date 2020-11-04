@@ -12,7 +12,6 @@ from . import config
 from . import indicator
 from . import load_data
 from . import run
-from . import smooth
 from . import update_indicator
 from . import weekday
 

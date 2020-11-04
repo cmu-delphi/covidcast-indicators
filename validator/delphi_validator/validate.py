@@ -245,7 +245,7 @@ class Validator():
 
         self.increment_total_checks()
 
-    def check_bad_geo_id_value(self, df_to_test, geo_type):
+    def check_bad_geo_id_value(self, df_to_test, filename, geo_type):
         """
         Check for bad geo_id values, by comparing to a list of known values (drawn from historical data)
 
@@ -740,7 +740,7 @@ class Validator():
             self.check_df_format(data_df, filename)
             self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
-            self.check_bad_geo_id_value(data_df, match.groupdict()['geo_type'])
+            self.check_bad_geo_id_value(data_df, filename, match.groupdict()['geo_type'])
             self.check_bad_val(data_df, filename, match.groupdict()['signal'])
             self.check_bad_se(data_df, filename)
             self.check_bad_sample_size(data_df, filename)

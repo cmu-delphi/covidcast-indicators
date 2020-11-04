@@ -21,6 +21,7 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
                                        "fips")
+    # change smoother window length for test data
     CHCSensor.smoother = Smoother("savgol",
                                   poly_fit_degree=1,
                                   gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH,

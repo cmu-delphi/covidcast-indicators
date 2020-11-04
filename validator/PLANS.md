@@ -6,6 +6,7 @@
 * Recognized file name format
 * Recognized geographical type (county, state, etc)
 * Recognized geo id format (e.g. state is two lowercase letters)
+* Geo id has been seen before, in historical data
 * Missing geo type + signal + date combos based on the geo type + signal combos Covidcast metadata says should be available
 * Missing ‘val’ values
 * Negative ‘val’ values
@@ -21,6 +22,8 @@
 * Most recent date seen in source data is not older than most recent date seen in reference data
 * Similar number of obs per day as recent API data (static threshold)
 * Similar average value as API data (static threshold)
+* Source data for specified date range is empty
+* API data for specified date range is empty
 
 
 ## Current features
@@ -33,15 +36,14 @@
 
 ## Checks + features wishlist, and problems to think about:
 
-* Improve performance and reduce runtime (what's the goal?)
+* Improve performance and reduce runtime (what's the target time?)
   * Profiling (iterate)
-  * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section)
-  * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance.
-* Which, if any, *specific* geo_ids are missing (get unique geo ids from historical data or delphi_utils)
+  * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section. Parallelize?)
+  * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.
 * Check for duplicate rows
 * Check explicitly for large spikes (avg_val check can detect jumps in average value)
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
-* Run check_missing_dates on every geo type-signal type separately. Probably move check to geo_sig loop.
+* Run check_missing_date_files (or similar) on every geo type-signal type separately in comparative checks loop.
 * Different test thresholds for different files? Currently some control based on smoothed vs raw signals
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days
@@ -56,11 +58,17 @@
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
 * Nicer formatting for error “report”.
-  * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each
+  * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Easier suppression of many errors at once
-* Ensure validator runs on signals that require AWS credentials (iterate)
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
+* Ensure validator runs on signals that require AWS credentials (iterate)
 * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
-* If can't get data from API, do we want to use substitute data for the comparative checks instead? E.g. most recent successful API pull -- might end up being a couple weeks older
+* If can't get data from API, do we want to use substitute data for the comparative checks instead?
+  * E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
-* Potentially implement a check for erratic data sources that wrongly report all 0's (like the error with the Wisconsin data for the 10/26 forecasts)
+* Check for erratic data sources that wrongly report all zeroes
+  * E.g. the error with the Wisconsin data for the 10/26 forecasts
+  * Wary of a purely static check for this
+  * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
+  * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
+  * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.

@@ -18,23 +18,23 @@ from delphi_utils import Smoother
 from .config import Config
 
 
-SMOOTHER = Smoother("savgol",
-                    poly_fit_degree=1,
-                    gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
 class CHCSensor:
     """Sensor class to fit a signal using Covid counts from Change HC outpatient data.
     """
+    smoother = Smoother("savgol",
+                        poly_fit_degree=1,
+                        gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
     def gauss_smooth(count,total):
-        """smooth using the SMOOTHER.smooth
+        """smooth using the left_gauss_linear
 
         Args:
             count, total: array
             """
-        count_smooth = SMOOTHER.smooth(count)
-        total_smooth = SMOOTHER.smooth(total)
+        count_smooth = CHCSensor.smoother.smooth(count)
+        total_smooth = CHCSensor.smoother.smooth(total)
         total_clip = np.clip(total_smooth, 0, None)
         count_clip = np.clip(count_smooth, 0, total_clip)
         return count_clip, total_clip
@@ -47,7 +47,7 @@ class CHCSensor:
             min_visits_to_fill=Config.MIN_CUM_VISITS):
         """
         Adjust for backfill (retroactively added observations) by using a
-         variable length smoother, which starts from the RHS and moves
+         variable length CHCSensor.smoother, which starts from the RHS and moves
          leftwards (backwards through time). We cumulatively sum the total
          visits (denominator), until we have observed some minimum number of
          counts, then calculate the sum over that bin. We restrict the
@@ -118,7 +118,7 @@ class CHCSensor:
         total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values, y_data[den_col].values)
 
         # calculate smoothed counts and jeffreys rate
-        # the left_gauss_linear smoother is not guaranteed to return values greater than 0
+        # the left_gauss_linear CHCSensor.smoother is not guaranteed to return values greater than 0
 
         smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(total_counts.flatten(),total_visits)
 
@@ -131,7 +131,7 @@ class CHCSensor:
                 (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
         )
 
-        # checks - due to the smoother, the first value will be NA
+        # checks - due to the CHCSensor.smoother, the first value will be NA
         assert (
                 np.sum(np.isnan(smoothed_total_rates[1:])) == 0
         ), "NAs in rate calculation"

@@ -148,7 +148,8 @@ class TestNameFormat:
 
 class TestCheckBadGeoIdFormat:
     params = {"data_source": "", "span_length": 0,
-              "end_date": "2020-09-02", "expected_lag": {}}
+              "end_date": "2020-09-02", "expected_lag": {},
+              "validator_static_file_dir": "../static"}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -270,7 +271,7 @@ class TestCheckBadGeoIdValue:
         validator.check_bad_geo_id_value(df, "name", "hrr")
 
         assert len(validator.raised_errors) == 1
-        assert "check_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
         assert len(validator.raised_errors[0].expression) == 3
         assert "1" not in validator.raised_errors[0].expression
         assert "11" not in validator.raised_errors[0].expression
@@ -285,7 +286,7 @@ class TestCheckBadGeoIdValue:
         validator.check_bad_geo_id_value(df, "name", "state")
 
         assert len(validator.raised_errors) == 1
-        assert "check_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
         assert len(validator.raised_errors[0].expression) == 1
         assert "ak" not in validator.raised_errors[0].expression
         assert "aa" in validator.raised_errors[0].expression
@@ -306,7 +307,7 @@ class TestCheckBadGeoIdValue:
         validator.check_bad_geo_id_value(df, "name", "national")
 
         assert len(validator.raised_errors) == 1
-        assert "check_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
         assert len(validator.raised_errors[0].expression) == 1
         assert "us" not in validator.raised_errors[0].expression
         assert "zz" in validator.raised_errors[0].expression

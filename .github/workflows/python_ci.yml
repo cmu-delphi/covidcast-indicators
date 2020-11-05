@@ -38,7 +38,7 @@ jobs:
         pip install .
     - name: Lint
       run: |
-        pylint delphi_*
+        # pylint delphi_*
         # pydocstyle delphi_*
     - name: Test
       run: |

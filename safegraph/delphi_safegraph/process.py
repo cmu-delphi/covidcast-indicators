@@ -4,10 +4,11 @@ import os
 from typing import List
 import numpy as np
 import pandas as pd
-import covidcast
+from delphi_utils.signal import add_prefix
 
-from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
-from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
+from delphi_utils import GeoMapper
+
+from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
@@ -52,60 +53,6 @@ def files_in_past_week(current_filename) -> List[str]:
 def add_suffix(signals, suffix):
     """Adds `suffix` to every element of `signals`."""
     return [s + suffix for s in signals]
-
-
-def add_prefix(signal_names, wip_signal, prefix: str):
-    """Adds prefix to signal if there is a WIP signal
-    Parameters
-    ----------
-    signal_names: List[str]
-        Names of signals to be exported
-    prefix : 'wip_'
-        prefix for new/non public signals
-    wip_signal : List[str] or bool
-        a list of wip signals: [], OR
-        all signals in the registry: True OR
-        only signals that have never been published: False
-    Returns
-    -------
-    List of signal names
-        wip/non wip signals for further computation
-    """
-
-    if wip_signal is True:
-        return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal, list):
-        make_wip = set(wip_signal)
-        return [
-            (prefix if signal in make_wip else "") + signal
-            for signal in signal_names
-        ]
-    if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
-    raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
-    Parameters
-    ----------
-    signal_ : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
-            return True
-    return False
 
 
 def construct_signals(cbg_df, signal_names):
@@ -175,16 +122,22 @@ def aggregate(df, signal_names, geo_resolution='county'):
     """
     # Prepare geo resolution
     if geo_resolution == 'county':
-        df['geo_id'] = df['county_fips']
+        geo_transformed_df = df.copy()
+        geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        df['geo_id'] = df['county_fips'].apply(lambda x:
-                                               FIPS_TO_STATE[x[:2]])
+        gmpr = GeoMapper()
+        geo_transformed_df = gmpr.add_geocode(df,
+                              from_col='county_fips',
+                              from_code='fips',
+                              new_code='state_id',
+                              new_col='geo_id',
+                              dropna=False)
     else:
         raise ValueError(
-            f'`geo_resolution` must be one of {VALID_GEO_RESOLUTIONS}.')
+            f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')
 
     # Aggregation and signal creation
-    grouped_df = df.groupby(['geo_id'])[signal_names]
+    grouped_df = geo_transformed_df.groupby(['geo_id'])[signal_names]
     df_mean = grouped_df.mean()
     df_sd = grouped_df.std()
     df_n = grouped_df.count()

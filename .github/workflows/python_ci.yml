@@ -30,17 +30,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint pytest pydocstyle wheel
-    - name: Install Delphi utils
-      if: ${{ matrix.packages }} != '_delphi_utils_python'
+    - name: Install
       run: |
-        pip install ../_delphi_utils_python/
-    - name: Install package
-      run: |
-        pip install .
+        make install
     - name: Lint
       run: |
-        # pylint delphi_*
-        # pydocstyle delphi_*
+        # make lint
     - name: Test
       run: |
-        (cd tests && pytest)
+        make test

@@ -1,9 +1,9 @@
 {
   "static_file_dir": "./static",
-  "export_dir": "./receiving",
+  "export_dir": "/common/covidcast/receiving/changehc",
   "cache_dir": "./cache",
-  "input_emr_file": "./tests/test_data/SYNICUE_CMB_INPATIENT_11062020.csv.gz",
-  "input_claims_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+  "input_denom_file": "./tests/test_data/20200601_All_Outpatients_By_County.dat",
+  "input_covid_file": "./tests/test_data/20200601_Covid_Outpatients_By_County.dat",
   "start_date": "2020-02-01",
   "end_date": null,
   "drop_date": null,
@@ -11,7 +11,7 @@
   "n_waiting_days": 3,
   "se": false,
   "parallel": false,
-  "geos": ["state", "msa", "hrr", "fips"],
+  "geos": ["state", "msa", "hrr", "county"],
   "weekday": [true, false],
   "wip_signal": "",
   "aws_credentials": {

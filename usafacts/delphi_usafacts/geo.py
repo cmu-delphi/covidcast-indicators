@@ -1,63 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Functions for converting geocodes."""
 import pandas as pd
 
+from delphi_utils import GeoMapper
 
 INCIDENCE_BASE = 100000
-# https://code.activestate.com/recipes/577775-state-fips-codes-dict/
-STATE_TO_FIPS = {
-    "WA": "53",
-    "DE": "10",
-    "DC": "11",
-    "WI": "55",
-    "WV": "54",
-    "HI": "15",
-    "FL": "12",
-    "WY": "56",
-    "PR": "72",
-    "NJ": "34",
-    "NM": "35",
-    "TX": "48",
-    "LA": "22",
-    "NC": "37",
-    "ND": "38",
-    "NE": "31",
-    "TN": "47",
-    "NY": "36",
-    "PA": "42",
-    "AK": "02",
-    "NV": "32",
-    "NH": "33",
-    "VA": "51",
-    "CO": "08",
-    "CA": "06",
-    "AL": "01",
-    "AR": "05",
-    "VT": "50",
-    "IL": "17",
-    "GA": "13",
-    "IN": "18",
-    "IA": "19",
-    "MA": "25",
-    "AZ": "04",
-    "ID": "16",
-    "CT": "09",
-    "ME": "23",
-    "MD": "24",
-    "OK": "40",
-    "OH": "39",
-    "UT": "49",
-    "MO": "29",
-    "MN": "27",
-    "MI": "26",
-    "RI": "44",
-    "KS": "20",
-    "MT": "30",
-    "MS": "28",
-    "SC": "45",
-    "KY": "21",
-    "OR": "41",
-    "SD": "46",
-}
+
 SECONDARY_FIPS = [
     ("51620", ["51093", "51175"]),
     ("51685", ["51153"]),
@@ -76,32 +24,12 @@ REPLACE_FIPS = [
     ("46102", "46113"),
 ]
 
-FIPS_TO_STATE = {v: k.lower() for k, v in STATE_TO_FIPS.items()}
 
-
-def fips_to_state(fips: str) -> str:
-    """Wrapper that handles exceptions to the FIPS scheme in the USAFacts data.
-
-    All the county FIPS codes are mapped to state by taking the first two
-    digits of the five digit, zero-padded county FIPS and applying
-    FIPS_TO_STATE to map it to the two-letter postal abbreviation.
-
-    Parameters
-    ----------
-    fips: str
-        Five digit, zero padded county FIPS code
-
-    Returns
-    -------
-    str
-        Two-letter postal abbreviation, lower case.
-
-    Raises
-    ------
-    KeyError
-        Inputted FIPS code not recognized.
-    """
-    return FIPS_TO_STATE[fips[:2]]
+# Valid geographical resolutions output by this indicator.
+VALID_GEO_RES = ("county", "state", "msa", "hrr")
+# Sensors that report proportions.  For geo resolutions with unallocated cases
+# or deaths, we avoid reporting these sensors.
+PROP_SENSORS = ("incidence", "cumulative_prop")
 
 
 def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
@@ -121,9 +49,9 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     pd.DataFrame
         Dataframe with same schema as df, with the counts disbursed.
     """
-    COLS = ["new_counts", "cumulative_counts"]
+    cols = ["new_counts", "cumulative_counts"]
     df = df.copy().sort_values(["fips", "timestamp"])
-    for col in COLS:
+    for col in cols:
         # Get values from the aggregated county:
         vals = df.loc[df["fips"] == pooled_fips, col].values / len(fips_list)
         for fips in fips_list:
@@ -142,7 +70,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         Columns: fips, timestamp, new_counts, cumulative_counts, population ...
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
-        ('county', 'state', 'msa', 'hrr').
+        ("county", "state", "msa", "hrr").
     map_df: pd.DataFrame
         Loaded from static file "fips_prop_pop.csv".
     sensor: str
@@ -155,29 +83,31 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     pd.DataFrame
         Columns: geo_id, timestamp, ...
     """
-    VALID_GEO_RES = ("county", "state", "msa", "hrr")
-    #It is not clear how to calculate the proportion for unallocated cases/deaths
-    PROP_SENSORS = ("incidence", "cumulative_prop")
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
 
-    df_mega = df[df['fips'].astype(int) % 1000 == 0].copy()
+    # State-level records unassigned to specific counties are coded as fake
+    # counties with fips XX000.
+    unassigned_counties = df[df["fips"].str.endswith("000")].copy()
 
-    df = df[df['fips'].astype(int) % 1000 != 0].copy()
+    df = df[df["fips"].astype(int) % 1000 != 0].copy()
     # Disburse unallocated cases/deaths in NYC to NYC counties
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
-    df = df[df['fips'] != NYC_FIPS[0][0]]
+    df = df[df["fips"] != NYC_FIPS[0][0]]
 
     if geo_res == "county":
         if sensor not in PROP_SENSORS:
-            df = df.append(df_mega)
+            # It is not clear how to calculate the proportion for unallocated
+            # cases/deaths, so we exclude them for those sensors.
+            df = df.append(unassigned_counties)
         df["geo_id"] = df["fips"]
     elif geo_res == "state":
         # Grab first two digits of fips
         # Map state fips to us postal code
         # Add unallocated cases/deaths
-        df = df.append(df_mega)
-        df["geo_id"] = df["fips"].apply(fips_to_state)
+        df = df.append(unassigned_counties)
+        geo_mapper = GeoMapper()
+        df = geo_mapper.add_geocode(df, "fips", "state_id", new_col="geo_id")
     elif geo_res in ("msa", "hrr"):
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
@@ -188,13 +118,15 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         map_df = map_df.loc[~pd.isnull(map_df[colname])].copy()
         map_df["geo_id"] = map_df[colname].astype(int)
         df["fips"] = df["fips"].astype(int)
-        merged = pd.merge(df, map_df, on="fips")
-        merged["cumulative_counts"] = merged["cumulative_counts"] * merged["pop_prop"]
+        merged = df.merge(map_df, on="fips")
+        merged["cumulative_counts"] =\
+             merged["cumulative_counts"] * merged["pop_prop"]
         merged["new_counts"] = merged["new_counts"] * merged["pop_prop"]
         merged["population"] = merged["population"] * merged["pop_prop"]
         df = merged.drop(["zip", "pop_prop", "hrrnum", "cbsa_id"], axis=1)
     df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
-    df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
+    df["cumulative_prop"] =\
+         df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df

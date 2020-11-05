@@ -14,9 +14,8 @@ import re
 import covidcast
 import pandas as pd
 
-from delphi_utils import read_params
+from delphi_utils import read_params, add_prefix
 from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
-from .handle_wip_signal import add_prefix
 
 
 def check_none_data_frame(data_frame, label, date_range):

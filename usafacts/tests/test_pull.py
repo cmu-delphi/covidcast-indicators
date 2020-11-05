@@ -3,12 +3,8 @@ import pytest
 from os.path import join
 
 import pandas as pd
+from delphi_utils import GeoMapper
 from delphi_usafacts.pull import pull_usafacts_data
-
-pop_df = pd.read_csv(
-    join("..", "static", "fips_population.csv"),
-    dtype={"fips": float, "population": float}
-).rename({"fips": "FIPS"}, axis=1)
 
 base_url_good = "test_data/small_{metric}.csv"
 
@@ -18,11 +14,13 @@ base_url_bad = {
     "extra_cols": "test_data/bad_{metric}_extra_cols.csv"
 }
 
+geo_mapper = GeoMapper()
+
 
 class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"
-        df = pull_usafacts_data(base_url_good, metric, pop_df)
+        df = pull_usafacts_data(base_url_good, metric, geo_mapper)
 
         assert (
             df.columns.values
@@ -34,7 +32,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["missing_days"], metric, pop_df
+                base_url_bad["missing_days"], metric, geo_mapper
             )
 
     def test_missing_cols(self):
@@ -42,7 +40,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["missing_cols"], metric, pop_df
+                base_url_bad["missing_cols"], metric, geo_mapper
             )
 
     def test_extra_cols(self):
@@ -50,5 +48,5 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["extra_cols"], metric, pop_df
+                base_url_bad["extra_cols"], metric, geo_mapper
             )

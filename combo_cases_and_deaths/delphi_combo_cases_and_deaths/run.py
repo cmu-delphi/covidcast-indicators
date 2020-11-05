@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Functions to call when running the function.
+
 This module should contain a function called `run_module`, that is executed when
 the module is run with `python -m delphi_combo_cases_and_deaths`.
 This module produces a combined signal for jhu-csse and usa-facts.  This signal
@@ -26,6 +27,8 @@ def check_none_data_frame(data_frame, label, date_range):
 
 def maybe_append(df1, df2):
     """
+    Append dataframes if available, otherwise return non-None one.
+
     If both data frames are available, append them and return. Otherwise, return
     whichever frame is not None.
     """
@@ -41,9 +44,7 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
-    """
-    Add rows for PR from JHU signals to USA-FACTS signals
-    """
+    """Add rows for PR from JHU signals to USA-FACTS signals."""
     print("Fetching usa-facts...")
     usafacts_df = fetcher("usa-facts", signal, date_range[0], date_range[1], geo)
     print("Fetching jhu-csse...")
@@ -74,7 +75,9 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):
-    """A complete issue includes smoothed signals as well as all raw data
+    """Extend the date range of the raw data backwards by 7 days.
+
+    A complete issue includes smoothed signals as well as all raw data
     that contributed to the smoothed values, so that it's possible to use
     the raw values in the API to reconstruct the smoothed signal at will.
     The smoother we're currently using incorporates the previous 7
@@ -99,7 +102,7 @@ def next_missing_day(source, signals):
     return day
 
 def sensor_signal(metric, sensor, smoother):
-    """Generate the signal name for a particular configuration"""
+    """Generate the signal name for a particular configuration."""
     if smoother == "7dav":
         sensor_name = "_".join([smoother, sensor])
     else:
@@ -107,9 +110,7 @@ def sensor_signal(metric, sensor, smoother):
     return sensor_name, "_".join([metric, sensor_name])
 
 def configure(variants):
-    """
-    Validate params file and set date range.
-    """
+    """Validate params file and set date range."""
     params = read_params()
     params['export_start_date'] = date(*params['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
@@ -153,7 +154,7 @@ def configure(variants):
 
 
 def run_module():
-    """Produce a combined cases and deaths signal using data from JHU and USA Facts"""
+    """Produce a combined cases and deaths signal using data from JHU and USA Facts."""
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]

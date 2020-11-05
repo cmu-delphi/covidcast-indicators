@@ -61,8 +61,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
 
 def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     """
-    Maps a DataFrame df, which contains data at the county resolution, and
-    aggregate it to the geographic resolution geo_res.
+    Map a DataFrame with county level data and aggregate it to the geographic resolution geo_res.
 
     Parameters
     ----------

@@ -1,4 +1,5 @@
 """Functions to call when running the function.
+
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
@@ -14,7 +15,7 @@ from .process import process, files_in_past_week
 
 
 def run_module():
-    """Creates the Safegraph indicator."""
+    """Create the Safegraph indicator."""
     params = read_params()
 
     # Place to write output files.

@@ -20,6 +20,7 @@ from .constants import SIGNALS
 def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """
     Write sensor values to csv.
+
     The dataframe be indexed by (date, geo_id), with columns
     values, se, sample_size
 
@@ -28,7 +29,6 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
         output_name: Suffix name to add to each output file
         output_path: Path to write the csvs to
     """
-
     # Each date is a csv file
     dates = data.index.get_level_values("date").unique()
     for date in dates:

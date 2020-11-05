@@ -17,7 +17,9 @@ from delphi_utils import (
 from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
 from .export import export_csv
-from .constants import SIGNALS, RAW, SMOOTHED, MSA, HRR, STATE, DMA
+from .constants import (SIGNALS, RAW, SMOOTHED,
+                        MSA, HRR, STATE, DMA,
+                        PULL_START_DATE)
 
 
 def run_module():
@@ -69,10 +71,10 @@ def run_module():
 
     # read data frame version of the data
     df_state = get_counts_states(
-        ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
+        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
     )
     df_dma = get_counts_dma(
-        ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
+        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
     )
     df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
 
@@ -81,15 +83,23 @@ def run_module():
     for signal in signal_names:
         if signal.endswith(SMOOTHED):
             # export each geographic region, with both smoothed and unsmoothed data
-            export_csv(df_state, STATE, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=True, receiving_dir=export_dir)
+            export_csv(df_state, STATE, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_dma, DMA, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_hrr, HRR, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_msa, MSA, signal, smooth=True,
+                       start_date = start_date, receiving_dir=export_dir)
         elif signal.endswith(RAW):
-            export_csv(df_state, STATE, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=False, receiving_dir=export_dir)
+            export_csv(df_state, STATE, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_dma, DMA, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_hrr, HRR, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_msa, MSA, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
     # Diff exports, and make incremental versions
     _, common_diffs, new_files = arch_diff.diff_exports()
 

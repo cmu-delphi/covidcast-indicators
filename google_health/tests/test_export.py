@@ -20,12 +20,16 @@ class TestGoogleHealthTrends:
                 "timestamp": ["2020-02-02", "2020-02-03"] * 3,
             }
         )
+        
+        start_date = "2020-02-02"
+        
         td = TemporaryDirectory()
         export_csv(
             input_data,
             geo_name="region",
             sensor="thing",
             smooth=False,
+            start_date=start_date,
             receiving_dir=td.name,
         )
 

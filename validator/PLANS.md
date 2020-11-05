@@ -44,7 +44,7 @@
 
 ### Larger issues
 
-* Improve errors and error reports
+* Improve errors and error report
   * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
   * Easier suppression of many errors at once
     * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc

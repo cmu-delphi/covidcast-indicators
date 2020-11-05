@@ -1,16 +1,16 @@
-import pytest
-
+"""Tests for running the USAFacts indicator."""
+from itertools import product
 from os import listdir
 from os.path import join
 
 import pandas as pd
-from delphi_usafacts.run import run_module
 
 
 class TestRun:
+    """Tests for the `run_module()` function."""
     def test_output_files_exist(self, run_as_module):
-
-        csv_files = listdir("receiving")
+        """Test that the expected output files exist."""
+        csv_files = [f for f in listdir("receiving") if f.endswith(".csv")]
 
         dates = [
             "20200229",
@@ -23,19 +23,17 @@ class TestRun:
             "20200307",
             "20200308",
             "20200309",
-            "202003010",
+            "20200310",
         ]
         geos = ["county", "hrr", "msa", "state"]
-        metrics = [
-            "deaths_cumulative_num",
-            "deaths_incidence_num",
-            "deaths_incidence_prop",
-            "confirmed_cumulative_num",
-            "confirmed_incidence_num",
-            "confirmed_incidence_prop",
-            "deaths_7dav_cumulative_prop",
-            "confirmed_7dav_cumulative_prop",
-        ]
+
+        # enumerate metric names.
+        metrics = []
+        for event, span, stat in product(["deaths", "confirmed"],
+                                         ["cumulative", "incidence"],
+                                         ["num", "prop"]):
+            metrics.append("_".join([event, span, stat]))
+            metrics.append("_".join([event, "7dav", span, stat]))
 
         expected_files = []
         for date in dates:
@@ -43,10 +41,10 @@ class TestRun:
                 for metric in metrics:
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
 
-        set(csv_files) == set(expected_files)
+        assert set(csv_files) == set(expected_files)
 
     def test_output_file_format(self, run_as_module):
-
+        """Test that the output files have the proper format."""
         df = pd.read_csv(
             join("receiving", "20200310_state_confirmed_cumulative_num.csv")
         )

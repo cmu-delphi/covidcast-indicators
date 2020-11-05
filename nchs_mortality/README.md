@@ -10,7 +10,7 @@ the state-level data as-is. For detailed information see the files
 steps below to create a MyAppToken.
 - Click the `Sign up for an app toekn` buttom in the linked website
 - Sign In or Sign Up with Socrata ID
-- Clck the `Create New App Token` buttom
+- Clck the `Create New App Token` button
 - Fill in `Application Name` and `Description` (You can just use NCHS_Mortality
   for both) and click `Save`
 - Copy the `App Token`

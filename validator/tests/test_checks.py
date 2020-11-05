@@ -146,21 +146,22 @@ class TestNameFormat:
         assert pattern_found["signal"] == "signal_signal"
 
 
-class TestCheckBadGeoId:
+class TestCheckBadGeoIdFormat:
     params = {"data_source": "", "span_length": 0,
-              "end_date": "2020-09-02", "expected_lag": {}}
+              "end_date": "2020-09-02", "expected_lag": {},
+              "validator_static_file_dir": "../static"}
 
     def test_empty_df(self):
         validator = Validator(self.params)
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        validator.check_bad_geo_id(empty_df, "name", "county")
+        validator.check_bad_geo_id_format(empty_df, "name", "county")
 
         assert len(validator.raised_errors) == 0
 
     def test_invalid_geo_type(self):
         validator = Validator(self.params)
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        validator.check_bad_geo_id(empty_df, "name", "hello")
+        validator.check_bad_geo_id_format(empty_df, "name", "hello")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_type" in [
@@ -173,7 +174,7 @@ class TestCheckBadGeoId:
         validator = Validator(self.params)
         df = pd.DataFrame(["0", "54321", "123", ".0000",
                            "abc12"], columns=["geo_id"])
-        validator.check_bad_geo_id(df, "name", "county")
+        validator.check_bad_geo_id_format(df, "name", "county")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
@@ -184,7 +185,7 @@ class TestCheckBadGeoId:
         validator = Validator(self.params)
         df = pd.DataFrame(["0", "54321", "123", ".0000",
                            "abc12"], columns=["geo_id"])
-        validator.check_bad_geo_id(df, "name", "msa")
+        validator.check_bad_geo_id_format(df, "name", "msa")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
@@ -195,7 +196,7 @@ class TestCheckBadGeoId:
         validator = Validator(self.params)
         df = pd.DataFrame(["1", "12", "123", "1234", "12345",
                            "a", ".", "ab1"], columns=["geo_id"])
-        validator.check_bad_geo_id(df, "name", "hrr")
+        validator.check_bad_geo_id_format(df, "name", "hrr")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
@@ -208,7 +209,7 @@ class TestCheckBadGeoId:
         validator = Validator(self.params)
         df = pd.DataFrame(["aa", "hi", "HI", "hawaii",
                            "Hawaii", "a", "H.I."], columns=["geo_id"])
-        validator.check_bad_geo_id(df, "name", "state")
+        validator.check_bad_geo_id_format(df, "name", "state")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
@@ -221,7 +222,7 @@ class TestCheckBadGeoId:
         validator = Validator(self.params)
         df = pd.DataFrame(["usa", "SP", " us", "us",
                            "usausa", "US"], columns=["geo_id"])
-        validator.check_bad_geo_id(df, "name", "national")
+        validator.check_bad_geo_id_format(df, "name", "national")
 
         assert len(validator.raised_errors) == 1
         assert "check_geo_id_format" in validator.raised_errors[0].check_data_id
@@ -229,6 +230,87 @@ class TestCheckBadGeoId:
         assert "us" not in validator.raised_errors[0].expression
         assert "US" not in validator.raised_errors[0].expression
         assert "SP" not in validator.raised_errors[0].expression
+
+class TestCheckBadGeoIdValue:
+    params = {"data_source": "", "span_length": 0,
+              "end_date": "2020-09-02", "expected_lag": {}}
+
+    def test_empty_df(self):
+        validator = Validator(self.params)
+        empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
+        validator.check_bad_geo_id_value(empty_df, "name", "county")
+        assert len(validator.raised_errors) == 0
+
+    def test_invalid_geo_id_county(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["01001", "88888", "99999"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "county")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 2
+        assert "01001" not in validator.raised_errors[0].expression
+        assert "88888" in validator.raised_errors[0].expression
+        assert "99999" in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_msa(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["10180", "88888", "99999"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "msa")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 2
+        assert "10180" not in validator.raised_errors[0].expression
+        assert "88888" in validator.raised_errors[0].expression
+        assert "99999" in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_hrr(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["1", "11", "111", "8", "88", "888"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "hrr")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 3
+        assert "1" not in validator.raised_errors[0].expression
+        assert "11" not in validator.raised_errors[0].expression
+        assert "111" not in validator.raised_errors[0].expression
+        assert "8" in validator.raised_errors[0].expression
+        assert "88" in validator.raised_errors[0].expression
+        assert "888" in validator.raised_errors[0].expression
+
+    def test_invalid_geo_id_state(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["aa", "ak"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "state")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 1
+        assert "ak" not in validator.raised_errors[0].expression
+        assert "aa" in validator.raised_errors[0].expression
+
+    def test_uppercase_geo_id(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["ak", "AK"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "state")
+
+        assert len(validator.raised_errors) == 0
+        assert len(validator.raised_warnings) == 1
+        assert "check_geo_id_lowercase" in validator.raised_warnings[0].check_data_id
+        assert "AK" in validator.raised_warnings[0].expression
+
+    def test_invalid_geo_id_national(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame(["us", "zz"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "national")
+
+        assert len(validator.raised_errors) == 1
+        assert "check_bad_geo_id_value" in validator.raised_errors[0].check_data_id
+        assert len(validator.raised_errors[0].expression) == 1
+        assert "us" not in validator.raised_errors[0].expression
+        assert "zz" in validator.raised_errors[0].expression
 
 
 class TestCheckBadVal:

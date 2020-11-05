@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
+        #packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, google_symptoms, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
+        packages: [cdc_covidnet, claims_hosp, combo_cases_and_deaths, google_symptoms, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}

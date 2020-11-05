@@ -13,10 +13,10 @@ import logging
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
+from delphi_utils import Smoother
 
 # first party
 from .config import Config
-from .smooth import left_gauss_linear
 
 
 class DoctorVisitsSensor:
@@ -25,13 +25,13 @@ class DoctorVisitsSensor:
 
     @staticmethod
     def transform(
-            sig, h=Config.SMOOTHER_BANDWIDTH, smoother=left_gauss_linear, base=None
+            sig, smoother, base=None
     ):
         """Transform signal by applying a smoother, and/or adjusting by a base.
 
         Args:
-            signal: 1D signal to transform
-            h: smoothing bandwidth
+            sig: 1D signal to transform
+            smoother: delphi_utils Smoother object
             base: signal to adjust arr with
 
         Returns: smoothed and/or adjusted 1D signal
@@ -39,12 +39,12 @@ class DoctorVisitsSensor:
 
         scaler = MinMaxScaler(feature_range=(0, 1))
         sc_sig = scaler.fit_transform(sig)
-        sm_sig = smoother(sc_sig, h)
+        sm_sig = smoother.smooth(sc_sig)
 
         if base is not None:
             base_scaler = MinMaxScaler(feature_range=(0, 1))
             base = base_scaler.fit_transform(base)
-            sc_base = smoother(base, h)
+            sc_base = smoother.smooth(base)
             sm_sig = np.clip(sm_sig - sc_base, 0, None)
         else:
             sm_sig = np.clip(sm_sig, 0, None)
@@ -223,7 +223,9 @@ class DoctorVisitsSensor:
             # include adjustment for flu like codes
             base = flu1 if code in ["Flu_like_Mixed"] else None
             fitted_codes = DoctorVisitsSensor.transform(
-                code_vals.values.reshape(-1, 1), base=base
+                code_vals.values.reshape(-1, 1),
+                Smoother("savgol", poly_fit_degree=1, gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH),
+                base=base
             )
             new_rates.append(fitted_codes.flatten())
 

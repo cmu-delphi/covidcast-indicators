@@ -167,11 +167,10 @@ class TestSmoothers:
         with pytest.raises(ValueError):
             imputed_signal = smoother.savgol_impute(signal)
 
-        # test window_length > len(signal)
+        # test window_length > len(signal) and boundary_method="identity"
         signal = np.arange(20)
         smoother = Smoother(smoother_name="savgol", boundary_method="identity", window_length=30)
-        with pytest.raises(ValueError):
-            smoothed_signal = smoother.smooth(signal)
+        smoothed_signal = smoother.smooth(signal)
 
         # test the boundary methods
         signal = np.arange(20)

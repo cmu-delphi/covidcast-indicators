@@ -20,12 +20,7 @@ def load_files(pattern = "", num = 1000):
             num_iter += 1
             df_rec = pd.read_csv(f'../receiving/{rec}').set_index('geo_id')
             df_stable = pd.read_csv(f'../receiving_{suff}/{rec}').set_index('geo_id')
-            try:
-                df_join = df_rec.join(df_stable, rsuffix='_stable' )
-            except:
-                print(df_rec.info())
-                print(df_stable.info())
-                assert False, f"failed join on {rec}"
+            df_join = df_rec.join(df_stable, rsuffix='_stable' )
             yield rec, df_join
 
 def main():

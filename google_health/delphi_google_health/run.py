@@ -10,14 +10,16 @@ import logging
 
 from delphi_utils import (
     read_params,
-    S3ArchiveDiffer
+    S3ArchiveDiffer,
+    add_prefix
 )
 
-import covidcast
 from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
 from .export import export_csv
-from .constants import SIGNALS, RAW, SMOOTHED, MSA, HRR, STATE, DMA
+from .constants import (SIGNALS, RAW, SMOOTHED,
+                        MSA, HRR, STATE, DMA,
+                        PULL_START_DATE)
 
 
 def run_module():
@@ -69,10 +71,10 @@ def run_module():
 
     # read data frame version of the data
     df_state = get_counts_states(
-        ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
+        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
     )
     df_dma = get_counts_dma(
-        ght, start_date, end_date, static_dir=static_dir, data_dir=data_dir
+        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
     )
     df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
 
@@ -81,15 +83,23 @@ def run_module():
     for signal in signal_names:
         if signal.endswith(SMOOTHED):
             # export each geographic region, with both smoothed and unsmoothed data
-            export_csv(df_state, STATE, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=True, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=True, receiving_dir=export_dir)
+            export_csv(df_state, STATE, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_dma, DMA, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_hrr, HRR, signal, smooth=True,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_msa, MSA, signal, smooth=True,
+                       start_date = start_date, receiving_dir=export_dir)
         elif signal.endswith(RAW):
-            export_csv(df_state, STATE, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=False, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=False, receiving_dir=export_dir)
+            export_csv(df_state, STATE, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_dma, DMA, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_hrr, HRR, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
+            export_csv(df_msa, MSA, signal, smooth=False,
+                       start_date=start_date, receiving_dir=export_dir)
     # Diff exports, and make incremental versions
     _, common_diffs, new_files = arch_diff.diff_exports()
 
@@ -105,57 +115,3 @@ def run_module():
     # Report failures: someone should probably look at them
     for exported_file in fails:
         print(f"Failed to archive '{exported_file}'")
-
-
-def add_prefix(signal_names, wip_signal, prefix):
-    """Adds prefix to signal if there is a WIP signal
-    Parameters
-    ----------
-    signal_names: List[str]
-        Names of signals to be exported
-    prefix : 'wip_'
-        prefix for new/non public signals
-    wip_signal : List[str] or bool
-        a list of wip signals: [], OR
-        all signals in the registry: True OR
-        only signals that have never been published: False
-    Returns
-    -------
-    List of signal names
-        wip/non wip signals for further computation
-    """
-
-    if wip_signal is True:
-        return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal, list):
-        make_wip = set(wip_signal)
-        return [
-            (prefix if signal in make_wip else "") + signal
-            for signal in signal_names
-        ]
-    if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
-    raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
-    Parameters
-    ----------
-    signal_ : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
-            return True
-    return False

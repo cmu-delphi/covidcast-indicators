@@ -4,7 +4,7 @@
 
 The indicator is run by directly executing the Python module contained in this
 directory. The safest way to do this is to create a virtual environment,
-installed the common DELPHI tools, and then install the module and its
+install the common DELPHI tools, and then install the module and its
 dependencies. To do this, run the following code from this directory:
 
 ```

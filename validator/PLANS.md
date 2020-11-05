@@ -44,17 +44,18 @@
 
 ### Larger issues
 
-* Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
+* Improve errors and error reports
+  * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
+  * Easier suppression of many errors at once
+    * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
+  * Nicer formatting for error “report”.
+    * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Check for erratic data sources that wrongly report all zeroes
   * E.g. the error with the Wisconsin data for the 10/26 forecasts
   * Wary of a purely static check for this
   * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
   * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
-* Easier suppression of many errors at once
-  * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
-* Nicer formatting for error “report”.
-  * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * If can't get data from API, do we want to use substitute data for the comparative checks instead?
   * E.g. most recent successful API pull -- might end up being a couple weeks older

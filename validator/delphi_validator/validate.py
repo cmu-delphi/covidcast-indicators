@@ -256,11 +256,18 @@ class Validator():
         file_path = join(self.validator_static_file_dir, geo_type + '_geo.csv')
         valid_geo_df = pd.read_csv(file_path, dtype = {'geo_id': str})
         valid_geos = valid_geo_df['geo_id'].values
-        unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo not in valid_geos]
+        unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:
             self.raised_errors.append(ValidationError(
                 ("check_bad_geo_id_value", filename),
                 unexpected_geos, "Unrecognized geo_ids (not in historical data)"))
+        self.increment_total_checks()
+        upper_case_geos = [geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
+        if len(upper_case_geos) > 0:
+            self.raised_warnings.append(ValidationError(
+                ("check_geo_id_lowercase", filename),
+                 upper_case_geos, "geo_id contains uppercase characters. Lowercase is preferred."))
+        self.increment_total_checks()
 
     def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type):
         """

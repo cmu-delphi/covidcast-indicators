@@ -39,7 +39,7 @@ class DoctorVisitsSensor:
 
         scaler = MinMaxScaler(feature_range=(0, 1))
         sc_sig = scaler.fit_transform(sig)
-        sm_sig = smoother.smooth(sc_sig)
+        sm_sig = smoother.smooth(np.ravel(sc_sig)).reshape(-1, 1)
 
         if base is not None:
             base_scaler = MinMaxScaler(feature_range=(0, 1))

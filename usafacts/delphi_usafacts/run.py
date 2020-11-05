@@ -15,6 +15,7 @@ from delphi_utils import (
     read_params,
     create_export_csv,
     S3ArchiveDiffer,
+    GeoMapper
 )
 
 from .geo import geo_map
@@ -67,7 +68,7 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-    """Run module for processing USAFacts data."""
+    """Run the usafacts indicator."""
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
@@ -88,12 +89,10 @@ def run_module():
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
 
-    dfs = {metric: pull_usafacts_data(base_url, metric, pop_df) for metric in METRICS}
+    geo_mapper = GeoMapper()
+
+    dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         print(geo_res, metric, sensor, smoother)

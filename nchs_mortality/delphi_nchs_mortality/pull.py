@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
+"""Functions for pulling NCHS mortality data API."""
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
 def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
-    """Pulls the latest NCHS Mortality data, and conforms it into a dataset
+    """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
 

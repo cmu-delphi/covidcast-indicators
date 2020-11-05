@@ -7,7 +7,7 @@ when the module is run with `python -m MODULE_NAME`.
 from os.path import join
 
 import pandas as pd
-from delphi_utils import read_params
+from delphi_utils import read_params, add_prefix
 
 from .geo_maps import (zip_to_msa, zip_to_hrr, zip_to_county, zip_to_state)
 from .pull import (pull_quidel_covidtest,
@@ -22,10 +22,10 @@ from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
                         GEO_RESOLUTIONS, SENSORS, SMOOTHERS,
                         COUNTY, MSA)
-from .handle_wip_sensor import add_prefix
 
 
 def run_module():
+    """Run the quidel_covidtest indicator."""
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]

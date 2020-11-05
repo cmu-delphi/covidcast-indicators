@@ -15,8 +15,9 @@ hrr level data is derived from county level data using population weighted avera
 `2020_US_daily_symptoms_dataset.csv` which includes data for District of Columbia.
 
 ## Metrics, Level 1 (`m1`)
-* `Anosmia`: Google search volume for Anosmia-related searches
-* `Ageusia`: Google search volume for Ageusia-related searches
+* `anosmia`: Google search volume for Anosmia-related searches
+* `ageusia`: Google search volume for Ageusia-related searches
+*`combined_symptoms`*: The sum of Google search volume for Anosmia-related searches and  Ageusia-related searches.
 
 ## Metrics, Level 2 (`m2`)
 * `raw_search`:  Google search volume reported as-is

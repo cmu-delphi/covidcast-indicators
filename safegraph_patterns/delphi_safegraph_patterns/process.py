@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+"""Process and export Safegraph patterns signal."""
 import glob
 from itertools import product
 
@@ -122,8 +123,9 @@ def aggregate(df, metric, geo_res):
 def process(fname, sensors, metrics, geo_resolutions,
             export_dir, brand_df):
     """
-    Process an input census block group-level CSV and export it.  Assumes
-    that the input file has _only_ one date of data.
+    Process an input census block group-level CSV and export it.
+
+    Assumes that the input file has _only_ one date of data.
 
     Parameters
     ----------

@@ -8,5 +8,8 @@ for(type in geo_types){
 }
 
 dtf = covidcast_signal("ght", "raw_search", start_day = "2020-10-01", end_day = "2020-10-01", geo_type = "dma")
-file_name = paste0("../static/dma_geo.csv")
+file_name = "../static/dma_geo.csv"
 write.table(unique(dtf$geo_value), file = file_name, row.names = F, col.names = "geo_id")
+
+national_file = "../static/national_geo.csv"
+write.table("us", file = national_file, row.names = F, col.names = "geo_id")

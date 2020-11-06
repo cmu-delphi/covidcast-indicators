@@ -43,7 +43,7 @@ def preprocess(df, level):
     """
     # Constants
     KEEP_COLUMNS = ["geo_id", "date"] + METRICS + ["combined_symptoms"]
-    
+
     df["combined_symptoms"] = 0
     for metric in METRICS:
         df.rename({"symptom:" + metric: metric}, axis = 1, inplace = True)
@@ -52,7 +52,7 @@ def preprocess(df, level):
             (df["Anosmia"].isnull())
             & (df["Ageusia"].isnull())
             , "combined_symptoms"] = np.nan
-  
+
     # Delete rows with missing FIPS
     null_mask = (df["geo_id"].isnull())
     df = df.loc[~null_mask]

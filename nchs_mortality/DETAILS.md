@@ -1,6 +1,6 @@
 # NCHS Mortality Data
 
-We import the NCHS Mortality Data from CDC website and export
+We import the Mortality Data from NCHS website and export
 the state-level data as-is in a weekly format.  
 
 In order to avoid confusing public consumers of the data, we maintain
@@ -57,6 +57,6 @@ as the corresponding epiweek of date(D + 1).
 ### Data Versioning
 Data versions are tracked on both a daily and weekly level.
 On a daily level, we check for updates for NCHS mortality data every weekday as how it is reported by 
-CDC and stash these daily updates on S3, but not our API.
+NCHS and stash these daily updates on S3, but not our API.
 On a weekly level (on Mondays), we additionally upload the changes to the data 
 made over the past week (due to backfill) to our API.

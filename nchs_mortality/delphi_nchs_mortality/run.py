@@ -104,7 +104,7 @@ def run_module():  # pylint: disable=too-many-branches,too-many-statements
             params["aws_credentials"])
 
         # Dont update cache from S3 (has daily files), only simulate a update_cache() call
-        weekly_arch_diff._cache_updated = True  # pylint: disable=W0212
+        weekly_arch_diff._cache_updated = True  # pylint: disable=protected-access
 
         # Diff exports, and make incremental versions
         _, common_diffs, new_files = weekly_arch_diff.diff_exports()

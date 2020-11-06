@@ -3,7 +3,7 @@
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "data_dir": "./data",
-  "start_date": "2020-01-05",
+  "start_date": "",
   "end_date": "",
   "ght_key": "",
   "wip_signal" : "",

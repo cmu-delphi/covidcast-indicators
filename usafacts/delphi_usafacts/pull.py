@@ -14,7 +14,7 @@ DROP_COLUMNS = [
 
 
 def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.DataFrame:
-    """Pulls the latest USA Facts data, and conforms it into a dataset
+    """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
 
@@ -53,7 +53,6 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
     pd.DataFrame
         Dataframe as described above.
     """
-
     # Read data
     df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
     # Check missing FIPS

@@ -21,7 +21,7 @@ def generate_transition_matrix(geo_res):
         The first is a data frame for HRR regions and the second are MSA
         regions.
     """
-    map_df = gmpr._load_crosswalk("fips", geo_res)  # pylint: disable=W0212
+    map_df = gmpr._load_crosswalk("fips", geo_res)  # pylint: disable=protected-access
     # Add population as weights
     map_df = gmpr.add_population_column(map_df, "fips")
     if geo_res == "hrr":

@@ -8,5 +8,4 @@ for testing.
 
 from __future__ import absolute_import
 
-from . import geo
 from . import process

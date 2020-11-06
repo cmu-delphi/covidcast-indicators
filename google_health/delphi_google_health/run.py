@@ -8,6 +8,8 @@ when the module is run with `python -m MODULE_NAME`.
 import datetime
 import logging
 
+import pandas as pd
+
 from delphi_utils import (
     read_params,
     S3ArchiveDiffer,
@@ -65,17 +67,23 @@ def run_module():
     # Turn on basic logging messages (level INFO)
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     logging.info("Creating data from %s through %s.", start_date, end_date)
-
-    # setup class to handle API calls
-    ght = GoogleHealthTrends(ght_key=ght_key)
-
-    # read data frame version of the data
-    df_state = get_counts_states(
-        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
-    )
-    df_dma = get_counts_dma(
-        ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
-    )
+    
+    if not params["test"]:
+        # setup class to handle API calls
+        ght = GoogleHealthTrends(ght_key=ght_key)
+    
+        # read data frame version of the data
+        df_state = get_counts_states(
+            ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
+        )
+        df_dma = get_counts_dma(
+            ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
+        )
+    else:
+        df_state = pd.read_csv(params["test_data_dir"].format(geo_res="state"))
+        df_dma = pd.read_csv(params["test_data_dir"].format(geo_res="dma"))
+    
+    
     df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
 
     signal_names = add_prefix(SIGNALS, wip_signal, prefix="wip_")

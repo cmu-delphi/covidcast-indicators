@@ -1,6 +1,6 @@
 .PHONY = venv, lint, test, clean
 
-dir = $(shell find ./delphi_* -name __init__.py |  sed 's/\/__init__.py//g;s/\.\///g')
+dir = $(shell find ./delphi_* -name __init__.py | grep -o 'delphi_[_[:alnum:]]*')
 
 venv:
 	python3.8 -m venv env

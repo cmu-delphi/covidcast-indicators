@@ -27,9 +27,9 @@ SENSORS = [
         "prop"
 ]
 INCIDENCE_BASE = 100000
-geo_res = "state"
+GEO_RES = "state"
 
-def run_module():
+def run_module():  # pylint: disable=too-many-branches,too-many-statements
     """Run module for processing NCHS mortality data."""
     params = read_params()
     export_start_date = params["export_start_date"]
@@ -65,7 +65,7 @@ def run_module():
             sensor_name = "_".join(["wip", metric])
             export_csv(
                 df,
-                geo_name=geo_res,
+                geo_name=GEO_RES,
                 export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
@@ -82,7 +82,7 @@ def run_module():
                 sensor_name = "_".join(["wip", metric, sensor])
                 export_csv(
                     df,
-                    geo_name=geo_res,
+                    geo_name=GEO_RES,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
@@ -104,7 +104,7 @@ def run_module():
             params["aws_credentials"])
 
         # Dont update cache from S3 (has daily files), only simulate a update_cache() call
-        weekly_arch_diff._cache_updated = True
+        weekly_arch_diff._cache_updated = True  # pylint: disable=protected-access
 
         # Diff exports, and make incremental versions
         _, common_diffs, new_files = weekly_arch_diff.diff_exports()

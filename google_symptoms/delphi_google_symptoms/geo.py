@@ -21,7 +21,7 @@ def generate_transition_matrix(geo_res):
         The first is a data frame for HRR regions and the second are MSA
         regions.
     """
-    map_df = gmpr._load_crosswalk("fips", geo_res)
+    map_df = gmpr._load_crosswalk("fips", geo_res)  # pylint: disable=W0212
     # Add population as weights
     map_df = gmpr.add_population_column(map_df, "fips")
     if geo_res == "hrr":
@@ -31,7 +31,7 @@ def generate_transition_matrix(geo_res):
             msa_pop, on=geo_res, how="inner", suffixes=["_raw", "_groupsum"]
             )
     map_df["weight"] = map_df["population_raw"] / map_df["population_groupsum"]
- 
+
     map_df = pd.pivot_table(
                  map_df, values='weight', index=["fips"], columns=[geo_res]
               ).fillna(0).reset_index().rename({"fips": "geo_id"}, axis = 1)
@@ -52,13 +52,13 @@ def geo_map(df, geo_res):
     Returns
     -------
     pd.DataFrame
-        A dataframe with columns "geo_id", "timestamp", 
-        and columns for signal vals. 
+        A dataframe with columns "geo_id", "timestamp",
+        and columns for signal vals.
         The geo_id has been converted from fips to HRRs/MSAs
     """
     if geo_res in set(["county", "state"]):
         return df
-    
+
     map_df = generate_transition_matrix(geo_res)
     converted_df = pd.DataFrame(columns = df.columns)
     for _date in df["timestamp"].unique():

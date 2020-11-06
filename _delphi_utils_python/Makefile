@@ -3,7 +3,7 @@
 dir = $(shell find ./delphi_* -name __init__.py |  sed 's/\/__init__.py//g;s/\.\///g')
 
 venv:
-	python3 -m venv env
+	python3.8 -m venv env
 
 install: venv
 	. env/bin/activate; \

@@ -20,4 +20,5 @@ test:
 	(cd tests && ../env/bin/pytest --cov=$(dir) --cov-report=term-missing)
 
 clean:
-	rm -r env
+	rm -rf env
+	rm -f params.json

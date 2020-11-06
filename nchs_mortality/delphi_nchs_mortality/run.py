@@ -29,7 +29,7 @@ SENSORS = [
 INCIDENCE_BASE = 100000
 GEO_RES = "state"
 
-def run_module():  # pylint: disable=R0912,R0915
+def run_module():  # pylint: disable=too-many-branches,too-many-statements
     """Run module for processing NCHS mortality data."""
     params = read_params()
     export_start_date = params["export_start_date"]

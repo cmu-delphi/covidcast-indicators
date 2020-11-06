@@ -113,7 +113,8 @@ class Validator():
         """
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
-        self.validator_static_file_dir = params.get('validator_static_file_dir', '../validator/static')
+        self.validator_static_file_dir = params.get(
+            'validator_static_file_dir', '../validator/static')
 
         # Date/time settings
         self.span_length = timedelta(days=params['span_length'])
@@ -254,19 +255,21 @@ class Validator():
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
         """
         file_path = join(self.validator_static_file_dir, geo_type + '_geo.csv')
-        valid_geo_df = pd.read_csv(file_path, dtype = {'geo_id': str})
+        valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
         valid_geos = valid_geo_df['geo_id'].values
-        unexpected_geos = [geo for geo in df_to_test['geo_id'] if geo.lower() not in valid_geos]
+        unexpected_geos = [geo for geo in df_to_test['geo_id']
+                           if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:
             self.raised_errors.append(ValidationError(
                 ("check_bad_geo_id_value", filename),
                 unexpected_geos, "Unrecognized geo_ids (not in historical data)"))
         self.increment_total_checks()
-        upper_case_geos = [geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
+        upper_case_geos = [
+            geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
         if len(upper_case_geos) > 0:
             self.raised_warnings.append(ValidationError(
                 ("check_geo_id_lowercase", filename),
-                 upper_case_geos, "geo_id contains uppercase characters. Lowercase is preferred."))
+                upper_case_geos, "geo_id contains uppercase characters. Lowercase is preferred."))
         self.increment_total_checks()
 
     def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type):
@@ -306,8 +309,8 @@ class Validator():
             if geo_type in fill_len.keys():
                 # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
                 # caused by FIPS codes saved as numeric.
-                df_to_test["geo_id"] = [geo.zfill(fill_len[geo_type])
-                                        for geo in df_to_test["geo_id"]]
+                df_to_test["geo_id"] = pd.Series([geo.zfill(fill_len[geo_type])
+                                                  for geo in df_to_test["geo_id"]], dtype=str)
 
             expected_geos = [geo[0] for geo in df_to_test['geo_id'].str.findall(
                 geo_regex) if len(geo) > 0]
@@ -747,7 +750,8 @@ class Validator():
             self.check_df_format(data_df, filename)
             self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
-            self.check_bad_geo_id_value(data_df, filename, match.groupdict()['geo_type'])
+            self.check_bad_geo_id_value(
+                data_df, filename, match.groupdict()['geo_type'])
             self.check_bad_val(data_df, filename, match.groupdict()['signal'])
             self.check_bad_se(data_df, filename)
             self.check_bad_sample_size(data_df, filename)

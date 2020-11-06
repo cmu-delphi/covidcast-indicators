@@ -6,8 +6,6 @@ import pandas as pd
 from delphi_validator.datafetcher import filename_regex
 from delphi_validator.validate import Validator, make_date_filter
 
-import pdb
-
 
 class TestDateFilter:
 
@@ -148,8 +146,7 @@ class TestNameFormat:
 
 class TestCheckBadGeoIdFormat:
     params = {"data_source": "", "span_length": 0,
-              "end_date": "2020-09-02", "expected_lag": {},
-              "validator_static_file_dir": "../static"}
+              "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -231,9 +228,11 @@ class TestCheckBadGeoIdFormat:
         assert "US" not in validator.raised_errors[0].expression
         assert "SP" not in validator.raised_errors[0].expression
 
+
 class TestCheckBadGeoIdValue:
     params = {"data_source": "", "span_length": 0,
-              "end_date": "2020-09-02", "expected_lag": {}}
+              "end_date": "2020-09-02", "expected_lag": {},
+              "validator_static_file_dir": "../static"}
 
     def test_empty_df(self):
         validator = Validator(self.params)
@@ -267,7 +266,8 @@ class TestCheckBadGeoIdValue:
 
     def test_invalid_geo_id_hrr(self):
         validator = Validator(self.params)
-        df = pd.DataFrame(["1", "11", "111", "8", "88", "888"], columns=["geo_id"])
+        df = pd.DataFrame(["1", "11", "111", "8", "88",
+                           "888"], columns=["geo_id"])
         validator.check_bad_geo_id_value(df, "name", "hrr")
 
         assert len(validator.raised_errors) == 1

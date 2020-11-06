@@ -1,6 +1,6 @@
 {
   "static_file_dir": "./static",
-  "export_dir": "./receiving",
+  "export_dir": "/common/covidcast/receiving/changehc",
   "cache_dir": "./cache",
   "input_denom_file": "./tests/test_data/20200601_All_Outpatients_By_County.dat",
   "input_covid_file": "./tests/test_data/20200601_Covid_Outpatients_By_County.dat",
@@ -20,9 +20,9 @@
   },
   "bucket_name": "",
   "ftp_conn": {
-    "host": "",
-    "user": "",
-    "pass": "",
-    "port": 0
+    "host": "{{ changehc_sftp_host }}",
+    "user": "{{ changehc_sftp_user }}",
+    "pass": "{{ changehc_sftp_password }}",
+    "port": "{{ changehc_sftp_port }}"
   }
 }

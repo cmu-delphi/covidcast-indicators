@@ -631,7 +631,6 @@ class TestCheckAvgValDiffs:
 class TestDataCorrections:
         params = {"data_source": "", "span_length": 1,
               "end_date": "2020-09-02", "expected_lag": {}}
- 
 
         # Test to determine outliers based on the row data, has lead and lag outlier
         def test_pos_outlier(self):

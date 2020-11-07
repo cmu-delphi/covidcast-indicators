@@ -10,6 +10,7 @@ from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
 from .errors import ValidationError, APIDataFetchError
+import time
 from .datafetcher import filename_regex, \
     read_filenames, load_csv, get_geo_signal_combos, \
     fetch_api_reference
@@ -626,7 +627,6 @@ class Validator():
             - sig: str; signal name as in the CSV name
 
         """
-
         self.increment_total_checks()
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
@@ -643,6 +643,7 @@ class Validator():
         size_cut = 20
         sig_cut = 3
         sig_consec = 2.25
+
 
         # Functions mapped to rows to determine outliers based on fstat and ststat values
         def outlier_flag(frame):
@@ -743,6 +744,7 @@ class Validator():
                 (source_outliers),
                 'Source dates with flagged ouliers based on the \
                 previous 14 days of data available'))
+
 
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
@@ -870,11 +872,13 @@ class Validator():
         # Get relevant data file names and info.
         export_files = read_filenames(export_dir)
         date_filter = make_date_filter(self.start_date, self.end_date)
+     
 
 
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
         self.check_missing_date_files(validate_files)
+        self.check_missing_dates(validate_files)
         self.check_settings()
 
         all_frames = []
@@ -903,6 +907,12 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
+        # Get list of dates we expect to see in the source data.
+        date_slist = all_frames['date'].unique().tolist()
+        date_list = list(
+            map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
+        date_list.sort()
+
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
@@ -916,8 +926,10 @@ class Validator():
         date_list = [self.start_date + timedelta(days=days)
                      for days in range(self.span_length.days + 1)]
 
-        #get 14 days prior to the earliest list date
+
+        # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
+
 
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
@@ -930,6 +942,9 @@ class Validator():
         if self.test_mode:
             kroc = 0
 
+
+        prev_df = None
+        next_df = None
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
         # week) API data.
@@ -947,7 +962,6 @@ class Validator():
                     None,
                     "file with geo_type-signal combo does not exist"))
                 continue
-
 
             max_date = geo_sig_df["time_value"].max()
             self.check_min_allowed_max_date(max_date, geo_type, signal_type)
@@ -978,6 +992,10 @@ class Validator():
             for checking_date in date_list:
                 recent_cutoff_date = checking_date - \
                     recent_lookbehind + timedelta(days=1)
+            # Check data from a group of dates against recent (previous 7 days, by default) and against all 
+            # data from the API.
+            for index, checking_date in enumerate(date_list):
+                recent_cutoff_date = checking_date - recent_lookbehind
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
@@ -1012,6 +1030,29 @@ class Validator():
                         "reference data is empty; comparative checks could not be performed"))
                     continue
 
+
+                
+                
+                # Source frame with the day before and after
+                next_cutoff_date = checking_date + recent_lookbehind
+                source_prev_next_df = geo_sig_df.query(
+                    'time_value <= @next_cutoff_date & time_value >= @recent_cutoff_date')
+
+
+                earliest_available_date = source_prev_next_df["time_value"].min()
+                # Outlier dataframe runs backwards from the checking date, in the future we should reduce the number of api calls
+                outlier_start_date = recent_cutoff_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = fetch_api_reference(
+                    self.data_source, outlier_start_date, outlier_end_date, geo, sig)
+
+                print(outlier_start_date, outlier_end_date, recent_cutoff_date, next_cutoff_date, earliest_available_date)
+                self.data_corrections(source_prev_next_df, outlier_api_df, geo, sig, checking_date)
+                prev_df = recent_df
+
+
+
+
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
@@ -1023,8 +1064,8 @@ class Validator():
                     self.check_avg_val_vs_reference(
                         recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
-
             # Keeps script from checking all files in a test run.
+
             if self.test_mode:
                 kroc += 1
                 if kroc == 2:

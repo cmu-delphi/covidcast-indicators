@@ -22,6 +22,15 @@ METRICS = [
         'pneumonia_deaths', 'pneumonia_and_covid_deaths', 'influenza_deaths',
         'pneumonia_influenza_or_covid_19_deaths'
 ]
+SENSOR_NAME_MAP = {
+        "covid_deaths": "deaths_covid_incidence",
+        "total_deaths": "deaths_allcause_incidence",
+        "percent_of_expected_deaths": "deaths_percent_of_expected",
+        "pneumonia_deaths": "deaths_pneumonia_notflu_incidence",
+        "pneumonia_and_covid_deaths": "deaths_covid_and_pneumonia_notflu_incidence",
+        "influenza_deaths": "deaths_flu_incidence",
+        "pneumonia_influenza_or_covid_19_deaths": "deaths_pneumonia_or_flu_or_covid_incidence"
+}
 SENSORS = [
         "num",
         "prop"
@@ -62,7 +71,7 @@ def run_module():
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
-            sensor_name = "_".join(["wip", metric])
+            sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
                 geo_name=geo_res,
@@ -79,7 +88,7 @@ def run_module():
                     df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
-                sensor_name = "_".join(["wip", metric, sensor])
+                sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
                     geo_name=geo_res,

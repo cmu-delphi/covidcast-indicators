@@ -1026,29 +1026,6 @@ class Validator():
                         "reference data is empty; comparative checks could not be performed"))
                     continue
 
-
-                
-                
-                # Source frame with the day before and after
-                next_cutoff_date = checking_date + recent_lookbehind
-                source_prev_next_df = geo_sig_df.query(
-                    'time_value <= @next_cutoff_date & time_value >= @recent_cutoff_date')
-
-
-                earliest_available_date = source_prev_next_df["time_value"].min()
-                # Outlier dataframe runs backwards from the checking date, in the future we should reduce the number of api calls
-                outlier_start_date = recent_cutoff_date - outlier_lookbehind
-                outlier_end_date = earliest_available_date - timedelta(days=1)
-                outlier_api_df = fetch_api_reference(
-                    self.data_source, outlier_start_date, outlier_end_date, geo, sig)
-
-                print(outlier_start_date, outlier_end_date, recent_cutoff_date, next_cutoff_date, earliest_available_date)
-                self.data_corrections(source_prev_next_df, outlier_api_df, geo, sig, checking_date)
-                prev_df = recent_df
-
-
-
-
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type)
 

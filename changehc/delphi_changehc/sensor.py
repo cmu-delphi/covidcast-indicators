@@ -111,12 +111,15 @@ class CHCSensor:
 
         """
         # backfill
-        total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values, y_data[den_col].values)
+        total_counts, total_visits = CHCSensor.backfill(y_data[num_col].values,
+                                                        y_data[den_col].values)
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
 
-        smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(total_counts.flatten(),total_visits)
+        smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(
+            total_counts.flatten(), total_visits
+        )
 
         # in smoothing, the numerator may have become more than the denominator
         # simple fix is to clip the max values elementwise to the denominator (note that
@@ -136,12 +139,18 @@ class CHCSensor:
         ), f"0 or negative value, {geo_id}"
 
         # cut off at sensor indexes
-        rate_data = pd.DataFrame({'rate':smoothed_total_rates, 'den': smoothed_total_visits}, index=y_data.index)
+        rate_data = pd.DataFrame({'rate':smoothed_total_rates, 'den': smoothed_total_visits},
+                                 index=y_data.index)
         rate_data = rate_data[first_sensor_date:]
         include = rate_data['den'] >= Config.MIN_DEN
         valid_rates = rate_data[include]
         se_valid = valid_rates.eval('sqrt(rate * (1 - rate) / den)')
         rate_data['se'] = se_valid
 
-        logging.debug(f"{geo_id}: {rate_data['rate'][-1]:.3f},[{rate_data['se'][-1]:.3f}]")
-        return {"geo_id": geo_id, "rate": 100 * rate_data['rate'], "se": 100 * rate_data['se'], "incl": include}
+        logging.debug("{0}: {1:.3f},[{2:.3f}]".format(
+            geo_id, rate_data['rate'][-1], rate_data['se'][-1]
+        ))
+        return {"geo_id": geo_id,
+                "rate": 100 * rate_data['rate'],
+                "se": 100 * rate_data['se'],
+                "incl": include}

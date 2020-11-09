@@ -1,3 +1,4 @@
+"""Read parameter files containing configuration information."""
 # -*- coding: utf-8 -*-
 from json import load
 from os.path import exists

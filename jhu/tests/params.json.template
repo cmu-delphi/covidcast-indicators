@@ -3,5 +3,10 @@
     "static_file_dir": "../static",
     "export_dir": "./receiving",
     "cache_dir": "./cache",
-    "base_url": "test_data/small_{metric}.csv"
+    "base_url": "test_data/small_{metric}.csv",
+    "aws_credentials": {
+      "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+      "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
+    },
+    "bucket_name": "test-bucket"
 }

@@ -26,34 +26,28 @@ class TestGeoMap:
 
         out, name = GM.county_to_msa(DATA)
         assert name == "cbsa_id"
-        assert set(out.groups.keys()) == set([11500.0, 13820.0, 19300.0, 33860.0])
+        assert set(out.groups.keys()) == {"11500", "13820", "19300", "33860"}
 
     def test_county_to_state(self):
 
         out, name = GM.county_to_state(DATA)
         assert name == "state_id"
-        assert set(out.groups.keys()) == set(["AL"])
+        assert set(out.groups.keys()) == {"al"}
 
     def test_county_to_hrr(self):
 
         out, name = GM.county_to_hrr(DATA)
         assert name == "hrr"
-        assert set(out.groups.keys()) == set(["1", "134", "144", "2", "6", "7", "9"])
+        assert set(out.groups.keys()) == {"1", "134", "144", "146", "2", "5", "6", "7", "9"}
 
     def test_county_to_megacounty(self):
 
-        out, name = GM.county_to_megacounty(DATA, 10, 10)
+        out, name = GM.county_to_megacounty(DATA, 100000, 10)
         assert name == "PatCountyFIPS"
-        assert set(out.groups.keys()) == set(
-            [
+        assert set(out.groups.keys()) == {
                 "01001",
-                "01003",
                 "01005",
-                "01007",
                 "01009",
-                "01011",
-                "01013",
                 "01015",
-                "01017",
-            ]
-        )
+                "01000"
+        }

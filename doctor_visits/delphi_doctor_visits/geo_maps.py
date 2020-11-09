@@ -12,6 +12,7 @@ from os.path import join
 
 import pandas as pd
 import numpy as np
+from delphi_utils.geomap import GeoMapper
 
 from .config import Config
 from .sensor import DoctorVisitsSensor
@@ -22,6 +23,7 @@ class GeoMaps:
 
     def __init__(self, geo_filepath):
         self.geo_filepath = geo_filepath
+        self.gmpr = GeoMapper()
 
     @staticmethod
     def convert_fips(x):
@@ -43,9 +45,12 @@ class GeoMaps:
             converters={"fips": GeoMaps.convert_fips},
         )
         msa_map.drop_duplicates(inplace=True)
-        data = data.merge(msa_map, how="left", left_on="PatCountyFIPS", right_on="fips")
-        data.dropna(inplace=True)
-        data.drop(columns=["fips", "PatCountyFIPS"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "msa",
+                                     from_col="PatCountyFIPS",
+                                     new_col="cbsa_id")
+        data.drop(columns="PatCountyFIPS", inplace=True)
         data = data.groupby(["ServiceDate", "cbsa_id"]).sum().reset_index()
 
         return data.groupby("cbsa_id"), "cbsa_id"
@@ -66,11 +71,11 @@ class GeoMaps:
             converters={"fips": GeoMaps.convert_fips},
         )
         state_map.drop_duplicates(inplace=True)
-        data = data.merge(
-            state_map, how="left", left_on="PatCountyFIPS", right_on="fips"
-        )
-        data.dropna(inplace=True)
-        data.drop(columns=["PatCountyFIPS", "fips"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "state_id",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
         data = data.groupby(["ServiceDate", "state_id"]).sum().reset_index()
 
         return data.groupby("state_id"), "state_id"
@@ -104,15 +109,15 @@ class GeoMaps:
 
         hrr_map = hrr_map.melt(["fips"], var_name="hrr", value_name="wpop")
         hrr_map = hrr_map[hrr_map["wpop"] > 0]
-
-        data = data.merge(hrr_map, how="left", left_on="PatCountyFIPS", right_on="fips")
-        ## drops rows with no matching HRR, which should not be many
-        data.dropna(inplace=True)
-        data.drop(columns=["PatCountyFIPS", "fips"], inplace=True)
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "hrr",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
 
         ## do a weighted sum by the wpop column to get each HRR's contribution
         tmp = data.groupby(["ServiceDate", "hrr"])
-        wtsum = lambda g: g["wpop"].values @ g[Config.COUNT_COLS]
+        wtsum = lambda g: g["weight"].values @ g[Config.COUNT_COLS]
         data = tmp.apply(wtsum).reset_index()
 
         return data.groupby("hrr"), "hrr"
@@ -160,37 +165,11 @@ class GeoMaps:
             recent_visits_df, how="left", on=["ServiceDate", "PatCountyFIPS"]
         )
 
-        # mark date-fips points to exclude if we see less than threshold visits that day
-        data["ToExclude"] = data["RecentVisits"] < threshold_visits
-
-        # now to convert to megacounties
-        state_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "state_id"],
-            dtype={"state_id": str},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        state_map.drop_duplicates(inplace=True)
-        data = data.merge(
-            state_map, how="left", left_on="PatCountyFIPS", right_on="fips"
-        )
-        # drops rows with no matches, which should not be many
-        data.dropna(inplace=True)
-        data.drop(columns=["fips"], inplace=True)
-        data["StateFIPS"] = data["PatCountyFIPS"].apply(
-            lambda f: str((int(f) // 1000) * 1000).zfill(5)
-        )
-
-        megacounty_df = (
-            data[data["ToExclude"]]
-            .groupby(["ServiceDate", "StateFIPS"])
-            .sum()
-            .reset_index()
-        )
-        megacounty_df["ToExclude"] = False
-        megacounty_df.rename(columns={"StateFIPS": "PatCountyFIPS"}, inplace=True)
-
-        result = pd.concat([data, megacounty_df])
-        result.drop(columns=["StateFIPS", "state_id"], inplace=True)
-
-        return result.groupby("PatCountyFIPS"), "PatCountyFIPS"
+        data = self.gmpr.fips_to_megacounty(data,
+                                            threshold_visits,
+                                            threshold_len,
+                                            fips_col="PatCountyFIPS",
+                                            thr_col="RecentVisits",
+                                            date_col="ServiceDate")
+        data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
+        return data.groupby("PatCountyFIPS"), "PatCountyFIPS"

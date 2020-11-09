@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import googleapiclient
 import googleapiclient.discovery
+from tenacity import retry, wait_fixed, stop_after_attempt
 
 DISCOVERY_URL = "https://www.googleapis.com/discovery/v1/apis/trends/v1beta/rest"
 TERMS_IDS = "anosmia_ms"
@@ -80,13 +81,13 @@ class GoogleHealthTrends:
 
         return data
 
-
+@retry(wait=wait_fixed(60), stop = stop_after_attempt(5))
 def get_counts_states(
     ght: GoogleHealthTrends,
     start_date: str,
     end_date: str,
     static_dir: str,
-    cache_dir: str,
+    data_dir: str,
 ) -> pd.DataFrame:
     """Returns data from Google Trends Health API for all states in a data range.
 
@@ -104,7 +105,7 @@ def get_counts_states(
         end date as a string formated as "YYYY-MM-DD"
     static_dir: str
         path to location where static metadata files are stored
-    cache_dir: str
+    data_dir: str
         path to location where cached CSV files are stored
 
     Returns
@@ -118,7 +119,7 @@ def get_counts_states(
     for state in state_list:
         state_df_list += [
             _get_counts_geoid(
-                ght, state, start_date, end_date, dma=False, cache_dir=cache_dir
+                ght, state, start_date, end_date, dma=False, data_dir=data_dir
             )
         ]
 
@@ -127,13 +128,13 @@ def get_counts_states(
 
     return state_df
 
-
+@retry(wait=wait_fixed(60), stop = stop_after_attempt(5))
 def get_counts_dma(
     ght: GoogleHealthTrends,
     start_date: str,
     end_date: str,
     static_dir: str,
-    cache_dir: str,
+    data_dir: str,
 ) -> pd.DataFrame:
     """Returns data from Google Trends Health API for all DMA regions in a data range.
 
@@ -151,7 +152,7 @@ def get_counts_dma(
         end date as a string formated as "YYYY-MM-DD"
     static_dir: str
         path to location where static metadata files are stored
-    cache_dir: str
+    data_dir: str
         path to location where cached CSV files are stored
 
     Returns
@@ -165,7 +166,7 @@ def get_counts_dma(
     for dma in dma_list:
         dma_df_list += [
             _get_counts_geoid(
-                ght, dma, start_date, end_date, dma=True, cache_dir=cache_dir
+                ght, dma, start_date, end_date, dma=True, data_dir=data_dir
             )
         ]
 
@@ -178,7 +179,7 @@ def _get_counts_geoid(
     start_date: str,
     end_date: str,
     dma: bool,
-    cache_dir: str,
+    data_dir: str,
 ) -> pd.DataFrame:
     """Given a GeoID and date range, return data frame of counts from Google Trends Health API
 
@@ -197,7 +198,7 @@ def _get_counts_geoid(
     dma: bool
         is the `geo_id` a DMA code? Otherwise, assumes that the code is a
         two-letter state code.
-    cache_dir: str
+    data_dir: str
         path to location where cached CSV files are stored
 
     Returns
@@ -206,28 +207,27 @@ def _get_counts_geoid(
         a data frame with columns "geo_id", "timestamp", and "val"
     """
 
-    dt = _load_cached_file(geo_id, cache_dir).sort_values("timestamp")
+    dt = _load_cached_file(geo_id, data_dir).sort_values("timestamp")
 
     output_dates = set(pd.date_range(start_date, end_date).to_native_types())
     cache_dates = set(dt["timestamp"].values)
     req_dates = list(output_dates - cache_dates)
-
     try:
         if req_dates:
             sdate = min(req_dates)
             edate = max(req_dates)
             new_data = _api_data_to_df(
-                ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
-                geo_id=geo_id,
-            )
+                    ght.query(start_date=sdate, end_date=edate, geo_id=geo_id, dma=dma),
+                    geo_id=geo_id,
+                )
             new_data = new_data[new_data["timestamp"].isin(req_dates)]
             dt = dt.append(new_data).sort_values("timestamp")
             dt = dt.drop_duplicates(subset="timestamp")
-            _write_cached_file(dt, geo_id, cache_dir)
-            dt = _load_cached_file(geo_id, cache_dir)
+            _write_cached_file(dt, geo_id, data_dir)
+            dt = _load_cached_file(geo_id, data_dir)
     except googleapiclient.errors.HttpError:
-        #  This is thrown in there is no data yet for the given days. Need to
-        #  investigate this further.
+        #  This is thrown in there is no data yet for the given days. Need to
+        #  investigate this further.
         pass
 
     dt = dt[dt["timestamp"].isin(output_dates)]
@@ -266,7 +266,7 @@ def _api_data_to_df(data: dict, geo_id: str) -> pd.DataFrame:
     return df
 
 
-def _load_cached_file(geo_id: str, cache_dir: str) -> pd.DataFrame:
+def _load_cached_file(geo_id: str, data_dir: str) -> pd.DataFrame:
     """Read cached data file for a given GeoID.
 
     Parameters
@@ -274,7 +274,7 @@ def _load_cached_file(geo_id: str, cache_dir: str) -> pd.DataFrame:
     geo_id: str
         geo_id of the region to grab; either a numeric value (DMA) or a two
         letter state abbreviation
-    cache_dir: str
+    data_dir: str
         path to location where cached CSV files are stored
 
     Returns
@@ -282,13 +282,13 @@ def _load_cached_file(geo_id: str, cache_dir: str) -> pd.DataFrame:
     pd.DataFrame
     """
     try:
-        fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
+        fn_cache = join(data_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
         return pd.read_csv(fn_cache)
     except FileNotFoundError:
         return pd.DataFrame({"geo_id": [], "timestamp": [], "val": []})
 
 
-def _write_cached_file(df: pd.DataFrame, geo_id: str, cache_dir: str):
+def _write_cached_file(df: pd.DataFrame, geo_id: str, data_dir: str):
     """Save a data frame as a CSV cache file for later usage.
 
     Parameters
@@ -298,8 +298,8 @@ def _write_cached_file(df: pd.DataFrame, geo_id: str, cache_dir: str):
     geo_id: str
         geo_id of the region to grab; either a numeric value (DMA) or a two
         letter state abbreviation
-    cache_dir: str
+    data_dir: str
         path to location where cached CSV files are stored
     """
-    fn_cache = join(cache_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
+    fn_cache = join(data_dir, f"Data_{geo_id}_{TERMS_IDS}.csv")
     df.to_csv(fn_cache, index=False, float_format="%.8f")

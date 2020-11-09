@@ -6,7 +6,6 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, time, timedelta
 from itertools import product
-from functools import partial
 from os.path import join
 
 import numpy as np
@@ -21,7 +20,6 @@ from delphi_utils import (
 
 from .geo import geo_map
 from .pull import pull_usafacts_data
-
 
 # global constants
 METRICS = [

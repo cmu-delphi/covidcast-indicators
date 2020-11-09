@@ -6,7 +6,7 @@
 * Recognized file name format
 * Recognized geographical type (county, state, etc)
 * Recognized geo id format (e.g. state is two lowercase letters)
-* Geo id has been seen before, in historical data
+* Specific geo id has been seen before, in historical data
 * Missing geo type + signal + date combos based on the geo type + signal combos Covidcast metadata says should be available
 * Missing ‘val’ values
 * Negative ‘val’ values
@@ -44,6 +44,9 @@
 
 ### Larger issues
 
+* Expand framework to support nchs_mortality, which is provided on a weekly basis and has some differences from the daily data. E.g. filenames use a different format ("weekly_YYYYWW_geotype_signalname.csv")
+* Make backtesting framework so new checks can be run individually on historical indicator data to tune false positives, output verbosity, understand frequency of error raising, etc. Should pull data from API the first time and save locally in `cache` dir.
+* Add DETAILS.md doc with detailed descriptions of what each check does and how. Will be especially important for statistical/anomaly detection checks.
 * Improve errors and error report
   * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
   * Easier suppression of many errors at once
@@ -62,7 +65,8 @@
   * Currently, any API fetch problems just doesn't do comparative checks at all.
 * Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
   * Profiling (iterate)
-  * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section. Parallelize?)
+  * Save intermediate files?
+  * Currently a bottleneck at "individual file checks" section. Parallelize?
   * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.
 * Ensure validator runs on signals that require AWS credentials (iterate)
 

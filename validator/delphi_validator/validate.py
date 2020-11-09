@@ -733,7 +733,7 @@ class Validator():
             sort_values(by=['time_value','geo_id']).drop(columns=['index']). \
             drop_duplicates().reset_index()
 
-
+        # Identify outliers just in the source data
         source_outliers = all_outliers.query \
             ("time_value >= @source_frame_start & time_value <= @source_frame_end")
 
@@ -975,7 +975,7 @@ class Validator():
 
             min_date = min(date_list)
             max_date = max(date_list)
-            # Source frame with the day before and after
+            # Source frame with all relevant dates
             source_df = geo_sig_df.query(
                 'time_value <= @max_date & time_value >= @min_date')
             earliest_available_date = source_df["time_value"].min()
@@ -992,10 +992,6 @@ class Validator():
             for checking_date in date_list:
                 recent_cutoff_date = checking_date - \
                     recent_lookbehind + timedelta(days=1)
-            # Check data from a group of dates against recent (previous 7 days, by default) and against all 
-            # data from the API.
-            for index, checking_date in enumerate(date_list):
-                recent_cutoff_date = checking_date - recent_lookbehind
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 

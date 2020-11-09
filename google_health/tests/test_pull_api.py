@@ -15,8 +15,7 @@ from delphi_google_health.pull_api import (
 class TestGoogleHealthTrends:
      def test_class_state(self):
          
-         # TODO
-         # Issue #444 in covidcast-indicators repo
+         # TODO (#474 in covidcast-indicators repo)
          assert True
 
 #         params = read_params()
@@ -38,8 +37,7 @@ class TestGoogleHealthTrends:
 
      def test_class_dma(self):
          
-         # TODO
-         # Issue #444 in covidcast-indicators repo
+         # TODO (#474 in covidcast-indicators repo)
          assert True
 
 #         params = read_params()
@@ -62,8 +60,7 @@ class TestGoogleHealthTrends:
 class TestingPullCounts:
      def test_get_state_counts(self):
          
-         # TODO
-         # Issue #444 in covidcast-indicators repo
+         # TODO (#474 in covidcast-indicators repo)
          assert True
 
 #         params = read_params()
@@ -84,8 +81,7 @@ class TestingPullCounts:
 
      def test_get_state_counts(self):
          
-         # TODO
-         # Issue #444 in covidcast-indicators repo
+         # TODO (#474 in covidcast-indicators repo)
          assert True
 
 #         params = read_params()
@@ -106,8 +102,7 @@ class TestingPullCounts:
 class TestGrabAPI:
      def test_api_grab(self):
          
-         # TODO
-         # Issue #444 in covidcast-indicators repo
+         # TODO (#474 in covidcast-indicators repo)
          assert True
 
 #         # Use a temporary cache directory to force pulling from the API

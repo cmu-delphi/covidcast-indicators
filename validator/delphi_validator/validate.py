@@ -973,12 +973,7 @@ class Validator():
             if geo_sig_api_df is None:
                 continue
 
-            min_date = min(date_list)
-            max_date = max(date_list)
-            # Source frame with all relevant dates
-            source_df = geo_sig_df.query(
-                'time_value <= @max_date & time_value >= @min_date')
-            earliest_available_date = source_df["time_value"].min()
+            earliest_available_date = geo_sig_df["time_value"].min()
 
             # Outlier dataframe
             outlier_start_date = earliest_available_date - outlier_lookbehind

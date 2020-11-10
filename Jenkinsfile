@@ -34,23 +34,35 @@ pipeline {
             }
         }
 
-    //     stage('Build') {
-    //         when {
-    //             changeRequest target: "deploy-*", comparator: "GLOB"
-    //         }
-    //         steps {
-    //             sh "jenkins/${INDICATOR}-jenkins-build.sh"
-    //         }
-    //     }
+        stage('Build and Package') {
+            when {
+                changeRequest target: "test-main";
+            }
+            steps {
+                // sh "jenkins/${INDICATOR}-jenkins-build.sh"
+                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+            }
+        }
 
-    //     stage('Test') {
-    //         when {
-    //             changeRequest target: "deploy-*", comparator: "GLOB"
-    //         }
-    //         steps {
-    //             sh "jenkins/${INDICATOR}-jenkins-test.sh"
-    //         }
-    //     }
+        stage('Deploy staging') {
+            when {
+                branch "main";
+            }
+            steps {
+                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                // sh "jenkins/${INDICATOR}-jenkins-test.sh"
+            }
+        }
+
+        stage('Deploy production') {
+            when {
+                branch "prod"; // TODO Rename to new production branch
+            }
+            steps {
+                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                // sh "jenkins/${INDICATOR}-jenkins-test.sh"
+            }
+        }
         
     //     stage('Package') {
     //         when {

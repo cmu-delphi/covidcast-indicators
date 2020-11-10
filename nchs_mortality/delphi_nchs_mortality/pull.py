@@ -33,12 +33,12 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ['covid_deaths', 'total_deaths',
+    keep_columns = ['covid_deaths', 'total_deaths',
                     'percent_of_expected_deaths', 'pneumonia_deaths',
                     'pneumonia_and_covid_deaths', 'influenza_deaths',
                     'pneumonia_influenza_or_covid_19_deaths']
-    TYPE_DICT = {key: float for key in KEEP_COLUMNS}
-    TYPE_DICT["timestamp"] = 'datetime64[ns]'
+    type_dict = {key: float for key in keep_columns}
+    type_dict["timestamp"] = 'datetime64[ns]'
 
     if test_mode == "":
         # Pull data from Socrata API
@@ -52,18 +52,18 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     # Check missing start_week == end_week
     try:
         assert sum(df["timestamp"] != df["end_week"]) == 0
-    except AssertionError:
+    except AssertionError as exc:
         raise ValueError(
             "end_week is not always the same as start_week, check the raw file"
-        )
+        ) from exc
 
     try:
-        df = df.astype(TYPE_DICT)
-    except KeyError:
+        df = df.astype(type_dict)
+    except KeyError as exc:
         raise ValueError("Expected column(s) missed, The dataset "
-            "schema may have changed. Please investigate and "
-            "amend the code.")
-    
+                         "schema may have changed. Please investigate and "
+                         "amend the code.") from exc
+
     df = df[df["state"] != "United States"]
     df.loc[df["state"] == "New York City", "state"] = "New York"
 
@@ -91,7 +91,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         )
 
     # Add population info
-    KEEP_COLUMNS.extend(["timestamp", "geo_id", "population"])
-    df = df.merge(map_df, on="state")[KEEP_COLUMNS]
-    
+    keep_columns.extend(["timestamp", "geo_id", "population"])
+    df = df.merge(map_df, on="state")[keep_columns]
+
     return df

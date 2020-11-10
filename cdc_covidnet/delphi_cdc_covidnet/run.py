@@ -16,10 +16,7 @@ from .update_sensor import update_sensor
 
 
 def run_module():
-    """
-    Parse parameters and generates csv files for the COVID-NET sensor
-    """
-
+    """Parse parameters and generates csv files for the COVID-NET sensor."""
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)

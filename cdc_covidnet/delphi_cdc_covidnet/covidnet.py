@@ -17,22 +17,19 @@ import pandas as pd
 from .api_config import APIConfig
 
 class CovidNet:
-    """
-    Methods for downloading and loading COVID-NET data
-    """
+    """Methods for downloading and loading COVID-NET data."""
 
     @staticmethod
     def download_mappings(
             url: str = APIConfig.INIT_URL,
             outfile: str = "./init.json"):
         """
-        Downloads the JSON file with all mappings (age, mmwr, catchments etc.) to disk
+        Download the JSON file with all mappings (age, mmwr, catchments etc.) to disk.
 
         Args:
             url: The API URL to GET from
             outfile: The output JSON file to write to
         """
-
         params = {"appVersion": "Public"}
         data = requests.get(url, params).json()
         with open(outfile, "w") as f_json:
@@ -41,8 +38,7 @@ class CovidNet:
     @staticmethod
     def read_mappings(infile: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
         """
-        Reads the mappings JSON file from disk to produce formatted
-        pd.DataFrame for relevant mappings
+        Read the mappings JSON file from disk to produce formatted DataFrames for relevant mappings.
 
         Args:
             infile: Mappings JSON file
@@ -52,7 +48,6 @@ class CovidNet:
             mmwr_info: Date-related mappings
             catchment_info: Geography-related mappings
         """
-
         with open(infile, "r") as f_json:
             data = json.load(f_json)
 
@@ -76,7 +71,8 @@ class CovidNet:
             outfile: str,
             url: str = APIConfig.HOSP_URL):
         """
-        Downloads hospitalization data to disk for a particular network or state
+        Download hospitalization data to disk for a particular network or state.
+
         Refer to catchment_info for network & catchment ID mappings
         Refer to age_info for age-group mappings
         Seasons are enumerated in original mappings JSON file
@@ -89,7 +85,6 @@ class CovidNet:
             outfile: JSON file to write the results to
             url: The API URL to POST to for downloading hospitalization data
         """
-
         download_params = {
             "AppVersion": "Public",
             "networkid": network_id,
@@ -108,7 +103,7 @@ class CovidNet:
             mappings_file: str, cache_path: str, parallel: bool = False
         ) -> List[str]:
         """
-        Downloads hospitalization data for all states listed in the mappings JSON file to disk.
+        Download hospitalization data for all states listed in the mappings JSON file to disk.
 
         Args:
             mappings_file: Mappings JSON file
@@ -118,7 +113,6 @@ class CovidNet:
         Returns:
             List of all downloaded JSON filenames (including the cache_path)
         """
-
         catchment_info, _, age_info = CovidNet.read_mappings(mappings_file)
 
         # By state
@@ -159,7 +153,7 @@ class CovidNet:
     @staticmethod
     def read_all_hosp_data(state_files: List[str]) -> pd.DataFrame:
         """
-        Read and combine hospitalization JSON files for each state into a pd.DataFrame
+        Read and combine hospitalization JSON files for each state into a pd.DataFrame.
 
         Args:
             state_files: List of hospitalization JSON files for each state to read from disk
@@ -167,7 +161,6 @@ class CovidNet:
         Returns:
             Single pd.DataFrame with all the hospitalization data combined
         """
-
         dfs = []
         for state_file in state_files:
             # Read json

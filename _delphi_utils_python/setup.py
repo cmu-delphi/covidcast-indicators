@@ -8,6 +8,7 @@ required = [
     "moto",
     "numpy",
     "pandas>=1.1.0",
+    "pylint",
     "pytest",
     "pytest-cov",
     "xlrd"

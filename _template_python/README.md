@@ -42,7 +42,6 @@ To run static tests of the code style, run the following command:
 make lint
 ```
 
-
 Unit tests are also included in the module. To execute these, run the following
 command from this directory:
 
@@ -59,7 +58,5 @@ To run individual tests, run the following:
 The output will show the number of unit tests that passed and failed, along
 with the percentage of code covered by the tests. 
 
-
 None of the linting or unit tests should fail, and the code lines that are not covered by unit tests should be small and
 should not include critical sub-routines. 
-

@@ -35,28 +35,61 @@ deactivate
 rm -r env
 ```
 
+## Running the Indicator
+
+The indicator is run by directly executing the Python module contained in this
+directory. The safest way to do this is to create a virtual environment,
+installed the common DELPHI tools, and then install the module and its
+dependencies. To do this, run the following command from this directory:
+
+```
+make install
+```
+
+This command will install the package in editable mode, so you can make changes that
+will automatically propagate to the installed package. 
+
+All of the user-changable parameters are stored in `params.json`. To execute
+the module and produce the output datasets (by default, in `receiving`), run
+the following:
+
+```
+env/bin/python -m delphi_usafacts
+```
+
+If you want to enter the virtual environment in your shell, 
+you can run `source env/bin/activate`. Run `deactivate` to leave the virtual environment. 
+
+Once you are finished, you can remove the virtual environment and 
+params file with the following:
+
+```
+make clean
+```
+
 ## Testing the code
 
-To do a static test of the code style, it is recommended to run **pylint** on
-the module. To do this, run the following from the main module directory:
+To run static tests of the code style, run the following command:
 
 ```
-env/bin/pylint delphi_usafacts
+make lint
 ```
-
-The most aggressive checks are turned off; only relatively important issues
-should be raised and they should be manually checked (or better, fixed).
 
 Unit tests are also included in the module. To execute these, run the following
 command from this directory:
 
 ```
-(cd tests && ../env/bin/pytest --cov=delphi_usafacts --cov-report=term-missing)
+make test
+```
+
+To run individual tests, run the following:
+
+```
+(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_usafacts --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along
-with the percentage of code covered by the tests. None of the tests should
-fail and the code lines that are not covered by unit tests should be small and
-should not include critical sub-routines.
+with the percentage of code covered by the tests. 
 
-- Jenkins test #1
+None of the linting or unit tests should fail, and the code lines that are not covered by unit tests should be small and
+should not include critical sub-routines. 

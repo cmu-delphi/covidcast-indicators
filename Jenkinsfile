@@ -12,70 +12,72 @@ pipeline {
         stage ("Environment") {            
             when {
                 anyOf {
-                    branch "deploy-*";
-                    changeRequest target: "deploy-*", comparator: "GLOB"
+                    branch "main";
+                    branch "prod";
+                    changeRequest target: "main";
                 }
             }
             steps {
-                script {
-                    // Get the indicator name from the pipeline env.
-                    if ( env.CHANGE_TARGET ) {
-                        INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
-                    }
-                    else if ( env.BRANCH_NAME ) {
-                        INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
-                    }
-                    else {
-                        INDICATOR = ""
-                    }
-                } 
+                // script {
+                //     // Get a list of indicators and read them into a list.
+                //     if ( env.CHANGE_TARGET ) {
+                //         INDICATOR = env.CHANGE_TARGET.replaceAll("deploy-", "")
+                //     }
+                //     else if ( env.BRANCH_NAME ) {
+                //         INDICATOR = env.BRANCH_NAME.replaceAll("deploy-", "")
+                //     }
+                //     else {
+                //         INDICATOR = ""
+                //     }
+                // } 
+                sh "echo This is a thing happening on ${BRANCH_NAME}|${CHANGE_TARGET}" // TEST
             }
         }
 
-        stage('Build') {
-            when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-build.sh"
-            }
-        }
+    //     stage('Build') {
+    //         when {
+    //             changeRequest target: "deploy-*", comparator: "GLOB"
+    //         }
+    //         steps {
+    //             sh "jenkins/${INDICATOR}-jenkins-build.sh"
+    //         }
+    //     }
 
-        stage('Test') {
-            when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-test.sh"
-            }
-        }
+    //     stage('Test') {
+    //         when {
+    //             changeRequest target: "deploy-*", comparator: "GLOB"
+    //         }
+    //         steps {
+    //             sh "jenkins/${INDICATOR}-jenkins-test.sh"
+    //         }
+    //     }
         
-        stage('Package') {
-            when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-package.sh"
-            }
-        }
+    //     stage('Package') {
+    //         when {
+    //             changeRequest target: "deploy-*", comparator: "GLOB"
+    //         }
+    //         steps {
+    //             sh "jenkins/${INDICATOR}-jenkins-package.sh"
+    //         }
+    //     }
 
-        stage('Deploy to staging env') {
-            when {
-                changeRequest target: "deploy-*", comparator: "GLOB"
-            }
-            steps {
-                sh "jenkins/jenkins-deploy-staging.sh ${INDICATOR}"
-            }
-        }
+    //     stage('Deploy to staging env') {
+    //         when {
+    //             changeRequest target: "deploy-*", comparator: "GLOB"
+    //         }
+    //         steps {
+    //             sh "jenkins/jenkins-deploy-staging.sh ${INDICATOR}"
+    //         }
+    //     }
 
-        stage('Deploy') {
-            when {
-                branch "deploy-*"
-            }
-            steps {
-                sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
-            }
-        }
+    //     stage('Deploy') {
+    //         when {
+    //             branch "deploy-*"
+    //         }
+    //         steps {
+    //             sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
+    //         }
+    //     }
     }
 
     post {
@@ -84,7 +86,7 @@ pipeline {
                 /*
                 Use slackNotifier.groovy from shared library and provide current
                 build result as parameter.
-                */   
+                */
                 slackNotifier(currentBuild.currentResult)
             }
         }

@@ -30,7 +30,7 @@ pipeline {
                 //         INDICATOR = ""
                 //     }
                 // } 
-                sh "echo This is a thing happening on ${BRANCH_NAME}|${CHANGE_TARGET}" // TEST
+                sh 'echo "This is a thing happening on ${BRANCH_NAME}|${CHANGE_TARGET}"' // TEST
             }
         }
 

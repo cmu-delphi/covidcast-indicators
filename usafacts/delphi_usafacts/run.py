@@ -11,10 +11,10 @@ from os.path import join
 import numpy as np
 import pandas as pd
 from delphi_utils import (
-    read_params,
     create_export_csv,
-    S3ArchiveDiffer,
+    read_params,
     GeoMapper,
+    S3ArchiveDiffer,
     Smoother
 )
 

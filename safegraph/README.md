@@ -1,4 +1,4 @@
-# Patterns Dataset in Safegraph Mobility Data
+# Safegraph Mobility Data
 
 We import raw mobility data from Safegraph, calculate some 
 statistics upon it, and aggregate the data from the Zip Code level to County,

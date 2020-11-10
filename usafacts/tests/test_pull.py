@@ -3,6 +3,7 @@ import pytest
 from os.path import join
 
 import pandas as pd
+import numpy as np
 from delphi_utils import GeoMapper
 from delphi_usafacts.pull import pull_usafacts_data
 
@@ -21,11 +22,17 @@ class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"
         df = pull_usafacts_data(base_url_good, metric, geo_mapper)
-
-        assert (
-            df.columns.values
-            == ["fips", "timestamp", "population", "new_counts", "cumulative_counts"]
-        ).all()
+        expected_df = pd.DataFrame({
+            "fips": ["00001", "00001", "00001", "36009", "36009", "36009"],
+            "timestamp": [pd.Timestamp("2020-02-29"), pd.Timestamp("2020-03-01"),
+                          pd.Timestamp("2020-03-02"), pd.Timestamp("2020-02-29"),
+                          pd.Timestamp("2020-03-01"), pd.Timestamp("2020-03-02")],
+            "population": [np.nan, np.nan, np.nan, 76117., 76117., 76117.],
+            "new_counts": [0., 0., 1., 2., 2., 2.],
+            "cumulative_counts": [0, 0, 1, 2, 4, 6]},
+            index=[1, 2, 3, 5, 6, 7])
+        # sort since rows order doesn't matter
+        pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())
 
     def test_missing_days(self):
         

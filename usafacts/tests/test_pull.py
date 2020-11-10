@@ -7,7 +7,7 @@ import numpy as np
 from delphi_utils import GeoMapper
 from delphi_usafacts.pull import pull_usafacts_data
 
-base_url_good = "test_data/small_{metric}.csv"
+base_url_good = "test_data/small_{metric}_pull.csv"
 
 base_url_bad = {
     "missing_days": "test_data/bad_{metric}_missing_days.csv",

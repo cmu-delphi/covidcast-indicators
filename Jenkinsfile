@@ -12,9 +12,9 @@ pipeline {
         stage ("Environment") {            
             when {
                 anyOf {
-                    branch "main";
+                    branch "test-main"; // TODO switch to main when done.
                     branch "prod";
-                    changeRequest target: "main";
+                    changeRequest target: "test-main"; // TODO switch to main when done.
                 }
             }
             steps {

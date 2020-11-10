@@ -138,6 +138,8 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             raise ValueError("Invalid impute_method given.")
         if self.boundary_method not in valid_boundary_methods:
             raise ValueError("Invalid boundary_method given.")
+        if self.window_length <= 1:
+            raise ValueError("Window length is too short.")
 
         if smoother_name == "savgol":
             # The polynomial fitting is done on a past window of size window_length
@@ -165,20 +167,36 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             A smoothed 1D signal. Returns an array of the same type and length as
             the input.
         """
+        # If all nans, pass through
+        if np.all(np.isnan(signal)):
+            return signal
+
         is_pandas_series = isinstance(signal, pd.Series)
         signal = signal.to_numpy() if is_pandas_series else signal
 
-        signal = self.impute(signal)
+        # Find where the first non-nan value is located and truncate the initial nans
+        ix = np.where(~np.isnan(signal))[0][0]
+        signal = signal[ix:]
 
-        if self.smoother_name == "savgol":
-            signal_smoothed = self.savgol_smoother(signal)
-        elif self.smoother_name == "left_gauss_linear":
-            signal_smoothed = self.left_gauss_linear_smoother(signal)
-        elif self.smoother_name == "moving_average":
-            signal_smoothed = self.moving_average_smoother(signal)
-        else:
+        # Don't smooth in certain edge cases
+        if len(signal) < self.poly_fit_degree or len(signal) == 1:
             signal_smoothed = signal.copy()
+        else:
+            # Impute
+            signal = self.impute(signal)
 
+            # Smooth
+            if self.smoother_name == "savgol":
+                signal_smoothed = self.savgol_smoother(signal)
+            elif self.smoother_name == "left_gauss_linear":
+                signal_smoothed = self.left_gauss_linear_smoother(signal)
+            elif self.smoother_name == "moving_average":
+                signal_smoothed = self.moving_average_smoother(signal)
+            elif self.smoother_name == "identity":
+                signal_smoothed = signal
+
+        # Append the nans back, since we want to preserve length
+        signal_smoothed = np.hstack([np.nan*np.ones(ix), signal_smoothed])
         signal_smoothed = signal_smoothed if not is_pandas_series else pd.Series(signal_smoothed)
         return signal_smoothed
 
@@ -283,7 +301,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
 
     def savgol_predict(self, signal, poly_fit_degree, nr):
         """Predict a single value using the savgol method.
-
+        
         Fits a polynomial through the values given by the signal and returns the value
         of the polynomial at the right-most signal-value. More precisely, for a signal of length
         n, fits a poly_fit_degree polynomial through the points signal[-n+1+nr], signal[-n+2+nr],
@@ -312,7 +330,8 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
     def savgol_coeffs(self, nl, nr, poly_fit_degree):
         """Solve for the Savitzky-Golay coefficients.
 
-        The coefficients c_i give a filter so that
+        Solves for the Savitzky-Golay coefficients. The coefficients c_i
+        give a filter so that
             y = sum_{i=-{n_l}}^{n_r} c_i x_i
         is the value at 0 (thus the constant term) of the polynomial fit
         through the points {x_i}. The coefficients are c_i are calculated as
@@ -386,7 +405,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         # - identity keeps the original signal (doesn't smooth)
         # - nan writes nans
         if self.boundary_method == "shortened_window":  # pylint: disable=no-else-return
-            for ix in range(len(self.coeffs)):
+            for ix in range(min(len(self.coeffs), len(signal))):
                 if ix == 0:
                     signal_smoothed[ix] = signal[ix]
                 else:

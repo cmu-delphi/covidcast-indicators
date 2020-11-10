@@ -78,7 +78,7 @@ pipeline {
     //             sh "jenkins/${INDICATOR}-jenkins-deploy.sh"
     //         }
     //     }
-    // }
+    }
 
     // post {
     //     always {

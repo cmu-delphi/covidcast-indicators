@@ -4,11 +4,8 @@
 @Library('jenkins-shared-library') _
 
 pipeline {
-
     agent any
-
     stages {
-
         stage ("Environment") {            
             when {
                 anyOf {
@@ -33,7 +30,6 @@ pipeline {
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
             }
         }
-
         stage('Build and Package') {
             when {
                 changeRequest target: "test-main";
@@ -43,7 +39,6 @@ pipeline {
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
             }
         }
-
         stage('Deploy staging') {
             when {
                 branch "main";
@@ -53,7 +48,6 @@ pipeline {
                 // sh "jenkins/${INDICATOR}-jenkins-test.sh"
             }
         }
-
         stage('Deploy production') {
             when {
                 branch "prod"; // TODO Rename to new production branch
@@ -63,7 +57,6 @@ pipeline {
                 // sh "jenkins/${INDICATOR}-jenkins-test.sh"
             }
         }
-        
     //     stage('Package') {
     //         when {
     //             changeRequest target: "deploy-*", comparator: "GLOB"
@@ -91,7 +84,6 @@ pipeline {
     //         }
     //     }
     }
-
     post {
         always {
             script {
@@ -104,6 +96,5 @@ pipeline {
         }
     }
 }
-
 // TODO: Purge these when done testing
 // TEST1

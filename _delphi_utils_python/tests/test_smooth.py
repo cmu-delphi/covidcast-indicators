@@ -281,3 +281,11 @@ class TestSmoothers:
         assert np.allclose(
             signal[window_length - 1 :], smoothed_signal[window_length - 1 :]
         )
+
+        # Test that the index of the series gets preserved
+        signal = pd.Series(np.ones(30), index=np.arange(50, 80))
+        smoother = Smoother(smoother_name="moving_average", window_length=10)
+        smoothed_signal = signal.transform(smoother.smooth)
+        ix1 = signal.index
+        ix2 = smoothed_signal.index
+        assert ix1.equals(ix2)

@@ -55,11 +55,9 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
     """
     # Read data
     df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
-
     # Clean commas in count fields in case the input file included them
     df[df.columns[4:]] = df[df.columns[4:]].applymap(
         lambda x: int(x.replace(",", "")) if isinstance(x, str) else x)
-
     # Check missing FIPS
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0

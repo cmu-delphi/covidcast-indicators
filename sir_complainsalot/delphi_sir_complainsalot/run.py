@@ -33,7 +33,7 @@ def run_module():
         sys.exit(1)
 
 def split_complaints(complaints, n=49):
-    """Yield successive n-sized chunks from lst."""
+    """Yield successive n-sized chunks from complaints list."""
     for i in range(0, len(complaints), n):
         yield complaints[i:i + n]
 

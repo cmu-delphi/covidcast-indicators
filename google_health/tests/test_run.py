@@ -56,7 +56,7 @@ class TestRunModule:
             new_df = pd.read_csv(join("receiving", fname))
             print(new_df)
 
-            assert_frame_equal(test_df, new_df, check_less_precise=5)
+            assert_frame_equal(test_df, new_df)
 
     def test_match_old_smoothed_output(self, run_as_module, wip_signal=read_params()["wip_signal"]):
         """Tests that smooth output files don't change over time."""
@@ -80,4 +80,4 @@ class TestRunModule:
             test_df = pd.read_csv(join("receiving_test", fname))
             new_df = pd.read_csv(join("receiving", fname))
 
-            assert_frame_equal(test_df, new_df, check_less_precise=5)
+            assert_frame_equal(test_df, new_df)

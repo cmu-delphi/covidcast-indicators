@@ -1,15 +1,17 @@
 {
   "static_file_dir": "../static",
   "export_dir": "./receiving",
-  "cache_dir": "../cache",
+  "cache_dir": "./cache",
   "data_dir": "./data",
   "start_date": "2020-02-11",
   "end_date": "2020-04-30",
   "ght_key": "",
   "wip_signal": "",
   "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
+    "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+    "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
   },
-  "bucket_name": ""
+  "bucket_name": "test-bucket",
+   "test": true,
+  "test_data_dir": "./test_data/{geo_res}_sample.csv"
 }

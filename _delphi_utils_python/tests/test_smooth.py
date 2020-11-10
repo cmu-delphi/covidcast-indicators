@@ -171,6 +171,7 @@ class TestSmoothers:
         signal = np.arange(20)
         smoother = Smoother(smoother_name="savgol", boundary_method="identity", window_length=30)
         smoothed_signal = smoother.smooth(signal)
+        assert np.allclose(signal, smoothed_signal)
 
         # test the boundary methods
         signal = np.arange(20)

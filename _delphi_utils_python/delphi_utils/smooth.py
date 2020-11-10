@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 
 
-class Smoother:
+class Smoother:  # pylint: disable=too-many-instance-attributes
     """Smoother class.
 
     This is the smoothing utility class. This class holds the parameter settings for its smoother
@@ -78,8 +78,8 @@ class Smoother:
     Methods
     ----------
     smooth: np.ndarray or pd.Series
-        Takes a 1D signal and returns a smoothed version. The input and the output have the same
-        length and type.
+        Takes a 1D signal and returns a smoothed version.
+        The input and the output have the same length and type.
 
     Example Usage
     -------------
@@ -260,20 +260,21 @@ class Smoother:
         )
         n = len(signal)
         signal_smoothed = np.zeros_like(signal)
-        A = np.vstack([np.ones(n), np.arange(n)]).T  # the regression design matrix
+        # A is the regression design matrix
+        A = np.vstack([np.ones(n), np.arange(n)]).T  # pylint: disable=invalid-name
         for idx in range(n):
             weights = np.exp(
                 -((np.arange(idx + 1) - idx) ** 2) / self.gaussian_bandwidth
             )
-            AwA = np.dot(A[: (idx + 1), :].T * weights, A[: (idx + 1), :])
-            Awy = np.dot(
+            AwA = np.dot(A[: (idx + 1), :].T * weights, A[: (idx + 1), :])  # pylint: disable=invalid-name
+            Awy = np.dot(  # pylint: disable=invalid-name
                 A[: (idx + 1), :].T * weights, signal[: (idx + 1)].reshape(-1, 1)
             )
             try:
                 beta = np.linalg.solve(AwA, Awy)
                 signal_smoothed[idx] = np.dot(A[: (idx + 1), :], beta)[-1]
             except np.linalg.LinAlgError:
-                signal_smoothed[idx] = signal[idx] if self.impute else np.nan
+                signal_smoothed[idx] = signal[idx] if self.impute else np.nan  # pylint: disable=using-constant-test
         if self.minval is not None:
             signal_smoothed[signal_smoothed <= self.minval] = self.minval
         return signal_smoothed
@@ -336,7 +337,7 @@ class Smoother:
         if nr > 0:
             raise warnings.warn("The filter is no longer causal.")
 
-        A = np.vstack(
+        A = np.vstack(  # pylint: disable=invalid-name
             [np.arange(nl, nr + 1) ** j for j in range(self.poly_fit_degree + 1)]
         ).T
 
@@ -380,7 +381,7 @@ class Smoother:
         # - shortened_window (default) applies savgol with a smaller window to do the fit
         # - identity keeps the original signal (doesn't smooth)
         # - nan writes nans
-        if self.boundary_method == "shortened_window":
+        if self.boundary_method == "shortened_window":  # pylint: disable=no-else-return
             for ix in range(len(self.coeffs)):
                 if ix == 0:
                     signal_smoothed[ix] = signal[ix]

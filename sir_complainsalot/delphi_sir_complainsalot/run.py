@@ -32,24 +32,30 @@ def run_module():
 
         sys.exit(1)
 
-def report_complaints(complaints, params):
+def split_complaints(complaints, n=49):
+    """Yield successive n-sized chunks from complaints list."""
+    for i in range(0, len(complaints), n):
+        yield complaints[i:i + n]
+
+def report_complaints(all_complaints, params):
     """Post complaints to Slack."""
     if not params["slack_token"]:
         print("\b (dry-run)")
         return
 
-    blocks = format_complaints(complaints)
-
     client = WebClient(token=params["slack_token"])
 
-    try:
-        client.chat_postMessage(
-            channel=params["channel"],
-            blocks=blocks
-        )
-    except SlackApiError as e:
-        # You will get a SlackApiError if "ok" is False
-        assert e.response["error"]
+    for complaints in split_complaints(all_complaints):
+        blocks = format_complaints(complaints)
+        print(f"blocks: {len(blocks)}")
+        try:
+            client.chat_postMessage(
+                channel=params["channel"],
+                blocks=blocks
+            )
+        except SlackApiError as e:
+            # You will get a SlackApiError if "ok" is False
+            assert False, e.response["error"]
 
 def format_complaints(complaints):
     """Build a formatted Slack message for posting to the API.

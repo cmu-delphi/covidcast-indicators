@@ -158,6 +158,12 @@ class TestSmoothers:
             smoothed_signal = smoother.smooth(signal)
             assert np.allclose(smoothed_signal, signal, equal_nan=True)
 
+        # test window_length > len(signal) and boundary_method="identity"
+        signal = np.arange(20)
+        smoother = Smoother(boundary_method="identity", window_length=30)
+        smoothed_signal = smoother.smooth(signal)
+        assert np.allclose(signal, smoothed_signal)
+
     def test_impute(self):
         # test front nan error
         with pytest.raises(ValueError):
@@ -178,7 +184,7 @@ class TestSmoothers:
         signal = np.array([i if i % 3 else np.nan for i in range(1, 40)])
         # test that the non-nan values are unchanged
         not_nans_ixs = np.bitwise_xor(np.isnan(signal, where=True), np.full(len(signal), True))
-        smoothed_signal = Smoother().savgol_impute(signal)
+        smoothed_signal = Smoother().impute(signal)
         assert np.allclose(signal[not_nans_ixs], smoothed_signal[not_nans_ixs])
         # test that the imputer is close to the true line
         assert np.allclose(range(1, 40), smoothed_signal, atol=0.5)
@@ -187,14 +193,14 @@ class TestSmoothers:
         signal = np.hstack([np.arange(10), [np.nan], np.arange(10)])
         window_length = 10
         smoother = Smoother(
-            smoother_name="savgol", window_length=window_length, poly_fit_degree=1
+            window_length=window_length, poly_fit_degree=1
         )
-        imputed_signal = smoother.savgol_impute(signal)
+        imputed_signal = smoother.impute(signal)
         assert np.allclose(imputed_signal, np.hstack([np.arange(11), np.arange(10)]))
         smoother = Smoother(
-            smoother_name="savgol", window_length=window_length, poly_fit_degree=2
+            window_length=window_length, poly_fit_degree=2
         )
-        imputed_signal = smoother.savgol_impute(signal)
+        imputed_signal = smoother.impute(signal)
         assert np.allclose(imputed_signal, np.hstack([np.arange(11), np.arange(10)]))
 
         # if there are nans on the boundary, should dynamically change window
@@ -202,9 +208,9 @@ class TestSmoothers:
             [np.arange(5), [np.nan], np.arange(20), [np.nan], np.arange(5)]
         )
         smoother = Smoother(
-            smoother_name="savgol", window_length=window_length, poly_fit_degree=2
+            window_length=window_length, poly_fit_degree=2
         )
-        imputed_signal = smoother.savgol_impute(signal)
+        imputed_signal = smoother.impute(signal)
         assert np.allclose(
             imputed_signal, np.hstack([np.arange(6), np.arange(21), np.arange(5)]),
         )
@@ -212,22 +218,16 @@ class TestSmoothers:
         # if the array begins with np.nan, we should tell the user to peel it off before sending
         signal = np.hstack([[np.nan], np.arange(20), [np.nan], np.arange(5)])
         smoother = Smoother(
-            smoother_name="savgol", window_length=window_length, poly_fit_degree=2
+            window_length=window_length, poly_fit_degree=2
         )
         with pytest.raises(ValueError):
-            imputed_signal = smoother.savgol_impute(signal)
-
-        # test window_length > len(signal) and boundary_method="identity"
-        signal = np.arange(20)
-        smoother = Smoother(smoother_name="savgol", boundary_method="identity", window_length=30)
-        smoothed_signal = smoother.smooth(signal)
-        assert np.allclose(signal, smoothed_signal)
+            imputed_signal = smoother.impute(signal)
 
         # test the boundary methods
         signal = np.arange(20)
-        smoother = Smoother(smoother_name="savgol", poly_fit_degree=0,
+        smoother = Smoother(poly_fit_degree=0,
                             boundary_method="identity", window_length=10)
-        smoothed_signal = smoother.savgol_impute(signal)
+        smoothed_signal = smoother.impute(signal)
         assert np.allclose(smoothed_signal, signal)
 
         # test that we don't hit a matrix inversion error when there are
@@ -237,6 +237,13 @@ class TestSmoothers:
                             boundary_method="identity", window_length=10)
         smoothed_signal = smoother.impute(signal)
         assert np.allclose(smoothed_signal, np.hstack([[1], np.ones(12), np.arange(5)]))
+
+        # test the impute_order argument
+        signal = np.hstack([[1, np.nan, np.nan, 2], np.arange(5)])
+        smoother = Smoother()
+        smoothed_signal = smoother.impute(signal, impute_order=1)
+        assert np.allclose(smoothed_signal, np.hstack([[1, 1, 1, 2], np.arange(5)]))
+
 
     def test_pandas_series_input(self):
         # The savgol method should match the linear regression method on the first
@@ -281,3 +288,11 @@ class TestSmoothers:
         assert np.allclose(
             signal[window_length - 1 :], smoothed_signal[window_length - 1 :]
         )
+
+        # Test that the index of the series gets preserved
+        signal = pd.Series(np.ones(30), index=np.arange(50, 80))
+        smoother = Smoother(smoother_name="moving_average", window_length=10)
+        smoothed_signal = signal.transform(smoother.smooth)
+        ix1 = signal.index
+        ix2 = smoothed_signal.index
+        assert ix1.equals(ix2)

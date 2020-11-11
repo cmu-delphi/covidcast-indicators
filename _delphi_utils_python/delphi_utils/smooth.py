@@ -150,7 +150,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         else:
             self.coeffs = None
 
-    def smooth(self, signal: Union[np.ndarray, pd.Series]) -> Union[np.ndarray, pd.Series]:
+    def smooth(self, signal: Union[np.ndarray, pd.Series], impute_order=2) -> Union[np.ndarray, pd.Series]:
         """Apply a smoother to a signal.
 
         The major workhorse smoothing function. Imputes the nans and then applies
@@ -160,6 +160,9 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         ----------
         signal: np.ndarray or pd.Series
             A 1D signal to be smoothed.
+        impute_order: int
+            The polynomial order of the fit used for imputation. By default, this is set to
+            2.
 
         Returns
         ----------
@@ -172,6 +175,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             return signal
 
         is_pandas_series = isinstance(signal, pd.Series)
+        pandas_index = signal.index if is_pandas_series else None
         signal = signal.to_numpy() if is_pandas_series else signal
 
         # Find where the first non-nan value is located and truncate the initial nans
@@ -183,7 +187,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             signal_smoothed = signal.copy()
         else:
             # Impute
-            signal = self.impute(signal)
+            signal = self.impute(signal, impute_order=impute_order)
 
             # Smooth
             if self.smoother_name == "savgol":
@@ -197,10 +201,13 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
 
         # Append the nans back, since we want to preserve length
         signal_smoothed = np.hstack([np.nan*np.ones(ix), signal_smoothed])
-        signal_smoothed = signal_smoothed if not is_pandas_series else pd.Series(signal_smoothed)
+        # Convert back to pandas if necessary
+        if is_pandas_series:
+            signal_smoothed = pd.Series(signal_smoothed)
+            signal_smoothed.index = pandas_index
         return signal_smoothed
 
-    def impute(self, signal):
+    def impute(self, signal, impute_order=2):
         """Impute the nan values in the signal.
 
         See the class docstring for an explanation of the impute methods.
@@ -209,6 +216,8 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         ----------
         signal: np.ndarray
             1D signal to be imputed.
+        impute_order: int
+            The polynomial order of the fit used for imputation.
 
         Returns
         -------
@@ -220,7 +229,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             # To preserve input-output array lengths, this util will not drop NaNs for you.
             if np.isnan(signal[0]):
                 raise ValueError("The signal should not begin with a nan value.")
-            imputed_signal = self.savgol_impute(signal)
+            imputed_signal = self.savgol_impute(signal, impute_order)
         elif self.impute_method == "zeros":
             imputed_signal = np.nan_to_num(signal)
         elif self.impute_method is None:
@@ -424,10 +433,10 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         elif self.boundary_method == "nan":
             return signal_smoothed
 
-    def savgol_impute(self, signal):
+    def savgol_impute(self, signal, impute_order):
         """Impute the nan values in signal using savgol.
 
-        This method fills the nan values in the signal with a quadratic polynomial fit
+        This method fills the nan values in the signal with polynomial interpolation
         on a rolling window of the immediate past up to window_length data points.
 
         A number of boundary cases are handled involving nan filling close to the boundary.
@@ -439,12 +448,17 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         ----------
         signal: np.ndarray
             A 1D signal to be imputed.
+        impute_order: int
+            The polynomial order of the fit used for imputation.
 
         Returns
         ----------
         signal_imputed: np.ndarray
             An imputed 1D signal.
         """
+        if impute_order > self.window_length:
+            raise ValueError("Impute order must be smaller than window length.")
+
         signal_imputed = np.copy(signal)
         for ix in np.where(np.isnan(signal_imputed))[0]:
             # Boundary cases
@@ -452,21 +466,18 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
                 # At the boundary, a single value should just be extended
                 if ix == 1:
                     signal_imputed[ix] = signal_imputed[ix - 1]
-                # Reduce the polynomial degree if needed
-                elif ix == 2:
-                    signal_imputed[ix] = self.savgol_predict(
-                        signal_imputed[:ix], 1, -1
-                    )
-                # Otherwise, use savgol fitting on the largest window prior
+                # Otherwise, use savgol fitting on the largest window prior,
+                # reduce the polynomial degree if needed (can't fit if the
+                # imputation order is larger than the available data)
                 else:
                     signal_imputed[ix] = self.savgol_predict(
-                        signal_imputed[:ix], self.poly_fit_degree, -1
+                        signal_imputed[:ix], min(ix-1, impute_order), -1
                     )
             # Away from the boundary, use savgol fitting on a fixed window
             else:
                 signal_imputed[ix] = self.savgol_predict(
                     signal_imputed[ix - self.window_length : ix],
-                    self.poly_fit_degree,
+                    impute_order,
                     -1,
                 )
         return signal_imputed

@@ -12,15 +12,19 @@ import logging
 # third party
 import numpy as np
 import pandas as pd
+from delphi_utils import Smoother
 
 # first party
 from .config import Config
-from .smooth import left_gauss_linear
+
 
 
 class CHCSensor:
     """Sensor class to fit a signal using Covid counts from Change HC outpatient data.
     """
+    smoother = Smoother("savgol",
+                        poly_fit_degree=1,
+                        gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
     def gauss_smooth(count,total):
@@ -29,8 +33,8 @@ class CHCSensor:
         Args:
             count, total: array
             """
-        count_smooth = left_gauss_linear(count)
-        total_smooth = left_gauss_linear(total)
+        count_smooth = CHCSensor.smoother.smooth(count)
+        total_smooth = CHCSensor.smoother.smooth(total)
         total_clip = np.clip(total_smooth, 0, None)
         count_clip = np.clip(count_smooth, 0, total_clip)
         return count_clip, total_clip

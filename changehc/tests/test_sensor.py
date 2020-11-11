@@ -2,7 +2,7 @@
 import pytest
 
 # third party
-from delphi_utils import read_params
+from delphi_utils import read_params, Smoother
 import numpy as np
 import numpy.random as nr
 import pandas as pd
@@ -20,7 +20,12 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
-                                            "fips")
+                                       "fips")
+    # change smoother window length for test data
+    CHCSensor.smoother = Smoother("savgol",
+                                  poly_fit_degree=1,
+                                  gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH,
+                                  window_length=20)
 
     def test_backfill(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

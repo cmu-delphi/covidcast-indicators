@@ -19,7 +19,7 @@ cd "${WORKSPACE}/${local_indicator}" || exit
 python -m venv env
 source env/bin/activate
 pip install ../_delphi_utils_python/.
-pip install 
+pip install .
 
 #
 # Package

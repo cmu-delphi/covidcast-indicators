@@ -45,9 +45,9 @@ pipeline {
                     }
                 }
                     //parallel buildAndPackage
-            }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+            }
         }
         stage('Deploy staging') {
             when {

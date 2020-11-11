@@ -19,11 +19,7 @@ from .update_indicator import ClaimsHospIndicatorUpdater
 
 
 def run_module():
-    """
-    Read from params.json and generate the updated claims-based hospitalization
-    indicator values.
-    """
-
+    """Read from params.json and generate updated claims-based hospitalization indicator values."""
     params = read_params()
     logging.basicConfig(level=logging.DEBUG)
 

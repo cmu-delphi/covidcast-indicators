@@ -1,3 +1,4 @@
+"""Export data in the format expected by the Delphi API."""
 # -*- coding: utf-8 -*-
 from datetime import datetime
 from os.path import join

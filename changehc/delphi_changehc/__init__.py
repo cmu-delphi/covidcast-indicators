@@ -12,7 +12,6 @@ from . import config
 from . import load_data
 from . import run
 from . import sensor
-from . import smooth
 from . import update_sensor
 from . import weekday
 

@@ -44,7 +44,8 @@ pipeline {
                     //     println ("${indicator}")
                     indicator_list.each { f ->
                         build_and_package[f] = {
-                            echo f.toString()
+                            //echo f.toString()
+                            println f
                         }
                     }
                     parallel build_and_package

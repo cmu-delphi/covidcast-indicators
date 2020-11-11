@@ -31,7 +31,7 @@ class ClaimsHospIndicatorUpdater:
     def __init__(self, startdate, enddate, dropdate, geo, parallel, weekday,
                  write_se, signal_name):
         """
-        Updater for the claims-based hospitalization indicator.
+        Initialize updater for the claims-based hospitalization indicator.
 
         Args:
             startdate: first indicator date (YYYY-mm-dd)

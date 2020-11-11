@@ -1,5 +1,6 @@
 """
 This file contains a left gauss filter used to smooth a 1-d signal.
+
 Code is courtesy of Addison Hu (minor adjustments by Maria).
 
 Author: Maria Jahja
@@ -24,7 +25,6 @@ def left_gauss_linear(arr, bandwidth=Config.SMOOTHER_BANDWIDTH):
     Returns: a smoothed 1D signal.
 
     """
-
     n_rows = len(arr)
     out_arr = np.zeros_like(arr)
     X = np.vstack([np.ones(n_rows), np.arange(n_rows)]).T

@@ -47,8 +47,8 @@ pipeline {
                             echo f.toString()
                         }
                     }
-                }
                     parallel build_and_package
+                }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
             }

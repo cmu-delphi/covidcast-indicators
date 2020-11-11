@@ -3,7 +3,8 @@
 // import shared library: https://github.com/cmu-delphi/jenkins-shared-library
 @Library('jenkins-shared-library') _
 
-def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
+//def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
+def indicator_list = ["cdc_covidnet"]
 def build_and_package = [:]
 
 pipeline {
@@ -46,8 +47,8 @@ pipeline {
                         build_and_package[indicator] = {
                             //echo f.toString()
                             //println f
-                            sh "echo ${indicator}"
-                            //sh "jenkins/jenkins-build-and-package.sh ${INDICATOR}"
+                            //sh "echo ${indicator}"
+                            sh "jenkins/jenkins-build-and-package.sh ${indicator}"
                         }
                     }
                     parallel build_and_package

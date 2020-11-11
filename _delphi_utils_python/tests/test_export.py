@@ -6,15 +6,33 @@ from os.path import join
 import pandas as pd
 from delphi_utils import create_export_csv
 
+def _clean_directory(directory):
+    """Clean files out of a directory."""
+    for fname in listdir(directory):
+        if fname.startswith("."):
+            continue
+        remove(join(directory, fname))
+
+
+def _non_ignored_files_set(directory):
+    """List all files in a directory not preceded by a '.' and store them in a set."""
+    out = set()
+    for fname in listdir(directory):
+        if fname.startswith("."):
+            continue
+        out.add(fname)
+    return out
+
 
 class TestExport:
+    """Tests for exporting CSVs."""
     # List of times for data points.
     TIMES = [
         datetime.strptime(x, "%Y-%m-%d")
         for x in ["2020-02-15", "2020-02-15", "2020-03-01", "2020-03-15"]
     ]
 
-    # A sample data frame
+    # A sample data frame.
     DF = pd.DataFrame(
         {
             "geo_id": ["51093", "51175", "51175", "51620"],
@@ -25,23 +43,25 @@ class TestExport:
         }
     )
 
+    # Directory in which to store tests.
+    TEST_DIR = "test_dir"
+
     def test_export_with_metric(self):
         """Test that exporting CSVs with the `metrics` argument yields the correct files."""
 
         # Clean receiving directory
-        for fname in listdir("test_dir"):
-            remove(join("test_dir", fname))
+        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
-            export_dir="test_dir",
+            export_dir=self.TEST_DIR,
             metric="deaths",
             geo_res="county",
             sensor="test",
         )
 
-        assert set(listdir("test_dir")) == set(
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
             [
                 "20200215_county_deaths_test.csv",
                 "20200301_county_deaths_test.csv",
@@ -53,18 +73,17 @@ class TestExport:
         """Test that exporting CSVs without the `metrics` argument yields the correct files."""
 
         # Clean receiving directory
-        for fname in listdir("test_dir"):
-            remove(join("test_dir", fname))
+        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
-            export_dir="test_dir",
+            export_dir=self.TEST_DIR,
             geo_res="county",
             sensor="test",
         )
 
-        assert set(listdir("test_dir")) == set(
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
             [
                 "20200215_county_test.csv",
                 "20200301_county_test.csv",
@@ -76,18 +95,17 @@ class TestExport:
         """Test that the `start_date` prevents earlier dates from being exported."""
 
         # Clean receiving directory
-        for fname in listdir("test_dir"):
-            remove(join("test_dir", fname))
+        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-20", "%Y-%m-%d"),
-            export_dir="test_dir",
+            export_dir=self.TEST_DIR,
             geo_res="county",
             sensor="test",
         )
 
-        assert set(listdir("test_dir")) == set(
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
             [
                 "20200301_county_test.csv",
                 "20200315_county_test.csv",
@@ -98,17 +116,16 @@ class TestExport:
         """Test that omitting the `start_date` exports all dates."""
 
         # Clean receiving directory
-        for fname in listdir("test_dir"):
-            remove(join("test_dir", fname))
+        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
-            export_dir="test_dir",
+            export_dir=self.TEST_DIR,
             geo_res="state",
             sensor="test",
         )
 
-        assert set(listdir("test_dir")) == set(
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
             [
                 "20200215_state_test.csv",
                 "20200301_state_test.csv",

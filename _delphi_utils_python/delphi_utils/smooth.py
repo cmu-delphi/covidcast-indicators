@@ -301,7 +301,6 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
 
     def savgol_predict(self, signal, poly_fit_degree, nr):
         """Predict a single value using the savgol method.
-        
         Fits a polynomial through the values given by the signal and returns the value
         of the polynomial at the right-most signal-value. More precisely, for a signal of length
         n, fits a poly_fit_degree polynomial through the points signal[-n+1+nr], signal[-n+2+nr],

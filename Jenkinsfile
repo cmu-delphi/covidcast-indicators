@@ -3,6 +3,10 @@
 // import shared library: https://github.com/cmu-delphi/jenkins-shared-library
 @Library('jenkins-shared-library') _
 
+def indicatorList = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", +
+    "google_symptoms", "jhu, nchs_mortality", "quidel", "quidel_covidtest", +
+    "safegraph", "safegraph_patterns", "usafacts"]
+
 pipeline {
     agent any
     stages {
@@ -35,6 +39,12 @@ pipeline {
                 changeRequest target: "test-main";
             }
             steps {
+                script {
+                    // Do some magical thing here...
+                    for (String indicator : indicatorList) {
+                        println ("${indicator}")
+                    }
+                }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
             }

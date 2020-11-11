@@ -40,11 +40,15 @@ pipeline {
             steps {
                 script {
                     // Do some magical thing here...
-                    for (String indicator : indicator_list) { // TEST
-                        println ("${indicator}")
+                    // for (String indicator : indicator_list) { // TEST
+                    //     println ("${indicator}")
+                    indicator_list.each { f ->
+                        build_and_package[f] = {
+                            echo f.toString()
+                        }
                     }
                 }
-                    //parallel buildAndPackage
+                    parallel build_and_package
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
             }

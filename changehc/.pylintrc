@@ -16,6 +16,7 @@ disable=logging-format-interpolation,
 # Allow arbitrarily short-named variables.
 variable-rgx=[a-z_][a-z0-9_]*
 argument-rgx=[a-z_][a-z0-9_]*
+attr-rgx=[a-z_][a-z0-9_]*
 
 [DESIGN]
 

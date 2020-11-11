@@ -32,17 +32,19 @@ class TestRun:
                 "202025",
                 "202026",
             ]
-            metrics = [
-                    'covid_deaths', 'total_deaths', 'pneumonia_deaths',
-                    'pneumonia_and_covid_deaths', 'influenza_deaths',
-                    'pneumonia_influenza_or_covid_19_deaths'
-            ]
+            metrics = ['deaths_covid_incidence',
+                       'deaths_allcause_incidence',
+                       'deaths_percent_of_expected',
+                       'deaths_pneumonia_notflu_incidence',
+                       'deaths_covid_and_pneumonia_notflu_incidence',
+                       'deaths_flu_incidence',
+                       'deaths_pneumonia_or_flu_or_covid_incidence']
             sensors = ["num", "prop"]
 
             expected_files = []
             for date in dates:
                 for metric in metrics:
-                    if metric == "percent_of_expected_deaths":
+                    if metric == "deaths_percent_of_expected":
                         expected_files += ["weekly_" + date + "_state_wip_" \
                                            + metric + ".csv"]
                     else:
@@ -61,6 +63,6 @@ class TestRun:
 
         for output_folder in folders:
             df = pd.read_csv(
-                join(output_folder, "weekly_202026_state_wip_covid_deaths_prop.csv")
+                join(output_folder, "weekly_202026_state_wip_deaths_covid_incidence_prop.csv")
             )
             assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

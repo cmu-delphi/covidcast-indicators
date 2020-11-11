@@ -23,7 +23,7 @@ def run_module():
     base_url = params["base_url"]
 
     # Pull GS data
-    dfs = pull_gs_data(base_url)    
+    dfs = pull_gs_data(base_url)
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]

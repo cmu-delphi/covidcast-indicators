@@ -42,11 +42,11 @@ pipeline {
                     // Do some magical thing here...
                     // for (String indicator : indicator_list) { // TEST
                     //     println ("${indicator}")
-                    indicator_list.each { f ->
-                        build_and_package[f] = {
+                    indicator_list.each { indicator ->
+                        build_and_package[indicator] = {
                             //echo f.toString()
                             //println f
-                            sh "echo ${f}"
+                            sh "echo ${indicator}"
                             //sh "jenkins/jenkins-build-and-package.sh ${INDICATOR}"
                         }
                     }

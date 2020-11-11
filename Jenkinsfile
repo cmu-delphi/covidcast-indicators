@@ -3,8 +3,8 @@
 // import shared library: https://github.com/cmu-delphi/jenkins-shared-library
 @Library('jenkins-shared-library') _
 
-def indicatorList = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
-def buildAndPackage
+def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
+def build_and_package
 
 pipeline {
     agent any
@@ -40,14 +40,11 @@ pipeline {
             steps {
                 script {
                     // Do some magical thing here...
-                    // for (String indicator : indicatorList) { // TEST
-                    //     println ("${indicator}")
-                    indicatorList.each { i ->
-                        buildAndPackage[b] = {
-                            echo b.toString()
+                    for (String indicator : indicator_list) { // TEST
+                        println ("${indicator}")
                         }
                     }
-                    parallel buildAndPackage
+                    //parallel buildAndPackage
                 }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST

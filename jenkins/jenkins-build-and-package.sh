@@ -30,7 +30,3 @@ cd "${WORKSPACE}" || exit
 # Create .tar.gz for deployment
 # TODO Rename test-artifacts to artifacts when this works!!!
 tar -czvf "${JENKINS_HOME}/test-artifacts/${local_indicator}.tar.gz" "${local_indicator}"
-cd "${WORKSPACE}" || exit
-
-# Create .tar.gz for deployment
-tar -czvf "${JENKINS_HOME}/test-artifacts/${local_indicator}.tar.gz" "${local_indicator}"

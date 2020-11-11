@@ -45,7 +45,8 @@ pipeline {
                     indicator_list.each { f ->
                         build_and_package[f] = {
                             //echo f.toString()
-                            println f
+                            //println f
+                            sh "echo test"
                         }
                     }
                     parallel build_and_package

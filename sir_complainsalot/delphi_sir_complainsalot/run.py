@@ -7,6 +7,8 @@ when the module is run with `python -m delphi_sir_complainsalot`.
 
 import sys
 
+from itertools import groupby
+
 from slack import WebClient
 from slack.errors import SlackApiError
 
@@ -46,7 +48,7 @@ def report_complaints(all_complaints, params):
     client = WebClient(token=params["slack_token"])
 
     for complaints in split_complaints(all_complaints):
-        blocks = format_complaints(complaints)
+        blocks = format_complaints_aggregated_by_source(complaints)
         print(f"blocks: {len(blocks)}")
         try:
             client.chat_postMessage(
@@ -57,6 +59,55 @@ def report_complaints(all_complaints, params):
             # You will get a SlackApiError if "ok" is False
             assert False, e.response["error"]
 
+
+def get_maintainers_block(complaints):
+    maintainers = set()
+    for c in complaints:
+        maintainers.update(c.maintainers)
+    
+    maintainers_block = {
+	    "type": "section",
+	    "text": {
+		"type": "mrkdwn",
+		"text": "Hi, this is Sir Complains-a-Lot. I need to speak to " +
+                        (", ".join("<@{0}>".format(m) for m in maintainers)) + "."
+	    }
+	}
+
+    return maintainers_block
+
+
+def format_complaints_aggregated_by_source(complaints):
+    """Build formatted Slack message for posting to the API, aggregating the 
+    complaints by source to reduce the number of blocks."""
+
+    blocks = [get_maintainers_block(complaints)]
+
+    def aggregated_message_for_source(x): return "{complaint} - (last update: {last_updated})".format(
+        complaint=x.message, last_updated=x.last_updated.strftime("%Y-%m-%d"))
+
+    for source, v in groupby(complaints, key=lambda x: x.data_source):
+        for message, complaint_list in groupby(v, key=aggregated_message_for_source):
+            signal_and_geo_types = ""
+            for complaint in complaint_list:
+                signal_and_geo_types += "`{signal}: [{geo_types}]`\n".format(
+                    signal=complaint.signal, geo_types=", ".join(complaint.geo_types))
+            blocks.extend([
+                {
+                    "type": "divider"
+                },
+                {
+                    "type": "section",
+                    "text": {
+                        "type": "mrkdwn",
+                        "text": "*{source_name}* {message_for_group}:\n{signals}".format(source_name=source.upper(), message_for_group=message, signals=signal_and_geo_types)
+                    }
+                }
+            ])
+
+    return blocks
+
+
 def format_complaints(complaints):
     """Build a formatted Slack message for posting to the API.
 
@@ -65,20 +116,7 @@ def format_complaints(complaints):
 
     """
 
-    maintainers = set()
-    for c in complaints:
-        maintainers.update(c.maintainers)
-
-    blocks = [
-	{
-	    "type": "section",
-	    "text": {
-		"type": "mrkdwn",
-		"text": "Hi, this is Sir Complains-a-Lot. I need to speak to " +
-                        (", ".join("<@{0}>".format(m) for m in maintainers)) + "."
-	    }
-	}
-    ]
+    blocks = [get_maintainers_block(complaints)]
 
     for complaint in complaints:
         blocks.append(

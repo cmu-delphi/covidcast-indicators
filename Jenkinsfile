@@ -46,7 +46,8 @@ pipeline {
                         build_and_package[f] = {
                             //echo f.toString()
                             //println f
-                            sh "echo test"
+                            sh "echo ${f}"
+                            //sh "jenkins/jenkins-build-and-package.sh ${INDICATOR}"
                         }
                     }
                     parallel build_and_package

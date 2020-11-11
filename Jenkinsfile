@@ -4,7 +4,7 @@
 @Library('jenkins-shared-library') _
 
 def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
-def build_and_package
+def build_and_package = [:]
 
 pipeline {
     agent any

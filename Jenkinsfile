@@ -42,13 +42,12 @@ pipeline {
                     // Do some magical thing here...
                     for (String indicator : indicator_list) { // TEST
                         println ("${indicator}")
-                        }
                     }
-                    //parallel buildAndPackage
                 }
+                    //parallel buildAndPackage
+            }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
-            }
         }
         stage('Deploy staging') {
             when {

@@ -112,8 +112,29 @@ class TestExport:
             ]
         )
 
-    def test_export_with_no_start_date(self):
-        """Test that omitting the `start_date` exports all dates."""
+    def test_export_with_limiting_end_date(self):
+        """Test that the `end_date` prevents later dates from being exported."""
+
+        # Clean receiving directory
+        _clean_directory(self.TEST_DIR)
+
+        create_export_csv(
+            df=self.DF,
+            end_date=datetime.strptime("2020-03-07", "%Y-%m-%d"),
+            export_dir=self.TEST_DIR,
+            geo_res="county",
+            sensor="test",
+        )
+
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
+            [
+                "20200215_county_test.csv",
+                "20200301_county_test.csv",
+            ]
+        )
+
+    def test_export_with_no_dates(self):
+        """Test that omitting the `start_date` and `end_date` exports all dates."""
 
         # Clean receiving directory
         _clean_directory(self.TEST_DIR)

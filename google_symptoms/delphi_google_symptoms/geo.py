@@ -75,4 +75,3 @@ def geo_map(df, geo_res):
         newdf[mask] = np.nan
         converted_df = converted_df.append(newdf)
     return converted_df
-    

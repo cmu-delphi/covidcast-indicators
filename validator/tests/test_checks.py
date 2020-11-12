@@ -636,34 +636,34 @@ class TestDataCorrections:
         def test_pos_outlier(self):
             validator = Validator(self.params)
 
-            val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714, 
+            ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714, 
                     31.42857143, 31.71428571, 32, 32, 32.14285714,
                     32.28571429, 32.42857143, 32.57142857, 32.71428571, 
                     32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
                     33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
-            ref_val = [100, 100, 100]
+            test_val = [100, 100, 100]
 
 
-            data = {"val": val , "se": [np.nan] * len(val),
-                    "sample_size": [np.nan] * len(val), "geo_id": ["1"] * len(val), 
-                    "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
             ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
-                    "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
-                     "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val), 
+                    "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")}
+            test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                    "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                     "time_value": pd.date_range(start="2020-10-24", end="2020-10-26")}
 
-            data2 = {"val": val , "se": [np.nan] * len(val),
-                    "sample_size": [np.nan] * len(val), "geo_id": ["2"] * len(val), 
-                    "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
             ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
                     "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val), 
+                    "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")}
+            test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                    "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val), 
                     "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
 
-            test_df = pd.concat([pd.DataFrame(data), pd.DataFrame(data2)])
+            test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)])
             ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)])
 
 
             validator.check_positive_negative_spikes(
-                ref_df, test_df, "state", "signal")
+                test_df, ref_df, "state", "signal")
 
 
             assert len(validator.raised_errors) == 1

@@ -5,8 +5,8 @@
 
 def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
 def build_package = [:]
-def deploy_staging [:]
-def deploy_production [:]
+def deploy_staging = [:]
+def deploy_production = [:]
 
 pipeline {
     agent any

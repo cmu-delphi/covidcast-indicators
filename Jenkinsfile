@@ -76,6 +76,7 @@ pipeline {
                         }
                     }
                     parallel deploy_staging
+                }
                 //sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
                 // sh "jenkins/${INDICATOR}-jenkins-test.sh"
             }

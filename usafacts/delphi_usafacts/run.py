@@ -6,28 +6,22 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, time, timedelta
 from itertools import product
-from functools import partial
 from os.path import join
 
 import numpy as np
 import pandas as pd
 from delphi_utils import (
-    read_params,
     create_export_csv,
+    read_params,
+    GeoMapper,
     S3ArchiveDiffer,
-    GeoMapper
+    Smoother
 )
 
 from .geo import geo_map
 from .pull import pull_usafacts_data
-from .smooth import (
-    identity,
-    kday_moving_average,
-)
-
 
 # global constants
-seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
     "confirmed",
     "deaths",
@@ -55,9 +49,10 @@ SENSOR_NAME_MAP = {
 #     "incidence":            ("incid_prop", False),
 #     "cumulative_prop":      ("cumul_prop", False),
 # }
+
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, '', False, lambda d: d - timedelta(days=7)),
-    "seven_day_average":    (seven_day_moving_average, '7dav_', True, lambda d: d),
+    "unsmoothed": (Smoother("identity"), "", False, lambda d: d - timedelta(days=7)),
+    "seven_day_average": (Smoother("moving_average", window_length=7), "7dav_", True, lambda d: d),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -99,7 +94,7 @@ def run_module():
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, map_df, sensor)
-        df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
+        df["val"] = SMOOTHERS_MAP[smoother][0].smooth(df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan
         # Drop early entries where data insufficient for smoothing

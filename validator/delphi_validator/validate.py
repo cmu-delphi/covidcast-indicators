@@ -878,7 +878,6 @@ class Validator():
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
         self.check_missing_date_files(validate_files)
-        self.check_missing_dates(validate_files)
         self.check_settings()
 
         all_frames = []

@@ -8,7 +8,3 @@ Describe code/test/documentation changes and files added/removed.
 
 ### Fixes 
 - Fixes #(issue)
-
-
-### Dependencies
-List anything these changes are dependent on.

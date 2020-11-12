@@ -394,7 +394,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             coeffs[i] = (mat_inverse @ basis_vector)[0]
         return coeffs
 
-    def savgol_smoother(self, signal):
+    def savgol_smoother(self, signal):  # pylint: disable=inconsistent-return-statements
         """Smooth signal with the savgol smoother.
 
         Returns a convolution of the 1D signal with the Savitzky-Golay coefficients, respecting

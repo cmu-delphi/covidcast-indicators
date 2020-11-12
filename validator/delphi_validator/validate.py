@@ -630,15 +630,17 @@ class Validator():
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
         source_frame_end = source_df["time_value"].max()
-        api_frames_end = api_frames["time_value"].max()
-        all_frames = pd.concat([api_frames, source_df]).drop_duplicates(subset=["time_value"], keep='last'). \
-            sort_values(by=['time_value']).reset_index()
-
+        api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
+        all_frames = pd.concat([api_frames, source_df]). \
+            drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
+            sort_values(by=['time_value']).reset_index(drop=True)
+        if "index" in all_frames.columns:
+            all_frames = all_frames.drop(columns=["index"])
         # Tuned Variables from Dan's Code for flagging outliers. Size_cut is a
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 20
+        size_cut = 0
         sig_cut = 3
         sig_consec = 2.25
 
@@ -681,8 +683,8 @@ class Validator():
             center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
             fmedian = rolling_windows.median()
             smedian = center_windows.median().shift(shift_val)
-            fsd = rolling_windows.std()
-            ssd = center_windows.std().shift(shift_val)
+            fsd = rolling_windows.std() + 0.00001 # if std is 0
+            ssd = center_windows.std().shift(shift_val) + 0.00001 # if std is 0
             vals_modified_f = group["val"] - fmedian.fillna(0)
             vals_modified_s = group["val"] - smedian.fillna(0)
             ftstat = abs(vals_modified_f)/fsd
@@ -692,30 +694,31 @@ class Validator():
             all_full_frames.append(group)
 
         all_frames = pd.concat(all_full_frames)
-
         # Determine outliers in source frames only, only need the reference
         # data from just before the start of the source data
         # because lead and lag outlier calculations are only one day
+        print(all_frames)
         outlier_df = all_frames.query \
             ('time_value >= @api_frames_end & time_value <= @source_frame_end')
+        print(outlier_df)
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
-            .drop(columns=['index']).reset_index().copy()
+            .reset_index(drop=True).copy()
+        print(outlier_df)
         outlier_df["flag"] = 0
         outlier_df["flag"] = outlier_df.apply(outlier_flag, axis = 1)
         outliers = outlier_df[outlier_df["flag"] == 1]
-        outliers_reset = outliers.copy().reset_index() \
-            .drop(columns=['index', 'level_0'])
+        outliers_reset = outliers.copy().reset_index(drop=True) 
 
         # Find the lead outliers and the lag outliers. Check that the selected row
         # is actually a leading and lagging row for given geo_id
         upper_index = list(filter(lambda x: x < outlier_df.shape[0], \
             list(outliers.index+1)))
-        upper_df = outlier_df.iloc[upper_index, :].reset_index().drop(columns=['level_0', 'index'])
+        upper_df = outlier_df.iloc[upper_index, :].reset_index(drop=True)
         upper_compare =  outliers_reset[:len(upper_index)]
         sel_upper_df = upper_df[upper_compare["geo_id"] == upper_df["geo_id"]].copy()
         lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
-        lower_df = outlier_df.iloc[lower_index, :].reset_index().drop(columns=['level_0', 'index'])
-        lower_compare =  outliers_reset[-len(lower_index):].reset_index()
+        lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
+        lower_compare =  outliers_reset[-len(lower_index):].reset_index(drop=True)
         sel_lower_df = lower_df[lower_compare["geo_id"] == lower_df["geo_id"]].copy()
 
         sel_upper_df["flag"] = 0
@@ -728,8 +731,10 @@ class Validator():
         lower_outliers = sel_lower_df[sel_lower_df["flag"] == 1]
 
         all_outliers = pd.concat([outliers, upper_outliers, lower_outliers]). \
-            sort_values(by=['time_value','geo_id']).drop(columns=['index']). \
-            drop_duplicates().reset_index()
+            sort_values(by=['time_value','geo_id']). \
+            drop_duplicates().reset_index(drop=True)
+
+        print(all_outliers)
 
         # Identify outliers just in the source data
         source_outliers = all_outliers.query \

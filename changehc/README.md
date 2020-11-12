@@ -80,3 +80,6 @@ should not include critical sub-routines.
 - config.py: Config: constants for reading data and transformations, Constants: constants for sanity checks
 - constants.py: constants for signal names
 - weekday.py: Weekday: Adjusts for weekday effect
+
+### TEST
+- 1

@@ -150,7 +150,9 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         else:
             self.coeffs = None
 
-    def smooth(self, signal: Union[np.ndarray, pd.Series], impute_order=2) -> Union[np.ndarray, pd.Series]:
+    def smooth(
+        self, signal: Union[np.ndarray, pd.Series], impute_order=2
+    ) -> Union[np.ndarray, pd.Series]:
         """Apply a smoother to a signal.
 
         The major workhorse smoothing function. Imputes the nans and then applies
@@ -200,7 +202,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
                 signal_smoothed = signal
 
         # Append the nans back, since we want to preserve length
-        signal_smoothed = np.hstack([np.nan*np.ones(ix), signal_smoothed])
+        signal_smoothed = np.hstack([np.nan * np.ones(ix), signal_smoothed])
         # Convert back to pandas if necessary
         if is_pandas_series:
             signal_smoothed = pd.Series(signal_smoothed)
@@ -295,7 +297,9 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             weights = np.exp(
                 -((np.arange(idx + 1) - idx) ** 2) / self.gaussian_bandwidth
             )
-            AwA = np.dot(A[: (idx + 1), :].T * weights, A[: (idx + 1), :])  # pylint: disable=invalid-name
+            AwA = np.dot(  # pylint: disable=invalid-name
+                A[: (idx + 1), :].T * weights, A[: (idx + 1), :]
+            )
             Awy = np.dot(  # pylint: disable=invalid-name
                 A[: (idx + 1), :].T * weights, signal[: (idx + 1)].reshape(-1, 1)
             )
@@ -303,13 +307,18 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
                 beta = np.linalg.solve(AwA, Awy)
                 signal_smoothed[idx] = np.dot(A[: (idx + 1), :], beta)[-1]
             except np.linalg.LinAlgError:
-                signal_smoothed[idx] = signal[idx] if self.impute else np.nan  # pylint: disable=using-constant-test
+                signal_smoothed[idx] = (
+                    signal[idx]  # pylint: disable=using-constant-test
+                    if self.impute
+                    else np.nan
+                )
         if self.minval is not None:
             signal_smoothed[signal_smoothed <= self.minval] = self.minval
         return signal_smoothed
 
     def savgol_predict(self, signal, poly_fit_degree, nr):
         """Predict a single value using the savgol method.
+
         Fits a polynomial through the values given by the signal and returns the value
         of the polynomial at the right-most signal-value. More precisely, for a signal of length
         n, fits a poly_fit_degree polynomial through the points signal[-n+1+nr], signal[-n+2+nr],
@@ -368,7 +377,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         if nr > 0:
             warnings.warn("The filter is no longer causal.")
 
-        A = np.vstack(
+        A = np.vstack(  # pylint: disable=invalid-name
             [np.arange(nl, nr + 1) ** j for j in range(poly_fit_degree + 1)]
         ).T
 
@@ -471,7 +480,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
                 # imputation order is larger than the available data)
                 else:
                     signal_imputed[ix] = self.savgol_predict(
-                        signal_imputed[:ix], min(ix-1, impute_order), -1
+                        signal_imputed[:ix], min(ix - 1, impute_order), -1
                     )
             # Away from the boundary, use savgol fitting on a fixed window
             else:

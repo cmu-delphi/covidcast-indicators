@@ -26,27 +26,33 @@ def run_module():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    ## download recent files from FTP server
-    logging.info("downloading recent files through SFTP")
-    download(params["cache_dir"], params["ftp_conn"])
-
-    ## get end date from input file
     # the filenames are expected to be in the format:
     # Denominator: "YYYYMMDD_All_Outpatients_By_County.dat.gz"
     # Numerator: "YYYYMMDD_Covid_Outpatients_By_County.dat.gz"
 
-    if params["drop_date"] is None:
-        dropdate_denom = datetime.strptime(
-            Path(params["input_denom_file"]).name.split("_")[0], "%Y%m%d"
-        )
+    assert (params["input_denom_file"] is None) == (params["input_covid_file"] is None), \
+        "exactly one of denom and covid files are provided"
 
-        dropdate_covid = datetime.strptime(
-            Path(params["input_covid_file"]).name.split("_")[0], "%Y%m%d"
-        )
-        assert dropdate_denom == dropdate_covid, "different drop dates for data files"
-        dropdate_dt = dropdate_denom
+    if params["drop_date"] is None:
+        # files are dropped about 8pm the day after the issue date
+        dropdate_dt = (datetime.now() - timedelta(days=1,hours=20))
+        dropdate_dt = dropdate_dt.replace(hour=0,minute=0,second=0,microsecond=0)
     else:
         dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
+    filedate = dropdate_dt.strftime("%Y%m%d")
+
+    if params["input_denom_file"] is None:
+
+        ## download recent files from FTP server
+        logging.info("downloading recent files through SFTP")
+        download(params["cache_dir"], params["ftp_conn"])
+
+        input_denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
+        input_covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
+    else:
+        input_denom_file = params["input_denom_file"]
+        input_covid_file = params["input_covid_file"]
+
     dropdate = str(dropdate_dt.date())
 
     # range of estimates to produce
@@ -93,8 +99,8 @@ def run_module():
                 params["se"]
             )
             su_inst.update_sensor(
-                params["input_denom_file"],
-                params["input_covid_file"],
+                input_denom_file,
+                input_covid_file,
                 params["export_dir"]
             )
         logging.info("finished %s", geo)

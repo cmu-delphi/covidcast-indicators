@@ -4,8 +4,9 @@
 @Library('jenkins-shared-library') _
 
 def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
-//def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms"]
-def build_and_package = [:]
+def build_package = [:]
+def deploy_staging [:]
+def deploy_production [:]
 
 pipeline {
     agent any
@@ -44,14 +45,14 @@ pipeline {
                     // for (String indicator : indicator_list) { // TEST
                     //     println ("${indicator}")
                     indicator_list.each { indicator ->
-                        build_and_package[indicator] = {
+                        build_package[indicator] = {
                             //echo f.toString()
                             //println f
                             //sh "echo ${indicator}"
                             sh "jenkins/jenkins-build-and-package.sh ${indicator}"
                         }
                     }
-                    parallel build_and_package
+                    parallel build_package
                 }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
                 sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
@@ -59,10 +60,23 @@ pipeline {
         }
         stage('Deploy staging') {
             when {
-                branch "main";
+                branch "test-main";
             }
             steps {
-                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                script {
+                    // Do some magical thing here...
+                    // for (String indicator : indicator_list) { // TEST
+                    //     println ("${indicator}")
+                    indicator_list.each { indicator ->
+                        deploy_staging[indicator] = {
+                            //echo f.toString()
+                            //println f
+                            //sh "echo ${indicator}"
+                            sh "jenkins/jenkins-deploy-staging.sh ${indicator}"
+                        }
+                    }
+                    parallel deploy_staging
+                //sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
                 // sh "jenkins/${INDICATOR}-jenkins-test.sh"
             }
         }

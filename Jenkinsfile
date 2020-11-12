@@ -32,7 +32,7 @@ pipeline {
                 //         INDICATOR = ""
                 //     }
                 // } 
-                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                sh "echo This is a thing happening on ${BRANCH_NAME}" // TEST
             }
         }
         stage('Build and Package') {
@@ -55,7 +55,7 @@ pipeline {
                     parallel build_package
                 }
                 // sh "jenkins/${INDICATOR}-jenkins-build.sh"
-                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                sh "echo This is a thing happening on ${BRANCH_NAME}" // TEST
             }
         }
         stage('Deploy staging') {
@@ -86,7 +86,7 @@ pipeline {
                 branch "prod"; // TODO Rename to new production branch
             }
             steps {
-                sh "echo This is a thing happening on ${BRANCH_NAME}/${CHANGE_TARGET}" // TEST
+                sh "echo This is a thing happening on ${BRANCH_NAME}" // TEST
                 // sh "jenkins/${INDICATOR}-jenkins-test.sh"
             }
         }

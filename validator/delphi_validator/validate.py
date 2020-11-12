@@ -907,12 +907,6 @@ class Validator():
 
         all_frames = pd.concat(all_frames)
 
-        # Get list of dates we expect to see in the source data.
-        date_slist = all_frames['date'].unique().tolist()
-        date_list = list(
-            map(lambda x: datetime.strptime(x, '%Y%m%d'), date_slist))
-        date_list.sort()
-
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.

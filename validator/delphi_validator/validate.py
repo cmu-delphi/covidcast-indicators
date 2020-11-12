@@ -697,13 +697,10 @@ class Validator():
         # Determine outliers in source frames only, only need the reference
         # data from just before the start of the source data
         # because lead and lag outlier calculations are only one day
-        print(all_frames)
         outlier_df = all_frames.query \
             ('time_value >= @api_frames_end & time_value <= @source_frame_end')
-        print(outlier_df)
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
             .reset_index(drop=True).copy()
-        print(outlier_df)
         outlier_df["flag"] = 0
         outlier_df["flag"] = outlier_df.apply(outlier_flag, axis = 1)
         outliers = outlier_df[outlier_df["flag"] == 1]
@@ -734,7 +731,6 @@ class Validator():
             sort_values(by=['time_value','geo_id']). \
             drop_duplicates().reset_index(drop=True)
 
-        print(all_outliers)
 
         # Identify outliers just in the source data
         source_outliers = all_outliers.query \

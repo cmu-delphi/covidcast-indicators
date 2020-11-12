@@ -630,9 +630,8 @@ class Validator():
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
         source_frame_end = source_df["time_value"].max()
-        api_frames_start = api_frames["time_value"].min()
         api_frames_end = api_frames["time_value"].max()
-        all_frames = pd.concat([api_frames, source_df]).drop_duplicates(). \
+        all_frames = pd.concat([api_frames, source_df]).drop_duplicates(subset=["time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index()
 
         # Tuned Variables from Dan's Code for flagging outliers. Size_cut is a

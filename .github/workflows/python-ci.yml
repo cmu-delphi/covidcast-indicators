@@ -34,7 +34,7 @@ jobs:
       run: |
         make install
     - name: Lint
-      if: ${{ matrix.packages != 'claims_hosp' && matrix.packages != 'quidel' && matrix.packages != 'usafacts'}}
+      if: ${{ matrix.packages != 'claims_hosp' && matrix.packages != 'quidel'}}
       run: |
         make lint
     - name: Test

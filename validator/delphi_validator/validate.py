@@ -936,8 +936,6 @@ class Validator():
             kroc = 0
 
 
-        prev_df = None
-        next_df = None
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
         # week) API data.

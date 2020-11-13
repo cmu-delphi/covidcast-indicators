@@ -123,53 +123,20 @@ class GeoMaps:
         return data.groupby("hrr"), "hrr"
 
     def county_to_megacounty(self, data, threshold_visits, threshold_len):
-        """A megacounty for a given day is all of the counties in a certain state who have:
-                 1) Denominator sum over <threshold_len> days below <threshold_visits>, or
-                 2) 0 denominator the last <min_recent_obs> days (not relevant for code
-                    because 0 denominator is not present)
+        """Convert to megacounty and groupby FIPS using GeoMapper package.
 
         Args:
             data: dataframe aggregated to the daily-county resolution (all 7 cols expected)
+            threshold_visits: count threshold to determine when to convert to megacounty.
+            threshold_len: number of days to use when thresholding.
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
-
-        dates = np.unique(data["ServiceDate"])
-        fipss = np.unique(data["PatCountyFIPS"])
-
-        # get denominator by day and location for all possible date-fips pairs
-        # this fills in 0 if unobserved
-        denom_dayloc = np.zeros((len(dates), len(fipss)))
-        by_fips = data.groupby("PatCountyFIPS")
-        for j, fips in enumerate(fipss):
-            denom_dayloc[:, j] = DoctorVisitsSensor.fill_dates(
-                by_fips.get_group(fips).set_index("ServiceDate"), dates
-            )["Denominator"].values
-
-        # get rolling sum across <threshold_len> days
-        num_recent_visits = np.concatenate(
-            (np.zeros((threshold_len, len(fipss))), np.cumsum(denom_dayloc, axis=0)),
-            axis=0,
-        )
-        num_recent_visits = (
-            num_recent_visits[threshold_len:] - num_recent_visits[:-threshold_len]
-        )
-        recent_visits_df = pd.DataFrame(
-            [
-                (dates[x[0]], fipss[x[1]], val)
-                for x, val in np.ndenumerate(num_recent_visits)
-            ],
-            columns=["ServiceDate", "PatCountyFIPS", "RecentVisits"],
-        )
-        data = data.merge(
-            recent_visits_df, how="left", on=["ServiceDate", "PatCountyFIPS"]
-        )
-
         data = self.gmpr.fips_to_megacounty(data,
                                             threshold_visits,
                                             threshold_len,
                                             fips_col="PatCountyFIPS",
-                                            thr_col="RecentVisits",
+                                            thr_col="Denominator",
                                             date_col="ServiceDate")
         data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
         return data.groupby("PatCountyFIPS"), "PatCountyFIPS"

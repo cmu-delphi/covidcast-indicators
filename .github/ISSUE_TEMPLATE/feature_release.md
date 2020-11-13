@@ -15,7 +15,7 @@ assignees: 'benjaminysmith'
 
 <!-- relevant for most work -->
 
-- [ ] API [documentation](https://github.com/cmu-delphi/delphi-epidata/tree/main/docs/api) and/or [changelog](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast_changelog.md)
+- [ ] API [documentation](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md) and/or [changelog](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast_changelog.md)
 - [ ] API mailing list notification
 
 <!-- relevant for new signals -->

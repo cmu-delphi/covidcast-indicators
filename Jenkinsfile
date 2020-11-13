@@ -17,18 +17,6 @@ def deploy_production = [:]
 pipeline {
     agent any
     stages {
-        stage ("Environment") {            
-            when {
-                anyOf {
-                    branch "test-main"; // TODO Switch to main when done.
-                    branch "prod"; // TODO Rename to new production branch when it exists
-                    changeRequest target: "test-main"; // TODO Switch to main when done.
-                }
-            }
-            steps {
-                sh "echo noop noop"
-            }
-        }
         stage('Build and Package') {
             when {
                 branch "test-main";

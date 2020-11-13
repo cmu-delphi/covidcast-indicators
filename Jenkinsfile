@@ -32,7 +32,7 @@ pipeline {
                 script {
                     indicator_list.each { indicator ->
                         build_package[indicator] = {
-                            sh "jenkins/jenkins-build-and-package.sh ${indicator}"
+                            sh "jenkins/build-and-package.sh ${indicator}"
                         }
                     }
                     parallel build_package
@@ -47,7 +47,7 @@ pipeline {
                 script {
                     indicator_list.each { indicator ->
                         deploy_staging[indicator] = {
-                            sh "jenkins/jenkins-deploy-staging.sh ${indicator}"
+                            sh "jenkins/deploy-staging.sh ${indicator}"
                         }
                     }
                     parallel deploy_staging
@@ -62,7 +62,7 @@ pipeline {
                 script {
                     indicator_list.each { indicator ->
                         deploy_production[indicator] = {
-                            sh "jenkins/jenkins-deploy-production.sh ${indicator}"
+                            sh "jenkins/deploy-production.sh ${indicator}"
                         }
                     }
                     parallel deploy_production

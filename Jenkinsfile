@@ -60,8 +60,7 @@ pipeline {
         }
         stage('Deploy staging') {
             when {
-                changeRequest target: "test-main";
-                //branch "test-main";
+                branch "test-main";
             }
             steps {
                 script {

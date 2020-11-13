@@ -3,7 +3,10 @@
 // Import shared lib.
 @Library('jenkins-shared-library') _
 
-// Vars.
+/* Declare variables.
+   - indicator_list should contain all the indicators to handle in the pipeline.
+   - Use '.github/workflows/python-ci.yml as a reference'.
+   - TODO: Get this list automatically from the file when the pipeline runs? */
 def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
 def build_package = [:]
 def deploy_staging = [:]
@@ -26,7 +29,7 @@ pipeline {
         }
         stage('Build and Package') {
             when {
-                changeRequest target: "test-main";
+                branch: "test-main";
             }
             steps {
                 script {
@@ -56,7 +59,7 @@ pipeline {
         }
         stage('Deploy production') {
             when {
-                branch "prod"; // TODO Rename to new production branch when it exists
+                branch "prod";
             }
             steps {
                 script {

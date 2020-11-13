@@ -73,7 +73,7 @@ pipeline {
     post {
         always {
             script {
-                //Use slackNotifier.groovy from shared lib.
+                //slackNotifier.groovy from shared lib.
                 slackNotifier(currentBuild.currentResult)
             }
         }

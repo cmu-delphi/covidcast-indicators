@@ -21,7 +21,7 @@ pipeline {
                 }
             }
             steps {
-                sh "noop noop"
+                sh "echo noop noop"
             }
         }
         stage('Build and Package') {
@@ -73,7 +73,7 @@ pipeline {
     post {
         always {
             script {
-                //slackNotifier.groovy from shared lib.
+                //Use slackNotifier.groovy from shared lib.
                 slackNotifier(currentBuild.currentResult)
             }
         }

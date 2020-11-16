@@ -13,12 +13,13 @@ import pandas as pd
 from delphi_utils import (
     read_params,
     S3ArchiveDiffer,
-    add_prefix
+    add_prefix,
+    create_export_csv
 )
 
+from .data_tools import format_for_export
 from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
-from .export import export_csv
 from .constants import (SIGNALS, RAW, SMOOTHED,
                         MSA, HRR, STATE, DMA,
                         PULL_START_DATE)
@@ -68,45 +69,37 @@ def run_module():
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
     logging.info("Creating data from %s through %s.", start_date, end_date)
 
+    # Dictionary mapping geo resolution to the data corresponding to that resolution.
+    df_by_geo_res = {}
+
     if not params["test"]:
         # setup class to handle API calls
         ght = GoogleHealthTrends(ght_key=ght_key)
 
         # read data frame version of the data
-        df_state = get_counts_states(
+        df_by_geo_res[STATE] = get_counts_states(
             ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
         )
-        df_dma = get_counts_dma(
+        df_by_geo_res[DMA] = get_counts_dma(
             ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
         )
     else:
-        df_state = pd.read_csv(params["test_data_dir"].format(geo_res="state"))
-        df_dma = pd.read_csv(params["test_data_dir"].format(geo_res="dma"))
+        df_by_geo_res[STATE] = pd.read_csv(params["test_data_dir"].format(geo_res="state"))
+        df_by_geo_res[DMA] = pd.read_csv(params["test_data_dir"].format(geo_res="dma"))
 
-    df_hrr, df_msa = derived_counts_from_dma(df_dma, static_dir=static_dir)
+    df_by_geo_res[HRR], df_by_geo_res[MSA] = derived_counts_from_dma(df_by_geo_res[DMA],
+                                                                     static_dir=static_dir)
 
     signal_names = add_prefix(SIGNALS, wip_signal, prefix="wip_")
 
     for signal in signal_names:
-        if signal.endswith(SMOOTHED):
-            # export each geographic region, with both smoothed and unsmoothed data
-            export_csv(df_state, STATE, signal, smooth=True,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=True,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=True,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=True,
-                       start_date = start_date, receiving_dir=export_dir)
-        elif signal.endswith(RAW):
-            export_csv(df_state, STATE, signal, smooth=False,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_dma, DMA, signal, smooth=False,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_hrr, HRR, signal, smooth=False,
-                       start_date=start_date, receiving_dir=export_dir)
-            export_csv(df_msa, MSA, signal, smooth=False,
-                       start_date=start_date, receiving_dir=export_dir)
+        is_smoothed = signal.endswith(SMOOTHED)
+        for geo_res, df in df_by_geo_res.items():
+            create_export_csv(format_for_export(df, is_smoothed),
+                              geo_res=geo_res,
+                              sensor=signal,
+                              start_date=start_date,
+                              export_dir=export_dir)
 
     if not params["test"]:
         # Diff exports, and make incremental versions

@@ -64,6 +64,7 @@ def report_complaints(all_complaints, params):
             assert False, e.response["error"]
 
 def get_maintainers_block(complaints):
+    """Build a Slack block to alert maintainers to pay attention."""
     maintainers = set()
     for c in complaints:
         maintainers.update(c.maintainers)
@@ -87,7 +88,7 @@ def format_complaints_aggregated_by_source(complaints):
 
     blocks = [get_maintainers_block(complaints)]
 
-    def message_for_source(complaint): 
+    def message_for_source(complaint):
         return "{main_text} - (last update: {last_updated})".format(
             main_text=complaint.message,
             last_updated=complaint.last_updated.strftime("%Y-%m-%d"))

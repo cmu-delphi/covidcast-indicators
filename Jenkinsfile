@@ -7,7 +7,7 @@
    Declare variables.
    - indicator_list should contain all the indicators to handle in the pipeline.
    - Keep in sync with '.github/workflows/python-ci.yml'.
-   - TODO: Get this list automatically from python-ci.yml at runtime?
+   - TODO: #527 Get this list automatically from python-ci.yml at runtime.
  */
 def indicator_list = ["cdc_covidnet", "claims_hosp", "combo_cases_and_deaths", "google_symptoms", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph", "safegraph_patterns", "usafacts"]
 def build_package = [:]

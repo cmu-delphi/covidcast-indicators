@@ -17,6 +17,7 @@ import covidcast
 
 from .check_source import check_source
 
+
 def run_module():
 
     params = read_params()
@@ -24,7 +25,8 @@ def run_module():
 
     complaints = []
     for data_source in params["sources"].keys():
-        complaints.extend(check_source(data_source, meta, params["sources"], params.get("grace", 0)))
+        complaints.extend(check_source(data_source, meta,
+                                       params["sources"], params.get("grace", 0)))
 
     if len(complaints) > 0:
         for complaint in complaints:
@@ -34,10 +36,12 @@ def run_module():
 
         sys.exit(1)
 
+
 def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""
     for i in range(0, len(complaints), n):
         yield complaints[i:i + n]
+
 
 def report_complaints(all_complaints, params):
     """Post complaints to Slack."""
@@ -59,39 +63,45 @@ def report_complaints(all_complaints, params):
             # You will get a SlackApiError if "ok" is False
             assert False, e.response["error"]
 
-
 def get_maintainers_block(complaints):
     maintainers = set()
     for c in complaints:
         maintainers.update(c.maintainers)
-    
+
     maintainers_block = {
-	    "type": "section",
-	    "text": {
-		"type": "mrkdwn",
-		"text": "Hi, this is Sir Complains-a-Lot. I need to speak to " +
-                        (", ".join("<@{0}>".format(m) for m in maintainers)) + "."
-	    }
-	}
+        "type": "section",
+        "text": {
+                "type": "mrkdwn",
+                "text": "Hi, this is Sir Complains-a-Lot. I need to speak to " +
+                        (", ".join("<@{0}>".format(m)
+                                   for m in maintainers)) + "."
+        }
+    }
 
     return maintainers_block
 
 
 def format_complaints_aggregated_by_source(complaints):
-    """Build formatted Slack message for posting to the API, aggregating the 
+    """Build formatted Slack message for posting to the API, aggregating
     complaints by source to reduce the number of blocks."""
 
     blocks = [get_maintainers_block(complaints)]
 
-    def aggregated_message_for_source(x): return "{complaint} - (last update: {last_updated})".format(
-        complaint=x.message, last_updated=x.last_updated.strftime("%Y-%m-%d"))
+    def message_for_source(complaint): 
+        return "{main_text} - (last update: {last_updated})".format(
+            main_text=complaint.message,
+            last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
-    for source, v in groupby(complaints, key=lambda x: x.data_source):
-        for message, complaint_list in groupby(v, key=aggregated_message_for_source):
+    for source, complaints_by_source in groupby(
+            complaints, key=lambda x: x.data_source):
+        for message, complaint_list in groupby(
+                complaints_by_source, key=message_for_source):
             signal_and_geo_types = ""
             for complaint in complaint_list:
                 signal_and_geo_types += "`{signal}: [{geo_types}]`\n".format(
-                    signal=complaint.signal, geo_types=", ".join(complaint.geo_types))
+                    signal=complaint.signal,
+                    geo_types=", ".join(complaint.geo_types))
+
             blocks.extend([
                 {
                     "type": "divider"
@@ -100,7 +110,11 @@ def format_complaints_aggregated_by_source(complaints):
                     "type": "section",
                     "text": {
                         "type": "mrkdwn",
-                        "text": "*{source_name}* {message_for_group}:\n{signals}".format(source_name=source.upper(), message_for_group=message, signals=signal_and_geo_types)
+                        "text": "*{source_name}* {message}:\n{signals}"
+                        .format(
+                            source_name=source.upper(),
+                            message=message,
+                            signals=signal_and_geo_types)
                     }
                 }
             ])
@@ -121,13 +135,12 @@ def format_complaints(complaints):
     for complaint in complaints:
         blocks.append(
             {
-	        "type": "section",
-		"text": {
-		    "type": "mrkdwn",
-		    "text": complaint.to_md()
-		}
-	    }
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": complaint.to_md()
+                }
+            }
         )
-
 
     return blocks

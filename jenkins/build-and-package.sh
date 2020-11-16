@@ -28,5 +28,4 @@ pip install .
 cd "${WORKSPACE}" || exit
 
 # Create .tar.gz for deployment
-# TODO: Switcheroo to `artifacts` after this goes live!
-tar -czvf "${JENKINS_HOME}/test-artifacts/${local_indicator}.tar.gz" "${local_indicator}"
+tar -czvf "${JENKINS_HOME}/artifacts/${local_indicator}.tar.gz" "${local_indicator}"

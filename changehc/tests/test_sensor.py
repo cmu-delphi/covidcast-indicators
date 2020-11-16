@@ -1,16 +1,14 @@
 # standard
-import pytest
 
-# third party
-from delphi_utils import read_params
 import numpy as np
 import numpy.random as nr
 import pandas as pd
-
 # first party
 from delphi_changehc.config import Config
 from delphi_changehc.load_data import load_combined_data
 from delphi_changehc.sensor import CHCSensor
+# third party
+from delphi_utils import read_params
 
 CONFIG = Config()
 PARAMS = read_params()
@@ -20,7 +18,7 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
-                                            "fips")
+                                       "fips")
 
     def test_backfill(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

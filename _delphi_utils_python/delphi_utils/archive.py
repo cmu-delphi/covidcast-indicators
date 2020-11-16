@@ -104,7 +104,8 @@ def run_module(archive_type: str,
     Parameters
     ----------
     archive_type: str
-        Type of ArchiveDiffer to run.  Must be one of ["git", "s3"] which correspond to `GitArchiveDiffer` and `S3ArchiveDiffer`, respectively.
+        Type of ArchiveDiffer to run.  Must be one of ["git", "s3"] which correspond to
+        `GitArchiveDiffer` and `S3ArchiveDiffer`, respectively.
     cache_dir: str
         The directory for storing most recent archived/uploaded CSVs to start diffing from.
     export_dir: str
@@ -351,7 +352,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
 
         self._cache_updated = True
 
-    def archive_exports(self,
+    def archive_exports(self,  # pylint: disable=arguments-differ
         exported_files: Files,
         update_cache: bool = True,
         update_s3: bool = True
@@ -587,11 +588,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     params = read_params()
     run_module(args.archive_type,
-               params.cache_dir,
-               params.export_dir,
-               aws_credentials=params.aws_credentials,
+               params["cache_dir"],
+               params["export_dir"],
+               aws_credentials=params["aws_credentials"],
                branch_name=args.branch_name,
-               bucket_name=params.bucket_name,
+               bucket_name=params["bucket_name"],
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

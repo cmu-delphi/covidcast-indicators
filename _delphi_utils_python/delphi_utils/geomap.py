@@ -9,7 +9,7 @@ TODO:
 - remove deprecated functions once integration into JHU and Quidel is refactored
   see: https://github.com/cmu-delphi/covidcast-indicators/issues/283
 """
-
+# pylint: disable=too-many-lines
 from os.path import join
 import warnings
 import pkg_resources
@@ -41,7 +41,7 @@ CROSSWALK_FILEPATHS = {
 }
 
 
-class GeoMapper:
+class GeoMapper:  # pylint: disable=too-many-public-methods
     """Geo mapping tools commonly used in Delphi.
 
     The GeoMapper class provides utility functions for translating between different
@@ -301,7 +301,7 @@ class GeoMapper:
                 df[from_col] = df[from_col].astype(str)
 
         # Assuming that the passed-in records are all United States data, at the moment
-        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]:
+        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]: # pylint: disable=no-else-return
             df[new_col] = df[from_col].apply(lambda x: "us")
             return df
         elif new_code == "nation":
@@ -724,7 +724,7 @@ class GeoMapper:
         )
 
         state_table = self._load_crosswalk(from_code="state", to_code="state")
-        state_table = state_table[["state_code", "state_id"]].rename(
+        state_table = state_table[["state_code", "state_id"]].rename(  # pylint: disable=unsubscriptable-object
             columns={"state_id": state_id_col}
         )
         data = data.copy()
@@ -796,7 +796,7 @@ class GeoMapper:
         return data
 
     def convert_zip_to_msa(
-        self, data, zip_col="zip", msa_col="msa", date_col="date", count_cols=None
+        self, data, zip_col="zip", date_col="date", count_cols=None
     ):
         """DEPRECATED."""
         warnings.warn(
@@ -828,7 +828,6 @@ class GeoMapper:
         data = self.convert_zip_to_msa(
             data,
             zip_col=zip_col,
-            msa_col=msa_col,
             date_col=date_col,
             count_cols=count_cols,
         )

@@ -7,7 +7,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    types: [ opened, synchronized, reopened, ready_for_review ]
+    types: [ opened, synchronize, reopened, ready_for_review ]
     branches: [ main ]
 
 jobs:
@@ -16,8 +16,7 @@ jobs:
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
-        #packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, google_symptoms, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
-        packages: [cdc_covidnet, claims_hosp, combo_cases_and_deaths, google_symptoms, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
+        packages: [_delphi_utils_python, cdc_covidnet, claims_hosp, combo_cases_and_deaths, google_symptoms, jhu, nchs_mortality, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}
@@ -35,8 +34,9 @@ jobs:
       run: |
         make install
     - name: Lint
+      if: ${{ matrix.packages != 'claims_hosp' && matrix.packages != 'quidel'}}
       run: |
-        # make lint
+        make lint
     - name: Test
       run: |
         make test

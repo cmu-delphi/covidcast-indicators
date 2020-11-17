@@ -330,7 +330,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "B8", "B10", "B10a", "B10b", "B12", "B12a", "B11", # added in Wave 4
     "C1", "C2", "C3", "C4", "C5", "C6", "C7", "C8_1", "C8_2", "C8_3", "C9", "C10_1_1", "C10_2_1",
     "C10_3_1", "C10_4_1", "C11", "C12",
-    "C13", "C13a", "C14", # C13, C13a, C14 added in Wave 4
+    "C13", "C13a", "C14", "C15", # C13, C13a, C14, C15 added in Wave 4
     "D1", "D1_4_TEXT", "D1b", "D2", "D3", "D4", "D5",
     "D8", "D9", # D6-9 added in Wave 4; D6 & D7 withheld pending privacy procedures
     "Q36", "Q40",

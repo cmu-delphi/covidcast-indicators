@@ -20,17 +20,13 @@ class TestRun:
             csv_files = listdir(output_folder)
 
             dates = [
-                "202016",
-                "202017",
-                "202018",
-                "202019",
-                "202020",
-                "202021",
-                "202022",
-                "202023",
-                "202024",
-                "202025",
-                "202026",
+                "202030",
+                "202031",
+                "202032",
+                "202033",
+                "202034",
+                "202035",
+                "202036",
             ]
             metrics = ['deaths_covid_incidence',
                        'deaths_allcause_incidence',

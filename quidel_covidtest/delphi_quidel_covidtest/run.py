@@ -4,9 +4,6 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from os.path import join
-
-import pandas as pd
 from delphi_utils import read_params, add_prefix
 
 from .geo_maps import geo_map
@@ -20,8 +17,7 @@ from .generate_sensor import (generate_sensor_for_states,
 from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
-                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS,
-                        COUNTY, MSA)
+                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS)
 
 
 def run_module():

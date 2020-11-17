@@ -20,23 +20,23 @@ class TestPullGoogleSymptoms:
             df = dfs[level]
             assert (
                 df.columns.values
-                == ["geo_id", "timestamp", "Anosmia", "Ageusia", "combined_symptoms"]
+                == ["geo_id", "timestamp", "Anosmia", "Ageusia", "sum_anosmia_ageusia"]
             ).all()
     
             # combined_symptoms is nan when both Anosmia and Ageusia are nan
             assert sum(~df.loc[
                                   (df["Anosmia"].isnull())
                                   & (df["Ageusia"].isnull())
-                               , "combined_symptoms"].isnull()) == 0
+                               , "sum_anosmia_ageusia"].isnull()) == 0
             # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
             assert sum(df.loc[
                                   (~df["Anosmia"].isnull())
                                   & (df["Ageusia"].isnull())
-                              , "combined_symptoms"].isnull()) == 0
+                              , "sum_anosmia_ageusia"].isnull()) == 0
             assert sum(df.loc[
                                   (df["Anosmia"].isnull())
                                   & (~df["Ageusia"].isnull())
-                              , "combined_symptoms"].isnull()) == 0
+                              , "sum_anosmia_ageusia"].isnull()) == 0
 
     def test_missing_cols(self):        
         df = pd.read_csv(base_url_bad["missing_cols"])       

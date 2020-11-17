@@ -180,7 +180,7 @@ class DoctorVisitsSensor:
 
         Returns: dictionary of results
         """
-        y_data.set_index("ServiceDate", inplace=True)
+        y_data.set_index(Config.DATE_COL, inplace=True)
         y_data = DoctorVisitsSensor.fill_dates(y_data, fit_dates)
         sensor_idxs = np.where(y_data.index >= sensor_dates[0])[0]
         n_dates = y_data.shape[0]

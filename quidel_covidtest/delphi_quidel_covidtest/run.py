@@ -4,12 +4,9 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from os.path import join
-
-import pandas as pd
 from delphi_utils import read_params, add_prefix
 
-from .geo_maps import (zip_to_msa, zip_to_hrr, zip_to_county, zip_to_state)
+from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
@@ -20,8 +17,7 @@ from .generate_sensor import (generate_sensor_for_states,
 from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
-                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS,
-                        COUNTY, MSA)
+                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS)
 
 
 def run_module():
@@ -29,12 +25,8 @@ def run_module():
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
-    static_file_dir = params["static_file_dir"]
     export_start_date = params["export_start_date"]
     export_end_date = params["export_end_date"]
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
 
     # Pull data and update export date
     df, _end_date = pull_quidel_covidtest(params)
@@ -50,7 +42,7 @@ def run_module():
 
     # State Level
     data = df.copy()
-    state_groups = zip_to_state(data, map_df).groupby("state_id")
+    state_groups = geo_map("state", data).groupby("state_id")
 
     # Add prefix, if required
     sensors = add_prefix(SENSORS,
@@ -76,21 +68,15 @@ def run_module():
         export_csv(state_df, "state", sensor, receiving_dir=export_dir,
                    start_date=export_start_date, end_date=export_end_date)
 
-        # County/HRR/MSA level
-        for geo_res in GEO_RESOLUTIONS:
+    # County/HRR/MSA level
+    for geo_res in GEO_RESOLUTIONS:
+        geo_data, res_key = geo_map(geo_res, data)
+        for sensor in sensors:
             print(geo_res, sensor)
-            data = df.copy()
-            if geo_res == COUNTY:
-                data, res_key = zip_to_county(data, map_df)
-            elif geo_res == MSA:
-                data, res_key = zip_to_msa(data, map_df)
-            else:
-                data, res_key = zip_to_hrr(data, map_df)
-
             res_df = generate_sensor_for_other_geores(
-                state_groups, data, res_key, smooth=smoothers[sensor][1],
-                device=smoothers[sensor][0], first_date=first_date,
-                last_date=last_date)
+                    state_groups, geo_data, res_key, smooth=smoothers[sensor][1],
+                    device=smoothers[sensor][0], first_date=first_date,
+                    last_date=last_date)
             export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
                        start_date=export_start_date, end_date=export_end_date)
 

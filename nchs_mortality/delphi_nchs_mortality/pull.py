@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
-import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
@@ -66,29 +65,6 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
 
     df = df[df["state"] != "United States"]
     df.loc[df["state"] == "New York City", "state"] = "New York"
-
-    state_list = df["state"].unique()
-    date_list = df["timestamp"].unique()
-    index_df = pd.MultiIndex.from_product(
-        [state_list, date_list], names=['state', 'timestamp']
-    )
-    df = df.groupby(
-            ["state", "timestamp"]).sum().reindex(index_df).reset_index()
-
-    # Final sanity checks
-    days_by_states = df.groupby("state").count()["covid_deaths"].unique()
-    unique_days = df["timestamp"].unique()
-    # each FIPS has same number of rows
-    if (len(days_by_states) > 1) or (days_by_states[0] != len(unique_days)):
-        raise ValueError("Differing number of days by fips")
-    min_timestamp = min(unique_days)
-    max_timestamp = max(unique_days)
-    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, 'D') / 7 + 1
-    if n_days != len(unique_days):
-        raise ValueError(
-            f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
-        )
 
     # Add population info
     keep_columns.extend(["timestamp", "geo_id", "population"])

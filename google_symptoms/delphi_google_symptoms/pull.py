@@ -42,16 +42,16 @@ def preprocess(df, level):
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + ["combined_symptoms"]
+    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + ["sum_anosmia_ageusia"]
 
-    df["combined_symptoms"] = 0
+    df["sum_anosmia_ageusia"] = 0
     for metric in METRICS:
         df.rename({"symptom:" + metric: metric}, axis = 1, inplace = True)
-        df["combined_symptoms"] += df[metric].fillna(0)
+        df["sum_anosmia_ageusia"] += df[metric].fillna(0)
     df.loc[
             (df["Anosmia"].isnull())
             & (df["Ageusia"].isnull())
-            , "combined_symptoms"] = np.nan
+            , "sum_anosmia_ageusia"] = np.nan
 
     # Delete rows with missing FIPS
     null_mask = (df["geo_id"].isnull())

@@ -31,7 +31,7 @@ def run_module():
             df_pull = dfs["county"]
             df_pull = geo_map(df_pull, geo_res)
         for metric, smoother in product(
-                METRICS+["combined_symptoms"], SMOOTHERS):
+                METRICS+["sum_anosmia_ageusia"], SMOOTHERS):
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1

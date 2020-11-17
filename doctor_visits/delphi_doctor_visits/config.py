@@ -21,17 +21,17 @@ class Config:
     CLI_COLS = ["Covid_like", "Flu_like", "Mixed"]
     FLU1_COL = ["Flu1"]
     COUNT_COLS = CLI_COLS + FLU1_COL + ["Denominator"]
-    DATE_COL = "ServiceDate"
-    GEO_COL = "PatCountyFIPS"
-    AGE_COL = "PatAgeGroup"
-    HRR_COLS = ["Pat HRR Name", "Pat HRR ID"]
+    DATE_COL = "servicedate"
+    GEO_COL = "patCountyFIPS"
+    AGE_COL = "patAgeGroup"
+    HRR_COLS = ["patHRRname", "patHRRid"]
     ID_COLS = [DATE_COL] + [GEO_COL] + [AGE_COL] + HRR_COLS
     FILT_COLS = ID_COLS + COUNT_COLS
-    DTYPES = {"ServiceDate": str, "PatCountyFIPS": str,
+    DTYPES = {"servicedate": str, "patCountyFIPS": str,
               "Denominator": int, "Flu1": int,
               "Covid_like": int, "Flu_like": int,
-              "Mixed": int, "PatAgeGroup": str,
-              "Pat HRR Name": str, "Pat HRR ID": float}
+              "Mixed": int, "patAgeGroup": str,
+              "patHRRname": str, "patHRRid": float}
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter
     MAX_BACKFILL_WINDOW = 7  # maximum number of days used to average a backfill correction
@@ -39,3 +39,6 @@ class Config:
     RECENT_LENGTH = 7  # number of days to sum over for sparsity threshold
     MIN_RECENT_VISITS = 100  # min numbers of visits needed to include estimate
     MIN_RECENT_OBS = 3  # minimum days needed to produce an estimate for latest time
+
+    SENSOR_WINDOW_START = 7 # start of training window for sensorization
+    SENSOR_WINDOW_END = 42 # end of training window for sensorization

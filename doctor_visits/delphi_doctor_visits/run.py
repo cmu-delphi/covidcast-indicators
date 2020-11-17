@@ -25,10 +25,10 @@ def run_module():
 
     ## get end date from input file
     # the filename is expected to be in the format:
-    # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
+    # "EDI_AGG_OUTPATIENT_YYYYMMDD_HHMM{timezone}.csv.gz"
     if params["drop_date"] == "":
         dropdate_dt = datetime.strptime(
-            Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
+            Path(params["input_file"]).name.split("_")[3], "%Y%m%d"
         )
     else:
         dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
@@ -48,7 +48,8 @@ def run_module():
     logging.info(f"n_waiting_days:\t{n_waiting_days}")
 
     ## geographies
-    geos = ["state", "msa", "hrr", "county"]
+    #geos = ["state", "msa", "hrr", "county"]
+    geos = ["state"]
 
     ## print out other vars
     logging.info("outpath:\t\t%s", params["export_dir"])
@@ -60,23 +61,25 @@ def run_module():
     ## start generating
     for geo in geos:
         for weekday in params["weekday"]:
-            if weekday:
-                logging.info("starting %s, weekday adj", geo)
-            else:
-                logging.info("starting %s, no adj", geo)
-            update_sensor(
-                filepath=params["input_file"],
-                outpath=params["export_dir"],
-                staticpath=params["static_file_dir"],
-                startdate=startdate,
-                enddate=enddate,
-                dropdate=dropdate,
-                geo=geo,
-                parallel=params["parallel"],
-                weekday=weekday,
-                se=params["se"],
-                prefix=params["obfuscated_prefix"]
-            )
+            for sensorize in params["sensorize"]:
+                if weekday:
+                    logging.info("starting %s, weekday adj", geo)
+                else:
+                    logging.info("starting %s, no adj", geo)
+                update_sensor(
+                    filepath=params["input_file"],
+                    outpath=params["export_dir"],
+                    staticpath=params["static_file_dir"],
+                    startdate=startdate,
+                    enddate=enddate,
+                    dropdate=dropdate,
+                    geo=geo,
+                    parallel=params["parallel"],
+                    weekday=weekday,
+                    se=params["se"],
+                    sensorize=sensorize,
+                    prefix=params["obfuscated_prefix"]
+                )
         logging.info("finished %s", geo)
 
     logging.info("finished all")

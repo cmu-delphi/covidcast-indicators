@@ -6,6 +6,7 @@ Created: 2020-04-18
 Modified:
  - 2020-04-30: Aaron Rumack (add megacounty code)
  - 2020-05-06: Aaron and Maria (weekday effects/other adjustments)
+ - 2020-11-12: Aaron Rumack (add sensorization)
 """
 
 # standard packages
@@ -21,7 +22,9 @@ import pandas as pd
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
+from .sensorize import Sensorizer
 from .weekday import Weekday
+import covidcast
 
 
 def write_to_csv(output_dict, se, out_name, output_path="."):
@@ -78,7 +81,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
 
 def update_sensor(
         filepath, outpath, staticpath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, prefix=None
+        weekday, se, sensorize, prefix=None
 ):
     """Generate sensor values, and write to csv format.
 
@@ -93,6 +96,7 @@ def update_sensor(
       parallel: boolean to run the sensor update in parallel
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
+      sensorize: boolean to sensorize signal
       prefix: string to prefix to output files (used for obfuscation in producing SEs)
     """
 
@@ -225,8 +229,51 @@ def update_sensor(
         "include": sensor_include,
     }
 
+    if sensorize:
+        
+        # Convert data in dict of dicts format to single pd.DataFrame
+        signal_dfs = []
+        for geo_id in unique_geo_ids:
+            incl = output_dict["include"][geo_id]
+            geo_df = pd.DataFrame(
+                data={"signal":output_dict["rates"][geo_id][incl], "time": burn_in_dates[final_sensor_idxs][incl]})
+            geo_df["geo"] = geo_id
+            signal_dfs.append(geo_df)
+        signal_df = pd.concat(signal_dfs)
+
+        # Load target (7-day averaged case incidence proportion)
+        target_df = covidcast.signal("jhu-csse",
+                                     "confirmed_7dav_incidence_prop",
+                                     geo_type = geo.lower(),
+                                     start_day = pd.to_datetime(sensor_dates[0]),
+                                     end_day = pd.to_datetime(sensor_dates[-1]))
+        target_df = target_df[["geo_value","time_value","value"]]
+
+        # Sensorize!
+        sensorized_df = Sensorizer.sensorize(
+                            signal_df,
+                            target_df,
+                            "geo","time","signal",
+                            "geo_value","time_value","value")
+
+        # Use sensorized_df to fill in sensorized rates
+        for geo_id in unique_geo_ids:
+            incl = output_dict["include"][geo_id]
+            output_dict["rates"][geo_id][incl] = sensorized_df[
+                sensorized_df["geo"] == geo_id
+            ]["signal"]
+
+        # TODO: Update SEs also
+    
+
     # write out results
-    out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
+    out_name = ["smoothed"]
+    if weekday:
+        out_name.append("adj")
+    if sensorize:
+        out_name.append("scaled")
+    out_name.append("cli")
+    out_name = "_".join(out_name)
     if se:
         assert prefix is not None, "template has no obfuscated prefix"
         out_name = prefix + "_" + out_name

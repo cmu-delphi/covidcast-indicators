@@ -1,10 +1,20 @@
 # -*- coding: utf-8 -*-
+"""Functions for pulling data from the USAFacts website."""
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper
+
+# Columns to drop the the data frame.
+DROP_COLUMNS = [
+    "FIPS",
+    "County Name",
+    "State",
+    "stateFIPS"
+]
 
 
-def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Pulls the latest USA Facts data, and conforms it into a dataset
+def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.DataFrame:
+    """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
 
@@ -35,32 +45,25 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
-    pop_df: pd.DataFrame
-        Read from static file "fips_population.csv".
+    geo_mapper: GeoMapper
+        GeoMapper object with population info.
 
     Returns
     -------
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    DROP_COLUMNS = [
-        "FIPS",
-        "County Name",
-        "State",
-        "stateFIPS"
-    ]
-    # MIN_FIPS = 1000
-    # MAX_FIPS = 57000
-
     # Read data
     df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
+    # Clean commas in count fields in case the input file included them
+    df[df.columns[4:]] = df[df.columns[4:]].applymap(
+        lambda x: int(x.replace(",", "")) if isinstance(x, str) else x)
     # Check missing FIPS
     null_mask = pd.isnull(df["FIPS"])
     assert null_mask.sum() == 0
 
-    UNEXPECTED_COLUMNS = [x for x in df.columns if "Unnamed" in x]
-    DROP_COLUMNS.extend(UNEXPECTED_COLUMNS)
+    unexpected_columns = [x for x in df.columns if "Unnamed" in x]
+    unexpected_columns.extend(DROP_COLUMNS)
 
     # Assign Grand Princess Cruise Ship a special FIPS 90000
     # df.loc[df["FIPS"] == 6000, "FIPS"] = 90000
@@ -72,16 +75,25 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         & (df["FIPS"] != 2270)
     ]
 
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Population for unassigned cases/deaths is NAN
-    df = df.merge(pop_df, on="FIPS", how="left")
-
     # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
     unassigned_index = (df['FIPS'] == 0)
     df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000
 
     # Conform FIPS
     df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
+
+    # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
+    # a corresponding population entry in the GeoMapper so it will be dropped
+    # in the call to `add_population_column()`.  We pull it out here to
+    # reinsert it after the population data is added.
+    nyc_dummy_row = df[df["fips"] == "00001"]
+    assert len(nyc_dummy_row) == 1
+
+    # Merge in population LOWERCASE, consistent across confirmed and deaths
+    # Population for unassigned cases/deaths is NAN
+    df = geo_mapper.add_population_column(df, "fips")
+    df = df.append(nyc_dummy_row, ignore_index=True)
+
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
         df.drop(DROP_COLUMNS, axis=1, inplace=True)
@@ -90,7 +102,7 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
             "Tried to drop non-existent columns. The dataset "
             "schema may have changed.  Please investigate and "
             "amend DROP_COLUMNS."
-        )
+        ) from e
     # Check that columns are either FIPS or dates
     try:
         columns = list(df.columns)
@@ -99,13 +111,12 @@ def pull_usafacts_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.D
         # Detects whether there is a non-date string column -- not perfect
         _ = [int(x.replace("/", "")) for x in columns]
     except ValueError as e:
-        print(e)
         raise ValueError(
             "Detected unexpected column(s) "
             "after dropping DROP_COLUMNS. The dataset "
             "schema may have changed. Please investigate and "
             "amend DROP_COLUMNS."
-        )
+        ) from e
     # Reshape dataframe
     df = df.melt(
         id_vars=["fips", "population"],

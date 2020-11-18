@@ -12,7 +12,7 @@ class TestRunModule:
 
     def test_class(self, run_as_module, wip_signal=read_params()["wip_signal"]):
         """Tests output file existence."""
-        if wip_signal is True:
+        if wip_signal:
             assert exists(join("receiving", "20200419_hrr_wip_raw_search.csv"))
             assert exists(join("receiving", "20200419_msa_wip_raw_search.csv"))
             assert exists(join("receiving", "20200419_state_wip_raw_search.csv"))
@@ -35,7 +35,7 @@ class TestRunModule:
 
     def test_match_old_raw_output(self, run_as_module, wip_signal=read_params()["wip_signal"]):
         """Tests that raw output files don't change over time."""
-        if wip_signal is True:
+        if wip_signal:
             files = [
                 "20200419_hrr_wip_raw_search.csv",
                 "20200419_msa_wip_raw_search.csv",
@@ -56,11 +56,11 @@ class TestRunModule:
             new_df = pd.read_csv(join("receiving", fname))
             print(new_df)
 
-            assert_frame_equal(test_df, new_df, check_less_precise=5)
+            assert_frame_equal(test_df, new_df)
 
     def test_match_old_smoothed_output(self, run_as_module, wip_signal=read_params()["wip_signal"]):
         """Tests that smooth output files don't change over time."""
-        if wip_signal is True:
+        if wip_signal:
 
             files = [
                 "20200419_hrr_wip_smoothed_search.csv",
@@ -80,4 +80,4 @@ class TestRunModule:
             test_df = pd.read_csv(join("receiving_test", fname))
             new_df = pd.read_csv(join("receiving", fname))
 
-            assert_frame_equal(test_df, new_df, check_less_precise=5)
+            assert_frame_equal(test_df, new_df)

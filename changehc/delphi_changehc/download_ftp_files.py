@@ -57,7 +57,7 @@ def download(out_path, ftp_conn):
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         client.connect(ftp_conn["host"], username=ftp_conn["user"],
-                       password=ftp_conn["pass"][1:] + ftp_conn["pass"][0],
+                       password=ftp_conn["pass"],
                        port=ftp_conn["port"],
                        allow_agent=False, look_for_keys=False)
         sftp = client.open_sftp()

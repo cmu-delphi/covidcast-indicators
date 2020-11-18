@@ -26,7 +26,7 @@ def export_csv(df, geo_name, sensor, export_dir, start_date):
 
     for date in df["timestamp"].unique():
         t = Week.fromdate(pd.to_datetime(str(date)))
-        date_short = "weekly_" + str(t.year) + str(t.week + 1).zfill(2)
+        date_short = "weekly_" + str(t.year) + str(t.week).zfill(2)
         export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
         result_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size"]]
         result_df.to_csv(f"{export_dir}/{export_fn}",

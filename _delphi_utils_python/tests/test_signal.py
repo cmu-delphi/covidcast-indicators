@@ -1,7 +1,8 @@
 """Tests for delphi_utils.signal."""
 from unittest.mock import patch
-import pandas as pd
 
+import pandas as pd
+import pytest
 from delphi_utils.signal import add_prefix, public_signal
 
 # Constants for mocking out the call to `covidcast.metadata` within `public_signal()`.
@@ -14,12 +15,17 @@ class TestSignal:
     def test_add_prefix_to_all(self):
         """Tests that `add_prefix()` derives work-in-progress names for all input signals."""
         assert add_prefix(["sig1", "sig3"], True, prefix="wip_") == ["wip_sig1", "wip_sig3"]
-    
+
     def test_add_prefix_to_specified(self):
         """Tests that `add_prefix()` derives work-in-progress names for specified signals."""
         assert add_prefix(["sig1", "sig2", "sig3"], ["sig2"], prefix="wip_") ==\
             ["sig1", "wip_sig2", "sig3"]
-    
+
+    def test_invalid_prefix_input(self):
+        """Tests that `add_prefix()` raises a ValueError when invalid input is given."""
+        with pytest.raises(ValueError):
+            add_prefix(None, None)
+
     @patch("covidcast.metadata")
     def test_add_prefix_to_non_public(self, metadata):
         """Tests that `add_prefix()` derives work-in-progress names for non-public signals."""

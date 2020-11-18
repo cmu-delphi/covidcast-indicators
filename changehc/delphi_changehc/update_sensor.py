@@ -6,17 +6,18 @@ Created: 2020-10-14
 # standard packages
 import logging
 from multiprocessing import Pool, cpu_count
-from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params, add_prefix
 
 # third party
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper, read_params, add_prefix
+
 # first party
 from .config import Config, Constants
+from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, NA
 from .load_data import load_combined_data
 from .sensor import CHCSensor
 from .weekday import Weekday
-from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, NA
 
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
@@ -28,7 +29,7 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
         output_path: outfile path to write the csv (default is current directory)
     """
     if write_se:
-        logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
+        logging.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     geo_level = output_dict["geo_level"]
     dates = output_dict["dates"]
     geo_ids = output_dict["geo_ids"]
@@ -52,7 +53,9 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
                     assert not np.isnan(sensor), "value for included sensor is nan"
                     assert not np.isnan(se), "se for included sensor is nan"
                     if sensor > 90:
-                        logging.warning(f"value suspiciously high, {geo_id}: {sensor}")
+                        logging.warning("value suspiciously high, {0}: {1}".format(
+                            geo_id, sensor
+                        ))
                     assert se < 5, f"se suspiciously high, {geo_id}: {se}"
                     if write_se:
                         assert sensor > 0 and se > 0, "p=0, std_err=0 invalid"
@@ -64,10 +67,12 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
                             "%s,%f,%s,%s,%s\n" % (geo_id, sensor, NA, NA, NA)
                         )
                     out_n += 1
-    logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+    logging.debug("wrote {0} rows for {1} {2}".format(
+        out_n, len(geo_ids), geo_level
+    ))
 
 
-class CHCSensorUpdator:
+class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
     """Contains methods to update sensor and write results to csv
     """
 
@@ -136,7 +141,9 @@ class CHCSensorUpdator:
         geo = self.geo
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr"}:
-            logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
+            logging.error("{0} is invalid, pick one of 'county', 'state', 'msa', 'hrr'".format(
+                geo
+            ))
             return False
         if geo == "county":
             data_frame = gmpr.fips_to_megacounty(data,
@@ -203,7 +210,7 @@ class CHCSensorUpdator:
                 sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs,"incl"])
         else:
             n_cpu = min(10, cpu_count())
-            logging.debug(f"starting pool with {n_cpu} workers")
+            logging.debug("starting pool with {0} workers".format(n_cpu))
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
@@ -235,30 +242,4 @@ class CHCSensorUpdator:
         # write out results
         for signal in self.updated_signal_names:
             write_to_csv(output_dict, self.se, signal, outpath)
-        logging.debug(f"wrote files to {outpath}")
-        '''
-        params = read_params()
-
-        arch_diff = S3ArchiveDiffer(
-        params["cache_dir"],
-        params["export_dir"],
-        params["bucket_name"], "chc",
-        params["aws_credentials"])
-        arch_diff.update_cache()
-
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-        print(fails)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
-        '''
+        logging.debug("wrote files to {0}".format(outpath))

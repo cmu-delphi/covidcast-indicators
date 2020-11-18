@@ -1,31 +1,22 @@
-import pytest
-
 from os.path import join
+
+import pytest
 
 import numpy as np
 import pandas as pd
-from delphi_usafacts.geo import fips_to_state, disburse, geo_map
+from delphi_usafacts.geo import disburse, geo_map
 
 MAP_DF = pd.read_csv(
     join("..", "static", "fips_prop_pop.csv"),
     dtype={"fips": int}
 )
 
-sensor = "new_counts"
-class TestFipsToState:
-
-    def test_normal(self):
-
-        assert fips_to_state("53003") == "wa"
-        assert fips_to_state("48027") == "tx"
-        assert fips_to_state("12003") == "fl"
-        assert fips_to_state("50103") == "vt"
-        assert fips_to_state("15003") == "hi"
-
+SENSOR = "new_counts"
 
 class TestDisburse:
+    """Tests for the `geo.disburse()` function."""
     def test_even(self):
-
+        """Tests that values are disbursed evenly across recipients."""
         df = pd.DataFrame(
             {
                 "fips": ["51093", "51175", "51620"],
@@ -43,8 +34,9 @@ class TestDisburse:
 
 
 class TestGeoMap:
+    """Tests for `geo.geo_map()`."""
     def test_incorrect_geo(self):
-
+        """Tests that an invalid resolution raises an error."""
         df = pd.DataFrame(
             {
                 "fips": ["53003", "48027", "50103"],
@@ -56,10 +48,10 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF, sensor)
+            geo_map(df, "département", MAP_DF, SENSOR)
 
     def test_county(self):
-
+        """Tests that values are correctly aggregated at the county level."""
         df = pd.DataFrame(
             {
                 "fips": ["53003", "48027", "50103"],
@@ -70,7 +62,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "county", MAP_DF, sensor)
+        new_df = geo_map(df, "county", MAP_DF, SENSOR)
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
@@ -81,18 +73,18 @@ class TestGeoMap:
         assert set(new_df["cumulative_prop"].values) == set(exp_cprop.values)
 
     def test_state(self):
-
+        """Tests that values are correctly aggregated at the state level."""
         df = pd.DataFrame(
             {
-                "fips": ["04001", "04003", "04009", "25023"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13],
-                "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
+                "fips": ["04001", "04003", "04009", "25023", "25000"],
+                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
+                "new_counts": [10, 15, 2, 13, 0],
+                "cumulative_counts": [100, 20, 45, 60, 0],
+                "population": [100, 2100, 300, 25, 25],
             }
         )
 
-        new_df = geo_map(df, "state", MAP_DF, sensor)
+        new_df = geo_map(df, "state", MAP_DF, SENSOR)
 
         exp_incidence = np.array([27, 13]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165, 60]) / np.array([2500, 25]) * 100000
@@ -106,7 +98,7 @@ class TestGeoMap:
         assert (new_df["cumulative_prop"].values == exp_cprop).all()
 
     def test_hrr(self):
-
+        """Tests that values are correctly aggregated at the HRR level."""
         df = pd.DataFrame(
             {
                 "fips": ["13009", "13017", "13021", "09015"],
@@ -117,7 +109,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "hrr", MAP_DF, sensor)
+        new_df = geo_map(df, "hrr", MAP_DF, SENSOR)
 
         exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
         exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
@@ -131,7 +123,7 @@ class TestGeoMap:
         assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
 
     def test_msa(self):
-
+        """Tests that values are correctly aggregated at the MSA level."""
         df = pd.DataFrame(
             {
                 "fips": ["13009", "13017", "13021", "09015"],
@@ -142,7 +134,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "msa", MAP_DF, sensor)
+        new_df = geo_map(df, "msa", MAP_DF, SENSOR)
 
         exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
         exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000

@@ -1,0 +1,3 @@
+origin_census_block_group,date_range_start,date_range_end,device_count,completely_home_device_count,median_home_dwell_time,part_time_work_behavior_devices,full_time_work_behavior_devices
+420430239002,2020-06-10T00:00:00-04:00,2020-06-13T00:00:00-04:00,100,10,7,20,30
+420430239002,2020-06-10T00:00:00-04:00,2020-06-13T00:00:00-04:00,100,20,8,30,40

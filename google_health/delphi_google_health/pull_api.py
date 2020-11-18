@@ -77,7 +77,7 @@ class GoogleHealthTrends:
             start_date,
             end_date,
         )
-        data = self.service.getTimelinesForHealth(**params).execute()
+        data = self.service.getTimelinesForHealth(**params).execute() #pylint: disable=no-member
 
         return data
 

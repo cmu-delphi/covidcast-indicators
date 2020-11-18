@@ -4,7 +4,7 @@ import re
 import numpy as np
 import pandas as pd
 
-from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS
+from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
 def get_geo_id(region_code):
     """
@@ -42,16 +42,16 @@ def preprocess(df, level):
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + ["combined_symptoms"]
+    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + [COMBINED_METRIC]
 
-    df["combined_symptoms"] = 0
+    df[COMBINED_METRIC] = 0
     for metric in METRICS:
         df.rename({"symptom:" + metric: metric}, axis = 1, inplace = True)
-        df["combined_symptoms"] += df[metric].fillna(0)
+        df[COMBINED_METRIC] += df[metric].fillna(0)
     df.loc[
             (df["Anosmia"].isnull())
             & (df["Ageusia"].isnull())
-            , "combined_symptoms"] = np.nan
+            , COMBINED_METRIC] = np.nan
 
     # Delete rows with missing FIPS
     null_mask = (df["geo_id"].isnull())

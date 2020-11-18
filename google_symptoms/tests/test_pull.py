@@ -3,6 +3,7 @@ import pytest
 import pandas as pd
 
 from delphi_google_symptoms.pull import pull_gs_data, preprocess
+from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 base_url_good = "./test_data{sub_url}small_{state}symptoms_dataset.csv"
 
@@ -20,23 +21,23 @@ class TestPullGoogleSymptoms:
             df = dfs[level]
             assert (
                 df.columns.values
-                == ["geo_id", "timestamp", "Anosmia", "Ageusia", "sum_anosmia_ageusia"]
+                == ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
             ).all()
     
             # combined_symptoms is nan when both Anosmia and Ageusia are nan
             assert sum(~df.loc[
-                                  (df["Anosmia"].isnull())
-                                  & (df["Ageusia"].isnull())
-                               , "sum_anosmia_ageusia"].isnull()) == 0
+                                  (df[METRICS[0]].isnull())
+                                  & (df[METRICS[1]].isnull())
+                               , COMBINED_METRIC].isnull()) == 0
             # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
             assert sum(df.loc[
-                                  (~df["Anosmia"].isnull())
-                                  & (df["Ageusia"].isnull())
-                              , "sum_anosmia_ageusia"].isnull()) == 0
+                                  (~df[METRICS[0]].isnull())
+                                  & (df[METRICS[1]].isnull())
+                              , COMBINED_METRIC].isnull()) == 0
             assert sum(df.loc[
-                                  (df["Anosmia"].isnull())
-                                  & (~df["Ageusia"].isnull())
-                              , "sum_anosmia_ageusia"].isnull()) == 0
+                                  (df[METRICS[0]].isnull())
+                                  & (~df[METRICS[1]].isnull())
+                              , COMBINED_METRIC].isnull()) == 0
 
     def test_missing_cols(self):        
         df = pd.read_csv(base_url_bad["missing_cols"])       

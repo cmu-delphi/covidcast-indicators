@@ -38,6 +38,7 @@ def run_module():
     # List of work-in-progress signal names.
     wip_signal = params["wip_signal"]
 
+    # Convert `process()` to a single-argument function for use in `pool.map`.
     single_arg_process = functools.partial(
         process,
         signal_names=SIGNALS,

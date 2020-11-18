@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
+import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
@@ -62,12 +63,26 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         raise ValueError("Expected column(s) missed, The dataset "
                          "schema may have changed. Please investigate and "
                          "amend the code.") from exc
-
+    
+    # Drop rows for locations outside US
     df = df[df["state"] != "United States"]
-    df.loc[df["state"] == "New York City", "state"] = "New York"
+    df = df.loc[:, keep_columns + ["timestamp", "state"]].set_index("timestamp")
+  
+    # NCHS considers NYC as an individual state, however, we want it included
+    # in NY. If values are nan for both NYC and NY, the aggreagtion should
+    # also have NAN.
+    df_ny = df.loc[df["state"] == "New York", :].drop("state", axis=1)
+    df_nyc = df.loc[df["state"] == "New York City", :].drop("state", axis=1) 
+    # Get mask df to ignore cells where both of them have NAN values
+    mask = (df_ny[keep_columns].isnull().values \
+            & df_nyc[keep_columns].isnull().values)
+    df_ny = df_ny.append(df_nyc).groupby("timestamp").sum().where(~mask, np.nan)
+    df_ny["state"] = "New York"
+    # Drop NYC and NY in the full dataset
+    df = df.loc[~df["state"].isin(["New York", "New York City"]), :]
+    df = df.append(df_ny).reset_index().sort_values(["state", "timestamp"])
 
     # Add population info
-    keep_columns.extend(["timestamp", "geo_id", "population"])
-    df = df.merge(map_df, on="state")[keep_columns]
+    df = df.merge(map_df, on="state")[keep_columns + ["geo_id", "population"]]
 
     return df

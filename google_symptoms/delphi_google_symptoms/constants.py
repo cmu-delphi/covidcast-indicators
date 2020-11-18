@@ -9,6 +9,7 @@ from .smooth import (
 
 # global constants
 METRICS = ["Anosmia", "Ageusia"]
+COMBINED_METRIC = "sum_anosmia_ageusia"
 SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [
         "state",

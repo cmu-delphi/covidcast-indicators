@@ -12,7 +12,8 @@ from delphi_utils import read_params, create_export_csv
 
 from .pull import pull_gs_data
 from .geo import geo_map
-from .constants import METRICS, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
+from .constants import (METRICS, COMBINED_METRIC,
+                        GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
 
 
 def run_module():
@@ -31,7 +32,7 @@ def run_module():
             df_pull = dfs["county"]
             df_pull = geo_map(df_pull, geo_res)
         for metric, smoother in product(
-                METRICS+["sum_anosmia_ageusia"], SMOOTHERS):
+                METRICS+[COMBINED_METRIC], SMOOTHERS):
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1

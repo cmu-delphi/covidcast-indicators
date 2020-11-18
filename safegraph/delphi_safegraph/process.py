@@ -243,7 +243,7 @@ def process(filenames: List[str],
                    export_dir)
     # ...then as part of the whole window.
     process_window(past_week,
-                   add_prefix(add_suffix(signal_names, '_7d_avg'),
+                   add_prefix(add_suffix(signal_names, '_7dav'),
                               wip_signal,
                               'wip_'),
                    geo_resolutions,

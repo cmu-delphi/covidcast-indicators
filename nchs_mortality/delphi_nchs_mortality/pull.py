@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
+from .constants import METRICS
 
 def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
@@ -33,10 +34,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         Dataframe as described above.
     """
     # Constants
-    keep_columns = ['covid_deaths', 'total_deaths',
-                    'percent_of_expected_deaths', 'pneumonia_deaths',
-                    'pneumonia_and_covid_deaths', 'influenza_deaths',
-                    'pneumonia_influenza_or_covid_19_deaths']
+    keep_columns = METRICS.copy()
     type_dict = {key: float for key in keep_columns}
     type_dict["timestamp"] = 'datetime64[ns]'
 
@@ -64,31 +62,23 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
                          "schema may have changed. Please investigate and "
                          "amend the code.") from exc
 
+    # Drop rows for locations outside US
     df = df[df["state"] != "United States"]
-    df.loc[df["state"] == "New York City", "state"] = "New York"
+    df = df.loc[:, keep_columns + ["timestamp", "state"]].set_index("timestamp")
 
-    state_list = df["state"].unique()
-    date_list = df["timestamp"].unique()
-    index_df = pd.MultiIndex.from_product(
-        [state_list, date_list], names=['state', 'timestamp']
-    )
-    df = df.groupby(
-            ["state", "timestamp"]).sum().reindex(index_df).reset_index()
-
-    # Final sanity checks
-    days_by_states = df.groupby("state").count()["covid_deaths"].unique()
-    unique_days = df["timestamp"].unique()
-    # each FIPS has same number of rows
-    if (len(days_by_states) > 1) or (days_by_states[0] != len(unique_days)):
-        raise ValueError("Differing number of days by fips")
-    min_timestamp = min(unique_days)
-    max_timestamp = max(unique_days)
-    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, 'D') / 7 + 1
-    if n_days != len(unique_days):
-        raise ValueError(
-            f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
-        )
+    # NCHS considers NYC as an individual state, however, we want it included
+    # in NY. If values are nan for both NYC and NY, the aggreagtion should
+    # also have NAN.
+    df_ny = df.loc[df["state"] == "New York", :].drop("state", axis=1)
+    df_nyc = df.loc[df["state"] == "New York City", :].drop("state", axis=1)
+    # Get mask df to ignore cells where both of them have NAN values
+    mask = (df_ny[keep_columns].isnull().values \
+            & df_nyc[keep_columns].isnull().values)
+    df_ny = df_ny.append(df_nyc).groupby("timestamp").sum().where(~mask, np.nan)
+    df_ny["state"] = "New York"
+    # Drop NYC and NY in the full dataset
+    df = df.loc[~df["state"].isin(["New York", "New York City"]), :]
+    df = df.append(df_ny).reset_index().sort_values(["state", "timestamp"])
 
     # Add population info
     keep_columns.extend(["timestamp", "geo_id", "population"])

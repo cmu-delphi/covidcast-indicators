@@ -83,6 +83,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     df = df.append(df_ny).reset_index().sort_values(["state", "timestamp"])
 
     # Add population info
-    df = df.merge(map_df, on="state")[keep_columns + ["geo_id", "population"]]
+    keep_columns.extend(["timestamp", "geo_id", "population"])
+    df = df.merge(map_df, on="state")[keep_columns]
 
     return df

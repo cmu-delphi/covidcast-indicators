@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
+from .constants import METRICS
 
 def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
@@ -33,10 +34,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         Dataframe as described above.
     """
     # Constants
-    keep_columns = ['covid_deaths', 'total_deaths',
-                    'percent_of_expected_deaths', 'pneumonia_deaths',
-                    'pneumonia_and_covid_deaths', 'influenza_deaths',
-                    'pneumonia_influenza_or_covid_19_deaths']
+    keep_columns = METRICS.copy()
     type_dict = {key: float for key in keep_columns}
     type_dict["timestamp"] = 'datetime64[ns]'
 

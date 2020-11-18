@@ -18,7 +18,7 @@ map_df = pd.read_csv(
     join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
 )
 
-class TestPullUSAFacts:
+class TestPullNCHS:
     def test_good_file(self):
         df = pull_nchs_mortality_data(token, map_df, "test_data.csv")
         

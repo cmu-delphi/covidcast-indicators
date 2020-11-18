@@ -6,7 +6,6 @@ Functions to get CSV filenames and data.
 import re
 from os import listdir
 from os.path import isfile, join
-from datetime import datetime
 from itertools import product
 import pandas as pd
 import numpy as np

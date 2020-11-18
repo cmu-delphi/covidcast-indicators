@@ -59,6 +59,9 @@
   * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
   * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
+* Outlier detection (in progress)
+  * Current approach is tuned to daily cases and daily deaths; use just on those signals?
+  * prophet (package) detection is flexible, but needs 2-3 months historical data to fit on. May make sense to use if other statistical checks also need that much data.
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * If can't get data from API, do we want to use substitute data for the comparative checks instead?
   * E.g. most recent successful API pull -- might end up being a couple weeks older

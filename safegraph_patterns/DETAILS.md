@@ -29,7 +29,7 @@ new necessary `brand_info.csv` in `./statics` with suffix YYYYMM(release version
                             code = 722511)
 
 ## Metrics, Level 2 (`m2`)
-* `num`: number of visits on a given week
+* `num`: number of visits in a given week
 * `prop`: `num` / population * 100,000 (Notice the population here only includes 
 population aggregated at Zip Code level. If there are no POIs for a certain 
 Zip Code, the population there won't be considered.)

@@ -5,6 +5,7 @@ required = [
     "numpy",
     "pandas",
     "google-api-python-client",
+    "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint",

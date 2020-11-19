@@ -37,6 +37,10 @@ jobs:
       if: ${{ matrix.packages != 'claims_hosp' && matrix.packages != 'quidel'}}
       run: |
         make lint
+    - name: Pydocstyle
+      if: ${{ matrix.packages != '_delphi_utils_python' && matrix.packages != 'google_symptoms' && matrix.packages != 'jhu' && matrix.packages != 'nchs_mortality' && matrix.packages != 'quidel' && matrix.packages != 'quidel_covidtest'}}
+      run: |
+        pydocstyle delphi_*
     - name: Test
       run: |
         make test

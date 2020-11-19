@@ -6,7 +6,6 @@ Created: 2020-06-01
 TODO:
 - use a caching utility to store the crossfiles
   see: https://github.com/cmu-delphi/covidcast-indicators/issues/282
-
 """
 # pylint: disable=too-many-lines
 from os.path import join

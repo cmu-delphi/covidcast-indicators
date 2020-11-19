@@ -13,8 +13,7 @@ install: venv
 
 lint:
 	. env/bin/activate; \
-	pylint $(dir); \
-	pydocstyle $(dir)
+	pylint $(dir)
 
 test:
 	. env/bin/activate ;\

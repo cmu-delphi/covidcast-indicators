@@ -168,48 +168,6 @@ class TestGeoMapper:
         assert pd.api.types.is_string_dtype(zip_data["zip"])
         assert pd.api.types.is_string_dtype(zip_data["hrr"])
 
-    def test_convert_fips_to_state_code(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.convert_fips_to_state_code(self.fips_data)
-        assert new_data["state_code"].dtype == "O"
-        assert new_data.loc[1, "state_code"] == new_data.loc[1, "fips"][:2]
-
-    def test_fips_to_state_code(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.fips_to_state_code(self.fips_data_3)
-        assert np.allclose(new_data["count"].sum(), self.fips_data_3["count"].sum())
-
-    def test_convert_state_code_to_state_id(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.convert_fips_to_state_code(self.fips_data)
-        new_data = gmpr.convert_state_code_to_state_id(new_data)
-        assert new_data["state_id"].isnull()[2]
-        assert new_data["state_id"][3] == "in"
-        assert len(pd.unique(new_data["state_id"])) == 4
-
-    def test_fips_to_state_id(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.fips_to_state_id(self.fips_data_2)
-        assert new_data["state_id"][2] == "in"
-        assert new_data.shape[0] == 3
-        assert new_data["count"].sum() == self.fips_data_2["count"].sum()
-
-    def test_fips_to_msa(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.fips_to_msa(self.fips_data_3)
-        assert new_data.shape[0] == 2
-        assert new_data["msa"][0] == "10180"
-        new_data = gmpr.fips_to_msa(self.fips_data_3, create_mega=True)
-        assert new_data[["count"]].sum()[0] == self.fips_data_3["count"].sum()
-
-    def test_zip_to_fips(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.zip_to_fips(self.zip_data)
-        assert new_data.shape[0] == 10
-        assert (
-            new_data[["count", "total"]].sum() - self.zip_data[["count", "total"]].sum()
-        ).sum() < 1e-3
-
     def test_megacounty(self):
         gmpr = GeoMapper()
         new_data = gmpr.fips_to_megacounty(self.mega_data, 6, 50)
@@ -228,53 +186,6 @@ class TestGeoMapper:
             new_data[["count"]].sum() - self.mega_data[["count"]].sum()
         ).sum() < 1e-3
 
-    def test_zip_to_hrr(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.zip_to_hrr(self.zip_data)
-        assert len(pd.unique(new_data["hrr"])) == 2
-        assert np.allclose(
-            new_data[["count", "total"]].sum(), self.zip_data[["count", "total"]].sum()
-        )
-
-    def test_jhu_uid_to_fips(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.jhu_uid_to_fips(self.jhu_uid_data)
-        assert not (new_data["fips"].astype(int) > 90000).any()
-        assert new_data["total"].sum() == self.jhu_uid_data["total"].sum()
-
-    def test_fips_to_zip(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.fips_to_zip(self.fips_data_4)
-        assert new_data["count"].sum() == self.fips_data_4["count"].sum()
-
-    def test_fips_to_hrr(self):
-        gmpr = GeoMapper()
-        data = gmpr.convert_fips_to_hrr(self.fips_data_3)
-        ind = self.fips_data_3["fips"].isin(data["fips"])
-        data = self.fips_data_3[ind]
-        new_data = gmpr.fips_to_hrr(self.fips_data_3)
-        assert new_data.shape == (2, 4)
-        assert new_data["count"].sum() == data["count"].sum()
-
-    def test_zip_to_msa(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.zip_to_msa(self.zip_data)
-        assert new_data["msa"][2] == "46700"
-        assert new_data.shape[0] == 6
-        assert np.allclose(new_data["count"].sum(), self.zip_data["count"].sum())
-
-    def test_zip_to_state_code(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.zip_to_state_code(self.zip_data)
-        assert new_data.shape[0] == 4
-        assert np.allclose(new_data["count"].sum(), self.zip_data["count"].sum())
-
-    def test_zip_to_state_id(self):
-        gmpr = GeoMapper()
-        new_data = gmpr.zip_to_state_id(self.zip_data)
-        assert new_data.shape[0] == 4
-        assert np.allclose(new_data["count"].sum(), self.zip_data["count"].sum())
-
     def test_add_population_column(self):
         gmpr = GeoMapper()
         new_data = gmpr.add_population_column(self.fips_data_3, "fips")
@@ -288,96 +199,6 @@ class TestGeoMapper:
 
     def test_add_geocode(self):
         gmpr = GeoMapper()
-
-        # fips -> zip
-        new_data = gmpr.fips_to_zip(self.fips_data_3)
-        new_data2 = gmpr.replace_geocode(self.fips_data_3, "fips", "zip")
-        assert new_data.equals(new_data2)
-
-        # fips -> hrr
-        new_data = gmpr.fips_to_hrr(self.fips_data_3)
-        new_data2 = gmpr.replace_geocode(self.fips_data_3, "fips", "hrr")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # fips -> msa
-        new_data = gmpr.fips_to_msa(self.fips_data_3)
-        new_data2 = gmpr.replace_geocode(self.fips_data_3, "fips", "msa")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # fips -> state_id
-        new_data = gmpr.fips_to_state_id(self.fips_data_4)
-        new_data2 = gmpr.replace_geocode(self.fips_data_4, "fips", "state_id")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # fips -> state_code
-        new_data = gmpr.fips_to_state_code(self.fips_data_4)
-        new_data2 = gmpr.replace_geocode(self.fips_data_4, "fips", "state_code")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # fips -> state_code (again, mostly to cover the test case of when fips 
-        # codes aren't all strings)
-        new_data = gmpr.fips_to_state_code(self.fips_data_5)
-        new_data2 = gmpr.replace_geocode(self.fips_data_5, "fips", "state_code")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # zip -> fips
-        new_data = gmpr.zip_to_fips(self.zip_data)
-        new_data2 = gmpr.replace_geocode(self.zip_data, "zip", "fips")
-        new_data2 = new_data2[new_data.columns]
-        assert new_data.equals(new_data2)
-
-        # zip -> hrr
-        new_data = gmpr.zip_to_hrr(self.zip_data)
-        new_data2 = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
-        new_data2 = new_data2[new_data.columns]
-        assert new_data.equals(new_data2)
-
-        # zip -> msa
-        new_data = gmpr.zip_to_msa(self.zip_data)
-        new_data2 = gmpr.replace_geocode(self.zip_data, "zip", "msa")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # zip -> state_id
-        new_data = gmpr.zip_to_state_id(self.zip_data)
-        new_data2 = gmpr.replace_geocode(self.zip_data, "zip", "state_id")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # zip -> state_code
-        new_data = gmpr.zip_to_state_code(self.zip_data)
-        new_data2 = gmpr.replace_geocode(self.zip_data, "zip", "state_code")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
-
-        # jhu_uid -> fips
-        new_data = gmpr.jhu_uid_to_fips(self.jhu_uid_data)
-        new_data2 = gmpr.replace_geocode(self.jhu_uid_data, "jhu_uid", "fips")
-        new_data2 = new_data2[new_data.columns]
-        assert np.allclose(
-            new_data[["count", "total"]].values, new_data2[["count", "total"]].values
-        )
 
         # state_code -> hhs
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")

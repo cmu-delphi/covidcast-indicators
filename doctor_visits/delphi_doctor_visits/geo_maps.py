@@ -21,8 +21,7 @@ from .sensor import DoctorVisitsSensor
 class GeoMaps:
     """Class to map counties to other geographic resolutions."""
 
-    def __init__(self, geo_filepath):
-        self.geo_filepath = geo_filepath
+    def __init__(self):
         self.gmpr = GeoMapper()
 
     @staticmethod
@@ -38,13 +37,6 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-msa resolution, and the geo_id column name
         """
-        msa_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "cbsa_id"],
-            dtype={"cbsa_id": float},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        msa_map.drop_duplicates(inplace=True)
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "msa",
@@ -63,14 +55,6 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
-
-        state_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "state_id"],
-            dtype={"state_id": str},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        state_map.drop_duplicates(inplace=True)
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "state_id",
@@ -94,21 +78,6 @@ class GeoMaps:
             tuple of (data frame at daily-HRR resolution, geo_id column name)
 
         """
-
-        hrr_map = pd.read_csv(
-            join(self.geo_filepath, "transfipsToHRR.csv"),
-            converters={"fips": GeoMaps.convert_fips},
-        )
-
-        ## Each row is one FIPS. Columns [3:] are HRR numbers, consecutively.
-        ## Entries are the proportion of the county contained in the HRR, so rows
-        ## sum to 1.
-
-        ## Drop county and state names -- not needed here.
-        hrr_map.drop(columns=["county_name", "state_id"], inplace=True)
-
-        hrr_map = hrr_map.melt(["fips"], var_name="hrr", value_name="wpop")
-        hrr_map = hrr_map[hrr_map["wpop"] > 0]
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "hrr",

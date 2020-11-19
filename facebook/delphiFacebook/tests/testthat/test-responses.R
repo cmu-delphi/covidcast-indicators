@@ -55,3 +55,40 @@ test_that("first response with a token is used", {
   expect_equal(!!out$StartDate, !!expected$StartDate)
   expect_equal(!!out$token, !!expected$token)
 })
+
+test_that("in case of duplicates, new input takes precedence", {
+  # Suppose there is an error in an input file and it gets stored in the
+  # archive. (Maybe load_responses() has a bug in its calculations that we later
+  # fix.) We should be able to re-run the pipeline with the new input file or
+  # new calculations and have the new values take precedence over the archived
+  # values.
+
+  input_data <- data.frame(
+    StartDate = as.Date(c("2020-02-01", "2020-02-02", "2020-01-05", "2020-06-01")),
+    token = c("A", "B", "C", "D"),
+    some_value = 1:4,
+    stringsAsFactors = FALSE
+  )
+
+  archive <- list(
+    input_data = data.frame(
+      StartDate = as.Date(c("2020-09-01", "2020-01-01", "2020-01-05", "2020-06-01")),
+      token = c("A", "B", "C", "D"),
+      some_value = 5:8,
+      stringsAsFactors = FALSE
+    )
+  )
+
+  out <- merge_responses(input_data, archive)
+
+  expected <- data.frame(
+    StartDate = as.Date(c("2020-01-01", "2020-01-05", "2020-02-01", "2020-06-01")),
+    token = c("B", "C", "A", "D"),
+    some_value = c(6, 3, 1, 4),
+    stringsAsFactors = FALSE
+  )
+
+  expect_equal(!!out$StartDate, !!expected$StartDate)
+  expect_equal(!!out$token, !!expected$token)
+  expect_equal(!!out$some_value, !!expected$some_value)
+})

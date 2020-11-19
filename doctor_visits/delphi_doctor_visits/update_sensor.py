@@ -249,12 +249,34 @@ def update_sensor(
                                      end_day = pd.to_datetime(sensor_dates[-1]))
         target_df = target_df[["geo_value","time_value","value"]]
 
+        geo_folder = "../_delphi_utils_python/delphi_utils/data"
+        fips_pop = pd.read_csv("%s/fips_pop.csv" % (geo_folder))
+        if geo.lower() == "state":
+            fips_state = pd.read_csv("%s/fips_state_table.csv" % (geo_folder))
+            geo_weights = fips_pop.merge(fips_state)
+            geo_weights = geo_weights.groupby("state_id").agg(np.sum).reset_index()
+            geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
+        elif geo.lower() == "hrr":
+            fips_hrr = pd.read_csv("%s/fips_hrr_table.csv" % (geo_folder))
+            geo_weights = fips_pop.merge(fips_hrr)
+            geo_weights["weight"] = geo_weights["weight"]*geo_weights["pop"]
+            geo_weights = geo_weights.groupby("hrr").agg(np.sum).reset_index()
+            geo_weights = geo_weights.rename(columns={"hrr":"geo"})
+        elif geo.lower() == "msa":
+            fips_msa = pd.read_csv("%s/fips_msa_table.csv" % (geo_folder))
+            geo_weights = fips_pop.merge(fips_msa)
+            geo_weights = geo_weights.groupby("msa").agg(np.sum).reset_index()
+            geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
+        elif geo.lower() == "county":
+            geo_weights = fips_pop.rename(columns={"fips":"geo","pop":"weight"})
+
         # Sensorize!
         sensorized_df = Sensorizer.sensorize(
                             signal_df,
                             target_df,
                             "geo","time","signal",
-                            "geo_value","time_value","value")
+                            "geo_value","time_value","value",
+                            global_weights=geo_weights)
 
         # Use sensorized_df to fill in sensorized rates
         for geo_id in unique_geo_ids:

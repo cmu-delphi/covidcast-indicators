@@ -9,10 +9,9 @@ TODO:
 """
 # pylint: disable=too-many-lines
 from os.path import join
-import warnings
-import pkg_resources
 
 import pandas as pd
+import pkg_resources
 from pandas.api.types import is_string_dtype
 
 DATA_PATH = "data"

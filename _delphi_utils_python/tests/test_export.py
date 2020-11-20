@@ -153,3 +153,63 @@ class TestExport:
                 "20200315_state_test.csv",
             ]
         )
+
+    def test_export_with_null_removal(self):
+        """Test that `remove_null_samples = True` removes entries with null samples."""
+        _clean_directory(self.TEST_DIR)
+
+        df_with_nulls = self.DF.copy().append({
+                                "geo_id": "66666",
+                                "timestamp": datetime(2020, 6, 6),
+                                "val": 10,
+                                "se": 0.2,
+                                "sample_size": pd.NA},
+                            ignore_index=True)
+
+        create_export_csv(
+            df=df_with_nulls,
+            export_dir=self.TEST_DIR,
+            geo_res="state",
+            sensor="test",
+            remove_null_samples=True
+        )
+
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
+            [
+                "20200215_state_test.csv",
+                "20200301_state_test.csv",
+                "20200315_state_test.csv",
+                "20200606_state_test.csv"
+            ]
+        )
+        assert pd.read_csv(join(self.TEST_DIR, "20200606_state_test.csv")).size == 0
+
+    def test_export_without_null_removal(self):
+        """Test that `remove_null_samples = False` does not remove entries with null samples."""
+        _clean_directory(self.TEST_DIR)
+
+        df_with_nulls = self.DF.copy().append({
+                                "geo_id": "66666",
+                                "timestamp": datetime(2020, 6, 6),
+                                "val": 10,
+                                "se": 0.2,
+                                "sample_size": pd.NA},
+                            ignore_index=True)
+
+        create_export_csv(
+            df=df_with_nulls,
+            export_dir=self.TEST_DIR,
+            geo_res="state",
+            sensor="test",
+            remove_null_samples=False
+        )
+
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
+            [
+                "20200215_state_test.csv",
+                "20200301_state_test.csv",
+                "20200315_state_test.csv",
+                "20200606_state_test.csv"
+            ]
+        )
+        assert pd.read_csv(join(self.TEST_DIR, "20200606_state_test.csv")).size > 0

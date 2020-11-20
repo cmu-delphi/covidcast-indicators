@@ -17,7 +17,7 @@ from .constants import (METRICS, COMBINED_METRIC,
 
 
 def run_module():
-
+    """Run Google Symptoms module."""
     params = read_params()
     export_start_date = datetime.strptime(params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]

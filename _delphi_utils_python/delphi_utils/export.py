@@ -14,7 +14,8 @@ def create_export_csv(
     sensor: str,
     metric: Optional[str] = None,
     start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None,
+    remove_null_samples: Optional[bool] = False
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -34,6 +35,8 @@ def create_export_csv(
         Earliest date to export or None if no minimum date restrictions should be applied.
     end_date: Optional[datetime]
         Latest date to export or None if no maximum date restrictions should be applied.
+    remove_null_samples: Optional[bool]
+        Whether to remove entries whose sample sizes are null.
     """
     df = df.copy()
 
@@ -54,6 +57,7 @@ def create_export_csv(
         else:
             export_filename = f"{date.strftime('%Y%m%d')}_{geo_res}_{metric}_{sensor}.csv"
         export_file = join(export_dir, export_filename)
-        df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]].to_csv(
-            export_file, index=False, na_rep="NA"
-        )
+        export_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]]
+        if remove_null_samples:
+            export_df = export_df[export_df["sample_size"].notnull()]
+        export_df.to_csv(export_file, index=False, na_rep="NA")

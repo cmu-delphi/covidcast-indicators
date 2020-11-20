@@ -1,4 +1,4 @@
-"""Registry for constants"""
+"""Registry for constants."""
 # global constants
 METRICS = [
         "covid_deaths", "total_deaths", "percent_of_expected_deaths",

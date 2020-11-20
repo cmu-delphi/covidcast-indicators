@@ -33,10 +33,9 @@ def compare_dates(date1, date2, flag):
         if flag == "l":
             return date1
         return date2
-    else:
-        if flag == "l":
-            return date2
-        return date1
+    if flag == "l":
+        return date2
+    return date1
 
 def check_whether_date_in_range(search_date, start_date, end_date):
     """
@@ -130,9 +129,9 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
                         continue
 
                     # Check whether we pull the data from a valid time range
-                    WhetherInRange = check_whether_date_in_range(
+                    whether_in_range = check_whether_date_in_range(
                             search_date, start_dates[test], end_dates[test])
-                    if not WhetherInRange:
+                    if not whether_in_range:
                         continue
 
                     print(f"Pulling {test} data received on %s"%search_date.date())
@@ -370,7 +369,7 @@ def pull_quidel_data(params):
     return dfs, _end_date
 
 def check_export_end_date(input_export_end_dates, _end_date,
-                          END_FROM_TODAY_MINUS):
+                          end_from_today_minus):
     """
     Update the export_end_date according to the data received
     By default, set the export end date to be the last pulling date - 5 days
@@ -393,7 +392,7 @@ def check_export_end_date(input_export_end_dates, _end_date,
     export_end_dates = {}
     for test_type in TEST_TYPES:
         export_end_dates[test_type] = _end_date \
-                                      - timedelta(days=END_FROM_TODAY_MINUS)
+                                      - timedelta(days=end_from_today_minus)
         if input_export_end_dates[test_type] != "":
             input_export_end_dates[test_type] = datetime.strptime(
                     input_export_end_dates[test_type], '%Y-%m-%d')
@@ -403,7 +402,7 @@ def check_export_end_date(input_export_end_dates, _end_date,
     return export_end_dates
 
 def check_export_start_date(export_start_dates, export_end_dates,
-                            EXPORT_DAY_RANGE):
+                            export_day_range):
     """
     Update the export_start_date according to the export_end_date so that it
     could be export_end_date - EXPORT_DAY_RANGE
@@ -414,7 +413,7 @@ def check_export_start_date(export_start_dates, export_end_dates,
         export_end_date: dict
             Calculated according to the data received.
             The type of values are datetime.datetime
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             Number of days to report
 
     Returns:
@@ -430,7 +429,7 @@ def check_export_start_date(export_start_dates, export_end_dates,
                     export_start_dates[test_type], '%Y-%m-%d')
         # Only export data from -45 days to -5 days
         export_start_dates[test_type] = compare_dates(
-                export_end_dates[test_type] - timedelta(days=EXPORT_DAY_RANGE),
+                export_end_dates[test_type] - timedelta(days=export_day_range),
                 export_start_dates[test_type], "l")
         if test_type == "covid_ag":
             export_start_dates[test_type] = compare_dates(

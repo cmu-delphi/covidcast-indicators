@@ -93,7 +93,7 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
             res_group = res_group.merge(parent_group, how="left",
                                         on="timestamp", suffixes=('', '_parent'))
             res_group = res_group.drop(columns=[res_key, "state_id", "state_id" + '_parent'])
-        except:
+        except KeyError:
             has_parent = False
             res_group = res_group.drop(columns=[res_key, "state_id"])
         res_group.set_index("timestamp", inplace=True)

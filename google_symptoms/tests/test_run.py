@@ -23,7 +23,7 @@ class TestRun:
             "20200811"
         ]
         geos = ["county", "state"]
-        metrics = ["anosmia", "ageusia", "combined_symptoms"]
+        metrics = ["anosmia", "ageusia", "sum_anosmia_ageusia"]
         smoother = ["raw", "smoothed"]
 
         expected_files = []

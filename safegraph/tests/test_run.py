@@ -22,7 +22,7 @@ class TestRun:
                     single_date_signal = "_".join([date, geo, signal]) + ".csv"
                     expected_files.add(single_date_signal)
                     single_date_signal = "_".join(
-                        [date, geo, "wip", signal, "7d_avg"]) + ".csv"
+                        [date, geo, "wip", signal, "7dav"]) + ".csv"
                     expected_files.add(single_date_signal)
 
         assert expected_files == csv_files

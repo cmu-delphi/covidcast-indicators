@@ -55,7 +55,6 @@ class Weekday:
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
         """
-
         tmp = data.reset_index()
         denoms = tmp.groupby(Config.DATE_COL).sum()["den"]
         nums = tmp.groupby(Config.DATE_COL).sum()["num"]
@@ -113,7 +112,6 @@ class Weekday:
         -- this has the same effect.
 
         """
-
         tmp = sub_data.reset_index()
 
         wd_correction = np.zeros((len(tmp["num"])))

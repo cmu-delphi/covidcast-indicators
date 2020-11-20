@@ -19,9 +19,7 @@ from .update_sensor import CHCSensorUpdator
 
 
 def run_module():
-    """Run the delphi_changehc module.
-    """
-
+    """Run the delphi_changehc module."""
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)

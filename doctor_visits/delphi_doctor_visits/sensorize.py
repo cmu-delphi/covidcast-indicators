@@ -26,7 +26,8 @@ class Sensorizer:
     def linear_regression_coefs(
             grouped_df,
             signal_col="signal",
-            target_col="target"):
+            target_col="target",
+            fit_intercept=True):
         """
         Calculate linear regression coefficients for a grouped df.
         For each group, calculate slope as cov(x,y)/var(x) and
@@ -37,6 +38,7 @@ class Sensorizer:
                         for each group
             signal_col: column name of covariate
             target_col: column name of response
+            fit_intercept: boolean whether to fit intercept
 
         Returns:
             DataFrame with columns for groups, and
@@ -48,26 +50,30 @@ class Sensorizer:
         target_mean = target_col + "_mean"
         signal_var = signal_col + "_var"
 
-        # ddof=1 to divide by N-1, see note below
-        cov_df = grouped_df.apply(
-                    lambda x: x[signal_col].cov(x[target_col],ddof=1))
-        cov_df = cov_df.reset_index().rename(columns={0: "cov"})
+        if fit_intercept:
+            cov_df = grouped_df.apply(
+                        lambda x: x[signal_col].cov(x[target_col],ddof=0))
+            cov_df = cov_df.reset_index().rename(columns={0: "cov"})
 
-        # Bug in pandas makes it impossible to calculate var divided by N,
-        # always divides by N-1 even though np.var divides by N
-        var_df = grouped_df.apply(np.var).reset_index()
-        var_df = var_df.rename(
-            columns={signal_col:signal_var}).drop(target_col,axis=1)
-        means_df = grouped_df.agg(np.mean).reset_index()
-        means_df = means_df.rename(
-            columns={signal_col: signal_mean, target_col:target_mean})
+            var_df = grouped_df.apply(np.var).reset_index()
+            var_df = var_df.rename(
+                columns={signal_col:signal_var}).drop(target_col,axis=1)
+            means_df = grouped_df.agg(np.mean).reset_index()
+            means_df = means_df.rename(
+                columns={signal_col: signal_mean, target_col:target_mean})
 
-        fit_df = cov_df.merge(var_df).merge(means_df)
-        fit_df["b1"] = fit_df["cov"] / fit_df[signal_var]
-        fit_df["b0"] = \
-            fit_df[target_mean]-fit_df["b1"]*fit_df[signal_mean]
-        fit_df = fit_df.drop(
-            ["cov",signal_mean,target_mean,signal_var],axis=1)
+            fit_df = cov_df.merge(var_df).merge(means_df)
+            fit_df["b1"] = fit_df["cov"] / fit_df[signal_var]
+            fit_df["b0"] = \
+                fit_df[target_mean]-fit_df["b1"]*fit_df[signal_mean]
+            fit_df = fit_df.drop(
+                ["cov",signal_mean,target_mean,signal_var],axis=1)
+        else:
+            # No intercept, b1 = sum(x_i * y_i)/sum(x_i^2)
+            fit_df = grouped_df.apply(lambda x:
+                np.sum(x[signal_col]*x[target_col])/np.sum(x[signal_col]**2))
+            fit_df = fit_df.reset_index().rename(columns={0: "b1"})
+            fit_df["b0"] = 0
         return fit_df
 
 
@@ -119,7 +125,7 @@ class Sensorizer:
                                 target_val_col:"target"})
         signal = signal.rename(columns={signal_val_col:"signal"})
         merged = pd.merge(signal,target,on=[signal_time_col,signal_geo_col],how="left")
-        merged.sort_values([signal_time_col, signal_geo_col]).reset_index()
+        merged = merged.sort_values([signal_geo_col,signal_time_col]).reset_index()
 
         unique_times = pd.to_datetime(merged[signal_time_col].unique())
         sliding_window_df = 0
@@ -128,13 +134,13 @@ class Sensorizer:
         for i in range(len(unique_times)):
             if not flag:
                 sliding_window_df = pd.DataFrame(data={
-                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end)+1,
+                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
                             unique_times[i]-timedelta(days=window_start)),
                     sensor_time_col:unique_times[i]})
                 flag = True
             else:
                 tmp_df = pd.DataFrame(data={
-                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end)+1,
+                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
                             unique_times[i]-timedelta(days=window_start)),
                     sensor_time_col:unique_times[i]})
                 sliding_window_df = sliding_window_df.append(tmp_df)
@@ -153,13 +159,13 @@ class Sensorizer:
         grouped = sliding_window_df[[signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
         if global_weights is None:
             global_weights = pd.DataFrame(data={signal_geo_col:grouped[signal_geo_col].unique(),"weight":1})
-            global_weights.weight = global_weights.weight/global_weights.weight.sum()
-            grouped = grouped.merge(global_weights)
-            grouped["signal_wt"] = grouped.weight * grouped.signal
-            grouped["target_wt"] = grouped.weight * grouped.target
-            grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
-            grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
-            grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
+        global_weights.weight = global_weights.weight/global_weights.weight.sum()
+        grouped = grouped.merge(global_weights)
+        grouped["signal_wt"] = grouped.weight * grouped.signal
+        grouped["target_wt"] = grouped.weight * grouped.target
+        grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
+        grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
+        grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
             
         grouped = grouped.groupby(sensor_time_col)
 
@@ -177,10 +183,8 @@ class Sensorizer:
         combined_df["sensor"] = combined_df["sensor"]*combined_df["global_b1"] + combined_df["global_b0"]
         # Where we could not fit regression coefficients, use original signal
         combined_df.sensor = combined_df["sensor"].fillna(combined_df["signal"])
-        bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 1)
+        bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 0.9)
         combined_df.loc[bad_fit,"sensor"] = combined_df.loc[bad_fit,"signal"]
-
-        combined_df.to_csv("combined_df.csv",index=False)
 
         result = combined_df[[signal_geo_col,signal_time_col,"sensor"]]
         result = result.rename(columns={"sensor":signal_val_col})

@@ -8,12 +8,11 @@ Created: 2020-11-11
 """
 
 import logging
+from datetime import timedelta
 
 # third party
 import numpy as np
 import pandas as pd
-from sklearn import linear_model
-from datetime import timedelta
 
 # first party
 from .config import Config
@@ -156,9 +155,12 @@ class Sensorizer:
             columns={"b1":"local_b1","b0":"local_b0",sensor_time_col:signal_time_col})
 
         # Global fits from target (covariate) to signal (response)
-        grouped = sliding_window_df[[signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
+        grouped = sliding_window_df[[
+            signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
         if global_weights is None:
-            global_weights = pd.DataFrame(data={signal_geo_col:grouped[signal_geo_col].unique(),"weight":1})
+            global_weights = pd.DataFrame(data={
+                signal_geo_col:grouped[signal_geo_col].unique(),
+                "weight":1})
         global_weights.weight = global_weights.weight/global_weights.weight.sum()
         grouped = grouped.merge(global_weights)
         grouped["signal_wt"] = grouped.weight * grouped.signal
@@ -166,7 +168,7 @@ class Sensorizer:
         grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
         grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
         grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
-            
+
         grouped = grouped.groupby(sensor_time_col)
 
         global_fit_df = Sensorizer.linear_regression_coefs(grouped, "target", "signal")
@@ -174,13 +176,15 @@ class Sensorizer:
         global_fit_df = global_fit_df.rename(
             columns={"b1":"global_b1","b0":"global_b0",sensor_time_col:signal_time_col})
 
-        combined_df = pd.merge(merged,global_fit_df,on=[signal_time_col],how="left")
-        combined_df = pd.merge(combined_df,local_fit_df,on=[signal_time_col,signal_geo_col],how="left")
-        
+        combined_df = pd.merge(merged,global_fit_df,on=[signal_time_col])
+        combined_df = pd.merge(combined_df,local_fit_df,on=[signal_time_col,signal_geo_col])
+
         # First, calculate estimate in target space
-        combined_df["sensor"] = combined_df["signal"]*combined_df["local_b1"] + combined_df["local_b0"]
+        combined_df["sensor"] = combined_df["signal"]*combined_df["local_b1"]\
+                                + combined_df["local_b0"]
         # Second, scale back into signal space
-        combined_df["sensor"] = combined_df["sensor"]*combined_df["global_b1"] + combined_df["global_b0"]
+        combined_df["sensor"] = combined_df["sensor"]*combined_df["global_b1"]\
+                                + combined_df["global_b0"]
         # Where we could not fit regression coefficients, use original signal
         combined_df.sensor = combined_df["sensor"].fillna(combined_df["signal"])
         bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 0.9)

@@ -18,13 +18,15 @@ from multiprocessing import Pool, cpu_count
 import numpy as np
 import pandas as pd
 
+# third party
+import covidcast
+
 # first party
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
 from .sensorize import Sensorizer
 from .weekday import Weekday
-import covidcast
 
 
 def write_to_csv(output_dict, se, out_name, output_path="."):
@@ -79,7 +81,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
 
 
-def update_sensor(
+def update_sensor( # pylint: disable=too-many-branches
         filepath, outpath, staticpath, startdate, enddate, dropdate, geo, parallel,
         weekday, se, sensorize, prefix=None
 ):
@@ -144,7 +146,7 @@ def update_sensor(
     params = Weekday.get_params(data) if weekday else None
 
     # handle explicitly if we need to use Jeffreys estimate for binomial proportions
-    jeffreys = True if se else False
+    jeffreys = se
 
     # get right geography
     geo_map = GeoMaps(staticpath)
@@ -230,13 +232,14 @@ def update_sensor(
     }
 
     if sensorize:
-        
+
         # Convert data in dict of dicts format to single pd.DataFrame
         signal_dfs = []
         for geo_id in unique_geo_ids:
             incl = output_dict["include"][geo_id]
             geo_df = pd.DataFrame(
-                data={"signal":output_dict["rates"][geo_id][incl], "time": burn_in_dates[final_sensor_idxs][incl]})
+                data={"signal":output_dict["rates"][geo_id][incl],
+                      "time": burn_in_dates[final_sensor_idxs][incl]})
             geo_df["geo"] = geo_id
             signal_dfs.append(geo_df)
         signal_df = pd.concat(signal_dfs)
@@ -285,8 +288,7 @@ def update_sensor(
                 sensorized_df["geo"] == geo_id
             ]["signal"]
 
-        # TODO: Update SEs also
-    
+        # Eventually need to update SEs also
 
     # write out results
     out_name = ["smoothed"]

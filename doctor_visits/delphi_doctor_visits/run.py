@@ -53,9 +53,9 @@ def run_module():
     ## print out other vars
     logging.info("outpath:\t\t%s", params["export_dir"])
     logging.info("parallel:\t\t%s", params["parallel"])
-    logging.info(f"weekday:\t\t%s", params["weekday"])
-    logging.info(f"write se:\t\t%s", params["se"])
-    logging.info(f"obfuscated prefix:\t%s", params["obfuscated_prefix"])
+    logging.info("weekday:\t\t%s", params["weekday"])
+    logging.info("write se:\t\t%s", params["se"])
+    logging.info("obfuscated prefix:\t%s", params["obfuscated_prefix"])
 
     ## start generating
     for geo in geos:

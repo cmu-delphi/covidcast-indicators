@@ -64,7 +64,7 @@ def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
-    """Pull the latest Johns Hopkins CSSE data, and conforms it into a dataset.
+    """Pull the latest Johns Hopkins CSSE data, and conform it into a dataset.
 
     The output dataset has:
 

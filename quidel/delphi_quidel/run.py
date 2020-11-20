@@ -75,7 +75,8 @@ def run_module():
                 last_date=last_date)
             create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
                               start_date=export_start_dates[test_type],
-                              end_date=export_end_dates[test_type])
+                              end_date=export_end_dates[test_type],
+                              remove_null_samples=True)
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

@@ -5,6 +5,7 @@ required = [
     "numpy",
     "pandas",
     "cvxpy",
+    "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint",

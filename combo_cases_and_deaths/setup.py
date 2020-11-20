@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "pandas",
+    "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint",

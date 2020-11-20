@@ -1,5 +1,6 @@
 """Contains geographic mapping tools."""
 def geo_map(geo_res, data, map_df):
+    """Call appropriate mapping function based on desired geo resolution."""
     if geo_res == "county":
         return zip_to_county(data, map_df)
     if geo_res == "msa":

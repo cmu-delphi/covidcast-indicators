@@ -1,8 +1,9 @@
+"""Functions for smoothing signals."""
 # -*- coding: utf-8 -*-
 import numpy as np
 
 def identity(x):
-    '''Trivial "smoother" that does no smoothing.
+    """Trivial "smoother" that does no smoothing.
 
     Parameters
     ----------
@@ -13,11 +14,11 @@ def identity(x):
     -------
     np.ndarray:
         Same as x
-    '''
+    """
     return x
 
 def kday_moving_average(x, k):
-    '''Compute k-day moving average on x.
+    """Compute k-day moving average on x.
 
     Parameters
     ----------
@@ -28,7 +29,7 @@ def kday_moving_average(x, k):
     -------
     np.ndarray:
         k-day moving average.  The first k-1 entries are np.nan.
-    '''
+    """
     if not isinstance(k, int):
         raise ValueError('k must be int.')
     # temp = np.append(np.zeros(k - 1), x)

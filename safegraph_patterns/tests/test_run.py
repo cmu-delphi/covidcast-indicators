@@ -27,13 +27,13 @@ class TestRun:
             for geo in GEO_RESOLUTIONS:
                 for sensor in SENSORS:
                     for metric in METRICS:
-                        fn = "_".join([date, geo, "wip", metric[0], sensor]) + ".csv"
+                        fn = "_".join([date, geo, metric[0], sensor]) + ".csv"
                         expected_files.append(fn)
 
         assert set(expected_files).issubset(set(csv_files))
 
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200729_state_wip_bars_visit_num.csv")
+            join("./receiving", "20200729_state_bars_visit_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

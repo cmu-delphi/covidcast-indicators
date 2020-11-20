@@ -20,6 +20,7 @@ from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         GEO_RESOLUTIONS, SENSORS)
 
 def run_module():
+    """Run Quidel flu test module."""
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]

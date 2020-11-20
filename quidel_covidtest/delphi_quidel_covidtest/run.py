@@ -77,7 +77,8 @@ def run_module():
                 device=smoothers[sensor][0], first_date=first_date,
                 last_date=last_date)
             create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
-                              start_date=export_start_date, end_date=export_end_date)
+                              start_date=export_start_date, end_date=export_end_date,
+                              remove_null_samples=True)
 
 
     # Export the cache file if the pipeline runs successfully.

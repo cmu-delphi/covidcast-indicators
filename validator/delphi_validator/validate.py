@@ -869,6 +869,7 @@ class Validator():
         """
 
         # Get relevant data file names and info.
+
         export_files = read_filenames(export_dir)
         date_filter = make_date_filter(self.start_date, self.end_date)
      
@@ -963,14 +964,21 @@ class Validator():
             if geo_sig_api_df is None:
                 continue
 
-            earliest_available_date = geo_sig_df["time_value"].min()
+            
 
             # Outlier dataframe
-            outlier_start_date = earliest_available_date - outlier_lookbehind
-            outlier_end_date = earliest_available_date - timedelta(days=1)
-            outlier_api_df = geo_sig_api_df.query \
-                ('time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-            self.check_positive_negative_spikes(source_df, outlier_api_df, geo_type, signal_type)
+            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num", \
+                "confirmed_cumulative_num", "confirmed_incidence_num", "deaths_7dav_cumulative_num", \
+                "deaths_cumulative_num"]):
+                earliest_available_date = geo_sig_df["time_value"].min()
+                source_df = geo_sig_df.query(
+                        'time_value <= @date_list[-1] & time_value >= @date_list[0]')
+                print(source_df)
+                outlier_start_date = earliest_available_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = geo_sig_api_df.query \
+                    ('time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+                self.check_positive_negative_spikes(source_df, outlier_api_df, geo_type, signal_type)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.

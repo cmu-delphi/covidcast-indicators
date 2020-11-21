@@ -973,7 +973,6 @@ class Validator():
                 earliest_available_date = geo_sig_df["time_value"].min()
                 source_df = geo_sig_df.query(
                         'time_value <= @date_list[-1] & time_value >= @date_list[0]')
-                print(source_df)
                 outlier_start_date = earliest_available_date - outlier_lookbehind
                 outlier_end_date = earliest_available_date - timedelta(days=1)
                 outlier_api_df = geo_sig_api_df.query \

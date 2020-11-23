@@ -8,6 +8,8 @@ from delphi_utils import GeoMapper
 
 def download_data(base_url: str, metric: str) -> pd.DataFrame:
     """
+    Download and format JHU data.
+
     Downloads the data from the JHU repo, extracts the UID and the date columns, and
     enforces the date datatype on the the time column.
     """
@@ -24,6 +26,8 @@ def download_data(base_url: str, metric: str) -> pd.DataFrame:
 
 def create_diffs_column(df: pd.DataFrame) -> pd.DataFrame:
     """
+    Compute pairwise differences of cumulative values to get incidence.
+
     Using the cumulative_counts column from the dataframe, partitions the dataframe
     into separate time-series based on fips, and then computes pairwise differences
     of the cumulative values to get the incidence values. Boundary cases are handled
@@ -41,9 +45,7 @@ def create_diffs_column(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
-    """
-    Perform a final set of sanity checks on the data.
-    """
+    """Perform a final set of sanity checks on the data."""
     days_by_fips = df.groupby("fips").count()["cumulative_counts"].unique()
     unique_days = df["timestamp"].unique()
 
@@ -62,7 +64,7 @@ def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
-    """Pulls the latest Johns Hopkins CSSE data, and conforms it into a dataset
+    """Pull the latest Johns Hopkins CSSE data, and conform it into a dataset.
 
     The output dataset has:
 

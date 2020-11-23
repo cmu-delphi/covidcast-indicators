@@ -588,11 +588,11 @@ if __name__ == "__main__":
     args = parser.parse_args()
     params = read_params()
     run_module(args.archive_type,
-               params.cache_dir,
-               params.export_dir,
-               aws_credentials=params.aws_credentials,
+               params["cache_dir"],
+               params["export_dir"],
+               aws_credentials=params["aws_credentials"],
                branch_name=args.branch_name,
-               bucket_name=params.bucket_name,
+               bucket_name=params["bucket_name"],
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

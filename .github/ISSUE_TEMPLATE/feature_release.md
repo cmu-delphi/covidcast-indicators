@@ -15,13 +15,14 @@ assignees: 'benjaminysmith'
 
 <!-- relevant for most work -->
 
-- [ ] API [documentation](https://github.com/cmu-delphi/delphi-epidata/tree/main/docs/api) and/or [changelog](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast_changelog.md)
+- [ ] API [documentation](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md) and/or [changelog](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast_changelog.md)
 - [ ] API mailing list notification
 
 <!-- relevant for new signals -->
 
 - [ ] Statistical review (usually [correlations](https://github.com/cmu-delphi/covidcast/tree/main/docs/R-notebooks))
 - [ ] Signal / source name review (usually [Roni](https://docs.google.com/document/d/10hGd4Evce4lJ4VkWaQEKFQxvmw2P4xyYGtIAWF52Sf8/edit?usp=sharing))
+- [ ] Verify licensing terms and any applicable DUA restrictions
 
 <!-- relevant for new map signals -->
 

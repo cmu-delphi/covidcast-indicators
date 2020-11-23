@@ -107,6 +107,13 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
         df = df.append(unassigned_counties)
         geo_mapper = GeoMapper()
         df = geo_mapper.add_geocode(df, "fips", "state_id", new_col="geo_id")
+
+        # Zero out the state FIPS population to avoid double counting.
+        df = df.set_index("fips")
+        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1, 73)}
+        subset_state_fips_codes = set(df.index.values) & state_fips_codes
+        df.loc[subset_state_fips_codes, "population"] = 0
+        df = df.reset_index()
     elif geo_res in ("msa", "hrr"):
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:

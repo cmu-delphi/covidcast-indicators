@@ -7,20 +7,20 @@ when the module is run with `python -m MODULE_NAME`.
 from os.path import join
 
 import pandas as pd
-from delphi_utils import read_params, add_prefix
+from delphi_utils import read_params, add_prefix, create_export_csv
 
 from .geo_maps import geo_map
 from .pull import (pull_quidel_data,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-from .export import export_csv
 from .generate_sensor import (generate_sensor_for_states,
                               generate_sensor_for_other_geores)
 from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
                         GEO_RESOLUTIONS, SENSORS)
 
 def run_module():
+    """Run Quidel flu test module."""
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
@@ -60,9 +60,9 @@ def run_module():
             state_groups, smooth=SENSORS[sensor][1],
             device=SENSORS[sensor][0], first_date=first_date,
             last_date=last_date)
-        export_csv(state_df, "state", sensor, receiving_dir=export_dir,
-                   start_date=export_start_dates[test_type],
-                   end_date=export_end_dates[test_type])
+        create_export_csv(state_df, geo_res="state", sensor=sensor, export_dir=export_dir,
+                          start_date=export_start_dates[test_type],
+                          end_date=export_end_dates[test_type])
 
         # County/HRR/MSA level
         for geo_res in GEO_RESOLUTIONS:
@@ -73,9 +73,10 @@ def run_module():
                 state_groups, data, res_key, smooth=SENSORS[sensor][1],
                 device=SENSORS[sensor][0], first_date=first_date,
                 last_date=last_date)
-            export_csv(res_df, geo_res, sensor, receiving_dir=export_dir,
-                       start_date=export_start_dates[test_type],
-                       end_date=export_end_dates[test_type])
+            create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
+                              start_date=export_start_dates[test_type],
+                              end_date=export_end_dates[test_type],
+                              remove_null_samples=True)
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

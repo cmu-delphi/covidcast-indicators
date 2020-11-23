@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 from delphi_utils.signal import add_prefix
 from delphi_utils.export import create_export_csv
-from delphi_utils import GeoMapper
+from delphi_utils.geomap import GeoMapper
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 

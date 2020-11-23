@@ -15,4 +15,6 @@ SIGNALS = [
 GEO_RESOLUTIONS = [
     'county',
     'state',
+    'msa',
+    'hrr'
 ]

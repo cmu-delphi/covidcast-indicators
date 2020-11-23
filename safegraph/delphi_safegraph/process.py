@@ -123,17 +123,31 @@ def aggregate(df, signal_names, geo_resolution='county'):
         signals, standard errors, and sample sizes.
     """
     # Prepare geo resolution
+    gmpr = GeoMapper()
     if geo_resolution == 'county':
         geo_transformed_df = df.copy()
         geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        gmpr = GeoMapper()
         geo_transformed_df = gmpr.add_geocode(df,
-                              from_col='county_fips',
-                              from_code='fips',
-                              new_code='state_id',
-                              new_col='geo_id',
-                              dropna=False)
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='state_id',
+                                              new_col='geo_id',
+                                              dropna=False)
+    elif geo_resolution == 'msa':
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='msa',
+                                              new_col='geo_id',
+                                              dropna=False)
+    elif geo_resolution == 'hrr':
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='hrr',
+                                              new_col='geo_id',
+                                              dropna=False)
     else:
         raise ValueError(
             f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')

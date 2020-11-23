@@ -228,6 +228,41 @@ class TestCheckBadGeoIdFormat:
         assert "US" not in validator.raised_errors[0].expression
         assert "SP" not in validator.raised_errors[0].expression
 
+class TestDuplicatedRows:
+    params = {}
+    def test_no_duplicates(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([["a", "1"], ["b", "2"], ["c", "3"]])
+        validator.check_duplicate_rows(df, "file")
+        assert len(validator.raised_warnings) == 0
+
+    def test_single_column_duplicates_but_not_row(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([["a", "1"], ["a", "2"], ["b", "2"]])
+        validator.check_duplicate_rows(df, "file")
+        assert len(validator.raised_warnings) == 0
+
+    def test_non_consecutive_duplicates(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([["a", "1"], ["b", "2"], ["a", "1"]])
+        validator.check_duplicate_rows(df, "file")
+        assert len(validator.raised_warnings) == 1
+        assert validator.raised_warnings[0].expression == [2]
+        assert validator.raised_warnings[0].check_data_id[1] == "file"
+
+    def test_multiple_distinct_duplicates(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([["a", "1"], ["b", "2"], ["a", "1"], ["b", "2"]])
+        validator.check_duplicate_rows(df, "file")
+        assert len(validator.raised_warnings) == 1
+        assert validator.raised_warnings[0].expression == [2, 3]
+
+    def test_more_than_two_copies(self):
+        validator = Validator(self.params)
+        df = pd.DataFrame([["a", "1"], ["b", "2"], ["b", "2"], ["b", "2"]])
+        validator.check_duplicate_rows(df, "file")
+        assert len(validator.raised_warnings) == 1
+        assert validator.raised_warnings[0].expression == [2, 3]
 
 class TestCheckBadGeoIdValue:
     params = {"data_source": "", "span_length": 0,

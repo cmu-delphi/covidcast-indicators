@@ -721,6 +721,16 @@ class Validator():
 
         self.increment_total_checks()
 
+    def check_duplicate_rows(self, data_df, filename):
+        is_duplicate = data_df.duplicated()
+        if (any(is_duplicate)):
+            duplicate_row_idxs = list(data_df[is_duplicate].index)
+            self.raised_warnings.append(ValidationError(
+                ("check_duplicate_rows", filename),
+                duplicate_row_idxs, 
+                "Some rows are duplicated, which may indicate data integrity issues"))
+        self.increment_total_checks()
+
     def validate(self, export_dir):
         """
         Runs all data checks.
@@ -747,8 +757,8 @@ class Validator():
         # For every daily file, read in and do some basic format and value checks.
         for filename, match in validate_files:
             data_df = load_csv(join(export_dir, filename))
-
             self.check_df_format(data_df, filename)
+            self.check_duplicate_rows(data_df, filename)
             self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
             self.check_bad_geo_id_value(

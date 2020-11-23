@@ -4,6 +4,7 @@ from setuptools import find_packages
 required = [
     "covidcast",
     "numpy",
+    "pydocstyle",
     "pandas",
     "pytest",
     "pytest-cov",

@@ -4,12 +4,14 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
+    "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint",
     "delphi-utils",
     "sodapy",
-    "epiweeks"
+    "epiweeks",
+    "freezegun",
 ]
 
 setup(

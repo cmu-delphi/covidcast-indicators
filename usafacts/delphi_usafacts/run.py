@@ -6,23 +6,22 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, time, timedelta
 from itertools import product
-from functools import partial
 from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import (
+    create_export_csv,
+    read_params,
+    GeoMapper,
+    S3ArchiveDiffer,
+    Smoother
+)
 
 from .geo import geo_map
 from .pull import pull_usafacts_data
-from .smooth import (
-    identity,
-    kday_moving_average,
-)
-
 
 # global constants
-seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
     "confirmed",
     "deaths",
@@ -50,9 +49,10 @@ SENSOR_NAME_MAP = {
 #     "incidence":            ("incid_prop", False),
 #     "cumulative_prop":      ("cumul_prop", False),
 # }
+
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, '', False, lambda d: d - timedelta(days=7)),
-    "seven_day_average":    (seven_day_moving_average, '7dav_', True, lambda d: d),
+    "unsmoothed": (Smoother("identity"), "", False, lambda d: d - timedelta(days=7)),
+    "seven_day_average": (Smoother("moving_average", window_length=7), "7dav_", True, lambda d: d),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -63,7 +63,7 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-
+    """Run the usafacts indicator."""
     params = read_params()
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
@@ -73,23 +73,28 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     static_file_dir = params["static_file_dir"]
+    cache_dir = params["cache_dir"]
+
+    arch_diff = S3ArchiveDiffer(
+        cache_dir, export_dir,
+        params["bucket_name"], "usafacts",
+        params["aws_credentials"])
+    arch_diff.update_cache()
 
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    ).rename({"fips": "FIPS"}, axis=1)
 
-    dfs = {metric: pull_usafacts_data(base_url, metric, pop_df) for metric in METRICS}
+    geo_mapper = GeoMapper()
+
+    dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         print(geo_res, metric, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, map_df, sensor)
-        df["val"] = SMOOTHERS_MAP[smoother][0](df[sensor].values)
+        df["val"] = SMOOTHERS_MAP[smoother][0].smooth(df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan
         # Drop early entries where data insufficient for smoothing
@@ -107,3 +112,19 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
+
+    # Diff exports, and make incremental versions
+    _, common_diffs, new_files = arch_diff.diff_exports()
+
+    # Archive changed and new files only
+    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+    to_archive += new_files
+    _, fails = arch_diff.archive_exports(to_archive)
+
+    # Filter existing exports to exclude those that failed to archive
+    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+    arch_diff.filter_exports(succ_common_diffs)
+
+    # Report failures: someone should probably look at them
+    for exported_file in fails:
+        print(f"Failed to archive '{exported_file}'")

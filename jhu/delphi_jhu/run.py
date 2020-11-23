@@ -6,27 +6,21 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime
 from itertools import product
-from functools import partial
-from os.path import join
 
 import numpy as np
-import pandas as pd
 from delphi_utils import (
     read_params,
     create_export_csv,
     S3ArchiveDiffer,
+    Smoother,
+    GeoMapper,
 )
 
 from .geo import geo_map
 from .pull import pull_jhu_data
-from .smooth import (
-    identity,
-    kday_moving_average,
-)
 
 
 # global constants
-seven_day_moving_average = partial(kday_moving_average, k=7)
 METRICS = [
     "deaths",
     "confirmed",
@@ -42,10 +36,10 @@ SMOOTHERS = [
     "seven_day_average",
 ]
 SENSOR_NAME_MAP = {
-    "new_counts":           ("incidence_num", False),
-    "cumulative_counts":    ("cumulative_num", False),
-    "incidence":            ("incidence_prop", False),
-    "cumulative_prop":      ("cumulative_prop", False),
+    "new_counts": ("incidence_num", False),
+    "cumulative_counts": ("cumulative_num", False),
+    "incidence": ("incidence_prop", False),
+    "cumulative_prop": ("cumulative_prop", False),
 }
 # Temporarily added for wip_ signals
 # WIP_SENSOR_NAME_MAP = {
@@ -55,8 +49,8 @@ SENSOR_NAME_MAP = {
 #     "cumulative_prop":      ("cumul_prop", False),
 # }
 SMOOTHERS_MAP = {
-    "unsmoothed":           (identity, ''),
-    "seven_day_average":    (seven_day_moving_average, '7dav_'),
+    "unsmoothed": (Smoother("identity").smooth, ""),
+    "seven_day_average": (Smoother("moving_average", window_length=7).smooth, "7dav_"),
 }
 GEO_RESOLUTIONS = [
     "county",
@@ -67,28 +61,30 @@ GEO_RESOLUTIONS = [
 
 
 def run_module():
-
+    """Run the JHU indicator module."""
     params = read_params()
     export_start_date = params["export_start_date"]
     export_dir = params["export_dir"]
     base_url = params["base_url"]
-    static_file_dir = params["static_file_dir"]
     cache_dir = params["cache_dir"]
 
-    arch_diff = S3ArchiveDiffer(
-        cache_dir, export_dir,
-        params["bucket_name"], "jhu",
-        params["aws_credentials"])
-    arch_diff.update_cache()
+    if len(params["bucket_name"]) > 0:
+        arch_diff = S3ArchiveDiffer(
+            cache_dir,
+            export_dir,
+            params["bucket_name"],
+            "jhu",
+            params["aws_credentials"],
+        )
+        arch_diff.update_cache()
+    else:
+        arch_diff = None
 
-    pop_df = pd.read_csv(
-        join(static_file_dir, "fips_population.csv"),
-        dtype={"fips": float, "population": float},
-    )
-
-    dfs = {metric: pull_jhu_data(base_url, metric, pop_df) for metric in METRICS}
+    gmpr = GeoMapper()
+    dfs = {metric: pull_jhu_data(base_url, metric, gmpr) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
-            METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
+        METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS
+    ):
         print(metric, geo_res, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
@@ -114,18 +110,21 @@ def run_module():
             sensor=sensor_name,
         )
 
-    # Diff exports, and make incremental versions
-    _, common_diffs, new_files = arch_diff.diff_exports()
+    if not arch_diff is None:
+        # Diff exports, and make incremental versions
+        _, common_diffs, new_files = arch_diff.diff_exports()
 
-    # Archive changed and new files only
-    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-    to_archive += new_files
-    _, fails = arch_diff.archive_exports(to_archive)
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = arch_diff.archive_exports(to_archive)
 
-    # Filter existing exports to exclude those that failed to archive
-    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-    arch_diff.filter_exports(succ_common_diffs)
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {
+            f: diff for f, diff in common_diffs.items() if f not in fails
+        }
+        arch_diff.filter_exports(succ_common_diffs)
 
-    # Report failures: someone should probably look at them
-    for exported_file in fails:
-        print(f"Failed to archive '{exported_file}'")
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive '{exported_file}'")

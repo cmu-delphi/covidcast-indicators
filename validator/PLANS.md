@@ -70,7 +70,8 @@
   * E.g. most recent successful API pull -- might end up being a couple weeks older
 * Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
   * Profiling (iterate)
-  * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section. Parallelize?)
+  * Save intermediate files?
+  * Currently a bottleneck at "individual file checks" section. Parallelize?
   * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.
 * Ensure validator runs on signals that require AWS credentials (iterate)
 

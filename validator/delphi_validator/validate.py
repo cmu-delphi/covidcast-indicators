@@ -247,7 +247,8 @@ class Validator():
 
     def check_bad_geo_id_value(self, df_to_test, filename, geo_type):
         """
-        Check for bad geo_id values, by comparing to a list of known values (drawn from historical data)
+        Check for bad geo_id values, by comparing to a list of known values (drawn from
+        historical data)
 
         Arguments:
             - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check

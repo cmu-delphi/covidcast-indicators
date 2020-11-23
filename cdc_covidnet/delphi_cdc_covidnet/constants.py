@@ -1,5 +1,3 @@
-"""
-Registry for signal names
-"""
+"""Registry for signal names."""
 COVIDNET = "covidnet"
 SIGNALS = [COVIDNET]

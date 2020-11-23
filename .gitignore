@@ -116,6 +116,9 @@ venv.bak/
 # mkdocs documentation
 /site
 
+# VSCode settings
+*.vscode
+
 # mypy
 .mypy_cache/
 
@@ -123,3 +126,7 @@ venv.bak/
 .retry
 .indicators-ansible-vault-pass
 indicators-ansible-vault-pass
+
+# testing_utils
+testing_utils/cache
+testing_utils/*.csv

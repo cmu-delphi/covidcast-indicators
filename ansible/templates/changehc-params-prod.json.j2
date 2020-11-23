@@ -1,0 +1,28 @@
+{
+  "static_file_dir": "./static",
+  "export_dir": "/common/covidcast/receiving/chng",
+  "cache_dir": "./cache",
+  "input_denom_file": null,
+  "input_covid_file": null,
+  "start_date": "2020-02-01",
+  "end_date": null,
+  "drop_date": null,
+  "n_backfill_days": 60,
+  "n_waiting_days": 3,
+  "se": false,
+  "parallel": false,
+  "geos": ["state", "msa", "hrr", "county"],
+  "weekday": [true, false],
+  "wip_signal": "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": "",
+  "ftp_conn": {
+    "host": "{{ changehc_sftp_host }}",
+    "user": "{{ changehc_sftp_user }}",
+    "pass": "{{ changehc_sftp_password }}",
+    "port": "{{ changehc_sftp_port }}"
+  }
+}

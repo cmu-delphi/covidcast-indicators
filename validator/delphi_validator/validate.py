@@ -606,8 +606,6 @@ class Validator():
 
         self.increment_total_checks()
 
-
-
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig):
         """
         Adapt Dan's corrections package to Python (only consider spikes) :
@@ -630,7 +628,8 @@ class Validator():
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
         source_frame_end = source_df["time_value"].max()
-        api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
+        api_frames_end = min(api_frames["time_value"].max(
+        ), source_frame_start-timedelta(days=1))
         all_frames = pd.concat([api_frames, source_df]). \
             drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index(drop=True)
@@ -640,32 +639,30 @@ class Validator():
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 0
+        size_cut = 20
         sig_cut = 3
         sig_consec = 2.25
 
-
         # Functions mapped to rows to determine outliers based on fstat and ststat values
+
         def outlier_flag(frame):
             if (abs(frame["val"]) > size_cut) and not (pd.isna(frame["ststat"])) \
-                and (frame["ststat"] > sig_cut):
+                    and (frame["ststat"] > sig_cut):
                 return 1
             if (abs(frame["val"]) > size_cut) and (pd.isna(frame["ststat"])) and \
-                not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
+                    not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
                 return 1
             if (frame["val"] < -size_cut) and not (pd.isna(frame["ststat"])) and \
-                not pd.isna(frame["ftstat"]):
+                    not pd.isna(frame["ftstat"]):
                 return 1
             return 0
 
         def outlier_nearby(frame):
             if (not pd.isna(frame['ststat'])) and (frame['ststat'] > sig_consec):
                 return 1
-            if pd.isna(frame['ststat']) and  (frame['ftstat'] > sig_consec):
+            if pd.isna(frame['ststat']) and (frame['ftstat'] > sig_consec):
                 return 1
             return 0
-
-
 
         # Calculate ftstat and ststat values for the rolling windows, group fames by geo region
         region_group = all_frames.groupby("geo_id")
@@ -673,18 +670,20 @@ class Validator():
         shift_val = 0
 
         # Shift the window to match how R calculates rolling windows with even numbers
-        if window_size%2 == 0:
+        if window_size % 2 == 0:
             shift_val = -1
 
         # Calculate the t-statistics for the two rolling windows (windows center and windows right)
         all_full_frames = []
         for _, group in region_group:
-            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
-            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
+            rolling_windows = group["val"].rolling(
+                window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(
+                window_size, min_periods=window_size, center=True)
             fmedian = rolling_windows.median()
             smedian = center_windows.median().shift(shift_val)
-            fsd = rolling_windows.std() + 0.00001 # if std is 0
-            ssd = center_windows.std().shift(shift_val) + 0.00001 # if std is 0
+            fsd = rolling_windows.std() + 0.00001  # if std is 0
+            ssd = center_windows.std().shift(shift_val) + 0.00001  # if std is 0
             vals_modified_f = group["val"] - fmedian.fillna(0)
             vals_modified_s = group["val"] - smedian.fillna(0)
             ftstat = abs(vals_modified_f)/fsd
@@ -697,44 +696,45 @@ class Validator():
         # Determine outliers in source frames only, only need the reference
         # data from just before the start of the source data
         # because lead and lag outlier calculations are only one day
-        outlier_df = all_frames.query \
-            ('time_value >= @api_frames_end & time_value <= @source_frame_end')
+        outlier_df = all_frames.query(
+            'time_value >= @api_frames_end & time_value <= @source_frame_end')
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
             .reset_index(drop=True).copy()
         outlier_df["flag"] = 0
-        outlier_df["flag"] = outlier_df.apply(outlier_flag, axis = 1)
+        outlier_df["flag"] = outlier_df.apply(outlier_flag, axis=1)
         outliers = outlier_df[outlier_df["flag"] == 1]
-        outliers_reset = outliers.copy().reset_index(drop=True) 
+        outliers_reset = outliers.copy().reset_index(drop=True)
 
         # Find the lead outliers and the lag outliers. Check that the selected row
         # is actually a leading and lagging row for given geo_id
-        upper_index = list(filter(lambda x: x < outlier_df.shape[0], \
-            list(outliers.index+1)))
+        upper_index = list(filter(lambda x: x < outlier_df.shape[0],
+                                  list(outliers.index+1)))
         upper_df = outlier_df.iloc[upper_index, :].reset_index(drop=True)
-        upper_compare =  outliers_reset[:len(upper_index)]
-        sel_upper_df = upper_df[upper_compare["geo_id"] == upper_df["geo_id"]].copy()
+        upper_compare = outliers_reset[:len(upper_index)]
+        sel_upper_df = upper_df[upper_compare["geo_id"]
+                                == upper_df["geo_id"]].copy()
         lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
         lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
-        lower_compare =  outliers_reset[-len(lower_index):].reset_index(drop=True)
-        sel_lower_df = lower_df[lower_compare["geo_id"] == lower_df["geo_id"]].copy()
+        lower_compare = outliers_reset[-len(lower_index)                                       :].reset_index(drop=True)
+        sel_lower_df = lower_df[lower_compare["geo_id"]
+                                == lower_df["geo_id"]].copy()
 
         sel_upper_df["flag"] = 0
         sel_lower_df["flag"] = 0
 
-        sel_upper_df["flag"] = sel_upper_df.apply(outlier_nearby, axis = 1)
-        sel_lower_df["flag"] = sel_lower_df.apply(outlier_nearby, axis = 1)
+        sel_upper_df["flag"] = sel_upper_df.apply(outlier_nearby, axis=1)
+        sel_lower_df["flag"] = sel_lower_df.apply(outlier_nearby, axis=1)
 
         upper_outliers = sel_upper_df[sel_upper_df["flag"] == 1]
         lower_outliers = sel_lower_df[sel_lower_df["flag"] == 1]
 
         all_outliers = pd.concat([outliers, upper_outliers, lower_outliers]). \
-            sort_values(by=['time_value','geo_id']). \
+            sort_values(by=['time_value', 'geo_id']). \
             drop_duplicates().reset_index(drop=True)
 
-
         # Identify outliers just in the source data
-        source_outliers = all_outliers.query \
-            ("time_value >= @source_frame_start & time_value <= @source_frame_end")
+        source_outliers = all_outliers.query(
+            "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
             self.raised_errors.append(ValidationError(
@@ -743,8 +743,6 @@ class Validator():
                 (source_outliers),
                 'Source dates with flagged ouliers based on the \
                 previous 14 days of data available'))
-
-
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type):
@@ -872,8 +870,6 @@ class Validator():
 
         export_files = read_filenames(export_dir)
         date_filter = make_date_filter(self.start_date, self.end_date)
-     
-
 
         # Make list of tuples of CSV names and regex match objects.
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
@@ -919,10 +915,8 @@ class Validator():
         date_list = [self.start_date + timedelta(days=days)
                      for days in range(self.span_length.days + 1)]
 
-
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
-
 
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
@@ -934,7 +928,6 @@ class Validator():
         # Keeps script from checking all files in a test run.
         if self.test_mode:
             kroc = 0
-
 
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
@@ -964,20 +957,19 @@ class Validator():
             if geo_sig_api_df is None:
                 continue
 
-            
-
             # Outlier dataframe
-            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num", \
-                "confirmed_cumulative_num", "confirmed_incidence_num", "deaths_7dav_cumulative_num", \
-                "deaths_cumulative_num"]):
+            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
+                                "confirmed_cumulative_num", "confirmed_incidence_num", "deaths_7dav_cumulative_num",
+                                "deaths_cumulative_num"]):
                 earliest_available_date = geo_sig_df["time_value"].min()
                 source_df = geo_sig_df.query(
-                        'time_value <= @date_list[-1] & time_value >= @date_list[0]')
+                    'time_value <= @date_list[-1] & time_value >= @date_list[0]')
                 outlier_start_date = earliest_available_date - outlier_lookbehind
                 outlier_end_date = earliest_available_date - timedelta(days=1)
-                outlier_api_df = geo_sig_api_df.query \
-                    ('time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-                self.check_positive_negative_spikes(source_df, outlier_api_df, geo_type, signal_type)
+                outlier_api_df = geo_sig_api_df.query(
+                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+                self.check_positive_negative_spikes(
+                    source_df, outlier_api_df, geo_type, signal_type)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -1035,9 +1027,6 @@ class Validator():
                 kroc += 1
                 if kroc == 2:
                     break
-
-
-
 
         self.exit()
 

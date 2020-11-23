@@ -24,5 +24,5 @@ env/bin/python -m delphi_safegraph_patterns
 # - awk prints the files that are inclusive of ${start_day} to ${today}.
 # - Pipe that list into xargs and copy those files to the receiving dir.
 echo "Copying files to the ingestion directory..."
-ls -1 | awk '$0>=from && $0<=to' from="${start_day}" to="${today}" \
+ls -1 ./receiving | awk '$0>=from && $0<=to' from="${start_day}" to="${today}" \
   | xargs cp -t /common/covidcast/receiving/safegraph

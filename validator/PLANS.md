@@ -6,7 +6,7 @@
 * Recognized file name format
 * Recognized geographical type (county, state, etc)
 * Recognized geo id format (e.g. state is two lowercase letters)
-* Geo id has been seen before, in historical data
+* Geo id has been seen before in historical data
 * Missing geo type + signal + date combos based on the geo type + signal combos Covidcast metadata says should be available
 * Missing ‘val’ values
 * Negative ‘val’ values
@@ -22,6 +22,7 @@
 * Most recent date seen in source data is not older than most recent date seen in reference data
 * Similar number of obs per day as recent API data (static threshold)
 * Similar average value as API data (static threshold)
+* Outliers in cases and deaths signals using [this method](https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections)
 * Source data for specified date range is empty
 * API data for specified date range is empty
 
@@ -44,22 +45,26 @@
 
 ### Larger issues
 
+* Set up validator to use Sir-complains-a-lot alerting functionality on a signal-by-signal basis (should send alert output as a slack message and "@" a set person), as a stop-gap before the logging server is ready
+  * This is [how Sir-CAL works](https://github.com/benjaminysmith/covidcast-indicators/blob/main/sir_complainsalot/delphi_sir_complainsalot/run.py)
+  * [Example output](https://delphi-org.slack.com/archives/C01E81A3YKF/p1605793508000100)
 * Improve errors and error report
   * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
   * Easier suppression of many errors at once
     * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
   * Nicer formatting for error “report”.
+    * Potentially set `__print__()` method in ValidationError class
     * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Check for erratic data sources that wrongly report all zeroes
   * E.g. the error with the Wisconsin data for the 10/26 forecasts
   * Wary of a purely static check for this
   * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
-  * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
+  * Also partially captured by outlier checking, depending on `size_cut` setting. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * If can't get data from API, do we want to use substitute data for the comparative checks instead?
-  * E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
+  * E.g. most recent successful API pull -- might end up being a couple weeks older
 * Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
   * Profiling (iterate)
   * Check if saving intermediate files will improve efficiency (currently a bottleneck at "individual file checks" section. Parallelize?)
@@ -80,3 +85,4 @@
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (different geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
+  * Use prophet package? Would require 2-3 months of API data.

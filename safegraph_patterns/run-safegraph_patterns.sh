@@ -20,7 +20,7 @@ env/bin/python -m delphi_safegraph_patterns
 
 # Copy the files to the ingestion directory.
 # The unwieldy one-liner does the following:
-# - Pipe a list (ls -1) of files into awk.
+# - Pipe a list of files into awk.
 # - awk prints the files that are inclusive of ${start_day} to ${today}.
 # - Pipe that list into xargs and copy those files to the receiving dir.
 echo "Copying files to the ingestion directory..."

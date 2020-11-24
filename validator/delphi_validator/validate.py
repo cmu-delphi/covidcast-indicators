@@ -150,9 +150,6 @@ class Validator():
 
         self.raised_warnings = []
 
-        # Make sure our configuration settings make sense.
-        self.check_settings()
-
     def increment_total_checks(self):
         """ Add 1 to total_checks counter """
         self.total_checks += 1
@@ -189,25 +186,6 @@ class Validator():
                 " already in the API they would not be updated"))
 
         self.increment_total_checks()
-
-    def check_settings(self):
-        """
-        Perform some automated format & sanity checks of parameters.
-
-        Arguments:
-            - None
-
-        Returns:
-            - None
-        """
-        assert isinstance(self.max_check_lookbehind, timedelta),\
-            "max_check_lookbehind must be of type datetime.timedelta"
-
-        assert isinstance(self.generation_date, date),\
-            "generation_date must be a datetime.date type"
-
-        assert self.generation_date <= date.today(),\
-            "generation_date must not be in the future"
 
     def check_df_format(self, df_to_test, nameformat):
         """

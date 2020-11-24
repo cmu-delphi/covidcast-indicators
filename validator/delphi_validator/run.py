@@ -13,4 +13,4 @@ def run_module():
     params = parent_params['validation']
 
     validator = Validator(params)
-    validator.validate(parent_params["export_dir"])
+    validator.validate(parent_params["export_dir"]).print_and_exit()

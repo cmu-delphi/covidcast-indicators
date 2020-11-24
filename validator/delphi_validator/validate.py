@@ -150,6 +150,9 @@ class Validator():
 
         self.raised_warnings = []
 
+        # Make sure our configuration settings make sense.
+        self.check_settings()
+
     def increment_total_checks(self):
         """ Add 1 to total_checks counter """
         self.total_checks += 1
@@ -197,27 +200,14 @@ class Validator():
         Returns:
             - None
         """
-        if not isinstance(self.max_check_lookbehind, timedelta):
-            self.raised_errors.append(ValidationError(
-                ("check_type_max_check_lookbehind"),
-                self.max_check_lookbehind,
-                "max_check_lookbehind must be of type datetime.timedelta"))
+        assert isinstance(self.max_check_lookbehind, timedelta),\
+            "max_check_lookbehind must be of type datetime.timedelta"
 
-        self.increment_total_checks()
+        assert isinstance(self.generation_date, date),\
+            "generation_date must be a datetime.date type"
 
-        if not isinstance(self.generation_date, date):
-            self.raised_errors.append(ValidationError(
-                ("check_type_generation_date"), self.generation_date,
-                "generation_date must be a datetime.date type"))
-
-        self.increment_total_checks()
-
-        if self.generation_date > date.today():
-            self.raised_errors.append(ValidationError(
-                ("check_future_generation_date"), self.generation_date,
-                "generation_date must not be in the future"))
-
-        self.increment_total_checks()
+        assert self.generation_date <= date.today(),\
+            "generation_date must not be in the future"
 
     def check_df_format(self, df_to_test, nameformat):
         """
@@ -739,7 +729,6 @@ class Validator():
         validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
 
         self.check_missing_date_files(validate_files)
-        self.check_settings()
 
         all_frames = []
 

@@ -11,7 +11,7 @@ class ValidationReport:
         ----------
         errors_to_suppress: List[Tuple[str]]
             List of error identifications to ignore.
-        
+
         Attributes
         ----------
         errors_to_suppress: List[Tuple[str]]
@@ -40,7 +40,7 @@ class ValidationReport:
         ----------
         error: Exception
             Error raised in validation
-        
+
         Returns
         -------
         None
@@ -69,11 +69,11 @@ class ValidationReport:
         ----------
         error: Exception
             Error raised in validation
-        
+
         Returns
         -------
         None
-        """        
+        """
         self.raised_warnings.append(warning)
 
     def __str__(self):

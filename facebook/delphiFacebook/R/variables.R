@@ -4,6 +4,69 @@
 ## wave of the survey -- they do not deal with inputs that have multiple waves
 ## mingled in one data frame.
 
+#' Split multiselect options into codable form
+#'
+#' Multiselect options are coded by Qualtrics as a comma-separated string of
+#' selected options, like "1,14", or the empty string if no options are
+#' selected. Split these into vectors of selected options.
+#'
+#' @param column vector of selections, like c("1,4", "5", ...)
+#' @return list of same length, each entry of which is a vector of selected
+#'   options
+split_options <- function(column) {
+  return(strsplit(column, ",", fixed = TRUE))
+}
+
+#' Test if a specific selection is selected
+#'
+#' @param vec A list whose entries are character vectors, such as c("14", "15").
+#' @param selection one string, such as "14"
+#' @return a logical vector; for each list entry, whether selection is contained
+#'   in the character vector.
+is_selected <- function(vec, selection) {
+  selections <- sapply(
+    vec,
+    function(resp) {
+      if (length(resp) == 0) {
+        # All our selection items include "None of the above" or similar, so
+        # treat no selection the same as missingness.
+        NA
+      } else {
+        selection %in% resp
+      }
+    })
+
+  return(selections)
+}
+
+#' Activities outside the home
+#'
+#' @param input_data input data frame of raw survey data
+#' @return data frame augmented with `a_work_outside_home_1d`, `a_shop_1d`,
+#'   `a_restaurant_1d`, `a_spent_time_1d`, `a_large_event_1d`,
+#'   `a_public_transit_1d`
+code_activities <- function(input_data) {
+  if ("C13" %in% names(input_data)) {
+    # introduced in wave 4
+    activities <- split_options(input_data$C13)
+
+    input_data$a_work_outside_home_1d <- is_selected(activities, "1")
+    input_data$a_shop_1d <- is_selected(activities, "2")
+    input_data$a_restaurant_1d <- is_selected(activities, "3")
+    input_data$a_spent_time_1d <- is_selected(activities, "4")
+    input_data$a_large_event_1d <- is_selected(activities, "5")
+    input_data$a_public_transit_1d <- is_selected(activities, "6")
+  } else {
+    input_data$a_work_outside_home_1d <- NA
+    input_data$a_shop_1d <- NA
+    input_data$a_restaurant_1d <- NA
+    input_data$a_spent_time_1d <- NA
+    input_data$a_large_event_1d <- NA
+    input_data$a_public_transit_1d <- NA
+  }
+  return(input_data)
+}
+
 #' Household symptom variables
 #'
 #' @param input_data input data frame of raw survey data

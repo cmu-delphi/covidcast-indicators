@@ -77,6 +77,7 @@ def run_module():
                     weekday=weekday,
                     se=params["se"],
                     sensorize=sensorize,
+                    global_sensor_fit=params["global_sensor_fit"],
                     prefix=params["obfuscated_prefix"]
                 )
         logging.info("finished %s", geo)

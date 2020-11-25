@@ -77,6 +77,26 @@ class Sensorizer:
 
 
     @staticmethod
+    def weighted_moments(df, data_col, wt_col):
+        """
+        Calculate weighted mean and std for a DataFrame
+
+        Args:
+            df: pd.DataFrame
+            data_col: column name of data
+            wt_col: column name of weight
+
+        Returns:
+            Tuple: (weighted mean, weighted_std)
+        """
+
+        w_mean = (df[data_col] * df[wt_col]).sum() / df[wt_col].sum()
+        w_var = (np.power(df[data_col]-w_mean,2) * df[wt_col]).sum()
+        w_var = w_var / df[wt_col].sum()
+        return (w_mean, np.sqrt(w_var))
+
+
+    @staticmethod
     def sensorize(
             signal,
             target,
@@ -88,7 +108,8 @@ class Sensorizer:
             target_val_col,
             window_start=Config.SENSOR_WINDOW_START,
             window_end=Config.SENSOR_WINDOW_END,
-            global_weights=None):
+            global_weights=None,
+            global_sensor_fit="intercept"):
         """
         Sensorize a signal to correct for spatial heterogeneity. For each
          date, use linear regression to fit target to signal globally (f) and
@@ -110,6 +131,14 @@ class Sensorizer:
             global_weights: DataFrame with weights to create global signal
                             and global target, with columns signal_geo_col
                             and "weight"
+            global_sensor_fit:
+                Method to fit/rescale sensorized signal to original scale.
+                - "intercept": Fits linear regression with slope and intercept
+                  from target to signal over training period
+                - "no-intercept": Fits linear regression with slope only
+                  from target to signal over training period
+                - "norm": Rescales sensorized signal so that it has the same
+                  mean and st. dev. for each day as the original signal
 
         Returns:
             DataFrame with signal_geo_col, signal_time_col, and signal_val_col
@@ -118,6 +147,8 @@ class Sensorizer:
         """
 
         logging.info("Sensorizing")
+        assert np.isin(global_sensor_fit,["intercept","no-intercept","norm"]),\
+               "%s is invalid global_sensor_fit" % (global_sensor_fit)
         target = target.rename(columns={
                                 target_time_col:signal_time_col,
                                 target_geo_col:signal_geo_col,
@@ -154,30 +185,58 @@ class Sensorizer:
         local_fit_df = local_fit_df.rename(
             columns={"b1":"local_b1","b0":"local_b0",sensor_time_col:signal_time_col})
 
-        # Global fits from target (covariate) to signal (response)
-        grouped = sliding_window_df[[
-            signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
         if global_weights is None:
-            global_weights = pd.DataFrame(data={
-                signal_geo_col:grouped[signal_geo_col].unique(),
-                "weight":1})
+                global_weights = pd.DataFrame(data={
+                    signal_geo_col:sliding_window_df[signal_geo_col].unique(),
+                    "weight":1})
         global_weights.weight = global_weights.weight/global_weights.weight.sum()
-        grouped = grouped.merge(global_weights)
-        grouped["signal_wt"] = grouped.weight * grouped.signal
-        grouped["target_wt"] = grouped.weight * grouped.target
-        grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
-        grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
-        grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
+        
+        if global_sensor_fit != "norm":
+            # Global fits from target (covariate) to signal (response)
+            grouped = sliding_window_df[[
+                signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
+            grouped = grouped.merge(global_weights)
+            grouped["signal_wt"] = grouped.weight * grouped.signal
+            grouped["target_wt"] = grouped.weight * grouped.target
 
-        grouped = grouped.groupby(sensor_time_col)
+            grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
+            grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
+            grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
+            grouped = grouped.groupby(sensor_time_col)
 
-        global_fit_df = Sensorizer.linear_regression_coefs(grouped, "target", "signal")
-        global_fit_df = global_fit_df.reset_index()
-        global_fit_df = global_fit_df.rename(
-            columns={"b1":"global_b1","b0":"global_b0",sensor_time_col:signal_time_col})
+            fit_intercept = (global_sensor_fit == "intercept")
+            global_fit_df = Sensorizer.linear_regression_coefs(grouped, "target", "signal",
+                                                               fit_intercept=fit_intercept)
+            global_fit_df = global_fit_df.reset_index()
+            global_fit_df = global_fit_df.rename(
+                columns={"b1":"global_b1","b0":"global_b0",sensor_time_col:signal_time_col})
+        else:
+            grouped = merged[[signal_geo_col,signal_time_col,"signal","target"]]
+            grouped = grouped.merge(global_weights)
+            signal_moments = grouped.drop(signal_geo_col,axis=1).groupby(signal_time_col)
+            signal_moments = signal_moments.apply(
+                               Sensorizer.weighted_moments, "signal", "weight").reset_index()
+            signal_moments[["signal_mean","signal_std"]] = pd.DataFrame(
+                signal_moments[0].tolist(),index=signal_moments.index)
+            signal_moments = signal_moments[[signal_time_col,"signal_mean","signal_std"]]
 
-        combined_df = pd.merge(merged,global_fit_df,on=[signal_time_col])
-        combined_df = pd.merge(combined_df,local_fit_df,on=[signal_time_col,signal_geo_col])
+            sensor_df = pd.merge(grouped,local_fit_df)
+            sensor_df["sensor"] = sensor_df["signal"]*sensor_df["local_b1"]\
+                                + sensor_df["local_b0"]
+            sensor_moments = sensor_df.drop(signal_geo_col,axis=1).groupby(signal_time_col)
+            sensor_moments = sensor_moments.apply(
+                                Sensorizer.weighted_moments, "sensor", "weight").reset_index()
+            sensor_moments[["sensor_mean","sensor_std"]] = pd.DataFrame(
+                sensor_moments[0].tolist(),index=sensor_moments.index)
+            sensor_moments = sensor_moments[[signal_time_col,"sensor_mean","sensor_std"]]
+            fit_df = pd.merge(signal_moments, sensor_moments)
+            fit_df["global_b0"] = fit_df["signal_mean"] - \
+                fit_df["sensor_mean"] * (fit_df["signal_std"]/fit_df["sensor_std"])
+            fit_df["global_b1"] = fit_df["signal_std"]/fit_df["sensor_std"]
+            global_fit_df = fit_df[[signal_time_col,"global_b1","global_b0"]]
+
+        combined_df = pd.merge(merged,global_fit_df,on=[signal_time_col],how="left")
+        combined_df = pd.merge(combined_df,local_fit_df,on=[signal_time_col,signal_geo_col],how="left")
 
         # First, calculate estimate in target space
         combined_df["sensor"] = combined_df["signal"]*combined_df["local_b1"]\

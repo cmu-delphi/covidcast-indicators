@@ -8,6 +8,7 @@
   "weekday": [true, false],
   "se": false,
   "sensorize": [true, false],
+  "global_sensor_fit": "intercept",
   "obfuscated_prefix": "wip_XXXXX",
   "parallel": false
 }

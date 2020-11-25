@@ -83,7 +83,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
 
 def update_sensor( # pylint: disable=too-many-branches
         filepath, outpath, staticpath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, sensorize, prefix=None
+        weekday, se, sensorize, global_sensor_fit="intercept", prefix=None
 ):
     """Generate sensor values, and write to csv format.
 
@@ -99,6 +99,7 @@ def update_sensor( # pylint: disable=too-many-branches
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
       sensorize: boolean to sensorize signal
+      global_sensor_fit: method to fit/rescale sensorized signal
       prefix: string to prefix to output files (used for obfuscation in producing SEs)
     """
 
@@ -253,20 +254,24 @@ def update_sensor( # pylint: disable=too-many-branches
         target_df = target_df[["geo_value","time_value","value"]]
 
         geo_folder = "../_delphi_utils_python/delphi_utils/data"
-        fips_pop = pd.read_csv("%s/fips_pop.csv" % (geo_folder))
+        fips_pop = pd.read_csv("%s/fips_pop.csv" % (geo_folder),\
+            dtype={"fips":str,"pop":int})
         if geo.lower() == "state":
-            fips_state = pd.read_csv("%s/fips_state_table.csv" % (geo_folder))
+            fips_state = pd.read_csv("%s/fips_state_table.csv" % (geo_folder),\
+                dtype={"fips":str,"state_code":str,"state_id":str,"state_name":str})
             geo_weights = fips_pop.merge(fips_state)
             geo_weights = geo_weights.groupby("state_id").agg(np.sum).reset_index()
             geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
         elif geo.lower() == "hrr":
-            fips_hrr = pd.read_csv("%s/fips_hrr_table.csv" % (geo_folder))
+            fips_hrr = pd.read_csv("%s/fips_hrr_table.csv" % (geo_folder),\
+                dtype={"fips":str,"hrr":str,"weight":float})
             geo_weights = fips_pop.merge(fips_hrr)
             geo_weights["weight"] = geo_weights["weight"]*geo_weights["pop"]
             geo_weights = geo_weights.groupby("hrr").agg(np.sum).reset_index()
             geo_weights = geo_weights.rename(columns={"hrr":"geo"})
         elif geo.lower() == "msa":
-            fips_msa = pd.read_csv("%s/fips_msa_table.csv" % (geo_folder))
+            fips_msa = pd.read_csv("%s/fips_msa_table.csv" % (geo_folder),\
+                dtype={"fips":str,"msa":str})
             geo_weights = fips_pop.merge(fips_msa)
             geo_weights = geo_weights.groupby("msa").agg(np.sum).reset_index()
             geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
@@ -279,7 +284,8 @@ def update_sensor( # pylint: disable=too-many-branches
                             target_df,
                             "geo","time","signal",
                             "geo_value","time_value","value",
-                            global_weights=geo_weights)
+                            global_weights=geo_weights,
+                            global_sensor_fit=global_sensor_fit)
 
         # Use sensorized_df to fill in sensorized rates
         for geo_id in unique_geo_ids:

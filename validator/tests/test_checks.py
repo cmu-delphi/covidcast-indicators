@@ -229,7 +229,8 @@ class TestCheckBadGeoIdFormat:
         assert "SP" not in validator.raised_errors[0].expression
 
 class TestDuplicatedRows:
-    params = {}
+    params = {"data_source": "", "span_length": 1,
+              "end_date": "2020-09-02", "expected_lag": {}}
     def test_no_duplicates(self):
         validator = Validator(self.params)
         df = pd.DataFrame([["a", "1"], ["b", "2"], ["c", "3"]])

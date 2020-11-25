@@ -24,6 +24,7 @@
 * Similar average value as API data (static threshold)
 * Source data for specified date range is empty
 * API data for specified date range is empty
+* Duplicate rows
 
 
 ## Current features

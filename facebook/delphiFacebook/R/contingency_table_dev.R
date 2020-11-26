@@ -1,28 +1,31 @@
-# Get data
-path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-
-wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
-wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
-wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
-wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
-
-
-# All surveys have 2 non-response rows at the top. First is detail of question.
-# Second is json(?) field access info -- not needed.
-wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
-# Shows 1 (uncompleted) response; 59 fields
-wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
-# Shows 230k responses; 83 fields. Most updated form of survey.
-wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
-# Shows 230k responses; 83 fields. Most updated form of survey.
-wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
-
-
-summarize_indicators_day(wave_data, tibble(), "target_day", "state", params)
+# # Get data
+# path_to_raw_data = "/mnt/sshftps/surveys/raw/"
+# 
+# wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
+# wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
+# wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
+# wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
+# 
+# 
+# # All surveys have 2 non-response rows at the top. First is detail of question.
+# # Second is json(?) field access info -- not needed.
+# wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
+# # Shows 1 (uncompleted) response; 59 fields
+# wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
+# # Shows 230k responses; 83 fields. Most updated form of survey.
+# wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
+# # Shows 230k responses; 83 fields. Most updated form of survey.
+# wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
+# 
+# 
+# summarize_indicators_day(wave_data, tibble(), "target_day", "state", params)
 
 # Start with example:
 #     group_by(epiweek, state, age, race) %>% summarize(mean(tested_positive), mean(cli), n())
 library(lubridate)
+library(parallel)
+library(dplyr)
+library(data.table)
 
 
 start_of_month <- function(end_date) {
@@ -157,17 +160,17 @@ run_contingency_tables <- function(params)
   archive <- load_archive(params) # Load archive of already-seen CIDs; archive also
   # saves the last params$archive_days of data for backfill and smoothing (e.g. 7dav) purposes
   msg_df("archive data loaded", archive$input_data)
-
+  
   # load all input csv files and filter according to selection criteria
   input_data <- load_responses_all(params) # Load all files listed in params$input from params$input_dir
   input_data <- filter_responses(input_data, params) # Keep only first instance of each CID. Keep responses after params$end_date.
   # Individual and aggregate procedures take care of filtering before params$start_date
   msg_df("response input data", input_data)
-
+  
   input_data <- merge_responses(input_data, archive) # combine newly loaded data with
   # archived data from last params$archive_days. If newly completed response was started
   # before a previously-completed response with the same CID, keep the one started first.
-
+  
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregatation(input_data) # Create new columns for reporting.
   # Includes # of sick people, symptom counts, flags for ili and cli, and prob of
@@ -204,12 +207,12 @@ run_contingency_tables <- function(params)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-
-  if (params$aggregate_range == "weekly") {
-    data_agg$period_start_date <- start_of_week(data_agg$day)
-  } else if (params$aggregate_range == "monthly") {
-    data_agg$period_start_date <- start_of_month(data_agg$day)
-  }
+  
+  # if (params$aggregate_range == "weekly") {
+  #   data_agg$period_start_date <- start_of_week(data_agg$day)
+  # } else if (params$aggregate_range == "monthly") {
+  #   data_agg$period_start_date <- start_of_month(data_agg$day)
+  # }
 
   aggregations <- get_aggs_from_params(params)
 
@@ -220,6 +223,8 @@ run_contingency_tables <- function(params)
 }
 
 
+#### TODO: format more like create_data_for_aggregations works, actually parsing
+#### answer codes into, e.g. binary responses
 #' Rename question codes to informative descriptions
 #'
 #'
@@ -323,6 +328,8 @@ set_human_readable_colnames <- function(input_data) {
                              "occupational_group_other" = "Q80"
                             )
 
+  map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
+  
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
   return(input_data)
 }
@@ -340,15 +347,101 @@ set_human_readable_colnames <- function(input_data) {
 #' 
 #' @export
 get_aggs_from_params <- function(params) {
-  # Aggregation settings in params.json are saved as a data.frame with columns
-  # group_by, summary_var, and summary_funcs.
-  aggregations = params$aggregations
+  # # Aggregation settings in params.json are saved as a data.frame with columns
+  # # group_by, metric, and summary_funcs.
+  # aggs = data.table(params$aggregations)
+  # 
+  # # Always want to calculate sample size, whether or not user requests it, since
+  # # we need to use for privacy censoring
+  # aggs[mapply(summary_funcs, FUN=function(x) {!("n" %in% x)}), 
+  #      summary_funcs := mapply(summary_funcs, FUN=c, "n")]
+  # 
+  # # Put each summary function on its own line, now in str format
+  # aggs = 
+  #   aggs[rep(seq(nrow(aggs)), length(summary_funcs)), 
+  #        cbind(.SD, summary_func = mapply(
+  #          seq_along(summary_funcs[[1]]), 
+  #          FUN=function(i) {summary_funcs[[1]][i]})), 
+  #        by=c(str("group_by"), "metric")]
+  # 
+  # aggs[, `:=`(
+  #   name = "", 
+  #   var_weight = ifelse(summary_func == "n", "weight_unif", "weight"), 
+  #   smooth_days = 0, 
+  #   # compute_fn = rep(compute_count_response, nrow(aggs)),
+  #   # post_fn = function(x) {return(x)}, 
+  #   skip_mixing = FALSE)]
+  # 
   
-  # Always want to calculate sample size, whether or not user requested it
+  aggs <- tribble(
+    ~name, ~var_weight, ~metric, ~group_by, ~smooth_days, ~compute_fn, ~post_fn,
+    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("state", "age", "t_tested_14d"), 0, compute_binary_response, return,
+    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("state", "age", "t_tested_14d"), 0, compute_binary_response, return,
+    "hh_num_adults_mean", "weight", "hh_number_total", c("state"), 0, compute_count_response, return,
+  )
   
-  return(aggregations)
+  return(aggs)
 }
 
+
+#' Returns response estimates for a single geographic area.
+#'
+#' This function takes vectors as input and computes the count response values
+#' (a point estimate named "val" and an effective
+#' sample size named "effective_sample_size").
+#'
+#' @param response a vector of percentages (100 * cnt / total)
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size Unused.
+#'
+#' @importFrom stats weighted.mean
+#' @export
+compute_count_response <- function(response, weight, sample_size)
+{
+  assert(all( response >= 0 & response <= 100 ))
+  assert(length(response) == length(weight))
+  
+  weight <- weight / sum(weight)
+  val <- weighted.mean(response, weight)
+  
+  effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
+  
+  return(list(
+    val = val,
+    sample_size = sample_size,
+    effective_sample_size = effective_sample_size
+  ))
+}
+
+
+#' Returns binary response estimates
+#'
+#' This function takes vectors as input and computes the binary response values
+#' (a point estimate named "val" and a sample size
+#' named "sample_size").
+#'
+#' @param response a vector of binary (0 or 1) responses
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size The sample size to use, which may be a non-integer (as
+#'   responses from ZIPs that span geographical boundaries are weighted
+#'   proportionately, and survey weights may also be applied)
+#'
+#' @importFrom stats weighted.mean
+#' @export
+compute_binary_response <- function(response, weight, sample_size)
+{
+  assert(all( (response == 0) | (response == 1) ))
+  assert(length(response) == length(weight))
+  
+  response_prop <- weighted.mean(response, weight)
+  
+  val <- 100 * response_prop
+  
+  return(list(val = val,
+              effective_sample_size = sample_size)) # TODO effective sample size
+}
 
 
 #' Produce aggregates for all indicators.
@@ -396,10 +489,12 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   df <- as.data.table(df)
   setkey(df, day)
 
-  agg_groups = unique(aggregations$groupby)
+  agg_groups = unique(aggregations$group_by)
 
   for (agg_group in agg_groups) {
-    these_inds = aggregations[aggregations$groupby == agg_group]
+    these_inds = aggregations[mapply(aggregations$group_by, 
+                                     FUN=function(x) {setequal(x, agg_group)
+                                       }), ]
 
     geo_level = intersect(agg_group, names(cw_list))
     if (length(geo_level) > 1) {
@@ -409,7 +504,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     }
     geo_crosswalk = cw_list[[geo_level]]
 
-    dfs_out <- summarize_aggs(df, geo_crosswalk, these_inds, params)
+    dfs_out <- summarize_aggs(df, geo_crosswalk, these_inds, geo_level, params)
 
     for (aggregation in names(dfs_out)) {
       private_df = apply_privacy_censoring(dfs_out[[aggregation]], params)
@@ -460,7 +555,7 @@ apply_privacy_censoring <- function(df, params) {
 #' @importFrom dplyr inner_join bind_rows
 #' @importFrom parallel mclapply
 #' @export
-summarize_aggs <- function(df, crosswalk_data, aggregations, params) {
+summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
   ## dplyr complains about joining a data.table, saying it is likely to be
   ## inefficient; profiling shows the cost to be negligible, so shut it up
   # Geo group column is always named "geo_id"
@@ -468,15 +563,24 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, params) {
 
   ## We do batches of just one set of groupby vars at a time, since we have
   ## to select rows based on this.
-  assert( length(unique(aggregations$groupby)) == 1 )
+  assert( length(unique(aggregations$group_by)) == 1 )
 
-  groupby_vars <- aggregations$groupby[1]
+  groupby_vars <- aggregations$group_by[[1]]
+  groupby_vars[groupby_vars == geo_level] = "geo_id"
+  
+  unique_group_combos = unique(df[, ..groupby_vars])
+  unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
+  
+  if (nrow(unique_group_combos) == 0) {
+    return(list())
+  }
 
   # #### Short form (less optimized? uses built-in data.table grouping functionality)
   # # Always runs count, since we need it for privacy filtering.
-  # df_grouped = df[, list(count = .N, summary_vars), keyby = groupby_vars]
+  # df_grouped = df[, cbind(
+  #   aggregations$compute_fn[[1]](df[, get(aggregations$metric)], df[, get(aggregations$var_weight)], .N)
+  #   ), by = groupby_vars]
   # df_grouped = df_grouped[complete.cases(df_grouped)]
-
 
   #### Long form (runs in parallel. faster?)
 
@@ -484,18 +588,21 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, params) {
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
-  unique_group_combos = unique(dt[, ..groupby_vars])
-
+  
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
     # Use data.table's index to make this filter efficient
-    out <- summarize_aggregations_group(df[as.list(target_group)], aggregations,
-                                        target_group, params)
+    out <- summarize_aggregations_group(
+      df[as.list(target_group), on=names(target_group)], 
+      aggregations, 
+      target_group, 
+      params)
 
+    browser()
     return(out)
   }
 
-
+  
   if (params$parallel) {
     dfs <- mclapply(seq_along(transpose(unique_group_combos)), calculate_group)
   } else {
@@ -506,9 +613,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, params) {
   ## Now we have a list, with one entry per groupby level, each containing a
   ## list of one data frame per aggregation. Rearrange it.
   dfs_out <- list()
-  for (aggregation in aggregations$name) {
-    dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
-  }
+  # for (aggregation in aggregations$name) {
+  #   dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
+  # }
 
   ### TODO: bind_rows again so all unique groups are in same df
 
@@ -519,20 +626,20 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, params) {
 #' Produce estimates for all indicators in a specific target group.
 #' @param group_df Data frame containing all data needed to estimate one group.
 #'   Estimates for `target_group` will be based on all of this data.
-#' @param indicators Indicators to report. See `aggregate_indicators()`.
+#' @param aggregations Aggregations to report. See `aggregate_aggs()`.
 #' @param target_group A `data.table` with one row specifying the grouping
 #'   variable values used to select this group.
 #' @param params Named list of configuration options.
 #' @importFrom dplyr mutate filter
 #' @importFrom rlang .data
 summarize_aggregations_group <- function(group_df, aggregations, target_group, params) {
+  browser()
   ## Prepare outputs.
   dfs_out <- list()
   geo_ids <- unique(group_df$geo_id)
-  for (indicator in indicators$name) {
-    dfs_out[[indicator]] <- tibble(
-      geo_id = geo_ids,
-      day = target_day,
+  for (aggregation in aggregations$name) {
+    dfs_out[[aggregation]] <- tibble(
+      # names(target_group) = as.list(target_group),
       val = NA_real_,
       se = NA_real_,
       sample_size = NA_real_,

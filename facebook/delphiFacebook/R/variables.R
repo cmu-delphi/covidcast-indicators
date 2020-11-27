@@ -144,17 +144,34 @@ code_mental_health <- function(input_data) {
 #'
 #' @param input_data input data frame of raw survey data
 #' @return data frame augmented with `c_travel_state`, `c_work_outside_5d`,
-#'   `c_mask_often`
+#'   `c_mask_often`, `c_others_masked`
 code_mask_contact <- function(input_data) {
+  # private helper for both mask items, which are identically coded: 6 means the
+  # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
+  most_always <- function(item) {
+    case_when(
+      is.na(item) ~ NA,
+      item == 6 ~ NA,
+      item == 1 | item ==  2 ~ TRUE,
+      TRUE ~ FALSE)
+  }
+
   input_data$c_travel_state <- input_data$C6 == 1
+
   if ("C14" %in% names(input_data)) {
-    # wearing mask most or all of the time; exclude respondents who have not
-    # been in public
-    input_data$c_mask_often <- input_data$C14 == 1 | input_data$C14 == 2
-    input_data$c_mask_often <- ifelse(input_data$C14 == 6, NA,
-                                      input_data$c_mask_often)
+    # added in wave 4. wearing mask most or all of the time; exclude respondents
+    # who have not been in public
+    input_data$c_mask_often <- most_always(input_data$C14)
   } else {
     input_data$c_mask_often <- NA
+  }
+
+  if ("C16" %in% names(input_data)) {
+    # added in wave 5. most/all *others* seen in public wearing masks; exclude
+    # respondents who have not been in public.
+    input_data$c_others_masked <- most_always(input_data$C16)
+  } else {
+    input_data$c_others_masked <- NA
   }
 
   if ("C3" %in% names(input_data)) {

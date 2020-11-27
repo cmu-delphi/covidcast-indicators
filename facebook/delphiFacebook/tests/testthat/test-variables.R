@@ -37,3 +37,17 @@ test_that("mask items correctly coded", {
 
   expect_equal(out, input_data)
 })
+
+test_that("household size correctly imputes zeros", {
+  input_data <- data.frame(
+    A5_1 = c(0, NA, 1, 2, NA),
+    A5_2 = c(0, NA, NA, 1, 0),
+    A5_3 = c(1, NA, NA, 1, 1)
+  )
+
+  out <- code_hh_size(input_data)
+
+  input_data$hh_number_total <- c(1, NA, 1, 4, 1)
+
+  expect_equal(out, input_data)
+})

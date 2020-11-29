@@ -374,10 +374,10 @@ get_aggs_from_params <- function(params) {
   # 
   
   aggs <- tribble(
-    ~name, ~var_weight, ~metric, ~group_by, ~smooth_days, ~compute_fn, ~post_fn,
-    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("state", "age", "t_tested_14d"), 0, compute_binary_response, return,
-    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("state", "age", "t_tested_14d"), 0, compute_binary_response, return,
-    "hh_num_adults_mean", "weight", "hh_number_total", c("state"), 0, compute_count_response, return,
+    ~name, ~var_weight, ~metric, ~group_by, ~smooth_days, ~skip_mixing, ~compute_fn, ~post_fn,
+    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("state", "age", "t_tested_14d"), 0, FALSE, compute_binary_response, function(x) {x},
+    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("state", "age", "t_tested_14d"), 0, FALSE, compute_binary_response, function(x) {x},
+    "hh_num_adults_mean", "weight", "hh_number_total", c("state"), 0, FALSE, compute_count_response, function(x) {x},
   )
   
   return(aggs)
@@ -506,9 +506,12 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_inds, geo_level, params)
 
+    browser()
     for (aggregation in names(dfs_out)) {
+      ##### TODO: modify so that loop over unique groupby_vars in aggregations. 
+      # Subset aggregations to get all names using those groupby_vars. Read out 
+      # results together to hand off to write_data_api
       private_df = apply_privacy_censoring(dfs_out[[aggregation]], params)
-      #### TODO: see what this write func does; probably amend
       write_data_api(private_df, params, geo_level, aggregation)
     }
   }
@@ -527,7 +530,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 #'
 #' @export
 apply_privacy_censoring <- function(df, params) {
-  return(df[sample_size >= 100])
+  return(df["sample_size" >= 100])
 }
 
 
@@ -596,9 +599,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       df[as.list(target_group), on=names(target_group)], 
       aggregations, 
       target_group, 
+      geo_level, 
       params)
 
-    browser()
     return(out)
   }
 
@@ -609,13 +612,12 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     dfs <- lapply(seq_along(transpose(unique_group_combos)), calculate_group)
   }
 
-
   ## Now we have a list, with one entry per groupby level, each containing a
   ## list of one data frame per aggregation. Rearrange it.
   dfs_out <- list()
-  # for (aggregation in aggregations$name) {
-  #   dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
-  # }
+  for (aggregation in aggregations$name) {
+    dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
+  }
 
   ### TODO: bind_rows again so all unique groups are in same df
 
@@ -632,80 +634,116 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #' @param params Named list of configuration options.
 #' @importFrom dplyr mutate filter
 #' @importFrom rlang .data
-summarize_aggregations_group <- function(group_df, aggregations, target_group, params) {
-  browser()
+summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
   ## Prepare outputs.
   dfs_out <- list()
-  geo_ids <- unique(group_df$geo_id)
-  for (aggregation in aggregations$name) {
-    dfs_out[[aggregation]] <- tibble(
-      # names(target_group) = as.list(target_group),
-      val = NA_real_,
-      se = NA_real_,
-      sample_size = NA_real_,
-      effective_sample_size = NA_real_
-    )
+  for (index in seq_along(aggregations$name)) {
+    aggregation = aggregations$name[index]
+    
+    dfs_out[[aggregation]] = target_group %>% 
+      as.list %>% 
+      as_tibble %>% 
+      add_column(val=NA_real_) %>% 
+      add_column(se=NA_real_) %>% 
+      add_column(sample_size=NA_real_) %>% 
+      add_column(effective_sample_size=NA_real_)
   }
-
-  for (ii in seq_along(geo_ids))
-  {
-    target_geo <- geo_ids[ii]
-
-    sub_df <- group_df[geo_id == target_geo]
-
-    for (row in seq_len(nrow(indicators))) {
-      indicator <- indicators$name[row]
-      metric <- indicators$metric[row]
-      var_weight <- indicators$var_weight[row]
-      compute_fn <- indicators$compute_fn[[row]]
-
-      ind_df <- sub_df[!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
-
-      if (nrow(ind_df) > 0)
-      {
-        s_mix_coef <- params$s_mix_coef
-        mixing <- mix_weights(ind_df[[var_weight]] * ind_df$weight_in_location,
-                              s_mix_coef, params$s_weight)
-
-        sample_size <- sum(ind_df$weight_in_location)
-
-        ## TODO Fix this. Old pipeline for community responses did not apply
-        ## mixing. To reproduce it, we ignore the mixed weights. Once a better
-        ## mixing/weighting scheme is chosen, all signals should use it.
-        new_row <- compute_fn(
-          response = ind_df[[metric]],
-          weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
-          sample_size = sample_size)
-
-        dfs_out[[indicator]]$val[ii] <- new_row$val
-        dfs_out[[indicator]]$se[ii] <- new_row$se
-        dfs_out[[indicator]]$sample_size[ii] <- sample_size
-        dfs_out[[indicator]]$effective_sample_size[ii] <- new_row$effective_sample_size
-      }
+  
+  for (row in seq_len(nrow(aggregations))) {
+    aggregation <- aggregations$name[row]
+    metric <- aggregations$metric[row]
+    var_weight <- aggregations$var_weight[row]
+    compute_fn <- aggregations$compute_fn[[row]]
+    
+    agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
+    
+    if (nrow(agg_df) > 0)
+    {
+      s_mix_coef <- params$s_mix_coef
+      mixing <- mix_weights(agg_df[[var_weight]] * agg_df$weight_in_location,
+                            s_mix_coef, params$s_weight)
+      
+      sample_size <- sum(agg_df$weight_in_location)
+      
+      ## TODO Fix this. Old pipeline for community responses did not apply
+      ## mixing. To reproduce it, we ignore the mixed weights. Once a better
+      ## mixing/weighting scheme is chosen, all signals should use it.
+      new_row <- compute_fn(
+        response = agg_df[[metric]],
+        weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
+        sample_size = sample_size)
+      
+      dfs_out[[aggregation]]$val <- new_row$val
+      dfs_out[[aggregation]]$se <- new_row$se
+      dfs_out[[aggregation]]$sample_size <- sample_size
+      dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
     }
   }
+  
+  for (row in seq_len(nrow(aggregations))) {
+    aggregation <- aggregations$name[row]
+    post_fn <- aggregations$post_fn[[row]]
 
-  for (row in seq_len(nrow(indicators))) {
-    indicator <- indicators$name[row]
-    post_fn <- indicators$post_fn[[row]]
-
-    dfs_out[[indicator]] <- dfs_out[[indicator]][
-      rowSums(is.na(dfs_out[[indicator]][, c("val", "sample_size", "geo_id", "day")])) == 0,
+    dfs_out[[aggregation]] <- dfs_out[[aggregation]][
+      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", names(target_group))])) == 0,
     ]
 
     if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[indicator]], params$num_filter)
-      dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]], df_megacounties)
+      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
+      dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
     }
 
-    dfs_out[[indicator]] <- filter(dfs_out[[indicator]],
+    dfs_out[[aggregation]] <- filter(dfs_out[[aggregation]],
                                    .data$sample_size >= params$num_filter,
                                    .data$effective_sample_size >= params$num_filter)
 
     ## *After* gluing together megacounties, apply the Jeffreys correction to
     ## the standard errors.
-    dfs_out[[indicator]] <- post_fn(dfs_out[[indicator]])
+    dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
   }
 
   return(dfs_out)
+}
+
+
+#' Write csv file for sharing with researchers
+#'
+#' @param data           a data frame to save; must contain the columns "geo_id", "val",
+#'                       "se", "sample_size", and grouping variables. The first four are saved in the
+#'                       output; day is used for spliting the data into files.
+#' @param params         a named list, containing the value "export_dir" indicating the
+#'                       directory where the csv should be saved
+#' @param geo_name       name of the geographic level; used for naming the output file
+#' @param signal_name    name of the signal; used for naming the output file
+#'
+#' @importFrom readr write_csv
+#' @importFrom dplyr arrange
+#' @importFrom rlang .data
+#' @export
+write_data_api <- function(data, params, geo_level, signal_name)
+{
+  ### Need grouping_vars. Signal_name not super useful, since we want one CSV per set of grouping vars (probably)
+  browser()
+  data <- arrange(data, .data$day, .data$geo_id)
+  
+  ## Workaround for annoying R misfeature: a for loop over a Date vector yield
+  ## numeric entries, rather than dates. Index directly to get the dates.
+  unique_dates <- unique(data$day)
+  
+  for (ii in seq_along(unique_dates))
+  {
+    
+    file_out <- file.path(
+      params$export_dir, sprintf("%s_%s_%s.csv", used_to_be_date,
+                                 geo_name, signal_name)
+    )
+    
+    create_dir_not_exist(params$export_dir)
+    
+    msg_df(sprintf(
+      "saving data for API to %-35s",
+      sprintf("%s_%s_%s", used_to_be_date, geo_name, signal_name)
+    ), df)
+    write_csv(df, file_out)
+  }
 }

@@ -1,12 +1,12 @@
 # # Get data
 # path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-# 
+#
 # wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
 # wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
 # wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
 # wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
-# 
-# 
+#
+#
 # # All surveys have 2 non-response rows at the top. First is detail of question.
 # # Second is json(?) field access info -- not needed.
 # wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
@@ -16,8 +16,8 @@
 # wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
 # # Shows 230k responses; 83 fields. Most updated form of survey.
 # wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
-# 
-# 
+#
+#
 # summarize_indicators_day(wave_data, tibble(), "target_day", "state", params)
 
 # Start with example:
@@ -87,14 +87,14 @@ run_contingency_tables <- function(params)
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
-  
+
   #### TODO: if end_date = "current", use regex to choose which files to read in from input_dir
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
-  
+
   input_data <- merge_responses(input_data, archive)
-  
+
   data_agg <- create_data_for_aggregatation(input_data) # TODO: combine with or delete this
 
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
@@ -124,7 +124,7 @@ run_contingency_tables <- function(params)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-  
+
   # if (params$aggregate_range == "weekly") {
   #   data_agg$period_start_date <- start_of_week(data_agg$day)
   # } else if (params$aggregate_range == "monthly") {
@@ -150,105 +150,119 @@ run_contingency_tables <- function(params)
 #' @param params    Params object produced by read_params
 #'
 #' @return Data frame with descriptive column names
-#' 
+#'
 #' @params input_data Data frame of individual response data
 #' @importFrom dplyr rename
 #' @export
 set_human_readable_colnames <- function(input_data) {
   # Named list of question numbers and str replacement names
   map_old_new_names <- c(
-                             "consent" = "S1",
-                             "hh_fever" = "A1_1",
-                             "hh_sore_throat" = "A1_2",
-                             "hh_cough" = "A1_3",
-                             "hh_shortness_of_breath" = "A1_4",
-                             "hh_difficulty_breathing" = "A1_5",
-                             "hh_num_sick" = "A2",
-                             "hh_num" = "A2b",
-                             "hh_num_children" = "A5_1",
-                             "hh_num_adults" = "A5_2",
-                             "hh_num_seniors" = "A5_3",
-                             "zipcode" = "A3",
-                             "state" = "A3b",
-                             "cmnty_num_sick" = "A4",
-                             "symptoms" = "B2",
-                             "symptoms_other" = "B2_14_TEXT",
-                             "unusual_symptoms" = "B2c",
-                             "unusual_symptoms_other" = "B2c_14_TEXT",
-                             "days_unusual_symptoms" = "B2b",
-                             "took_temp" = "B3",
-                             "highest_temp_f" = "Q40",
-                             "cough_mucus" = "B4",
-                             "tested_current_illness" = "B5",
-                             "hospital" = "B6",
-                             "medical_care" = "B7",
-                             "tested_ever" = "B8",
-                             "tested_14d" = "B10",
-                             "tested_pos_14d" = "B10a",
-                             "reasons_tested_14d" = "B10b",
-                             "wanted_test_14d" = "B12",
-                             "reasons_not_tested_14d" = "B12a",
-                             "tested_pos_ever" = "B11",
-                             "comorbidities" = "C1",
-                             "flu_shot_12m" = "C2",
-                             "worked_outside_home_5d" = "C3",
-                             "worked_healthcare_5d" = "C4",
-                             "worked_nursing_home_5d" = "C5",
-                             "social_avoidance" = "C7",
-                             "trips_outside_home" = "C13",
-                             "mask_outside_home" = "C13a",
-                             "contact_num_work" = "C10_1_1",
-                             "contact_num_shopping" = "C10_2_1",
-                             "contact_num_social" = "C10_3_1",
-                             "contact_num_other" = "C10_4_1",
-                             "mask_public" = "C14",
-                             "financial_worry" = "C15",
-                             "cmnty_mask_prevalence" = "C16",
-                             "flu_shot_jun2020" = "C17",
-                             "state_travel" = "C6",
-                             "contact_tested_pos" = "C11",
-                             "contact_tested_pos_hh" = "C12",
-                             "anxiety" = "C8_1",
-                             "depression" = "C8_2",
-                             "isolation" = "C8_3",
-                             "worried_family_ill" = "C9",
-                             "gender" = "D1",
-                             "gender_other" = "D1_4_TEXT",
-                             "pregnant" = "D1b",
-                             "age" = "D2",
-                             "hh_num_children" = "D3", # Wave 1, etc versions of A5
-                             "hh_num_adults_not_self" = "D4",
-                             "hh_num_seniors_not_self" = "D5",
-                             "hispanic" = "D6",
-                             "race" = "D7",
-                             "education" = "D8",
-                             "worked_4w" = "D9",
-                             "worked_outside_home_4w" = "D10",
-                             "children_grade" = "E1",
-                             "children_school" = "E2",
-                             "school_safety_measures" = "E3",
-                             "financial_threat" = "Q36",
-                             "occupational_group" = "Q64",
-                             "job_type_cmnty_social" = "Q65",
-                             "job_type_education" = "Q66",
-                             "job_type_arts_media" = "Q67",
-                             "job_type_healthcare" = "Q68",
-                             "job_type_healthcare_support" = "Q69",
-                             "job_type_protective" = "Q70",
-                             "job_type_food" = "Q71",
-                             "job_type_maintenance" = "Q72",
-                             "job_type_personal_care" = "Q73",
-                             "job_type_sales" = "Q74",
-                             "job_type_office_admin" = "Q75",
-                             "job_type_construction" = "Q76",
-                             "job_type_repair" = "Q77",
-                             "job_type_production" = "Q78",
-                             "job_type_transport" = "Q79",
-                             "occupational_group_other" = "Q80"
-                            )
+    ## free response
+    # Either number ("n") or text ("t")
+    "n_hh_num_sick" = "A2",
+    "n_hh_num_children" = "A5_1",
+    "n_hh_num_adults" = "A5_2",
+    "n_hh_num_seniors" = "A5_3",
+    "n_zipcode" = "A3",
+    "n_cmnty_num_sick" = "A4",
+    "t_symptoms_other" = "B2_14_TEXT",
+    "t_unusual_symptoms_other" = "B2c_14_TEXT",
+    "t_gender_other" = "D1_4_TEXT",
+    "n_days_unusual_symptoms" = "B2b",
+    "n_contact_num_work" = "C10_1_1",
+    "n_contact_num_shopping" = "C10_2_1",
+    "n_contact_num_social" = "C10_3_1",
+    "n_contact_num_other" = "C10_4_1",
+    "n_hh_num" = "A2b",
+    "n_highest_temp_f" = "Q40",
+    "n_hh_num_children" = "D3", # Wave 1, etc versions of A5
+    "n_hh_num_adults_not_self" = "D4",
+    "n_hh_num_seniors_not_self" = "D5",
+    
+    
+    ## binary response (b)
+    # False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
+    "b_consent" = "S1",
+    "b_hh_fever" = "A1_1",
+    "b_hh_sore_throat" = "A1_2",
+    "b_hh_cough" = "A1_3",
+    "b_hh_shortness_of_breath" = "A1_4",
+    "b_hh_difficulty_breathing" = "A1_5",
+    "b_tested_ever" = "B8",
+    "b_tested_14d" = "B10",
+    "b_wanted_test_14d" = "B12",
+    "b_state_travel" = "C6",
+    "b_contact_tested_pos" = "C11",
+    "b_contact_tested_pos_hh" = "C12",
+    "b_hispanic" = "D6",
+    "b_worked_4w" = "D9",
+    "b_worked_outside_home_4w" = "D10",
+    "b_took_temp" = "B3",
+    "b_flu_shot_12m" = "C2",
+    "b_worked_outside_home_5d" = "C3",
+    "b_worked_healthcare_5d" = "C4",
+    "b_worked_nursing_home_5d" = "C5",
+    
+    
+    ## multiple choice (mc)
+    # Can only select one of n > 2 choices
+    "mc_state" = "A3b",
+    "mc_tested_pos_14d" = "B10a", # binary with an "I don't know" (3) option
+    "mc_tested_pos_ever" = "B11", # binary with an "I don't know" (3) option
+    "mc_mask_public" = "C14",
+    "mc_anxiety" = "C8_1",
+    "mc_depression" = "C8_2",
+    "mc_isolation" = "C8_3",
+    "mc_worried_family_ill" = "C9",
+    "mc_financial_worry" = "C15",
+    "mc_gender" = "D1",
+    "mc_age" = "D2",
+    "mc_race" = "D7",
+    "mc_education" = "D8",
+    "mc_occupational_group" = "Q64",
+    "mc_job_type_cmnty_social" = "Q65",
+    "mc_job_type_education" = "Q66",
+    "mc_job_type_arts_media" = "Q67",
+    "mc_job_type_healthcare" = "Q68",
+    "mc_job_type_healthcare_support" = "Q69",
+    "mc_job_type_protective" = "Q70",
+    "mc_job_type_food" = "Q71",
+    "mc_job_type_maintenance" = "Q72",
+    "mc_job_type_personal_care" = "Q73",
+    "mc_job_type_sales" = "Q74",
+    "mc_job_type_office_admin" = "Q75",
+    "mc_job_type_construction" = "Q76",
+    "mc_job_type_repair" = "Q77",
+    "mc_job_type_production" = "Q78",
+    "mc_job_type_transport" = "Q79",
+    "mc_occupational_group_other" = "Q80",
+    "mc_cough_mucus" = "B4",
+    "mc_tested_current_illness" = "B5",
+    "mc_hospital" = "B6",
+    "mc_social_avoidance" = "C7",
+    "mc_financial_threat" = "Q36",
+    "mc_cmnty_mask_prevalence" = "C16",
+    "mc_flu_shot_jun2020" = "C17",
+    "mc_children_grade" = "E1",
+    "mc_children_school" = "E2",
+    "mc_pregnant" = "D1b",
+    
+    ## multiselect (ms)
+    # Can select more than one choice
+    "ms_symptoms" = "B2",
+    "ms_unusual_symptoms" = "B2c",
+    "ms_medical_care" = "B7",
+    "ms_reasons_tested_14d" = "B10b",
+    "ms_reasons_not_tested_14d" = "B12a",
+    "ms_trips_outside_home" = "C13",
+    "ms_mask_outside_home" = "C13a",
+    "ms_school_safety_measures" = "E3",
+    "ms_comorbidities" = "C1"
+  )
 
+  browser()
   map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
-  
+
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
   return(input_data)
 }
@@ -260,9 +274,9 @@ set_human_readable_colnames <- function(input_data) {
 #' User should add additional desired aggregations here following existing format.
 #'
 #' @param params Named list of configuration parameters.
-#' 
+#'
 #' @import data.table
-#' 
+#'
 #' @export
 set_aggs <- function(params) {
   aggs <- tribble(
@@ -271,7 +285,7 @@ set_aggs <- function(params) {
     "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("national", "age", "t_tested_14d"), FALSE, compute_binary_response, I,
     "hh_num_mean", "weight", "hh_number_total", c("state"), FALSE, compute_count_response, I,
   )
-  
+
   return(aggs)
 }
 
@@ -295,12 +309,12 @@ compute_count_response <- function(response, weight, sample_size)
   #### TODO: Why does this need to be for a percent response?
   assert(all( response >= 0 & response <= 100 ))
   assert(length(response) == length(weight))
-  
+
   weight <- weight / sum(weight)
   val <- weighted.mean(response, weight)
-  
+
   effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
-  
+
   return(list(
     val = val,
     sample_size = sample_size,
@@ -328,11 +342,11 @@ compute_binary_response <- function(response, weight, sample_size)
 {
   assert(all( (response == 0) | (response == 1) ))
   assert(length(response) == length(weight))
-  
+
   response_prop <- weighted.mean(response, weight)
-  
+
   val <- 100 * response_prop
-  
+
   return(list(val = val,
              sample_size = sample_size,
              effective_sample_size = sample_size)) # TODO effective sample size
@@ -364,10 +378,10 @@ compute_binary_response <- function(response, weight, sample_size)
 #'   to a geographic level such as county or state. Aggregates will be produced
 #'   for each geographic level.
 #' @param params Named list of configuration parameters.
-#' 
+#'
 #' @import data.table
 #' @importFrom dplyr filter mutate_at vars bind_rows
-#' 
+#'
 #' @export
 aggregate_aggs <- function(df, aggregations, cw_list, params) {
   ## For the day range lookups we do on df, use a data.table key. This puts the
@@ -376,10 +390,10 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   ## input files.
   df <- as.data.table(df)
   setkey(df, day)
-  
+
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
-    
+
   # Add implied geo_level to each group_by. Order alphabetically
   aggregations$geo_level = NA
   for (agg_ind in seq_along(aggregations$group_by)) {
@@ -389,19 +403,19 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     } else if (length(geo_level) == 0) {
       geo_level = "national"
     }
-    
+
     aggregations$group_by[agg_ind][[1]] = sort(unique(append(aggregations$group_by[agg_ind][[1]], geo_level)))
     aggregations$geo_level[agg_ind] = geo_level
   }
-  
+
   # For each unique combination of groupby_vars, run aggregation process once
-  # and calculate all desired aggregations on the grouping. Save to individual 
+  # and calculate all desired aggregations on the grouping. Save to individual
   # files
   #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
   agg_groups = unique(aggregations$group_by)
-  
+
   for (agg_group in agg_groups) {
-    these_aggs = aggregations[mapply(aggregations$group_by, 
+    these_aggs = aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
                                        }), ]
 
@@ -413,7 +427,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     for (agg_ind in seq_along(these_aggs$name)) {
       aggregation = these_aggs$name[agg_ind]
       groupby_vars = these_aggs$group_by[agg_ind]
-      
+
       private_df = apply_privacy_censoring(dfs_out[[aggregation]], params)
       write_data_api(private_df, params, geo_level, aggregation, groupby_vars)
     }
@@ -424,7 +438,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 #' Censor aggregates to ensure privacy.
 #'
 #' Currently done in simple, static way: Rows with sample size less than 100 are
-#' removed; no noise is added and sample size setting is not changeable via 
+#' removed; no noise is added and sample size setting is not changeable via
 #' the params file.
 #'
 #' @param df a data frame of summarized response data
@@ -472,34 +486,34 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 
   groupby_vars <- aggregations$group_by[[1]]
   groupby_vars[groupby_vars == geo_level] = "geo_id"
-  
+
   unique_group_combos = unique(df[, ..groupby_vars])
   unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
-  
+
   if (nrow(unique_group_combos) == 0) {
     return(list())
   }
 
-  
+
   ## Set an index on the groupby var columns so that the groupby step can be
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
-  
+
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
     # Use data.table's index to make this filter efficient
     out <- summarize_aggregations_group(
-      df[as.list(target_group), on=names(target_group)], 
-      aggregations, 
-      target_group, 
-      geo_level, 
+      df[as.list(target_group), on=names(target_group)],
+      aggregations,
+      target_group,
+      geo_level,
       params)
 
     return(out)
   }
 
-  
+
   if (params$parallel) {
     dfs <- mclapply(seq_along(transpose(unique_group_combos)), calculate_group)
   } else {
@@ -532,32 +546,32 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
   dfs_out <- list()
   for (index in seq_along(aggregations$name)) {
     aggregation = aggregations$name[index]
-    
-    dfs_out[[aggregation]] = target_group %>% 
-      as.list %>% 
-      as_tibble %>% 
-      add_column(val=NA_real_) %>% 
-      add_column(se=NA_real_) %>% 
-      add_column(sample_size=NA_real_) %>% 
+
+    dfs_out[[aggregation]] = target_group %>%
+      as.list %>%
+      as_tibble %>%
+      add_column(val=NA_real_) %>%
+      add_column(se=NA_real_) %>%
+      add_column(sample_size=NA_real_) %>%
       add_column(effective_sample_size=NA_real_)
   }
-  
+
   for (row in seq_len(nrow(aggregations))) {
     aggregation <- aggregations$name[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
-    
+
     agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
-    
+
     if (nrow(agg_df) > 0)
     {
       s_mix_coef <- params$s_mix_coef
       mixing <- mix_weights(agg_df[[var_weight]] * agg_df$weight_in_location,
                             s_mix_coef, params$s_weight)
-      
+
       sample_size <- sum(agg_df$weight_in_location)
-      
+
       ## TODO Fix this. Old pipeline for community responses did not apply
       ## mixing. To reproduce it, we ignore the mixed weights. Once a better
       ## mixing/weighting scheme is chosen, all signals should use it.
@@ -565,14 +579,14 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
         sample_size = sample_size)
-      
+
       dfs_out[[aggregation]]$val <- new_row$val
       dfs_out[[aggregation]]$se <- new_row$se
       dfs_out[[aggregation]]$sample_size <- sample_size
       dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
     }
   }
-  
+
   for (row in seq_len(nrow(aggregations))) {
     aggregation <- aggregations$name[row]
     post_fn <- aggregations$post_fn[[row]]
@@ -619,14 +633,14 @@ write_data_api <- function(data, params, geo_level, signal_name, groupby_vars)
   } else {
     data <- data.frame()
   }
-  
+
   file_out <- file.path(
     params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
                                geo_level, signal_name)
   )
-  
+
   create_dir_not_exist(params$export_dir)
-  
+
   msg_df(sprintf(
     "saving contingency table data to %-35s",
     sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"), geo_level, signal_name)
@@ -643,20 +657,20 @@ end_of_prev_full_month <- function(end_date) {
   if (ceiling_date(end_date, "month") == end_date) {
     return(end_date)
   }
-  
+
   return(floor_date(end_date, "month") - days(1))
 }
 
 
 get_range_prev_full_month <- function(end_date = Sys.Date()) {
   eom = end_of_prev_full_month(end_date)
-  
+
   if (eom == end_date) {
     som = start_of_month(end_date + months(1))
   } else {
     som = start_of_month(end_date)
   }
-  
+
   return(list(som, eom))
 }
 
@@ -670,7 +684,7 @@ end_of_prev_full_week <- function(end_date) {
   if (ceiling_date(end_date, "week") == end_date) {
     return(end_date)
   }
-  
+
   return(floor_date(end_date, "week") - days(1))
 }
 
@@ -678,13 +692,13 @@ end_of_prev_full_week <- function(end_date) {
 #### TODO: should be epiweeks eventually. Already exists a package to calculate?
 get_range_prev_full_week <- function(end_date = Sys.Date()) {
   eow = end_of_prev_full_week(end_date)
-  
+
   if (eow == end_date) {
     sow = start_of_week(end_date + weeks(1))
   } else {
     sow = start_of_week(end_date)
   }
-  
+
   return(list(sow, eow))
 }
 
@@ -696,13 +710,13 @@ get_range_prev_full_period <- function(end_date = Sys.Date(), weekly_or_monthly_
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(end_date)
   }
-  
+
   date_period_range[[1]] =  ymd_hms(
     sprintf("%s 00:00:00", date_period_range[[1]]), tz = "America/Los_Angeles"
   )
   date_period_range[[2]] =  ymd_hms(
     sprintf("%s 23:59:59", date_period_range[[2]]), tz = "America/Los_Angeles"
   )
-  
+
   return(date_period_range)
 }

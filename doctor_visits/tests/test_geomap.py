@@ -14,7 +14,7 @@ DATA = pd.read_csv(
     nrows=9,
 )
 
-GM = GeoMaps("../static")
+GM = GeoMaps()
 
 
 class TestGeoMap:

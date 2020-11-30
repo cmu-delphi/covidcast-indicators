@@ -138,6 +138,11 @@ class Validator():
             - total_checks: incremental counter to track total number of checks run
             - raised_warnings: list to append non-data upload-blocking errors to as they are raised
         """
+        # TODO(https://github.com/cmu-delphi/covidcast-indicators/issues/579)
+        # Refactor this class to avoid the too-many-instance-attributes error.
+        #
+        # pylint: disable=too-many-instance-attributes
+
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
         self.validator_static_file_dir = params.get(
@@ -176,6 +181,7 @@ class Validator():
         self.total_checks = 0
 
         self.raised_warnings = []
+        # pylint:  enable=too-many-instance-attributes
 
     def load_all_files(self, export_dir):
         """Load all files in a directory.

@@ -17,12 +17,12 @@ from .datafetcher import filename_regex, \
 
 # Recognized geo types.
 geo_regex_dict = {
-    'county': '^\d{5}$',
-    'hrr': '^\d{1,3}$',
-    'msa': '^\d{5}$',
-    'dma': '^\d{3}$',
-    'state': '^[a-zA-Z]{2}$',
-    'national': '^[a-zA-Z]{2}$'
+    'county': r'^\d{5}$',
+    'hrr': r'^\d{1,3}$',
+    'msa': r'^\d{5}$',
+    'dma': r'^\d{3}$',
+    'state': r'^[a-zA-Z]{2}$',
+    'national': r'^[a-zA-Z]{2}$'
 }
 
 
@@ -72,6 +72,33 @@ def make_date_filter(start_date, end_date):
         return start_code <= code <= end_code
 
     return custom_date_filter
+
+
+def aggregate_frames(frames_list):
+    """Aggregates a list of data frames into a single frame.
+
+    Parameters
+    ----------
+    frames_list: List[Tuple(str, re.match, pd.DataFrame)]
+        triples of filenames, filename matches with the geo regex, and the data from the file
+
+    Returns
+    -------
+    A pd.DataFrame concatenation of all data frames in `frames_list` with additional columns for
+    geo_type, time_value, and signal derived from the corresponding re.match.
+    """
+    all_frames = []
+    for _, match, data_df in frames_list:
+        df = data_df.copy()
+        # Get geo_type, date, and signal name as specified by CSV name.
+        df['geo_type'] = match.groupdict()['geo_type']
+        df['time_value'] = datetime.strptime(
+            match.groupdict()['date'], "%Y%m%d").date()
+        df['signal'] = match.groupdict()['signal']
+
+        all_frames.append(df)
+
+    return pd.concat(all_frames)
 
 
 class Validator():
@@ -150,6 +177,24 @@ class Validator():
 
         self.raised_warnings = []
 
+    def load_all_files(self, export_dir):
+        """Load all files in a directory.
+        Parameters
+        ----------
+        export_dir: str
+            directory from which to load files
+
+        Returns
+        -------
+        loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
+            triples of filenames, filename matches with the geo regex, and the data from the file
+        """
+        export_files = read_filenames(export_dir)
+        date_filter = make_date_filter(self.start_date, self.end_date)
+
+        # Make list of tuples of CSV names and regex match objects.
+        return [(f, m, load_csv(join(export_dir, f))) for (f, m) in export_files if date_filter(m)]
+
     def increment_total_checks(self):
         """ Add 1 to total_checks counter """
         self.total_checks += 1
@@ -159,8 +204,9 @@ class Validator():
         Check for missing dates between the specified start and end dates.
 
         Arguments:
-            - daily_filenames: list of tuples, each containing CSV source data filename
-            and the regex match object corresponding to filename_regex.
+            - daily_filenames: List[Tuple(str, re.match, pd.DataFrame)]
+                triples of filenames, filename matches with the geo regex, and the data from the
+                file
 
         Returns:
             - None
@@ -699,22 +745,25 @@ class Validator():
         Returns:
             - None
         """
-        # Get relevant data file names and info.
-        export_files = read_filenames(export_dir)
-        date_filter = make_date_filter(self.start_date, self.end_date)
+        frames_list = self.load_all_files(export_dir)
+        self._run_single_file_checks(frames_list)
+        all_frames = aggregate_frames(frames_list)
+        self._run_combined_file_checks(all_frames)
+        self.exit()
 
-        # Make list of tuples of CSV names and regex match objects.
-        validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
+    def _run_single_file_checks(self, file_list):
+        """Perform checks over single-file data sets.
+        Parameters
+        ----------
+        loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
+            triples of filenames, filename matches with the geo regex, and the data from the file
+        """
 
-        self.check_missing_date_files(validate_files)
-
-        all_frames = []
+        self.check_missing_date_files(file_list)
 
         # Individual file checks
         # For every daily file, read in and do some basic format and value checks.
-        for filename, match in validate_files:
-            data_df = load_csv(join(export_dir, filename))
-
+        for filename, match, data_df in file_list:
             self.check_df_format(data_df, filename)
             self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
@@ -724,17 +773,9 @@ class Validator():
             self.check_bad_se(data_df, filename)
             self.check_bad_sample_size(data_df, filename)
 
-            # Get geo_type, date, and signal name as specified by CSV name.
-            data_df['geo_type'] = match.groupdict()['geo_type']
-            data_df['time_value'] = datetime.strptime(
-                match.groupdict()['date'], "%Y%m%d").date()
-            data_df['signal'] = match.groupdict()['signal']
-
-            # Add current CSV data to all_frames.
-            all_frames.append(data_df)
-
-        all_frames = pd.concat(all_frames)
-
+    def _run_combined_file_checks(self, all_frames):
+        """
+        """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
@@ -755,7 +796,6 @@ class Validator():
             self.start_date - min(semirecent_lookbehind,
                                   self.max_check_lookbehind),
             self.end_date, geo_signal_combos)
-
         # Keeps script from checking all files in a test run.
         if self.test_mode:
             kroc = 0
@@ -809,10 +849,15 @@ class Validator():
                     continue
 
                 # Reference dataframe runs backwards from the recent_cutoff_date
+                #
+                # These variables are interpolated into the call to `geo_sig_api_df.query()`
+                # below but pylint doesn't recognize that.
+                # pylint: disable=unused-variable
                 reference_start_date = recent_cutoff_date - \
                     min(semirecent_lookbehind, self.max_check_lookbehind) - \
                     timedelta(days=1)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
+                # pylint: enable=unused-variable
 
                 # Subset API data to relevant range of dates.
                 reference_api_df = geo_sig_api_df.query(
@@ -843,8 +888,6 @@ class Validator():
                 kroc += 1
                 if kroc == 2:
                     break
-
-        self.exit()
 
     def get_one_api_df(self, min_date, max_date,
                        geo_type, signal_type,

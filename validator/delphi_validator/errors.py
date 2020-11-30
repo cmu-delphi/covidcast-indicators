@@ -35,3 +35,4 @@ class ValidationError(Exception):
             check_data_id, tuple) and not isinstance(check_data_id, list) else tuple(check_data_id)
         self.expression = expression
         self.message = message
+        super().__init__(self.message)

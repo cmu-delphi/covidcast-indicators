@@ -9,6 +9,7 @@ from .validate import Validator
 
 
 def run_module():
+    """Run the validator as a module."""
     parent_params = read_params()
     params = parent_params['validation']
 

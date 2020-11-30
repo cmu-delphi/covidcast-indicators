@@ -91,7 +91,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     ).rename(
         columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}
     ).drop(
-        ['direction', 'issue', 'lag'], axis=1
+        ['issue', 'lag'], axis=1
     ).reindex(columns=column_names)
 
     return api_df

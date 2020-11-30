@@ -42,6 +42,7 @@ class TestProcess:
         assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (1472, 17)
 
     def test_aggregate_state(self):
         """Tests that aggregation at the state level creates non-zero-valued
@@ -53,6 +54,31 @@ class TestProcess:
         assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (52, 17)
+
+    def test_aggregate_msa(self):
+        """Tests that aggregation at the state level creates non-zero-valued
+        signals."""
+        cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
+                                   SIGNALS)
+        df = aggregate(cbg_df, SIGNALS, 'msa')
+
+        assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
+        x = df[f'{SIGNALS[0]}_se'].values
+        assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (372, 17)
+
+    def test_aggregate_hrr(self):
+        """Tests that aggregation at the state level creates non-zero-valued
+        signals."""
+        cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
+                                   SIGNALS)
+        df = aggregate(cbg_df, SIGNALS, 'hrr')
+
+        assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
+        x = df[f'{SIGNALS[0]}_se'].values
+        assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (306, 17)
 
     def test_files_in_past_week(self):
         """Tests that `files_in_past_week()` finds the file names corresponding

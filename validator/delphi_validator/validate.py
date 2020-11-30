@@ -640,7 +640,7 @@ class Validator():
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 20
+        size_cut = 5
         sig_cut = 3
         sig_consec = 2.25
 
@@ -716,7 +716,7 @@ class Validator():
                                 == upper_df["geo_id"]].copy()
         lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
         lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
-        lower_compare = outliers_reset[-len(lower_index)                                       :].reset_index(drop=True)
+        lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
         sel_lower_df = lower_df[lower_compare["geo_id"]
                                 == lower_df["geo_id"]].copy()
 

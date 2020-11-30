@@ -26,79 +26,9 @@ library(lubridate)
 library(parallel)
 library(dplyr)
 library(data.table)
-
-
-start_of_month <- function(end_date) {
-  return(floor_date(end_date, "month") - months(1))
-}
-
-end_of_prev_full_month <- function(end_date) {
-  if (ceiling_date(end_date, "month") == end_date) {
-    return(end_date)
-  }
-
-  return(floor_date(end_date, "month") - days(1))
-}
-
-
-get_range_prev_full_month <- function(end_date = Sys.Date()) {
-  eom = end_of_prev_full_month(end_date)
-
-  if (eom == end_date) {
-    som = start_of_month(end_date + months(1))
-  } else {
-    som = start_of_month(end_date)
-  }
-
-  return(list(som, eom))
-}
-
-
-
-start_of_week <- function(end_date) {
-  return(floor_date(end_date, "week") - weeks(1))
-}
-
-end_of_prev_full_week <- function(end_date) {
-  if (ceiling_date(end_date, "week") == end_date) {
-    return(end_date)
-  }
-
-  return(floor_date(end_date, "week") - days(1))
-}
-
-
-#### TODO: should be epiweeks eventually. Already exists a package to calculate?
-get_range_prev_full_week <- function(end_date = Sys.Date()) {
-  eow = end_of_prev_full_week(end_date)
-
-  if (eow == end_date) {
-    sow = start_of_week(end_date + weeks(1))
-  } else {
-    sow = start_of_week(end_date)
-  }
-
-  return(list(sow, eow))
-}
-
-get_range_prev_full_period <- function(end_date = Sys.Date(), weekly_or_monthly_flag) {
-  if (weekly_or_monthly_flag == "monthly") {
-    # Get start and end of previous full month.
-    date_period_range = get_range_prev_full_month(end_date)
-  } else if (weekly_or_monthly_flag == "weekly") {
-    # Get start and end of previous full epiweek.
-    date_period_range = get_range_prev_full_week(end_date)
-  }
-  
-  date_period_range[[1]] =  ymd_hms(
-    sprintf("%s 00:00:00", date_period_range[[1]]), tz = "America/Los_Angeles"
-  )
-  date_period_range[[2]] =  ymd_hms(
-    sprintf("%s 23:59:59", date_period_range[[2]]), tz = "America/Los_Angeles"
-  )
-
-  return(date_period_range)
-}
+library(tibble)
+library(jsonlite)
+library(readr)
 
 
 #' Return params file as an R list
@@ -142,8 +72,6 @@ read_params <- function(path = "params.json") {
 }
 
 
-
-
 #' Run the contingency table production pipeline
 #'
 #' See the README.md file in the source directory for more information about how to run
@@ -156,31 +84,21 @@ read_params <- function(path = "params.json") {
 #' @export
 run_contingency_tables <- function(params)
 {
-  cw_list <- produce_crosswalk_list(params$static_dir) # Get mapping of zip code to each geo region at different geo levels
-  archive <- load_archive(params) # Load archive of already-seen CIDs; archive also
-  # saves the last params$archive_days of data for backfill and smoothing (e.g. 7dav) purposes
+  cw_list <- produce_crosswalk_list(params$static_dir)
+  archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
   
-  # load all input csv files and filter according to selection criteria
-  input_data <- load_responses_all(params) # Load all files listed in params$input from params$input_dir
-  input_data <- filter_responses(input_data, params) # Keep only first instance of each CID. Keep responses after params$end_date.
-  # Individual and aggregate procedures take care of filtering before params$start_date
+  #### TODO: if end_date = "current", use regex to choose which files to read in from input_dir
+  input_data <- load_responses_all(params)
+  input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
   
-  input_data <- merge_responses(input_data, archive) # combine newly loaded data with
-  # archived data from last params$archive_days. If newly completed response was started
-  # before a previously-completed response with the same CID, keep the one started first.
+  input_data <- merge_responses(input_data, archive)
   
-  # create data that will be aggregated for covidcast
-  data_agg <- create_data_for_aggregatation(input_data) # Create new columns for reporting.
-  # Includes # of sick people, symptom counts, flags for ili and cli, and prob of
-  # cli and ili, flags for knowing someone in community and/or household who are sick
+  data_agg <- create_data_for_aggregatation(input_data) # TODO: combine with or delete this
 
-  data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12) # Keep
-  # only good zips, and data after params$start_date with adjustment for lead_days.
-  # Keep only rows with aggregate columns of interest not missing/unreasonable
-  data_agg <- join_weights(data_agg, params, weights = "step1") # Add weights to data,
-  # step 1 for aggregations
+  data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
+  data_agg <- join_weights(data_agg, params, weights = "step1")
   msg_df("response data to aggregate", data_agg)
 
   ## Set default number of cores for mclapply to the total available number,
@@ -196,7 +114,6 @@ run_contingency_tables <- function(params)
     }
   }
 
-  # write files for each specific output
   if ( "cids" %in% params$output )
   {
     write_cid(data_agg, "part_a", params)
@@ -214,7 +131,7 @@ run_contingency_tables <- function(params)
   #   data_agg$period_start_date <- start_of_month(data_agg$day)
   # }
 
-  aggregations <- get_aggs_from_params(params)
+  aggregations <- set_aggs(params)
 
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -223,8 +140,10 @@ run_contingency_tables <- function(params)
 }
 
 
-#### TODO: format more like create_data_for_aggregations works, actually parsing
-#### answer codes into, e.g. binary responses
+#### TODO: process binary vars on use (i.e. if aggregations$metric is a binary var)
+#### TODO: map response codes to sensical values?
+#### TODO: How to get this to work with existing column renaming/processing?
+#### TODO: how to know if var to calculate has already been turned into number, or still represents the responses code?
 #' Rename question codes to informative descriptions
 #'
 #'
@@ -336,55 +255,29 @@ set_human_readable_colnames <- function(input_data) {
 
 
 
-#' Parses user-specified aggregations.
+#' Sets user-specified aggregations.
 #'
-#' Turns aggregations settings from params file into tibble. Maps keywords to 
-#' appropriate functions.
+#' User should add additional desired aggregations here following existing format.
 #'
 #' @param params Named list of configuration parameters.
 #' 
 #' @import data.table
 #' 
 #' @export
-get_aggs_from_params <- function(params) {
-  # # Aggregation settings in params.json are saved as a data.frame with columns
-  # # group_by, metric, and summary_funcs.
-  # aggs = data.table(params$aggregations)
-  # 
-  # # Always want to calculate sample size, whether or not user requests it, since
-  # # we need to use for privacy censoring
-  # aggs[mapply(summary_funcs, FUN=function(x) {!("n" %in% x)}), 
-  #      summary_funcs := mapply(summary_funcs, FUN=c, "n")]
-  # 
-  # # Put each summary function on its own line, now in str format
-  # aggs = 
-  #   aggs[rep(seq(nrow(aggs)), length(summary_funcs)), 
-  #        cbind(.SD, summary_func = mapply(
-  #          seq_along(summary_funcs[[1]]), 
-  #          FUN=function(i) {summary_funcs[[1]][i]})), 
-  #        by=c(str("group_by"), "metric")]
-  # 
-  # aggs[, `:=`(
-  #   name = "", 
-  #   var_weight = ifelse(summary_func == "n", "weight_unif", "weight"), 
-  #   smooth_days = 0, 
-  #   # compute_fn = rep(compute_count_response, nrow(aggs)),
-  #   # post_fn = function(x) {return(x)}, 
-  #   skip_mixing = FALSE)]
-  # 
-  
+set_aggs <- function(params) {
   aggs <- tribble(
-    ~name, ~var_weight, ~metric, ~group_by, ~smooth_days, ~skip_mixing, ~compute_fn, ~post_fn,
-    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("state", "age", "t_tested_14d"), 0, FALSE, compute_binary_response, function(x) {x},
-    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("state", "age", "t_tested_14d"), 0, FALSE, compute_binary_response, function(x) {x},
-    "hh_num_adults_mean", "weight", "hh_number_total", c("state"), 0, FALSE, compute_count_response, function(x) {x},
+    ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
+    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("age", "t_tested_14d"), FALSE, compute_binary_response, I,
+    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("national", "age", "t_tested_14d"), FALSE, compute_binary_response, I,
+    "hh_num_mean", "weight", "hh_number_total", c("state"), FALSE, compute_count_response, I,
   )
   
   return(aggs)
 }
 
 
-#' Returns response estimates for a single geographic area.
+
+#' Returns response estimates for a single data grouping.
 #'
 #' This function takes vectors as input and computes the count response values
 #' (a point estimate named "val" and an effective
@@ -399,6 +292,7 @@ get_aggs_from_params <- function(params) {
 #' @export
 compute_count_response <- function(response, weight, sample_size)
 {
+  #### TODO: Why does this need to be for a percent response?
   assert(all( response >= 0 & response <= 100 ))
   assert(length(response) == length(weight))
   
@@ -440,11 +334,12 @@ compute_binary_response <- function(response, weight, sample_size)
   val <- 100 * response_prop
   
   return(list(val = val,
-              effective_sample_size = sample_size)) # TODO effective sample size
+             sample_size = sample_size,
+             effective_sample_size = sample_size)) # TODO effective sample size
 }
 
 
-#' Produce aggregates for all indicators.
+#' Produce aggregates for all desired aggregations.
 #'
 #' Writes the outputs directly to CSVs in the directory specified by `params`.
 #' Produces output for all available days between `params$start_date -
@@ -452,17 +347,16 @@ compute_binary_response <- function(response, weight, sample_size)
 #' before `start_date` in case there was backfill for those days.)
 #'
 #' Warning: The maximum value of `smooth_days` needs to be accounted for in
-#' `run.R` in the `lead_days` argument to `filter_data_for_aggregatation`, so
+#' `run.R` in the `lead_days` argument to `filter_data_for_aggregation`, so
 #' the correct amount of archived data is included, plus the expected backfill
 #' length.
 #'
 #' @param df Data frame of individual response data.
-#' @param indicators Data frame with columns `name`, `var_weight`, `metric`,
-#'   `smooth_days`, `compute_fn`, `post_fn`. Each row represents one indicator
-#'   to report. `name` is the indicator's API name; `var_weight` is the column
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
 #'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `smooth_days` determines how many days to aggregate to
-#'   produce one day of responses. `compute_fn` is the function that computes
+#'   response value. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
@@ -470,49 +364,58 @@ compute_binary_response <- function(response, weight, sample_size)
 #'   to a geographic level such as county or state. Aggregates will be produced
 #'   for each geographic level.
 #' @param params Named list of configuration parameters.
+#' 
 #' @import data.table
-#' @importFrom dplyr filter mutate_at vars
+#' @importFrom dplyr filter mutate_at vars bind_rows
 #' 
 #' @export
 aggregate_aggs <- function(df, aggregations, cw_list, params) {
-  ## The data frame will include more days than just [start_date, end_date], so
-  ## select just the unique days contained in that interval.
-  days <- unique(df$day)
-  #### TODO: filter down to range of days in agg period. here?
-  days <- days[days >= as.Date(params$start_date) - params$backfill_days &
-                 days <= as.Date(params$end_date)]
-
   ## For the day range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
   df <- as.data.table(df)
   setkey(df, day)
-
-  agg_groups = unique(aggregations$group_by)
-
-  for (agg_group in agg_groups) {
-    these_inds = aggregations[mapply(aggregations$group_by, 
-                                     FUN=function(x) {setequal(x, agg_group)
-                                       }), ]
-
-    geo_level = intersect(agg_group, names(cw_list))
+  
+  # Keep only obs in desired date range.
+  df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
+    
+  # Add implied geo_level to each group_by. Order alphabetically
+  aggregations$geo_level = NA
+  for (agg_ind in seq_along(aggregations$group_by)) {
+    geo_level = intersect(aggregations$group_by[agg_ind], names(cw_list))
     if (length(geo_level) > 1) {
       stop('more than one geo type provided for a single aggregation')
     } else if (length(geo_level) == 0) {
       geo_level = "national"
     }
+    
+    aggregations$group_by[agg_ind][[1]] = sort(unique(append(aggregations$group_by[agg_ind][[1]], geo_level)))
+    aggregations$geo_level[agg_ind] = geo_level
+  }
+  
+  # For each unique combination of groupby_vars, run aggregation process once
+  # and calculate all desired aggregations on the grouping. Save to individual 
+  # files
+  #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
+  agg_groups = unique(aggregations$group_by)
+  
+  for (agg_group in agg_groups) {
+    these_aggs = aggregations[mapply(aggregations$group_by, 
+                                     FUN=function(x) {setequal(x, agg_group)
+                                       }), ]
+
+    geo_level = these_aggs$geo_level[1]
     geo_crosswalk = cw_list[[geo_level]]
 
-    dfs_out <- summarize_aggs(df, geo_crosswalk, these_inds, geo_level, params)
+    dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
 
-    browser()
-    for (aggregation in names(dfs_out)) {
-      ##### TODO: modify so that loop over unique groupby_vars in aggregations. 
-      # Subset aggregations to get all names using those groupby_vars. Read out 
-      # results together to hand off to write_data_api
+    for (agg_ind in seq_along(these_aggs$name)) {
+      aggregation = these_aggs$name[agg_ind]
+      groupby_vars = these_aggs$group_by[agg_ind]
+      
       private_df = apply_privacy_censoring(dfs_out[[aggregation]], params)
-      write_data_api(private_df, params, geo_level, aggregation)
+      write_data_api(private_df, params, geo_level, aggregation, groupby_vars)
     }
   }
 }
@@ -549,9 +452,8 @@ apply_privacy_censoring <- function(df, params) {
 #' @param df a data frame of survey responses
 #' @param crosswalk_data An aggregation, such as zip => county or zip => state,
 #'   as a data frame with a "zip5" column to join against.
-#' @param indicators Data frame of indicators.
+#' @param aggregations Data frame of desired aggregations.
 #' @param geo_level the aggregation level, such as county or state, being used
-#' @param days a vector of Dates for which we should generate response estimates
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
 #'
@@ -578,15 +480,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     return(list())
   }
 
-  # #### Short form (less optimized? uses built-in data.table grouping functionality)
-  # # Always runs count, since we need it for privacy filtering.
-  # df_grouped = df[, cbind(
-  #   aggregations$compute_fn[[1]](df[, get(aggregations$metric)], df[, get(aggregations$var_weight)], .N)
-  #   ), by = groupby_vars]
-  # df_grouped = df_grouped[complete.cases(df_grouped)]
-
-  #### Long form (runs in parallel. faster?)
-
+  
   ## Set an index on the groupby var columns so that the groupby step can be
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
@@ -619,8 +513,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
   }
 
-  ### TODO: bind_rows again so all unique groups are in same df
-
   return(dfs_out)
 }
 
@@ -633,6 +525,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   variable values used to select this group.
 #' @param params Named list of configuration options.
 #' @importFrom dplyr mutate filter
+#' @importFrom tibble add_column
 #' @importFrom rlang .data
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
   ## Prepare outputs.
@@ -697,8 +590,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
                                    .data$sample_size >= params$num_filter,
                                    .data$effective_sample_size >= params$num_filter)
 
-    ## *After* gluing together megacounties, apply the Jeffreys correction to
-    ## the standard errors.
+    ## *After* gluing together megacounties, apply the post-function
     dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
   }
 
@@ -720,30 +612,97 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 #' @importFrom dplyr arrange
 #' @importFrom rlang .data
 #' @export
-write_data_api <- function(data, params, geo_level, signal_name)
+write_data_api <- function(data, params, geo_level, signal_name, groupby_vars)
 {
-  ### Need grouping_vars. Signal_name not super useful, since we want one CSV per set of grouping vars (probably)
-  browser()
-  data <- arrange(data, .data$day, .data$geo_id)
-  
-  ## Workaround for annoying R misfeature: a for loop over a Date vector yield
-  ## numeric entries, rather than dates. Index directly to get the dates.
-  unique_dates <- unique(data$day)
-  
-  for (ii in seq_along(unique_dates))
-  {
-    
-    file_out <- file.path(
-      params$export_dir, sprintf("%s_%s_%s.csv", used_to_be_date,
-                                 geo_name, signal_name)
-    )
-    
-    create_dir_not_exist(params$export_dir)
-    
-    msg_df(sprintf(
-      "saving data for API to %-35s",
-      sprintf("%s_%s_%s", used_to_be_date, geo_name, signal_name)
-    ), df)
-    write_csv(df, file_out)
+  if (!is.null(data)) {
+    data <- arrange(data, groupby_vars)
+  } else {
+    data <- data.frame()
   }
+  
+  file_out <- file.path(
+    params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
+                               geo_level, signal_name)
+  )
+  
+  create_dir_not_exist(params$export_dir)
+  
+  msg_df(sprintf(
+    "saving contingency table data to %-35s",
+    sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"), geo_level, signal_name)
+  ), data)
+  write_csv(data, file_out)
+}
+
+
+start_of_month <- function(end_date) {
+  return(floor_date(end_date, "month") - months(1))
+}
+
+end_of_prev_full_month <- function(end_date) {
+  if (ceiling_date(end_date, "month") == end_date) {
+    return(end_date)
+  }
+  
+  return(floor_date(end_date, "month") - days(1))
+}
+
+
+get_range_prev_full_month <- function(end_date = Sys.Date()) {
+  eom = end_of_prev_full_month(end_date)
+  
+  if (eom == end_date) {
+    som = start_of_month(end_date + months(1))
+  } else {
+    som = start_of_month(end_date)
+  }
+  
+  return(list(som, eom))
+}
+
+
+
+start_of_week <- function(end_date) {
+  return(floor_date(end_date, "week") - weeks(1))
+}
+
+end_of_prev_full_week <- function(end_date) {
+  if (ceiling_date(end_date, "week") == end_date) {
+    return(end_date)
+  }
+  
+  return(floor_date(end_date, "week") - days(1))
+}
+
+
+#### TODO: should be epiweeks eventually. Already exists a package to calculate?
+get_range_prev_full_week <- function(end_date = Sys.Date()) {
+  eow = end_of_prev_full_week(end_date)
+  
+  if (eow == end_date) {
+    sow = start_of_week(end_date + weeks(1))
+  } else {
+    sow = start_of_week(end_date)
+  }
+  
+  return(list(sow, eow))
+}
+
+get_range_prev_full_period <- function(end_date = Sys.Date(), weekly_or_monthly_flag) {
+  if (weekly_or_monthly_flag == "monthly") {
+    # Get start and end of previous full month.
+    date_period_range = get_range_prev_full_month(end_date)
+  } else if (weekly_or_monthly_flag == "weekly") {
+    # Get start and end of previous full epiweek.
+    date_period_range = get_range_prev_full_week(end_date)
+  }
+  
+  date_period_range[[1]] =  ymd_hms(
+    sprintf("%s 00:00:00", date_period_range[[1]]), tz = "America/Los_Angeles"
+  )
+  date_period_range[[2]] =  ymd_hms(
+    sprintf("%s 23:59:59", date_period_range[[2]]), tz = "America/Los_Angeles"
+  )
+  
+  return(date_period_range)
 }

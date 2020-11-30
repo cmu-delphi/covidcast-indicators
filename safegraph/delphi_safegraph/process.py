@@ -5,8 +5,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 from delphi_utils.signal import add_prefix
-
-from delphi_utils import GeoMapper
+from delphi_utils.export import create_export_csv
+from delphi_utils.geomap import GeoMapper
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
@@ -206,10 +206,12 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            date_str = date.strftime('%Y%m%d')
-            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
-                             na_rep='NA',
-                             index=False, )
+            df_export["timestamp"] = date.strftime('%Y%m%d')
+            create_export_csv(df_export,
+                              export_dir,
+                              geo_res,
+                              signal,
+                              )
 
 
 def process(filenames: List[str],

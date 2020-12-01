@@ -1,12 +1,19 @@
+#### TODO
+# - Make aggregations work with binary columns and multiselect columns
+# - Let user specify function keyword instead of actual function?
+# - Fix readable column names
+# - set up to be able to aggregate multiple time periods in series?
+# - compute function for mean vs n vs frequency
+
 # # Get data
 # path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-#
+# 
 # wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
 # wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
 # wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
 # wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
-#
-#
+# 
+# 
 # # All surveys have 2 non-response rows at the top. First is detail of question.
 # # Second is json(?) field access info -- not needed.
 # wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
@@ -16,9 +23,7 @@
 # wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
 # # Shows 230k responses; 83 fields. Most updated form of survey.
 # wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
-#
-#
-# summarize_indicators_day(wave_data, tibble(), "target_day", "state", params)
+
 
 # Start with example:
 #     group_by(epiweek, state, age, race) %>% summarize(mean(tested_positive), mean(cli), n())
@@ -88,13 +93,13 @@ run_contingency_tables <- function(params)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
 
-  #### TODO: if end_date = "current", use regex to choose which files to read in from input_dir
+  #### TODO: if end_date == "current", use regex to choose which files to read in from input_dir
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
 
   input_data <- merge_responses(input_data, archive)
-
+  browser()
   data_agg <- create_data_for_aggregatation(input_data) # TODO: combine with or delete this
 
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
@@ -158,12 +163,12 @@ set_human_readable_colnames <- function(input_data) {
   # Named list of question numbers and str replacement names
   map_old_new_names <- c(
     ## free response
-    # Either number ("n") or text ("t")
-    "n_hh_num_sick" = "A2",
+    # Either number ("n"; can be averaged although may need processing) or text ("t")
+    "n_hh_num_sick" = "hh_number_sick", # A2
     "n_hh_num_children" = "A5_1",
     "n_hh_num_adults" = "A5_2",
     "n_hh_num_seniors" = "A5_3",
-    "n_zipcode" = "A3",
+    # "t_zipcode" = "A3", # zip5
     "n_cmnty_num_sick" = "A4",
     "t_symptoms_other" = "B2_14_TEXT",
     "t_unusual_symptoms_other" = "B2c_14_TEXT",
@@ -173,7 +178,7 @@ set_human_readable_colnames <- function(input_data) {
     "n_contact_num_shopping" = "C10_2_1",
     "n_contact_num_social" = "C10_3_1",
     "n_contact_num_other" = "C10_4_1",
-    "n_hh_num" = "A2b",
+    "n_hh_num_total" = "hh_number_total", # A2b from Waves <4 and summed A5 from Wave 4
     "n_highest_temp_f" = "Q40",
     "n_hh_num_children" = "D3", # Wave 1, etc versions of A5
     "n_hh_num_adults_not_self" = "D4",
@@ -183,15 +188,15 @@ set_human_readable_colnames <- function(input_data) {
     ## binary response (b)
     # False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
     "b_consent" = "S1",
-    "b_hh_fever" = "A1_1",
-    "b_hh_sore_throat" = "A1_2",
-    "b_hh_cough" = "A1_3",
-    "b_hh_shortness_of_breath" = "A1_4",
-    "b_hh_difficulty_breathing" = "A1_5",
+    "b_hh_fever" = "hh_fever", # A1_1
+    "b_hh_sore_throat" = "hh_soar_throat", # A1_2
+    "b_hh_cough" = "hh_cough", # A1_3
+    "b_hh_shortness_of_breath" = "hh_short_breath", # A1_4
+    "b_hh_difficulty_breathing" = "hh_diff_breath", # A1_5
     "b_tested_ever" = "B8",
-    "b_tested_14d" = "B10",
-    "b_wanted_test_14d" = "B12",
-    "b_state_travel" = "C6",
+    "b_tested_14d" = "t_tested_14d", # B10; "No" coded as 3, but dealth with in conversion to "t_tested_14d"
+    "b_wanted_test_14d" = "t_wanted_test_14d", # B12
+    "b_state_travel" = "C6", # c_travel_state
     "b_contact_tested_pos" = "C11",
     "b_contact_tested_pos_hh" = "C12",
     "b_hispanic" = "D6",
@@ -199,17 +204,21 @@ set_human_readable_colnames <- function(input_data) {
     "b_worked_outside_home_4w" = "D10",
     "b_took_temp" = "B3",
     "b_flu_shot_12m" = "C2",
-    "b_worked_outside_home_5d" = "C3",
+    "b_worked_outside_home_5d" = "c_work_outside_5d", # C3
     "b_worked_healthcare_5d" = "C4",
     "b_worked_nursing_home_5d" = "C5",
-    
+    "b_anxious" = "mh_anxious", # Binary version of C8_1
+    "b_depressed" = "mh_depressed", # Binary version of C8_2
+    "b_isolated" = "mh_isolated", # Binary version of C8_3
+    "b_worried_family_ill" = "mh_worried_ill", # Binary version of C9   
+    "b_public_mask_often" = "c_mask_often", # Binary version of C14
+    "b_tested_pos_14d" = "t_tested_positive_14d", # B10a; binary with an "I don't know" (3) option
+    "b_tested_pos_ever" = "B11", # binary with an "I don't know" (3) option
     
     ## multiple choice (mc)
     # Can only select one of n > 2 choices
     "mc_state" = "A3b",
-    "mc_tested_pos_14d" = "B10a", # binary with an "I don't know" (3) option
-    "mc_tested_pos_ever" = "B11", # binary with an "I don't know" (3) option
-    "mc_mask_public" = "C14",
+    "mc_mask_often" = "C14",
     "mc_anxiety" = "C8_1",
     "mc_depression" = "C8_2",
     "mc_isolation" = "C8_3",
@@ -248,7 +257,7 @@ set_human_readable_colnames <- function(input_data) {
     "mc_pregnant" = "D1b",
     
     ## multiselect (ms)
-    # Can select more than one choice
+    # Can select more than one choice; saved as comma-separated list of choice codes
     "ms_symptoms" = "B2",
     "ms_unusual_symptoms" = "B2c",
     "ms_medical_care" = "B7",
@@ -258,12 +267,33 @@ set_human_readable_colnames <- function(input_data) {
     "ms_mask_outside_home" = "C13a",
     "ms_school_safety_measures" = "E3",
     "ms_comorbidities" = "C1"
+    
+    ## other (created in previous data-cleaning steps)
+    "n_num_symptoms" = "cnt_symptoms", # Based on symptoms in A1
+    "" = "is_cli", # Based on symptoms in A1
+    "" = "is_ili", # Based on symptoms in A1
+    "" = "hh_p_cli", # Based on symptoms in A1, and hh sick and total counts
+    "" = "hh_p_ili", # Based on symptoms in A1, and hh sick and total counts
+    "" = "community_yes",
+    "" = "hh_community_yes",
   )
 
-  browser()
   map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
 
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
+  input_data$t_zipcode = input_data$zip5 # Keep old zipcode column
+  
+  if ("b_tested_pos_ever" %in% names(input_data)) {
+    # Convert to binary, excluding "I don't know". yes == 1
+    # no == 2; "I don't know" == 3
+    input_data$b_tested_pos_ever <- case_when(
+      input_data$b_tested_pos_ever == 1 ~ 1, # yes
+      input_data$b_tested_pos_ever == 2 ~ 0, # no
+      input_data$b_tested_pos_ever == 3 ~ NA_real_, # I don't know
+      TRUE ~ NA_real_
+    )
+  }
+  
   return(input_data)
 }
 
@@ -281,9 +311,20 @@ set_human_readable_colnames <- function(input_data) {
 set_aggs <- function(params) {
   aggs <- tribble(
     ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
-    "tested_reasons_freq", "weight", "t_wanted_test_14d", c("age", "t_tested_14d"), FALSE, compute_binary_response, I,
-    "tested_pos_freq_given_tested", "weight", "t_tested_positive_14d", c("national", "age", "t_tested_14d"), FALSE, compute_binary_response, I,
-    "hh_num_mean", "weight", "hh_number_total", c("state"), FALSE, compute_count_response, I,
+    "tested_reasons_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_binary_response, I,
+    "tested_pos_freq_given_tested", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_binary_response, I,
+    "hh_num_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_count_response, I,
+    
+    "mean_tested_positive_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, mean, I,
+    "mean_cli", "weight", "cli", c("state", "mc_age", "mc_race"), FALSE, mean, I,
+    "comorbidities_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, n, I,
+    
+    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, mean, I,
+    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, mean, I,
+    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, mean, I,
+    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, mean, I,
+    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, mean, I,
+    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, mean, I,
   )
 
   return(aggs)

@@ -136,7 +136,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     if not isinstance(api_df, pd.DataFrame):
         custom_msg = "Error fetching data from " + str(start_date) + \
                      " to " + str(end_date) + \
-                     "for data source: " + data_source + \
+                     " for data source: " + data_source + \
                      ", signal type: " + signal_type + \
                      ", geo type: " + geo_type
 

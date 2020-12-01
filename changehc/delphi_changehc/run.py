@@ -21,7 +21,8 @@ from .update_sensor import CHCSensorUpdator
 def retrieve_files(params, filedate):
     """Return filenames of relevant files, downloading them if necessary
     """
-    if params["input_denom_file"] is None:
+    files = params["input_files"]
+    if files["denom"] is None:
 
         ## download recent files from FTP server
         logging.info("downloading recent files through SFTP")
@@ -37,12 +38,12 @@ def retrieve_files(params, filedate):
         flu_like_file = "%s/%s_Flu_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
         covid_like_file = "%s/%s_Covid_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
     else:
-        denom_file = params["input_denom_file"]
-        covid_file = params["input_covid_file"]
-        flu_file = params["input_flu_file"]
-        mixed_file = params["input_mixed_file"]
-        flu_like_file = params["input_flu_like_file"]
-        covid_like_file = params["input_covid_like_file"]
+        denom_file = files["denom"]
+        covid_file = files["covid"]
+        flu_file = files["flu"]
+        mixed_file = files["mixed"]
+        flu_like_file = files["flu_like"]
+        covid_like_file = files["covid_like"]
 
     file_dict = {"denom": denom_file}
     if "covid" in params["types"]:
@@ -58,21 +59,22 @@ def retrieve_files(params, filedate):
 def make_asserts(params):
     """Assert that for each type, filenames are either all present or all absent
     """
+    files = params["input_files"]
     if "covid" in params["types"]:
-        assert (params["input_denom_file"] is None) == (params["input_covid_file"] is None), \
+        assert (files["denom"] is None) == (files["covid"] is None), \
             "exactly one of denom and covid files are provided"
     if "cli" in params["types"]:
-        if params["input_denom_file"] is None:
-            assert params["input_flu_file"] is None and \
-                    params["input_mixed_file"] is None and \
-                    params["input_flu_like_file"] is None and \
-                    params["input_covid_like_file"] is None,\
+        if files["denom"] is None:
+            assert files["flu"] is None and \
+                    files["mixed"] is None and \
+                    files["flu_like"] is None and \
+                    files["covid_like"] is None,\
                     "files must be all present or all absent"
         else:
-            assert params["input_flu_file"] is not None and \
-                    params["input_mixed_file"] is not None and \
-                    params["input_flu_like_file"] is not None and \
-                    params["input_covid_like_file"] is not None,\
+            assert files["flu"] is not None and \
+                    files["mixed"] is not None and \
+                    files["flu_like"] is not None and \
+                    files["covid_like"] is not None,\
                     "files must be all present or all absent"
 
 

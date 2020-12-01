@@ -18,30 +18,9 @@ from .download_ftp_files import download_covid, download_cli
 from .load_data import load_combined_data, load_cli_data
 from .update_sensor import CHCSensorUpdator
 
-
-def run_module(): # pylint: disable=too-many-branches,too-many-statements
-    """Run the delphi_changehc module.
+def retrieve_files(params, filedate):
+    """Return filenames of relevant files, downloading them if necessary
     """
-
-    params = read_params()
-
-    logging.basicConfig(level=logging.DEBUG)
-
-    # the filenames are expected to be in the format:
-    # Denominator: "YYYYMMDD_All_Outpatients_By_County.dat.gz"
-    # Numerator: "YYYYMMDD_Covid_Outpatients_By_County.dat.gz"
-
-    assert (params["input_denom_file"] is None) == (params["input_covid_file"] is None), \
-        "exactly one of denom and covid files are provided"
-
-    if params["drop_date"] is None:
-        # files are dropped about 8pm the day after the issue date
-        dropdate_dt = (datetime.now() - timedelta(days=1,hours=20))
-        dropdate_dt = dropdate_dt.replace(hour=0,minute=0,second=0,microsecond=0)
-    else:
-        dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
-    filedate = dropdate_dt.strftime("%Y%m%d")
-
     if params["input_denom_file"] is None:
 
         ## download recent files from FTP server
@@ -51,19 +30,71 @@ def run_module(): # pylint: disable=too-many-branches,too-many-statements
         if "cli" in params["types"]:
             download_cli(params["cache_dir"], params["ftp_conn"])
 
-        input_denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
-        input_covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
-        input_flu_file = "%s/%s_Flu_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
-        input_mixed_file = "%s/%s_Mixed_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
-        input_flu_like_file = "%s/%s_Flu_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
-        input_covid_like_file = "%s/%s_Covid_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
+        covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
+        flu_file = "%s/%s_Flu_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        mixed_file = "%s/%s_Mixed_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        flu_like_file = "%s/%s_Flu_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        covid_like_file = "%s/%s_Covid_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
     else:
-        input_denom_file = params["input_denom_file"]
-        input_covid_file = params["input_covid_file"]
-        input_flu_file = params["input_flu_file"]
-        input_mixed_file = params["input_mixed_file"]
-        input_flu_like_file = params["input_flu_like_file"]
-        input_covid_like_file = params["input_covid_like_file"]
+        denom_file = params["input_denom_file"]
+        covid_file = params["input_covid_file"]
+        flu_file = params["input_flu_file"]
+        mixed_file = params["input_mixed_file"]
+        flu_like_file = params["input_flu_like_file"]
+        covid_like_file = params["input_covid_like_file"]
+
+    file_dict = {"denom": denom_file}
+    if "covid" in params["types"]:
+        file_dict["covid"] = covid_file
+    if "cli" in params["types"]:
+        file_dict["flu"] = flu_file
+        file_dict["mixed"] = mixed_file
+        file_dict["flu_like"] = flu_like_file
+        file_dict["covid_like"] = covid_like_file
+    return file_dict
+
+
+def make_asserts(params):
+    """Assert that for each type, filenames are either all present or all absent
+    """
+    if "covid" in params["types"]:
+        assert (params["input_denom_file"] is None) == (params["input_covid_file"] is None), \
+            "exactly one of denom and covid files are provided"
+    if "cli" in params["types"]:
+        if params["input_denom_file"] is None:
+            assert params["input_flu_file"] is None and \
+                    params["input_mixed_file"] is None and \
+                    params["input_flu_like_file"] is None and \
+                    params["input_covid_like_file"] is None,\
+                    "files must be all present or all absent"
+        else:
+            assert params["input_flu_file"] is not None and \
+                    params["input_mixed_file"] is not None and \
+                    params["input_flu_like_file"] is not None and \
+                    params["input_covid_like_file"] is not None,\
+                    "files must be all present or all absent"
+
+
+def run_module():
+    """Run the delphi_changehc module.
+    """
+
+    params = read_params()
+
+    logging.basicConfig(level=logging.DEBUG)
+
+    make_asserts(params)
+
+    if params["drop_date"] is None:
+        # files are dropped about 8pm the day after the issue date
+        dropdate_dt = (datetime.now() - timedelta(days=1,hours=20))
+        dropdate_dt = dropdate_dt.replace(hour=0,minute=0,second=0,microsecond=0)
+    else:
+        dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
+    filedate = dropdate_dt.strftime("%Y%m%d")
+
+    file_dict = retrieve_files(params, filedate)
 
     dropdate = str(dropdate_dt.date())
 
@@ -114,11 +145,11 @@ def run_module(): # pylint: disable=too-many-branches,too-many-statements
                     params["se"]
                 )
                 if numtype == "covid":
-                    data = load_combined_data(input_denom_file,
-                             input_covid_file,dropdate_dt,"fips")
+                    data = load_combined_data(file_dict["denom"],
+                             file_dict["covid"],dropdate_dt,"fips")
                 elif numtype == "cli":
-                    data = load_cli_data(input_denom_file,input_flu_file,input_mixed_file,
-                             input_flu_like_file,input_covid_like_file,dropdate_dt,"fips")
+                    data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
+                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
                 su_inst.update_sensor(
                     data,
                     params["export_dir"]

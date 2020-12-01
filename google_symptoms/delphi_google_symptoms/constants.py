@@ -1,4 +1,4 @@
-"""Registry for constants"""
+"""Registry for constants."""
 from functools import partial
 from datetime import timedelta
 

@@ -1,3 +1,4 @@
+"""Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
 import re
 
@@ -8,6 +9,8 @@ from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
 def get_geo_id(region_code):
     """
+    Extract fips code from region code.
+
     There are region code in the format of "US-state" and "US-state-fips". In
     county level report, we only consider rows with fips info provided.
     """
@@ -19,8 +22,7 @@ def get_geo_id(region_code):
 
 def preprocess(df, level):
     """
-    Conforms the pulled data from Google COVID-19 Search Trends symptoms
-    data into a dataset
+    Conforms the pulled data from Google COVID-19 Search Trends symptoms data into a dataset.
 
     The output dataset has:
 
@@ -90,7 +92,9 @@ def preprocess(df, level):
     return df
 
 def pull_gs_data(base_url):
-    """Pulls the latest Google COVID-19 Search Trends symptoms dataset, and
+    """Pull latest dataset and transform it into the appropriate format.
+
+    Pull the latest Google COVID-19 Search Trends symptoms dataset, and
     conforms it into a dataset as described in preprocess function.
 
     Note that we retrieve state level data from "2020_US_daily_symptoms_dataset.csv"

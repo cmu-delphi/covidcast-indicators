@@ -40,7 +40,7 @@ def load_chng_data(filepath, dropdate, base_geo,
         elif n == "fips":
             geo_flag = True
     assert count_flag, "counts_col must be present in col_names"
-    assert date_flag, "'%s' must be present in col_names"%(CONFIG.DATE_COL)
+    assert date_flag, "'%s' must be present in col_names"%(Config.DATE_COL)
     assert geo_flag, "'fips' must be present in col_names"
 
     data = pd.read_csv(

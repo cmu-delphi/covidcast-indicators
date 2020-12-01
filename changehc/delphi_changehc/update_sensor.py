@@ -14,7 +14,7 @@ from delphi_utils import GeoMapper, read_params, add_prefix
 
 # first party
 from .config import Config, Constants
-from .constants import *
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
 from .sensor import CHCSensor
 from .weekday import Weekday
 
@@ -187,8 +187,6 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             (self.burn_in_dates <= self.enddate)
 
         # load data
-        base_geo = "fips"
-
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday

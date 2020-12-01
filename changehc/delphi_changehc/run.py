@@ -19,7 +19,7 @@ from .load_data import load_combined_data, load_cli_data
 from .update_sensor import CHCSensorUpdator
 
 
-def run_module():
+def run_module(): # pylint: disable=too-many-branches,too-many-statements
     """Run the delphi_changehc module.
     """
 

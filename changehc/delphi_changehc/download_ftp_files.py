@@ -109,4 +109,3 @@ def download_cli(out_path, ftp_conn):
     finally:
         if client:
             client.close()
-

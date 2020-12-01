@@ -95,7 +95,8 @@ load_response_one <- function(input_filename, params) {
   # the individual output files. rather than truncating to 5 digits -- which may
   # turn nonsense entered by some respondents into a valid ZIP5 -- we simply
   # replace these ZIPs with NA.
-  input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_, input_data$zip5)
+  input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_,
+                            input_data$zip5)
 
   return(input_data)
 }

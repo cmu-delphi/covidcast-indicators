@@ -8,7 +8,7 @@ from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
 from .errors import ValidationError, APIDataFetchError
-from .datafetcher import filename_regex, get_geo_signal_combos, threaded_api_calls, load_all_files
+from .datafetcher import FILENAME_REGEX, get_geo_signal_combos, threaded_api_calls, load_all_files
 from .utils import GEO_REGEX_DICT, relative_difference_by_min, aggregate_frames
 from .report import ValidationReport
 
@@ -139,7 +139,7 @@ class Validator():
         Returns:
             - None
         """
-        pattern_found = filename_regex.match(nameformat)
+        pattern_found = FILENAME_REGEX.match(nameformat)
         if not nameformat or not pattern_found:
             self.active_report.add_raised_error(ValidationError(
                 ("check_filename_format", nameformat),
@@ -828,7 +828,7 @@ class Validator():
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
-        all_api_df = threaded_api_calls(self.start_date - outlier_lookbehind,
+        all_api_df = threaded_api_calls(self.data_source, self.start_date - outlier_lookbehind,
                                         self.end_date, geo_signal_combos)
 
         # Keeps script from checking all files in a test run.

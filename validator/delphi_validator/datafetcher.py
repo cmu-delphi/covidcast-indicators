@@ -14,7 +14,7 @@ import numpy as np
 import covidcast
 from .errors import APIDataFetchError, ValidationError
 
-filename_regex = re.compile(
+FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
 
@@ -40,7 +40,7 @@ def make_date_filter(start_date, end_date):
         within the specified date range.
 
         Arguments:
-            - match: regex match object based on filename_regex applied to a filename str
+            - match: regex match object based on FILENAME_REGEX applied to a filename str
 
         Returns:
             - boolean
@@ -89,7 +89,7 @@ def read_filenames(path):
     Returns:
         - list of tuples
     """
-    daily_filenames = [(f, filename_regex.match(f))
+    daily_filenames = [(f, FILENAME_REGEX.match(f))
                        for f in listdir(path) if isfile(join(path, f))]
     return daily_filenames
 
@@ -136,7 +136,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     if not isinstance(api_df, pd.DataFrame):
         custom_msg = "Error fetching data from " + str(start_date) + \
                      " to " + str(end_date) + \
-                     "for data source: " + data_source + \
+                     " for data source: " + data_source + \
                      ", signal type: " + signal_type + \
                      ", geo type: " + geo_type
 
@@ -183,7 +183,8 @@ def get_one_api_df(data_source, min_date, max_date,
     output_dict[(geo_type, signal_type)] = geo_sig_api_df_or_error
     dict_lock.release()
 
-def threaded_api_calls(min_date, max_date, geo_signal_combos, n_threads=32):
+
+def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=32):
     """
     Get data from API for all geo-signal combinations in a threaded way
     to save time.
@@ -198,7 +199,7 @@ def threaded_api_calls(min_date, max_date, geo_signal_combos, n_threads=32):
     api_semaphore = threading.Semaphore(value=n_threads)
 
     thread_objs = [threading.Thread(
-        target=get_one_api_df, args=(min_date, max_date,
+        target=get_one_api_df, args=(data_source, min_date, max_date,
                                      geo_type, signal_type,
                                      api_semaphore,
                                      dict_lock, output_dict)

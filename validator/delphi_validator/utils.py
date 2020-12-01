@@ -44,4 +44,4 @@ def aggregate_frames(frames_list):
 
         all_frames.append(df)
 
-    return pd.concat(all_frames)
+    return pd.concat(all_frames).reset_index(drop=True)

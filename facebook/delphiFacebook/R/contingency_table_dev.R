@@ -4,6 +4,7 @@
 # - Fix readable column names
 # - set up to be able to aggregate multiple time periods in series?
 # - compute function for mean vs n vs frequency
+# - Do type-checking to make sure desired aggregate function is compatible with metric specified
 
 # # Get data
 # path_to_raw_data = "/mnt/sshftps/surveys/raw/"
@@ -214,6 +215,10 @@ set_human_readable_colnames <- function(input_data) {
     "b_public_mask_often" = "c_mask_often", # Binary version of C14
     "b_tested_pos_14d" = "t_tested_positive_14d", # B10a; binary with an "I don't know" (3) option
     "b_tested_pos_ever" = "B11", # binary with an "I don't know" (3) option
+    "b_have_cli" = "is_cli", # Based on symptoms in A1
+    "b_have_ili" = "is_ili", # Based on symptoms in A1
+    "b_cmnty_have_cli" = "community_yes",
+    "b_hh_or_cmnty_have_cli" = "hh_community_yes",
     
     ## multiple choice (mc)
     # Can only select one of n > 2 choices
@@ -266,16 +271,12 @@ set_human_readable_colnames <- function(input_data) {
     "ms_trips_outside_home" = "C13",
     "ms_mask_outside_home" = "C13a",
     "ms_school_safety_measures" = "E3",
-    "ms_comorbidities" = "C1"
+    "ms_comorbidities" = "C1",
     
     ## other (created in previous data-cleaning steps)
     "n_num_symptoms" = "cnt_symptoms", # Based on symptoms in A1
-    "" = "is_cli", # Based on symptoms in A1
-    "" = "is_ili", # Based on symptoms in A1
-    "" = "hh_p_cli", # Based on symptoms in A1, and hh sick and total counts
-    "" = "hh_p_ili", # Based on symptoms in A1, and hh sick and total counts
-    "" = "community_yes",
-    "" = "hh_community_yes",
+    "n_hh_prop_cli" = "hh_p_cli", # Based on symptoms in A1, and hh sick and total counts
+    "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
   )
 
   map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
@@ -454,6 +455,22 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # files
   #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
   agg_groups = unique(aggregations$group_by)
+
+  check_col_types = unique(c(do.call(c, as.list(agg_groups), these_aggs$metric))
+  
+  for (col_var in check_col_types) {
+    if (startsWith(col_var, "b_")) {
+      if (FALSE %in% df[col_var] | TRUE %in% df[col_var]) {
+        next
+      }
+      
+      df <- convert_qcodes_to_bool(df, col_var)
+    } else if (startsWith(col_var, "ms_")) {
+      df <- convert_multiselect_to_binary_cols(df, col_var)
+    } else if (startsWith(col_var, "n_")) {
+      df[col_var] <- as.numeric(df[col_var])
+    }
+  }
 
   for (agg_group in agg_groups) {
     these_aggs = aggregations[mapply(aggregations$group_by,

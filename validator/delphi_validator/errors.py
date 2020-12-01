@@ -31,6 +31,7 @@ class ValidationError(Exception):
             pass a check, provide the date
             - message: str explaining why an error was raised
         """
+        super().__init__(message)
         self.check_data_id = (check_data_id,) if not isinstance(
             check_data_id, tuple) and not isinstance(check_data_id, list) else tuple(check_data_id)
         self.expression = expression

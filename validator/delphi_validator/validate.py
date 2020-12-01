@@ -2,78 +2,15 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-import sys
 import re
 import math
-import threading
 from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
-
 from .errors import ValidationError, APIDataFetchError
-from .datafetcher import filename_regex, \
-    read_filenames, load_csv, get_geo_signal_combos, \
-    fetch_api_reference
+from .datafetcher import filename_regex, get_geo_signal_combos, threaded_api_calls, load_all_files
+from .utils import GEO_REGEX_DICT, relative_difference_by_min, aggregate_frames
 from .report import ValidationReport
-
-# Recognized geo types.
-geo_regex_dict = {
-    'county': '^\d{5}$',
-    'hrr': '^\d{1,3}$',
-    'msa': '^\d{5}$',
-    'dma': '^\d{3}$',
-    'state': '^[a-zA-Z]{2}$',
-    'national': '^[a-zA-Z]{2}$'
-}
-
-
-def relative_difference_by_min(x, y):
-    """
-    Calculate relative difference between two numbers.
-    """
-    return (x - y) / min(x, y)
-
-
-def make_date_filter(start_date, end_date):
-    """
-    Create a function to return a boolean of whether a filename of appropriate
-    format contains a date within (inclusive) the specified date range.
-
-    Arguments:
-        - start_date: datetime date object
-        - end_date: datetime date object
-
-    Returns:
-        - Custom function object
-    """
-    # Convert dates from datetime format to int.
-    start_code = int(start_date.strftime("%Y%m%d"))
-    end_code = int(end_date.strftime("%Y%m%d"))
-
-    def custom_date_filter(match):
-        """
-        Return a boolean of whether a filename of appropriate format contains a date
-        within the specified date range.
-
-        Arguments:
-            - match: regex match object based on filename_regex applied to a filename str
-
-        Returns:
-            - boolean
-        """
-        # If regex match doesn't exist, current filename is not an appropriately
-        # formatted source data file.
-        if not match:
-            return False
-
-        # Convert date found in CSV name to int.
-        code = int(match.groupdict()['date'])
-
-        # Return boolean True if current file date "code" is within the defined date range.
-        return start_code <= code <= end_code
-
-    return custom_date_filter
-
 
 class Validator():
     """ Class containing validation() function and supporting functions. Stores a list
@@ -112,6 +49,11 @@ class Validator():
             - total_checks: incremental counter to track total number of checks run
             - raised_warnings: list to append non-data upload-blocking errors to as they are raised
         """
+        # TODO(https://github.com/cmu-delphi/covidcast-indicators/issues/579)
+        # Refactor this class to avoid the too-many-instance-attributes error.
+        #
+        # pylint: disable=too-many-instance-attributes
+
         # Get user settings from params or if not provided, set default.
         self.data_source = params['data_source']
         self.validator_static_file_dir = params.get(
@@ -146,14 +88,17 @@ class Validator():
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
 
         self.active_report = ValidationReport(self.suppressed_errors)
+        # pylint:  enable=too-many-instance-attributes
+
 
     def check_missing_date_files(self, daily_filenames):
         """
         Check for missing dates between the specified start and end dates.
 
         Arguments:
-            - daily_filenames: list of tuples, each containing CSV source data filename
-            and the regex match object corresponding to filename_regex.
+            - daily_filenames: List[Tuple(str, re.match, pd.DataFrame)]
+                triples of filenames, filename matches with the geo regex, and the data from the
+                file
             - report: ValidationReport; report where results are added
 
         Returns:
@@ -180,6 +125,7 @@ class Validator():
                 " already in the API they would not be updated"))
 
         self.active_report.increment_total_checks()
+
 
     def check_df_format(self, df_to_test, nameformat):
         """
@@ -288,13 +234,13 @@ class Validator():
                     ("check_geo_id_format", nameformat),
                     unexpected_geos, "Non-conforming geo_ids found"))
 
-        if geo_type not in geo_regex_dict:
+        if geo_type not in GEO_REGEX_DICT:
             self.active_report.add_raised_error(ValidationError(
                 ("check_geo_type", nameformat),
                 geo_type, "Unrecognized geo type"))
         else:
             find_all_unexpected_geo_ids(
-                df_to_test, geo_regex_dict[geo_type], geo_type)
+                df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
 
         self.active_report.increment_total_checks()
 
@@ -578,18 +524,143 @@ class Validator():
 
         self.active_report.increment_total_checks()
 
+    def check_positive_negative_spikes(self, source_df, api_frames, geo, sig):
+        """
+        Adapt Dan's corrections package to Python (only consider spikes) :
+        https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
+
+        Statistics for a right shifted rolling window and a centered rolling window are used
+        to determine outliers for both positive and negative spikes.
+
+        As it is now, ststat will always be NaN for source frames.
+
+        Arguments:
+            - source_df: pandas dataframe of CSV source data
+            - api_frames: pandas dataframe of reference data, either from the
+            COVIDcast API or semirecent data
+            - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - sig: str; signal name as in the CSV name
+
+        """
+        self.active_report.increment_total_checks()
+        # Combine all possible frames so that the rolling window calculations make sense.
+        source_frame_start = source_df["time_value"].min()
+        source_frame_end = source_df["time_value"].max()
+        all_frames = pd.concat([api_frames, source_df]). \
+            drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
+            sort_values(by=['time_value']).reset_index(drop=True)
+
+        # Tuned Variables from Dan's Code for flagging outliers. Size_cut is a
+        # check on the minimum value reported, sig_cut is a check
+        # on the ftstat or ststat reported (t-statistics) and sig_consec
+        # is a lower check for determining outliers that are next to each other.
+        size_cut = 5
+        sig_cut = 3
+        sig_consec = 2.25
+
+        # Functions mapped to rows to determine outliers based on fstat and ststat values
+
+        def outlier_flag(frame):
+            if (abs(frame["val"]) > size_cut) and not (pd.isna(frame["ststat"])) \
+                    and (frame["ststat"] > sig_cut):
+                return True
+            if (abs(frame["val"]) > size_cut) and (pd.isna(frame["ststat"])) and \
+                    not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
+                return True
+            if (frame["val"] < -size_cut) and not (pd.isna(frame["ststat"])) and \
+                    not pd.isna(frame["ftstat"]):
+                return True
+            return False
+
+        def outlier_nearby(frame):
+            if (not pd.isna(frame['ststat'])) and (frame['ststat'] > sig_consec):
+                return True
+            if pd.isna(frame['ststat']) and (frame['ftstat'] > sig_consec):
+                return True
+            return False
+
+        # Calculate ftstat and ststat values for the rolling windows, group fames by geo region
+        region_group = all_frames.groupby("geo_id")
+        window_size = 14
+        # Shift the window to match how R calculates rolling windows with even numbers
+        shift_val = -1 if window_size % 2 == 0 else 0
+
+        # Calculate the t-statistics for the two rolling windows (windows center and windows right)
+        all_full_frames = []
+        for _, group in region_group:
+            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
+            fmedian = rolling_windows.median()
+            smedian = center_windows.median().shift(shift_val)
+            fsd = rolling_windows.std() + 0.00001  # if std is 0
+            ssd = center_windows.std().shift(shift_val) + 0.00001  # if std is 0
+            group['ftstat'] = abs(group["val"] - fmedian.fillna(0)) / fsd
+            group['ststat'] = abs(group["val"] - smedian.fillna(0)) / ssd
+            all_full_frames.append(group)
+
+        all_frames = pd.concat(all_full_frames)
+        # Determine outliers in source frames only, only need the reference
+        # data from just before the start of the source data
+        # because lead and lag outlier calculations are only one day
+        #
+        # These variables are interpolated into the call to `api_df_or_error.query()`
+        # below but pylint doesn't recognize that.
+        # pylint: disable=unused-variable
+        api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
+        # pylint: enable=unused-variable
+        outlier_df = all_frames.query(
+            'time_value >= @api_frames_end & time_value <= @source_frame_end')
+        outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
+            .reset_index(drop=True).copy()
+        outliers = outlier_df[outlier_df.apply(outlier_flag, axis=1)]
+        outliers_reset = outliers.copy().reset_index(drop=True)
+
+        # Find the lead outliers and the lag outliers. Check that the selected row
+        # is actually a leading and lagging row for given geo_id
+        upper_index = list(filter(lambda x: x < outlier_df.shape[0],
+                                  list(outliers.index+1)))
+        upper_df = outlier_df.iloc[upper_index, :].reset_index(drop=True)
+        upper_compare = outliers_reset[:len(upper_index)]
+        sel_upper_df = upper_df[upper_compare["geo_id"]
+                                == upper_df["geo_id"]].copy()
+        lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
+        lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
+        lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
+        sel_lower_df = lower_df[lower_compare["geo_id"]
+                                == lower_df["geo_id"]].copy()
+
+        outliers_list = [outliers]
+        if sel_upper_df.size > 0:
+            outliers_list.append(sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
+        if sel_lower_df.size > 0:
+            outliers_list.append(sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
+
+        all_outliers = pd.concat(outliers_list). \
+            sort_values(by=['time_value', 'geo_id']). \
+            drop_duplicates().reset_index(drop=True)
+
+        # Identify outliers just in the source data
+        source_outliers = all_outliers.query(
+            "time_value >= @source_frame_start & time_value <= @source_frame_end")
+
+        if source_outliers.shape[0] > 0:
+            self.active_report.raised_errors.append(ValidationError(
+                ("check_positive_negative_spikes",
+                 source_frame_start, source_frame_end, geo, sig),
+                (source_outliers),
+                'Source dates with flagged ouliers based on the \
+                previous 14 days of data available'))
+
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
-
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the
             COVIDcast API or semirecent data
             - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
             - signal_type: str; signal name as in the CSV name
-            - report: ValidationReport; report where results are added
         Returns:
             - None
         """
@@ -654,10 +725,8 @@ class Validator():
 
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
-        raw_thresholds = pd.DataFrame(
-            [[1.50, 1.30, 1.80]], columns=classes)
-        smoothed_thresholds = raw_thresholds.apply(
-            lambda x: x/(math.sqrt(7) * 1.5))
+        raw_thresholds = pd.DataFrame([[1.50, 1.30, 1.80]], columns=classes)
+        smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
 
         switcher = {
             'raw': raw_thresholds,
@@ -675,8 +744,7 @@ class Validator():
                 (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
                  > float(thres["val_mean_stddiff"])).any()
         )
-        mean_stdabsdiff_high = (
-            df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
+        mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
             self.active_report.add_raised_error(ValidationError(
@@ -701,25 +769,28 @@ class Validator():
         Returns:
             - ValidationReport collating the validation outcomes
         """
-        # initialize output report
         self.active_report = ValidationReport(self.suppressed_errors)
+        frames_list = load_all_files(export_dir, self.start_date, self.end_date)
+        self._run_single_file_checks(frames_list)
+        all_frames = aggregate_frames(frames_list)
+        self._run_combined_file_checks(all_frames)
+        return self.active_report
 
-        # Get relevant data file names and info.
-        export_files = read_filenames(export_dir)
-        date_filter = make_date_filter(self.start_date, self.end_date)
+    def _run_single_file_checks(self, file_list):
+        """
+        Perform checks over single-file data sets.
 
-        # Make list of tuples of CSV names and regex match objects.
-        validate_files = [(f, m) for (f, m) in export_files if date_filter(m)]
+        Parameters
+        ----------
+        loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
+            triples of filenames, filename matches with the geo regex, and the data from the file
+        """
 
-        self.check_missing_date_files(validate_files)
-
-        all_frames = []
+        self.check_missing_date_files(file_list)
 
         # Individual file checks
         # For every daily file, read in and do some basic format and value checks.
-        for filename, match in validate_files:
-            data_df = load_csv(join(export_dir, filename))
-
+        for filename, match, data_df in file_list:
             self.check_df_format(data_df, filename)
             self.check_bad_geo_id_format(
                 data_df, filename, match.groupdict()['geo_type'])
@@ -729,17 +800,15 @@ class Validator():
             self.check_bad_se(data_df, filename)
             self.check_bad_sample_size(data_df, filename)
 
-            # Get geo_type, date, and signal name as specified by CSV name.
-            data_df['geo_type'] = match.groupdict()['geo_type']
-            data_df['time_value'] = datetime.strptime(
-                match.groupdict()['date'], "%Y%m%d").date()
-            data_df['signal'] = match.groupdict()['signal']
+    def _run_combined_file_checks(self, all_frames):
+        """
+        Performs all checks over the combined data set from all files.
 
-            # Add current CSV data to all_frames.
-            all_frames.append(data_df)
-
-        all_frames = pd.concat(all_frames)
-
+        Parameters
+        ----------
+        all_frames: pd.DataFrame
+            combined data from all input files
+        """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
@@ -753,17 +822,17 @@ class Validator():
         date_list = [self.start_date + timedelta(days=days)
                      for days in range(self.span_length.days + 1)]
 
+        # Get 14 days prior to the earliest list date
+        outlier_lookbehind = timedelta(days=14)
+
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
-        all_api_df = self.threaded_api_calls(
-            self.start_date - min(semirecent_lookbehind,
-                                  self.max_check_lookbehind),
-            self.end_date, geo_signal_combos)
+        all_api_df = threaded_api_calls(self.start_date - outlier_lookbehind,
+                                        self.end_date, geo_signal_combos)
 
         # Keeps script from checking all files in a test run.
-        if self.test_mode:
-            kroc = 0
+        kroc = 0
 
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
@@ -788,10 +857,33 @@ class Validator():
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
 
             # Get relevant reference data from API dictionary.
-            geo_sig_api_df = all_api_df[(geo_type, signal_type)]
+            api_df_or_error = all_api_df[(geo_type, signal_type)]
 
-            if geo_sig_api_df is None:
+            if isinstance(api_df_or_error, APIDataFetchError):
+                self.active_report.increment_total_checks()
+                self.active_report.raised_errors.append(api_df_or_error)
                 continue
+
+            # Outlier dataframe
+            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
+                                "confirmed_cumulative_num", "confirmed_incidence_num",
+                                "deaths_7dav_cumulative_num",
+                                "deaths_cumulative_num"]):
+                earliest_available_date = geo_sig_df["time_value"].min()
+                source_df = geo_sig_df.query(
+                    'time_value <= @date_list[-1] & time_value >= @date_list[0]')
+
+                # These variables are interpolated into the call to `api_df_or_error.query()`
+                # below but pylint doesn't recognize that.
+                # pylint: disable=unused-variable
+                outlier_start_date = earliest_available_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = api_df_or_error.query(
+                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+                # pylint: enable=unused-variable
+
+                self.check_positive_negative_spikes(
+                    source_df, outlier_api_df, geo_type, signal_type)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -814,13 +906,18 @@ class Validator():
                     continue
 
                 # Reference dataframe runs backwards from the recent_cutoff_date
+                #
+                # These variables are interpolated into the call to `api_df_or_error.query()`
+                # below but pylint doesn't recognize that.
+                # pylint: disable=unused-variable
                 reference_start_date = recent_cutoff_date - \
                     min(semirecent_lookbehind, self.max_check_lookbehind) - \
                     timedelta(days=1)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
+                # pylint: enable=unused-variable
 
                 # Subset API data to relevant range of dates.
-                reference_api_df = geo_sig_api_df.query(
+                reference_api_df = api_df_or_error.query(
                     "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
                 self.active_report.increment_total_checks()
@@ -844,69 +941,6 @@ class Validator():
                         recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
             # Keeps script from checking all files in a test run.
-            if self.test_mode:
-                kroc += 1
-                if kroc == 2:
-                    break
-
-        return self.active_report
-
-    def get_one_api_df(self, min_date, max_date,
-                       geo_type, signal_type,
-                       api_semaphore, dict_lock, output_dict):
-        """
-        Pull API data for a single geo type-signal combination. Raises
-        error if data couldn't be retrieved. Saves data to data dict.
-        """
-        api_semaphore.acquire()
-
-        # Pull reference data from API for all dates.
-        try:
-            geo_sig_api_df = fetch_api_reference(
-                self.data_source, min_date, max_date, geo_type, signal_type)
-
-        except APIDataFetchError as e:
-            self.active_report.increment_total_checks()
-            self.active_report.add_raised_error(ValidationError(
-                ("api_data_fetch_error", geo_type, signal_type), None, e))
-
-            geo_sig_api_df = None
-
-        api_semaphore.release()
-
-        # Use a lock so only one thread can access the dictionary.
-        dict_lock.acquire()
-        output_dict[(geo_type, signal_type)] = geo_sig_api_df
-        dict_lock.release()
-
-    def threaded_api_calls(self, min_date, max_date,
-                           geo_signal_combos, n_threads=32):
-        """
-        Get data from API for all geo-signal combinations in a threaded way
-        to save time.
-        """
-        if n_threads > 32:
-            n_threads = 32
-            print("Warning: Don't run more than 32 threads at once due "
-                  + "to API resource limitations")
-
-        output_dict = dict()
-        dict_lock = threading.Lock()
-        api_semaphore = threading.Semaphore(value=n_threads)
-
-        thread_objs = [threading.Thread(
-            target=self.get_one_api_df, args=(min_date, max_date,
-                                              geo_type, signal_type,
-                                              api_semaphore,
-                                              dict_lock, output_dict)
-        ) for geo_type, signal_type in geo_signal_combos]
-
-        # Start all threads.
-        for thread in thread_objs:
-            thread.start()
-
-        # Wait until all threads are finished.
-        for thread in thread_objs:
-            thread.join()
-
-        return output_dict
+            kroc += 1
+            if self.test_mode and kroc == 2:
+                break

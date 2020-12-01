@@ -3,8 +3,8 @@ from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from delphi_validator.datafetcher import filename_regex
-from delphi_validator.validate import Validator, make_date_filter
+from delphi_validator.datafetcher import filename_regex, make_date_filter
+from delphi_validator.validate import Validator
 
 
 class TestDateFilter:
@@ -626,3 +626,203 @@ class TestCheckAvgValDiffs:
         assert len(validator.active_report.raised_errors) == 1
         assert "check_test_vs_reference_avg_changed" in [
             err.check_data_id[0] for err in validator.active_report.raised_errors]
+
+class TestDataOutlier:
+    params = {"data_source": "", "span_length": 1,
+          "end_date": "2020-09-02", "expected_lag": {}}
+    pd.set_option("display.max_rows", None, "display.max_columns", None)
+    # Test to determine outliers based on the row data, has lead and lag outlier
+    def test_pos_outlier(self):
+        validator = Validator(self.params)
+
+        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
+                31.42857143, 31.71428571, 32, 32, 32.14285714,
+                32.28571429, 32.42857143, 32.57142857, 32.71428571,
+                32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+        test_val = [100, 100, 100]
+
+
+        ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")}
+        test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24", end="2020-10-26")}
+
+        ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")}
+        test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val),
+                "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)]).reset_index(drop=True)
+        test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)]). \
+                            reset_index(drop=True)
+
+        validator.check_positive_negative_spikes(
+            test_df, ref_df, "state", "signal")
+
+
+        assert len(validator.active_report.raised_errors) == 1
+        assert "check_positive_negative_spikes" in [
+            err.check_data_id[0] for err in validator.active_report.raised_errors]
+
+    def test_neg_outlier(self):
+        validator = Validator(self.params)
+
+        ref_val = [100, 101, 100, 101, 100,
+                   100, 100, 100, 100, 100,
+                   100, 102, 100, 100, 100,
+                   100, 100, 101, 100, 100,
+                   100, 100, 100, 99, 100,
+                   100, 98, 100, 100, 100]
+        test_val = [10, 10, 10]
+
+
+        ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val),
+                 "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)]). \
+                    reset_index(drop=True)
+        test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)]). \
+                    reset_index(drop=True)
+
+
+        validator.check_positive_negative_spikes(
+            test_df, ref_df, "state", "signal")
+
+
+        assert len(validator.active_report.raised_errors) == 1
+        assert "check_positive_negative_spikes" in [
+            err.check_data_id[0] for err in validator.active_report.raised_errors]
+
+    def test_zero_outlier(self):
+        validator = Validator(self.params)
+
+        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
+                31.42857143, 31.71428571, 32, 32, 32.14285714,
+                32.28571429, 32.42857143, 32.57142857, 32.71428571,
+                32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+        test_val = [0, 0, 0]
+
+
+        ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val),
+                 "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)]). \
+                    reset_index(drop=True)
+        test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)]). \
+                    reset_index(drop=True)
+
+
+        validator.check_positive_negative_spikes(
+            test_df, ref_df, "state", "signal")
+
+
+
+        assert len(validator.active_report.raised_errors) == 1
+        assert "check_positive_negative_spikes" in [
+        err.check_data_id[0] for err in validator.active_report.raised_errors]
+
+    def test_no_outlier(self):
+        validator = Validator(self.params)
+
+        #Data from 51580 between 9/24 and 10/26 (10/25 query date)
+        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
+                31.42857143, 31.71428571, 32, 32, 32.14285714,
+                32.28571429, 32.42857143, 32.57142857, 32.71428571,
+                32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                33, 33, 33, 33, 33, 33, 33]
+        test_val = [33, 33, 33]
+
+
+        ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val),
+                 "time_value": pd.date_range(start="2020-09-24",end="2020-10-23")}
+        test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)]). \
+                    reset_index(drop=True)
+        test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)]). \
+                    reset_index(drop=True)
+
+
+        validator.check_positive_negative_spikes(
+            test_df, ref_df, "state", "signal")
+
+
+        assert len(validator.active_report.raised_errors) == 0
+
+    def test_source_api_overlap(self):
+        validator = Validator(self.params)
+
+        #Data from 51580 between 9/24 and 10/26 (10/25 query date)
+        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
+                31.42857143, 31.71428571, 32, 32, 32.14285714,
+                32.28571429, 32.42857143, 32.57142857, 32.71428571,
+                32.85714286, 33, 33, 33, 33, 33, 33, 33, 33, 33,
+                33, 33, 33, 33, 33, 33, 33, 33, 33]
+        test_val = [100, 100, 100]
+
+
+        ref_data = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                "time_value": pd.date_range(start="2020-09-24",end="2020-10-26")}
+        test_data = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_data2 = {"val": ref_val , "se": [np.nan] * len(ref_val),
+                "sample_size": [np.nan] * len(ref_val), "geo_id": ["2"] * len(ref_val),
+                 "time_value": pd.date_range(start="2020-09-24",end="2020-10-26")}
+        test_data2 = {"val": test_val , "se": [np.nan] * len(test_val),
+                "sample_size": [np.nan] * len(test_val), "geo_id": ["2"] * len(test_val),
+                 "time_value": pd.date_range(start="2020-10-24",end="2020-10-26")}
+
+        ref_df = pd.concat([pd.DataFrame(ref_data), pd.DataFrame(ref_data2)]). \
+                    reset_index(drop=True)
+        test_df = pd.concat([pd.DataFrame(test_data), pd.DataFrame(test_data2)]). \
+                    reset_index(drop=True)
+
+
+        validator.check_positive_negative_spikes(
+            test_df, ref_df, "state", "signal")
+
+
+        assert len(validator.active_report.raised_errors) == 1
+        assert "check_positive_negative_spikes" in [
+        err.check_data_id[0] for err in validator.active_report.raised_errors]

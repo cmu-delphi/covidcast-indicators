@@ -42,7 +42,7 @@ def run_module():
             # Drop early entries where data insufficient for smoothing
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
-            sensor_name = "_".join(["wip", smoother, "search"])
+            sensor_name = "_".join([smoother, "search"])
             create_export_csv(
                 df,
                 export_dir=export_dir,

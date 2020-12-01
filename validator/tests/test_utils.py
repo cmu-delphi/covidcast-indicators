@@ -2,7 +2,7 @@
 
 from datetime import date
 import pandas as pd
-from delphi_validator.datafetcher import filename_regex
+from delphi_validator.datafetcher import FILENAME_REGEX
 from delphi_validator.utils import relative_difference_by_min, aggregate_frames
 
 class TestUtils:
@@ -16,8 +16,8 @@ class TestUtils:
         """Test that frames are aggregated and their data is derived from the re.match objects."""
         frame_1 = pd.DataFrame({"data": list(range(10))})
         frame_2 = pd.DataFrame({"data": list(range(10, 20))})
-        match_1 = filename_regex.match("20200404_state_signal_1.csv")
-        match_2 = filename_regex.match("20200505_county_signal_2.csv")
+        match_1 = FILENAME_REGEX.match("20200404_state_signal_1.csv")
+        match_2 = FILENAME_REGEX.match("20200505_county_signal_2.csv")
 
         actual = aggregate_frames([(None, match_1, frame_1), (None, match_2, frame_2)])
         expected = pd.DataFrame({"data": list(range(20)),

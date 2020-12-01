@@ -1,4 +1,3 @@
-library(delphiFacebook)
 
 files <- c(
   dir(test_path("individual"), full.names = TRUE, all.files = TRUE, no.. = TRUE),

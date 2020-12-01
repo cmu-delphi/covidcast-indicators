@@ -3,7 +3,6 @@
 ### which loads `input/responses.csv`, a small selected subset of test
 ### responses.
 
-library(delphiFacebook)
 library(dplyr)
 library(readr)
 library(stringi)

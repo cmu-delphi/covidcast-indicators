@@ -1,4 +1,3 @@
-library(delphiFacebook)
 library(jsonlite)
 library(testthat)
 

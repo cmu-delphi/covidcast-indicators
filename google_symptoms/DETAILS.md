@@ -17,7 +17,7 @@ hrr level data is derived from county level data using population weighted avera
 ## Metrics, Level 1 (`m1`)
 * `anosmia`: Google search volume for Anosmia-related searches
 * `ageusia`: Google search volume for Ageusia-related searches
-*`combined_symptoms`*: The sum of Google search volume for Anosmia-related searches and  Ageusia-related searches.
+*`sum_anosmia_ageusia`*: The sum of Google search volume for Anosmia-related searches and  Ageusia-related searches.
 
 ## Metrics, Level 2 (`m2`)
 * `raw_search`:  Google search volume reported as-is

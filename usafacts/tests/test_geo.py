@@ -76,11 +76,11 @@ class TestGeoMap:
         """Tests that values are correctly aggregated at the state level."""
         df = pd.DataFrame(
             {
-                "fips": ["04001", "04003", "04009", "25023"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13],
-                "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
+                "fips": ["04001", "04003", "04009", "25023", "25000"],
+                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
+                "new_counts": [10, 15, 2, 13, 0],
+                "cumulative_counts": [100, 20, 45, 60, 0],
+                "population": [100, 2100, 300, 25, 25],
             }
         )
 

@@ -4,7 +4,6 @@ from os import listdir
 from os.path import join
 
 import pandas as pd
-from delphi_jhu.run import run_module
 
 
 class TestRun:

@@ -5,6 +5,12 @@ Functions to calculate the quidel sensor statistic.
 import numpy as np
 import pandas as pd
 
+
+def remove_null_samples(df):
+    """Removes entries in a data frame whose sample sizes are null."""
+    return df[df["sample_size"].notnull()]
+
+
 def _prop_var(p, n):
     """var(X/n) = 1/(n^2)var(X) = (npq)/(n^2) = pq/n"""
     return p * (1 - p) / n

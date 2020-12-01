@@ -1,13 +1,15 @@
+"""Functions for mapping between geo regions."""
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 from delphi_utils import GeoMapper
-from .constants import METRICS
+from .constants import METRICS, COMBINED_METRIC
 
 gmpr = GeoMapper()
+
 def generate_transition_matrix(geo_res):
     """
-    Generate transition matrix from county to msa/hrr
+    Generate transition matrix from county to msa/hrr.
 
     Parameters
     ----------
@@ -64,7 +66,7 @@ def geo_map(df, geo_res):
     for _date in df["timestamp"].unique():
         val_lists = df[df["timestamp"] == _date].merge(
                 map_df["geo_id"], how="right"
-                )[METRICS + ["combined_symptoms"]].fillna(0)
+                )[METRICS + [COMBINED_METRIC]].fillna(0)
         newdf = pd.DataFrame(
                 np.matmul(map_df.values[:, 1:].T, val_lists.values),
                 columns = list(val_lists.keys())

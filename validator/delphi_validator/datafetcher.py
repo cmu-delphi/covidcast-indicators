@@ -183,7 +183,7 @@ def get_one_api_df(data_source, min_date, max_date,
     output_dict[(geo_type, signal_type)] = geo_sig_api_df_or_error
     dict_lock.release()
 
-def threaded_api_calls(min_date, max_date, geo_signal_combos, n_threads=32):
+def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=32):
     """
     Get data from API for all geo-signal combinations in a threaded way
     to save time.
@@ -198,7 +198,7 @@ def threaded_api_calls(min_date, max_date, geo_signal_combos, n_threads=32):
     api_semaphore = threading.Semaphore(value=n_threads)
 
     thread_objs = [threading.Thread(
-        target=get_one_api_df, args=(min_date, max_date,
+        target=get_one_api_df, args=(data_source, min_date, max_date,
                                      geo_type, signal_type,
                                      api_semaphore,
                                      dict_lock, output_dict)

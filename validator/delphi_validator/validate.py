@@ -824,7 +824,7 @@ class Validator():
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
-        all_api_df = threaded_api_calls(self.start_date - outlier_lookbehind,
+        all_api_df = threaded_api_calls(self.data_source, self.start_date - outlier_lookbehind,
                                         self.end_date, geo_signal_combos)
 
         # Keeps script from checking all files in a test run.

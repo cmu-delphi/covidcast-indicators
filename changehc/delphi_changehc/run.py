@@ -14,7 +14,8 @@ from pathlib import Path
 from delphi_utils import read_params
 
 # first party
-from .download_ftp_files import download
+from .download_ftp_files import download_covid, download_cli
+from .load_data import load_combined_data, load_cli_data
 from .update_sensor import CHCSensorUpdator
 
 
@@ -45,13 +46,24 @@ def run_module():
 
         ## download recent files from FTP server
         logging.info("downloading recent files through SFTP")
-        download(params["cache_dir"], params["ftp_conn"])
+        if "covid" in params["types"]:
+            download_covid(params["cache_dir"], params["ftp_conn"])
+        if "cli" in params["types"]:
+            download_cli(params["cache_dir"], params["ftp_conn"])
 
         input_denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
         input_covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
+        input_flu_file = "%s/%s_Flu_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        input_mixed_file = "%s/%s_Mixed_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        input_flu_like_file = "%s/%s_Flu_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
+        input_covid_like_file = "%s/%s_Covid_Like_Patient_Count_By_County.dat.gz" % (params["cache_dir"],filedate)
     else:
         input_denom_file = params["input_denom_file"]
         input_covid_file = params["input_covid_file"]
+        input_flu_file = params["input_flu_file"]
+        input_mixed_file = params["input_mixed_file"]
+        input_flu_like_file = params["input_flu_like_file"]
+        input_covid_like_file = params["input_covid_like_file"]
 
     dropdate = str(dropdate_dt.date())
 
@@ -80,29 +92,37 @@ def run_module():
     logging.info("outpath:\t\t%s", params["export_dir"])
     logging.info("parallel:\t\t%s", params["parallel"])
     logging.info("weekday:\t\t%s", params["weekday"])
+    logging.info("types:\t\t%s", params["types"])
     logging.info("se:\t\t\t%s", params["se"])
 
     ## start generating
     for geo in params["geos"]:
-        for weekday in params["weekday"]:
-            if weekday:
-                logging.info("starting %s, weekday adj", geo)
-            else:
-                logging.info("starting %s, no adj", geo)
-            su_inst = CHCSensorUpdator(
-                startdate,
-                enddate,
-                dropdate,
-                geo,
-                params["parallel"],
-                weekday,
-                params["se"]
-            )
-            su_inst.update_sensor(
-                input_denom_file,
-                input_covid_file,
-                params["export_dir"]
-            )
-        logging.info("finished %s", geo)
+        for numtype in params["types"]:
+            for weekday in params["weekday"]:
+                if weekday:
+                    logging.info("starting %s, %s, weekday adj", geo, numtype)
+                else:
+                    logging.info("starting %s, %s, no adj", geo, numtype)
+                su_inst = CHCSensorUpdator(
+                    startdate,
+                    enddate,
+                    dropdate,
+                    geo,
+                    params["parallel"],
+                    weekday,
+                    numtype,
+                    params["se"]
+                )
+                if numtype == "covid":
+                    data = load_combined_data(input_denom_file,
+                             input_covid_file,dropdate_dt,"fips")
+                elif numtype == "cli":
+                    data = load_cli_data(input_denom_file,input_flu_file,input_mixed_file,
+                             input_flu_like_file,input_covid_like_file,dropdate_dt,"fips")
+                su_inst.update_sensor(
+                    data,
+                    params["export_dir"]
+                )
+            logging.info("finished %s", geo)
 
     logging.info("finished all")

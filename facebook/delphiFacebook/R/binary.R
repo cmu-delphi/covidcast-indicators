@@ -17,6 +17,8 @@ get_binary_indicators <- function() {
     # mask wearing
     "smoothed_wearing_mask", "weight_unif", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwearing_mask", "weight", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_others_masked", "weight_unif", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wothers_masked", "weight", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
 
     # mental health
     "wip_smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,

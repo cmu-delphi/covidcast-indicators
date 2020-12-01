@@ -46,7 +46,7 @@ class CHCSensor:
             k=Config.MAX_BACKFILL_WINDOW,
             min_visits_to_fill=Config.MIN_CUM_VISITS):
         """
-        Adjust for backfills (retroactively added observations) by using a variable length smoother.
+        Adjust for retroactively added observations (backfill) by using a variable length smoother.
 
         The smoother starts from the RHS and moves leftwards (backwards through time).
         We cumulatively sum the total visits (denominator), until we have observed some minimum number of

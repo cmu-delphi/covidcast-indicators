@@ -5,100 +5,12 @@ Tools to validate CSV source data, including various check methods.
 import sys
 import re
 import math
-import threading
 from os.path import join
 from datetime import date, datetime, timedelta
 import pandas as pd
 from .errors import ValidationError, APIDataFetchError
-from .datafetcher import filename_regex, \
-    read_filenames, load_csv, get_geo_signal_combos, \
-    fetch_api_reference
-
-# Recognized geo types.
-geo_regex_dict = {
-    'county': r'^\d{5}$',
-    'hrr': r'^\d{1,3}$',
-    'msa': r'^\d{5}$',
-    'dma': r'^\d{3}$',
-    'state': r'^[a-zA-Z]{2}$',
-    'national': r'^[a-zA-Z]{2}$'
-}
-
-
-def relative_difference_by_min(x, y):
-    """
-    Calculate relative difference between two numbers.
-    """
-    return (x - y) / min(x, y)
-
-
-def make_date_filter(start_date, end_date):
-    """
-    Create a function to return a boolean of whether a filename of appropriate
-    format contains a date within (inclusive) the specified date range.
-
-    Arguments:
-        - start_date: datetime date object
-        - end_date: datetime date object
-
-    Returns:
-        - Custom function object
-    """
-    # Convert dates from datetime format to int.
-    start_code = int(start_date.strftime("%Y%m%d"))
-    end_code = int(end_date.strftime("%Y%m%d"))
-
-    def custom_date_filter(match):
-        """
-        Return a boolean of whether a filename of appropriate format contains a date
-        within the specified date range.
-
-        Arguments:
-            - match: regex match object based on filename_regex applied to a filename str
-
-        Returns:
-            - boolean
-        """
-        # If regex match doesn't exist, current filename is not an appropriately
-        # formatted source data file.
-        if not match:
-            return False
-
-        # Convert date found in CSV name to int.
-        code = int(match.groupdict()['date'])
-
-        # Return boolean True if current file date "code" is within the defined date range.
-        return start_code <= code <= end_code
-
-    return custom_date_filter
-
-
-def aggregate_frames(frames_list):
-    """Aggregates a list of data frames into a single frame.
-
-    Parameters
-    ----------
-    frames_list: List[Tuple(str, re.match, pd.DataFrame)]
-        triples of filenames, filename matches with the geo regex, and the data from the file
-
-    Returns
-    -------
-    A pd.DataFrame concatenation of all data frames in `frames_list` with additional columns for
-    geo_type, time_value, and signal derived from the corresponding re.match.
-    """
-    all_frames = []
-    for _, match, data_df in frames_list:
-        df = data_df.copy()
-        # Get geo_type, date, and signal name as specified by CSV name.
-        df['geo_type'] = match.groupdict()['geo_type']
-        df['time_value'] = datetime.strptime(
-            match.groupdict()['date'], "%Y%m%d").date()
-        df['signal'] = match.groupdict()['signal']
-
-        all_frames.append(df)
-
-    return pd.concat(all_frames)
-
+from .datafetcher import filename_regex, get_geo_signal_combos, threaded_api_calls, load_all_files
+from .utils import GEO_REGEX_DICT, relative_difference_by_min, aggregate_frames
 
 class Validator():
     """ Class containing validation() function and supporting functions. Stores a list
@@ -181,24 +93,6 @@ class Validator():
 
         self.raised_warnings = []
         # pylint:  enable=too-many-instance-attributes
-
-    def load_all_files(self, export_dir):
-        """Load all files in a directory.
-        Parameters
-        ----------
-        export_dir: str
-            directory from which to load files
-
-        Returns
-        -------
-        loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
-            triples of filenames, filename matches with the geo regex, and the data from the file
-        """
-        export_files = read_filenames(export_dir)
-        date_filter = make_date_filter(self.start_date, self.end_date)
-
-        # Make list of tuples of CSV names and regex match objects.
-        return [(f, m, load_csv(join(export_dir, f))) for (f, m) in export_files if date_filter(m)]
 
     def increment_total_checks(self):
         """ Add 1 to total_checks counter """
@@ -343,13 +237,13 @@ class Validator():
                     ("check_geo_id_format", nameformat),
                     unexpected_geos, "Non-conforming geo_ids found"))
 
-        if geo_type not in geo_regex_dict:
+        if geo_type not in GEO_REGEX_DICT:
             self.raised_errors.append(ValidationError(
                 ("check_geo_type", nameformat),
                 geo_type, "Unrecognized geo type"))
         else:
             find_all_unexpected_geo_ids(
-                df_to_test, geo_regex_dict[geo_type], geo_type)
+                df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
 
         self.increment_total_checks()
 
@@ -652,13 +546,12 @@ class Validator():
         all_frames = pd.concat([api_frames, source_df]). \
             drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index(drop=True)
-        if "index" in all_frames.columns:
-            all_frames = all_frames.drop(columns=["index"])
+
         # Tuned Variables from Dan's Code for flagging outliers. Size_cut is a
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 20
+        size_cut = 5
         sig_cut = 3
         sig_consec = 2.25
 
@@ -667,48 +560,39 @@ class Validator():
         def outlier_flag(frame):
             if (abs(frame["val"]) > size_cut) and not (pd.isna(frame["ststat"])) \
                     and (frame["ststat"] > sig_cut):
-                return 1
+                return True
             if (abs(frame["val"]) > size_cut) and (pd.isna(frame["ststat"])) and \
                     not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
-                return 1
+                return True
             if (frame["val"] < -size_cut) and not (pd.isna(frame["ststat"])) and \
                     not pd.isna(frame["ftstat"]):
-                return 1
-            return 0
+                return True
+            return False
 
         def outlier_nearby(frame):
             if (not pd.isna(frame['ststat'])) and (frame['ststat'] > sig_consec):
-                return 1
+                return True
             if pd.isna(frame['ststat']) and (frame['ftstat'] > sig_consec):
-                return 1
-            return 0
+                return True
+            return False
 
         # Calculate ftstat and ststat values for the rolling windows, group fames by geo region
         region_group = all_frames.groupby("geo_id")
         window_size = 14
-        shift_val = 0
-
         # Shift the window to match how R calculates rolling windows with even numbers
-        if window_size % 2 == 0:
-            shift_val = -1
+        shift_val = -1 if window_size % 2 == 0 else 0
 
         # Calculate the t-statistics for the two rolling windows (windows center and windows right)
         all_full_frames = []
         for _, group in region_group:
-            rolling_windows = group["val"].rolling(
-                window_size, min_periods=window_size)
-            center_windows = group["val"].rolling(
-                window_size, min_periods=window_size, center=True)
+            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
             fmedian = rolling_windows.median()
             smedian = center_windows.median().shift(shift_val)
             fsd = rolling_windows.std() + 0.00001  # if std is 0
             ssd = center_windows.std().shift(shift_val) + 0.00001  # if std is 0
-            vals_modified_f = group["val"] - fmedian.fillna(0)
-            vals_modified_s = group["val"] - smedian.fillna(0)
-            ftstat = abs(vals_modified_f)/fsd
-            ststat = abs(vals_modified_s)/ssd
-            group['ftstat'] = ftstat
-            group['ststat'] = ststat
+            group['ftstat'] = abs(group["val"] - fmedian.fillna(0)) / fsd
+            group['ststat'] = abs(group["val"] - smedian.fillna(0)) / ssd
             all_full_frames.append(group)
 
         all_frames = pd.concat(all_full_frames)
@@ -716,7 +600,7 @@ class Validator():
         # data from just before the start of the source data
         # because lead and lag outlier calculations are only one day
         #
-        # These variables are interpolated into the call to `geo_sig_api_df.query()`
+        # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
         # pylint: disable=unused-variable
         api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
@@ -725,9 +609,7 @@ class Validator():
             'time_value >= @api_frames_end & time_value <= @source_frame_end')
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
             .reset_index(drop=True).copy()
-        outlier_df["flag"] = 0
-        outlier_df["flag"] = outlier_df.apply(outlier_flag, axis=1)
-        outliers = outlier_df[outlier_df["flag"] == 1]
+        outliers = outlier_df[outlier_df.apply(outlier_flag, axis=1)]
         outliers_reset = outliers.copy().reset_index(drop=True)
 
         # Find the lead outliers and the lag outliers. Check that the selected row
@@ -744,16 +626,13 @@ class Validator():
         sel_lower_df = lower_df[lower_compare["geo_id"]
                                 == lower_df["geo_id"]].copy()
 
-        sel_upper_df["flag"] = 0
-        sel_lower_df["flag"] = 0
+        outliers_list = [outliers]
+        if sel_upper_df.size > 0:
+            outliers_list.append(sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
+        if sel_lower_df.size > 0:
+            outliers_list.append(sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
 
-        sel_upper_df["flag"] = sel_upper_df.apply(outlier_nearby, axis=1)
-        sel_lower_df["flag"] = sel_lower_df.apply(outlier_nearby, axis=1)
-
-        upper_outliers = sel_upper_df[sel_upper_df["flag"] == 1]
-        lower_outliers = sel_lower_df[sel_lower_df["flag"] == 1]
-
-        all_outliers = pd.concat([outliers, upper_outliers, lower_outliers]). \
+        all_outliers = pd.concat(outliers_list). \
             sort_values(by=['time_value', 'geo_id']). \
             drop_duplicates().reset_index(drop=True)
 
@@ -843,10 +722,8 @@ class Validator():
 
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
-        raw_thresholds = pd.DataFrame(
-            [[1.50, 1.30, 1.80]], columns=classes)
-        smoothed_thresholds = raw_thresholds.apply(
-            lambda x: x/(math.sqrt(7) * 1.5))
+        raw_thresholds = pd.DataFrame([[1.50, 1.30, 1.80]], columns=classes)
+        smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
 
         switcher = {
             'raw': raw_thresholds,
@@ -864,8 +741,7 @@ class Validator():
                 (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
                  > float(thres["val_mean_stddiff"])).any()
         )
-        mean_stdabsdiff_high = (
-            df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
+        mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
             self.raised_errors.append(ValidationError(
@@ -890,7 +766,7 @@ class Validator():
         Returns:
             - None
         """
-        frames_list = self.load_all_files(export_dir)
+        frames_list = load_all_files(export_dir, self.start_date, self.end_date)
         self._run_single_file_checks(frames_list)
         all_frames = aggregate_frames(frames_list)
         self._run_combined_file_checks(all_frames)
@@ -948,12 +824,11 @@ class Validator():
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
-        all_api_df = self.threaded_api_calls(
-            self.start_date - outlier_lookbehind,
-            self.end_date, geo_signal_combos)
+        all_api_df = threaded_api_calls(self.start_date - outlier_lookbehind,
+                                        self.end_date, geo_signal_combos)
+
         # Keeps script from checking all files in a test run.
-        if self.test_mode:
-            kroc = 0
+        kroc = 0
 
         # Comparison checks
         # Run checks for recent dates in each geo-sig combo vs semirecent (previous
@@ -978,9 +853,11 @@ class Validator():
             self.check_max_allowed_max_date(max_date, geo_type, signal_type)
 
             # Get relevant reference data from API dictionary.
-            geo_sig_api_df = all_api_df[(geo_type, signal_type)]
+            api_df_or_error = all_api_df[(geo_type, signal_type)]
 
-            if geo_sig_api_df is None:
+            if isinstance(api_df_or_error, APIDataFetchError):
+                self.increment_total_checks()
+                self.raised_errors.append(api_df_or_error)
                 continue
 
             # Outlier dataframe
@@ -992,12 +869,12 @@ class Validator():
                 source_df = geo_sig_df.query(
                     'time_value <= @date_list[-1] & time_value >= @date_list[0]')
 
-                # These variables are interpolated into the call to `geo_sig_api_df.query()`
+                # These variables are interpolated into the call to `api_df_or_error.query()`
                 # below but pylint doesn't recognize that.
                 # pylint: disable=unused-variable
                 outlier_start_date = earliest_available_date - outlier_lookbehind
                 outlier_end_date = earliest_available_date - timedelta(days=1)
-                outlier_api_df = geo_sig_api_df.query(
+                outlier_api_df = api_df_or_error.query(
                     'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
                 # pylint: enable=unused-variable
 
@@ -1026,7 +903,7 @@ class Validator():
 
                 # Reference dataframe runs backwards from the recent_cutoff_date
                 #
-                # These variables are interpolated into the call to `geo_sig_api_df.query()`
+                # These variables are interpolated into the call to `api_df_or_error.query()`
                 # below but pylint doesn't recognize that.
                 # pylint: disable=unused-variable
                 reference_start_date = recent_cutoff_date - \
@@ -1036,7 +913,7 @@ class Validator():
                 # pylint: enable=unused-variable
 
                 # Subset API data to relevant range of dates.
-                reference_api_df = geo_sig_api_df.query(
+                reference_api_df = api_df_or_error.query(
                     "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
                 self.increment_total_checks()
@@ -1060,71 +937,9 @@ class Validator():
                         recent_df, reference_api_df, checking_date, geo_type, signal_type)
 
             # Keeps script from checking all files in a test run.
-
-            if self.test_mode:
-                kroc += 1
-                if kroc == 2:
-                    break
-
-    def get_one_api_df(self, min_date, max_date,
-                       geo_type, signal_type,
-                       api_semaphore, dict_lock, output_dict):
-        """
-        Pull API data for a single geo type-signal combination. Raises
-        error if data couldn't be retrieved. Saves data to data dict.
-        """
-        api_semaphore.acquire()
-
-        # Pull reference data from API for all dates.
-        try:
-            geo_sig_api_df = fetch_api_reference(
-                self.data_source, min_date, max_date, geo_type, signal_type)
-
-        except APIDataFetchError as e:
-            self.increment_total_checks()
-            self.raised_errors.append(ValidationError(
-                ("api_data_fetch_error", geo_type, signal_type), None, e))
-
-            geo_sig_api_df = None
-
-        api_semaphore.release()
-
-        # Use a lock so only one thread can access the dictionary.
-        dict_lock.acquire()
-        output_dict[(geo_type, signal_type)] = geo_sig_api_df
-        dict_lock.release()
-
-    def threaded_api_calls(self, min_date, max_date,
-                           geo_signal_combos, n_threads=32):
-        """
-        Get data from API for all geo-signal combinations in a threaded way
-        to save time.
-        """
-        if n_threads > 32:
-            n_threads = 32
-            print("Warning: Don't run more than 32 threads at once due "
-                  + "to API resource limitations")
-
-        output_dict = dict()
-        dict_lock = threading.Lock()
-        api_semaphore = threading.Semaphore(value=n_threads)
-
-        thread_objs = [threading.Thread(
-            target=self.get_one_api_df, args=(min_date, max_date,
-                                              geo_type, signal_type,
-                                              api_semaphore,
-                                              dict_lock, output_dict)
-        ) for geo_type, signal_type in geo_signal_combos]
-
-        # Start all threads.
-        for thread in thread_objs:
-            thread.start()
-
-        # Wait until all threads are finished.
-        for thread in thread_objs:
-            thread.join()
-
-        return output_dict
+            kroc += 1
+            if self.test_mode and kroc == 2:
+                break
 
     def exit(self):
         """

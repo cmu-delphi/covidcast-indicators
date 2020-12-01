@@ -3,8 +3,8 @@ from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from delphi_validator.datafetcher import filename_regex
-from delphi_validator.validate import Validator, make_date_filter
+from delphi_validator.datafetcher import filename_regex, make_date_filter
+from delphi_validator.validate import Validator
 
 
 class TestDateFilter:
@@ -668,17 +668,17 @@ class TestDataOutlier:
 
         assert len(validator.raised_errors) == 1
         assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in validator.raised_errors]
+            err.check_data_id[0] for err in validator.raised_errors]
 
     def test_neg_outlier(self):
         validator = Validator(self.params)
 
         ref_val = [100, 101, 100, 101, 100,
-        100, 100, 100, 100, 100,
-        100, 102, 100, 100, 100,
-        100, 100, 101, 100, 100,
-        100, 100, 100, 99, 100,
-        100, 98, 100, 100, 100]
+                   100, 100, 100, 100, 100,
+                   100, 102, 100, 100, 100,
+                   100, 100, 101, 100, 100,
+                   100, 100, 100, 99, 100,
+                   100, 98, 100, 100, 100]
         test_val = [10, 10, 10]
 
 
@@ -708,7 +708,7 @@ class TestDataOutlier:
 
         assert len(validator.raised_errors) == 1
         assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in validator.raised_errors]
+            err.check_data_id[0] for err in validator.raised_errors]
 
     def test_zero_outlier(self):
         validator = Validator(self.params)

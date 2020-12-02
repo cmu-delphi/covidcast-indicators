@@ -73,12 +73,12 @@ def download_covid(out_path, ftp_conn):
 
 
 def download_cli(out_path, ftp_conn):
-    """Downloads files necessary to create chng-cli signal from ftp server.
+    """Download files necessary to create chng-cli signal from ftp server.
+
     Args:
         out_path: Path to local directory into which to download the files
         ftp_conn: Dict containing login credentials to ftp server
     """
-
     # open client
     try:
         client = paramiko.SSHClient()

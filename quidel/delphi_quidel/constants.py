@@ -1,4 +1,4 @@
-"""Registry for constants"""
+"""Registry for constants."""
 # global constants
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 MAX_BORROW_OBS = 20 # maximum number of observations can be borrowed in geographical pooling

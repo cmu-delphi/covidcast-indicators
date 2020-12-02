@@ -1,3 +1,4 @@
+"""Functions for mapping between geo regions."""
 # -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
@@ -5,9 +6,10 @@ from delphi_utils import GeoMapper
 from .constants import METRICS, COMBINED_METRIC
 
 gmpr = GeoMapper()
+
 def generate_transition_matrix(geo_res):
     """
-    Generate transition matrix from county to msa/hrr
+    Generate transition matrix from county to msa/hrr.
 
     Parameters
     ----------

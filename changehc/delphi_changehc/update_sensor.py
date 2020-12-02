@@ -15,8 +15,7 @@ from delphi_utils import GeoMapper, read_params, add_prefix
 
 # first party
 from .config import Config, Constants
-from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, NA
-from .load_data import load_combined_data
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
 from .sensor import CHCSensor
 from .weekday import Weekday
 
@@ -84,6 +83,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                  geo,
                  parallel,
                  weekday,
+                 numtype,
                  se):
         """Init Sensor Updator.
 
@@ -94,6 +94,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
+            numtype: type of count data used, one of ["covid", "cli"]
             se: boolean to write out standard errors, if true, use an obfuscated name
         """
         self.startdate, self.enddate, self.dropdate = [
@@ -105,11 +106,13 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         assert self.enddate <= self.dropdate, "end date > drop date"
         assert geo in ['county', 'state', 'msa', 'hrr'],\
             f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
-        self.geo, self.parallel, self.weekday, self.se = geo.lower(), parallel, weekday, se
+        self.geo, self.parallel, self.weekday, self.numtype, self.se = geo.lower(), parallel, weekday, numtype, se
 
         # output file naming
-        signals = SIGNALS.copy()
-        signals.remove(SMOOTHED if self.weekday else SMOOTHED_ADJ)
+        if self.numtype == "covid":
+            signals = [SMOOTHED_ADJ if self.weekday else SMOOTHED]
+        elif self.numtype == "cli":
+            signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
         signal_names = add_prefix(
             signals,
             wip_signal=read_params()["wip_signal"])
@@ -173,16 +176,13 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         return data_frame
 
 
-
     def update_sensor(self,
-            denom_filepath,
-            covid_filepath,
+            data,
             outpath):
         """Generate sensor values, and write to csv format.
 
         Args:
-            denom_filepath: path to the aggregated denominator data
-            covid_filepath: path to the aggregated covid data
+            data: pd.DataFrame with columns num and den
             outpath: output path for the csv results
         """
         self.shift_dates()
@@ -190,9 +190,6 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             (self.burn_in_dates <= self.enddate)
 
         # load data
-        base_geo = "fips"
-        data = load_combined_data(denom_filepath, covid_filepath, self.dropdate, base_geo)
-
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday

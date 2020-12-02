@@ -38,8 +38,12 @@ load_responses_all <- function(params) {
 load_response_one <- function(input_filename, params) {
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
-  meta_data <- read_lines(full_path, skip = 2L, n_max = 1L)
+
+  # Qualtrics provides a row of JSON-encoded metadata entries. Extract the
+  # timezone entry.
+  meta_data <- read_csv(full_path, skip = 2L, n_max = 1L, col_names = FALSE)$X1
   tz_from <- stri_extract(meta_data, regex = "[a-zA-Z_]+/[a-zA-Z_]+")
+
   col_names <- stri_split(read_lines(full_path, n_max = 1L), fixed = ",")[[1]]
   col_names <- stri_replace_all(col_names, "", fixed = "\"")
 

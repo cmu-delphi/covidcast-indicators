@@ -490,7 +490,7 @@ class GitArchiveDiffer(ArchiveDiffer):
 
     def update_cache(self):
         """
-        Check if cache_dir is clean: has everything nice committed if override_dirty=False.
+        Check if cache_dir is clean: has everything nicely committed if override_dirty=False.
 
         Since we are using a local git repo, assumes there is nothing to update from.
         """

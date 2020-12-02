@@ -31,6 +31,7 @@ class TestCHCSensorUpdator:
     geo = "county"
     parallel = False
     weekday = False
+    numtype = "covid"
     se = False
     prefix = "foo"
     small_test_data = pd.DataFrame({
@@ -48,6 +49,7 @@ class TestCHCSensorUpdator:
             self.geo,
             self.parallel,
             self.weekday,
+            self.numtype,
             self.se
         )
         ## Test init
@@ -69,6 +71,7 @@ class TestCHCSensorUpdator:
             'county',
             self.parallel,
             self.weekday,
+            self.numtype,
             self.se
         )
         su_inst.shift_dates()
@@ -87,6 +90,7 @@ class TestCHCSensorUpdator:
                 geo,
                 self.parallel,
                 self.weekday,
+                self.numtype,
                 self.se
             )
 
@@ -97,8 +101,7 @@ class TestCHCSensorUpdator:
                 s3_client = Session(**aws_credentials).client("s3")
                 s3_client.create_bucket(Bucket=params["bucket_name"])
                 su_inst.update_sensor(
-                    DENOM_FILEPATH,
-                    COVID_FILEPATH,
+                    self.small_test_data,
                     td.name)
 
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\

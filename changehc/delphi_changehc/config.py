@@ -25,15 +25,29 @@ class Config:
     ## data columns
     COVID_COL = "COVID"
     DENOM_COL = "Denominator"
-    COUNT_COLS = ["COVID"] + ["Denominator"]
+    FLU_COL = "Flu"
+    MIXED_COL = "Mixed"
+    FLU_LIKE_COL = "Flu-like"
+    COVID_LIKE_COL = "Covid-like"
+    COUNT_COLS = [COVID_COL,DENOM_COL,FLU_COL,MIXED_COL,FLU_LIKE_COL,COVID_LIKE_COL]
     DATE_COL = "date"
     GEO_COL = "fips"
     ID_COLS = [DATE_COL] + [GEO_COL]
     FILT_COLS = ID_COLS + COUNT_COLS
+
     DENOM_COLS = [GEO_COL, DATE_COL, DENOM_COL]
     COVID_COLS = [GEO_COL, DATE_COL, COVID_COL]
-    DENOM_DTYPES = {"date": str, "Denominator": str, "fips": str}
-    COVID_DTYPES = {"date": str, "COVID": str, "fips": str}
+    FLU_COLS = [GEO_COL, DATE_COL, FLU_COL]
+    MIXED_COLS = [GEO_COL, DATE_COL, MIXED_COL]
+    FLU_LIKE_COLS = [GEO_COL, DATE_COL, FLU_LIKE_COL]
+    COVID_LIKE_COLS = [GEO_COL, DATE_COL, COVID_LIKE_COL]
+
+    DENOM_DTYPES = {DATE_COL: str, DENOM_COL: str, GEO_COL: str}
+    COVID_DTYPES = {DATE_COL: str, COVID_COL: str, GEO_COL: str}
+    FLU_DTYPES = {DATE_COL: str, FLU_COL: str, GEO_COL: str}
+    MIXED_DTYPES = {DATE_COL: str, MIXED_COL: str, GEO_COL: str}
+    FLU_LIKE_DTYPES = {DATE_COL: str, FLU_LIKE_COL: str, GEO_COL: str}
+    COVID_LIKE_DTYPES = {DATE_COL: str, COVID_LIKE_COL: str, GEO_COL: str}
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter
     MIN_DEN = 100  # number of total visits needed to produce a sensor

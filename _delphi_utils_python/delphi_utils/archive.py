@@ -336,7 +336,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
         self.indicator_prefix = indicator_prefix
 
     def update_cache(self):
-        """For making sure cache_dir is updated with all latest files from the S3 bucket."""
+        """Make sure cache_dir is updated with all latest files from the S3 bucket."""
         # List all indicator-related objects from S3
         archive_objects = self.bucket.objects.filter(
             Prefix=self.indicator_prefix).all()

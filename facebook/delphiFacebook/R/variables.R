@@ -121,7 +121,7 @@ code_hh_size <- function(input_data) {
 #'
 #' @param input_data input data frame of raw survey data
 #' @return data frame augmented with `mh_worried_ill`, `mh_anxious`,
-#'   `mh_depressed`, `mh_isolated`
+#'   `mh_depressed`, `mh_isolated`, `mh_worried_finances`
 code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
@@ -131,11 +131,13 @@ code_mental_health <- function(input_data) {
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
     input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
+    input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   } else {
     input_data$mh_worried_ill <- NA
     input_data$mh_anxious <- NA
     input_data$mh_depressed <- NA
     input_data$mh_isolated <- NA
+    input_data$mh_worried_finances <- NA
   }
   return(input_data)
 }

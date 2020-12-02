@@ -23,6 +23,8 @@ get_binary_indicators <- function() {
     # mental health
     "wip_smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
     "wip_smoothed_wworried_become_ill", "weight", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_worried_finances", "weight_unif", "mh_worried_finances", 6, compute_binary_response, jeffreys_binary,
+    "wip_smoothed_wworried_finances", "weight", "mh_worried_finances", 6, compute_binary_response, jeffreys_binary,
 
     "wip_smoothed_anxious_5d", "weight_unif", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
     "wip_smoothed_wanxious_5d", "weight", "mh_anxious", 6, compute_binary_response, jeffreys_binary,

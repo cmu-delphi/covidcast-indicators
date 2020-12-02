@@ -1,7 +1,5 @@
 #### TODO
-# - Make aggregations work with binary columns and multiselect columns
 # - Let user specify function keyword instead of actual function?
-# - Fix readable column names
 # - set up to be able to aggregate multiple time periods in series?
 # - compute function for mean vs n vs frequency
 # - Do type-checking to make sure desired aggregate function is compatible with metric specified
@@ -435,7 +433,6 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
 
-  browser()
   # Add implied geo_level to each group_by. Order alphabetically
   aggregations$geo_level = NA
   for (agg_ind in seq_along(aggregations$group_by)) {
@@ -450,27 +447,35 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     aggregations$geo_level[agg_ind] = geo_level
   }
 
-  # For each unique combination of groupby_vars, run aggregation process once
-  # and calculate all desired aggregations on the grouping. Save to individual
-  # files
-  #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
   agg_groups = unique(aggregations$group_by)
-
-  check_col_types = unique(c(do.call(c, as.list(agg_groups), these_aggs$metric)))
+  
+  # Convert any columns being aggregated to the appropriate format.
+  #### TODO: want to convert/check groupby cols?
+  # check_col_types = unique(c(do.call(c, agg_groups), aggregations$metric))
+  check_col_types = unique(aggregations$metric)
   
   for (col_var in check_col_types) {
-    if (startsWith(col_var, "b_")) {
-      df <- convert_qcodes_to_bool(df, col_var)
-    } else if (startsWith(col_var, "ms_")) {
+    if (startsWith(col_var, "b_")) { # Binary
+      output <- convert_qcodes_to_bool(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
+      
+    } else if (startsWith(col_var, "ms_")) { # Multiselect
       output <- convert_multiselect_to_binary_cols(df, aggregations, col_var)
       df <- output[[1]]
       aggregations <- output[[2]]
       
-    } else if (startsWith(col_var, "n_")) {
-      df[col_var] <- as.numeric(df[col_var])
+    } else if (startsWith(col_var, "n_")) { # Numeric free response
+      output <- convert_freeresponse_to_num(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
     }
   }
 
+  # For each unique combination of groupby_vars, run aggregation process once
+  # and calculate all desired aggregations on the grouping. Save to individual
+  # files
+  #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
   for (agg_group in agg_groups) {
     these_aggs = aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
@@ -481,6 +486,8 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
 
+    browser()
+    # Save each aggregation to separate file
     for (agg_ind in seq_along(these_aggs$name)) {
       aggregation = these_aggs$name[agg_ind]
       groupby_vars = these_aggs$group_by[agg_ind]
@@ -492,26 +499,44 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 }
 
 
-convert_qcodes_to_bool <- function(df, col_var) {
-  if (FALSE %in% df[col_var] | TRUE %in% df[col_var]) {
+convert_qcodes_to_bool <- function(df, aggregations, col_var) {
+  if (is.null(df[[col_var]])) {
+    # Column not defined.
+    return(list(df,  aggregations[aggregations$name != col_var, ]))
+  }
+  
+  if (FALSE %in% df[[col_var]] | TRUE %in% df[[col_var]]) {
     return(df)
   }
   
-  df[col_var] <- (df[col_var] == 1L)
-  return(df)
+  df[[col_var]] <- (df[[col_var]] == 1L)
+  return(list(df, aggregations))
 }
 
 
 
 convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
+  if (is.null(df[[col_var]])) {
+    # Column not defined.
+    return(list(df,  aggregations[aggregations$name != col_var, ]))
+  }
+  
   # Get unique response codes
-  response_codes <- na.omit(unique(do.call(c,strsplit(unique(df$ms_comorbidities), ","))))
+  response_codes <- sort(na.omit(unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
   
+  browser()
   # Turn each response code into a new binary col
-  new_binary_cols = lapply(response_codes, function(code) { paste(col_var, code, sep="_") })
-  df = df[, new_binary_cols = 
-       lapply(response_codes, function(code) { code %in% df[col_var] })]
-  
+  new_binary_cols = as.character(lapply(response_codes, function(code) { paste(col_var, code, sep="_") }))
+  #### TODO: eval(parse()) here is not the best approach, but I can't find another 
+  # way to get col_var (a string) to be used as a var rather than a string
+  df[!is.na(df[[col_var]]), c(new_binary_cols) := 
+       lapply(response_codes, function(code) { 
+         ( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) | 
+             grepl(sprintf("^%s,", code), eval(parse(text=col_var))) | 
+             grepl(sprintf(",%s$", code), eval(parse(text=col_var))) | 
+             grepl(sprintf(",%s,", code), eval(parse(text=col_var))) ) 
+         })]
+
   # Update aggregations table
   old_row = aggregations[aggregations$name == col_var, ]
   for (col_ind in seq_along(new_binary_cols)) {
@@ -522,6 +547,18 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
   
   return(list(df, aggregations[aggregations$name != col_var, ]))
 }
+
+
+convert_freeresponse_to_num <- function(df, aggregations, col_var) {
+  if (is.null(df[[col_var]])) {
+    # Column not defined.
+    return(list(df,  aggregations[aggregations$name != col_var, ]))
+  }
+  
+  df[[col_var]] <- as.numeric(df[[col_var]])
+  return(list(df, aggregations))
+}
+
 
 
 #' Censor aggregates to ensure privacy.

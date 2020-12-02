@@ -100,8 +100,7 @@ run_contingency_tables <- function(params)
   msg_df("response input data", input_data)
 
   input_data <- merge_responses(input_data, archive)
-  browser()
-  data_agg <- create_data_for_aggregatation(input_data) # TODO: combine with or delete this
+  data_agg <- create_data_for_aggregatation(input_data)
 
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
   data_agg <- join_weights(data_agg, params, weights = "step1")
@@ -436,6 +435,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
 
+  browser()
   # Add implied geo_level to each group_by. Order alphabetically
   aggregations$geo_level = NA
   for (agg_ind in seq_along(aggregations$group_by)) {
@@ -456,17 +456,16 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
   agg_groups = unique(aggregations$group_by)
 
-  check_col_types = unique(c(do.call(c, as.list(agg_groups), these_aggs$metric))
+  check_col_types = unique(c(do.call(c, as.list(agg_groups), these_aggs$metric)))
   
   for (col_var in check_col_types) {
     if (startsWith(col_var, "b_")) {
-      if (FALSE %in% df[col_var] | TRUE %in% df[col_var]) {
-        next
-      }
-      
       df <- convert_qcodes_to_bool(df, col_var)
     } else if (startsWith(col_var, "ms_")) {
-      df <- convert_multiselect_to_binary_cols(df, col_var)
+      output <- convert_multiselect_to_binary_cols(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
+      
     } else if (startsWith(col_var, "n_")) {
       df[col_var] <- as.numeric(df[col_var])
     }
@@ -490,6 +489,38 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
       write_data_api(private_df, params, geo_level, aggregation, groupby_vars)
     }
   }
+}
+
+
+convert_qcodes_to_bool <- function(df, col_var) {
+  if (FALSE %in% df[col_var] | TRUE %in% df[col_var]) {
+    return(df)
+  }
+  
+  df[col_var] <- (df[col_var] == 1L)
+  return(df)
+}
+
+
+
+convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
+  # Get unique response codes
+  response_codes <- na.omit(unique(do.call(c,strsplit(unique(df$ms_comorbidities), ","))))
+  
+  # Turn each response code into a new binary col
+  new_binary_cols = lapply(response_codes, function(code) { paste(col_var, code, sep="_") })
+  df = df[, new_binary_cols = 
+       lapply(response_codes, function(code) { code %in% df[col_var] })]
+  
+  # Update aggregations table
+  old_row = aggregations[aggregations$name == col_var, ]
+  for (col_ind in seq_along(new_binary_cols)) {
+    old_row$name = paste(col_var, col_ind, sep="_")
+    old_row$metric = new_binary_cols[col_ind]
+    add_row(aggregations, old_row)
+  }
+  
+  return(list(df, aggregations[aggregations$name != col_var, ]))
 }
 
 

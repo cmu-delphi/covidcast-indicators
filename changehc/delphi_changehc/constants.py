@@ -1,4 +1,4 @@
-"""Registry for signal names and geo types"""
+"""Registry for signal names and geo types."""
 SMOOTHED = "smoothed_outpatient_covid"
 SMOOTHED_ADJ = "smoothed_adj_outpatient_covid"
 SMOOTHED_CLI = "smoothed_outpatient_cli"

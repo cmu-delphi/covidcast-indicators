@@ -27,7 +27,6 @@ def load_chng_data(filepath, dropdate, base_geo,
     Returns:
         cleaned dataframe
     """
-
     assert base_geo == "fips", "base unit must be 'fips'"
     count_flag = False
     date_flag = False

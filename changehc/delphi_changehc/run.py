@@ -19,8 +19,7 @@ from .load_data import load_combined_data, load_cli_data
 from .update_sensor import CHCSensorUpdator
 
 def retrieve_files(params, filedate):
-    """Return filenames of relevant files, downloading them if necessary
-    """
+    """Return filenames of relevant files, downloading them if necessary."""
     files = params["input_files"]
     if files["denom"] is None:
 
@@ -57,8 +56,7 @@ def retrieve_files(params, filedate):
 
 
 def make_asserts(params):
-    """Assert that for each type, filenames are either all present or all absent
-    """
+    """Assert that for each type, filenames are either all present or all absent."""
     files = params["input_files"]
     if "covid" in params["types"]:
         assert (files["denom"] is None) == (files["covid"] is None), \
@@ -79,9 +77,7 @@ def make_asserts(params):
 
 
 def run_module():
-    """Run the delphi_changehc module.
-    """
-
+    """Run the delphi_changehc module."""
     params = read_params()
 
     logging.basicConfig(level=logging.DEBUG)

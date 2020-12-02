@@ -20,19 +20,19 @@ from .config import Config
 
 
 class CHCSensor:
-    """Sensor class to fit a signal using Covid counts from Change HC outpatient data.
-    """
+    """Sensor class to fit a signal using Covid counts from Change HC outpatient data."""
+
     smoother = Smoother("savgol",
                         poly_fit_degree=1,
                         gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
     def gauss_smooth(count,total):
-        """smooth using the left_gauss_linear
+        """Smooth using the left_gauss_linear.
 
         Args:
             count, total: array
-            """
+        """
         count_smooth = CHCSensor.smoother.smooth(count)
         total_smooth = CHCSensor.smoother.smooth(total)
         total_clip = np.clip(total_smooth, 0, None)
@@ -46,12 +46,12 @@ class CHCSensor:
             k=Config.MAX_BACKFILL_WINDOW,
             min_visits_to_fill=Config.MIN_CUM_VISITS):
         """
-        Adjust for backfill (retroactively added observations) by using a
-         variable length smoother, which starts from the RHS and moves
-         leftwards (backwards through time). We cumulatively sum the total
-         visits (denominator), until we have observed some minimum number of
-         counts, then calculate the sum over that bin. We restrict the
-         bin size so to avoid inluding long-past values.
+        Adjust for retroactively added observations (backfill) by using a variable length smoother.
+
+        The smoother starts from the RHS and moves leftwards (backwards through time).
+        We cumulatively sum the total visits (denominator), until we have observed some minimum number of
+        counts, then calculate the sum over that bin. We restrict the
+        bin size so to avoid including long-past values.
 
         Args:
             num: array of covid counts

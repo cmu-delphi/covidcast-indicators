@@ -45,7 +45,7 @@ def get_files_from_dir(sftp, out_path):
 
 def download_covid(out_path, ftp_conn):
     """Download files necessary to create chng-covid signal from ftp server.
-    
+
     Args:
         out_path: Path to local directory into which to download the files
         ftp_conn: Dict containing login credentials to ftp server

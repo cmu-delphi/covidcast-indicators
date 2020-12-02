@@ -100,7 +100,7 @@ def run_module(archive_type: str,
                cache_dir: str,
                export_dir: str,
                **kwargs):
-    """Build and runs an ArchiveDiffer.
+    """Build and run an ArchiveDiffer.
 
     Parameters
     ----------

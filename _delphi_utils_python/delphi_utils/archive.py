@@ -273,7 +273,7 @@ class ArchiveDiffer:
                 replace(diff_file, exported_file)
 
     def run(self):
-        """Run the differ and archives the changed and new files."""
+        """Run the differ and archive the changed and new files."""
         self.update_cache()
 
         # Diff exports, and make incremental versions

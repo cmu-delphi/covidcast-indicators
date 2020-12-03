@@ -433,25 +433,25 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
 
-  # Add implied geo_level to each group_by. Order alphabetically
+  # Add implied geo_level to each group_by. Order alphabetically. Replace geo_level
+  # with generic "geo_id" var
   aggregations$geo_level = NA
   for (agg_ind in seq_along(aggregations$group_by)) {
-    geo_level = intersect(aggregations$group_by[agg_ind], names(cw_list))
+    geo_level = intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
     if (length(geo_level) > 1) {
       stop('more than one geo type provided for a single aggregation')
     } else if (length(geo_level) == 0) {
       geo_level = "national"
+      aggregations$group_by[agg_ind][[1]] = sort(append(aggregations$group_by[agg_ind][[1]], "geo_id"))
+    } else {
+      aggregations$group_by[agg_ind][[1]][aggregations$group_by[agg_ind][[1]] == geo_level] = "geo_id"
+      aggregations$group_by[agg_ind][[1]] = sort(unique(aggregations$group_by[agg_ind][[1]]))
     }
 
-    aggregations$group_by[agg_ind][[1]] = sort(unique(append(aggregations$group_by[agg_ind][[1]], geo_level)))
     aggregations$geo_level[agg_ind] = geo_level
   }
 
-  agg_groups = unique(aggregations$group_by)
-  
   # Convert any columns being aggregated to the appropriate format.
-  #### TODO: want to convert/check groupby cols?
-  # check_col_types = unique(c(do.call(c, agg_groups), aggregations$metric))
   check_col_types = unique(aggregations$metric)
   
   for (col_var in check_col_types) {
@@ -471,18 +471,24 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
       aggregations <- output[[2]]
     }
   }
-
+  
+  # agg_groups = unique(aggregations$group_by)
+  browser()
+  agg_groups = unique(aggregations[c("group_by", "geo_level")])
+  
   # For each unique combination of groupby_vars, run aggregation process once
   # and calculate all desired aggregations on the grouping. Save to individual
   # files
   #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
-  for (agg_group in agg_groups) {
+  for (group_ind in seq_along(agg_groups)) {
+    
+    agg_group = agg_groups$group_by[group_ind][[1]]
+    geo_level = agg_groups$geo_level[group_ind]
+    geo_crosswalk = cw_list[[geo_level]]
+    
     these_aggs = aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
-                                       }), ]
-
-    geo_level = these_aggs$geo_level[1]
-    geo_crosswalk = cw_list[[geo_level]]
+                                       }) & aggregations$geo_level == geo_level, ]
 
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
 

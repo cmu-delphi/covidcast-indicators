@@ -486,7 +486,6 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
 
-    browser()
     # Save each aggregation to separate file
     for (agg_ind in seq_along(these_aggs$name)) {
       aggregation = these_aggs$name[agg_ind]
@@ -524,7 +523,6 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
   # Get unique response codes
   response_codes <- sort(na.omit(unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
   
-  browser()
   # Turn each response code into a new binary col
   new_binary_cols = as.character(lapply(response_codes, function(code) { paste(col_var, code, sep="_") }))
   #### TODO: eval(parse()) here is not the best approach, but I can't find another 
@@ -536,23 +534,28 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
              grepl(sprintf(",%s$", code), eval(parse(text=col_var))) | 
              grepl(sprintf(",%s,", code), eval(parse(text=col_var))) ) 
          })]
-
+ 
   # Update aggregations table
-  old_row = aggregations[aggregations$name == col_var, ]
-  for (col_ind in seq_along(new_binary_cols)) {
-    old_row$name = paste(col_var, col_ind, sep="_")
-    old_row$metric = new_binary_cols[col_ind]
-    add_row(aggregations, old_row)
+  old_rows = aggregations[aggregations$metric == col_var, ]
+  for (row_ind in seq_along(old_rows$name)) {
+    old_row = old_rows[row_ind, ]
+    
+    for (col_ind in seq_along(new_binary_cols)) {
+      new_row = old_row
+      new_row$name = paste(old_row$name, col_ind, sep="_")
+      new_row$metric = new_binary_cols[col_ind]
+      aggregations = add_row(aggregations, new_row)
+    }
   }
   
-  return(list(df, aggregations[aggregations$name != col_var, ]))
+  return(list(df, aggregations[aggregations$metric != col_var, ]))
 }
 
 
 convert_freeresponse_to_num <- function(df, aggregations, col_var) {
   if (is.null(df[[col_var]])) {
     # Column not defined.
-    return(list(df,  aggregations[aggregations$name != col_var, ]))
+    return(list(df,  aggregations[aggregations$metric != col_var, ]))
   }
   
   df[[col_var]] <- as.numeric(df[[col_var]])

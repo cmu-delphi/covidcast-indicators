@@ -855,8 +855,8 @@ class Validator():
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
+            self.increment_total_checks()
             if isinstance(api_df_or_error, APIDataFetchError):
-                self.increment_total_checks()
                 self.raised_errors.append(api_df_or_error)
                 continue
 

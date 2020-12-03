@@ -3,3 +3,6 @@ delphi-master-prod-01.delphi.cmu.edu
 
 [runtime_host_staging]
 app-mono-dev-01.delphi.cmu.edu
+
+[api_proxy_staging]
+api-staging.delphi.cmu.edu

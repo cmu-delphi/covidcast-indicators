@@ -3,8 +3,8 @@ from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
-from delphi_validator.datafetcher import filename_regex
-from delphi_validator.validate import Validator, make_date_filter
+from delphi_validator.datafetcher import FILENAME_REGEX, make_date_filter
+from delphi_validator.validate import Validator
 
 
 class TestDateFilter:
@@ -14,7 +14,7 @@ class TestDateFilter:
         date_filter = make_date_filter(
             start_date, end_date)
 
-        filenames = [(f, filename_regex.match(f))
+        filenames = [(f, FILENAME_REGEX.match(f))
                      for f in ("20200901_county_signal_signal.csv",
                                "20200902_county_signal_signal.csv",
                                "20200903_county_signal_signal.csv")]
@@ -30,7 +30,7 @@ class TestDateFilter:
         date_filter = make_date_filter(
             start_date, end_date)
 
-        filenames = [(f, filename_regex.match(f))
+        filenames = [(f, FILENAME_REGEX.match(f))
                      for f in ("20200901_county_signal_signal.csv",
                                "20200902_county_signal_signal.csv",
                                "20200903_county_signal_signal.csv",
@@ -46,7 +46,7 @@ class TestDateFilter:
         date_filter = make_date_filter(
             start_date, end_date)
 
-        filenames = [(f, filename_regex.match(f))
+        filenames = [(f, FILENAME_REGEX.match(f))
                      for f in ()]
 
         subset_filenames = [(f, m) for (f, m) in filenames if date_filter(m)]
@@ -124,20 +124,20 @@ class TestCheckMissingDates:
 class TestNameFormat:
 
     def test_match_existence(self):
-        pattern_found = filename_regex.match("20200903_usa_signal_signal.csv")
+        pattern_found = FILENAME_REGEX.match("20200903_usa_signal_signal.csv")
         assert pattern_found
 
-        pattern_found = filename_regex.match("2020090_usa_signal_signal.csv")
+        pattern_found = FILENAME_REGEX.match("2020090_usa_signal_signal.csv")
         assert not pattern_found
 
-        pattern_found = filename_regex.match("20200903_usa_signal_signal.pdf")
+        pattern_found = FILENAME_REGEX.match("20200903_usa_signal_signal.pdf")
         assert not pattern_found
 
-        pattern_found = filename_regex.match("20200903_usa_.csv")
+        pattern_found = FILENAME_REGEX.match("20200903_usa_.csv")
         assert not pattern_found
 
     def test_expected_groups(self):
-        pattern_found = filename_regex.match(
+        pattern_found = FILENAME_REGEX.match(
             "20200903_usa_signal_signal.csv").groupdict()
         assert pattern_found["date"] == "20200903"
         assert pattern_found["geo_type"] == "usa"
@@ -704,17 +704,17 @@ class TestDataOutlier:
 
         assert len(validator.raised_errors) == 1
         assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in validator.raised_errors]
+            err.check_data_id[0] for err in validator.raised_errors]
 
     def test_neg_outlier(self):
         validator = Validator(self.params)
 
         ref_val = [100, 101, 100, 101, 100,
-        100, 100, 100, 100, 100,
-        100, 102, 100, 100, 100,
-        100, 100, 101, 100, 100,
-        100, 100, 100, 99, 100,
-        100, 98, 100, 100, 100]
+                   100, 100, 100, 100, 100,
+                   100, 102, 100, 100, 100,
+                   100, 100, 101, 100, 100,
+                   100, 100, 100, 99, 100,
+                   100, 98, 100, 100, 100]
         test_val = [10, 10, 10]
 
 
@@ -744,7 +744,7 @@ class TestDataOutlier:
 
         assert len(validator.raised_errors) == 1
         assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in validator.raised_errors]
+            err.check_data_id[0] for err in validator.raised_errors]
 
     def test_zero_outlier(self):
         validator = Validator(self.params)

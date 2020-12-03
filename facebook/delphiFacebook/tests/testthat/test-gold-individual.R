@@ -4,7 +4,6 @@
 ###
 ### See `test-gold.R` for details on how the test data is generated.
 
-library(delphiFacebook)
 library(dplyr)
 library(readr)
 library(stringi)

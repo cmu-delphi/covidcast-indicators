@@ -1,4 +1,3 @@
-library(delphiFacebook)
 library(testthat)
 
 # These tests cover the backfill and archiving behavior described in the

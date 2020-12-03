@@ -1,4 +1,3 @@
-library(delphiFacebook)
 library(dplyr)
 library(readr)
 

@@ -1,4 +1,3 @@
-library(delphiFacebook)
 library(jsonlite)
 
 context("Testing geographic crosswalk file creation")

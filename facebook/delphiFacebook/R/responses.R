@@ -38,8 +38,12 @@ load_responses_all <- function(params) {
 load_response_one <- function(input_filename, params) {
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
-  meta_data <- read_lines(full_path, skip = 2L, n_max = 1L)
+
+  # Qualtrics provides a row of JSON-encoded metadata entries. Extract the
+  # timezone entry.
+  meta_data <- read_csv(full_path, skip = 2L, n_max = 1L, col_names = FALSE)$X1
   tz_from <- stri_extract(meta_data, regex = "[a-zA-Z_]+/[a-zA-Z_]+")
+
   col_names <- stri_split(read_lines(full_path, n_max = 1L), fixed = ",")[[1]]
   col_names <- stri_replace_all(col_names, "", fixed = "\"")
 
@@ -62,95 +66,17 @@ load_response_one <- function(input_filename, params) {
   }
   input_data <- arrange(input_data, desc(.data$StartDate))
 
-  # create symptom variables
-  input_data$hh_fever <- (input_data$A1_1 == 1L)
-  input_data$hh_soar_throat <- (input_data$A1_2 == 1L)
-  input_data$hh_cough <- (input_data$A1_3 == 1L)
-  input_data$hh_short_breath <- (input_data$A1_4 == 1L)
-  input_data$hh_diff_breath <- (input_data$A1_5 == 1L)
-  suppressWarnings({ input_data$hh_number_sick <- as.integer(input_data$A2) })
-
-  if ("A5_1" %in% names(input_data)) {
-    # This is Wave 4, where item A2b was replaced with 3 items asking about
-    # separate ages. Many respondents leave blank the categories that do not
-    # apply to their household, rather than entering 0, so if at least one of
-    # the three items has a response, we impute 0 for the remaining items.
-    suppressWarnings({
-      age18 <- as.integer(input_data$A5_1)
-      age1864 <- as.integer(input_data$A5_2)
-      age65 <- as.integer(input_data$A5_3)
-    })
-
-    input_data$hh_number_total <- ifelse(
-      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
-      (ifelse(is.na(age18), 0, age18) +
-         ifelse(is.na(age1864), 0, age1864) +
-         ifelse(is.na(age65), 0, age65)),
-      NA_integer_
-    )
-  } else {
-    # This is Wave <= 4, where item A2b measured household size
-    suppressWarnings({
-      input_data$hh_number_total <- as.integer(input_data$A2b)
-    })
-  }
+  input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 
-  # create mental health variables
-  input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
-  input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
-  input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
-  if ("C8_3" %in% names(input_data)) {
-    input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
-  } else {
-    input_data$mh_isolated <- NA
-  }
-
-  # mask and contact variables
-  input_data$c_travel_state <- input_data$C6 == 1
-  if ("C14" %in% names(input_data)) {
-    # wearing mask most or all of the time; exclude respondents who have not
-    # been in public
-    input_data$c_mask_often <- input_data$C14 == 1 | input_data$C14 == 2
-    input_data$c_mask_often <- ifelse(input_data$C14 == 6, NA, input_data$c_mask_often)
-  } else {
-    input_data$c_mask_often <- NA
-  }
-
-  if ("C3" %in% names(input_data)) {
-    input_data$c_work_outside_5d <- input_data$C3 == 1
-  } else {
-    input_data$c_work_outside_5d <- NA
-  }
+  input_data <- code_symptoms(input_data)
+  input_data <- code_hh_size(input_data)
+  input_data <- code_mental_health(input_data)
+  input_data <- code_mask_contact(input_data)
+  input_data <- code_testing(input_data)
+  input_data <- code_activities(input_data)
 
   # create testing variables
-  if ("B8" %in% names(input_data) && "B10" %in% names(input_data) &&
-        "B12" %in% names(input_data)) {
-    # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
-    # B10 (which codes "no" as 3 for some reason)
-    input_data$t_tested_14d <- case_when(
-      input_data$B8 == 2 | input_data$B10 == 3 ~ 0,
-      input_data$B10 == 1 ~ 1,
-      TRUE ~ NA_real_
-    )
-
-    # fraction, of those tested in past 14 days, who tested positive. yes == 1
-    # on B10a, no == 2 on B10a; option 3 is "I don't know", which is excluded
-    input_data$t_tested_positive_14d <- case_when(
-      input_data$B10a == 1 ~ 1, # yes
-      input_data$B10a == 2 ~ 0, # no
-      input_data$B10a == 3 ~ NA_real_, # I don't know
-      TRUE ~ NA_real_
-    )
-
-    # fraction, of those not tested in past 14 days, who wanted to be tested but
-    # were not
-    input_data$t_wanted_test_14d <- input_data$B12 == 1
-  } else {
-    input_data$t_tested_14d <- NA
-    input_data$t_tested_positive_14d <- NA
-    input_data$t_wanted_test_14d <- NA
-  }
 
   # When a token begins with a hyphen, Qualtrics CSVs contain a lone single
   # quote in front, for some mysterious reason. Strip these from the token,
@@ -173,7 +99,8 @@ load_response_one <- function(input_filename, params) {
   # the individual output files. rather than truncating to 5 digits -- which may
   # turn nonsense entered by some respondents into a valid ZIP5 -- we simply
   # replace these ZIPs with NA.
-  input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_, input_data$zip5)
+  input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_,
+                            input_data$zip5)
 
   return(input_data)
 }
@@ -319,8 +246,6 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 #' @export
 create_complete_responses <- function(input_data, county_crosswalk)
 {
-  input_data$wave <- surveyID_to_wave(input_data$SurveyID)
-
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
     "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2",

@@ -6,7 +6,6 @@
 ### This test file specifically tests the configuration in `params-full.json`,
 ### which loads the synthetic data in `input/full_synthetic.csv`.
 
-library(delphiFacebook)
 library(dplyr)
 library(readr)
 library(stringi)

@@ -85,8 +85,8 @@ def run_module():
     make_asserts(params)
 
     if params["drop_date"] is None:
-        # files are dropped about 8pm the day after the issue date
-        dropdate_dt = (datetime.now() - timedelta(days=1,hours=20))
+        # files are dropped about 4pm the day after the issue date
+        dropdate_dt = (datetime.now() - timedelta(days=1,hours=16))
         dropdate_dt = dropdate_dt.replace(hour=0,minute=0,second=0,microsecond=0)
     else:
         dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")

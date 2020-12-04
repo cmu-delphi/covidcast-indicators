@@ -33,12 +33,10 @@ class TestDataFetcher:
                                                   })
 
         assert set(get_geo_signal_combos("a")) == set([("state", "w"),
-                                                       ("county", "w"),
                                                        ("state", "x"),
                                                        ("county", "x")])
         assert set(get_geo_signal_combos("b")) == set([("hrr", "y"),
                                                        ("msa", "y"),
-                                                       ("hrr", "z"),
                                                        ("msa", "z")])
 
     @mock.patch("covidcast.signal")

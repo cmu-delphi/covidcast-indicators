@@ -7,8 +7,8 @@
   tasks:
     - name: Set staging api proxy openresty signal match list template.
       template:
-        src: templates/staging-api-match-list.j2
+        src: "templates/staging-api-match-list.j2"
         dest: "/common/staging-api-match-list"
-        owner: "root"
-        group: "root"
-        mode: 0600
+        owner: "deploy"
+        group: "deploy"
+        mode: "0777"

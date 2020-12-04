@@ -24,7 +24,7 @@ class ValidationReport:
             Errors raised from validation failures
         raised_warnings: List[Exception]
             Warnings raised from validation execution
-        suppressed_errors: List[Exception]
+        unsuppressed_errors: List[Exception]
             Errors raised from validation failures not found in `self.errors_to_suppress`
         """
         self.errors_to_suppress = errors_to_suppress.copy()
@@ -32,7 +32,7 @@ class ValidationReport:
         self.total_checks = 0
         self.raised_errors = []
         self.raised_warnings = []
-        self.suppressed_errors = []
+        self.unsuppressed_errors = []
 
     def add_raised_error(self, error):
         """Add an error to the report.
@@ -53,7 +53,7 @@ class ValidationReport:
             else item for item in error.check_data_id])
 
         if raised_check_id not in self.errors_to_suppress:
-            self.suppressed_errors.append(error)
+            self.unsuppressed_errors.append(error)
         else:
             self.errors_to_suppress.remove(raised_check_id)
             self.num_suppressed += 1
@@ -79,10 +79,10 @@ class ValidationReport:
     def __str__(self):
         """String representation of report."""
         out_str = f"{self.total_checks} checks run\n"
-        out_str += f"{len(self.suppressed_errors)} checks failed\n"
+        out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
         out_str += f"{self.num_suppressed} checks suppressed\n"
         out_str += f"{len(self.raised_warnings)} warnings\n"
-        for message in self.suppressed_errors:
+        for message in self.unsuppressed_errors:
             out_str += f"{message}\n"
         for message in self.raised_warnings:
             out_str += f"{message}\n"
@@ -93,7 +93,7 @@ class ValidationReport:
         Print results and, if any not-suppressed exceptions were raised, exit with non-zero status.
         """
         print(self)
-        if len(self.suppressed_errors) != 0:
+        if len(self.unsuppressed_errors) != 0:
             sys.exit(1)
         else:
             sys.exit(0)

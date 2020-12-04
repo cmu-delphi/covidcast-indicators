@@ -66,6 +66,10 @@ load_response_one <- function(input_filename, params) {
   }
   input_data <- arrange(input_data, desc(.data$StartDate))
 
+  # Occasionally we get single responses with no SurveyID, which prevents us
+  # from knowing their wave. Discard.
+  input_data <- filter(input_data, !is.na(SurveyID))
+
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 

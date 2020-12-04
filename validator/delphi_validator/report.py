@@ -52,12 +52,11 @@ class ValidationReport:
             item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
             else item for item in error.check_data_id])
 
-        if raised_check_id not in self.errors_to_suppress:
-            self.unsuppressed_errors.append(error)
-        else:
+        if raised_check_id in self.errors_to_suppress:
             self.errors_to_suppress.remove(raised_check_id)
             self.num_suppressed += 1
-
+        else:
+            self.unsuppressed_errors.append(error)
 
     def increment_total_checks(self):
         """Records a check."""

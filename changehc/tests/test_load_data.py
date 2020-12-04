@@ -18,23 +18,21 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 
 
 class TestLoadData:
-    denom_data = load_denom_data(DENOM_FILEPATH, DROP_DATE, "fips")
-    covid_data = load_covid_data(COVID_FILEPATH, DROP_DATE, "fips")
+    denom_data = load_chng_data(DENOM_FILEPATH, DROP_DATE, "fips",
+                    Config.DENOM_COLS, Config.DENOM_DTYPES, Config.DENOM_COL)
+    covid_data = load_chng_data(COVID_FILEPATH, DROP_DATE, "fips",
+                    Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
                                             "fips")
 
     def test_base_unit(self):
         with pytest.raises(AssertionError):
-            load_denom_data(DENOM_FILEPATH, DROP_DATE, "foo")
+            load_chng_data(DENOM_FILEPATH, DROP_DATE, "foo",
+                    Config.DENOM_COLS, Config.DENOM_DTYPES, Config.DENOM_COL)
 
         with pytest.raises(AssertionError):
-            load_denom_data("test_data/20200101_foo.dat", DROP_DATE, "fips")
-
-        with pytest.raises(AssertionError):
-            load_covid_data(COVID_FILEPATH, DROP_DATE, "foo")
-
-        with pytest.raises(AssertionError):
-            load_covid_data("test_data/20200101_foo.dat", DROP_DATE, "fips")
+            load_chng_data(DENOM_FILEPATH, DROP_DATE, "fips",
+                    Config.DENOM_COLS, Config.DENOM_DTYPES, Config.COVID_COL)
 
         with pytest.raises(AssertionError):
             load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo")

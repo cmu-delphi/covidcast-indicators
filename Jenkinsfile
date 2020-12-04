@@ -45,6 +45,7 @@ pipeline {
                     }
                     parallel deploy_staging
                 }
+                sh "jenkins/ansible-deploy-staging-api-proxy-match-list"
             }
         }
         stage('Deploy production') {

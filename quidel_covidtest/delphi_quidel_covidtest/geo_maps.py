@@ -13,9 +13,7 @@ GEO_KEY_DICT = {
 
 
 def geo_map(geo_res, df):
-    """
-    Map a geocode to a new value.
-    """
+    """Map a geocode to a new value."""
     data = df.copy()
     geo_key = GEO_KEY_DICT[geo_res]
     # Add population for each zipcode
@@ -32,6 +30,8 @@ def geo_map(geo_res, df):
 
 def add_parent_state(data, geo_res, geo_key):
     """
+    Add parent state column to DataFrame.
+
     - map from msa/hrr to state, going by the state with the largest
       population (since a msa/hrr may span multiple states)
     - map from county to the corresponding state

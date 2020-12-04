@@ -91,8 +91,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     """
 
     def __init__(self):
-        """Initialize geomapper. Holds loading the crosswalk tables
-        until a conversion function is first used.
+        """Initialize geomapper.
+
+        Holds loading the crosswalk tables until a conversion function is first used.
 
         Parameters
         ---------
@@ -110,7 +111,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     # Utility functions
     def _load_crosswalk(self, from_code, to_code):
-        """Loads the crosswalk from from_code -> to_code."""
+        """Load the crosswalk from from_code -> to_code."""
         stream = pkg_resources.resource_stream(
             __name__, self.crosswalk_filepaths[from_code][to_code]
         )
@@ -189,7 +190,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
-        """convert fips string to a megafips string"""
+        """Convert fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
         data[mega_col] = data[mega_col].str.slice_replace(start=2, stop=5, repl="000")
@@ -205,7 +206,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         date_col="date",
         mega_col="megafips",
     ):
-        """create megacounty column
+        """Create megacounty column.
 
         Parameters
         ---------
@@ -412,8 +413,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
         """
-        Appends a population column to a dataframe, based on the FIPS or ZIP code. If no
-        dataframe is provided, the full crosswalk from geocode to population is returned.
+        Append a population column to a dataframe, based on the FIPS or ZIP code.
+
+        If no dataframe is provided, the full crosswalk from geocode to population is returned.
 
         Parameters
         ---------
@@ -464,7 +466,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         mega_col="megafips",
         count_cols=None,
     ):
-        """Convert and aggregate from FIPS to megaFIPS
+        """Convert and aggregate from FIPS to megaFIPS.
 
         Parameters
         ---------

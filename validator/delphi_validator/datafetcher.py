@@ -7,7 +7,6 @@ import re
 import threading
 from os import listdir
 from os.path import isfile, join
-from itertools import product
 import pandas as pd
 import numpy as np
 
@@ -115,10 +114,10 @@ def get_geo_signal_combos(data_source):
     """
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
-    unique_signals = source_meta['signal'].unique().tolist()
-    unique_geotypes = source_meta['geo_type'].unique().tolist()
+    # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
+    geo_signal_combos = list(map(tuple,
+                                 source_meta[["geo_type", "signal"]].to_records(index=False)))
 
-    geo_signal_combos = list(product(unique_geotypes, unique_signals))
     print("Number of expected geo region-signal combinations:",
           len(geo_signal_combos))
 

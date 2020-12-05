@@ -66,8 +66,8 @@ class ValidationReport:
         """Add a warning to the report.
         Parameters
         ----------
-        error: Exception
-            Error raised in validation
+        warning: Warning
+            Warning raised in validation
 
         Returns
         -------

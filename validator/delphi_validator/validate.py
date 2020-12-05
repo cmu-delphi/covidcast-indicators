@@ -44,10 +44,6 @@ class Validator():
             avg, etc)
             - expected_lag: dict of signal names: int pairs; how many days behind do we
             expect each signal to be
-            - suppressed_errors: set of check_data_ids used to identify error messages to ignore
-            - raised_errors: list to append data upload-blocking errors to as they are raised
-            - total_checks: incremental counter to track total number of checks run
-            - raised_warnings: list to append non-data upload-blocking errors to as they are raised
         """
         # TODO(https://github.com/cmu-delphi/covidcast-indicators/issues/579)
         # Refactor this class to avoid the too-many-instance-attributes error.
@@ -763,11 +759,11 @@ class Validator():
         is_duplicate = data_df.duplicated()
         if (any(is_duplicate)):
             duplicate_row_idxs = list(data_df[is_duplicate].index)
-            self.raised_warnings.append(ValidationError(
+            self.active_report.add_raised_warning(ValidationError(
                 ("check_duplicate_rows", filename),
                 duplicate_row_idxs, 
                 "Some rows are duplicated, which may indicate data integrity issues"))
-        self.increment_total_checks()
+        self.active_report.increment_total_checks()
 
     def validate(self, export_dir):
         """

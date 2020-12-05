@@ -623,9 +623,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     unique_group_combos = unique(df[, ..groupby_vars])
     unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
   } else {
-    msg_df(sprintf(
+    msg_plain(sprintf(
       "not all of groupby columns %s available in data; skipping this aggregation", paste(groupby_vars, collapse=", ")
-      ), NULL)
+      ))
   }
   
   if (!exists("unique_group_combos") || nrow(unique_group_combos) == 0) {
@@ -858,4 +858,14 @@ get_range_prev_full_period <- function(end_date = Sys.Date(), weekly_or_monthly_
   )
 
   return(date_period_range)
+}
+
+
+#' Write a plain, time-stamped message to the console
+#'
+#' @param text the body of the message to display
+#'
+#' @export
+msg_plain <- function(text) {
+  message(sprintf("%s --- %s", format(Sys.time()), text))
 }

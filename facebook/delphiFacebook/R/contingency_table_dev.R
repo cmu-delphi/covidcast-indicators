@@ -24,8 +24,7 @@
 # wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
 
 
-# Start with example:
-#     group_by(epiweek, state, age, race) %>% summarize(mean(tested_positive), mean(cli), n())
+
 library(lubridate)
 library(parallel)
 library(dplyr)
@@ -472,15 +471,14 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     }
   }
   
-  # agg_groups = unique(aggregations$group_by)
-  browser()
   agg_groups = unique(aggregations[c("group_by", "geo_level")])
   
-  # For each unique combination of groupby_vars, run aggregation process once
+  # For each unique combination of groupby_vars and geo level, run aggregation process once
   # and calculate all desired aggregations on the grouping. Save to individual
   # files
-  #### TODO: want to save all results for a given grouping to the same file. Will need to rename cols and put groupby vars into file name.
-  for (group_ind in seq_along(agg_groups)) {
+  #### TODO: want to save all results for a given grouping to the same file. 
+  #### Will need to rename cols and put groupby vars and geo level into file name.
+  for (group_ind in seq_along(agg_groups$group_by)) {
     
     agg_group = agg_groups$group_by[group_ind][[1]]
     geo_level = agg_groups$geo_level[group_ind]
@@ -620,12 +618,17 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   assert( length(unique(aggregations$group_by)) == 1 )
 
   groupby_vars <- aggregations$group_by[[1]]
-  groupby_vars[groupby_vars == geo_level] = "geo_id"
 
-  unique_group_combos = unique(df[, ..groupby_vars])
-  unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
-
-  if (nrow(unique_group_combos) == 0) {
+  if (all(groupby_vars %in% names(df))) {
+    unique_group_combos = unique(df[, ..groupby_vars])
+    unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
+  } else {
+    msg_df(sprintf(
+      "not all of groupby columns %s available in data; skipping this aggregation", paste(groupby_vars, collapse=", ")
+      ), NULL)
+  }
+  
+  if (!exists("unique_group_combos") || nrow(unique_group_combos) == 0) {
     return(list())
   }
 
@@ -648,11 +651,10 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     return(out)
   }
 
-
   if (params$parallel) {
-    dfs <- mclapply(seq_along(transpose(unique_group_combos)), calculate_group)
+    dfs <- mclapply(seq_along(unique_group_combos[[1]]), calculate_group)
   } else {
-    dfs <- lapply(seq_along(transpose(unique_group_combos)), calculate_group)
+    dfs <- lapply(seq_along(unique_group_combos[[1]]), calculate_group)
   }
 
   ## Now we have a list, with one entry per groupby level, each containing a
@@ -730,10 +732,12 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", names(target_group))])) == 0,
     ]
 
-    if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
-      dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
-    }
+    #### TODO: megacounty function not found. Small sample size counties will still
+    #### be removed later in censoring step.
+    # if (geo_level == "county") {
+    #   df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
+    #   dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
+    # }
 
     dfs_out[[aggregation]] <- filter(dfs_out[[aggregation]],
                                    .data$sample_size >= params$num_filter,

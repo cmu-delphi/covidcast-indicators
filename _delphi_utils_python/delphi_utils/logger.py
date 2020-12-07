@@ -4,8 +4,10 @@ import sys
 import structlog
 
 def get_structured_logger(name=__name__):
-    """Creates a new structlog logger. Use the logger returned from this in
-    indicator code using the standard wrapper calls, e.g.:
+    """Create a new structlog logger.
+    
+    Use the logger returned from this in indicator code using the standard 
+    wrapper calls, e.g.:
 
     logger.warning("Error", type="Signal too low").
 

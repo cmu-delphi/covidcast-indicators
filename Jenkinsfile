@@ -45,6 +45,7 @@ pipeline {
                     }
                     parallel deploy_staging
                 }
+                sh "jenkins/deploy-staging-api-match-list.sh"
             }
         }
         stage('Deploy production') {

@@ -1,27 +1,35 @@
 #### TODO
 # - Let user specify function keyword instead of actual function?
 # - set up to be able to aggregate multiple time periods in series?
-# - compute function for mean vs n vs frequency
 # - Do type-checking to make sure desired aggregate function is compatible with metric specified
+# - map response codes to sensical values?
 
-# # Get data
+
+# # # Get data
 # path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-# 
-# wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
-# wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
-# wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
+# path_to_raw_data =  params$input_dir
+# data_file = params$input
+# # 
+# # wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
+# # wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
+# # wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
+# wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
 # wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
 # 
+# input_data <- load_responses_all(params)
 # 
-# # All surveys have 2 non-response rows at the top. First is detail of question.
-# # Second is json(?) field access info -- not needed.
-# wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
-# # Shows 1 (uncompleted) response; 59 fields
-# wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
-# # Shows 230k responses; 83 fields. Most updated form of survey.
-# wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
-# # Shows 230k responses; 83 fields. Most updated form of survey.
-# wave4 = read.csv(file.path(path_to_raw_data, wave4), header = TRUE)
+# 
+# 
+# # 
+# # # All surveys have 2 non-response rows at the top. First is detail of question.
+# # # Second is json(?) field access info -- not needed.
+# # wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
+# # # Shows 1 (uncompleted) response; 59 fields
+# # wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
+# # # Shows 230k responses; 83 fields. Most updated form of survey.
+# # wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
+# # # Shows 230k responses; 83 fields. Most updated form of survey.
+# wave4 = read.csv(file.path(path_to_raw_data, data_file), header = TRUE)
 
 
 
@@ -32,6 +40,7 @@ library(data.table)
 library(tibble)
 library(jsonlite)
 library(readr)
+library(purrr)
 
 
 #' Return params file as an R list
@@ -90,7 +99,7 @@ run_contingency_tables <- function(params)
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
-
+  
   #### TODO: if end_date == "current", use regex to choose which files to read in from input_dir
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
@@ -142,10 +151,6 @@ run_contingency_tables <- function(params)
 }
 
 
-#### TODO: process binary vars on use (i.e. if aggregations$metric is a binary var)
-#### TODO: map response codes to sensical values?
-#### TODO: How to get this to work with existing column renaming/processing?
-#### TODO: how to know if var to calculate has already been turned into number, or still represents the responses code?
 #' Rename question codes to informative descriptions
 #'
 #'
@@ -177,7 +182,7 @@ set_human_readable_colnames <- function(input_data) {
     "n_contact_num_other" = "C10_4_1",
     "n_hh_num_total" = "hh_number_total", # A2b from Waves <4 and summed A5 from Wave 4
     "n_highest_temp_f" = "Q40",
-    "n_hh_num_children" = "D3", # Wave 1, etc versions of A5
+    "n_hh_num_children_old" = "D3", # Wave 1, etc versions of A5
     "n_hh_num_adults_not_self" = "D4",
     "n_hh_num_seniors_not_self" = "D5",
     
@@ -312,16 +317,18 @@ set_aggs <- function(params) {
     "tested_pos_freq_given_tested", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_binary_response, I,
     "hh_num_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_count_response, I,
     
-    "mean_tested_positive_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, mean, I,
-    "mean_cli", "weight", "cli", c("state", "mc_age", "mc_race"), FALSE, mean, I,
-    "comorbidities_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, n, I,
+    "mean_tested_positive_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_binary_response, I,
+    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_binary_response, I,
+    "comorbidities_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_binary_response, I,
     
-    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, mean, I,
-    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, mean, I,
-    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, mean, I,
-    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, mean, I,
-    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, mean, I,
-    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, mean, I,
+    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_binary_response, I,
+    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_binary_response, I,
+    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_binary_response, I,
+    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_binary_response, I,
+    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_binary_response, I,
+    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_binary_response, I,
+    
+    "anxiety_levels", "weight", "mc_anxiety", c(), FALSE, compute_count_response, I,
   )
 
   return(aggs)
@@ -419,6 +426,7 @@ compute_binary_response <- function(response, weight, sample_size)
 #'
 #' @import data.table
 #' @importFrom dplyr filter mutate_at vars bind_rows
+#' @importFrom purrr reduce
 #'
 #' @export
 aggregate_aggs <- function(df, aggregations, cw_list, params) {
@@ -476,8 +484,6 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # For each unique combination of groupby_vars and geo level, run aggregation process once
   # and calculate all desired aggregations on the grouping. Save to individual
   # files
-  #### TODO: want to save all results for a given grouping to the same file. 
-  #### Will need to rename cols and put groupby vars and geo level into file name.
   for (group_ind in seq_along(agg_groups$group_by)) {
     
     agg_group = agg_groups$group_by[group_ind][[1]]
@@ -490,14 +496,20 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
 
-    # Save each aggregation to separate file
-    for (agg_ind in seq_along(these_aggs$name)) {
-      aggregation = these_aggs$name[agg_ind]
-      groupby_vars = these_aggs$group_by[agg_ind]
-
-      private_df = apply_privacy_censoring(dfs_out[[aggregation]], params)
-      write_data_api(private_df, params, geo_level, aggregation, groupby_vars)
+    # If want to additionally keep "se" and "effective_sample_size", add here.
+    keep_vars = c("val", "sample_size")
+    
+    for (agg_metric in names(dfs_out)) {
+      map_old_new_names = keep_vars
+      names(map_old_new_names) = paste(keep_vars, agg_metric, sep="_")
+      
+      dfs_out[[agg_metric]] = 
+        apply_privacy_censoring(dfs_out[[agg_metric]], params)[, c(agg_group, keep_vars)] %>% 
+        rename(map_old_new_names)
     }
+    
+    df_out = dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
+    write_data_api(df_out, params, geo_level, agg_group)
   }
 }
 
@@ -508,8 +520,10 @@ convert_qcodes_to_bool <- function(df, aggregations, col_var) {
     return(list(df,  aggregations[aggregations$name != col_var, ]))
   }
   
-  if (FALSE %in% df[[col_var]] | TRUE %in% df[[col_var]]) {
-    return(df)
+  #### TODO: or saved in integer format? Check for 0/1?
+  if (FALSE %in% df[[col_var]] || TRUE %in% df[[col_var]]) {
+    # Already in boolean format.
+    return(list(df, aggregations))
   }
   
   df[[col_var]] <- (df[[col_var]] == 1L)
@@ -752,6 +766,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 
 
 #' Write csv file for sharing with researchers
+#' 
+#' CSV name includes date specifying start of time period aggregated, geo level,
+#' and grouping variables.
 #'
 #' @param data           a data frame to save; must contain the columns "geo_id", "val",
 #'                       "se", "sample_size", and grouping variables. The first four are saved in the
@@ -765,24 +782,29 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 #' @importFrom dplyr arrange
 #' @importFrom rlang .data
 #' @export
-write_data_api <- function(data, params, geo_level, signal_name, groupby_vars)
+write_data_api <- function(data, params, geo_level, groupby_vars)
 {
-  if (!is.null(data)) {
-    data <- arrange(data, groupby_vars)
+  if (!is.null(data) && nrow(data) != 0) {
+    data <- arrange_at(data, groupby_vars)
   } else {
-    data <- data.frame()
+    msg_plain(sprintf(
+      "no aggregations produced for grouping variables %s (%s); CSV will not be saved", 
+      paste(groupby_vars, collapse=", "), geo_level
+    ))
+    return()
   }
 
   file_out <- file.path(
     params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
-                               geo_level, signal_name)
+                               geo_level, paste(groupby_vars, collapse="_"))
   )
 
   create_dir_not_exist(params$export_dir)
 
   msg_df(sprintf(
     "saving contingency table data to %-35s",
-    sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"), geo_level, signal_name)
+    sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"),
+            geo_level, paste(groupby_vars, collapse="_"))
   ), data)
   write_csv(data, file_out)
 }

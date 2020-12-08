@@ -137,7 +137,7 @@ class TestGeoMapper:
         # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="zip", to_code="state")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
-        cw = gmpr._load_crosswalk(from_code="zip", to_code="hhs_region_number")
+        cw = gmpr._load_crosswalk(from_code="zip", to_code="hhs")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
 
 
@@ -205,8 +205,8 @@ class TestGeoMapper:
 
         # state_code -> hhs
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
-        new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs_region_number")
-        assert new_data2["hhs_region_number"].unique().size == 2
+        new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs")
+        assert new_data2["hhs"].unique().size == 2
 
         # state_name -> state_id
         new_data = gmpr.replace_geocode(self.zip_data, "zip", "state_name")
@@ -267,11 +267,11 @@ class TestGeoMapper:
 
         # fips -> hhs
         new_data = gmpr.replace_geocode(self.fips_data_3.drop(columns=["date"]),
-                                        "fips", "hhs_region_number", date_col=None)
+                                        "fips", "hhs", date_col=None)
         assert new_data.equals(
             pd.DataFrame().from_dict(
                 {
-                    "hhs_region_number": {0: "2", 1: "6"},
+                    "hhs": {0: "2", 1: "6"},
                     "count": {0: 12, 1: 6},
                     "total": {0: 111, 1: 13}
                 }
@@ -279,14 +279,14 @@ class TestGeoMapper:
         )
 
         # zip -> hhs
-        new_data = gmpr.replace_geocode(self.zip_data, "zip", "hhs_region_number")
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "hhs")
         new_data = new_data.round(10)  # get rid of a floating point error with 99.00000000000001
         assert new_data.equals(
             pd.DataFrame().from_dict(
                 {
                     "date": {0: pd.Timestamp("2018-01-01"), 1: pd.Timestamp("2018-01-01"),
                              2: pd.Timestamp("2018-01-03"), 3: pd.Timestamp("2018-01-03")},
-                    "hhs_region_number": {0: "5", 1: "9", 2: "5", 3: "9"},
+                    "hhs": {0: "5", 1: "9", 2: "5", 3: "9"},
                     "count": {0: 99.0, 1: 801.0, 2: 100.0, 3: 786.0},
                     "total": {0: 198.0, 1: 1602.0, 2: 200.0, 3: 1572.0}
                 }

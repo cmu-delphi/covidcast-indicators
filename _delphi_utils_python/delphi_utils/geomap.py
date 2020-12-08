@@ -106,10 +106,12 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         self.crosswalk_filepaths = CROSSWALK_FILEPATHS
         self.crosswalks = {
-            "zip": {"fips": None, "hrr": None, "msa": None,
-                    "pop": None, "state": None, "hhs_region_number": None},
-            "fips": {"zip": None, "hrr": None, "msa": None,
-                     "pop": None, "state": None, "hhs_region_number": None},
+            "zip": {
+                geo: None for geo in ["fips", "hrr", "msa", "pop", "state", "hhs_region_number"]
+            },
+            "fips": {
+                geo: None for geo in ["zip", "hrr", "msa", "pop", "state", "hhs_region_number"]
+            },
             "state": {"state": None},
             "state_code": {"hhs_region_number": None},
             "jhu_uid": {"fips": None},

@@ -68,8 +68,12 @@ class Constants:
     NUM_HRRS = 308
     NUM_MSAS = 392 + 52  # MSA + States
     NUM_STATES = 52  # including DC and PR
+    NUM_NATIONS = 1
+    NUM_HHSS = 10
 
     MAX_GEO = {"county": NUM_COUNTIES,
                "hrr": NUM_HRRS,
                "msa": NUM_MSAS,
-               "state": NUM_STATES}
+               "state": NUM_STATES,
+               "nation": NUM_NATIONS,
+               "hhs": NUM_HHSS}

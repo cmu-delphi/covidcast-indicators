@@ -104,9 +104,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
-        assert geo in ['county', 'state', 'msa', 'hrr'],\
-            f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
-        self.geo, self.parallel, self.weekday, self.numtype, self.se = geo.lower(), parallel, weekday, numtype, se
+        self.geo, self.parallel, self.weekday, self.numtype, self.se = geo.lower(), parallel, \
+                                                                       weekday, numtype, se
 
         # output file naming
         if self.numtype == "covid":
@@ -145,10 +144,9 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         # get right geography
         geo = self.geo
         gmpr = GeoMapper()
-        if geo not in {"county", "state", "msa", "hrr"}:
-            logging.error("{0} is invalid, pick one of 'county', 'state', 'msa', 'hrr'".format(
-                geo
-            ))
+        if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
+            logging.error("{0} is invalid, pick one of 'county', "
+                          "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
             data_frame = gmpr.fips_to_megacounty(data,
@@ -162,6 +160,10 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             data_frame = gmpr.replace_geocode(data, "fips", "msa")
         elif geo == "hrr":
             data_frame = gmpr.replace_geocode(data, "fips", "hrr")
+        elif geo == "hhs":
+            data_frame = gmpr.replace_geocode(data, "fips", "hhs")
+        else:
+            data_frame = gmpr.replace_geocode(data, "fips", "nation")
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)

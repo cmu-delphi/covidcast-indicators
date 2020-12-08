@@ -36,7 +36,7 @@ class TestCHCSensorUpdator:
     prefix = "foo"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
-        "fips": [1.0] * 7 + [2.0] * 6,
+        "fips": ['01001'] * 7 + ['04007'] * 6,
         "den": [1000] * 7 + [2000] * 6,
         "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
 
@@ -68,7 +68,7 @@ class TestCHCSensorUpdator:
             "02-01-2020",
             "06-01-2020",
             "06-12-2020",
-            'county',
+            "nation",
             self.parallel,
             self.weekday,
             self.numtype,

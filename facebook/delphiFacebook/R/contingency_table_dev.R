@@ -1,34 +1,25 @@
 #### TODO
-# - Let user specify function keyword instead of actual function?
-# - set up to be able to aggregate multiple time periods in series?
+# - set up to be able to aggregate multiple time periods in series? wrapper function more likely
 # - Do type-checking to make sure desired aggregate function is compatible with metric specified
 # - map response codes to sensical values?
 
 
-# # # Get data
+# # Get data
 # path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-# path_to_raw_data =  params$input_dir
-# data_file = params$input
-# # 
-# # wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
-# # wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
-# # wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
-# wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
+# 
+# wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
+# wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
+# wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
 # wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
 # 
-# input_data <- load_responses_all(params)
-# 
-# 
-# 
-# # 
-# # # All surveys have 2 non-response rows at the top. First is detail of question.
-# # # Second is json(?) field access info -- not needed.
-# # wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
-# # # Shows 1 (uncompleted) response; 59 fields
-# # wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
-# # # Shows 230k responses; 83 fields. Most updated form of survey.
-# # wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
-# # # Shows 230k responses; 83 fields. Most updated form of survey.
+# # All surveys have 2 non-response rows at the top. First is detail of question.
+# # Second is json(?) field access info -- not needed.
+# wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
+# # Shows 1 (uncompleted) response; 59 fields
+# wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
+# # Shows 230k responses; 83 fields. Most updated form of survey.
+# wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
+# # Shows 230k responses; 83 fields. Most updated form of survey.
 # wave4 = read.csv(file.path(path_to_raw_data, data_file), header = TRUE)
 
 
@@ -135,14 +126,11 @@ run_contingency_tables <- function(params)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-
-  # if (params$aggregate_range == "weekly") {
-  #   data_agg$period_start_date <- start_of_week(data_agg$day)
-  # } else if (params$aggregate_range == "monthly") {
-  #   data_agg$period_start_date <- start_of_month(data_agg$day)
-  # }
-
-  aggregations <- set_aggs(params)
+  aggregations <- unique(set_aggs(params))
+  
+  if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
+    stop("all aggregation names must be unique")
+  }
 
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -303,7 +291,8 @@ set_human_readable_colnames <- function(input_data) {
 
 #' Sets user-specified aggregations.
 #'
-#' User should add additional desired aggregations here following existing format.
+#' User should add additional desired aggregations here following existing 
+#' format. Names should be unique.
 #'
 #' @param params Named list of configuration parameters.
 #'
@@ -313,22 +302,23 @@ set_human_readable_colnames <- function(input_data) {
 set_aggs <- function(params) {
   aggs <- tribble(
     ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
-    "tested_reasons_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_binary_response, I,
-    "tested_pos_freq_given_tested", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_binary_response, I,
-    "hh_num_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_count_response, I,
+    # "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, I,
+    # "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, I,
+    # "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, I,
+    # 
+    # "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
+    # "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
+    # "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, I,
+    # 
+    # "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, I,
+    # "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, I,
+    # "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_prop, I,
+    # "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, I,
+    # "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, I,
+    # "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, I,
     
-    "mean_tested_positive_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_binary_response, I,
-    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_binary_response, I,
-    "comorbidities_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_binary_response, I,
-    
-    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_binary_response, I,
-    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_binary_response, I,
-    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_binary_response, I,
-    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_binary_response, I,
-    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_binary_response, I,
-    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_binary_response, I,
-    
-    "anxiety_levels", "weight", "mc_anxiety", c(), FALSE, compute_count_response, I,
+    "anxiety_levels_no_groups", "weight", "mc_anxiety", c(), FALSE, compute_count, I,
+    "anxiety_levels", "weight", "mc_anxiety", c("state"), FALSE, compute_count, I,
   )
 
   return(aggs)
@@ -336,7 +326,7 @@ set_aggs <- function(params) {
 
 
 
-#' Returns response estimates for a single data grouping.
+#' Returns numeric response estimates
 #'
 #' This function takes vectors as input and computes the count response values
 #' (a point estimate named "val" and an effective
@@ -349,7 +339,7 @@ set_aggs <- function(params) {
 #'
 #' @importFrom stats weighted.mean
 #' @export
-compute_count_response <- function(response, weight, sample_size)
+compute_mean <- function(response, weight, sample_size)
 {
   #### TODO: Why does this need to be for a percent response?
   assert(all( response >= 0 & response <= 100 ))
@@ -383,7 +373,7 @@ compute_count_response <- function(response, weight, sample_size)
 #'
 #' @importFrom stats weighted.mean
 #' @export
-compute_binary_response <- function(response, weight, sample_size)
+compute_prop <- function(response, weight, sample_size)
 {
   assert(all( (response == 0) | (response == 1) ))
   assert(length(response) == length(weight))
@@ -395,6 +385,32 @@ compute_binary_response <- function(response, weight, sample_size)
   return(list(val = val,
              sample_size = sample_size,
              effective_sample_size = sample_size)) # TODO effective sample size
+}
+
+
+#' Returns multichoice response estimates
+#'
+#' This function takes vectors as input and computes the response values
+#' (a point estimate named "val" and a sample size
+#' named "sample_size").
+#'
+#' @param response a vector of binary (0 or 1) responses
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size The sample size to use, which may be a non-integer (as
+#'   responses from ZIPs that span geographical boundaries are weighted
+#'   proportionately, and survey weights may also be applied)
+#'
+#' @importFrom stats weighted.mean
+#' @export
+compute_count <- function(response, weight, sample_size)
+{
+  assert(all( response >= 0 ))
+  assert(length(response) == length(weight))
+  
+  return(list(val = sample_size,
+              sample_size = sample_size,
+              effective_sample_size = sample_size)) # TODO effective sample size
 }
 
 
@@ -440,10 +456,11 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
 
-  # Add implied geo_level to each group_by. Order alphabetically. Replace geo_level
-  # with generic "geo_id" var
+
   aggregations$geo_level = NA
   for (agg_ind in seq_along(aggregations$group_by)) {
+    # Add implied geo_level to each group_by. Order alphabetically. Replace geo_level
+    # with generic "geo_id" var
     geo_level = intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
     if (length(geo_level) > 1) {
       stop('more than one geo type provided for a single aggregation')
@@ -456,6 +473,14 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     }
 
     aggregations$geo_level[agg_ind] = geo_level
+    
+    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
+      # The multiple choice column should also be included in the groupby vars
+      if ( !(aggregations$metric[agg_ind] %in% aggregations$group_by[agg_ind][[1]]) ) {
+        aggregations$group_by[agg_ind][[1]] = 
+          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
+      }
+    }
   }
 
   # Convert any columns being aggregated to the appropriate format.

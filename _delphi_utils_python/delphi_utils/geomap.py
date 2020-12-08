@@ -22,6 +22,7 @@ CROSSWALK_FILEPATHS = {
         "msa": join(DATA_PATH, "zip_msa_table.csv"),
         "pop": join(DATA_PATH, "zip_pop.csv"),
         "state": join(DATA_PATH, "zip_state_code_table.csv"),
+        "hhs_region_number": join(DATA_PATH, "zip_hhs_table.csv")
     },
     "fips": {
         "zip": join(DATA_PATH, "fips_zip_table.csv"),
@@ -29,6 +30,7 @@ CROSSWALK_FILEPATHS = {
         "msa": join(DATA_PATH, "fips_msa_table.csv"),
         "pop": join(DATA_PATH, "fips_pop.csv"),
         "state": join(DATA_PATH, "fips_state_table.csv"),
+        "hhs_region_number": join(DATA_PATH, "fips_hhs_table.csv"),
     },
     "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
     "state_code": {
@@ -55,12 +57,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     - [x] zip -> hrr : unweighted
     - [x] zip -> msa : unweighted
     - [x] zip -> state
+    - [x] zip -> hhs_region_number
     - [x] zip -> population
     - [x] state code -> hhs_region_number
     - [x] fips -> state : unweighted
     - [x] fips -> msa : unweighted
     - [x] fips -> megacounty
     - [x] fips -> hrr
+    - [x] fips -> hhs_region_number
     - [x] nation
     - [ ] zip -> dma (postponed)
 
@@ -102,8 +106,10 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         self.crosswalk_filepaths = CROSSWALK_FILEPATHS
         self.crosswalks = {
-            "zip": {"fips": None, "hrr": None, "msa": None, "pop": None, "state": None},
-            "fips": {"zip": None, "hrr": None, "msa": None, "pop": None, "state": None},
+            "zip": {"fips": None, "hrr": None, "msa": None,
+                    "pop": None, "state": None, "hhs_region_number": None},
+            "fips": {"zip": None, "hrr": None, "msa": None,
+                     "pop": None, "state": None, "hhs_region_number": None},
             "state": {"state": None},
             "state_code": {"hhs_region_number": None},
             "jhu_uid": {"fips": None},
@@ -123,6 +129,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 ("jhu_uid", "fips"),
                 ("zip", "msa"),
                 ("fips", "hrr"),
+                ("zip", "hhs_region_number")
             ]:
                 self.crosswalks[from_code][to_code] = pd.read_csv(
                     stream,
@@ -136,6 +143,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             elif (from_code, to_code) in [
                 ("zip", "hrr"),
                 ("fips", "msa"),
+                ("fips", "hhs_region_number"),
+                ("state_code", "hhs_region_number")
             ]:
                 self.crosswalks[from_code][to_code] = pd.read_csv(
                     stream,
@@ -150,11 +159,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                         "state_id": str,
                         "state_name": str,
                     },
-                )
-            elif (from_code, to_code) == ("state_code", "hhs_region_number"):
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={"state_code": str, "hhs_region_number": str},
                 )
             elif (from_code, to_code) == ("zip", "state"):
                 self.crosswalks[from_code][to_code] = pd.read_csv(
@@ -255,8 +259,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """Add a new geocode column to a dataframe.
 
         Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
-        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs_region_number
+        - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs_region_number
         - jhu_uid -> fips
         - state_x -> state_y, where x and y are in {code, id, name}
         - state_code -> hhs_region_number

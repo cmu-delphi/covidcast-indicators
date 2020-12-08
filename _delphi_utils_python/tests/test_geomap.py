@@ -137,6 +137,9 @@ class TestGeoMapper:
         # assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         cw = gmpr._load_crosswalk(from_code="zip", to_code="state")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+        cw = gmpr._load_crosswalk(from_code="zip", to_code="hhs_region_number")
+        assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
+
 
     def test_load_zip_fips_table(self):
         gmpr = GeoMapper()
@@ -258,6 +261,34 @@ class TestGeoMapper:
                     'hrr': {0: '1', 1: '183', 2: '184', 3: '382', 4: '7'},
                     'count': {0: 1.772347174163783, 1: 7157.392403522299, 2: 2863.607596477701, 3: 1.0, 4: 0.22765282583621685},
                     'total': {0: 3.544694348327566, 1: 71424.64801363471, 2: 28576.35198636529, 3: 1.0, 4: 0.4553056516724337}
+                }
+            )
+        )
+
+        # fips -> hhs
+        new_data = gmpr.replace_geocode(self.fips_data_3.drop(columns=["date"]),
+                                        "fips", "hhs_region_number", date_col=None)
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "hhs_region_number": {0: "2", 1: "6"},
+                    "count": {0: 12, 1: 6},
+                    "total": {0: 111, 1: 13}
+                }
+            )
+        )
+
+        # zip -> hhs
+        new_data = gmpr.replace_geocode(self.zip_data, "zip", "hhs_region_number")
+        new_data = new_data.round(10)  # get rid of a floating point error with 99.00000000000001
+        assert new_data.equals(
+            pd.DataFrame().from_dict(
+                {
+                    "date": {0: pd.Timestamp("2018-01-01"), 1: pd.Timestamp("2018-01-01"),
+                             2: pd.Timestamp("2018-01-03"), 3: pd.Timestamp("2018-01-03")},
+                    "hhs_region_number": {0: "5", 1: "9", 2: "5", 3: "9"},
+                    "count": {0: 99.0, 1: 801.0, 2: 100.0, 3: 786.0},
+                    "total": {0: 198.0, 1: 1602.0, 2: 200.0, 3: 1572.0}
                 }
             )
         )

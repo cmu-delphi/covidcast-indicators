@@ -12,14 +12,6 @@
 # wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
 # wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
 # 
-# # All surveys have 2 non-response rows at the top. First is detail of question.
-# # Second is json(?) field access info -- not needed.
-# wave1 = read.csv(file.path(path_to_raw_data, wave1), header = TRUE)
-# # Shows 1 (uncompleted) response; 59 fields
-# wave2 = read.csv(file.path(path_to_raw_data, wave2), header = TRUE)
-# # Shows 230k responses; 83 fields. Most updated form of survey.
-# wave3 = read.csv(file.path(path_to_raw_data, wave3), header = TRUE)
-# # Shows 230k responses; 83 fields. Most updated form of survey.
 # wave4 = read.csv(file.path(path_to_raw_data, data_file), header = TRUE)
 
 
@@ -58,6 +50,7 @@ read_params <- function(path = "params.json") {
 
   if (params$end_date == "current") {
     date_range = get_range_prev_full_period(Sys.Date(), params$aggregate_range)
+    params$input = get_filenames_in_range(date_range, params)
   } else {
     end_date <- ymd_hms(
       sprintf("%s 23:59:59", params$end_date), tz = "America/Los_Angeles"
@@ -65,6 +58,10 @@ read_params <- function(path = "params.json") {
     date_range = get_range_prev_full_period(end_date, params$aggregate_range)
   }
 
+  if (length(params$input) == 0) {
+    stop("no input files to read in")
+  }
+  
   params$start_time <- date_range[[1]]
   params$end_time <- date_range[[2]]
 
@@ -72,6 +69,36 @@ read_params <- function(path = "params.json") {
   params$end_date <- as.Date(date_range[[2]])
 
   return(params)
+}
+
+
+#' Get relevant input data file names.
+#'
+#' @param date_range    List of two dates specifying start and end of desired
+#' date range 
+#' @param params    Params object produced by read_params
+#'
+#' @return Character vector of filenames
+#' @export
+get_filenames_in_range <- function(date_range, params) {
+  #### TODO: do we need to read in data as far as params$archive_days back?
+  start_date <- as.Date(date_range[[1]]) - params$backfill_days
+  end_date <- as.Date(date_range[[2]])
+  pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
+  
+  filenames <- list.files(path=params$input_dir)
+  filenames <- filenames[grepl(pattern, filenames)]
+  
+  file_end_dates <- as.Date(substr(filenames, 1, 10))
+  file_start_dates <- file_end_dates
+  
+  # Only keep files with data that falls at least somewhat between the desired
+  # start and end range dates.
+  filenames <- filenames[
+    !(( file_start_dates < start_date & file_end_dates < start_date ) | 
+        ( file_start_dates > end_date & file_end_dates > end_date ))]
+  
+  return(filenames)
 }
 
 
@@ -91,7 +118,6 @@ run_contingency_tables <- function(params)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
   
-  #### TODO: if end_date == "current", use regex to choose which files to read in from input_dir
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
@@ -292,7 +318,8 @@ set_human_readable_colnames <- function(input_data) {
 #' Sets user-specified aggregations.
 #'
 #' User should add additional desired aggregations here following existing 
-#' format. Names should be unique.
+#' format. Names should be unique. Listing no groupby vars will implicitly
+#' compute aggregations at the national level.
 #'
 #' @param params Named list of configuration parameters.
 #'
@@ -302,21 +329,21 @@ set_human_readable_colnames <- function(input_data) {
 set_aggs <- function(params) {
   aggs <- tribble(
     ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
-    # "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, I,
-    # "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, I,
-    # "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, I,
-    # 
-    # "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
-    # "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
-    # "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, I,
-    # 
-    # "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, I,
-    # "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, I,
-    # "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_prop, I,
-    # "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, I,
-    # "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, I,
-    # "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, I,
-    
+    "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, I,
+    "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, I,
+    "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, I,
+
+    "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
+    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
+    "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, I,
+
+    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, I,
+    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, I,
+    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_prop, I,
+    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, I,
+    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, I,
+    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, I,
+
     "anxiety_levels_no_groups", "weight", "mc_anxiety", c(), FALSE, compute_count, I,
     "anxiety_levels", "weight", "mc_anxiety", c("state"), FALSE, compute_count, I,
   )
@@ -341,7 +368,6 @@ set_aggs <- function(params) {
 #' @export
 compute_mean <- function(response, weight, sample_size)
 {
-  #### TODO: Why does this need to be for a percent response?
   assert(all( response >= 0 & response <= 100 ))
   assert(length(response) == length(weight))
 
@@ -545,7 +571,6 @@ convert_qcodes_to_bool <- function(df, aggregations, col_var) {
     return(list(df,  aggregations[aggregations$name != col_var, ]))
   }
   
-  #### TODO: or saved in integer format? Check for 0/1?
   if (FALSE %in% df[[col_var]] || TRUE %in% df[[col_var]]) {
     # Already in boolean format.
     return(list(df, aggregations))
@@ -569,7 +594,8 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
   # Turn each response code into a new binary col
   new_binary_cols = as.character(lapply(response_codes, function(code) { paste(col_var, code, sep="_") }))
   #### TODO: eval(parse()) here is not the best approach, but I can't find another 
-  # way to get col_var (a string) to be used as a var rather than a string
+  # way to get col_var (a string) to be used as a var rather than a string. This
+  # approach causes a shallow copy to be made (warning is raised).
   df[!is.na(df[[col_var]]), c(new_binary_cols) := 
        lapply(response_codes, function(code) { 
          ( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) | 

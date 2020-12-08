@@ -553,7 +553,7 @@ def derive_fips_hhs_crosswalk():
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
     (
         fips_pop.merge(state_hhs, on="state_code", how="left")
-        .drop(columns="pop")
+        .drop(columns=["state_code", "pop"])
         .to_csv(join(OUTPUT_DIR, FIPS_HHS_FILENAME), index=False)
     )
 
@@ -578,6 +578,7 @@ def derive_zip_hhs_crosswalk():
 
     (
         zip_state.merge(state_hhs, on="state_code", how="left")
+        .drop(columns=["state_code", "state_id", "state_name"])
         .to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
     )
 

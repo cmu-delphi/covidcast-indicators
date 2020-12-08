@@ -5,16 +5,22 @@ import structlog
 
 def get_structured_logger(name=__name__):
     """Create a new structlog logger.
-    
-    Use the logger returned from this in indicator code using the standard 
+
+    Use the logger returned from this in indicator code using the standard
     wrapper calls, e.g.:
 
+    logger = get_structured_logger(__name__)
     logger.warning("Error", type="Signal too low").
 
     The output will be rendered as JSON which can easily be consumed by logs
     processors.
 
     See the structlog documentation for details.
+
+    Parameters
+    ---------
+    name: Name to use for logger (included in log lines), __name__ from caller
+    is a good choice.
     """
     # Configure the underlying logging configuration
     logging.basicConfig(

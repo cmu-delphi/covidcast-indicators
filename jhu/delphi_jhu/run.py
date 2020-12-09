@@ -57,6 +57,8 @@ GEO_RESOLUTIONS = [
     "state",
     "msa",
     "hrr",
+    "hhs",
+    "nation"
 ]
 
 

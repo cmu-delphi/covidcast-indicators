@@ -91,7 +91,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             startdate: first sensor date (YYYY-mm-dd)
             enddate: last sensor date (YYYY-mm-dd)
             dropdate: data drop date (YYYY-mm-dd)
-            geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
+            geo: geographic resolution, one of ["county", "state", "msa", "hrr", "hhs", "nation"]
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
             numtype: type of count data used, one of ["covid", "cli"]

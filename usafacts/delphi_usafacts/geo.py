@@ -111,7 +111,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         subset_state_fips_codes = set(df.index.values) & state_fips_codes
         df.loc[subset_state_fips_codes, "population"] = 0
         df = df.reset_index()
-    elif geo_res in ("msa", "hrr"):
+    else:
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
             df = disburse(df, fips, fips_list)

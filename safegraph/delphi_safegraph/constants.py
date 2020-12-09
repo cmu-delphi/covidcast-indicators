@@ -18,5 +18,5 @@ GEO_RESOLUTIONS = [
     'msa',
     'hrr',
     'hhs',
-    'nations'
+    'nation'
 ]

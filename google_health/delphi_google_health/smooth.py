@@ -60,11 +60,12 @@ def _left_gauss_linear(s: np.ndarray, h=10, impute=False, minval=None) -> np.nda
 
     n = len(s)
     t = np.zeros_like(s, dtype=np.float64)
-    X = np.vstack([np.ones(n), np.arange(n)]).T
+    X = np.vstack([np.ones(n), np.arange(n)]).T #pylint: disable=invalid-name
     for idx in range(n):
         wts = np.exp(-((np.arange(idx + 1) - idx) ** 2) / (h ** 2))
-        XwX = np.dot(X[: (idx + 1), :].T * wts, X[: (idx + 1), :])
-        Xwy = np.dot(X[: (idx + 1), :].T * wts, s[: (idx + 1)].reshape(-1, 1))
+        XwX = np.dot(X[: (idx + 1), :].T * wts, X[: (idx + 1), :]) #pylint: disable=invalid-name
+        Xwy = np.dot(X[: (idx + 1), :].T * wts, #pylint: disable=invalid-name
+                     s[: (idx + 1)].reshape(-1, 1))
         try:
             beta = np.linalg.solve(XwX, Xwy)
             t[idx] = np.dot(X[: (idx + 1), :], beta)[-1]

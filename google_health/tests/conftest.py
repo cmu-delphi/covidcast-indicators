@@ -15,7 +15,8 @@ from delphi_google_health.run import run_module
 def run_as_module():
     # Clean receiving directory
     for fname in listdir("receiving"):
-        remove(join("receiving", fname))
+        if fname != ".gitignore":
+            remove(join("receiving", fname))
     with mock_s3():
         # Create the fake bucket we will be using
         params = read_params()

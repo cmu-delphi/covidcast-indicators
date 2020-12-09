@@ -13,7 +13,6 @@ from . import direction
 from . import geo_maps
 from . import run
 from . import sensor
-from . import smooth
 from . import update_sensor
 from . import weekday
 

@@ -57,24 +57,23 @@ class TestClaimsHospIndicatorUpdater:
         assert updater.output_dates[-1] == updater.enddate - pd.Timedelta(days=1)
 
     def test_geo_reindex(self):
-        for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
-            updater = ClaimsHospIndicatorUpdater(
-                "02-01-2020",
-                "06-01-2020",
-                "06-12-2020",
-                geo,
-                self.parallel,
-                self.weekday,
-                self.write_se,
-                Config.signal_name
-            )
-            updater.shift_dates()
-            data_frame = updater.geo_reindex(self.small_test_data.reset_index())
-            assert data_frame.shape[0] == multiple * len(updater.fit_dates)
-            assert (data_frame.sum() == (4200, 19000)).all()
+        updater = ClaimsHospIndicatorUpdater(
+            "02-01-2020",
+            "06-01-2020",
+            "06-12-2020",
+            self.geo,
+            self.parallel,
+            self.weekday,
+            self.write_se,
+            Config.signal_name
+        )
+        updater.shift_dates()
+        data_frame = updater.geo_reindex(self.small_test_data.reset_index())
+        assert data_frame.shape[0] == 2 * len(updater.fit_dates)
+        assert (data_frame.sum() == (4200, 19000)).all()
 
     def test_update_indicator(self):
-        for geo in ["hrr", "hhs", "nation"]:
+        for geo in ["state", "hrr", "hhs", "nation"]:
             td = TemporaryDirectory()
             updater = ClaimsHospIndicatorUpdater(
                 "02-01-2020",

@@ -103,16 +103,16 @@ class ClaimsHospIndicatorUpdater:
                                                     mega_col=self.geo)
         elif self.geo == "state":
             data_frame = geo_map.replace_geocode(data,
-                                                 from_code="hrr",
+                                                 from_code="fips",
                                                  new_col=self.geo,
                                                  new_code="state_id")
             data_frame[self.geo] = data_frame[self.geo]
         elif self.geo in ["msa", "hhs", "nation"]:
             data_frame = geo_map.replace_geocode(data,
-                                                 from_code="hrr",
+                                                 from_code="fips",
                                                  new_code=self.geo)
         elif self.geo == "hrr":
-            data_frame = data  # data has HHR column which is already adjusted
+            data_frame = data  # data is already adjusted in aggregation step above
         else:
             logging.error(
                 "%s is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'",

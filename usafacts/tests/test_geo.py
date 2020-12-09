@@ -6,11 +6,6 @@ import numpy as np
 import pandas as pd
 from delphi_usafacts.geo import disburse, geo_map
 
-MAP_DF = pd.read_csv(
-    join("..", "static", "fips_prop_pop.csv"),
-    dtype={"fips": int}
-)
-
 SENSOR = "new_counts"
 
 class TestDisburse:
@@ -48,7 +43,7 @@ class TestGeoMap:
         )
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF, SENSOR)
+            geo_map(df, "département", SENSOR)
 
     def test_county(self):
         """Tests that values are correctly aggregated at the county level."""
@@ -62,7 +57,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "county", MAP_DF, SENSOR)
+        new_df = geo_map(df, "county", SENSOR)
 
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
@@ -84,7 +79,7 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "state", MAP_DF, SENSOR)
+        new_df = geo_map(df, "state", SENSOR)
 
         exp_incidence = np.array([27, 13]) / np.array([2500, 25]) * 100000
         exp_cprop = np.array([165, 60]) / np.array([2500, 25]) * 100000
@@ -108,7 +103,7 @@ class TestGeoMap:
                 "population": [100, 2100, 300, 25],
             }
         )
-        new_df = geo_map(df, "hrr", MAP_DF, SENSOR)
+        new_df = geo_map(df, "hrr", SENSOR)
         assert new_df.round(5).equals(pd.DataFrame({
             "geo_id": ["110", "123", "140", "145", "147"],
             "timestamp": ["2020-02-15"]*5,
@@ -130,7 +125,7 @@ class TestGeoMap:
                 "population": [100, 2100, 300, 25],
             }
         )
-        new_df = geo_map(df, "msa", MAP_DF, SENSOR)
+        new_df = geo_map(df, "msa", SENSOR)
         assert new_df.round(5).equals(pd.DataFrame({
             "geo_id": ["31420", "49340"],
             "timestamp": ["2020-02-15"]*2,

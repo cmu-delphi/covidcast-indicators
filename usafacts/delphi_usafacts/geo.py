@@ -59,7 +59,7 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     return df
 
 
-def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
+def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     """
     Map a DataFrame with county level data and aggregate it to the geographic resolution geo_res.
 
@@ -70,8 +70,6 @@ def geo_map(df: pd.DataFrame, geo_res: str, map_df: pd.DataFrame, sensor: str):
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
         ("county", "state", "msa", "hrr").
-    map_df: pd.DataFrame
-        Loaded from static file "fips_prop_pop.csv".
     sensor: str
         sensor type. Valid options:
         ("new_counts", "cumulative_counts",

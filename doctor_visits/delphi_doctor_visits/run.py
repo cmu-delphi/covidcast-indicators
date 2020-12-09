@@ -48,7 +48,7 @@ def run_module():
     logging.info(f"n_waiting_days:\t{n_waiting_days}")
 
     ## geographies
-    geos = ["state", "msa", "hrr", "county"]
+    geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
     ## print out other vars
     logging.info("outpath:\t\t%s", params["export_dir"])

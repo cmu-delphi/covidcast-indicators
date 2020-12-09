@@ -89,7 +89,7 @@ def update_sensor(
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
-      geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
+      geo: geographic resolution, one of ["county", "state", "msa", "hrr", "nation", "hhs"]
       parallel: boolean to run the sensor update in parallel
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
@@ -154,8 +154,14 @@ def update_sensor(
         data_groups, _ = geo_map.county_to_msa(data)
     elif geo.lower() == "hrr":
         data_groups, _ = geo_map.county_to_hrr(data)
+    elif geo.lower() == "hhs":
+        data_groups, _ = geo_map.county_to_hhs(data)
+    elif geo.lower() == "nation":
+        data_groups, _ = geo_map.county_to_nation(data)
     else:
-        logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
+        logging.error(
+            f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', 'nation'"
+        )
         return False
     unique_geo_ids = list(data_groups.groups.keys())
 

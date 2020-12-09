@@ -64,20 +64,21 @@ class TestCHCSensorUpdator:
 
     def test_geo_reindex(self):
         """Tests that the geo reindexer changes the geographic resolution."""
-        su_inst = CHCSensorUpdator(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
-            "nation",
-            self.parallel,
-            self.weekday,
-            self.numtype,
-            self.se
-        )
-        su_inst.shift_dates()
-        data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
-        assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
-        assert (data_frame.sum() == (4200,19000)).all()
+        for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
+            su_inst = CHCSensorUpdator(
+                "02-01-2020",
+                "06-01-2020",
+                "06-12-2020",
+                geo,
+                self.parallel,
+                self.weekday,
+                self.numtype,
+                self.se
+            )
+            su_inst.shift_dates()
+            data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
+            assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
+            assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
         """Tests that the sensors are properly updated."""

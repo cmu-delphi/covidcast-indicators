@@ -547,7 +547,7 @@ def derive_fips_hhs_crosswalk():
     )
     state_hhs = pd.read_csv(
         join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME),
-        dtype={"state_code": str, "state_id": str, "state_name": str},
+        dtype={"state_code": str, "hhs": str},
     )
 
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
@@ -569,11 +569,11 @@ def derive_zip_hhs_crosswalk():
 
     zip_state = pd.read_csv(
         join(OUTPUT_DIR, ZIP_STATE_CODE_OUT_FILENAME),
-        dtype={"fips": str, "pop": int, "state_code": str}
+        dtype={"zip": str, "pop": int, "state_code": str}
     )
     state_hhs = pd.read_csv(
         join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME),
-        dtype={"state_code": str, "state_id": str, "state_name": str},
+        dtype={"state_code": str, "hhs": str},
     )
 
     (

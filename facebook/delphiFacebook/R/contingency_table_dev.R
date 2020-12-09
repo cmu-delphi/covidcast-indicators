@@ -1,38 +1,11 @@
 #### TODO
 # - set up to be able to aggregate multiple time periods in series? wrapper function more likely
-# - Do type-checking to make sure desired aggregate function is compatible with metric specified
 # - map response codes to sensical values?
 
 
-# # Get data
-# path_to_raw_data = "/mnt/sshftps/surveys/raw/"
-# 
-# wave1 = "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_2020-04-06.csv"
-# wave2 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv"
-# wave3 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"
-# wave4 = "2020-11-06.2020-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_Wave_4.csv"
-# 
-# wave4 = read.csv(file.path(path_to_raw_data, data_file), header = TRUE)
-
-
-
-library(lubridate)
-library(parallel)
-library(dplyr)
-library(data.table)
-library(tibble)
-library(jsonlite)
-library(readr)
-library(purrr)
-
-
-#' Return params file as an R list
+#' Update date and input files settings from params file
 #'
-#' Reads a parameters file. If the file does not exist, the function will create a copy of
-#' '"params.json.template" and read from that.
-#'
-#' @param path    path to the parameters file; if not present, will try to copy the file
-#'                "params.json.template"
+#' @param params    Params object produced by read_params
 #'
 #' @return a named list of parameters values
 #'
@@ -40,14 +13,7 @@ library(purrr)
 #' @importFrom jsonlite read_json
 #' @importFrom lubridate ymd_hms
 #' @export
-read_params <- function(path = "params.json") {
-  if (!file.exists(path)) file.copy("params.json.template", "params.json")
-  params <- read_json(path, simplifyVector = TRUE)
-
-  params$num_filter <- if_else(params$debug, 2L, 100L)
-  params$s_weight <- if_else(params$debug, 1.00, 0.01)
-  params$s_mix_coef <- if_else(params$debug, 0.05, 0.05)
-
+update_params <- function(params) {
   if (params$end_date == "current") {
     date_range = get_range_prev_full_period(Sys.Date(), params$aggregate_range)
     params$input = get_filenames_in_range(date_range, params)
@@ -114,6 +80,8 @@ get_filenames_in_range <- function(date_range, params) {
 #' @export
 run_contingency_tables <- function(params)
 {
+  params <- update_params(params)
+  
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)
@@ -152,11 +120,7 @@ run_contingency_tables <- function(params)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-  aggregations <- unique(set_aggs(params))
-  
-  if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
-    stop("all aggregation names must be unique")
-  }
+  aggregations <- get_aggs(params)
 
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -167,12 +131,20 @@ run_contingency_tables <- function(params)
 
 #' Rename question codes to informative descriptions
 #'
+#' Column names beginning with "b_" are binary (T/F/NA); with "t_" are user-
+#' entered text; with "n_" are user-entered numeric; with "mc_" are multiple
+#' choice (where only a single response can be selected); and with "ms_" are
+#' so-called multi-select, where multiple responses can be selected.
+#' 
+#' Only binary columns are mapped from response codes to real values. Multiple
+#' choice and multi-select questions use the original numeric response codes.
 #'
 #' @param params    Params object produced by read_params
 #'
 #' @return Data frame with descriptive column names
 #'
 #' @params input_data Data frame of individual response data
+#' 
 #' @importFrom dplyr rename
 #' @export
 set_human_readable_colnames <- function(input_data) {
@@ -314,35 +286,57 @@ set_human_readable_colnames <- function(input_data) {
 }
 
 
+#' Wrapper for `set_aggs`
+#'
+#' @return a tibble of desired aggregations to calculate
+#'
+#' @param params Named list of configuration parameters.
+#'
+#' @export
+get_aggs <- function(params) {
+  aggregations <- unique(set_aggs(params))
+  
+  if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
+    stop("all aggregation names must be unique")
+  }
+  
+  return(aggregations)
+}
+
 
 #' Sets user-specified aggregations.
 #'
 #' User should add additional desired aggregations here following existing 
 #' format. Names should be unique. Listing no groupby vars will implicitly
 #' compute aggregations at the national level.
+#' 
+#' Compute functions must be one of the `compute_*` set (or another function 
+#' with similar format can be created).
 #'
+#' @return a tibble of desired aggregations to calculate
+#' 
 #' @param params Named list of configuration parameters.
 #'
-#' @import data.table
+#' @importFrom tibble tribble
 #'
 #' @export
 set_aggs <- function(params) {
   aggs <- tribble(
     ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
-    "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, I,
-    "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, I,
-    "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, I,
+    "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, jeffreys_binary,
+    "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, jeffreys_binary,
+    "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, jeffreys_count,
 
-    "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
-    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, I,
-    "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, I,
+    "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, jeffreys_binary,
+    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, jeffreys_binary,
+    "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, jeffreys_binary,
 
-    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, I,
-    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, I,
+    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, jeffreys_binary,
+    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, jeffreys_binary,
     "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_prop, I,
-    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, I,
-    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, I,
-    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, I,
+    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, jeffreys_binary,
+    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, jeffreys_binary,
+    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, jeffreys_binary,
 
     "anxiety_levels_no_groups", "weight", "mc_anxiety", c(), FALSE, compute_count, I,
     "anxiety_levels", "weight", "mc_anxiety", c("state"), FALSE, compute_count, I,
@@ -353,42 +347,24 @@ set_aggs <- function(params) {
 
 
 
-#' Returns numeric response estimates
-#'
-#' This function takes vectors as input and computes the count response values
-#' (a point estimate named "val" and an effective
-#' sample size named "effective_sample_size").
+#' Wrapper for `compute_count_response` that adds sample_size
 #'
 #' @param response a vector of percentages (100 * cnt / total)
 #' @param weight a vector of sample weights for inverse probability weighting;
 #'   invariant up to a scaling factor
 #' @param sample_size Unused.
 #'
-#' @importFrom stats weighted.mean
 #' @export
 compute_mean <- function(response, weight, sample_size)
 {
-  assert(all( response >= 0 & response <= 100 ))
-  assert(length(response) == length(weight))
-
-  weight <- weight / sum(weight)
-  val <- weighted.mean(response, weight)
-
-  effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
-
-  return(list(
-    val = val,
-    sample_size = sample_size,
-    effective_sample_size = effective_sample_size
-  ))
+  response_mean <- compute_count_response(response, weight, sample_size)
+  response_mean$sample_size = sample_size
+  
+  return(response_mean)
 }
 
 
-#' Returns binary response estimates
-#'
-#' This function takes vectors as input and computes the binary response values
-#' (a point estimate named "val" and a sample size
-#' named "sample_size").
+#' Wrapper for `compute_binary_response` that adds sample_size
 #'
 #' @param response a vector of binary (0 or 1) responses
 #' @param weight a vector of sample weights for inverse probability weighting;
@@ -397,37 +373,30 @@ compute_mean <- function(response, weight, sample_size)
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
 #'
-#' @importFrom stats weighted.mean
 #' @export
 compute_prop <- function(response, weight, sample_size)
 {
-  assert(all( (response == 0) | (response == 1) ))
-  assert(length(response) == length(weight))
-
-  response_prop <- weighted.mean(response, weight)
-
-  val <- 100 * response_prop
-
-  return(list(val = val,
-             sample_size = sample_size,
-             effective_sample_size = sample_size)) # TODO effective sample size
+  response_prop <- compute_binary_response(response, weight, sample_size)
+  response_prop$sample_size = sample_size
+  
+  return(response_prop)
 }
 
 
-#' Returns multichoice response estimates
+
+#' Returns multiple choice response estimates
 #'
 #' This function takes vectors as input and computes the response values
 #' (a point estimate named "val" and a sample size
 #' named "sample_size").
 #'
-#' @param response a vector of binary (0 or 1) responses
+#' @param response a vector of multiple choice responses
 #' @param weight a vector of sample weights for inverse probability weighting;
 #'   invariant up to a scaling factor
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
 #'
-#' @importFrom stats weighted.mean
 #' @export
 compute_count <- function(response, weight, sample_size)
 {
@@ -436,6 +405,7 @@ compute_count <- function(response, weight, sample_size)
   
   return(list(val = sample_size,
               sample_size = sample_size,
+              se = NA_real_,
               effective_sample_size = sample_size)) # TODO effective sample size
 }
 
@@ -443,14 +413,8 @@ compute_count <- function(response, weight, sample_size)
 #' Produce aggregates for all desired aggregations.
 #'
 #' Writes the outputs directly to CSVs in the directory specified by `params`.
-#' Produces output for all available days between `params$start_date -
-#' params$backfill_days` and `params$end_date`, inclusive. (We re-output days
-#' before `start_date` in case there was backfill for those days.)
-#'
-#' Warning: The maximum value of `smooth_days` needs to be accounted for in
-#' `run.R` in the `lead_days` argument to `filter_data_for_aggregation`, so
-#' the correct amount of archived data is included, plus the expected backfill
-#' length.
+#' Produces output for all available data between `params$start_date` and 
+#' `params$end_date`, inclusive.
 #'
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -482,59 +446,15 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
 
-
-  aggregations$geo_level = NA
-  for (agg_ind in seq_along(aggregations$group_by)) {
-    # Add implied geo_level to each group_by. Order alphabetically. Replace geo_level
-    # with generic "geo_id" var
-    geo_level = intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
-    if (length(geo_level) > 1) {
-      stop('more than one geo type provided for a single aggregation')
-    } else if (length(geo_level) == 0) {
-      geo_level = "national"
-      aggregations$group_by[agg_ind][[1]] = sort(append(aggregations$group_by[agg_ind][[1]], "geo_id"))
-    } else {
-      aggregations$group_by[agg_ind][[1]][aggregations$group_by[agg_ind][[1]] == geo_level] = "geo_id"
-      aggregations$group_by[agg_ind][[1]] = sort(unique(aggregations$group_by[agg_ind][[1]]))
-    }
-
-    aggregations$geo_level[agg_ind] = geo_level
-    
-    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
-      # The multiple choice column should also be included in the groupby vars
-      if ( !(aggregations$metric[agg_ind] %in% aggregations$group_by[agg_ind][[1]]) ) {
-        aggregations$group_by[agg_ind][[1]] = 
-          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
-      }
-    }
-  }
-
-  # Convert any columns being aggregated to the appropriate format.
-  check_col_types = unique(aggregations$metric)
-  
-  for (col_var in check_col_types) {
-    if (startsWith(col_var, "b_")) { # Binary
-      output <- convert_qcodes_to_bool(df, aggregations, col_var)
-      df <- output[[1]]
-      aggregations <- output[[2]]
-      
-    } else if (startsWith(col_var, "ms_")) { # Multiselect
-      output <- convert_multiselect_to_binary_cols(df, aggregations, col_var)
-      df <- output[[1]]
-      aggregations <- output[[2]]
-      
-    } else if (startsWith(col_var, "n_")) { # Numeric free response
-      output <- convert_freeresponse_to_num(df, aggregations, col_var)
-      df <- output[[1]]
-      aggregations <- output[[2]]
-    }
-  }
+  output <- post_process_aggs(df, aggregations, cw_list)
+  df <- output[[1]]
+  aggregations <- output[[2]]
   
   agg_groups = unique(aggregations[c("group_by", "geo_level")])
   
   # For each unique combination of groupby_vars and geo level, run aggregation process once
-  # and calculate all desired aggregations on the grouping. Save to individual
-  # files
+  # and calculate all desired aggregations on the grouping. Rename columns. Save
+  # to individual files
   for (group_ind in seq_along(agg_groups$group_by)) {
     
     agg_group = agg_groups$group_by[group_ind][[1]]
@@ -560,11 +480,98 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     }
     
     df_out = dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
-    write_data_api(df_out, params, geo_level, agg_group)
+    write_data_agg(df_out, params, geo_level, agg_group)
   }
 }
 
 
+#' Post-process aggregations and data to make more generic
+#' 
+#' @param df Data frame of individual response data.
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
+#'   to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
+#' @param cw_list Named list of geographic crosswalks, each of which maps a zip5
+#'   to a geographic level such as county or state. Aggregates will be produced
+#'   for each geographic level.
+#'
+#' @export
+post_process_aggs <- function(df, aggregations, cw_list) {
+  aggregations$geo_level = NA
+  for (agg_ind in seq_along(aggregations$group_by)) {
+    # Add implied geo_level to each group_by. Order alphabetically. Replace 
+    # geo_level with generic "geo_id" var
+    geo_level = intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
+    if (length(geo_level) > 1) {
+      stop('more than one geo type provided for a single aggregation')
+    } else if (length(geo_level) == 0) {
+      geo_level = "national"
+      aggregations$group_by[agg_ind][[1]] = 
+        sort(append(aggregations$group_by[agg_ind][[1]], "geo_id"))
+    } else {
+      aggregations$group_by[agg_ind][[1]][
+        aggregations$group_by[agg_ind][[1]] == geo_level] = "geo_id"
+      aggregations$group_by[agg_ind][[1]] = 
+        sort(unique(aggregations$group_by[agg_ind][[1]]))
+    }
+    
+    aggregations$geo_level[agg_ind] = geo_level
+    
+    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
+      # Multiple choice metrics should also be included in the groupby vars
+      if ( !(aggregations$metric[agg_ind] %in% 
+             aggregations$group_by[agg_ind][[1]]) ) {
+        aggregations$group_by[agg_ind][[1]] = 
+          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
+      }
+    }
+  }
+  
+  # Convert any columns being aggregated to the appropriate format.
+  check_col_types = unique(aggregations$metric)
+  
+  for (col_var in check_col_types) {
+    if (startsWith(col_var, "b_")) { # Binary
+      output <- convert_qcodes_to_bool(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
+      
+    } else if (startsWith(col_var, "ms_")) { # Multiselect
+      output <- convert_multiselect_to_binary_cols(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
+      
+    } else if (startsWith(col_var, "n_")) { # Numeric free response
+      output <- convert_freeresponse_to_num(df, aggregations, col_var)
+      df <- output[[1]]
+      aggregations <- output[[2]]
+    }
+  }
+  
+  return(list(df, aggregations))
+}
+
+
+
+#' Convert a single binary response column to boolean
+#' 
+#' @param df Data frame of individual response data.
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
+#'   to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
+#' @param col_var Name of response var
+#'
+#' @export
 convert_qcodes_to_bool <- function(df, aggregations, col_var) {
   if (is.null(df[[col_var]])) {
     # Column not defined.
@@ -581,7 +588,20 @@ convert_qcodes_to_bool <- function(df, aggregations, col_var) {
 }
 
 
-
+#' Convert a single multi-select response column to a set of boolean columns
+#' 
+#' @param df Data frame of individual response data.
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
+#'   to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
+#' @param col_var Name of response var
+#'
+#' @export
 convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
   if (is.null(df[[col_var]])) {
     # Column not defined.
@@ -589,10 +609,13 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
   }
   
   # Get unique response codes
-  response_codes <- sort(na.omit(unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
+  response_codes <- sort(na.omit(
+    unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
   
   # Turn each response code into a new binary col
-  new_binary_cols = as.character(lapply(response_codes, function(code) { paste(col_var, code, sep="_") }))
+  new_binary_cols = as.character(lapply(
+    response_codes, 
+    function(code) { paste(col_var, code, sep="_") }))
   #### TODO: eval(parse()) here is not the best approach, but I can't find another 
   # way to get col_var (a string) to be used as a var rather than a string. This
   # approach causes a shallow copy to be made (warning is raised).
@@ -621,6 +644,21 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
 }
 
 
+
+#' Convert a single free response column to numeric
+#' 
+#' @param df Data frame of individual response data.
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
+#'   to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
+#' @param col_var Name of response var
+#'
+#' @export
 convert_freeresponse_to_num <- function(df, aggregations, col_var) {
   if (is.null(df[[col_var]])) {
     # Column not defined.
@@ -645,7 +683,7 @@ convert_freeresponse_to_num <- function(df, aggregations, col_var) {
 #'
 #' @export
 apply_privacy_censoring <- function(df, params) {
-  return(df["sample_size" >= 100])
+  return(df["sample_size" >= 100 & "effective_sample_size" >= 100])
 }
 
 
@@ -654,9 +692,9 @@ apply_privacy_censoring <- function(df, params) {
 #'
 #' The organization may seem a bit contorted, but this is designed for speed.
 #' The primary bottleneck is repeatedly filtering the data frame to find data
-#' for the day and geographic area of interest. To save time, we do this once
-#' and then calculate all indicators for that day-area combination, rather than
-#' separately filtering every time we want to calculate a new indicator. We also
+#' for the grouping variables of interest. To save time, we do this once
+#' and then calculate all indicators for that groupby combination, rather than
+#' separately filtering every time we want to calculate a new table. We also
 #' rely upon data.table's keys and indices to allow us to do the filtering in
 #' O(log n) time, which is important when the data frame contains millions of
 #' rows.
@@ -671,6 +709,7 @@ apply_privacy_censoring <- function(df, params) {
 #'
 #' @importFrom dplyr inner_join bind_rows
 #' @importFrom parallel mclapply
+#' 
 #' @export
 summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
   ## dplyr complains about joining a data.table, saying it is likely to be
@@ -688,8 +727,10 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     unique_group_combos = unique(df[, ..groupby_vars])
     unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
   } else {
-    msg_plain(sprintf(
-      "not all of groupby columns %s available in data; skipping this aggregation", paste(groupby_vars, collapse=", ")
+    msg_plain(
+      sprintf(
+        "not all of groupby columns %s available in data; skipping this aggregation", 
+        paste(groupby_vars, collapse=", ")
       ))
   }
   
@@ -726,7 +767,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## list of one data frame per aggregation. Rearrange it.
   dfs_out <- list()
   for (aggregation in aggregations$name) {
-    dfs_out[[aggregation]] <- bind_rows(lapply(dfs, function(groupby_levels) { groupby_levels[[aggregation]] }))
+    dfs_out[[aggregation]] <- bind_rows( lapply(dfs, function(groupby_levels) { 
+      groupby_levels[[aggregation]] 
+    }))
   }
 
   return(dfs_out)
@@ -734,15 +777,19 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 
 
 #' Produce estimates for all indicators in a specific target group.
+#' 
 #' @param group_df Data frame containing all data needed to estimate one group.
 #'   Estimates for `target_group` will be based on all of this data.
 #' @param aggregations Aggregations to report. See `aggregate_aggs()`.
 #' @param target_group A `data.table` with one row specifying the grouping
 #'   variable values used to select this group.
 #' @param params Named list of configuration options.
+#' 
 #' @importFrom dplyr mutate filter
 #' @importFrom tibble add_column
 #' @importFrom rlang .data
+#' 
+#' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
   ## Prepare outputs.
   dfs_out <- list()
@@ -797,8 +844,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", names(target_group))])) == 0,
     ]
 
-    #### TODO: megacounty function not found. Small sample size counties will still
-    #### be removed later in censoring step.
+    #### TODO: megacounty function needs a `day` column. Also doesn't make sense to be here, since this looks at a single group.
     # if (geo_level == "county") {
     #   df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
     #   dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
@@ -832,8 +878,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 #' @importFrom readr write_csv
 #' @importFrom dplyr arrange
 #' @importFrom rlang .data
+#' 
 #' @export
-write_data_api <- function(data, params, geo_level, groupby_vars)
+write_data_agg <- function(data, params, geo_level, groupby_vars)
 {
   if (!is.null(data) && nrow(data) != 0) {
     data <- arrange_at(data, groupby_vars)
@@ -861,26 +908,34 @@ write_data_api <- function(data, params, geo_level, groupby_vars)
 }
 
 
-start_of_month <- function(end_date) {
-  return(floor_date(end_date, "month") - months(1))
+
+#' Get the date of the first of the previous month,relative
+#'
+#' @param end_date a
+#' 
+#' @importFrom lubridate floor_date
+#' 
+#' @export
+start_of_month <- function(date) {
+  return(floor_date(date, "month") - months(1))
 }
 
-end_of_prev_full_month <- function(end_date) {
-  if (ceiling_date(end_date, "month") == end_date) {
-    return(end_date)
+end_of_prev_full_month <- function(date) {
+  if (ceiling_date(date, "month") == date) {
+    return(date)
   }
 
-  return(floor_date(end_date, "month") - days(1))
+  return(floor_date(date, "month") - days(1))
 }
 
 
-get_range_prev_full_month <- function(end_date = Sys.Date()) {
-  eom = end_of_prev_full_month(end_date)
+get_range_prev_full_month <- function(date = Sys.Date()) {
+  eom = end_of_prev_full_month(date)
 
-  if (eom == end_date) {
-    som = start_of_month(end_date + months(1))
+  if (eom == date) {
+    som = start_of_month(date + months(1))
   } else {
-    som = start_of_month(end_date)
+    som = start_of_month(date)
   }
 
   return(list(som, eom))
@@ -888,39 +943,39 @@ get_range_prev_full_month <- function(end_date = Sys.Date()) {
 
 
 
-start_of_week <- function(end_date) {
-  return(floor_date(end_date, "week") - weeks(1))
+start_of_week <- function(date) {
+  return(floor_date(date, "week") - weeks(1))
 }
 
-end_of_prev_full_week <- function(end_date) {
-  if (ceiling_date(end_date, "week") == end_date) {
-    return(end_date)
+end_of_prev_full_week <- function(date) {
+  if (ceiling_date(date, "week") == date) {
+    return(date)
   }
 
-  return(floor_date(end_date, "week") - days(1))
+  return(floor_date(date, "week") - days(1))
 }
 
 
 #### TODO: should be epiweeks eventually. Already exists a package to calculate?
-get_range_prev_full_week <- function(end_date = Sys.Date()) {
-  eow = end_of_prev_full_week(end_date)
+get_range_prev_full_week <- function(date = Sys.Date()) {
+  eow = end_of_prev_full_week(date)
 
-  if (eow == end_date) {
-    sow = start_of_week(end_date + weeks(1))
+  if (eow == date) {
+    sow = start_of_week(date + weeks(1))
   } else {
-    sow = start_of_week(end_date)
+    sow = start_of_week(date)
   }
 
   return(list(sow, eow))
 }
 
-get_range_prev_full_period <- function(end_date = Sys.Date(), weekly_or_monthly_flag) {
+get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag) {
   if (weekly_or_monthly_flag == "monthly") {
     # Get start and end of previous full month.
-    date_period_range = get_range_prev_full_month(end_date)
+    date_period_range = get_range_prev_full_month(date)
   } else if (weekly_or_monthly_flag == "weekly") {
     # Get start and end of previous full epiweek.
-    date_period_range = get_range_prev_full_week(end_date)
+    date_period_range = get_range_prev_full_week(date)
   }
 
   date_period_range[[1]] =  ymd_hms(

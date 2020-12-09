@@ -12,6 +12,7 @@ required = [
     "pylint",
     "pytest",
     "pytest-cov",
+    "structlog",
     "xlrd"
 ]
 

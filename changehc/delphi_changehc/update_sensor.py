@@ -156,10 +156,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                                                  mega_col=geo)
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
-        elif geo in ["msa", "hrr", "hhs"]:
-            data_frame = gmpr.replace_geocode(data, "fips", geo)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", "nation")
+            data_frame = gmpr.replace_geocode(data, "fips", geo)
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)

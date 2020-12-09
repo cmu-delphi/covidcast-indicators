@@ -156,12 +156,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                                                  mega_col=geo)
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
-        elif geo == "msa":
-            data_frame = gmpr.replace_geocode(data, "fips", "msa")
-        elif geo == "hrr":
-            data_frame = gmpr.replace_geocode(data, "fips", "hrr")
-        elif geo == "hhs":
-            data_frame = gmpr.replace_geocode(data, "fips", "hhs")
+        elif geo in ["msa", "hrr", "hhs"]:
+            data_frame = gmpr.replace_geocode(data, "fips", geo)
         else:
             data_frame = gmpr.replace_geocode(data, "fips", "nation")
 

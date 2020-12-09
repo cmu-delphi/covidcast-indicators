@@ -35,11 +35,11 @@ def run_module():
     if len(complaints) > 0:
         for complaint in complaints:
             logger.critical(event="signal out of SLA",
-                           message=complaint.message, 
-                           data_source=complaint.data_source,
-                           signal=complaint.signal, 
-                           geo_types=complaint.geo_types, 
-                           last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
+                            message=complaint.message,
+                            data_source=complaint.data_source,
+                            signal=complaint.signal,
+                            geo_types=complaint.geo_types,
+                            last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
         report_complaints(complaints, params)
 

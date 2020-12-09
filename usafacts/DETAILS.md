@@ -1,8 +1,8 @@
 # USA Facts Cases and Deaths
 
 We import the confirmed case and deaths data from USA Facts website and export
-the county-level data as-is.  We also aggregate the data to the MSA, HRR, and
-State levels.
+the county-level data as-is.  We also aggregate the data to the MSA, HRR, HHS, 
+State, and Nation levels.
 
 In order to avoid confusing public consumers of the data, we maintain
 consistency how USA Facts reports the data, please refer to [Exceptions](#Exceptions).
@@ -13,7 +13,9 @@ consistency how USA Facts reports the data, please refer to [Exceptions](#Except
   for internal consistency), noted below.  
 * `msa`: reported using cbsa (consistent with all other COVIDcast sensors)
 * `hrr`: reported using HRR number (consistent with all other COVIDcast sensors)
+* `hhs`: reported using HHS region number 
 * `state`: reported using two-letter postal code
+* `nation`: reported using two-letter nation code. Just 'us' for now
 
 ## Metrics, Level 1 (`m1`)
 * `confirmed`: Confirmed cases

@@ -25,7 +25,7 @@ class TestRun:
             "20200309",
             "20200310",
         ]
-        geos = ["county", "hrr", "msa", "state"]
+        geos = ["county", "hrr", "msa", "state", "hhs", "nation"]
 
         # enumerate metric names.
         metrics = []

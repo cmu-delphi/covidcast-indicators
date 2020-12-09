@@ -1,9 +1,12 @@
 from dataclasses import dataclass
 from typing import List
+from delphi_utils import get_structured_logger
 
 import covidcast
 import numpy as np
 import pandas as pd
+
+logger = get_structured_logger(__name__)
 
 @dataclass
 class Complaint:
@@ -82,6 +85,14 @@ def check_source(data_source, meta, params, grace):
         if max_allowed_gap == -1:
             # No gap detection for this source
             continue
+
+        logger.info("Retrieving signal",
+                    source=data_source,
+                    signal=row["signal"],
+                    start_day=(row["max_time"] -
+                               gap_window).strftime("%Y-%m-%d"),
+                    end_day=row["max_time"].strftime("%Y-%m-%d"),
+                    geo_type=row["geo_type"])
 
         latest_data = covidcast.signal(
             data_source, row["signal"],

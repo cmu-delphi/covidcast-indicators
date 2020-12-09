@@ -2,7 +2,7 @@
 
 We import census block group-level raw mobility indicators from Safegraph,
 calculate functions of the raw data, and then aggregate the data to the
-county and state levels.  MSA and HRR not yet implemented.
+county and state levels.
 
 ## Geographical Levels
 * `county`: reported using zero-padded FIPS codes.  The FIPS codes are

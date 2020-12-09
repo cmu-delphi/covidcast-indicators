@@ -16,5 +16,7 @@ GEO_RESOLUTIONS = [
     'county',
     'state',
     'msa',
-    'hrr'
+    'hrr',
+    'hhs',
+    'nations'
 ]

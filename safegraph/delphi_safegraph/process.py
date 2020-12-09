@@ -134,20 +134,14 @@ def aggregate(df, signal_names, geo_resolution='county'):
                                               new_code='state_id',
                                               new_col='geo_id',
                                               dropna=False)
-    elif geo_resolution == 'msa':
+    elif geo_resolution in ['msa', 'nation', 'hrr', 'hhs']:
         geo_transformed_df = gmpr.add_geocode(df,
                                               from_col='county_fips',
                                               from_code='fips',
-                                              new_code='msa',
+                                              new_code=geo_resolution,
                                               new_col='geo_id',
                                               dropna=False)
-    elif geo_resolution == 'hrr':
-        geo_transformed_df = gmpr.add_geocode(df,
-                                              from_col='county_fips',
-                                              from_code='fips',
-                                              new_code='hrr',
-                                              new_col='geo_id',
-                                              dropna=False)
+
     else:
         raise ValueError(
             f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')

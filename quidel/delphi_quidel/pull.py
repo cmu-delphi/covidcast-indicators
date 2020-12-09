@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Simply downloads email attachments.
+
 Uses this handy package: https://pypi.org/project/imap-tools/
 """
 import io
@@ -26,6 +27,7 @@ TEST_TYPES = ["covid_ag", "flu_ag"]
 def compare_dates(date1, date2, flag):
     """
     Compare two dates.
+
     If op == "l" return the larger date
     If op == "s" return the smaller date
     """
@@ -33,15 +35,12 @@ def compare_dates(date1, date2, flag):
         if flag == "l":
             return date1
         return date2
-    else:
-        if flag == "l":
-            return date2
-        return date1
+    if flag == "l":
+        return date2
+    return date1
 
 def check_whether_date_in_range(search_date, start_date, end_date):
-    """
-    Check whether the search date is in a valid time range
-    """
+    """Check whether the search date is in a valid time range."""
     if search_date > end_date:
         return False
     if search_date < start_date:
@@ -49,10 +48,7 @@ def check_whether_date_in_range(search_date, start_date, end_date):
     return True
 
 def read_historical_data():
-    """
-    Read historical flu antigen test data stored in
-    midas /common/quidel-historical-raw
-    """
+    """Read historical flu antigen test data stored in midas /common/quidel-historical-raw."""
     pull_dir = "/common/quidel-historical-raw"
     columns = ['SofiaSerNum', 'TestDate', 'Facility', 'ZipCode',
                                'FluA', 'FluB', 'StorageDate']
@@ -66,9 +62,9 @@ def read_historical_data():
 
 def regulate_column_names(df, test_type):
     """
-    Regulate column names for flu_ag test data since Quidel changed their
-    column names multiple times. We want to finalize the column name list
-    to be:
+    Regulate column names for flu_ag test data since Quidel changed their column names multiple times.
+
+    We want to finalize the column name list to be:
         ['SofiaSerNum', 'TestDate', 'Facility',
         'Zip', 'FluA', 'FluB', 'StorageDate']
     """
@@ -88,7 +84,7 @@ def regulate_column_names(df, test_type):
 def get_from_email(column_names, start_dates, end_dates, mail_server,
                    account, sender, password):
     """
-    Get raw data from email account
+    Get raw data from email account.
 
     Parameters:
         start_date: datetime.datetime
@@ -130,9 +126,9 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
                         continue
 
                     # Check whether we pull the data from a valid time range
-                    WhetherInRange = check_whether_date_in_range(
+                    whether_in_range = check_whether_date_in_range(
                             search_date, start_dates[test], end_dates[test])
-                    if not WhetherInRange:
+                    if not whether_in_range:
                         continue
 
                     print(f"Pulling {test} data received on %s"%search_date.date())
@@ -146,9 +142,7 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
     return dfs, time_flag
 
 def fix_zipcode(df):
-    """
-    Fix zipcode that is 9 digit instead of 5 digit
-    """
+    """Fix zipcode that is 9 digit instead of 5 digit."""
     zipcode5 = []
     fixnum = 0
     for zipcode in df['Zip'].values:
@@ -164,6 +158,8 @@ def fix_zipcode(df):
 
 def fix_date(df):
     """
+    Remove invalid dates and select correct test date to use.
+
     Quidel antigen tests are labeled with Test Date and Storage Date. In principle,
     the TestDate should reflect when the test was performed and the StorageDate
     when the test was logged in the MyVirena cloud storage device. We expect
@@ -191,6 +187,7 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
                         sender, password, test_mode):
     """
     Pull and pre-process Quidel Antigen Test data from datadrop email.
+
     Drop unnecessary columns. Temporarily consider the positive rate
     sensor only which is related to number of total tests and number
     of positive tests.
@@ -286,7 +283,7 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
 
 def check_intermediate_file(cache_dir, pull_start_dates):
     """
-    Check whether there is a cache file containing historical data already
+    Check whether there is a cache file containing historical data already.
 
     Parameters:
         cache_dir: str
@@ -314,8 +311,7 @@ def check_intermediate_file(cache_dir, pull_start_dates):
 
 def pull_quidel_data(params):
     """
-    Pull the quidel test data. Decide whether to combine the newly
-    received data with stored historical records in ./cache
+    Pull the quidel test data and decide whether to combine the new data with stored historical records in ./cache.
 
     Parameters:
         params: dict
@@ -370,9 +366,10 @@ def pull_quidel_data(params):
     return dfs, _end_date
 
 def check_export_end_date(input_export_end_dates, _end_date,
-                          END_FROM_TODAY_MINUS):
+                          end_from_today_minus):
     """
-    Update the export_end_date according to the data received
+    Update the export_end_date according to the data received.
+
     By default, set the export end date to be the last pulling date - 5 days
     (END_FROM_TODAY_MINUS = 5).
     Otherwise, use the required date if it is earlier than the default one.
@@ -393,7 +390,7 @@ def check_export_end_date(input_export_end_dates, _end_date,
     export_end_dates = {}
     for test_type in TEST_TYPES:
         export_end_dates[test_type] = _end_date \
-                                      - timedelta(days=END_FROM_TODAY_MINUS)
+                                      - timedelta(days=end_from_today_minus)
         if input_export_end_dates[test_type] != "":
             input_export_end_dates[test_type] = datetime.strptime(
                     input_export_end_dates[test_type], '%Y-%m-%d')
@@ -403,10 +400,9 @@ def check_export_end_date(input_export_end_dates, _end_date,
     return export_end_dates
 
 def check_export_start_date(export_start_dates, export_end_dates,
-                            EXPORT_DAY_RANGE):
+                            export_day_range):
     """
-    Update the export_start_date according to the export_end_date so that it
-    could be export_end_date - EXPORT_DAY_RANGE
+    Update export_start_date according to the export_end_date so that it could be export_end_date - EXPORT_DAY_RANGE.
 
     Parameters:
         export_start_date: dict
@@ -414,7 +410,7 @@ def check_export_start_date(export_start_dates, export_end_dates,
         export_end_date: dict
             Calculated according to the data received.
             The type of values are datetime.datetime
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             Number of days to report
 
     Returns:
@@ -430,7 +426,7 @@ def check_export_start_date(export_start_dates, export_end_dates,
                     export_start_dates[test_type], '%Y-%m-%d')
         # Only export data from -45 days to -5 days
         export_start_dates[test_type] = compare_dates(
-                export_end_dates[test_type] - timedelta(days=EXPORT_DAY_RANGE),
+                export_end_dates[test_type] - timedelta(days=export_day_range),
                 export_start_dates[test_type], "l")
         if test_type == "covid_ag":
             export_start_dates[test_type] = compare_dates(
@@ -439,7 +435,7 @@ def check_export_start_date(export_start_dates, export_end_dates,
 
 def update_cache_file(dfs, _end_date, cache_dir):
     """
-    Update cache file. Remove the old one, export the new one
+    Update cache file. Remove the old one, export the new one.
 
     Parameter:
         df: pd.DataFrame

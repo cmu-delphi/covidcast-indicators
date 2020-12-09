@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 
 from delphi_safegraph.process import (
-    add_prefix,
     aggregate,
     construct_signals,
     files_in_past_week,
@@ -43,6 +42,7 @@ class TestProcess:
         assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (1472, 17)
 
     def test_aggregate_state(self):
         """Tests that aggregation at the state level creates non-zero-valued
@@ -54,21 +54,31 @@ class TestProcess:
         assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (52, 17)
 
-    def test_handle_wip_signal(self):
-        """Tests that `add_prefix()` derives work-in-progress signals."""
-        # Test wip_signal = True
-        signal_names = SIGNALS
-        signal_names = add_prefix(SIGNALS, True, prefix="wip_")
-        assert all(s.startswith("wip_") for s in signal_names)
-        # Test wip_signal = list
-        signal_names = add_prefix(SIGNALS, [SIGNALS[0]], prefix="wip_")
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
-        # Test wip_signal = False
-        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False, prefix="wip_")
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
+    def test_aggregate_msa(self):
+        """Tests that aggregation at the state level creates non-zero-valued
+        signals."""
+        cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
+                                   SIGNALS)
+        df = aggregate(cbg_df, SIGNALS, 'msa')
+
+        assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
+        x = df[f'{SIGNALS[0]}_se'].values
+        assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (372, 17)
+
+    def test_aggregate_hrr(self):
+        """Tests that aggregation at the state level creates non-zero-valued
+        signals."""
+        cbg_df = construct_signals(pd.read_csv('raw_data/sample_raw_data.csv'),
+                                   SIGNALS)
+        df = aggregate(cbg_df, SIGNALS, 'hrr')
+
+        assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
+        x = df[f'{SIGNALS[0]}_se'].values
+        assert np.all(x[~np.isnan(x)] >= 0)
+        assert df.shape == (306, 17)
 
     def test_files_in_past_week(self):
         """Tests that `files_in_past_week()` finds the file names corresponding
@@ -144,7 +154,7 @@ class TestProcess:
                  'raw_data/small_raw_data_3.csv'],
                 SIGNALS,
                 ['median_home_dwell_time',
-                 'completely_home_prop_7d_avg'],
+                 'completely_home_prop_7dav'],
                 ['state'],
                 export_dir)
 
@@ -173,25 +183,25 @@ class TestProcess:
                 'se': [None, 0.005],
                 'sample_size': [1, 2]
             }),
-            'median_home_dwell_time_7d_avg': pd.DataFrame(data={
+            'median_home_dwell_time_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [4.5, 3.5, 7.5],
                 'se': [1.5, 0.5, 0.5],
                 'sample_size': [2, 2, 2]
             }),
-            'wip_completely_home_prop_7d_avg': pd.DataFrame(data={
+            'wip_completely_home_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.1, 0.055, 0.15],
                 'se': [0.05, 0.005, 0.05],
                 'sample_size': [2, 2, 2]
             }),
-            'part_time_work_prop_7d_avg': pd.DataFrame(data={
+            'part_time_work_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.25, 0.055, 0.25],
                 'se': [0.1, 0.005, 0.05],
                 'sample_size': [2, 2, 2]
             }),
-            'full_time_work_prop_7d_avg': pd.DataFrame(data={
+            'full_time_work_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.35, 0.055, 0.35],
                 'se': [0.1, 0.005, 0.05],

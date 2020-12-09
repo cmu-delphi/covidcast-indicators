@@ -11,9 +11,7 @@ from datetime import datetime, timedelta
 
 
 class Config:
-    """
-    Static configuration variables.
-    """
+    """Static configuration variables."""
 
     signal_name = "smoothed_covid19_from_claims"
     signal_weekday_name = "smoothed_adj_covid19_from_claims"
@@ -59,9 +57,7 @@ class Config:
 
 
 class GeoConstants:
-    """
-    Constant geographical variables.
-    """
+    """Constant geographical variables."""
 
     # number of counties in usa, including megacounties
     NUM_COUNTIES = 3141 + 52

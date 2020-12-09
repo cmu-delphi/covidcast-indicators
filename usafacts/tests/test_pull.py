@@ -3,14 +3,11 @@ import pytest
 from os.path import join
 
 import pandas as pd
+import numpy as np
+from delphi_utils import GeoMapper
 from delphi_usafacts.pull import pull_usafacts_data
 
-pop_df = pd.read_csv(
-    join("..", "static", "fips_population.csv"),
-    dtype={"fips": float, "population": float}
-).rename({"fips": "FIPS"}, axis=1)
-
-base_url_good = "test_data/small_{metric}.csv"
+base_url_good = "test_data/small_{metric}_pull.csv"
 
 base_url_bad = {
     "missing_days": "test_data/bad_{metric}_missing_days.csv",
@@ -18,23 +15,31 @@ base_url_bad = {
     "extra_cols": "test_data/bad_{metric}_extra_cols.csv"
 }
 
+geo_mapper = GeoMapper()
+
 
 class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"
-        df = pull_usafacts_data(base_url_good, metric, pop_df)
-
-        assert (
-            df.columns.values
-            == ["fips", "timestamp", "population", "new_counts", "cumulative_counts"]
-        ).all()
+        df = pull_usafacts_data(base_url_good, metric, geo_mapper)
+        expected_df = pd.DataFrame({
+            "fips": ["00001", "00001", "00001", "36009", "36009", "36009"],
+            "timestamp": [pd.Timestamp("2020-02-29"), pd.Timestamp("2020-03-01"),
+                          pd.Timestamp("2020-03-02"), pd.Timestamp("2020-02-29"),
+                          pd.Timestamp("2020-03-01"), pd.Timestamp("2020-03-02")],
+            "population": [np.nan, np.nan, np.nan, 76117., 76117., 76117.],
+            "new_counts": [0., 0., 1., 2., 2., 2.],
+            "cumulative_counts": [0, 0, 1, 2, 4, 6]},
+            index=[1, 2, 3, 5, 6, 7])
+        # sort since rows order doesn't matter
+        pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())
 
     def test_missing_days(self):
         
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["missing_days"], metric, pop_df
+                base_url_bad["missing_days"], metric, geo_mapper
             )
 
     def test_missing_cols(self):
@@ -42,7 +47,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["missing_cols"], metric, pop_df
+                base_url_bad["missing_cols"], metric, geo_mapper
             )
 
     def test_extra_cols(self):
@@ -50,5 +55,5 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             df = pull_usafacts_data(
-                base_url_bad["extra_cols"], metric, pop_df
+                base_url_bad["extra_cols"], metric, geo_mapper
             )

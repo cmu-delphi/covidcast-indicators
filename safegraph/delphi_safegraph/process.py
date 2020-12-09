@@ -4,10 +4,11 @@ import os
 from typing import List
 import numpy as np
 import pandas as pd
-import covidcast
+from delphi_utils.signal import add_prefix
+from delphi_utils.export import create_export_csv
+from delphi_utils.geomap import GeoMapper
 
-from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK
-from .geo import FIPS_TO_STATE, VALID_GEO_RESOLUTIONS
+from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
 # Magic number for modular arithmetic; CBG -> FIPS
 MOD = 10000000
@@ -17,18 +18,19 @@ CSV_NAME = 'social-distancing.csv.gz'
 
 
 def validate(df):
-    """Confirms that a data frame has only one date."""
+    """Confirm that a data frame has only one date."""
     timestamps = df['date_range_start'].apply(date_from_timestamp)
     assert len(timestamps.unique()) == 1
 
 
 def date_from_timestamp(timestamp) -> datetime.date:
-    """Extracts the date from a timestamp beginning with {YYYY}-{MM}-{DD}T."""
+    """Extract the date from a timestamp beginning with {YYYY}-{MM}-{DD}T."""
     return datetime.date.fromisoformat(timestamp.split('T')[0])
 
 
 def files_in_past_week(current_filename) -> List[str]:
-    """Constructs file paths from previous 6 days.
+    """Construct file paths from previous 6 days.
+
     Parameters
     ----------
     current_filename: str
@@ -50,66 +52,13 @@ def files_in_past_week(current_filename) -> List[str]:
 
 
 def add_suffix(signals, suffix):
-    """Adds `suffix` to every element of `signals`."""
+    """Add `suffix` to every element of `signals`."""
     return [s + suffix for s in signals]
-
-
-def add_prefix(signal_names, wip_signal, prefix: str):
-    """Adds prefix to signal if there is a WIP signal
-    Parameters
-    ----------
-    signal_names: List[str]
-        Names of signals to be exported
-    prefix : 'wip_'
-        prefix for new/non public signals
-    wip_signal : List[str] or bool
-        a list of wip signals: [], OR
-        all signals in the registry: True OR
-        only signals that have never been published: False
-    Returns
-    -------
-    List of signal names
-        wip/non wip signals for further computation
-    """
-
-    if wip_signal is True:
-        return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal, list):
-        make_wip = set(wip_signal)
-        return [
-            (prefix if signal in make_wip else "") + signal
-            for signal in signal_names
-        ]
-    if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
-    raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
-    Parameters
-    ----------
-    signal_ : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
-            return True
-    return False
 
 
 def construct_signals(cbg_df, signal_names):
     """Construct Census-block level signals.
+
     In its current form, we prepare the following signals in addition to those
     already available in raw form from Safegraph:
     - completely_home_prop, defined as:
@@ -133,7 +82,6 @@ def construct_signals(cbg_df, signal_names):
         Dataframe with columns: timestamp, county_fips, and
         {each signal described above}.
     """
-
     # Preparation
     cbg_df['county_fips'] = (cbg_df['origin_census_block_group'] // MOD).apply(
         lambda x: f'{int(x):05d}')
@@ -158,6 +106,7 @@ def construct_signals(cbg_df, signal_names):
 
 def aggregate(df, signal_names, geo_resolution='county'):
     """Aggregate signals to appropriate resolution and produce standard errors.
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -174,17 +123,37 @@ def aggregate(df, signal_names, geo_resolution='county'):
         signals, standard errors, and sample sizes.
     """
     # Prepare geo resolution
+    gmpr = GeoMapper()
     if geo_resolution == 'county':
-        df['geo_id'] = df['county_fips']
+        geo_transformed_df = df.copy()
+        geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        df['geo_id'] = df['county_fips'].apply(lambda x:
-                                               FIPS_TO_STATE[x[:2]])
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='state_id',
+                                              new_col='geo_id',
+                                              dropna=False)
+    elif geo_resolution == 'msa':
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='msa',
+                                              new_col='geo_id',
+                                              dropna=False)
+    elif geo_resolution == 'hrr':
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='hrr',
+                                              new_col='geo_id',
+                                              dropna=False)
     else:
         raise ValueError(
-            f'`geo_resolution` must be one of {VALID_GEO_RESOLUTIONS}.')
+            f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')
 
     # Aggregation and signal creation
-    grouped_df = df.groupby(['geo_id'])[signal_names]
+    grouped_df = geo_transformed_df.groupby(['geo_id'])[signal_names]
     df_mean = grouped_df.mean()
     df_sd = grouped_df.std()
     df_n = grouped_df.count()
@@ -203,9 +172,10 @@ def process_window(df_list: List[pd.DataFrame],
                    signal_names: List[str],
                    geo_resolutions: List[str],
                    export_dir: str):
-    """Processes a list of input census block group-level data frames as a
-    single data set and exports it.  Assumes each data frame has _only_ one
-    date of data.
+    """Process a list of input census block group-level data frames as a single data set and export.
+
+    Assumes each data frame has _only_ one date of data.
+
     Parameters
     ----------
     cbg_df: pd.DataFrame
@@ -236,10 +206,12 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            date_str = date.strftime('%Y%m%d')
-            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
-                             na_rep='NA',
-                             index=False, )
+            df_export["timestamp"] = date.strftime('%Y%m%d')
+            create_export_csv(df_export,
+                              export_dir,
+                              geo_res,
+                              signal,
+                              )
 
 
 def process(filenames: List[str],
@@ -247,8 +219,8 @@ def process(filenames: List[str],
             wip_signal,
             geo_resolutions: List[str],
             export_dir: str):
-    """Creates and exports signals corresponding both to a single day as well
-    as averaged over the previous week.
+    """Create and exports signals corresponding both single day and averaged over the previous week.
+
     Parameters
     ----------
     current_filename: List[str]
@@ -287,7 +259,7 @@ def process(filenames: List[str],
                    export_dir)
     # ...then as part of the whole window.
     process_window(past_week,
-                   add_prefix(add_suffix(signal_names, '_7d_avg'),
+                   add_prefix(add_suffix(signal_names, '_7dav'),
                               wip_signal,
                               'wip_'),
                    geo_resolutions,

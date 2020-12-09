@@ -1,0 +1,14 @@
+---
+- hosts: api_proxy_staging
+  remote_user: deploy
+  vars_files:
+    - vars.yaml
+    - vault.yaml
+  tasks:
+    - name: Set staging api proxy openresty signal match list template.
+      template:
+        src: "templates/staging-api-match-list.j2"
+        dest: "/common/staging-api-match-list"
+        owner: "deploy"
+        group: "deploy"
+        mode: "0777"

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Simply downloads email attachments.
+
 Uses this handy package: https://pypi.org/project/imap-tools/
 """
 import io
@@ -15,7 +16,8 @@ from imap_tools import MailBox, A, AND
 def get_from_email(start_date, end_date, mail_server,
                    account, sender, password):
     """
-    Get raw data from email account
+    Get raw data from email account.
+
     Args:
         start_date: datetime.datetime
             pull data from email received from the start date
@@ -56,9 +58,7 @@ def get_from_email(start_date, end_date, mail_server,
     return df, time_flag
 
 def fix_zipcode(df):
-    """
-    Fix zipcode that is 9 digit instead of 5 digit
-    """
+    """Fix zipcode that is 9 digit instead of 5 digit."""
     zipcode5 = []
     fixnum = 0
     for zipcode in df['Zip'].values:
@@ -74,6 +74,8 @@ def fix_zipcode(df):
 
 def fix_date(df):
     """
+    Remove invalid dates and select correct test date to use.
+
     Quidel Covid Test are labeled with Test Date and Storage Date. In principle,
     the TestDate should reflect when the test was performed and the StorageDate
     when the test was logged in the MyVirena cloud storage device. We expect
@@ -101,6 +103,7 @@ def preprocess_new_data(start_date, end_date, mail_server, account,
                         sender, password, test_mode):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
+
     Drop unnecessary columns. Temporarily consider the positive rate
     sensor only which is related to number of total tests and number
     of positive tests.
@@ -173,9 +176,7 @@ def preprocess_new_data(start_date, end_date, mail_server, account,
     return df_merged, time_flag
 
 def check_intermediate_file(cache_dir, pull_start_date):
-    """
-    Check whether there is a cache file containing historical data already
-    """
+    """Check whether there is a cache file containing historical data already."""
     for filename in os.listdir(cache_dir):
         if ".csv" in filename:
             pull_start_date = datetime.strptime(filename.split("_")[2].split(".")[0],
@@ -187,15 +188,14 @@ def check_intermediate_file(cache_dir, pull_start_date):
 
 def pull_quidel_covidtest(params):
     """
-    Pull the quidel covid test data. Decide whether to combine the newly
-    received data with stored historical records in ./cache
+    Pull the quidel covid test data and ecide whether to combine the new data with stored historical records in ./cache.
 
     Parameters:
         params: dict
             including all the information read from params.json
-        END_FROM_TODAY_MINUS: int
+        end_from_today_minus: int
             report data until - X days
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             number of dates to report
 
     Returns:
@@ -238,11 +238,12 @@ def pull_quidel_covidtest(params):
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,
-                          END_FROM_TODAY_MINUS):
+                          end_from_today_minus):
     """
-    Update the export_end_date according to the data received
+    Update the export_end_date according to the data received.
+
     By default, set the export end date to be the last pulling date - 5 days
-    (END_FROM_TODAY_MINUS = 5).
+    (end_from_today_minus = 5).
     Otherwise, use the required date if it is earlier than the default one.
 
     Parameter:
@@ -250,14 +251,14 @@ def check_export_end_date(input_export_end_date, _end_date,
             read from params
         _end_date: datetime.datetime
             updated according the data received
-        END_FROM_TODAY_MINUS: int
+        end_from_today_minus: int
             report data until - X days
 
     Returns:
         datetime.datetime
             export data from which date
     """
-    export_end_date = _end_date - timedelta(days=END_FROM_TODAY_MINUS)
+    export_end_date = _end_date - timedelta(days=end_from_today_minus)
     if input_export_end_date != "":
         input_export_end_date = datetime.strptime(input_export_end_date, '%Y-%m-%d')
         if input_export_end_date < export_end_date:
@@ -265,17 +266,16 @@ def check_export_end_date(input_export_end_date, _end_date,
     return export_end_date
 
 def check_export_start_date(export_start_date, export_end_date,
-                            EXPORT_DAY_RANGE):
+                            export_day_range):
     """
-    Update the export_start_date according to the export_end_date so that it
-    could be export_end_date - EXPORT_DAY_RANGE
+    Update export_start_date according to the export_end_date so that it could be export_end_date - export_day_range.
 
     Parameters:
         export_start_date: str
             Read from params
         export_end_date: datetime.datetime
             Calculated according to the data received
-        EXPORT_DAY_RANGE: int
+        export_day_range: int
             Number of days to report
 
     Returns:
@@ -287,8 +287,8 @@ def check_export_start_date(export_start_date, export_end_date,
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
      # Only export data from -45 days to -5 days
-    if (export_end_date - export_start_date).days > EXPORT_DAY_RANGE:
-        export_start_date = export_end_date - timedelta(days=EXPORT_DAY_RANGE)
+    if (export_end_date - export_start_date).days > export_day_range:
+        export_start_date = export_end_date - timedelta(days=export_day_range)
 
     if export_start_date < datetime(2020, 5, 26):
         return datetime(2020, 5, 26)
@@ -296,7 +296,7 @@ def check_export_start_date(export_start_date, export_end_date,
 
 def update_cache_file(df, _end_date, cache_dir):
     """
-    Update cache file. Remove the old one, export the new one
+    Update cache file. Remove the old one, export the new one.
 
     Parameter:
         df: pd.DataFrame

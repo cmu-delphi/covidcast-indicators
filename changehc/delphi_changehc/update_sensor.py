@@ -1,27 +1,28 @@
 """
 Generate CHC sensors.
+
 Author: Aaron Rumack
 Created: 2020-10-14
 """
 # standard packages
 import logging
 from multiprocessing import Pool, cpu_count
-import covidcast
-from delphi_utils import GeoMapper, S3ArchiveDiffer, read_params
 
 # third party
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper, read_params, add_prefix
+
 # first party
 from .config import Config, Constants
-from .load_data import load_combined_data
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
 from .sensor import CHCSensor
 from .weekday import Weekday
-from .constants import SIGNALS, SMOOTHED, SMOOTHED_ADJ, NA
 
 
 def write_to_csv(output_dict, write_se, out_name, output_path="."):
     """Write sensor values to csv.
+
     Args:
         output_dict: dictionary containing sensor rates, se, unique dates, and unique geo_id
         write_se: boolean to write out standard errors, if true, use an obfuscated name
@@ -29,7 +30,7 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
         output_path: outfile path to write the csv (default is current directory)
     """
     if write_se:
-        logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
+        logging.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     geo_level = output_dict["geo_level"]
     dates = output_dict["dates"]
     geo_ids = output_dict["geo_ids"]
@@ -53,7 +54,9 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
                     assert not np.isnan(sensor), "value for included sensor is nan"
                     assert not np.isnan(se), "se for included sensor is nan"
                     if sensor > 90:
-                        logging.warning(f"value suspiciously high, {geo_id}: {sensor}")
+                        logging.warning("value suspiciously high, {0}: {1}".format(
+                            geo_id, sensor
+                        ))
                     assert se < 5, f"se suspiciously high, {geo_id}: {se}"
                     if write_se:
                         assert sensor > 0 and se > 0, "p=0, std_err=0 invalid"
@@ -65,65 +68,13 @@ def write_to_csv(output_dict, write_se, out_name, output_path="."):
                             "%s,%f,%s,%s,%s\n" % (geo_id, sensor, NA, NA, NA)
                         )
                     out_n += 1
-    logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+    logging.debug("wrote {0} rows for {1} {2}".format(
+        out_n, len(geo_ids), geo_level
+    ))
 
 
-def add_prefix(signal_names, wip_signal, prefix="wip_"):
-    """Adds prefix to signal if there is a WIP signal
-    Parameters
-    ----------
-    signal_names: List[str]
-        Names of signals to be exported
-    wip_signal : List[str] or bool
-        a list of wip signals: [], OR
-        all signals in the registry: True OR
-        only signals that have never been published: False
-    prefix : 'wip_'
-        prefix for new/non public signals
-    Returns
-    -------
-    List of signal names
-        wip/non wip signals for further computation
-    """
-    if wip_signal is True:
-        return [prefix + signal for signal in signal_names]
-    if isinstance(wip_signal, list):
-        make_wip = set(wip_signal)
-        return [
-            prefix + signal if signal in make_wip else signal
-            for signal in signal_names
-        ]
-    if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
-    raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal_):
-    """Checks if the signal name is already public using COVIDcast
-    Parameters
-    ----------
-    signal_ : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df['signal'][index] == signal_:
-            return True
-    return False
-
-
-class CHCSensorUpdator:
-    """Contains methods to update sensor and write results to csv
-    """
+class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
+    """Contains methods to update sensor and write results to csv."""
 
     def __init__(self,
                  startdate,
@@ -132,8 +83,10 @@ class CHCSensorUpdator:
                  geo,
                  parallel,
                  weekday,
+                 numtype,
                  se):
-        """Init Sensor Updator
+        """Init Sensor Updator.
+
         Args:
             startdate: first sensor date (YYYY-mm-dd)
             enddate: last sensor date (YYYY-mm-dd)
@@ -141,28 +94,38 @@ class CHCSensorUpdator:
             geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
+            numtype: type of count data used, one of ["covid", "cli"]
             se: boolean to write out standard errors, if true, use an obfuscated name
         """
-        self.startdate, self.enddate, self.dropdate = [pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
+        self.startdate, self.enddate, self.dropdate = [
+            pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
         # handle dates
         assert (self.startdate > (Config.FIRST_DATA_DATE + Config.BURN_IN_PERIOD)
                 ), f"not enough data to produce estimates starting {self.startdate}"
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
-        assert geo in ['county', 'state', 'msa', 'hrr'], f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
-        self.geo, self.parallel, self.weekday, self.se = geo.lower(), parallel, weekday, se
+        assert geo in ['county', 'state', 'msa', 'hrr'],\
+            f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
+        self.geo, self.parallel, self.weekday, self.numtype, self.se = geo.lower(), parallel, weekday, numtype, se
 
         # output file naming
-        signals = SIGNALS.copy()
-        signals.remove(SMOOTHED if self.weekday else SMOOTHED_ADJ)
+        if self.numtype == "covid":
+            signals = [SMOOTHED_ADJ if self.weekday else SMOOTHED]
+        elif self.numtype == "cli":
+            signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
         signal_names = add_prefix(
             signals,
             wip_signal=read_params()["wip_signal"])
         self.updated_signal_names = signal_names
 
+        # initialize members set in shift_dates().
+        self.burnindate = None
+        self.fit_dates = None
+        self.burn_in_dates = None
+        self.sensor_dates = None
+
     def shift_dates(self):
-        """shift estimates forward to account for time lag, compute burnindates, sensordates
-        """
+        """Shift estimates forward to account for time lag, compute burnindates, sensordates."""
         drange = lambda s, e: pd.date_range(start=s,periods=(e-s).days,freq='D')
         self.startdate = self.startdate - Config.DAY_SHIFT
         self.burnindate = self.startdate - Config.BURN_IN_PERIOD
@@ -172,10 +135,10 @@ class CHCSensorUpdator:
         return True
 
     def geo_reindex(self, data):
-        """Reindex based on geography, include all date, geo pairs
+        """Reindex based on geography, include all date, geo pairs.
+
         Args:
             data: dataframe, the output of loadcombineddata
-            staticpath: path for the static geographic files
         Returns:
             dataframe
         """
@@ -183,10 +146,16 @@ class CHCSensorUpdator:
         geo = self.geo
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr"}:
-            logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
+            logging.error("{0} is invalid, pick one of 'county', 'state', 'msa', 'hrr'".format(
+                geo
+            ))
             return False
         if geo == "county":
-            data_frame = gmpr.fips_to_megacounty(data,Config.MIN_DEN,Config.MAX_BACKFILL_WINDOW,thr_col="den",mega_col=geo)
+            data_frame = gmpr.fips_to_megacounty(data,
+                                                 Config.MIN_DEN,
+                                                 Config.MAX_BACKFILL_WINDOW,
+                                                 thr_col="den",
+                                                 mega_col=geo)
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
         elif geo == "msa":
@@ -194,10 +163,10 @@ class CHCSensorUpdator:
         elif geo == "hrr":
             data_frame = gmpr.replace_geocode(data, "fips", "hrr")
 
-        self.unique_geo_ids = pd.unique(data_frame[geo])
+        unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
         # for each location, fill in all missing dates with 0 values
-        multiindex = pd.MultiIndex.from_product((self.unique_geo_ids, self.fit_dates),
+        multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
                                                 names=[geo, Config.DATE_COL])
         assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
                 ), "more loc-date pairs than maximum number of geographies x number of dates"
@@ -207,26 +176,20 @@ class CHCSensorUpdator:
         return data_frame
 
 
-
     def update_sensor(self,
-            denom_filepath,
-            covid_filepath,
-            outpath,
-            staticpath):
+            data,
+            outpath):
         """Generate sensor values, and write to csv format.
+
         Args:
-            denom_filepath: path to the aggregated denominator data
-            covid_filepath: path to the aggregated covid data
+            data: pd.DataFrame with columns num and den
             outpath: output path for the csv results
-            staticpath: path for the static geographic files
         """
         self.shift_dates()
-        final_sensor_idxs = (self.burn_in_dates >= self.startdate) & (self.burn_in_dates <= self.enddate)
+        final_sensor_idxs = (self.burn_in_dates >= self.startdate) &\
+            (self.burn_in_dates <= self.enddate)
 
         # load data
-        base_geo = "fips"
-        data = load_combined_data(denom_filepath, covid_filepath, self.dropdate, base_geo)
-
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
@@ -247,7 +210,7 @@ class CHCSensorUpdator:
                 sensor_include[geo_id] = np.array(res.loc[final_sensor_idxs,"incl"])
         else:
             n_cpu = min(10, cpu_count())
-            logging.debug(f"starting pool with {n_cpu} workers")
+            logging.debug("starting pool with {0} workers".format(n_cpu))
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
@@ -279,30 +242,4 @@ class CHCSensorUpdator:
         # write out results
         for signal in self.updated_signal_names:
             write_to_csv(output_dict, self.se, signal, outpath)
-        logging.debug(f"wrote files to {outpath}")
-        params = read_params()
-
-        '''
-        arch_diff = S3ArchiveDiffer(
-        params["cache_dir"],
-        params["export_dir"],
-        params["bucket_name"], "chc",
-        params["aws_credentials"])
-        arch_diff.update_cache()
-
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-        print(fails)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
-        '''
+        logging.debug("wrote files to {0}".format(outpath))

@@ -64,8 +64,12 @@ class GeoConstants:
     NUM_HRRS = 308
     NUM_MSAS = 392 + 52  # MSA + States
     NUM_STATES = 52  # including DC and PR
+    NUM_HHSS = 10
+    NUM_NATIONS = 1
 
     MAX_GEO = {"county": NUM_COUNTIES,
                "hrr": NUM_HRRS,
                "msa": NUM_MSAS,
-               "state": NUM_STATES}
+               "state": NUM_STATES,
+               "hhs": NUM_HHSS,
+               "nation": NUM_NATIONS}

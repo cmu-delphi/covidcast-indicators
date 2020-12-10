@@ -39,8 +39,8 @@ def run_module():
     request_all_states = ",".join(all_states.state_id)
 
     today = date.today()
-    month_ago = today - timedelta(days=14)
-    date_range = [ int(x.strftime("%Y%m%d")) for x in [today, month_ago] ]
+    past_reference_day = date(year=2020, month=1, day=1) # first available date in DB
+    date_range = [ int(x.strftime("%Y%m%d")) for x in [past_reference_day, today] ]
     response = Epidata.covid_hosp(request_all_states, date_range)
     if response['result'] != 1:
         raise Exception(f"Bad result from Epidata: {response['message']}")

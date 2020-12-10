@@ -2,7 +2,7 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.
+when the module is run with `python -m delphi_hhs_facilities`.
 """
 
 # from datetime import date, datetime, timedelta

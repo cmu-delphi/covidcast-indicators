@@ -12,8 +12,8 @@
 #' @importFrom jsonlite read_json
 #' @importFrom lubridate ymd_hms
 #' @export
-read_params <- function(path = "params.json") {
-  if (!file.exists(path)) file.copy("params.json.template", "params.json")
+read_params <- function(path = "params.json", template_path = "params.json.template") {
+  if (!file.exists(path)) file.copy(template_path, path)
   params <- read_json(path, simplifyVector = TRUE)
 
   params$num_filter <- if_else(params$debug, 2L, 100L)

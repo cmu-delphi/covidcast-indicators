@@ -1,9 +1,8 @@
-# Patterns Dataset in Safegraph Mobility Data
+# HHS Hospitalizations
 
-We import raw mobility data from Safegraph Weekly Patterns, calculate some 
-statistics upon it, and aggregate the data from the Zip Code level to County,
-HRR, MSA, HHS, Nation, and State levels. For detailed information see the files `DETAILS.md` 
-contained in this directory.
+This indicator computes the "ground truth" for official hospitalizations in the
+US. It uses the Epidata API to fetch daily adult and pediatric hospital
+admissions, sums them, and publishes the result as a COVIDcast signal.
 
 ## Running the Indicator
 
@@ -19,19 +18,12 @@ make install
 This command will install the package in editable mode, so you can make changes that
 will automatically propagate to the installed package. 
 
-One must also install the
-[AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-welcome.html).
-Please refer to OS-specific instructions to install this command line
-interface, and verify that it is installed by calling `which aws`.
-If `aws` is not installed prior to running the pipeline, it will raise
-a `FileNotFoundError`.
-
 All of the user-changable parameters are stored in `params.json`. To execute
 the module and produce the output datasets (by default, in `receiving`), run
 the following:
 
 ```
-env/bin/python -m delphi_safegraph_patterns
+env/bin/python -m delphi_hhs
 ```
 
 If you want to enter the virtual environment in your shell, 
@@ -62,7 +54,7 @@ make test
 To run individual tests, run the following:
 
 ```
-(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_safegraph_patterns --cov-report=term-missing)
+(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_hhs --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along

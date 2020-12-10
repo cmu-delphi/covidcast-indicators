@@ -73,7 +73,7 @@ class TestClaimsHospIndicatorUpdater:
         assert (data_frame.sum() == (4200, 19000)).all()
 
     def test_update_indicator(self):
-        for geo in ["state", "hrr"]:
+        for geo in ["state", "hrr", "hhs", "nation"]:
             td = TemporaryDirectory()
             updater = ClaimsHospIndicatorUpdater(
                 "02-01-2020",

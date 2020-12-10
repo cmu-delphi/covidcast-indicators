@@ -5,6 +5,8 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_sir_complainsalot`.
 """
 
+import logging
+import structlog
 import sys
 
 from itertools import groupby
@@ -13,10 +15,12 @@ from slack import WebClient
 from slack.errors import SlackApiError
 
 from delphi_utils import read_params
+from delphi_utils import get_structured_logger
 import covidcast
 
 from .check_source import check_source
 
+logger = get_structured_logger(__name__)
 
 def run_module():
 
@@ -30,7 +34,12 @@ def run_module():
 
     if len(complaints) > 0:
         for complaint in complaints:
-            print(complaint)
+            logger.critical(event="signal out of SLA",
+                            message=complaint.message,
+                            data_source=complaint.data_source,
+                            signal=complaint.signal,
+                            geo_types=complaint.geo_types,
+                            last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
         report_complaints(complaints, params)
 
@@ -46,14 +55,14 @@ def split_complaints(complaints, n=49):
 def report_complaints(all_complaints, params):
     """Post complaints to Slack."""
     if not params["slack_token"]:
-        print("\b (dry-run)")
+        logger.info("(dry-run)")
         return
 
     client = WebClient(token=params["slack_token"])
 
     for complaints in split_complaints(all_complaints):
         blocks = format_complaints_aggregated_by_source(complaints)
-        print(f"blocks: {len(blocks)}")
+        logger.info(f"blocks: {len(blocks)}")
         try:
             client.chat_postMessage(
                 channel=params["channel"],

@@ -61,7 +61,7 @@ class GoogleHealthTrends:
         params = {
             "time_startDate": start_date,
             "time_endDate": end_date,
-            "timelineResolution": "day",
+            "timelineResolution": "DAY",
             "terms": TERMS,
         }
 

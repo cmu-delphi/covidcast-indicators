@@ -78,14 +78,22 @@ get_filenames_in_range <- function(date_range, params) {
 #' this function.
 #'
 #' @param params    Params object produced by read_params
-#' @param user_aggs    Tibble of user-specified aggregations to perform
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
 #'
 #' @return none
 #' 
 #' @importFrom parallel detectCores
 #' 
 #' @export
-run_contingency_tables <- function(params, user_aggs)
+run_contingency_tables <- function(params, aggregations)
 {
   params <- update_params(params)
   
@@ -127,7 +135,7 @@ run_contingency_tables <- function(params, user_aggs)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-  aggregations <- get_aggs(params, user_aggs)
+  aggregations <- get_aggs(params, aggregations)
 
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -296,7 +304,7 @@ set_human_readable_colnames <- function(input_data) {
 #'
 #' @param params Named list of configuration parameters.
 #' 
-#' @return a tibble of desired aggregations to calculate
+#' @return a data frame of desired aggregations to calculate
 #'
 #' @export
 get_aggs <- function(params, aggs) {
@@ -308,8 +316,11 @@ get_aggs <- function(params, aggs) {
   
   expected_names = c("name", "var_weight", "metric", "group_by", "skip_mixing", 
                      "compute_fn", "post_fn")
-  
-  if ( all() )
+  if ( !all(expected_names %in% names(aggs)) ) {
+    stop(sprintf(
+      "all expected columns %s must appear in aggs", 
+      paste(expected_names, collapse=", ")))
+  }
   
   return(aggregations)
 }
@@ -322,6 +333,8 @@ get_aggs <- function(params, aggs) {
 #' @param weight a vector of sample weights for inverse probability weighting;
 #'   invariant up to a scaling factor
 #' @param sample_size Unused.
+#' 
+#' @return a vector of mean values
 #'
 #' @export
 compute_mean <- function(response, weight, sample_size)
@@ -341,14 +354,16 @@ compute_mean <- function(response, weight, sample_size)
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
+#'   
+#' @return a vector of percentages
 #'
 #' @export
-compute_prop <- function(response, weight, sample_size)
+compute_pct <- function(response, weight, sample_size)
 {
-  response_prop <- compute_binary_response(response, weight, sample_size)
-  response_prop$sample_size = sample_size
+  response_pct <- compute_binary_response(response, weight, sample_size)
+  response_pct$sample_size = sample_size
   
-  return(response_prop)
+  return(response_pct)
 }
 
 
@@ -366,6 +381,8 @@ compute_prop <- function(response, weight, sample_size)
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
 #'
+#' @return a vector of counts
+#'
 #' @export
 compute_count <- function(response, weight, sample_size)
 {
@@ -382,15 +399,16 @@ compute_count <- function(response, weight, sample_size)
 #' Produce aggregates for all desired aggregations.
 #'
 #' Writes the outputs directly to CSVs in the directory specified by `params`.
-#' Produces output for all available data between `params$start_date` and 
+#' Produces output using all available data between `params$start_date` and 
 #' `params$end_date`, inclusive.
 #'
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
-#'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `compute_fn` is the function that computes
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
@@ -399,8 +417,9 @@ compute_count <- function(response, weight, sample_size)
 #'   for each geographic level.
 #' @param params Named list of configuration parameters.
 #'
+#' @return none
+#'
 #' @import data.table
-#' @importFrom dplyr filter mutate_at vars bind_rows
 #' @importFrom purrr reduce
 #'
 #' @export
@@ -449,7 +468,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     }
     
     df_out = dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
-    write_data_agg(df_out, params, geo_level, agg_group)
+    write_contingency_tables(df_out, params, geo_level, agg_group)
   }
 }
 
@@ -458,16 +477,20 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
-#'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `compute_fn` is the function that computes
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
 #' @param cw_list Named list of geographic crosswalks, each of which maps a zip5
 #'   to a geographic level such as county or state. Aggregates will be produced
 #'   for each geographic level.
+#'   
+#' @return list of data frame of individual response data and user-set data
+#' frame of desired aggregations
 #'
 #' @export
 post_process_aggs <- function(df, aggregations, cw_list) {
@@ -531,14 +554,18 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
-#'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `compute_fn` is the function that computes
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
 #' @param col_var Name of response var
+#'
+#' @return list of data frame of individual response data and user-set data 
+#' frame of desired aggregations
 #'
 #' @export
 convert_qcodes_to_bool <- function(df, aggregations, col_var) {
@@ -561,14 +588,18 @@ convert_qcodes_to_bool <- function(df, aggregations, col_var) {
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
-#'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `compute_fn` is the function that computes
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
 #' @param col_var Name of response var
+#'
+#' @return list of data frame of individual response data and user-set data 
+#' frame of desired aggregations
 #'
 #' @export
 convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
@@ -618,14 +649,18 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base file name; `var_weight` is the column
-#'   to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `compute_fn` is the function that computes
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
 #' @param col_var Name of response var
+#' 
+#' @return list of data frame of individual response data and user-set data 
+#' frame of desired aggregations
 #'
 #' @export
 convert_freeresponse_to_num <- function(df, aggregations, col_var) {
@@ -657,7 +692,7 @@ apply_privacy_censoring <- function(df, params) {
 
 
 
-#' Calculate aggregates across all days for all indicators.
+#' Performs calculations across all groupby levels for all aggregations.
 #'
 #' The organization may seem a bit contorted, but this is designed for speed.
 #' The primary bottleneck is repeatedly filtering the data frame to find data
@@ -671,7 +706,15 @@ apply_privacy_censoring <- function(df, params) {
 #' @param df a data frame of survey responses
 #' @param crosswalk_data An aggregation, such as zip => county or zip => state,
 #'   as a data frame with a "zip5" column to join against.
-#' @param aggregations Data frame of desired aggregations.
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
 #' @param geo_level the aggregation level, such as county or state, being used
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
@@ -754,7 +797,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   variable values used to select this group.
 #' @param params Named list of configuration options.
 #' 
-#' @importFrom dplyr mutate filter
+#' @importFrom dplyr filter
 #' @importFrom tibble add_column
 #' @importFrom rlang .data
 #' 
@@ -813,12 +856,15 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", names(target_group))])) == 0,
     ]
 
-    #### TODO: megacounty function needs a `day` column. Also doesn't make sense to be here, since this looks at a single group.
+    #### TODO: megacounty function needs a `day` column. Also doesn't make sense
+    # to be here, since this looks at a single group. Needs to be one level pu.
     # if (geo_level == "county") {
     #   df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
     #   dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
     # }
 
+    #### TODO: replace with privacy function so can change more easily. Also need
+    # to move one level up, since need to perform after megacounty aggregation
     dfs_out[[aggregation]] <- filter(dfs_out[[aggregation]],
                                    .data$sample_size >= params$num_filter,
                                    .data$effective_sample_size >= params$num_filter)
@@ -845,11 +891,10 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 #' @param signal_name    name of the signal; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange
-#' @importFrom rlang .data
+#' @importFrom dplyr arrange_at
 #' 
 #' @export
-write_data_agg <- function(data, params, geo_level, groupby_vars)
+write_contingency_tables <- function(data, params, geo_level, groupby_vars)
 {
   if (!is.null(data) && nrow(data) != 0) {
     data <- arrange_at(data, groupby_vars)
@@ -878,17 +923,28 @@ write_data_agg <- function(data, params, geo_level, groupby_vars)
 
 
 
-#' Get the date of the first of the previous month,relative
+#' Get the date of the first day of the previous month
 #'
-#' @param end_date a
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return Date
 #' 
 #' @importFrom lubridate floor_date
 #' 
 #' @export
-start_of_month <- function(date) {
+start_of_prev_full_month <- function(date) {
   return(floor_date(date, "month") - months(1))
 }
 
+#' Get the date of the last day of the previous month
+#'
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return Date
+#' 
+#' @importFrom lubridate ceiling_date days
+#' 
+#' @export
 end_of_prev_full_month <- function(date) {
   if (ceiling_date(date, "month") == date) {
     return(date)
@@ -898,24 +954,49 @@ end_of_prev_full_month <- function(date) {
 }
 
 
+#' Get the date range specifying the previous month
+#'
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return list of two Dates
+#' 
+#' @export
 get_range_prev_full_month <- function(date = Sys.Date()) {
   eom = end_of_prev_full_month(date)
 
   if (eom == date) {
-    som = start_of_month(date + months(1))
+    som = start_of_prev_full_month(date + months(1))
   } else {
-    som = start_of_month(date)
+    som = start_of_prev_full_month(date)
   }
 
   return(list(som, eom))
 }
 
 
-
-start_of_week <- function(date) {
+#' Get the date of the first day of the previous week
+#'
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return Date
+#' 
+#' @importFrom lubridate floor_date weeks
+#' 
+#' @export
+start_of_prev_full_week <- function(date) {
   return(floor_date(date, "week") - weeks(1))
 }
 
+
+#' Get the date of the last day of the previous week
+#'
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return Date
+#' 
+#' @importFrom lubridate ceiling_date days
+#' 
+#' @export
 end_of_prev_full_week <- function(date) {
   if (ceiling_date(date, "week") == date) {
     return(date)
@@ -926,18 +1007,39 @@ end_of_prev_full_week <- function(date) {
 
 
 #### TODO: should be epiweeks eventually. Already exists a package to calculate?
+#' Get the date range specifying the previous week
+#'
+#' @param date Date that output will be calculated relative to
+#' 
+#' @return list of two Dates
+#' 
+#' @importFrom lubridate weeks
+#' 
+#' @export
 get_range_prev_full_week <- function(date = Sys.Date()) {
   eow = end_of_prev_full_week(date)
 
   if (eow == date) {
-    sow = start_of_week(date + weeks(1))
+    sow = start_of_prev_full_week(date + weeks(1))
   } else {
-    sow = start_of_week(date)
+    sow = start_of_prev_full_week(date)
   }
 
   return(list(sow, eow))
 }
 
+
+#' Get the date range specifying the previous full time period
+#'
+#' @param date Date that output will be calculated relative to
+#' @param weekly_or_monthly_flag string "weekly" or "monthly" indicating desired
+#' time period to aggregate over
+#' 
+#' @return list of two Dates
+#' 
+#' @importFrom lubridate ymd_hms
+#' 
+#' @export
 get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag) {
   if (weekly_or_monthly_flag == "monthly") {
     # Get start and end of previous full month.
@@ -958,7 +1060,7 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
 }
 
 
-#' Write a plain, time-stamped message to the console
+#' Write a time-stamped message to the console
 #'
 #' @param text the body of the message to display
 #'

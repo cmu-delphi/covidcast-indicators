@@ -420,6 +420,7 @@ compute_count <- function(response, weight, sample_size)
 #' @return none
 #'
 #' @import data.table
+#' @importFrom dplyr full_join
 #' @importFrom purrr reduce
 #'
 #' @export

@@ -37,7 +37,7 @@ class ClaimsHospIndicatorUpdater:
             startdate: first indicator date (YYYY-mm-dd)
             enddate: last indicator date (YYYY-mm-dd)
             dropdate: data drop date (YYYY-mm-dd)
-            geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
+            geo: geographic resolution, one of ["county", "state", "msa", "hrr", "hhs", "nation"]
             parallel: boolean to run the indicator update in parallel
             weekday: boolean to adjust for weekday effects
             write_se: boolean to write out standard errors, if true, use an obfuscated name
@@ -60,8 +60,8 @@ class ClaimsHospIndicatorUpdater:
         assert self.startdate < self.enddate, "start date >= end date"
         assert self.enddate <= self.dropdate, "end date > drop date"
         assert (
-                geo in ['county', 'state', 'msa', 'hrr']
-        ), f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'"
+                geo in ['county', 'state', 'msa', 'hrr', 'hhs', 'nation']
+        ), f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', 'nation'"
 
     def shift_dates(self):
         """
@@ -107,15 +107,16 @@ class ClaimsHospIndicatorUpdater:
                                                  new_col=self.geo,
                                                  new_code="state_id")
             data_frame[self.geo] = data_frame[self.geo]
-        elif self.geo == "msa":
+        elif self.geo in ["msa", "hhs", "nation"]:
             data_frame = geo_map.replace_geocode(data,
                                                  from_code="fips",
                                                  new_code=self.geo)
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
         else:
-            logging.error("%s is invalid, pick one of 'county', 'state', 'msa', 'hrr'",
-                          self.geo)
+            logging.error(
+                "%s is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'",
+                self.geo)
             return False
 
         unique_geo_ids = pd.unique(data_frame[self.geo])

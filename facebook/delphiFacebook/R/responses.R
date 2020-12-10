@@ -65,6 +65,10 @@ load_response_one <- function(input_filename, params) {
     return(tibble())
   }
   input_data <- arrange(input_data, desc(.data$StartDate))
+  if (!("SurveyID" %in% names(input_data))) {
+    # The first wave files didn't actually record their survey id
+    input_data$SurveyID <- "SV_8zYl1sFN6fAFIxv"
+  }
 
   # Occasionally we get single responses with no SurveyID, which prevents us
   # from knowing their wave. Discard.

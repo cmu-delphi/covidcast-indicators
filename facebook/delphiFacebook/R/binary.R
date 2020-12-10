@@ -105,6 +105,7 @@ compute_binary_response <- function(response, weight, sample_size)
 #' @param df Data frame
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
+#' @export
 jeffreys_binary <- function(df) {
   return(mutate(df,
                 val = jeffreys_percentage(.data$val, .data$sample_size),
@@ -120,6 +121,7 @@ jeffreys_binary <- function(df) {
 #' @param percentage Vector of percentages to adjust.
 #' @param sample_size Vector of corresponding sample sizes.
 #' @return Vector of adjusted percentages.
+#' @export
 jeffreys_percentage <- function(percentage, sample_size) {
   return((percentage * sample_size + 50) / (sample_size + 1))
 }

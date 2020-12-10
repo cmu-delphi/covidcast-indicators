@@ -4,7 +4,7 @@
 \alias{start_of_month}
 \title{Get the date of the first of the previous month,relative}
 \usage{
-start_of_month(end_date)
+start_of_month(date)
 }
 \arguments{
 \item{end_date}{a}

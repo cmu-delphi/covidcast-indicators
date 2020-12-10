@@ -1,17 +1,20 @@
 #### TODO
 # - set up to be able to aggregate multiple time periods in series? wrapper function more likely
-# - map response codes to sensical values?
+# - map response codes to descriptive values? Would need mapping for every individual question
 
 
 #' Update date and input files settings from params file
+#' 
+#' Use `end_date` and `aggregate_range` to calculate last full time period
+#' (either month or week) to use for aggregations. Find all files in `input_dir`
+#' within the calculated time period.
 #'
 #' @param params    Params object produced by read_params
 #'
 #' @return a named list of parameters values
 #'
-#' @importFrom dplyr if_else
-#' @importFrom jsonlite read_json
 #' @importFrom lubridate ymd_hms
+#' 
 #' @export
 update_params <- function(params) {
   if (params$end_date == "current") {
@@ -38,13 +41,14 @@ update_params <- function(params) {
 }
 
 
-#' Get relevant input data file names.
+#' Get relevant input data file names from `input_dir`.
 #'
 #' @param date_range    List of two dates specifying start and end of desired
 #' date range 
 #' @param params    Params object produced by read_params
 #'
 #' @return Character vector of filenames
+#' 
 #' @export
 get_filenames_in_range <- function(date_range, params) {
   #### TODO: do we need to read in data as far as params$archive_days back?
@@ -74,11 +78,14 @@ get_filenames_in_range <- function(date_range, params) {
 #' this function.
 #'
 #' @param params    Params object produced by read_params
+#' @param user_aggs    Tibble of user-specified aggregations to perform
 #'
 #' @return none
+#' 
 #' @importFrom parallel detectCores
+#' 
 #' @export
-run_contingency_tables <- function(params)
+run_contingency_tables <- function(params, user_aggs)
 {
   params <- update_params(params)
   
@@ -120,7 +127,7 @@ run_contingency_tables <- function(params)
   }
 
   data_agg <- set_human_readable_colnames(data_agg)
-  aggregations <- get_aggs(params)
+  aggregations <- get_aggs(params, user_aggs)
 
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -139,13 +146,12 @@ run_contingency_tables <- function(params)
 #' Only binary columns are mapped from response codes to real values. Multiple
 #' choice and multi-select questions use the original numeric response codes.
 #'
-#' @param params    Params object produced by read_params
-#'
+#' @param input_data    Data frame of individual response data
+#' 
 #' @return Data frame with descriptive column names
-#'
-#' @params input_data Data frame of individual response data
 #' 
 #' @importFrom dplyr rename
+#' 
 #' @export
 set_human_readable_colnames <- function(input_data) {
   # Named list of question numbers and str replacement names
@@ -182,7 +188,7 @@ set_human_readable_colnames <- function(input_data) {
     "b_hh_shortness_of_breath" = "hh_short_breath", # A1_4
     "b_hh_difficulty_breathing" = "hh_diff_breath", # A1_5
     "b_tested_ever" = "B8",
-    "b_tested_14d" = "t_tested_14d", # B10; "No" coded as 3, but dealth with in conversion to "t_tested_14d"
+    "b_tested_14d" = "t_tested_14d", # B10; "No" coded as 3, but dealt with in conversion to "t_tested_14d"
     "b_wanted_test_14d" = "t_wanted_test_14d", # B12
     "b_state_travel" = "C6", # c_travel_state
     "b_contact_tested_pos" = "C11",
@@ -286,63 +292,26 @@ set_human_readable_colnames <- function(input_data) {
 }
 
 
-#' Wrapper for `set_aggs`
-#'
-#' @return a tibble of desired aggregations to calculate
+#' Checks user-set aggregations for basic validity
 #'
 #' @param params Named list of configuration parameters.
+#' 
+#' @return a tibble of desired aggregations to calculate
 #'
 #' @export
-get_aggs <- function(params) {
-  aggregations <- unique(set_aggs(params))
+get_aggs <- function(params, aggs) {
+  aggregations <- unique(aggs)
   
   if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
     stop("all aggregation names must be unique")
   }
   
+  expected_names = c("name", "var_weight", "metric", "group_by", "skip_mixing", 
+                     "compute_fn", "post_fn")
+  
+  if ( all() )
+  
   return(aggregations)
-}
-
-
-#' Sets user-specified aggregations.
-#'
-#' User should add additional desired aggregations here following existing 
-#' format. Names should be unique. Listing no groupby vars will implicitly
-#' compute aggregations at the national level.
-#' 
-#' Compute functions must be one of the `compute_*` set (or another function 
-#' with similar format can be created).
-#'
-#' @return a tibble of desired aggregations to calculate
-#' 
-#' @param params Named list of configuration parameters.
-#'
-#' @importFrom tibble tribble
-#'
-#' @export
-set_aggs <- function(params) {
-  aggs <- tribble(
-    ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
-    "reasons_tested_14d_freq", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_prop, jeffreys_binary,
-    "tested_pos_14d_freq", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_prop, jeffreys_binary,
-    "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, jeffreys_count,
-
-    "tested_pos_14d_freq_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_prop, jeffreys_binary,
-    "mean_cli", "weight", "b_have_cli", c("state", "mc_age", "mc_race"), FALSE, compute_prop, jeffreys_binary,
-    "comorbidity_freq_by_demos", "weight", "ms_comorbidities", c("county", "mc_race", "mc_gender"), FALSE, compute_prop, jeffreys_binary,
-
-    "reasons_tested_freq", "weight", "ms_reasons_tested_14d", c("county"), FALSE, compute_prop, jeffreys_binary,
-    "reasons_not_tested_freq_by_race", "weight", "ms_reasons_not_tested_14d", c("mc_race", "b_hispanic"), FALSE, compute_prop, jeffreys_binary,
-    "reasons_not_tested_freq_by_age", "weight", "ms_reasons_not_tested_14d", c("mc_age"), FALSE, compute_prop, I,
-    "reasons_not_tested_freq_by_job", "weight", "ms_reasons_not_tested_14d", c("mc_occupational_group"), FALSE, compute_prop, jeffreys_binary,
-    "seek_medical_care_freq", "weight", "ms_medical_care", c("county"), FALSE, compute_prop, jeffreys_binary,
-    "unusual_symptom_freq", "weight", "ms_unusual_symptoms", c("b_tested_pos_14d"), FALSE, compute_prop, jeffreys_binary,
-
-    "anxiety_levels_no_groups", "weight", "mc_anxiety", c(), FALSE, compute_count, I,
-    "anxiety_levels", "weight", "mc_anxiety", c("state"), FALSE, compute_count, I,
-  )
-
-  return(aggs)
 }
 
 

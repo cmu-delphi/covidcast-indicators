@@ -13,5 +13,7 @@ update_params(params)
 a named list of parameters values
 }
 \description{
-Update date and input files settings from params file
+Use `end_date` and `aggregate_range` to calculate last full time period
+(either month or week) to use for aggregations. Find all files in `input_dir`
+within the calculated time period.
 }

@@ -59,6 +59,7 @@ compute_count_response <- function(response, weight, sample_size)
 #' @param df Data frame
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
+#' @export
 jeffreys_count <- function(df) {
   return(mutate(df,
                 se = jeffreys_se(.data$se, .data$val,

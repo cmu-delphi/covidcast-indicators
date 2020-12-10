@@ -2,9 +2,9 @@
 % Please edit documentation in R/contingency_table_dev.R
 \name{get_aggs}
 \alias{get_aggs}
-\title{Wrapper for `set_aggs`}
+\title{Checks user-set aggregations for basic validity}
 \usage{
-get_aggs(params)
+get_aggs(params, aggs)
 }
 \arguments{
 \item{params}{Named list of configuration parameters.}
@@ -13,5 +13,5 @@ get_aggs(params)
 a tibble of desired aggregations to calculate
 }
 \description{
-Wrapper for `set_aggs`
+Checks user-set aggregations for basic validity
 }

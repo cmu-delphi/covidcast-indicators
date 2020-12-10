@@ -4,10 +4,12 @@
 \alias{run_contingency_tables}
 \title{Run the contingency table production pipeline}
 \usage{
-run_contingency_tables(params)
+run_contingency_tables(params, user_aggs)
 }
 \arguments{
 \item{params}{Params object produced by read_params}
+
+\item{user_aggs}{Tibble of user-specified aggregations to perform}
 }
 \value{
 none

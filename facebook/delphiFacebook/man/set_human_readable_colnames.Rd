@@ -7,7 +7,7 @@
 set_human_readable_colnames(input_data)
 }
 \arguments{
-\item{params}{Params object produced by read_params}
+\item{input_data}{Data frame of individual response data}
 }
 \value{
 Data frame with descriptive column names

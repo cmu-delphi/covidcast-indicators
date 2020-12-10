@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_table_dev.R
 \name{get_filenames_in_range}
 \alias{get_filenames_in_range}
-\title{Get relevant input data file names.}
+\title{Get relevant input data file names from `input_dir`.}
 \usage{
 get_filenames_in_range(date_range, params)
 }
@@ -16,5 +16,5 @@ date range}
 Character vector of filenames
 }
 \description{
-Get relevant input data file names.
+Get relevant input data file names from `input_dir`.
 }

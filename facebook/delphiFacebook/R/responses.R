@@ -59,7 +59,9 @@ load_response_one <- function(input_filename, params) {
                            D1_4_TEXT = col_character(),
                            A3 = col_character(),
                            B2 = col_character(),
-                           C1 = col_character()),
+                           B2c = col_character(),
+                           C1 = col_character(),
+                           D7 = col_character()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())

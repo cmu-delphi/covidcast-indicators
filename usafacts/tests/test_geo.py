@@ -104,15 +104,18 @@ class TestGeoMap:
             }
         )
         new_df = geo_map(df, "hrr", SENSOR)
-        assert new_df.round(5).equals(pd.DataFrame({
-            "geo_id": ["110", "123", "140", "145", "147"],
-            "timestamp": ["2020-02-15"]*5,
-            "new_counts": [13.0, 0.11143, 0.09867, 0.00809, 26.78180],
-            "cumulative_counts": [60.0, 0.14858, 0.13156, 0.08093, 164.63893],
-            "population": [25.0, 15.60054, 13.81422, 0.08093, 2470.50431],
-            "incidence": [52000.0, 714.28571, 714.28571, 10000.0, 1084.06214],
-            "cumulative_prop": [240000.0, 952.38095, 952.38095, 100000.0, 6664.18316]
-        }))
+        pd._testing.assert_frame_equal(
+            new_df.round(5),
+            pd.DataFrame({
+                "geo_id": ["110", "123", "140", "145", "147"],
+                "timestamp": ["2020-02-15"]*5,
+                "new_counts": [13.0, 0.11143, 0.09867, 0.00809, 26.78180],
+                "cumulative_counts": [60.0, 0.14858, 0.13156, 0.08093, 164.63893],
+                "population": [25.0, 15.60054, 13.81422, 0.08093, 2470.50431],
+                "incidence": [52000.0, 714.28571, 714.28571, 10000.0, 1084.06214],
+                "cumulative_prop": [240000.0, 952.38095, 952.38095, 100000.0, 6664.18316]
+            })
+        )
 
     def test_msa(self):
         """Tests that values are correctly aggregated at the MSA level."""
@@ -126,12 +129,15 @@ class TestGeoMap:
             }
         )
         new_df = geo_map(df, "msa", SENSOR)
-        assert new_df.round(5).equals(pd.DataFrame({
-            "geo_id": ["31420", "49340"],
-            "timestamp": ["2020-02-15"]*2,
-            "new_counts": [2.0, 13.0],
-            "cumulative_counts": [45.0, 60.0],
-            "population": [300, 25],
-            "incidence": [666.66667, 52000.0],
-            "cumulative_prop": [15000.0, 240000.0]
-        }))
+        pd._testing.assert_frame_equal(
+            new_df.round(5),
+            pd.DataFrame({
+                "geo_id": ["31420", "49340"],
+                "timestamp": ["2020-02-15"]*2,
+                "new_counts": [2.0, 13.0],
+                "cumulative_counts": [45.0, 60.0],
+                "population": [300, 25],
+                "incidence": [666.66667, 52000.0],
+                "cumulative_prop": [15000.0, 240000.0]
+            })
+        )

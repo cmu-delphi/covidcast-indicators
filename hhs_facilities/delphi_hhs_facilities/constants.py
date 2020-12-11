@@ -6,9 +6,9 @@ SIGNALS = [
     TOTAL_BEDS_7DAV
 ]
 
-GEO_RESOLUTIONS = [
+GEO_RESOLUTIONS = {
     "county",
     "state",
     "msa",
     "hrr"
-]
+}

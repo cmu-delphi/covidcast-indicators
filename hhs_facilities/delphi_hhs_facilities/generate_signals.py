@@ -13,7 +13,7 @@ def generate_signal(df: pd.DataFrame,
     """
     Generate a signal DataFrame derived from an input DataFrame.
 
-    Applies the provided function the the columns specified, and then aggregates by geo and time.
+    Applies the provided function on the columns specified, and then aggregates by geo and time.
 
     Parameters
     ----------

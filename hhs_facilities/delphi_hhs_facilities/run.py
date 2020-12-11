@@ -14,7 +14,7 @@ from delphi_utils.geomap import GeoMapper
 import numpy as np
 import pandas as pd
 
-from .constants import GEO_RESOLUTIONS, SIGNALS
+from .constants import GEO_RESOLUTIONS, SIGNALS, NAN_VALUE
 from .generate_signals import generate_signal
 from .geo import convert_geo
 
@@ -23,12 +23,12 @@ def run_module() -> None:
     """Run entire hhs_facilities indicator."""
     params = read_params()
 
-    # below 3 commands are all just for local testing while API is not online yet.
+    # below 2 commands are all just for local testing while API is not online yet.
     raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv",
                          dtype={"fips_code": "str"},
-                         nrows=1000)
+                         nrows=1000,
+                         na_values=NAN_VALUE)
     raw_df["timestamp"] = pd.to_datetime(raw_df["collection_week"])
-    raw_df.replace(-999999.0, np.nan, inplace=True)
 
     gmpr = GeoMapper()
     for geo, (sig_name, sig_cols, sig_func, sig_offset) in product(GEO_RESOLUTIONS, SIGNALS):

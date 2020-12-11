@@ -18,28 +18,23 @@ from .constants import GEO_RESOLUTIONS
 
 
 def run_module():
-    """
-    Run entire hhs_facilities indicator.
-
-    Returns
-    -------
-    None
-    """
+    """Run entire hhs_facilities indicator."""
     params = read_params()
     # raw_df = query_api()  pull data from API
-
-    raw_df = pd.read_csv("delphi_hhs_facilities/reported_hospital_capacity_admissions_facility-level_weekly_average_timeseries_20201207.csv", nrows=1000, dtype={"fips_code": "str"})
+    # below 3 lines are all just for local testing while API is not online yet.
+    raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv", dtype={"fips_code": "str"})
     raw_df["timestamp"] = pd.to_datetime(raw_df["collection_week"])
     raw_df["fips"] = raw_df["fips_code"]
 
     gmpr = GeoMapper()
-    for geo in GEO_RESOLUTIONS:
-        mapped_df = map_to_geo(raw_df, geo, gmpr)
+    for geo, signal in GEO_RESOLUTIONS:
+        mapped_df = convert_geo(raw_df, geo, gmpr)
         output_df = process_df(mapped_df)
         create_export_csv(output_df, params["export_dir"], geo, "testsignal")
 
 
-def map_to_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
+def convert_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
+    """Map a df to desired regions."""
     if geo == "county":
         output_df = df.copy()
         output_df["geo_id"] = output_df["county"]
@@ -50,7 +45,8 @@ def map_to_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
 
 
 def process_df(df: pd.DataFrame) -> pd.DataFrame:
+    """Process a df to get the value of interest."""
     df["se"] = np.nan
     df["sample_size"] = np.nan
-    df["val"] = 1
+    df["val"] = 1  # Do real processing here
     return df

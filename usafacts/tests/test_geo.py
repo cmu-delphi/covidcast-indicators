@@ -104,7 +104,7 @@ class TestGeoMap:
             }
         )
         new_df = geo_map(df, "hrr", SENSOR)
-        pd._testing.assert_frame_equal(
+        pd.testing.assert_frame_equal(
             new_df.round(5),
             pd.DataFrame({
                 "geo_id": ["110", "123", "140", "145", "147"],
@@ -129,7 +129,7 @@ class TestGeoMap:
             }
         )
         new_df = geo_map(df, "msa", SENSOR)
-        pd._testing.assert_frame_equal(
+        pd.testing.assert_frame_equal(
             new_df.round(5),
             pd.DataFrame({
                 "geo_id": ["31420", "49340"],

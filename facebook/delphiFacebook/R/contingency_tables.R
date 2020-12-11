@@ -26,17 +26,17 @@ update_params <- function(params) {
     )
     date_range = get_range_prev_full_period(end_date, params$aggregate_range)
   }
-
+  
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }
   
   params$start_time <- date_range[[1]]
   params$end_time <- date_range[[2]]
-
+  
   params$start_date <- as.Date(date_range[[1]])
   params$end_date <- as.Date(date_range[[2]])
-
+  
   return(params)
 }
 
@@ -104,19 +104,19 @@ run_contingency_tables <- function(params, aggregations)
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
   msg_df("response input data", input_data)
-
+  
   input_data <- merge_responses(input_data, archive)
   data_agg <- create_data_for_aggregatation(input_data)
-
+  
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
   data_agg <- join_weights(data_agg, params, weights = "step1")
   msg_df("response data to aggregate", data_agg)
-
+  
   ## Set default number of cores for mclapply to the total available number,
   ## because we are greedy and this will typically run on a server.
   if (params$parallel) {
     cores <- detectCores()
-
+    
     if (is.na(cores)) {
       warning("Could not detect the number of CPU cores; parallel mode disabled")
       params$parallel <- FALSE
@@ -124,7 +124,7 @@ run_contingency_tables <- function(params, aggregations)
       options(mc.cores = cores)
     }
   }
-
+  
   if ( "cids" %in% params$output )
   {
     write_cid(data_agg, "part_a", params)
@@ -133,14 +133,14 @@ run_contingency_tables <- function(params, aggregations)
   {
     update_archive(input_data, archive, params)
   }
-
+  
   data_agg <- set_human_readable_colnames(data_agg)
   aggregations <- get_aggs(params, aggregations)
-
+  
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
   }
-
+  
 }
 
 
@@ -279,9 +279,9 @@ set_human_readable_colnames <- function(input_data) {
     "n_hh_prop_cli" = "hh_p_cli", # Based on symptoms in A1, and hh sick and total counts
     "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
   )
-
+  
   map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
-
+  
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
   input_data$t_zipcode = input_data$zip5 # Keep old zipcode column
   
@@ -431,10 +431,10 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   ## input files.
   df <- as.data.table(df)
   setkey(df, day)
-
+  
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
-
+  
   output <- post_process_aggs(df, aggregations, cw_list)
   df <- output[[1]]
   aggregations <- output[[2]]
@@ -452,10 +452,10 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     
     these_aggs = aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
-                                       }) & aggregations$geo_level == geo_level, ]
-
+                                     }) & aggregations$geo_level == geo_level, ]
+    
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
-
+    
     # If want to additionally keep "se" and "effective_sample_size", add here.
     keep_vars = c("val", "sample_size")
     
@@ -463,9 +463,8 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
       map_old_new_names = keep_vars
       names(map_old_new_names) = paste(keep_vars, agg_metric, sep="_")
       
-      dfs_out[[agg_metric]] = 
-        apply_privacy_censoring(dfs_out[[agg_metric]], params)[, c(agg_group, keep_vars)] %>% 
-        rename(map_old_new_names)
+      dfs_out[[agg_metric]] = rename(
+        dfs_out[[agg_metric]][, c(agg_group, keep_vars)], map_old_new_names)
     }
     
     df_out = dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
@@ -626,8 +625,8 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
              grepl(sprintf("^%s,", code), eval(parse(text=col_var))) | 
              grepl(sprintf(",%s$", code), eval(parse(text=col_var))) | 
              grepl(sprintf(",%s,", code), eval(parse(text=col_var))) ) 
-         })]
- 
+       })]
+  
   # Update aggregations table
   old_rows = aggregations[aggregations$metric == col_var, ]
   for (row_ind in seq_along(old_rows$name)) {
@@ -675,24 +674,6 @@ convert_freeresponse_to_num <- function(df, aggregations, col_var) {
 }
 
 
-
-#' Censor aggregates to ensure privacy.
-#'
-#' Currently done in simple, static way: Rows with sample size less than 100 are
-#' removed; no noise is added and sample size setting is not changeable via
-#' the params file.
-#'
-#' @param df a data frame of summarized response data
-#' @param params a named list with entries "s_weight", "s_mix_coef",
-#'   "num_filter"
-#'
-#' @export
-apply_privacy_censoring <- function(df, params) {
-  return(df["sample_size" >= 100 & "effective_sample_size" >= 100])
-}
-
-
-
 #' Performs calculations across all groupby levels for all aggregations.
 #'
 #' The organization may seem a bit contorted, but this is designed for speed.
@@ -729,13 +710,13 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## inefficient; profiling shows the cost to be negligible, so shut it up
   # Geo group column is always named "geo_id"
   df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
-
+  
   ## We do batches of just one set of groupby vars at a time, since we have
   ## to select rows based on this.
   assert( length(unique(aggregations$group_by)) == 1 )
-
+  
   groupby_vars <- aggregations$group_by[[1]]
-
+  
   if (all(groupby_vars %in% names(df))) {
     unique_group_combos = unique(df[, ..groupby_vars])
     unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
@@ -750,13 +731,13 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   if (!exists("unique_group_combos") || nrow(unique_group_combos) == 0) {
     return(list())
   }
-
-
+  
+  
   ## Set an index on the groupby var columns so that the groupby step can be
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
-
+  
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
     # Use data.table's index to make this filter efficient
@@ -766,16 +747,16 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       target_group,
       geo_level,
       params)
-
+    
     return(out)
   }
-
+  
   if (params$parallel) {
     dfs <- mclapply(seq_along(unique_group_combos[[1]]), calculate_group)
   } else {
     dfs <- lapply(seq_along(unique_group_combos[[1]]), calculate_group)
   }
-
+  
   ## Now we have a list, with one entry per groupby level, each containing a
   ## list of one data frame per aggregation. Rearrange it.
   dfs_out <- list()
@@ -784,9 +765,101 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       groupby_levels[[aggregation]] 
     }))
   }
-
+  
+  ## Do post-processing.
+  for (row in seq_len(nrow(aggregations))) {
+    aggregation <- aggregations$name[row]
+    groupby_vars <- aggregations$group_by[[row]]
+    post_fn <- aggregations$post_fn[[row]]
+    
+    dfs_out[[aggregation]] <- dfs_out[[aggregation]][
+      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", groupby_vars)])) == 0,
+    ]
+    
+    if (geo_level == "county") {
+      df_megacounties <- megacounty_generic(dfs_out[[aggregation]], params$num_filter, groupby_vars)
+      dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
+    }
+    
+    dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
+    
+    ## *After* gluing together megacounties, apply the post-function
+    dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
+  }
+  
   return(dfs_out)
 }
+
+
+
+
+#' Generic version of `megacounty` function. Uses provided set of grouping
+#' variables.
+#' 
+#' Aggregates counties into megacounties that have low sample size values for a
+#' given day.
+#'
+#' @param df_intr Input tibble that requires aggregation, with `geo_id`, `val`,
+#'     `sample_size`, `effective_sample_size`, and `se` columns.
+#' @param threshold Sample size value below which counties should be grouped
+#'     into megacounties.
+#'     
+#' @return Tibble of megacounties. Counties that are not grouped are not
+#'     included in the output.
+#'     
+#' @importFrom dplyr mutate group_by_at summarize ungroup
+#' @importFrom rlang .data
+megacounty_generic <- function(
+  df_intr, threshold, groupby_vars
+)
+{
+  df_megacounties <- df_intr[df_intr$sample_size < threshold |
+                               df_intr$effective_sample_size < threshold, ]
+  
+  df_megacounties <- mutate(df_megacounties,
+                            geo_id = make_megacounty_fips(.data$geo_id))
+  
+  df_megacounties <- group_by_at(df_megacounties, groupby_vars)
+  df_megacounties <- mutate(
+    df_megacounties,
+    county_weight = .data$effective_sample_size / sum(.data$effective_sample_size))
+  
+  df_megacounties <- summarize(
+    df_megacounties,
+    val = weighted.mean(.data$val, .data$effective_sample_size),
+    se = sqrt(sum(.data$se^2 * .data$county_weight^2)),
+    sample_size = sum(.data$sample_size),
+    effective_sample_size = sum(.data$effective_sample_size)
+  )
+  
+  df_megacounties <- mutate(df_megacounties, county_weight = NULL)
+  df_megacounties <- ungroup(df_megacounties)
+  
+  return(df_megacounties)
+}
+
+
+
+
+#' Censor aggregates to ensure privacy.
+#'
+#' Currently done in simple, static way: Rows with sample size less than 100 are
+#' removed; no noise is added.
+#'
+#' @param df a data frame of summarized response data
+#' @param params a named list with entries "s_weight", "s_mix_coef",
+#'   "num_filter"
+#'
+#' @importFrom dplyr filter
+#' @importFrom rlang .data
+#'
+#' @export
+apply_privacy_censoring <- function(df, params) {
+  return(filter(df,
+         .data$sample_size >= params$num_filter,
+         .data$effective_sample_size >= params$num_filter))
+}
+
 
 
 #' Produce estimates for all indicators in a specific target group.
@@ -798,9 +871,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   variable values used to select this group.
 #' @param params Named list of configuration options.
 #' 
-#' @importFrom dplyr filter
 #' @importFrom tibble add_column
-#' @importFrom rlang .data
 #' 
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
@@ -808,7 +879,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
   dfs_out <- list()
   for (index in seq_along(aggregations$name)) {
     aggregation = aggregations$name[index]
-
+    
     dfs_out[[aggregation]] = target_group %>%
       as.list %>%
       as_tibble %>%
@@ -817,23 +888,23 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       add_column(sample_size=NA_real_) %>%
       add_column(effective_sample_size=NA_real_)
   }
-
+  
   for (row in seq_len(nrow(aggregations))) {
     aggregation <- aggregations$name[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
-
+    
     agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
-
+    
     if (nrow(agg_df) > 0)
     {
       s_mix_coef <- params$s_mix_coef
       mixing <- mix_weights(agg_df[[var_weight]] * agg_df$weight_in_location,
                             s_mix_coef, params$s_weight)
-
+      
       sample_size <- sum(agg_df$weight_in_location)
-
+      
       ## TODO Fix this. Old pipeline for community responses did not apply
       ## mixing. To reproduce it, we ignore the mixed weights. Once a better
       ## mixing/weighting scheme is chosen, all signals should use it.
@@ -841,39 +912,14 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
         sample_size = sample_size)
-
+      
       dfs_out[[aggregation]]$val <- new_row$val
       dfs_out[[aggregation]]$se <- new_row$se
       dfs_out[[aggregation]]$sample_size <- sample_size
       dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
     }
   }
-
-  for (row in seq_len(nrow(aggregations))) {
-    aggregation <- aggregations$name[row]
-    post_fn <- aggregations$post_fn[[row]]
-
-    dfs_out[[aggregation]] <- dfs_out[[aggregation]][
-      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", names(target_group))])) == 0,
-    ]
-
-    #### TODO: megacounty function needs a `day` column. Also doesn't make sense
-    # to be here, since this looks at a single group. Needs to be one level pu.
-    # if (geo_level == "county") {
-    #   df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter)
-    #   dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
-    # }
-
-    #### TODO: replace with privacy function so can change more easily. Also need
-    # to move one level up, since need to perform after megacounty aggregation
-    dfs_out[[aggregation]] <- filter(dfs_out[[aggregation]],
-                                   .data$sample_size >= params$num_filter,
-                                   .data$effective_sample_size >= params$num_filter)
-
-    ## *After* gluing together megacounties, apply the post-function
-    dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
-  }
-
+  
   return(dfs_out)
 }
 
@@ -906,14 +952,14 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     ))
     return()
   }
-
+  
   file_out <- file.path(
     params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
                                geo_level, paste(groupby_vars, collapse="_"))
   )
-
+  
   create_dir_not_exist(params$export_dir)
-
+  
   msg_df(sprintf(
     "saving contingency table data to %-35s",
     sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"),
@@ -950,7 +996,7 @@ end_of_prev_full_month <- function(date) {
   if (ceiling_date(date, "month") == date) {
     return(date)
   }
-
+  
   return(floor_date(date, "month") - days(1))
 }
 
@@ -964,13 +1010,13 @@ end_of_prev_full_month <- function(date) {
 #' @export
 get_range_prev_full_month <- function(date = Sys.Date()) {
   eom = end_of_prev_full_month(date)
-
+  
   if (eom == date) {
     som = start_of_prev_full_month(date + months(1))
   } else {
     som = start_of_prev_full_month(date)
   }
-
+  
   return(list(som, eom))
 }
 
@@ -1002,7 +1048,7 @@ end_of_prev_full_week <- function(date) {
   if (ceiling_date(date, "week") == date) {
     return(date)
   }
-
+  
   return(floor_date(date, "week") - days(1))
 }
 
@@ -1019,13 +1065,13 @@ end_of_prev_full_week <- function(date) {
 #' @export
 get_range_prev_full_week <- function(date = Sys.Date()) {
   eow = end_of_prev_full_week(date)
-
+  
   if (eow == date) {
     sow = start_of_prev_full_week(date + weeks(1))
   } else {
     sow = start_of_prev_full_week(date)
   }
-
+  
   return(list(sow, eow))
 }
 
@@ -1049,14 +1095,14 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(date)
   }
-
+  
   date_period_range[[1]] =  ymd_hms(
     sprintf("%s 00:00:00", date_period_range[[1]]), tz = "America/Los_Angeles"
   )
   date_period_range[[2]] =  ymd_hms(
     sprintf("%s 23:59:59", date_period_range[[2]]), tz = "America/Los_Angeles"
   )
-
+  
   return(date_period_range)
 }
 

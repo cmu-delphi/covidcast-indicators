@@ -25,7 +25,7 @@ def generate_signal(df: pd.DataFrame,
         Function which takes in a list of Series and produces a signal Series.
     date_offset: integer
         Number of days to add to the timestamp. This is used because some of the columns are
-        "previous_day_<metric>" and require us adding -1 days to accurate depict the right timespan.
+        "previous_day_<metric>" and require us adding -1 days to represent the right timespan.
 
     Returns
     -------

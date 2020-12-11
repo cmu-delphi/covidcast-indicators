@@ -83,11 +83,9 @@ class Validator():
         self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
 
-        self.active_report = ValidationReport(self.suppressed_errors)
         # pylint:  enable=too-many-instance-attributes
 
-
-    def check_missing_date_files(self, daily_filenames):
+    def check_missing_date_files(self, daily_filenames, report):
         """
         Check for missing dates between the specified start and end dates.
 
@@ -114,16 +112,15 @@ class Validator():
         check_dateholes.sort()
 
         if check_dateholes:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 "check_missing_date_files",
                 check_dateholes,
                 "Missing dates are observed; if these dates are" +
                 " already in the API they would not be updated"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-
-    def check_df_format(self, df_to_test, nameformat):
+    def check_df_format(self, df_to_test, nameformat, report):
         """
         Check basic format of source data CSV df.
 
@@ -131,26 +128,27 @@ class Validator():
             - df_to_test: pandas dataframe of a single CSV of source data
             (one day-signal-geo_type combo)
             - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
+            - report: ValidationReport; report where results are added
 
         Returns:
             - None
         """
         pattern_found = FILENAME_REGEX.match(nameformat)
         if not nameformat or not pattern_found:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_filename_format", nameformat),
                 nameformat, 'nameformat not recognized'))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
         if not isinstance(df_to_test, pd.DataFrame):
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_file_data_format", nameformat),
                 type(df_to_test), 'df_to_test must be a pandas dataframe.'))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_bad_geo_id_value(self, df_to_test, filename, geo_type):
+    def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
         """
         Check for bad geo_id values, by comparing to a list of known values (drawn from
         historical data)
@@ -166,19 +164,19 @@ class Validator():
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_bad_geo_id_value", filename),
                 unexpected_geos, "Unrecognized geo_ids (not in historical data)"))
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
         upper_case_geos = [
             geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
         if len(upper_case_geos) > 0:
-            self.active_report.add_raised_warning(ValidationError(
+            report.add_raised_warning(ValidationError(
                 ("check_geo_id_lowercase", filename),
                 upper_case_geos, "geo_id contains uppercase characters. Lowercase is preferred."))
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type):
+    def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type, report):
         """
         Check validity of geo_type and format of geo_ids, according to regex pattern.
 
@@ -209,7 +207,7 @@ class Validator():
                     df_to_test["geo_id"] = [geo[0]
                                             for geo in df_to_test["geo_id"].str.split(".")]
 
-                    self.active_report.add_raised_warning(ValidationError(
+                    report.add_raised_warning(ValidationError(
                         ("check_geo_id_type", nameformat),
                         None, "geo_ids saved as floats; strings preferred"))
 
@@ -226,21 +224,21 @@ class Validator():
                 df_to_test['geo_id']) if geo not in expected_geos}
 
             if len(unexpected_geos) > 0:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_geo_id_format", nameformat),
                     unexpected_geos, "Non-conforming geo_ids found"))
 
         if geo_type not in GEO_REGEX_DICT:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_geo_type", nameformat),
                 geo_type, "Unrecognized geo type"))
         else:
             find_all_unexpected_geo_ids(
                 df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_bad_val(self, df_to_test, nameformat, signal_type):
+    def check_bad_val(self, df_to_test, nameformat, signal_type, report):
         """
         Check value field for validity.
 
@@ -258,38 +256,38 @@ class Validator():
 
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_val_pct_gt_100", nameformat),
                     df_to_test[(df_to_test['val'] > 100)],
                     "val column can't have any cell greater than 100 for percents"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
         if proportion_option:
             if not df_to_test[(df_to_test['val'] > 100000)].empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_val_prop_gt_100k", nameformat),
                     df_to_test[(df_to_test['val'] > 100000)],
                     "val column can't have any cell greater than 100000 for proportions"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
         if df_to_test['val'].isnull().values.any():
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_val_missing", nameformat),
                 None, "val column can't have any cell that is NA"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_val_lt_0", nameformat),
                 df_to_test[(df_to_test['val'] < 0)],
                 "val column can't have any cell smaller than 0"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_bad_se(self, df_to_test, nameformat):
+    def check_bad_se(self, df_to_test, nameformat, report):
         """
         Check standard errors for validity.
 
@@ -297,6 +295,7 @@ class Validator():
             - df_to_test: pandas dataframe of a single CSV of source data
             (one day-signal-geo_type combo)
             - nameformat: str CSV name; for example, "20200624_county_smoothed_nohh_cmnty_cli.csv"
+            - report: ValidationReport; report where results are added
 
         Returns:
             - None
@@ -314,35 +313,35 @@ class Validator():
                 '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
             if not result.empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_se_not_missing_and_in_range", nameformat),
                     result, "se must be in (0, min(50,val*(1+eps))] and not missing"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
             if df_to_test["se"].isnull().mean() > 0.5:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_se_many_missing", nameformat),
                     None, 'Recent se values are >50% NA'))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
         elif self.missing_se_allowed:
             result = df_to_test.query(
                 '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
             if not result.empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_se_missing_or_in_range", nameformat),
                     result, "se must be NA or in (0, min(50,val*(1+eps))]"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
         result_jeffreys = df_to_test.query('(val == 0) & (se == 0)')
         result_alt = df_to_test.query('se == 0')
 
         if not result_jeffreys.empty:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_se_0_when_val_0", nameformat),
                 None,
                 "when signal value is 0, se must be non-zero. please "
@@ -350,16 +349,16 @@ class Validator():
                 + " (see wikipedia.org/wiki/Binomial_proportion_confidence"
                 + "_interval#Jeffreys_interval for details)"))
         elif not result_alt.empty:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_se_0", nameformat),
                 result_alt, "se must be non-zero"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
         # Remove se_upper_limit column.
         df_to_test.drop(columns=["se_upper_limit"])
 
-    def check_bad_sample_size(self, df_to_test, nameformat):
+    def check_bad_sample_size(self, df_to_test, nameformat, report):
         """
         Check sample sizes for validity.
 
@@ -374,36 +373,36 @@ class Validator():
         """
         if not self.missing_sample_size_allowed:
             if df_to_test['sample_size'].isnull().values.any():
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_n_missing", nameformat),
                     None, "sample_size must not be NA"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
             # Find rows with sample size less than minimum allowed
             result = df_to_test.query(
                 '(sample_size < @self.minimum_sample_size)')
 
             if not result.empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_n_gt_min", nameformat),
                     result, f"sample size must be >= {self.minimum_sample_size}"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
         elif self.missing_sample_size_allowed:
             result = df_to_test.query(
                 '~(sample_size.isnull() | (sample_size >= @self.minimum_sample_size))')
 
             if not result.empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_n_missing_or_gt_min", nameformat),
                     result,
                     f"sample size must be NA or >= {self.minimum_sample_size}"))
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
-    def check_min_allowed_max_date(self, max_date, geo_type, signal_type):
+    def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """
         Check if time since data was generated is reasonable or too long ago.
 
@@ -421,14 +420,14 @@ class Validator():
             else 1)
 
         if max_date < self.generation_date - thres:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_min_max_date", geo_type, signal_type),
                 max_date,
                 "date of most recent generated file seems too long ago"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_max_allowed_max_date(self, max_date, geo_type, signal_type):
+    def check_max_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """
         Check if time since data was generated is reasonable or too recent.
 
@@ -442,15 +441,15 @@ class Validator():
             - None
         """
         if max_date > self.generation_date:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_max_max_date", geo_type, signal_type),
                 max_date,
                 "date of most recent generated file seems too recent"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date,
-                                    geo_type, signal_type):
+                                    geo_type, signal_type, report):
         """
         Check if reference data is more recent than test data.
 
@@ -467,7 +466,7 @@ class Validator():
             - None
         """
         if df_to_test["time_value"].max() < df_to_reference["time_value"].max():
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_max_date_vs_reference",
                  checking_date.date(), geo_type, signal_type),
                 (df_to_test["time_value"].max(),
@@ -478,10 +477,10 @@ class Validator():
                 'working files have already been compared against the reference, ' +
                 'that there is a bug somewhere'))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
     def check_rapid_change_num_rows(self, df_to_test, df_to_reference, checking_date,
-                                    geo_type, signal_type):
+                                    geo_type, signal_type, report):
         """
         Compare number of obervations per day in test dataframe vs reference dataframe.
 
@@ -511,16 +510,16 @@ class Validator():
             raise e
 
         if abs(compare_rows) > 0.35:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_rapid_change_num_rows",
                  checking_date, geo_type, signal_type),
                 (test_rows_per_reporting_day, reference_rows_per_reporting_day),
                 "Number of rows per day (-with-any-rows) seems to have changed " +
                 "rapidly (reference vs test data)"))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_positive_negative_spikes(self, source_df, api_frames, geo, sig):
+    def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):
         """
         Adapt Dan's corrections package to Python (only consider spikes) :
         https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
@@ -536,9 +535,10 @@ class Validator():
             COVIDcast API or semirecent data
             - geo: str; geo type name (county, msa, hrr, state) as in the CSV name
             - sig: str; signal name as in the CSV name
+            - report: ValidationReport; report where results are added
 
         """
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
         source_frame_end = source_df["time_value"].max()
@@ -640,7 +640,7 @@ class Validator():
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            self.active_report.raised_errors.append(ValidationError(
+            report.raised_errors.append(ValidationError(
                 ("check_positive_negative_spikes",
                  source_frame_start, source_frame_end, geo, sig),
                 (source_outliers),
@@ -648,7 +648,7 @@ class Validator():
                 previous 14 days of data available'))
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
-                                   signal_type):
+                                   signal_type, report):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
         Arguments:
@@ -657,6 +657,7 @@ class Validator():
             COVIDcast API or semirecent data
             - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
             - signal_type: str; signal name as in the CSV name
+            - report: ValidationReport; report where results are added
         Returns:
             - None
         """
@@ -743,7 +744,7 @@ class Validator():
         mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
-            self.active_report.add_raised_error(ValidationError(
+            report.add_raised_error(ValidationError(
                 ("check_test_vs_reference_avg_changed",
                  checking_date, geo_type, signal_type),
                 (mean_stddiff_high, mean_stdabsdiff_high),
@@ -753,17 +754,17 @@ class Validator():
                 + 'to average values of corresponding variables. For the former check, '
                 + 'tolerances for `val` are more restrictive than those for other columns.'))
 
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
-    def check_duplicate_rows(self, data_df, filename):
+    def check_duplicate_rows(self, data_df, filename, report):
         is_duplicate = data_df.duplicated()
         if (any(is_duplicate)):
             duplicate_row_idxs = list(data_df[is_duplicate].index)
-            self.active_report.add_raised_warning(ValidationError(
+            report.add_raised_warning(ValidationError(
                 ("check_duplicate_rows", filename),
                 duplicate_row_idxs, 
                 "Some rows are duplicated, which may indicate data integrity issues"))
-        self.active_report.increment_total_checks()
+        report.increment_total_checks()
 
     def validate(self, export_dir):
         """
@@ -775,14 +776,14 @@ class Validator():
         Returns:
             - ValidationReport collating the validation outcomes
         """
-        self.active_report = ValidationReport(self.suppressed_errors)
+        report = ValidationReport(self.suppressed_errors)
         frames_list = load_all_files(export_dir, self.start_date, self.end_date)
-        self._run_single_file_checks(frames_list)
+        self._run_single_file_checks(frames_list, report)
         all_frames = aggregate_frames(frames_list)
-        self._run_combined_file_checks(all_frames)
-        return self.active_report
+        self._run_combined_file_checks(all_frames, report)
+        return report
 
-    def _run_single_file_checks(self, file_list):
+    def _run_single_file_checks(self, file_list, report):
         """
         Perform checks over single-file data sets.
 
@@ -790,24 +791,26 @@ class Validator():
         ----------
         loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
             triples of filenames, filename matches with the geo regex, and the data from the file
+        report: ValidationReport
+            report to which the results of these checks will be added
         """
 
-        self.check_missing_date_files(file_list)
+        self.check_missing_date_files(file_list, report)
 
         # Individual file checks
         # For every daily file, read in and do some basic format and value checks.
         for filename, match, data_df in file_list:
-            self.check_df_format(data_df, filename)
-            self.check_duplicate_rows(data_df, filename)
+            self.check_df_format(data_df, filename, report)
+            self.check_duplicate_rows(data_df, filename, report)
             self.check_bad_geo_id_format(
-                data_df, filename, match.groupdict()['geo_type'])
+                data_df, filename, match.groupdict()['geo_type'], report)
             self.check_bad_geo_id_value(
-                data_df, filename, match.groupdict()['geo_type'])
-            self.check_bad_val(data_df, filename, match.groupdict()['signal'])
-            self.check_bad_se(data_df, filename)
-            self.check_bad_sample_size(data_df, filename)
+                data_df, filename, match.groupdict()['geo_type'], report)
+            self.check_bad_val(data_df, filename, match.groupdict()['signal'], report)
+            self.check_bad_se(data_df, filename, report)
+            self.check_bad_sample_size(data_df, filename, report)
 
-    def _run_combined_file_checks(self, all_frames):
+    def _run_combined_file_checks(self, all_frames, report):
         """
         Performs all checks over the combined data set from all files.
 
@@ -815,6 +818,8 @@ class Validator():
         ----------
         all_frames: pd.DataFrame
             combined data from all input files
+        report: ValidationReport
+            report to which the results of these checks will be added
         """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
@@ -850,25 +855,25 @@ class Validator():
             # Drop unused columns.
             geo_sig_df.drop(columns=["geo_type", "signal"])
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
 
             if geo_sig_df.empty:
-                self.active_report.add_raised_error(ValidationError(
+                report.add_raised_error(ValidationError(
                     ("check_missing_geo_sig_combo", geo_type, signal_type),
                     None,
                     "file with geo_type-signal combo does not exist"))
                 continue
 
             max_date = geo_sig_df["time_value"].max()
-            self.check_min_allowed_max_date(max_date, geo_type, signal_type)
-            self.check_max_allowed_max_date(max_date, geo_type, signal_type)
+            self.check_min_allowed_max_date(max_date, geo_type, signal_type, report)
+            self.check_max_allowed_max_date(max_date, geo_type, signal_type, report)
 
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
-            self.active_report.increment_total_checks()
+            report.increment_total_checks()
             if isinstance(api_df_or_error, APIDataFetchError):
-                self.active_report.raised_errors.append(api_df_or_error)
+                report.raised_errors.append(api_df_or_error)
                 continue
 
             # Outlier dataframe
@@ -890,7 +895,7 @@ class Validator():
                 # pylint: enable=unused-variable
 
                 self.check_positive_negative_spikes(
-                    source_df, outlier_api_df, geo_type, signal_type)
+                    source_df, outlier_api_df, geo_type, signal_type, report)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -900,10 +905,10 @@ class Validator():
                 recent_df = geo_sig_df.query(
                     'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
-                self.active_report.increment_total_checks()
+                report.increment_total_checks()
 
                 if recent_df.empty:
-                    self.active_report.add_raised_error(ValidationError(
+                    report.add_raised_error(ValidationError(
                         ("check_missing_geo_sig_date_combo",
                          checking_date, geo_type, signal_type),
                         None,
@@ -927,25 +932,25 @@ class Validator():
                 reference_api_df = api_df_or_error.query(
                     "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
-                self.active_report.increment_total_checks()
+                report.increment_total_checks()
 
                 if reference_api_df.empty:
-                    self.active_report.add_raised_error(ValidationError(
+                    report.add_raised_error(ValidationError(
                         ("empty_reference_data",
                          checking_date, geo_type, signal_type), None,
                         "reference data is empty; comparative checks could not be performed"))
                     continue
 
                 self.check_max_date_vs_reference(
-                    recent_df, reference_api_df, checking_date, geo_type, signal_type)
+                    recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
                 if self.sanity_check_rows_per_day:
                     self.check_rapid_change_num_rows(
-                        recent_df, reference_api_df, checking_date, geo_type, signal_type)
+                        recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
                 if self.sanity_check_value_diffs:
                     self.check_avg_val_vs_reference(
-                        recent_df, reference_api_df, checking_date, geo_type, signal_type)
+                        recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
             # Keeps script from checking all files in a test run.
             kroc += 1

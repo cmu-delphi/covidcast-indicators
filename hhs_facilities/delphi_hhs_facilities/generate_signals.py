@@ -37,7 +37,7 @@ def generate_signal(df: pd.DataFrame,
     df.dropna(subset=["val"], inplace=True)
     df = df.groupby(["timestamp", "geo_id"], as_index=False).sum()
     df["se"] = df["sample_size"] = np.nan
-    return df
+    return df[["timestamp", "geo_id", "val", "se", "sample_size"]]
 
 
 def sum_cols(cols: list) -> pd.Series:

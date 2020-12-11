@@ -5,7 +5,7 @@
 \title{Aggregates counties into megacounties that have low sample size values for a
 given day.}
 \usage{
-megacounty(df_intr, threshold)
+megacounty(df_intr, threshold, groupby_vars = c("day", "geo_id"))
 }
 \arguments{
 \item{df_intr}{Input tibble that requires aggregation, with `geo_id`, `val`,

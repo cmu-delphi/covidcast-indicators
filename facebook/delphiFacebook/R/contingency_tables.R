@@ -777,7 +777,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     ]
     
     if (geo_level == "county") {
-      df_megacounties <- megacounty_generic(dfs_out[[aggregation]], params$num_filter, groupby_vars)
+      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, groupby_vars)
       dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
     }
     
@@ -789,55 +789,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   
   return(dfs_out)
 }
-
-
-
-
-#' Generic version of `megacounty` function. Uses provided set of grouping
-#' variables.
-#' 
-#' Aggregates counties into megacounties that have low sample size values for a
-#' given day.
-#'
-#' @param df_intr Input tibble that requires aggregation, with `geo_id`, `val`,
-#'     `sample_size`, `effective_sample_size`, and `se` columns.
-#' @param threshold Sample size value below which counties should be grouped
-#'     into megacounties.
-#'     
-#' @return Tibble of megacounties. Counties that are not grouped are not
-#'     included in the output.
-#'     
-#' @importFrom dplyr mutate group_by_at summarize ungroup
-#' @importFrom rlang .data
-megacounty_generic <- function(
-  df_intr, threshold, groupby_vars
-)
-{
-  df_megacounties <- df_intr[df_intr$sample_size < threshold |
-                               df_intr$effective_sample_size < threshold, ]
-  
-  df_megacounties <- mutate(df_megacounties,
-                            geo_id = make_megacounty_fips(.data$geo_id))
-  
-  df_megacounties <- group_by_at(df_megacounties, groupby_vars)
-  df_megacounties <- mutate(
-    df_megacounties,
-    county_weight = .data$effective_sample_size / sum(.data$effective_sample_size))
-  
-  df_megacounties <- summarize(
-    df_megacounties,
-    val = weighted.mean(.data$val, .data$effective_sample_size),
-    se = sqrt(sum(.data$se^2 * .data$county_weight^2)),
-    sample_size = sum(.data$sample_size),
-    effective_sample_size = sum(.data$effective_sample_size)
-  )
-  
-  df_megacounties <- mutate(df_megacounties, county_weight = NULL)
-  df_megacounties <- ungroup(df_megacounties)
-  
-  return(df_megacounties)
-}
-
 
 
 

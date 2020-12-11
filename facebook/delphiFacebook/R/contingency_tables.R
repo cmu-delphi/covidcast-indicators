@@ -1,6 +1,8 @@
 #### TODO
-# - set up to be able to aggregate multiple time periods in series? wrapper function more likely
+# - set up to be able to aggregate multiple time periods in series? wrapper function that modifies params.json more likely
 # - map response codes to descriptive values? Would need mapping for every individual question
+# - when params$end_date is specified exactly (not "current"), should we just use that date
+# range instead of finding the most recent full week/month?
 
 
 #' Update date and input files settings from params file
@@ -134,8 +136,10 @@ run_contingency_tables <- function(params, aggregations)
     update_archive(input_data, archive, params)
   }
   
-  data_agg <- set_human_readable_colnames(data_agg)
+  data_agg <- make_human_readable(data_agg)
   aggregations <- get_aggs(params, aggregations)
+  
+  browser()
   
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -161,7 +165,7 @@ run_contingency_tables <- function(params, aggregations)
 #' @importFrom dplyr rename
 #' 
 #' @export
-set_human_readable_colnames <- function(input_data) {
+make_human_readable <- function(input_data) {
   # Named list of question numbers and str replacement names
   map_old_new_names <- c(
     ## free response
@@ -524,12 +528,23 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
   }
   
-  # Convert any columns being aggregated to the appropriate format.
-  check_col_types = unique(aggregations$metric)
+  # Convert most columns being used in aggregations to the appropriate format.
+  # Multiple choice and multi-select used for grouping are left as-is.
+  agg_groups <- unique(aggregations$group_by)
+  group_cols_to_convert <- unique(do.call(c, agg_groups))
+  group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
   
-  for (col_var in check_col_types) {
+  metric_cols_to_convert <- unique(aggregations$metric)
+  
+  for (col_var in c(group_cols_to_convert, metric_cols_to_convert)) {
+    if ( is.null(df[[col_var]]) ) {
+      # Column not defined.
+      aggregations <- aggregations[aggregations$metric != col_var, ]
+      next
+    }
+    
     if (startsWith(col_var, "b_")) { # Binary
-      output <- convert_qcodes_to_bool(df, aggregations, col_var)
+      output <- convert_binary_qcodes_to_bool(df, aggregations, col_var)
       df <- output[[1]]
       aggregations <- output[[2]]
       
@@ -568,12 +583,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' frame of desired aggregations
 #'
 #' @export
-convert_qcodes_to_bool <- function(df, aggregations, col_var) {
-  if (is.null(df[[col_var]])) {
-    # Column not defined.
-    return(list(df,  aggregations[aggregations$name != col_var, ]))
-  }
-  
+convert_binary_qcodes_to_bool <- function(df, aggregations, col_var) {
   if (FALSE %in% df[[col_var]] || TRUE %in% df[[col_var]]) {
     # Already in boolean format.
     return(list(df, aggregations))
@@ -603,11 +613,6 @@ convert_qcodes_to_bool <- function(df, aggregations, col_var) {
 #'
 #' @export
 convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
-  if (is.null(df[[col_var]])) {
-    # Column not defined.
-    return(list(df,  aggregations[aggregations$name != col_var, ]))
-  }
-  
   # Get unique response codes
   response_codes <- sort(na.omit(
     unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
@@ -664,11 +669,6 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
 #'
 #' @export
 convert_freeresponse_to_num <- function(df, aggregations, col_var) {
-  if (is.null(df[[col_var]])) {
-    # Column not defined.
-    return(list(df,  aggregations[aggregations$metric != col_var, ]))
-  }
-  
   df[[col_var]] <- as.numeric(df[[col_var]])
   return(list(df, aggregations))
 }

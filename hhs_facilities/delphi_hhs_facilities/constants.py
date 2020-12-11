@@ -3,7 +3,7 @@ from .generate_signals import sum_cols
 
 NAN_VALUE = -999999.0
 
-ADMISSION_TOTAL = "total_admissions_7dav"
+ADMISSION_TOTAL = "total_admissions_7d"
 
 SIGNALS = [
     # (name, columns to use, operation, date offset)

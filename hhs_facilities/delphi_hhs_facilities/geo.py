@@ -27,10 +27,10 @@ def convert_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
     """
     if geo == "county":
         output_df = df.copy()
-        output_df["geo_id"] = output_df["fips_code"]  # fips is provided in data
+        output_df["geo_id"] = output_df["fips_code"]
     elif geo == "state":
         output_df = df.copy()
-        output_df["geo_id"] = output_df["state"]  # state is provided in data
+        output_df["geo_id"] = output_df["state"]
     else:
         output_df = gmpr.add_geocode(df, "zip", geo)
         output_df["geo_id"] = output_df[geo]

@@ -34,9 +34,9 @@ def generate_signal(df: pd.DataFrame,
     df_cols = [df[i] for i in input_cols]
     df["val"] = signal_func(df_cols)
     df["timestamp"] = df["timestamp"] + pd.Timedelta(days=date_offset)
+    df.dropna(subset=["val"], inplace=True)
     df = df.groupby(["timestamp", "geo_id"], as_index=False).sum()
-    df["se"] = np.nan
-    df["sample_size"] = np.nan
+    df["se"] = df["sample_size"] = np.nan
     return df
 
 

@@ -1,6 +1,6 @@
 """Registry for geographies to process."""
 
-ADMISSION_TOTAL = "total_admission"
+ADMISSION_TOTAL = "total_admissions_7dav"
 
 SIGNALS = [
     # (name, columns to use, operation, date offset)

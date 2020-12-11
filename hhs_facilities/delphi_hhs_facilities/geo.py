@@ -8,7 +8,7 @@ def convert_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
     """
     Map a DataFrame to desired regions.
 
-    The HHS facility level data contains a zip, state, and fips columns. For state and fips, we
+    The HHS facility level data contains columns for zip, state, and fips. For state and fips, we
     use them as given. For all other geos, we map from zip (the smallest of the regions) to the
     desired geo.
 

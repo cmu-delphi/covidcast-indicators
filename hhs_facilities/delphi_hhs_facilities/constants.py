@@ -1,7 +1,7 @@
-"""Registry for geographies to process."""
+"""Registry for signals and geographies to process."""
 from .generate_signals import sum_cols
 
-NAN_VALUE= -999999.0
+NAN_VALUE = -999999.0
 
 ADMISSION_TOTAL = "total_admissions_7dav"
 

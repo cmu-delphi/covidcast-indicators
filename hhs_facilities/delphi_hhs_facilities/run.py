@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Functions to call when running the function.
-
-This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m delphi_hhs_facilities    `.
-"""
+"""Main function to run the HHS facilities module. Run with `python -m delphi_hhs_facilities`."""
 
 from itertools import product
 
@@ -11,7 +7,6 @@ from itertools import product
 from delphi_utils import read_params
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
-import numpy as np
 import pandas as pd
 
 from .constants import GEO_RESOLUTIONS, SIGNALS, NAN_VALUE
@@ -24,10 +19,7 @@ def run_module() -> None:
     params = read_params()
 
     # below 2 commands are all just for local testing while API is not online yet.
-    raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv",
-                         dtype={"fips_code": "str"},
-                         nrows=1000,
-                         na_values=NAN_VALUE)
+    raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv", dtype={"fips_code": "str"}, nrows=10000, na_values=NAN_VALUE)
     raw_df["timestamp"] = pd.to_datetime(raw_df["collection_week"])
 
     gmpr = GeoMapper()

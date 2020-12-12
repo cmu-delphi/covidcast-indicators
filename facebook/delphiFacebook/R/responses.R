@@ -279,7 +279,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "Q64", "Q65", "Q66", "Q67", "Q68", "Q69", "Q70", "Q71", "Q72", "Q73", "Q74", "Q75",
     "Q76", "Q77", "Q78", "Q79", "Q80", # Q64-Q90 added in Wave 4
     "D10", # added in Wave 4
-    "C16", "C17", "E1", "E2", "E3", # added in Wave 5
+    "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )

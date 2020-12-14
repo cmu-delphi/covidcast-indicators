@@ -53,8 +53,7 @@ update_params <- function(params) {
 #' 
 #' @export
 get_filenames_in_range <- function(date_range, params) {
-  #### TODO: do we need to read in data as far as params$archive_days back?
-  start_date <- as.Date(date_range[[1]]) - params$backfill_days
+  start_date <- as.Date(date_range[[1]]) - params$archive_days
   end_date <- as.Date(date_range[[2]])
   pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
   

@@ -72,7 +72,6 @@ def run_module():
         export_start_date = datetime.strptime(export_start_date, "%Y-%m-%d")
     export_dir = params["export_dir"]
     base_url = params["base_url"]
-    static_file_dir = params["static_file_dir"]
     cache_dir = params["cache_dir"]
 
     arch_diff = S3ArchiveDiffer(
@@ -80,10 +79,6 @@ def run_module():
         params["bucket_name"], "usafacts",
         params["aws_credentials"])
     arch_diff.update_cache()
-
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
 
     geo_mapper = GeoMapper()
 
@@ -93,7 +88,7 @@ def run_module():
         print(geo_res, metric, sensor, smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res, map_df, sensor)
+        df = geo_map(df, geo_res, sensor)
         df["val"] = SMOOTHERS_MAP[smoother][0].smooth(df[sensor].values)
         df["se"] = np.nan
         df["sample_size"] = np.nan

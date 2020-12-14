@@ -30,7 +30,7 @@ load_responses_all <- function(params) {
 #'                        where the input file are found
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
-#' @importFrom readr read_lines cols locale col_character
+#' @importFrom readr read_lines cols locale col_character col_integer
 #' @importFrom dplyr arrange desc case_when
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
@@ -55,20 +55,28 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
+                           B2_14_TEXT = col_character(),
+                           D1_4_TEXT = col_character(),
                            A3 = col_character(),
                            B2 = col_character(),
-                           B2_14_TEXT = col_character(),
-                           B2c = col_character(),
-                           B2c_14_TEXT = col_character(),
-                           B7 = col_character(),
-                           B10b = col_character(),
-                           B12a = col_character(),
                            C1 = col_character(),
-                           C13 = col_character(),
-                           C13a = col_character(),
-                           D1_4_TEXT = col_character(),
-                           D7 = col_character(),
-                           E3 = col_character()),
+                           Q_TerminateFlag = col_character(),
+                           Q65 = col_integer(),
+                           Q66 = col_integer(),
+                           Q67 = col_integer(),
+                           Q68 = col_integer(),
+                           Q69 = col_integer(),
+                           Q70 = col_integer(),
+                           Q71 = col_integer(),
+                           Q72 = col_integer(),
+                           Q73 = col_integer(),
+                           Q74 = col_integer(),
+                           Q75 = col_integer(),
+                           Q76 = col_integer(),
+                           Q77 = col_integer(),
+                           Q78 = col_integer(),
+                           Q79 = col_integer(),
+                           Q80 = col_integer()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())

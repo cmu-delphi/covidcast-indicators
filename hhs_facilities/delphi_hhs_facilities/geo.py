@@ -31,7 +31,10 @@ def convert_geo(df: pd.DataFrame, geo: str, gmpr: GeoMapper) -> pd.DataFrame:
     elif geo == "state":
         output_df = df.copy()
         output_df["geo_id"] = output_df["state"]
-    else:
+    elif geo == "hrr":  # use zip for HRR since zips nest within HRR while FIPS split across HRRs.
         output_df = gmpr.add_geocode(df, "zip", geo)
+        output_df["geo_id"] = output_df[geo]
+    else:
+        output_df = gmpr.add_geocode(df, "fips", geo, from_col="fips_code")
         output_df["geo_id"] = output_df[geo]
     return output_df

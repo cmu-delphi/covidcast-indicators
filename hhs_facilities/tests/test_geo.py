@@ -12,7 +12,7 @@ class TestGeo:
         gmpr = GeoMapper()
         test_input = pd.DataFrame(
             {"state": ["test"],
-             "fips_code": ["hello"],
+             "fips_code": ["01001"],
              "zip": ["01001"],
              })
         test_state_output = convert_geo(test_input, "state", gmpr)
@@ -21,11 +21,11 @@ class TestGeo:
         )
         test_county_output = convert_geo(test_input, "county", gmpr)
         pd.testing.assert_series_equal(
-            test_county_output.geo_id, pd.Series(["hello"]), check_names=False
+            test_county_output.geo_id, pd.Series(["01001"]), check_names=False
         )
         test_msa_output = convert_geo(test_input, "msa", gmpr)
         pd.testing.assert_series_equal(
-            test_msa_output.geo_id, pd.Series(["44140"]), check_names=False
+            test_msa_output.geo_id, pd.Series(["33860"]), check_names=False
         )
         test_hrr_output = convert_geo(test_input, "hrr", gmpr)
         pd.testing.assert_series_equal(

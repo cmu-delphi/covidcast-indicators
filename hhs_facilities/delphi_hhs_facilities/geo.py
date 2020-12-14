@@ -69,8 +69,8 @@ def fill_missing_fips(df: pd.DataFrame, gmpr: GeoMapper) -> pd.DataFrame:
     # we keep unmapped zips because they may be used in HRR mapping so we don't want to drop them
     added_fips = gmpr.add_geocode(no_fips, "zip", "fips", dropna=False)
     added_fips["fips_code"] = added_fips["fips"]
-    # set weight of unmapped zips to 1 to they don"t zero out all the values when multiplied
-    added_fips.weight.fillna(1, inplace=True)  
+    # set weight of unmapped zips to 1 to they don't zero out all the values when multiplied
+    added_fips.weight.fillna(1, inplace=True)
     added_fips[data_cols] = added_fips[data_cols].multiply(added_fips["weight"], axis=0)
     fips_filled = added_fips.groupby(no_data_cols, dropna=False, as_index=False).sum(min_count=1)
     fips_filled.drop(columns="weight", inplace=True)

@@ -11,7 +11,7 @@ import pandas as pd
 
 from .constants import GEO_RESOLUTIONS, SIGNALS, NAN_VALUE
 from .generate_signals import generate_signal
-from .geo import convert_geo
+from .geo import convert_geo, fill_missing_fips
 
 
 def run_module() -> None:
@@ -19,11 +19,12 @@ def run_module() -> None:
     params = read_params()
 
     # below 2 commands are all just for local testing while API is not online yet.
-    raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv", dtype={"fips_code": "str"}, nrows=10000, na_values=NAN_VALUE)
+    raw_df = pd.read_csv("delphi_hhs_facilities/sample_data.csv", dtype={"fips_code": str, "zip": str}, nrows=10000, na_values=NAN_VALUE)
     raw_df["timestamp"] = pd.to_datetime(raw_df["collection_week"])
 
     gmpr = GeoMapper()
+    filled_fips_df = fill_missing_fips(raw_df, gmpr)
     for geo, (sig_name, sig_cols, sig_func, sig_offset) in product(GEO_RESOLUTIONS, SIGNALS):
-        mapped_df = convert_geo(raw_df, geo, gmpr)
+        mapped_df = convert_geo(filled_fips_df, geo, gmpr)
         output_df = generate_signal(mapped_df, sig_cols, sig_func, sig_offset)
         create_export_csv(output_df, params["export_dir"], geo, sig_name)

@@ -101,11 +101,14 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
-        data = self.gmpr.fips_to_megacounty(data,
+        all_data = self.gmpr.fips_to_megacounty(data,
                                             threshold_visits,
                                             threshold_len,
                                             fips_col="PatCountyFIPS",
                                             thr_col="Denominator",
                                             date_col="ServiceDate")
-        data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
+        all_data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
+        megacounties = all_data[all_data.PatCountyFIPS.str.endswith("000")]
+        data = pd.concat([data, megacounties])
+
         return data.groupby("PatCountyFIPS"), "PatCountyFIPS"

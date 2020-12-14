@@ -44,8 +44,8 @@ def test_unstable_sources():
     available.
     """
     placeholder = lambda geo: pd.DataFrame(
-        [(date.today(),"pr" if geo == "state" else "72000",1,1,1,0)],
-        columns="time_value geo_value value stderr sample_size direction".split())
+        [(date.today(),"pr" if geo == "state" else "72000",1,1,1)],
+        columns="time_value geo_value value stderr sample_size".split())
     fetcher10 = lambda *x: placeholder(x[-1]) if x[0] == "usa-facts" else None
     fetcher01 = lambda *x: placeholder(x[-1]) if x[0] == "jhu-csse" else None
     fetcher11 = lambda *x: placeholder(x[-1])

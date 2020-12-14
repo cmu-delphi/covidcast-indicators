@@ -47,6 +47,9 @@ def fill_missing_fips(df: pd.DataFrame, gmpr: GeoMapper) -> pd.DataFrame:
 
     Maps rows that have the FIPS missing but zip present. The rest of the rows,
     including those where both FIPS and zip are nan, are kept as is and appended back at the end.
+    Rows with a zip which fail to map to a FIPS are also kept so that column totals remain equal.
+    This means that column sums before and after imputation should be identical, and any dropping
+    of values is handled by downstream geomapping.
 
     TODO #636 Generalize this function to geomapper.
 
@@ -66,7 +69,6 @@ def fill_missing_fips(df: pd.DataFrame, gmpr: GeoMapper) -> pd.DataFrame:
     fips_present = df[~mask]
     no_data_cols = [c for c in df.columns if df[c].dtypes not in (dtype("int64"), dtype("float64"))]
     data_cols = list(set(df.columns) - set(no_data_cols))
-    # we keep unmapped zips because they may be used in HRR mapping so we don't want to drop them
     added_fips = gmpr.add_geocode(no_fips, "zip", "fips", dropna=False)
     added_fips["fips_code"] = added_fips["fips"]
     # set weight of unmapped zips to 1 to they don't zero out all the values when multiplied

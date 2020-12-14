@@ -2,11 +2,13 @@
 from unittest.mock import patch
 import tempfile
 import os
+from itertools import product
 
 import pandas as pd
 import numpy as np
 
 from delphi_hhs_facilities.run import run_module
+from delphi_hhs_facilities.constants import GEO_RESOLUTIONS, SIGNALS
 
 
 class TestRun:
@@ -15,10 +17,7 @@ class TestRun:
     @patch("delphi_hhs_facilities.run.pull_data")
     def test_run_module(self, pull_data, params):
         pull_data.return_value = pd.DataFrame({
-            "timestamp": [pd.Timestamp("20200201"),
-                          pd.Timestamp("20200201"),
-                          pd.Timestamp("20200201"),
-                          pd.Timestamp("20200201")],
+            "timestamp": [pd.Timestamp("20200201")]*4,
             "fips_code": ["25013", "25013", np.nan, np.nan],
             "zip": ["01001", "01001", "00601", "00601"],
             "state": ["AL", "AL", "PR", np.nan],
@@ -32,14 +31,8 @@ class TestRun:
             # tests will fail but the files will be created.
             params.return_value = {"export_dir": tmp}
             run_module()
-            expected_files = ["20200131_county_confirmed_admissions_7d.csv",
-                              "20200131_county_confirmed_suspected_admission_7d.csv",
-                              "20200131_hrr_confirmed_admissions_7d.csv",
-                              "20200131_hrr_confirmed_suspected_admission_7d.csv",
-                              "20200131_msa_confirmed_admissions_7d.csv",
-                              "20200131_msa_confirmed_suspected_admission_7d.csv",
-                              "20200131_state_confirmed_admissions_7d.csv",
-                              "20200131_state_confirmed_suspected_admission_7d.csv"]
+            expected_files = ["_".join(["20200131", geo, sig[0]]) + ".csv" for geo, sig
+                              in product(GEO_RESOLUTIONS, SIGNALS)]
             assert sorted(os.listdir(tmp)) == sorted(expected_files)
             for f in expected_files:
                 out_df = pd.read_csv(os.path.join(tmp, f))

@@ -1,5 +1,7 @@
 """Contains geographic mapping tools."""
+
 def geo_map(geo_res, data, map_df):
+    """Call appropriate mapping function based on desired geo resolution."""
     if geo_res == "county":
         return zip_to_county(data, map_df)
     if geo_res == "msa":
@@ -10,6 +12,7 @@ def geo_map(geo_res, data, map_df):
 
 def zip_to_msa(data, map_df):
     """Map from zipcode to MSA (along with parent state).
+
     Args:
         data: dataframe at the day-zip resolution.
     Returns:
@@ -34,6 +37,7 @@ def zip_to_msa(data, map_df):
 
 def zip_to_hrr(data, map_df):
     """Map from zipcode to HRR (along with parent state).
+
     Args:
         data: dataframe at the day-zip resolution.
     Returns:
@@ -58,6 +62,7 @@ def zip_to_hrr(data, map_df):
 
 def zip_to_county(data, map_df):
     """Aggregate zip codes to the county resolution, along with its parent state.
+
     Args:
         data: dataframe aggregated to the day-zip resolution
     Returns:
@@ -73,6 +78,7 @@ def zip_to_county(data, map_df):
 
 def zip_to_state(data, map_df):
     """Aggregate zip codes to the state resolution.
+
     Args:
         data: dataframe aggregated to the day-zip resolution
     Returns:

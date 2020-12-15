@@ -77,9 +77,14 @@ class GoogleHealthTrends:
             start_date,
             end_date,
         )
-        data = self.service.getTimelinesForHealth(**params).execute() #pylint: disable=no-member
-
+        try:
+            data = self.service.getTimelinesForHealth(**params).execute() #pylint: disable=no-member
+        except TypeError:
+            # Sometimes the GHT API parameter validation requires uppercase for some reason.
+            params["timelineResolution"] = "DAY"
+            data = self.service.getTimelinesForHealth(**params).execute() #pylint: disable=no-member
         return data
+
 
 @retry(wait=wait_fixed(60), stop = stop_after_attempt(5))
 def get_counts_states(

@@ -1,5 +1,6 @@
 """
 Utilities for diffing and archiving covidcast export CSVs.
+
 Aims to simplify the creation of issues for new and backfilled value for indicators.
 Also handles archiving of export CSVs to some backend (git, S3 etc.) before replacing them.
 
@@ -52,6 +53,7 @@ def diff_export_csv(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Find differences in exported covidcast CSVs, using geo_id as the index.
+
     Treats NA == NA as True.
 
     Parameters
@@ -68,7 +70,6 @@ def diff_export_csv(
         changed_df is the pd.DataFrame of common rows from after_csv with changed values.
         added_df is the pd.DataFrame of added rows from after_csv.
     """
-
     export_csv_dtypes = {"geo_id": str, "val": float,
                          "se": float, "sample_size": float}
 
@@ -99,7 +100,7 @@ def run_module(archive_type: str,
                cache_dir: str,
                export_dir: str,
                **kwargs):
-    """Builds and runs an ArchiveDiffer.
+    """Build and run an ArchiveDiffer.
 
     Parameters
     ----------
@@ -132,13 +133,11 @@ def run_module(archive_type: str,
 
 
 class ArchiveDiffer:
-    """
-    Base class for performing diffing and archiving of exported covidcast CSVs
-    """
+    """Base class for performing diffing and archiving of exported covidcast CSVs."""
 
     def __init__(self, cache_dir: str, export_dir: str):
         """
-        Initialize an ArchiveDiffer
+        Initialize an ArchiveDiffer.
 
         Parameters
         ----------
@@ -157,7 +156,8 @@ class ArchiveDiffer:
 
     def update_cache(self):
         """
-        For making sure cache_dir is updated correctly from a backend.
+        Make sure cache_dir is updated correctly from a backend.
+
         To be implemented by specific archiving backends.
         Should set self._cache_updated = True after verifying cache is updated.
         """
@@ -165,7 +165,8 @@ class ArchiveDiffer:
 
     def diff_exports(self) -> Tuple[Files, FileDiffMap, Files]:
         """
-        Finds diffs across and within CSV files, from cache_dir to export_dir.
+        Find diffs across and within CSV files, from cache_dir to export_dir.
+
         Should be called after update_cache() succeeds. Only works on *.csv files,
         ignores every other file.
 
@@ -223,7 +224,8 @@ class ArchiveDiffer:
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         """
-        Handles actual archiving of files, depending on specific backend.
+        Handle actual archiving of files, depending on specific backend.
+
         To be implemented by specific archiving backends.
 
         Parameters
@@ -241,6 +243,8 @@ class ArchiveDiffer:
 
     def filter_exports(self, common_diffs: FileDiffMap):
         """
+        Filter export directory to only contain relevant files.
+
         Filters down the export_dir to only contain:
         1) New files, 2) Changed files, filtered-down to the ADDED and CHANGED rows only.
         Should be called after archive_exports() so we archive the raw exports before
@@ -269,7 +273,7 @@ class ArchiveDiffer:
                 replace(diff_file, exported_file)
 
     def run(self):
-        """Runs the differ and archives the changed and new files."""
+        """Run the differ and archive the changed and new files."""
         self.update_cache()
 
         # Diff exports, and make incremental versions
@@ -293,7 +297,8 @@ class ArchiveDiffer:
 
 class S3ArchiveDiffer(ArchiveDiffer):
     """
-    AWS S3 backend for archving
+    AWS S3 backend for archiving.
+
     Archives CSV files into a S3 bucket, with keys "{indicator_prefix}/{csv_file_name}".
     Ideally, versioning should be enabled in this bucket to track versions of each CSV file.
     """
@@ -306,6 +311,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
     ):
         """
         Initialize a S3ArchiveDiffer.
+
         See this link for possible aws_credentials kwargs:
         https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html#boto3.session.Session
 
@@ -330,9 +336,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
         self.indicator_prefix = indicator_prefix
 
     def update_cache(self):
-        """
-        For making sure cache_dir is updated with all latest files from the S3 bucket.
-        """
+        """Make sure cache_dir is updated with all latest files from the S3 bucket."""
         # List all indicator-related objects from S3
         archive_objects = self.bucket.objects.filter(
             Prefix=self.indicator_prefix).all()
@@ -358,7 +362,7 @@ class S3ArchiveDiffer(ArchiveDiffer):
         update_s3: bool = True
     ) -> Tuple[Files, Files]:
         """
-        Handles actual archiving of files to the S3 bucket.
+        Handle actual archiving of files to the S3 bucket.
 
         Parameters
         ----------
@@ -398,7 +402,8 @@ class S3ArchiveDiffer(ArchiveDiffer):
 
 class GitArchiveDiffer(ArchiveDiffer):
     """
-    Local git repo backend for archiving
+    Local git repo backend for archiving.
+
     Archives CSV files into a local git repo as commits.
     Assumes that a git repository is already set up.
     """
@@ -446,7 +451,8 @@ class GitArchiveDiffer(ArchiveDiffer):
 
     def get_branch(self, branch_name: Optional[str] = None) -> Head:
         """
-        Retrieves a Head object representing a branch of specified name.
+        Retrieve a Head object representing a branch of specified name.
+
         Creates the branch from the current active branch if does not exist yet.
 
         Parameters
@@ -469,6 +475,8 @@ class GitArchiveDiffer(ArchiveDiffer):
     @contextmanager
     def archiving_branch(self):
         """
+        Context manager for checking out a branch.
+
         Useful for checking out self.branch within a context, then switching back
         to original branch when finished.
         """
@@ -482,8 +490,9 @@ class GitArchiveDiffer(ArchiveDiffer):
 
     def update_cache(self):
         """
+        Check if cache_dir is clean: has everything nicely committed if override_dirty=False.
+
         Since we are using a local git repo, assumes there is nothing to update from.
-        Checks if cache_dir is clean: has everything nice committed if override_dirty=False
         """
         # Make sure cache directory is clean: has everything nicely committed
         if not self.override_dirty:
@@ -495,14 +504,16 @@ class GitArchiveDiffer(ArchiveDiffer):
 
     def diff_exports(self) -> Tuple[Files, FileDiffMap, Files]:
         """
-        Same as base class diff_exports, but in context of specified branch
+        Find diffs across and within CSV files, from cache_dir to export_dir.
+
+        Same as base class diff_exports, but in context of specified branch.
         """
         with self.archiving_branch():
             return super().diff_exports()
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         """
-        Handles actual archiving of files to the local git repo.
+        Handle actual archiving of files to the local git repo.
 
         Parameters
         ----------

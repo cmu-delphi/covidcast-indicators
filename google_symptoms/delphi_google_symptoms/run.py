@@ -12,11 +12,12 @@ from delphi_utils import read_params, create_export_csv
 
 from .pull import pull_gs_data
 from .geo import geo_map
-from .constants import METRICS, GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP
+from .constants import (METRICS, COMBINED_METRIC,
+                        GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
 
 
 def run_module():
-
+    """Run Google Symptoms module."""
     params = read_params()
     export_start_date = datetime.strptime(params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]
@@ -31,7 +32,7 @@ def run_module():
             df_pull = dfs["county"]
             df_pull = geo_map(df_pull, geo_res)
         for metric, smoother in product(
-                METRICS+["combined_symptoms"], SMOOTHERS):
+                METRICS+[COMBINED_METRIC], SMOOTHERS):
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
@@ -41,7 +42,7 @@ def run_module():
             # Drop early entries where data insufficient for smoothing
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
-            sensor_name = "_".join(["wip", smoother, "search"])
+            sensor_name = "_".join([smoother, "search"])
             create_export_csv(
                 df,
                 export_dir=export_dir,

@@ -1,4 +1,4 @@
-"""Registry for constants"""
+"""Registry for constants."""
 from functools import partial
 from datetime import timedelta
 
@@ -9,6 +9,7 @@ from .smooth import (
 
 # global constants
 METRICS = ["Anosmia", "Ageusia"]
+COMBINED_METRIC = "sum_anosmia_ageusia"
 SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [
         "state",

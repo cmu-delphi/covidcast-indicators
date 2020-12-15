@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Function for diffing and archiving"""
+"""Function for diffing and archiving."""
 
 from os import remove, listdir
 from os.path import join
@@ -10,6 +10,8 @@ from delphi_utils import S3ArchiveDiffer
 
 def arch_diffs(params, daily_arch_diff):
     """
+    Archive differences between new updates and existing data.
+
     We check for updates for NCHS mortality data every weekday as how it is
     reported by NCHS and stash these daily updates on S3, but not our API.
     On a weekly level (on Mondays), we additionally upload the changes to the
@@ -22,7 +24,6 @@ def arch_diffs(params, daily_arch_diff):
     daily_arch_diff: S3ArchiveDiffer
         Used to store and update cache
     """
-
     export_dir = params["export_dir"]
     daily_export_dir = params["daily_export_dir"]
     cache_dir = params["cache_dir"]
@@ -78,7 +79,8 @@ def arch_diffs(params, daily_arch_diff):
         remove(exported_file)
     for exported_file, diff_file in common_diffs.items():
         remove(exported_file)
-        remove(diff_file)
+        if diff_file is not None:
+            remove(diff_file)
 
     # Report failures: someone should probably look at them
     for exported_file in fails:

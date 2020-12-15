@@ -4,12 +4,13 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
+    "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint",
     "delphi-utils",
     "imap-tools",
-    "xlrd",
+    "xlrd==1.2.0",
     "covidcast"
 ]
 

@@ -17,7 +17,7 @@ from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
                         SENSORS, INCIDENCE_BASE, GEO_RES)
 
-def run_module():  # pylint: disable=too-many-branches,too-many-statements
+def run_module():
     """Run module for processing NCHS mortality data."""
     params = read_params()
     export_start_date = params["export_start_date"]
@@ -41,13 +41,15 @@ def run_module():  # pylint: disable=too-many-branches,too-many-statements
         join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
     )
 
-    df = pull_nchs_mortality_data(token, map_df, test_mode)
+    df_pull = pull_nchs_mortality_data(token, map_df, test_mode)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
             print(metric)
+            df = df_pull.copy()
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
+            df = df[~df["val"].isnull()]
             sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
@@ -59,12 +61,14 @@ def run_module():  # pylint: disable=too-many-branches,too-many-statements
         else:
             for sensor in SENSORS:
                 print(metric, sensor)
+                df = df_pull.copy()
                 if sensor == "num":
                     df["val"] = df[metric]
                 else:
                     df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
+                df = df[~df["val"].isnull()]
                 sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
@@ -74,10 +78,10 @@ def run_module():  # pylint: disable=too-many-branches,too-many-statements
                     sensor=sensor_name,
                 )
 
-    # Weekly run of archive utility on Monday
-    # - Does not upload to S3, that is handled by daily run of archive utility
-    # - Exports issues into receiving for the API
-    # Daily run of archiving utility
-    # - Uploads changed files to S3
-    # - Does not export any issues into receiving
+#     Weekly run of archive utility on Monday
+#     - Does not upload to S3, that is handled by daily run of archive utility
+#     - Exports issues into receiving for the API
+#     Daily run of archiving utility
+#     - Uploads changed files to S3
+#     - Does not export any issues into receiving
     arch_diffs(params, daily_arch_diff)

@@ -8,9 +8,11 @@ required = [
     "moto",
     "numpy",
     "pandas>=1.1.0",
+    "pydocstyle",
     "pylint",
     "pytest",
     "pytest-cov",
+    "structlog",
     "xlrd"
 ]
 

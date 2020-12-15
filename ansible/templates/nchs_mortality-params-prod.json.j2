@@ -1,0 +1,15 @@
+{
+  "export_start_date": "2020-02-01",
+  "static_file_dir": "./static",
+  "export_dir": "/common/covidcast/receiving/nchs-mortality",
+  "cache_dir": "./cache",
+  "daily_export_dir": "./daily_receiving",
+  "daily_cache_dir": "./daily_cache",
+  "token": "{{ nchs_mortality_token }}",
+  "mode":"",
+  "aws_credentials": {
+    "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+    "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+  },
+  "bucket_name": "delphi-covidcast-indicator-output"
+}

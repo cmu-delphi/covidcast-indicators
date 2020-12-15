@@ -18,8 +18,8 @@ from .process import process
 
 METRICS = [
         # signal_name, naics_code, wip
-        ('bars_visit', 722410, True),
-        ('restaurants_visit', 722511, True),
+        ('bars_visit', 722410, False),
+        ('restaurants_visit', 722511, False),
 ]
 VERSIONS = [
         # relaese version, access dir
@@ -35,6 +35,8 @@ GEO_RESOLUTIONS = [
         "hrr",
         "msa",
         "state",
+        "hhs",
+        "nation"
 ]
 
 

@@ -2,8 +2,14 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "input_denom_file": null,
-  "input_covid_file": null,
+  "input_files": {
+    "denom": null,
+    "covid": null,
+    "flu": null,
+    "mixed": null,
+    "flu_like": null,
+    "covid_like": null
+  },
   "start_date": "2020-02-01",
   "end_date": null,
   "drop_date": null,
@@ -11,8 +17,9 @@
   "n_waiting_days": 3,
   "se": false,
   "parallel": false,
-  "geos": ["state", "msa", "hrr", "county"],
+  "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
   "weekday": [true, false],
+  "types": ["covid","cli"],
   "wip_signal": "",
   "aws_credentials": {
     "aws_access_key_id": "",

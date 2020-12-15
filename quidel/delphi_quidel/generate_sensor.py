@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Functions to help generate sensor for different geographical levels
-"""
+"""Functions to help generate sensor for different geographical levels."""
 import pandas as pd
 from .data_tools import (fill_dates, raw_positive_prop,
                          smoothed_positive_prop,
@@ -11,7 +9,8 @@ from .constants import (MIN_OBS, MAX_BORROW_OBS, POOL_DAYS)
 
 def generate_sensor_for_states(state_groups, smooth, device, first_date, last_date):
     """
-    fit over states
+    Fit over states.
+
     Args:
         state_groups: pd.groupby.generic.DataFrameGroupBy
         state_key: "state_id"
@@ -70,7 +69,8 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
 def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                      device, first_date, last_date):
     """
-    fit over counties/HRRs/MSAs
+    Fit over counties/HRRs/MSAs.
+
     Args:
         data: pd.DataFrame
         res_key: "fips", "cbsa_id" or "hrrnum"
@@ -93,7 +93,7 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
             res_group = res_group.merge(parent_group, how="left",
                                         on="timestamp", suffixes=('', '_parent'))
             res_group = res_group.drop(columns=[res_key, "state_id", "state_id" + '_parent'])
-        except:
+        except KeyError:
             has_parent = False
             res_group = res_group.drop(columns=[res_key, "state_id"])
         res_group.set_index("timestamp", inplace=True)

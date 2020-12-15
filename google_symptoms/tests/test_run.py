@@ -22,7 +22,7 @@ class TestRun:
             "20200810",
             "20200811"
         ]
-        geos = ["county", "state"]
+        geos = ["county", "state", "hhs", "nation"]
         metrics = ["anosmia", "ageusia", "sum_anosmia_ageusia"]
         smoother = ["raw", "smoothed"]
 

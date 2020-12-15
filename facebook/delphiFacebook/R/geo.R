@@ -214,7 +214,7 @@ produce_crosswalk_list <- function(static_dir)
     "state" = crosswalk_state,
     "hrr" = crosswalk_hrr,
     "msa" = crosswalk_msa,
-    "national" = crosswalk_national
+    "nation" = crosswalk_national
   )
 
   return (cw_list)

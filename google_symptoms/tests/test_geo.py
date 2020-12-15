@@ -40,16 +40,24 @@ class TestGeo:
         
         assert set(new_df.keys()) == set(df.keys())
         assert set(new_df["geo_id"]) == set(["1", "5", "7", "9"])
-        assert new_df[METRICS[0]].values == pytest.approx([0.39030655604059333, 
-                                                          0.014572815050225169,
-                                                          1.1509470322941868,
-                                                          0.08525105356979307])
-        assert new_df[METRICS[1]].values == pytest.approx([0.7973533171562179,
-                                                   0.019430420066966894,
-                                                   11.509470322941867,
-                                                   1.918148705320344])
-        assert new_df[COMBINED_METRIC].values == pytest.approx(
-                new_df[METRICS[0]].values + new_df[METRICS[1]])
+        assert np.allclose(
+            list(new_df[METRICS[0]]),
+            [0.39030655604059333,
+             0.014572815050225169,
+             1.1509470322941868,
+             0.08525105356979307]
+        )
+        assert np.allclose(
+            list(new_df[METRICS[1]]),
+            [0.7973533171562179,
+             0.019430420066966894,
+             11.509470322941867,
+             1.918148705320344]
+        )
+        assert np.allclose(
+            list(new_df[COMBINED_METRIC]),
+            list(new_df[METRICS[0]].values + new_df[METRICS[1]].values)
+        )
         
     def test_msa(self):
         df = pd.DataFrame(
@@ -65,9 +73,17 @@ class TestGeo:
         
         assert set(new_df.keys()) == set(df.keys())
         assert set(new_df["geo_id"]) == set(["13820", "33860"])
-        assert new_df[METRICS[0]].values == pytest.approx([0.8365267072315176,
-                                                          1.4966647914490074])
-        assert new_df[METRICS[1]].values == pytest.approx([1.9847583762443426,
-                                                          14.966647914490075])
-        assert new_df[COMBINED_METRIC].values == pytest.approx(
-                new_df[METRICS[0]].values + new_df[METRICS[1]])
+        assert np.allclose(
+            list(new_df[METRICS[0]]),
+            [0.8365267072315176,
+             1.4966647914490074]
+        )
+        assert np.allclose(
+            list(new_df[METRICS[1]]),
+            [1.9847583762443426,
+             14.966647914490075]
+        )
+        assert np.allclose(
+            list(new_df[COMBINED_METRIC]),
+            list(new_df[METRICS[0]].values + new_df[METRICS[1]])
+            )

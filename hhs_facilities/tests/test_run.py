@@ -27,7 +27,7 @@ class TestRun:
             "previous_day_admission_pediatric_covid_suspected_7_day_sum": [5., 10., 15., 20.]
         })
         with tempfile.TemporaryDirectory() as tmp:
-            # change tmp to './expected' to generate new expected files.
+            # when adding tests for new signals, change tmp to './expected' to generate new expected files.
             # tests will fail but the files will be created.
             params.return_value = {"export_dir": tmp}
             run_module()

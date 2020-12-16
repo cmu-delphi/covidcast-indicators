@@ -20,21 +20,24 @@ import covidcast
 
 from .check_source import check_source
 
-logger = get_structured_logger(__name__)
+def get_logger():
+    params = read_params()
+    return get_structured_logger(__name__, filename = params.get("log_filename"))
+
+LOGGER = get_logger()
 
 def run_module():
-
     params = read_params()
     meta = covidcast.metadata()
 
     complaints = []
     for data_source in params["sources"].keys():
         complaints.extend(check_source(data_source, meta,
-                                       params["sources"], params.get("grace", 0)))
+                                       params["sources"], params.get("grace", 0), LOGGER))
 
     if len(complaints) > 0:
         for complaint in complaints:
-            logger.critical(event="signal out of SLA",
+            LOGGER.critical(event="signal out of SLA",
                             message=complaint.message,
                             data_source=complaint.data_source,
                             signal=complaint.signal,
@@ -55,7 +58,7 @@ def split_complaints(complaints, n=49):
 def report_complaints(all_complaints, params):
     """Post complaints to Slack."""
     if not params["slack_token"]:
-        logger.info("(dry-run)")
+        LOGGER.info("(dry-run)")
         return
 
     client = WebClient(token=params["slack_token"])

@@ -55,10 +55,11 @@ update_params <- function(params) {
 get_filenames_in_range <- function(date_range, params) {
   start_date <- as.Date(date_range[[1]]) - params$archive_days
   end_date <- as.Date(date_range[[2]])
-  pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
+  date_pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
+  youtube_pattern = ".*YouTube[.]csv$"
   
   filenames <- list.files(path=params$input_dir)
-  filenames <- filenames[grepl(pattern, filenames)]
+  filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
   
   file_end_dates <- as.Date(substr(filenames, 1, 10))
   file_start_dates <- file_end_dates

@@ -55,11 +55,20 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
-                           B2_14_TEXT = col_character(),
-                           D1_4_TEXT = col_character(),
                            A3 = col_character(),
                            B2 = col_character(),
+                           B2_14_TEXT = col_character(),
+                           B2c = col_character(),
+                           B2c_14_TEXT = col_character(),
+                           B7 = col_character(),
+                           B10b = col_character(),
+                           B12a = col_character(),
                            C1 = col_character(),
+                           C13 = col_character(),
+                           C13a = col_character(),
+                           D1_4_TEXT = col_character(),
+                           D7 = col_character(),
+                           E3 = col_character(),
                            Q_TerminateFlag = col_character(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
@@ -82,6 +91,14 @@ load_response_one <- function(input_filename, params) {
     return(tibble())
   }
   input_data <- arrange(input_data, desc(.data$StartDate))
+  if (!("SurveyID" %in% names(input_data))) {
+    # The first wave files didn't actually record their survey id
+    input_data$SurveyID <- "SV_8zYl1sFN6fAFIxv"
+  }
+
+  # Occasionally we get single responses with no SurveyID, which prevents us
+  # from knowing their wave. Discard.
+  input_data <- filter(input_data, !is.na(SurveyID))
 
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
@@ -279,7 +296,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "Q64", "Q65", "Q66", "Q67", "Q68", "Q69", "Q70", "Q71", "Q72", "Q73", "Q74", "Q75",
     "Q76", "Q77", "Q78", "Q79", "Q80", # Q64-Q90 added in Wave 4
     "D10", # added in Wave 4
-    "C16", "C17", "E1", "E2", "E3", # added in Wave 5
+    "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )

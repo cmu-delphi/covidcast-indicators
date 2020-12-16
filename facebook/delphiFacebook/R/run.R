@@ -10,6 +10,9 @@
 #' @export
 run_facebook <- function(params)
 {
+  assert(params$start_date <= params$end_date,
+         "start date must precede end date")
+
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
   msg_df("archive data loaded", archive$input_data)

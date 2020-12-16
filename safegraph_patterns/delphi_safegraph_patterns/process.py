@@ -14,7 +14,9 @@ GEO_KEY_DICT = {
         "county": "fips",
         "msa": "msa",
         "hrr": "hrr",
-        "state": "state_id"
+        "state": "state_id",
+        "hhs": "hhs",
+        "nation": "nation"
 }
 
 def construct_signals(df, metric_names, naics_codes, brand_df):
@@ -97,7 +99,7 @@ def aggregate(df, metric, geo_res):
     metric: str
         Name of metric to be exported.
     geo_resolution: str
-        One of ('county', 'hrr, 'msa', 'state')
+        One of ('county', 'hrr, 'msa', 'state', 'hhs', 'nation')
 
     Returns
     -------
@@ -112,9 +114,7 @@ def aggregate(df, metric, geo_res):
     gmpr = GeoMapper()
     geo_key = GEO_KEY_DICT[geo_res]
     df = gmpr.add_population_column(df, "zip")
-    df = gmpr.replace_geocode(df, "zip", geo_key,
-                              date_col="timestamp",
-                              data_cols=[metric_count_name, "population"])
+    df = gmpr.replace_geocode(df, "zip", geo_key, date_col="timestamp", data_cols=[metric_count_name, "population"])
 
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE

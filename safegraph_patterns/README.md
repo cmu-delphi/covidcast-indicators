@@ -2,7 +2,7 @@
 
 We import raw mobility data from Safegraph Weekly Patterns, calculate some 
 statistics upon it, and aggregate the data from the Zip Code level to County,
-HRR, MSA and State levels. For detailed information see the files `DETAILS.md` 
+HRR, MSA, HHS, Nation, and State levels. For detailed information see the files `DETAILS.md` 
 contained in this directory.
 
 ## Running the Indicator

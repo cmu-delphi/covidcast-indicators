@@ -88,7 +88,7 @@ if (length(args) < 3) {
 }
 
 year <- args[1]
-month <- sprintf("%02d", args[2]) # 0-padded 2-digit month
+month <- sprintf("%02d", as.numeric(args[2])) # 0-padded 2-digit month
 path <- args[3]
 
 pattern <- paste0("^cvid_responses_", year, "_", month, "_.*.csv.gz$")

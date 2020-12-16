@@ -1,13 +1,14 @@
 """Dynamic file checks."""
 import math
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import pandas as pd
 from .errors import ValidationError, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min
+from .utils import relative_difference_by_min, TimeWindow
 
 class DynamicValidation:
-    def __init__(self, params, suppressed_errors=dict()):
+    """Class for validation of static properties of individual datasets."""
+    def __init__(self, params, suppressed_errors=None):
         """
         Initialize object and set parameters.
 
@@ -17,9 +18,7 @@ class DynamicValidation:
         Attributes:
             - data_source: str; data source name, one of
             https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
-            - start_date: beginning date of data to check, in datetime date format
-            - span_length: number of days before the end date to include in checking
-            - end_date: end date of data to check, in datetime date format
+            - time_window: span of time over which to perform checks
             - generation_date: date that this df_to_test was generated; typically 1 day
             after the last date in df_to_test
             - max_check_lookbehind: number of days back to perform sanity checks, starting
@@ -40,10 +39,7 @@ class DynamicValidation:
         self.data_source = params['data_source']
 
         # Date/time settings
-        self.span_length = timedelta(days=params['span_length'])
-        self.end_date = date.today() if params['end_date'] == "latest" else datetime.strptime(
-            params['end_date'], '%Y-%m-%d').date()
-        self.start_date = self.end_date - self.span_length
+        self.time_window = TimeWindow.from_strings(params["end_date"], params["span_length"])
         self.generation_date = date.today()
 
         # General options: flags, thresholds
@@ -60,7 +56,10 @@ class DynamicValidation:
         self.smoothed_signals = set(params.get("smoothed_signals", []))
         self.expected_lag = params["expected_lag"]
 
-        self.suppressed_errors = suppressed_errors
+        if suppressed_errors is None:
+            self.suppressed_errors = set()
+        else:
+            self.suppressed_errors = suppressed_errors
 
     def validate(self, all_frames, report):
         """
@@ -83,8 +82,8 @@ class DynamicValidation:
         semirecent_lookbehind = timedelta(days=7)
 
         # Get list of dates we want to check.
-        date_list = [self.start_date + timedelta(days=days)
-                     for days in range(self.span_length.days + 1)]
+        date_list = [self.time_window.start_date + timedelta(days=days)
+                     for days in range(self.time_window.span_length.days + 1)]
 
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
@@ -92,8 +91,10 @@ class DynamicValidation:
         # Get all expected combinations of geo_type and signal.
         geo_signal_combos = get_geo_signal_combos(self.data_source)
 
-        all_api_df = threaded_api_calls(self.data_source, self.start_date - outlier_lookbehind,
-                                        self.end_date, geo_signal_combos)
+        all_api_df = threaded_api_calls(self.data_source,
+                                        self.time_window.start_date - outlier_lookbehind,
+                                        self.time_window.end_date,
+                                        geo_signal_combos)
 
         # Keeps script from checking all files in a test run.
         kroc = 0

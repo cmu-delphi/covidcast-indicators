@@ -1,5 +1,6 @@
 """Utility functions for validation."""
-from datetime import datetime
+from dataclasses import dataclass, field
+from datetime import date, datetime, timedelta
 import pandas as pd
 
 # Recognized geo types.
@@ -11,6 +12,27 @@ GEO_REGEX_DICT = {
     'state': r'^[a-zA-Z]{2}$',
     'national': r'^[a-zA-Z]{2}$'
 }
+
+@dataclass
+class TimeWindow:
+    """Object to store a window of time ending on `end_date` and lasting `span_length`."""
+    end_date: date
+    span_length: timedelta
+    start_date: date = field(init=False)
+
+    def __post_init__(self):
+        """Derive the start date of this span."""
+        self.start_date = self.end_date - self.span_length
+
+    @classmethod
+    def from_strings(cls, end_date_str, span_length_str):
+        """Create a TimeWindow from string representations of its members."""
+        span_length = timedelta(days=span_length_str)
+        if end_date_str == "latest":
+            end_date = date.today()
+        else:
+            end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+        return cls(end_date, span_length)
 
 
 def relative_difference_by_min(x, y):

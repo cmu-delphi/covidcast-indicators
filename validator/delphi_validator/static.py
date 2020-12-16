@@ -1,14 +1,15 @@
 """Static file checks."""
 from os.path import join
 import re
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationError
-from .utils import GEO_REGEX_DICT
+from .utils import GEO_REGEX_DICT, TimeWindow
 
 class StaticValidation:
-    def __init__(self, params, suppressed_errors=dict()):
+    """Class for validation of static properties of individual datasets."""
+    def __init__(self, params, suppressed_errors=None):
         """
         Initialize object and set parameters.
 
@@ -16,9 +17,7 @@ class StaticValidation:
             - params: dictionary of user settings; if empty, defaults will be used
 
         Attributes:
-            - start_date: beginning date of data to check, in datetime date format
-            - span_length: number of days before the end date to include in checking
-            - end_date: end date of data to check, in datetime date format
+            - time_window: span of time over which to perform checks
             - minimum_sample_size: int
             - missing_se_allowed: boolean indicating if missing standard errors should
             raise an exception or not
@@ -30,10 +29,7 @@ class StaticValidation:
             'validator_static_file_dir', '../validator/static')
 
         # Date/time settings
-        self.span_length = timedelta(days=params['span_length'])
-        self.end_date = date.today() if params['end_date'] == "latest" else datetime.strptime(
-            params['end_date'], '%Y-%m-%d').date()
-        self.start_date = self.end_date - self.span_length
+        self.time_window = TimeWindow.from_strings(params["end_date"], params["span_length"])
 
         # General options: flags, thresholds
         self.minimum_sample_size = params.get('minimum_sample_size', 100)
@@ -41,7 +37,10 @@ class StaticValidation:
         self.missing_sample_size_allowed = params.get(
             'missing_sample_size_allowed', False)
 
-        self.suppressed_errors = suppressed_errors
+        if suppressed_errors is None:
+            self.suppressed_errors = set()
+        else:
+            self.suppressed_errors = suppressed_errors
 
     def validate(self, file_list, report):
         """
@@ -84,10 +83,11 @@ class StaticValidation:
         Returns:
             - None
         """
-        number_of_dates = self.end_date - self.start_date + timedelta(days=1)
+        number_of_dates = self.time_window.end_date - self.time_window.start_date +\
+            timedelta(days=1)
 
         # Create set of all expected dates.
-        date_seq = {self.start_date + timedelta(days=x)
+        date_seq = {self.time_window.start_date + timedelta(days=x)
                     for x in range(number_of_dates.days)}
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
@@ -390,10 +390,10 @@ class StaticValidation:
 
     def check_duplicate_rows(self, data_df, filename, report):
         is_duplicate = data_df.duplicated()
-        if (any(is_duplicate)):
+        if any(is_duplicate):
             duplicate_row_idxs = list(data_df[is_duplicate].index)
             report.add_raised_warning(ValidationError(
                 ("check_duplicate_rows", filename),
-                duplicate_row_idxs, 
+                duplicate_row_idxs,
                 "Some rows are duplicated, which may indicate data integrity issues"))
         report.increment_total_checks()

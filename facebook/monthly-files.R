@@ -22,10 +22,10 @@ suppressPackageStartupMessages({
 #'
 #' There can be multiple data files for a single day of survey responses, for
 #' example if the data is reissued when late-arriving surveys are recorded.
-#' Each file contains *all* data recorded for that date, so only the later files
-#' are needed.
+#' Each file contains *all* data recorded for that date, so only the most
+#' recently updated file for each date is needed.
 #'
-#' This function extracts the date from each file, determines which files are
+#' This function extracts the date from each file, determines which files contain
 #' reissued data, and produces a single data frame representing the most recent
 #' data available for each day. It can read gzip-compressed CSV files, such as
 #' those on the SFTP site, using `readr::read_csv`.

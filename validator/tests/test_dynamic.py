@@ -4,14 +4,14 @@ import numpy as np
 import pandas as pd
 
 from delphi_validator.report import ValidationReport
-from delphi_validator.dynamic import DynamicValidation
+from delphi_validator.dynamic import DynamicValidator
 
 class TestCheckRapidChange:
     params = {"data_source": "", "span_length": 1,
               "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_same_df(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
         test_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
         ref_df = pd.DataFrame([date.today()] * 5, columns=["time_value"])
@@ -21,7 +21,7 @@ class TestCheckRapidChange:
         assert len(report.raised_errors) == 0
 
     def test_0_vs_many(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         time_value = datetime.combine(date.today(), datetime.min.time())
@@ -41,7 +41,7 @@ class TestCheckAvgValDiffs:
               "end_date": "2020-09-02", "expected_lag": {}}
 
     def test_same_val(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
@@ -56,7 +56,7 @@ class TestCheckAvgValDiffs:
         assert len(report.raised_errors) == 0
 
     def test_same_se(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         data = {"val": [np.nan] * 6, "se": [1, 1, 1, 2, 0, 1],
@@ -71,7 +71,7 @@ class TestCheckAvgValDiffs:
         assert len(report.raised_errors) == 0
 
     def test_same_n(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         data = {"val": [np.nan] * 6, "se": [np.nan] * 6,
@@ -86,7 +86,7 @@ class TestCheckAvgValDiffs:
         assert len(report.raised_errors) == 0
 
     def test_same_val_se_n(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         data = {"val": [1, 1, 1, 2, 0, 1], "se": [1, 1, 1, 2, 0, 1],
@@ -101,7 +101,7 @@ class TestCheckAvgValDiffs:
         assert len(report.raised_errors) == 0
 
     def test_10x_val(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
         test_data = {"val": [1, 1, 1, 20, 0, 1], "se": [np.nan] * 6,
                      "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
@@ -117,7 +117,7 @@ class TestCheckAvgValDiffs:
         assert len(report.raised_errors) == 0
 
     def test_100x_val(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
         test_data = {"val": [1, 1, 1, 200, 0, 1], "se": [np.nan] * 6,
                      "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
@@ -135,7 +135,7 @@ class TestCheckAvgValDiffs:
             err.check_data_id[0] for err in report.raised_errors]
 
     def test_1000x_val(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
         test_data = {"val": [1, 1, 1, 2000, 0, 1], "se": [np.nan] * 6,
                      "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6}
@@ -158,7 +158,7 @@ class TestDataOutlier:
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     # Test to determine outliers based on the row data, has lead and lag outlier
     def test_pos_outlier(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
@@ -196,7 +196,7 @@ class TestDataOutlier:
             err.check_data_id[0] for err in report.raised_errors]
 
     def test_neg_outlier(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         ref_val = [100, 101, 100, 101, 100,
@@ -237,7 +237,7 @@ class TestDataOutlier:
             err.check_data_id[0] for err in report.raised_errors]
 
     def test_zero_outlier(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
@@ -278,7 +278,7 @@ class TestDataOutlier:
         err.check_data_id[0] for err in report.raised_errors]
 
     def test_no_outlier(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         #Data from 51580 between 9/24 and 10/26 (10/25 query date)
@@ -317,7 +317,7 @@ class TestDataOutlier:
         assert len(report.raised_errors) == 0
 
     def test_source_api_overlap(self):
-        validator = DynamicValidation(self.params)
+        validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
         #Data from 51580 between 9/24 and 10/26 (10/25 query date)

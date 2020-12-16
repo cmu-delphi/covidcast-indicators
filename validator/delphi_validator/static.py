@@ -8,7 +8,7 @@ from .datafetcher import FILENAME_REGEX
 from .errors import ValidationError
 from .utils import GEO_REGEX_DICT, TimeWindow
 
-class StaticValidation:
+class StaticValidator:
     """Class for validation of static properties of individual datasets."""
 
     @dataclass

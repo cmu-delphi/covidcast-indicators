@@ -3,9 +3,9 @@
 Tools to validate CSV source data, including various check methods.
 """
 from .datafetcher import load_all_files
-from .dynamic import DynamicValidation
+from .dynamic import DynamicValidator
 from .report import ValidationReport
-from .static import StaticValidation
+from .static import StaticValidator
 from .utils import aggregate_frames, TimeWindow
 
 class Validator():
@@ -25,8 +25,8 @@ class Validator():
         # Date/time settings
         self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
 
-        self.static_validation = StaticValidation(params)
-        self.dynamic_validation = DynamicValidation(params)
+        self.static_validation = StaticValidator(params)
+        self.dynamic_validation = DynamicValidator(params)
 
     def validate(self, export_dir):
         """

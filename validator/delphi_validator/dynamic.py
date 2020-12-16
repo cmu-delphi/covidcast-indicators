@@ -8,7 +8,7 @@ from .errors import ValidationError, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow
 
-class DynamicValidation:
+class DynamicValidator:
     """Class for validation of static properties of individual datasets."""
 
     @dataclass

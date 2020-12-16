@@ -69,7 +69,6 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     else:
         combined_df = usafacts_df
 
-    combined_df = combined_df.drop(["direction"], axis=1)
     combined_df = combined_df.rename(COLUMN_MAPPING,
                                      axis=1)
     return combined_df

@@ -1,9 +1,8 @@
 """Structured logger utility for creating JSON logs in Delphi pipelines."""
 import logging
-import sys
 import structlog
 
-def get_structured_logger(name=__name__):
+def get_structured_logger(name = __name__, filename = None):
     """Create a new structlog logger.
 
     Use the logger returned from this in indicator code using the standard
@@ -21,12 +20,18 @@ def get_structured_logger(name=__name__):
     ---------
     name: Name to use for logger (included in log lines), __name__ from caller
     is a good choice.
+    filename: An (optional) file to write log output.
     """
     # Configure the underlying logging configuration
+    handlers = [logging.StreamHandler()]
+    if filename:
+        handlers.append(logging.FileHandler(filename))
+
     logging.basicConfig(
         format="%(message)s",
-        stream=sys.stdout,
-        level=logging.INFO)
+        level=logging.INFO,
+        handlers=handlers
+        )
 
     # Configure structlog. This uses many of the standard suggestions from
     # the structlog documentation.

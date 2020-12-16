@@ -28,8 +28,6 @@ class DynamicValidation:
             raise an exception or not
             - missing_sample_size_allowed: boolean indicating if missing sample size should
             raise an exception or not
-            - sanity_check_rows_per_day: boolean; check flag
-            - sanity_check_value_diffs: boolean; check flag
             - smoothed_signals: set of strings; names of signals that are smoothed (7-day
             avg, etc)
             - expected_lag: dict of signal names: int pairs; how many days behind do we
@@ -46,10 +44,6 @@ class DynamicValidation:
         self.max_check_lookbehind = timedelta(
             days=params.get("ref_window_size", 7))
 
-        self.sanity_check_rows_per_day = params.get(
-            'sanity_check_rows_per_day', True)
-        self.sanity_check_value_diffs = params.get(
-            'sanity_check_value_diffs', True)
         self.test_mode = params.get("test_mode", False)
 
         # Signal-specific settings
@@ -197,13 +191,11 @@ class DynamicValidation:
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
-                if self.sanity_check_rows_per_day:
-                    self.check_rapid_change_num_rows(
-                        recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
+                self.check_rapid_change_num_rows(
+                    recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
-                if self.sanity_check_value_diffs:
-                    self.check_avg_val_vs_reference(
-                        recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
+                self.check_avg_val_vs_reference(
+                    recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
             # Keeps script from checking all files in a test run.
             kroc += 1

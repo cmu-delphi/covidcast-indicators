@@ -1,6 +1,8 @@
 """Dynamic file checks."""
 import math
+from dataclasses import dataclass
 from datetime import date, timedelta
+from typing import Dict, Set
 import pandas as pd
 from .errors import ValidationError, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
@@ -8,52 +10,43 @@ from .utils import relative_difference_by_min, TimeWindow
 
 class DynamicValidation:
     """Class for validation of static properties of individual datasets."""
-    def __init__(self, params, suppressed_errors=None):
+
+    @dataclass
+    class Parameters:
+        """Configuration parameters."""
+        # data source name, one of
+        # https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
+        data_source: str
+        # span of time over which to perform checks
+        time_window: TimeWindow
+        # date that this df_to_test was generated; typically 1 day after the last date in df_to_test
+        generation_date: date
+        # number of days back to perform sanity checks, starting from the last date appearing in
+        # df_to_test
+        max_check_lookbehind: timedelta
+        # names of signals that are smoothed (7-day avg, etc)
+        smoothed_signals: Set[str]
+        # how many days behind do we expect each signal to be
+        expected_lag: Dict[str, int]
+
+    def __init__(self, params):
         """
         Initialize object and set parameters.
 
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
-
-        Attributes:
-            - data_source: str; data source name, one of
-            https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
-            - time_window: span of time over which to perform checks
-            - generation_date: date that this df_to_test was generated; typically 1 day
-            after the last date in df_to_test
-            - max_check_lookbehind: number of days back to perform sanity checks, starting
-            from the last date appearing in df_to_test
-            - minimum_sample_size: int
-            - missing_se_allowed: boolean indicating if missing standard errors should
-            raise an exception or not
-            - missing_sample_size_allowed: boolean indicating if missing sample size should
-            raise an exception or not
-            - smoothed_signals: set of strings; names of signals that are smoothed (7-day
-            avg, etc)
-            - expected_lag: dict of signal names: int pairs; how many days behind do we
-            expect each signal to be
         """
-        # Get user settings from params or if not provided, set default.
-        self.data_source = params['data_source']
-
-        # Date/time settings
-        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
-        self.generation_date = date.today()
-
-        # General options: flags, thresholds
-        self.max_check_lookbehind = timedelta(
-            days=params.get("ref_window_size", 7))
-
         self.test_mode = params.get("test_mode", False)
 
-        # Signal-specific settings
-        self.smoothed_signals = set(params.get("smoothed_signals", []))
-        self.expected_lag = params["expected_lag"]
+        self.params = self.Parameters(
+            data_source = params['data_source'],
+            time_window = TimeWindow.from_params(params["end_date"], params["span_length"]),
+            generation_date = date.today(),
+            max_check_lookbehind = timedelta(days=params.get("ref_window_size", 7)),
+            smoothed_signals = set(params.get("smoothed_signals", [])),
+            expected_lag = params["expected_lag"]
+        )
 
-        if suppressed_errors is None:
-            self.suppressed_errors = set()
-        else:
-            self.suppressed_errors = suppressed_errors
 
     def validate(self, all_frames, report):
         """
@@ -76,18 +69,18 @@ class DynamicValidation:
         semirecent_lookbehind = timedelta(days=7)
 
         # Get list of dates we want to check.
-        date_list = [self.time_window.start_date + timedelta(days=days)
-                     for days in range(self.time_window.span_length.days + 1)]
+        date_list = [self.params.time_window.start_date + timedelta(days=days)
+                     for days in range(self.params.time_window.span_length.days + 1)]
 
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
         # Get all expected combinations of geo_type and signal.
-        geo_signal_combos = get_geo_signal_combos(self.data_source)
+        geo_signal_combos = get_geo_signal_combos(self.params.data_source)
 
-        all_api_df = threaded_api_calls(self.data_source,
-                                        self.time_window.start_date - outlier_lookbehind,
-                                        self.time_window.end_date,
+        all_api_df = threaded_api_calls(self.params.data_source,
+                                        self.params.time_window.start_date - outlier_lookbehind,
+                                        self.params.time_window.end_date,
                                         geo_signal_combos)
 
         # Keeps script from checking all files in a test run.
@@ -170,7 +163,7 @@ class DynamicValidation:
                 # below but pylint doesn't recognize that.
                 # pylint: disable=unused-variable
                 reference_start_date = recent_cutoff_date - \
-                    min(semirecent_lookbehind, self.max_check_lookbehind) - \
+                    min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
                     timedelta(days=1)
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
                 # pylint: enable=unused-variable
@@ -216,10 +209,10 @@ class DynamicValidation:
             - None
         """
         thres = timedelta(
-            days=self.expected_lag[signal_type] if signal_type in self.expected_lag
+            days=self.params.expected_lag[signal_type] if signal_type in self.params.expected_lag
             else 1)
 
-        if max_date < self.generation_date - thres:
+        if max_date < self.params.generation_date - thres:
             report.add_raised_error(ValidationError(
                 ("check_min_max_date", geo_type, signal_type),
                 max_date,
@@ -240,7 +233,7 @@ class DynamicValidation:
         Returns:
             - None
         """
-        if max_date > self.generation_date:
+        if max_date > self.params.generation_date:
             report.add_raised_error(ValidationError(
                 ("check_max_max_date", geo_type, signal_type),
                 max_date,
@@ -531,7 +524,7 @@ class DynamicValidation:
         }
 
         # Get the selected thresholds from switcher dictionary
-        smooth_option = "smoothed" if signal_type in self.smoothed_signals else "raw"
+        smooth_option = "smoothed" if signal_type in self.params.smoothed_signals else "raw"
         thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
 
         # Check if the calculated mean differences are high compared to the thresholds.

@@ -2,6 +2,7 @@
 from os.path import join
 import re
 from datetime import datetime, timedelta
+from dataclasses import dataclass
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationError
@@ -9,38 +10,37 @@ from .utils import GEO_REGEX_DICT, TimeWindow
 
 class StaticValidation:
     """Class for validation of static properties of individual datasets."""
-    def __init__(self, params, suppressed_errors=None):
+
+    @dataclass
+    class Parameters:
+        """Configuration parameters."""
+        # Place to find the data files
+        validator_static_file_dir: str
+        # Span of time over which to perform checks
+        time_window: TimeWindow
+        # Threshold for reporting small sample sizes
+        minimum_sample_size: int
+        # Whether to report missing standard errors
+        missing_se_allowed: bool
+        # Whether to report missing sample sizes
+        missing_sample_size_allowed: bool
+
+    def __init__(self, params):
         """
         Initialize object and set parameters.
 
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
-
-        Attributes:
-            - time_window: span of time over which to perform checks
-            - minimum_sample_size: int
-            - missing_se_allowed: boolean indicating if missing standard errors should
-            raise an exception or not
-            - missing_sample_size_allowed: boolean indicating if missing sample size should
-            raise an exception or not
         """
-        # Get user settings from params or if not provided, set default.
-        self.validator_static_file_dir = params.get(
-            'validator_static_file_dir', '../validator/static')
+        self.params = self.Parameters(
+            validator_static_file_dir = params.get('validator_static_file_dir',
+                                                   '../validator/static'),
+            time_window = TimeWindow.from_params(params["end_date"], params["span_length"]),
+            minimum_sample_size = params.get('minimum_sample_size', 100),
+            missing_se_allowed = params.get('missing_se_allowed', False),
+            missing_sample_size_allowed = params.get('missing_sample_size_allowed', False)
+        )
 
-        # Date/time settings
-        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
-
-        # General options: flags, thresholds
-        self.minimum_sample_size = params.get('minimum_sample_size', 100)
-        self.missing_se_allowed = params.get('missing_se_allowed', False)
-        self.missing_sample_size_allowed = params.get(
-            'missing_sample_size_allowed', False)
-
-        if suppressed_errors is None:
-            self.suppressed_errors = set()
-        else:
-            self.suppressed_errors = suppressed_errors
 
     def validate(self, file_list, report):
         """
@@ -83,11 +83,11 @@ class StaticValidation:
         Returns:
             - None
         """
-        number_of_dates = self.time_window.end_date - self.time_window.start_date +\
+        number_of_dates = self.params.time_window.end_date - self.params.time_window.start_date +\
             timedelta(days=1)
 
         # Create set of all expected dates.
-        date_seq = {self.time_window.start_date + timedelta(days=x)
+        date_seq = {self.params.time_window.start_date + timedelta(days=x)
                     for x in range(number_of_dates.days)}
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
@@ -144,7 +144,7 @@ class StaticValidation:
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
             - report: ValidationReport; report where results are added
        """
-        file_path = join(self.validator_static_file_dir, geo_type + '_geo.csv')
+        file_path = join(self.params.validator_static_file_dir, geo_type + '_geo.csv')
         valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
         valid_geos = valid_geo_df['geo_id'].values
         unexpected_geos = [geo for geo in df_to_test['geo_id']
@@ -293,7 +293,7 @@ class StaticValidation:
         df_to_test['se'] = df_to_test['se'].round(3)
         df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-        if not self.missing_se_allowed:
+        if not self.params.missing_se_allowed:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
                 '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
@@ -312,7 +312,7 @@ class StaticValidation:
 
             report.increment_total_checks()
 
-        elif self.missing_se_allowed:
+        elif self.params.missing_se_allowed:
             result = df_to_test.query(
                 '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
@@ -357,7 +357,7 @@ class StaticValidation:
         Returns:
             - None
         """
-        if not self.missing_sample_size_allowed:
+        if not self.params.missing_sample_size_allowed:
             if df_to_test['sample_size'].isnull().values.any():
                 report.add_raised_error(ValidationError(
                     ("check_n_missing", nameformat),
@@ -367,28 +367,40 @@ class StaticValidation:
 
             # Find rows with sample size less than minimum allowed
             result = df_to_test.query(
-                '(sample_size < @self.minimum_sample_size)')
+                '(sample_size < @self.params.minimum_sample_size)')
 
             if not result.empty:
                 report.add_raised_error(ValidationError(
                     ("check_n_gt_min", nameformat),
-                    result, f"sample size must be >= {self.minimum_sample_size}"))
+                    result, f"sample size must be >= {self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 
-        elif self.missing_sample_size_allowed:
+        elif self.params.missing_sample_size_allowed:
             result = df_to_test.query(
-                '~(sample_size.isnull() | (sample_size >= @self.minimum_sample_size))')
+                '~(sample_size.isnull() | (sample_size >= @self.params.minimum_sample_size))')
 
             if not result.empty:
                 report.add_raised_error(ValidationError(
                     ("check_n_missing_or_gt_min", nameformat),
                     result,
-                    f"sample size must be NA or >= {self.minimum_sample_size}"))
+                    f"sample size must be NA or >= {self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 
     def check_duplicate_rows(self, data_df, filename, report):
+        """
+        Check if any rows are duplicated in a data set.
+
+        Parameters
+        ----------
+        data_df: pd.DataFrame
+            data to check
+        filename: str
+            name of file from which this data came
+        report: ValidationReport
+            report where results are added
+        """
         is_duplicate = data_df.duplicated()
         if any(is_duplicate):
             duplicate_row_idxs = list(data_df[is_duplicate].index)

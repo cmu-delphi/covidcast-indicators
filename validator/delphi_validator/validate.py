@@ -25,8 +25,8 @@ class Validator():
         # Date/time settings
         self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
 
-        self.static_validation = StaticValidation(params, self.suppressed_errors)
-        self.dynamic_validation = DynamicValidation(params, self.suppressed_errors)
+        self.static_validation = StaticValidation(params)
+        self.dynamic_validation = DynamicValidation(params)
 
     def validate(self, export_dir):
         """

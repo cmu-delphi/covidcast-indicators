@@ -15,8 +15,9 @@ GEO_REGEX_DICT = {
 
 
 def get_today():
-    """Wrapper function for mocking out date.today().
-    
+    """
+    Wrapper function for mocking out date.today().
+
     Needed because Python built-in class methods are not mockable.
     """
     return date.today()

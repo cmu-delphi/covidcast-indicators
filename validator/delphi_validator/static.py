@@ -83,12 +83,9 @@ class StaticValidator:
         Returns:
             - None
         """
-        number_of_dates = self.params.time_window.end_date - self.params.time_window.start_date +\
-            timedelta(days=1)
-
         # Create set of all expected dates.
         date_seq = {self.params.time_window.start_date + timedelta(days=x)
-                    for x in range(number_of_dates.days)}
+                    for x in range(self.params.time_window.span_length.days + 1)}
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}

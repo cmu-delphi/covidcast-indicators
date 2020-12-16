@@ -13,6 +13,15 @@ GEO_REGEX_DICT = {
     'national': r'^[a-zA-Z]{2}$'
 }
 
+
+def get_today():
+    """Wrapper function for mocking out date.today().
+    
+    Needed because Python built-in class methods are not mockable.
+    """
+    return date.today()
+
+
 @dataclass
 class TimeWindow:
     """Object to store a window of time ending on `end_date` and lasting `span_length`."""
@@ -25,11 +34,11 @@ class TimeWindow:
         self.start_date = self.end_date - self.span_length
 
     @classmethod
-    def from_strings(cls, end_date_str, span_length_str):
-        """Create a TimeWindow from string representations of its members."""
-        span_length = timedelta(days=span_length_str)
+    def from_params(cls, end_date_str: str, span_length_int: int):
+        """Create a TimeWindow from param representations of its members."""
+        span_length = timedelta(days=span_length_int)
         if end_date_str == "latest":
-            end_date = date.today()
+            end_date = get_today()
         else:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         return cls(end_date, span_length)

@@ -29,7 +29,7 @@ class StaticValidation:
             'validator_static_file_dir', '../validator/static')
 
         # Date/time settings
-        self.time_window = TimeWindow.from_strings(params["end_date"], params["span_length"])
+        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
 
         # General options: flags, thresholds
         self.minimum_sample_size = params.get('minimum_sample_size', 100)

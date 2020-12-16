@@ -1,9 +1,10 @@
 """Tests for module utils."""
 
-from datetime import date
+from datetime import date, timedelta
+import mock
 import pandas as pd
 from delphi_validator.datafetcher import FILENAME_REGEX
-from delphi_validator.utils import relative_difference_by_min, aggregate_frames
+from delphi_validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
 
 class TestUtils:
     """Tests for module utils."""
@@ -26,3 +27,20 @@ class TestUtils:
                                  "signal": ["signal_1"] * 10 + ["signal_2"] * 10
                                 })
         pd.testing.assert_frame_equal(actual, expected)
+
+class TestTimeWindow:
+    """Tests for TimeWindow data class."""
+    def test_init(self):
+        """Test that the start date is computed correctly."""
+        window = TimeWindow(date(2020, 11, 7), timedelta(days=4))
+        assert window.start_date == date(2020, 11, 3)
+
+    @mock.patch("delphi_validator.utils.get_today")
+    def test_string_init(self, mock_today):
+        """Test that TimeWindows can be derived from strings."""
+        mock_today.return_value = date(2020, 2, 14)
+
+        window = TimeWindow.from_params("2020-08-23", 366)
+        assert window.start_date == date(2019, 8, 23)
+        latest_window = TimeWindow.from_params("latest", 1897)
+        assert latest_window.start_date == date(2014, 12, 5)

@@ -2,12 +2,11 @@
 """
 Tools to validate CSV source data, including various check methods.
 """
-from datetime import date, datetime, timedelta
 from .datafetcher import load_all_files
 from .dynamic import DynamicValidation
 from .report import ValidationReport
 from .static import StaticValidation
-from .utils import aggregate_frames
+from .utils import aggregate_frames, TimeWindow
 
 class Validator():
     """ Class containing validation() function and supporting functions. Stores a list
@@ -24,10 +23,7 @@ class Validator():
             item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
 
         # Date/time settings
-        self.span_length = timedelta(days=params['span_length'])
-        self.end_date = date.today() if params['end_date'] == "latest" else datetime.strptime(
-            params['end_date'], '%Y-%m-%d').date()
-        self.start_date = self.end_date - self.span_length
+        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
 
         self.static_validation = StaticValidation(params, self.suppressed_errors)
         self.dynamic_validation = DynamicValidation(params, self.suppressed_errors)
@@ -43,7 +39,8 @@ class Validator():
             - ValidationReport collating the validation outcomes
         """
         report = ValidationReport(self.suppressed_errors)
-        frames_list = load_all_files(export_dir, self.start_date, self.end_date)
+        frames_list = load_all_files(export_dir, self.time_window.start_date,
+                                     self.time_window.end_date)
         self.static_validation.validate(frames_list, report)
         all_frames = aggregate_frames(frames_list)
         self.dynamic_validation.validate(all_frames, report)

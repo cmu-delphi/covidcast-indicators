@@ -39,7 +39,7 @@ class DynamicValidation:
         self.data_source = params['data_source']
 
         # Date/time settings
-        self.time_window = TimeWindow.from_strings(params["end_date"], params["span_length"])
+        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
         self.generation_date = date.today()
 
         # General options: flags, thresholds

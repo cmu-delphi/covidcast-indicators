@@ -1,9 +1,10 @@
 """Tests for module utils."""
 
-from datetime import date
+from datetime import date, timedelta
+from freezegun import freeze_time
 import pandas as pd
 from delphi_validator.datafetcher import FILENAME_REGEX
-from delphi_validator.utils import relative_difference_by_min, aggregate_frames
+from delphi_validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
 
 class TestUtils:
     """Tests for module utils."""
@@ -26,3 +27,23 @@ class TestUtils:
                                  "signal": ["signal_1"] * 10 + ["signal_2"] * 10
                                 })
         pd.testing.assert_frame_equal(actual, expected)
+
+class TestTimeWindow:
+    """Tests for TimeWindow data class."""
+    def test_init(self):
+        """Test that the start date is computed correctly."""
+        window = TimeWindow(date(2020, 11, 7), timedelta(days=4))
+        assert window.start_date == date(2020, 11, 3)
+        assert window.date_seq == [date(2020, 11, 3),
+                                   date(2020, 11, 4),
+                                   date(2020, 11, 5),
+                                   date(2020, 11, 6),
+                                   date(2020, 11, 7)]
+
+    @freeze_time("2020-02-14")
+    def test_string_init(self):
+        """Test that TimeWindows can be derived from strings."""
+        window = TimeWindow.from_params("2020-08-23", 366)
+        assert window.start_date == date(2019, 8, 23)
+        latest_window = TimeWindow.from_params("latest", 1897)
+        assert latest_window.start_date == date(2014, 12, 5)

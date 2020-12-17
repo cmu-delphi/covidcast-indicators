@@ -531,8 +531,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         and state, which uses the state codes table since the fips/state mapping doesn't include
         all territories.
 
-        Note for state codes
-
         Parameters
         ----------
         geo_type: str

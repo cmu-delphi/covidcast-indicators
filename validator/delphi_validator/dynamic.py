@@ -68,10 +68,6 @@ class DynamicValidator:
         # in time, how many days do we use to form the reference statistics.
         semirecent_lookbehind = timedelta(days=7)
 
-        # Get list of dates we want to check.
-        date_list = [self.params.time_window.start_date + timedelta(days=days)
-                     for days in range(self.params.time_window.span_length.days + 1)]
-
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
@@ -123,7 +119,9 @@ class DynamicValidator:
                                 "deaths_cumulative_num"]):
                 earliest_available_date = geo_sig_df["time_value"].min()
                 source_df = geo_sig_df.query(
-                    'time_value <= @date_list[-1] & time_value >= @date_list[0]')
+                    'time_value <= @self.params.time_window.end_date & '
+                    'time_value >= @self.params.time_window.start_date'
+                )
 
                 # These variables are interpolated into the call to `api_df_or_error.query()`
                 # below but pylint doesn't recognize that.
@@ -139,7 +137,7 @@ class DynamicValidator:
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
-            for checking_date in date_list:
+            for checking_date in self.params.time_window.date_seq:
                 recent_cutoff_date = checking_date - \
                     recent_lookbehind + timedelta(days=1)
                 recent_df = geo_sig_df.query(

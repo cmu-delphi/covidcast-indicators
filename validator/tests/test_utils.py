@@ -34,6 +34,11 @@ class TestTimeWindow:
         """Test that the start date is computed correctly."""
         window = TimeWindow(date(2020, 11, 7), timedelta(days=4))
         assert window.start_date == date(2020, 11, 3)
+        assert window.date_seq == [date(2020, 11, 3),
+                                   date(2020, 11, 4),
+                                   date(2020, 11, 5),
+                                   date(2020, 11, 6),
+                                   date(2020, 11, 7)]
 
     @mock.patch("delphi_validator.utils.get_today")
     def test_string_init(self, mock_today):

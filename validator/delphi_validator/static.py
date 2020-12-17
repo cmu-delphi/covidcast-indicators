@@ -1,7 +1,7 @@
 """Static file checks."""
 from os.path import join
 import re
-from datetime import datetime, timedelta
+from datetime import datetime
 from dataclasses import dataclass
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
@@ -83,15 +83,12 @@ class StaticValidator:
         Returns:
             - None
         """
-        # Create set of all expected dates.
-        date_seq = {self.params.time_window.start_date + timedelta(days=x)
-                    for x in range(self.params.time_window.span_length.days + 1)}
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
 
         # Diff expected and observed dates.
-        check_dateholes = list(date_seq.difference(unique_dates))
+        check_dateholes = list(set(self.params.time_window.date_seq).difference(unique_dates))
         check_dateholes.sort()
 
         if check_dateholes:

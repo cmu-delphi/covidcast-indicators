@@ -33,8 +33,8 @@ class ValidationFailure:
 
         Parameters
         ----------
-        errors_to_suppress: List[Tuple[str]]
-            list of (check_)
+        errors_to_suppress: Set[Tuple[str]]
+            set of (check_name, data_name) tuples to ignore.
         """
         return (self.check_name, self.data_name) in suppressed_errors
 

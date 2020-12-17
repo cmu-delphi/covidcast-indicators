@@ -8,12 +8,12 @@ class ValidationReport:
         """Initialize a ValidationReport.
         Parameters
         ----------
-        errors_to_suppress: List[Tuple[str]]
-            List of error identifications to ignore.
+        errors_to_suppress: Set[Tuple[str]]
+            set of (check_name, data_name) tuples to ignore.
 
         Attributes
         ----------
-        errors_to_suppress: List[Tuple[str]]
+        errors_to_suppress: Set[Tuple[str]]
             See above
         num_suppressed: int
             Number of errors suppressed

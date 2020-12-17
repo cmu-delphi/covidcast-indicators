@@ -1,7 +1,7 @@
 """Registry for signals and geographies to process."""
 from .generate_signals import sum_cols
 
-NAN_VALUE = -999999.0
+NAN_VALUES = [None, -999999, -999999.0]
 
 CONFIRMED_ADMISSIONS = "confirmed_admissions_7d"
 CONFIRMED_SUSPECTED_ADMISSIONS = "confirmed_suspected_admission_7d"

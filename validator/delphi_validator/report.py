@@ -1,11 +1,10 @@
 """Validation output reports."""
 import sys
-from datetime import date, datetime
-from typing import List, Tuple
+from typing import Set, Tuple
 
 class ValidationReport:
     """Class for reporting the results of validation."""
-    def __init__(self, errors_to_suppress: List[Tuple[str]]):
+    def __init__(self, errors_to_suppress: Set[Tuple[str]]):
         """Initialize a ValidationReport.
         Parameters
         ----------

@@ -437,4 +437,3 @@ class TestCheckBadN:
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_n_gt_min"
-

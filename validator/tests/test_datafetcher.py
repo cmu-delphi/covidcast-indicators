@@ -8,7 +8,7 @@ from delphi_validator.datafetcher import (FILENAME_REGEX,
                                           make_date_filter,
                                           get_geo_signal_combos,
                                           threaded_api_calls)
-from delphi_validator.errors import APIDataFetchError, ValidationFailure
+from delphi_validator.errors import ValidationFailure
 
 
 class TestDataFetcher:
@@ -65,10 +65,9 @@ class TestDataFetcher:
             """Function to return data when covidcast.signal() is called."""
             if signal_type == "a":
                 return signal_data_1
-            elif geo_type == "county":
+            if geo_type == "county":
                 return signal_data_2
-            else:
-                return None
+            return None
 
         mock_signal.side_effect = mock_signal_return_fn
 

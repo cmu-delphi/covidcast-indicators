@@ -20,11 +20,22 @@ class APIDataFetchError(Exception):
 
 @dataclass
 class ValidationFailure:
+    """Structured report of single validation failure."""
+    # Which check the failure came from
     check_name: str
+    # Data source of the failure
     data_name: str
+    # Additional context about the failure
     message: str
 
     def is_suppressed(self, suppressed_errors):
+        """Determine whether the failure should be suppressed.
+
+        Parameters
+        ----------
+        errors_to_suppress: List[Tuple[str]]
+            list of (check_)
+        """
         return (self.check_name, self.data_name) in suppressed_errors
 
     def __str__(self):

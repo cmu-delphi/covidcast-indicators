@@ -2,7 +2,6 @@
 
 from datetime import date, timedelta
 from freezegun import freeze_time
-import mock
 import pandas as pd
 from delphi_validator.datafetcher import FILENAME_REGEX
 from delphi_validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow

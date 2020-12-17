@@ -46,14 +46,7 @@ class ValidationReport:
         None
         """
         self.raised_errors.append(error)
-        # Convert any dates in check_data_id to strings for the purpose of comparing
-        # to manually suppressed errors.
-        raised_check_id = tuple([
-            item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
-            else item for item in error.check_data_id])
-
-        if raised_check_id in self.errors_to_suppress:
-            self.errors_to_suppress.remove(raised_check_id)
+        if error.is_suppressed(self.errors_to_suppress):
             self.num_suppressed += 1
         else:
             self.unsuppressed_errors.append(error)

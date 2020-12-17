@@ -32,8 +32,7 @@ class TestCheckRapidChange:
             test_df, ref_df, time_value, "geo", "signal", report)
 
         assert len(report.raised_errors) == 1
-        assert "check_rapid_change_num_rows" in [
-            err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_rapid_change_num_rows"
 
 
 class TestCheckAvgValDiffs:
@@ -131,8 +130,7 @@ class TestCheckAvgValDiffs:
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal", report)
 
         assert len(report.raised_errors) == 1
-        assert "check_test_vs_reference_avg_changed" in [
-            err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
 
     def test_1000x_val(self):
         validator = DynamicValidator(self.params)
@@ -149,8 +147,7 @@ class TestCheckAvgValDiffs:
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal", report)
 
         assert len(report.raised_errors) == 1
-        assert "check_test_vs_reference_avg_changed" in [
-            err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
 
 class TestDataOutlier:
     params = {"data_source": "", "span_length": 1,
@@ -192,8 +189,7 @@ class TestDataOutlier:
 
 
         assert len(report.raised_errors) == 1
-        assert "check_positive_negative_spikes" in [
-            err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_neg_outlier(self):
         validator = DynamicValidator(self.params)
@@ -233,8 +229,7 @@ class TestDataOutlier:
 
 
         assert len(report.raised_errors) == 1
-        assert "check_positive_negative_spikes" in [
-            err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_zero_outlier(self):
         validator = DynamicValidator(self.params)
@@ -274,8 +269,7 @@ class TestDataOutlier:
 
 
         assert len(report.raised_errors) == 1
-        assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_no_outlier(self):
         validator = DynamicValidator(self.params)
@@ -354,5 +348,4 @@ class TestDataOutlier:
 
 
         assert len(report.raised_errors) == 1
-        assert "check_positive_negative_spikes" in [
-        err.check_data_id[0] for err in report.raised_errors]
+        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"

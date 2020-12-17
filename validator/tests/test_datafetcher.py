@@ -8,7 +8,7 @@ from delphi_validator.datafetcher import (FILENAME_REGEX,
                                           make_date_filter,
                                           get_geo_signal_combos,
                                           threaded_api_calls)
-from delphi_validator.errors import APIDataFetchError, ValidationError
+from delphi_validator.errors import APIDataFetchError, ValidationFailure
 
 
 class TestDataFetcher:
@@ -88,11 +88,10 @@ class TestDataFetcher:
             ("county", "a"): processed_signal_data_1,
             ("county", "b"): processed_signal_data_2,
             ("state", "a"): processed_signal_data_1,
-            ("state", "b"): ValidationError(("api_data_fetch_error", "state", "b"), None,
-                                            APIDataFetchError("Error fetching data from 2020-03-10 "
-                                                              "to 2020-06-10 for data source: "
-                                                              "source, signal type: b, geo type: "
-                                                              "state"))
+            ("state", "b"): ValidationFailure("api_data_fetch_error", "state b",
+                                             "Error fetching data from 2020-03-10 "
+                                             "to 2020-06-10 for data source: "
+                                             "source, signal type: b, geo type: state")
         }
         actual = threaded_api_calls("source", date(2020, 3, 10), date(2020, 6, 10), expected.keys())
 

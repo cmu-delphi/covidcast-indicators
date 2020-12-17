@@ -1,6 +1,7 @@
 """Tests for module utils."""
 
 from datetime import date, timedelta
+from freezegun import freeze_time
 import mock
 import pandas as pd
 from delphi_validator.datafetcher import FILENAME_REGEX
@@ -40,11 +41,9 @@ class TestTimeWindow:
                                    date(2020, 11, 6),
                                    date(2020, 11, 7)]
 
-    @mock.patch("delphi_validator.utils.get_today")
-    def test_string_init(self, mock_today):
+    @freeze_time("2020-02-14")
+    def test_string_init(self):
         """Test that TimeWindows can be derived from strings."""
-        mock_today.return_value = date(2020, 2, 14)
-
         window = TimeWindow.from_params("2020-08-23", 366)
         assert window.start_date == date(2019, 8, 23)
         latest_window = TimeWindow.from_params("latest", 1897)

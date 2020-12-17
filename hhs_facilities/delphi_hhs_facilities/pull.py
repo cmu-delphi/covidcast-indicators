@@ -19,12 +19,7 @@ def pull_data() -> pd.DataFrame:
     DataFrame of HHS data.
     """
     mapper = GeoMapper()
-    # get a list of state codes
-    all_states = pd.DataFrame(
-        {"state_code": ["{:02d}".format(x) for x in range(1, 72)]}
-    )
-    all_states = mapper.add_geocode(all_states, "state_code", "state_id")
-    request_all_states = ",".join(all_states.state_id)
+    request_all_states = ",".join(mapper.get_geo_values("state_id"))
     today = date.today()
     past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
     date_range = [int(x.strftime("%Y%m%d")) for x in [past_reference_day, today]]

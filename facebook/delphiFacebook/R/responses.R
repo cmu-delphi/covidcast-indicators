@@ -297,6 +297,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "Q76", "Q77", "Q78", "Q79", "Q80", # Q64-Q90 added in Wave 4
     "D10", # added in Wave 4
     "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
+    "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
@@ -360,7 +361,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_cT2ri3tFp2dhJGZ" = 2,
                 "SV_8bKZvWZcGbvzsz3" = 3,
                 "SV_eVXdPlGVNw04el7" = 4,
-                "SV_2hErnivitm0th8F" = 5)
+                "SV_2hErnivitm0th8F" = 5,
+                "SV_8HCnaK1BJPsI3BP" = 6)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

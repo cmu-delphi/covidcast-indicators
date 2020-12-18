@@ -87,7 +87,12 @@ def run_module():
         METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS
     ):
         print(metric, geo_res, sensor, smoother)
-        logger.info(event = "processing data", metric = metric, geo_res = geo_res, sensor = sensor, smoother = smoother)
+        logger.info(
+            event="processing data",
+            metric=metric,
+            geo_res=geo_res,
+            sensor=sensor,
+            smoother=smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res)

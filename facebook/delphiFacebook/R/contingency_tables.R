@@ -156,6 +156,11 @@ run_contingency_tables <- function(params, aggregations)
 #' @export
 make_human_readable <- function(input_data) {
   # Named list of question numbers and str replacement names
+  # These columns are not available for aggregation:
+  #   "t_zipcode" = "A3", (Please use `zip5` instead)
+  #   "t_symptoms_other" = "B2_14_TEXT",
+  #   "t_unusual_symptoms_other" = "B2c_14_TEXT",
+  #   "t_gender_other" = "D1_4_TEXT",
   map_old_new_names <- c(
     ## free response
     # Either number ("n"; can be averaged although may need processing) or text ("t")
@@ -163,11 +168,7 @@ make_human_readable <- function(input_data) {
     "n_hh_num_children" = "A5_1",
     "n_hh_num_adults" = "A5_2",
     "n_hh_num_seniors" = "A5_3",
-    # "t_zipcode" = "A3", # zip5
     "n_cmnty_num_sick" = "A4",
-    "t_symptoms_other" = "B2_14_TEXT",
-    "t_unusual_symptoms_other" = "B2c_14_TEXT",
-    "t_gender_other" = "D1_4_TEXT",
     "n_days_unusual_symptoms" = "B2b",
     "n_contact_num_work" = "C10_1_1",
     "n_contact_num_shopping" = "C10_2_1",

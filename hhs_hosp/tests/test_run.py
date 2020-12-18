@@ -4,7 +4,7 @@ from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, gene
     make_signal
 from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP
 import pandas as pd
-
+import pytest
 
 def test__date_to_int():
     """Check that dates are converted to the right int."""
@@ -64,3 +64,6 @@ def test_make_signal():
         'sample_size': None
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
+
+    with pytest.raises(Exception):
+        make_signal(data, "zig")

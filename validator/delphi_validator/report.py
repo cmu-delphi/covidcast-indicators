@@ -2,6 +2,9 @@
 import sys
 from datetime import date, datetime
 from typing import List, Tuple
+from delphi_utils.logger import get_structured_logger
+
+logger = get_structured_logger()
 
 class ValidationReport:
     """Class for reporting the results of validation."""
@@ -75,23 +78,27 @@ class ValidationReport:
         """
         self.raised_warnings.append(warning)
 
-    def __str__(self):
-        """String representation of report."""
+    def summary(self):
+        """String representation of summary of report."""
         out_str = f"{self.total_checks} checks run\n"
         out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
         out_str += f"{self.num_suppressed} checks suppressed\n"
         out_str += f"{len(self.raised_warnings)} warnings\n"
-        for message in self.unsuppressed_errors:
-            out_str += f"{message}\n"
-        for message in self.raised_warnings:
-            out_str += f"{message}\n"
         return out_str
+
+    def log(self):
+        """Log errors and warnings."""
+        for error in self.unsuppressed_errors:
+            logger.critical(str(error))
+        for warning in self.raised_warnings:
+            logger.warning(str(warning))
 
     def print_and_exit(self):
         """
         Print results and, if any not-suppressed exceptions were raised, exit with non-zero status.
         """
-        print(self)
+        print(self.summary)
+        self.log()
         if len(self.unsuppressed_errors) != 0:
             sys.exit(1)
         else:

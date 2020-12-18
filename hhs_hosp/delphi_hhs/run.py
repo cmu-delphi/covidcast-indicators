@@ -12,7 +12,7 @@ from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 import pandas as pd
 
-from .constants import HOSPITALIZATIONS
+from .constants import SIGNALS, CONFIRMED, SUM_CONF_SUSP
 
 
 def _date_to_int(d):
@@ -78,18 +78,41 @@ def run_module():
             raise Exception(f"Bad result from Epidata: {response['message']}")
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
-    signal = pd.DataFrame({
-        "geo_id": all_columns.state.apply(str.lower),
-        "timestamp":int_date_to_previous_day_datetime(all_columns.date),
-        "val": \
-        all_columns.previous_day_admission_adult_covid_confirmed + \
-        all_columns.previous_day_admission_pediatric_covid_confirmed,
-        "se": None,
-        "sample_size": None
-    })
-    create_export_csv(
-        signal,
-        params["export_dir"],
-        "state",
-        HOSPITALIZATIONS
+
+    for sig in SIGNALS:
+        create_export_csv(
+            make_signal(all_columns, sig),
+            params["export_dir"],
+            "state",
+            sig
         )
+
+def make_signal(all_columns, sig):
+    """Generate column sums according to signal name."""
+    assert sig in SIGNALS, f"Unexpected signal name '{sig}';" + \
+        " familiar names are '{', '.join(SIGNALS)}'"
+    if sig == CONFIRMED:
+        return pd.DataFrame({
+            "geo_id": all_columns.state.apply(str.lower),
+            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
+            "val": \
+            all_columns.previous_day_admission_adult_covid_confirmed + \
+            all_columns.previous_day_admission_pediatric_covid_confirmed,
+            "se": None,
+            "sample_size": None
+        })
+    if sig == SUM_CONF_SUSP:
+        return pd.DataFrame({
+            "geo_id": all_columns.state.apply(str.lower),
+            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
+            "val": \
+            all_columns.previous_day_admission_adult_covid_confirmed + \
+            all_columns.previous_day_admission_adult_covid_suspected + \
+            all_columns.previous_day_admission_pediatric_covid_confirmed + \
+            all_columns.previous_day_admission_pediatric_covid_suspected,
+            "se": None,
+            "sample_size": None
+        })
+    raise Exception(
+        "Bad programmer: signal '{sig}' in SIGNALS but not handled in make_signal"
+    )

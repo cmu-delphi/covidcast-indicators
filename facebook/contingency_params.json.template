@@ -9,14 +9,9 @@
   "archive_dir": "./archive",
   "individual_dir": "./individual",
   "weights_in_dir": "./delphiFacebook/tests/testthat/weights_full",
-  "weights_out_dir": "./weights_out",
   "input_dir": "./delphiFacebook/tests/testthat/input",
   "input": [
     "full_synthetic.csv"
-  ],
-  "output": [
-    "cids",
-    "archive"
   ],
   "aggregate_range": "weekly",
   "debug": false,

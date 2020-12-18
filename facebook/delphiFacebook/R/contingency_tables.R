@@ -20,13 +20,13 @@
 #' @export
 update_params <- function(params) {
   if (params$end_date == "current") {
-    date_range = get_range_prev_full_period(Sys.Date(), params$aggregate_range)
-    params$input = get_filenames_in_range(date_range, params)
+    date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
+    params$input <- get_filenames_in_range(date_range, params)
   } else {
     end_date <- ymd_hms(
       sprintf("%s 23:59:59", params$end_date), tz = "America/Los_Angeles"
     )
-    date_range = get_range_prev_full_period(end_date, params$aggregate_range)
+    date_range <- get_range_prev_full_period(end_date, params$aggregate_range)
   }
   
   if (length(params$input) == 0) {
@@ -55,8 +55,8 @@ update_params <- function(params) {
 get_filenames_in_range <- function(date_range, params) {
   start_date <- as.Date(date_range[[1]]) - params$archive_days
   end_date <- as.Date(date_range[[2]])
-  date_pattern = "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
-  youtube_pattern = ".*YouTube[.]csv$"
+  date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
+  youtube_pattern <- ".*YouTube[.]csv$"
   
   filenames <- list.files(path=params$input_dir)
   filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
@@ -111,7 +111,7 @@ run_contingency_tables <- function(params, aggregations)
   data_agg <- create_data_for_aggregatation(input_data)
   
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
-  data_agg <- join_weights(data_agg, params, weights = "step1")
+  data_agg <- join_weights(data_agg, params, weights = "full")
   msg_df("response data to aggregate", data_agg)
   
   ## Set default number of cores for mclapply to the total available number,
@@ -127,19 +127,8 @@ run_contingency_tables <- function(params, aggregations)
     }
   }
   
-  if ( "cids" %in% params$output )
-  {
-    write_cid(data_agg, "part_a", params)
-  }
-  if ( "archive" %in% params$output )
-  {
-    update_archive(input_data, archive, params)
-  }
-  
   data_agg <- make_human_readable(data_agg)
   aggregations <- get_aggs(params, aggregations)
-  
-  browser()
   
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)
@@ -284,10 +273,10 @@ make_human_readable <- function(input_data) {
     "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
   )
   
-  map_old_new_names = map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
+  map_old_new_names <- map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
   
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
-  input_data$t_zipcode = input_data$zip5 # Keep old zipcode column
+  input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
   
   if ("b_tested_pos_ever" %in% names(input_data)) {
     # Convert to binary, excluding "I don't know". yes == 1
@@ -318,7 +307,7 @@ get_aggs <- function(params, aggs) {
     stop("all aggregation names must be unique")
   }
   
-  expected_names = c("name", "var_weight", "metric", "group_by", "skip_mixing", 
+  expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
                      "compute_fn", "post_fn")
   if ( !all(expected_names %in% names(aggs)) ) {
     stop(sprintf(
@@ -344,7 +333,7 @@ get_aggs <- function(params, aggs) {
 compute_mean <- function(response, weight, sample_size)
 {
   response_mean <- compute_count_response(response, weight, sample_size)
-  response_mean$sample_size = sample_size
+  response_mean$sample_size <- sample_size
   
   return(response_mean)
 }
@@ -365,7 +354,7 @@ compute_mean <- function(response, weight, sample_size)
 compute_pct <- function(response, weight, sample_size)
 {
   response_pct <- compute_binary_response(response, weight, sample_size)
-  response_pct$sample_size = sample_size
+  response_pct$sample_size <- sample_size
   
   return(response_pct)
 }
@@ -443,35 +432,35 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   df <- output[[1]]
   aggregations <- output[[2]]
   
-  agg_groups = unique(aggregations[c("group_by", "geo_level")])
+  agg_groups <- unique(aggregations[c("group_by", "geo_level")])
   
   # For each unique combination of groupby_vars and geo level, run aggregation process once
   # and calculate all desired aggregations on the grouping. Rename columns. Save
   # to individual files
   for (group_ind in seq_along(agg_groups$group_by)) {
     
-    agg_group = agg_groups$group_by[group_ind][[1]]
-    geo_level = agg_groups$geo_level[group_ind]
-    geo_crosswalk = cw_list[[geo_level]]
+    agg_group <- agg_groups$group_by[group_ind][[1]]
+    geo_level <- agg_groups$geo_level[group_ind]
+    geo_crosswalk <- cw_list[[geo_level]]
     
-    these_aggs = aggregations[mapply(aggregations$group_by,
+    these_aggs <- aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
                                      }) & aggregations$geo_level == geo_level, ]
     
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
     
     # If want to additionally keep "se" and "effective_sample_size", add here.
-    keep_vars = c("val", "sample_size")
+    keep_vars <- c("val", "sample_size")
     
     for (agg_metric in names(dfs_out)) {
-      map_old_new_names = keep_vars
-      names(map_old_new_names) = paste(keep_vars, agg_metric, sep="_")
+      map_old_new_names <- keep_vars
+      names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
       
-      dfs_out[[agg_metric]] = rename(
+      dfs_out[[agg_metric]] <- rename(
         dfs_out[[agg_metric]][, c(agg_group, keep_vars)], map_old_new_names)
     }
     
-    df_out = dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
+    df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
     write_contingency_tables(df_out, params, geo_level, agg_group)
   }
 }
@@ -498,31 +487,31 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 #'
 #' @export
 post_process_aggs <- function(df, aggregations, cw_list) {
-  aggregations$geo_level = NA
+  aggregations$geo_level <- NA
   for (agg_ind in seq_along(aggregations$group_by)) {
     # Add implied geo_level to each group_by. Order alphabetically. Replace 
     # geo_level with generic "geo_id" var
-    geo_level = intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
+    geo_level <- intersect(aggregations$group_by[agg_ind][[1]], names(cw_list))
     if (length(geo_level) > 1) {
       stop('more than one geo type provided for a single aggregation')
     } else if (length(geo_level) == 0) {
-      geo_level = "national"
-      aggregations$group_by[agg_ind][[1]] = 
+      geo_level <- "national"
+      aggregations$group_by[agg_ind][[1]] <- 
         sort(append(aggregations$group_by[agg_ind][[1]], "geo_id"))
     } else {
       aggregations$group_by[agg_ind][[1]][
-        aggregations$group_by[agg_ind][[1]] == geo_level] = "geo_id"
-      aggregations$group_by[agg_ind][[1]] = 
+        aggregations$group_by[agg_ind][[1]] == geo_level] <- "geo_id"
+      aggregations$group_by[agg_ind][[1]] <- 
         sort(unique(aggregations$group_by[agg_ind][[1]]))
     }
     
-    aggregations$geo_level[agg_ind] = geo_level
+    aggregations$geo_level[agg_ind] <- geo_level
     
     if (startsWith(aggregations$metric[agg_ind], "mc_")) {
       # Multiple choice metrics should also be included in the groupby vars
       if ( !(aggregations$metric[agg_ind] %in% 
              aggregations$group_by[agg_ind][[1]]) ) {
-        aggregations$group_by[agg_ind][[1]] = 
+        aggregations$group_by[agg_ind][[1]] <- 
           c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
       }
     }
@@ -618,12 +607,13 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
     unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
   
   # Turn each response code into a new binary col
-  new_binary_cols = as.character(lapply(
+  new_binary_cols <- as.character(lapply(
     response_codes, 
     function(code) { paste(col_var, code, sep="_") }))
   #### TODO: eval(parse()) here is not the best approach, but I can't find another 
-  # way to get col_var (a string) to be used as a var rather than a string. This
-  # approach causes a shallow copy to be made (warning is raised).
+  # way to get col_var (a string) to be used as a var that references a column
+  # rather than as an actual string. This approach causes a shallow copy to be 
+  # made (warning is raised).
   df[!is.na(df[[col_var]]), c(new_binary_cols) := 
        lapply(response_codes, function(code) { 
          ( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) | 
@@ -633,15 +623,15 @@ convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
        })]
   
   # Update aggregations table
-  old_rows = aggregations[aggregations$metric == col_var, ]
+  old_rows <- aggregations[aggregations$metric == col_var, ]
   for (row_ind in seq_along(old_rows$name)) {
-    old_row = old_rows[row_ind, ]
+    old_row <- old_rows[row_ind, ]
     
     for (col_ind in seq_along(new_binary_cols)) {
-      new_row = old_row
-      new_row$name = paste(old_row$name, col_ind, sep="_")
-      new_row$metric = new_binary_cols[col_ind]
-      aggregations = add_row(aggregations, new_row)
+      new_row <- old_row
+      new_row$name <- paste(old_row$name, col_ind, sep="_")
+      new_row$metric <- new_binary_cols[col_ind]
+      aggregations <- add_row(aggregations, new_row)
     }
   }
   
@@ -718,8 +708,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   groupby_vars <- aggregations$group_by[[1]]
   
   if (all(groupby_vars %in% names(df))) {
-    unique_group_combos = unique(df[, ..groupby_vars])
-    unique_group_combos = unique_group_combos[complete.cases(unique_group_combos)]
+    unique_group_combos <- unique(df[, ..groupby_vars])
+    unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
   } else {
     msg_plain(
       sprintf(
@@ -829,9 +819,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
   ## Prepare outputs.
   dfs_out <- list()
   for (index in seq_along(aggregations$name)) {
-    aggregation = aggregations$name[index]
+    aggregation <- aggregations$name[index]
     
-    dfs_out[[aggregation]] = target_group %>%
+    dfs_out[[aggregation]] <- target_group %>%
       as.list %>%
       as_tibble %>%
       add_column(val=NA_real_) %>%
@@ -960,12 +950,12 @@ end_of_prev_full_month <- function(date) {
 #' 
 #' @export
 get_range_prev_full_month <- function(date = Sys.Date()) {
-  eom = end_of_prev_full_month(date)
+  eom <- end_of_prev_full_month(date)
   
   if (eom == date) {
-    som = start_of_prev_full_month(date + months(1))
+    som <- start_of_prev_full_month(date + months(1))
   } else {
-    som = start_of_prev_full_month(date)
+    som <- start_of_prev_full_month(date)
   }
   
   return(list(som, eom))
@@ -1015,12 +1005,12 @@ end_of_prev_full_week <- function(date) {
 #' 
 #' @export
 get_range_prev_full_week <- function(date = Sys.Date()) {
-  eow = end_of_prev_full_week(date)
+  eow <- end_of_prev_full_week(date)
   
   if (eow == date) {
-    sow = start_of_prev_full_week(date + weeks(1))
+    sow <- start_of_prev_full_week(date + weeks(1))
   } else {
-    sow = start_of_prev_full_week(date)
+    sow <- start_of_prev_full_week(date)
   }
   
   return(list(sow, eow))

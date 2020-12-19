@@ -6,22 +6,20 @@ import pytest
 import pandas as pd
 import numpy as np
 
-from delphi_hhs_facilities.pull import pull_data
+from delphi_hhs_facilities.pull import _pull_data_iteratively, pull_data
 
 
 class TestPull:
 
     @patch("delphi_hhs_facilities.pull.Epidata.covid_hosp_facility")
     @patch("delphi_hhs_facilities.pull.Epidata.covid_hosp_facility_lookup")
-    def test_pull(self, covid_hosp_facility_lookup, covid_hosp_facility):
+    def test__pull_data_iteratively(self, covid_hosp_facility_lookup, covid_hosp_facility):
         covid_hosp_facility_lookup.return_value = {
             "result": 1,
             "epidata": [{"hospital_pk": "020001"}, {"hospital_pk": "020006"}],
             "message": "success"
         }
-        covid_hosp_facility.return_value = {
-            "result": 1,
-            "epidata": [{"collection_week": 20201204,
+        mock_epidata = [{"collection_week": 20201204,
                          "total_beds_7_day_sum": 2360,
                          "all_adult_hospital_beds_7_day_sum": -999999,
                          "inpatient_beds_7_day_avg": -999999.0,
@@ -32,34 +30,42 @@ class TestPull:
                          "all_adult_hospital_beds_7_day_sum": 1917,
                          "inpatient_beds_7_day_avg": 330.6,
                          "total_icu_beds_7_day_avg": 76.7,
-                         "total_staffed_adult_icu_beds_7_day_avg": 12.1}],
+                         "total_staffed_adult_icu_beds_7_day_avg": 12.1}]
+        covid_hosp_facility.return_value = {
+            "result": 1,
+            "epidata": mock_epidata,
             "message": "success"}
-        output = pull_data()
-        assert output.shape == (120, 7)  # 2 mock rows * 60 states, 6 mock + 1 new timestamp column
-        # verify nans cast properly
-        assert np.isnan(output["all_adult_hospital_beds_7_day_sum"][0])
-        assert np.isnan(output["inpatient_beds_7_day_avg"][0])
-        assert np.isnan(output["total_icu_beds_7_day_avg"][0])
-        pd.testing.assert_series_equal(output.timestamp, 
-                                       pd.Series([pd.Timestamp("2020-12-04")]*120),
-                                       check_names=False)
-        pd.testing.assert_series_equal(output.loc[0],
-                                       pd.Series({"collection_week": 20201204,
-                                                  "total_beds_7_day_sum": 2360,
-                                                  "all_adult_hospital_beds_7_day_sum": np.nan,
-                                                  "inpatient_beds_7_day_avg": np.nan,
-                                                  "total_icu_beds_7_day_avg": np.nan,
-                                                  "total_staffed_adult_icu_beds_7_day_avg": 32.4,
-                                                  "timestamp": pd.Timestamp("2020-12-04")}), 
-                                       check_names=False)
+        output = _pull_data_iteratively({"state1", "state2"}, {"from": "test", "to": "date"})
+        assert output == mock_epidata * 2  # x2 because there were 2 states that were looped through
 
         # test failure cases
         covid_hosp_facility.return_value = {"result": 2, "message": "data fail"}
         with pytest.raises(Exception) as exc:
-            pull_data()
+            _pull_data_iteratively({"state1", "state2"}, {"from": "test", "to": "date"})
             assert "data fail" in exc
-
         covid_hosp_facility_lookup.return_value = {"result": 2, "message": "lookup fail"}
         with pytest.raises(Exception) as exc:
-            pull_data()
+            _pull_data_iteratively({"state1", "state2"}, {"from": "test", "to": "date"})
             assert "lookup fail" in exc
+
+    @patch("delphi_hhs_facilities.pull._pull_data_iteratively")
+    def test_pull_data(self, _pull_data_iteratively):
+        _pull_data_iteratively.return_value = [{"collection_week": 20201204,
+                                                "total_beds_7_day_sum": 2360,
+                                                "all_adult_hospital_beds_7_day_sum": -999999,
+                                                "inpatient_beds_7_day_avg": -999999.0,
+                                                "total_icu_beds_7_day_avg": np.nan,
+                                                "total_staffed_adult_icu_beds_7_day_avg": 32.4}]
+        output = pull_data()
+        assert output.shape == (1, 7)  # 1 mock row, 6 mock + 1 new timestamp column
+        # verify nans cast properly and timestamp added
+        pd.testing.assert_frame_equal(
+            output,
+            pd.DataFrame({"collection_week": [20201204],
+                          "total_beds_7_day_sum": [2360],
+                          "all_adult_hospital_beds_7_day_sum": [np.nan],
+                          "inpatient_beds_7_day_avg": [np.nan],
+                          "total_icu_beds_7_day_avg": [np.nan],
+                          "total_staffed_adult_icu_beds_7_day_avg": [32.4],
+                          "timestamp": [pd.Timestamp("2020-12-04")]}),
+            check_names=False)

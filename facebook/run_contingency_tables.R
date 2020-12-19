@@ -19,7 +19,7 @@ library(delphiFacebook)
 aggs <- tribble(
   ~name, ~var_weight, ~metric, ~group_by, ~skip_mixing, ~compute_fn, ~post_fn,
   "reasons_tested_14d_pct", "weight", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), FALSE, compute_pct, jeffreys_binary,
-  "tested_pos_14d_pct", "weight", "b_tested_pos_14d", c("national", "mc_age", "b_tested_14d"), FALSE, compute_pct, jeffreys_binary,
+  "tested_pos_14d_pct", "weight", "b_tested_pos_14d", c("nation", "mc_age", "b_tested_14d"), FALSE, compute_pct, jeffreys_binary,
   "hh_members_mean", "weight", "n_hh_num_total", c("state"), FALSE, compute_mean, jeffreys_count,
 
   "tested_pos_14d_pct_by_demos", "weight", "b_tested_pos_14d", c("state", "mc_age", "mc_race"), FALSE, compute_pct, jeffreys_binary,

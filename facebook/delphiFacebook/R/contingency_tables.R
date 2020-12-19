@@ -112,6 +112,7 @@ run_contingency_tables <- function(params, aggregations)
   
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
   data_agg <- join_weights(data_agg, params, weights = "full")
+  browser()
   msg_df("response data to aggregate", data_agg)
   
   ## Set default number of cores for mclapply to the total available number,
@@ -279,6 +280,11 @@ make_human_readable <- function(input_data) {
   input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
   input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
   
+  # Map responses with multiple race options selected into a single category.
+  input_data[grepl(",", input_data$mc_race), "mc_race"] <- "multiracial"
+  
+  # This column has "yes", "no", and "I don't know". Handle following existing
+  # approach in variables.R::code_testing().
   if ("b_tested_pos_ever" %in% names(input_data)) {
     # Convert to binary, excluding "I don't know". yes == 1
     # no == 2; "I don't know" == 3
@@ -297,6 +303,15 @@ make_human_readable <- function(input_data) {
 #' Checks user-set aggregations for basic validity
 #'
 #' @param params Named list of configuration parameters.
+#' @param aggs Data frame with columns `name`, `var_weight`, `metric`,
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
 #' 
 #' @return a data frame of desired aggregations to calculate
 #'
@@ -444,6 +459,9 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     geo_level <- agg_groups$geo_level[group_ind]
     geo_crosswalk <- cw_list[[geo_level]]
     
+    # Subset aggregations to keep only those grouping by the current agg_group
+    # and with the current geo_level. `setequal` ignores differences in 
+    # ordering and only looks at unique elements.
     these_aggs <- aggregations[mapply(aggregations$group_by,
                                      FUN=function(x) {setequal(x, agg_group)
                                      }) & aggregations$geo_level == geo_level, ]
@@ -496,7 +514,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     if (length(geo_level) > 1) {
       stop('more than one geo type provided for a single aggregation')
     } else if (length(geo_level) == 0) {
-      geo_level <- "national"
+      geo_level <- "nation"
       aggregations$group_by[agg_ind][[1]] <- 
         sort(append(aggregations$group_by[agg_ind][[1]], "geo_id"))
     } else {
@@ -1030,10 +1048,10 @@ get_range_prev_full_week <- function(date = Sys.Date()) {
 #' 
 #' @export
 get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag) {
-  if (weekly_or_monthly_flag == "monthly") {
+  if (weekly_or_monthly_flag == "month") {
     # Get start and end of previous full month.
     date_period_range = get_range_prev_full_month(date)
-  } else if (weekly_or_monthly_flag == "weekly") {
+  } else if (weekly_or_monthly_flag == "epiweek") {
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(date)
   }

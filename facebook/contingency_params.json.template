@@ -13,7 +13,7 @@
   "input": [
     "full_synthetic.csv"
   ],
-  "aggregate_range": "weekly",
+  "aggregate_range": "month",
   "debug": false,
   "parallel": true
 }

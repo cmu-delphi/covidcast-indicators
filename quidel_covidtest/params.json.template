@@ -10,6 +10,11 @@
   "account": "delphi-datadrop@andrew.cmu.edu",
   "password": "",
   "sender": "",
+  "aws_credentials": {
+    "aws_access_key_id": "",
+    "aws_secret_access_key": ""
+  },
+  "bucket_name": "",
   "wip_signal": [""],
   "mode": ""
 }

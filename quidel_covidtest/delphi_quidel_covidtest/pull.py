@@ -3,17 +3,19 @@
 Uses this handy package: https://pypi.org/project/imap-tools/
 """
 import io
+from io import BytesIO
 from os.path import join
 import os
 from datetime import datetime, timedelta
 
 import pandas as pd
 import numpy as np
+from boto3.session import Session
 
 from imap_tools import MailBox, A, AND
 
-def get_from_email(start_date, end_date, mail_server,
-                   account, sender, password):
+def get_from_s3(start_date, end_date, mail_server, account, sender,
+                   password, aws_credentials, bucket_name):
     """
     Get raw data from email account
     Args:
@@ -30,29 +32,73 @@ def get_from_email(start_date, end_date, mail_server,
             password of the datadrop email
     output:
         df: pd.DataFrame
-    """
-    time_flag = None
+    """  
+    ACCESS_KEY = aws_credentials["aws_access_key_id"]
+    SECRET_KEY = aws_credentials["aws_secret_access_key"]
+    
+    session = Session(aws_access_key_id=ACCESS_KEY,
+                      aws_secret_access_key=SECRET_KEY)
+    s3 = session.resource('s3')
+    delphi_bucket = s3.Bucket(bucket_name)
+    
     df = pd.DataFrame(columns=['SofiaSerNum', 'TestDate', 'Facility', 'City',
-                               'State', 'Zip', 'PatientAge', 'Result1', 'Result2',
-                               'OverallResult', 'County', 'FacilityType', 'Assay',
-                               'SCO1', 'SCO2', 'CLN', 'CSN', 'InstrType',
-                               'StorageDate', 'ResultId', 'SarsTestNumber'])
-    with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
-        for search_date in [start_date + timedelta(days=x)
-                            for x in range((end_date - start_date).days + 1)]:
-            for message in mailbox.fetch(A(AND(date=search_date.date(), from_=sender))):
-                for att in message.attachments:
-                    name = att.filename
-                    # Only consider covid tests
-                    if "Sars" not in name:
-                        continue
-                    print("Pulling data received on %s"%search_date.date())
-                    toread = io.BytesIO()
-                    toread.write(att.payload)
-                    toread.seek(0)  # reset the pointer
-                    newdf = pd.read_excel(toread)  # now read to dataframe
-                    df = df.append(newdf)
-                    time_flag = search_date
+                               'State', 'Zip', 'PatientAge', 'Result1',
+                               'Result2', 'OverallResult', 'StorageDate',
+                               'fname'])
+    
+    time_flag = None
+    recorded_files = set([])
+    for s3_file in delphi_bucket.objects.all():
+        # Pull COVID data only
+        if "sars" not in s3_file.key:
+            continue
+        data_type, receive_date_string, fname = s3_file.key.split("/")
+        if fname in recorded_files:
+            continue
+        recorded_files.add(fname)
+        # Pull data received in a specific time range
+        yy, mm, dd, _, _ = receive_date_string.split("_")
+        pull_date = datetime(yy, mm, dd)
+        if pull_date < start_date or pull_date > end_date:
+            continue
+        
+        # time_flag is none, or if time_flag is earlier than the 
+        # current pull_date, use the current pull date
+        if not time_flag or time_flag < pull_date:
+            time_flag = pull_date
+        
+        try:   #Data received after 11-16-2020 is in csv format
+            newdf = pd.read_csv(s3_file.key, low_memory=False,
+                                parse_dates=["StorageDate", "TestDate"])
+        except:
+            newdf = pd.read_excel(s3_file.key)
+        df = df.append(newdf)
+        
+        
+    # time_flag = None
+    # df = pd.DataFrame(columns=['SofiaSerNum', 'TestDate', 'Facility', 'City',
+    #                            'State', 'Zip', 'PatientAge', 'Result1', 'Result2',
+    #                            'OverallResult', 'County', 'FacilityType', 'Assay',
+    #                            'SCO1', 'SCO2', 'CLN', 'CSN', 'InstrType',
+    #                            'StorageDate', 'ResultId', 'SarsTestNumber'])
+    
+    # with MailBox(mail_server).login(account, password, 'INBOX') as mailbox:
+    #     for search_date in [start_date + timedelta(days=x)
+    #                         for x in range((end_date - start_date).days + 1)]:
+    #         for message in mailbox.fetch(A(AND(date=search_date.date(), from_=sender))):
+    #             for att in message.attachments:
+    #                 name = att.filename
+    #                 # Only consider covid tests
+    #                 if "Sars" not in name:
+    #                     continue
+    #                 print("Pulling data received on %s"%search_date.date())
+    #                 toread = io.BytesIO()
+                    
+    #                 toread.write(att.payload)
+    #                 toread.seek(0)  # reset the pointer
+    #                 newdf = pd.read_excel(toread)  # now read to dataframe
+    #                 df = df.append(newdf)
+    #                 time_flag = search_date
     return df, time_flag
 
 def fix_zipcode(df):
@@ -98,7 +144,8 @@ def fix_date(df):
     return df
 
 def preprocess_new_data(start_date, end_date, mail_server, account,
-                        sender, password, test_mode):
+                        sender, password, aws_credentials,
+                        bucket_name, test_mode):
     """
     Pull and pre-process Quidel Covid Test data from datadrop email.
     Drop unnecessary columns. Temporarily consider the positive rate
@@ -129,8 +176,9 @@ def preprocess_new_data(start_date, end_date, mail_server, account,
         df, time_flag = pd.read_excel(test_data_dir), datetime(2020, 8, 17)
     else:
         # Get new data from email
-        df, time_flag = get_from_email(start_date, end_date, mail_server,
-                                       account, sender, password)
+        df, time_flag = get_from_s3(start_date, end_date, mail_server,
+                                       account, sender, password,
+                                       aws_credentials, bucket_name)
 
     # No new data can be pulled
     if time_flag is None:
@@ -213,6 +261,9 @@ def pull_quidel_covidtest(params):
     account = params["account"]
     password = params["password"]
     sender = params["sender"]
+    aws_credentials = params["aws_credentials"]
+    bucket_name = params["bucket_name"]
+    
 
     test_mode = (params["mode"] == "test")
 
@@ -230,7 +281,8 @@ def pull_quidel_covidtest(params):
     # Use _end_date to check the most recent date that we received data
     df, _end_date = preprocess_new_data(
             pull_start_date, pull_end_date, mail_server,
-            account, sender, password, test_mode)
+            account, sender, password, aws_credentials,
+            bucket_name, test_mode)
 
     # Utilize previously stored data
     if previous_df is not None:

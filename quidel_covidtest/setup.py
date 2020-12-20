@@ -10,7 +10,8 @@ required = [
     "delphi-utils",
     "imap-tools",
     "xlrd",
-    "covidcast"
+    "covidcast",
+    "boto3"
 ]
 
 setup(

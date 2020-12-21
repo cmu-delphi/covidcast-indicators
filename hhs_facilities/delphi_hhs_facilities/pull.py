@@ -5,9 +5,10 @@ from datetime import date
 import pandas as pd
 import numpy as np
 from delphi_utils.geomap import GeoMapper
-from delphi_epidata import Epidata
+#from delphi_epidata import Epidata
 
 from .constants import NAN_VALUES
+from .delphi_epidata import Epidata
 
 
 def _pull_data_iteratively(states: set, dates: dict) -> list:
@@ -31,14 +32,14 @@ def _pull_data_iteratively(states: set, dates: dict) -> list:
     responses = []
     for state in states:
         lookup_response = Epidata.covid_hosp_facility_lookup(state)
-        if lookup_response["result"] != 1:
-            raise Exception(f"Bad result from Epidata: {lookup_response['message']}")
-        state_hospital_ids = [i["hospital_pk"] for i in lookup_response["epidata"]]
-        for i in range(0, len(state_hospital_ids), 10):
-            response = Epidata.covid_hosp_facility(state_hospital_ids[i:i+10], dates)
-            if response["result"] != 1:
+        state_hospital_ids = [i["hospital_pk"] for i in lookup_response.get("epidata", [])]
+        for i in range(0, len(state_hospital_ids), 50):
+            response = Epidata.covid_hosp_facility(state_hospital_ids[i:i+50], dates)
+            if "too many results, data truncated" in response["message"]:
                 raise Exception(f"Bad result from Epidata: {response['message']}")
-            responses += response["epidata"]
+            responses += response.get("epidata", [])
+    if len(responses) == 0:
+        raise Exception("No results found.")
     return responses
 
 

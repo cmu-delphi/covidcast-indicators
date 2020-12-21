@@ -39,14 +39,15 @@ class TestPull:
         assert output == mock_epidata * 2  # x2 because there were 2 states that were looped through
 
         # test failure cases
-        covid_hosp_facility.return_value = {"result": 2, "message": "data fail"}
+        covid_hosp_facility.return_value = {"result": 2,
+                                            "message": "too many results, data truncated"}
         with pytest.raises(Exception) as exc:
             _pull_data_iteratively({"state1", "state2"}, {"from": "test", "to": "date"})
-            assert "data fail" in exc
+            assert "No results" in exc
         covid_hosp_facility_lookup.return_value = {"result": 2, "message": "lookup fail"}
         with pytest.raises(Exception) as exc:
             _pull_data_iteratively({"state1", "state2"}, {"from": "test", "to": "date"})
-            assert "lookup fail" in exc
+            assert "No results found" in exc
 
     @patch("delphi_hhs_facilities.pull._pull_data_iteratively")
     def test_pull_data(self, _pull_data_iteratively):

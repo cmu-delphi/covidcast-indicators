@@ -88,7 +88,7 @@ def run_module():
     ):
         print(metric, geo_res, sensor, smoother)
         logger.info(
-            event="processing data",
+            event="exporting to CSV",
             metric=metric,
             geo_res=geo_res,
             sensor=sensor,

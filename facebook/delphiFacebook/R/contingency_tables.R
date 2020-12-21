@@ -903,13 +903,13 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 #' @param signal_name    name of the signal; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange_at
+#' @importFrom dplyr arrange across
 #' 
 #' @export
 write_contingency_tables <- function(data, params, geo_level, groupby_vars)
 {
   if (!is.null(data) && nrow(data) != 0) {
-    data <- arrange_at(data, groupby_vars)
+    data <- arrange(data, across(groupby_vars))
   } else {
     msg_plain(sprintf(
       "no aggregations produced for grouping variables %s (%s); CSV will not be saved", 
@@ -918,6 +918,9 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     return()
   }
   
+  # Format reported columns.
+  data <- mutate_at(data, vars(-c(groupby_vars)), 
+                    function(x) formatC(x,digits=7,format="f",drop0trailing=TRUE))
   file_out <- file.path(
     params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
                                geo_level, paste(groupby_vars, collapse="_"))

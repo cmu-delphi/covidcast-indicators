@@ -1,8 +1,6 @@
 #### TODO
 # - set up to be able to aggregate multiple time periods in series? wrapper function that modifies params.json more likely
 # - map response codes to descriptive values? Would need mapping for every individual question
-# - when params$end_date is specified exactly (not "current"), should we just use that date
-# range instead of finding the most recent full week/month?
 # - Convert weeks to epiweeks
 
 
@@ -112,6 +110,11 @@ run_contingency_tables <- function(params, aggregations)
   data_agg <- create_data_for_aggregatation(input_data)
   
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
+  
+  if (nrow(data_agg) == 0) {
+    stop("no data available in the desired date range")
+  }
+  
   data_agg <- join_weights(data_agg, params, weights = "full")
   msg_df("response data to aggregate", data_agg)
   

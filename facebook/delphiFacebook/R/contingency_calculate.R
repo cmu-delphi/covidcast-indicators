@@ -16,6 +16,7 @@ compute_mean <- function(response, weight, sample_size)
   return(response_mean)
 }
 
+
 #' Wrapper for `compute_binary_response` that adds sample_size
 #'
 #' @param response a vector of binary (0 or 1) responses
@@ -36,7 +37,7 @@ compute_pct <- function(response, weight, sample_size)
   return(response_pct)
 }
 
-#### TODO: val should be weighted sample size (how many people in the population these obs represent)
+
 #' Returns multiple choice response estimates
 #'
 #' This function takes vectors as input and computes the response values

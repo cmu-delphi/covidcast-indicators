@@ -1,3 +1,8 @@
+#### TODO
+# - set up to be able to aggregate multiple time periods in series? wrapper function that modifies params.json more likely
+# - map response codes to descriptive values? Would need mapping for every individual question
+# - Convert weeks to epiweeks
+
 library(tibble)
 library(delphiFacebook)
 

@@ -3,7 +3,6 @@
 # - map response codes to descriptive values? Would need mapping for every individual question
 # - when params$end_date is specified exactly (not "current"), should we just use that date
 # range instead of finding the most recent full week/month?
-# - Several multiple choice questions that are actually binary + I don't know. Map to binary using generic function.
 # - Convert weeks to epiweeks
 
 
@@ -216,6 +215,13 @@ make_human_readable <- function(input_data) {
     "b_have_ili" = "is_ili", # Based on symptoms in A1
     "b_cmnty_have_cli" = "community_yes",
     "b_hh_or_cmnty_have_cli" = "hh_community_yes",
+    "b_flu_shot_jun2020" = "C17", # binary with "I don't know" option
+    "b_children_grade_pre-k" = "E1_1", # binary with "I don't know" option
+    "b_children_grade_1-5" = "E1_2", # binary with "I don't know" option
+    "b_children_grade_6-8" = "E1_3", # binary with "I don't know" option
+    "b_children_grade_9-12" = "E1_4", # binary with "I don't know" option
+    "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
+    "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     
     ## multiple choice (mc)
     # Can only select one of n > 2 choices
@@ -253,14 +259,7 @@ make_human_readable <- function(input_data) {
     "mc_social_avoidance" = "C7",
     "mc_financial_threat" = "Q36",
     "mc_cmnty_mask_prevalence" = "C16",
-    "mc_flu_shot_jun2020" = "C17", # binary with "I don't know" option
-    "mc_children_grade_pre-k" = "E1_1", # binary with "I don't know" option
-    "mc_children_grade_1-5" = "E1_2", # binary with "I don't know" option
-    "mc_children_grade_6-8" = "E1_3", # binary with "I don't know" option
-    "mc_children_grade_9-12" = "E1_4", # binary with "I don't know" option
-    "mc_children_fulltime_school" = "E2_1", # binary with "I don't know" option
-    "mc_children_parttime_school" = "E2_2", # binary with "I don't know" option
-    "mc_pregnant" = "D1b",
+    "mc_pregnant" = "D1b", # Somewhat of a binary response (yes, no, prefer not to answer, and not applicable)
     
     ## multiselect (ms)
     # Can select more than one choice; saved as comma-separated list of choice codes
@@ -288,21 +287,56 @@ make_human_readable <- function(input_data) {
   # Map responses with multiple race options selected into a single category.
   input_data[grepl(",", input_data$mc_race), "mc_race"] <- "multiracial"
   
-  # This column has "yes", "no", and "I don't know". Handle following existing
-  # approach in variables.R::code_testing().
-  if ("b_tested_pos_ever" %in% names(input_data)) {
-    # Convert to binary, excluding "I don't know". yes == 1
-    # no == 2; "I don't know" == 3
-    input_data$b_tested_pos_ever <- case_when(
-      input_data$b_tested_pos_ever == 1 ~ 1, # yes
-      input_data$b_tested_pos_ever == 2 ~ 0, # no
-      input_data$b_tested_pos_ever == 3 ~ NA_real_, # I don't know
+  # Map "I don't know" to NA in otherwise binary columns.
+  input_data <- convert_3_binary_to_bool(input_data, "b_tested_pos_ever")
+  input_data <- convert_3_binary_to_bool(input_data, "b_flu_shot_jun2020", 1, 4, 2)
+  
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_grade_pre-k", 1, 2, 5)
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_grade_1-5", 1, 2, 5)
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_grade_6-8", 1, 2, 5)
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_grade_9-12", 1, 2, 5)
+  
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_fulltime_school", 2, 3, 4)
+  input_data <- convert_3_binary_to_bool(input_data, "b_children_parttime_school", 2, 3, 4)
+  
+  return(input_data)
+}
+
+
+
+#' Convert a single binary response + "I don't know" column to boolean
+#' 
+#' "I don't know" is set to NA (missing) and excluded.
+#' 
+#' @param df Data frame of individual response data.
+#' @param col_var Name of response var
+#' @param yes_val Response code corresponding to answering "yes"
+#' @param no_val Response code corresponding to answering "yes"
+#' @param idk_val Response code corresponding to answering "I don't know"
+#'
+#' @return list of data frame of individual response data with newly mapped column
+#'
+#' @export
+convert_3_binary_to_bool <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
+  if (FALSE %in% df[[col_var]]) {
+    # Already in boolean format.
+    return(df)
+  }
+  
+  # Map values following existing approach in variables.R::code_testing().
+  if (col_var %in% names(df)) {
+    # Convert to binary, excluding "I don't know".
+    df[[col_var]] <- case_when(
+      df[[col_var]] == yes_val ~ 1, # yes
+      df[[col_var]] == no_val ~ 0, # no
+      df[[col_var]] == idk_val ~ NA_real_, # I don't know
       TRUE ~ NA_real_
     )
   }
   
-  return(input_data)
+  return(df)
 }
+
 
 
 #' Checks user-set aggregations for basic validity
@@ -557,12 +591,12 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
     
     if (startsWith(col_var, "b_")) { # Binary
-      output <- convert_binary_qcodes_to_bool(df, aggregations, col_var)
+      output <- convert_binary_to_bool(df, aggregations, col_var)
       df <- output[[1]]
       aggregations <- output[[2]]
       
     } else if (startsWith(col_var, "ms_")) { # Multiselect
-      output <- convert_multiselect_to_binary_cols(df, aggregations, col_var)
+      output <- convert_multiselect_to_bools(df, aggregations, col_var)
       df <- output[[1]]
       aggregations <- output[[2]]
       
@@ -575,7 +609,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   
   return(list(df, aggregations))
 }
-
 
 
 #' Convert a single binary response column to boolean
@@ -596,8 +629,8 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' frame of desired aggregations
 #'
 #' @export
-convert_binary_qcodes_to_bool <- function(df, aggregations, col_var) {
-  if (FALSE %in% df[[col_var]] || TRUE %in% df[[col_var]]) {
+convert_binary_to_bool <- function(df, aggregations, col_var) {
+  if (FALSE %in% df[[col_var]]) {
     # Already in boolean format.
     return(list(df, aggregations))
   }
@@ -625,7 +658,7 @@ convert_binary_qcodes_to_bool <- function(df, aggregations, col_var) {
 #' frame of desired aggregations
 #'
 #' @export
-convert_multiselect_to_binary_cols <- function(df, aggregations, col_var) {
+convert_multiselect_to_bools <- function(df, aggregations, col_var) {
   # Get unique response codes
   response_codes <- sort(na.omit(
     unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))

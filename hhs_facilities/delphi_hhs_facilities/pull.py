@@ -5,10 +5,9 @@ from datetime import date
 import pandas as pd
 import numpy as np
 from delphi_utils.geomap import GeoMapper
-#from delphi_epidata import Epidata
+from delphi_epidata import Epidata
 
 from .constants import NAN_VALUES
-from .delphi_epidata import Epidata
 
 
 def _pull_data_iteratively(states: set, dates: dict) -> list:

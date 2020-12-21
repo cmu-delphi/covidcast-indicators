@@ -3,6 +3,8 @@
 # - map response codes to descriptive values? Would need mapping for every individual question
 # - when params$end_date is specified exactly (not "current"), should we just use that date
 # range instead of finding the most recent full week/month?
+# - Several multiple choice questions that are actually binary + I don't know. Map to binary using generic function.
+# - Convert weeks to epiweeks
 
 
 #' Update date and input files settings from params file
@@ -112,7 +114,6 @@ run_contingency_tables <- function(params, aggregations)
   
   data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
   data_agg <- join_weights(data_agg, params, weights = "full")
-  browser()
   msg_df("response data to aggregate", data_agg)
   
   ## Set default number of cores for mclapply to the total available number,
@@ -158,7 +159,7 @@ run_contingency_tables <- function(params, aggregations)
 make_human_readable <- function(input_data) {
   # Named list of question numbers and str replacement names
   # These columns are not available for aggregation:
-  #   "t_zipcode" = "A3", (Please use `zip5` instead)
+  #   "t_zipcode" = "A3", -> Please use `zip5` instead
   #   "t_symptoms_other" = "B2_14_TEXT",
   #   "t_unusual_symptoms_other" = "B2c_14_TEXT",
   #   "t_gender_other" = "D1_4_TEXT",
@@ -252,9 +253,13 @@ make_human_readable <- function(input_data) {
     "mc_social_avoidance" = "C7",
     "mc_financial_threat" = "Q36",
     "mc_cmnty_mask_prevalence" = "C16",
-    "mc_flu_shot_jun2020" = "C17",
-    "mc_children_grade" = "E1",
-    "mc_children_school" = "E2",
+    "mc_flu_shot_jun2020" = "C17", # binary with "I don't know" option
+    "mc_children_grade_pre-k" = "E1_1", # binary with "I don't know" option
+    "mc_children_grade_1-5" = "E1_2", # binary with "I don't know" option
+    "mc_children_grade_6-8" = "E1_3", # binary with "I don't know" option
+    "mc_children_grade_9-12" = "E1_4", # binary with "I don't know" option
+    "mc_children_fulltime_school" = "E2_1", # binary with "I don't know" option
+    "mc_children_parttime_school" = "E2_2", # binary with "I don't know" option
     "mc_pregnant" = "D1b",
     
     ## multiselect (ms)

@@ -58,7 +58,6 @@ join_weights <- function(data, params, weights = c("step1", "full"))
     pattern <- "finish_full_survey_weights.csv$"
   }
 
-  browser()
   weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
   weights_files <- sort(weights_files)
   agg_weights <- bind_rows(lapply(weights_files, read_csv, col_types = "cd"))

@@ -63,8 +63,9 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
     
-    # If want to additionally keep "se" and "effective_sample_size", add here.
-    keep_vars <- c("val", "sample_size")
+    # If want to display other response columns ("val", "sample_size", "se", 
+    # "effective_sample_size"), add here.
+    keep_vars <- c("val", "sample_size", "effective_sample_size")
     
     for (agg_metric in names(dfs_out)) {
       map_old_new_names <- keep_vars

@@ -7,8 +7,9 @@
 #' choice (where only a single response can be selected); and with "ms_" are
 #' so-called multi-select, where multiple responses can be selected.
 #' 
-#' Only binary columns are mapped from response codes to real values. Multiple
-#' choice and multi-select questions use the original numeric response codes.
+#' Only binary responses with a third "I don't know" option are mapped from 
+#' response codes to interpretable values. Multiple choice, multi-select, and
+#' pure binary (yes/no) questions use the original numeric response codes.
 #'
 #' @param input_data    Data frame of individual response data
 #' 
@@ -18,6 +19,19 @@
 #' 
 #' @export
 make_human_readable <- function(input_data) {
+  input_data <- reformat_responses(input_data)
+  input_data <- rename_responses(input_data)
+  input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
+  
+  return(input_data)
+}
+
+#' Rename all columns to make more interpretable
+#' 
+#' @param df Data frame of individual response data.
+#' 
+#' @return data frame of individual response data with newly mapped columns
+rename_responses <- function(df) {
   # Named list of question numbers and str replacement names
   # These columns are not available for aggregation:
   #   "t_zipcode" = "A3", -> Please use `zip5` instead
@@ -140,27 +154,34 @@ make_human_readable <- function(input_data) {
     "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
   )
   
-  map_old_new_names <- map_old_new_names[!(names(map_old_new_names) %in% names(input_data))]
+  map_old_new_names <- map_old_new_names[!(names(map_old_new_names) %in% names(df))]
+  df <- rename(df, map_old_new_names[map_old_new_names %in% names(df)])
   
-  input_data <- rename(input_data, map_old_new_names[map_old_new_names %in% names(input_data)])
-  input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
-  
+  return(df)
+}
+
+#' Remap race and binary columns to make more interpretable
+#' 
+#' @param df Data frame of individual response data.
+#' 
+#' @return data frame of individual response data with newly mapped columns
+reformat_responses <- function(df) {
   # Map responses with multiple race options selected into a single category.
-  input_data[grepl(",", input_data$mc_race), "mc_race"] <- "multiracial"
+  df[grepl(",", df$D7), "D7"] <- "multiracial"
   
   # Map "I don't know" to NA in otherwise binary columns.
-  input_data <- code_binary_with_idk(input_data, "b_tested_pos_ever")
-  input_data <- code_binary_with_idk(input_data, "b_flu_shot_jun2020", 1, 4, 2)
+  df <- code_binary_with_idk(df, "B11")
+  df <- code_binary_with_idk(df, "C17", 1, 4, 2)
   
-  input_data <- code_binary_with_idk(input_data, "b_children_grade_pre-k", 1, 2, 5)
-  input_data <- code_binary_with_idk(input_data, "b_children_grade_1-5", 1, 2, 5)
-  input_data <- code_binary_with_idk(input_data, "b_children_grade_6-8", 1, 2, 5)
-  input_data <- code_binary_with_idk(input_data, "b_children_grade_9-12", 1, 2, 5)
+  df <- code_binary_with_idk(df, "E1_1", 1, 2, 5)
+  df <- code_binary_with_idk(df, "E1_2", 1, 2, 5)
+  df <- code_binary_with_idk(df, "E1_3", 1, 2, 5)
+  df <- code_binary_with_idk(df, "E1_4", 1, 2, 5)
   
-  input_data <- code_binary_with_idk(input_data, "b_children_fulltime_school", 2, 3, 4)
-  input_data <- code_binary_with_idk(input_data, "b_children_parttime_school", 2, 3, 4)
+  df <- code_binary_with_idk(df, "E2_1", 2, 3, 4)
+  df <- code_binary_with_idk(df, "E2_2", 2, 3, 4)
   
-  return(input_data)
+  return(df)
 }
 
 #' Convert a single binary response + "I don't know" column to boolean
@@ -174,8 +195,6 @@ make_human_readable <- function(input_data) {
 #' @param idk_val Response code corresponding to answering "I don't know"
 #'
 #' @return list of data frame of individual response data with newly mapped column
-#'
-#' @export
 code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
   if (FALSE %in% df[[col_var]]) {
     # Already in boolean format.

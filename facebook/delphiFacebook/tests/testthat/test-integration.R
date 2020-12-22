@@ -10,7 +10,7 @@ library(testthat)
 
 context("Testing the run_facebook function")
 
-geo_levels <- c("state", "county", "hrr", "msa", "national")
+geo_levels <- c("state", "county", "hrr", "msa", "nation")
 dates <- c("20200510", "20200511", "20200512", "20200513")
 metrics <- c("raw_cli", "raw_ili", "raw_hh_cmnty_cli", "raw_nohh_cmnty_cli",
              "raw_wcli", "raw_wili", "raw_whh_cmnty_cli", "raw_wnohh_cmnty_cli",
@@ -63,16 +63,16 @@ test_that("testing geo files contain correct number of lines", {
 
   expect_true(all(dt_nrow[grid$dates == "20200510"] == 1L))
   expect_true(all(dt_nrow[grid$dates == "20200511"] == 1L))
-  expect_true(all(dt_nrow[grid$dates == "20200512" & grid$geo_levels != "national"] == 2L))
+  expect_true(all(dt_nrow[grid$dates == "20200512" & grid$geo_levels != "nation"] == 2L))
   expect_true(all(
     dt_nrow[grid$dates == "20200513" & stri_detect(fnames, fixed = "raw")] == 1L
   ))
   expect_true(all(
     dt_nrow[grid$dates == "20200513" &
             stri_detect(fnames, fixed = "smoothed") &
-            grid$geo_levels != "national"] == 2L
+            grid$geo_levels != "nation"] == 2L
   ))
-  expect_true(all(dt_nrow[grid$geo_levels == "national"] == 1L))
+  expect_true(all(dt_nrow[grid$geo_levels == "nation"] == 1L))
 })
 
 test_that("testing raw community values files", {
@@ -363,7 +363,7 @@ test_that("testing national aggregation", {
     stringsAsFactors=FALSE
   )
   f_state <- sprintf("%s_%s_%s.csv", grid$dates, "state", grid$metrics)
-  f_national <- sprintf("%s_%s_%s.csv", grid$dates, "national", grid$metrics)
+  f_national <- sprintf("%s_%s_%s.csv", grid$dates, "nation", grid$metrics)
 
   for(i in seq_along(f_state))
   {

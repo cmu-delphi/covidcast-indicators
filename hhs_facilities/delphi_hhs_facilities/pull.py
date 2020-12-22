@@ -10,7 +10,7 @@ from delphi_epidata import Epidata
 from .constants import NAN_VALUES
 
 
-def _pull_data_iteratively(states: set, dates: dict) -> list:
+def pull_data_iteratively(states: set, dates: dict) -> list:
     """
     Pull Epidata API for a set of states and dates.
 
@@ -53,7 +53,7 @@ def pull_data() -> pd.DataFrame:
     today = int(date.today().strftime("%Y%m%d"))
     past_reference_day = int(date(2020, 1, 1).strftime("%Y%m%d"))  # first available date in DB
     all_states = GeoMapper().get_geo_values("state_id")
-    responses = _pull_data_iteratively(all_states, Epidata.range(past_reference_day, today))
+    responses = pull_data_iteratively(all_states, Epidata.range(past_reference_day, today))
     all_columns = pd.DataFrame(responses).replace(NAN_VALUES, np.nan)
     all_columns["timestamp"] = pd.to_datetime(all_columns["collection_week"], format="%Y%m%d")
     return all_columns

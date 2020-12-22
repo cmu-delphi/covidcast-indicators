@@ -7,7 +7,7 @@
 end_of_prev_full_month(date)
 }
 \arguments{
-\item{date}{Date that output will be calculated relative to}
+\item{date}{Date of interest}
 }
 \value{
 Date

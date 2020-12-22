@@ -7,7 +7,7 @@
 get_range_prev_full_month(date = Sys.Date())
 }
 \arguments{
-\item{date}{Date that output will be calculated relative to}
+\item{date}{Date of interest}
 }
 \value{
 list of two Dates

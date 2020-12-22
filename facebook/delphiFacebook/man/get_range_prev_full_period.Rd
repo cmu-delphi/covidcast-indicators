@@ -7,9 +7,9 @@
 get_range_prev_full_period(date = Sys.Date(), weekly_or_monthly_flag)
 }
 \arguments{
-\item{date}{Date that output will be calculated relative to}
+\item{date}{Date of interest}
 
-\item{weekly_or_monthly_flag}{string "weekly" or "monthly" indicating desired
+\item{weekly_or_monthly_flag}{string "week" or "month" indicating desired
 time period to aggregate over}
 }
 \value{

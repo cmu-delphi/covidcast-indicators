@@ -2,16 +2,16 @@
 % Please edit documentation in R/dates.R
 \name{start_of_prev_full_week}
 \alias{start_of_prev_full_week}
-\title{Get the date of the first day of the previous week}
+\title{Get the date of the first day of the previous epiweek}
 \usage{
 start_of_prev_full_week(date)
 }
 \arguments{
-\item{date}{Date that output will be calculated relative to}
+\item{date}{Date of interest}
 }
 \value{
 Date
 }
 \description{
-Get the date of the first day of the previous week
+Get the date of the first day of the previous epiweek
 }

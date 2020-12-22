@@ -1,7 +1,12 @@
 #### TODO
-# - set up to be able to aggregate multiple time periods in series? wrapper function that modifies params.json more likely
-# - map response codes to descriptive values? Would need mapping for every individual question
-# - Convert weeks to epiweeks
+# - set up to be able to aggregate multiple time periods in series?
+#   wrapper function that modifies params.json more likely. Or something like, if
+#   want to span multiple time periods, date window is added as a grouping var
+# - map response codes to descriptive values? Would need mapping for every
+#   individual question 
+# - How to calculate effective
+#   sample size/count respondents per response? Sum of original weights? But
+#   count.R::line 44 does something completely different
 
 library(tibble)
 library(delphiFacebook)

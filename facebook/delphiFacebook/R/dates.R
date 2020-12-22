@@ -1,6 +1,6 @@
 #' Get the date of the first day of the previous month
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return Date
 #' 
@@ -13,7 +13,7 @@ start_of_prev_full_month <- function(date) {
 
 #' Get the date of the last day of the previous month
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return Date
 #' 
@@ -28,10 +28,9 @@ end_of_prev_full_month <- function(date) {
   return(floor_date(date, "month") - days(1))
 }
 
-
 #' Get the date range specifying the previous month
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return list of two Dates
 #' 
@@ -48,10 +47,9 @@ get_range_prev_full_month <- function(date = Sys.Date()) {
   return(list(som, eom))
 }
 
-
-#' Get the date of the first day of the previous week
+#' Get the date of the first day of the previous epiweek
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return Date
 #' 
@@ -59,13 +57,12 @@ get_range_prev_full_month <- function(date = Sys.Date()) {
 #' 
 #' @export
 start_of_prev_full_week <- function(date) {
-  return(floor_date(date, "week") - weeks(1))
+  return(floor_epiweek(date, "week") - weeks(1))
 }
 
-
-#' Get the date of the last day of the previous week
+#' Get the date of the last day of the previous epiweek
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return Date
 #' 
@@ -73,18 +70,16 @@ start_of_prev_full_week <- function(date) {
 #' 
 #' @export
 end_of_prev_full_week <- function(date) {
-  if (ceiling_date(date, "week") == date) {
+  if (ceiling_epiweek(date, "week") == date) {
     return(date)
   }
   
-  return(floor_date(date, "week") - days(1))
+  return(floor_epiweek(date, "week") - days(1))
 }
 
-
-#### TODO: should be epiweeks eventually. Already exists a package to calculate?
 #' Get the date range specifying the previous week
 #'
-#' @param date Date that output will be calculated relative to
+#' @param date Date of interest
 #' 
 #' @return list of two Dates
 #' 
@@ -103,11 +98,10 @@ get_range_prev_full_week <- function(date = Sys.Date()) {
   return(list(sow, eow))
 }
 
-
 #' Get the date range specifying the previous full time period
 #'
-#' @param date Date that output will be calculated relative to
-#' @param weekly_or_monthly_flag string "weekly" or "monthly" indicating desired
+#' @param date Date of interest
+#' @param weekly_or_monthly_flag string "week" or "month" indicating desired
 #' time period to aggregate over
 #' 
 #' @return list of two Dates
@@ -119,7 +113,7 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   if (weekly_or_monthly_flag == "month") {
     # Get start and end of previous full month.
     date_period_range = get_range_prev_full_month(date)
-  } else if (weekly_or_monthly_flag == "epiweek") {
+  } else if (weekly_or_monthly_flag == "week") {
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(date)
   }
@@ -132,4 +126,40 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   )
   
   return(date_period_range)
+}
+
+#' epiweek equivalent of `week<-` as shown [here](https://lubridate.tidyverse.org/reference/week.html#examples)
+#' 
+#' @importFrom lubridate epiweek days
+#' 
+#' @export
+"epiweek<-" <- function(x, value)
+  x <- x + days((value - epiweek(x)) * 7)
+
+#' Get date of the first day of the epiweek `x` falls in
+#' 
+#' @param x date
+#' 
+#' @return date
+#' 
+#' @importFrom lubridate epiweek
+#' 
+#' @export
+floor_epiweek <- function(x) {
+  epiweek(floor_x) <- epiweek(x)
+  return(floor_x)
+}
+
+#' Get date of the last day of the epiweek `x` falls in
+#' 
+#' @param x date
+#' 
+#' @return date
+#' 
+#' @importFrom lubridate epiweek days weeks
+#' 
+#' @export
+ceiling_epiweek <- function(x) {
+  epiweek(floor_next_week) <- epiweek(x + weeks(1))
+  return(floor_next_week - days(1))
 }

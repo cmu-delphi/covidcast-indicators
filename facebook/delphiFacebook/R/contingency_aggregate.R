@@ -1,3 +1,5 @@
+## Functions for performing the aggregations in an efficient way.
+
 #' Produce aggregates for all desired aggregations.
 #'
 #' Writes the outputs directly to CSVs in the directory specified by `params`.
@@ -135,7 +137,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   
   # Convert most columns being used in aggregations to the appropriate format.
   # Multiple choice and multi-select used for grouping are left as-is.
-  #### TODO: should multi-select response be converted into set of binary cols if being used for grouping?
+  #### TODO: should multi-select response be converted into set of binary cols if being used for grouping? Yeah, probably
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
   group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
@@ -194,7 +196,8 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
-#' @param geo_level the aggregation level, such as county or state, being used
+#' @param geo_level a string of the current geo level, such as county or state, 
+#'   being used
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
 #'
@@ -294,6 +297,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #' @param aggregations Aggregations to report. See `aggregate_aggs()`.
 #' @param target_group A `data.table` with one row specifying the grouping
 #'   variable values used to select this group.
+#' @param geo_level a string of the current geo level, such as county or state, 
+#'   being used
 #' @param params Named list of configuration options.
 #' 
 #' @importFrom tibble add_column

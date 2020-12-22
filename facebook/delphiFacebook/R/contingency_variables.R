@@ -1,3 +1,5 @@
+## Functions handling renaming, reformatting, or recoding response columns.
+
 #' Rename question codes to informative descriptions
 #'
 #' Column names beginning with "b_" are binary (T/F/NA); with "t_" are user-
@@ -40,7 +42,6 @@ make_human_readable <- function(input_data) {
     "n_hh_num_children_old" = "D3", # Wave 1, etc versions of A5
     "n_hh_num_adults_not_self" = "D4",
     "n_hh_num_seniors_not_self" = "D5",
-    
     
     ## binary response (b)
     # False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
@@ -195,7 +196,6 @@ code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
   return(df)
 }
 
-
 #' Convert a single binary response column to boolean
 #' 
 #' @param df Data frame of individual response data.
@@ -223,7 +223,6 @@ code_binary <- function(df, aggregations, col_var) {
   df[[col_var]] <- (df[[col_var]] == 1L)
   return(list(df, aggregations))
 }
-
 
 #' Convert a single multi-select response column to a set of boolean columns
 #' 
@@ -279,8 +278,6 @@ code_multiselect <- function(df, aggregations, col_var) {
   
   return(list(df, aggregations[aggregations$metric != col_var, ]))
 }
-
-
 
 #' Convert a single free response column to numeric
 #' 

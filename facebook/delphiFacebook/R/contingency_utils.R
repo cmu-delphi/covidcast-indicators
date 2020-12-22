@@ -35,7 +35,6 @@ update_params <- function(params) {
   return(params)
 }
 
-
 #' Get relevant input data file names from `input_dir`.
 #'
 #' @param date_range    List of two dates specifying start and end of desired
@@ -65,8 +64,6 @@ get_filenames_in_range <- function(date_range, params) {
   
   return(filenames)
 }
-
-
 
 #' Checks user-set aggregations for basic validity
 #'

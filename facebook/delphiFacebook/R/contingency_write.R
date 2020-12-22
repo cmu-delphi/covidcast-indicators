@@ -8,8 +8,9 @@
 #'                       output; day is used for spliting the data into files.
 #' @param params         a named list, containing the value "export_dir" indicating the
 #'                       directory where the csv should be saved
-#' @param geo_name       name of the geographic level; used for naming the output file
-#' @param signal_name    name of the signal; used for naming the output file
+#' @param geo_level      name of the geographic level; used for naming the output file
+#' @param groupby_vars   character vector of column names used for grouping to
+#'                       calculate aggregations; used for naming the output file
 #'
 #' @importFrom readr write_csv
 #' @importFrom dplyr arrange across

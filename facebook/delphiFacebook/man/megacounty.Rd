@@ -13,6 +13,9 @@ megacounty(df_intr, threshold, groupby_vars = c("day", "geo_id"))
 
 \item{threshold}{Sample size value below which counties should be grouped
 into megacounties.}
+
+\item{groupby_vars}{Character vector of column names to perform `group_by`
+over}
 }
 \value{
 Tibble of megacounties. Counties that are not grouped are not

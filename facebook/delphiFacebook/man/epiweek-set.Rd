@@ -6,6 +6,16 @@
 \usage{
 epiweek(x) <- value
 }
+\arguments{
+\item{x}{a date-time object. Must be a POSIXct, POSIXlt, Date, chron, 
+yearmon, yearqtr, zoo, zooreg, timeDate, xts, its, ti, jul, timeSeries, or 
+fts object.}
+
+\item{value}{a numeric object}
+}
+\value{
+date
+}
 \description{
 epiweek equivalent of `week<-` as shown [here](https://lubridate.tidyverse.org/reference/week.html#examples)
 }

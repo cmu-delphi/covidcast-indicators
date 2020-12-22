@@ -57,7 +57,7 @@ get_range_prev_full_month <- function(date = Sys.Date()) {
 #' 
 #' @export
 start_of_prev_full_week <- function(date) {
-  return(floor_epiweek(date, "week") - weeks(1))
+  return(floor_epiweek(date) - weeks(1))
 }
 
 #' Get the date of the last day of the previous epiweek
@@ -70,11 +70,11 @@ start_of_prev_full_week <- function(date) {
 #' 
 #' @export
 end_of_prev_full_week <- function(date) {
-  if (ceiling_epiweek(date, "week") == date) {
+  if (ceiling_epiweek(date) == date) {
     return(date)
   }
   
-  return(floor_epiweek(date, "week") - days(1))
+  return(floor_epiweek(date) - days(1))
 }
 
 #' Get the date range specifying the previous week
@@ -129,6 +129,13 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
 }
 
 #' epiweek equivalent of `week<-` as shown [here](https://lubridate.tidyverse.org/reference/week.html#examples)
+#' 
+#' @param x a date-time object. Must be a POSIXct, POSIXlt, Date, chron, 
+#' yearmon, yearqtr, zoo, zooreg, timeDate, xts, its, ti, jul, timeSeries, or 
+#' fts object.
+#' @param value a numeric object
+#' 
+#' @return date
 #' 
 #' @importFrom lubridate epiweek days
 #' 

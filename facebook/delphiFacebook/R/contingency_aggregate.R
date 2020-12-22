@@ -24,17 +24,17 @@
 #' @return none
 #'
 #' @import data.table
-#' @importFrom dplyr full_join
+#' @importFrom dplyr full_join %>%
 #' @importFrom purrr reduce
 #'
 #' @export
 aggregate_aggs <- function(df, aggregations, cw_list, params) {
-  ## For the day range lookups we do on df, use a data.table key. This puts the
+  ## For the date range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
   df <- as.data.table(df)
-  setkey(df, day)
+  setkeyv(df, "start_dt")
   
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
@@ -204,6 +204,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'
 #' @importFrom dplyr inner_join bind_rows
 #' @importFrom parallel mclapply
+#' @importFrom stats complete.cases
 #' 
 #' @export
 summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
@@ -219,7 +220,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   groupby_vars <- aggregations$group_by[[1]]
   
   if (all(groupby_vars %in% names(df))) {
-    unique_group_combos <- unique(df[, ..groupby_vars])
+    unique_group_combos <- unique(df[, groupby_vars, with=FALSE])
     unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
   } else {
     msg_plain(
@@ -302,7 +303,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   being used
 #' @param params Named list of configuration options.
 #' 
-#' @importFrom tibble add_column
+#' @importFrom tibble add_column as_tibble
+#' @importFrom dplyr %>%
 #' 
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {

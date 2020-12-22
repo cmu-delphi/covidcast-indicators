@@ -5,6 +5,7 @@
 #'
 #' @param path    path to the parameters file; if not present, will try to copy the file
 #'                "params.json.template"
+#' @param template_path    path to the template parameters file
 #'
 #' @return a named list of parameters values
 #'
@@ -136,6 +137,8 @@ mix_weights <- function(weights, s_mix_coef, s_weight)
 #'     `sample_size`, `effective_sample_size`, and `se` columns.
 #' @param threshold Sample size value below which counties should be grouped
 #'     into megacounties.
+#' @param groupby_vars Character vector of column names to perform `group_by`
+#'     over
 #' @return Tibble of megacounties. Counties that are not grouped are not
 #'     included in the output.
 #' @importFrom dplyr group_by across

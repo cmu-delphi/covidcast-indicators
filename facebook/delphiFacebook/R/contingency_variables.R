@@ -259,6 +259,9 @@ code_binary <- function(df, aggregations, col_var) {
 #'
 #' @return list of data frame of individual response data and user-set data 
 #' frame of desired aggregations
+#' 
+#' @importFrom stats na.omit
+#' @importFrom tibble add_row
 #'
 #' @export
 code_multiselect <- function(df, aggregations, col_var) {

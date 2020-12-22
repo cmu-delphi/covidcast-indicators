@@ -19,7 +19,8 @@ Imports:
     jsonlite,
     lubridate,
     data.table,
-    tibble
+    tibble,
+    purrr
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

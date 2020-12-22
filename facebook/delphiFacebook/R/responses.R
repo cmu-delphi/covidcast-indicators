@@ -287,8 +287,10 @@ bodge_v4_translation <- function(input_data) {
   affected <- c("V4_1", "V4_2", "V4_3", "V4_4", "V4_5")
   corrected <- c("V4a_1", "V4a_2", "V4a_3", "V4a_4", "V4a_5")
 
-  # Step 1: For any non-English results, null out V4 responses
-  non_english <- input_data$UserLanguage != "EN"
+  # Step 1: For any non-English results, null out V4 responses. There are NAs
+  # because of filtering earlier in the pipeline that incorrectly handles NA, so
+  # also remove these.
+  non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
   for (col in affected) {
     input_data[non_english, col] <- NA
   }

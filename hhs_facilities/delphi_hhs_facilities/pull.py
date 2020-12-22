@@ -34,7 +34,7 @@ def pull_data_iteratively(states: set, dates: dict) -> list:
         state_hospital_ids = [i["hospital_pk"] for i in lookup_response.get("epidata", [])]
         for i in range(0, len(state_hospital_ids), 50):
             response = Epidata.covid_hosp_facility(state_hospital_ids[i:i+50], dates)
-            if "too many results, data truncated" in response["message"]:
+            if response["result"] == 2:
                 raise Exception(f"Bad result from Epidata: {response['message']}")
             responses += response.get("epidata", [])
     if len(responses) == 0:

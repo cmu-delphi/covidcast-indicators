@@ -1,4 +1,5 @@
 library(testthat)
+library(dplyr)
 
 # These tests cover the backfill and archiving behavior described in the
 # indicator README, which is quite involved.
@@ -93,7 +94,7 @@ test_that("in case of duplicates, new input takes precedence", {
 })
 
 test_that("V4 bodge works correctly", {
-  foo <- data.frame(
+  foo <- tibble(
     UserLanguage = c("EN", "ES", "EN", NA, "ZH"),
     V4_1 = c(NA, 2, 3, 1, NA),
     V4a_1 = c(2, NA, NA, NA, 3),
@@ -107,7 +108,7 @@ test_that("V4 bodge works correctly", {
     V4a_5 = c(2, NA, NA, NA, 3)
   )
 
-  expected <- data.frame(
+  expected <- tibble(
     UserLanguage = foo$UserLanguage,
     V4_1 = c(2, NA, 3, NA, 3),
     V4a_1 = foo$V4a_1,

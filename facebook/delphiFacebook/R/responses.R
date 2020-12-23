@@ -304,10 +304,10 @@ bodge_v4_translation <- function(input_data) {
     bad <- affected[ii]
     good <- corrected[ii]
 
-    input_data[, bad] <- ifelse(
-      !is.na(input_data[, good]),
-      input_data[, good],
-      input_data[, bad]
+    input_data[[bad]] <- ifelse(
+      !is.na(input_data[[good]]),
+      input_data[[good]],
+      input_data[[bad]]
     )
   }
 

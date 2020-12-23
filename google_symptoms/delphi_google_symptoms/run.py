@@ -8,7 +8,7 @@ from datetime import datetime
 from itertools import product
 
 import numpy as np
-from delphi_utils import read_params, create_export_csv
+from delphi_utils import read_params, create_export_csv, geomap
 
 from .pull import pull_gs_data
 from .geo import geo_map
@@ -25,12 +25,16 @@ def run_module():
 
     # Pull GS data
     dfs = pull_gs_data(base_url)
+    gmpr = geomap.GeoMapper()
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
+        elif geo_res in ["hhs", "nation"]:
+            df_pull = gmpr.replace_geocode(dfs["county"], "fips", geo_res, from_col="geo_id",
+                                           date_col="timestamp")
+            df_pull.rename(columns={geo_res: "geo_id"}, inplace=True)
         else:
-            df_pull = dfs["county"]
-            df_pull = geo_map(df_pull, geo_res)
+            df_pull = geo_map(dfs["county"], geo_res)
         for metric, smoother in product(
                 METRICS+[COMBINED_METRIC], SMOOTHERS):
             print(geo_res, metric, smoother)

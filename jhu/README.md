@@ -1,8 +1,8 @@
 # Johns Hopkins University Cases and Deaths
 
 We import the confirmed case and deaths data from Johns Hopkins CSSE and export
-the county-level data as-is.  We also aggregate the data to the MSA, HRR, and
-State levels. For detailed information see the files `DETAILS.md` contained
+the county-level data as-is.  We also aggregate the data to the MSA, HRR, HHS, 
+State, and Nation levels. For detailed information see the files `DETAILS.md` contained
 in this directory.
 
 ## Running the Indicator

@@ -60,7 +60,7 @@ test_that("testing MSA crosswalk function", {
 
 })
 
-test_that("testing creating all all crosswalk files", {
+test_that("testing creating all crosswalk files", {
 
   cw_list <- produce_crosswalk_list(static_dir)
 

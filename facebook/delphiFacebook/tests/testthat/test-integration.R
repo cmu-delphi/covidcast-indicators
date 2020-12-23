@@ -18,7 +18,7 @@ metrics <- c("raw_cli", "raw_ili", "raw_hh_cmnty_cli", "raw_nohh_cmnty_cli",
              "smoothed_nohh_cmnty_cli", "smoothed_wcli", "smoothed_wili",
              "smoothed_whh_cmnty_cli", "smoothed_wnohh_cmnty_cli")
 
-test_that("testing existance of csv files", {
+test_that("testing existence of csv files", {
   grid <- expand.grid(
     geo_levels = geo_levels, dates = dates, metrics = metrics, stringsAsFactors=FALSE
   )

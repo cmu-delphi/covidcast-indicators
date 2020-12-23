@@ -1,5 +1,4 @@
 library(lubridate)
-library(testthat)
 
 context("Testing functions for getting and manipulating dates")
 

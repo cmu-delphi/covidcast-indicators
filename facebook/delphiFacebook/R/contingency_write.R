@@ -20,28 +20,28 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
 {
   if (!is.null(data) && nrow(data) != 0) {
     data <- arrange(data, across(groupby_vars))
+    
+    # Format reported columns.
+    data <- mutate_at(data, vars(-c(groupby_vars)), 
+                      function(x) formatC(x,digits=7,format="f",drop0trailing=TRUE))
+    file_out <- file.path(
+      params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
+                                 geo_level, paste(groupby_vars, collapse="_"))
+    )
+    
+    create_dir_not_exist(params$export_dir)
+    
+    msg_df(sprintf(
+      "saving contingency table data to %-35s",
+      sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"),
+              geo_level, paste(groupby_vars, collapse="_"))
+    ), data)
+    write_csv(data, file_out)
+    
   } else {
     msg_plain(sprintf(
       "no aggregations produced for grouping variables %s (%s); CSV will not be saved", 
       paste(groupby_vars, collapse=", "), geo_level
     ))
-    return()
   }
-  
-  # Format reported columns.
-  data <- mutate_at(data, vars(-c(groupby_vars)), 
-                    function(x) formatC(x,digits=7,format="f",drop0trailing=TRUE))
-  file_out <- file.path(
-    params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
-                               geo_level, paste(groupby_vars, collapse="_"))
-  )
-  
-  create_dir_not_exist(params$export_dir)
-  
-  msg_df(sprintf(
-    "saving contingency table data to %-35s",
-    sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"),
-            geo_level, paste(groupby_vars, collapse="_"))
-  ), data)
-  write_csv(data, file_out)
 }

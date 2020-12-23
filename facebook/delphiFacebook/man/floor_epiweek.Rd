@@ -4,10 +4,10 @@
 \alias{floor_epiweek}
 \title{Get date of the first day of the epiweek `x` falls in}
 \usage{
-floor_epiweek(x)
+floor_epiweek(date)
 }
 \arguments{
-\item{x}{date}
+\item{date}{date}
 }
 \value{
 date

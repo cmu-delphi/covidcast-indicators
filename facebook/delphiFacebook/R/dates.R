@@ -21,11 +21,13 @@ start_of_prev_full_month <- function(date) {
 #' 
 #' @export
 end_of_prev_full_month <- function(date) {
-  if (ceiling_date(date, "month") == date) {
-    return(date)
+  first_day_of_next_month <- ceiling_date(date, "month")
+  
+  if (first_day_of_next_month != date) {
+    first_day_of_next_month <- floor_date(date, "month")
   }
   
-  return(floor_date(date, "month") - days(1))
+  return(first_day_of_next_month - days(1))
 }
 
 #' Get the date range specifying the previous month
@@ -66,15 +68,17 @@ start_of_prev_full_week <- function(date) {
 #' 
 #' @return Date
 #' 
-#' @importFrom lubridate ceiling_date days
+#' @importFrom lubridate days
 #' 
 #' @export
 end_of_prev_full_week <- function(date) {
-  if (ceiling_epiweek(date) == date) {
-    return(date)
+  first_day_of_next_week <- ceiling_epiweek(date)
+  
+  if (first_day_of_next_week != date) {
+    first_day_of_next_week <- floor_epiweek(date)
   }
   
-  return(floor_epiweek(date) - days(1))
+  return(first_day_of_next_week - days(1))
 }
 
 #' Get the date range specifying the previous week
@@ -116,6 +120,8 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   } else if (weekly_or_monthly_flag == "week") {
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(date)
+  } else {
+    stop("invalid time period selection; must indicate either 'month' or 'week'")
   }
   
   date_period_range[[1]] =  ymd_hms(
@@ -128,45 +134,31 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   return(date_period_range)
 }
 
-#' epiweek equivalent of `week<-` as shown [here](https://lubridate.tidyverse.org/reference/week.html#examples)
+#' Get date of the first day of the epiweek `x` falls in
 #' 
-#' @param x a date-time object. Must be a POSIXct, POSIXlt, Date, chron, 
-#' yearmon, yearqtr, zoo, zooreg, timeDate, xts, its, ti, jul, timeSeries, or 
-#' fts object.
-#' @param value a numeric object
+#' @param date date
 #' 
 #' @return date
 #' 
 #' @importFrom lubridate epiweek days
 #' 
 #' @export
-"epiweek<-" <- function(x, value)
-  x <- x + days((value - epiweek(x)) * 7)
-
-#' Get date of the first day of the epiweek `x` falls in
-#' 
-#' @param x date
-#' 
-#' @return date
-#' 
-#' @importFrom lubridate epiweek
-#' 
-#' @export
-floor_epiweek <- function(x) {
-  epiweek(floor_x) <- epiweek(x)
-  return(floor_x)
+floor_epiweek <- function(date) { 
+  for (prior_days in 1:7) {
+    if (epiweek(date) != epiweek(date - days(prior_days))) { break }
+  }
+  return(date - days(prior_days - 1))
 }
 
-#' Get date of the last day of the epiweek `x` falls in
+#' Get date of the first day of the epiweek following the epiweek `x` falls in
 #' 
-#' @param x date
+#' @param date date
 #' 
 #' @return date
 #' 
-#' @importFrom lubridate epiweek days weeks
+#' @importFrom lubridate days
 #' 
 #' @export
-ceiling_epiweek <- function(x) {
-  epiweek(floor_next_week) <- epiweek(x + weeks(1))
-  return(floor_next_week - days(1))
+ceiling_epiweek <- function(date) {
+  return(floor_epiweek(date + days(7)))
 }

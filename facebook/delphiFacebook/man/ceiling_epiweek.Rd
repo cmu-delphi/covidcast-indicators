@@ -2,16 +2,16 @@
 % Please edit documentation in R/dates.R
 \name{ceiling_epiweek}
 \alias{ceiling_epiweek}
-\title{Get date of the last day of the epiweek `x` falls in}
+\title{Get date of the first day of the epiweek following the epiweek `x` falls in}
 \usage{
-ceiling_epiweek(x)
+ceiling_epiweek(date)
 }
 \arguments{
-\item{x}{date}
+\item{date}{date}
 }
 \value{
 date
 }
 \description{
-Get date of the last day of the epiweek `x` falls in
+Get date of the first day of the epiweek following the epiweek `x` falls in
 }

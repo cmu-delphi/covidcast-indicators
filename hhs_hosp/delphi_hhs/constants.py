@@ -1,6 +1,9 @@
 """Registry for signal names."""
-HOSPITALIZATIONS = "hospitalizations_incidence"
+CONFIRMED = "confirmed_admissions_1d"
+SUM_CONF_SUSP = "sum_confirmed_suspected_admissions_1d"
+
 
 SIGNALS = [
-    HOSPITALIZATIONS
+    CONFIRMED,
+    SUM_CONF_SUSP
 ]

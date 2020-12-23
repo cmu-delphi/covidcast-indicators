@@ -16,7 +16,60 @@ metrics <- c("raw_cli", "raw_ili", "raw_hh_cmnty_cli", "raw_nohh_cmnty_cli",
              "raw_wcli", "raw_wili", "raw_whh_cmnty_cli", "raw_wnohh_cmnty_cli",
              "smoothed_cli", "smoothed_ili", "smoothed_hh_cmnty_cli",
              "smoothed_nohh_cmnty_cli", "smoothed_wcli", "smoothed_wili",
-             "smoothed_whh_cmnty_cli", "smoothed_wnohh_cmnty_cli")
+             "smoothed_whh_cmnty_cli", "smoothed_wnohh_cmnty_cli",
+
+             # # mask wearing, wave 4+
+             # "smoothed_wearing_mask",
+             # "smoothed_wwearing_mask",
+             # "smoothed_others_masked",
+             # "smoothed_wothers_masked",
+             #
+             # # mental health, wave 4+
+             # "smoothed_worried_become_ill",
+             # "smoothed_wworried_become_ill",
+             # "smoothed_worried_finances",
+             # "smoothed_wworried_finances",
+             #
+             # "smoothed_anxious_5d",
+             # "smoothed_wanxious_5d",
+             # "smoothed_depressed_5d",
+             # "smoothed_wdepressed_5d",
+             # "smoothed_felt_isolated_5d",
+             # "smoothed_wfelt_isolated_5d",
+
+             # travel
+             "smoothed_travel_outside_state_5d",
+             "smoothed_wtravel_outside_state_5d",
+
+             # work outside home
+             # pre-wave-4
+             "wip_smoothed_work_outside_home_5d",
+             "wip_smoothed_wwork_outside_home_5d"
+             # # wave 4+
+             # "smoothed_work_outside_home_1d",
+             # "smoothed_wwork_outside_home_1d",
+             # 
+             # # activities, wave 4+
+             # "smoothed_shop_1d",
+             # "smoothed_wshop_1d",
+             # "smoothed_restaurant_1d",
+             # "smoothed_wrestaurant_1d",
+             # "smoothed_spent_time_1d",
+             # "smoothed_wspent_time_1d",
+             # "smoothed_large_event_1d",
+             # "smoothed_wlarge_event_1d",
+             # "smoothed_public_transit_1d",
+             # "smoothed_wpublic_transit_1d",
+             # 
+             # # testing, wave 4+
+             # "smoothed_tested_14d",
+             # "smoothed_wtested_14d",
+             # "smoothed_tested_positive_14d",
+             # "smoothed_wtested_positive_14d",
+             # "smoothed_wanted_test_14d",
+             # "smoothed_wwanted_test_14d"
+             )
+
 
 test_that("testing existence of csv files", {
   grid <- expand.grid(

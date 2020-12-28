@@ -163,7 +163,7 @@ class TestGeoMapper:
     def test_load_jhu_uid_fips_table(self):
         gmpr = GeoMapper()
         jhu_data = gmpr._load_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), [1.0]*3398)
+        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), 1.0)
 
     def test_load_zip_hrr_table(self):
         gmpr = GeoMapper()

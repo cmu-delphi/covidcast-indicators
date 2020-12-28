@@ -163,7 +163,7 @@ class TestGeoMapper:
     def test_load_jhu_uid_fips_table(self):
         gmpr = GeoMapper()
         jhu_data = gmpr._load_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert (jhu_data.groupby("jhu_uid").sum() == 1).all()[0]
+        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), [1.0]*3398)
 
     def test_load_zip_hrr_table(self):
         gmpr = GeoMapper()
@@ -217,7 +217,8 @@ class TestGeoMapper:
 
         # fips -> nation
         new_data = gmpr.replace_geocode(self.fips_data_5, "fips", "nation", new_col="NATION")
-        assert new_data.equals(
+        pd.testing.assert_frame_equal(
+            new_data,
             pd.DataFrame().from_dict(
                 {
                     "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
@@ -230,7 +231,8 @@ class TestGeoMapper:
 
         # zip -> nation
         new_data = gmpr.replace_geocode(self.zip_data, "zip", "nation")
-        assert new_data.equals(
+        pd.testing.assert_frame_equal(
+            new_data,
             pd.DataFrame().from_dict(
                 {
                     "date": {
@@ -255,7 +257,8 @@ class TestGeoMapper:
 
         # fips -> zip (date_col=None chech)
         new_data = gmpr.replace_geocode(self.fips_data_5.drop(columns=["date"]), "fips", "hrr", date_col=None)
-        assert new_data.equals(
+        pd.testing.assert_frame_equal(
+            new_data,
             pd.DataFrame().from_dict(
                 {
                     'hrr': {0: '1', 1: '183', 2: '184', 3: '382', 4: '7'},
@@ -268,7 +271,8 @@ class TestGeoMapper:
         # fips -> hhs
         new_data = gmpr.replace_geocode(self.fips_data_3.drop(columns=["date"]),
                                         "fips", "hhs", date_col=None)
-        assert new_data.equals(
+        pd.testing.assert_frame_equal(
+            new_data,
             pd.DataFrame().from_dict(
                 {
                     "hhs": {0: "2", 1: "6"},
@@ -281,7 +285,8 @@ class TestGeoMapper:
         # zip -> hhs
         new_data = gmpr.replace_geocode(self.zip_data, "zip", "hhs")
         new_data = new_data.round(10)  # get rid of a floating point error with 99.00000000000001
-        assert new_data.equals(
+        pd.testing.assert_frame_equal(
+            new_data,
             pd.DataFrame().from_dict(
                 {
                     "date": {0: pd.Timestamp("2018-01-01"), 1: pd.Timestamp("2018-01-01"),

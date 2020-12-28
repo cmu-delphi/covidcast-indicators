@@ -302,6 +302,6 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         assert gmpr.get_geo_values("nation") == {"us"}
         assert gmpr.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(gmpr.get_geo_values("fips")) == 3274
+        assert len(gmpr.get_geo_values("fips")) == 3287
         assert len(gmpr.get_geo_values("state_id")) == 60
         assert len(gmpr.get_geo_values("zip")) == 32976

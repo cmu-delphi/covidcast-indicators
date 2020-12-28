@@ -84,7 +84,7 @@ class TestGeoMap:
             }
         )
         
-        new_df, geo_res = geo_map("msa", df)
+        new_df, res_key = geo_map("msa", df)
 
         assert set(new_df["msa"].values) == set(['19100', '22900', '49340'])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)

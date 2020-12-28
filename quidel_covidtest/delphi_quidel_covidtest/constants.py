@@ -13,11 +13,20 @@ RAW_TEST_PER_DEVICE = "covid_ag_raw_test_per_device"
 COUNTY = "county"
 MSA = "msa"
 HRR = "hrr"
+HHS = "hhs"
+NATION = "nation"
+STATE = "state"
 
-GEO_RESOLUTIONS = [
+PARENT_GEO_RESOLUTIONS = [
     COUNTY,
     MSA,
-    HRR
+    HRR,
+]
+
+NONPARENT_GEO_RESOLUTIONS = [
+    HHS,
+    NATION,
+    STATE
 ]
 SENSORS = [
     SMOOTHED_POSITIVE,

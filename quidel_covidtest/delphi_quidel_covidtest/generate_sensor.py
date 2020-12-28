@@ -9,13 +9,13 @@ from .data_tools import (fill_dates, raw_positive_prop,
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7
 
-def generate_sensor_for_states(state_groups, smooth, device, first_date, last_date):
+def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, first_date, last_date):
     """
-    Fit over states.
+    Fit over geo resolutions that don't use a parent state (nation/hhs/state).
 
     Args:
         state_groups: pd.groupby.generic.DataFrameGroupBy
-        state_key: "state_id"
+        res_key: name of geo column
         smooth: bool
             Consider raw or smooth
         device: bool
@@ -27,7 +27,7 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
     state_list = list(state_groups.groups.keys())
     for state in state_list:
         state_group = state_groups.get_group(state)
-        state_group = state_group.drop(columns=["state_id"])
+        state_group = state_group.drop(columns=[res_key])
         state_group.set_index("timestamp", inplace=True)
         state_group = fill_dates(state_group, first_date, last_date)
 
@@ -66,10 +66,10 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
                                                  "sample_size": sample_size}))
     return state_df
 
-def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
-                                     device, first_date, last_date):
+def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
+                                   device, first_date, last_date):
     """
-    Fit over counties/HRRs/MSAs.
+    Fit over geo resolutions that use a parent state (county/hrr/msa).
 
     Args:
         data: pd.DataFrame

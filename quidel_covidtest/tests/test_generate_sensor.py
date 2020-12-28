@@ -20,7 +20,7 @@ class TestGenerateSensor:
 
         # raw pct_positive
         state_pct_positive = generate_sensor_for_nonparent_geo(
-            state_groups, smooth = False, device = False,
+            state_groups, "state_id", smooth = False, device = False,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 
         assert (state_pct_positive.dropna()["val"] < 100).all()
@@ -29,7 +29,7 @@ class TestGenerateSensor:
         
         # raw test_per_device
         state_test_per_device = generate_sensor_for_nonparent_geo(
-            state_groups, smooth = False, device = True,
+            state_groups, "state_id", smooth = False, device = True,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 
         assert state_test_per_device["se"].isnull().all()

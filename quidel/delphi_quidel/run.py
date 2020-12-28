@@ -24,12 +24,8 @@ def run_module():
     params = read_params()
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
-    static_file_dir = params["static_file_dir"]
     export_start_dates = params["export_start_date"]
     export_end_dates = params["export_end_date"]
-    map_df = pd.read_csv(
-        join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
-    )
 
     # Pull data and update export date
     dfs, _end_date = pull_quidel_data(params)
@@ -52,7 +48,7 @@ def run_module():
         test_type = "covid_ag" if "covid_ag" in sensor else "flu_ag"
         print("state", sensor)
         data = dfs[test_type].copy()
-        state_groups = geo_map("state", data, map_df).groupby("state_id")
+        state_groups = geo_map("state", data).groupby("state_id")
         first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
 
         # For State Level
@@ -68,7 +64,7 @@ def run_module():
         for geo_res in GEO_RESOLUTIONS:
             print(geo_res, sensor)
             data = dfs[test_type].copy()
-            data, res_key = geo_map(geo_res, data, map_df)
+            data, res_key = geo_map(geo_res, data)
             res_df = generate_sensor_for_other_geores(
                 state_groups, data, res_key, smooth=SENSORS[sensor][1],
                 device=SENSORS[sensor][0], first_date=first_date,

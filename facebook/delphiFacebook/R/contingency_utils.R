@@ -12,6 +12,7 @@
 #' 
 #' @export
 update_params <- function(params) {
+
   if (params$end_date == "current") {
     date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range, params)
@@ -21,17 +22,17 @@ update_params <- function(params) {
     )
     date_range <- get_range_prev_full_period(end_date, params$aggregate_range)
   }
-  
+
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }
-  
+
   params$start_time <- date_range[[1]]
   params$end_time <- date_range[[2]]
-  
-  params$start_date <- as.Date(date_range[[1]])
-  params$end_date <- as.Date(date_range[[2]])
-  
+
+  params$start_date <- as_date(date_range[[1]])
+  params$end_date <- as_date(date_range[[2]])
+
   return(params)
 }
 
@@ -54,7 +55,7 @@ get_filenames_in_range <- function(date_range, params) {
   filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
   
   file_end_dates <- as.Date(substr(filenames, 1, 10))
-  file_start_dates <- file_end_dates
+  file_start_dates <- as.Date(substr(filenames, 12, 21))
   
   # Only keep files with data that falls at least somewhat between the desired
   # start and end range dates.
@@ -67,7 +68,6 @@ get_filenames_in_range <- function(date_range, params) {
 
 #' Checks user-set aggregations for basic validity
 #'
-#' @param params Named list of configuration parameters.
 #' @param aggs Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
 #'   to report. `name` is the aggregate's base column name; `var_weight` is the 
@@ -81,7 +81,7 @@ get_filenames_in_range <- function(date_range, params) {
 #' @return a data frame of desired aggregations to calculate
 #'
 #' @export
-get_aggs <- function(params, aggs) {
+verify_aggs <- function(aggs) {
   aggregations <- unique(aggs)
   
   if ( length(unique(aggregations$name)) < nrow(aggregations) ) {

@@ -22,6 +22,7 @@
 run_contingency_tables <- function(params, aggregations)
 {
   params <- update_params(params)
+  aggregations <- verify_aggs(aggregations)
   
   cw_list <- produce_crosswalk_list(params$static_dir)
   archive <- load_archive(params)
@@ -57,7 +58,6 @@ run_contingency_tables <- function(params, aggregations)
   }
   
   data_agg <- make_human_readable(data_agg)
-  aggregations <- get_aggs(params, aggregations)
   
   if (nrow(aggregations) > 0) {
     aggregate_aggs(data_agg, aggregations, cw_list, params)

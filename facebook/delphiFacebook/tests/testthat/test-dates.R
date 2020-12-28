@@ -17,10 +17,14 @@ test_that("testing end_of_prev_full_month command", {
 })
 
 test_that("testing get_range_prev_full_month command", {
-  expect_equal(get_range_prev_full_month(ymd("2020-01-02")), list(ymd("2019-12-01"), ymd("2019-12-31")))
-  expect_equal(get_range_prev_full_month(ymd("2020-01-31")), list(ymd("2019-12-01"), ymd("2019-12-31")))
-  expect_equal(get_range_prev_full_month(ymd("2019-02-28")), list(ymd("2019-01-01"), ymd("2019-01-31")))
-  expect_equal(get_range_prev_full_month(ymd("2019-03-01")), list(ymd("2019-02-01"), ymd("2019-02-28")))
+  expect_equal(get_range_prev_full_month(ymd("2020-01-02")), 
+               list(ymd("2019-12-01"), ymd("2019-12-31")))
+  expect_equal(get_range_prev_full_month(ymd("2020-01-31")), 
+               list(ymd("2019-12-01"), ymd("2019-12-31")))
+  expect_equal(get_range_prev_full_month(ymd("2019-02-28")), 
+               list(ymd("2019-01-01"), ymd("2019-01-31")))
+  expect_equal(get_range_prev_full_month(ymd("2019-03-01")), 
+               list(ymd("2019-02-01"), ymd("2019-02-28")))
 })
 
 ## Weekly
@@ -37,9 +41,12 @@ test_that("testing end_of_prev_full_week command", {
 })
 
 test_that("testing get_range_prev_full_week command", {
-  expect_equal(get_range_prev_full_week(ymd("2020-01-01")), list(ymd("2019-12-22"), ymd("2019-12-28")))
-  expect_equal(get_range_prev_full_week(ymd("2020-01-04")), list(ymd("2019-12-22"), ymd("2019-12-28")))
-  expect_equal(get_range_prev_full_week(ymd("2020-03-01")), list(ymd("2020-02-23"), ymd("2020-02-29")))
+  expect_equal(get_range_prev_full_week(ymd("2020-01-01")), 
+               list(ymd("2019-12-22"), ymd("2019-12-28")))
+  expect_equal(get_range_prev_full_week(ymd("2020-01-04")), 
+               list(ymd("2019-12-22"), ymd("2019-12-28")))
+  expect_equal(get_range_prev_full_week(ymd("2020-03-01")), 
+               list(ymd("2020-02-23"), ymd("2020-02-29")))
 })
 
 ## High level

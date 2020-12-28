@@ -40,7 +40,8 @@ compute_binary_and_multiselect <- function(response, weight, sample_size)
   return(response_pct)
 }
 
-#### TODO: val and effective sample size should be weighted sample size (how many people in the population these obs represent)
+#### TODO: val and effective sample size should be weighted sample size (how 
+####       many people in the population these obs represent)
 #' Returns multiple choice response estimates. Val is the effective sample size.
 #'
 #' This function takes vectors as input and computes the response values

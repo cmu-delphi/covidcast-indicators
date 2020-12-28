@@ -91,10 +91,10 @@ rename_responses <- function(df) {
     "b_cmnty_have_cli" = "community_yes",
     "b_hh_or_cmnty_have_cli" = "hh_community_yes",
     "b_flu_shot_jun2020" = "C17", # binary with "I don't know" option
-    "b_children_grade_pre-k" = "E1_1", # binary with "I don't know" option
-    "b_children_grade_1-5" = "E1_2", # binary with "I don't know" option
-    "b_children_grade_6-8" = "E1_3", # binary with "I don't know" option
-    "b_children_grade_9-12" = "E1_4", # binary with "I don't know" option
+    "b_children_grade_prek_k" = "E1_1", # binary with "I don't know" option
+    "b_children_grade_1_5" = "E1_2", # binary with "I don't know" option
+    "b_children_grade_6_8" = "E1_3", # binary with "I don't know" option
+    "b_children_grade_9_12" = "E1_4", # binary with "I don't know" option
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     
@@ -215,7 +215,10 @@ code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
   return(df)
 }
 
-#' Convert a single binary response column to boolean
+#' Wrapper for `code_binary_with_idk` that returns `aggregations` also
+#' 
+#' Assumes binary response variable is coded with 1 = TRUE (agree), 2 = FALSE,
+#' 3 = "I don't know"
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -234,16 +237,15 @@ code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
 #'
 #' @export
 code_binary <- function(df, aggregations, col_var) {
-  if (FALSE %in% df[[col_var]]) {
-    # Already in boolean format.
-    return(list(df, aggregations))
-  }
-  
-  df[[col_var]] <- (df[[col_var]] == 1L)
+  df <- code_binary_with_idk(df, col_var)
   return(list(df, aggregations))
 }
 
 #' Convert a single multi-select response column to a set of boolean columns
+#' 
+#' Update aggregations table to use new set of columns where `col_var` had
+#' previously been used as the metric to aggregate. Does not change columns
+#' referenced in `groupby`
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -279,10 +281,10 @@ code_multiselect <- function(df, aggregations, col_var) {
   # made (warning is raised).
   df[!is.na(df[[col_var]]), c(new_binary_cols) := 
        lapply(response_codes, function(code) { 
-         ( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) | 
-             grepl(sprintf("^%s,", code), eval(parse(text=col_var))) | 
-             grepl(sprintf(",%s$", code), eval(parse(text=col_var))) | 
-             grepl(sprintf(",%s,", code), eval(parse(text=col_var))) ) 
+         as.numeric( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) | 
+                       grepl(sprintf("^%s,", code), eval(parse(text=col_var))) | 
+                       grepl(sprintf(",%s$", code), eval(parse(text=col_var))) | 
+                       grepl(sprintf(",%s,", code), eval(parse(text=col_var))) ) 
        })]
   
   # Update aggregations table

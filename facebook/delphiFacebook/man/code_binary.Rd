@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{code_binary}
 \alias{code_binary}
-\title{Convert a single binary response column to boolean}
+\title{Wrapper for `code_binary_with_idk` that returns `aggregations` also}
 \usage{
 code_binary(df, aggregations, col_var)
 }
@@ -26,5 +26,6 @@ list of data frame of individual response data and user-set data
 frame of desired aggregations
 }
 \description{
-Convert a single binary response column to boolean
+Assumes binary response variable is coded with 1 = TRUE (agree), 2 = FALSE,
+3 = "I don't know"
 }

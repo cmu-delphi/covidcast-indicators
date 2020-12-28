@@ -26,5 +26,7 @@ list of data frame of individual response data and user-set data
 frame of desired aggregations
 }
 \description{
-Convert a single multi-select response column to a set of boolean columns
+Update aggregations table to use new set of columns where `col_var` had
+previously been used as the metric to aggregate. Does not change columns
+referenced in `groupby`
 }

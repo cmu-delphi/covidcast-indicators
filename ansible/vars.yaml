@@ -1,4 +1,6 @@
 ---
+# Store unencrypted variables and pointers to vault.yaml variables here.
+#
 runtime_user: "indicators"
 jenkins_user: "jenkins"
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"

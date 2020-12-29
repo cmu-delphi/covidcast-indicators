@@ -76,10 +76,14 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
 
     if geo in ["hhs", "nation"]:
         combined_df = GMPR.replace_geocode(combined_df,
-                                           from_col="geo_value",
+                                           from_col="geo_id",
                                            from_code="fips",
                                            new_code=geo,
                                            date_col="timestamp")
+        if "se" not in combined_df.columns and "sample_size" not in combined_df.columns:
+            # if a column has non numeric data including None, they'll be dropped.
+            # se and sample size are required later so we add them back.
+            combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
 
     return combined_df

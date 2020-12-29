@@ -49,6 +49,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
 def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals."""
     print("Fetching usa-facts...")
+    # for hhs and nation, fetch the county data so we can combined JHU and USAFacts before mapping
+    # to the desired geos.
     geo_to_fetch = "county" if geo in ["county", "hhs", "nation"] else geo
     usafacts_df = fetcher("usa-facts", signal, date_range[0], date_range[1], geo_to_fetch)
     print("Fetching jhu-csse...")

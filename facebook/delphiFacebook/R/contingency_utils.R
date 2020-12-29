@@ -12,9 +12,9 @@
 #' 
 #' @export
 update_params <- function(params) {
-  if (params$end_date == "current") {
+  if ( is.null(params$end_date) ) {
     date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
-    params$input <- get_filenames_in_range(date_range, params)
+    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
   } else {
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
@@ -35,24 +35,26 @@ update_params <- function(params) {
 
 #' Get relevant input data file names from `input_dir`.
 #'
-#' @param date_range    List of two dates specifying start and end of desired
-#' date range 
+#' @param start_date    Start of desired date range 
+#' @param end_date    End of desired date range 
 #' @param params    Params object produced by read_params
 #'
 #' @return Character vector of filenames
 #' 
+#' @importFrom lubridate as_date days
+#' 
 #' @export
-get_filenames_in_range <- function(date_range, params) {
-  start_date <- as.Date(date_range[[1]]) - params$archive_days
-  end_date <- as.Date(date_range[[2]])
+get_filenames_in_range <- function(start_date, end_date, params) {
+  start_date <- as_date(start_date) - days(params$backfill_days)
+  end_date <- as_date(end_date)
   date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
   youtube_pattern <- ".*YouTube[.]csv$"
   
   filenames <- list.files(path=params$input_dir)
   filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
   
-  file_end_dates <- as.Date(substr(filenames, 1, 10))
-  file_start_dates <- as.Date(substr(filenames, 12, 21))
+  file_end_dates <- as_date(substr(filenames, 1, 10))
+  file_start_dates <- as_date(substr(filenames, 12, 21))
   
   # Only keep files with data that falls at least somewhat between the desired
   # start and end range dates.

@@ -119,6 +119,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- code_mask_contact(input_data)
   input_data <- code_testing(input_data)
   input_data <- code_activities(input_data)
+  input_data <- code_vaccines(input_data)
 
   # create testing variables
 

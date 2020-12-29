@@ -63,7 +63,11 @@ get_binary_indicators <- function() {
     "smoothed_tested_positive_14d", "weight_unif", "t_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtested_positive_14d", "weight", "t_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wanted_test_14d", "weight_unif", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wwanted_test_14d", "weight", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary
+    "smoothed_wwanted_test_14d", "weight", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
+
+    # vaccines
+    "smoothed_accept_covid_vaccine", "weight_unif", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_waccept_covid_vaccine", "weight", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary
   )
 
   ind$skip_mixing <- TRUE

@@ -48,5 +48,5 @@ aggs <- tribble(
 )
 
 #Rprof(interval = 0.005)
-params <- read_params("params.json", "contingency_params.json.template")
+params <- read_params("contingency_params.json", "contingency_params.json.template")
 run_contingency_tables(params, aggs)

@@ -3,10 +3,9 @@
   "backfill_days": 4,
   "archive_days": 14,
   "static_dir": "./static",
-  "export_dir": "./receiving",
+  "export_dir": "./contingency_receiving",
   "cache_dir": "./cache",
   "archive_dir": "./archive",
-  "individual_dir": "./individual",
   "weights_in_dir": "./delphiFacebook/tests/testthat/weights_full",
   "input_dir": "./delphiFacebook/tests/testthat/input",
   "input": [

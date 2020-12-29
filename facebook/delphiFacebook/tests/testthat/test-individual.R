@@ -2,7 +2,7 @@ library(dplyr)
 library(lubridate)
 library(readr)
 
-context("Testing creating of individual response output data for external sharing")
+context("Testing creation of individual response output data for external sharing")
 
 test_that("testing write_individual command", {
   tdir <- tempfile()

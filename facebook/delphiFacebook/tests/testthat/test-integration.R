@@ -18,7 +18,7 @@ metrics <- c("raw_cli", "raw_ili", "raw_hh_cmnty_cli", "raw_nohh_cmnty_cli",
              "smoothed_nohh_cmnty_cli", "smoothed_wcli", "smoothed_wili",
              "smoothed_whh_cmnty_cli", "smoothed_wnohh_cmnty_cli")
 
-test_that("testing existance of csv files", {
+test_that("testing existence of csv files", {
   grid <- expand.grid(
     geo_levels = geo_levels, dates = dates, metrics = metrics, stringsAsFactors=FALSE
   )
@@ -77,7 +77,7 @@ test_that("testing geo files contain correct number of lines", {
 
 test_that("testing raw community values files", {
 
-  # there are 2 / 4 households in PA on 2020-05-11 for community
+  # there are 2 / 4 households in PA on 2020-05-11 for community
   x <- read_csv(test_path("receiving", "20200511_state_raw_nohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "pa")
   expect_equal(x$sample_size, 4L)

@@ -266,6 +266,54 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
   return(df)
 }
 
+#' Fix translation error in Wave 6.
+#'
+#' In Wave 6's first deployment, some of the translations swapped the order of
+#' responses in V4, so these responses can't be interpreted correctly. Rather
+#' than recoding them, we simply delete non-English translations of V4.
+#'
+#' The updated deployment replaces V4 with V4a with correct translations. We
+#' delete non-English V4 responses, then use V4a in place of V4 when present.
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @return corrected data frame, where V4 is the authoritative column
+#' @importFrom dplyr case_when
+bodge_v4_translation <- function(input_data) {
+  if (!("V4_1" %in% names(input_data))) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+
+  affected <- c("V4_1", "V4_2", "V4_3", "V4_4", "V4_5")
+  corrected <- c("V4a_1", "V4a_2", "V4a_3", "V4a_4", "V4a_5")
+
+  # Step 1: For any non-English results, null out V4 responses. There are NAs
+  # because of filtering earlier in the pipeline that incorrectly handles NA, so
+  # also remove these.
+  non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
+  for (col in affected) {
+    input_data[non_english, col] <- NA
+  }
+
+  # Step 2: If this data does not have V4a, stop.
+  if (!("V4a_1" %in% names(input_data))) {
+    return(input_data)
+  }
+
+  for (ii in seq_along(affected)) {
+    bad <- affected[ii]
+    good <- corrected[ii]
+
+    input_data[[bad]] <- ifelse(
+      !is.na(input_data[[good]]),
+      input_data[[good]],
+      input_data[[bad]]
+    )
+  }
+
+  return(input_data)
+}
+
 #' Create dataset for sharing with research partners
 #'
 #' Different survey waves may have different sets of questions. Here we report
@@ -280,6 +328,8 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 #' @export
 create_complete_responses <- function(input_data, county_crosswalk)
 {
+  input_data <- bodge_v4_translation(input_data)
+
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
     "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2",

@@ -87,6 +87,9 @@ verify_aggs <- function(aggs) {
     stop("all aggregation names must be unique")
   }
   
+  aggregations$var_weight <- "weight"
+  aggregations$skip_mixing <- FALSE
+  
   expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
                       "compute_fn", "post_fn")
   if ( !all(expected_names %in% names(aggs)) ) {

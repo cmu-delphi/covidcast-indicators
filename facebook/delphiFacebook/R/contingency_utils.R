@@ -8,19 +8,16 @@
 #'
 #' @return a named list of parameters values
 #'
-#' @importFrom lubridate ymd_hms
+#' @importFrom lubridate ymd_hms as_date
 #' 
 #' @export
 update_params <- function(params) {
-
   if (params$end_date == "current") {
     date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range, params)
   } else {
-    end_date <- ymd_hms(
-      sprintf("%s 23:59:59", params$end_date), tz = "America/Los_Angeles"
-    )
-    date_range <- get_range_prev_full_period(end_date, params$aggregate_range)
+    date_range <- get_range_prev_full_period(
+      as_date(params$end_date), params$aggregate_range)
   }
 
   if (length(params$input) == 0) {

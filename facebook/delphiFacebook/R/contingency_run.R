@@ -30,12 +30,13 @@ run_contingency_tables <- function(params, aggregations)
   
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
+  input_data <- bodge_v4_translation(input_data)
   msg_df("response input data", input_data)
   
   input_data <- merge_responses(input_data, archive)
   data_agg <- create_data_for_aggregatation(input_data)
-  
-  data_agg <- filter_data_for_aggregatation(data_agg, params, lead_days = 12)
+  data_agg <- filter_data_for_aggregatation(data_agg, params, 
+                                            lead_days = params$backfill_days)
   
   if (nrow(data_agg) == 0) {
     stop("no data available in the desired date range")

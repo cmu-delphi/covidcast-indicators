@@ -110,7 +110,7 @@ get_range_prev_full_week <- function(date = Sys.Date()) {
 #' 
 #' @return list of two Dates
 #' 
-#' @importFrom lubridate ymd_hms
+#' @importFrom lubridate ymd_hms as_date
 #' 
 #' @export
 get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag) {
@@ -125,10 +125,10 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   }
   
   date_period_range[[1]] =  ymd_hms(
-    sprintf("%s 00:00:00", date_period_range[[1]]), tz = "America/Los_Angeles"
+    sprintf("%s 00:00:00", as_date(date_period_range[[1]])), tz = "America/Los_Angeles"
   )
   date_period_range[[2]] =  ymd_hms(
-    sprintf("%s 23:59:59", date_period_range[[2]]), tz = "America/Los_Angeles"
+    sprintf("%s 23:59:59", as_date(date_period_range[[2]])), tz = "America/Los_Angeles"
   )
   
   return(date_period_range)

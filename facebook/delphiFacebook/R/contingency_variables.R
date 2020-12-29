@@ -99,12 +99,12 @@ rename_responses <- function(df) {
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     # Wave 6 additions
-    "b_accept_cov_vaccine_rec_by_friends_family" = "V4_1" # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_local_health" = "V4_2" # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_WHO" = "V4_3" # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_gov_health" = "V4_4" # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_politician" = "V4_5" # Need to merge V4a into?
-    "b_had_cov_vaccine" = "V1"
+    "b_accept_cov_vaccine_rec_by_friends_family" = "V4_1", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_local_health" = "V4_2", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_WHO" = "V4_3", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_gov_health" = "V4_4", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_politician" = "V4_5", # Need to merge V4a into?
+    "b_had_cov_vaccine" = "V1",
     
     ## multiple choice (mc)
     ## Can only select one of n > 2 choices
@@ -145,8 +145,8 @@ rename_responses <- function(df) {
     # Wave 5 additions
     "mc_cmnty_mask_prevalence" = "C16",
     # Wave 6 additions
-    "mc_accept_cov_vaccine" = "V3" # presumably has binary version
-    "mc_num_cov_vaccine_doses" = "V2"
+    "mc_accept_cov_vaccine" = "V3", # presumably has binary version
+    "mc_num_cov_vaccine_doses" = "V2",
     
     ## multiselect (ms)
     ## Can select more than one choice; saved as comma-separated list of choice codes

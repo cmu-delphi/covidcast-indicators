@@ -58,7 +58,7 @@ rename_responses <- function(df) {
     "n_hh_num_seniors_not_self" = "D5",
     
     ## binary response (b)
-    # False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
+    ## generally, False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
     "b_consent" = "S1",
     "b_hh_fever" = "hh_fever", # A1_1
     "b_hh_sore_throat" = "hh_soar_throat", # A1_2
@@ -90,6 +90,7 @@ rename_responses <- function(df) {
     "b_have_ili" = "is_ili", # Based on symptoms in A1
     "b_cmnty_have_cli" = "community_yes",
     "b_hh_or_cmnty_have_cli" = "hh_community_yes",
+    # Wave 5 additions
     "b_flu_shot_jun2020" = "C17", # binary with "I don't know" option
     "b_children_grade_prek_k" = "E1_1", # binary with "I don't know" option
     "b_children_grade_1_5" = "E1_2", # binary with "I don't know" option
@@ -97,9 +98,16 @@ rename_responses <- function(df) {
     "b_children_grade_9_12" = "E1_4", # binary with "I don't know" option
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
+    # Wave 6 additions
+    "b_accept_cov_vaccine_rec_by_friends_family" = "V4_1" # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_local_health" = "V4_2" # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_WHO" = "V4_3" # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_gov_health" = "V4_4" # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_by_politician" = "V4_5" # Need to merge V4a into?
+    "b_had_cov_vaccine" = "V1"
     
     ## multiple choice (mc)
-    # Can only select one of n > 2 choices
+    ## Can only select one of n > 2 choices
     "mc_state" = "A3b",
     "mc_mask_often" = "C14",
     "mc_anxiety" = "C8_1",
@@ -133,11 +141,15 @@ rename_responses <- function(df) {
     "mc_hospital" = "B6",
     "mc_social_avoidance" = "C7",
     "mc_financial_threat" = "Q36",
-    "mc_cmnty_mask_prevalence" = "C16",
     "mc_pregnant" = "D1b", # Somewhat of a binary response (yes, no, prefer not to answer, and not applicable)
+    # Wave 5 additions
+    "mc_cmnty_mask_prevalence" = "C16",
+    # Wave 6 additions
+    "mc_accept_cov_vaccine" = "V3" # presumably has binary version
+    "mc_num_cov_vaccine_doses" = "V2"
     
     ## multiselect (ms)
-    # Can select more than one choice; saved as comma-separated list of choice codes
+    ## Can select more than one choice; saved as comma-separated list of choice codes
     "ms_symptoms" = "B2",
     "ms_unusual_symptoms" = "B2c",
     "ms_medical_care" = "B7",
@@ -145,8 +157,9 @@ rename_responses <- function(df) {
     "ms_reasons_not_tested_14d" = "B12a",
     "ms_trips_outside_home" = "C13",
     "ms_mask_outside_home" = "C13a",
-    "ms_school_safety_measures" = "E3",
     "ms_comorbidities" = "C1",
+    # Wave 5 additions
+    "ms_school_safety_measures" = "E3",
     
     ## other (created in previous data-cleaning steps)
     "n_num_symptoms" = "cnt_symptoms", # Based on symptoms in A1

@@ -230,8 +230,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
-  sum_all_weights <- na.omit(df, groupby_vars)[, sum(weight, na.rm=TRUE)]
-  
+
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
     # Use data.table's index to make this filter efficient
@@ -240,8 +239,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       aggregations,
       target_group,
       geo_level,
-      params,
-      sum_all_weights)
+      params)
     
     return(out)
   }
@@ -300,8 +298,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #' @importFrom dplyr %>%
 #' 
 #' @export
-summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params, sum_all_weights) {
-  browser()
+summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
   ## Prepare outputs.
   dfs_out <- list()
   for (row in seq_along(aggregations$name)) {
@@ -338,8 +335,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       new_row <- compute_fn(
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
-        sample_size = sample_size,
-        sum_all_weights)
+        sample_size = sample_size)
       
       dfs_out[[aggregation]]$val <- new_row$val
       dfs_out[[aggregation]]$se <- new_row$se

@@ -7,12 +7,11 @@
 #' @param weight a vector of sample weights for inverse probability weighting;
 #'   invariant up to a scaling factor
 #' @param sample_size Unused.
-#' @param sum_all_weights Unused.
 #' 
 #' @return a vector of mean values
 #'
 #' @export
-compute_numeric <- function(response, weight, sample_size, sum_all_weights)
+compute_numeric <- function(response, weight, sample_size)
 {
   response_mean <- compute_count_response(response, weight, sample_size)
   response_mean$sample_size <- sample_size
@@ -29,12 +28,11 @@ compute_numeric <- function(response, weight, sample_size, sum_all_weights)
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
-#' @param sum_all_weights Unused.
 #'   
 #' @return a vector of percentages
 #'
 #' @export
-compute_binary_and_multiselect <- function(response, weight, sample_size, sum_all_weights)
+compute_binary_and_multiselect <- function(response, weight, sample_size)
 {
   response_pct <- compute_binary_response(response, weight, sample_size)
   response_pct$sample_size <- sample_size
@@ -58,22 +56,16 @@ compute_binary_and_multiselect <- function(response, weight, sample_size, sum_al
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
-#' @param sum_all_weights Sum of scaled weights for all responses with non-missing
-#'   grouping variables.
 #'
 #' @return a vector of counts
 #'
 #' @export
-compute_multiple_choice <- function(response, weight, sample_size, sum_all_weights)
+compute_multiple_choice <- function(response, weight, sample_size)
 {
   assert(all( response >= 0 ))
   assert(length(response) == length(weight))
   
-  response_prop <- sum(weight) / sum_all_weights
-  
-  val <- 100 * response_prop
-  
-  return(list(val = val,
+  return(list(val = sample_size,
               sample_size = sample_size,
               se = NA_real_,
               effective_sample_size = sample_size))

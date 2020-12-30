@@ -1,12 +1,8 @@
 #### TODO
 # - set up to be able to aggregate multiple time periods in series?
-#   wrapper function that modifies params.json more likely. Or something like, if
-#   want to span multiple time periods, date window is added as a grouping var?
+#   wrapper function that modifies params.json or starts an alternate path in main .R file
 # - map response codes to descriptive values? Would need mapping for every
 #   individual question
-# - Remove dependence on "name" column of `aggregations` so aggregations not sharing
-#   grouping variables can have the same name (e.g. might want to report pct_race
-#   by state and by county)
 
 library(tibble)
 library(delphiFacebook)
@@ -28,8 +24,8 @@ library(delphiFacebook)
 # `jeffreys_*` set or the identity `I`, which does not modify the data.
 aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-  "freq_accept_cov_vaccine_1", "mc_accept_cov_vaccine", c("mc_race"), compute_multiple_choice, I,
-  "freq_accept_cov_vaccine_2", "mc_accept_cov_vaccine", c("mc_age"), compute_multiple_choice, I,
+  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_race"), compute_multiple_choice, I,
+  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age"), compute_multiple_choice, I,
 
   # "reasons_tested_14d_pct", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), compute_binary_and_multiselect, jeffreys_binary,
   # "tested_pos_14d_pct", "b_tested_pos_14d", c("nation", "mc_age", "b_tested_14d"), compute_binary_and_multiselect, jeffreys_binary,

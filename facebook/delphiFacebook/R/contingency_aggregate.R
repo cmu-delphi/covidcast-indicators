@@ -199,14 +199,18 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' 
 #' @export
 summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
+  ## We do batches of just one set of groupby vars at a time, since we have
+  ## to select rows based on this.
+  assert( length(unique(aggregations$group_by)) == 1 )
+  
+  if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
+    stop("all aggregations using the same set of groupby variables must have unique names")
+  }
+  
   ## dplyr complains about joining a data.table, saying it is likely to be
   ## inefficient; profiling shows the cost to be negligible, so shut it up
   # Geo group column is always named "geo_id"
   df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
-  
-  ## We do batches of just one set of groupby vars at a time, since we have
-  ## to select rows based on this.
-  assert( length(unique(aggregations$group_by)) == 1 )
   
   groupby_vars <- aggregations$group_by[[1]]
   
@@ -253,7 +257,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## Now we have a list, with one entry per groupby level, each containing a
   ## list of one data frame per aggregation. Rearrange it.
   dfs_out <- list()
-  for (aggregation in aggregations$name) {
+  for (aggregation in aggregations$id) {
     dfs_out[[aggregation]] <- bind_rows( lapply(dfs, function(groupby_levels) { 
       groupby_levels[[aggregation]] 
     }))
@@ -261,7 +265,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   
   ## Do post-processing.
   for (row in seq_len(nrow(aggregations))) {
-    aggregation <- aggregations$name[row]
+    aggregation <- aggregations$id[row]
     groupby_vars <- aggregations$group_by[[row]]
     post_fn <- aggregations$post_fn[[row]]
     
@@ -301,8 +305,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
   ## Prepare outputs.
   dfs_out <- list()
-  for (row in seq_along(aggregations$name)) {
-    aggregation <- aggregations$name[row]
+  for (row in seq_along(aggregations$id)) {
+    aggregation <- aggregations$id[row]
     
     dfs_out[[aggregation]] <- target_group %>%
       as.list %>%
@@ -313,8 +317,8 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       add_column(effective_sample_size=NA_real_)
   }
   
-  for (row in seq_along(aggregations$name)) {
-    aggregation <- aggregations$name[row]
+  for (row in seq_along(aggregations$id)) {
+    aggregation <- aggregations$id[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]

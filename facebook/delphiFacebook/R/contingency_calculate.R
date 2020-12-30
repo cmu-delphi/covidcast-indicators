@@ -11,7 +11,7 @@
 #'   proportionately, and survey weights may also be applied)
 #' @param total_represented Unused
 #' 
-#' @return a vector of mean values
+#' @return a list of named means and other descriptive statistics
 #'
 #' @export
 compute_numeric <- function(response, weight, sample_size, total_represented)
@@ -33,7 +33,7 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
 #'   proportionately, and survey weights may also be applied)
 #' @param total_represented Unused
 #'   
-#' @return a vector of percentages
+#' @return a list of named percentages and other descriptive statistics
 #'
 #' @export
 compute_binary_and_multiselect <- function(response, weight, sample_size, total_represented)
@@ -60,7 +60,7 @@ compute_binary_and_multiselect <- function(response, weight, sample_size, total_
 #' @param total_represented Number of people represented in sample, which may
 #'   be a non-integer
 #'
-#' @return a vector of counts
+#' @return a list of named counts and other descriptive statistics
 #'
 #' @export
 compute_multiple_choice <- function(response, weight, sample_size, total_represented)
@@ -68,7 +68,7 @@ compute_multiple_choice <- function(response, weight, sample_size, total_represe
   assert(all( response >= 0 ))
   assert(length(response) == length(weight))
   
-  return(list(val = total_represented,
+  return(list(val = round(total_represented),
               sample_size = sample_size,
               se = NA_real_,
               effective_sample_size = sample_size))

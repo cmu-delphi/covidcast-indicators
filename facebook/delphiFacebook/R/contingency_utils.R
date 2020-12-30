@@ -84,15 +84,14 @@ verify_aggs <- function(aggregations) {
   aggregations <- unique(aggregations)
   aggregations$group_by <- as.list(aggregations$group_by)
   
-  if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
-    stop("all aggregation names must be unique")
-  }
+  # Create unique row ID
+  aggregations$id <- paste(aggs[, c("name", "metric", "group_by")], collapse="_")
   
   aggregations$var_weight <- "weight"
   aggregations$skip_mixing <- FALSE
   
   expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
-                      "compute_fn", "post_fn")
+                      "compute_fn", "post_fn", "id")
   if ( !all(expected_names %in% names(aggregations)) ) {
     stop(sprintf(
       "all expected columns %s must appear in the aggregations table", 

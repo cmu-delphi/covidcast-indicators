@@ -302,13 +302,13 @@ code_multiselect <- function(df, aggregations, col_var) {
   
   # Update aggregations table
   old_rows <- aggregations[aggregations$metric == col_var, ]
-  for (row_ind in seq_along(old_rows$name)) {
-    old_row <- old_rows[row_ind, ]
+  for (row in seq_along(old_rows$id)) {
+    old_row <- old_rows[row, ]
     
-    for (col_ind in seq_along(new_binary_cols)) {
+    for (col in seq_along(new_binary_cols)) {
       new_row <- old_row
-      new_row$name <- paste(old_row$name, col_ind, sep="_")
-      new_row$metric <- new_binary_cols[col_ind]
+      new_row$name <- paste(old_row$name, col, sep="_")
+      new_row$metric <- new_binary_cols[col]
       aggregations <- add_row(aggregations, new_row)
     }
   }

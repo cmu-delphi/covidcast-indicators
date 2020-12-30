@@ -1,4 +1,55 @@
-#' Run the contingency table production pipeline
+#' Wrapper that runs `run_contingency_tables_one_period` over several time periods
+#'
+#' Allows pipeline to be create a series of CSVs for a range of dates.
+#'
+#' See the README.md file in the source directory for more information about how to run
+#' this function.
+#'
+#' @param params    Params object produced by read_params
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
+#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
+#'   to report. `name` is the aggregate's base column name; `var_weight` is the 
+#'   column to use for its weights; `metric` is the column of `df` containing the
+#'   response value. `group_by` is a list of variables used to perform the 
+#'   aggregations over. `compute_fn` is the function that computes
+#'   the aggregate response given many rows of data. `post_fn` is applied to the
+#'   aggregate data after megacounty aggregation, and can perform any final
+#'   calculations necessary.
+#'
+#' @return none
+#' 
+#' @importFrom lubridate ymd days
+#' @importFrom dplyr case_when
+#' 
+#' @export
+run_contingency_tables <- function(params, aggregations)
+{
+  if (!is.null(params$end_date) & !is.null(params$n_periods)) {
+    ## Produce historical CSVs
+    
+    period_step <- case_when(
+      params$aggregate_range == "week" ~ days(7),
+      params$aggregate_range == "month" ~ months(1),
+      is.null(params$aggregate_range) ~ stop("setting aggregate_range must be provided in params")
+    )
+    
+    # Make list of dates to aggregate over.
+    end_dates <- sort( ymd(params$end_date) - period_step * seq(0, params$n_periods) )
+    
+    for (end_date in end_dates) {
+      period_params <- params
+      period_params$end_date <- end_date
+      run_contingency_tables_one_period(period_params, aggregations)
+    }
+  } else {
+    ## Produce CSVs for a single time period
+    run_contingency_tables_one_period(params, aggregations)
+  }
+  
+
+}
+
+#' Run the contingency table production pipeline for a single time period
 #'
 #' See the README.md file in the source directory for more information about how to run
 #' this function.
@@ -19,7 +70,7 @@
 #' @importFrom parallel detectCores
 #' 
 #' @export
-run_contingency_tables <- function(params, aggregations)
+run_contingency_tables_one_period <- function(params, aggregations)
 {
   params <- update_params(params)
   aggregations <- verify_aggs(aggregations)

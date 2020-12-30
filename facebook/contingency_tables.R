@@ -1,8 +1,7 @@
 #### TODO
-# - set up to be able to aggregate multiple time periods in series?
-#   wrapper function that modifies params.json or starts an alternate path in main .R file
 # - map response codes to descriptive values? Would need mapping for every
-#   individual question
+#   individual question. Plan is to start with most important/used (race, age 
+#   groups, V3)
 
 library(tibble)
 library(delphiFacebook)

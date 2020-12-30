@@ -65,7 +65,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     
     # To display other response columns ("val", "sample_size", "se", 
     # "effective_sample_size"), add here.
-    keep_vars <- c("val", "sample_size", "effective_sample_size")
+    keep_vars <- c("val", "sample_size")
     
     for (agg_metric in names(dfs_out)) {
       map_old_new_names <- keep_vars
@@ -328,6 +328,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
                             s_mix_coef, params$s_weight)
       
       sample_size <- sum(agg_df$weight_in_location)
+      total_represented <- sum(agg_df[[var_weight]])
       
       ## TODO Fix this. Old pipeline for community responses did not apply
       ## mixing. To reproduce it, we ignore the mixed weights. Once a better
@@ -335,7 +336,8 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       new_row <- compute_fn(
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
-        sample_size = sample_size)
+        sample_size = sample_size,
+        total_represented = total_represented)
       
       dfs_out[[aggregation]]$val <- new_row$val
       dfs_out[[aggregation]]$se <- new_row$se

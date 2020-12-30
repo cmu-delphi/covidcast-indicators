@@ -1,11 +1,9 @@
 #### TODO
 # - set up to be able to aggregate multiple time periods in series?
 #   wrapper function that modifies params.json more likely. Or something like, if
-#   want to span multiple time periods, date window is added as a grouping var
+#   want to span multiple time periods, date window is added as a grouping var?
 # - map response codes to descriptive values? Would need mapping for every
 #   individual question
-# - How to calculate effective sample size/count respondents per response? Sum
-#   of original weights? Butcount.R::line 44 does something completely different
 # - Remove dependence on "name" column of `aggregations` so aggregations not sharing
 #   grouping variables can have the same name (e.g. might want to report pct_race
 #   by state and by county)
@@ -52,6 +50,5 @@ aggs <- tribble(
   # "anxiety_levels", "mc_anxiety", c("state"), compute_multiple_choice, I,
 )
 
-#Rprof(interval = 0.005)
 params <- read_params("contingency_params.json", "contingency_params.json.template")
 run_contingency_tables(params, aggs)

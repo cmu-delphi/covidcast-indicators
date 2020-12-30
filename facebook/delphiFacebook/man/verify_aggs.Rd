@@ -4,7 +4,7 @@
 \alias{verify_aggs}
 \title{Checks user-set aggregations for basic validity}
 \usage{
-verify_aggs(aggs)
+verify_aggs(aggregations)
 }
 \arguments{
 \item{aggs}{Data frame with columns `name`, `var_weight`, `metric`,

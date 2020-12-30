@@ -2,9 +2,10 @@
 % Please edit documentation in R/contingency_calculate.R
 \name{compute_multiple_choice}
 \alias{compute_multiple_choice}
-\title{Returns multiple choice response estimates. Val is the effective sample size.}
+\title{Returns multiple choice response estimates. Val is the percent responding
+with a given response.}
 \usage{
-compute_multiple_choice(response, weight, sample_size)
+compute_multiple_choice(response, weight, sample_size, sum_all_weights)
 }
 \arguments{
 \item{response}{a vector of multiple choice responses}
@@ -15,6 +16,9 @@ invariant up to a scaling factor}
 \item{sample_size}{The sample size to use, which may be a non-integer (as
 responses from ZIPs that span geographical boundaries are weighted
 proportionately, and survey weights may also be applied)}
+
+\item{sum_all_weights}{Sum of scaled weights for all responses with non-missing
+grouping variables.}
 }
 \value{
 a vector of counts

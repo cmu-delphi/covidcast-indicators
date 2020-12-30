@@ -9,7 +9,8 @@ summarize_aggregations_group(
   aggregations,
   target_group,
   geo_level,
-  params
+  params,
+  sum_all_weights
 )
 }
 \arguments{

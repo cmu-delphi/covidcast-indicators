@@ -4,11 +4,12 @@
 \alias{get_filenames_in_range}
 \title{Get relevant input data file names from `input_dir`.}
 \usage{
-get_filenames_in_range(date_range, params)
+get_filenames_in_range(start_date, end_date, params)
 }
 \arguments{
-\item{date_range}{List of two dates specifying start and end of desired
-date range}
+\item{start_date}{Start of desired date range}
+
+\item{end_date}{End of desired date range}
 
 \item{params}{Params object produced by read_params}
 }

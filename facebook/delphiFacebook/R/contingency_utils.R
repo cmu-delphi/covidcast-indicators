@@ -80,8 +80,9 @@ get_filenames_in_range <- function(start_date, end_date, params) {
 #' @return a data frame of desired aggregations to calculate
 #'
 #' @export
-verify_aggs <- function(aggs) {
-  aggregations <- unique(aggs)
+verify_aggs <- function(aggregations) {
+  aggregations <- unique(aggregations)
+  aggregations$group_by <- as.list(aggregations$group_by)
   
   if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
     stop("all aggregation names must be unique")
@@ -92,9 +93,9 @@ verify_aggs <- function(aggs) {
   
   expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
                       "compute_fn", "post_fn")
-  if ( !all(expected_names %in% names(aggs)) ) {
+  if ( !all(expected_names %in% names(aggregations)) ) {
     stop(sprintf(
-      "all expected columns %s must appear in aggs", 
+      "all expected columns %s must appear in the aggregations table", 
       paste(expected_names, collapse=", ")))
   }
   

@@ -5,7 +5,7 @@
 \title{Wrapper for `compute_binary_response` that adds sample_size. Val is the 
 percent `TRUE`.}
 \usage{
-compute_binary_and_multiselect(response, weight, sample_size)
+compute_binary_and_multiselect(response, weight, sample_size, sum_all_weights)
 }
 \arguments{
 \item{response}{a vector of binary (0 or 1) responses}
@@ -16,6 +16,8 @@ invariant up to a scaling factor}
 \item{sample_size}{The sample size to use, which may be a non-integer (as
 responses from ZIPs that span geographical boundaries are weighted
 proportionately, and survey weights may also be applied)}
+
+\item{sum_all_weights}{Unused.}
 }
 \value{
 a vector of percentages

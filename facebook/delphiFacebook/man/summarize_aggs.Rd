@@ -29,12 +29,5 @@ being used}
 "num_filter"}
 }
 \description{
-The organization may seem a bit contorted, but this is designed for speed.
-The primary bottleneck is repeatedly filtering the data frame to find data
-for the grouping variables of interest. To save time, we do this once
-and then calculate all indicators for that groupby combination, rather than
-separately filtering every time we want to calculate a new table. We also
-rely upon data.table's keys and indices to allow us to do the filtering in
-O(log n) time, which is important when the data frame contains millions of
-rows.
+Performs calculations across all groupby levels for all aggregations.
 }

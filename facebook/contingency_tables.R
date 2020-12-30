@@ -6,7 +6,9 @@
 #   individual question
 # - How to calculate effective sample size/count respondents per response? Sum
 #   of original weights? Butcount.R::line 44 does something completely different
-# - Remove dependence on "name" column of `aggregations`.
+# - Remove dependence on "name" column of `aggregations` so aggregations not sharing
+#   grouping variables can have the same name (e.g. might want to report pct_race
+#   by state and by county)
 
 library(tibble)
 library(delphiFacebook)

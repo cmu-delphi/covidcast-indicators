@@ -4,7 +4,7 @@
 \alias{compute_numeric}
 \title{Wrapper for `compute_count_response` that adds sample_size. Val is the mean.}
 \usage{
-compute_numeric(response, weight, sample_size)
+compute_numeric(response, weight, sample_size, sum_all_weights)
 }
 \arguments{
 \item{response}{a vector of percentages (100 * cnt / total)}
@@ -13,6 +13,8 @@ compute_numeric(response, weight, sample_size)
 invariant up to a scaling factor}
 
 \item{sample_size}{Unused.}
+
+\item{sum_all_weights}{Unused.}
 }
 \value{
 a vector of mean values

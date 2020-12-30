@@ -63,7 +63,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
     
-    # If want to display other response columns ("val", "sample_size", "se", 
+    # To display other response columns ("val", "sample_size", "se", 
     # "effective_sample_size"), add here.
     keep_vars <- c("val", "sample_size", "effective_sample_size")
     
@@ -176,15 +176,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 
 #' Performs calculations across all groupby levels for all aggregations.
 #'
-#' The organization may seem a bit contorted, but this is designed for speed.
-#' The primary bottleneck is repeatedly filtering the data frame to find data
-#' for the grouping variables of interest. To save time, we do this once
-#' and then calculate all indicators for that groupby combination, rather than
-#' separately filtering every time we want to calculate a new table. We also
-#' rely upon data.table's keys and indices to allow us to do the filtering in
-#' O(log n) time, which is important when the data frame contains millions of
-#' rows.
-#'
 #' @param df a data frame of survey responses
 #' @param crosswalk_data An aggregation, such as zip => county or zip => state,
 #'   as a data frame with a "zip5" column to join against.
@@ -239,6 +230,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
+  sum_all_weights <- na.omit(df, groupby_vars)[, sum(weight, na.rm=TRUE)]
   
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
@@ -248,7 +240,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       aggregations,
       target_group,
       geo_level,
-      params)
+      params,
+      sum_all_weights)
     
     return(out)
   }
@@ -307,11 +300,12 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #' @importFrom dplyr %>%
 #' 
 #' @export
-summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
+summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params, sum_all_weights) {
+  browser()
   ## Prepare outputs.
   dfs_out <- list()
-  for (index in seq_along(aggregations$name)) {
-    aggregation <- aggregations$name[index]
+  for (row in seq_along(aggregations$name)) {
+    aggregation <- aggregations$name[row]
     
     dfs_out[[aggregation]] <- target_group %>%
       as.list %>%
@@ -322,7 +316,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       add_column(effective_sample_size=NA_real_)
   }
   
-  for (row in seq_len(nrow(aggregations))) {
+  for (row in seq_along(aggregations$name)) {
     aggregation <- aggregations$name[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
@@ -344,7 +338,8 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       new_row <- compute_fn(
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
-        sample_size = sample_size)
+        sample_size = sample_size,
+        sum_all_weights)
       
       dfs_out[[aggregation]]$val <- new_row$val
       dfs_out[[aggregation]]$se <- new_row$se

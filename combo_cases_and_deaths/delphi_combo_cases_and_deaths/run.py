@@ -51,7 +51,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     print("Fetching usa-facts...")
     # for hhs and nation, fetch the county data so we can combined JHU and USAFacts before mapping
     # to the desired geos.
-    geo_to_fetch = "county" if geo in ["county", "hhs", "nation"] else geo
+    geo_to_fetch = "county" if geo in ["hhs", "nation"] else geo
     usafacts_df = fetcher("usa-facts", signal, date_range[0], date_range[1], geo_to_fetch)
     print("Fetching jhu-csse...")
     jhu_df = fetcher("jhu-csse", signal, date_range[0], date_range[1], geo_to_fetch)

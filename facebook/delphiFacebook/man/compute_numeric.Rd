@@ -4,7 +4,7 @@
 \alias{compute_numeric}
 \title{Wrapper for `compute_count_response` that adds sample_size. Val is the mean.}
 \usage{
-compute_numeric(response, weight, sample_size, sum_all_weights)
+compute_numeric(response, weight, sample_size, total_represented)
 }
 \arguments{
 \item{response}{a vector of percentages (100 * cnt / total)}
@@ -12,12 +12,14 @@ compute_numeric(response, weight, sample_size, sum_all_weights)
 \item{weight}{a vector of sample weights for inverse probability weighting;
 invariant up to a scaling factor}
 
-\item{sample_size}{Unused.}
+\item{sample_size}{The sample size to use, which may be a non-integer (as
+responses from ZIPs that span geographical boundaries are weighted
+proportionately, and survey weights may also be applied)}
 
-\item{sum_all_weights}{Unused.}
+\item{total_represented}{Unused}
 }
 \value{
-a vector of mean values
+a list of named means and other descriptive statistics
 }
 \description{
 Wrapper for `compute_count_response` that adds sample_size. Val is the mean.

@@ -1,14 +1,10 @@
-#### TODO
-# - map response codes to descriptive values? Would need mapping for every
-#   individual question. Plan is to start with most important/used (race, age 
-#   groups, V3, etc)
-
 library(tibble)
 library(delphiFacebook)
 
 # User should add additional desired aggregations here following existing
-# format. Names should be unique. Listing no groupby vars will implicitly
-# compute aggregations at the national level only.
+# format. Names should be descriptive. Listing no groupby vars will implicitly
+# compute aggregations at the national level only. Aggregations will not be 
+# reported if one or more of the metric or grouping variables is missing.
 #
 # Each row represents one aggregate to report. `name` is the aggregate's base
 # column name; `var_weight` is the column to use for its weights. `metric` is

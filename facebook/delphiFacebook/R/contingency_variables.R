@@ -32,13 +32,13 @@ make_human_readable <- function(input_data) {
 #' 
 #' @return data frame of individual response data with newly mapped columns
 rename_responses <- function(df) {
-  # Named list of question numbers and str replacement names
+  # Named vector of new response names and the response codes they are replacing.
   # These columns are not available for aggregation:
   #   "t_zipcode" = "A3", -> Please use `zip5` instead
   #   "t_symptoms_other" = "B2_14_TEXT",
   #   "t_unusual_symptoms_other" = "B2c_14_TEXT",
   #   "t_gender_other" = "D1_4_TEXT",
-  map_old_new_names <- c(
+  map_new_old_names <- c(
     ## free response
     # Either number ("n"; can be averaged although may need processing) or text ("t")
     "n_hh_num_sick" = "hh_number_sick", # A2
@@ -145,7 +145,7 @@ rename_responses <- function(df) {
     # Wave 5 additions
     "mc_cmnty_mask_prevalence" = "C16",
     # Wave 6 additions
-    "mc_accept_cov_vaccine" = "V3", # presumably has binary version
+    "mc_accept_cov_vaccine" = "V3",
     "mc_num_cov_vaccine_doses" = "V2",
     
     ## multiselect (ms)
@@ -167,32 +167,80 @@ rename_responses <- function(df) {
     "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
   )
   
-  map_old_new_names <- map_old_new_names[!(names(map_old_new_names) %in% names(df))]
-  df <- rename(df, map_old_new_names[map_old_new_names %in% names(df)])
+  map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
+  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
   
   return(df)
 }
 
-#' Remap race and binary columns to make more interpretable
+#' Remap binary columns, race, and others to make more interpretable
 #' 
 #' @param df Data frame of individual response data.
 #' 
 #' @return data frame of individual response data with newly mapped columns
 reformat_responses <- function(df) {
-  # Map responses with multiple race options selected into a single category.
-  df[grepl(",", df$D7), "D7"] <- "multiracial"
+  # Map responses with multiple races selected into a single category.
+  df[grepl(",", df$D7), "D7"] <- "Multiracial"
   
   # Map "I don't know" to NA in otherwise binary columns.
-  df <- code_binary_with_idk(df, "B11")
-  df <- code_binary_with_idk(df, "C17", 1, 4, 2)
+  df <- remap_response(df, "B11", c("1"=1, "2"=0, "3"=NA)) %>% 
+    remap_response("C17", c("1"=1, "4"=0, "2"=NA)) %>% 
+    
+    remap_response("E1_1", c("1"=1, "2"=0, "5"=NA)) %>% 
+    remap_response("E1_2", c("1"=1, "2"=0, "5"=NA)) %>% 
+    remap_response("E1_3", c("1"=1, "2"=0, "5"=NA)) %>% 
+    remap_response("E1_4", c("1"=1, "2"=0, "5"=NA)) %>% 
+    
+    remap_response("E2_1", c("2"=1, "3"=0, "4"=NA)) %>% 
+    remap_response("E2_2", c("2"=1, "3"=0, "4"=NA))
   
-  df <- code_binary_with_idk(df, "E1_1", 1, 2, 5)
-  df <- code_binary_with_idk(df, "E1_2", 1, 2, 5)
-  df <- code_binary_with_idk(df, "E1_3", 1, 2, 5)
-  df <- code_binary_with_idk(df, "E1_4", 1, 2, 5)
+  map_old_new_responses <- list(
+    D2=list(
+      "map"=c("1"="18-24", "2"="25-34", "3"="35-44", "4"="45-54", "5"="55-64", "6"="65-74", "7"="75+"),
+      "default"=NULL
+    ),
+    D7=list(
+      "map"=c("1"="American Indian or Alaska Native", "2"="Asian", "3"="Black or African American", 
+              "4"="Native Hawaiian or Pacific Islander", "5"="White", "6"="Other"),
+      "default"=NULL
+    ),
+    V3=list(
+      "map"=c("1"="def vaccinate", "2"="prob vaccinate", "3"="prob not vaccinate", "4"="def not vaccinate"),
+      "default"=NULL
+    )
+  )
   
-  df <- code_binary_with_idk(df, "E2_1", 2, 3, 4)
-  df <- code_binary_with_idk(df, "E2_2", 2, 3, 4)
+  for (col_var in names(map_old_new_responses)) {
+    df <- remap_response(df, col_var, 
+                         map_old_new_responses[[col_var]][["map"]], 
+                         map_old_new_responses[[col_var]][["default"]]
+    )
+  }
+  
+  
+  return(df)
+}
+
+#' Convert a response codes in a single response to specified values
+#' 
+#' @param df Data frame of individual response data.
+#' @param col_var Name of response var to recode
+#' @param map_old_new Named vector of new values we want to use; names are the
+#'     original response codes
+#' @param default Default to use if value is not explicitly remapped in 
+#'     `map_old_new`; often `NA`, `NA_character_`, etc. See `recode` 
+#'     [documentation](https://rdrr.io/cran/dplyr/man/recode.html) for more info
+#'
+#' @importFrom dplyr recode
+#'
+#' @return list of data frame of individual response data with newly mapped column
+remap_response <- function(df, col_var, map_old_new, default=NULL) {
+  if (  is.null(df[[col_var]]) | (startsWith(col_var, "b_") & FALSE %in% df[[col_var]]) ) {
+    # Already in boolean format or missing
+    return(df)
+  }
+  
+  df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   
   return(df)
 }

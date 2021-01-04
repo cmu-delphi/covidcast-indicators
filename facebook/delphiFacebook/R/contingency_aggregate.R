@@ -138,19 +138,21 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   
   # Convert most columns being used in aggregations to the appropriate format.
   # Multiple choice and multi-select used for grouping are left as-is.
-  #### TODO: should multi-select response be converted into set of binary cols if being used for grouping? Yeah, probably
+  #### TODO: multi-select responses should be converted into set of binary cols if being used for grouping
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
   group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
   
   metric_cols_to_convert <- unique(aggregations$metric)
   
-  #### TODO: likely good as a separate function. Can find way to remove or condense all the `output[[x]]`?
+  #### TODO: move to separate function. Remove or condense all the `output[[x]]`; messy
   for (col_var in c(group_cols_to_convert, metric_cols_to_convert)) {
     if ( is.null(df[[col_var]]) ) {
-      # Column not defined. Remove all aggregations that use it.
-      #### TODO: subset aggregations to remove rows using col_var in group_by vars as well.
-      aggregations <- aggregations[aggregations$metric != col_var, ]
+      # Column not defined. Remove all aggregations that use it as metric or in
+      # group_by variables
+      aggregations <- aggregations[aggregations$metric != col_var & 
+                                     !mapply(aggregations$group_by, 
+                                             FUN=function(x) {col_var %in% x}), ]
       next
     }
     
@@ -334,9 +336,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       sample_size <- sum(agg_df$weight_in_location)
       total_represented <- sum(agg_df[[var_weight]])
       
-      ## TODO Fix this. Old pipeline for community responses did not apply
-      ## mixing. To reproduce it, we ignore the mixed weights. Once a better
-      ## mixing/weighting scheme is chosen, all signals should use it.
+      ## TODO Fix this when same bit is fixed in `aggregate.R`
       new_row <- compute_fn(
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },

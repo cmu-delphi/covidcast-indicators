@@ -1,7 +1,7 @@
 #### TODO
 # - map response codes to descriptive values? Would need mapping for every
 #   individual question. Plan is to start with most important/used (race, age 
-#   groups, V3)
+#   groups, V3, etc)
 
 library(tibble)
 library(delphiFacebook)
@@ -25,7 +25,7 @@ aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_race"), compute_multiple_choice, I,
   "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age"), compute_multiple_choice, I,
-
+  
   # "reasons_tested_14d_pct", "ms_reasons_tested_14d", c("mc_age", "b_tested_14d"), compute_binary_and_multiselect, jeffreys_binary,
   # "tested_pos_14d_pct", "b_tested_pos_14d", c("nation", "mc_age", "b_tested_14d"), compute_binary_and_multiselect, jeffreys_binary,
   # "hh_members_mean", "n_hh_num_total", c("state"), compute_numeric, jeffreys_count,

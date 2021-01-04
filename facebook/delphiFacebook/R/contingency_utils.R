@@ -85,7 +85,8 @@ verify_aggs <- function(aggregations) {
   aggregations$group_by <- as.list(aggregations$group_by)
   
   # Create unique row ID
-  aggregations$id <- paste(aggs[, c("name", "metric", "group_by")], collapse="_")
+  aggregations$id <- apply(aggregations[, c("name", "metric", "group_by")], 
+                           MARGIN=1, FUN=paste, collapse="_")
   
   aggregations$var_weight <- "weight"
   aggregations$skip_mixing <- FALSE

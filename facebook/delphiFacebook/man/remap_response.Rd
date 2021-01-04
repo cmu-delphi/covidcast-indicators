@@ -2,9 +2,10 @@
 % Please edit documentation in R/contingency_variables.R
 \name{remap_response}
 \alias{remap_response}
-\title{Convert a response codes in a single response to specified values}
+\title{Convert a response codes in a single response to specified values. Returns 
+as-is for numeric columns.}
 \usage{
-remap_response(df, col_var, map_old_new, default = NULL)
+remap_response(df, col_var, map_old_new, default = NULL, response_type = "b")
 }
 \arguments{
 \item{df}{Data frame of individual response data.}
@@ -17,10 +18,14 @@ original response codes}
 \item{default}{Default to use if value is not explicitly remapped in 
 `map_old_new`; often `NA`, `NA_character_`, etc. See `recode` 
 [documentation](https://rdrr.io/cran/dplyr/man/recode.html) for more info}
+
+\item{response_type}{Str indicating if response is binary, multiple choice, or
+multi-select.}
 }
 \value{
 list of data frame of individual response data with newly mapped column
 }
 \description{
-Convert a response codes in a single response to specified values
+Convert a response codes in a single response to specified values. Returns 
+as-is for numeric columns.
 }

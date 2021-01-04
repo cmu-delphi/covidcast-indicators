@@ -24,18 +24,15 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     # Format reported columns.
     data <- mutate_at(data, vars(-c(groupby_vars)), 
                       function(x) formatC(x,digits=7,format="f",drop0trailing=TRUE))
-    file_out <- file.path(
-      params$export_dir, sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
-                                 geo_level, paste(groupby_vars, collapse="_"))
-    )
+    
+    filename <- sprintf("%s_%s_%s.csv", format(params$start_date, "%Y%m%d"),
+                        geo_level, 
+                        paste(groupby_vars[groupby_vars != "geo_id"], collapse="_"))
+    file_out <- file.path(params$export_dir, filename)
     
     create_dir_not_exist(params$export_dir)
     
-    msg_df(sprintf(
-      "saving contingency table data to %-35s",
-      sprintf("%s_%s_%s", format(params$start_date, "%Y%m%d"),
-              geo_level, paste(groupby_vars, collapse="_"))
-    ), data)
+    msg_df(sprintf("saving contingency table data to %-35s", filename), data)
     write_csv(data, file_out)
     
   } else {

@@ -245,40 +245,10 @@ remap_response <- function(df, col_var, map_old_new, default=NULL) {
   return(df)
 }
 
-#' Convert a single binary response + "I don't know" column to boolean
-#' 
-#' "I don't know" is set to NA (missing) and excluded.
-#' 
-#' @param df Data frame of individual response data.
-#' @param col_var Name of response var
-#' @param yes_val Response code corresponding to answering "yes"
-#' @param no_val Response code corresponding to answering "yes"
-#' @param idk_val Response code corresponding to answering "I don't know"
-#'
-#' @return list of data frame of individual response data with newly mapped column
-code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
-  if (FALSE %in% df[[col_var]]) {
-    # Already in boolean format.
-    return(df)
-  }
-  
-  # Map values following existing approach in variables.R::code_testing().
-  if (col_var %in% names(df)) {
-    # Convert to binary, excluding "I don't know".
-    df[[col_var]] <- case_when(
-      df[[col_var]] == yes_val ~ 1, # yes
-      df[[col_var]] == no_val ~ 0, # no
-      df[[col_var]] == idk_val ~ NA_real_, # I don't know
-      TRUE ~ NA_real_
-    )
-  }
-  
-  return(df)
-}
 
-#' Wrapper for `code_binary_with_idk` that returns `aggregations` also
+#' Wrapper for `remap_response` that returns `aggregations` also
 #' 
-#' Assumes binary response variable is coded with 1 = TRUE (agree), 2 = FALSE,
+#' Assumes binary response variable and is coded with 1 = TRUE (agree), 2 = FALSE,
 #' 3 = "I don't know"
 #' 
 #' @param df Data frame of individual response data.
@@ -298,7 +268,7 @@ code_binary_with_idk <- function(df, col_var, yes_val=1, no_val=2, idk_val=3) {
 #'
 #' @export
 code_binary <- function(df, aggregations, col_var) {
-  df <- code_binary_with_idk(df, col_var)
+  df <- remap_response(col_var, c("1"=1, "2"=0, "3"=NA))
   return(list(df, aggregations))
 }
 

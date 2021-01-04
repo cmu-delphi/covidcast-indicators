@@ -233,7 +233,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   
   
   ## Set an index on the groupby var columns so that the groupby step can be
-  ## dramatically faster; data.table stores the sort order of the column and
+  ## faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
 

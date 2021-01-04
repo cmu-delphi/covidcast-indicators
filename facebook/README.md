@@ -23,7 +23,7 @@ Rscript run.R
 
 ## Building and testing the code
 
-The documentation for the package is written using the **roxygen2** packaage. To
+The documentation for the package is written using the **roxygen2** package. To
 (re)-create this documentation for the package, run the following from the package
 directory:
 
@@ -31,7 +31,7 @@ directory:
 make lib
 ```
 
-Testing the package is done with the build-in R package checks (which include both
+Testing the package is done with the built-in R package checks (which include both
 static and dynamic checks), as well as unit tests written with **testthat**. To run all
 of these, use the following from within this directory:
 

@@ -14,6 +14,9 @@ library(delphiFacebook)
 # applied to the aggregate data and can perform any final calculations
 # necessary.
 #
+# Please verify that any non-binary, non-numeric questions used are reformatted
+# to be descriptive in `contingency_variables::reformat_responses`.
+#
 # Compute functions must be one of the `compute_*` set (or another function with
 # similar format can be created). Post-processing functions should be one of the
 # `jeffreys_*` set or the identity `I`, which does not modify the data.

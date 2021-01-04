@@ -138,7 +138,9 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   
   # Convert most columns being used in aggregations to the appropriate format.
   # Multiple choice and multi-select used for grouping are left as-is.
-  #### TODO: multi-select responses should be converted into set of binary cols if being used for grouping
+  #### TODO: multi-select responses should be converted into set of binary cols 
+  #### if being used for grouping; low priority since using a multi-select as a
+  #### grouping variable should be rare.
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
   group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
@@ -227,7 +229,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       ))
   }
   
-  if (!exists("unique_group_combos") || nrow(unique_group_combos) == 0) {
+  if ( !exists("unique_group_combos") || nrow(unique_group_combos) == 0 ) {
     return(list())
   }
   
@@ -336,7 +338,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       sample_size <- sum(agg_df$weight_in_location)
       total_represented <- sum(agg_df[[var_weight]])
       
-      ## TODO Fix this when same bit is fixed in `aggregate.R`
+      ## TODO Fix this when same bit is fixed in `aggregate.R`, ~line 181
       new_row <- compute_fn(
         response = agg_df[[metric]],
         weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },

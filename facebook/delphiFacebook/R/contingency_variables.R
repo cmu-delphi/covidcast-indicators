@@ -180,7 +180,7 @@ rename_responses <- function(df) {
 #' @return data frame of individual response data with newly mapped columns
 reformat_responses <- function(df) {
   # Map responses with multiple races selected into a single category.
-  df[grepl(",", df$D7), "D7"] <- "Multiracial"
+  df[grepl(",", df$D7), "D7"] <- "multiracial"
   
   # Map "I don't know" to NA in otherwise binary columns.
   df <- remap_response(df, "B11", c("1"=1, "2"=0, "3"=NA)) %>% 
@@ -194,34 +194,52 @@ reformat_responses <- function(df) {
     remap_response("E2_1", c("2"=1, "3"=0, "4"=NA)) %>% 
     remap_response("E2_2", c("2"=1, "3"=0, "4"=NA))
   
+  # Specifies human-readable values that response codes correspond to for each
+  # question. `default` is the value that all non-specified response codes map to.
   map_old_new_responses <- list(
     D2=list(
       "map"=c("1"="18-24", "2"="25-34", "3"="35-44", "4"="45-54", "5"="55-64", "6"="65-74", "7"="75+"),
-      "default"=NULL
+      "default"=NULL,
+      "type"="mc"
     ),
     D7=list(
       "map"=c("1"="American Indian or Alaska Native", "2"="Asian", "3"="Black or African American", 
-              "4"="Native Hawaiian or Pacific Islander", "5"="White", "6"="Other"),
-      "default"=NULL
+              "4"="Native Hawaiian or Pacific Islander", "5"="White", "6"="Other", "multiracial"="Multiracial"),
+      "default"=NULL,
+      "type"="mc"
     ),
     V3=list(
       "map"=c("1"="def vaccinate", "2"="prob vaccinate", "3"="prob not vaccinate", "4"="def not vaccinate"),
-      "default"=NULL
+      "default"=NULL,
+      "type"="mc"
+    ),
+    D1=list(
+      "map"=c("1"="Male", "2"="Female", "3"="Non-binary", "4"="Other", "5"=NA),
+      "default"=NULL,
+      "type"="mc"
+    ),
+    D8=list(
+      "map"=c("1"="Less than high school", "2"="High school graduate or equivalent", 
+              "3"="Some college", "4"="2 year degree", "5"="4 year degree",
+              "6"="Master's degree", "7"="Professional degree", "8"="Doctorate"),
+      "default"=NULL,
+      "type"="mc"
     )
   )
   
   for (col_var in names(map_old_new_responses)) {
     df <- remap_response(df, col_var, 
                          map_old_new_responses[[col_var]][["map"]], 
-                         map_old_new_responses[[col_var]][["default"]]
+                         map_old_new_responses[[col_var]][["default"]],
+                         map_old_new_responses[[col_var]][["type"]]
     )
   }
-  
   
   return(df)
 }
 
-#' Convert a response codes in a single response to specified values
+#' Convert a response codes in a single response to specified values. Returns 
+#' as-is for numeric columns.
 #' 
 #' @param df Data frame of individual response data.
 #' @param col_var Name of response var to recode
@@ -230,18 +248,27 @@ reformat_responses <- function(df) {
 #' @param default Default to use if value is not explicitly remapped in 
 #'     `map_old_new`; often `NA`, `NA_character_`, etc. See `recode` 
 #'     [documentation](https://rdrr.io/cran/dplyr/man/recode.html) for more info
+#' @param response_type Str indicating if response is binary, multiple choice, or
+#'     multi-select.
 #'
 #' @importFrom dplyr recode
+#' @importFrom stringr str_split
 #'
 #' @return list of data frame of individual response data with newly mapped column
-remap_response <- function(df, col_var, map_old_new, default=NULL) {
-  if (  is.null(df[[col_var]]) | (startsWith(col_var, "b_") & FALSE %in% df[[col_var]]) ) {
-    # Already in boolean format or missing
+remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
+  if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) ) {
+    # Column is missing/not in this wave or already in boolean format
     return(df)
   }
   
-  df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
-  
+  if (response_type %in% c("b", "mc")) {
+    df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
+  } else if (response_type == "ms") {
+    split_col <- str_split(a[[col_var]], ",")
+    df[[col_var]] <- mapply(split_col, FUN=function(row) {
+      paste(recode(row, !!!map_old_new, .default=default), collapse=",")
+    })
+  }
   return(df)
 }
 

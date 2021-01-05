@@ -18,4 +18,7 @@ file.remove(test_path("archive"))
 file.remove(test_path("receiving_full"))
 file.remove(test_path("individual_full"))
 file.remove(test_path("receiving_contingency_full"))
-file.remove(test_path("receiving_contingency_test"))
+
+if ( dir.exists(test_path("receiving_contingency_test")) ) {
+  file.remove(test_path("receiving_contingency_test"))
+}

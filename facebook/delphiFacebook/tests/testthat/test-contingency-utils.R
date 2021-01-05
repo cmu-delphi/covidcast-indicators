@@ -55,7 +55,7 @@ test_that("testing get_filenames_in_range command", {
   
   params <- list(
     input = c(),
-    archive_days = 14,
+    backfill_days = 4,
     input_dir = tdir
   )
   date_range <- list(ymd("2020-01-01"), ymd("2020-01-31"))
@@ -67,7 +67,7 @@ test_that("testing get_filenames_in_range command", {
     "2020-02-06.2020-01-31_Wave_4.csv"
   )
   
-  out <- get_filenames_in_range(date_range, params)
+  out <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
   
   expect_equal(out, expected_output)
 })
@@ -75,20 +75,22 @@ test_that("testing get_filenames_in_range command", {
 test_that("testing verify_aggs command", {
   # Duplicate rows
   input_aggs <- tribble(
-    ~name, ~metric, ~group_by, ~var_weight, ~skip_mixing, ~compute_fn, ~post_fn,
-    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL, NULL, NULL,
-    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, NULL, NULL,
-    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, NULL, NULL
+    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
+    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL,
+    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL,
+    "duplicated", "DDD1_23", c("geo_id"), NULL, NULL
   )
   
   expected_output <- tribble(
-    ~name, ~metric, ~group_by, ~var_weight, ~skip_mixing, ~compute_fn, ~post_fn,
-    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL, NULL, NULL,
-    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, NULL, NULL
+    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight, ~skip_mixing, 
+    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL, "no_change_C14_c(\"geo_id\", \"mc_race\", \"DDD1_23\")", "weight", FALSE,
+    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, "duplicated_DDD1_23_c(\"geo_id\", \"mc_race\")", "weight", FALSE,
+    "duplicated", "DDD1_23", c("geo_id"), NULL, NULL, "duplicated_DDD1_23_geo_id", "weight", FALSE
   )
   
   out <- verify_aggs(input_aggs)
-  
+  print(out)
+  print(expected_output)
   expect_identical(out, expected_output)
   
   # Missing columns
@@ -98,14 +100,6 @@ test_that("testing verify_aggs command", {
     "duplicated", "DDD1_23", c("geo_id", "mc_race")
   )
   
-  expect_error(verify_aggs(input_aggs), "all expected columns .* must appear in aggs")
-  
-  # Duplicate agg names
-  input_aggs <- tribble(
-    ~name, ~metric, ~group_by,
-    "agg_1", "C14", c("geo_id", "mc_race", "DDD1_23"),
-    "agg_1", "DDD1_23", c("geo_id", "mc_race")
-  )
-  
-  expect_error(verify_aggs(input_aggs), "all aggregation names must be unique")
+  expect_error(verify_aggs(input_aggs), 
+               "all expected columns .* must appear in the aggregations table")
 })

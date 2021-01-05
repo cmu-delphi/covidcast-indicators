@@ -21,7 +21,7 @@ test_that("testing rename_responses command", {
   expect_identical(rename_responses(input_data), expected_output)
 })
 
-test_that("testing reformat_responses command", {
+test_that("testing remap_responses command", {
   input_data <- data.frame(
     C14 = c(NA, 1, 3, 6, 2),
     D7 = c("1", NA, "1,2", "5", "3,4,5"),
@@ -30,30 +30,11 @@ test_that("testing reformat_responses command", {
   
   expected_output <- data.frame(
     C14 = c(NA, 1, 3, 6, 2),
-    D7 = c("1", NA, "multiracial", "5", "multiracial"),
+    D7 = c("American Indian or Alaska Native", NA, "Multiracial", "White", "Multiracial"),
     E1_1 = c(1, 1, NA, 0, NA)
   )
   
-  expect_identical(reformat_responses(input_data), expected_output)
-})
-
-test_that("testing code_binary_with_idk command", {
-  input_data <- data.frame(
-    C14 = c(NA, 1, 3, 6, 2),
-    E1_2 = c(1, 1, NA, 0, 0),
-    E1_1 = c(1, 1, 5, 2, NA)
-  )
-  
-  expected_output <- data.frame(
-    C14 = c(NA, 1, 3, 6, 2),
-    E1_2 = c(1, 1, NA, 0, 0),
-    E1_1 = c(1, 1, NA, 0, NA)
-  )
-  
-  out <- code_binary_with_idk(input_data, "E1_1", 1, 2, 5)
-  out <- code_binary_with_idk(out, "E1_2", 1, 2, 5)
-  
-  expect_identical(out, expected_output)
+  expect_identical(remap_responses(input_data), expected_output)
 })
 
 test_that("testing code_binary command", {
@@ -79,9 +60,9 @@ test_that("testing code_multiselect command", {
   )
   
   input_aggs <- tribble(
-    ~name, ~metric, ~group_by,
-    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"),
-    "duplicated", "DDD1_23", c("geo_id", "mc_race")
+    ~name, ~metric, ~group_by, ~id,
+    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), "1",
+    "duplicated", "DDD1_23", c("geo_id", "mc_race"), "2"
   )
   
   expected_output <- data.frame(
@@ -93,15 +74,14 @@ test_that("testing code_multiselect command", {
   )
   
   expected_aggs <- tribble(
-    ~name, ~metric, ~group_by,
-    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"),
-    "duplicated_1", "DDD1_23_1", c("geo_id", "mc_race"),
-    "duplicated_2", "DDD1_23_2", c("geo_id", "mc_race"),
-    "duplicated_3", "DDD1_23_3", c("geo_id", "mc_race")
+    ~name, ~metric, ~group_by, ~id,
+    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), "1",
+    "duplicated_1", "DDD1_23_1", c("geo_id", "mc_race"), "2_1",
+    "duplicated_2", "DDD1_23_2", c("geo_id", "mc_race"), "2_2",
+    "duplicated_3", "DDD1_23_3", c("geo_id", "mc_race"), "2_3"
   )
 
   out <- code_multiselect(as.data.table(input_data), input_aggs, "DDD1_23")
-  
   expect_identical(out, list(as.data.table(expected_output), expected_aggs))
 })
 
@@ -139,7 +119,7 @@ test_that("testing make_human_readable command", {
     b_state_travel = 1,
     DDD123 = 1,
     b_children_grade_prek_k = c(1, 1, NA, 0, NA),
-    mc_race = c("1", NA, "multiracial", "5", "multiracial"),
+    mc_race = c("American Indian or Alaska Native", NA, "Multiracial", "White", "Multiracial"),
     zip5 = c("12345", "23345", "10009", NA, NA),
     t_zipcode = c("12345", "23345", "10009", NA, NA)
   )

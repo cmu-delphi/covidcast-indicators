@@ -76,8 +76,10 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
         dfs_out[[agg_id]][, c(agg_group, keep_vars)], map_old_new_names)
     }
     
-    df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
-    write_contingency_tables(df_out, params, geo_level, agg_group)
+    if ( length(dfs_out) != 0 ) {
+      df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
+      write_contingency_tables(df_out, params, geo_level, agg_group)
+    }
   }
 }
 

@@ -7,8 +7,9 @@ context("Testing the run_contingency_tables function on a small dataset")
 
 test_that("testing lack of existence of csv files", {
   # Since the contingency tables tool removes aggregates that pose a privacy
-  # risk, the small test dataset should produce no aggregates at all.
-  expected_files <- c()
+  # risk, the small test dataset should produce no aggregates at all. In fact,
+  # test output directory won't even be created.
+  expected_files <- character(0)
   actual_files <- dir(test_path("receiving_contingency_test"))
   
   expect_setequal(expected_files, actual_files)

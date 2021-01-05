@@ -7,11 +7,12 @@ context("Testing functions for exporting contingency table CSVs")
 test_that("testing write_contingency_tables command", {
   tdir <- tempfile()
   
-  write_contingency_tables(data.frame(), 
+  expect_message(write_contingency_tables(data.frame(), 
                            params = list(export_dir = tdir, 
                                          start_date = ymd("2020-05-10")), 
                            "state", 
-                           c("geo_id", "tested"))
+                           c("geo_id", "tested")),
+                 "no aggregations produced for grouping variables .* CSV will not be saved")
   expect_equal(!!dir(tdir), character(0))
   
   test_data <- tibble(
@@ -28,8 +29,8 @@ test_that("testing write_contingency_tables command", {
                                          start_date = ymd("2020-05-10")), 
                            "state", 
                            c("geo_id", "tested"))
-  expect_setequal(!!dir(tdir), c("20200510_state_geo_id_tested.csv"))
+  expect_setequal(!!dir(tdir), c("20200510_state_tested.csv"))
   
-  df <- read_csv(file.path(tdir, "20200510_state_geo_id_tested.csv"))
+  df <- read_csv(file.path(tdir, "20200510_state_tested.csv"))
   expect_equivalent(df, test_data)
 })

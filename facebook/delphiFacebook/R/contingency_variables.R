@@ -19,7 +19,7 @@
 #' 
 #' @export
 make_human_readable <- function(input_data) {
-  input_data <- reformat_responses(input_data)
+  input_data <- remap_responses(input_data)
   input_data <- rename_responses(input_data)
   input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
   
@@ -178,7 +178,7 @@ rename_responses <- function(df) {
 #' @param df Data frame of individual response data.
 #' 
 #' @return data frame of individual response data with newly mapped columns
-reformat_responses <- function(df) {
+remap_responses <- function(df) {
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -254,11 +254,10 @@ reformat_responses <- function(df) {
 #'     multi-select.
 #'
 #' @importFrom dplyr recode
-#' @importFrom stringi stri_split
 #'
 #' @return list of data frame of individual response data with newly mapped column
 remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
-  if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) ) {
+  if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) | inherits(df[[col_var]], "logical") ) {
     # Column is missing/not in this wave or already in boolean format
     return(df)
   }
@@ -266,7 +265,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   if (response_type %in% c("b", "mc")) {
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
-    split_col <- stri_split(df[[col_var]], fixed=",")
+    split_col <- strsplit(df[[col_var]], ",")
     df[[col_var]] <- mapply(split_col, FUN=function(row) {
       paste(recode(row, !!!map_old_new, .default=default), collapse=",")
     })
@@ -297,7 +296,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
 #'
 #' @export
 code_binary <- function(df, aggregations, col_var) {
-  df <- remap_response(col_var, c("1"=1, "2"=0, "3"=NA))
+  df <- remap_response(df, col_var, c("1"=1, "2"=0, "3"=NA))
   return(list(df, aggregations))
 }
 
@@ -355,6 +354,7 @@ code_multiselect <- function(df, aggregations, col_var) {
     for (col in seq_along(new_binary_cols)) {
       new_row <- old_row
       new_row$name <- paste(old_row$name, col, sep="_")
+      new_row$id <- paste(old_row$id, col, sep="_")
       new_row$metric <- new_binary_cols[col]
       aggregations <- add_row(aggregations, new_row)
     }

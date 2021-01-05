@@ -10,7 +10,7 @@ class TestValidationReport:
 
     def test_add_raised_unsuppressed_error(self):
         """Test that an unsupressed error shows up in the unsuppressed error list."""
-        report = ValidationReport([("bad", "data 1")])
+        report = ValidationReport(set([("bad", "data 1")]))
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
         assert report.unsuppressed_errors == [self.ERROR_1, self.ERROR_2]
@@ -25,7 +25,7 @@ class TestValidationReport:
 
     def test_str(self):
         """Test that the string representation contains all information."""
-        report = ValidationReport([("good", "data 1")])
+        report = ValidationReport(set([("good", "data 1")]))
         report.increment_total_checks()
         report.increment_total_checks()
         report.increment_total_checks()

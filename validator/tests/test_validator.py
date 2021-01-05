@@ -22,7 +22,7 @@ class TestValidatorInitialization:
                  }
 
         validator = Validator(params)
-        assert not validator.suppressed_errors ^ set([("a", "b"), ("c", "d")])
+        assert validator.suppressed_errors == set([("a", "b"), ("c", "d")])
 
     def test_incorrect_suppressed_errors(self):
         """Test initialization with improperly coded suppressed errors."""

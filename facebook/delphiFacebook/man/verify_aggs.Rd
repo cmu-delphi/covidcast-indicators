@@ -7,7 +7,7 @@
 verify_aggs(aggregations)
 }
 \arguments{
-\item{aggs}{Data frame with columns `name`, `var_weight`, `metric`,
+\item{aggregations}{Data frame with columns `name`, `var_weight`, `metric`,
 `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
 to report. `name` is the aggregate's base column name; `var_weight` is the 
 column to use for its weights; `metric` is the column of `df` containing the

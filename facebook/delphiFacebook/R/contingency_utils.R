@@ -67,7 +67,7 @@ get_filenames_in_range <- function(start_date, end_date, params) {
 
 #' Checks user-set aggregations for basic validity
 #'
-#' @param aggs Data frame with columns `name`, `var_weight`, `metric`,
+#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
 #'   to report. `name` is the aggregate's base column name; `var_weight` is the 
 #'   column to use for its weights; `metric` is the column of `df` containing the

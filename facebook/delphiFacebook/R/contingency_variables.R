@@ -264,7 +264,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   if (response_type %in% c("b", "mc")) {
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
-    split_col <- stri_split(a[[col_var]], fixed=",")
+    split_col <- stri_split(df[[col_var]], fixed=",")
     df[[col_var]] <- mapply(split_col, FUN=function(row) {
       paste(recode(row, !!!map_old_new, .default=default), collapse=",")
     })

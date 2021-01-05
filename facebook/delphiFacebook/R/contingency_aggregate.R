@@ -336,7 +336,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
                             s_mix_coef, params$s_weight)
       
       sample_size <- sum(agg_df$weight_in_location)
-      total_represented <- sum(agg_df[[var_weight]])
+      total_represented <- sum(agg_df[[var_weight]] * agg_df$weight_in_location)
       
       ## TODO Fix this when same bit is fixed in `aggregate.R`, ~line 181
       new_row <- compute_fn(

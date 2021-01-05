@@ -70,6 +70,16 @@ load_response_one <- function(input_filename, params) {
                            D7 = col_character(),
                            E3 = col_character(),
                            Q_TerminateFlag = col_character(),
+                           V4_1 = col_integer(),
+                           V4_2 = col_integer(),
+                           V4_3 = col_integer(),
+                           V4_4 = col_integer(),
+                           V4_5 = col_integer(),
+                           V4a_1 = col_integer(),
+                           V4a_2 = col_integer(),
+                           V4a_3 = col_integer(),
+                           V4a_4 = col_integer(),
+                           V4a_5 = col_integer(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -109,6 +119,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- code_mask_contact(input_data)
   input_data <- code_testing(input_data)
   input_data <- code_activities(input_data)
+  input_data <- code_vaccines(input_data)
 
   # create testing variables
 

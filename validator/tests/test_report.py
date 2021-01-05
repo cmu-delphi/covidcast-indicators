@@ -17,7 +17,7 @@ class TestValidationReport:
 
     def test_add_raised_suppressed_error(self):
         """Test that an supressed error does not show up in the unsuppressed error list."""
-        report = ValidationReport([("good", "data 1")])
+        report = ValidationReport(set([("good", "data 1")]))
         report.add_raised_error(self.ERROR_1)
 
         assert len(report.unsuppressed_errors) == 0

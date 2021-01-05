@@ -10,11 +10,11 @@ class SlackNotifier:
 
     def post_message(self, blocks):
         """Post a message to the slack channel"""
-        try:
-            self.client.chat_postMessage(
-                channel=self.slack_channel,
-                blocks=blocks
-            )
-        except SlackApiError as e:
-            # You will get a SlackApiError if "ok" is False
-            assert False, e.response["error"]
+        #try:
+        self.client.chat_postMessage(
+            channel=self.slack_channel,
+            blocks=blocks
+        )
+        # except SlackApiError as e:
+        #     # You will get a SlackApiError if "ok" is False
+        #     assert False, e.response["error"]

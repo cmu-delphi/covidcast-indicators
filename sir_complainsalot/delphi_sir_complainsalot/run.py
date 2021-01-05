@@ -56,7 +56,7 @@ def split_complaints(complaints, n=49):
 
 def report_complaints(all_complaints, slack_notifier):
     """Post complaints to Slack."""
-    if not params["slack_token"]:
+    if not slack_notifier:
         LOGGER.info("(dry-run)")
         return
 

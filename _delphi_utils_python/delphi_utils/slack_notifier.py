@@ -13,4 +13,3 @@ class SlackNotifier:
             channel=self.slack_channel,
             blocks=blocks
         )
-

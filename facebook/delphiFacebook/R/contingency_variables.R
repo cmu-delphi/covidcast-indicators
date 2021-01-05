@@ -180,7 +180,9 @@ rename_responses <- function(df) {
 #' @return data frame of individual response data with newly mapped columns
 reformat_responses <- function(df) {
   # Map responses with multiple races selected into a single category.
-  df[grepl(",", df$D7), "D7"] <- "multiracial"
+  if ("D7" %in% names(df)) {
+    df[grepl(",", df$D7), "D7"] <- "multiracial"
+  }
   
   # Map "I don't know" to NA in otherwise binary columns.
   df <- remap_response(df, "B11", c("1"=1, "2"=0, "3"=NA)) %>% 

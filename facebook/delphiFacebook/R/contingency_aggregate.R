@@ -63,16 +63,17 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
     
-    # To display other response columns ("val", "sample_size", "se", 
-    # "effective_sample_size"), add here.
+    ## To display other response columns ("val", "sample_size", "se", 
+    ## "effective_sample_size"), add here.
     keep_vars <- c("val", "sample_size")
     
-    for (agg_metric in names(dfs_out)) {
+    for (agg_id in names(dfs_out)) {
+      agg_metric <- aggregations$name[aggregations$id == agg_id]
       map_old_new_names <- keep_vars
       names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
       
-      dfs_out[[agg_metric]] <- rename(
-        dfs_out[[agg_metric]][, c(agg_group, keep_vars)], map_old_new_names)
+      dfs_out[[agg_id]] <- rename(
+        dfs_out[[agg_id]][, c(agg_group, keep_vars)], map_old_new_names)
     }
     
     df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))

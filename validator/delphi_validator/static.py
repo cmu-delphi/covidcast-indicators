@@ -214,14 +214,14 @@ class StaticValidator:
                                       nameformat,
                                       f"Non-conforming geo_ids {unexpected_geos} found"))
 
-        if geo_type not in GEO_REGEX_DICT:
+        if geo_type in GEO_REGEX_DICT:
+            find_all_unexpected_geo_ids(
+                df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
+        else:
             report.add_raised_error(
                 ValidationFailure("check_geo_type",
                                   nameformat,
                                   f"Unrecognized geo type {geo_type}"))
-        else:
-            find_all_unexpected_geo_ids(
-                df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
 
         report.increment_total_checks()
 

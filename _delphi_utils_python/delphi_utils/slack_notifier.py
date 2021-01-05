@@ -5,7 +5,7 @@ class SlackNotifier:
     """Notifies slack channels of messages."""
 
     def __init__(self, slack_channel, slack_token):
-        """Initializes with a slack channel and token."""
+        """Initialize with a slack channel and token."""
         self.slack_channel = slack_channel
         self.client = WebClient(token = slack_token)
 

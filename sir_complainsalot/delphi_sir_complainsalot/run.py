@@ -65,7 +65,7 @@ def report_complaints(all_complaints, params):
 
     for complaints in split_complaints(all_complaints):
         blocks = format_complaints_aggregated_by_source(complaints)
-        logger.info(f"blocks: {len(blocks)}")
+        LOGGER.info(f"blocks: {len(blocks)}")
         try:
             client.chat_postMessage(
                 channel=params["channel"],

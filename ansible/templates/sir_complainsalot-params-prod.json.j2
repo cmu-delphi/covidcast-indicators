@@ -1,0 +1,53 @@
+{
+  "channel": "#sir-complains-a-lot",
+  "slack_token": "{{ sir_complainsalot_slack_token }}",
+  "sources": {
+    "doctor-visits": {
+      "max_age": 5,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "hospital-admissions": {
+      "max_age": 5,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
+      "retired-signals": ["smoothed_covid19","smoothed_adj_covid19"]
+    },
+    "chng": {
+      "max_age": 6,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "google-symptoms": {
+      "max_age": 11,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "ght": {
+      "max_age": 5,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "usa-facts": {
+      "max_age": 3,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "jhu-csse": {
+      "max_age": 2,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "safegraph": {
+      "max_age": 11,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+    },
+    "fb-survey": {
+      "max_age": 3,
+      "maintainers": ["U01069KCRS7"]
+    },
+    "indicator-combination": {
+      "max_age": 3,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
+      "retired-signals": ["nmf_day_doc_fbs_ght"]
+    },
+    "quidel": {
+      "max_age":6,
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
+      "retired-signals": ["raw_pct_negative","smoothed_pct_negative","raw_tests_per_device","smoothed_tests_per_device"]
+    }
+  }
+}

@@ -53,12 +53,12 @@ def test_unstable_sources():
 
     date_range = [date.today(), date.today()]
 
-    for geo in "state county msa".split():
+    for geo in ["state", "county", "msa", "nation", "hhs"]:
         for (fetcher, expected_size) in [
                 (fetcher00, 0),
                 (fetcher01, 0 if geo == "msa" else 1),
                 (fetcher10, 1),
-                (fetcher11, 1 if geo == "msa" else 2)
+                (fetcher11, 1 if geo in ["msa", "nation", "hhs"] else 2)
         ]:
             df = combine_usafacts_and_jhu("", geo, date_range, fetcher)
             assert df.size == expected_size * len(COLUMN_MAPPING), f"""

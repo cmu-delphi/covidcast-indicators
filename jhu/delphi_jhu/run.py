@@ -14,11 +14,11 @@ from delphi_utils import (
     S3ArchiveDiffer,
     Smoother,
     GeoMapper,
+    get_structured_logger,
 )
 
 from .geo import geo_map
 from .pull import pull_jhu_data
-
 
 # global constants
 METRICS = [
@@ -69,6 +69,7 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     cache_dir = params["cache_dir"]
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     if len(params["bucket_name"]) > 0:
         arch_diff = S3ArchiveDiffer(
@@ -88,6 +89,12 @@ def run_module():
         METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS
     ):
         print(metric, geo_res, sensor, smoother)
+        logger.info(
+            event="generating signal and exporting to CSV",
+            metric=metric,
+            geo_res=geo_res,
+            sensor=sensor,
+            smoother=smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res)

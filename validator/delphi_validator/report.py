@@ -91,7 +91,7 @@ class ValidationReport:
         """
         print(self.summary)
         self.log()
-        if len(self.unsuppressed_errors) != 0:
-            sys.exit(1)
-        else:
+        if len(self.unsuppressed_errors) == 0:
             sys.exit(0)
+        else:
+            sys.exit(1)

@@ -3,7 +3,7 @@ import sys
 from typing import Set, Tuple
 from delphi_utils.logger import get_structured_logger
 
-logger = get_structured_logger()
+logger = get_structured_logger("ValidationReport")
 
 class ValidationReport:
     """Class for reporting the results of validation."""

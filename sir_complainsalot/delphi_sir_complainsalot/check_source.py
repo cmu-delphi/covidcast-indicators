@@ -6,8 +6,6 @@ import covidcast
 import numpy as np
 import pandas as pd
 
-logger = get_structured_logger(__name__)
-
 @dataclass
 class Complaint:
     message: str
@@ -31,7 +29,7 @@ class Complaint:
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
 
-def check_source(data_source, meta, params, grace):
+def check_source(data_source, meta, params, grace, logger):
     """Iterate over all signals from a source and check for problems.
 
     Possible problems:

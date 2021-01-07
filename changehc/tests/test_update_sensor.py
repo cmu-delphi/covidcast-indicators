@@ -36,7 +36,7 @@ class TestCHCSensorUpdator:
     prefix = "foo"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
-        "fips": [1.0] * 7 + [2.0] * 6,
+        "fips": ['01001'] * 7 + ['04007'] * 6,
         "den": [1000] * 7 + [2000] * 6,
         "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
 
@@ -64,20 +64,21 @@ class TestCHCSensorUpdator:
 
     def test_geo_reindex(self):
         """Tests that the geo reindexer changes the geographic resolution."""
-        su_inst = CHCSensorUpdator(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
-            'county',
-            self.parallel,
-            self.weekday,
-            self.numtype,
-            self.se
-        )
-        su_inst.shift_dates()
-        data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
-        assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
-        assert (data_frame.sum() == (4200,19000)).all()
+        for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
+            su_inst = CHCSensorUpdator(
+                "02-01-2020",
+                "06-01-2020",
+                "06-12-2020",
+                geo,
+                self.parallel,
+                self.weekday,
+                self.numtype,
+                self.se
+            )
+            su_inst.shift_dates()
+            data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
+            assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
+            assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
         """Tests that the sensors are properly updated."""

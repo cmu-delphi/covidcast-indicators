@@ -15,7 +15,9 @@ GEO_RESOLUTIONS = [
         "state",
         "county",
         "msa",
-        "hrr"
+        "hrr",
+        "hhs",
+        "nation"
 ]
 
 seven_day_moving_average = partial(kday_moving_average, k=7)

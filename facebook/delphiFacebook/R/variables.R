@@ -227,10 +227,12 @@ code_testing <- function(input_data) {
 #'   `v_accept_covid_vaccine`
 code_vaccines <- function(input_data) {
   if ("V1" %in% names(input_data)) {
-    # coded as 1 = Yes, 2 = No, 3 = don't know
+    # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
+    # because, well, you'd know.
     input_data$v_covid_vaccinated <- case_when(
       input_data$V1 == 1 ~ 1,
       input_data$V1 == 2 ~ 0,
+      input_data$V1 == 3 ~ 0,
       TRUE ~ NA_real_
     )
   } else {

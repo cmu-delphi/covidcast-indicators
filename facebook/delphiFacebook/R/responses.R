@@ -70,6 +70,8 @@ load_response_one <- function(input_filename, params) {
                            D7 = col_character(),
                            E3 = col_character(),
                            Q_TerminateFlag = col_character(),
+                           V1 = col_integer(),
+                           V3 = col_integer(),
                            V4_1 = col_integer(),
                            V4_2 = col_integer(),
                            V4_3 = col_integer(),

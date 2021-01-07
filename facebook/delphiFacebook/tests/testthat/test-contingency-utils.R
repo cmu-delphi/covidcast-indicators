@@ -89,8 +89,6 @@ test_that("testing verify_aggs command", {
   )
   
   out <- verify_aggs(input_aggs)
-  print(out)
-  print(expected_output)
   expect_identical(out, expected_output)
   
   # Missing columns

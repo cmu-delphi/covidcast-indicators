@@ -1,0 +1,217 @@
+library(dplyr)
+library(mockery)
+
+context("Verifying the data manipulation correctness of the contingency_tables pipeline")
+
+# mc_anxiety = C8_1
+# mc_gender = D1
+# n_hh_num_total = A2b
+# b_hh_fever = A1_1
+# ms_comorbidities = C1
+# zip = A3
+base_aggs <- tribble(
+  ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
+  "freq_anxiety", "mc_anxiety", c("mc_gender"), compute_multiple_choice, I,
+  "avg_hh_size", "n_hh_num_total", c("mc_gender"), compute_numeric, I,
+  "pct_hh_fever", "b_hh_fever", c("mc_gender"), compute_binary_and_multiselect, I,
+  "pct_comorbidities", "ms_comorbidities", c("mc_gender"), compute_binary_and_multiselect, I,
+)
+
+get_params <- function(output_dir) {
+  params <- read_params("params-contingency-full.json")
+  params$export_dir <- output_dir
+  params$input <- c("simple_synthetic.csv")
+  params$weights_in_dir <- "./weights_simple"
+  
+  return(params)
+}
+
+### This test relies on `setup-run.R` to run the pipeline. This test loads
+### `input/responses.csv`, a small selected subset of test responses.
+test_that("small dataset produces no output", {
+  # Since the contingency tables tool removes aggregates that pose a privacy
+  # risk, the small test dataset should produce no aggregates at all. In fact,
+  # test output directory won't even be created.
+  expected_files <- character(0)
+  actual_files <- dir(test_path("receiving_contingency_test"))
+  
+  expect_setequal(expected_files, actual_files)
+  expect_equal(dir.exists(test_path("receiving_contingency_test")), FALSE)
+})
+
+
+test_that("simple equal-weight dataset produces correct counts", {
+  tdir <- tempfile()
+  params <- get_params("~/Documents/out")
+  create_dir_not_exist(params$export_dir)
+
+  run_contingency_tables(params, base_aggs[1,])
+  
+  # Expected files
+  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
+
+  # Expected file contents
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
+    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L,
+    # "us", "Female", 4L, 100 * 1, 1L # censored due to sample size
+  ))
+  
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  print(df)
+  print(expected_output)
+  expect_equivalent(df, expected_output)
+})
+
+
+test_that("simple equal-weight dataset produces correct unweighted mean", {
+  tdir <- tempfile()
+  params <- get_params("~/Documents/out")
+  create_dir_not_exist(params$export_dir)
+  
+  run_contingency_tables(params, base_aggs[2,])
+  
+  # Expected files
+  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  
+  # # Expected file contents
+  # raw_data <- read.csv("./input/simple_synthetic.csv")
+  # hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
+  hh_avg <- 1.05
+  
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
+    "us", "Female", hh_avg, 2000L
+  ))
+  
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print(df)
+  print(expected_output)
+  expect_equivalent(df, expected_output)
+})
+
+
+test_that("simple equal-weight dataset produces correct percents", {
+  tdir <- tempfile()
+  params <- get_params("~/Documents/out")
+  create_dir_not_exist(params$export_dir)
+  
+  run_contingency_tables(params, base_aggs[3,])
+  
+  # Expected files
+  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  
+  # Expected file contents
+  raw_data <- read.csv("./input/simple_synthetic.csv")
+  fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
+  
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
+    "us", "Female", fever_prop * 100, 2000L
+  ))
+  
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print(df)
+  print(expected_output)
+  expect_equivalent(df, expected_output)
+})
+
+
+test_that("simple equal-weight dataset produces correct multiselect binary percents", {
+  tdir <- tempfile()
+  params <- get_params("~/Documents/out")
+  create_dir_not_exist(params$export_dir)
+  
+  run_contingency_tables(params, base_aggs[4,])
+  
+  # Expected files
+  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  
+  # Expected file contents
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9, ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
+    "us", "Female", 100, 2000L, 1/2000*100, 2000L
+  ))
+  
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print(df)
+  print(expected_output)
+  expect_equivalent(df, expected_output)
+})
+
+
+
+
+
+
+# 
+# 
+# 
+# test_that("testing run on simple equal-weight dataset", {
+#   tdir <- tempfile()
+#   params <- get_params("~/Documents/out")
+#   create_dir_not_exist(params$export_dir)
+#   
+#   run_contingency_tables(params, base_aggs)
+#   
+#   ## freq_anxiety
+#   expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv", 
+#                                               "20200501_nation_gender_anxiety.csv"))
+#   
+#   # Expected file contents
+#   expected_output <- as.data.frame(tribble(
+#     ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
+#     "us", "Female", 1L, 100*2000, 2000L
+#   ))
+#   
+#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+#   print(df)
+#   print(expected_output)
+#   expect_equivalent(df, expected_output)
+#   
+#   ## avg_hh_size
+#   raw_data <- read.csv("./input/simple_synthetic.csv")
+#   hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
+#   
+#   expected_output <- as.data.frame(tribble(
+#     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
+#     "us", "Female", hh_avg, 2000L
+#   ))
+#   
+#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+#   print(df)
+#   print(expected_output)
+#   expect_equivalent(df, expected_output)
+# })
+# 
+# 
+# 
+# test_that("simple dataset produces weighted mean", {
+#   tdir <- tempfile()
+#   params <- get_params("~/Documents/out")
+#   create_dir_not_exist(params$export_dir)
+#   
+#   # Substitute mix_weights return value so can use in calculation for expected value.
+#   stub_weights <- runif(2000)
+#   stub_weights <- stub_weights / sum(stub_weights)
+#   stub(where=summarize_aggregations_group, what="mix_weights", how=stub_weights)
+#   
+#   run_contingency_tables(params, base_aggs[2,])
+#   
+#   # Expected files
+#   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+#   
+#   # Expected file contents
+#   raw_data <- read.csv("./input/simple_synthetic.csv")
+#   hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), stub_weights)
+#   
+#   expected_output <- as.data.frame(tribble(
+#     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
+#     "us", "Female", hh_avg, 2000L
+#   ))
+#   
+#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+#   print(df)
+#   print(expected_output)
+#   expect_equivalent(df, expected_output)
+# })

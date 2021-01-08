@@ -24,7 +24,7 @@ update_params <- function(params) {
       as_date(params$end_date), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
   } else {
-    # Use list of input files provided, even if it does not consitute a full period.
+    # Use list of input files provided, even if it does not constitute a full period.
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
   }

@@ -326,9 +326,9 @@ code_binary <- function(df, aggregations, col_var) {
 #'
 #' @export
 code_multiselect <- function(df, aggregations, col_var) {
-  # Get unique response codes
-  response_codes <- sort(na.omit(
-    unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
+  # Get unique response codes. Sort numerically.
+  response_codes <- as.character(sort(as.numeric( na.omit(
+    unique(do.call(c, strsplit(unique(df[[col_var]]), ","))))) ))
   
   # Turn each response code into a new binary col
   new_binary_cols <- as.character(lapply(
@@ -348,14 +348,16 @@ code_multiselect <- function(df, aggregations, col_var) {
   
   # Update aggregations table
   old_rows <- aggregations[aggregations$metric == col_var, ]
-  for (row in seq_along(old_rows$id)) {
-    old_row <- old_rows[row, ]
+  for (row_ind in seq_along(old_rows$id)) {
+    old_row <- old_rows[row_ind, ]
     
-    for (col in seq_along(new_binary_cols)) {
+    for (col_ind in seq_along(new_binary_cols)) {
       new_row <- old_row
-      new_row$name <- paste(old_row$name, col, sep="_")
-      new_row$id <- paste(old_row$id, col, sep="_")
-      new_row$metric <- new_binary_cols[col]
+      response_code <- response_codes[col_ind]
+      
+      new_row$name <- paste(old_row$name, response_code, sep="_")
+      new_row$id <- paste(old_row$id, response_code, sep="_")
+      new_row$metric <- new_binary_cols[col_ind]
       aggregations <- add_row(aggregations, new_row)
     }
   }

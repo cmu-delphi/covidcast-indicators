@@ -43,8 +43,8 @@ aggs <- tribble(
   "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age", "mc_race", "b_hispanic", "msa"), compute_multiple_choice, I,
   
   # by age and comorbidities
-  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age", "mc_comorbidities", "nation"), compute_multiple_choice, I,
-  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age", "mc_comorbidities", "state"), compute_multiple_choice, I,
+  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age", "ms_comorbidities", "nation"), compute_multiple_choice, I,
+  "freq_accept_cov_vaccine", "mc_accept_cov_vaccine", c("mc_age", "ms_comorbidities", "state"), compute_multiple_choice, I,
   
   ## V1 (had COVID vaccine)
   # by age
@@ -63,8 +63,8 @@ aggs <- tribble(
   "pct_had_cov_vaccine", "b_had_cov_vaccine", c("mc_age", "mc_race", "b_hispanic", "msa"), compute_binary_and_multiselect, jeffreys_binary,
   
   # by age and comorbidities
-  "pct_had_cov_vaccine", "b_had_cov_vaccine", c("mc_age", "mc_comorbidities", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_had_cov_vaccine", "b_had_cov_vaccine", c("mc_age", "mc_comorbidities", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_had_cov_vaccine", "b_had_cov_vaccine", c("mc_age", "ms_comorbidities", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_had_cov_vaccine", "b_had_cov_vaccine", c("mc_age", "ms_comorbidities", "state"), compute_binary_and_multiselect, jeffreys_binary,
 )
 
 params <- read_params("contingency_params.json", "contingency_params.json.template")

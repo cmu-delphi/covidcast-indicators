@@ -196,36 +196,83 @@ remap_responses <- function(df) {
     remap_response("E2_1", c("2"=1, "3"=0, "4"=NA)) %>% 
     remap_response("E2_2", c("2"=1, "3"=0, "4"=NA))
   
-  # Specifies human-readable values that response codes correspond to for each
-  # question. `default` is the value that all non-specified response codes map to.
+  ## Specifies human-readable values that response codes correspond to for each
+  ## question. `default` is the value that all non-specified response codes map 
+  ## to. Please avoid including commas or other punctuation in replacement
+  ## strings for ease of down-stream usage.
   map_old_new_responses <- list(
     D2=list(
-      "map"=c("1"="18-24", "2"="25-34", "3"="35-44", "4"="45-54", "5"="55-64", "6"="65-74", "7"="75+"),
+      "map"=c(
+        "1"="18-24", 
+        "2"="25-34", 
+        "3"="35-44", 
+        "4"="45-54", 
+        "5"="55-64", 
+        "6"="65-74", 
+        "7"="75+"),
       "default"=NULL,
       "type"="mc"
     ),
     D7=list(
-      "map"=c("1"="American Indian or Alaska Native", "2"="Asian", "3"="Black or African American", 
-              "4"="Native Hawaiian or Pacific Islander", "5"="White", "6"="Other", "multiracial"="Multiracial"),
+      "map"=c(
+        "1"="American Indian or Alaska Native", 
+        "2"="Asian", 
+        "3"="Black or African American", 
+        "4"="Native Hawaiian or Pacific Islander", 
+        "5"="White", 
+        "6"="Other", 
+        "multiracial"="Multiracial"),
       "default"=NULL,
       "type"="mc"
     ),
     V3=list(
-      "map"=c("1"="def vaccinate", "2"="prob vaccinate", "3"="prob not vaccinate", "4"="def not vaccinate"),
+      "map"=c(
+        "1"="def vaccinate", 
+        "2"="prob vaccinate", 
+        "3"="prob not vaccinate", 
+        "4"="def not vaccinate"),
       "default"=NULL,
       "type"="mc"
     ),
     D1=list(
-      "map"=c("1"="Male", "2"="Female", "3"="Non-binary", "4"="Other", "5"=NA),
+      "map"=c(
+        "1"="Male", 
+        "2"="Female", 
+        "3"="Non-binary", 
+        "4"="Other", 
+        "5"=NA),
       "default"=NULL,
       "type"="mc"
     ),
     D8=list(
-      "map"=c("1"="Less than high school", "2"="High school graduate or equivalent", 
-              "3"="Some college", "4"="2 year degree", "5"="4 year degree",
-              "6"="Master's degree", "7"="Professional degree", "8"="Doctorate"),
+      "map"=c(
+        "1"="Less than high school", 
+        "2"="High school graduate or equivalent", 
+        "3"="Some college", 
+        "4"="2 year degree", 
+        "5"="4 year degree", 
+        "6"="Master's degree", 
+        "7"="Professional degree", 
+        "8"="Doctorate"),
       "default"=NULL,
       "type"="mc"
+    ),
+    C1=list(
+      "map"=c(
+        "1"="Diabetes", # Waves 1-3; later separated into types 1 and 2
+        "2"="Cancer", 
+        "3"="Heart disease", 
+        "4"="High blood pressure", 
+        "5"="Asthma", 
+        "6"="Chronic lung disease", 
+        "7"="Kidney disease", 
+        "8"="Autoimmune disorder", 
+        "9"="None listed", 
+        "10"="Type 2 diabetes", 
+        "11"="Compromised immune system", 
+        "12"="Type 1 diabetes"),
+      "default"=NULL,
+      "type"="ms"
     )
   )
   

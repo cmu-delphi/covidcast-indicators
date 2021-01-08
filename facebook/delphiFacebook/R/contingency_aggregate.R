@@ -227,7 +227,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   } else {
     msg_plain(
       sprintf(
-        "not all of groupby columns %s available in data; skipping this aggregation", 
+        "not all of groupby columns %s available in data; skipping aggregation", 
         paste(groupby_vars, collapse=", ")
       ))
   }

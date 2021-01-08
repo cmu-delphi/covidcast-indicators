@@ -1,0 +1,2 @@
+# Manual Jenkins build and deployment
+- Fri Jan  8 16:14:32 EST 2021

@@ -55,6 +55,7 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
+                           A2 = col_integer(),
                            A3 = col_character(),
                            B2 = col_character(),
                            B2_14_TEXT = col_character(),

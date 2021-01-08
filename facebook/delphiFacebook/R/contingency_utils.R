@@ -12,16 +12,21 @@
 #' 
 #' @export
 update_params <- function(params) {
-  if ( is.null(params$end_date) ) {
+  if ( is.null(params$end_date) & is.null(params$input) ) {
+    # Neither end_date nor list of input files is provided, assume want to use
+    # most current dates and data.
     date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-  } else {
+  } else if ( !is.null(params$end_date) & is.null(params$input) ) {
+    # List of input files is not provided, assume want to use the full period
+    # preceding the provided end_date
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
-  }
-
-  if (length(params$input) == 0) {
-    stop("no input files to read in")
+    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+  } else {
+    # Use list of input files provided, even if it does not consitute a full period.
+    date_range <- get_range_prev_full_period(
+      as_date(params$end_date), params$aggregate_range)
   }
 
   params$start_time <- date_range[[1]]

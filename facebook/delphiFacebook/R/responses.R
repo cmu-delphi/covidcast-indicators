@@ -85,7 +85,8 @@ load_response_one <- function(input_filename, params) {
                            Q77 = col_integer(),
                            Q78 = col_integer(),
                            Q79 = col_integer(),
-                           Q80 = col_integer()),
+                           Q80 = col_integer(), 
+                           V1 = col_character()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())

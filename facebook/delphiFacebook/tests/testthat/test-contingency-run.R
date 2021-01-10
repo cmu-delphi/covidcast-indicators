@@ -1,5 +1,7 @@
 library(dplyr)
 library(mockery)
+library(mockr)
+library(data.table)
 
 context("Verifying the data manipulation correctness of the contingency_tables pipeline")
 
@@ -186,18 +188,22 @@ test_that("testing run with multiple aggregations per group", {
 ### Tests using non-equal weights. `mix_weights` is stubbed (output is fixed) so
 ### we can ignore the weight normalization process in calculating expected output
 
-# # Substitute mix_weights return value so can use in calculation for expected value.
-# set.seed(0)
-# rand_weights <- runif(2000)
-# rand_weights <- rand_weights / sum(rand_weights)
-# 
-# stub(run_contingency_tables, "mix_weights",
-#      list(
-#        weights=rand_weights,
-#        normalized_preweights=rand_weights
-#      ), depth=15)
-stub(run_contingency_tables, "join_weights", 
-     tibble(), depth=2)
+# Substitute mix_weights return value so can use in calculation for expected value.
+set.seed(0)
+rand_weights <- runif(2000)
+rand_weights <- rand_weights / sum(rand_weights)
+
+mock_join_weights <- function(data, params, weights = c("step1", "full")) {
+  data <- cbind(as.data.table(data), weight=rand_weights)
+  return(data)
+}
+
+mock_mix_weights <- function() {
+  return(list(
+    weights=rand_weights,
+    normalized_preweights=rand_weights
+  ))
+}
 
 test_that("simple weighted dataset produces correct counts", {
   tdir <- tempfile()
@@ -205,22 +211,11 @@ test_that("simple weighted dataset produces correct counts", {
   params$parallel <- FALSE
   create_dir_not_exist(params$export_dir)
   
-  # # Substitute mix_weights return value so can use in calculation for expected value.
-  # set.seed(0)
-  # rand_weights <- runif(2000)
-  # rand_weights <- rand_weights / sum(rand_weights)
-  # 
-  # stub(run_contingency_tables, "mix_weights",
-  #      list(
-  #        weights=rand_weights,
-  #        normalized_preweights=rand_weights
-  #      ), depth=15)
-  # 
-  # # Join rand_weights on.
-  # stub(run_contingency_tables, "join_weights", 
-  #      tibble(), depth=2)
-  browser()
-  run_contingency_tables(params, base_aggs[1,])
+  with_mock(join_weights = mock_join_weights, {
+    with_mock(mix_weights = mock_mix_weights, {
+      run_contingency_tables(params, base_aggs[1,])
+    })
+  })
 
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
@@ -244,88 +239,100 @@ test_that("simple weighted dataset produces correct counts", {
   expect_equivalent(df, expected_output)
 })
 
-# 
-# test_that("simple weighted dataset produces weighted mean", {
-#   tdir <- tempfile()
-#   params <- get_params(tdir)
-#   create_dir_not_exist(params$export_dir)
-# 
-#   run_contingency_tables(params, base_aggs[2,])
-# 
-#   # Expected files
-#   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-# 
-#   # Expected file contents
-#   raw_data <- read.csv("./input/simple_synthetic.csv")
-#   hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), rand_weights)
-# 
-#   expected_output <- as.data.frame(tribble(
-#     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
-#     "us", "Female", hh_avg, 2000L
-#   ))
-# 
-#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-#   print("")
-#   print(df)
-#   print(expected_output)
-#   print("")
-#   expect_equivalent(df, expected_output)
-# })
-# 
-# 
-# test_that("simple weighted dataset produces correct percents", {
-#   tdir <- tempfile()
-#   params <- get_params(tdir)
-#   create_dir_not_exist(params$export_dir)
-# 
-#   run_contingency_tables(params, base_aggs[3,])
-# 
-#   # Expected files
-#   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-# 
-#   # Expected file contents
-#   raw_data <- read.csv("./input/simple_synthetic.csv")
-#   fever_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) , rand_weights)
-# 
-#   expected_output <- as.data.frame(tribble(
-#     ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
-#     "us", "Female", fever_prop * 100, 2000L
-#   ))
-# 
-#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-#   print("")
-#   print(df)
-#   print(expected_output)
-#   print("")
-#   expect_equivalent(df, expected_output)
-# })
-# 
-# 
-# test_that("simple weighted dataset produces correct multiselect binary percents", {
-#   tdir <- tempfile()
-#   params <- get_params(tdir)
-#   create_dir_not_exist(params$export_dir)
-# 
-#   run_contingency_tables(params, base_aggs[4,])
-# 
-#   # Expected files
-#   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-# 
-#   # Expected file contents
-#   raw_data <- read.csv("./input/simple_synthetic.csv")
-#   comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "9"=0, .default=1) , rand_weights)
-# 
-#   expected_output <- as.data.frame(tribble(
-#     ~geo_id, ~mc_gender, ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9,
-#     ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
-#     "us", "Female", 100, 2000L,
-#     comorbid_prop * 100, 2000L
-#   ))
-# 
-#   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-#   print("")
-#   print(df)
-#   print(expected_output)
-#   print("")
-#   expect_equivalent(df, expected_output)
-# })
+
+test_that("simple weighted dataset produces weighted mean", {
+  tdir <- tempfile()
+  params <- get_params(tdir)
+  create_dir_not_exist(params$export_dir)
+
+  with_mock(join_weights = mock_join_weights, {
+    with_mock(mix_weights = mock_mix_weights, {
+      run_contingency_tables(params, base_aggs[2,])
+    })
+  })
+  
+  # Expected files
+  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+
+  # Expected file contents
+  raw_data <- read.csv("./input/simple_synthetic.csv")
+  hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), rand_weights)
+
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
+    "us", "Female", hh_avg, 2000L
+  ))
+
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print("")
+  print(df)
+  print(expected_output)
+  print("")
+  expect_equivalent(df, expected_output)
+})
+
+
+test_that("simple weighted dataset produces correct percents", {
+  tdir <- tempfile()
+  params <- get_params(tdir)
+  create_dir_not_exist(params$export_dir)
+
+  with_mock(join_weights = mock_join_weights, {
+    with_mock(mix_weights = mock_mix_weights, {
+      run_contingency_tables(params, base_aggs[3,])
+    })
+  })
+  
+  # Expected files
+  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+
+  # Expected file contents
+  raw_data <- read.csv("./input/simple_synthetic.csv")
+  fever_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) , rand_weights)
+
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
+    "us", "Female", fever_prop * 100, 2000L
+  ))
+
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print("")
+  print(df)
+  print(expected_output)
+  print("")
+  expect_equivalent(df, expected_output)
+})
+
+
+test_that("simple weighted dataset produces correct multiselect binary percents", {
+  tdir <- tempfile()
+  params <- get_params(tdir)
+  create_dir_not_exist(params$export_dir)
+
+  with_mock(join_weights = mock_join_weights, {
+    with_mock(mix_weights = mock_mix_weights, {
+      run_contingency_tables(params, base_aggs[4,])
+    })
+  })
+
+  # Expected files
+  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+
+  # Expected file contents
+  raw_data <- read.csv("./input/simple_synthetic.csv")
+  comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "9"=0, .default=1) , rand_weights)
+
+  expected_output <- as.data.frame(tribble(
+    ~geo_id, ~mc_gender, ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9,
+    ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
+    "us", "Female", 100, 2000L,
+    comorbid_prop * 100, 2000L
+  ))
+
+  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  print("")
+  print(df)
+  print(expected_output)
+  print("")
+  expect_equivalent(df, expected_output)
+})

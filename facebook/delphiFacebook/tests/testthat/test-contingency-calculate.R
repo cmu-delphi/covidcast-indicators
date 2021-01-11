@@ -5,7 +5,7 @@ test_that("testing compute_multiple_choice command", {
   weight <- c(0.05, 0.03, 0.05, 0.01, 0.05)
   sample_size <- 5
   
-  expected_output <- list(val = 70,
+  expected_output <- list(val = 70.3,
                            sample_size = sample_size,
                            se = NA_real_,
                            effective_sample_size = sample_size)

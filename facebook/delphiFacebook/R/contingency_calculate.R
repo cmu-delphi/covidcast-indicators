@@ -68,7 +68,7 @@ compute_multiple_choice <- function(response, weight, sample_size, total_represe
   assert(all( response >= 0 ))
   assert(length(response) == length(weight))
   
-  return(list(val = round(total_represented),
+  return(list(val = total_represented,
               sample_size = sample_size,
               se = NA_real_,
               effective_sample_size = sample_size))

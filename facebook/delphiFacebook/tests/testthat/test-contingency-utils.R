@@ -8,7 +8,8 @@ test_that("testing update_params command", {
   params <- list(
     input = c(),
     aggregate_range = "month",
-    end_date = "2020-02-01"
+    end_date = "2020-02-01",
+    input_dir = "./input"
   )
   
   expect_error(update_params(params), "no input files to read in")
@@ -32,7 +33,7 @@ test_that("testing update_params command", {
     )
   
   out <- update_params(input_params)
-
+  
   expect_identical(out, expected_output)
 })
 

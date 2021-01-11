@@ -23,10 +23,14 @@ update_params <- function(params) {
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-  } else {
+  } else if ( is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
     # Use list of input files provided, even if it does not constitute a full 
     # period. Use dates in input files to select range.
     date_range <- get_date_range_from_filenames(params)
+  } else if ( !is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
+    # Use provided date to determine range, and use provided list of input files.
+    date_range <- get_range_prev_full_period(
+      as_date(params$end_date), params$aggregate_range)
   }
 
   if (length(params$input) == 0) {

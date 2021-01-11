@@ -8,7 +8,9 @@ GEO_KEY_DICT = {
         "county": "fips",
         "msa": "msa",
         "hrr": "hrr",
-        "state": "state_id"
+        "state": "state_id",
+        "nation": "nation",
+        "hhs": "hhs"
 }
 
 
@@ -21,8 +23,8 @@ def geo_map(geo_res, df):
     # zip -> geo_res
     data = GMPR.replace_geocode(data, "zip", geo_key,
                                 date_col=DATE_COL, data_cols=DATA_COLS)
-    if geo_res == "state":
-        return data
+    if geo_res in ["state", "hhs", "nation"]:
+        return data, geo_key
     # Add parent state
     data = add_parent_state(data, geo_res, geo_key)
     return data, geo_key

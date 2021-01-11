@@ -5,7 +5,8 @@ from os.path import join
 import pandas as pd
 
 from delphi_utils import read_params, add_prefix
-from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
+from delphi_quidel_covidtest.constants import PARENT_GEO_RESOLUTIONS, NONPARENT_GEO_RESOLUTIONS, \
+    SENSORS
 
 
 class TestRun:
@@ -14,7 +15,7 @@ class TestRun:
         """Tests that the proper files are output."""
 
         # Test output exists
-        csv_files = listdir("receiving")
+        csv_files = [i for i in listdir("receiving") if i.endswith(".csv")]
 
         dates = [
             "20200702",
@@ -26,7 +27,7 @@ class TestRun:
             "20200708",
             "20200709"
         ]
-        geos = GEO_RESOLUTIONS.copy()
+        geos = PARENT_GEO_RESOLUTIONS + NONPARENT_GEO_RESOLUTIONS
         sensors = add_prefix(SENSORS,
                              wip_signal=read_params()["wip_signal"],
                              prefix="wip_")
@@ -37,7 +38,7 @@ class TestRun:
                 for sensor in sensors:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
-        assert set(expected_files).issubset(set(csv_files))
+        assert set(expected_files) == (set(csv_files))
 
         # Test output format
         df = pd.read_csv(

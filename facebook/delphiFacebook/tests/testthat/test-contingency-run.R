@@ -41,7 +41,7 @@ test_that("small dataset produces no output", {
   # test output directory won't even be created.
   expected_files <- character(0)
   actual_files <- dir(test_path("receiving_contingency_test"))
-  
+
   expect_setequal(expected_files, actual_files)
   expect_equal(dir.exists(test_path("receiving_contingency_test")), FALSE)
 })
@@ -75,12 +75,12 @@ test_that("simple equal-weight dataset produces correct unweighted mean", {
   tdir <- tempfile()
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
-  
+
   run_contingency_tables(params, base_aggs[2,])
-  
+
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-  
+
   # Expected file contents
   raw_data <- read.csv("./input/simple_synthetic.csv")
   hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
@@ -89,7 +89,7 @@ test_that("simple equal-weight dataset produces correct unweighted mean", {
     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
     "us", "Female", hh_avg, 2000L
   ))
-  
+
   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
   expect_equivalent(df, expected_output)
 })
@@ -123,7 +123,7 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
   tdir <- tempfile()
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
-  
+
   run_contingency_tables(params, base_aggs[4,])
 
   # Expected files
@@ -131,14 +131,15 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9, 
-    ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
-    "us", "Female", 100, 2000L, 
+    ~geo_id, ~mc_gender, ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
+    "us", "Female", 100, 2000L,
     1/2000 * 100, 2000L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  expect_equivalent(df, expected_output)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+
+  expect_equivalent(out, expected_output)
 })
 
 
@@ -157,12 +158,12 @@ test_that("testing run with multiple aggregations per group", {
   ## freq_anxiety
   expected_anxiety <- as.data.frame(tribble(
     ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
-    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L,
-    # "us", "Female", 4L, 100 * 1, 1L # censored due to sample size
+    # "us", "Female", 4L, 100 * 1, 1L, # censored due to sample size
+    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
-  expect_equivalent(df, expected_anxiety)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  expect_equivalent(out, expected_anxiety)
 
   ## all other aggs
   raw_data <- read.csv("./input/simple_synthetic.csv")
@@ -172,16 +173,17 @@ test_that("testing run with multiple aggregations per group", {
   expected_other <- as.data.frame(tribble(
     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
     ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
-    ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9, 
-    ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
+    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
     "us", "Female", hh_avg, 2000L,
     fever_prop * 100, 2000L,
-    100, 2000L, 
+    100, 2000L,
     1/2000 * 100, 2000L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  expect_equivalent(df, expected_other)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+
+  expect_equivalent(out, expected_other)
 })
 
 
@@ -198,11 +200,23 @@ mock_join_weights <- function(data, params, weights = c("step1", "full")) {
   return(data)
 }
 
-mock_mix_weights <- function() {
-  return(list(
-    weights=rand_weights,
-    normalized_preweights=rand_weights
-  ))
+mock_mix_weights <- function(weights, s_mix_coef, s_weight) {
+  if ( length(weights) == 1 ) {
+    return(list(
+      weights=rand_weights[1],
+      normalized_preweights=rand_weights[1]
+    ))
+  } else if ( length(weights) == 1999 ) {
+    return(list(
+      weights=rand_weights[2:2000],
+      normalized_preweights=rand_weights[2:2000]
+    ))
+  } else {
+    return(list(
+      weights=rand_weights,
+      normalized_preweights=rand_weights
+    ))
+  }
 }
 
 test_that("simple weighted dataset produces correct counts", {
@@ -210,12 +224,10 @@ test_that("simple weighted dataset produces correct counts", {
   params <- get_params(tdir)
   params$parallel <- FALSE
   create_dir_not_exist(params$export_dir)
-  
-  with_mock(join_weights = mock_join_weights, {
-    with_mock(mix_weights = mock_mix_weights, {
-      run_contingency_tables(params, base_aggs[1,])
-    })
-  })
+
+  local_mock("delphiFacebook::join_weights" = mock_join_weights)
+  local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  run_contingency_tables(params, base_aggs[1,])
 
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
@@ -227,16 +239,12 @@ test_that("simple weighted dataset produces correct counts", {
   # Expected file contents
   expected_output <- as.data.frame(tribble(
     ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
-    "us", "Female", 1L, anx_freq, 2000L - 1L,
-    # "us", "Female", 4L, xx, 1L # censored due to sample size
+    # "us", "Female", 4L, xx, 1L, # censored due to sample size
+    "us", "Female", 1L, anx_freq, 2000L - 1L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
-  print("")
-  print(df)
-  print(expected_output)
-  print("")
-  expect_equivalent(df, expected_output)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  expect_equivalent(out, expected_output)
 })
 
 
@@ -245,11 +253,9 @@ test_that("simple weighted dataset produces weighted mean", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
-  with_mock(join_weights = mock_join_weights, {
-    with_mock(mix_weights = mock_mix_weights, {
-      run_contingency_tables(params, base_aggs[2,])
-    })
-  })
+  local_mock("delphiFacebook::join_weights" = mock_join_weights)
+  local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  run_contingency_tables(params, base_aggs[2,])
   
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
@@ -257,18 +263,15 @@ test_that("simple weighted dataset produces weighted mean", {
   # Expected file contents
   raw_data <- read.csv("./input/simple_synthetic.csv")
   hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), rand_weights)
+  hh_avg <- round(hh_avg, digits=7)
 
   expected_output <- as.data.frame(tribble(
     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
     "us", "Female", hh_avg, 2000L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  print("")
-  print(df)
-  print(expected_output)
-  print("")
-  expect_equivalent(df, expected_output)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  expect_equivalent(out, expected_output)
 })
 
 
@@ -277,12 +280,10 @@ test_that("simple weighted dataset produces correct percents", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
-  with_mock(join_weights = mock_join_weights, {
-    with_mock(mix_weights = mock_mix_weights, {
-      run_contingency_tables(params, base_aggs[3,])
-    })
-  })
-  
+  local_mock("delphiFacebook::join_weights" = mock_join_weights)
+  local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  run_contingency_tables(params, base_aggs[3,])
+
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
@@ -295,12 +296,8 @@ test_that("simple weighted dataset produces correct percents", {
     "us", "Female", fever_prop * 100, 2000L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  print("")
-  print(df)
-  print(expected_output)
-  print("")
-  expect_equivalent(df, expected_output)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  expect_equivalent(out, expected_output)
 })
 
 
@@ -309,11 +306,9 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
-  with_mock(join_weights = mock_join_weights, {
-    with_mock(mix_weights = mock_mix_weights, {
-      run_contingency_tables(params, base_aggs[4,])
-    })
-  })
+  local_mock("delphiFacebook::join_weights" = mock_join_weights)
+  local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  run_contingency_tables(params, base_aggs[4,])
 
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
@@ -321,18 +316,15 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   # Expected file contents
   raw_data <- read.csv("./input/simple_synthetic.csv")
   comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "9"=0, .default=1) , rand_weights)
-
+  comorbid_prop <- round(comorbid_prop, digits=7)
+  
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_comorbidities_9, ~sample_size_pct_comorbidities_9,
-    ~val_pct_comorbidities_24, ~sample_size_pct_comorbidities_24,
+    ~geo_id, ~mc_gender, ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
     "us", "Female", 100, 2000L,
     comorbid_prop * 100, 2000L
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  print("")
-  print(df)
-  print(expected_output)
-  print("")
-  expect_equivalent(df, expected_output)
+  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  expect_equivalent(out, expected_output)
 })

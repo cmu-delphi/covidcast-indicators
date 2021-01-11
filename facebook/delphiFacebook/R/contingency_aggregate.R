@@ -73,7 +73,7 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
       names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
       
       dfs_out[[agg_id]] <- rename(
-        dfs_out[[agg_id]][, c(agg_group, keep_vars)], map_old_new_names)
+        dfs_out[[agg_id]][, c(agg_group, keep_vars)], all_of(map_old_new_names))
     }
     
     if ( length(dfs_out) != 0 ) {

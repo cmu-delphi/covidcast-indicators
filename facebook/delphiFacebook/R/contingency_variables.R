@@ -373,9 +373,9 @@ code_binary <- function(df, aggregations, col_var) {
 #'
 #' @export
 code_multiselect <- function(df, aggregations, col_var) {
-  # Get unique response codes. Sort numerically.
-  response_codes <- as.character(sort(as.numeric( na.omit(
-    unique(do.call(c, strsplit(unique(df[[col_var]]), ","))))) ))
+  # Get unique response codes. Sort alphabetically.
+  response_codes <- sort( na.omit(
+    unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
   
   # Turn each response code into a new binary col
   new_binary_cols <- as.character(lapply(

@@ -72,6 +72,7 @@ load_response_one <- function(input_filename, params) {
                            E3 = col_character(),
                            Q_TerminateFlag = col_character(),
                            V1 = col_integer(),
+                           V2 = col_integer(),
                            V3 = col_integer(),
                            V4_1 = col_integer(),
                            V4_2 = col_integer(),
@@ -83,6 +84,7 @@ load_response_one <- function(input_filename, params) {
                            V4a_3 = col_integer(),
                            V4a_4 = col_integer(),
                            V4a_5 = col_integer(),
+                           V9 = col_integer(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -362,6 +364,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "D10", # added in Wave 4
     "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
+    "V9", # added in Wave 7
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
@@ -426,7 +429,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_8bKZvWZcGbvzsz3" = 3,
                 "SV_eVXdPlGVNw04el7" = 4,
                 "SV_2hErnivitm0th8F" = 5,
-                "SV_8HCnaK1BJPsI3BP" = 6)
+                "SV_8HCnaK1BJPsI3BP" = 6,
+                "SV_ddjHkcYrrLWgM2V" = 7)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

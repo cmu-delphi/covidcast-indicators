@@ -124,7 +124,7 @@ class Sensorizer:
             {signal,target}_val_col: name of value column in DataFrame
             window_start: Number of days before fit date at which to begin
                           training, inclusive
-                          Positive integer
+                          Positive integer or None for static sensorization
             window_end: Number of days before fit date at which to end
                         training, exclusive
                         Positive integer, greater than window_start
@@ -157,57 +157,79 @@ class Sensorizer:
         merged = pd.merge(signal,target,on=[signal_time_col,signal_geo_col],how="left")
         merged = merged.sort_values([signal_geo_col,signal_time_col]).reset_index()
 
-        unique_times = pd.to_datetime(merged[signal_time_col].unique())
-        sliding_window_df = 0
-        flag = False
         sensor_time_col = "sensor" + signal_time_col
-        for i in range(len(unique_times)):
-            if not flag:
-                sliding_window_df = pd.DataFrame(data={
-                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
-                            unique_times[i]-timedelta(days=window_start)),
-                    sensor_time_col:unique_times[i]})
-                flag = True
-            else:
-                tmp_df = pd.DataFrame(data={
-                    signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
-                            unique_times[i]-timedelta(days=window_start)),
-                    sensor_time_col:unique_times[i]})
-                sliding_window_df = sliding_window_df.append(tmp_df)
+        if window_start is not None:
+            unique_times = pd.to_datetime(merged[signal_time_col].unique())
+            sliding_window_df = 0
+            flag = False
+            for i in range(len(unique_times)):
+                if not flag:
+                    sliding_window_df = pd.DataFrame(data={
+                        signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
+                                unique_times[i]-timedelta(days=window_start)),
+                        sensor_time_col:unique_times[i]})
+                    flag = True
+                else:
+                    tmp_df = pd.DataFrame(data={
+                        signal_time_col:pd.date_range(unique_times[i]-timedelta(days=window_end-1),
+                                unique_times[i]-timedelta(days=window_start)),
+                        sensor_time_col:unique_times[i]})
+                    sliding_window_df = sliding_window_df.append(tmp_df)
 
-        sliding_window_df = pd.merge(merged,sliding_window_df)
-        # Local fits from signal (covariate) to target (response)
-        grouped = sliding_window_df[[signal_geo_col,sensor_time_col,"signal","target"]]
-        grouped = grouped.groupby([signal_geo_col,sensor_time_col])
+            sliding_window_df = pd.merge(merged,sliding_window_df)
+            # Local fits from signal (covariate) to target (response)
+            grouped = sliding_window_df[[signal_geo_col,sensor_time_col,"signal","target"]]
+            grouped = grouped.groupby([signal_geo_col,sensor_time_col])
+        else:
+            grouped = merged[[signal_geo_col,"signal","target"]].groupby(signal_geo_col)
+            merged[[signal_geo_col,"signal","target"]].to_csv("orig_df.csv")
 
         local_fit_df = Sensorizer.linear_regression_coefs(grouped, "signal", "target")
-        local_fit_df = local_fit_df.reset_index()
+        local_fit_df = local_fit_df.reset_index(drop=True)
+        local_fit_df.to_csv("local_fit.csv")
         local_fit_df = local_fit_df.rename(
             columns={"b1":"local_b1","b0":"local_b0",sensor_time_col:signal_time_col})
 
         if global_weights is None:
-                global_weights = pd.DataFrame(data={
-                    signal_geo_col:sliding_window_df[signal_geo_col].unique(),
-                    "weight":1})
+            global_weights = pd.DataFrame(data={
+                signal_geo_col:sliding_window_df[signal_geo_col].unique(),
+                "weight":1})
         global_weights.weight = global_weights.weight/global_weights.weight.sum()
-        
+
         if global_sensor_fit != "norm":
             # Global fits from target (covariate) to signal (response)
-            grouped = sliding_window_df[[
-                signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
-            grouped = grouped.merge(global_weights)
-            grouped["signal_wt"] = grouped.weight * grouped.signal
-            grouped["target_wt"] = grouped.weight * grouped.target
 
-            grouped = grouped.groupby([signal_time_col,sensor_time_col]).agg(np.sum).reset_index()
-            grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
-            grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
-            grouped = grouped.groupby(sensor_time_col)
+            if window_start is not None:
+                grouped = sliding_window_df[[
+                    signal_geo_col,signal_time_col,sensor_time_col,"signal","target"]]
+                grouped = grouped.merge(global_weights)
+                grouped["signal_wt"] = grouped.weight * grouped.signal
+                grouped["target_wt"] = grouped.weight * grouped.target
+
+                grouped = grouped.groupby([signal_time_col,sensor_time_col])
+                grouped = grouped.agg(np.sum).reset_index()
+                grouped = grouped[[signal_time_col,sensor_time_col,"signal_wt","target_wt"]]
+                grouped = grouped.rename(columns={"signal_wt":"signal","target_wt":"target"})
+                grouped = grouped.groupby(sensor_time_col)
+            else:
+                grouped = merged[[signal_geo_col,signal_time_col,"signal","target"]]
+                grouped = grouped.merge(global_weights)
+                grouped["signal_wt"] = grouped.weight * grouped.signal
+                grouped["target_wt"] = grouped.weight * grouped.target
+
+                grouped = grouped.groupby([signal_time_col]).agg(np.sum).reset_index()
+                grouped = grouped[[signal_time_col,"signal_wt","target_wt"]]
+                grouped = grouped.rename(
+                    columns={"signal_wt":"signal","target_wt":"target"}
+                )
+                # Need to group to call linear_regression_coefs but only want 1 group
+                grouped["g"] = "1"
+                grouped = grouped.groupby("g")
 
             fit_intercept = (global_sensor_fit == "intercept")
             global_fit_df = Sensorizer.linear_regression_coefs(grouped, "target", "signal",
                                                                fit_intercept=fit_intercept)
-            global_fit_df = global_fit_df.reset_index()
+            global_fit_df = global_fit_df.reset_index(drop=True)
             global_fit_df = global_fit_df.rename(
                 columns={"b1":"global_b1","b0":"global_b0",sensor_time_col:signal_time_col})
         else:
@@ -235,8 +257,15 @@ class Sensorizer:
             fit_df["global_b1"] = fit_df["signal_std"]/fit_df["sensor_std"]
             global_fit_df = fit_df[[signal_time_col,"global_b1","global_b0"]]
 
-        combined_df = pd.merge(merged,global_fit_df,on=[signal_time_col],how="left")
-        combined_df = pd.merge(combined_df,local_fit_df,on=[signal_time_col,signal_geo_col],how="left")
+        # If static sensorization, global_fit_df has one row
+        # Pandas doesn't allow join without common columns
+        if window_start is None and global_sensor_fit != "norm":
+            combined_df = merged.copy(deep=True)
+            combined_df["global_b0"] = global_fit_df["global_b0"].values[0]
+            combined_df["global_b1"] = global_fit_df["global_b1"].values[0]
+        else:
+            combined_df = pd.merge(merged,global_fit_df,how="left")
+        combined_df = pd.merge(combined_df,local_fit_df,how="left")
 
         # First, calculate estimate in target space
         combined_df["sensor"] = combined_df["signal"]*combined_df["local_b1"]\
@@ -244,6 +273,7 @@ class Sensorizer:
         # Second, scale back into signal space
         combined_df["sensor"] = combined_df["sensor"]*combined_df["global_b1"]\
                                 + combined_df["global_b0"]
+        combined_df.to_csv("static_df.csv")
         # Where we could not fit regression coefficients, use original signal
         combined_df.sensor = combined_df["sensor"].fillna(combined_df["signal"])
         bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 0.9)

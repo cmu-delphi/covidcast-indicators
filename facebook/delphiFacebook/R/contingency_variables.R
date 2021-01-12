@@ -314,7 +314,11 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   } else if (response_type == "ms") {
     split_col <- strsplit(df[[col_var]], ",")
     df[[col_var]] <- mapply(split_col, FUN=function(row) {
-      paste(recode(row, !!!map_old_new, .default=default), collapse=",")
+      if ( length(row) == 1 && is.na(row) ) {
+        NA
+      } else {
+        paste(recode(row, !!!map_old_new, .default=default), collapse=",")
+      }
     })
   }
   return(df)

@@ -1,5 +1,4 @@
 library(dplyr)
-library(mockery)
 library(mockr)
 library(data.table)
 
@@ -20,8 +19,9 @@ base_aggs <- tribble(
 )
 
 # Suppress loading of archive to keep output predictable.
-stub(run_contingency_tables, "load_archive", 
-     list(input_data = NULL, seen_tokens = NULL), depth=2)
+mock_load_archive <- function(...) {
+  return(list(input_data = NULL, seen_tokens = NULL))
+}
 
 get_params <- function(output_dir) {
   params <- read_params("params-contingency-full.json")
@@ -54,6 +54,7 @@ test_that("simple equal-weight dataset produces correct counts", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[1,])
 
   # Expected files
@@ -76,6 +77,7 @@ test_that("simple equal-weight dataset produces correct unweighted mean", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[2,])
 
   # Expected files
@@ -100,6 +102,7 @@ test_that("simple equal-weight dataset produces correct percents", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[3,])
 
   # Expected files
@@ -124,6 +127,7 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[4,])
 
   # Expected files
@@ -148,6 +152,7 @@ test_that("testing run with multiple aggregations per group", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs)
 
   ## freq_anxiety
@@ -227,6 +232,7 @@ test_that("simple weighted dataset produces correct counts", {
 
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[1,])
 
   # Expected files
@@ -255,6 +261,7 @@ test_that("simple weighted dataset produces weighted mean", {
 
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[2,])
   
   # Expected files
@@ -282,6 +289,7 @@ test_that("simple weighted dataset produces correct percents", {
 
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[3,])
 
   # Expected files
@@ -308,6 +316,7 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
 
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
+  local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[4,])
 
   # Expected files

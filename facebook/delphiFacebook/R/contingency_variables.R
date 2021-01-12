@@ -370,6 +370,7 @@ code_binary <- function(df, aggregations, col_var) {
 #' 
 #' @importFrom stats na.omit
 #' @importFrom tibble add_row
+#' @importFrom stringi stri_replace_all
 #'
 #' @export
 code_multiselect <- function(df, aggregations, col_var) {
@@ -380,7 +381,12 @@ code_multiselect <- function(df, aggregations, col_var) {
   # Turn each response code into a new binary col
   new_binary_cols <- as.character(lapply(
     response_codes, 
-    function(code) { paste(col_var, code, sep="_") }))
+    function(code) {
+      paste(col_var, 
+            stri_replace_all(code, "_", fixed=" "), 
+            sep="_")
+      }
+    ))
   #### TODO: eval(parse()) here is not the best approach, but I can't find another 
   # way to get col_var (a string) to be used as a var that references a column
   # rather than as an actual string. This approach causes a shallow copy to be 

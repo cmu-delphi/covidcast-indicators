@@ -190,7 +190,7 @@ class Sensorizer:
 
         if global_weights is None:
             global_weights = pd.DataFrame(data={
-                signal_geo_col:sliding_window_df[signal_geo_col].unique(),
+                signal_geo_col:merged[signal_geo_col].unique(),
                 "weight":1})
         global_weights.weight = global_weights.weight/global_weights.weight.sum()
 

@@ -19,7 +19,6 @@
 #' @return none
 #' 
 #' @importFrom lubridate ymd days
-#' @importFrom dplyr case_when
 #' 
 #' @export
 run_contingency_tables <- function(params, aggregations)
@@ -27,11 +26,13 @@ run_contingency_tables <- function(params, aggregations)
   if (!is.null(params$end_date) & !is.null(params$n_periods)) {
     ## Produce historical CSVs
     
-    period_step <- case_when(
-      params$aggregate_range == "week" ~ days(7),
-      params$aggregate_range == "month" ~ months(1),
-      is.null(params$aggregate_range) ~ stop("setting aggregate_range must be provided in params")
-    )
+    if (params$aggregate_range == "week") {
+      period_step <- days(7)
+    } else if (params$aggregate_range == "week") {
+      period_step <- months(1)
+    } else if (is.null(params$aggregate_range)) {
+      stop("setting aggregate_range must be provided in params")
+    }
     
     # Make list of dates to aggregate over.
     end_dates <- sort( ymd(params$end_date) - period_step * seq(0, params$n_periods) )
@@ -90,7 +91,9 @@ run_contingency_tables_one_period <- function(params, aggregations)
                                             lead_days = params$backfill_days)
   
   if (nrow(data_agg) == 0) {
-    stop("no data available in the desired date range")
+    msg_plain(sprintf("no data available in the desired date range %s- to %s", 
+            params$start_date, params$end_date))
+    return()
   }
   
   data_agg <- join_weights(data_agg, params, weights = "full")

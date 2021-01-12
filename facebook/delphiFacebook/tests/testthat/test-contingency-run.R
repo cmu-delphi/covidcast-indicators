@@ -227,7 +227,6 @@ mock_mix_weights <- function(weights, s_mix_coef, s_weight) {
 test_that("simple weighted dataset produces correct counts", {
   tdir <- tempfile()
   params <- get_params(tdir)
-  params$parallel <- FALSE
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
@@ -336,4 +335,22 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
   expect_equivalent(out, expected_output)
+})
+
+### Providing a range of dates to produce aggregates for
+test_that("production of historical CSVs for range of dates", {
+  tdir <- tempfile()
+  
+  params <- get_params(tdir)
+  params$aggregate_range <- "week"
+  params$n_periods <- 4
+  params$input <- c("full_synthetic.csv")
+  params$weights_in_dir <- "./weights_full"
+  
+  create_dir_not_exist(params$export_dir)
+  
+  run_contingency_tables(params, base_aggs[2,])
+  
+  # Expected files
+  expect_equal(!!dir(params$export_dir), c("20200503_nation_gender.csv", "20200510_nation_gender.csv"))
 })

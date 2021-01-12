@@ -146,9 +146,6 @@ def update_sensor( # pylint: disable=too-many-branches
     # handle if we need to adjust by weekday
     params = Weekday.get_params(data) if weekday else None
 
-    # handle explicitly if we need to use Jeffreys estimate for binomial proportions
-    jeffreys = se
-
     # get right geography
     geo_map = GeoMaps()
     if geo.lower() == "county":
@@ -183,7 +180,7 @@ def update_sensor( # pylint: disable=too-many-branches
                 geo_id,
                 Config.MIN_RECENT_VISITS,
                 Config.MIN_RECENT_OBS,
-                jeffreys
+                se # use Jeffreys estimate
             )
             sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
             sensor_se[geo_id] = res["se"][final_sensor_idxs]
@@ -210,7 +207,7 @@ def update_sensor( # pylint: disable=too-many-branches
                             geo_id,
                             Config.MIN_RECENT_VISITS,
                             Config.MIN_RECENT_OBS,
-                            jeffreys,
+                            se, # use Jeffreys estimate
                         ),
                     )
                 )

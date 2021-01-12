@@ -4,9 +4,8 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-from datetime import datetime as dt
+from datetime import datetime
 from itertools import product
-import datetime
 import time
 
 import numpy as np
@@ -118,7 +117,7 @@ def run_module():
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=dt.strptime(export_start_date, "%Y-%m-%d"),
+            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
             metric=metric,
             geo_res=geo_res,
             sensor=sensor_name,
@@ -153,7 +152,7 @@ def run_module():
     max_lag_in_days = None
     formatted_oldest_final_export_date = None
     if oldest_final_export_date:
-        max_lag_in_days = (datetime.datetime.now() - oldest_final_export_date).days
+        max_lag_in_days = (datetime.now() - oldest_final_export_date).days
         formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds,

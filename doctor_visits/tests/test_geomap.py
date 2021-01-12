@@ -14,7 +14,7 @@ DATA = pd.read_csv(
     nrows=9,
 )
 
-GM = GeoMaps("../static")
+GM = GeoMaps()
 
 
 class TestGeoMap:
@@ -46,8 +46,13 @@ class TestGeoMap:
         assert name == "PatCountyFIPS"
         assert set(out.groups.keys()) == {
                 "01001",
+                "01003",
                 "01005",
+                "01007",
                 "01009",
+                "01011",
+                "01013",
                 "01015",
+                "01017",
                 "01000"
         }

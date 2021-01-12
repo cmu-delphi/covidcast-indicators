@@ -150,7 +150,7 @@ def update_sensor( # pylint: disable=too-many-branches
     jeffreys = se
 
     # get right geography
-    geo_map = GeoMaps(staticpath)
+    geo_map = GeoMaps()
     if geo.lower() == "county":
         data_groups, _ = geo_map.county_to_megacounty(
             data, Config.MIN_RECENT_VISITS, Config.RECENT_LENGTH

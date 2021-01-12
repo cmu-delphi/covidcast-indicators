@@ -21,8 +21,7 @@ from .sensor import DoctorVisitsSensor
 class GeoMaps:
     """Class to map counties to other geographic resolutions."""
 
-    def __init__(self, geo_filepath):
-        self.geo_filepath = geo_filepath
+    def __init__(self):
         self.gmpr = GeoMapper()
 
     @staticmethod
@@ -38,13 +37,6 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-msa resolution, and the geo_id column name
         """
-        msa_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "cbsa_id"],
-            dtype={"cbsa_id": float},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        msa_map.drop_duplicates(inplace=True)
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "msa",
@@ -63,14 +55,6 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
-
-        state_map = pd.read_csv(
-            join(self.geo_filepath, "02_20_uszips.csv"),
-            usecols=["fips", "state_id"],
-            dtype={"state_id": str},
-            converters={"fips": GeoMaps.convert_fips},
-        )
-        state_map.drop_duplicates(inplace=True)
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "state_id",
@@ -94,21 +78,6 @@ class GeoMaps:
             tuple of (data frame at daily-HRR resolution, geo_id column name)
 
         """
-
-        hrr_map = pd.read_csv(
-            join(self.geo_filepath, "transfipsToHRR.csv"),
-            converters={"fips": GeoMaps.convert_fips},
-        )
-
-        ## Each row is one FIPS. Columns [3:] are HRR numbers, consecutively.
-        ## Entries are the proportion of the county contained in the HRR, so rows
-        ## sum to 1.
-
-        ## Drop county and state names -- not needed here.
-        hrr_map.drop(columns=["county_name", "state_id"], inplace=True)
-
-        hrr_map = hrr_map.melt(["fips"], var_name="hrr", value_name="wpop")
-        hrr_map = hrr_map[hrr_map["wpop"] > 0]
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "hrr",
@@ -123,13 +92,12 @@ class GeoMaps:
         return data.groupby("hrr"), "hrr"
 
     def county_to_megacounty(self, data, threshold_visits, threshold_len):
-        """A megacounty for a given day is all of the counties in a certain state who have:
-                 1) Denominator sum over <threshold_len> days below <threshold_visits>, or
-                 2) 0 denominator the last <min_recent_obs> days (not relevant for code
-                    because 0 denominator is not present)
+        """Convert to megacounty and groupby FIPS using GeoMapper package.
 
         Args:
             data: dataframe aggregated to the daily-county resolution (all 7 cols expected)
+            threshold_visits: count threshold to determine when to convert to megacounty.
+            threshold_len: number of days to use when thresholding.
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
@@ -165,11 +133,14 @@ class GeoMaps:
             recent_visits_df, how="left", on=[Config.DATE_COL, Config.GEO_COL]
         )
 
-        data = self.gmpr.fips_to_megacounty(data,
+        all_data = self.gmpr.fips_to_megacounty(data,
                                             threshold_visits,
                                             threshold_len,
                                             fips_col=Config.GEO_COL,
-                                            thr_col="RecentVisits",
+                                            thr_col="Denominator",
                                             date_col=Config.DATE_COL)
-        data.rename({"megafips": Config.GEO_COL}, axis=1, inplace=True)
+        all_data.rename({"megafips": Config.GEO_COL}, axis=1, inplace=True)
+        megacounties = all_data[all_data[Config.GEO_COL].str.endswith("000")]
+        data = pd.concat([data, megacounties])
+
         return data.groupby(Config.GEO_COL), Config.GEO_COL

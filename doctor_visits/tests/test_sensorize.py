@@ -41,6 +41,7 @@ class TestSensorizer:
         signal_df = toy_df[["geo","time","signal"]]
         target_df = toy_df[["geo","time","target"]]
 
+        # Test dynamic sensorization
         coef_df = Sensorizer.sensorize(signal_df,target_df,
             "geo","time","signal","geo","time","target",
             window_start=1,window_end=3)
@@ -52,5 +53,16 @@ class TestSensorizer:
         sensor_values = global_b1*(local_b1*signal_df.signal.values+local_b0)+global_b0
         sensor_values[np.isnan(sensor_values)] = signal_df.signal.values[np.isnan(sensor_values)]
 
-        coef_df.to_csv("coef_df.csv")
+        assert np.allclose(sensor_values, coef_df.signal.values)
+
+        # Test static sensorization
+        coef_df = Sensorizer.sensorize(signal_df,target_df,
+            "geo","time","signal","geo","time","target",
+            window_start=None,window_end=None)
+
+        local_b1 = np.concatenate((np.repeat([11/12.8],5),np.repeat([10/10.8],5)))
+        local_b0 = np.concatenate((np.repeat([0.25],5),np.repeat([4-10*3.8/10.8],5)))*0.01
+        global_b1 = np.repeat([1.05],10)
+        global_b0 = np.repeat([-0.175],10)*0.01
+        sensor_values = global_b1*(local_b1*signal_df.signal.values+local_b0)+global_b0
         assert np.allclose(sensor_values, coef_df.signal.values)

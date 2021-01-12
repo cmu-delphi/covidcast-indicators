@@ -41,7 +41,7 @@ def create_export_csv(
     Returns
     ---------
     dates: pd.Series[datetime]
-        Series of datetimes for which CSV files were exported.
+        Series of dates for which CSV files were exported.
     """
     df = df.copy()
 

@@ -40,5 +40,5 @@ class Config:
     MIN_RECENT_VISITS = 100  # min numbers of visits needed to include estimate
     MIN_RECENT_OBS = 3  # minimum days needed to produce an estimate for latest time
 
-    SENSOR_WINDOW_START = 7 # start of training window for sensorization
+    SENSOR_WINDOW_START = None # 7 # start of training window for sensorization
     SENSOR_WINDOW_END = 42 # end of training window for sensorization

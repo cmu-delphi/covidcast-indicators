@@ -15,6 +15,7 @@ from delphi_utils import read_params
 
 # first party
 from .update_sensor import update_sensor
+from .config import Config
 
 
 def run_module():
@@ -38,7 +39,8 @@ def run_module():
     n_backfill_days = params["n_backfill_days"] # produce estimates for n_backfill_days
     n_waiting_days = params["n_waiting_days"]  # most recent n_waiting_days won't be est
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
-    startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
+    startdate_dt = max(enddate_dt - timedelta(days=n_backfill_days),\
+                        Config.FIRST_DATA_DATE + timedelta(days=1) + Config.DAY_SHIFT)
     enddate = str(enddate_dt.date())
     startdate = str(startdate_dt.date())
     logging.info(f"drop date:\t\t{dropdate}")

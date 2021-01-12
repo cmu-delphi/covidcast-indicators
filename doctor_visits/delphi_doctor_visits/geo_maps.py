@@ -102,37 +102,6 @@ class GeoMaps:
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
 
-        dates = np.unique(data[Config.DATE_COL])
-        fipss = np.unique(data[Config.GEO_COL])
-
-        # get denominator by day and location for all possible date-fips pairs
-        # this fills in 0 if unobserved
-        denom_dayloc = np.zeros((len(dates), len(fipss)))
-        by_fips = data.groupby(Config.GEO_COL)
-        for j, fips in enumerate(fipss):
-            denom_dayloc[:, j] = DoctorVisitsSensor.fill_dates(
-                by_fips.get_group(fips).set_index(Config.DATE_COL), dates
-            )["Denominator"].values
-
-        # get rolling sum across <threshold_len> days
-        num_recent_visits = np.concatenate(
-            (np.zeros((threshold_len, len(fipss))), np.cumsum(denom_dayloc, axis=0)),
-            axis=0,
-        )
-        num_recent_visits = (
-            num_recent_visits[threshold_len:] - num_recent_visits[:-threshold_len]
-        )
-        recent_visits_df = pd.DataFrame(
-            [
-                (dates[x[0]], fipss[x[1]], val)
-                for x, val in np.ndenumerate(num_recent_visits)
-            ],
-            columns=[Config.DATE_COL, Config.GEO_COL, "RecentVisits"],
-        )
-        data = data.merge(
-            recent_visits_df, how="left", on=[Config.DATE_COL, Config.GEO_COL]
-        )
-
         all_data = self.gmpr.fips_to_megacounty(data,
                                             threshold_visits,
                                             threshold_len,

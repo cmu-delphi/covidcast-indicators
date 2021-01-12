@@ -40,8 +40,8 @@ def create_export_csv(
 
     Returns
     ---------
-    dates: Series[datetime]
-        List of dates for which CSV files were exported.
+    dates: pd.Series[datetime]
+        Series of dates for which CSV files were exported.
     """
     df = df.copy()
 

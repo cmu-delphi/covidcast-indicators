@@ -123,7 +123,7 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
-        if not exported_csv_dates.empty:
+        if exported_csv_dates and not exported_csv_dates.empty:
             csv_export_count += exported_csv_dates.size
             if not oldest_final_export_date:
                 oldest_final_export_date = max(exported_csv_dates)
@@ -151,10 +151,12 @@ def run_module():
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = None
+    formatted_oldest_final_export_date = None
     if oldest_final_export_date:
         max_lag_in_days = (datetime.datetime.now() - oldest_final_export_date).days
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds,
         csv_export_count = csv_export_count,
         max_lag_in_days = max_lag_in_days,
-        oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d"))
+        oldest_final_export_date = formatted_oldest_final_export_date)

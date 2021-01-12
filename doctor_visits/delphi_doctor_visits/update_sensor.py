@@ -274,7 +274,7 @@ def update_sensor( # pylint: disable=too-many-branches
                 dtype={"fips":str,"msa":str})
             geo_weights = fips_pop.merge(fips_msa)
             geo_weights = geo_weights.groupby("msa").agg(np.sum).reset_index()
-            geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
+            geo_weights = geo_weights.rename(columns={"msa":"geo","pop":"weight"})
         elif geo.lower() == "county":
             geo_weights = fips_pop.rename(columns={"fips":"geo","pop":"weight"})
 

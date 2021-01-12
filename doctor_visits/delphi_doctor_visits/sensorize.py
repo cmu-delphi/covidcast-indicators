@@ -182,11 +182,9 @@ class Sensorizer:
             grouped = grouped.groupby([signal_geo_col,sensor_time_col])
         else:
             grouped = merged[[signal_geo_col,"signal","target"]].groupby(signal_geo_col)
-            merged[[signal_geo_col,"signal","target"]].to_csv("orig_df.csv")
 
         local_fit_df = Sensorizer.linear_regression_coefs(grouped, "signal", "target")
         local_fit_df = local_fit_df.reset_index(drop=True)
-        local_fit_df.to_csv("local_fit.csv")
         local_fit_df = local_fit_df.rename(
             columns={"b1":"local_b1","b0":"local_b0",sensor_time_col:signal_time_col})
 
@@ -273,7 +271,6 @@ class Sensorizer:
         # Second, scale back into signal space
         combined_df["sensor"] = combined_df["sensor"]*combined_df["global_b1"]\
                                 + combined_df["global_b0"]
-        combined_df.to_csv("static_df.csv")
         # Where we could not fit regression coefficients, use original signal
         combined_df.sensor = combined_df["sensor"].fillna(combined_df["signal"])
         bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 0.9)

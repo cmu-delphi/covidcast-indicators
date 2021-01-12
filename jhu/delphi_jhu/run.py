@@ -123,7 +123,7 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
-        if exported_csv_dates and not exported_csv_dates.empty:
+        if not exported_csv_dates.empty:
             csv_export_count += exported_csv_dates.size
             if not oldest_final_export_date:
                 oldest_final_export_date = max(exported_csv_dates)

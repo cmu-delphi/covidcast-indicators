@@ -9,7 +9,8 @@
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
-#' @param total_represented Unused
+#' @param total_represented Number of people represented in sample, which may
+#'   be a non-integer
 #' 
 #' @return a list of named means and other descriptive statistics
 #'
@@ -18,6 +19,7 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
 {
   response_mean <- compute_count_response(response, weight, sample_size)
   response_mean$sample_size <- sample_size
+  response_mean$represented <- total_represented
   
   return(response_mean)
 }
@@ -31,8 +33,9 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
 #' @param sample_size The sample size to use, which may be a non-integer (as
 #'   responses from ZIPs that span geographical boundaries are weighted
 #'   proportionately, and survey weights may also be applied)
-#' @param total_represented Unused
-#'   
+#' @param total_represented Number of people represented in sample, which may
+#'   be a non-integer
+#'      
 #' @return a list of named percentages and other descriptive statistics
 #'
 #' @export
@@ -40,6 +43,7 @@ compute_binary_and_multiselect <- function(response, weight, sample_size, total_
 {
   response_pct <- compute_binary_response(response, weight, sample_size)
   response_pct$sample_size <- sample_size
+  response_pct$represented <- total_represented
   
   return(response_pct)
 }
@@ -71,5 +75,6 @@ compute_multiple_choice <- function(response, weight, sample_size, total_represe
   return(list(val = total_represented,
               sample_size = sample_size,
               se = NA_real_,
-              effective_sample_size = sample_size))
+              effective_sample_size = sample_size,
+              represented = total_represented))
 }

@@ -64,8 +64,8 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
     dfs_out <- summarize_aggs(df, geo_crosswalk, these_aggs, geo_level, params)
     
     ## To display other response columns ("val", "sample_size", "se", 
-    ## "effective_sample_size"), add here.
-    keep_vars <- c("val", "sample_size")
+    ## "effective_sample_size", "represented"), add here.
+    keep_vars <- c("val", "sample_size", "represented")
     
     for (agg_id in names(dfs_out)) {
       agg_metric <- aggregations$name[aggregations$id == agg_id]
@@ -321,7 +321,8 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       add_column(val=NA_real_) %>%
       add_column(se=NA_real_) %>%
       add_column(sample_size=NA_real_) %>%
-      add_column(effective_sample_size=NA_real_)
+      add_column(effective_sample_size=NA_real_) %>%
+      add_column(represented=NA_real_)
   }
   
   for (row in seq_along(aggregations$id)) {
@@ -352,6 +353,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       dfs_out[[aggregation]]$se <- new_row$se
       dfs_out[[aggregation]]$sample_size <- sample_size
       dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
+      dfs_out[[aggregation]]$represented <- new_row$represented
     }
   }
   

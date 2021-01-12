@@ -22,7 +22,8 @@ invariant up to a scaling factor}
 responses from ZIPs that span geographical boundaries are weighted
 proportionately, and survey weights may also be applied)}
 
-\item{total_represented}{Unused}
+\item{total_represented}{Number of people represented in sample, which may
+be a non-integer}
 }
 \value{
 a list of named percentages and other descriptive statistics

@@ -28,7 +28,7 @@ get_params <- function(output_dir) {
   params$export_dir <- output_dir
   params$input <- c("simple_synthetic.csv")
   params$weights_in_dir <- "./weights_simple"
-  
+
   return(params)
 }
 
@@ -62,8 +62,8 @@ test_that("simple equal-weight dataset produces correct counts", {
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
-    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L,
+    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
+    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L, 100 * (2000 - 1)
     # "us", "Female", 4L, 100 * 1, 1L # censored due to sample size
   ))
 
@@ -88,8 +88,8 @@ test_that("simple equal-weight dataset produces correct unweighted mean", {
   hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
 
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
-    "us", "Female", hh_avg, 2000L
+    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
+    "us", "Female", hh_avg, 2000L, 100 * 2000
   ))
 
   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -113,8 +113,8 @@ test_that("simple equal-weight dataset produces correct percents", {
   fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
 
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
-    "us", "Female", fever_prop * 100, 2000L
+    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
+    "us", "Female", fever_prop * 100, 2000L, 100 * 2000
   ))
 
   df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -135,10 +135,12 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
-    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
-    "us", "Female", 100, 2000L,
-    1/2000 * 100, 2000L
+    ~geo_id, ~mc_gender, 
+    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
+    "us", "Female", 
+    100, 2000L, 100 * 2000,
+    1/2000 * 100, 2000L, 100 * 2000
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -162,9 +164,9 @@ test_that("testing run with multiple aggregations per group", {
   # Expected file contents
   ## freq_anxiety
   expected_anxiety <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
+    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
     # "us", "Female", 4L, 100 * 1, 1L, # censored due to sample size
-    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L
+    "us", "Female", 1L, 100 * (2000 - 1), 2000L -1L, 100 * (2000 - 1)
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
@@ -176,14 +178,14 @@ test_that("testing run with multiple aggregations per group", {
   fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
 
   expected_other <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
-    ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
-    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
-    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
-    "us", "Female", hh_avg, 2000L,
-    fever_prop * 100, 2000L,
-    100, 2000L,
-    1/2000 * 100, 2000L
+    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
+    ~val_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
+    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
+    "us", "Female", hh_avg, 2000L, 100 * 2000,
+    fever_prop * 100, 2000L, 100 * 2000,
+    100, 2000L, 100 * 2000,
+    1/2000 * 100, 2000L, 100 * 2000
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -243,9 +245,11 @@ test_that("simple weighted dataset produces correct counts", {
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~sample_size_freq_anxiety,
+    ~geo_id, ~mc_gender, ~mc_anxiety,
+    ~val_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
     # "us", "Female", 4L, xx, 1L, # censored due to sample size
-    "us", "Female", 1L, anx_freq, 2000L - 1L
+    "us", "Female", 1L,
+    anx_freq, 2000L - 1L, sum(rand_weights[2:2000])
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
@@ -262,7 +266,7 @@ test_that("simple weighted dataset produces weighted mean", {
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
   run_contingency_tables(params, base_aggs[2,])
-  
+
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
@@ -272,8 +276,8 @@ test_that("simple weighted dataset produces weighted mean", {
   hh_avg <- round(hh_avg, digits=7)
 
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size,
-    "us", "Female", hh_avg, 2000L
+    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
+    "us", "Female", hh_avg, 2000L, sum(rand_weights)
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -299,8 +303,8 @@ test_that("simple weighted dataset produces correct percents", {
   fever_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) , rand_weights)
 
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever,
-    "us", "Female", fever_prop * 100, 2000L
+    ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
+    "us", "Female", fever_prop * 100, 2000L, sum(rand_weights)
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -325,12 +329,14 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   raw_data <- read.csv("./input/simple_synthetic.csv")
   comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "9"=0, .default=1) , rand_weights)
   comorbid_prop <- round(comorbid_prop, digits=7)
-  
+
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed,
-    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes,
-    "us", "Female", 100, 2000L,
-    comorbid_prop * 100, 2000L
+    ~geo_id, ~mc_gender,
+    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
+    "us", "Female",
+    100, 2000L, sum(rand_weights),
+    comorbid_prop * 100, 2000L, sum(rand_weights)
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
@@ -340,17 +346,17 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
 ### Providing a range of dates to produce aggregates for
 test_that("production of historical CSVs for range of dates", {
   tdir <- tempfile()
-  
+
   params <- get_params(tdir)
   params$aggregate_range <- "week"
   params$n_periods <- 4
   params$input <- c("full_synthetic.csv")
   params$weights_in_dir <- "./weights_full"
-  
+
   create_dir_not_exist(params$export_dir)
-  
+
   run_contingency_tables(params, base_aggs[2,])
-  
+
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200503_nation_gender.csv", "20200510_nation_gender.csv"))
 })

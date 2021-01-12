@@ -88,7 +88,7 @@ test_that("testing get_date_range_from_filenames command", {
     backfill_days = 4,
     input = files
   )
-  browser()
+  
   expected_output <- list(ymd("2019-10-30"), ymd("2020-02-16"))
   out <- get_date_range_from_filenames(params)
   

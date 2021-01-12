@@ -6,9 +6,10 @@ test_that("testing compute_multiple_choice command", {
   sample_size <- 5
   
   expected_output <- list(val = 70.3,
-                           sample_size = sample_size,
-                           se = NA_real_,
-                           effective_sample_size = sample_size)
+                          sample_size = sample_size,
+                          se = NA_real_,
+                          effective_sample_size = sample_size,
+                          represented = 70.3)
   
   out <- compute_multiple_choice(response, weight, sample_size, 70.3)
   expect_identical(out, expected_output)

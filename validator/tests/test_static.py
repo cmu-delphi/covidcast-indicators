@@ -9,7 +9,13 @@ from delphi_validator.static import StaticValidator
 class TestCheckMissingDates:
 
     def test_empty_filelist(self):
-        params = {"data_source": "", "span_length": 8, "end_date": "2020-09-09"}
+        params = {
+            "global": {
+                "data_source": "",
+                "span_length": 8,
+                "end_date": "2020-09-09"
+            }
+        }
         validator = StaticValidator(params)
         report = ValidationReport(set())
         report = ValidationReport(set())
@@ -21,7 +27,13 @@ class TestCheckMissingDates:
         assert report.raised_errors[0].check_name == "check_missing_date_files"
 
     def test_same_day(self):
-        params = {"data_source": "", "span_length": 0, "end_date": "2020-09-01"}
+        params = {
+            "global": {
+                "data_source": "",
+                "span_length": 0,
+                "end_date": "2020-09-01"
+            }
+        }
         validator = StaticValidator(params)
         report = ValidationReport(set())
 
@@ -31,7 +43,13 @@ class TestCheckMissingDates:
         assert len(report.raised_errors) == 0
 
     def test_duplicate_dates(self):
-        params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
+        params = {
+            "global": {
+                "data_source": "",
+                "span_length": 1,
+                "end_date": "2020-09-02"
+            }
+        }
         validator = StaticValidator(params)
         report = ValidationReport(set())
 
@@ -69,7 +87,13 @@ class TestNameFormat:
 
 
 class TestCheckBadGeoIdFormat:
-    params = {"data_source": "", "span_length": 0, "end_date": "2020-09-02"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 0,
+            "end_date": "2020-09-02"
+        }
+    }
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
@@ -139,7 +163,14 @@ class TestCheckBadGeoIdFormat:
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
 class TestDuplicatedRows:
-    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 0,
+            "end_date": "2020-09-02"
+        }
+    }
+
     def test_no_duplicates(self):
         validator = StaticValidator(self.params)
         report = ValidationReport(set())
@@ -179,9 +210,16 @@ class TestDuplicatedRows:
         assert report.raised_warnings[0].check_name == "check_duplicate_rows"
 
 class TestCheckBadGeoIdValue:
-    params = {"data_source": "", "span_length": 0,
-              "end_date": "2020-09-02",
-              "validator_static_file_dir": "../static"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 0,
+            "end_date": "2020-09-02",
+        },
+        "static": {
+            "validator_static_file_dir": "../static"
+        }
+    }
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
@@ -247,7 +285,13 @@ class TestCheckBadGeoIdValue:
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
 class TestCheckBadVal:
-    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
@@ -297,7 +341,13 @@ class TestCheckBadVal:
 
 
 class TestCheckBadSe:
-    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
@@ -376,8 +426,13 @@ class TestCheckBadSe:
 
 
 class TestCheckBadN:
-    params = {"data_source": "", "span_length": 1,
-              "end_date": "2020-09-02"}
+    params = {
+        "global": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)

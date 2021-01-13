@@ -36,15 +36,19 @@ class DynamicValidator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        self.test_mode = params.get("test_mode", False)
+        global_params = params["global"]
+        dynamic_params = params.get("dynamic", dict())
+
+        self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
-            data_source = params['data_source'],
-            time_window = TimeWindow.from_params(params["end_date"], params["span_length"]),
+            data_source = global_params["data_source"],
+            time_window = TimeWindow.from_params(global_params["end_date"],
+                                                 global_params["span_length"]),
             generation_date = date.today(),
-            max_check_lookbehind = timedelta(days=params.get("ref_window_size", 7)),
-            smoothed_signals = set(params.get("smoothed_signals", [])),
-            expected_lag = params.get("expected_lag", dict())
+            max_check_lookbehind = timedelta(days=dynamic_params.get("ref_window_size", 7)),
+            smoothed_signals = set(dynamic_params.get("smoothed_signals", [])),
+            expected_lag = dynamic_params.get("expected_lag", dict())
         )
 
 

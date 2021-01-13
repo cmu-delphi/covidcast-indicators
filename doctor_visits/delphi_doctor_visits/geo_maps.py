@@ -40,10 +40,10 @@ class GeoMaps:
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "msa",
-                                     from_col="PatCountyFIPS",
+                                     from_col=Config.GEO_COL,
                                      new_col="cbsa_id")
-        data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "cbsa_id"]).sum().reset_index()
+        data.drop(columns=Config.GEO_COL, inplace=True)
+        data = data.groupby([Config.DATE_COL, "cbsa_id"]).sum().reset_index()
 
         return data.groupby("cbsa_id"), "cbsa_id"
 
@@ -58,9 +58,9 @@ class GeoMaps:
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "state_id",
-                                     from_col="PatCountyFIPS")
-        data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "state_id"]).sum().reset_index()
+                                     from_col=Config.GEO_COL)
+        data.drop(columns=Config.GEO_COL, inplace=True)
+        data = data.groupby([Config.DATE_COL, "state_id"]).sum().reset_index()
 
         return data.groupby("state_id"), "state_id"
 
@@ -81,11 +81,11 @@ class GeoMaps:
         data = self.gmpr.add_geocode(data,
                                      "fips",
                                      "hrr",
-                                     from_col="PatCountyFIPS")
-        data.drop(columns="PatCountyFIPS", inplace=True)
+                                     from_col=Config.GEO_COL)
+        data.drop(columns=Config.GEO_COL, inplace=True)
 
         ## do a weighted sum by the wpop column to get each HRR's contribution
-        tmp = data.groupby(["ServiceDate", "hrr"])
+        tmp = data.groupby([Config.DATE_COL, "hrr"])
         wtsum = lambda g: g["weight"].values @ g[Config.COUNT_COLS]
         data = tmp.apply(wtsum).reset_index()
 
@@ -101,14 +101,15 @@ class GeoMaps:
 
         Returns: tuple of dataframe at the daily-state resolution, and geo_id column name
         """
+
         all_data = self.gmpr.fips_to_megacounty(data,
                                             threshold_visits,
                                             threshold_len,
-                                            fips_col="PatCountyFIPS",
+                                            fips_col=Config.GEO_COL,
                                             thr_col="Denominator",
-                                            date_col="ServiceDate")
-        all_data.rename({"megafips": "PatCountyFIPS"}, axis=1, inplace=True)
-        megacounties = all_data[all_data.PatCountyFIPS.str.endswith("000")]
+                                            date_col=Config.DATE_COL)
+        all_data.rename({"megafips": Config.GEO_COL}, axis=1, inplace=True)
+        megacounties = all_data[all_data[Config.GEO_COL].str.endswith("000")]
         data = pd.concat([data, megacounties])
 
-        return data.groupby("PatCountyFIPS"), "PatCountyFIPS"
+        return data.groupby(Config.GEO_COL), Config.GEO_COL

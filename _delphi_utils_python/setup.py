@@ -3,18 +3,23 @@ from setuptools import find_packages
 
 required = [
     "boto3",
+    "covidcast",
     "gitpython",
     "moto",
     "numpy",
     "pandas>=1.1.0",
+    "pydocstyle",
+    "pylint",
     "pytest",
     "pytest-cov",
+    "slackclient",
+    "structlog",
     "xlrd"
 ]
 
 setup(
     name="delphi_utils",
-    version="0.0.1",
+    version="0.1.0",
     description="Shared Utility Functions for Indicators",
     author="",
     author_email="",

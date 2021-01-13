@@ -1,12 +1,14 @@
 {
   "static_file_dir": "./static",
   "export_dir": "./receiving",
-  "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
+  "input_file": "./input/EDI_AGG_OUTPATIENT_20201112_1452CDT.csv.gz",
   "drop_date": "",
   "n_backfill_days": 60,
   "n_waiting_days": 3,
   "weekday": [true, false],
   "se": false,
+  "sensorize": [true, false],
+  "global_sensor_fit": "intercept",
   "obfuscated_prefix": "wip_XXXXX",
   "parallel": false
 }

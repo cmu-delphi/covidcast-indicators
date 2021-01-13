@@ -15,6 +15,7 @@ from delphi_utils import read_params
 
 # first party
 from .update_sensor import update_sensor
+from .config import Config
 
 
 def run_module():
@@ -25,10 +26,10 @@ def run_module():
 
     ## get end date from input file
     # the filename is expected to be in the format:
-    # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
+    # "EDI_AGG_OUTPATIENT_YYYYMMDD_HHMM{timezone}.csv.gz"
     if params["drop_date"] == "":
         dropdate_dt = datetime.strptime(
-            Path(params["input_file"]).name.split("_")[3], "%d%m%Y"
+            Path(params["input_file"]).name.split("_")[3], "%Y%m%d"
         )
     else:
         dropdate_dt = datetime.strptime(params["drop_date"], "%Y-%m-%d")
@@ -38,7 +39,8 @@ def run_module():
     n_backfill_days = params["n_backfill_days"] # produce estimates for n_backfill_days
     n_waiting_days = params["n_waiting_days"]  # most recent n_waiting_days won't be est
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
-    startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
+    startdate_dt = max(enddate_dt - timedelta(days=n_backfill_days),\
+                        Config.FIRST_DATA_DATE + timedelta(days=1) + Config.DAY_SHIFT)
     enddate = str(enddate_dt.date())
     startdate = str(startdate_dt.date())
     logging.info(f"drop date:\t\t{dropdate}")
@@ -53,30 +55,33 @@ def run_module():
     ## print out other vars
     logging.info("outpath:\t\t%s", params["export_dir"])
     logging.info("parallel:\t\t%s", params["parallel"])
-    logging.info(f"weekday:\t\t%s", params["weekday"])
-    logging.info(f"write se:\t\t%s", params["se"])
-    logging.info(f"obfuscated prefix:\t%s", params["obfuscated_prefix"])
+    logging.info("weekday:\t\t%s", params["weekday"])
+    logging.info("write se:\t\t%s", params["se"])
+    logging.info("obfuscated prefix:\t%s", params["obfuscated_prefix"])
 
     ## start generating
     for geo in geos:
         for weekday in params["weekday"]:
-            if weekday:
-                logging.info("starting %s, weekday adj", geo)
-            else:
-                logging.info("starting %s, no adj", geo)
-            update_sensor(
-                filepath=params["input_file"],
-                outpath=params["export_dir"],
-                staticpath=params["static_file_dir"],
-                startdate=startdate,
-                enddate=enddate,
-                dropdate=dropdate,
-                geo=geo,
-                parallel=params["parallel"],
-                weekday=weekday,
-                se=params["se"],
-                prefix=params["obfuscated_prefix"]
-            )
+            for sensorize in params["sensorize"]:
+                if weekday:
+                    logging.info("starting %s, weekday adj", geo)
+                else:
+                    logging.info("starting %s, no adj", geo)
+                update_sensor(
+                    filepath=params["input_file"],
+                    outpath=params["export_dir"],
+                    staticpath=params["static_file_dir"],
+                    startdate=startdate,
+                    enddate=enddate,
+                    dropdate=dropdate,
+                    geo=geo,
+                    parallel=params["parallel"],
+                    weekday=weekday,
+                    se=params["se"],
+                    sensorize=sensorize,
+                    global_sensor_fit=params["global_sensor_fit"],
+                    prefix=params["obfuscated_prefix"]
+                )
         logging.info("finished %s", geo)
 
     logging.info("finished all")

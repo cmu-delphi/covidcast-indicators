@@ -6,6 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime
 from itertools import product
+import time
 
 import numpy as np
 from delphi_utils import (
@@ -64,6 +65,9 @@ GEO_RESOLUTIONS = [
 
 def run_module():
     """Run the JHU indicator module."""
+    start_time = time.time()
+    csv_export_count = 0
+    oldest_final_export_date = None
     params = read_params()
     export_start_date = params["export_start_date"]
     export_dir = params["export_dir"]
@@ -110,7 +114,7 @@ def run_module():
         #     metric = f"wip_{metric}"
         #     sensor_name = WIP_SENSOR_NAME_MAP[sensor][0]
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
-        create_export_csv(
+        exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
             start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
@@ -118,6 +122,12 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
+        if not exported_csv_dates.empty:
+            csv_export_count += exported_csv_dates.size
+            if not oldest_final_export_date:
+                oldest_final_export_date = max(exported_csv_dates)
+            oldest_final_export_date = min(
+                oldest_final_export_date, max(exported_csv_dates))
 
     if not arch_diff is None:
         # Diff exports, and make incremental versions
@@ -137,3 +147,15 @@ def run_module():
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = None
+    formatted_oldest_final_export_date = None
+    if oldest_final_export_date:
+        max_lag_in_days = (datetime.now() - oldest_final_export_date).days
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds,
+        csv_export_count = csv_export_count,
+        max_lag_in_days = max_lag_in_days,
+        oldest_final_export_date = formatted_oldest_final_export_date)

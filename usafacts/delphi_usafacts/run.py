@@ -90,7 +90,7 @@ def run_module():
     dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
-        logger.info(event = "generating signal and exporting to CSV",
+        logger.info("generating signal and exporting to CSV",
             geo_res = geo_res,
             metric = metric,
             sensor = sensor,
@@ -117,7 +117,7 @@ def run_module():
             sensor=sensor_name,
         )
         if not exported_csv_dates.empty:
-            logger.info(event = "Exported CSV",
+            logger.info("Exported CSV",
                 csv_export_count = exported_csv_dates.size,
                 min_csv_export_date = min(exported_csv_dates).strftime("%Y-%m-%d"),
                 max_csv_export_date = max(exported_csv_dates).strftime("%Y-%m-%d"))

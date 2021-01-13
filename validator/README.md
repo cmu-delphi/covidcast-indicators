@@ -51,15 +51,21 @@ All of the user-changable parameters are stored in the `validation` field of the
 
 Please update the follow settings:
 
-* `data_source`: should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls
-* `end_date`: specifies the last date to be checked; if set to "latest", `end_date` will always be the current date
-* `span_length`: specifies the number of days before the `end_date` to check. `span_length` should be long enough to contain all recent source data that is still in the process of being updated (i.e. in the backfill period), for example, if the data source of interest has a 2-week lag before all reports are in for a given date, `scan_length` should be 14 days
-* `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)
-* `expected_lag`: dictionary of signal name-int pairs specifying the number of days of expected lag (time between event occurrence and when data about that event was published) for that signal
-* `test_mode`: boolean; `true` checks only a small number of data files
-* `suppressed_errors`: list of lists uniquely specifying errors that have been manually verified as false positives or acceptable deviations from expected
+* `global`: global validation settings
+   * `data_source`: should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls
+   * `end_date`: specifies the last date to be checked; if set to "latest", `end_date` will always be the current date
+   * `span_length`: specifies the number of days before the `end_date` to check. `span_length` should be long enough to contain all recent source data that is still in the process of being updated (i.e. in the backfill period), for example, if the data source of interest has a 2-week lag before all reports are in for a given date, `scan_length` should be 14 days
+   * `suppressed_errors`: list of lists uniquely specifying errors that have been manually verified as false positives or acceptable deviations from expected
+   * `test_mode`: boolean; `true` checks only a small number of data files
+* `static`: settings for validations that don't require comparison with external COVIDcast API data
+   * `minimum_sample_size` (default: 100): threshold for flagging small sample sizes as invalid
+   * `missing_se_allowed` (default: False): whether signals with missing standard errors are valid
+   * `misisng_sample_size_allowed` (default: False): whether signals with missing sample sizes are valid
+* `static`: settings for validations that don't require comparison with external COVIDcast API data
+   * `ref_window_size` (default: 7): number of days over which to look back for comparison 
+   * `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)
+   * `expected_lag` (default: 1 for all unspecified signals): dictionary of signal name-int pairs specifying the number of days of expected lag (time between event occurrence and when data about that event was published) for that signal
 
-All other fields contain working defaults, to be modified as needed.
 
 ## Testing the code
 
@@ -94,9 +100,13 @@ The output will show the number of unit tests that passed and failed, along with
 ## Code tour
 
 * run.py: sends params.json fields to and runs the validation process
+* validate.py: top-level organization of validation
+* static.py: methods for validating data that don't require comparisons against external API data
+* dynamic.py: methods for validating data that require comparisons against external API data
 * datafetcher.py: methods for loading source and API data
-* validate.py: methods for validating data. Includes the individual check methods and supporting functions.
 * errors.py: custom errors
+* report.py: organization and logging of validation outcomes
+* utils.py: various helper functions
 
 
 ## Adding checks

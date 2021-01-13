@@ -27,6 +27,7 @@ from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
 from .sensorize import Sensorizer
 from .weekday import Weekday
+from delphi_utils import GeoMapper
 
 
 def write_to_csv(output_dict, se, out_name, output_path="."):
@@ -250,30 +251,25 @@ def update_sensor( # pylint: disable=too-many-branches
                                      end_day = pd.to_datetime(sensor_dates[-1]))
         target_df = target_df[["geo_value","time_value","value"]]
 
-        geo_folder = "../_delphi_utils_python/delphi_utils/data"
-        fips_pop = pd.read_csv("%s/fips_pop.csv" % (geo_folder),\
-            dtype={"fips":str,"pop":int})
+        geomapper = GeoMapper()
+        fips_pop = pd.DataFrame({"fips":sorted(list(geomapper.get_geo_values("fips")))})
+        fips_pop = fips_pop[fips_pop.fips.str.slice(start=2) != "000"]
+        fips_pop = geomapper.add_population_column(fips_pop,"fips",geocode_col="fips")
         if geo.lower() == "state":
-            fips_state = pd.read_csv("%s/fips_state_table.csv" % (geo_folder),\
-                dtype={"fips":str,"state_code":str,"state_id":str,"state_name":str})
-            geo_weights = fips_pop.merge(fips_state)
-            geo_weights = geo_weights.groupby("state_id").agg(np.sum).reset_index()
-            geo_weights = geo_weights.rename(columns={"state_id":"geo","pop":"weight"})
+            geo_weights = geomapper.replace_geocode(
+                fips_pop,"fips","state_id",from_col="fips",new_col="geo",date_col=None
+            )
         elif geo.lower() == "hrr":
-            fips_hrr = pd.read_csv("%s/fips_hrr_table.csv" % (geo_folder),\
-                dtype={"fips":str,"hrr":str,"weight":float})
-            geo_weights = fips_pop.merge(fips_hrr)
-            geo_weights["weight"] = geo_weights["weight"]*geo_weights["pop"]
-            geo_weights = geo_weights.groupby("hrr").agg(np.sum).reset_index()
-            geo_weights = geo_weights.rename(columns={"hrr":"geo"})
+            geo_weights = geomapper.replace_geocode(
+                fips_pop,"fips","hrr",from_col="fips",new_col="geo",date_col=None
+            )
         elif geo.lower() == "msa":
-            fips_msa = pd.read_csv("%s/fips_msa_table.csv" % (geo_folder),\
-                dtype={"fips":str,"msa":str})
-            geo_weights = fips_pop.merge(fips_msa)
-            geo_weights = geo_weights.groupby("msa").agg(np.sum).reset_index()
-            geo_weights = geo_weights.rename(columns={"msa":"geo","pop":"weight"})
+            geo_weights = geomapper.replace_geocode(
+                fips_pop,"fips","msa",from_col="fips",new_col="geo",date_col=None
+            )
         elif geo.lower() == "county":
-            geo_weights = fips_pop.rename(columns={"fips":"geo","pop":"weight"})
+            geo_weights = fips_pop.rename(columns={"fips":"geo"})
+        geo_weights = geo_weights.rename(columns={"population":"weight"})
 
         # Sensorize!
         sensorized_df = Sensorizer.sensorize(

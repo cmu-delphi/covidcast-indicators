@@ -81,6 +81,38 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
                     out_n += 1
     logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
 
+def write_coefs_to_csv(output_dict, out_name, output_path="."):
+    """Write sensorization coefficients to csv.
+    Only supported for static sensorization, since this can save memory.
+
+    Args:
+      output_dict: dictionary containing sensorization coefficients and unique geo_id
+      out_name: name of the output file
+      output_path: outfile path to write the csv (default is current directory)
+    """
+
+    geo_level = output_dict["geo_level"]
+    geo_ids = output_dict["geo_ids"]
+    all_coefs = output_dict["coefs"]
+
+    out_n = 0
+    filename = "%s/%s_%s.csv" % (output_path,
+                                    geo_level,
+                                    out_name)
+
+    with open(filename, "w") as outfile:
+        outfile.write("geo_id,b1,b0\n")
+
+        for geo_id in geo_ids:
+            b1 = all_coefs[geo_id][1]
+            b0 = all_coefs[geo_id][0] * 100  # report percentage
+            assert not np.isnan(b1), "sensorization coef b1 is nan, check pipeline"
+            assert not np.isnan(b0), "sensorization coef b0 is nan, check pipeline"
+
+            outfile.write("%s,%f,%f\n" % (geo_id, b1, b0))
+            out_n += 1
+    logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+
 
 def update_sensor( # pylint: disable=too-many-branches
         filepath, outpath, staticpath, startdate, enddate, dropdate, geo, parallel,
@@ -272,13 +304,13 @@ def update_sensor( # pylint: disable=too-many-branches
         geo_weights = geo_weights.rename(columns={"population":"weight"})
 
         # Sensorize!
-        sensorized_df = Sensorizer.sensorize(
-                            signal_df,
-                            target_df,
-                            "geo","time","signal",
-                            "geo_value","time_value","value",
-                            global_weights=geo_weights,
-                            global_sensor_fit=global_sensor_fit)
+        sensorized_df, coef_df = Sensorizer.sensorize(
+                                    signal_df,
+                                    target_df,
+                                    "geo","time","signal",
+                                    "geo_value","time_value","value",
+                                    global_weights=geo_weights,
+                                    global_sensor_fit=global_sensor_fit)
 
         # Use sensorized_df to fill in sensorized rates
         for geo_id in unique_geo_ids:
@@ -288,6 +320,16 @@ def update_sensor( # pylint: disable=too-many-branches
             ]["signal"]
 
         # Eventually need to update SEs also
+
+        # Coef dict
+        coef_dict = {
+            "coefs": {},
+            "geo_ids": unique_geo_ids,
+            "geo_level": geo,
+        }
+        for geo_id in unique_geo_ids:
+            idx = np.where(coef_df["geo"] == geo_id)[0][0]
+            coef_dict["coefs"][geo_id] = [coef_df["b0"].values[idx], coef_df["b1"].values[idx]]
 
     # write out results
     out_name = ["smoothed"]
@@ -302,5 +344,10 @@ def update_sensor( # pylint: disable=too-many-branches
         out_name = prefix + "_" + out_name
 
     write_to_csv(output_dict, se, out_name, outpath)
+
+    if sensorize:
+        out_name = "coefficients"
+        write_coefs_to_csv(coef_dict, out_name, outpath)
+
     logging.debug(f"wrote files to {outpath}")
     return True

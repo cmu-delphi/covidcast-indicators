@@ -276,6 +276,15 @@ class Sensorizer:
         bad_fit = (combined_df.sensor < 0) | (combined_df.sensor > 0.9)
         combined_df.loc[bad_fit,"sensor"] = combined_df.loc[bad_fit,"signal"]
 
-        result = combined_df[[signal_geo_col,signal_time_col,"sensor"]]
-        result = result.rename(columns={"sensor":signal_val_col})
-        return result
+        sensor_df = combined_df[[signal_geo_col,signal_time_col,"sensor"]]
+        sensor_df = sensor_df.rename(columns={"sensor":signal_val_col})
+
+        combined_df["b1"] = combined_df["global_b1"]*combined_df["local_b1"]
+        combined_df["b0"] = combined_df["global_b1"]*combined_df["local_b0"]+combined_df["global_b0"]
+        bad_fit = np.isnan(combined_df["b1"]) | np.isnan(combined_df["b0"])
+        combined_df["b1"][bad_fit] = 1
+        combined_df["b0"][bad_fit] = 0
+        coef_df = combined_df[[signal_geo_col,signal_time_col,"b1","b0"]]
+        if window_start is None and global_sensor_fit != "norm":
+            coef_df = coef_df.drop(signal_time_col, axis=1).drop_duplicates()
+        return sensor_df, coef_df

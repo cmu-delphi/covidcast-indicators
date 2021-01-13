@@ -6,11 +6,10 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, time, timedelta
 from itertools import product
-from os.path import join
 
-import numpy as np
-import pandas as pd
 import time as t
+import numpy as np
+
 from delphi_utils import (
     create_export_csv,
     get_structured_logger,
@@ -143,7 +142,7 @@ def run_module():
     # Report failures: someone should probably look at them
     for exported_file in fails:
         print(f"Failed to archive '{exported_file}'")
-    
+
     elapsed_time_in_seconds = round(t.time() - start_time, 2)
     max_lag_in_days = None
     formatted_oldest_final_export_date = None

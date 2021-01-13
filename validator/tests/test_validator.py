@@ -6,8 +6,7 @@ class TestValidatorInitialization:
     """Tests for proper initialization."""
     def test_default_settings(self):
         """Test default initialization."""
-        params = {"data_source": "", "span_length": 0,
-                  "end_date": "2020-09-01", "expected_lag": {}}
+        params = {"data_source": "", "span_length": 0, "end_date": "2020-09-01"}
         validator = Validator(params)
         assert len(validator.suppressed_errors) == 0
         assert isinstance(validator.suppressed_errors, set)
@@ -17,7 +16,6 @@ class TestValidatorInitialization:
         params = {"data_source": "",
                   "span_length": 0,
                   "end_date": "2020-09-01",
-                  "expected_lag": {},
                   "suppressed_errors": [["a", "b"], ["c", "d"], ["a", "b"]]
                  }
 
@@ -31,7 +29,6 @@ class TestValidatorInitialization:
             Validator({"data_source": "",
                        "span_length": 0,
                        "end_date": "2020-09-01",
-                       "expected_lag": {},
                        "suppressed_errors": [["a", "b"], ["c", "d"], ["ab"]]
                       })
 
@@ -40,6 +37,5 @@ class TestValidatorInitialization:
             Validator({"data_source": "",
                        "span_length": 0,
                        "end_date": "2020-09-01",
-                       "expected_lag": {},
                        "suppressed_errors": [["a", "b"], ["c", "d"], "ab"]
                       })

@@ -7,8 +7,7 @@ from delphi_validator.report import ValidationReport
 from delphi_validator.dynamic import DynamicValidator
 
 class TestCheckRapidChange:
-    params = {"data_source": "", "span_length": 1,
-              "end_date": "2020-09-02", "expected_lag": {}}
+    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
 
     def test_same_df(self):
         validator = DynamicValidator(self.params)
@@ -36,8 +35,7 @@ class TestCheckRapidChange:
 
 
 class TestCheckAvgValDiffs:
-    params = {"data_source": "", "span_length": 1,
-              "end_date": "2020-09-02", "expected_lag": {}}
+    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
 
     def test_same_val(self):
         validator = DynamicValidator(self.params)
@@ -150,8 +148,7 @@ class TestCheckAvgValDiffs:
         assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
 
 class TestDataOutlier:
-    params = {"data_source": "", "span_length": 1,
-          "end_date": "2020-09-02", "expected_lag": {}}
+    params = {"data_source": "", "span_length": 1, "end_date": "2020-09-02"}
     pd.set_option("display.max_rows", None, "display.max_columns", None)
     # Test to determine outliers based on the row data, has lead and lag outlier
     def test_pos_outlier(self):

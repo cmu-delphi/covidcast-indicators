@@ -44,7 +44,7 @@ class DynamicValidator:
             generation_date = date.today(),
             max_check_lookbehind = timedelta(days=params.get("ref_window_size", 7)),
             smoothed_signals = set(params.get("smoothed_signals", [])),
-            expected_lag = params["expected_lag"]
+            expected_lag = params.get("expected_lag", dict())
         )
 
 

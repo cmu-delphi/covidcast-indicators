@@ -89,14 +89,15 @@ def run_module():
             "state",
             sig
         )
-        create_export_csv(
-            geo_mapper.replace_geocode(state, "state", "nation",
-                                       from_col="geo_id", new_col="geo_id",
-                                       date_col="timestamp"),
-            params["export_dir"],
-            "nation",
-            sig
-        )
+        for geo in GEOS:
+            create_export_csv(
+                geo_mapper.replace_geocode(state, "state", geo,
+                                           from_col="geo_id", new_col="geo_id",
+                                           date_col="timestamp"),
+                params["export_dir"],
+                geo,
+                sig
+            )
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""

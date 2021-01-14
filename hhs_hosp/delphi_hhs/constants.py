@@ -7,3 +7,9 @@ SIGNALS = [
     CONFIRMED,
     SUM_CONF_SUSP
 ]
+
+# incoming geo: state
+GEOS = [
+    "nation",
+    "hhs"
+]

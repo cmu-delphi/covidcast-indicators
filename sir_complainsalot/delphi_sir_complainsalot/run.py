@@ -5,8 +5,6 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_sir_complainsalot`.
 """
 
-import sys
-
 from itertools import groupby
 
 from delphi_utils import read_params
@@ -44,9 +42,6 @@ def run_module():
                             last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
         report_complaints(complaints, slack_notifier)
-
-        sys.exit(1)
-
 
 def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""

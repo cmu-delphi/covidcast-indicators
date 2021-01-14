@@ -203,6 +203,11 @@ class TestGeoMapper:
     def test_add_geocode(self):
         gmpr = GeoMapper()
 
+        # state_code -> nation
+        new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
+        new_data2 = gmpr.add_geocode(new_data, "state_code", "nation")
+        assert new_data2["nation"].unique()[0] == "us"
+
         # state_code -> hhs
         new_data = gmpr.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = gmpr.add_geocode(new_data, "state_code", "hhs")

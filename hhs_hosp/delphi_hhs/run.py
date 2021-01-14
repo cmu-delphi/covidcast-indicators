@@ -79,11 +79,22 @@ def run_module():
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
 
+    geo_mapper = GeoMapper()
+
     for sig in SIGNALS:
+        state = make_signal(all_columns, sig)
         create_export_csv(
-            make_signal(all_columns, sig),
+            state,
             params["export_dir"],
             "state",
+            sig
+        )
+        create_export_csv(
+            geo_mapper.replace_geocode(state, "state", "nation",
+                                       from_col="geo_id", new_col="geo_id",
+                                       date_col="timestamp"),
+            params["export_dir"],
+            "nation",
             sig
         )
 

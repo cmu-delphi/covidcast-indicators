@@ -9,6 +9,7 @@ from datetime.datetime import strptime, strftime
 from pandas_gbq import read_gbq
 from os import listdir
 from os.path import isfile, join
+from collections import defaultdict
 
 from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
@@ -126,8 +127,20 @@ def get_missing_dates(receiving_dir, start_date):
     missing_dates = [strftime(d, "%Y-%m-%d")
                      for d in expected_dates.difference(existing_output_dates)]
 
-    # TODO: Drop dates with year < 2017 (Google doesn't provide data that long ago)
     return missing_dates
+
+
+def format_dates_for_query(date_list):
+    date_dict = defaultdict(list)
+    for d in date_list:
+        if d.year >= 2017:
+            date_dict[d.year].append(d)
+
+    for key in date_dict.keys():
+        date_dict[key] = 'timestamp("' + \
+            '"), timestamp("'.join(missing_dates) + '")'
+
+    return date_dict
 
 
 def pull_gs_data(project_id, api_key, receiving_dir, start_date):
@@ -165,7 +178,7 @@ def pull_gs_data(project_id, api_key, receiving_dir, start_date):
     # TODO: Make a dict {<tablename with year>: <formatted list of dates to use in where>}. Iterate over the dict to make multiple queries; add dfs to list; concat() together after loop.
     # Fetch and format dates we want to attempt to retrieve
     missing_dates = get_missing_dates(receiving_dir, start_date)
-    date_list = 'timestamp("' + '"), timestamp("'.join(missing_dates) + '")'
+    missing_dates_dict = format_dates_for_query(missing_dates)
 
     # Create map of old to new column names.
     colname_map = {metric.replace(

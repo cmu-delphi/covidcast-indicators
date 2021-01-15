@@ -117,7 +117,7 @@ def format_dates_for_query(date_list):
     return date_dict
 
 
-def pull_gs_data_one_geolevel(level, dates_dict):
+def pull_gs_data_one_geolevel(credentials, level, dates_dict):
     """
     """
     base_query =
@@ -146,7 +146,7 @@ def pull_gs_data_one_geolevel(level, dates_dict):
             symptom_table=base_level_table[level].format(year=year),
             date_list=dates_dict[year])
 
-        df.append(read_gbq(query, project_id=project_id))
+        df.append(read_gbq(query, project_id=credentials["project_id"]))
 
     df = pd.concat(df)
     df.rename(colname_map, axis=1, inplace=True)
@@ -157,7 +157,7 @@ def pull_gs_data_one_geolevel(level, dates_dict):
     return(df)
 
 
-def pull_gs_data(project_id, api_key, receiving_dir, start_date):
+def pull_gs_data(credentials, receiving_dir, start_date):
     """Pull latest dataset and transform it into the appropriate format.
 
     Pull the latest Google COVID-19 Search Trends symptoms dataset, and
@@ -192,10 +192,12 @@ def pull_gs_data(project_id, api_key, receiving_dir, start_date):
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel("state", missing_dates_dict)
+    dfs["state"] = pull_gs_data_one_geolevel(
+        credentials, "state", missing_dates_dict)
 
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel("county", missing_dates_dict)
+    dfs["county"] = pull_gs_data_one_geolevel(
+        credentials, "county", missing_dates_dict)
 
     # Add District of Columbia as county
     try:

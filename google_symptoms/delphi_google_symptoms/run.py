@@ -24,8 +24,8 @@ def run_module():
     export_dir = params["export_dir"]
 
     # Pull GS data
-    dfs = pull_gs_data(params["project_id"],
-                       params["api_key"], export_dir, export_start_date)
+    dfs = pull_gs_data(params["bigquery_credentials"],
+                       export_dir, export_start_date)
     gmpr = geomap.GeoMapper()
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":

@@ -103,11 +103,11 @@ def run_module():
         is_smoothed = signal.endswith(SMOOTHED)
         for geo_res, df in df_by_geo_res.items():
             exported_csv_dates = create_export_csv(
-                              format_for_export(df, is_smoothed),
-                              geo_res=geo_res,
-                              sensor=signal,
-                              start_date=start_date,
-                              export_dir=export_dir)
+                                    format_for_export(df, is_smoothed),
+                                    geo_res=geo_res,
+                                    sensor=signal,
+                                    start_date=start_date,
+                                    export_dir=export_dir)
 
             if not exported_csv_dates.empty:
                 csv_export_count += exported_csv_dates.size

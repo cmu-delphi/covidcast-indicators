@@ -28,19 +28,6 @@ where timestamp(date) in ({date_list})
 """
 
 
-def get_geo_id(region_code):
-    """
-    Extract fips code from region code.
-
-    There are region code in the format of "US-state" and "US-state-fips". In
-    county level report, we only consider rows with fips info provided.
-    """
-    splits = region_code.split("-")
-    if len(splits) == 3:
-        return splits[2]
-    return np.nan
-
-
 def preprocess(df, level):
     """
     Conforms the pulled data from Google COVID-19 Search Trends symptoms data into a dataset.
@@ -131,6 +118,8 @@ def get_missing_dates(receiving_dir, start_date):
 
 
 def format_dates_for_query(date_list):
+    """
+    """
     date_dict = defaultdict(list)
     for d in date_list:
         if d.year >= 2017:
@@ -141,6 +130,34 @@ def format_dates_for_query(date_list):
             '"), timestamp("'.join(missing_dates) + '")'
 
     return date_dict
+
+
+def pull_gs_data_one_geolevel(level, dates_dict):
+    """
+    """
+    # Create map of old to new column names.
+    colname_map = {metric.replace(
+        " ", "_"): "symptom:" + metric for metric in METRICS}
+
+    base_level_table = {"state": "states_daily_{year}",
+                        "county": "counties_daily_{year}"}
+
+    df = []
+    for year in dates_dict.keys():
+        query = base_query.format(
+            symptom_cols=", ".join(colname_map.keys()),
+            symptom_table=base_level_table[level].format(year=year),
+            date_list=dates_dict[year])
+
+        df.append(read_gbq(query, project_id=project_id))
+
+    df = pd.concat(df)
+    df.rename(colname_map, axis=1, inplace=True)
+    df["geo_id"] = df["open_covid_region_code"].apply(
+        lambda x: x.split("-")[-1].lower())
+    df = preprocess(df, level)
+
+    return(df)
 
 
 def pull_gs_data(project_id, api_key, receiving_dir, start_date):
@@ -170,47 +187,22 @@ def pull_gs_data(project_id, api_key, receiving_dir, start_date):
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
 
-    base_states_table = "states_daily_{year}"
-    base_county_table = "counties_daily_{year}"
-
     # TODO: Modify pull_gs_data() call to get needed args from params.
     # TODO: Check how other indicators handle api keys.
-    # TODO: Make a dict {<tablename with year>: <formatted list of dates to use in where>}. Iterate over the dict to make multiple queries; add dfs to list; concat() together after loop.
     # Fetch and format dates we want to attempt to retrieve
     missing_dates = get_missing_dates(receiving_dir, start_date)
     missing_dates_dict = format_dates_for_query(missing_dates)
-
-    # Create map of old to new column names.
-    colname_map = {metric.replace(
-        " ", "_"): "symptom:" + metric for metric in METRICS}
 
     # Create dictionary for state and county level data
     dfs = {}
 
     # For state level data
-    state_query = base_query.format(
-        symptom_cols=", ".join(colname_map.keys()),
-        symptom_table=base_states_table.format(year="2020"),
-        date_list=date_list)
-
-    df = read_gbq(state_query, project_id=project_id)
-    df["geo_id"] = df["open_covid_region_code"].apply(
-        lambda x: x.split("-")[1].lower())
-    df.rename(colname_map, axis=1, inplace=True)
-    dfs["state"] = preprocess(df, "state")
+    dfs["state"] = pull_gs_data_one_geolevel("state", missing_dates_dict)
 
     # For county level data
-    county_query = base_query.format(
-        symptom_cols=", ".join(colname_map.keys()),
-        symptom_table=base_counties_table.format(year="2020"),
-        date_list=date_list)
+    dfs["county"] = pull_gs_data_one_geolevel("county", missing_dates_dict)
 
-    df = read_gbq(county_query, project_id=project_id)
-    df["geo_id"] = df["open_covid_region_code"].apply(get_geo_id)
-    df.rename(colname_map, axis=1, inplace=True)
-    dfs["county"] = preprocess(df, "county")
-
-    # Add District of Columbia County
+    # Add District of Columbia as county
     try:
         df_dc_county = dfs["state"][dfs["state"]["geo_id"] == "dc"].drop(
             "geo_id", axis=1)

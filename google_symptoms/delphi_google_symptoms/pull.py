@@ -13,19 +13,6 @@ from collections import defaultdict
 
 from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
-base_query =
-"""
-select
-    case
-        when sub_region_2_code is null then sub_region_1_code
-        when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
-    end as open_covid_region_code,
-    date,
-    {symptom_cols}
-from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
-where timestamp(date) in ({date_list})
-"""
-
 
 def preprocess(df, level):
     """
@@ -55,7 +42,6 @@ def preprocess(df, level):
 
     df[COMBINED_METRIC] = 0
     for metric in METRICS:
-        df.rename({"symptom:" + metric: metric}, axis=1, inplace=True)
         df[COMBINED_METRIC] += df[metric].fillna(0)
     df.loc[
         (df["Anosmia"].isnull())
@@ -134,12 +120,24 @@ def format_dates_for_query(date_list):
 def pull_gs_data_one_geolevel(level, dates_dict):
     """
     """
-    # Create map of old to new column names.
-    colname_map = {metric.replace(
-        " ", "_"): "symptom:" + metric for metric in METRICS}
-
+    base_query =
+    """
+    select
+        case
+            when sub_region_2_code is null then sub_region_1_code
+            when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+        end as open_covid_region_code,
+        date,
+        {symptom_cols}
+    from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
+    where timestamp(date) in ({date_list})
+    """
     base_level_table = {"state": "states_daily_{year}",
                         "county": "counties_daily_{year}"}
+
+    # Create map of old to new column names.
+    colname_map = {"symptom_" +
+                   metric.replace(" ", "_"): metric for metric in METRICS}
 
     df = []
     for year in dates_dict.keys():

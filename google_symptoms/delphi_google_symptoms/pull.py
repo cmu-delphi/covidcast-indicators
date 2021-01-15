@@ -77,8 +77,8 @@ def preprocess(df, level):
         df = df[KEEP_COLUMNS]
     except KeyError:
         raise ValueError(
-            "Part of necessary columns are missed. The dataset "
-            "schema may have changed.  Please investigate."
+            "Some necessary columns are missing. The dataset "
+            "schema may have changed. Please investigate."
         )
 
     # Make sure each FIPS/state has same number of rows
@@ -186,8 +186,6 @@ def pull_gs_data(project_id, api_key, receiving_dir, start_date):
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
 
-    # TODO: Modify pull_gs_data() call to get needed args from params.
-    # TODO: Check how other indicators handle api keys.
     # Fetch and format dates we want to attempt to retrieve
     missing_dates = get_missing_dates(receiving_dir, start_date)
     missing_dates_dict = format_dates_for_query(missing_dates)

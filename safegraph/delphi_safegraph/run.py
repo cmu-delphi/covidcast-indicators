@@ -7,7 +7,9 @@ import glob
 import functools
 import multiprocessing as mp
 import subprocess
+import time
 
+from delphi_utils import get_structured_logger
 from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
@@ -17,6 +19,8 @@ from .process import process, files_in_past_week
 def run_module():
     """Create the Safegraph indicator."""
     params = read_params()
+    start_time = time.time()
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     # Place to write output files.
     export_dir = params["export_dir"]
@@ -75,3 +79,7 @@ def run_module():
 
     with mp.Pool(n_core) as pool:
         pool.map(single_arg_process, files_with_previous_weeks)
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

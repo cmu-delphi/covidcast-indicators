@@ -19,12 +19,13 @@ from .constants import (METRICS, COMBINED_METRIC,
 def run_module():
     """Run Google Symptoms module."""
     params = read_params()
-    export_start_date = datetime.strptime(params["export_start_date"], "%Y-%m-%d")
+    export_start_date = datetime.strptime(
+        params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]
-    base_url = params["base_url"]
 
     # Pull GS data
-    dfs = pull_gs_data(base_url)
+    dfs = pull_gs_data(params["project_id"],
+                       params["api_key"], export_dir, export_start_date)
     gmpr = geomap.GeoMapper()
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
@@ -40,7 +41,7 @@ def run_module():
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
-                                 ).transform(SMOOTHERS_MAP[smoother][0])
+                                           ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing

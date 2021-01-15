@@ -20,7 +20,6 @@ select
         when sub_region_2_code is null then sub_region_1_code
         when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
     end as open_covid_region_code,
-    sub_region_2_code,
     date,
     {symptom_cols}
 from `bigquery-public-data.covid19_symptom_search.{symptom_table}`

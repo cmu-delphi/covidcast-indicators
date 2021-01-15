@@ -5,7 +5,6 @@ import re
 import numpy as np
 import pandas as pd
 from datetime import date, timedelta, datetime
-from datetime.datetime import strptime, strftime
 from pandas_gbq import read_gbq
 from os import listdir
 from os.path import isfile, join
@@ -91,12 +90,12 @@ def get_missing_dates(receiving_dir, start_date):
     existing_output_files = [f for f in listdir(receiving_dir) if isfile(
         join(receiving_dir, f)) and OUTPUT_NAME_PATTERN.match(f)]
 
-    existing_output_dates = {strptime(f[0:8]).date()
+    existing_output_dates = {datetime.strptime(f[0:8]).date()
                              for f in existing_output_files}
     expected_dates = {
         start_date + timedelta(days=i) for i in range((date.today() - start_date).days + 1)}
 
-    missing_dates = [strftime(d, "%Y-%m-%d")
+    missing_dates = [datetime.strftime(d, "%Y-%m-%d")
                      for d in expected_dates.difference(existing_output_dates)]
 
     return missing_dates
@@ -120,8 +119,7 @@ def format_dates_for_query(date_list):
 def pull_gs_data_one_geolevel(credentials, level, dates_dict):
     """
     """
-    base_query =
-    """
+    base_query = """
     select
         case
             when sub_region_2_code is null then sub_region_1_code

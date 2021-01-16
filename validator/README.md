@@ -61,7 +61,7 @@ Please update the follow settings:
    * `minimum_sample_size` (default: 100): threshold for flagging small sample sizes as invalid
    * `missing_se_allowed` (default: False): whether signals with missing standard errors are valid
    * `misisng_sample_size_allowed` (default: False): whether signals with missing sample sizes are valid
-* `static`: settings for validations that don't require comparison with external COVIDcast API data
+* `dynamic`: settings for validations that require comparison with external COVIDcast API data
    * `ref_window_size` (default: 7): number of days over which to look back for comparison 
    * `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)
    * `expected_lag` (default: 1 for all unspecified signals): dictionary of signal name-int pairs specifying the number of days of expected lag (time between event occurrence and when data about that event was published) for that signal

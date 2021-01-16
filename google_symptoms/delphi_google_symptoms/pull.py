@@ -90,13 +90,12 @@ def get_missing_dates(receiving_dir, start_date):
     existing_output_files = [f for f in listdir(receiving_dir) if isfile(
         join(receiving_dir, f)) and OUTPUT_NAME_PATTERN.match(f)]
 
-    existing_output_dates = {datetime.strptime(f[0:8]).date()
+    existing_output_dates = {datetime.strptime(f[0:8], "%Y%m%d").date()
                              for f in existing_output_files}
     expected_dates = {
         start_date + timedelta(days=i) for i in range((date.today() - start_date).days + 1)}
 
-    missing_dates = [datetime.strftime(d, "%Y-%m-%d")
-                     for d in expected_dates.difference(existing_output_dates)]
+    missing_dates = list(expected_dates.difference(existing_output_dates))
 
     return missing_dates
 
@@ -107,11 +106,11 @@ def format_dates_for_query(date_list):
     date_dict = defaultdict(list)
     for d in date_list:
         if d.year >= 2017:
-            date_dict[d.year].append(d)
+            date_dict[d.year].append(datetime.strftime(d, "%Y-%m-%d"))
 
     for key in date_dict.keys():
         date_dict[key] = 'timestamp("' + \
-            '"), timestamp("'.join(missing_dates) + '")'
+            '"), timestamp("'.join(date_dict[key]) + '")'
 
     return date_dict
 

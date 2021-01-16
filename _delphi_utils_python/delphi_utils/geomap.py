@@ -269,8 +269,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -310,7 +310,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 df[from_col] = df[from_col].astype(str)
 
         # Assuming that the passed-in records are all United States data, at the moment
-        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]: # pylint: disable=no-else-return
+        if (from_code, new_code) in [("fips", "nation"), # pylint: disable=no-else-return
+                                     ("zip", "nation"),
+                                     ("state_code", "nation"),
+                                     ("state_name", "nation"),
+                                     ("state_id", "nation")]:
             df[new_col] = df[from_col].apply(lambda x: "us")
             return df
         elif new_code == "nation":
@@ -368,8 +372,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -541,7 +545,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         -------
         Set of geo values, all in string format.
         """
-        if self.geo_lists[geo_type]:
+        if self.geo_lists[geo_type]:  # pylint: disable=no-else-return
             return self.geo_lists[geo_type]
         else:
             from_code = "fips"

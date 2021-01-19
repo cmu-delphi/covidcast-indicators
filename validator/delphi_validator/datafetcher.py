@@ -144,15 +144,15 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]
 
-    # Replace None with NA to make numerical manipulation easier.
     # Rename and reorder columns to match those in df_to_test.
-    api_df = api_df.replace(
-        to_replace=[None], value=np.nan
-    ).rename(
+    api_df = api_df.rename(
         columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}
     ).drop(
         ['issue', 'lag'], axis=1
     ).reindex(columns=column_names)
+    # Replace None with NA to make numerical manipulation easier.  We omit the `geo_id` column
+    # since sometimes this replacement will covert the strings to numeric values.
+    api_df[column_names[1:]] = api_df[column_names[1:]].replace(to_replace=[None], value=np.nan)
 
     return api_df
 

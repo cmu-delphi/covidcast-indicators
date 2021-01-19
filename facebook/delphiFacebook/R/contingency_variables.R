@@ -19,6 +19,19 @@
 #' 
 #' @export
 make_human_readable <- function(input_data) {
+  # Make derivative columns.
+  if ("mc_occupational_group" %in% names(input_data)) {
+    input_data$b_work_in_healthcare <- (
+      input_data$mc_occupational_group == 4 | input_data$mc_occupational_group == 5
+    )
+  } else {
+    input_data$b_work_in_healthcare <- NA_real_
+  }
+  
+  input_data$b_65_or_older <- (
+    input_data$mc_age == 6 | input_data$mc_age == 7
+  )
+  
   input_data <- remap_responses(input_data)
   input_data <- rename_responses(input_data)
   input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
@@ -170,19 +183,6 @@ rename_responses <- function(df) {
   
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
   df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
-  
-  
-  if ("mc_occupational_group" %in% names(df)) {
-    df$b_work_in_healthcare <- (
-      df$mc_occupational_group == 4 | df$mc_occupational_group == 5
-    )
-  } else {
-    df$b_work_in_healthcare <- NA_real_
-  }
-  
-  df$b_65_or_older <- (
-    df$mc_age == 6 | df$mc_age == 7
-  )
   
   return(df)
 }

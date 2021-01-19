@@ -6,12 +6,13 @@ when the module is run with `python -m MODULE_NAME`.
 """
 from datetime import datetime, date, time, timedelta
 from itertools import product
-from os.path import join
 
+import time as t
 import numpy as np
-import pandas as pd
+
 from delphi_utils import (
     create_export_csv,
+    get_structured_logger,
     read_params,
     GeoMapper,
     S3ArchiveDiffer,
@@ -67,6 +68,10 @@ GEO_RESOLUTIONS = [
 def run_module():
     """Run the usafacts indicator."""
     params = read_params()
+    start_time = t.time()
+    csv_export_count = 0
+    oldest_final_export_date = None
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
         export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)
@@ -87,7 +92,11 @@ def run_module():
     dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
-        print(geo_res, metric, sensor, smoother)
+        logger.info("generating signal and exporting to CSV",
+            geo_res = geo_res,
+            metric = metric,
+            sensor = sensor,
+            smoother = smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, sensor)
@@ -101,7 +110,7 @@ def run_module():
         #     metric = f"wip_{metric}"
         #     sensor_name = WIP_SENSOR_NAME_MAP[sensor][0]
         sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
-        create_export_csv(
+        exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
             start_date=SMOOTHERS_MAP[smoother][3](export_start_date),
@@ -109,6 +118,16 @@ def run_module():
             geo_res=geo_res,
             sensor=sensor_name,
         )
+        if not exported_csv_dates.empty:
+            logger.info("Exported CSV",
+                csv_export_count = exported_csv_dates.size,
+                min_csv_export_date = min(exported_csv_dates).strftime("%Y-%m-%d"),
+                max_csv_export_date = max(exported_csv_dates).strftime("%Y-%m-%d"))
+            csv_export_count += exported_csv_dates.size
+            if not oldest_final_export_date:
+                oldest_final_export_date = max(exported_csv_dates)
+            oldest_final_export_date = min(
+                oldest_final_export_date, max(exported_csv_dates))
 
     # Diff exports, and make incremental versions
     _, common_diffs, new_files = arch_diff.diff_exports()
@@ -125,3 +144,15 @@ def run_module():
     # Report failures: someone should probably look at them
     for exported_file in fails:
         print(f"Failed to archive '{exported_file}'")
+
+    elapsed_time_in_seconds = round(t.time() - start_time, 2)
+    max_lag_in_days = None
+    formatted_oldest_final_export_date = None
+    if oldest_final_export_date:
+        max_lag_in_days = (datetime.now() - oldest_final_export_date).days
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds,
+        csv_export_count = csv_export_count,
+        max_lag_in_days = max_lag_in_days,
+        oldest_final_export_date = formatted_oldest_final_export_date)

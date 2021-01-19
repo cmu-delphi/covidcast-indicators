@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 
 import covidcast
-from .errors import APIDataFetchError, ValidationError
+from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
@@ -172,8 +172,9 @@ def get_one_api_df(data_source, min_date, max_date,
             data_source, min_date, max_date, geo_type, signal_type)
 
     except APIDataFetchError as e:
-        geo_sig_api_df_or_error = ValidationError(
-                ("api_data_fetch_error", geo_type, signal_type), None, e)
+        geo_sig_api_df_or_error = ValidationFailure("api_data_fetch_error",
+                                                    f"{geo_type} {signal_type}",
+                                                    e.custom_msg)
 
     api_semaphore.release()
 

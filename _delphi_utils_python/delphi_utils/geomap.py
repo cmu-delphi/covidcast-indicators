@@ -116,6 +116,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "state_code": {"hhs": None},
             "jhu_uid": {"fips": None},
         }
+        self.geo_lists = {
+            geo: None for geo in ["zip", "fips", "hrr", "state_id", "state_code",
+                                  "state_name", "hhs", "msa"]
+        }
+        self.geo_lists["nation"] = {"us"}
 
     # Utility functions
     def _load_crosswalk(self, from_code, to_code):
@@ -264,8 +269,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -305,7 +310,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 df[from_col] = df[from_col].astype(str)
 
         # Assuming that the passed-in records are all United States data, at the moment
-        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]: # pylint: disable=no-else-return
+        if (from_code, new_code) in [("fips", "nation"), # pylint: disable=no-else-return
+                                     ("zip", "nation"),
+                                     ("state_code", "nation"),
+                                     ("state_name", "nation"),
+                                     ("state_id", "nation")]:
             df[new_col] = df[from_col].apply(lambda x: "us")
             return df
         elif new_code == "nation":
@@ -363,8 +372,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -512,3 +521,43 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.join(mega_data)
         data = data.reset_index().groupby([date_col, mega_col]).sum()
         return data.reset_index()
+
+    def get_geo_values(self, geo_type):
+        """
+        Return a set of all values for a given geography type.
+
+        Uses the same caching paradigm as _load_crosswalks, storing the value from previous calls
+        and not re-reading the CSVs if the same geo type is requested multiple times. Does not
+        share the same crosswalk cache to keep complexity down.
+
+        Reads the FIPS crosswalk files by default for reference data since those have mappings to
+        all other geos. Exceptions are nation, which has no mapping file and is hard-coded as 'us',
+        and state, which uses the state codes table since the fips/state mapping doesn't include
+        all territories.
+
+        Parameters
+        ----------
+        geo_type: str
+          One of "zip", "fips", "hrr", "state_id", "state_code", "state_name", "hhs", "msa",
+          and "nation"
+
+        Returns
+        -------
+        Set of geo values, all in string format.
+        """
+        if self.geo_lists[geo_type]:  # pylint: disable=no-else-return
+            return self.geo_lists[geo_type]
+        else:
+            from_code = "fips"
+            if geo_type.startswith("state"):
+                to_code = from_code = "state"
+            elif geo_type == "fips":
+                to_code = "pop"
+            else:
+                to_code = geo_type
+            stream = pkg_resources.resource_stream(
+                __name__, self.crosswalk_filepaths[from_code][to_code]
+            )
+            crosswalk = pd.read_csv(stream, dtype=str)
+            self.geo_lists[geo_type] = set(crosswalk[geo_type])
+            return self.geo_lists[geo_type]

@@ -219,3 +219,47 @@ code_testing <- function(input_data) {
   }
   return(input_data)
 }
+
+#' COVID vaccination variables
+#'
+#' @param input_data input data frame of raw survey data
+#' @return data frame augmented with `v_covid_vaccinated` and
+#'   `v_accept_covid_vaccine`
+code_vaccines <- function(input_data) {
+  if ("V1" %in% names(input_data)) {
+    # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
+    # because, well, you'd know.
+    input_data$v_covid_vaccinated <- case_when(
+      input_data$V1 == 1 ~ 1,
+      input_data$V1 == 2 ~ 0,
+      input_data$V1 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_covid_vaccinated <- NA_real_
+  }
+
+  if ("V3" %in% names(input_data)) {
+    input_data$v_accept_covid_vaccine <- (
+      input_data$V3 == 1 | input_data$V3 == 2
+    )
+  } else {
+    input_data$v_accept_covid_vaccine <- NA_real_
+  }
+
+  if ("V4_1" %in% names(input_data)) {
+    input_data$v_vaccine_likely_friends <- input_data$V4_1 == 1
+    input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
+    input_data$v_vaccine_likely_who <- input_data$V4_3 == 1
+    input_data$v_vaccine_likely_govt_health <- input_data$V4_4 == 1
+    input_data$v_vaccine_likely_politicians <- input_data$V4_5 == 1
+  } else {
+    input_data$v_vaccine_likely_friends <- NA_real_
+    input_data$v_vaccine_likely_local_health <- NA_real_
+    input_data$v_vaccine_likely_who <- NA_real_
+    input_data$v_vaccine_likely_govt_health <- NA_real_
+    input_data$v_vaccine_likely_politicians <- NA_real_
+  }
+
+  return(input_data)
+}

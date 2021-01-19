@@ -96,7 +96,7 @@ $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
 	cd "$(WEIGHTS)"; \
 	BATCH="cd fb-interchange/cmu_respondent_weights\nls -1"; \
-	NEW=`LC_ALL=C comm -23 <(sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu | grep "^2020" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
+	NEW=`LC_ALL=C comm -23 <(sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu | grep "^202" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
 	echo "New weights files:"; \
 	echo $${NEW}; \
 	for f in $${NEW}; do \

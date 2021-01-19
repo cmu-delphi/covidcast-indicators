@@ -55,7 +55,7 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
-                           A2 = col_character(),
+                           A2 = col_integer(),
                            A3 = col_character(),
                            B2 = col_character(),
                            B2_14_TEXT = col_character(),
@@ -71,6 +71,20 @@ load_response_one <- function(input_filename, params) {
                            D7 = col_character(),
                            E3 = col_character(),
                            Q_TerminateFlag = col_character(),
+                           V1 = col_integer(),
+                           V2 = col_integer(),
+                           V3 = col_integer(),
+                           V4_1 = col_integer(),
+                           V4_2 = col_integer(),
+                           V4_3 = col_integer(),
+                           V4_4 = col_integer(),
+                           V4_5 = col_integer(),
+                           V4a_1 = col_integer(),
+                           V4a_2 = col_integer(),
+                           V4a_3 = col_integer(),
+                           V4a_4 = col_integer(),
+                           V4a_5 = col_integer(),
+                           V9 = col_integer(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -105,12 +119,15 @@ load_response_one <- function(input_filename, params) {
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 
+  input_data <- bodge_v4_translation(input_data)
+
   input_data <- code_symptoms(input_data)
   input_data <- code_hh_size(input_data)
   input_data <- code_mental_health(input_data)
   input_data <- code_mask_contact(input_data)
   input_data <- code_testing(input_data)
   input_data <- code_activities(input_data)
+  input_data <- code_vaccines(input_data)
 
   # create testing variables
 
@@ -330,8 +347,6 @@ bodge_v4_translation <- function(input_data) {
 #' @export
 create_complete_responses <- function(input_data, county_crosswalk)
 {
-  input_data <- bodge_v4_translation(input_data)
-
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
     "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2",
@@ -350,6 +365,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "D10", # added in Wave 4
     "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
+    "V9", # added in Wave 7
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
@@ -414,7 +430,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_8bKZvWZcGbvzsz3" = 3,
                 "SV_eVXdPlGVNw04el7" = 4,
                 "SV_2hErnivitm0th8F" = 5,
-                "SV_8HCnaK1BJPsI3BP" = 6)
+                "SV_8HCnaK1BJPsI3BP" = 6,
+                "SV_ddjHkcYrrLWgM2V" = 7)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

@@ -190,8 +190,9 @@ def check_intermediate_file(cache_dir, pull_start_date):
     return None, pull_start_date
 
 def pull_quidel_covidtest(params):
-    """Pull the quidel covid test data and decide whether to combine the new data
-    with stored historical records in ./cache.
+    """Pull the quidel covid test data.
+
+    Conditionally merge new data with historical data from ./cache.
 
     Parameters:
         params: dict
@@ -266,7 +267,7 @@ def check_export_end_date(input_export_end_date, _end_date,
 def check_export_start_date(export_start_date, export_end_date,
                             export_day_range):
     """
-    Update export_start_date according to the export_end_date so that it could be export_end_date - export_day_range.
+    Ensure that the starte date, end date, and day range are mutually consistent.
 
     Parameters:
         export_start_date: str
@@ -279,6 +280,7 @@ def check_export_start_date(export_start_date, export_end_date,
     Returns:
         datetime.datetime
             export data until which date
+
     """
     if export_start_date == "":
         export_start_date = datetime(2020, 5, 26)

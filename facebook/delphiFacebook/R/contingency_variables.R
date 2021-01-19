@@ -180,6 +180,10 @@ rename_responses <- function(df) {
     df$b_work_in_healthcare <- NA_real_
   }
   
+  df$b_65_or_older <- (
+    df$mc_age == 6 | df$mc_age == 7
+  )
+  
   return(df)
 }
 

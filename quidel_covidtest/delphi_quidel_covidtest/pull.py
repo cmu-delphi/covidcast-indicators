@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Simply downloads email attachments.
-
-Uses this handy package: https://pypi.org/project/imap-tools/
-"""
+"""Collect and process Quidel export files."""
 from os.path import join
 import os
 from datetime import datetime, timedelta
@@ -17,11 +14,11 @@ def get_from_s3(start_date, end_date, bucket):
 
     Args:
         start_date: datetime.datetime
-            pull data from email received from the start date
+            pull data from file tagged with date on/after the start date
         end_date: datetime.datetime
-            pull data from email received on/before the end date
+            pull data from file tagged with date on/before the end date
         bucket: s3.Bucket
-            the aws s3 bucket that stored quidel data
+            the aws s3 bucket that stores quidel data
     output:
         df: pd.DataFrame
         time_flag: datetime.datetime
@@ -103,7 +100,7 @@ def fix_date(df):
 
 def preprocess_new_data(start_date, end_date, params, test_mode):
     """
-    Pull and pre-process Quidel Covid Test data from datadrop email.
+    Pull and pre-process Quidel Covid Test data.
 
     Drop unnecessary columns. Temporarily consider the positive rate
     sensor only which is related to number of total tests and number
@@ -111,13 +108,13 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
 
     Args:
         start_date: datetime.datetime
-            pull data from email received from the start date
+            pull data from file tagged with date on/after start date
         end_date: datetime.datetime
-            pull data from email received on/before the end date
+            pull data from file tagged with date on/before the end date
         params: dict
             read from params.json
         test_mode: bool
-            pull raw data from email or not
+            pull raw data from s3 or not
     output:
         df: pd.DataFrame
         time_flag: datetime.date:
@@ -138,7 +135,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
         s3 = boto3.resource('s3', aws_access_key_id=aws_access_key_id,
                             aws_secret_access_key=aws_secret_access_key)
         bucket = s3.Bucket(bucket_name)
-        # Get new data from email
+        # Get new data from s3
         df, time_flag = get_from_s3(start_date, end_date, bucket)
 
     # No new data can be pulled
@@ -193,8 +190,8 @@ def check_intermediate_file(cache_dir, pull_start_date):
     return None, pull_start_date
 
 def pull_quidel_covidtest(params):
-    """
-    Pull the quidel covid test data and ecide whether to combine the new data with stored historical records in ./cache.
+    """Pull the quidel covid test data and decide whether to combine the new data
+    with stored historical records in ./cache.
 
     Parameters:
         params: dict
@@ -212,6 +209,7 @@ def pull_quidel_covidtest(params):
             the first date of the report
         datetime.datetime
             the last date of the report
+
     """
     cache_dir = params["cache_dir"]
 
@@ -227,7 +225,7 @@ def pull_quidel_covidtest(params):
     else:
         pull_end_date = datetime.strptime(params["pull_end_date"], '%Y-%m-%d')
 
-    # Pull data from the email at 5 digit zipcode level
+    # Pull data from the file at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = preprocess_new_data(
             pull_start_date, pull_end_date, params, test_mode)

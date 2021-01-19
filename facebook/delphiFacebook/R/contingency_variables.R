@@ -105,6 +105,7 @@ rename_responses <- function(df) {
     "b_accept_cov_vaccine_rec_by_gov_health" = "V4_4", # Need to merge V4a into?
     "b_accept_cov_vaccine_rec_by_politician" = "V4_5", # Need to merge V4a into?
     "b_had_cov_vaccine" = "V1",
+    "b_accept_cov_vaccine" = "v_accept_covid_vaccine", # Binary version of V3; "definitely" and "probably" vaccinate map to TRUE
     
     ## multiple choice (mc)
     ## Can only select one of n > 2 choices
@@ -169,6 +170,15 @@ rename_responses <- function(df) {
   
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
   df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
+  
+  
+  if ("mc_occupational_group" %in% names(df)) {
+    df$b_work_in_healthcare <- (
+      df$mc_occupational_group == 4 | df$mc_occupational_group == 5
+    )
+  } else {
+    df$b_work_in_healthcare <- NA_real_
+  }
   
   return(df)
 }
@@ -273,8 +283,30 @@ remap_responses <- function(df) {
         "12"="Type 1 diabetes"),
       "default"=NULL,
       "type"="ms"
+    ),
+    Q64=list(
+      "map"=c(
+        "1"="Community and social",
+        "2"="Education", 
+        "3"="Arts and media", 
+        "4"="Healthcare practitioner", 
+        "5"="Healthcare support", 
+        "6"="Protective", 
+        "7"="Food", 
+        "8"="Building upkeep", 
+        "9"="Personal care", 
+        "10"="Sales", 
+        "11"="Administrative", 
+        "12"="Construction and extraction",
+        "13"="Maintenance and repair",
+        "14"="Production",
+        "15"="Transportation and delivery",
+        "16"="Other"),
+      "default"=NULL,
+      "type"="mc"
     )
   )
+  
   
   for (col_var in names(map_old_new_responses)) {
     df <- remap_response(df, col_var, 

@@ -98,7 +98,9 @@ def run_module():
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, sensor)
-        df["val"] = SMOOTHERS_MAP[smoother][0].smooth(df[sensor].values)
+        df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
+            SMOOTHERS_MAP[smoother][0].smooth
+        )
         df["se"] = np.nan
         df["sample_size"] = np.nan
         # Drop early entries where data insufficient for smoothing

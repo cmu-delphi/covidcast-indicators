@@ -69,7 +69,20 @@ get_binary_indicators <- function() {
     "smoothed_accept_covid_vaccine", "weight_unif", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
     "smoothed_waccept_covid_vaccine", "weight", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
     "smoothed_covid_vaccinated", "weight_unif", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wcovid_vaccinated", "weight", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary
+    "smoothed_wcovid_vaccinated", "weight", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary,
+
+    # who would make more likely to accept vaccine
+    "smoothed_vaccine_likely_friends", "weight_unif", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_friends", "weight", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_likely_local_health", "weight_unif", "v_vaccine_likely_local_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_local_health", "weight", "v_vaccine_likely_local_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_likely_who", "weight_unif", "v_vaccine_likely_who", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_who", "weight", "v_vaccine_likely_who", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_likely_govt_health", "weight_unif", "v_vaccine_likely_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_govt_health", "weight", "v_vaccine_likely_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_likely_politicians", "weight_unif", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_politicians", "weight", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary
+
   )
 
   ind$skip_mixing <- TRUE

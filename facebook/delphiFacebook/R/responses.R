@@ -118,6 +118,8 @@ load_response_one <- function(input_filename, params) {
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 
+  input_data <- bodge_v4_translation(input_data)
+
   input_data <- code_symptoms(input_data)
   input_data <- code_hh_size(input_data)
   input_data <- code_mental_health(input_data)
@@ -344,8 +346,6 @@ bodge_v4_translation <- function(input_data) {
 #' @export
 create_complete_responses <- function(input_data, county_crosswalk)
 {
-  input_data <- bodge_v4_translation(input_data)
-
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
     "A1_1", "A1_2", "A1_3", "A1_4", "A1_5", "A2",

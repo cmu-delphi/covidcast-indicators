@@ -247,5 +247,19 @@ code_vaccines <- function(input_data) {
     input_data$v_accept_covid_vaccine <- NA_real_
   }
 
+  if ("V4_1" %in% names(input_data)) {
+    input_data$v_vaccine_likely_friends <- input_data$V4_1 == 1
+    input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
+    input_data$v_vaccine_likely_who <- input_data$V4_3 == 1
+    input_data$v_vaccine_likely_govt_health <- input_data$V4_4 == 1
+    input_data$v_vaccine_likely_politicians <- input_data$V4_5 == 1
+  } else {
+    input_data$v_vaccine_likely_friends <- NA_real_
+    input_data$v_vaccine_likely_local_health <- NA_real_
+    input_data$v_vaccine_likely_who <- NA_real_
+    input_data$v_vaccine_likely_govt_health <- NA_real_
+    input_data$v_vaccine_likely_politicians <- NA_real_
+  }
+
   return(input_data)
 }

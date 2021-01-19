@@ -82,7 +82,6 @@ run_contingency_tables_one_period <- function(params, aggregations)
   
   input_data <- load_responses_all(params)
   input_data <- filter_responses(input_data, params)
-  input_data <- bodge_v4_translation(input_data)
   msg_df("response input data", input_data)
   
   input_data <- merge_responses(input_data, archive)

@@ -7,17 +7,25 @@ import pandas as pd
 from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_dates, format_dates_for_query
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
-base_url_good = "./test_data{sub_url}small_{state}symptoms_dataset.csv"
+good_input = {
+    "state": "test_data/small_symptoms_dataset.csv",
+    "county": "test_data/subregions/Montana/small_Montana_symptoms_dataset.csv"
+}
 
-base_url_bad = {
+bad_input = {
     "missing_cols": "test_data/bad_state_missing_cols.csv",
     "invalid_fips": "test_data/bad_county_invalid_fips.csv"
 }
 
 
 class TestPullGoogleSymptoms:
-    def test_good_file(self):
-        dfs = pull_gs_data(base_url_good)
+    # , new_callable=lambda level: pd.read_csv(good_input[level]))
+    @mock.patch("pandas_gbq.read_gbq")
+    def test_good_file(self, mock_read_gbq):
+        mock_read_gbq.return_value = [pd.read_csv(
+            good_input["state"]), pd.read_csv(good_input["county"])]
+        dfs = pull_gs_data({"project_id": ""}, "./test_data/static_receiving",
+                           date(year=2020, month=12, day=30))
 
         for level in set(["county", "state"]):
             df = dfs[level]
@@ -39,12 +47,12 @@ class TestPullGoogleSymptoms:
                 & (~df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
 
     def test_missing_cols(self):
-        df = pd.read_csv(base_url_bad["missing_cols"])
+        df = pd.read_csv(bad_input["missing_cols"])
         with pytest.raises(KeyError):
             preprocess(df, "state")
 
     def test_invalid_fips(self):
-        df = pd.read_csv(base_url_bad["invalid_fips"])
+        df = pd.read_csv(bad_input["invalid_fips"])
         with pytest.raises(AssertionError):
             preprocess(df, "county")
 

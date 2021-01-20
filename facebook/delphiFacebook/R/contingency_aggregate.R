@@ -1,6 +1,6 @@
 ## Functions for performing the aggregations in an efficient way.
 
-#' Produce aggregates for all desired aggregations.
+#' Produce all desired aggregations.
 #'
 #' Writes the outputs directly to CSVs in the directory specified by `params`.
 #' Produces output using all available data between `params$start_date` and 
@@ -102,8 +102,8 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
 #'   to report. `name` is the aggregate's base column name; `var_weight` is the 
 #'   column to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `group_by` is a list of variables used to perform the 
-#'   aggregations over. `compute_fn` is the function that computes
+#'   response value. `group_by` is a list of variables to aggregate 
+#'   over. `compute_fn` is the function that computes
 #'   the aggregate response given many rows of data. `post_fn` is applied to the
 #'   aggregate data after megacounty aggregation, and can perform any final
 #'   calculations necessary.
@@ -192,7 +192,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   return(list(df, aggregations))
 }
 
-#' Performs calculations across all groupby levels for all aggregations.
+#' Perform calculations across all groupby levels for all aggregations.
 #'
 #' @param df a data frame of survey responses
 #' @param crosswalk_data An aggregation, such as zip => county or zip => state,

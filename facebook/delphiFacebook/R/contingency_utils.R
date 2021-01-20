@@ -106,7 +106,7 @@ get_date_range_from_filenames <- function(params) {
 }
 
 
-#' Checks user-set aggregations for basic validity
+#' Check user-set aggregations for basic validity.
 #'
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate

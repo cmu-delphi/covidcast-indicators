@@ -1,4 +1,4 @@
-#' Get the date of the first day of the previous month
+#' Get the date of the first day of the previous month.
 #'
 #' @param date Date of interest
 #' 
@@ -11,7 +11,7 @@ start_of_prev_full_month <- function(date) {
   return(floor_date(date, "month") - months(1))
 }
 
-#' Get the date of the last day of the previous month
+#' Get the date of the last day of the previous month.
 #'
 #' @param date Date of interest
 #' 
@@ -30,7 +30,7 @@ end_of_prev_full_month <- function(date) {
   return(first_day_of_next_month - days(1))
 }
 
-#' Get the date range specifying the previous month
+#' Get the date range specifying the previous month.
 #'
 #' @param date Date of interest
 #' 
@@ -49,7 +49,7 @@ get_range_prev_full_month <- function(date = Sys.Date()) {
   return(list(som, eom))
 }
 
-#' Get the date of the first day of the previous epiweek
+#' Get the date of the first day of the previous epiweek.
 #'
 #' @param date Date of interest
 #' 
@@ -62,7 +62,7 @@ start_of_prev_full_week <- function(date) {
   return(floor_epiweek(date) - weeks(1))
 }
 
-#' Get the date of the last day of the previous epiweek
+#' Get the date of the last day of the previous epiweek.
 #'
 #' @param date Date of interest
 #' 
@@ -81,7 +81,7 @@ end_of_prev_full_week <- function(date) {
   return(first_day_of_next_week - days(1))
 }
 
-#' Get the date range specifying the previous week
+#' Get the date range specifying the previous week.
 #'
 #' @param date Date of interest
 #' 
@@ -102,7 +102,7 @@ get_range_prev_full_week <- function(date = Sys.Date()) {
   return(list(sow, eow))
 }
 
-#' Get the date range specifying the previous full time period
+#' Get the date range specifying the previous full time period.
 #'
 #' @param date Date of interest
 #' @param weekly_or_monthly_flag string "week" or "month" indicating desired
@@ -134,7 +134,7 @@ get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag
   return(date_period_range)
 }
 
-#' Get date of the first day of the epiweek `x` falls in
+#' Get date of the first day of the epiweek `x` falls in.
 #' 
 #' @param date date
 #' 
@@ -150,7 +150,7 @@ floor_epiweek <- function(date) {
   return(date - days(prior_days - 1))
 }
 
-#' Get date of the first day of the epiweek following the epiweek `x` falls in
+#' Get date of the first day of the epiweek following the epiweek `x` falls in.
 #' 
 #' @param date date
 #' 

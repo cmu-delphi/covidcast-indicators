@@ -1,4 +1,4 @@
-#' Write csv file for sharing with researchers
+#' Write csv file for sharing with researchers.
 #' 
 #' CSV name includes date specifying start of time period aggregated, geo level,
 #' and grouping variables.

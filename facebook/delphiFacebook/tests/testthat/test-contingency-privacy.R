@@ -2,7 +2,7 @@ library(dplyr)
 
 context("Testing functions for ensuring aggregation privacy")
 
-test_that("testing apply_privacy_censoring command", {
+test_that("apply_privacy_censoring filters sample size & effective sample size", {
   test_data <- tibble(
     geo_id = c("MA", "MA", "MA", "MA", "PA", "PA"),
     tested = c(1, 1, 1, 1, 1, 1),

@@ -1,6 +1,6 @@
 context("Testing functions for calculating weighted aggregations")
 
-test_that("testing compute_multiple_choice command", {
+test_that("compute_multiple_choice returns people represented in group", {
   response <- c(1, 2, 5, 1, 5)
   weight <- c(0.05, 0.03, 0.05, 0.01, 0.05)
   sample_size <- 5

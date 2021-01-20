@@ -48,7 +48,7 @@ compute_binary_and_multiselect <- function(response, weight, sample_size, total_
   return(response_pct)
 }
 
-#' Returns multiple choice response estimates. Val is the number of people
+#' Return multiple choice response estimates. Val is the number of people
 #' represented by the survey respondents in a given response.
 #'
 #' This function takes vectors as input and computes the response values

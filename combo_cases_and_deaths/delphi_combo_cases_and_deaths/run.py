@@ -10,11 +10,12 @@ everything else from usa-facts.
 from datetime import date, timedelta, datetime
 from itertools import product
 import re
+import time
 
 import covidcast
 import pandas as pd
 
-from delphi_utils import read_params, add_prefix
+from delphi_utils import read_params, add_prefix, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
@@ -171,10 +172,13 @@ def configure(variants):
 
 def run_module():
     """Produce a combined cases and deaths signal using data from JHU and USA Facts."""
+    start_time = time.time()
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
     params = configure(variants)
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,
                                       geo_res,
@@ -192,3 +196,7 @@ def run_module():
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

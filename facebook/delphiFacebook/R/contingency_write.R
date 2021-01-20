@@ -29,7 +29,7 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     groupby_vars <- gsub("_", "", sub(
       ".+?_", "", groupby_vars[groupby_vars != "geo_id"]))
     filename <- sprintf("%s_%s.csv", format(params$start_date, "%Y%m%d"),
-                        paste(geo_level, groupby_vars, collapse="_"))
+                        paste(c(geo_level, groupby_vars), collapse="_"))
     file_out <- file.path(params$export_dir, filename)
     
     create_dir_not_exist(params$export_dir)

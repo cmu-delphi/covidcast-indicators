@@ -107,7 +107,7 @@ def run_module():
                 print(geo)
                 print(state)
                 print(exported)
-                raise
+                raise e
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""

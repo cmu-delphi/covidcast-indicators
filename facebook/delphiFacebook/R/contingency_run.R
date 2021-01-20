@@ -70,44 +70,44 @@ run_contingency_tables_one_period <- function(params, aggregations)
   params <- update_params(params)
   aggregations <- verify_aggs(aggregations)
   
-  cw_list <- produce_crosswalk_list(params$static_dir)
-  archive <- load_archive(params)
-  msg_df("archive data loaded", archive$input_data)
-  
-  input_data <- load_responses_all(params)
-  input_data <- filter_responses(input_data, params)
-  msg_df("response input data", input_data)
-  
-  input_data <- merge_responses(input_data, archive)
-  data_agg <- create_data_for_aggregatation(input_data)
-  data_agg <- filter_data_for_aggregatation(data_agg, params, 
-                                            lead_days = params$backfill_days)
-  
-  if (nrow(data_agg) == 0) {
-    msg_plain(sprintf("no data available in the desired date range %s- to %s", 
-            params$start_date, params$end_date))
-    return()
-  }
-  
-  data_agg <- join_weights(data_agg, params, weights = "full")
-  msg_df("response data to aggregate", data_agg)
-  
-  ## Set default number of cores for mclapply to the total available number,
-  ## because we are greedy and this will typically run on a server.
-  if (params$parallel) {
-    cores <- detectCores()
-    
-    if (is.na(cores)) {
-      warning("Could not detect the number of CPU cores; parallel mode disabled")
-      params$parallel <- FALSE
-    } else {
-      options(mc.cores = cores)
-    }
-  }
-  
-  data_agg <- make_human_readable(data_agg)
-  
   if (nrow(aggregations) > 0) {
+    cw_list <- produce_crosswalk_list(params$static_dir)
+    archive <- load_archive(params)
+    msg_df("archive data loaded", archive$input_data)
+    
+    input_data <- load_responses_all(params)
+    input_data <- filter_responses(input_data, params)
+    msg_df("response input data", input_data)
+    
+    input_data <- merge_responses(input_data, archive)
+    data_agg <- create_data_for_aggregatation(input_data)
+    data_agg <- filter_data_for_aggregatation(data_agg, params, 
+                                              lead_days = params$backfill_days)
+    
+    if (nrow(data_agg) == 0) {
+      msg_plain(sprintf("no data available in the desired date range %s- to %s", 
+                        params$start_date, params$end_date))
+      return()
+    }
+    
+    data_agg <- join_weights(data_agg, params, weights = "full")
+    msg_df("response data to aggregate", data_agg)
+    
+    ## Set default number of cores for mclapply to the total available number,
+    ## because we are greedy and this will typically run on a server.
+    if (params$parallel) {
+      cores <- detectCores()
+      
+      if (is.na(cores)) {
+        warning("Could not detect the number of CPU cores; parallel mode disabled")
+        params$parallel <- FALSE
+      } else {
+        options(mc.cores = cores)
+      }
+    }
+    
+    data_agg <- make_human_readable(data_agg)
+    
     aggregate_aggs(data_agg, aggregations, cw_list, params)
   }
   

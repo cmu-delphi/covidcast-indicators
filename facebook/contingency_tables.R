@@ -3,16 +3,15 @@ library(delphiFacebook)
 
 # User should add additional desired aggregations here following existing
 # format. Names should be descriptive. Listing no groupby vars will implicitly
-# compute aggregations at the national level only. Aggregations will not be 
+# compute aggregations at the national level only. Aggregations will not be
 # reported if one or more of the metric or grouping variables is missing.
 #
 # Each row represents one aggregate to report. `name` is the aggregate's base
-# column name; `var_weight` is the column to use for its weights. `metric` is
-# the column of `df` containing the response value. `group_by` is a list of
-# variables used to perform the aggregations over. `compute_fn` is the function
-# that computes the aggregate response given many rows of data. `post_fn` is
-# applied to the aggregate data and can perform any final calculations
-# necessary.
+# column name.`metric` is the column of `df` containing the response value.
+# `group_by` is a list of variables used to perform the aggregations over.
+# `compute_fn` is the function that computes the aggregate response given many
+# rows of data. `post_fn` is applied to the aggregate data and can perform any
+# final calculations necessary.
 #
 # Please verify that any multiple choice and multi-select questions used in the
 # aggregations are reformatted to be descriptive in

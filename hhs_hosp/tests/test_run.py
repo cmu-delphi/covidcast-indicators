@@ -1,8 +1,10 @@
 from datetime import datetime, date
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
-    make_signal
+    make_signal, make_geo
 from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP
+from delphi_utils.geomap import GeoMapper
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -48,22 +50,58 @@ def test_make_signal():
     })
 
     expected_confirmed = pd.DataFrame({
-        'geo_id': ['na'],
+        'state': ['na'],
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [5],
-        'se': None,
-        'sample_size': None
     })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED))
 
     expected_sum = pd.DataFrame({
-        'geo_id': ['na'],
+        'state': ['na'],
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [15],
-        'se': None,
-        'sample_size': None
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
 
     with pytest.raises(Exception):
         make_signal(data, "zig")
+
+def test_make_geo():
+    """Check that geographies transform correctly."""
+    test_timestamp = datetime(year=2020, month=1, day=1)
+    geo_mapper = GeoMapper()
+    
+    data = pd.DataFrame({
+        'state': ['PA','WV','OH'],
+        'state_code': [42, 54, 39],
+        'timestamp': [test_timestamp]*3,
+        'val': [1, 2, 4],
+    })
+
+    template = {
+        'se': np.nan,
+        'sample_size': np.nan,
+    }
+    expecteds = {
+        "state": pd.DataFrame(
+            dict(template,
+                 geo_id=data.state,
+                 timestamp=data.timestamp,
+                 val=data.val)),
+        "hhs": pd.DataFrame(
+            dict(template,
+                 geo_id=['3', '5'],
+                 timestamp=[test_timestamp]*2,
+                 val=[3, 4])),
+        "nation": pd.DataFrame(
+            dict(template,
+                 geo_id=['us'],
+                 timestamp=[test_timestamp],
+                 val=[7]))
+    }
+    for geo, expected in expecteds.items():
+        result = make_geo(data, geo, geo_mapper)
+        for series in ["geo_id", "timestamp", "val", "se", "sample_size"]:
+            pd.testing.assert_series_equal(expected[series], result[series], obj=f"{geo}:{series}")
+
+    

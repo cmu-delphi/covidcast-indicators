@@ -8,8 +8,8 @@ SIGNALS = [
     SUM_CONF_SUSP
 ]
 
-# incoming geo: state
 GEOS = [
     "nation",
-    "hhs"
+    "hhs",
+    "state"
 ]

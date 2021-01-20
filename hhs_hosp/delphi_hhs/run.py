@@ -10,9 +10,10 @@ from delphi_epidata import Epidata
 from delphi_utils import read_params
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
+import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, CONFIRMED, SUM_CONF_SUSP
 
 
 def _date_to_int(d):
@@ -82,22 +83,31 @@ def run_module():
     geo_mapper = GeoMapper()
 
     for sig in SIGNALS:
-        state = make_signal(all_columns, sig)
-        create_export_csv(
-            state,
-            params["export_dir"],
-            "state",
-            sig
-        )
+        state = geo_mapper.add_geocode(make_signal(all_columns, sig),
+                                       "state_id", "state_code",
+                                       from_col="state")
         for geo in GEOS:
-            create_export_csv(
-                geo_mapper.replace_geocode(state, "state", geo,
-                                           from_col="geo_id", new_col="geo_id",
-                                           date_col="timestamp"),
-                params["export_dir"],
-                geo,
-                sig
-            )
+            if geo == "state":
+                exported = state.rename(columns={"state":"geo_id"})
+            else:
+                exported = geo_mapper.replace_geocode(
+                    state, "state_code", geo,
+                    new_col="geo_id",
+                    date_col="timestamp")
+            exported["se"] = np.nan
+            exported["sample_size"] = np.nan
+            try:
+                create_export_csv(
+                    exported,
+                    params["export_dir"],
+                    geo,
+                    sig
+                )
+            except (KeyError,ValueError) as e:
+                print(geo)
+                print(state)
+                print(exported)
+                raise
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""
@@ -105,25 +115,21 @@ def make_signal(all_columns, sig):
         " familiar names are '{', '.join(SIGNALS)}'"
     if sig == CONFIRMED:
         return pd.DataFrame({
-            "geo_id": all_columns.state.apply(str.lower),
+            "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
             "val": \
             all_columns.previous_day_admission_adult_covid_confirmed + \
-            all_columns.previous_day_admission_pediatric_covid_confirmed,
-            "se": None,
-            "sample_size": None
+            all_columns.previous_day_admission_pediatric_covid_confirmed
         })
     if sig == SUM_CONF_SUSP:
         return pd.DataFrame({
-            "geo_id": all_columns.state.apply(str.lower),
+            "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
             "val": \
             all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
-            "se": None,
-            "sample_size": None
         })
     raise Exception(
         "Bad programmer: signal '{sig}' in SIGNALS but not handled in make_signal"

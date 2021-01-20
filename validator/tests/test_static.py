@@ -152,12 +152,21 @@ class TestCheckBadGeoIdFormat:
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
-    def test_invalid_geo_id_national(self):
+    def test_invalid_geo_id_hhs(self):
+        validator = StaticValidator(self.params)
+        report = ValidationReport(set())
+        df = pd.DataFrame(["1", "112"], columns=["geo_id"])
+        validator.check_bad_geo_id_format(df, "name", "hhs", report)
+
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_geo_id_format"
+
+    def test_invalid_geo_id_nation(self):
         validator = StaticValidator(self.params)
         report = ValidationReport(set())
         df = pd.DataFrame(["usa", "SP", " us", "us",
                            "usausa", "US"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "national", report)
+        validator.check_bad_geo_id_format(df, "name", "nation", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
@@ -256,6 +265,15 @@ class TestCheckBadGeoIdValue:
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
+    def test_invalid_geo_id_hhs(self):
+        validator = StaticValidator(self.params)
+        report = ValidationReport(set())
+        df = pd.DataFrame(["1", "11"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, "name", "hhs", report)
+
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
+
     def test_invalid_geo_id_state(self):
         validator = StaticValidator(self.params)
         report = ValidationReport(set())
@@ -275,11 +293,11 @@ class TestCheckBadGeoIdValue:
         assert len(report.raised_warnings) == 1
         assert report.raised_warnings[0].check_name == "check_geo_id_lowercase"
 
-    def test_invalid_geo_id_national(self):
+    def test_invalid_geo_id_nation(self):
         validator = StaticValidator(self.params)
         report = ValidationReport(set())
         df = pd.DataFrame(["us", "zz"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "national", report)
+        validator.check_bad_geo_id_value(df, "name", "nation", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"

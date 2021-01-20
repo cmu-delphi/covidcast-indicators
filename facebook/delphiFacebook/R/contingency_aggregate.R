@@ -83,7 +83,19 @@ aggregate_aggs <- function(df, aggregations, cw_list, params) {
   }
 }
 
-#' Post-process aggregations and data to make more generic
+#' Process aggregations to make formatting more consistent
+#' 
+#' Parse grouping variables for geolevel, and save to new column for easy
+#' access. If none, assume national. If `metric` is a multiple choice item,
+#' include it in list of grouping variables so levels are included in output
+#' CSV. Alphabetize grouping variables; columns are saved to output CSV in this
+#' order.
+#'
+#' Most columns specified in `aggregations` are converted into the appropriate
+#' format (binary response codes -> logical, etc). Multi-select `metrics` are
+#' turned into a series of binary columns. Each binary is given its own
+#' aggregation, sharing grouping variables and other settings with the original
+#' multi-select agg.
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -142,8 +154,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   # Convert most columns being used in aggregations to the appropriate format.
   # Multiple choice and multi-select used for grouping are left as-is.
   #### TODO: multi-select responses should be converted into set of binary cols 
-  #### if being used for grouping; low priority since using a multi-select as a
-  #### grouping variable should be rare.
+  #### if being used for grouping
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
   group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
@@ -216,7 +227,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   
   ## dplyr complains about joining a data.table, saying it is likely to be
   ## inefficient; profiling shows the cost to be negligible, so shut it up
-  # Geo group column is always named "geo_id"
   df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
   
   groupby_vars <- aggregations$group_by[[1]]
@@ -333,8 +343,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
     
     agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
     
-    if (nrow(agg_df) > 0)
-    {
+    if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef
       mixing <- mix_weights(agg_df[[var_weight]] * agg_df$weight_in_location,
                             s_mix_coef, params$s_weight)

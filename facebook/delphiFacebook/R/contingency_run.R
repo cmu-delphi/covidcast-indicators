@@ -2,9 +2,6 @@
 #'
 #' Allows pipeline to be create a series of CSVs for a range of dates.
 #'
-#' See the README.md file in the source directory for more information about how to run
-#' this function.
-#'
 #' @param params    Params object produced by read_params
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
@@ -28,7 +25,7 @@ run_contingency_tables <- function(params, aggregations)
     
     if (params$aggregate_range == "week") {
       period_step <- days(7)
-    } else if (params$aggregate_range == "week") {
+    } else if (params$aggregate_range == "month") {
       period_step <- months(1)
     } else if (is.null(params$aggregate_range)) {
       stop("setting aggregate_range must be provided in params")
@@ -51,9 +48,6 @@ run_contingency_tables <- function(params, aggregations)
 }
 
 #' Run the contingency table production pipeline for a single time period
-#'
-#' See the README.md file in the source directory for more information about how to run
-#' this function.
 #'
 #' @param params    Params object produced by read_params
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,

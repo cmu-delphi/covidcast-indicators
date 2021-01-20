@@ -1,6 +1,6 @@
 ## Functions handling renaming, reformatting, or recoding response columns.
 
-#' Rename question codes to informative descriptions
+#' Rename question codes to informative descriptions.
 #'
 #' Column names beginning with "b_" are binary (T/F/NA); with "t_" are user-
 #' entered text; with "n_" are user-entered numeric; with "mc_" are multiple
@@ -26,7 +26,7 @@ make_human_readable <- function(input_data) {
   return(input_data)
 }
 
-#' Rename all columns to make more interpretable
+#' Rename all columns to make more interpretable.
 #' 
 #' @param df Data frame of individual response data.
 #' 
@@ -187,7 +187,7 @@ rename_responses <- function(df) {
   return(df)
 }
 
-#' Remap binary columns, race, and others to make more interpretable
+#' Remap binary columns, race, and others to make more interpretable.
 #' 
 #' @param df Data frame of individual response data.
 #' 
@@ -387,7 +387,7 @@ code_binary <- function(df, aggregations, col_var) {
   return(list(df, aggregations))
 }
 
-#' Convert a single multi-select response column to a set of boolean columns
+#' Convert a single multi-select response column to a set of boolean columns.
 #' 
 #' Update aggregations table to use new set of columns where `col_var` had
 #' previously been used as the metric to aggregate. Does not change columns
@@ -458,7 +458,7 @@ code_multiselect <- function(df, aggregations, col_var) {
   return(list(df, aggregations[aggregations$metric != col_var, ]))
 }
 
-#' Convert a single free response column to numeric
+#' Convert a single free response column to numeric.
 #' 
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,

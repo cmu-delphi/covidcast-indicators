@@ -297,7 +297,8 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 #' @return corrected data frame, where V4 is the authoritative column
 #' @importFrom dplyr case_when
 bodge_v4_translation <- function(input_data) {
-  if (!("V4_1" %in% names(input_data))) {
+  if (!("V4_1" %in% names(input_data)) &&
+        !("V4a_1" %in% names(input_data))) {
     # Data unaffected; skip.
     return(input_data)
   }

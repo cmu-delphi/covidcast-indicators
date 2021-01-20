@@ -87,20 +87,16 @@ def run_module():
                                        "state_id", "state_code",
                                        from_col="state")
         for geo in GEOS:
-            try:
-                create_export_csv(
-                    make_geo(state, geo, geo_mapper),
-                    params["export_dir"],
-                    geo,
-                    sig
-                )
-            except (KeyError,ValueError) as e:
-                print(geo)
-                print(state)
-                print(exported)
-                raise e
+            create_export_csv(
+                make_geo(state, geo, geo_mapper),
+                params["export_dir"],
+                geo,
+                sig
+            )
 
 def make_geo(state, geo, geo_mapper):
+    """Transform incoming geo (state) to another geo."""
+    exported = None
     if geo == "state":
         exported = state.rename(columns={"state":"geo_id"})
     else:
@@ -111,7 +107,6 @@ def make_geo(state, geo, geo_mapper):
     exported["se"] = np.nan
     exported["sample_size"] = np.nan
     return exported
-    
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""

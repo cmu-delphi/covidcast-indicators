@@ -99,6 +99,10 @@ def check_source(data_source, meta, params, grace, logger):
             geo_type=row["geo_type"]
         )
 
+        if latest_data is None:
+            logger.info("No signal data retrieved")
+            continue
+
         # convert numpy datetime values to pandas datetimes and then to
         # datetime.date, so we can work with timedeltas after
         unique_dates = [pd.to_datetime(val).date()

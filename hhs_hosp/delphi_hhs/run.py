@@ -87,18 +87,9 @@ def run_module():
                                        "state_id", "state_code",
                                        from_col="state")
         for geo in GEOS:
-            if geo == "state":
-                exported = state.rename(columns={"state":"geo_id"})
-            else:
-                exported = geo_mapper.replace_geocode(
-                    state, "state_code", geo,
-                    new_col="geo_id",
-                    date_col="timestamp")
-            exported["se"] = np.nan
-            exported["sample_size"] = np.nan
             try:
                 create_export_csv(
-                    exported,
+                    make_geo(state, geo, geo_mapper),
                     params["export_dir"],
                     geo,
                     sig
@@ -108,6 +99,19 @@ def run_module():
                 print(state)
                 print(exported)
                 raise e
+
+def make_geo(state, geo, geo_mapper):
+    if geo == "state":
+        exported = state.rename(columns={"state":"geo_id"})
+    else:
+        exported = geo_mapper.replace_geocode(
+            state, "state_code", geo,
+            new_col="geo_id",
+            date_col="timestamp")
+    exported["se"] = np.nan
+    exported["sample_size"] = np.nan
+    return exported
+    
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""

@@ -8,10 +8,11 @@ import pandas as pd
 GEO_REGEX_DICT = {
     'county': r'^\d{5}$',
     'hrr': r'^\d{1,3}$',
+    'hhs': r'^\d{1,2}$',
     'msa': r'^\d{5}$',
     'dma': r'^\d{3}$',
     'state': r'^[a-zA-Z]{2}$',
-    'national': r'^[a-zA-Z]{2}$'
+    'nation': r'^[a-zA-Z]{2}$'
 }
 
 

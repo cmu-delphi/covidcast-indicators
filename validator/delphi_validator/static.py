@@ -151,8 +151,8 @@ class StaticValidator:
         if len(unexpected_geos) > 0:
             report.add_raised_error(ValidationFailure("check_bad_geo_id_value",
                                                       filename,
-                                                      f"Unrecognized geo_ids (not in historical "
-                                                      "data) {unexpected_geos}"))
+                                                      "Unrecognized geo_ids (not in historical "
+                                                      f"data) {unexpected_geos}"))
         report.increment_total_checks()
         upper_case_geos = [
             geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
@@ -374,8 +374,8 @@ class StaticValidator:
                 report.add_raised_error(
                     ValidationFailure("check_n_missing_or_gt_min",
                                       nameformat,
-                                      f"sample size must be NA or >= "\
-                                          "{self.params.minimum_sample_size}"))
+                                      "sample size must be NA or >= "
+                                      f"{self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 

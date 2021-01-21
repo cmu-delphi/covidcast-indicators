@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{get_range_prev_full_week}
 \alias{get_range_prev_full_week}
-\title{Get the date range specifying the previous week}
+\title{Get the date range specifying the previous week.}
 \usage{
 get_range_prev_full_week(date = Sys.Date())
 }
@@ -13,5 +13,5 @@ get_range_prev_full_week(date = Sys.Date())
 list of two Dates
 }
 \description{
-Get the date range specifying the previous week
+Get the date range specifying the previous week.
 }

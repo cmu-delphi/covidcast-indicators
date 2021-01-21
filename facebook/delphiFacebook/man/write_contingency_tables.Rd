@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_write.R
 \name{write_contingency_tables}
 \alias{write_contingency_tables}
-\title{Write csv file for sharing with researchers}
+\title{Write csv file for sharing with researchers.}
 \usage{
 write_contingency_tables(data, params, geo_level, groupby_vars)
 }

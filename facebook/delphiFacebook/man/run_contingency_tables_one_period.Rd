@@ -23,6 +23,5 @@ calculations necessary.}
 none
 }
 \description{
-See the README.md file in the source directory for more information about how to run
-this function.
+Run the contingency table production pipeline for a single time period
 }

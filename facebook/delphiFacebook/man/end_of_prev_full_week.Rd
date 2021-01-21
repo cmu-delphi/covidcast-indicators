@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{end_of_prev_full_week}
 \alias{end_of_prev_full_week}
-\title{Get the date of the last day of the previous epiweek}
+\title{Get the date of the last day of the previous epiweek.}
 \usage{
 end_of_prev_full_week(date)
 }
@@ -13,5 +13,5 @@ end_of_prev_full_week(date)
 Date
 }
 \description{
-Get the date of the last day of the previous epiweek
+Get the date of the last day of the previous epiweek.
 }

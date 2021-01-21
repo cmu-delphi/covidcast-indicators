@@ -99,11 +99,11 @@ rename_responses <- function(df) {
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     # Wave 6 additions
-    "b_accept_cov_vaccine_rec_by_friends_family" = "V4_1", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_local_health" = "V4_2", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_WHO" = "V4_3", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_gov_health" = "V4_4", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_by_politician" = "V4_5", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_friends_family" = "V4_1", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_local_health" = "V4_2", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_WHO" = "V4_3", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_gov_health" = "V4_4", # Need to merge V4a into?
+    "b_accept_cov_vaccine_rec_politician" = "V4_5", # Need to merge V4a into?
     "b_had_cov_vaccine" = "V1",
     "b_accept_cov_vaccine" = "v_accept_covid_vaccine", # Binary version of V3; "definitely" and "probably" vaccinate map to TRUE
     
@@ -183,6 +183,14 @@ rename_responses <- function(df) {
   df$b_65_or_older <- (
     df$mc_age == "65-74" | df$mc_age == "75+"
   )
+  
+  if ("mc_accept_cov_vaccine" %in% names(df)) {
+    df$b_hesitant_cov_vaccine <- (
+      df$mc_accept_cov_vaccine == 3 | df$mc_accept_cov_vaccine == 4
+    )
+  } else {
+    df$b_hesitant_cov_vaccine <- NA_real_
+  }
   
   return(df)
 }

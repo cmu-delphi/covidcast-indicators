@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_aggregate.R
 \name{summarize_aggs}
 \alias{summarize_aggs}
-\title{Performs calculations across all groupby levels for all aggregations.}
+\title{Perform calculations across all groupby levels for all aggregations.}
 \usage{
 summarize_aggs(df, crosswalk_data, aggregations, geo_level, params)
 }
@@ -29,5 +29,5 @@ being used}
 "num_filter"}
 }
 \description{
-Performs calculations across all groupby levels for all aggregations.
+Perform calculations across all groupby levels for all aggregations.
 }

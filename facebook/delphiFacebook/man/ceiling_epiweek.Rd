@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{ceiling_epiweek}
 \alias{ceiling_epiweek}
-\title{Get date of the first day of the epiweek following the epiweek `x` falls in}
+\title{Get date of the first day of the epiweek following the epiweek `x` falls in.}
 \usage{
 ceiling_epiweek(date)
 }
@@ -13,5 +13,5 @@ ceiling_epiweek(date)
 date
 }
 \description{
-Get date of the first day of the epiweek following the epiweek `x` falls in
+Get date of the first day of the epiweek following the epiweek `x` falls in.
 }

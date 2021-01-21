@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{get_range_prev_full_month}
 \alias{get_range_prev_full_month}
-\title{Get the date range specifying the previous month}
+\title{Get the date range specifying the previous month.}
 \usage{
 get_range_prev_full_month(date = Sys.Date())
 }
@@ -13,5 +13,5 @@ get_range_prev_full_month(date = Sys.Date())
 list of two Dates
 }
 \description{
-Get the date range specifying the previous month
+Get the date range specifying the previous month.
 }

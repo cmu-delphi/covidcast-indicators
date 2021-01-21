@@ -28,9 +28,9 @@ update_params <- function(params) {
     # period. Use dates in input files to select range.
     date_range <- get_date_range_from_filenames(params)
   } else if ( !is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
-    # Use provided date to determine range, and use provided list of input files.
-    date_range <- get_range_prev_full_period(
-      as_date(params$end_date), params$aggregate_range)
+    stop(paste("both end_date and list of input files cannot be provided in", 
+               "params. To run aggregations on a specific set of input files",
+               "please remove end_date from params."))
   }
 
   if (length(params$input) == 0) {

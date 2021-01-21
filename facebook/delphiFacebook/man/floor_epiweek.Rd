@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{floor_epiweek}
 \alias{floor_epiweek}
-\title{Get date of the first day of the epiweek `x` falls in}
+\title{Get date of the first day of the epiweek `x` falls in.}
 \usage{
 floor_epiweek(date)
 }
@@ -13,5 +13,5 @@ floor_epiweek(date)
 date
 }
 \description{
-Get date of the first day of the epiweek `x` falls in
+Get date of the first day of the epiweek `x` falls in.
 }

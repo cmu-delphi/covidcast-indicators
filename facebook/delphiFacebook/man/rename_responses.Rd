@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{rename_responses}
 \alias{rename_responses}
-\title{Rename all columns to make more interpretable}
+\title{Rename all columns to make more interpretable.}
 \usage{
 rename_responses(df)
 }
@@ -13,5 +13,5 @@ rename_responses(df)
 data frame of individual response data with newly mapped columns
 }
 \description{
-Rename all columns to make more interpretable
+Rename all columns to make more interpretable.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_aggregate.R
 \name{aggregate_aggs}
 \alias{aggregate_aggs}
-\title{Produce aggregates for all desired aggregations.}
+\title{Produce all desired aggregations.}
 \usage{
 aggregate_aggs(df, aggregations, cw_list, params)
 }

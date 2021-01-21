@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{make_human_readable}
 \alias{make_human_readable}
-\title{Rename question codes to informative descriptions}
+\title{Rename question codes to informative descriptions.}
 \usage{
 make_human_readable(input_data)
 }

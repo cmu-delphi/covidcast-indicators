@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_aggregate.R
 \name{post_process_aggs}
 \alias{post_process_aggs}
-\title{Post-process aggregations and data to make more generic}
+\title{Process aggregations to make formatting more consistent}
 \usage{
 post_process_aggs(df, aggregations, cw_list)
 }
@@ -13,8 +13,8 @@ post_process_aggs(df, aggregations, cw_list)
 `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
 to report. `name` is the aggregate's base column name; `var_weight` is the 
 column to use for its weights; `metric` is the column of `df` containing the
-response value. `group_by` is a list of variables used to perform the 
-aggregations over. `compute_fn` is the function that computes
+response value. `group_by` is a list of variables to aggregate 
+over. `compute_fn` is the function that computes
 the aggregate response given many rows of data. `post_fn` is applied to the
 aggregate data after megacounty aggregation, and can perform any final
 calculations necessary.}
@@ -28,5 +28,16 @@ list of data frame of individual response data and user-set data
 frame of desired aggregations
 }
 \description{
-Post-process aggregations and data to make more generic
+Parse grouping variables for geolevel, and save to new column for easy
+access. If none, assume national. If `metric` is a multiple choice item,
+include it in list of grouping variables so levels are included in output
+CSV. Alphabetize grouping variables; columns are saved to output CSV in this
+order.
+}
+\details{
+Most columns specified in `aggregations` are converted into the appropriate
+format (binary response codes -> logical, etc). Multi-select `metrics` are
+turned into a series of binary columns. Each binary is given its own
+aggregation, sharing grouping variables and other settings with the original
+multi-select agg.
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{start_of_prev_full_month}
 \alias{start_of_prev_full_month}
-\title{Get the date of the first day of the previous month}
+\title{Get the date of the first day of the previous month.}
 \usage{
 start_of_prev_full_month(date)
 }
@@ -13,5 +13,5 @@ start_of_prev_full_month(date)
 Date
 }
 \description{
-Get the date of the first day of the previous month
+Get the date of the first day of the previous month.
 }

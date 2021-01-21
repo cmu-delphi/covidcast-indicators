@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{code_multiselect}
 \alias{code_multiselect}
-\title{Convert a single multi-select response column to a set of boolean columns}
+\title{Convert a single multi-select response column to a set of boolean columns.}
 \usage{
 code_multiselect(df, aggregations, col_var)
 }

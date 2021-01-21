@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{remap_responses}
 \alias{remap_responses}
-\title{Remap binary columns, race, and others to make more interpretable}
+\title{Remap binary columns, race, and others to make more interpretable.}
 \usage{
 remap_responses(df)
 }
@@ -13,5 +13,5 @@ remap_responses(df)
 data frame of individual response data with newly mapped columns
 }
 \description{
-Remap binary columns, race, and others to make more interpretable
+Remap binary columns, race, and others to make more interpretable.
 }

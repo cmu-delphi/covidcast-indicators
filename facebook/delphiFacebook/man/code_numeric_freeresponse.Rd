@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{code_numeric_freeresponse}
 \alias{code_numeric_freeresponse}
-\title{Convert a single free response column to numeric}
+\title{Convert a single free response column to numeric.}
 \usage{
 code_numeric_freeresponse(df, aggregations, col_var)
 }
@@ -26,5 +26,5 @@ list of data frame of individual response data and user-set data
 frame of desired aggregations
 }
 \description{
-Convert a single free response column to numeric
+Convert a single free response column to numeric.
 }

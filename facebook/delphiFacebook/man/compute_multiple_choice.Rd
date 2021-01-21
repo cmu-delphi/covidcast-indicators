@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_calculate.R
 \name{compute_multiple_choice}
 \alias{compute_multiple_choice}
-\title{Returns multiple choice response estimates. Val is the number of people
+\title{Return multiple choice response estimates. Val is the number of people
 represented by the survey respondents in a given response.}
 \usage{
 compute_multiple_choice(response, weight, sample_size, total_represented)

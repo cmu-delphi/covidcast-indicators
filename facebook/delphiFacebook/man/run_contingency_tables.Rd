@@ -25,7 +25,3 @@ none
 \description{
 Allows pipeline to be create a series of CSVs for a range of dates.
 }
-\details{
-See the README.md file in the source directory for more information about how to run
-this function.
-}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/dates.R
 \name{get_range_prev_full_period}
 \alias{get_range_prev_full_period}
-\title{Get the date range specifying the previous full time period}
+\title{Get the date range specifying the previous full time period.}
 \usage{
 get_range_prev_full_period(date = Sys.Date(), weekly_or_monthly_flag)
 }
@@ -16,5 +16,5 @@ time period to aggregate over}
 list of two Dates
 }
 \description{
-Get the date range specifying the previous full time period
+Get the date range specifying the previous full time period.
 }

@@ -11,8 +11,8 @@ def standardize_columns(df):
     NCHS has changed column names a few times, so this will help us maintain
     backwards-compatibility without the processing code getting all gnarly.
     """
-    rename_pairs = [ (from_col, to_col) for (from_col, to_col) in RENAME
-                     if from_col in df.columns ]
+    rename_pairs = [(from_col, to_col) for (from_col, to_col) in RENAME
+                     if from_col in df.columns]
     return df.rename(columns=dict(rename_pairs))
 
 
@@ -64,7 +64,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     if "end_date" in df.columns:
         # Check missing week_ending_date == end_date
         try:
-            assert sum(df["week_ending_date"] != df["end_date"]) == 0
+            assert all(df["week_ending_date"] == df["end_date"])
         except AssertionError as exc:
             raise ValueError(
                 "week_ending_date is not always the same as end_date, check the raw file"
@@ -72,7 +72,7 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     else:
         # Check missing start_week == end_week
         try:
-            assert sum(df["timestamp"] != df["end_week"]) == 0
+            assert all(df["timestamp"] == df["end_week"])
         except AssertionError as exc:
             raise ValueError(
                 "end_week is not always the same as start_week, check the raw file"

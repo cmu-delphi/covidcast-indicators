@@ -19,6 +19,22 @@ map_df = pd.read_csv(
 )
 
 class TestPullNCHS:
+    def test_standardize_columns(self):
+        df = standardize_columns(
+            pd.DataFrame({
+                "start_week":[1],
+                "covid_deaths":[2],
+                "pneumonia_and_covid_deaths":[4],
+                "pneumonia_influenza_or_covid_19_deaths": [8]
+            }))
+        expected = pd.DataFrame({
+            "timestamp": [1],
+            "covid_19_deaths": [2],
+            "pneumonia_and_covid_19_deaths": [4],
+            "pneumonia_influenza_or_covid_19_deaths": [8]
+        })
+        pd.testing.assert_frame_equal(expected, df)
+        
     def test_good_file(self):
         df = pull_nchs_mortality_data(token, map_df, "test_data.csv")
         

@@ -11,6 +11,7 @@ from delphi_utils import read_params
 from delphi_utils import get_structured_logger
 from delphi_utils import SlackNotifier
 import covidcast
+import time
 
 from .check_source import check_source
 
@@ -21,6 +22,7 @@ def get_logger():
 LOGGER = get_logger()
 
 def run_module():
+    start_time = time.time()
     params = read_params()
     meta = covidcast.metadata()
     slack_notifier = None
@@ -42,6 +44,10 @@ def run_module():
                             last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
         report_complaints(complaints, slack_notifier)
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    LOGGER.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)
 
 def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""

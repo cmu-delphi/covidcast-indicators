@@ -9,7 +9,8 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, S3ArchiveDiffer
+import time
+from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
 
 from .pull import pull_nchs_mortality_data
 from .export import export_csv
@@ -19,7 +20,9 @@ from .constants import (METRICS, SENSOR_NAME_MAP,
 
 def run_module():
     """Run module for processing NCHS mortality data."""
+    start_time = time.time()
     params = read_params()
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
     export_start_date = params["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday
         export_start_date = date.today() - timedelta(
@@ -86,6 +89,9 @@ def run_module():
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-
     if params["bucket_name"]:
         arch_diffs(params, daily_arch_diff)
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -400,7 +400,14 @@ def create_fips_population_table():
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
     census_pop_pr = pd.concat([census_pop, df_pr])
 
-    census_pop_pr.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
+    # Filled from https://www.census.gov/data/tables/2010/dec/2010-island-areas.html
+    territories_pop = pd.DataFrame({
+        "fips": ["60010", "60020", "60030", "60040", "60050", "66010", "78010", "78020", "78030", "69085", "69100", "69110", "69120"],
+        "pop": [23030, 1143, 0, 17, 31329, 159358, 50601, 4170, 51634, 0, 2527, 48220, 3136]
+    })
+    census_pop_territories = pd.concat([census_pop_pr, territories_pop])
+
+    census_pop_territories.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
 
 
 def derive_zip_population_table():

@@ -26,4 +26,8 @@ SENSORS = [
 ]
 INCIDENCE_BASE = 100000
 GEO_RES = "state"
+
+# this is necessary as a delimiter in the f-string expressions we use to
+# construct detailed error reports
+# (https://www.python.org/dev/peps/pep-0498/#escape-sequences)
 NEWLINE = "\n"

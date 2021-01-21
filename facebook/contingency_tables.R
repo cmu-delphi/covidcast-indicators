@@ -25,7 +25,7 @@ library(delphiFacebook)
 ## Facebook aggregates
 weekly_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-  ## V9 (concerened about side effects)
+  ## V9 (concerned about side effects)
   # National
   "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
   
@@ -50,7 +50,6 @@ weekly_aggs <- tribble(
   "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
   "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
   "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  
 )
 
 monthly_aggs <- tribble(

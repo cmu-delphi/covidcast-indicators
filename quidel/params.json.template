@@ -12,4 +12,5 @@
   "sender": "",
   "wip_signal": [""],
   "mode": ""
+  "log_filename": "/var/log/indicators/quidel.log"
 }

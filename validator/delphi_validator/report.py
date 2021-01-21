@@ -89,7 +89,7 @@ class ValidationReport:
         """
         Print results and, if any not-suppressed exceptions were raised, exit with non-zero status.
         """
-        print(self.summary)
+        print(self.summary())
         self.log()
         if len(self.unsuppressed_errors) == 0:
             sys.exit(0)

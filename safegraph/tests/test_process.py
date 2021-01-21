@@ -54,7 +54,7 @@ class TestProcess:
         assert np.all(df[f'{SIGNALS[0]}_n'].values > 0)
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
-        assert df.shape == (52, 17)
+        assert df.shape == (54, 17)
 
     def test_aggregate_msa(self):
         """Tests that aggregation at the state level creates non-zero-valued signals."""

@@ -99,13 +99,13 @@ rename_responses <- function(df) {
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     # Wave 6 additions
-    "b_accept_cov_vaccine_rec_friends_family" = "V4_1", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_local_health" = "V4_2", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_WHO" = "V4_3", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_gov_health" = "V4_4", # Need to merge V4a into?
-    "b_accept_cov_vaccine_rec_politician" = "V4_5", # Need to merge V4a into?
     "b_had_cov_vaccine" = "V1",
     "b_accept_cov_vaccine" = "v_accept_covid_vaccine", # Binary version of V3; "definitely" and "probably" vaccinate map to TRUE
+    "b_vaccine_likely_friends" = "v_vaccine_likely_friends", # Binary version of V4_1
+    "b_vaccine_likely_local_health" = "v_vaccine_likely_local_health", # Binary version of V4_2
+    "b_vaccine_likely_who" = "v_vaccine_likely_who", # Binary version of V4_3
+    "b_vaccine_likely_govt_health" = "v_vaccine_likely_govt_health", # Binary version of V4_4
+    "b_vaccine_likely_politicians" = "v_vaccine_likely_politicians", # Binary version of V4_5
     
     ## multiple choice (mc)
     ## Can only select one of n > 2 choices
@@ -148,6 +148,11 @@ rename_responses <- function(df) {
     # Wave 6 additions
     "mc_accept_cov_vaccine" = "V3",
     "mc_num_cov_vaccine_doses" = "V2",
+    "mc_vaccine_likely_friends" = "V4_1",
+    "mc_vaccine_likely_local_health" = "V4_2",
+    "mc_vaccine_likely_who" = "V4_3",
+    "mc_vaccine_likely_govt_health" = "V4_4",
+    "mc_vaccine_likely_politicians" = "V4_5",
     # Wave 7 additions
     "mc_concerned_sideeffects" = "V9",
     

@@ -6,10 +6,10 @@ when the module is run with `python -m delphi_nchs_mortality`.
 """
 from datetime import datetime, date, timedelta
 from os.path import join
+import time
 
 import numpy as np
 import pandas as pd
-import time
 from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
 
 from .pull import pull_nchs_mortality_data

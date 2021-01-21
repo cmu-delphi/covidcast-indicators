@@ -1,20 +1,22 @@
 """Validation output reports."""
 import sys
-from datetime import date, datetime
-from typing import List, Tuple
+from typing import Set, Tuple
+from delphi_utils.logger import get_structured_logger
+
+logger = get_structured_logger(__name__)
 
 class ValidationReport:
     """Class for reporting the results of validation."""
-    def __init__(self, errors_to_suppress: List[Tuple[str]]):
+    def __init__(self, errors_to_suppress: Set[Tuple[str]]):
         """Initialize a ValidationReport.
         Parameters
         ----------
-        errors_to_suppress: List[Tuple[str]]
-            List of error identifications to ignore.
+        errors_to_suppress: Set[Tuple[str]]
+            set of (check_name, data_name) tuples to ignore.
 
         Attributes
         ----------
-        errors_to_suppress: List[Tuple[str]]
+        errors_to_suppress: Set[Tuple[str]]
             See above
         num_suppressed: int
             Number of errors suppressed
@@ -46,14 +48,7 @@ class ValidationReport:
         None
         """
         self.raised_errors.append(error)
-        # Convert any dates in check_data_id to strings for the purpose of comparing
-        # to manually suppressed errors.
-        raised_check_id = tuple([
-            item.strftime("%Y-%m-%d") if isinstance(item, (date, datetime))
-            else item for item in error.check_data_id])
-
-        if raised_check_id in self.errors_to_suppress:
-            self.errors_to_suppress.remove(raised_check_id)
+        if error.is_suppressed(self.errors_to_suppress):
             self.num_suppressed += 1
         else:
             self.unsuppressed_errors.append(error)
@@ -75,24 +70,28 @@ class ValidationReport:
         """
         self.raised_warnings.append(warning)
 
-    def __str__(self):
-        """String representation of report."""
+    def summary(self):
+        """String representation of summary of report."""
         out_str = f"{self.total_checks} checks run\n"
         out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
         out_str += f"{self.num_suppressed} checks suppressed\n"
         out_str += f"{len(self.raised_warnings)} warnings\n"
-        for message in self.unsuppressed_errors:
-            out_str += f"{message}\n"
-        for message in self.raised_warnings:
-            out_str += f"{message}\n"
         return out_str
+
+    def log(self):
+        """Log errors and warnings."""
+        for error in self.unsuppressed_errors:
+            logger.critical(str(error))
+        for warning in self.raised_warnings:
+            logger.warning(str(warning))
 
     def print_and_exit(self):
         """
         Print results and, if any not-suppressed exceptions were raised, exit with non-zero status.
         """
-        print(self)
-        if len(self.unsuppressed_errors) != 0:
-            sys.exit(1)
-        else:
+        print(self.summary())
+        self.log()
+        if len(self.unsuppressed_errors) == 0:
             sys.exit(0)
+        else:
+            sys.exit(1)

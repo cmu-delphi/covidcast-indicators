@@ -1,4 +1,6 @@
 ---
+# Store unencrypted variables and pointers to vault.yaml variables here.
+#
 runtime_user: "indicators"
 jenkins_user: "jenkins"
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"
@@ -13,12 +15,12 @@ delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
 delphi_aws_secret_access_key: "{{ vault_delphi_aws_secret_access_key }}"
 safegraph_aws_access_key_id: "{{ vault_safegraph_aws_access_key_id }}"
 safegraph_aws_secret_access_key: "{{ vault_safegraph_aws_secret_access_key }}"
-quidel_datadrop_mail_server: "{{ vault_quidel_datadrop_mail_server }}"
-quidel_datadrop_account: "{{ vault_quidel_datadrop_account }}"
-quidel_datadrop_password: "{{ vault_quidel_datadrop_password }}"
-quidel_datadrop_sender: "{{ vault_quidel_datadrop_sender }}"
+quidel_aws_access_key_id: "{{ vault_quidel_aws_access_key_id }}"
+quidel_aws_secret_access_key: "{{ vault_quidel_aws_secret_access_key }}"
+quidel_aws_bucket_name: 'delphi-quidel-data'
 changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
+sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"

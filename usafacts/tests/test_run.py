@@ -25,7 +25,7 @@ class TestRun:
             "20200309",
             "20200310",
         ]
-        geos = ["county", "hrr", "msa", "state"]
+        geos = ["county", "hrr", "msa", "state", "hhs", "nation"]
 
         # enumerate metric names.
         metrics = []
@@ -39,6 +39,8 @@ class TestRun:
         for date in dates:
             for geo in geos:
                 for metric in metrics:
+                    if "7dav" in metric and date in dates[:6]:
+                        continue  # there are no 7dav signals for first 6 days
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
 
         assert set(csv_files) == set(expected_files)

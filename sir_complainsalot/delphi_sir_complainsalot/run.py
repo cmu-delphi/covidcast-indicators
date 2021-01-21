@@ -5,17 +5,11 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_sir_complainsalot`.
 """
 
-import logging
-import structlog
-import sys
-
 from itertools import groupby
-
-from slack import WebClient
-from slack.errors import SlackApiError
 
 from delphi_utils import read_params
 from delphi_utils import get_structured_logger
+from delphi_utils import SlackNotifier
 import covidcast
 
 from .check_source import check_source
@@ -29,6 +23,9 @@ LOGGER = get_logger()
 def run_module():
     params = read_params()
     meta = covidcast.metadata()
+    slack_notifier = None
+    if "channel" in params and "slack_token" in params:
+        slack_notifier = SlackNotifier(params["channel"], params["slack_token"])
 
     complaints = []
     for data_source in params["sources"].keys():
@@ -44,10 +41,7 @@ def run_module():
                             geo_types=complaint.geo_types,
                             last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
 
-        report_complaints(complaints, params)
-
-        sys.exit(1)
-
+        report_complaints(complaints, slack_notifier)
 
 def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""
@@ -55,25 +49,16 @@ def split_complaints(complaints, n=49):
         yield complaints[i:i + n]
 
 
-def report_complaints(all_complaints, params):
+def report_complaints(all_complaints, slack_notifier):
     """Post complaints to Slack."""
-    if not params["slack_token"]:
+    if not slack_notifier:
         LOGGER.info("(dry-run)")
         return
 
-    client = WebClient(token=params["slack_token"])
-
     for complaints in split_complaints(all_complaints):
         blocks = format_complaints_aggregated_by_source(complaints)
-        logger.info(f"blocks: {len(blocks)}")
-        try:
-            client.chat_postMessage(
-                channel=params["channel"],
-                blocks=blocks
-            )
-        except SlackApiError as e:
-            # You will get a SlackApiError if "ok" is False
-            assert False, e.response["error"]
+        LOGGER.info(f"blocks: {len(blocks)}")
+        slack_notifier.post_message(blocks)
 
 def get_maintainers_block(complaints):
     """Build a Slack block to alert maintainers to pay attention."""

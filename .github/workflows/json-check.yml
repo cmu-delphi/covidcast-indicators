@@ -1,0 +1,28 @@
+# This workflow will verify all JSON files in the directory, excluding venv files
+
+name: JSON check
+
+on:
+  push:
+    branches: [ main, prod ]
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    branches: [ main, prod ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.pull_request.draft == false
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Check JSONs
+      run: |
+        python3 -c "import json; from pathlib import Path
+        for i in Path('.').glob('**/*.json*'):
+            if '/env/' not in str(i):
+                print(i)
+                json.load(open(str(i)))"

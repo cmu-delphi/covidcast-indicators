@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 
 import covidcast
-from .errors import APIDataFetchError, ValidationError
+from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
@@ -144,15 +144,15 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]
 
-    # Replace None with NA to make numerical manipulation easier.
     # Rename and reorder columns to match those in df_to_test.
-    api_df = api_df.replace(
-        to_replace=[None], value=np.nan
-    ).rename(
+    api_df = api_df.rename(
         columns={'geo_value': "geo_id", 'stderr': 'se', 'value': 'val'}
     ).drop(
         ['issue', 'lag'], axis=1
     ).reindex(columns=column_names)
+    # Replace None with NA to make numerical manipulation easier.  We omit the `geo_id` column
+    # since sometimes this replacement will covert the strings to numeric values.
+    api_df[column_names[1:]] = api_df[column_names[1:]].replace(to_replace=[None], value=np.nan)
 
     return api_df
 
@@ -172,8 +172,9 @@ def get_one_api_df(data_source, min_date, max_date,
             data_source, min_date, max_date, geo_type, signal_type)
 
     except APIDataFetchError as e:
-        geo_sig_api_df_or_error = ValidationError(
-                ("api_data_fetch_error", geo_type, signal_type), None, e)
+        geo_sig_api_df_or_error = ValidationFailure("api_data_fetch_error",
+                                                    f"{geo_type} {signal_type}",
+                                                    e.custom_msg)
 
     api_semaphore.release()
 

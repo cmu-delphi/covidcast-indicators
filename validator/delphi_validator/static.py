@@ -5,7 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
-from .errors import ValidationError
+from .errors import ValidationFailure
 from .utils import GEO_REGEX_DICT, TimeWindow
 
 class StaticValidator:
@@ -32,13 +32,17 @@ class StaticValidator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
+        global_params = params["global"]
+        static_params = params.get("static", dict())
+
         self.params = self.Parameters(
-            validator_static_file_dir = params.get('validator_static_file_dir',
-                                                   '../validator/static'),
-            time_window = TimeWindow.from_params(params["end_date"], params["span_length"]),
-            minimum_sample_size = params.get('minimum_sample_size', 100),
-            missing_se_allowed = params.get('missing_se_allowed', False),
-            missing_sample_size_allowed = params.get('missing_sample_size_allowed', False)
+            validator_static_file_dir = static_params.get('validator_static_file_dir',
+                                                             '../validator/static'),
+            time_window = TimeWindow.from_params(global_params["end_date"],
+                                                 global_params["span_length"]),
+            minimum_sample_size = static_params.get('minimum_sample_size', 100),
+            missing_se_allowed = static_params.get('missing_se_allowed', False),
+            missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False)
         )
 
 
@@ -92,11 +96,11 @@ class StaticValidator:
         check_dateholes.sort()
 
         if check_dateholes:
-            report.add_raised_error(ValidationError(
-                "check_missing_date_files",
-                check_dateholes,
-                "Missing dates are observed; if these dates are" +
-                " already in the API they would not be updated"))
+            report.add_raised_error(ValidationFailure("check_missing_date_files",
+                                                      str(check_dateholes),
+                                                      "Missing dates are observed; if these dates "
+                                                      "are already in the API they would not be "
+                                                      "updated"))
 
         report.increment_total_checks()
 
@@ -115,16 +119,17 @@ class StaticValidator:
         """
         pattern_found = FILENAME_REGEX.match(nameformat)
         if not nameformat or not pattern_found:
-            report.add_raised_error(ValidationError(
-                ("check_filename_format", nameformat),
-                nameformat, 'nameformat not recognized'))
+            report.add_raised_error(ValidationFailure("check_filename_format",
+                                                      nameformat,
+                                                      "nameformat not recognized"))
 
         report.increment_total_checks()
 
         if not isinstance(df_to_test, pd.DataFrame):
-            report.add_raised_error(ValidationError(
-                ("check_file_data_format", nameformat),
-                type(df_to_test), 'df_to_test must be a pandas dataframe.'))
+            report.add_raised_error(
+                ValidationFailure("check_file_data_format",
+                                  nameformat,
+                                  f"expected pd.DataFrame but got {type(df_to_test)}."))
 
         report.increment_total_checks()
 
@@ -144,16 +149,19 @@ class StaticValidator:
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:
-            report.add_raised_error(ValidationError(
-                ("check_bad_geo_id_value", filename),
-                unexpected_geos, "Unrecognized geo_ids (not in historical data)"))
+            report.add_raised_error(ValidationFailure("check_bad_geo_id_value",
+                                                      filename,
+                                                      f"Unrecognized geo_ids (not in historical "
+                                                      "data) {unexpected_geos}"))
         report.increment_total_checks()
         upper_case_geos = [
             geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
         if len(upper_case_geos) > 0:
-            report.add_raised_warning(ValidationError(
-                ("check_geo_id_lowercase", filename),
-                upper_case_geos, "geo_id contains uppercase characters. Lowercase is preferred."))
+            report.add_raised_warning(ValidationFailure("check_geo_id_lowercase",
+                                                        filename,
+                                                        f"geo_ids {upper_case_geos} contains "
+                                                        "uppercase characters. Lowercase is "
+                                                        "preferred."))
         report.increment_total_checks()
 
     def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type, report):
@@ -187,9 +195,10 @@ class StaticValidator:
                     df_to_test["geo_id"] = [geo[0]
                                             for geo in df_to_test["geo_id"].str.split(".")]
 
-                    report.add_raised_warning(ValidationError(
-                        ("check_geo_id_type", nameformat),
-                        None, "geo_ids saved as floats; strings preferred"))
+                    report.add_raised_warning(
+                        ValidationFailure("check_geo_id_type",
+                                          nameformat,
+                                          "geo_ids saved as floats; strings preferred"))
 
             if geo_type in fill_len.keys():
                 # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
@@ -204,17 +213,19 @@ class StaticValidator:
                 df_to_test['geo_id']) if geo not in expected_geos}
 
             if len(unexpected_geos) > 0:
-                report.add_raised_error(ValidationError(
-                    ("check_geo_id_format", nameformat),
-                    unexpected_geos, "Non-conforming geo_ids found"))
+                report.add_raised_error(
+                    ValidationFailure("check_geo_id_format",
+                                      nameformat,
+                                      f"Non-conforming geo_ids {unexpected_geos} found"))
 
-        if geo_type not in GEO_REGEX_DICT:
-            report.add_raised_error(ValidationError(
-                ("check_geo_type", nameformat),
-                geo_type, "Unrecognized geo type"))
-        else:
+        if geo_type in GEO_REGEX_DICT:
             find_all_unexpected_geo_ids(
                 df_to_test, GEO_REGEX_DICT[geo_type], geo_type)
+        else:
+            report.add_raised_error(
+                ValidationFailure("check_geo_type",
+                                  nameformat,
+                                  f"Unrecognized geo type {geo_type}"))
 
         report.increment_total_checks()
 
@@ -236,34 +247,37 @@ class StaticValidator:
 
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
-                report.add_raised_error(ValidationError(
-                    ("check_val_pct_gt_100", nameformat),
-                    df_to_test[(df_to_test['val'] > 100)],
-                    "val column can't have any cell greater than 100 for percents"))
+                report.add_raised_error(
+                    ValidationFailure("check_val_pct_gt_100",
+                                      nameformat,
+                                      "val column can't have any cell greater than 100 for "
+                                      "percents"))
 
             report.increment_total_checks()
 
         if proportion_option:
             if not df_to_test[(df_to_test['val'] > 100000)].empty:
-                report.add_raised_error(ValidationError(
-                    ("check_val_prop_gt_100k", nameformat),
-                    df_to_test[(df_to_test['val'] > 100000)],
-                    "val column can't have any cell greater than 100000 for proportions"))
+                report.add_raised_error(
+                    ValidationFailure("check_val_prop_gt_100k",
+                                      nameformat,
+                                      "val column can't have any cell greater than 100000 for "
+                                      "proportions"))
 
             report.increment_total_checks()
 
         if df_to_test['val'].isnull().values.any():
-            report.add_raised_error(ValidationError(
-                ("check_val_missing", nameformat),
-                None, "val column can't have any cell that is NA"))
+            report.add_raised_error(
+                ValidationFailure("check_val_missing",
+                                  nameformat,
+                                  "val column can't have any cell that is NA"))
 
         report.increment_total_checks()
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
-            report.add_raised_error(ValidationError(
-                ("check_val_lt_0", nameformat),
-                df_to_test[(df_to_test['val'] < 0)],
-                "val column can't have any cell smaller than 0"))
+            report.add_raised_error(
+                ValidationFailure("check_val_lt_0",
+                                  nameformat,
+                                  "val column can't have any cell smaller than 0"))
 
         report.increment_total_checks()
 
@@ -293,16 +307,18 @@ class StaticValidator:
                 '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
 
             if not result.empty:
-                report.add_raised_error(ValidationError(
-                    ("check_se_not_missing_and_in_range", nameformat),
-                    result, "se must be in (0, min(50,val*(1+eps))] and not missing"))
+                report.add_raised_error(
+                    ValidationFailure("check_se_not_missing_and_in_range",
+                                      nameformat,
+                                      "se must be in (0, min(50,val*(1+eps))] and not missing"))
 
             report.increment_total_checks()
 
             if df_to_test["se"].isnull().mean() > 0.5:
-                report.add_raised_error(ValidationError(
-                    ("check_se_many_missing", nameformat),
-                    None, 'Recent se values are >50% NA'))
+                report.add_raised_error(
+                    ValidationFailure("check_se_many_missing",
+                                      nameformat,
+                                     'Recent se values are >50% NA'))
 
             report.increment_total_checks()
 
@@ -311,9 +327,10 @@ class StaticValidator:
                 '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
 
             if not result.empty:
-                report.add_raised_error(ValidationError(
-                    ("check_se_missing_or_in_range", nameformat),
-                    result, "se must be NA or in (0, min(50,val*(1+eps))]"))
+                report.add_raised_error(
+                    ValidationFailure("check_se_missing_or_in_range",
+                                      nameformat,
+                                     "se must be NA or in (0, min(50,val*(1+eps))]"))
 
             report.increment_total_checks()
 
@@ -321,17 +338,16 @@ class StaticValidator:
         result_alt = df_to_test.query('se == 0')
 
         if not result_jeffreys.empty:
-            report.add_raised_error(ValidationError(
-                ("check_se_0_when_val_0", nameformat),
-                None,
-                "when signal value is 0, se must be non-zero. please "
-                + "use Jeffreys correction to generate an appropriate se"
-                + " (see wikipedia.org/wiki/Binomial_proportion_confidence"
-                + "_interval#Jeffreys_interval for details)"))
+            report.add_raised_error(
+                ValidationFailure("check_se_0_when_val_0",
+                                  nameformat,
+                                  "when signal value is 0, se must be non-zero. please "
+                                  + "use Jeffreys correction to generate an appropriate se"
+                                  + " (see wikipedia.org/wiki/Binomial_proportion_confidence"
+                                  + "_interval#Jeffreys_interval for details)"))
         elif not result_alt.empty:
-            report.add_raised_error(ValidationError(
-                ("check_se_0", nameformat),
-                result_alt, "se must be non-zero"))
+            report.add_raised_error(
+                ValidationFailure("check_se_0", nameformat, "se must be non-zero"))
 
         report.increment_total_checks()
 
@@ -353,9 +369,10 @@ class StaticValidator:
         """
         if not self.params.missing_sample_size_allowed:
             if df_to_test['sample_size'].isnull().values.any():
-                report.add_raised_error(ValidationError(
-                    ("check_n_missing", nameformat),
-                    None, "sample_size must not be NA"))
+                report.add_raised_error(
+                    ValidationFailure("check_n_missing",
+                                      nameformat,
+                                      "sample_size must not be NA"))
 
             report.increment_total_checks()
 
@@ -364,9 +381,10 @@ class StaticValidator:
                 '(sample_size < @self.params.minimum_sample_size)')
 
             if not result.empty:
-                report.add_raised_error(ValidationError(
-                    ("check_n_gt_min", nameformat),
-                    result, f"sample size must be >= {self.params.minimum_sample_size}"))
+                report.add_raised_error(
+                    ValidationFailure("check_n_gt_min",
+                                      nameformat,
+                                      f"sample size must be >= {self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 
@@ -375,10 +393,11 @@ class StaticValidator:
                 '~(sample_size.isnull() | (sample_size >= @self.params.minimum_sample_size))')
 
             if not result.empty:
-                report.add_raised_error(ValidationError(
-                    ("check_n_missing_or_gt_min", nameformat),
-                    result,
-                    f"sample size must be NA or >= {self.params.minimum_sample_size}"))
+                report.add_raised_error(
+                    ValidationFailure("check_n_missing_or_gt_min",
+                                      nameformat,
+                                      f"sample size must be NA or >= "\
+                                          "{self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 
@@ -397,9 +416,9 @@ class StaticValidator:
         """
         is_duplicate = data_df.duplicated()
         if any(is_duplicate):
-            duplicate_row_idxs = list(data_df[is_duplicate].index)
-            report.add_raised_warning(ValidationError(
-                ("check_duplicate_rows", filename),
-                duplicate_row_idxs,
-                "Some rows are duplicated, which may indicate data integrity issues"))
+            report.add_raised_warning(
+                ValidationFailure("check_duplicate_rows",
+                                  filename,
+                                  "Some rows are duplicated, which may indicate data integrity "
+                                  "issues"))
         report.increment_total_checks()

@@ -19,11 +19,16 @@ class Validator():
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        self.suppressed_errors = {(item,) if not isinstance(item, tuple) and not isinstance(
-            item, list) else tuple(item) for item in params.get('suppressed_errors', [])}
+        suppressed_errors =  params["global"].get('suppressed_errors', [])
+        for entry in suppressed_errors:
+            assert isinstance(entry, list)
+            assert len(entry) == 2
+
+        self.suppressed_errors = {tuple(item) for item in suppressed_errors}
 
         # Date/time settings
-        self.time_window = TimeWindow.from_params(params["end_date"], params["span_length"])
+        self.time_window = TimeWindow.from_params(params["global"]["end_date"],
+                                                  params["global"]["span_length"])
 
         self.static_validation = StaticValidator(params)
         self.dynamic_validation = DynamicValidator(params)

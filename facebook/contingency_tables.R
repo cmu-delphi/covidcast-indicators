@@ -24,33 +24,148 @@ library(delphiFacebook)
 
 ## Facebook aggregates
 weekly_aggs <- tribble(
-  ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-  ## V9 (concerned about side effects)
+  ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,  
+  
+  #### Cut 2
+  ## V4_1 given V3
   # National
-  "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_fam", "b_vaccine_likely_friends", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
   
   # State
-  "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_fam", "b_vaccine_likely_friends", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
   
   # State marginal
-  "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_concerned_sideeffects", "b_concerned_sideeffects", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_fam", "b_vaccine_likely_friends", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_fam", "b_vaccine_likely_friends", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_fam", "b_vaccine_likely_friends", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_2 given V3
+  # National
+  "pct_hesitant_trust_healthcare", "b_vaccine_likely_local_health", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_hesitant_trust_healthcare", "b_vaccine_likely_local_health", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_hesitant_trust_healthcare", "b_vaccine_likely_local_health", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_healthcare", "b_vaccine_likely_local_health", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_healthcare", "b_vaccine_likely_local_health", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_3 given V3
+  # National
+  "pct_hesitant_trust_who", "b_vaccine_likely_who", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_hesitant_trust_who", "b_vaccine_likely_who", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_hesitant_trust_who", "b_vaccine_likely_who", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_who", "b_vaccine_likely_who", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_who", "b_vaccine_likely_who", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_4 given V3
+  # National
+  "pct_hesitant_trust_govt", "b_vaccine_likely_govt_health", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_hesitant_trust_govt", "b_vaccine_likely_govt_health", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_hesitant_trust_govt", "b_vaccine_likely_govt_health", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_govt", "b_vaccine_likely_govt_health", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_govt", "b_vaccine_likely_govt_health", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
 
   
-  
-  ## V9 given V3 (worried about side effects given not willing to get vaccine)
+  ## V4_5 given V3
   # National
-  "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_politicians", "b_vaccine_likely_politicians", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
   
   # State
-  "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_politicians", "b_vaccine_likely_politicians", c("b_hesitant_cov_vaccine", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
   
   # State marginal
-  "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_hesitant_sideeffects", "b_concerned_sideeffects", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_politicians", "b_vaccine_likely_politicians", c("b_hesitant_cov_vaccine", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_politicians", "b_vaccine_likely_politicians", c("b_hesitant_cov_vaccine", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_hesitant_trust_politicians", "b_vaccine_likely_politicians", c("b_hesitant_cov_vaccine", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  #### Cut 3
+  ## V4_1
+  # National
+  "pct_trust_fam", "b_vaccine_likely_friends", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_trust_fam", "b_vaccine_likely_friends", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_trust_fam", "b_vaccine_likely_friends", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_fam", "b_vaccine_likely_friends", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_fam", "b_vaccine_likely_friends", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_2
+  # National
+  "pct_trust_healthcare", "b_vaccine_likely_local_health", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_trust_healthcare", "b_vaccine_likely_local_health", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_trust_healthcare", "b_vaccine_likely_local_health", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_healthcare", "b_vaccine_likely_local_health", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_healthcare", "b_vaccine_likely_local_health", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_3
+  # National
+  "pct_trust_who", "b_vaccine_likely_who", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_trust_who", "b_vaccine_likely_who", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_trust_who", "b_vaccine_likely_who", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_who", "b_vaccine_likely_who", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_who", "b_vaccine_likely_who", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_4
+  # National
+  "pct_trust_govt", "b_vaccine_likely_govt_health", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_trust_govt", "b_vaccine_likely_govt_health", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_trust_govt", "b_vaccine_likely_govt_health", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_govt", "b_vaccine_likely_govt_health", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_govt", "b_vaccine_likely_govt_health", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  
+  
+  ## V4_5
+  # National
+  "pct_trust_politicians", "b_vaccine_likely_politicians", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State
+  "pct_trust_politicians", "b_vaccine_likely_politicians", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  
+  # State marginal
+  "pct_trust_politicians", "b_vaccine_likely_politicians", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_politicians", "b_vaccine_likely_politicians", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  "pct_trust_politicians", "b_vaccine_likely_politicians", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
 )
+
 
 monthly_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,

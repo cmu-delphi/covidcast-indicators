@@ -148,6 +148,8 @@ rename_responses <- function(df) {
     # Wave 6 additions
     "mc_accept_cov_vaccine" = "V3",
     "mc_num_cov_vaccine_doses" = "V2",
+    # Wave 7 additions
+    "mc_concerned_sideeffects" = "V9",
     
     ## multiselect (ms)
     ## Can select more than one choice; saved as comma-separated list of choice codes
@@ -186,10 +188,18 @@ rename_responses <- function(df) {
   
   if ("mc_accept_cov_vaccine" %in% names(df)) {
     df$b_hesitant_cov_vaccine <- (
-      df$mc_accept_cov_vaccine == 3 | df$mc_accept_cov_vaccine == 4
+      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"
     )
   } else {
     df$b_hesitant_cov_vaccine <- NA_real_
+  }
+
+  if ("mc_concerned_sideeffects" %in% names(df)) {
+    df$b_concerned_sideeffects <- (
+      df$mc_concerned_sideeffects == 1 | df$mc_concerned_sideeffects == 2
+    )
+  } else {
+    df$b_concerned_sideeffects <- NA_real_
   }
   
   return(df)

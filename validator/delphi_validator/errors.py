@@ -36,7 +36,13 @@ class ValidationFailure:
         errors_to_suppress: Set[Tuple[str]]
             set of (check_name, data_name) tuples to ignore.
         """
-        return (self.check_name, self.data_name) in suppressed_errors
+        if (self.check_name, self.data_name) in suppressed_errors:
+            return True
+        if (self.check_name, "*") in suppressed_errors:
+            return True
+        if ("*", self.data_name) in suppressed_errors:
+            return True
+        return False
 
     def __str__(self):
         return f"{self.check_name} failed for {self.data_name}: {self.message}"

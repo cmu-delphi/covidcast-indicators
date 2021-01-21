@@ -3,7 +3,18 @@
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
-from .constants import METRICS
+from .constants import METRICS, RENAME, NEWLINE
+
+def standardize_columns(df):
+    """Rename columns to comply with a standard set.
+
+    NCHS has changed column names a few times, so this will help us maintain
+    backwards-compatibility without the processing code getting all gnarly.
+    """
+    rename_pairs = [ (from_col, to_col) for (from_col, to_col) in RENAME
+                     if from_col in df.columns ]
+    return df.rename(columns=dict(rename_pairs))
+
 
 def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
@@ -42,25 +53,44 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", token)
         results = client.get("r8kw-7aab", limit=10**10)
-        df = pd.DataFrame.from_records(results).rename(
-                {"start_week": "timestamp"}, axis=1)
+        df = pd.DataFrame.from_records(results)
+        # drop "By Total" rows
+        df = df[df["group"].transform(str.lower) == "by week"]
     else:
         df = pd.read_csv("./test_data/%s"%test_mode)
 
-    # Check missing start_week == end_week
-    try:
-        assert sum(df["timestamp"] != df["end_week"]) == 0
-    except AssertionError as exc:
-        raise ValueError(
-            "end_week is not always the same as start_week, check the raw file"
-        ) from exc
+    df = standardize_columns(df)
+
+    if "end_date" in df.columns:
+        # Check missing week_ending_date == end_date
+        try:
+            assert sum(df["week_ending_date"] != df["end_date"]) == 0
+        except AssertionError as exc:
+            raise ValueError(
+                "week_ending_date is not always the same as end_date, check the raw file"
+            ) from exc
+    else:
+        # Check missing start_week == end_week
+        try:
+            assert sum(df["timestamp"] != df["end_week"]) == 0
+        except AssertionError as exc:
+            raise ValueError(
+                "end_week is not always the same as start_week, check the raw file"
+            ) from exc
 
     try:
         df = df.astype(type_dict)
     except KeyError as exc:
-        raise ValueError("Expected column(s) missed, The dataset "
-                         "schema may have changed. Please investigate and "
-                         "amend the code.") from exc
+        raise ValueError(f"""
+Expected column(s) missed, The dataset schema may
+have changed. Please investigate and amend the code.
+
+Columns needed:
+{NEWLINE.join(type_dict.keys())}
+
+Columns available:
+{NEWLINE.join(df.columns)}
+""") from exc
 
     # Drop rows for locations outside US
     df = df[df["state"] != "United States"]

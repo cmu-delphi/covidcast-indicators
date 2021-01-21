@@ -5,7 +5,7 @@ from os.path import join
 import pandas as pd
 from delphi_utils import read_params
 
-from delphi_nchs_mortality.pull import pull_nchs_mortality_data
+from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_columns
 from delphi_nchs_mortality.constants import METRICS
 
 params = read_params()
@@ -24,13 +24,14 @@ class TestPullNCHS:
         
         # Test columns
         assert (df.columns.values == [
-                'covid_deaths', 'total_deaths', 'percent_of_expected_deaths',
-                'pneumonia_deaths', 'pneumonia_and_covid_deaths',
+                'covid_19_deaths', 'total_deaths', 'percent_of_expected_deaths',
+                'pneumonia_deaths', 'pneumonia_and_covid_19_deaths',
                 'influenza_deaths', 'pneumonia_influenza_or_covid_19_deaths',
                 "timestamp", "geo_id", "population"]).all()
     
         # Test aggregation for NYC and NY
-        raw_df = pd.read_csv("./test_data/test_data.csv", parse_dates=["timestamp"])
+        raw_df = pd.read_csv("./test_data/test_data.csv", parse_dates=["start_week"])
+        raw_df = standardize_columns(raw_df)
         for metric in METRICS:
             ny_list = raw_df.loc[(raw_df["state"] == "New York")
                                 & (raw_df[metric].isnull()), "timestamp"].values
@@ -62,4 +63,4 @@ class TestPullNCHS:
                                           "bad_data_with_missing_cols.csv")
 
     
-        
+

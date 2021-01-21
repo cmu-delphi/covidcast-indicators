@@ -31,11 +31,13 @@ def run_module():
     token = params["token"]
     test_mode = params["mode"]
 
-    daily_arch_diff = S3ArchiveDiffer(
-        daily_cache_dir, daily_export_dir,
-        params["bucket_name"], "nchs_mortality",
-        params["aws_credentials"])
-    daily_arch_diff.update_cache()
+    if params["bucket_name"]:
+        daily_arch_diff = S3ArchiveDiffer(
+            daily_cache_dir, daily_export_dir,
+            params["bucket_name"], "nchs_mortality",
+            params["aws_credentials"])
+        daily_arch_diff.update_cache()
+
 
     map_df = pd.read_csv(
         join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
@@ -84,4 +86,6 @@ def run_module():
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-    arch_diffs(params, daily_arch_diff)
+
+    if params["bucket_name"]:
+        arch_diffs(params, daily_arch_diff)

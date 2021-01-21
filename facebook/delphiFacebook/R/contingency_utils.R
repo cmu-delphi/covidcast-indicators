@@ -31,6 +31,9 @@ update_params <- function(params) {
     stop(paste("both end_date and list of input files cannot be provided in", 
                "params. To run aggregations on a specific set of input files",
                "please remove end_date from params."))
+  } else if ( !is.null(params$end_date) & !is.null(params$start_date) ) {
+    # Use all data within explicitly set date range.
+    date_range <- list(params$start_time, params$end_time)
   }
 
   if (length(params$input) == 0) {

@@ -328,11 +328,11 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
     dfs_out[[aggregation]] <- target_group %>%
       as.list %>%
       as_tibble %>%
-      add_column(val=NA_real_) %>%
-      add_column(se=NA_real_) %>%
-      add_column(sample_size=NA_real_) %>%
-      add_column(effective_sample_size=NA_real_) %>%
-      add_column(represented=NA_real_)
+      add_column(val=NA_real_, 
+                 se=NA_real_, 
+                 sample_size=NA_real_, 
+                 effective_sample_size=NA_real_, 
+                 represented=NA_real_)
   }
   
   for (row in seq_along(aggregations$id)) {

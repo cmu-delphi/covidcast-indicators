@@ -4,7 +4,10 @@
 \alias{get_range_prev_full_period}
 \title{Get the date range specifying the previous full time period.}
 \usage{
-get_range_prev_full_period(date = Sys.Date(), weekly_or_monthly_flag)
+get_range_prev_full_period(
+  date = Sys.Date(),
+  weekly_or_monthly_flag = c("month", "week")
+)
 }
 \arguments{
 \item{date}{Date of interest}

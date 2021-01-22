@@ -2,8 +2,8 @@
 % Please edit documentation in R/contingency_variables.R
 \name{remap_response}
 \alias{remap_response}
-\title{Convert a response codes in a single response to specified values. Returns 
-as-is for numeric columns.}
+\title{Convert numeric response codes in a single survey item to values specified in
+map. Returns as-is for numeric columns.}
 \usage{
 remap_response(df, col_var, map_old_new, default = NULL, response_type = "b")
 }
@@ -26,6 +26,5 @@ multi-select.}
 list of data frame of individual response data with newly mapped column
 }
 \description{
-Convert a response codes in a single response to specified values. Returns 
-as-is for numeric columns.
+Maps for recoding are set manually in `remap_responses`.
 }

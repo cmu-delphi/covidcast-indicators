@@ -11,9 +11,9 @@ post_process_aggs(df, aggregations, cw_list)
 
 \item{aggregations}{Data frame with columns `name`, `var_weight`, `metric`,
 `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
-to report. `name` is the aggregate's base column name; `var_weight` is the 
+to report. `name` is the aggregate's base column name; `var_weight` is the
 column to use for its weights; `metric` is the column of `df` containing the
-response value. `group_by` is a list of variables to aggregate 
+response value. `group_by` is a list of variables to aggregate
 over. `compute_fn` is the function that computes
 the aggregate response given many rows of data. `post_fn` is applied to the
 aggregate data after megacounty aggregation, and can perform any final

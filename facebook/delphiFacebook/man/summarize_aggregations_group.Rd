@@ -16,12 +16,12 @@ summarize_aggregations_group(
 \item{group_df}{Data frame containing all data needed to estimate one group.
 Estimates for `target_group` will be based on all of this data.}
 
-\item{aggregations}{Aggregations to report. See `aggregate_aggs()`.}
+\item{aggregations}{Aggregations to report. See `produce_aggregates()`.}
 
 \item{target_group}{A `data.table` with one row specifying the grouping
 variable values used to select this group.}
 
-\item{geo_level}{a string of the current geo level, such as county or state, 
+\item{geo_level}{a string of the current geo level, such as county or state,
 being used}
 
 \item{params}{Named list of configuration options.}

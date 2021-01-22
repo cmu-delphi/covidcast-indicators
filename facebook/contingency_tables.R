@@ -24,50 +24,9 @@ library(delphiFacebook)
 
 ## Facebook aggregates
 weekly_aggs <- tribble(
-  ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,  
-  ## V1 (vaccinated)
-  # National
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_work_in_healthcare", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_65_or_older", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  
-  # State
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_work_in_healthcare", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_65_or_older", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  
-  # State marginal
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_work_in_healthcare", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_work_in_healthcare","mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_work_in_healthcare", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_65_or_older", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("b_65_or_older", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_vaccinated", "b_had_cov_vaccine", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  
-  
-  
-  ## Binary V3 (accept COVID vaccine)
-  # National
-  "pct_accepting", "b_accept_cov_vaccine", c("b_work_in_healthcare", "mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_65_or_older", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "nation"), compute_binary_and_multiselect, jeffreys_binary,
-  
-  # State
-  "pct_accepting", "b_accept_cov_vaccine", c("b_work_in_healthcare", "mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_65_or_older", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("mc_age", "mc_gender", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  
-  # State marginal
-  "pct_accepting", "b_accept_cov_vaccine", c("b_work_in_healthcare", "mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_work_in_healthcare","mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_work_in_healthcare", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_65_or_older", "mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("b_65_or_older", "mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("mc_age", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("mc_gender", "state"), compute_binary_and_multiselect, jeffreys_binary,
-  "pct_accepting", "b_accept_cov_vaccine", c("mc_race", "b_hispanic", "state"), compute_binary_and_multiselect, jeffreys_binary,
+  ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
+  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, I,
+  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, I,
 )
 
 

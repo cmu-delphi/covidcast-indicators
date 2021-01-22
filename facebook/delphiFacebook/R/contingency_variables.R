@@ -186,7 +186,33 @@ rename_responses <- function(df) {
   } else {
     df$b_work_in_healthcare <- NA_real_
   }
+
   
+  df$mc_simple_education <- case_when(
+    df$mc_education %in% c("Less than high school", 
+                           "High school graduate or equivalent") ~ "High school or less", 
+    df$mc_education %in% c("Some college")  ~ "Some college",
+    df$mc_education %in% c("2 year degree", 
+                           "4 year degree", 
+                           "Master's degree", 
+                           "Professional degree", 
+                           "Doctorate")  ~ "College or more"
+  )
+  
+  df$mc_simple_race <- case_when(
+    df$mc_race %in% c("White") ~ "White", 
+    df$mc_race %in% c("Black or African American")  ~ "Black",
+    df$mc_race %in% c("Asian")  ~ "Asian",
+    df$mc_race %in% c("American Indian or Alaska Native", 
+                      "Native Hawaiian or Pacific Islander",
+                      "Other", 
+                      "Multiracial")  ~ "Other"
+  )
+  
+  df$b_25_or_older <- (
+    df$mc_age != "18-24"
+  )
+    
   df$b_65_or_older <- (
     df$mc_age == "65-74" | df$mc_age == "75+"
   )

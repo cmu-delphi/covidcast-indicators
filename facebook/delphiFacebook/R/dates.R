@@ -113,15 +113,15 @@ get_range_prev_full_week <- function(date = Sys.Date()) {
 #' @importFrom lubridate ymd_hms as_date
 #' 
 #' @export
-get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag) {
+get_range_prev_full_period <- function(date = Sys.Date(), weekly_or_monthly_flag = c("month", "week")) {
+  weekly_or_monthly_flag <- match.arg(weekly_or_monthly_flag)
+
   if (weekly_or_monthly_flag == "month") {
     # Get start and end of previous full month.
     date_period_range = get_range_prev_full_month(date)
   } else if (weekly_or_monthly_flag == "week") {
     # Get start and end of previous full epiweek.
     date_period_range = get_range_prev_full_week(date)
-  } else {
-    stop("invalid time period selection; must indicate either 'month' or 'week'")
   }
   
   date_period_range[[1]] =  ymd_hms(

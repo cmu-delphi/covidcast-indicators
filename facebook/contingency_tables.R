@@ -19,14 +19,15 @@ library(delphiFacebook)
 #
 # Compute functions must be one of the `compute_*` set (or another function with
 # similar format can be created). Post-processing functions should be one of the
-# `jeffreys_*` set or the identity `I`, which does not modify the data.
+# `jeffreys_*` set or post_convert_count_to_pct or the identity `I`, which does 
+# not modify the data.
 
 
 ## Facebook aggregates
 weekly_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, I,
-  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, I,
+  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, post_convert_count_to_pct,
+  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, post_convert_count_to_pct,
 )
 
 

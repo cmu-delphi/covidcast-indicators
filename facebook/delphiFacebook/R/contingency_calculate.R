@@ -78,3 +78,17 @@ compute_multiple_choice <- function(response, weight, sample_size, total_represe
               effective_sample_size = sample_size,
               represented = total_represented))
 }
+
+#' Convert val column from counts to percents of total
+#' 
+#' Meant for use as `post_fn` with multiple choice metrics, which produce
+#' weighted frequency for val by default.
+#'
+#' @param df Data frame
+#' @return Updated data frame.
+#' @importFrom dplyr mutate
+#' @export
+post_convert_count_to_pct <- function(df) {
+  return(mutate(df,
+                val = 100 * .data$val / sum(.data$val, na.rm=TRUE)))
+}

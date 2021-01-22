@@ -209,8 +209,9 @@ rename_responses <- function(df) {
                       "Multiracial")  ~ "Other"
   )
   
-  df$b_25_or_older <- (
-    df$mc_age != "18-24"
+  df$b_25_or_older <- case_when(
+    df$mc_age != "18-24" ~ 1,
+    df$mc_age != "18-24" ~ NA_real_
   )
     
   df$b_65_or_older <- (

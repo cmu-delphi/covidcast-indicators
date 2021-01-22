@@ -346,8 +346,10 @@ remap_responses <- function(df) {
   return(df)
 }
 
-#' Convert a response codes in a single response to specified values. Returns 
-#' as-is for numeric columns.
+#' Convert numeric response codes in a single survey item to values specified in
+#' map. Returns as-is for numeric columns.
+#' 
+#' Maps for recoding are set manually in `remap_responses`.
 #' 
 #' @param df Data frame of individual response data.
 #' @param col_var Name of response var to recode

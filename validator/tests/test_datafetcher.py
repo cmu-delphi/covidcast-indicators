@@ -87,8 +87,10 @@ class TestDataFetcher:
             ("county", "a"): processed_signal_data_1,
             ("county", "b"): processed_signal_data_2,
             ("state", "a"): processed_signal_data_1,
-            ("state", "b"): ValidationFailure("api_data_fetch_error", "state b",
-                                             "Error fetching data from 2020-03-10 "
+            ("state", "b"): ValidationFailure("api_data_fetch_error",
+                                              geo_type="state",
+                                              signal="b",
+                                             message="Error fetching data from 2020-03-10 "
                                              "to 2020-06-10 for data source: "
                                              "source, signal type: b, geo type: state")
         }

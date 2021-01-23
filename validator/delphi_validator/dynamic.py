@@ -98,10 +98,11 @@ class DynamicValidator:
             report.increment_total_checks()
 
             if geo_sig_df.empty:
-                report.add_raised_error(ValidationFailure("check_missing_geo_sig_combo",
-                                                          f"{geo_type} {signal_type}",
-                                                          "file with geo_type-signal combo does "
-                                                          "not exist"))
+                report.add_raised_error(ValidationFailure(check_name="check_missing_geo_sig_combo",
+                                                          geo_type=geo_type,
+                                                          signal=signal_type,
+                                                          message="file with geo_type-signal combo "
+                                                            "does not exist"))
                 continue
 
             max_date = geo_sig_df["time_value"].max()
@@ -152,7 +153,9 @@ class DynamicValidator:
                 if recent_df.empty:
                     report.add_raised_error(
                         ValidationFailure("check_missing_geo_sig_date_combo",
-                                          f"{checking_date} {geo_type} {signal_type}",
+                                          checking_date,
+                                          geo_type,
+                                          signal_type,
                                           "test data for a given checking date-geo type-signal type"
                                           " combination is missing. Source data may be missing"
                                           " for one or more dates"))
@@ -178,7 +181,9 @@ class DynamicValidator:
                 if reference_api_df.empty:
                     report.add_raised_error(
                         ValidationFailure("empty_reference_data",
-                                          f"{checking_date} {geo_type} {signal_type}",
+                                          checking_date,
+                                          geo_type,
+                                          signal_type,
                                           "reference data is empty; comparative checks could not "
                                           "be performed"))
                     continue
@@ -217,8 +222,9 @@ class DynamicValidator:
         if max_date < self.params.generation_date - thres:
             report.add_raised_error(
                 ValidationFailure("check_min_max_date",
-                                  f"{geo_type} {signal_type}",
-                                  "date of most recent generated file seems too long ago"))
+                                  geo_type=geo_type,
+                                  signal=signal_type,
+                                  message="date of most recent generated file seems too long ago"))
 
         report.increment_total_checks()
 
@@ -238,8 +244,9 @@ class DynamicValidator:
         if max_date > self.params.generation_date:
             report.add_raised_error(
                 ValidationFailure("check_max_max_date",
-                                  f"{geo_type} {signal_type}",
-                                  "date of most recent generated file seems too recent"))
+                                  geo_type=geo_type,
+                                  signal=signal_type,
+                                  message="date of most recent generated file seems too recent"))
 
         report.increment_total_checks()
 
@@ -263,7 +270,9 @@ class DynamicValidator:
         if df_to_test["time_value"].max() < df_to_reference["time_value"].max():
             report.add_raised_error(
                 ValidationFailure("check_max_date_vs_reference",
-                                  f"{checking_date.date()} {geo_type} {signal_type}",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
                                   "reference df has days beyond the max date in the =df_to_test="))
 
         report.increment_total_checks()
@@ -301,7 +310,9 @@ class DynamicValidator:
         if abs(compare_rows) > 0.35:
             report.add_raised_error(
                 ValidationFailure("check_rapid_change_num_rows",
-                                  f"{checking_date} {geo_type} {signal_type}",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
                                   "Number of rows per day seems to have changed rapidly (reference "
                                   "vs test data)"))
 
@@ -431,7 +442,9 @@ class DynamicValidator:
             report.raised_errors.append(
                 ValidationFailure(
                     "check_positive_negative_spikes",
-                    f"{source_frame_start} {source_frame_end} {geo} {sig}",
+                    source_frame_end,
+                    geo,
+                    sig,
                     "Source dates with flagged ouliers based on the previous 14 days of data "
                     "available"))
 
@@ -535,7 +548,9 @@ class DynamicValidator:
             report.add_raised_error(
                 ValidationFailure(
                     "check_test_vs_reference_avg_changed",
-                    f"{checking_date} {geo_type} {signal_type}",
+                    checking_date,
+                    geo_type,
+                    signal_type,
                     'Average differences in variables by geo_id between recent & reference data '
                     + 'seem large --- either large increase '
                     + 'tending toward one direction or large mean absolute difference, relative '

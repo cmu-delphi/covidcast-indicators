@@ -173,8 +173,9 @@ def get_one_api_df(data_source, min_date, max_date,
 
     except APIDataFetchError as e:
         geo_sig_api_df_or_error = ValidationFailure("api_data_fetch_error",
-                                                    f"{geo_type} {signal_type}",
-                                                    e.custom_msg)
+                                                    geo_type=geo_type,
+                                                    signal=signal_type,
+                                                    message=e.custom_msg)
 
     api_semaphore.release()
 

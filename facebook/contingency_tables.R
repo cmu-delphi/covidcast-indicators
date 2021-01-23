@@ -26,8 +26,8 @@ library(delphiFacebook)
 ## Facebook aggregates
 weekly_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, post_convert_count_to_pct,
-  "freq", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, post_convert_count_to_pct,
+  "pct_total", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, post_convert_count_to_pct,
+  "pct_total", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, post_convert_count_to_pct,
 )
 
 

@@ -82,7 +82,7 @@ class ValidationFailure:
 
     def __eq__(self, other):
         """Compare this object with ValidationFailure `other` for equality.
-        
+
         Two ValidationFailures are considered equal if their `check_name`, `date`, `geo_type`, and
         `signal` attributes correspondingly match.  A value of `None` in any of these attributes is
         considered to match any corresponding value on the other ValidationFailure.

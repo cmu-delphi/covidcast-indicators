@@ -5,10 +5,14 @@ import re
 import numpy as np
 import pandas as pd
 from datetime import date, timedelta, datetime
-from pandas_gbq import read_gbq
 from os import listdir
 from os.path import isfile, join
 from collections import defaultdict
+
+import pandas_gbq
+from pandas_gbq.gbq import GenericGBQException
+from google.oauth2 import service_account
+from google.api_core.exceptions import NotFound
 
 from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
@@ -19,7 +23,7 @@ def preprocess(df, level):
 
     The output dataset has:
 
-    - Each row corresponds to (County/State, Date),
+    - Each row corresponding to (County/State, Date),
       denoted (FIPS/State abbrev, timestamp).
     - Each row additionally has columns corresponding to sensors such as
       "Anosmia" and "Ageusia".
@@ -84,7 +88,19 @@ def preprocess(df, level):
 
 
 def get_missing_dates(receiving_dir, start_date):
-    """
+    """Decide which dates we want to retrieve data for based on existing
+    CSVs.
+
+    Parameters
+    ----------
+    receiving_dir: str
+        path to output directory
+    start_date: date
+        first date to retrieve data for
+
+    Returns
+    -------
+    list
     """
     OUTPUT_NAME_PATTERN = re.compile("^[0-9]{8}_.*[.]csv")
     existing_output_files = [f for f in listdir(receiving_dir) if isfile(
@@ -101,13 +117,28 @@ def get_missing_dates(receiving_dir, start_date):
 
 
 def format_dates_for_query(date_list):
+    """Turn list of dates into year-grouped dict formatted for use in
+    BigQuery query.
+
+    Parameters
+    ----------
+    dates_list: list
+        collection of dates of days we want to pull data for
+
+    Returns
+    -------
+    dict: {year: "timestamp(date), ..."}
     """
-    """
+    earliest_available_symptom_search_year = 2017
+
+    # Make a dictionary of years: list(dates).
     date_dict = defaultdict(list)
     for d in date_list:
-        if d.year >= 2017:
+        if d.year >= earliest_available_symptom_search_year:
             date_dict[d.year].append(datetime.strftime(d, "%Y-%m-%d"))
 
+    # For each year, convert list of dates into list of BigQuery-
+    # compatible timestamps.
     for key in date_dict.keys():
         date_dict[key] = 'timestamp("' + \
             '"), timestamp("'.join(date_dict[key]) + '")'
@@ -115,8 +146,29 @@ def format_dates_for_query(date_list):
     return date_dict
 
 
-def pull_gs_data_one_geolevel(credentials, level, dates_dict):
-    """
+def pull_gs_data_one_geolevel(level, dates_dict):
+    """Pull latest data for a single geo level and transform it into the
+    appropriate format, as described in preprocess function.
+
+    Note that we retrieve state level data from "states_daily_<year>"
+    where there are state level data for 51 states including 'District of Columbia'.
+
+    We retrieve the county level data from "counties_daily_<year>"
+    where there is county level data available except District of Columbia.
+    We filter the data such that we only keep rows with valid FIPS.
+
+    PS:  No information for PR
+
+    Parameters
+    ----------
+    level: str
+        "county" or "state"
+    dates_dict: dict
+        {year: "timestamp(date), ..."} where timestamps are BigQuery-compatible
+
+    Returns
+    -------
+    pd.DataFrame
     """
     base_query = """
     select
@@ -132,7 +184,7 @@ def pull_gs_data_one_geolevel(credentials, level, dates_dict):
     base_level_table = {"state": "states_daily_{year}",
                         "county": "counties_daily_{year}"}
 
-    # Create map of old to new column names.
+    # Create map of BigQuery to desired column names.
     colname_map = {"symptom_" +
                    metric.replace(" ", "_"): metric for metric in METRICS}
 
@@ -143,7 +195,18 @@ def pull_gs_data_one_geolevel(credentials, level, dates_dict):
             symptom_table=base_level_table[level].format(year=year),
             date_list=dates_dict[year])
 
-        df.append(read_gbq(query, project_id=credentials["project_id"]))
+        try:
+            result = pandas_gbq.read_gbq(query, progress_bar_type=None)
+        except GenericGBQException as e:
+            if isinstance(e.__context__, NotFound):
+                print(
+                    "BigQuery table for year {year} not found".format(year=year))
+                result = pd.DataFrame(
+                    columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
+            else:
+                raise(e)
+
+        df.append(result)
 
     df = pd.concat(df)
     df.rename(colname_map, axis=1, inplace=True)
@@ -154,27 +217,21 @@ def pull_gs_data_one_geolevel(credentials, level, dates_dict):
     return(df)
 
 
-def pull_gs_data(credentials, receiving_dir, start_date):
-    """Pull latest dataset and transform it into the appropriate format.
-
-    Pull the latest Google COVID-19 Search Trends symptoms dataset, and
-    conforms it into a dataset as described in preprocess function.
-
-    Note that we retrieve state level data from "2020_US_daily_symptoms_dataset.csv"
-    where there are state level data for 51 states including 'District of Columbia'.
-
-    We retrieve the county level data from "/subregions/state/**daily**.csv"
-    where there is county level data available except District of Columbia.
-    We filter the data such that we only keep rows with valid FIPS.
+def pull_gs_data(path_to_credentials, receiving_dir, start_date):
+    """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
 
     Parameters
     ----------
-    base_url: str
-        Base URL for pulling the Google COVID-19 Search Trends symptoms dataset
+    path_to_credentials: str
+        Path to BigQuery API key and service account json file
     level: str
         "county" or "state"
+    receiving_dir: str
+        path to output directory
+    start_date: date
+        first date to retrieve data for
 
     Returns
     -------
@@ -185,16 +242,20 @@ def pull_gs_data(credentials, receiving_dir, start_date):
     missing_dates = get_missing_dates(receiving_dir, start_date)
     missing_dates_dict = format_dates_for_query(missing_dates)
 
+    # Provide pandas_gbq with BigQuery credentials
+    credentials = service_account.Credentials.from_service_account_file(
+        path_to_credentials)
+    pandas_gbq.context.credentials = credentials
+    pandas_gbq.context.project = credentials.project_id
+
     # Create dictionary for state and county level data
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel(
-        credentials, "state", missing_dates_dict)
+    dfs["state"] = pull_gs_data_one_geolevel("state", missing_dates_dict)
 
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel(
-        credentials, "county", missing_dates_dict)
+    dfs["county"] = pull_gs_data_one_geolevel("county", missing_dates_dict)
 
     # Add District of Columbia as county
     try:

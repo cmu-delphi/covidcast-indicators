@@ -102,7 +102,7 @@ class DynamicValidator:
                                                           geo_type=geo_type,
                                                           signal=signal_type,
                                                           message="file with geo_type-signal combo "
-                                                            "does not exist"))
+                                                                  "does not exist"))
                 continue
 
             max_date = geo_sig_df["time_value"].max()

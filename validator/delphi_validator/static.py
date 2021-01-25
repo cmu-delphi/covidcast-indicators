@@ -164,7 +164,7 @@ class StaticValidator:
                     "check_geo_id_lowercase",
                     filename=filename,
                     message=f"geo_ids {upper_case_geos} contains uppercase characters. Lowercase "
-                    "is preferred."))
+                            "is preferred."))
         report.increment_total_checks()
 
     def check_bad_geo_id_format(self, df_to_test, nameformat, geo_type, report):
@@ -315,7 +315,7 @@ class StaticValidator:
                 report.add_raised_error(
                     ValidationFailure("check_se_missing_or_in_range",
                                       filename=nameformat,
-                                     message="se must be NA or in (0, min(50,val*(1+eps))]"))
+                                      message="se must be NA or in (0, min(50,val*(1+eps))]"))
 
             report.increment_total_checks()
         else:
@@ -336,7 +336,7 @@ class StaticValidator:
                 report.add_raised_error(
                     ValidationFailure("check_se_many_missing",
                                       filename=nameformat,
-                                     message='Recent se values are >50% NA'))
+                                      message='Recent se values are >50% NA'))
 
             report.increment_total_checks()
 
@@ -384,7 +384,7 @@ class StaticValidator:
                     ValidationFailure("check_n_missing_or_gt_min",
                                       filename=nameformat,
                                       message="sample size must be NA or >= "
-                                      f"{self.params.minimum_sample_size}"))
+                                              f"{self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 

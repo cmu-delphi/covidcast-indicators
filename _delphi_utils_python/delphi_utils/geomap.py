@@ -528,14 +528,14 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.reset_index().groupby([date_col, mega_col]).sum()
         return data.reset_index()
 
-    def as_mapper_name(self, geo_type):
+    def as_mapper_name(self, geo_type, state="state_id"):
         """
         Return the mapper equivalent of a region type.
 
         Human-readable names like 'county' will return their mapper equivalents ('fips').
         """
         if geo_type == "state":
-            return "state_code"
+            return state
         if geo_type == "county":
             return "fips"
         return geo_type

@@ -17,6 +17,11 @@ from google.api_core.exceptions import NotFound
 from .constants import STATE_TO_ABBREV, DC_FIPS, METRICS, COMBINED_METRIC
 
 
+# Create map of BigQuery to desired column names.
+colname_map = {"symptom_" +
+               metric.replace(" ", "_"): metric for metric in METRICS}
+
+
 def preprocess(df, level):
     """
     Conforms the pulled data from Google COVID-19 Search Trends symptoms data into a dataset.
@@ -146,6 +151,46 @@ def format_dates_for_query(date_list):
     return date_dict
 
 
+def produce_query(level, year, dates_str):
+    """Pull latest data for a single geo level and transform it into the
+    appropriate format, as described in preprocess function.
+
+    Parameters
+    ----------
+    level: str
+        "county" or "state"
+    year: int
+        year of all dates in dates_str; used to specify table to pull data from
+    dates_str: str
+        "timestamp(date), ..." where timestamps are BigQuery-compatible
+
+    Returns
+    -------
+    str
+    """
+    base_query = """
+    select
+        case
+            when sub_region_2_code is null then sub_region_1_code
+            when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+        end as open_covid_region_code,
+        date,
+        {symptom_cols}
+    from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
+    where timestamp(date) in ({date_list})
+    """
+    base_level_table = {"state": "states_daily_{year}",
+                        "county": "counties_daily_{year}"}
+
+    # Add custom values to base_query
+    query = base_query.format(
+        symptom_cols=", ".join(colname_map.keys()),
+        symptom_table=base_level_table[level].format(year=year),
+        date_list=dates_str)
+
+    return(query)
+
+
 def pull_gs_data_one_geolevel(level, dates_dict):
     """Pull latest data for a single geo level and transform it into the
     appropriate format, as described in preprocess function.
@@ -170,30 +215,9 @@ def pull_gs_data_one_geolevel(level, dates_dict):
     -------
     pd.DataFrame
     """
-    base_query = """
-    select
-        case
-            when sub_region_2_code is null then sub_region_1_code
-            when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
-        end as open_covid_region_code,
-        date,
-        {symptom_cols}
-    from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
-    where timestamp(date) in ({date_list})
-    """
-    base_level_table = {"state": "states_daily_{year}",
-                        "county": "counties_daily_{year}"}
-
-    # Create map of BigQuery to desired column names.
-    colname_map = {"symptom_" +
-                   metric.replace(" ", "_"): metric for metric in METRICS}
-
     df = []
     for year in dates_dict.keys():
-        query = base_query.format(
-            symptom_cols=", ".join(colname_map.keys()),
-            symptom_table=base_level_table[level].format(year=year),
-            date_list=dates_dict[year])
+        query = produce_query(level, year, dates_dict[year])
 
         try:
             result = pandas_gbq.read_gbq(query, progress_bar_type=None)

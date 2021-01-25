@@ -151,8 +151,8 @@ class StaticValidator:
         if len(unexpected_geos) > 0:
             report.add_raised_error(ValidationFailure("check_bad_geo_id_value",
                                                       filename,
-                                                      f"Unrecognized geo_ids (not in historical "
-                                                      "data) {unexpected_geos}"))
+                                                      "Unrecognized geo_ids (not in historical "
+                                                      f"data) {unexpected_geos}"))
         report.increment_total_checks()
         upper_case_geos = [
             geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
@@ -301,7 +301,18 @@ class StaticValidator:
         df_to_test['se'] = df_to_test['se'].round(3)
         df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
 
-        if not self.params.missing_se_allowed:
+        if self.params.missing_se_allowed:
+            result = df_to_test.query(
+                '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+
+            if not result.empty:
+                report.add_raised_error(
+                    ValidationFailure("check_se_missing_or_in_range",
+                                      nameformat,
+                                     "se must be NA or in (0, min(50,val*(1+eps))]"))
+
+            report.increment_total_checks()
+        else:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
                 '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
@@ -319,18 +330,6 @@ class StaticValidator:
                     ValidationFailure("check_se_many_missing",
                                       nameformat,
                                      'Recent se values are >50% NA'))
-
-            report.increment_total_checks()
-
-        elif self.params.missing_se_allowed:
-            result = df_to_test.query(
-                '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
-
-            if not result.empty:
-                report.add_raised_error(
-                    ValidationFailure("check_se_missing_or_in_range",
-                                      nameformat,
-                                     "se must be NA or in (0, min(50,val*(1+eps))]"))
 
             report.increment_total_checks()
 
@@ -367,7 +366,20 @@ class StaticValidator:
         Returns:
             - None
         """
-        if not self.params.missing_sample_size_allowed:
+        if self.params.missing_sample_size_allowed:
+            result = df_to_test.query(
+                '~(sample_size.isnull() | (sample_size >= @self.params.minimum_sample_size))')
+
+            if not result.empty:
+                report.add_raised_error(
+                    ValidationFailure("check_n_missing_or_gt_min",
+                                      nameformat,
+                                      "sample size must be NA or >= "
+                                      f"{self.params.minimum_sample_size}"))
+
+            report.increment_total_checks()
+
+        else:
             if df_to_test['sample_size'].isnull().values.any():
                 report.add_raised_error(
                     ValidationFailure("check_n_missing",
@@ -385,19 +397,6 @@ class StaticValidator:
                     ValidationFailure("check_n_gt_min",
                                       nameformat,
                                       f"sample size must be >= {self.params.minimum_sample_size}"))
-
-            report.increment_total_checks()
-
-        elif self.params.missing_sample_size_allowed:
-            result = df_to_test.query(
-                '~(sample_size.isnull() | (sample_size >= @self.params.minimum_sample_size))')
-
-            if not result.empty:
-                report.add_raised_error(
-                    ValidationFailure("check_n_missing_or_gt_min",
-                                      nameformat,
-                                      f"sample size must be NA or >= "\
-                                          "{self.params.minimum_sample_size}"))
 
             report.increment_total_checks()
 

@@ -54,26 +54,3 @@ class Config:
         7  # maximum number of days used to average a backfill correction
     )
     MIN_CUM_VISITS = 500  # need to observe at least 500 counts before averaging
-
-
-class Constants:
-    """
-    Contains the maximum number of geo units for each geo type.
-
-    Used for sanity checks
-    """
-
-    # number of counties in usa, including megacounties
-    NUM_COUNTIES = 3141 + 52
-    NUM_HRRS = 308
-    NUM_MSAS = 392 + 52  # MSA + States
-    NUM_STATES = 52  # including DC and PR
-    NUM_NATIONS = 1
-    NUM_HHSS = 10
-
-    MAX_GEO = {"county": NUM_COUNTIES,
-               "hrr": NUM_HRRS,
-               "msa": NUM_MSAS,
-               "state": NUM_STATES,
-               "nation": NUM_NATIONS,
-               "hhs": NUM_HHSS}

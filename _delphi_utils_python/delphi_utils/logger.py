@@ -5,7 +5,7 @@ import structlog
 
 
 def handle_exceptions(logger):
-    """Handle exceptions using the provided logger"""
+    """Handle exceptions using the provided logger."""
     def exception_handler(etype, value, traceback):
         logger.exception("Top-level exception occurred",
                          exc_info=(etype, value, traceback))

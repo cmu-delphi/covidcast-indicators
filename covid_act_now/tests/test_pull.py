@@ -1,17 +1,18 @@
 import numpy as np
 import pandas as pd
-from pandas.testing import assert_series_equal
 import pytest
 
-from delphi_utils import GeoMapper
 from delphi_covid_act_now.pull import (
     load_data,
     extract_testing_metrics
 )
 
 class TestPull:
-    def test_load_data(self):
-        df_pq = load_data("test_data/small_CAN_data.parquet")
+    def test_load_data(self, CAN_parquet_data, tmp_path):
+        path = tmp_path / "small_CAN_data.parquet"
+        CAN_parquet_data.to_parquet(path)
+
+        df_pq = load_data(path)
 
         impt_cols = set([
             "fips", "timestamp",
@@ -22,7 +23,10 @@ class TestPull:
         assert impt_cols <= set(df_pq.columns)
 
     def test_extract_testing_data(self, CAN_parquet_data, tmp_path):
-        df_pq = load_data("test_data/small_CAN_data.parquet")
+        path = tmp_path / "small_CAN_data.parquet"
+        CAN_parquet_data.to_parquet(path)
+
+        df_pq = load_data(path)
         df_tests = extract_testing_metrics(df_pq)
 
         impt_cols = set([
@@ -35,4 +39,3 @@ class TestPull:
         assert np.allclose(
             df_tests.pcr_tests_positive,
             df_tests.pcr_positivity_rate * df_tests.pcr_tests_total)
-

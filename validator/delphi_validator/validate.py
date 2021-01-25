@@ -22,13 +22,10 @@ class Validator:
         """
         suppressed_errors =  params["global"].get('suppressed_errors', [])
         for entry in suppressed_errors:
-            assert isinstance(entry, list)
-            assert len(entry) == 4
+            assert isinstance(entry, dict)
+            assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"])
 
-        self.suppressed_errors = [ValidationFailure(check_name=item[0],
-                                                    date=item[1],
-                                                    geo_type=item[2],
-                                                    signal=item[3]) for item in suppressed_errors]
+        self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
         self.time_window = TimeWindow.from_params(params["global"]["end_date"],

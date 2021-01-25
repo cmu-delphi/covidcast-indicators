@@ -25,27 +25,36 @@ class TestValidatorInitialization:
                 "data_source": "",
                 "span_length": 0,
                 "end_date": "2020-09-01",
-                "suppressed_errors": [["a", None, None, "b"],
-                                      ["c", None, None, "d"]]
+                "suppressed_errors": [{"check_name": "a",
+                                       "date": None,
+                                       "signal": "b"},
+                                      {"check_name":"c",
+                                       "date": None,
+                                       "geo_type": "d"}]
             }
         }
 
         validator = Validator(params)
-        assert validator.suppressed_errors == [ValidationFailure("a", None, None, "b", ""),
-                                               ValidationFailure("c", None, None, "d", "")]
+        assert validator.suppressed_errors == [ValidationFailure("a", None, None, "b"),
+                                               ValidationFailure("c", None, "d", "None")]
 
     def test_incorrect_suppressed_errors(self):
         """Test initialization with improperly coded suppressed errors."""
         with pytest.raises(AssertionError):
-            # entry of length not equal to 2
+            # entry with invalid keys
             Validator({
                 "global": {
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01",
-                    "suppressed_errors": [["a", None, None, "b"],
-                                          ["c", None, None, "d"],
-                                          ["ab"]]
+                    "suppressed_errors": [{"check_name": "a",
+                                           "date": None,
+                                           "signal": "b"},
+                                          {"check_name":"c",
+                                           "date": None,
+                                           "geo_type": "d"},
+                                          {"check_name": "a",
+                                           "fake": "b"}]
                 }
             })
 
@@ -56,8 +65,12 @@ class TestValidatorInitialization:
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01",
-                    "suppressed_errors": [["a", None, None, "b"],
-                                          ["c", None, None, "d"],
-                                          "ab"]
+                    "suppressed_errors": [{"check_name": "a",
+                                           "date": None,
+                                           "signal": "b"},
+                                          {"check_name":"c",
+                                           "date": None,
+                                           "geo_type": "d"},
+                                          ["ab"]]
                 }
             })

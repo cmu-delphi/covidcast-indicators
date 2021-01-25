@@ -16,7 +16,7 @@ required = [
 setup(
     name="delphi_covid_act_now",
     version="0.1.0",
-    description="SHORT DESCRIPTION",
+    description="Indicators from COVID Act Now",
     author="Eu Jing Chua",
     author_email="eujingc@andrew.cmu.edu",
     url="https://github.com/cmu-delphi/covidcast-indicators",

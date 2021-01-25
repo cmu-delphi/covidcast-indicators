@@ -15,11 +15,10 @@ import pytest
 from delphi_utils import read_params
 
 # first party
-from delphi_changehc.config import Config, Constants
+from delphi_changehc.config import Config
 from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
-CONSTANTS = Constants()
 PARAMS = read_params()
 COVID_FILEPATH = PARAMS["input_covid_file"]
 DENOM_FILEPATH = PARAMS["input_denom_file"]

@@ -2,7 +2,6 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "wip_signal": true,
   "parquet_url": "https://storage.googleapis.com/us-east4-data-eng-scrapers-a02dc940-bucket/data/final/can_scrape_api_covid_us.parquet",
   "aws_credentials": {
     "aws_access_key_id": "",

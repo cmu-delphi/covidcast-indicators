@@ -15,7 +15,7 @@ from delphi_covid_act_now.run import run_module
 def run_as_module():
     # Clean receiving directory
     for fname in listdir("receiving"):
-        if fname != ".gitkeep":
+        if fname not in (".gitkeep", ".gitignore"):
             remove(join("receiving", fname))
 
     with mock_s3():

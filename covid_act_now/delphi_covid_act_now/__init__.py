@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module to pull and clean indicators from the XXXXX source.
+"""Module to pull and clean indicators from Covid Act Now.
 
 This file defines the functions that are made public by the module. As the
 module is intended to be executed though the main method, these are primarily

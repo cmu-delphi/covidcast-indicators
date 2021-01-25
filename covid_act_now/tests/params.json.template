@@ -2,7 +2,6 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "wip_signal": [],
   "parquet_url": "./test_data/small_CAN_data.parquet",
   "aws_credentials": {
     "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",

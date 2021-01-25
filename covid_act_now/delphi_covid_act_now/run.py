@@ -2,12 +2,11 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.
+when the module is run with `python -m delphi_covid_act_now`.
 """
 
 from delphi_utils import (
     read_params,
-    add_prefix,
     create_export_csv,
     S3ArchiveDiffer,
 )
@@ -46,7 +45,7 @@ def run_module():
         df = geo_map(df_county_testing, geo_res)
 
         # Only 1 signal for now
-        signal = add_prefix(SIGNALS, wip_signal)[0]
+        signal = SIGNALS[0]
 
         exported_csv_dates = create_export_csv(
             df,

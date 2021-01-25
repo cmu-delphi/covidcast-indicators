@@ -22,8 +22,9 @@ class Validator:
         """
         suppressed_errors =  params["global"].get('suppressed_errors', [])
         for entry in suppressed_errors:
-            assert isinstance(entry, dict)
-            assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"])
+            assert isinstance(entry, dict), "suppressed_errors must be a list of objects"
+            assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"]),\
+                'suppressed_errors may only have fields "check_name", "date", "geo_type", "signal"'
 
         self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 

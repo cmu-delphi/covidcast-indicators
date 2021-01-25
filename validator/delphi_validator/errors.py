@@ -70,8 +70,12 @@ class ValidationFailure:
         self.message = message
         if filename:
             pieces = filename.split(".")[0].split("_", maxsplit=2)
-            assert len(pieces) == 3
-            date = dt.datetime.strptime(pieces[0], "%Y%m%d").date()
+            assert len(pieces) == 3, '`filename` argument expected to be in "{date}_{geo_type}_'\
+                                     '{signal}.{extension}" format'
+            try:
+                date = dt.datetime.strptime(pieces[0], "%Y%m%d").date()
+            except ValueError as e:
+                raise ValueError('date in `filename` must be in "YYYYMMDD" format') from e
             geo_type = pieces[1]
             signal = pieces[2]
         if isinstance(date, str):
@@ -102,6 +106,8 @@ class ValidationFailure:
         ----------
         errors_to_suppress: List[ValidationFailure]
             set of data sources to ignore.
+            Because we allow `None` values as wildcards, we cannot assume errors that are equal 
+            will hash to the same values.  Thus, we need to use a list rather than a set here.
         """
         return self in suppressed_errors
 

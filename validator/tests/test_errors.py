@@ -33,11 +33,13 @@ class TestValidationFailure:
         assert vf3.signal == "cases_7dav"
         assert vf3.message == ""
 
-        with pytest.raises(AssertionError):
+        with pytest.raises(AssertionError,
+                           match='`filename` argument expected to be in "{date}_{geo_type}_'\
+                                 '{signal}.{extension}" format'):
             # file name not formatted correctly
             ValidationFailure("chk", filename="20200311_county.csv")
 
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match='date in `filename` must be in "YYYYMMDD" format'):
             # date in file name not formatted correctly
             ValidationFailure("chk", filename="2020-03-11_county_cases_7dav.csv")
 

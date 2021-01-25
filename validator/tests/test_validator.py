@@ -40,7 +40,8 @@ class TestValidatorInitialization:
 
     def test_incorrect_suppressed_errors(self):
         """Test initialization with improperly coded suppressed errors."""
-        with pytest.raises(AssertionError):
+        with pytest.raises(AssertionError, match='suppressed_errors may only have fields '
+                                                 '"check_name", "date", "geo_type", "signal"'):
             # entry with invalid keys
             Validator({
                 "global": {
@@ -58,7 +59,7 @@ class TestValidatorInitialization:
                 }
             })
 
-        with pytest.raises(AssertionError):
+        with pytest.raises(AssertionError, match="suppressed_errors must be a list of objects"):
             # entry that is not a list
             Validator({
                 "global": {

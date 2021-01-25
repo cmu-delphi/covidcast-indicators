@@ -14,7 +14,7 @@ import pandas as pd
 from delphi_utils import GeoMapper, read_params, add_prefix
 
 # first party
-from .config import Config, Constants
+from .config import Config
 from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
 from .sensor import CHCSensor
 from .weekday import Weekday
@@ -164,7 +164,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         # for each location, fill in all missing dates with 0 values
         multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
                                                 names=[geo, Config.DATE_COL])
-        assert (len(multiindex) <= (Constants.MAX_GEO[geo] * len(self.fit_dates))
+        assert (len(multiindex) <= (len(gmpr.get_geo_values(gmpr.as_mapper_name(geo))) * len(self.fit_dates))
                 ), "more loc-date pairs than maximum number of geographies x number of dates"
         # fill dataframe with missing dates using 0
         data_frame = data_frame.reindex(multiindex, fill_value=0)

@@ -3,8 +3,5 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "bigquery_credentials": {
-    "project_id": "",
-    "api_key": ""
-  }
+  "path_to_bigquery_credentials": "credentials.json"
 }

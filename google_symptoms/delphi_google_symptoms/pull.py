@@ -87,7 +87,7 @@ def preprocess(df, level):
     return df
 
 
-def get_missing_dates(receiving_dir, start_date):
+def get_missing_dates(receiving_dir, export_start_date):
     """Decide which dates we want to retrieve data for based on existing
     CSVs.
 
@@ -95,7 +95,7 @@ def get_missing_dates(receiving_dir, start_date):
     ----------
     receiving_dir: str
         path to output directory
-    start_date: date
+    export_start_date: date
         first date to retrieve data for
 
     Returns
@@ -109,7 +109,7 @@ def get_missing_dates(receiving_dir, start_date):
     existing_output_dates = {datetime.strptime(f[0:8], "%Y%m%d").date()
                              for f in existing_output_files}
     expected_dates = {
-        start_date + timedelta(days=i) for i in range((date.today() - start_date).days + 1)}
+        export_start_date + timedelta(days=i) for i in range((date.today() - export_start_date).days + 1)}
 
     missing_dates = list(expected_dates.difference(existing_output_dates))
 
@@ -217,7 +217,7 @@ def pull_gs_data_one_geolevel(level, dates_dict):
     return(df)
 
 
-def pull_gs_data(path_to_credentials, receiving_dir, start_date):
+def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -230,7 +230,7 @@ def pull_gs_data(path_to_credentials, receiving_dir, start_date):
         "county" or "state"
     receiving_dir: str
         path to output directory
-    start_date: date
+    export_start_date: date
         first date to retrieve data for
 
     Returns
@@ -239,7 +239,7 @@ def pull_gs_data(path_to_credentials, receiving_dir, start_date):
     """
 
     # Fetch and format dates we want to attempt to retrieve
-    missing_dates = get_missing_dates(receiving_dir, start_date)
+    missing_dates = get_missing_dates(receiving_dir, export_start_date)
     missing_dates_dict = format_dates_for_query(missing_dates)
 
     # Provide pandas_gbq with BigQuery credentials

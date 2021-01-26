@@ -46,7 +46,7 @@ class TestPullGoogleSymptoms:
             state_data,
             state_data[state_row_subset],
             county_data,
-            county_data[county_row_subset],
+            county_data[county_row_subset]
         ]
         mock_credentials.return_value = None
 

@@ -22,12 +22,19 @@ symptom_names = ["symptom_" +
                  metric.replace(" ", "_") for metric in METRICS]
 keep_cols = ["open_covid_region_code", "date"] + symptom_names
 
-state_data = pd.read_csv(good_input["state"])[keep_cols]
-county_data = pd.read_csv(good_input["county"])[keep_cols]
+state_data = pd.read_csv(good_input["state"], parse_dates=["date"])[keep_cols]
+county_data = pd.read_csv(
+    good_input["county"], parse_dates=["date"])[keep_cols]
 
 
 # Set up fake list of dates to fetch.
 dates = [
+    "20200726",
+    "20200727",
+    "20200728",
+    "20200729",
+    "20200730",
+    "20200731",
     "20200801",
     "20200802",
     "20200803",

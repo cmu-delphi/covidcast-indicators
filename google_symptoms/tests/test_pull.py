@@ -28,8 +28,10 @@ class TestPullGoogleSymptoms:
                          metric.replace(" ", "_") for metric in METRICS]
         keep_cols = ["open_covid_region_code", "date"] + symptom_names
 
-        state_data = pd.read_csv(good_input["state"])[keep_cols]
-        county_data = pd.read_csv(good_input["county"])[keep_cols]
+        state_data = pd.read_csv(
+            good_input["state"], parse_dates=["date"])[keep_cols]
+        county_data = pd.read_csv(
+            good_input["county"], parse_dates=["date"])[keep_cols]
 
         state_row_subset = pd.Series([False]).repeat(
             len(state_data.index)).reset_index(drop=True)

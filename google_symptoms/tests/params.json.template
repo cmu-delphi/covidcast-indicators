@@ -3,5 +3,5 @@
   "static_file_dir": "../static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "path_to_bigquery_credentials": "test_api_key.json"
+  "path_to_bigquery_credentials": ""
 }

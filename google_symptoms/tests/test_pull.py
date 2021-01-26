@@ -23,7 +23,7 @@ class TestPullGoogleSymptoms:
     @mock.patch("pandas_gbq.read_gbq")
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
     def test_good_file(self, mock_credentials, mock_read_gbq):
-        # Setup fake data.
+        # Set up fake data.
         symptom_names = ["symptom_" +
                          metric.replace(" ", "_") for metric in METRICS]
         keep_cols = ["open_covid_region_code", "date"] + symptom_names
@@ -37,13 +37,16 @@ class TestPullGoogleSymptoms:
             len(county_data.index)).reset_index(drop=True)
 
         # Mock fetching API credentials and BigQuery data.
+        # Each year is called separately. Based on `static_receiving`, `get_missing_dates`
+        # produces missing dates in two separate years, so we need to provide two
+        # sets of state data and two sets of county data, one for 2020 and one for 2021.
+        # The second return set is empty to prevent duplicate geo_id-date combos, which
+        # causes an error when reindexing.
         mock_read_gbq.side_effect = [
             state_data,
             state_data[state_row_subset],
-            state_data[state_row_subset],
             county_data,
             county_data[county_row_subset],
-            county_data[county_row_subset]
         ]
         mock_credentials.return_value = None
 

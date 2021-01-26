@@ -77,17 +77,20 @@ def preprocess(df, level):
 
     # Make sure each FIPS/state has same number of rows
     geo_list = df["geo_id"].unique()
-    date_list = pd.date_range(start=df["date"].min(),
-                              end=df["date"].max(),
-                              freq='D')
+    date_list = pd.date_range(
+        start=df["date"].min(),
+        end=df["date"].max(),
+        freq='D')
     index_df = pd.MultiIndex.from_product(
         [geo_list, date_list], names=['geo_id', 'date']
     )
-    df = df.set_index(["geo_id", "date"]
-                      ).reindex(
+    df = df.set_index(
+        ["geo_id", "date"]
+    ).reindex(
         index_df
     ).reset_index(
-    ).rename({"date": "timestamp"}, axis=1)
+    ).rename(
+        {"date": "timestamp"}, axis=1)
 
     return df
 

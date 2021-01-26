@@ -8,8 +8,8 @@ from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_da
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 good_input = {
-    "state": "test_data/states_daily_202012.csv",
-    "county": "test_data/counties_daily_202012.csv"
+    "state": "test_data/20201201_states_daily.csv",
+    "county": "test_data/20201201_counties_daily.csv"
 }
 
 bad_input = {
@@ -23,13 +23,27 @@ class TestPullGoogleSymptoms:
     @mock.patch("pandas_gbq.read_gbq")
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
     def test_good_file(self, mock_credentials, mock_read_gbq):
-        mock_credentials.side_effect = [
-            pd.read_csv(good_input["state"]),
-            pd.read_csv(good_input["state"]),
-            pd.read_csv(good_input["state"]),
-            pd.read_csv(good_input["county"]),
-            pd.read_csv(good_input["county"]),
-            pd.read_csv(good_input["county"])
+        # Setup fake data.
+        symptom_names = ["symptom_" +
+                         metric.replace(" ", "_") for metric in METRICS]
+        keep_cols = ["open_covid_region_code", "date"] + symptom_names
+
+        state_data = pd.read_csv(good_input["state"])[keep_cols]
+        county_data = pd.read_csv(good_input["county"])[keep_cols]
+
+        state_row_subset = pd.Series([False]).repeat(
+            len(state_data.index)).reset_index(drop=True)
+        county_row_subset = pd.Series([False]).repeat(
+            len(county_data.index)).reset_index(drop=True)
+
+        # Mock fetching API credentials and BigQuery data.
+        mock_read_gbq.side_effect = [
+            state_data,
+            state_data[state_row_subset],
+            state_data[state_row_subset],
+            county_data,
+            county_data[county_row_subset],
+            county_data[county_row_subset]
         ]
         mock_credentials.return_value = None
 

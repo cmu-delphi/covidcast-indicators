@@ -4,7 +4,7 @@ import re
 
 import numpy as np
 import pandas as pd
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 from os import listdir
 from os.path import isfile, join
 from collections import defaultdict
@@ -116,8 +116,10 @@ def get_missing_dates(receiving_dir, export_start_date):
 
     existing_output_dates = {datetime.strptime(f[0:8], "%Y%m%d").date()
                              for f in existing_output_files}
-    expected_dates = {
-        export_start_date + timedelta(days=i) for i in range((date.today() - export_start_date).days + 1)}
+    expected_dates = {date.date() for date in pd.date_range(
+        start=export_start_date,
+        end=date.today(),
+        freq='D')}
 
     missing_dates = list(expected_dates.difference(existing_output_dates))
 

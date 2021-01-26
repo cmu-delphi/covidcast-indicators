@@ -12,7 +12,31 @@ import delphi_google_symptoms
 from delphi_google_symptoms.constants import METRICS
 
 
-# Set up fake data.
+# Set up fake data so that tests don't require BigQuery
+# credentials to run.
+
+# State data is created by running the following query in the BigQuery
+# browser console:
+# select
+#     case
+#         when sub_region_2_code is null then sub_region_1_code
+#         when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+#     end as open_covid_region_code,
+#     *
+# from `bigquery-public-data.covid19_symptom_search.states_daily_2020` # States by day
+# where timestamp(date) between timestamp("2020-07-26") and timestamp("2020-08-11")
+
+# County data is created by running the following query in the BigQuery
+# browser console:
+# select
+#     case
+#         when sub_region_2_code is null then sub_region_1_code
+#         when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+#     end as open_covid_region_code,
+#     *
+# from `bigquery-public-data.covid19_symptom_search.counties_daily_2020` # Counties by day; includes state and county name, + FIPS code
+# where timestamp(date) between timestamp("2020-07-26") and timestamp("2020-08-11")
+
 good_input = {
     "state": "test_data/202008_states_daily.csv",
     "county": "test_data/202008_counties_daily.csv"

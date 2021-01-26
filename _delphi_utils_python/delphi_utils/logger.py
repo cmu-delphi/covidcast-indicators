@@ -1,6 +1,7 @@
 """Structured logger utility for creating JSON logs in Delphi pipelines."""
 import logging
 import sys
+import threading
 import structlog
 
 
@@ -9,7 +10,12 @@ def handle_exceptions(logger):
     def exception_handler(etype, value, traceback):
         logger.exception("Top-level exception occurred",
                          exc_info=(etype, value, traceback))
+
+    def multithread_exception_handler(args):
+        exception_handler(args.exc_type, args.exc_value, args.exc_traceback)
+
     sys.excepthook = exception_handler
+    threading.excepthook = multithread_exception_handler
 
 
 def get_structured_logger(name=__name__,

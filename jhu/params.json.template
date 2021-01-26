@@ -8,5 +8,45 @@
     "aws_access_key_id": "",
     "aws_secret_access_key": ""
   },
-  "bucket_name": ""
+  "bucket_name": "",
+  "validation": {
+    "global": {
+      "data_source": "jhu-csse",
+      "span_length": 14,
+      "end_date": "latest",
+      "test_mode": false,
+      "suppressed_errors": [
+        {"check_name": "check_val_lt_0"},
+        {"check_name": "check_test_vs_reference_avg_changed",
+         "signal": "deaths_7dav_incidence_prop",
+         "geo_type": "county"}
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 100,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "confirmed_7dav_cumulative_num",
+        "confirmed_7dav_cumulative_prop",
+        "confirmed_7dav_incidence_num",
+        "confirmed_7dav_incidence_prop",
+        "deaths_7dav_cumulative_num",
+        "deaths_7dav_cumulative_prop",
+        "deaths_7dav_incidence_num",
+        "deaths_7dav_incidence_prop"],
+      "expected_lag": {
+        "confirmed_7dav_cumulative_num": 1,
+        "confirmed_7dav_cumulative_prop": 1,
+        "confirmed_7dav_incidence_num": 1,
+        "confirmed_7dav_incidence_prop": 1,
+        "deaths_7dav_cumulative_num": 1,
+        "deaths_7dav_cumulative_prop": 1,
+        "deaths_7dav_incidence_num": 1,
+        "deaths_7dav_incidence_prop": 1}
+    }
+  }
 }

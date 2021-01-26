@@ -1,17 +1,26 @@
-"""
-Functions to calculate the quidel sensor statistic.
-"""
+"""Functions to calculate the quidel sensor statistic."""
 
 import numpy as np
 import pandas as pd
 
+
+def remove_null_samples(df):
+    """Remove entries in a data frame whose sample sizes are null."""
+    return df[df["sample_size"].notnull()]
+
+
 def _prop_var(p, n):
-    """var(X/n) = 1/(n^2)var(X) = (npq)/(n^2) = pq/n"""
+    """
+    Calculate variance of proportion.
+
+    var(X/n) = 1/(n^2)var(X) = (npq)/(n^2) = pq/n
+    """
     return p * (1 - p) / n
 
 def fill_dates(y_data, first_date, last_date):
     """
     Ensure all dates are listed in the data, otherwise, add days with 0 counts.
+
     Args:
         y_data: dataframe with datetime index
         first_date: datetime.datetime
@@ -36,8 +45,9 @@ def fill_dates(y_data, first_date, last_date):
 
 def _slide_window_sum(arr, k):
     """
-    Sliding window sum, with fixed window size k.  For indices 0:k, we
-    DO compute a sum, using whatever points are available.
+    Sliding window sum, with fixed window size k.
+
+    For indices 0:k, we DO compute a sum, using whatever points are available.
 
     Reference: https://stackoverflow.com/a/38507725
 
@@ -51,7 +61,6 @@ def _slide_window_sum(arr, k):
         sarr: np.ndarray
             Array of same length of arr, holding the sliding window sum.
     """
-
     if not isinstance(k, int):
         raise ValueError('k must be int.')
     temp = np.append(np.zeros(k - 1), arr)
@@ -61,12 +70,12 @@ def _slide_window_sum(arr, k):
 
 def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
-    Calculates the proportion of parent samples (tests) that must be "borrowed"
-    in order to properly compute the statistic.  If there are no samples
-    available in the parent, the borrow_prop is 0.  If the parent does not
-    have enough samples, we return a borrow_prop of 1, and the fact that the
-    pooled samples are insufficient are handled in the statistic fitting
-    step.
+    Determine how many samples from the parent geography must be borrowed.
+
+    If there are no samples available in the parent, the borrow_prop is 0.  If
+    the parent does not have enough samples, we return a borrow_prop of 1, and
+    the fact that the pooled samples are insufficient are handled in the
+    statistic fitting step.
 
     Args:
         tpooled_tests: np.ndarray[float]
@@ -80,6 +89,7 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     Returns:
         np.ndarray[float]
             Same length as tests; proportion of parent observations to borrow.
+
     """
     if (np.any(np.isnan(tpooled_tests)) or np.any(np.isnan(tpooled_ptests))):
         print(tpooled_tests)
@@ -109,8 +119,9 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
 
 def raw_positive_prop(positives, tests, min_obs):
     """
-    Calculates the proportion of positive tests for a single geographic
-    location, without any temporal smoothing.
+    Calculate the proportion of positive tests without any temporal smoothing.
+
+    This calculation assumes a single geographic location.
 
     If on any day t, tests[t] < min_obs, then we report np.nan.
 
@@ -140,6 +151,7 @@ def raw_positive_prop(positives, tests, min_obs):
             Of the same length as above.
         np.ndarray
             Sample size used to compute estimates.
+
     """
     positives = positives.astype(float)
     tests = tests.astype(float)
@@ -163,8 +175,9 @@ def raw_positive_prop(positives, tests, min_obs):
 def smoothed_positive_prop(positives, tests, min_obs, pool_days,
                            parent_positives=None, parent_tests=None):
     """
-    Calculates the proportion of negative tests for a single geographic
-    location, with temporal smoothing.
+    Calculate the proportion of negative tests, with temporal smoothing.
+
+    This calculation assumes a single geographic location.
 
     For a given day t, if sum(tests[(t-pool_days+1):(t+1)]) < min_obs, then we
     'borrow' min_obs - sum(tests[(t-pool_days+1):(t+1)]) observations from the
@@ -209,7 +222,6 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
         np.ndarray
             Effective sample size (after temporal and geographic pooling).
     """
-
     positives = positives.astype(float)
     tests = tests.astype(float)
     if (parent_positives is None) or (parent_tests is None):
@@ -253,9 +265,10 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
 
 
 def raw_tests_per_device(devices, tests, min_obs):
-    '''
-    Calculates the tests per device for a single geographic
-    location, without any temporal smoothing.
+    """
+    Calculate the tests per device, without temporal smoothing.
+
+    This calculation assumes a single geographic location.
 
     If on any day t, tests[t] < min_obs, then we report np.nan.
     The second and third returned np.ndarray are the standard errors,
@@ -278,7 +291,8 @@ def raw_tests_per_device(devices, tests, min_obs):
             Placeholder for standard errors
         np.ndarray
             Sample size used to compute estimates.
-    '''
+
+    """
     devices = devices.astype(float)
     tests = tests.astype(float)
     if (np.any(np.isnan(devices)) or np.any(np.isnan(tests))):
@@ -298,8 +312,10 @@ def raw_tests_per_device(devices, tests, min_obs):
 def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
                               parent_devices=None, parent_tests=None):
     """
-    Calculates the ratio of tests per device for a single geographic
-    location, with temporal smoothing.
+    Calculate the ratio of tests per device, with temporal smoothing.
+
+    This calculation assumes a single geographic location.
+
     For a given day t, if sum(tests[(t-pool_days+1):(t+1)]) < min_obs, then we
     'borrow' min_obs - sum(tests[(t-pool_days+1):(t+1)]) observations from the
     parents over the same timespan.  Importantly, it will make sure NOT to
@@ -335,6 +351,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, pool_days,
             Standard errors, currently uniformly np.nan (placeholder).
         np.ndarray
             Effective sample size (after temporal and geographic pooling).
+
     """
     devices = devices.astype(float)
     tests = tests.astype(float)

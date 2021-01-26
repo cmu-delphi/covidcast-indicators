@@ -6,9 +6,8 @@ Created: 2020-06-12
 """
 
 class APIConfig:
-    """
-    Static configuration variables
-    """
+    """Static configuration variables."""
+
     # API Parameters
     INIT_URL = "https://gis.cdc.gov/grasp/covid19_3_api/GetPhase03InitApp"
     MMWR_COLS = ["year", "weeknumber", "weekstart", "weekend"]

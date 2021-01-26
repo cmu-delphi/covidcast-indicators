@@ -2,70 +2,63 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.
+when the module is run with `python -m delphi_nchs_mortality`.
 """
 from datetime import datetime, date, timedelta
 from os.path import join
-from os import remove, listdir
-from shutil import copy
+import time
 
 import numpy as np
 import pandas as pd
-from delphi_utils import read_params, S3ArchiveDiffer
+from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
 
 from .pull import pull_nchs_mortality_data
 from .export import export_csv
-
-# global constants
-METRICS = [
-        'covid_deaths', 'total_deaths', 'percent_of_expected_deaths',
-        'pneumonia_deaths', 'pneumonia_and_covid_deaths', 'influenza_deaths',
-        'pneumonia_influenza_or_covid_19_deaths'
-]
-SENSORS = [
-        "num",
-        "prop"
-]
-INCIDENCE_BASE = 100000
-geo_res = "state"
+from .archive_diffs import arch_diffs
+from .constants import (METRICS, SENSOR_NAME_MAP,
+                        SENSORS, INCIDENCE_BASE, GEO_RES)
 
 def run_module():
     """Run module for processing NCHS mortality data."""
+    start_time = time.time()
     params = read_params()
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
     export_start_date = params["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday
         export_start_date = date.today() - timedelta(
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
-    export_dir = params["export_dir"]
     daily_export_dir = params["daily_export_dir"]
-    cache_dir = params["cache_dir"]
     daily_cache_dir = params["daily_cache_dir"]
     static_file_dir = params["static_file_dir"]
     token = params["token"]
     test_mode = params["mode"]
 
-    daily_arch_diff = S3ArchiveDiffer(
-        daily_cache_dir, daily_export_dir,
-        params["bucket_name"], "nchs_mortality",
-        params["aws_credentials"])
-    daily_arch_diff.update_cache()
+    if params["bucket_name"]:
+        daily_arch_diff = S3ArchiveDiffer(
+            daily_cache_dir, daily_export_dir,
+            params["bucket_name"], "nchs_mortality",
+            params["aws_credentials"])
+        daily_arch_diff.update_cache()
+
 
     map_df = pd.read_csv(
         join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
     )
 
-    df = pull_nchs_mortality_data(token, map_df, test_mode)
+    df_pull = pull_nchs_mortality_data(token, map_df, test_mode)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
             print(metric)
+            df = df_pull.copy()
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
-            sensor_name = "_".join(["wip", metric])
+            df = df[~df["val"].isnull()]
+            sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
-                geo_name=geo_res,
+                geo_name=GEO_RES,
                 export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
@@ -73,74 +66,32 @@ def run_module():
         else:
             for sensor in SENSORS:
                 print(metric, sensor)
+                df = df_pull.copy()
                 if sensor == "num":
                     df["val"] = df[metric]
                 else:
                     df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
-                sensor_name = "_".join(["wip", metric, sensor])
+                df = df[~df["val"].isnull()]
+                sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
-                    geo_name=geo_res,
+                    geo_name=GEO_RES,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
                 )
 
-    # Weekly run of archive utility on Monday
-    # - Does not upload to S3, that is handled by daily run of archive utility
-    # - Exports issues into receiving for the API
-    if datetime.today().weekday() == 0:
-        # Copy todays raw output to receiving
-        for output_file in listdir(daily_export_dir):
-            copy(
-                join(daily_export_dir, output_file),
-                join(export_dir, output_file))
+#     Weekly run of archive utility on Monday
+#     - Does not upload to S3, that is handled by daily run of archive utility
+#     - Exports issues into receiving for the API
+#     Daily run of archiving utility
+#     - Uploads changed files to S3
+#     - Does not export any issues into receiving
+    if params["bucket_name"]:
+        arch_diffs(params, daily_arch_diff)
 
-        weekly_arch_diff = S3ArchiveDiffer(
-            cache_dir, export_dir,
-            params["bucket_name"], "nchs_mortality",
-            params["aws_credentials"])
-
-        # Dont update cache from S3 (has daily files), only simulate a update_cache() call
-        weekly_arch_diff._cache_updated = True
-
-        # Diff exports, and make incremental versions
-        _, common_diffs, new_files = weekly_arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = weekly_arch_diff.archive_exports(to_archive, update_s3=False)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-        weekly_arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive (weekly) '{exported_file}'")
-
-    # Daily run of archiving utility
-    # - Uploads changed files to S3
-    # - Does not export any issues into receiving
-
-    # Diff exports, and make incremental versions
-    _, common_diffs, new_files = daily_arch_diff.diff_exports()
-
-    # Archive changed and new files only
-    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-    to_archive += new_files
-    _, fails = daily_arch_diff.archive_exports(to_archive)
-
-    # Daily output not needed anymore, remove them
-    for exported_file in new_files:
-        remove(exported_file)
-    for exported_file, diff_file in common_diffs.items():
-        remove(exported_file)
-        remove(diff_file)
-
-    # Report failures: someone should probably look at them
-    for exported_file in fails:
-        print(f"Failed to archive (daily) '{exported_file}'")
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

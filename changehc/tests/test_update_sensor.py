@@ -2,7 +2,6 @@
 from copy import deepcopy
 import os
 from os.path import join, exists
-import pytest
 from tempfile import TemporaryDirectory
 
 # third party
@@ -16,14 +15,10 @@ import pytest
 from delphi_utils import read_params
 
 # first party
-from delphi_changehc.config import Config, Constants
-from delphi_changehc.constants import *
-from delphi_changehc.update_sensor import write_to_csv, add_prefix, CHCSensorUpdator
-from delphi_changehc.load_data import *
-from delphi_changehc.run import run_module
+from delphi_changehc.config import Config
+from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
-CONSTANTS = Constants()
 PARAMS = read_params()
 COVID_FILEPATH = PARAMS["input_covid_file"]
 DENOM_FILEPATH = PARAMS["input_denom_file"]
@@ -31,18 +26,21 @@ DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
 OUTPATH="test_data/"
 
 class TestCHCSensorUpdator:
+    """Tests for updating the sensors."""
     geo = "county"
     parallel = False
     weekday = False
+    numtype = "covid"
     se = False
     prefix = "foo"
     small_test_data = pd.DataFrame({
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
-        "fips": [1.0] * 7 + [2.0] * 6,
+        "fips": ['01001'] * 7 + ['04007'] * 6,
         "den": [1000] * 7 + [2000] * 6,
         "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
 
     def test_shift_dates(self):
+        """Tests that dates in the data are shifted according to the burn-in and lag."""
         su_inst = CHCSensorUpdator(
             "02-01-2020",
             "06-01-2020",
@@ -50,6 +48,7 @@ class TestCHCSensorUpdator:
             self.geo,
             self.parallel,
             self.weekday,
+            self.numtype,
             self.se
         )
         ## Test init
@@ -63,21 +62,25 @@ class TestCHCSensorUpdator:
         assert su_inst.sensor_dates[-1] == su_inst.enddate - pd.Timedelta(days=1)
 
     def test_geo_reindex(self):
-        su_inst = CHCSensorUpdator(
-            "02-01-2020",
-            "06-01-2020",
-            "06-12-2020",
-            'county',
-            self.parallel,
-            self.weekday,
-            self.se
-        )
-        su_inst.shift_dates()
-        data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
-        assert data_frame.shape[0] == 2*len(su_inst.fit_dates)
-        assert (data_frame.sum() == (4200,19000)).all()
+        """Tests that the geo reindexer changes the geographic resolution."""
+        for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
+            su_inst = CHCSensorUpdator(
+                "02-01-2020",
+                "06-01-2020",
+                "06-12-2020",
+                geo,
+                self.parallel,
+                self.weekday,
+                self.numtype,
+                self.se
+            )
+            su_inst.shift_dates()
+            data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
+            assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
+            assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
+        """Tests that the sensors are properly updated."""
         for geo in ["state","hrr"]:
             td = TemporaryDirectory()
             su_inst = CHCSensorUpdator(
@@ -87,6 +90,7 @@ class TestCHCSensorUpdator:
                 geo,
                 self.parallel,
                 self.weekday,
+                self.numtype,
                 self.se
             )
 
@@ -97,17 +101,17 @@ class TestCHCSensorUpdator:
                 s3_client = Session(**aws_credentials).client("s3")
                 s3_client.create_bucket(Bucket=params["bucket_name"])
                 su_inst.update_sensor(
-                    DENOM_FILEPATH,
-                    COVID_FILEPATH,
-                    td.name,
-                    PARAMS["static_file_dir"]
-                )
+                    self.small_test_data,
+                    td.name)
 
-            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates), f"failed {geo} update sensor test"
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
+                f"failed {geo} update sensor test"
             td.cleanup()
 
 class TestWriteToCsv:
+    """Tests for writing output files to CSV."""
     def test_write_to_csv_results(self):
+        """Tests that the computed data are written correctly."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],
@@ -175,6 +179,7 @@ class TestWriteToCsv:
         td.cleanup()
 
     def test_write_to_csv_with_se_results(self):
+        """Tests that the standard error is written when requested."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],
@@ -215,6 +220,7 @@ class TestWriteToCsv:
         td.cleanup()
 
     def test_write_to_csv_wrong_results(self):
+        """Tests that nonsensical inputs trigger exceptions."""
         res0 = {
             "rates": {
                 "a": [0.1, 0.5, 1.5],
@@ -258,16 +264,3 @@ class TestWriteToCsv:
             write_to_csv(res3, False, "name_of_signal", td.name)
 
         td.cleanup()
-
-    def test_handle_wip_signal(self):
-        # Test wip_signal = True (all signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, True)
-        assert all(s.startswith("wip_") for s in signal_names)
-        # Test wip_signal = list (only listed signals should receive prefix)
-        signal_names = add_prefix(SIGNALS, [SIGNALS[0]])
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])
-        # Test wip_signal = False (only unpublished signals should receive prefix)
-        signal_names = add_prefix(["xyzzy", SIGNALS[0]], False)
-        assert signal_names[0].startswith("wip_")
-        assert all(not s.startswith("wip_") for s in signal_names[1:])

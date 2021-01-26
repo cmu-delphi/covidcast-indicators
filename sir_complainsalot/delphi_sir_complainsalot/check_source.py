@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from typing import List
+from delphi_utils import get_structured_logger
 
 import covidcast
+from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
@@ -28,7 +30,7 @@ class Complaint:
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
 
-def check_source(data_source, meta, params, grace):
+def check_source(data_source, meta, params, grace, logger):
     """Iterate over all signals from a source and check for problems.
 
     Possible problems:
@@ -83,21 +85,43 @@ def check_source(data_source, meta, params, grace):
             # No gap detection for this source
             continue
 
+        logger.info("Retrieving signal",
+                    source=data_source,
+                    signal=row["signal"],
+                    start_day=(datetime.now() - timedelta(days = 14)).strftime("%Y-%m-%d"),
+                    end_day=datetime.now().strftime("%Y-%m-%d"),
+                    geo_type=row["geo_type"])
+
         latest_data = covidcast.signal(
             data_source, row["signal"],
-            start_day=row["max_time"] - gap_window,
-            end_day=row["max_time"],
+            start_day=datetime.now() - timedelta(days = 14),
+            end_day=datetime.now(),
             geo_type=row["geo_type"]
         )
+
+        if latest_data is None:
+            logger.info("No signal data retrieved")
+            continue
 
         # convert numpy datetime values to pandas datetimes and then to
         # datetime.date, so we can work with timedeltas after
         unique_dates = [pd.to_datetime(val).date()
                         for val in latest_data["time_value"].unique()]
+        unique_issues = [pd.to_datetime(val).date()
+                        for val in latest_data["issue"].unique()]
+
 
         gap_days = [(day - prev_day).days
                     for day, prev_day in zip(unique_dates[1:], unique_dates[:-1])]
-        gap = max(gap_days)
+        gap = max(gap_days) - 1
+        logger.info("Detecting days with data present",
+                    data_source = data_source,
+                    signal = row["signal"],
+                    geo_type=row["geo_type"],
+                    most_recent_dates_with_data = [x.strftime("%Y-%m-%d") for x in unique_dates],
+                    gap_days = gap_days,
+                    max_gap = gap,
+                    issue_dates = [x.strftime("%Y-%m-%d") for x in unique_issues])
 
         if gap > max_allowed_gap:
             if row["signal"] not in gap_complaints:
@@ -107,7 +131,7 @@ def check_source(data_source, meta, params, grace):
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
-                    row["max_time"],
+                    datetime.now(),
                     source_config["maintainers"])
             else:
                 gap_complaints[row["signal"]].geo_types.append(row["geo_type"])

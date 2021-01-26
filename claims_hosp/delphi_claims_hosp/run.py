@@ -6,12 +6,12 @@ when the module is run with `python -m delphi_claims_hosp`.
 """
 
 # standard packages
-import logging
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
 # third party
-from delphi_utils import read_params
+from delphi_utils import read_params, get_structured_logger
 
 # first party
 from .config import Config
@@ -19,13 +19,10 @@ from .update_indicator import ClaimsHospIndicatorUpdater
 
 
 def run_module():
-    """
-    Read from params.json and generate the updated claims-based hospitalization
-    indicator values.
-    """
-
+    """Read from params.json and generate updated claims-based hospitalization indicator values."""
+    start_time = time.time()
     params = read_params()
-    logging.basicConfig(level=logging.DEBUG)
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
@@ -50,24 +47,25 @@ def run_module():
         startdate = params['start_date']
 
     # print out information
-    logging.info("first sensor date:\t%s", startdate)
-    logging.info("last sensor date:\t%s", enddate)
-    logging.info("drop date:\t\t%s", dropdate)
-    logging.info("n_backfill_days:\t%s", params["n_backfill_days"])
-    logging.info("n_waiting_days:\t%s", params["n_waiting_days"])
-    logging.info("geos:\t\t\t%s", params["geos"])
-    logging.info("outpath:\t\t%s", params["export_dir"])
-    logging.info("parallel:\t\t%s", params["parallel"])
-    logging.info("weekday:\t\t%s", params["weekday"])
-    logging.info("write_se:\t\t%s", params["write_se"])
+    logger.info("Loaded params",
+                startdate = startdate,
+                enddate = enddate,
+                dropdate = dropdate,
+                n_backfill_days = params["n_backfill_days"],
+                n_waiting_days = params["n_waiting_days"],
+                geos = params["geos"],
+                outpath = params["export_dir"],
+                parallel = params["parallel"],
+                weekday = params["weekday"],
+                write_se = params["write_se"])
 
     # generate indicator csvs
     for geo in params["geos"]:
         for weekday in params["weekday"]:
             if weekday:
-                logging.info("starting %s, weekday adj", geo)
+                logger.info("starting weekday adj", geo = geo)
             else:
-                logging.info("starting %s, no adj", geo)
+                logger.info("starting no weekday adj", geo =  geo)
 
             signal_name = Config.signal_weekday_name if weekday else Config.signal_name
             if params["write_se"]:
@@ -75,7 +73,7 @@ def run_module():
                     "supply obfuscated prefix in params.json"
                 signal_name = params["obfuscated_prefix"] + "_" + signal_name
 
-            logging.info("output signal name %s", signal_name)
+            logger.info("Updating signal name", signal_name = signal_name)
             updater = ClaimsHospIndicatorUpdater(
                 startdate,
                 enddate,
@@ -87,5 +85,8 @@ def run_module():
                 signal_name
             )
             updater.update_indicator(params["input_file"], params["export_dir"])
-        logging.info("finished %s", geo)
-    logging.info("finished all")
+        logger.info("finished updating", geo = geo)
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

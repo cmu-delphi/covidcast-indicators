@@ -18,7 +18,7 @@ class Weekday:
 
     @staticmethod
     def get_params(data):
-        """Correct a signal estimated as numerator/denominator for weekday effects.
+        r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
         t. Instead, model
@@ -55,7 +55,6 @@ class Weekday:
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
         """
-
         tmp = data.reset_index()
         denoms = tmp.groupby(Config.DATE_COL).sum()["den"]
         nums = tmp.groupby(Config.DATE_COL).sum()["num"]
@@ -63,7 +62,7 @@ class Weekday:
 
         # Construct design matrix to have weekday indicator columns and then day
         # indicators.
-        X = np.zeros((nums.shape[0], 6 + nums.shape[0]))
+        X = np.zeros((nums.shape[0], 6 + nums.shape[0]))  # pylint: disable=invalid-name
         not_sunday = np.where(nums.index.dayofweek != 6)[0]
         X[not_sunday, np.array(nums.index.dayofweek)[not_sunday]] = 1
         X[np.where(nums.index.dayofweek == 6)[0], :6] = -1
@@ -113,7 +112,6 @@ class Weekday:
         -- this has the same effect.
 
         """
-
         tmp = sub_data.reset_index()
 
         wd_correction = np.zeros((len(tmp["num"])))

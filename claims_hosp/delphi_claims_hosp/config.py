@@ -11,9 +11,7 @@ from datetime import datetime, timedelta
 
 
 class Config:
-    """
-    Static configuration variables.
-    """
+    """Static configuration variables."""
 
     signal_name = "smoothed_covid19_from_claims"
     signal_weekday_name = "smoothed_adj_covid19_from_claims"
@@ -59,17 +57,19 @@ class Config:
 
 
 class GeoConstants:
-    """
-    Constant geographical variables.
-    """
+    """Constant geographical variables."""
 
     # number of counties in usa, including megacounties
     NUM_COUNTIES = 3141 + 52
     NUM_HRRS = 308
     NUM_MSAS = 392 + 52  # MSA + States
     NUM_STATES = 52  # including DC and PR
+    NUM_HHSS = 10
+    NUM_NATIONS = 1
 
     MAX_GEO = {"county": NUM_COUNTIES,
                "hrr": NUM_HRRS,
                "msa": NUM_MSAS,
-               "state": NUM_STATES}
+               "state": NUM_STATES,
+               "hhs": NUM_HHSS,
+               "nation": NUM_NATIONS}

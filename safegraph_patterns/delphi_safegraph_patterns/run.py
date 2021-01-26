@@ -7,10 +7,12 @@ when the module is run with `python -m MODULE_NAME`.
 import glob
 import multiprocessing as mp
 import subprocess
+import time
 from functools import partial
 from os.path import join
 
 import pandas as pd
+from delphi_utils import get_structured_logger
 from delphi_utils import read_params
 
 from .process import process
@@ -18,8 +20,8 @@ from .process import process
 
 METRICS = [
         # signal_name, naics_code, wip
-        ('bars_visit', 722410, True),
-        ('restaurants_visit', 722511, True),
+        ('bars_visit', 722410, False),
+        ('restaurants_visit', 722511, False),
 ]
 VERSIONS = [
         # relaese version, access dir
@@ -35,17 +37,21 @@ GEO_RESOLUTIONS = [
         "hrr",
         "msa",
         "state",
+        "hhs",
+        "nation"
 ]
 
 
 def run_module():
     """Run module for Safegraph patterns data."""
+    start_time = time.time()
     params = read_params()
     export_dir = params["export_dir"]
     raw_data_dir = params["raw_data_dir"]
     n_core = int(params["n_core"])
     aws_endpoint = params["aws_endpoint"]
     static_file_dir = params["static_file_dir"]
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     env_vars = {
             'AWS_ACCESS_KEY_ID': params["aws_access_key_id"],
@@ -83,3 +89,7 @@ def run_module():
 
         with mp.Pool(n_core) as pool:
             pool.map(process_file, files)
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

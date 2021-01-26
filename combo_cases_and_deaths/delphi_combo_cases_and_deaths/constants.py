@@ -1,4 +1,4 @@
-"""Registry for signal names, geo types and other constants"""
+"""Registry for signal names, geo types and other constants."""
 METRICS = [
     "confirmed",
     "deaths",
@@ -18,4 +18,6 @@ GEO_RESOLUTIONS = [
     "state",
     "msa",
     "hrr",
+    "hhs",
+    "nation"
 ]

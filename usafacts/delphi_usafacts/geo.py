@@ -26,7 +26,7 @@ REPLACE_FIPS = [
 
 
 # Valid geographical resolutions output by this indicator.
-VALID_GEO_RES = ("county", "state", "msa", "hrr")
+VALID_GEO_RES = ("county", "state", "msa", "hrr", "hhs", "nation")
 # Sensors that report proportions.  For geo resolutions with unallocated cases
 # or deaths, we avoid reporting these sensors.
 PROP_SENSORS = ("incidence", "cumulative_prop")
@@ -69,7 +69,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         Columns: fips, timestamp, new_counts, cumulative_counts, population ...
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
-        ("county", "state", "msa", "hrr").
+        ("county", "state", "msa", "hrr", "hhs", "nation").
     sensor: str
         sensor type. Valid options:
         ("new_counts", "cumulative_counts",

@@ -9,7 +9,8 @@ required = [
     "pytest-cov",
     "pylint",
     "delphi-utils",
-    "freezegun"
+    "freezegun",
+    "pandas-gbq"
 ]
 
 setup(

@@ -8,8 +8,8 @@ from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_da
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 good_input = {
-    "state": "test_data/small_symptoms_dataset.csv",
-    "county": "test_data/subregions/Montana/small_Montana_symptoms_dataset.csv"
+    "state": "test_data/states_daily_202012.csv",
+    "county": "test_data/counties_daily_202012.csv"
 }
 
 bad_input = {
@@ -19,15 +19,24 @@ bad_input = {
 
 
 class TestPullGoogleSymptoms:
-    # , new_callable=lambda level: pd.read_csv(good_input[level]))
+    @freeze_time("2021-01-05")
     @mock.patch("pandas_gbq.read_gbq")
-    def test_good_file(self, mock_read_gbq):
-        mock_read_gbq.return_value = [pd.read_csv(
-            good_input["state"]), pd.read_csv(good_input["county"])]
-        dfs = pull_gs_data({"project_id": ""}, "./test_data/static_receiving",
+    @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
+    def test_good_file(self, mock_credentials, mock_read_gbq):
+        mock_credentials.side_effect = [
+            pd.read_csv(good_input["state"]),
+            pd.read_csv(good_input["state"]),
+            pd.read_csv(good_input["state"]),
+            pd.read_csv(good_input["county"]),
+            pd.read_csv(good_input["county"]),
+            pd.read_csv(good_input["county"])
+        ]
+        mock_credentials.return_value = None
+
+        dfs = pull_gs_data("", "./test_data/static_receiving",
                            date(year=2020, month=12, day=30))
 
-        for level in set(["county", "state"]):
+        for level in ["county", "state"]:
             df = dfs[level]
             assert (
                 df.columns.values

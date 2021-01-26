@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import mock
 
 from os import listdir, remove, makedirs
 from os.path import join, exists
 
-from delphi_google_symptoms.run import run_module
+import delphi_google_symptoms
 
 
 @pytest.fixture(scope="session")
@@ -17,4 +18,5 @@ def run_as_module():
     else:
         makedirs("receiving")
 
-    run_module()
+    with mock.patch("delphi_google_symptoms.pull.initialize_credentials", return_value=None) as mock_credentials:
+        delphi_google_symptoms.run.run_module()

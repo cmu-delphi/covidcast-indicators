@@ -50,8 +50,6 @@ def run_module():
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
 
-            if len(df) == 0:
-                continue
             create_export_csv(
                 df,
                 export_dir=export_dir,

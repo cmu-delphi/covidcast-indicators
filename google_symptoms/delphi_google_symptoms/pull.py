@@ -5,8 +5,8 @@ import re
 import numpy as np
 import pandas as pd
 from datetime import date, datetime
-from os import listdir
-from os.path import isfile, join
+from os import listdir, makedirs
+from os.path import isfile, join, exists
 from collections import defaultdict
 
 import pandas_gbq
@@ -110,6 +110,9 @@ def get_missing_dates(receiving_dir, export_start_date):
     -------
     list
     """
+    if not exists(receiving_dir):
+        makedirs(receiving_dir)
+
     OUTPUT_NAME_PATTERN = re.compile("^[0-9]{8}_.*[.]csv")
     existing_output_files = [f for f in listdir(receiving_dir) if isfile(
         join(receiving_dir, f)) and OUTPUT_NAME_PATTERN.match(f)]

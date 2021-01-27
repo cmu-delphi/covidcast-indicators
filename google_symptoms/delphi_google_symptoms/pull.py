@@ -317,15 +317,34 @@ def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
     except KeyError:
         pass
 
-    state_date_list = dfs["state"]["timestamp"].unique()
-    county_date_list = dfs["county"]["timestamp"].unique()
-    new_date_list = [datetime.strftime(
-        date, "%Y-%m-%d") for date in sorted(list(set(state_date_list + county_date_list)))]
+    alert_dates(dfs)
 
-    if len(new_date_list) > 0:
+    return dfs
+
+
+def alert_dates(dfs):
+    """Print the list of dates that were successfully retrieved out of all desired dates.
+
+    Parameters
+    ----------
+    dfs: dict of dataframes
+        {"state": pd.DataFrame, "county": pd.DataFrame} as produced in pull_gs_data
+
+    Returns
+    -------
+    None
+    """
+    # Catalog dates of data retrieved.
+    retrieved_date_list = [datetime.strftime(
+        pd.to_datetime(date).date(), "%Y-%m-%d") for date in sorted(list(set(
+            list(dfs["state"]["timestamp"].unique()) +
+            list(dfs["county"]["timestamp"].unique())
+        )))]
+
+    if len(retrieved_date_list) > 0:
         print("found new data for {date_list}".format(
-            date_list=', '.join(new_date_list)))
+            date_list=', '.join(retrieved_date_list)))
     else:
         print("no new data found")
 
-    return dfs
+    return

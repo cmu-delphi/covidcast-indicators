@@ -4,7 +4,7 @@ from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
 
-from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_dates, format_dates_for_query, pull_gs_data_one_geolevel
+from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_dates, format_dates_for_query, pull_gs_data_one_geolevel, get_all_dates
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 good_input = {
@@ -54,7 +54,7 @@ class TestPullGoogleSymptoms:
         mock_credentials.return_value = None
 
         dfs = pull_gs_data("", "./test_data/static_receiving",
-                           date(year=2020, month=12, day=30))
+                           datetime.strptime("20201230", "%Y%m%d"))
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -90,9 +90,46 @@ class TestPullHelperFuncs:
     @freeze_time("2021-01-05")
     def test_get_missing_dates(self):
         output = get_missing_dates(
-            "./test_data/static_receiving", date(year=2020, month=12, day=30))
+            "./test_data/static_receiving", datetime.strptime("20201230", "%Y%m%d"))
 
         expected = [date(2020, 12, 30), date(2021, 1, 4), date(2021, 1, 5)]
+        assert set(output) == set(expected)
+
+    @freeze_time("2021-01-05")
+    def test_get_all_dates_recent_export_start_date(self):
+        output = get_all_dates(
+            "./test_data/static_receiving", datetime.strptime("20201230", "%Y%m%d"))
+
+        expected = [date(2020, 12, 30),
+                    date(2020, 12, 31),
+                    date(2021, 1, 1),
+                    date(2021, 1, 2),
+                    date(2021, 1, 3),
+                    date(2021, 1, 4),
+                    date(2021, 1, 5)]
+        assert set(output) == set(expected)
+
+    @freeze_time("2021-01-05")
+    @mock.patch("delphi_google_symptoms.pull.get_missing_dates")
+    def test_get_all_dates(self, mock_missing_dates):
+        mock_missing_dates.return_value = [
+            date(2020, 12, 30), date(2021, 1, 4), date(2021, 1, 5)]
+        output = get_all_dates(
+            "./test_data/static_receiving", datetime.strptime("20200201", "%Y%m%d"))
+
+        expected = [date(2020, 12, 24),
+                    date(2020, 12, 25),
+                    date(2020, 12, 26),
+                    date(2020, 12, 27),
+                    date(2020, 12, 28),
+                    date(2020, 12, 29),
+                    date(2020, 12, 30),
+                    date(2020, 12, 31),
+                    date(2021, 1, 1),
+                    date(2021, 1, 2),
+                    date(2021, 1, 3),
+                    date(2021, 1, 4),
+                    date(2021, 1, 5)]
         assert set(output) == set(expected)
 
     def test_format_dates_for_query(self):

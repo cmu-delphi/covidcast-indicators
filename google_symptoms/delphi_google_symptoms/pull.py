@@ -139,6 +139,11 @@ def get_missing_dates(receiving_dir, export_start_date):
 def get_all_dates(receiving_dir, export_start_date):
     """Pad missing dates with enough extra days to do smoothing.
 
+    Using the missing_dates list as reference, creates a new list of dates
+    spanning 6 days before the earliest date in missing_dates to today. This
+    pads missing_dates with enough prior days to produce smoothed estimates
+    starting on min(missing_dates) and fills in any gaps in missing_dates.
+
     Parameters
     ----------
     receiving_dir: str
@@ -156,13 +161,19 @@ def get_all_dates(receiving_dir, export_start_date):
     if len(missing_dates) == 0:
         return missing_dates
 
-    pad_dates = {date.date() for date in pd.date_range(
-        start=min(missing_dates) - timedelta(days=PAD_DAYS - 1),
-        end=min(missing_dates),
+    # Calculate list start date. We don't want to get data before the
+    # user-set start date. Convert both dates/datetimes to date to avoid TypeError.
+    start_date = max(
+        min(missing_dates) - timedelta(days=PAD_DAYS - 1),
+        export_start_date.date()
+    )
+
+    retrieve_dates = {date.date() for date in pd.date_range(
+        start=start_date,
+        end=date.today(),
         freq='D')}
 
-    retrieve_dates = list(set(missing_dates).union(pad_dates))
-    return retrieve_dates
+    return list(retrieve_dates)
 
 
 def format_dates_for_query(date_list):

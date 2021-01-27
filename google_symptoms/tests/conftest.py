@@ -84,8 +84,8 @@ def run_as_module():
     else:
         makedirs("receiving")
 
-    with mock.patch("delphi_google_symptoms.pull.get_missing_dates",
-                    return_value=date_list) as mock_missing_dates:
+    with mock.patch("delphi_google_symptoms.pull.get_all_dates",
+                    return_value=date_list) as mock_all_dates:
         with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                         return_value=None) as mock_credentials:
             with mock.patch("pandas_gbq.read_gbq", side_effect=[

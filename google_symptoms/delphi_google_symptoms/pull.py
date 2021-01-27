@@ -161,7 +161,7 @@ def get_all_dates(receiving_dir, export_start_date):
     if len(missing_dates) == 0:
         return missing_dates
 
-    # Calculate list start date. We don't want to get data before the
+    # Calculate list start date to avoid getting data before the
     # user-set start date. Convert both dates/datetimes to date to avoid TypeError.
     start_date = max(
         min(missing_dates) - timedelta(days=PAD_DAYS - 1),

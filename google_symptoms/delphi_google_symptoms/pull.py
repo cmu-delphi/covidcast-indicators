@@ -75,22 +75,24 @@ def preprocess(df, level):
             "schema may have changed. Please investigate."
         )
 
-    # Make sure each FIPS/state has same number of rows
-    geo_list = df["geo_id"].unique()
-    date_list = pd.date_range(
-        start=df["date"].min(),
-        end=df["date"].max(),
-        freq='D')
-    index_df = pd.MultiIndex.from_product(
-        [geo_list, date_list], names=['geo_id', 'date']
-    )
-    df = df.set_index(
-        ["geo_id", "date"]
-    ).reindex(
-        index_df
-    ).reset_index(
-    ).rename(
-        {"date": "timestamp"}, axis=1)
+    if len(df) != 0:
+        # Make sure each FIPS/state has same number of rows
+        geo_list = df["geo_id"].unique()
+        date_list = pd.date_range(
+            start=df["date"].min(),
+            end=df["date"].max(),
+            freq='D')
+        index_df = pd.MultiIndex.from_product(
+            [geo_list, date_list], names=['geo_id', 'date']
+        )
+        df = df.set_index(
+            ["geo_id", "date"]
+        ).reindex(
+            index_df
+        ).reset_index(
+        )
+
+    df = df.rename({"date": "timestamp"}, axis=1)
 
     return df
 
@@ -232,7 +234,8 @@ def pull_gs_data_one_geolevel(level, dates_dict):
         except GenericGBQException as e:
             if isinstance(e.__context__, NotFound):
                 print(
-                    "BigQuery table for year {year} not found".format(year=year))
+                    "BigQuery table for year {year}, geo level {level} not found".format(
+                        year=year, level=level))
                 result = pd.DataFrame(
                     columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
             else:
@@ -309,9 +312,20 @@ def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
     try:
         df_dc_county = dfs["state"][dfs["state"]["geo_id"] == "dc"].drop(
             "geo_id", axis=1)
-        df_dc_county.loc[:, "geo_id"] = DC_FIPS
+        df_dc_county["geo_id"] = DC_FIPS
         dfs["county"] = dfs["county"].append(df_dc_county)
     except KeyError:
         pass
+
+    state_date_list = dfs["state"]["timestamp"].unique()
+    county_date_list = dfs["county"]["timestamp"].unique()
+    new_date_list = [datetime.strftime(
+        date, "%Y-%m-%d") for date in sorted(list(set(state_date_list + county_date_list)))]
+
+    if len(new_date_list) > 0:
+        print("found new data for {date_list}".format(
+            date_list=', '.join(new_date_list)))
+    else:
+        print("no new data found")
 
     return dfs

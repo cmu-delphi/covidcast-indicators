@@ -7,6 +7,7 @@ when the module is run with `python -m MODULE_NAME`.
 
 import datetime
 import logging
+import time
 
 import pandas as pd
 
@@ -14,7 +15,8 @@ from delphi_utils import (
     read_params,
     S3ArchiveDiffer,
     add_prefix,
-    create_export_csv
+    create_export_csv,
+    get_structured_logger
 )
 
 from .data_tools import format_for_export
@@ -32,7 +34,10 @@ def run_module():
     the directory defined by the `export_dir` (should be "receiving" expect for
     testing purposes).
     """
-
+    start_time = time.time()
+    csv_export_count = 0
+    oldest_final_export_date = None
+    
     # read parameters
     params = read_params()
     ght_key = params["ght_key"]
@@ -43,6 +48,8 @@ def run_module():
     data_dir = params["data_dir"]
     wip_signal = params["wip_signal"]
     cache_dir = params["cache_dir"]
+
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     arch_diff = S3ArchiveDiffer(
         cache_dir, export_dir,
@@ -95,11 +102,19 @@ def run_module():
     for signal in signal_names:
         is_smoothed = signal.endswith(SMOOTHED)
         for geo_res, df in df_by_geo_res.items():
-            create_export_csv(format_for_export(df, is_smoothed),
-                              geo_res=geo_res,
-                              sensor=signal,
-                              start_date=start_date,
-                              export_dir=export_dir)
+            exported_csv_dates = create_export_csv(
+                                    format_for_export(df, is_smoothed),
+                                    geo_res=geo_res,
+                                    sensor=signal,
+                                    start_date=start_date,
+                                    export_dir=export_dir)
+
+            if not exported_csv_dates.empty:
+                csv_export_count += exported_csv_dates.size
+                if not oldest_final_export_date:
+                    oldest_final_export_date = max(exported_csv_dates)
+                oldest_final_export_date = min(
+                    oldest_final_export_date, max(exported_csv_dates))
 
     if not params["test"]:
         # Diff exports, and make incremental versions
@@ -117,3 +132,15 @@ def run_module():
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = None
+    formatted_oldest_final_export_date = None
+    if oldest_final_export_date:
+        max_lag_in_days = (datetime.datetime.now() - oldest_final_export_date).days
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds,
+        csv_export_count = csv_export_count,
+        max_lag_in_days = max_lag_in_days,
+        oldest_final_export_date = formatted_oldest_final_export_date)

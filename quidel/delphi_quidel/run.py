@@ -7,7 +7,13 @@ when the module is run with `python -m MODULE_NAME`.
 from os.path import join
 
 import pandas as pd
-from delphi_utils import read_params, add_prefix, create_export_csv
+import time
+from delphi_utils import (
+    read_params,
+    add_prefix,
+    create_export_csv,
+    get_structured_logger
+)
 
 from .geo_maps import geo_map
 from .pull import (pull_quidel_data,
@@ -21,7 +27,9 @@ from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
 
 def run_module():
     """Run Quidel flu test module."""
+    start_time = time.time()
     params = read_params()
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     static_file_dir = params["static_file_dir"]
@@ -81,3 +89,7 @@ def run_module():
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
     update_cache_file(dfs, _end_date, cache_dir)
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

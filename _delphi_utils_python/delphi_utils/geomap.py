@@ -125,6 +125,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     # Utility functions
     def _load_crosswalk(self, from_code, to_code):
         """Load the crosswalk from from_code -> to_code."""
+        assert from_code in self.crosswalk_filepaths, \
+            f"No crosswalk files for {from_code}; try {'; '.join(self.crosswalk_filepaths.keys())}"
+        assert to_code in self.crosswalk_filepaths[from_code], \
+            f"No crosswalk file from {from_code} to {to_code}; try" \
+            f"{'; '.join(self.crosswalk_filepaths[from_code].keys())}"
         stream = pkg_resources.resource_stream(
             __name__, self.crosswalk_filepaths[from_code][to_code]
         )
@@ -269,8 +274,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -301,6 +306,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         df = df.copy()
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
+        assert from_col != new_col, f"Can't use the same column '{from_col}' for both from_col and to_col"
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
@@ -310,12 +316,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 df[from_col] = df[from_col].astype(str)
 
         # Assuming that the passed-in records are all United States data, at the moment
-        if (from_code, new_code) in [("fips", "nation"), ("zip", "nation")]: # pylint: disable=no-else-return
+        if (from_code, new_code) in [("fips", "nation"), # pylint: disable=no-else-return
+                                     ("zip", "nation"),
+                                     ("state_code", "nation"),
+                                     ("state_name", "nation"),
+                                     ("state_id", "nation")]:
             df[new_col] = df[from_col].apply(lambda x: "us")
             return df
         elif new_code == "nation":
             raise ValueError(
-                "Conversion to the nation level is only supported from the FIPS and ZIP codes."
+                f"Conversion to the nation level is not supported from {from_code}; try fips, zip, or state_*"
             )
 
         # state codes are all stored in one table
@@ -368,8 +378,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
-        - state_x -> state_y, where x and y are in {code, id, name}
-        - state_code -> hhs
+        - state_x -> state_y (where x and y are in {code, id, name}), nation
+        - state_code -> hhs, nation
 
         Parameters
         ---------
@@ -518,6 +528,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         data = data.reset_index().groupby([date_col, mega_col]).sum()
         return data.reset_index()
 
+    def as_mapper_name(self, geo_type, state="state_id"):
+        """
+        Return the mapper equivalent of a region type.
+
+        Human-readable names like 'county' will return their mapper equivalents ('fips').
+        """
+        if geo_type == "state":
+            return state
+        if geo_type == "county":
+            return "fips"
+        return geo_type
     def get_geo_values(self, geo_type):
         """
         Return a set of all values for a given geography type.
@@ -541,7 +562,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         -------
         Set of geo values, all in string format.
         """
-        if self.geo_lists[geo_type]:
+        if self.geo_lists[geo_type]:  # pylint: disable=no-else-return
             return self.geo_lists[geo_type]
         else:
             from_code = "fips"

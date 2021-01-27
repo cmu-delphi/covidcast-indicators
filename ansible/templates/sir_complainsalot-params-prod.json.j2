@@ -1,5 +1,6 @@
 {
   "channel": "#sir-complains-a-lot",
+  "log_filename": "/var/log/indicators/sircal.log",
   "slack_token": "{{ sir_complainsalot_slack_token }}",
   "sources": {
     "doctor-visits": {
@@ -40,7 +41,7 @@
       "maintainers": ["U01069KCRS7"]
     },
     "indicator-combination": {
-      "max_age": 3,
+      "max_age": 4,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
       "retired-signals": ["nmf_day_doc_fbs_ght"]
     },

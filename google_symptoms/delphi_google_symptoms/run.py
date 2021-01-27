@@ -8,7 +8,13 @@ from datetime import datetime
 from itertools import product
 
 import numpy as np
-from delphi_utils import read_params, create_export_csv, geomap
+import time
+from delphi_utils import (
+    read_params, 
+    create_export_csv, 
+    geomap,
+    get_structured_logger
+)
 
 from .pull import pull_gs_data
 from .geo import geo_map
@@ -18,10 +24,16 @@ from .constants import (METRICS, COMBINED_METRIC,
 
 def run_module():
     """Run Google Symptoms module."""
+    start_time = time.time()
+    csv_export_count = 0
+    oldest_final_export_date = None
+
     params = read_params()
     export_start_date = datetime.strptime(
         params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]
+
+    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
 
     # Pull GS data
     dfs = pull_gs_data(params["path_to_bigquery_credentials"],
@@ -52,10 +64,29 @@ def run_module():
 
             if len(df) == 0:
                 continue
-            create_export_csv(
+            exported_csv_dates = create_export_csv(
                 df,
                 export_dir=export_dir,
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)
+            
+            if not exported_csv_dates.empty:
+                csv_export_count += exported_csv_dates.size
+                if not oldest_final_export_date:
+                    oldest_final_export_date = max(exported_csv_dates)
+                oldest_final_export_date = min(
+                    oldest_final_export_date, max(exported_csv_dates))
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = None
+    formatted_oldest_final_export_date = None
+    if oldest_final_export_date:
+        max_lag_in_days = (datetime.now() - oldest_final_export_date).days
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds,
+        csv_export_count = csv_export_count,
+        max_lag_in_days = max_lag_in_days,
+        oldest_final_export_date = formatted_oldest_final_export_date)

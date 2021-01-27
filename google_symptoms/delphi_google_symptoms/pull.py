@@ -48,6 +48,10 @@ def preprocess(df, level):
     # Constants
     KEEP_COLUMNS = ["geo_id", "date"] + METRICS + [COMBINED_METRIC]
 
+    df.rename(colname_map, axis=1, inplace=True)
+    df["geo_id"] = df["open_covid_region_code"].apply(
+        lambda x: x.split("-")[-1].lower())
+
     df[COMBINED_METRIC] = 0
     for metric in METRICS:
         df[COMBINED_METRIC] += df[metric].fillna(0)
@@ -282,9 +286,6 @@ def pull_gs_data_one_geolevel(level, dates_dict):
         df.append(result)
 
     df = pd.concat(df)
-    df.rename(colname_map, axis=1, inplace=True)
-    df["geo_id"] = df["open_covid_region_code"].apply(
-        lambda x: x.split("-")[-1].lower())
     df = preprocess(df, level)
 
     return df
@@ -352,32 +353,4 @@ def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
     except KeyError:
         pass
 
-    alert_dates(dfs)
-
     return dfs
-
-
-def alert_dates(dfs):
-    """Print the list of dates that were successfully retrieved out of all desired dates.
-
-    Parameters
-    ----------
-    dfs: dict of dataframes
-        {"state": pd.DataFrame, "county": pd.DataFrame} as produced in pull_gs_data
-
-    Returns
-    -------
-    None
-    """
-    # Catalog dates of data retrieved.
-    retrieved_date_list = [datetime.strftime(
-        pd.to_datetime(date).date(), "%Y-%m-%d") for date in sorted(list(set(
-            list(dfs["state"]["timestamp"].unique()) +
-            list(dfs["county"]["timestamp"].unique())
-        )))]
-
-    if len(retrieved_date_list) > 0:
-        print("retrieved data for {date_list}".format(
-            date_list=', '.join(retrieved_date_list)))
-    else:
-        print("no data found for desired dates")

@@ -4,7 +4,7 @@ from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
 
-from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_dates, format_dates_for_query
+from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_dates, format_dates_for_query, pull_gs_data_one_geolevel
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 good_input = {
@@ -17,6 +17,11 @@ bad_input = {
     "invalid_fips": "test_data/bad_county_invalid_fips.csv"
 }
 
+symptom_names = ["symptom_" +
+                 metric.replace(" ", "_") for metric in METRICS]
+keep_cols = ["open_covid_region_code", "date"] + symptom_names
+new_keep_cols = ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
+
 
 class TestPullGoogleSymptoms:
     @freeze_time("2021-01-05")
@@ -24,10 +29,6 @@ class TestPullGoogleSymptoms:
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
     def test_good_file(self, mock_credentials, mock_read_gbq):
         # Set up fake data.
-        symptom_names = ["symptom_" +
-                         metric.replace(" ", "_") for metric in METRICS]
-        keep_cols = ["open_covid_region_code", "date"] + symptom_names
-
         state_data = pd.read_csv(
             good_input["state"], parse_dates=["date"])[keep_cols]
         county_data = pd.read_csv(
@@ -102,3 +103,13 @@ class TestPullHelperFuncs:
         expected = {2020: 'timestamp("2020-12-30")',
                     2021: 'timestamp("2021-01-04"), timestamp("2021-01-05")'}
         assert output == expected
+
+    def test_pull_one_gs_no_dates(self):
+        output = pull_gs_data_one_geolevel("state", {})
+        expected = pd.DataFrame(columns=new_keep_cols)
+        assert output.equals(expected)
+
+    def test_preprocess_no_data(self):
+        output = preprocess(pd.DataFrame(columns=keep_cols), "state")
+        expected = pd.DataFrame(columns=new_keep_cols)
+        assert output.equals(expected)

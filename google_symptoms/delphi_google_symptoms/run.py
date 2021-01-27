@@ -27,6 +27,7 @@ def run_module():
     dfs = pull_gs_data(params["path_to_bigquery_credentials"],
                        export_dir, export_start_date)
     gmpr = geomap.GeoMapper()
+
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
@@ -38,8 +39,6 @@ def run_module():
             df_pull = geo_map(dfs["county"], geo_res)
         for metric, smoother in product(
                 METRICS+[COMBINED_METRIC], SMOOTHERS):
-            if len(df_pull) == 0:
-                continue
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
@@ -50,6 +49,9 @@ def run_module():
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
+
+            if len(df) == 0:
+                continue
             create_export_csv(
                 df,
                 export_dir=export_dir,

@@ -51,3 +51,15 @@ test_that("household size correctly imputes zeros", {
 
   expect_equal(out, input_data)
 })
+
+test_that("vaccine acceptance is coded", {
+  input_data <- data.frame(
+    V1 = c(2, 3, 2, NA, 1, NA),
+    V3 = c(1, 2, 3, 4, NA, NA)
+  )
+
+  out <- code_vaccines(input_data)
+
+  expect_equal(out$v_accept_covid_vaccine_plus,
+               c(1, 1, 0, 0, 1, NA))
+})

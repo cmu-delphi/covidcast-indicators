@@ -247,6 +247,22 @@ code_vaccines <- function(input_data) {
     input_data$v_accept_covid_vaccine <- NA_real_
   }
 
+  if ("V3" %in% names(input_data) && "V1" %in% names(input_data)) {
+    # "acceptance plus" means you either
+    # - already have the vaccine (V1 == 1), or
+    # - would get it if offered (V3 == 1 or 2)
+    input_data$v_covid_vaccinated_or_accept <- case_when(
+      input_data$V1 == 1 ~ 1,
+      input_data$V3 == 1 ~ 1,
+      input_data$V3 == 2 ~ 1,
+      input_data$V3 == 3 ~ 0,
+      input_data$V3 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_covid_vaccinated_or_accept <- NA_real_
+  }
+
   if ("V4_1" %in% names(input_data)) {
     input_data$v_vaccine_likely_friends <- input_data$V4_1 == 1
     input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1

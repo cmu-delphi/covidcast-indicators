@@ -25,6 +25,5 @@ clean:
 	rm -f params.json
 
 run:
-	. env/bin/activate; \
-	python -m $(dir) 2>errlog.txt && \
-	python -m delphi_utils.archive --archive_type s3 --indicator_prefix $(dir) 2>errlog.txt
+	env/bin/python -m $(dir)
+	env/bin/python -m delphi_utils.archive --archive_type s3 --indicator_prefix $(dir)

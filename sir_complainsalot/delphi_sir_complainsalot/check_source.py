@@ -110,6 +110,12 @@ def check_source(data_source, meta, params, grace, logger):
         unique_issues = [pd.to_datetime(val).date()
                         for val in latest_data["issue"].unique()]
 
+        current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
+        logger.info("Signal lag",
+                    current_lag_in_days = current_lag_in_days,
+                    data_source = data_source,
+                    signal = row["signal"],
+                    geo_type=row["geo_type"])
 
         gap_days = [(day - prev_day).days
                     for day, prev_day in zip(unique_dates[1:], unique_dates[:-1])]

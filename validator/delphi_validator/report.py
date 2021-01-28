@@ -1,22 +1,23 @@
 """Validation output reports."""
 import sys
-from typing import Set, Tuple
+from typing import List
 from delphi_utils.logger import get_structured_logger
+from delphi_validator.errors import ValidationFailure
 
 logger = get_structured_logger(__name__)
 
 class ValidationReport:
     """Class for reporting the results of validation."""
-    def __init__(self, errors_to_suppress: Set[Tuple[str]]):
+    def __init__(self, errors_to_suppress: List[ValidationFailure]):
         """Initialize a ValidationReport.
         Parameters
         ----------
-        errors_to_suppress: Set[Tuple[str]]
-            set of (check_name, data_name) tuples to ignore.
+        errors_to_suppress: List[ValidationFailure]
+            List of ValidationFailures to ignore.
 
         Attributes
         ----------
-        errors_to_suppress: Set[Tuple[str]]
+        errors_to_suppress: List[ValidationFailure]
             See above
         num_suppressed: int
             Number of errors suppressed
@@ -29,7 +30,7 @@ class ValidationReport:
         unsuppressed_errors: List[Exception]
             Errors raised from validation failures not found in `self.errors_to_suppress`
         """
-        self.errors_to_suppress = errors_to_suppress.copy()
+        self.errors_to_suppress = errors_to_suppress
         self.num_suppressed = 0
         self.total_checks = 0
         self.raised_errors = []

@@ -23,11 +23,6 @@ class TestLocationSeries:
         test_ls.add_data(3, 4)
         assert test_ls == LocationSeries(dates=[1, 3], values=[2, 4])
 
-    def test_get_value(self):
-        test_ls = LocationSeries(dates=[1], values=[2])
-        assert test_ls.get_value(1) == 2
-        assert np.isnan(test_ls.get_value(-1))
-
     def test_get_data_range_out_of_bounds(self):
         test_ls = LocationSeries(dates=[20200101, 20200102, 20200103], values=[7, 8, 9])
         with pytest.raises(ValueError) as exc:

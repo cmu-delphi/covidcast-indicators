@@ -58,6 +58,6 @@ def compute_regression_sensor(day: int,
     X = np.ones((len(train_covariates), 1 + include_intercept))
     X[:, -1] = train_covariates
     B = np.linalg.inv(X.T @ X) @ X.T @ train_Y
-    date_val = covariate.get_value(day)
+    date_val = covariate.data.get(day, np.nan)
     date_X = np.array((1, date_val)) if include_intercept else np.array([date_val])
     return date_X @ B

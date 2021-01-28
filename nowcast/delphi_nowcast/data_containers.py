@@ -1,9 +1,9 @@
 """Data container classes for holding sensor configurations and data needed for fusion."""
 
-from dataclasses import dataclass, field
-from typing import List, Union
+from dataclasses import dataclass
+from typing import List
 
-from numpy import ndarray, nan, nanmean, isnan
+from numpy import nan, nanmean, isnan
 from pandas import date_range
 
 
@@ -21,39 +21,44 @@ class SensorConfig:
 class LocationSeries:
     """Data class for holding time series data specific to a single location."""
 
-    geo_value: str = None
-    geo_type: str = None
-    dates: List[int] = field(default_factory=lambda: [])
-    values: Union[List, ndarray] = field(default_factory=lambda: [])
-
-    def __post_init__(self):
-        """Input validation."""
-        if (self.dates is not None and self.values is not None) and \
-                (len(self.dates) != len(self.values)):
+    def __init__(self,
+                 geo_value: str = None,
+                 geo_type: str = None,
+                 dates: List[int] = None,
+                 values: List[str] = None):
+        """Initialize LocationSeries."""
+        if (dates is not None and values is not None) and \
+                (len(dates) != len(values)):
             raise ValueError("Length of dates and values differs.")
-
-        if len(set(self.dates)) < len(self.dates):
+        if len(set(dates)) < len(dates):
             raise ValueError("Duplicate dates not allowed.")
+        self.geo_value = geo_value
+        self.geo_type = geo_type
+        self.data = dict(zip(dates, values))
 
-    def add_data(self, date, value):
+    def add_data(self, date, value, overwrite=False):
         """Append a date and value to existing attributes.
 
         Safer than appending individually since the two lists shouldn't have different lengths.
         """
-        self.dates.append(date)
-        self.values.append(value)
+        if self.data.get(date) and not overwrite:
+            raise ValueError("Date already exists in LocationSeries")
+        self.data[date] = value
 
     @property
     def empty(self):
         """Check if there is no stored data in the class."""
         return not self.dates and not self.values
 
-    def get_value(self, date: int) -> float:
-        """Return value for a given date or nan if not available."""
-        try:
-            return self.values[self.dates.index(date)]
-        except ValueError:
-            return nan
+    @property
+    def dates(self):
+        """Check if there is no stored data in the class."""
+        return self.data.keys()
+
+    @property
+    def values(self):
+        """Check if there is no stored data in the class."""
+        return self.data.values()
 
     def get_data_range(self,
                        start_date: int,
@@ -79,9 +84,7 @@ class LocationSeries:
             raise ValueError(f"Data range must be within existing dates "
                              f"{min(self.dates)}-{max(self.dates)}.")
         all_dates = [int(i.strftime("%Y%m%d")) for i in date_range(str(start_date), str(end_date))]
-        out_values = []
-        for day in all_dates:
-            out_values.append(self.get_value(day))
+        out_values = [self.data.get(day, nan) for day in all_dates]
         if imputation_method is None or not out_values:
             return out_values
         if imputation_method == "mean":

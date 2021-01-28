@@ -58,7 +58,6 @@ def get_from_s3(start_date, end_date, bucket):
                                     low_memory=False)
                 newdf["fname"] = fn
                 df = df.append(newdf[selected_columns])
-                assert set(df.columns) == set(selected_columns)
                 time_flag = search_date
     return df, time_flag
 

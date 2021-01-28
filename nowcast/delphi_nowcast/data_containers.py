@@ -28,10 +28,6 @@ class LocationSeries:
 
     def __post_init__(self):
         """Input validation."""
-        if (self.dates is None and self.values is not None) or \
-                (self.dates is not None and self.values is None):
-            raise ValueError("Must init with both date and values.")
-
         if (self.dates is not None and self.values is not None) and \
                 (len(self.dates) != len(self.values)):
             raise ValueError("Length of dates and values differs.")

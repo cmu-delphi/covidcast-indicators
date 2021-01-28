@@ -4,6 +4,8 @@ import numpy as np
 
 from ..data_containers import LocationSeries
 
+MIN_SAMPLE_SIZE = 5  # arbitrarily chosen for now.
+
 
 def compute_regression_sensor(day: int,
                               covariate: LocationSeries,
@@ -48,7 +50,7 @@ def compute_regression_sensor(day: int,
     train_Y, train_covariates = zip(  # only get pairs where both are not nan
         *[(i, j) for i, j in zip(train_Y, train_covariates) if not (np.isnan(i) or np.isnan(j))]
     )
-    if len(train_Y) < 5:  # some arbitrary min num observations:
+    if len(train_Y) < MIN_SAMPLE_SIZE:
         print("insufficient observations")
         return np.nan
     train_Y = np.array(train_Y)

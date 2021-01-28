@@ -7,15 +7,10 @@ from delphi_nowcast.data_containers import LocationSeries
 class TestLocationSeries:
 
     def test___post_init__(self):
-        with pytest.raises(ValueError) as exc:
-            LocationSeries(dates=[1])
-            assert str(exc.value) == "Must init with both date and values."
-        with pytest.raises(ValueError) as exc:
-            LocationSeries(dates=[1], values=[1,1])
-            assert str(exc.value) == "Length of dates and values differs."
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError, match="Length of dates and values differs.") as exc:
+            LocationSeries(dates=[1], values=[1, 1])
+        with pytest.raises(ValueError, match="Duplicate dates not allowed.") as exc:
             LocationSeries(dates=[1, 1], values=[1, 2])
-            assert str(exc.value) == "Duplicate dates not allowed."
 
     def test_empty(self):
         test_ls = LocationSeries(dates=[], values=[])

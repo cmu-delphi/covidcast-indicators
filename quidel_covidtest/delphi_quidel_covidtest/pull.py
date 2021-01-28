@@ -47,7 +47,7 @@ def get_from_s3(start_date, end_date, bucket):
         if search_date in s3_files.keys():
             # Avoid appending duplicate datasets
             print("Pulling data received on %s"%search_date.date())
-            
+
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
                 if fn in set(df["fname"].values):

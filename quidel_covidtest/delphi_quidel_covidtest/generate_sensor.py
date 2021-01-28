@@ -64,7 +64,7 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
                                                  "val": stat,
                                                  "se": se,
                                                  "sample_size": sample_size}))
-    return state_df
+    return state_df[~state_df["val"].isnull()]
 
 def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                      device, first_date, last_date):
@@ -147,4 +147,4 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                              "val": stat,
                                              "se": se,
                                              "sample_size": sample_size}))
-    return res_df
+    return res_df[~res_df["val"].isnull()]

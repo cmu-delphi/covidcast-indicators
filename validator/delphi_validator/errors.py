@@ -2,7 +2,6 @@
 """
 Custom validator exceptions.
 """
-# from dataclasses import dataclass
 import datetime as dt
 from typing import Union, Optional
 

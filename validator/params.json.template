@@ -11,7 +11,7 @@
         {"check_name": "check_val_lt_0",
          "date": "2020-09-06",
          "geo_type": "county",
-         "signal": "deaths_7dav_incidence_num.csv"}],
+         "signal": "deaths_7dav_incidence_num"}],
       "test_mode": true
     },
     "static": {

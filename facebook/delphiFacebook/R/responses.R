@@ -30,8 +30,8 @@ load_responses_all <- function(params) {
 #'                        where the input file are found
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
-#' @importFrom readr read_lines cols locale col_character col_integer
-#' @importFrom dplyr arrange desc case_when
+#' @importFrom readr read_lines cols locale col_character col_integer col_double
+#' @importFrom dplyr arrange desc case_when mutate if_else
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
@@ -55,7 +55,7 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
-                           A2 = col_integer(),
+                           A2 = col_double(),
                            A3 = col_character(),
                            B2 = col_character(),
                            B2_14_TEXT = col_character(),
@@ -115,6 +115,11 @@ load_response_one <- function(input_filename, params) {
   # from knowing their wave. Discard.
   input_data <- filter(input_data, !is.na(SurveyID))
 
+  # Convert A2 to integer, keeping only responses that are equal to their
+  # integer version (e.g. 10.0).
+  input_data <- input_data %>% 
+    mutate(A2 = ifelse(A2 == as.integer(A2), as.integer(A2), NA))
+  
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 

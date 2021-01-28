@@ -22,6 +22,27 @@ class TestPull:
 
         assert impt_cols <= set(df_pq.columns)
 
+    def test_zero_sample_size(self):
+        columns = ["provider", "timestamp", "location_id", "fips", "location_type", "variable_name",
+                "measurement", "unit", "age", "race", "ethnicity", "sex", "last_updated", "value"]
+        df_pq = pd.DataFrame([
+            # Should become a zero sample_size row
+            ["cdc", "2021-01-01", "iso1:us#iso2:us-al#fips:01001", 1001, "county", "pcr_tests_positive",
+                "rolling_average_7_day", "percentage", "all", "all", "all", "all", "2021-01-02 19:00:00", 0.0],
+            ["cdc", "2021-01-01", "iso1:us#iso2:us-al#fips:01001", 1001, "county", "pcr_tests_total",
+                "rolling_average_7_day", "specimens", "all", "all", "all", "all", "2021-01-02 19:00:00", 0.0],
+
+            # A non-zero sample_size row
+            ["cdc", "2021-01-01", "iso1:us#iso2:us-pa#fips:42001", 42001, "county", "pcr_tests_positive",
+                "rolling_average_7_day", "percentage", "all", "all", "all", "all", "2021-01-02 19:00:00", 50.0],
+            ["cdc", "2021-01-01", "iso1:us#iso2:us-pa#fips:42001", 42001, "county", "pcr_tests_total",
+                "rolling_average_7_day", "specimens", "all", "all", "all", "all", "2021-01-02 19:00:00", 10.0],
+        ], columns=columns)
+
+        df_tests = extract_testing_metrics(df_pq)
+
+        assert (df_tests.pcr_tests_total > 0).all()
+
     def test_extract_testing_data(self, CAN_parquet_data, tmp_path):
         path = tmp_path / "small_CAN_data.parquet"
         CAN_parquet_data.to_parquet(path)

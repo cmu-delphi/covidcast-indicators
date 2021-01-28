@@ -74,7 +74,7 @@ def get_indicator_data(sensors: List[SensorConfig],
             dates=[i["time_value"] for i in response.get("epidata", []) if not isnan(i["value"])],
             values=[i["value"] for i in response.get("epidata", []) if not isnan(i["value"])]
         )
-        if not data.empty:  # TODO OR NOT ENOUGH RESPONSES
+        if not data.empty:
             output[(sensor.source, sensor.signal, location.geo_type, location.geo_value)] = data
     return output
 

@@ -80,7 +80,9 @@ def run_module():
     start_time = time.time()
     params = read_params()
 
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    return get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     make_asserts(params)
 

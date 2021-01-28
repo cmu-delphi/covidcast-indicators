@@ -33,7 +33,9 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
 
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     # Pull GS data
     dfs = pull_gs_data(base_url)

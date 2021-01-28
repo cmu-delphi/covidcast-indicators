@@ -5,5 +5,6 @@
   "export_start_date":[2020,4,1],
   "date_range":"new",
   "source":"indicator-combination",
-  "wip_signal": ""
+  "wip_signal": "",
+  "log_exceptions": false
 }

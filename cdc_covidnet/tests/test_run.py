@@ -8,7 +8,7 @@ from delphi_cdc_covidnet.run import run_module
 
 class TestRun:
     def test_match_old_to_new_output(self):
-        output_fnames = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
+        output_fnames = ["202010_state_covidnet.csv", "202011_state_covidnet.csv"]
         cached_files = [
             "networkid_2_catchmentid_11.json",
             "networkid_2_catchmentid_14.json",

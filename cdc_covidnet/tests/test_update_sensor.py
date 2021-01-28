@@ -90,11 +90,11 @@ class TestUpdateSensor:
             assert pd.isna(hosp_df["sample_size"]).all()
 
             # Check actual files generated
-            expected_files = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
+            expected_files = ["202010_state_covidnet.csv", "202011_state_covidnet.csv"]
             expected_files = [join(temp_dir, exp_file) for exp_file in expected_files]
             for exp_file in expected_files:
                 assert exists(exp_file)
-            assert not exists("202012_state_wip_covidnet.csv")
+            assert not exists("202012_state_covidnet.csv")
 
             for i, exp_file in enumerate(expected_files):
                 data = pd.read_csv(exp_file)

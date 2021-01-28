@@ -60,9 +60,7 @@ def load_chng_data(filepath, dropdate, base_geo,
         ]
 
     # counts between 1 and 3 are coded as "3 or less", we convert to 1
-    data[counts_col][
-        data[counts_col] == "3 or less"
-        ] = "1"
+    data.loc[data[counts_col] == "3 or less", counts_col] = "1"
     data[counts_col] = data[counts_col].astype(int)
 
     assert (

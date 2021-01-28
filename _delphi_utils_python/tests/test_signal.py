@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pandas as pd
 import pytest
-from delphi_utils.signal import add_prefix, public_signal
+from delphi_utils.signal import add_prefix
 
 # Constants for mocking out the call to `covidcast.metadata` within `public_signal()`.
 PUBLIC_SIGNALS = ["sig1", "sig2", "sig3"]
@@ -26,15 +26,7 @@ class TestSignal:
         with pytest.raises(ValueError):
             add_prefix(None, None)
 
-    @patch("covidcast.metadata")
-    def test_add_prefix_to_non_public(self, metadata):
-        """Tests that `add_prefix()` derives work-in-progress names for non-public signals."""
-        metadata.return_value = PUBLIC_SIGNALS_FRAME
-        assert add_prefix(["sig0", "sig1"], False, prefix="wip_") == ["wip_sig0", "sig1"]
-
-    @patch("covidcast.metadata")
-    def test_public_signal(self, metadata):
-        """Tests that `public_signal()` identifies public vs. private signals."""
-        metadata.return_value = PUBLIC_SIGNALS_FRAME
-        assert not public_signal("sig0")
-        assert public_signal("sig2")
+    def test_add_no_prefix(self):
+        """Tests that `add_prefix()` doesn't affect signals if `wip_signals` is False or ''."""
+        assert add_prefix(["sig0", "sig1"], False, prefix="wip_") == ["sig0", "sig1"]
+        assert add_prefix(["sig0", "sig1"], "", prefix="wip_") == ["sig0", "sig1"]

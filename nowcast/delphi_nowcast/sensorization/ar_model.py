@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from typing import Tuple
 
 import numpy as np
@@ -6,7 +6,7 @@ import numpy as np
 from ..data_containers import LocationSeries
 
 
-def compute_ar_sensor(day: int,
+def compute_ar_sensor(day: date,
                       values: LocationSeries,
                       ar_size: int = 3,
                       lambda_: float = 0.1) -> float:
@@ -36,7 +36,7 @@ def compute_ar_sensor(day: int,
     -------
         Float value of sensor on `date`
     """
-    previous_day = int((datetime.strptime(str(day), "%Y%m%d") - timedelta(1)).strftime("%Y%m%d"))
+    previous_day = day - timedelta(1)
     try:
         window = values.get_data_range(min(values.dates), previous_day, "mean")
     except ValueError:
@@ -50,11 +50,11 @@ def compute_ar_sensor(day: int,
     # Taken from https://github.com/dfarrow0/covidcast-nowcast/blob/dfarrow/sf/src/sf/ar_sensor.py:
     # ground truth in some locations is a zero vector, which leads to perfect AR fit, zero
     # variance, and a singular covariance matrix so as a small hack, add some small noise.
-    np.random.seed(day)
+    np.random.seed(int(day.strftime("%Y%m%d")))
     Yhat += np.random.normal(0, 0.1)
     # as a huge hack, add more noise to prevent AR from unreasonably dominating
     # the nowcast since AR3 can nearly exactly predict some trendfiltered curves.
-    np.random.seed(day)
+    np.random.seed(int(day.strftime("%Y%m%d")))
     Yhat += np.random.normal(0, 0.1 * np.maximum(0, np.mean(Yhat)))
     return Yhat
 

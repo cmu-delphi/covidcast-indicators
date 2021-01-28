@@ -1,11 +1,13 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 import numpy as np
 
 from ..data_containers import LocationSeries
 
+MIN_SAMPLE_SIZE = 5  # arbitrarily chosen for now.
 
-def compute_regression_sensor(day: int,
+
+def compute_regression_sensor(day: date,
                               covariate: LocationSeries,
                               response: LocationSeries,
                               include_intercept: bool = False) -> float:
@@ -36,7 +38,7 @@ def compute_regression_sensor(day: int,
     -------
         Float value of sensor on `date`
     """
-    previous_day = int((datetime.strptime(str(day), "%Y%m%d") - timedelta(1)).strftime("%Y%m%d"))
+    previous_day = day - timedelta(1)
     first_day = max(min(covariate.dates), min(response.dates))
     try:
         train_Y = response.get_data_range(first_day, previous_day)
@@ -48,7 +50,7 @@ def compute_regression_sensor(day: int,
     train_Y, train_covariates = zip(  # only get pairs where both are not nan
         *[(i, j) for i, j in zip(train_Y, train_covariates) if not (np.isnan(i) or np.isnan(j))]
     )
-    if len(train_Y) < 5:  # some arbitrary min num observations:
+    if len(train_Y) < MIN_SAMPLE_SIZE:
         print("insufficient observations")
         return np.nan
     train_Y = np.array(train_Y)
@@ -56,6 +58,6 @@ def compute_regression_sensor(day: int,
     X = np.ones((len(train_covariates), 1 + include_intercept))
     X[:, -1] = train_covariates
     B = np.linalg.inv(X.T @ X) @ X.T @ train_Y
-    date_val = covariate.get_value(day)
+    date_val = covariate.data.get(day, np.nan)
     date_X = np.array((1, date_val)) if include_intercept else np.array([date_val])
     return date_X @ B

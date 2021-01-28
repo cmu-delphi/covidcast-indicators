@@ -5,7 +5,7 @@ from os.path import join
 import pandas as pd
 
 from delphi_utils import read_params, add_prefix
-from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
+from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SMOOTHED_POSITIVE
 
 
 class TestRun:
@@ -17,17 +17,14 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200702",
-            "20200703",
-            "20200704",
-            "20200705",
-            "20200706",
-            "20200707",
-            "20200708",
-            "20200709"
+            "20200715",
+            "20200716",
+            "20200717",
+            "20200718",
+            "20200719"
         ]
         geos = GEO_RESOLUTIONS.copy()
-        sensors = add_prefix(SENSORS,
+        sensors = add_prefix([SMOOTHED_POSITIVE],
                              wip_signal=read_params()["wip_signal"],
                              prefix="wip_")
 
@@ -41,7 +38,7 @@ class TestRun:
 
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200709_state_covid_ag_raw_pct_positive.csv")
+            join("./receiving", "20200715_msa_covid_ag_smoothed_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 

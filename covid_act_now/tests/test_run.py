@@ -9,6 +9,7 @@ from delphi_covid_act_now.constants import GEO_RESOLUTIONS
 class TestRun:
     def test_output_files(self, run_as_module):
         csv_files = set(listdir("receiving"))
+        csv_files.discard(".gitignore")
 
         expected_files = {
             f"20210101_{geo}_pcr_specimen_positivity_rate.csv"

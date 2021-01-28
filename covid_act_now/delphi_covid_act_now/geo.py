@@ -12,6 +12,7 @@ gmpr = GeoMapper()
 def positivity_rate(x):
     """
     Find Positivity Rate from binomial counts.
+    Assumes input sample_size are all > 0.
 
     Parameters
     ----------
@@ -25,13 +26,12 @@ def positivity_rate(x):
     """
     p = x.pcr_tests_positive / x.sample_size
 
-    # To stay consistent with CAN's / CDC's reporting
-    # They use report a 0% rate even if 0 total tests were performed
-    return np.where(x.sample_size == 0, 0, p)
+    return p
 
 def std_err(x):
     """
     Find Standard Error of a binomial proportion.
+    Assumes input sample_size are all > 0.
 
     Parameters
     ----------
@@ -67,6 +67,12 @@ def geo_map(df: pd.DataFrame, geo_res: str) -> pd.DataFrame:
     """
     if geo_res not in GEO_RESOLUTIONS:
         raise ValueError(f"geo_res must be one of {GEO_RESOLUTIONS}, got '{geo_res}'")
+
+    if (df.pcr_tests_positive > df.pcr_tests_total).any():
+        raise ValueError("Found some test positive count greater than the total")
+
+    if (df.pcr_tests_total <= 0).any():
+        raise ValueError("Found some test total <= 0")
 
     if geo_res == "county":
         df = (df

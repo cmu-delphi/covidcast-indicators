@@ -69,6 +69,8 @@ def extract_testing_metrics(df: pd.DataFrame) -> pd.DataFrame:
             """)
         .pivot(index=["fips", "timestamp"], columns="variable_name", values="value")
         .reset_index()
+        # Filter off rows with 0 sample_size
+        .query("pcr_tests_total > 0")
         # pcr_tests_positive from the CDC is actually positivity rate (percentage)
         .rename(columns={"pcr_tests_positive": "pcr_positivity_rate"})
     )

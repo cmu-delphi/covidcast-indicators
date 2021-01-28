@@ -1,4 +1,8 @@
 
+[MASTER]
+
+ignore=delphi_nowcast/nowcast_fusion
+
 [MESSAGES CONTROL]
 
 disable=logging-format-interpolation,

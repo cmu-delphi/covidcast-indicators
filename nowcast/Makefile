@@ -14,7 +14,7 @@ install: venv
 lint:
 	. env/bin/activate; \
 	pylint $(dir); \
-	pydocstyle $(dir)
+	pydocstyle $(dir) --match-dir '(?!nowcast_fusion)'
 
 test:
 	. env/bin/activate ;\

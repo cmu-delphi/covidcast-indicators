@@ -37,23 +37,28 @@ def get_from_s3(start_date, end_date, bucket):
             mm = int(date_string.split("_")[1])
             dd = int(date_string.split("_")[2])
             received_date = datetime(yy, mm, dd)
-            s3_files[received_date] = obj.key
+            if received_date not in s3_files.keys():
+                s3_files[received_date] = [obj.key]
+            else:
+                s3_files[received_date].append(obj.key)
 
     n_days = (end_date - start_date).days + 1
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
             # Avoid appending duplicate datasets
-            if s3_files[search_date] in set(df["fname"].values):
-                continue
             print("Pulling data received on %s"%search_date.date())
-            obj = bucket.Object(key=s3_files[search_date])
-            newdf = pd.read_csv(obj.get()["Body"],
-                                parse_dates=["StorageDate", "TestDate"],
-                                low_memory=False)
-            newdf["fname"] = s3_files[search_date]
-            df = df.append(newdf[selected_columns])
-            assert set(df.columns) == set(selected_columns)
-            time_flag = search_date
+
+            # Fetch data received on the same day
+            for fn in s3_files[search_date]:
+                if fn in set(df["fname"].values):
+                    continue
+                obj = bucket.Object(key=fn)
+                newdf = pd.read_csv(obj.get()["Body"],
+                                    parse_dates=["StorageDate", "TestDate"],
+                                    low_memory=False)
+                newdf["fname"] = fn
+                df = df.append(newdf[selected_columns])
+                time_flag = search_date
     return df, time_flag
 
 def fix_zipcode(df):

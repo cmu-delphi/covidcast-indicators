@@ -38,8 +38,8 @@ from delphi_google_symptoms.constants import METRICS
 # where timestamp(date) between timestamp("2020-07-26") and timestamp("2020-08-11")
 
 good_input = {
-    "state": "test_data/202008_states_daily.csv",
-    "county": "test_data/202008_counties_daily.csv"
+    "state": "test_data/small_states_daily.csv",
+    "county": "test_data/small_counties_daily.csv"
 }
 
 symptom_names = ["symptom_" +

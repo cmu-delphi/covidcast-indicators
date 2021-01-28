@@ -8,8 +8,8 @@ from delphi_google_symptoms.pull import pull_gs_data, preprocess, get_missing_da
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
 
 good_input = {
-    "state": "test_data/20201201_states_daily.csv",
-    "county": "test_data/20201201_counties_daily.csv"
+    "state": "test_data/small_states_daily.csv",
+    "county": "test_data/small_counties_daily.csv"
 }
 
 bad_input = {

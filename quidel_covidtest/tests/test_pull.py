@@ -46,7 +46,7 @@ class TestingPullData:
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 
         
-        assert [first_date.month, first_date.day] == [7, 2]
+        assert [first_date.month, first_date.day] == [7, 18]
         assert [last_date.month, last_date.day] == [7, 23]
         assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
         

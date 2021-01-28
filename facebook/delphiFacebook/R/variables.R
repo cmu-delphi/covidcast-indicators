@@ -260,6 +260,14 @@ code_vaccines <- function(input_data) {
     input_data$v_vaccine_likely_govt_health <- NA_real_
     input_data$v_vaccine_likely_politicians <- NA_real_
   }
-
+  
+  if ("V9" %in% names(input_data)) {
+    input_data$v_worried_vaccine_side_effects <- (
+      input_data$V9 == 1 | input_data$V9 == 2
+    )
+  } else {
+    input_data$v_worried_vaccine_side_effects <- NA_real_
+  }
+  
   return(input_data)
 }

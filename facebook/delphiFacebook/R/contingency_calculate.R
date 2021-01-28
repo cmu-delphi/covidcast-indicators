@@ -39,11 +39,32 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
 #' @return a list of named percentages and other descriptive statistics
 #'
 #' @export
-compute_binary_and_multiselect <- function(response, weight, sample_size, total_represented)
+compute_binary <- function(response, weight, sample_size, total_represented)
 {
   response_pct <- compute_binary_response(response, weight, sample_size)
   response_pct$sample_size <- sample_size
   response_pct$represented <- total_represented
+  
+  return(response_pct)
+}
+
+#' Wrapper for `compute_binary`
+#'
+#' @param response a vector of binary (0 or 1) responses
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size The sample size to use, which may be a non-integer (as
+#'   responses from ZIPs that span geographical boundaries are weighted
+#'   proportionately, and survey weights may also be applied)
+#' @param total_represented Number of people represented in sample, which may
+#'   be a non-integer
+#'      
+#' @return a list of named percentages and other descriptive statistics
+#'
+#' @export
+compute_multiselect <- function(response, weight, sample_size, total_represented)
+{
+  response_pct <- compute_binary(response, weight, sample_size, total_represented)
   
   return(response_pct)
 }

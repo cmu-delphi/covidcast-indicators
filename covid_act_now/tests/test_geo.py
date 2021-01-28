@@ -31,6 +31,7 @@ class TestAggregationFunctions:
         expected_se = np.sqrt(df.val * (1 - df.val) / df.sample_size)
         se = std_err(df)
 
+        # 0 se is permitted in this indicator, since applying the Jeffreys prior would violate the mirror
         assert (se >= 0).all()
         assert not np.isnan(se).any()
         assert not np.isinf(se).any()

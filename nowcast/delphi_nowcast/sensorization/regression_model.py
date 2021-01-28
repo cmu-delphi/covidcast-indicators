@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 import numpy as np
 
@@ -7,7 +7,7 @@ from ..data_containers import LocationSeries
 MIN_SAMPLE_SIZE = 5  # arbitrarily chosen for now.
 
 
-def compute_regression_sensor(day: int,
+def compute_regression_sensor(day: date,
                               covariate: LocationSeries,
                               response: LocationSeries,
                               include_intercept: bool = False) -> float:
@@ -38,7 +38,7 @@ def compute_regression_sensor(day: int,
     -------
         Float value of sensor on `date`
     """
-    previous_day = int((datetime.strptime(str(day), "%Y%m%d") - timedelta(1)).strftime("%Y%m%d"))
+    previous_day = day - timedelta(1)
     first_day = max(min(covariate.dates), min(response.dates))
     try:
         train_Y = response.get_data_range(first_day, previous_day)

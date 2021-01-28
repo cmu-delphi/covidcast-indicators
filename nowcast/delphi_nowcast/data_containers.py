@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from typing import List
+from datetime import date
 
 from numpy import nan, nanmean, isnan
 from pandas import date_range
@@ -24,7 +25,7 @@ class LocationSeries:
     def __init__(self,
                  geo_value: str = None,
                  geo_type: str = None,
-                 dates: List[int] = None,
+                 dates: List[date] = None,
                  values: List[str] = None):
         """Initialize LocationSeries."""
         if (dates is not None and values is not None) and \
@@ -61,8 +62,8 @@ class LocationSeries:
         return self.data.values()
 
     def get_data_range(self,
-                       start_date: int,
-                       end_date: int,
+                       start_date: date,
+                       end_date: date,
                        imputation_method: str = None) -> List[float]:
         """
         Return value of LocationSeries between two dates with optional imputation.
@@ -83,8 +84,8 @@ class LocationSeries:
         if start_date < min(self.dates) or end_date > max(self.dates):
             raise ValueError(f"Data range must be within existing dates "
                              f"{min(self.dates)}-{max(self.dates)}.")
-        all_dates = [int(i.strftime("%Y%m%d")) for i in date_range(str(start_date), str(end_date))]
-        out_values = [self.data.get(day, nan) for day in all_dates]
+        all_dates = date_range(start_date, end_date)
+        out_values = [self.data.get(day.date(), nan) for day in all_dates]
         if imputation_method is None or not out_values:
             return out_values
         if imputation_method == "mean":

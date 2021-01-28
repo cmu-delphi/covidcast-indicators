@@ -2,7 +2,7 @@
 import os
 from collections import defaultdict
 from typing import List, DefaultDict
-from datetime import datetime, timedelta
+from datetime import timedelta, date
 
 import numpy as np
 
@@ -12,7 +12,7 @@ from .regression_model import compute_regression_sensor
 from ..data_containers import LocationSeries, SensorConfig
 
 
-def compute_sensors(as_of_date: int,
+def compute_sensors(as_of_date: date,
                     regression_sensors: List[SensorConfig],
                     ground_truth_sensor: SensorConfig,
                     ground_truths: List[LocationSeries],
@@ -43,14 +43,14 @@ def compute_sensors(as_of_date: int,
     output = defaultdict(list)
     indicator_data = get_indicator_data(regression_sensors, ground_truths, as_of_date)
     for loc in ground_truths:
-        ground_truth_pred_date = _lag_date(as_of_date, ground_truth_sensor.lag)
+        ground_truth_pred_date = as_of_date - timedelta(ground_truth_sensor.lag)
         ar_sensor = compute_ar_sensor(ground_truth_pred_date, loc)
         if not np.isnan(ar_sensor):
             output[ground_truth_sensor].append(
                 LocationSeries(loc.geo_value, loc.geo_type, [ground_truth_pred_date], [ar_sensor])
             )
         for sensor in regression_sensors:
-            sensor_pred_date = _lag_date(as_of_date, sensor.lag)
+            sensor_pred_date = as_of_date - timedelta(sensor.lag)
             covariates = indicator_data.get(
                 (sensor.source, sensor.signal, loc.geo_type, loc.geo_value)
             )
@@ -69,8 +69,8 @@ def compute_sensors(as_of_date: int,
     return output
 
 
-def historical_sensors(start_date: int,
-                       end_date: int,
+def historical_sensors(start_date: date,
+                       end_date: date,
                        sensors: List[SensorConfig],
                        ground_truths: List[LocationSeries],
                        ) -> DefaultDict[SensorConfig, List[LocationSeries]]:
@@ -107,9 +107,9 @@ def historical_sensors(start_date: int,
 
 def _export_to_csv(value: LocationSeries,
                    sensor: SensorConfig,
-                   as_of_date: int,
+                   as_of_date: date,
                    receiving_dir: str = "./receiving"  # convert this to use params file and eventually be /common/covidcast_nowcast/receiving/
-                   ) -> str:
+                   ) -> List[str]:
     """
     Save value to csv for upload to Epidata database.
 
@@ -128,24 +128,26 @@ def _export_to_csv(value: LocationSeries,
     -------
         Filepath of exported files
     """
-    export_dir = os.path.join(receiving_dir, f"issue_{as_of_date}", sensor.source)
+    export_dir = os.path.join(
+        receiving_dir,
+        f"issue_{as_of_date.strftime('%Y%m%d')}",
+        sensor.source
+    )
     os.makedirs(export_dir, exist_ok=True)
     exported_files = []
     for time_value in value.dates:
-        export_file = os.path.join(export_dir, f"{time_value}_{value.geo_type}_{sensor.signal}.csv")
+        export_file = os.path.join(
+            export_dir,
+            f"{time_value.strftime('%Y%m%d')}_{value.geo_type}_{sensor.signal}.csv"
+        )
         if os.path.exists(export_file):
             with open(export_file, "a") as f:
                 f.write(
-                    f"{sensor.name},{value.geo_value},{value.get_value(time_value)}\n")
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
         else:
             with open(export_file, "a") as f:
                 f.write("sensor_name,geo_value,value\n")
                 f.write(
-                    f"{sensor.name},{value.geo_value},{value.get_value(time_value)}\n")
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
         exported_files.append(export_file)
     return exported_files
-
-
-def _lag_date(date: int, lag: int) -> int:
-    """Subtract a specified number of days from a date."""
-    return int((datetime.strptime(str(date), "%Y%m%d") - timedelta(lag)).strftime("%Y%m%d"))

@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime, date
 from typing import Tuple, List, Dict
 from itertools import product
 
@@ -41,7 +42,7 @@ async def fetch_epidata(combos, as_of):
 
 def get_indicator_data(sensors: List[SensorConfig],
                        locations: List[LocationSeries],
-                       as_of: int) -> Dict[Tuple, LocationSeries]:
+                       as_of: date) -> Dict[Tuple, LocationSeries]:
     """
     Given a list of sensors and locations, asynchronously gets covidcast data for all combinations.
 
@@ -63,7 +64,7 @@ def get_indicator_data(sensors: List[SensorConfig],
     output = {}
     all_combos = product(sensors, locations)
     loop = asyncio.get_event_loop()
-    future = asyncio.ensure_future(fetch_epidata(all_combos, as_of))
+    future = asyncio.ensure_future(fetch_epidata(all_combos, as_of.strftime("%Y%m%d")))
     responses = loop.run_until_complete(future)
     for response, sensor, location in responses:
         if response["result"] not in (-2, 1):
@@ -71,7 +72,8 @@ def get_indicator_data(sensors: List[SensorConfig],
         data = LocationSeries(
             geo_value=location.geo_value,
             geo_type=location.geo_type,
-            dates=[i["time_value"] for i in response.get("epidata", []) if not isnan(i["value"])],
+            dates=[datetime.strptime(i, "%Y%m%d").date() for i in response.get("epidata", [])
+                   if not isnan(i["value"])],
             values=[i["value"] for i in response.get("epidata", []) if not isnan(i["value"])]
         )
         if not data.empty:
@@ -82,8 +84,8 @@ def get_indicator_data(sensors: List[SensorConfig],
 def get_historical_sensor_data(sensor: SensorConfig,
                                geo_value: str,
                                geo_type: str,
-                               end_date: int,
-                               start_date: int) -> Tuple[LocationSeries, list]:
+                               end_date: date,
+                               start_date: date) -> Tuple[LocationSeries, list]:
     """
     Query Epidata API for historical sensorization data.
 
@@ -112,18 +114,20 @@ def get_historical_sensor_data(sensor: SensorConfig,
     # Epidata.covidcast_nowcast not yet published to pypi
     ########################################################################################
     # Epidata.BASE_URL = "http://localhost:10080/epidata/api.php"  # used for local testing
-    response = Epidata.covidcast_nowcast(data_source=sensor.source,
-                                         signals=sensor.signal,
-                                         time_type="day",
-                                         geo_type=geo_type,
-                                         time_values=Epidata.range(start_date, end_date),
-                                         geo_value=geo_value,
-                                         sensor_names=sensor.name,
-                                         lag=sensor.lag)
+    response = Epidata.covidcast_nowcast(
+        data_source=sensor.source,
+        signals=sensor.signal,
+        time_type="day",
+        geo_type=geo_type,
+        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+        geo_value=geo_value,
+        sensor_names=sensor.name,
+        lag=sensor.lag)
     # Epidata.BASE_URL = "https://delphi.cmu.edu/epidata/api.php"  # used for local testing
     if response["result"] == 1:
         output = LocationSeries(
-            dates=[i["time_value"] for i in response["epidata"] if not isnan(i["value"])],
+            dates=[datetime.strptime(i, "%Y%m%d").date() for i in response["epidata"]
+                   if not isnan(i["value"])],
             values=[i["value"] for i in response["epidata"] if not isnan(i["value"])],
             geo_value=geo_value,
             geo_type=geo_type
@@ -133,7 +137,7 @@ def get_historical_sensor_data(sensor: SensorConfig,
         output = LocationSeries(geo_value=geo_value, geo_type=geo_type)
     else:
         raise Exception(f"Bad result from Epidata: {response['message']}")
-    all_dates = [int(i.strftime("%Y%m%d")) for i in date_range(str(start_date), str(end_date))]
+    all_dates = [i.date() for i in date_range(start_date, end_date)]
     missing_dates = [i for i in all_dates if i not in output.dates]
     return output, missing_dates
 

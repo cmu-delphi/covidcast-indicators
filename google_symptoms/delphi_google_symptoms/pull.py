@@ -255,7 +255,7 @@ def pull_gs_data_one_geolevel(level, date_string):
     where there is county level data available except District of Columbia.
     We filter the data such that we only keep rows with valid FIPS.
 
-    Each of these tables should contain all dates.
+    Each of these tables should be static and contain all dates.
 
     PS:  No information for PR
 

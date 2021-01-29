@@ -137,11 +137,13 @@ class TestPullHelperFuncs:
                      date(2021, 1, 4), date(2021, 1, 5)]
         output = format_dates_for_query(date_list)
 
-        expected = {2020: 'timestamp("2020-12-30")',
-                    2021: 'timestamp("2021-01-04"), timestamp("2021-01-05")'}
+        expected = 'timestamp("2020-12-30"), timestamp("2021-01-04"), timestamp("2021-01-05")'
         assert output == expected
 
-    def test_pull_one_gs_no_dates(self):
+    @mock.patch("pandas_gbq.read_gbq")
+    def test_pull_one_gs_no_dates(self, mock_read_gbq):
+        mock_read_gbq.return_value = pd.DataFrame()
+
         output = pull_gs_data_one_geolevel("state", {})
         expected = pd.DataFrame(columns=new_keep_cols)
         assert output.equals(expected)

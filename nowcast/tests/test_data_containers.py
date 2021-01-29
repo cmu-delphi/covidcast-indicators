@@ -27,12 +27,14 @@ class TestLocationSeries:
     def test_get_data_range_out_of_bounds(self):
         test_ls = LocationSeries(dates=[date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)],
                                  values=[7, 8, 9])
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError,
+                           match="Data range must be within existing dates "
+                                 "2020-01-01 to 2020-01-03"):
             test_ls.get_data_range(date(2019, 12, 31), date(2020, 1, 3))
-            assert str(exc.value) == "Data range must be within existing dates 1-3"
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError,
+                           match="Data range must be within existing dates "
+                                 "2020-01-01 to 2020-01-03"):
             test_ls.get_data_range(date(2020, 1, 1), date(2020, 1, 4))
-            assert str(exc.value) == "Data range must be within existing dates 1-3"
 
     def test_get_data_range_no_impute(self):
         test_ls = LocationSeries(dates=[date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)],
@@ -49,6 +51,5 @@ class TestLocationSeries:
     def test_get_data_range_invalid_impute(self):
         test_ls = LocationSeries(dates=[date(2020, 1, 1), date(2020, 1, 2), date(2020, 1, 3)],
                                  values=[7, np.nan, 9])
-        with pytest.raises(ValueError) as exc:
+        with pytest.raises(ValueError, match="Invalid imputation method. Must be None or 'mean'"):
             test_ls.get_data_range(date(2020, 1, 1), date(2020, 1, 3), "fakeimpute")
-            assert str(exc.value) == "Invalid imputation method. Must be None or 'mean'"

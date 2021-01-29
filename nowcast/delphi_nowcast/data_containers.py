@@ -37,29 +37,33 @@ class LocationSeries:
         self.geo_type = geo_type
         self.data = dict(zip(dates, values)) if has_data else {}
 
-    def add_data(self, date, value, overwrite=False):
+    def add_data(self,
+                 day: date,
+                 value: float,
+                 overwrite: bool = False) -> None:
         """Append a date and value to existing attributes.
 
         Safer than appending individually since the two lists shouldn't have different lengths.
         """
-        if self.data.get(date) and not overwrite:
-            raise ValueError("Date already exists in LocationSeries")
-        self.data[date] = value
+        if self.data.get(day) and not overwrite:
+            raise ValueError("Date already exists in LocationSeries. "
+                             "To overwrite, use overwrite=True")
+        self.data[day] = value
 
     @property
-    def empty(self):
+    def empty(self) -> bool:
         """Check if there is no stored data in the class."""
         return not self.dates and not self.values
 
     @property
-    def dates(self):
+    def dates(self) -> list:
         """Check if there is no stored data in the class."""
-        return self.data.keys()
+        return list(self.data.keys())
 
     @property
-    def values(self):
+    def values(self) -> list:
         """Check if there is no stored data in the class."""
-        return self.data.values()
+        return list(self.data.values())
 
     def get_data_range(self,
                        start_date: date,
@@ -83,7 +87,7 @@ class LocationSeries:
         """
         if start_date < min(self.dates) or end_date > max(self.dates):
             raise ValueError(f"Data range must be within existing dates "
-                             f"{min(self.dates)}-{max(self.dates)}.")
+                             f"{min(self.dates)} to {max(self.dates)}.")
         all_dates = date_range(start_date, end_date)
         out_values = [self.data.get(day.date(), nan) for day in all_dates]
         if imputation_method is None or not out_values:

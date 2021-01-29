@@ -61,7 +61,9 @@ def compute_sensors(as_of_date: date,
                     LocationSeries(loc.geo_value, loc.geo_type, [sensor_pred_date], [reg_sensor])
                 )
     if export_data:
-        pass  # added in later commit
+        for sensor, locations in output.items():
+            for loc in locations:
+                print(_export_to_csv(loc, sensor, as_of_date))
     return output
 
 
@@ -97,3 +99,49 @@ def historical_sensors(start_date: date,
             if not sensor_vals.empty:
                 output[sensor].append(sensor_vals)
     return output
+
+
+def _export_to_csv(value: LocationSeries,
+                   sensor: SensorConfig,
+                   as_of_date: date,
+                   receiving_dir: str = "./receiving"  # convert this to use params file and eventually be /common/covidcast_nowcast/receiving/
+                   ) -> List[str]:
+    """
+    Save value to csv for upload to Epidata database.
+    Parameters
+    ----------
+    value
+        LocationSeries containing data.
+    sensor
+        SensorConfig corresponding to value.
+    as_of_date
+        As_of date for the indicator data used to train the sensor.
+    receiving_dir
+        Export directory for Epidata acquisition.
+    Returns
+    -------
+        Filepath of exported files
+    """
+    export_dir = os.path.join(
+        receiving_dir,
+        f"issue_{as_of_date.strftime('%Y%m%d')}",
+        sensor.source
+    )
+    os.makedirs(export_dir, exist_ok=True)
+    exported_files = []
+    for time_value in value.dates:
+        export_file = os.path.join(
+            export_dir,
+            f"{time_value.strftime('%Y%m%d')}_{value.geo_type}_{sensor.signal}.csv"
+        )
+        if os.path.exists(export_file):
+            with open(export_file, "a") as f:
+                f.write(
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
+        else:
+            with open(export_file, "a") as f:
+                f.write("sensor_name,geo_value,value\n")
+                f.write(
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
+        exported_files.append(export_file)
+    return exported_files

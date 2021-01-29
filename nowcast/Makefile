@@ -12,9 +12,8 @@ install: venv
 	pip install -e .
 
 lint:
-	. env/bin/activate; \
-	pylint $(dir); \
-	pydocstyle $(dir) --match-dir '(?!nowcast_fusion)'
+	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pydocstyle $(dir) --match-dir '(?!nowcast_fusion)'
 
 test:
 	. env/bin/activate ;\

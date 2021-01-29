@@ -196,7 +196,7 @@ def run_module():
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)

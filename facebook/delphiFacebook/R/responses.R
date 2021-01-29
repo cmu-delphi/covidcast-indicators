@@ -118,7 +118,7 @@ load_response_one <- function(input_filename, params) {
   # Convert A2 to integer, keeping only responses that are integers or have a
   # single value-less decimal place ("xx.0")
   input_data <- input_data %>% 
-    mutate(A2 = ifelse(grepl("^[0-9]+[.]?0?$", A2), as.integer(A2), NA))
+    mutate(A2 = if_else(grepl("^[0-9]+[.]?0?$", A2), as.integer(A2), NA_integer_))
   
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3

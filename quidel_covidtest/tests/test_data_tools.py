@@ -92,11 +92,13 @@ class TestDataTools:
     @pytest.mark.parametrize("min_obs, expected_pos_prop, expected_se, expected_sample_sz", [
         (3,  # one case of tests < min_obs
          np.array([np.nan, 2.5/5, 3.5/7, 4.5/11]),
-         np.array([np.nan, np.sqrt(2.5**2/5**2/4), np.sqrt(3.5**2/7**2/6), np.sqrt(4.5*6.5/11**2/10)]),
+         np.array([np.nan, np.sqrt(2.5*(5-2.5)/5/5/4), np.sqrt(3.5*(7-3.5)/7/7/6),
+                   np.sqrt(4.5*(11-4.5)/11/11/10)]),
          np.array([np.nan, 4, 6, 10])),
         (1,  # no cases of tests < min_obs
          np.array([1.5/3, 2.5/5, 3.5/7, 4.5/11]),
-         np.array([np.sqrt(1.5**2/3**2/2), np.sqrt(2.5**2/5**2/4), np.sqrt(3.5**2/7**2/6), np.sqrt(4.5*6.5/11**2/10)]),
+         np.array([np.sqrt(1.5*(3-1.5)/3/3/2), np.sqrt(2.5*(5-2.5)/5/5/4),
+                   np.sqrt(3.5*(7-3.5)/7/7/6), np.sqrt(4.5*(11-4.5)/11/11/10)]),
          np.array([2, 4, 6, 10])),
     ])
     def test_raw_positive_prop(self, min_obs, expected_pos_prop, expected_se, expected_sample_sz):
@@ -124,7 +126,8 @@ class TestDataTools:
          None,
          None,
          np.array([np.nan, 3.5/7, 5.5/11, 7.5/17]),
-         np.array([np.nan, np.sqrt(3.5**2/7**2/6), np.sqrt(5.5**2/11**2/10), np.sqrt(7.5*9.5/17**2/16)]),
+         np.array([np.nan, np.sqrt(3.5*(7-3.5)/7/7/6), np.sqrt(5.5*(11-5.5)/11/11/10), 
+                   np.sqrt(7.5*(17-7.5)/17/17/16)]),
          np.array([np.nan, 6, 10, 16]),
          ),
         (3,  # parents case
@@ -132,7 +135,8 @@ class TestDataTools:
          np.array([3, 7, 9, 11]),
          np.array([5, 10, 15, 20]),
          np.array([(1 + 0.6 + 0.5)/(2 + 1 + 1), 3.5/7, 5.5/11, 7.5/17]),
-         np.array([np.sqrt(2.1 * 1.9/4**2/3), np.sqrt(3.5**2/7**2/6), np.sqrt(5.5**2/11**2/10), np.sqrt(7.5*9.5/17**2/16)]),
+         np.array([np.sqrt(2.1*(4-2.1)/4/4/3), np.sqrt(3.5*(7-3.5)/7/7/6), 
+                   np.sqrt(5.5*(11-5.5)/11/11/10), np.sqrt(7.5*(17-7.5)/17/17/16)]),
          np.array([3, 6, 10, 16]),
          ),
     ])

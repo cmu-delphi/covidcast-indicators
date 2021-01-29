@@ -12,14 +12,18 @@ import logging
 # third party
 import numpy as np
 import pandas as pd
+from delphi_utils import Smoother
 
 # first party
 from .config import Config
-from .smooth import left_gauss_linear
 
 
 class ClaimsHospIndicator:
     """Class to fit a hospitalizations indicator using CLI counts from claims-based data."""
+
+    smoother = Smoother("savgol",
+                        poly_fit_degree=1,
+                        gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
     def gauss_smooth(num, den):
@@ -33,8 +37,8 @@ class ClaimsHospIndicator:
             tuple: (array of smoothed num, array of smoothed den)
 
         """
-        num_smooth = left_gauss_linear(num)
-        den_smooth = left_gauss_linear(den)
+        num_smooth = ClaimsHospIndicator.smoother.smooth(num)
+        den_smooth = ClaimsHospIndicator.smoother.smooth(den)
         den_smooth = np.clip(den_smooth, 0, None)
         num_smooth = np.clip(num_smooth, 0, den_smooth)
         return num_smooth, den_smooth

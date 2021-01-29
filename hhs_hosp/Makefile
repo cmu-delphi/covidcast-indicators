@@ -23,3 +23,7 @@ test:
 clean:
 	rm -rf env
 	rm -f params.json
+
+run:
+	env/bin/python -m $(dir)
+	env/bin/python -m delphi_utils.archive --archive_type s3 --indicator_prefix $(dir)

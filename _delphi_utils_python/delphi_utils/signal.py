@@ -1,5 +1,5 @@
 """Functions for understanding and creating signal names."""
-import covidcast
+
 
 def add_prefix(signal_names, wip_signal, prefix="wip_"):
     """Add prefix to signal if there is a WIP signal.
@@ -28,29 +28,5 @@ def add_prefix(signal_names, wip_signal, prefix="wip_"):
             for signal in signal_names
         ]
     if wip_signal in {False, ""}:
-        return [
-            signal if public_signal(signal)
-            else prefix + signal
-            for signal in signal_names
-        ]
+        return signal_names
     raise ValueError("Supply True | False or '' or [] | list()")
-
-
-def public_signal(signal):
-    """Check if the signal name is already public using COVIDcast.
-
-    Parameters
-    ----------
-    signal : str
-        Name of the signal
-    Returns
-    -------
-    bool
-        True if the signal is present
-        False if the signal is not present
-    """
-    epidata_df = covidcast.metadata()
-    for index in range(len(epidata_df)):
-        if epidata_df["signal"][index] == signal:
-            return True
-    return False

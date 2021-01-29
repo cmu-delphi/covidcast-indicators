@@ -25,7 +25,7 @@ class TestGenerateSensor:
 
         assert (state_pct_positive.dropna()["val"] < 100).all()
         assert set(state_pct_positive.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
-        assert len(state_pct_positive.groupby("geo_id").count()["timestamp"].unique()) == 1
+        assert state_pct_positive["val"].isnull().sum() == 0
         
         # raw test_per_device
         state_test_per_device = generate_sensor_for_states(
@@ -34,7 +34,7 @@ class TestGenerateSensor:
 
         assert state_test_per_device["se"].isnull().all()
         assert set(state_test_per_device.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
-        assert len(state_test_per_device.groupby("geo_id").count()["timestamp"].unique()) == 1
+        assert state_test_per_device["val"].isnull().sum() == 0
         
         
         # MSA level
@@ -47,7 +47,7 @@ class TestGenerateSensor:
         
         assert (msa_pct_positive.dropna()["val"] < 100).all()
         assert set(msa_pct_positive.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
-        assert len(msa_pct_positive.groupby("geo_id").count()["timestamp"].unique()) == 1
+        assert msa_pct_positive["val"].isnull().sum() == 0
         
         # smoothed test_per_device
         msa_test_per_device = generate_sensor_for_other_geores(
@@ -56,5 +56,5 @@ class TestGenerateSensor:
         
         assert msa_test_per_device["se"].isnull().all()     
         assert set(msa_test_per_device.columns) == set(["geo_id", "val", "se", "sample_size", "timestamp"])
-        assert len(msa_test_per_device.groupby("geo_id").count()["timestamp"].unique()) == 1
+        assert msa_test_per_device["val"].isnull().sum() == 0
         

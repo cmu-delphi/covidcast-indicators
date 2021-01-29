@@ -26,16 +26,16 @@ class LocationSeries:
                  geo_value: str = None,
                  geo_type: str = None,
                  dates: List[date] = None,
-                 values: List[str] = None):
+                 values: List[float] = None):
         """Initialize LocationSeries."""
-        if (dates is not None and values is not None) and \
-                (len(dates) != len(values)):
+        has_data = dates is not None and values is not None
+        if has_data and (len(dates) != len(values)):
             raise ValueError("Length of dates and values differs.")
-        if len(set(dates)) < len(dates):
+        if has_data and len(set(dates)) < len(dates):
             raise ValueError("Duplicate dates not allowed.")
         self.geo_value = geo_value
         self.geo_type = geo_type
-        self.data = dict(zip(dates, values))
+        self.data = dict(zip(dates, values)) if has_data else {}
 
     def add_data(self,
                  day: date,

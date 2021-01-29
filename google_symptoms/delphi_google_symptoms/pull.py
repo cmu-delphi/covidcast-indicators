@@ -17,7 +17,7 @@ import pandas as pd
 from .constants import DC_FIPS, METRICS, COMBINED_METRIC
 
 
-# Create map of BigQuery to desired column names.
+# Create map of BigQuery symptom column names to desired column names.
 colname_map = {"symptom_" +
                metric.replace(" ", "_"): metric for metric in METRICS}
 
@@ -162,7 +162,8 @@ def get_all_dates(receiving_dir, export_start_date):
         return missing_dates
 
     # Calculate list start date to avoid getting data before the
-    # user-set start date. Convert both dates/datetimes to date to avoid TypeError.
+    # user-set start date. Convert both dates/datetimes to date to avoid error
+    # from trying to compare different types.
     start_date = max(
         min(missing_dates) - timedelta(days=PAD_DAYS - 1),
         export_start_date.date()
@@ -179,8 +180,8 @@ def get_all_dates(receiving_dir, export_start_date):
 def format_dates_for_query(date_list):
     """Format list of dates as needed for query.
 
-    Date list is turned into dict (keys are years) with each value a string
-    formatted for use in BigQuery query `where` statement that filters by date.
+    Date list is turned into a single string for use in
+    BigQuery query `where` statement that filters by date.
 
     Parameters
     ----------
@@ -189,35 +190,28 @@ def format_dates_for_query(date_list):
 
     Returns
     -------
-    dict: {year: "timestamp(date), ..."}
+    str: "timestamp("YYYY-MM-DD"), ..."
     """
     earliest_available_symptom_search_year = 2017
 
-    # Make a dictionary of years: list(dates).
-    date_dict = defaultdict(list)
-    for d in date_list:
-        if d.year >= earliest_available_symptom_search_year:
-            date_dict[d.year].append(datetime.strftime(d, "%Y-%m-%d"))
+    filtered_date_strings = [datetime.strftime(date, "%Y-%m-%d")
+                             for date in date_list if date.year >= earliest_available_symptom_search_year]
 
-    # For each year, convert list of dates into list of BigQuery-
-    # compatible timestamps.
-    for key in date_dict.keys():
-        date_dict[key] = 'timestamp("' + \
-            '"), timestamp("'.join(date_dict[key]) + '")'
+    # Convert list of dates into list of BigQuery-compatible timestamps.
+    query_string = 'timestamp("' + \
+        '"), timestamp("'.join(filtered_date_strings) + '")'
 
-    return date_dict
+    return query_string
 
 
-def produce_query(level, year, dates_str):
+def produce_query(level, date_string):
     """Create query string.
 
     Parameters
     ----------
     level: str
         "county" or "state"
-    year: int
-        year of all dates in dates_str; used to specify table to pull data from
-    dates_str: str
+    date_string: str
         "timestamp(date), ..." where timestamps are BigQuery-compatible
 
     Returns
@@ -233,32 +227,35 @@ def produce_query(level, year, dates_str):
         date,
         {symptom_cols}
     from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
-    where timestamp(date) in ({date_list})
+    where timestamp(date) in ({date_list}) and
+        country_region_code = "US"
     """
-    base_level_table = {"state": "states_daily_{year}",
-                        "county": "counties_daily_{year}"}
+    base_level_table = {"state": "symptom_search_sub_region_1_daily",
+                        "county": "symptom_search_sub_region_2_daily"}
 
     # Add custom values to base_query
     query = base_query.format(
         symptom_cols=", ".join(colname_map.keys()),
-        symptom_table=base_level_table[level].format(year=year),
-        date_list=dates_str)
+        symptom_table=base_level_table[level],
+        date_list=date_string)
 
     return query
 
 
-def pull_gs_data_one_geolevel(level, dates_dict):
+def pull_gs_data_one_geolevel(level, date_string):
     """Pull latest data for a single geo level.
 
     Fetch data and transform it into the appropriate format, as described in
     the preprocess function.
 
-    Note that we retrieve state level data from "states_daily_<year>"
+    Note that we retrieve state level data from "symptom_search_sub_region_1_daily"
     where there are state level data for 51 states including 'District of Columbia'.
 
-    We retrieve the county level data from "counties_daily_<year>"
+    We retrieve the county level data from "symptom_search_sub_region_2_daily"
     where there is county level data available except District of Columbia.
     We filter the data such that we only keep rows with valid FIPS.
+
+    Each of these tables should contain all dates.
 
     PS:  No information for PR
 
@@ -266,37 +263,23 @@ def pull_gs_data_one_geolevel(level, dates_dict):
     ----------
     level: str
         "county" or "state"
-    dates_dict: dict
-        {year: "timestamp(date), ..."} where timestamps are BigQuery-compatible
+    date_string: str
+        "timestamp("YYYY-MM-DD"), ..." where timestamps are BigQuery-compatible
 
     Returns
     -------
     pd.DataFrame
     """
-    df = []
-    for year in dates_dict.keys():
-        query = produce_query(level, year, dates_dict[year])
+    query = produce_query(level, date_string)
 
-        try:
-            result = pandas_gbq.read_gbq(query, progress_bar_type=None)
-        except GenericGBQException as e:
-            if isinstance(e.__context__, NotFound):
-                print(
-                    "BigQuery table for year {year}, geo level {level} not found".format(
-                        year=year, level=level))
-                result = pd.DataFrame(
-                    columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
-            else:
-                raise e
-
-        df.append(result)
+    df = pandas_gbq.read_gbq(query, progress_bar_type=None)
 
     if len(df) == 0:
-        result = pd.DataFrame(
-            columns=["open_covid_region_code", "date"] + list(colname_map.keys()))
-        df.append(result)
+        df = pd.DataFrame(
+            columns=["open_covid_region_code", "date"] +
+            list(colname_map.keys())
+        )
 
-    df = pd.concat(df)
     df = preprocess(df, level)
 
     return df

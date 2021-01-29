@@ -38,15 +38,6 @@
         "deaths_7dav_cumulative_prop",
         "deaths_7dav_incidence_num",
         "deaths_7dav_incidence_prop"],
-      "expected_lag": {
-        "confirmed_7dav_cumulative_num": 1,
-        "confirmed_7dav_cumulative_prop": 1,
-        "confirmed_7dav_incidence_num": 1,
-        "confirmed_7dav_incidence_prop": 1,
-        "deaths_7dav_cumulative_num": 1,
-        "deaths_7dav_cumulative_prop": 1,
-        "deaths_7dav_incidence_num": 1,
-        "deaths_7dav_incidence_prop": 1}
     }
   }
 }

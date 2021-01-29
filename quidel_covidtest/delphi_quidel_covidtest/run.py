@@ -30,7 +30,9 @@ def run_module():
     """Run the quidel_covidtest indicator."""
     start_time = time.time()
     params = read_params()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     export_start_date = params["export_start_date"]

@@ -177,7 +177,9 @@ def run_module():
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
     params = configure(variants)
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,

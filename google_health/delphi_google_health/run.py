@@ -49,7 +49,9 @@ def run_module():
     wip_signal = params["wip_signal"]
     cache_dir = params["cache_dir"]
 
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     arch_diff = S3ArchiveDiffer(
         cache_dir, export_dir,

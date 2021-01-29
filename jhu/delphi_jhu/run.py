@@ -73,7 +73,9 @@ def run_module():
     export_dir = params["export_dir"]
     base_url = params["base_url"]
     cache_dir = params["cache_dir"]
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     if len(params["bucket_name"]) > 0:
         arch_diff = S3ArchiveDiffer(

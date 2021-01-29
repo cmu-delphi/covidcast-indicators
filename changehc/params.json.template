@@ -31,5 +31,6 @@
     "user": "",
     "pass": "",
     "port": 0
-  }
+  },
+  "log_exceptions": false
 }

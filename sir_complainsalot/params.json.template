@@ -1,5 +1,6 @@
 {
   "channel": "#sir-complains-a-lot",
+  "log_exceptions": false,
   "slack_token": "",
   "sources": {
     "doctor-visits": {

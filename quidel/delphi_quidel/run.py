@@ -30,7 +30,9 @@ def run_module():
     """Run Quidel flu test module."""
     start_time = time.time()
     params = read_params()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     static_file_dir = params["static_file_dir"]

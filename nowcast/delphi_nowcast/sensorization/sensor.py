@@ -63,3 +63,37 @@ def compute_sensors(as_of_date: date,
     if export_data:
         pass  # added in later commit
     return output
+
+
+def historical_sensors(start_date: date,
+                       end_date: date,
+                       sensors: List[SensorConfig],
+                       ground_truths: List[LocationSeries],
+                       ) -> DefaultDict[SensorConfig, List[LocationSeries]]:
+    """
+    Retrieve past sensorized values from start to end date at given locations for specified sensors.
+    Parameters
+    ----------
+    start_date
+        first day to attempt to get sensor values for.
+    end_date
+        last day to attempt to get sensor values for.
+    sensors
+        list of SensorConfigs for sensors to retrieve.
+    ground_truths
+        list of LocationSeries, one for each location desired. This is only used for the list of
+        locations; none of the dates or values are used.
+    Returns
+    -------
+        Dict where keys are sensor tuples and values are lists, where each list element is a
+        LocationSeries holding sensor data for a location.
+    """
+    output = defaultdict(list)
+    for location in ground_truths:
+        for sensor in sensors:
+            sensor_vals, missing_dates = get_historical_sensor_data(
+                sensor, location.geo_value, location.geo_type, start_date, end_date
+            )
+            if not sensor_vals.empty:
+                output[sensor].append(sensor_vals)
+    return output

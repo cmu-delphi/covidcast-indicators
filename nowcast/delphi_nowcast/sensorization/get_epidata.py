@@ -76,3 +76,56 @@ def get_indicator_data(sensors: List[SensorConfig],
         if not data.empty:
             output[(sensor.source, sensor.signal, location.geo_type, location.geo_value)] = data
     return output
+
+
+def get_historical_sensor_data(sensor: SensorConfig,
+                               geo_value: str,
+                               geo_type: str,
+                               end_date: date,
+                               start_date: date) -> Tuple[LocationSeries, list]:
+    """
+    Query Epidata API for historical sensorization data.
+    Will only return values if they are not null. If any days are null or are not available,
+    they will be listed as missing.
+    Parameters
+    ----------
+    sensor
+        SensorConfig specifying which sensor to retrieve.
+    geo_type
+        Geo type to retrieve.
+    geo_value
+        Geo value to retrieve.
+    start_date
+        First day to retrieve (inclusive).
+    end_date
+        Last day to retrieve (inclusive).
+    Returns
+    -------
+        Tuple of (LocationSeries containing non-na data, list of dates without valid data). If no
+        data was found, an empty LocationSeries is returned.
+    """
+    response = Epidata.covidcast_nowcast(
+        data_source=sensor.source,
+        signals=sensor.signal,
+        time_type="day",
+        geo_type=geo_type,
+        time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
+        geo_value=geo_value,
+        sensor_names=sensor.name,
+        lag=sensor.lag)
+    if response["result"] == 1:
+        output = LocationSeries(
+            dates=[datetime.strptime(i, "%Y%m%d").date() for i in response["epidata"]
+                   if not isnan(i["value"])],
+            values=[i["value"] for i in response["epidata"] if not isnan(i["value"])],
+            geo_value=geo_value,
+            geo_type=geo_type
+        )
+    elif response["result"] == -2:  # no results
+        print("No historical results found")
+        output = LocationSeries(geo_value=geo_value, geo_type=geo_type)
+    else:
+        raise Exception(f"Bad result from Epidata: {response['message']}")
+    all_dates = [i.date() for i in date_range(start_date, end_date)]
+    missing_dates = [i for i in all_dates if i not in output.dates]
+    return output, missing_dates

@@ -5,12 +5,9 @@ import re
 from datetime import date, datetime, timedelta
 from os import listdir, makedirs
 from os.path import isfile, join, exists
-from collections import defaultdict
 
 import pandas_gbq
-from pandas_gbq.gbq import GenericGBQException
 from google.oauth2 import service_account
-from google.api_core.exceptions import NotFound
 import numpy as np
 import pandas as pd
 
@@ -195,7 +192,8 @@ def format_dates_for_query(date_list):
     earliest_available_symptom_search_year = 2017
 
     filtered_date_strings = [datetime.strftime(date, "%Y-%m-%d")
-                             for date in date_list if date.year >= earliest_available_symptom_search_year]
+                             for date in date_list
+                             if date.year >= earliest_available_symptom_search_year]
 
     # Convert list of dates into list of BigQuery-compatible timestamps.
     query_string = 'timestamp("' + \

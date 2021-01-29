@@ -7,8 +7,8 @@ when the module is run with `python -m delphi_google_symptoms`.
 from datetime import datetime
 from itertools import product
 
-import numpy as np
 import time
+import numpy as np
 from delphi_utils import (
     read_params,
     create_export_csv,

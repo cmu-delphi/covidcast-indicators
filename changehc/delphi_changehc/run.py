@@ -150,10 +150,9 @@ def run_module():
                 su_inst.update_sensor(
                     data,
                     params["export_dir"]
-                )            
+                )
             logger.info("finished processing", geo = geo)
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)
-

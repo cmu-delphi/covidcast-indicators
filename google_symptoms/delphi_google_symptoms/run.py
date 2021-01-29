@@ -4,22 +4,22 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_google_symptoms`.
 """
+import time
 from datetime import datetime
 from itertools import product
 
 import numpy as np
-import time
 from delphi_utils import (
-    read_params, 
-    create_export_csv, 
+    read_params,
+    create_export_csv,
     geomap,
     get_structured_logger
 )
 
-from .pull import pull_gs_data
-from .geo import geo_map
 from .constants import (METRICS, COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
+from .geo import geo_map
+from .pull import pull_gs_data
 
 
 def run_module():
@@ -66,7 +66,7 @@ def run_module():
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)
-            
+
             if not exported_csv_dates.empty:
                 csv_export_count += exported_csv_dates.size
                 if not oldest_final_export_date:

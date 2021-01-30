@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 from itertools import product
 
-import time
 import numpy as np
 from delphi_utils import (
     read_params,

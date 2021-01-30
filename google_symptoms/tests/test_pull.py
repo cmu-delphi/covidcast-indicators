@@ -23,38 +23,38 @@ keep_cols = ["open_covid_region_code", "date"] + symptom_names
 new_keep_cols = ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
 
 
+# List of faux already-exported CSVs.
+exported_files = [
+    "20201231_whatever.csv",
+    "20210101_whatever.csv",
+    "20210102_whatever.csv",
+    "20210103_whatever.csv",
+    "20210105_not_even_a_csv.txt",
+    "not_the_right_format.csv"
+]
+
+
 class TestPullGoogleSymptoms:
     @freeze_time("2021-01-05")
     @mock.patch("pandas_gbq.read_gbq")
     @mock.patch("delphi_google_symptoms.pull.initialize_credentials")
-    def test_good_file(self, mock_credentials, mock_read_gbq):
+    @mock.patch("delphi_google_symptoms.pull.listdir")
+    @mock.patch("delphi_google_symptoms.pull.isfile")
+    def test_good_file(self, mock_is_file, mock_get_dates, mock_credentials, mock_read_gbq):
         # Set up fake data.
         state_data = pd.read_csv(
             good_input["state"], parse_dates=["date"])[keep_cols]
         county_data = pd.read_csv(
             good_input["county"], parse_dates=["date"])[keep_cols]
 
-        state_row_subset = pd.Series([False]).repeat(
-            len(state_data.index)).reset_index(drop=True)
-        county_row_subset = pd.Series([False]).repeat(
-            len(county_data.index)).reset_index(drop=True)
-
-        # Mock fetching API credentials and BigQuery data.
-        # Each year is called separately. Based on `static_receiving`, `get_missing_dates`
-        # produces missing dates in two separate years, so we need to provide two
-        # sets of state data and two sets of county data, one for 2020 and one for 2021.
-        # The second return set is empty to prevent duplicate geo_id-date combos, which
-        # causes an error when reindexing.
-        mock_read_gbq.side_effect = [
-            state_data,
-            state_data[state_row_subset],
-            county_data,
-            county_data[county_row_subset]
-        ]
+        # Mocks
+        mock_read_gbq.side_effect = [state_data, county_data]
         mock_credentials.return_value = None
+        mock_get_dates.return_value = exported_files
+        mock_is_file = True
 
-        dfs = pull_gs_data("", "./test_data/static_receiving",
-                           datetime.strptime("20201230", "%Y%m%d"))
+        dfs = pull_gs_data(
+            "", "receiving", datetime.strptime("20201230", "%Y%m%d"))
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -88,17 +88,27 @@ class TestPullGoogleSymptoms:
 
 class TestPullHelperFuncs:
     @freeze_time("2021-01-05")
-    def test_get_missing_dates(self):
+    @mock.patch("delphi_google_symptoms.pull.listdir")
+    @mock.patch("delphi_google_symptoms.pull.isfile")
+    def test_get_missing_dates(self, mock_is_file, mock_get_dates):
+        mock_get_dates.return_value = exported_files
+        mock_is_file = True
+
         output = get_missing_dates(
-            "./test_data/static_receiving", datetime.strptime("20201230", "%Y%m%d"))
+            "receiving", datetime.strptime("20201230", "%Y%m%d"))
 
         expected = [date(2020, 12, 30), date(2021, 1, 4), date(2021, 1, 5)]
         assert set(output) == set(expected)
 
     @freeze_time("2021-01-05")
-    def test_get_all_dates_recent_export_start_date(self):
+    @mock.patch("delphi_google_symptoms.pull.listdir")
+    @mock.patch("delphi_google_symptoms.pull.isfile")
+    def test_get_all_dates_recent_export_start_date(self, mock_is_file, mock_get_dates):
+        mock_get_dates.return_value = exported_files
+        mock_is_file = True
+
         output = get_all_dates(
-            "./test_data/static_receiving", datetime.strptime("20201230", "%Y%m%d"))
+            "receiving", datetime.strptime("20201230", "%Y%m%d"))
 
         expected = [date(2020, 12, 30),
                     date(2020, 12, 31),
@@ -111,11 +121,16 @@ class TestPullHelperFuncs:
 
     @freeze_time("2021-01-05")
     @mock.patch("delphi_google_symptoms.pull.get_missing_dates")
-    def test_get_all_dates(self, mock_missing_dates):
+    @mock.patch("delphi_google_symptoms.pull.listdir")
+    @mock.patch("delphi_google_symptoms.pull.isfile")
+    def test_get_all_dates(self, mock_is_file, mock_get_dates, mock_missing_dates):
+        mock_get_dates.return_value = exported_files
+        mock_is_file = True
         mock_missing_dates.return_value = [
             date(2020, 12, 30), date(2021, 1, 4), date(2021, 1, 5)]
+
         output = get_all_dates(
-            "./test_data/static_receiving", datetime.strptime("20200201", "%Y%m%d"))
+            "receiving", datetime.strptime("20200201", "%Y%m%d"))
 
         expected = [date(2020, 12, 24),
                     date(2020, 12, 25),

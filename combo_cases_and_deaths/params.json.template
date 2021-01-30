@@ -4,7 +4,7 @@
   "cache_dir": "./cache",
   "export_start_date":[2020,4,1],
   "date_range":"new",
-  "log_filename": "/var/log/indicators/delphi_combo_cases_and_deaths.log",
   "source":"indicator-combination",
-  "wip_signal": ""
+  "wip_signal": "",
+  "log_exceptions": false
 }

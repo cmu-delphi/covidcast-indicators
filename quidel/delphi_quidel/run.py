@@ -4,10 +4,10 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+import time
 from os.path import join
 
 import pandas as pd
-import time
 from delphi_utils import (
     read_params,
     add_prefix,
@@ -15,21 +15,24 @@ from delphi_utils import (
     get_structured_logger
 )
 
+from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+                        GEO_RESOLUTIONS, SENSORS)
+from .generate_sensor import (generate_sensor_for_states,
+                              generate_sensor_for_other_geores)
 from .geo_maps import geo_map
 from .pull import (pull_quidel_data,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-from .generate_sensor import (generate_sensor_for_states,
-                              generate_sensor_for_other_geores)
-from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
-                        GEO_RESOLUTIONS, SENSORS)
+
 
 def run_module():
     """Run Quidel flu test module."""
     start_time = time.time()
     params = read_params()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     static_file_dir = params["static_file_dir"]

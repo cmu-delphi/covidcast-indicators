@@ -306,7 +306,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         df = df.copy()
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
-        assert from_col != new_col, f"Can't use the same column '{from_col}' for both from_col and to_col"
+        assert from_col != new_col, \
+            f"Can't use the same column '{from_col}' for both from_col and to_col"
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
@@ -325,7 +326,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return df
         elif new_code == "nation":
             raise ValueError(
-                f"Conversion to the nation level is not supported from {from_code}; try fips, zip, or state_*"
+                f"Conversion to the nation level is not supported "
+                f"from {from_code}; try fips, zip, or state_*"
             )
 
         # state codes are all stored in one table

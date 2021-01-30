@@ -17,7 +17,9 @@ from .check_source import check_source
 
 def get_logger():
     params = read_params()
-    return get_structured_logger(__name__, filename = params.get("log_filename"))
+    return get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
 LOGGER = get_logger()
 

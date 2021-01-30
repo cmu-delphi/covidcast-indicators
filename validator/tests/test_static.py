@@ -6,6 +6,9 @@ from delphi_validator.datafetcher import FILENAME_REGEX
 from delphi_validator.report import ValidationReport
 from delphi_validator.static import StaticValidator
 
+# Properly formatted file name to use in tests where the actual value doesn't matter.
+FILENAME = "17760704_nation_num_declarations.csv"
+
 class TestCheckMissingDates:
 
     def test_empty_filelist(self):
@@ -17,8 +20,8 @@ class TestCheckMissingDates:
             }
         }
         validator = StaticValidator(params)
-        report = ValidationReport(set())
-        report = ValidationReport(set())
+        report = ValidationReport([])
+        report = ValidationReport([])
 
         filenames = list()
         validator.check_missing_date_files(filenames, report)
@@ -35,7 +38,7 @@ class TestCheckMissingDates:
             }
         }
         validator = StaticValidator(params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
 
         filenames = [("20200901_county_signal_signal.csv", "match_obj")]
         validator.check_missing_date_files(filenames, report)
@@ -51,7 +54,7 @@ class TestCheckMissingDates:
             }
         }
         validator = StaticValidator(params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
 
         filenames = [("20200901_county_signal_signal.csv", "match_obj"),
                      ("20200903_county_signal_signal.csv", "match_obj"),
@@ -97,76 +100,76 @@ class TestCheckBadGeoIdFormat:
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        validator.check_bad_geo_id_format(empty_df, "name", "county", report)
+        validator.check_bad_geo_id_format(empty_df, FILENAME, "county", report)
 
         assert len(report.raised_errors) == 0
 
     def test_invalid_geo_type(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        validator.check_bad_geo_id_format(empty_df, "name", "hello", report)
+        validator.check_bad_geo_id_format(empty_df, FILENAME, "hello", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_type"
 
     def test_invalid_geo_id_format_county(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["0", "54321", "123", ".0000",
                            "abc12"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "county", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "county", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
     def test_invalid_geo_id_format_msa(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["0", "54321", "123", ".0000",
                            "abc12"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "msa", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "msa", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
     def test_invalid_geo_id_format_hrr(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["1", "12", "123", "1234", "12345",
                            "a", ".", "ab1"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "hrr", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "hrr", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
     def test_invalid_geo_id_format_state(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["aa", "hi", "HI", "hawaii",
                            "Hawaii", "a", "H.I."], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "state", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "state", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
     def test_invalid_geo_id_format_hhs(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["1", "112"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "hhs", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "hhs", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
 
     def test_invalid_geo_id_format_nation(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["usa", "SP", " us", "us",
                            "usausa", "US"], columns=["geo_id"])
-        validator.check_bad_geo_id_format(df, "name", "nation", report)
+        validator.check_bad_geo_id_format(df, FILENAME, "nation", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_geo_id_format"
@@ -182,39 +185,39 @@ class TestDuplicatedRows:
 
     def test_no_duplicates(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([["a", "1"], ["b", "2"], ["c", "3"]])
-        validator.check_duplicate_rows(df, "file", report)
+        validator.check_duplicate_rows(df, FILENAME, report)
         assert len(report.raised_warnings) == 0
 
     def test_single_column_duplicates_but_not_row(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([["a", "1"], ["a", "2"], ["b", "2"]])
-        validator.check_duplicate_rows(df, "file", report)
+        validator.check_duplicate_rows(df, FILENAME, report)
         assert len(report.raised_warnings) == 0
 
     def test_non_consecutive_duplicates(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([["a", "1"], ["b", "2"], ["a", "1"]])
-        validator.check_duplicate_rows(df, "file", report)
+        validator.check_duplicate_rows(df, FILENAME, report)
         assert len(report.raised_warnings) == 1
         assert report.raised_warnings[0].check_name == "check_duplicate_rows"
 
     def test_multiple_distinct_duplicates(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([["a", "1"], ["b", "2"], ["a", "1"], ["b", "2"]])
-        validator.check_duplicate_rows(df, "file", report)
+        validator.check_duplicate_rows(df, FILENAME, report)
         assert len(report.raised_warnings) == 1
         assert report.raised_warnings[0].check_name == "check_duplicate_rows"
 
     def test_more_than_two_copies(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([["a", "1"], ["b", "2"], ["b", "2"], ["b", "2"]])
-        validator.check_duplicate_rows(df, "file", report)
+        validator.check_duplicate_rows(df, FILENAME, report)
         assert len(report.raised_warnings) == 1
         assert report.raised_warnings[0].check_name == "check_duplicate_rows"
 
@@ -232,62 +235,62 @@ class TestCheckBadGeoIdValue:
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(columns=["geo_id"], dtype=str)
-        validator.check_bad_geo_id_value(empty_df, "name", "county", report)
+        validator.check_bad_geo_id_value(empty_df, FILENAME, "county", report)
         assert len(report.raised_errors) == 0
 
     def test_invalid_geo_id_value_county(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["01001", "88888", "99999"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "county", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "county", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
     def test_invalid_geo_id_value_msa(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["10180", "88888", "99999"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "msa", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "msa", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
     def test_invalid_geo_id_value_hrr(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["1", "11", "111", "8", "88",
                            "888"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "hrr", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "hrr", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
     def test_invalid_geo_id_value_hhs(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["1", "11"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "hhs", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "hhs", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
     def test_invalid_geo_id_value_state(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["aa", "ak"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "state", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "state", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
     def test_uppercase_geo_id(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["ak", "AK"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "state", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "state", report)
 
         assert len(report.raised_errors) == 0
         assert len(report.raised_warnings) == 1
@@ -295,9 +298,9 @@ class TestCheckBadGeoIdValue:
 
     def test_invalid_geo_id_value_nation(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame(["us", "zz"], columns=["geo_id"])
-        validator.check_bad_geo_id_value(df, "name", "nation", report)
+        validator.check_bad_geo_id_value(df, FILENAME, "nation", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
@@ -313,7 +316,7 @@ class TestCheckBadVal:
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(columns=["val"])
         validator.check_bad_val(empty_df, "", "", report)
         validator.check_bad_val(empty_df, "", "prop", report)
@@ -323,36 +326,36 @@ class TestCheckBadVal:
 
     def test_missing(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([np.nan], columns=["val"])
-        validator.check_bad_val(df, "name", "signal", report)
+        validator.check_bad_val(df, FILENAME, "signal", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_val_missing"
 
     def test_lt_0(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([-5], columns=["val"])
-        validator.check_bad_val(df, "name", "signal", report)
+        validator.check_bad_val(df, FILENAME, "signal", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_val_lt_0"
 
     def test_gt_max_pct(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([1e7], columns=["val"])
-        validator.check_bad_val(df, "name", "pct", report)
+        validator.check_bad_val(df, FILENAME, "pct", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_val_pct_gt_100"
 
     def test_gt_max_prop(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         df = pd.DataFrame([1e7], columns=["val"])
-        validator.check_bad_val(df, "name", "prop", report)
+        validator.check_bad_val(df, FILENAME, "prop", report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_val_prop_gt_100k"
@@ -369,7 +372,7 @@ class TestCheckBadSe:
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(
             columns=["val", "se", "sample_size"], dtype=float)
         validator.check_bad_se(empty_df, "", report)
@@ -383,16 +386,16 @@ class TestCheckBadSe:
 
     def test_missing(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_se_allowed = True
         df = pd.DataFrame([[np.nan, np.nan, np.nan]], columns=[
                           "val", "se", "sample_size"])
-        validator.check_bad_se(df, "name", report)
+        validator.check_bad_se(df, FILENAME, report)
 
         assert len(report.raised_errors) == 0
 
         validator.params.missing_se_allowed = False
-        validator.check_bad_se(df, "name", report)
+        validator.check_bad_se(df, FILENAME, report)
 
         assert len(report.raised_errors) == 2
         assert "check_se_not_missing_and_in_range" in [
@@ -402,11 +405,11 @@ class TestCheckBadSe:
 
     def test_e_0_missing_allowed(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_se_allowed = True
         df = pd.DataFrame([[1, 0, 200], [1, np.nan, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
-        validator.check_bad_se(df, "name", report)
+        validator.check_bad_se(df, FILENAME, report)
 
         assert len(report.raised_errors) == 2
         assert "check_se_missing_or_in_range" in [
@@ -416,11 +419,11 @@ class TestCheckBadSe:
 
     def test_e_0_missing_not_allowed(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_se_allowed = False
         df = pd.DataFrame([[1, 0, 200], [1, 0, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
-        validator.check_bad_se(df, "name", report)
+        validator.check_bad_se(df, FILENAME, report)
 
         assert len(report.raised_errors) == 2
         assert "check_se_not_missing_and_in_range" in [
@@ -430,11 +433,11 @@ class TestCheckBadSe:
 
     def test_jeffreys(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_se_allowed = False
         df = pd.DataFrame([[0, 0, 200], [1, 0, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
-        validator.check_bad_se(df, "name", report)
+        validator.check_bad_se(df, FILENAME, report)
 
         assert len(report.raised_errors) == 2
         assert "check_se_not_missing_and_in_range" in [
@@ -454,7 +457,7 @@ class TestCheckBadN:
 
     def test_empty_df(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         empty_df = pd.DataFrame(
             columns=["val", "se", "sample_size"], dtype=float)
         validator.check_bad_sample_size(empty_df, "", report)
@@ -468,38 +471,38 @@ class TestCheckBadN:
 
     def test_missing(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_sample_size_allowed = True
         df = pd.DataFrame([[np.nan, np.nan, np.nan]], columns=[
                           "val", "se", "sample_size"])
-        validator.check_bad_sample_size(df, "name", report)
+        validator.check_bad_sample_size(df, FILENAME, report)
 
         assert len(report.raised_errors) == 0
 
         validator.params.missing_sample_size_allowed = False
-        validator.check_bad_sample_size(df, "name", report)
+        validator.check_bad_sample_size(df, FILENAME, report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_n_missing"
 
     def test_lt_min_missing_allowed(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_sample_size_allowed = True
         df = pd.DataFrame([[1, 0, 10], [1, np.nan, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
-        validator.check_bad_sample_size(df, "name", report)
+        validator.check_bad_sample_size(df, FILENAME, report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_n_missing_or_gt_min"
 
     def test_lt_min_missing_not_allowed(self):
         validator = StaticValidator(self.params)
-        report = ValidationReport(set())
+        report = ValidationReport([])
         validator.params.missing_sample_size_allowed = False
         df = pd.DataFrame([[1, 0, 10], [1, np.nan, 240], [
                           1, np.nan, 245]], columns=["val", "se", "sample_size"])
-        validator.check_bad_sample_size(df, "name", report)
+        validator.check_bad_sample_size(df, FILENAME, report)
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_n_gt_min"

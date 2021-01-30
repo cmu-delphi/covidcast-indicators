@@ -66,5 +66,4 @@ def create_export_csv(
         if remove_null_samples:
             export_df = export_df[export_df["sample_size"].notnull()]
         export_df.to_csv(export_file, index=False, na_rep="NA")
-    
     return dates

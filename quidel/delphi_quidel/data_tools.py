@@ -6,7 +6,7 @@ import pandas as pd
 def _prop_var(p, n):
     """
     Calculate variance of proportion.
-    
+
     var(X/n) = 1/(n^2)var(X) = (npq)/(n^2) = pq/n
     """
     return p * (1 - p) / n
@@ -64,7 +64,7 @@ def _slide_window_sum(arr, k):
 
 def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs, max_borrow_obs):
     """
-    Calculate proportion of parent samples (tests) that must be "borrowed" in order to compute the statistic.
+    Calculate proportion of parent samples (tests) that must be "borrowed" to compute the statistic.
 
     If there are no samples available in the parent, the borrow_prop is 0.  If the parent does not
     have enough samples, we return a borrow_prop of 1, and the fact that the
@@ -119,7 +119,7 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs, max_borrow_obs
 
 def raw_positive_prop(positives, tests, min_obs):
     """
-    Calculate the proportion of positive tests for a single geographic location, without any temporal smoothing.
+    Calculate proportion of positive tests for a single location with no temporal smoothing.
 
     If on any day t, tests[t] < min_obs, then we report np.nan.
 
@@ -172,7 +172,7 @@ def raw_positive_prop(positives, tests, min_obs):
 def smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs, pool_days,
                            parent_positives=None, parent_tests=None):
     """
-    Calculate the proportion of negative tests for a single geographic location, with temporal smoothing.
+    Calculate the proportion of negative tests for a single location with temporal smoothing.
 
     For a given day t, if sum(tests[(t-pool_days+1):(t+1)]) < min_obs, then we
     'borrow' min_obs - sum(tests[(t-pool_days+1):(t+1)]) observations from the
@@ -307,7 +307,7 @@ def raw_tests_per_device(devices, tests, min_obs):
 def smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs, pool_days,
                               parent_devices=None, parent_tests=None):
     """
-    Calculate the ratio of tests per device for a single geographic location, with temporal smoothing.
+    Calculate the ratio of tests per device for a single location with temporal smoothing.
 
     For a given day t, if sum(tests[(t-pool_days+1):(t+1)]) < min_obs, then we
     'borrow' min_obs - sum(tests[(t-pool_days+1):(t+1)]) observations from the

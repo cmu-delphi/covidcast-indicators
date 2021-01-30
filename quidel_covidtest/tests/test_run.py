@@ -17,14 +17,9 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20200702",
-            "20200703",
-            "20200704",
-            "20200705",
-            "20200706",
-            "20200707",
-            "20200708",
-            "20200709"
+            "20200718",
+            "20200719",
+            "20200720"
         ]
         geos = GEO_RESOLUTIONS.copy()
         sensors = add_prefix(SENSORS,
@@ -38,10 +33,12 @@ class TestRun:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
         assert set(expected_files).issubset(set(csv_files))
+        assert '20200721_state_covid_ag_raw_pct_positive.csv' not in csv_files
+        assert '20200722_state_covid_ag_raw_pct_positive.csv' not in csv_files
 
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200709_state_covid_ag_raw_pct_positive.csv")
+            join("./receiving", "20200718_state_covid_ag_smoothed_pct_positive.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 

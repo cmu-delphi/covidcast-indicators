@@ -12,5 +12,6 @@
   "obfuscated_prefix": "foo_obfuscated",
   "parallel": false,
   "geos": ["state", "msa", "hrr", "county"],
-  "weekday": [true, false]
+  "weekday": [true, false],
+  "log_exceptions": false
 }

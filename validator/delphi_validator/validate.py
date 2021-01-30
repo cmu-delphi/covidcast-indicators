@@ -4,11 +4,12 @@ Tools to validate CSV source data, including various check methods.
 """
 from .datafetcher import load_all_files
 from .dynamic import DynamicValidator
+from .errors import ValidationFailure
 from .report import ValidationReport
 from .static import StaticValidator
 from .utils import aggregate_frames, TimeWindow
 
-class Validator():
+class Validator:
     """ Class containing validation() function and supporting functions. Stores a list
     of all raised errors, and user settings. """
 
@@ -21,10 +22,11 @@ class Validator():
         """
         suppressed_errors =  params["global"].get('suppressed_errors', [])
         for entry in suppressed_errors:
-            assert isinstance(entry, list)
-            assert len(entry) == 2
+            assert isinstance(entry, dict), "suppressed_errors must be a list of objects"
+            assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"]),\
+                'suppressed_errors may only have fields "check_name", "date", "geo_type", "signal"'
 
-        self.suppressed_errors = {tuple(item) for item in suppressed_errors}
+        self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
         self.time_window = TimeWindow.from_params(params["global"]["end_date"],

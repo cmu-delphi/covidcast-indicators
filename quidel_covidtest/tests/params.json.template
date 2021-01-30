@@ -3,7 +3,7 @@
   "export_dir": "./receiving",
   "cache_dir": "./cache",
   "export_start_date": "2020-06-30",
-  "export_end_date": "2020-07-09",
+  "export_end_date": "",
   "pull_start_date": "2020-07-09",
   "pull_end_date":"",
   "aws_credentials": {

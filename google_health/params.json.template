@@ -13,5 +13,6 @@
   },
   "bucket_name": "",
   "test": false,
-  "test_data_dir": ""
+  "test_data_dir": "",
+  "log_exceptions": false
 }

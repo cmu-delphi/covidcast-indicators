@@ -166,7 +166,8 @@ def raw_positive_prop(positives, tests, min_obs):
     # nan out any days where there are insufficient observations
     # this also elegantly sidesteps 0/0 division.
     tests[tests < min_obs] = np.nan
-    positive_prop = positives / tests
+    # Jeffreys Correction for estimates
+    positive_prop = (positives + 0.5) / (tests + 1)
     se = np.sqrt(_prop_var(positive_prop, tests))
     sample_size = tests
     return positive_prop, se, sample_size

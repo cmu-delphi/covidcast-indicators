@@ -3,5 +3,6 @@
   "static_file_dir": "./static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "path_to_bigquery_credentials": "credentials.json"
+  "path_to_bigquery_credentials": "credentials.json",
+  "log_exceptions": false
 }

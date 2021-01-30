@@ -20,7 +20,9 @@ def run_module():
     """Create the Safegraph indicator."""
     params = read_params()
     start_time = time.time()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     # Place to write output files.
     export_dir = params["export_dir"]

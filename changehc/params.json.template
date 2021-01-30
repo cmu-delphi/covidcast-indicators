@@ -32,5 +32,5 @@
     "pass": "",
     "port": 0
   },
-  "log_filename": "/var/log/indicators/changehc.log"
+  "log_exceptions": false
 }

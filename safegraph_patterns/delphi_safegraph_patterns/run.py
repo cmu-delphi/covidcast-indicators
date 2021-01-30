@@ -51,8 +51,9 @@ def run_module():
     n_core = int(params["n_core"])
     aws_endpoint = params["aws_endpoint"]
     static_file_dir = params["static_file_dir"]
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
-
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     env_vars = {
             'AWS_ACCESS_KEY_ID': params["aws_access_key_id"],
             'AWS_SECRET_ACCESS_KEY': params["aws_secret_access_key"],

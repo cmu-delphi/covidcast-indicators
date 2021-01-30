@@ -22,7 +22,9 @@ def run_module():
     """Run module for processing NCHS mortality data."""
     start_time = time.time()
     params = read_params()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     export_start_date = params["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday
         export_start_date = date.today() - timedelta(

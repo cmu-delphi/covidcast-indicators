@@ -177,7 +177,9 @@ def run_module():
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
     params = configure(variants)
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,
@@ -196,7 +198,7 @@ def run_module():
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -12,5 +12,6 @@
   },
   "bucket_name": "",
   "wip_signal": [""],
-  "mode": ""
+  "mode": "",
+  "log_exceptions": false
 }

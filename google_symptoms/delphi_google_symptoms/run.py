@@ -4,6 +4,7 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_google_symptoms`.
 """
+import time
 from datetime import datetime
 from itertools import product
 
@@ -16,10 +17,10 @@ from delphi_utils import (
     get_structured_logger
 )
 
-from .pull import pull_gs_data
-from .geo import geo_map
 from .constants import (METRICS, COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
+from .geo import geo_map
+from .pull import pull_gs_data
 
 
 def run_module():
@@ -34,7 +35,8 @@ def run_module():
     export_dir = params["export_dir"]
 
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"))
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
     # Pull GS data
     dfs = pull_gs_data(params["path_to_bigquery_credentials"],

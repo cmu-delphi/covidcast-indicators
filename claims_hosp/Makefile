@@ -12,10 +12,8 @@ install: venv
 	pip install -e .
 
 lint:
-	. env/bin/activate; \
-	pylint $(dir)
-	pylint $(dir); \
-	pydocstyle $(dir)
+	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pydocstyle $(dir)
 
 test:
 	. env/bin/activate ;\

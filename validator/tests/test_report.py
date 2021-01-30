@@ -6,19 +6,25 @@ from delphi_validator.report import ValidationReport
 class TestValidationReport:
     """Tests for ValidationReport class."""
 
-    ERROR_1 = ValidationFailure("good", "data 1", "msg 1")
-    ERROR_2 = ValidationFailure("bad", "data 2", "msg 2")
+    ERROR_1 = ValidationFailure("good",
+                                filename="20201107_county_sig1.csv",
+                                message="msg 1")
+    ERROR_2 = ValidationFailure("bad",
+                                filename="20201107_county_sig2.csv",
+                                message="msg 2")
 
     def test_add_raised_unsuppressed_error(self):
         """Test that an unsupressed error shows up in the unsuppressed error list."""
-        report = ValidationReport(set([("bad", "data 1")]))
+        report = ValidationReport([ValidationFailure("good",
+                                   filename="20201107_county_sig2.csv",
+                                   message="msg 2")])
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
         assert report.unsuppressed_errors == [self.ERROR_1, self.ERROR_2]
 
     def test_add_raised_suppressed_error(self):
         """Test that an supressed error does not show up in the unsuppressed error list."""
-        report = ValidationReport(set([("good", "data 1")]))
+        report = ValidationReport([self.ERROR_1])
         report.add_raised_error(self.ERROR_1)
 
         assert len(report.unsuppressed_errors) == 0
@@ -26,7 +32,7 @@ class TestValidationReport:
 
     def test_str(self):
         """Test that the string representation contains all information."""
-        report = ValidationReport(set([("good", "data 1")]))
+        report = ValidationReport([self.ERROR_1])
         report.increment_total_checks()
         report.increment_total_checks()
         report.increment_total_checks()
@@ -41,7 +47,7 @@ class TestValidationReport:
     @mock.patch("delphi_validator.report.logger")
     def test_log(self, mock_logger):
         """Test that the logs contain all failures and warnings."""
-        report = ValidationReport(set([("good", "data 1")]))
+        report = ValidationReport([self.ERROR_1])
         report.increment_total_checks()
         report.increment_total_checks()
         report.increment_total_checks()
@@ -52,5 +58,5 @@ class TestValidationReport:
 
         report.log()
         mock_logger.critical.assert_called_once_with(
-            "bad failed for data 2: msg 2")
+            "bad failed for sig2 at resolution county on 2020-11-07: msg 2")
         mock_logger.warning.assert_has_calls([mock.call("wrong import"), mock.call("right import")])

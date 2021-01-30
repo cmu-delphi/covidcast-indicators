@@ -1,6 +1,6 @@
 {
   "channel": "#sir-complains-a-lot",
-  "log_filename": "/var/log/indicators/sircal.log",
+  "log_exceptions": false,
   "slack_token": "",
   "sources": {
     "doctor-visits": {

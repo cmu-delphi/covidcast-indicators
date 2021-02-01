@@ -45,7 +45,7 @@ def compute_sensors(as_of_date: date,
         ar_sensor = compute_ar_sensor(ground_truth_pred_date, loc)
         if not np.isnan(ar_sensor):
             output[ground_truth_sensor].append(
-                LocationSeries(loc.geo_value, loc.geo_type, [ground_truth_pred_date], [ar_sensor])
+                LocationSeries(loc.geo_value, loc.geo_type, {ground_truth_pred_date: ar_sensor})
             )
         for sensor in regression_sensors:
             sensor_pred_date = as_of_date - timedelta(sensor.lag)
@@ -58,7 +58,7 @@ def compute_sensors(as_of_date: date,
             reg_sensor = compute_regression_sensor(sensor_pred_date, covariates, loc)
             if not np.isnan(reg_sensor):
                 output[sensor].append(
-                    LocationSeries(loc.geo_value, loc.geo_type, [sensor_pred_date], [reg_sensor])
+                    LocationSeries(loc.geo_value, loc.geo_type, {sensor_pred_date: reg_sensor})
                 )
     if export_data:
         for sensor, locations in output.items():
@@ -96,7 +96,7 @@ def historical_sensors(start_date: date,
             sensor_vals, missing_dates = get_historical_sensor_data(
                 sensor, location.geo_value, location.geo_type, start_date, end_date
             )
-            if not sensor_vals.empty:
+            if sensor_vals.data:
                 output[sensor].append(sensor_vals)
     return output
 

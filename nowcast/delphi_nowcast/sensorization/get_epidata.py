@@ -71,11 +71,10 @@ def get_indicator_data(sensors: List[SensorConfig],
         data = LocationSeries(
             geo_value=location.geo_value,
             geo_type=location.geo_type,
-            dates=[datetime.strptime(i, "%Y%m%d").date() for i in response.get("epidata", [])
-                   if not isnan(i["value"])],
-            values=[i["value"] for i in response.get("epidata", []) if not isnan(i["value"])]
+            data={datetime.strptime(i["time_value"], "%Y%m%d").date(): i["value"]
+                  for i in response.get("epidata", []) if not isnan(i["value"])}
         )
-        if not data.empty:
+        if data.data:
             output[(sensor.source, sensor.signal, location.geo_type, location.geo_value)] = data
     return output
 
@@ -117,11 +116,10 @@ def get_historical_sensor_data(sensor: SensorConfig,
         lag=sensor.lag)
     if response["result"] == 1:
         output = LocationSeries(
-            dates=[datetime.strptime(i, "%Y%m%d").date() for i in response["epidata"]
-                   if not isnan(i["value"])],
-            values=[i["value"] for i in response["epidata"] if not isnan(i["value"])],
             geo_value=geo_value,
-            geo_type=geo_type
+            geo_type=geo_type,
+            data={datetime.strptime(i["time_value"], "%Y%m%d").date(): i["value"]
+                  for i in response.get("epidata", []) if not isnan(i["value"])}
         )
     elif response["result"] == -2:  # no results
         print("No historical results found")

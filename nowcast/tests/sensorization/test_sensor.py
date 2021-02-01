@@ -25,7 +25,7 @@ class TestComputeSensors:
         assert compute_sensors(
             date(2020, 5, 5), test_sensors, test_ground_truth_sensor, test_ground_truth, False
         ) == {
-            SensorConfig("i", "j", "k", 3): [LocationSeries("ca", "state", [date(2020, 5, 2)], [1.5])],
+            SensorConfig("i", "j", "k", 3): [LocationSeries("ca", "state", {date(2020, 5, 2): 1.5})],
         }
 
     @patch("delphi_nowcast.sensorization.sensor.compute_regression_sensor")
@@ -43,8 +43,8 @@ class TestComputeSensors:
         assert compute_sensors(
             date(2020, 5, 5), test_sensors, test_ground_truth_sensor, test_ground_truth, False
         ) == {
-            SensorConfig("i", "j", "k", 3): [LocationSeries("ca", "state", [date(2020, 5, 1)], [1.5])],
-            SensorConfig("a", "b", "c", 1): [LocationSeries("ca", "state", [date(2020, 5, 4)], [2.5])],
+            SensorConfig("i", "j", "k", 3): [LocationSeries("ca", "state", {date(2020, 5, 2): 1.5})],
+            SensorConfig("a", "b", "c", 1): [LocationSeries("ca", "state", {date(2020, 5, 4): 2.5})],
         }
 
 
@@ -53,15 +53,15 @@ class TestHisoricalSensors:
     @patch("delphi_nowcast.sensorization.sensor.get_historical_sensor_data")
     def test_historical_sensors_some_data(self, mock_historical):
         """Test non empty data is returned for first two sensors."""
-        mock_historical.side_effect = [(LocationSeries(dates=[date(2020, 1, 1)], values=[2]), []),
-                                  (LocationSeries(dates=[date(2020, 1, 3)], values=[4]), []),
+        mock_historical.side_effect = [(LocationSeries(data={date(2020, 1, 1): 2}), []),
+                                  (LocationSeries(data={date(2020, 1, 3): 4}), []),
                                   (LocationSeries(), [])]
         test_sensors = [SensorConfig("i", "j", "k", 3), SensorConfig("a", "b", "c", 1), SensorConfig("x", "y", "z", 2)]
         test_ground_truth = [LocationSeries("ca", "state")]
         assert historical_sensors(
             None, None, test_sensors, test_ground_truth) == {
-            SensorConfig("i", "j", "k", 3): [LocationSeries(dates=[date(2020, 1, 1)], values=[2])],
-            SensorConfig("a", "b", "c", 1): [LocationSeries(dates=[date(2020, 1, 3)], values=[4])]
+            SensorConfig("i", "j", "k", 3): [LocationSeries(data={date(2020, 1, 1): 2})],
+            SensorConfig("a", "b", "c", 1): [LocationSeries(data={date(2020, 1, 3): 4})]
         }
 
     @patch("delphi_nowcast.sensorization.sensor.get_historical_sensor_data")
@@ -82,7 +82,7 @@ class TestExportToCSV:
                                    signal="sig",
                                    name="test",
                                    lag=4)
-        test_value = LocationSeries("ca", "state", [date(2020, 1, 1)], [1.5])
+        test_value = LocationSeries("ca", "state", {date(2020, 1, 1): 1.5})
         with tempfile.TemporaryDirectory() as tmpdir:
             out_files = _export_to_csv(test_value, test_sensor, date(2020, 1, 5), receiving_dir=tmpdir)
             assert len(out_files) == 1

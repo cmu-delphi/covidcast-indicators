@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import re
 
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta  # pylint: disable=unused-import
 from os import listdir, makedirs
 from os.path import isfile, join, exists
 

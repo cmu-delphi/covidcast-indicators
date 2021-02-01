@@ -64,6 +64,7 @@ def get_indicator_data(sensors: List[SensorConfig],
     future = asyncio.ensure_future(fetch_epidata(all_combos, as_of.strftime("%Y%m%d")))
     responses = loop.run_until_complete(future)
     for response, sensor, location in responses:
+        # -2 = no results, 1 = success. Truncated data or server errors may lead to this Exception.
         if response["result"] not in (-2, 1):
             raise Exception(f"Bad result from Epidata: {response['message']}")
         data = LocationSeries(

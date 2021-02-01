@@ -9,6 +9,7 @@
     "aws_secret_access_key": ""
   },
   "bucket_name": "",
+  "log_exceptions": false,
   "validation": {
     "global": {
       "data_source": "jhu-csse",

@@ -12,5 +12,6 @@
   "wip_signal" : ["median_home_dwell_time_7dav",
                   "completely_home_prop_7dav",
                   "part_time_work_prop_7dav",
-                  "full_time_work_prop_7dav"]
+                  "full_time_work_prop_7dav"],
+  "log_exceptions": false
 }

@@ -13,23 +13,26 @@ from delphi_utils import (
     get_structured_logger
 )
 
+from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+                        SMOOTHED_POSITIVE, RAW_POSITIVE,
+                        SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
+                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS)
+from .generate_sensor import (generate_sensor_for_states,
+                              generate_sensor_for_other_geores)
 from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-from .generate_sensor import (generate_sensor_for_states,
-                              generate_sensor_for_other_geores)
-from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
-                        SMOOTHED_POSITIVE, RAW_POSITIVE,
-                        SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
-                        GEO_RESOLUTIONS, SENSORS, SMOOTHERS)
+
 
 def run_module():
     """Run the quidel_covidtest indicator."""
     start_time = time.time()
     params = read_params()
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     cache_dir = params["cache_dir"]
     export_dir = params["export_dir"]
     export_start_date = params["export_start_date"]

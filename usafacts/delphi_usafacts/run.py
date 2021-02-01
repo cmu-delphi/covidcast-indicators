@@ -71,7 +71,9 @@ def run_module():
     start_time = t.time()
     csv_export_count = 0
     oldest_final_export_date = None
-    logger = get_structured_logger(__name__, filename = params.get("log_filename"))
+    logger = get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
     export_start_date = params["export_start_date"]
     if export_start_date == "latest":
         export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)

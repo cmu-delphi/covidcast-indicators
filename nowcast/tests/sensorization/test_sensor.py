@@ -1,9 +1,11 @@
+import csv
 from datetime import date
 import os
 import tempfile
 from unittest.mock import patch
 
 import numpy as np
+import pandas as pd
 
 from delphi_nowcast.data_containers import LocationSeries, SensorConfig
 from delphi_nowcast.sensorization.sensor import compute_sensors, historical_sensors, _export_to_csv
@@ -87,5 +89,8 @@ class TestExportToCSV:
             out_file = out_files[0]
             assert os.path.isfile(out_file)
             assert out_file.endswith("issue_20200105/src/20200101_state_sig.csv")
-            with open(out_file) as f:
-                assert f.read() == "sensor_name,geo_value,value\ntest,ca,1.5\n"
+            out_file_df = pd.read_csv(out_file)
+            pd.testing.assert_frame_equal(out_file_df,
+                                          pd.DataFrame({"sensor_name": ["test"],
+                                                        "geo_value": ["ca"],
+                                                        "value": [1.5]}))

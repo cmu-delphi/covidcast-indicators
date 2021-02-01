@@ -32,7 +32,7 @@ def run_module():
     export_start_date = datetime.strptime(
         params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]
-    num_export_days = params.get("num_export_days", 14)
+    num_export_days = params.get("num_export_days", "all")
 
     logger = get_structured_logger(
         __name__, filename=params.get("log_filename"),

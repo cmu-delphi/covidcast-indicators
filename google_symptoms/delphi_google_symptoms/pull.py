@@ -94,7 +94,7 @@ def preprocess(df, level):
     return df
 
 
-def get_date_range(export_start_date, retrieve_days_before_now):
+def get_date_range(export_start_date, num_export_days):
     """Produce date range to retrieve data for.
 
     Calculate start of date range as a static offset from the end date
@@ -105,7 +105,7 @@ def get_date_range(export_start_date, retrieve_days_before_now):
     ----------
     export_start_date: date
         first date to retrieve data for
-    retrieve_days_before_now: int
+    num_export_days: int
         number of days before end date ("now") to export
 
     Returns
@@ -115,13 +115,17 @@ def get_date_range(export_start_date, retrieve_days_before_now):
     PAD_DAYS = 7
 
     end_date = date.today()
-    # Don't fetch data before the user-set start date. Convert both
-    # dates/datetimes to date to avoid error from trying to compare
-    # different types.
-    start_date = max(
-        end_date - timedelta(days=retrieve_days_before_now),
-        export_start_date.date()
-    )
+    if num_export_days == "all":
+        # Get all dates since export_start_date.
+        start_date = export_start_date
+    else:
+        # Don't fetch data before the user-set start date. Convert both
+        # dates/datetimes to date to avoid error from trying to compare
+        # different types.
+        start_date = max(
+            end_date - timedelta(days=num_export_days),
+            export_start_date.date()
+        )
 
     retrieve_dates = [
         start_date - timedelta(days=PAD_DAYS - 1),

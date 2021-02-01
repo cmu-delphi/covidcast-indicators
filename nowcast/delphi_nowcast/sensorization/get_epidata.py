@@ -12,6 +12,7 @@ from delphi_epidata import Epidata
 
 from ..data_containers import LocationSeries, SensorConfig
 
+EPIDATA_START_DATE = 20200101
 
 async def get(params, session, sensor, location):
     """Helper function to make Epidata GET requests."""
@@ -30,7 +31,7 @@ async def fetch_epidata(combos, as_of):
                     "signals": sensor.signal,
                     "time_type": "day",
                     "geo_type": location.geo_type,
-                    "time_values": f"20200101-{as_of}",
+                    "time_values": f"{EPIDATA_START_DATE}-{as_of}",
                     "geo_value": location.geo_value,
                     "as_of": as_of
                 }

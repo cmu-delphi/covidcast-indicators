@@ -53,6 +53,7 @@ def compute_sensors(as_of_date: date,
                 (sensor.source, sensor.signal, loc.geo_type, loc.geo_value)
             )
             if not covariates:
+                # TODO convert to log statements #689
                 print(f"No data: {(sensor.source, sensor.signal, loc.geo_type, loc.geo_value)}")
                 continue
             reg_sensor = compute_regression_sensor(sensor_pred_date, covariates, loc)

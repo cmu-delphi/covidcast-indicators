@@ -35,7 +35,7 @@ async def fetch_epidata(combos, as_of):
                     "geo_value": location.geo_value,
                     "as_of": as_of
                 }
-            task = asyncio.ensure_future(get(params, session, sensor, location))
+            task = asyncio.create_task(get(params, session, sensor, location))
             tasks.append(task)
         responses = await asyncio.gather(*tasks)
         return responses

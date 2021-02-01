@@ -32,6 +32,7 @@ def run_module():
     export_start_date = datetime.strptime(
         params["export_start_date"], "%Y-%m-%d")
     export_dir = params["export_dir"]
+    num_export_days = params.get("num_export_days", 14)
 
     logger = get_structured_logger(
         __name__, filename=params.get("log_filename"),
@@ -39,7 +40,8 @@ def run_module():
 
     # Pull GS data
     dfs = pull_gs_data(params["path_to_bigquery_credentials"],
-                       export_dir, export_start_date)
+                       export_start_date,
+                       num_export_days)
     gmpr = geomap.GeoMapper()
 
     for geo_res in GEO_RESOLUTIONS:

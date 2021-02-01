@@ -1,11 +1,7 @@
 """Retrieve data and wrangle into appropriate format."""
 # -*- coding: utf-8 -*-
 import re
-
 from datetime import date, datetime, timedelta  # pylint: disable=unused-import
-from os import listdir, makedirs
-from os.path import isfile, join, exists
-
 import pandas_gbq
 from google.oauth2 import service_account
 import numpy as np
@@ -98,55 +94,19 @@ def preprocess(df, level):
     return df
 
 
-def get_missing_dates(receiving_dir, export_start_date):
-    """Produce list of dates to retrieve data for.
+def get_date_range(export_start_date, retrieve_days_before_now):
+    """Produce date range to retrieve data for.
 
-    Date list is created based on dates seen in already exported CSVs.
-
-    Parameters
-    ----------
-    receiving_dir: str
-        path to output directory
-    export_start_date: date
-        first date to retrieve data for
-
-    Returns
-    -------
-    list
-    """
-    if not exists(receiving_dir):
-        makedirs(receiving_dir)
-
-    OUTPUT_NAME_PATTERN = re.compile("^[0-9]{8}_.*[.]csv")
-    existing_output_files = [f for f in listdir(receiving_dir) if isfile(
-        join(receiving_dir, f)) and OUTPUT_NAME_PATTERN.match(f)]
-
-    existing_output_dates = {datetime.strptime(f[0:8], "%Y%m%d").date()
-                             for f in existing_output_files}
-    expected_dates = {date.date() for date in pd.date_range(
-        start=export_start_date,
-        end=date.today(),
-        freq='D')}
-
-    missing_dates = list(expected_dates.difference(existing_output_dates))
-
-    return missing_dates
-
-
-def get_all_dates(receiving_dir, export_start_date):
-    """Pad missing dates with enough extra days to do smoothing.
-
-    Using the missing_dates list as reference, creates a new list of dates
-    spanning 6 days before the earliest date in missing_dates to today. This
-    pads missing_dates with enough prior days to produce smoothed estimates
-    starting on min(missing_dates) and fills in any gaps in missing_dates.
+    Calculate start of date range as a static offset from the end date
+    ("now"). Pad date range by an additional 7 days before the earliest
+    date to produce data for calculating smoothed estimates.
 
     Parameters
     ----------
-    receiving_dir: str
-        path to output directory
     export_start_date: date
         first date to retrieve data for
+    retrieve_days_before_now: int
+        number of days before end date ("now") to export
 
     Returns
     -------
@@ -154,24 +114,20 @@ def get_all_dates(receiving_dir, export_start_date):
     """
     PAD_DAYS = 7
 
-    missing_dates = get_missing_dates(receiving_dir, export_start_date)
-    if len(missing_dates) == 0:
-        return missing_dates
-
-    # Calculate list start date to avoid getting data before the
-    # user-set start date. Convert both dates/datetimes to date to avoid error
-    # from trying to compare different types.
+    end_date = date.today()
+    # Don't fetch data before the user-set start date. Convert both
+    # dates/datetimes to date to avoid error from trying to compare
+    # different types.
     start_date = max(
-        min(missing_dates) - timedelta(days=PAD_DAYS - 1),
+        end_date - timedelta(days=retrieve_days_before_now),
         export_start_date.date()
     )
 
-    retrieve_dates = {date.date() for date in pd.date_range(
-        start=start_date,
-        end=date.today(),
-        freq='D')}
+    retrieve_dates = [
+        start_date - timedelta(days=PAD_DAYS - 1),
+        end_date]
 
-    return list(retrieve_dates)
+    return retrieve_dates
 
 
 def format_dates_for_query(date_list):
@@ -187,30 +143,22 @@ def format_dates_for_query(date_list):
 
     Returns
     -------
-    str: "timestamp("YYYY-MM-DD"), ..."
+    list[str]: ["YYYY-MM-DD"), "YYYY-MM-DD"]
     """
-    earliest_available_symptom_search_year = 2017
-
-    filtered_date_strings = [datetime.strftime(date, "%Y-%m-%d")
-                             for date in date_list
-                             if date.year >= earliest_available_symptom_search_year]
-
-    # Convert list of dates into list of BigQuery-compatible timestamps.
-    query_string = 'timestamp("' + \
-        '"), timestamp("'.join(filtered_date_strings) + '")'
-
-    return query_string
+    formatted_date_strings = [datetime.strftime(date, "%Y-%m-%d")
+                              for date in date_list]
+    return formatted_date_strings
 
 
-def produce_query(level, date_string):
+def produce_query(level, date_range):
     """Create query string.
 
     Parameters
     ----------
     level: str
         "county" or "state"
-    date_string: str
-        "timestamp(date), ..." where timestamps are BigQuery-compatible
+    date_range: list[str]
+        ["YYYY-MM-DD"), "YYYY-MM-DD"] where dates are BigQuery-compatible.
 
     Returns
     -------
@@ -225,7 +173,7 @@ def produce_query(level, date_string):
         date,
         {symptom_cols}
     from `bigquery-public-data.covid19_symptom_search.{symptom_table}`
-    where timestamp(date) in ({date_list}) and
+    where timestamp(date) between timestamp("{start_date}") and timestamp("{end_date}") and
         country_region_code = "US"
     """
     base_level_table = {"state": "symptom_search_sub_region_1_daily",
@@ -235,12 +183,13 @@ def produce_query(level, date_string):
     query = base_query.format(
         symptom_cols=", ".join(colname_map.keys()),
         symptom_table=base_level_table[level],
-        date_list=date_string)
+        start_date=date_range[0],
+        end_date=date_range[1])
 
     return query
 
 
-def pull_gs_data_one_geolevel(level, date_string):
+def pull_gs_data_one_geolevel(level, date_range):
     """Pull latest data for a single geo level.
 
     Fetch data and transform it into the appropriate format, as described in
@@ -261,14 +210,14 @@ def pull_gs_data_one_geolevel(level, date_string):
     ----------
     level: str
         "county" or "state"
-    date_string: str
-        "timestamp("YYYY-MM-DD"), ..." where timestamps are BigQuery-compatible
+    date_range: list[str]
+        ["YYYY-MM-DD"), "YYYY-MM-DD"] where dates are BigQuery-compatible.
 
     Returns
     -------
     pd.DataFrame
     """
-    query = produce_query(level, date_string)
+    query = produce_query(level, date_range)
 
     df = pandas_gbq.read_gbq(query, progress_bar_type=None)
 
@@ -301,7 +250,7 @@ def initialize_credentials(path_to_credentials):
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
+def pull_gs_data(path_to_credentials, export_start_date, num_export_days):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
@@ -312,18 +261,18 @@ def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
         Path to BigQuery API key and service account json file
     level: str
         "county" or "state"
-    receiving_dir: str
-        path to output directory
     export_start_date: date
         first date to retrieve data for
+    num_export_days: int
+        number of days before end date ("now") to export
 
     Returns
     -------
     dict: {"county": pd.DataFrame, "state": pd.DataFrame}
     """
     # Fetch and format dates we want to attempt to retrieve
-    retrieve_dates = get_all_dates(receiving_dir, export_start_date)
-    retrieve_dates_dict = format_dates_for_query(retrieve_dates)
+    retrieve_dates = get_date_range(export_start_date, num_export_days)
+    retrieve_dates = format_dates_for_query(retrieve_dates)
 
     initialize_credentials(path_to_credentials)
 
@@ -331,10 +280,10 @@ def pull_gs_data(path_to_credentials, receiving_dir, export_start_date):
     dfs = {}
 
     # For state level data
-    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates_dict)
+    dfs["state"] = pull_gs_data_one_geolevel("state", retrieve_dates)
 
     # For county level data
-    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates_dict)
+    dfs["county"] = pull_gs_data_one_geolevel("county", retrieve_dates)
 
     # Add District of Columbia as county
     try:

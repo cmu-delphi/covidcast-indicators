@@ -54,21 +54,6 @@ county_data = pd.read_csv(
 # Set up fake list of dates to fetch.
 dates = [
     "20200726",
-    "20200727",
-    "20200728",
-    "20200729",
-    "20200730",
-    "20200731",
-    "20200801",
-    "20200802",
-    "20200803",
-    "20200804",
-    "20200805",
-    "20200806",
-    "20200807",
-    "20200808",
-    "20200809",
-    "20200810",
     "20200811"
 ]
 
@@ -84,7 +69,7 @@ def run_as_module():
     else:
         makedirs("receiving")
 
-    with mock.patch("delphi_google_symptoms.pull.get_all_dates",
+    with mock.patch("delphi_google_symptoms.pull.get_date_range",
                     return_value=date_list) as mock_all_dates:
         with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
                         return_value=None) as mock_credentials:

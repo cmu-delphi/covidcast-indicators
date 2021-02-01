@@ -9,5 +9,35 @@
     "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
   },
   "bucket_name": "delphi-covidcast-indicator-output",
-  "log_filename": "/var/log/indicators/usafacts.log"
+  "log_filename": "/var/log/indicators/usafacts.log",
+  "validation": {
+    "global": {
+      "data_source": "usa-facts",
+      "span_length": 14,
+      "end_date": "latest",
+      "suppressed_errors": [
+        {"check_name": "check_val_lt_0"},
+        {"check_name": "check_test_vs_reference_avg_changed",
+         "signal": "deaths_7dav_incidence_prop",
+         "geo_type": "county"}
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 100,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "confirmed_7dav_cumulative_num",
+        "confirmed_7dav_cumulative_prop",
+        "confirmed_7dav_incidence_num",
+        "confirmed_7dav_incidence_prop",
+        "deaths_7dav_cumulative_num",
+        "deaths_7dav_cumulative_prop",
+        "deaths_7dav_incidence_num",
+        "deaths_7dav_incidence_prop"]
+    }
+  }
 }

@@ -1,7 +1,7 @@
 """Data container classes for holding sensor configurations and data needed for fusion."""
 
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 from datetime import date
 
 from numpy import nan, nanmean, isnan
@@ -22,20 +22,9 @@ class SensorConfig:
 class LocationSeries:
     """Data class for holding time series data specific to a single location."""
 
-    def __init__(self,
-                 geo_value: str = None,
-                 geo_type: str = None,
-                 dates: List[date] = None,
-                 values: List[float] = None):
-        """Initialize LocationSeries."""
-        has_data = dates is not None and values is not None
-        if has_data and (len(dates) != len(values)):
-            raise ValueError("Length of dates and values differs.")
-        if has_data and len(set(dates)) < len(dates):
-            raise ValueError("Duplicate dates not allowed.")
-        self.geo_value = geo_value
-        self.geo_type = geo_type
-        self.data = dict(zip(dates, values)) if has_data else {}
+    geo_value: str = None
+    geo_type: str = None
+    data: Dict[date, float] = None
 
     def add_data(self,
                  day: date,
@@ -45,15 +34,10 @@ class LocationSeries:
 
         Safer than appending individually since the two lists shouldn't have different lengths.
         """
-        if self.data.get(day) and not overwrite:
+        if day in self.dates and not overwrite:
             raise ValueError("Date already exists in LocationSeries. "
                              "To overwrite, use overwrite=True")
         self.data[day] = value
-
-    @property
-    def empty(self) -> bool:
-        """Check if there is no stored data in the class."""
-        return not self.dates and not self.values
 
     @property
     def dates(self) -> list:

@@ -181,6 +181,8 @@ post_process_aggs <- function(df, aggregations, cw_list) {
       output <- code_multiselect(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response
       output <- code_numeric_freeresponse(df, aggregations, col_var)
+    } else if (startsWith(col_var, "mc_")) { # Multiple choice
+      output <- list(df, aggregations)
     }
     
     df <- output[[1]]

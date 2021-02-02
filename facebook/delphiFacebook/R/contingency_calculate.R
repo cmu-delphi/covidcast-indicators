@@ -13,8 +13,6 @@
 #'   be a non-integer
 #' 
 #' @return a list of named means and other descriptive statistics
-#'
-#' @export
 compute_numeric <- function(response, weight, sample_size, total_represented)
 {
   response_mean <- compute_count_response(response, weight, sample_size)
@@ -37,8 +35,6 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
 #'   be a non-integer
 #'      
 #' @return a list of named percentages and other descriptive statistics
-#'
-#' @export
 compute_binary <- function(response, weight, sample_size, total_represented)
 {
   response_pct <- compute_binary_response(response, weight, sample_size)
@@ -60,8 +56,6 @@ compute_binary <- function(response, weight, sample_size, total_represented)
 #'   be a non-integer
 #'      
 #' @return a list of named percentages and other descriptive statistics
-#'
-#' @export
 compute_multiselect <- function(response, weight, sample_size, total_represented)
 {
   response_pct <- compute_binary(response, weight, sample_size, total_represented)
@@ -86,8 +80,6 @@ compute_multiselect <- function(response, weight, sample_size, total_represented
 #'   be a non-integer
 #'
 #' @return a list of named counts and other descriptive statistics
-#'
-#' @export
 compute_multiple_choice <- function(response, weight, sample_size, total_represented)
 {
   assert(all( response >= 0 ))
@@ -108,7 +100,6 @@ compute_multiple_choice <- function(response, weight, sample_size, total_represe
 #' @param df Data frame
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
-#' @export
 post_convert_count_to_pct <- function(df) {
   return(mutate(df,
                 val = 100 * .data$val / sum(.data$val, na.rm=TRUE)))

@@ -9,6 +9,7 @@ TODO:
 """
 # pylint: disable=too-many-lines
 from os.path import join
+import warnings
 
 import pandas as pd
 import pkg_resources
@@ -371,6 +372,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         from_col=None,
         new_col=None,
         date_col="date",
+        pop_col=None,
         data_cols=None,
         dropna=True,
     ):
@@ -416,6 +418,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
 
+        if from_code == "fips" and pop_col:
+            # Zero out the duplicate population in megafips to avoid double counting.
+            megafips_to_zero = [i in self._megafips_to_zero(df[from_col]) for i in df[from_col]]
+            df.loc[megafips_to_zero, "population"] = 0
+            print(megafips_to_zero)
+        if from_code == "fips" and not pop_col:
+            warnings.warn("Without specifying a population column, megaFIPS populations be double "
+                          "counted later on. If working with populations, add the FIPS column "
+                          "before replacing the geocode.")
         df = self.add_geocode(
             df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna
         ).drop(columns=from_col)
@@ -541,6 +552,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if geo_type == "county":
             return "fips"
         return geo_type
+
     def get_geo_values(self, geo_type):
         """
         Return a set of all values for a given geography type.
@@ -580,3 +592,16 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             crosswalk = pd.read_csv(stream, dtype=str)
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
+
+    def _megafips_to_zero(self, fips_list):
+        output = set()
+        fips_set = set(fips_list)
+        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1, 73)}
+        for state in state_fips_codes:
+            is_present = state in fips_set
+            # check if megafips is the only code reported for that state
+            is_only_fips = not any(i.startswith(state[:2]) and
+                                   not i.endswith(state[2:]) for i in fips_set)
+            if is_present and not is_only_fips:
+                output.add(state)
+        return output

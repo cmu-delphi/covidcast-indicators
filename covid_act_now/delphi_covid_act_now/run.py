@@ -21,7 +21,6 @@ def run_module():
     params = read_params()
     export_dir = params["export_dir"]
     cache_dir = params["cache_dir"]
-    wip_signal = params["wip_signal"]
     parquet_url = params["parquet_url"]
 
     # Archive Differ configuration

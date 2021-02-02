@@ -12,6 +12,7 @@ gmpr = GeoMapper()
 def positivity_rate(x):
     """
     Find Positivity Rate from binomial counts.
+
     Assumes input sample_size are all > 0.
 
     Parameters
@@ -31,6 +32,7 @@ def positivity_rate(x):
 def std_err(x):
     """
     Find Standard Error of a binomial proportion.
+
     Assumes input sample_size are all > 0.
 
     Parameters

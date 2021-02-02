@@ -97,20 +97,19 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
             # It is not clear how to calculate the proportion for unallocated
             # cases/deaths, so we exclude them for those sensors.
             df = df.append(unassigned_counties)
-        df["geo_id"] = df["fips"]
-    elif geo_res == "state":
+        df.rename({"fips": "geo_id"}, inplace=True, axis=1)
+    elif geo_res in ("state", "hhs", "nation"):
         # Grab first two digits of fips
         # Map state fips to us postal code
         # Add unallocated cases/deaths
-        df = df.append(unassigned_counties)
-        df = geo_mapper.add_geocode(df, "fips", "state_id", new_col="geo_id")
 
-        # Zero out the state FIPS population to avoid double counting.
-        df = df.set_index("fips")
-        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1, 73)}
-        subset_state_fips_codes = set(df.index.values) & state_fips_codes
-        df.loc[subset_state_fips_codes, "population"] = 0
-        df = df.reset_index()
+        df = df.append(unassigned_counties)
+        df = geo_mapper.replace_geocode(df,
+                                        "fips",
+                                        "state_id" if geo_res == "state" else geo_res,
+                                        new_col="geo_id",
+                                        date_col="timestamp",
+                                        pop_col="population")
     else:
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
@@ -125,7 +124,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         merged["new_counts"] = merged["new_counts"] * merged["weight"]
         merged["population"] = merged["population"] * merged["weight"]
         df = merged.drop(["weight"], axis=1)
-    df = df.drop("fips", axis=1)
+        df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] =\

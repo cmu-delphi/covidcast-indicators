@@ -401,10 +401,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         date_col: str or None, default "date"
             Specify which column contains the date values. Used for value aggregation.
             If None, then the aggregation is done only on geo_id.
+        pop_col: str or None
+            Specify which columns contains population values. Used for correcting for double
+            counting if a megafips is present.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
-        dropna: bool, default False
+        dropna: bool, default True
             Determines how the merge with the crosswalk file is done. If True, the join is inner,
             and if False, the join is left. The inner join will drop records from the input database
             that have no translation in the crosswalk, while the outer join will keep those records

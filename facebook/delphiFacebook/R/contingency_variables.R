@@ -178,62 +178,6 @@ rename_responses <- function(df) {
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
   df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
   
-  # Make derivative columns.
-  if ("mc_occupational_group" %in% names(df)) {
-    df$b_work_in_healthcare <- (
-      df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"
-    )
-  } else {
-    df$b_work_in_healthcare <- NA_real_
-  }
-
-  
-  df$mc_simple_education <- case_when(
-    df$mc_education %in% c("Less than high school", 
-                           "High school graduate or equivalent") ~ "High school or less", 
-    df$mc_education %in% c("Some college")  ~ "Some college",
-    df$mc_education %in% c("2 year degree", 
-                           "4 year degree", 
-                           "Master's degree", 
-                           "Professional degree", 
-                           "Doctorate")  ~ "College or more"
-  )
-  
-  df$mc_simple_race <- case_when(
-    df$mc_race %in% c("White") ~ "White", 
-    df$mc_race %in% c("Black or African American")  ~ "Black",
-    df$mc_race %in% c("Asian")  ~ "Asian",
-    df$mc_race %in% c("American Indian or Alaska Native", 
-                      "Native Hawaiian or Pacific Islander",
-                      "Other", 
-                      "Multiracial")  ~ "Other"
-  )
-  
-  df$b_25_or_older <- case_when(
-    df$mc_age != "18-24" ~ 1,
-    df$mc_age != "18-24" ~ NA_real_
-  )
-    
-  df$b_65_or_older <- (
-    df$mc_age == "65-74" | df$mc_age == "75+"
-  )
-  
-  if ("mc_accept_cov_vaccine" %in% names(df)) {
-    df$b_hesitant_cov_vaccine <- (
-      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"
-    )
-  } else {
-    df$b_hesitant_cov_vaccine <- NA_real_
-  }
-
-  if ("mc_concerned_sideeffects" %in% names(df)) {
-    df$b_concerned_sideeffects <- (
-      df$mc_concerned_sideeffects == 1 | df$mc_concerned_sideeffects == 2
-    )
-  } else {
-    df$b_concerned_sideeffects <- NA_real_
-  }
-  
   return(df)
 }
 

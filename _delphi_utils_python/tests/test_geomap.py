@@ -324,6 +324,8 @@ class TestGeoMapper:
                 "population": [2, 1, 7, 9]
             })
         )
+        with pytest.warns(UserWarning):
+            gmpr.replace_geocode(self.fips_data_2, "fips", "state_id")
 
     def test__megafips_to_zero(self):
         gmpr = GeoMapper()

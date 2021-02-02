@@ -424,9 +424,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df.loc[megafips_to_zero, "population"] = 0
             print(megafips_to_zero)
         if from_code == "fips" and not pop_col:
-            warnings.warn("Without specifying a population column, megaFIPS populations be double "
-                          "counted later on. If working with populations, add the FIPS column "
-                          "before replacing the geocode.")
+            warnings.warn("Without specifying a population column, megaFIPS populations may be "
+                          "double counted later on. If working with populations, add the FIPS "
+                          "column before replacing the geocode.")
         df = self.add_geocode(
             df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna
         ).drop(columns=from_col)

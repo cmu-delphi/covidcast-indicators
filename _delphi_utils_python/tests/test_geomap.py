@@ -315,13 +315,13 @@ class TestGeoMapper:
     def test_megafips_zeroed(self):
         gmpr = GeoMapper()
         pd.testing.assert_frame_equal(
-            gmpr.replace_geocode(self.fips_data_2, "fips", "state_id", pop_col="population"),
+            gmpr.replace_geocode(self.fips_data_2, "fips", "state_code", pop_col="population"),
             pd.DataFrame({
                 "date": [pd.Timestamp("2018-01-01")] * 4,
-                "state_id": ["ak", "al", "az", "in"],
-                "count": [21., 2., 6., 10026.],
-                "total": [401., 4., 20., 100011.],
-                "population": [2, 1, 7, 9]
+                "state_code": ["01", "02", "04", "18"],
+                "count": [2., 21., 6., 10026.],
+                "total": [4., 401., 20., 100011.],
+                "population": [1, 2, 7, 9]
             })
         )
         with pytest.warns(UserWarning):
@@ -331,4 +331,4 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         test_fips_set = ["01001", "01003", "01000", "02000", "03001",
                          "04000", "04001", "05000", "06001", "06002"]
-        assert gmpr._megafips_to_zero(test_fips_set) == {"01000", "04000"}
+        assert gmpr._megafips_to_zero(test_fips_set) == {"01000", "03000", "04000", "06000"}

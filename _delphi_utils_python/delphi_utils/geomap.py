@@ -423,8 +423,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
         if from_code == "fips" and pop_col:
             # Zero out the duplicate population in megafips to avoid double counting.
-            megafips_to_zero = [i in self._megafips_to_zero(df[from_col]) for i in df[from_col]]
-            df.loc[megafips_to_zero, "population"] = 0
+            megafips_to_zero = self._megafips_to_zero(df[from_col])
+            megafips_to_zero_mask = [i in megafips_to_zero for i in df[from_col]]
+            df.loc[megafips_to_zero_mask, "population"] = 0
             print(megafips_to_zero)
         if from_code == "fips" and not pop_col:
             warnings.warn("Without specifying a population column, megaFIPS populations may be "
@@ -597,14 +598,23 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             return self.geo_lists[geo_type]
 
     def _megafips_to_zero(self, fips_list):
-        output = set()
-        fips_set = set(fips_list)
-        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1, 73)}
-        for state in state_fips_codes:
-            is_present = state in fips_set
-            # check if megafips is the only code reported for that state
-            is_only_fips = not any(i.startswith(state[:2]) and
-                                   not i.endswith(state[2:]) for i in fips_set)
-            if is_present and not is_only_fips:
-                output.add(state)
-        return output
+        """
+        Select megafips values for which we want to zero out the population.
+
+        Parameters
+        ----------
+        fips_list: list
+            List of fips present in the data.
+
+        Returns
+        -------
+            Set of all megafips which are reported for a state which also has other fips reported.
+            This means if a state reports only a megafips and nothing else, it will not be returned.
+            The set may include megafips which are not present in the data if all counties are
+            reported for a state without a megafips.
+        """
+        index = set()
+        for fips in fips_list:
+            if fips[2:] != "000":
+                index.add(fips[:2])
+        return {statecode + "000" for statecode in index}

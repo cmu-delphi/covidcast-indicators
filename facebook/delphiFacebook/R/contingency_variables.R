@@ -444,7 +444,7 @@ code_multiselect <- function(df, aggregations, col_var) {
       new_row <- old_row
       response_code <- response_codes[col_ind]
       
-      new_row$name <- paste(old_row$name, response_code, sep="_")
+      new_row$name <- paste(old_row$name, new_binary_cols[col_ind], sep="_")
       new_row$id <- paste(old_row$id, response_code, sep="_")
       new_row$metric <- new_binary_cols[col_ind]
       aggregations <- add_row(aggregations, new_row)

@@ -4,12 +4,6 @@ library(data.table)
 
 context("Verifying the data manipulation correctness of the contingency_tables pipeline")
 
-# mc_anxiety = C8_1
-# mc_gender = D1
-# n_hh_num_total = A2b
-# b_hh_fever = A1_1
-# ms_comorbidities = C1
-# zip = A3
 base_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   "freq_anxiety", "mc_anxiety", c("mc_gender"), compute_multiple_choice, I,
@@ -23,6 +17,19 @@ mock_load_archive <- function(...) {
   return(list(input_data = NULL, seen_tokens = NULL))
 }
 
+
+# `simple_responses.csv` was created by copying `responses.csv` and modifying
+# columns C1 (comorbidities), C8_1 (anxiety), and D1 (gender).
+#     - All C1 responses set to "4" (high blood pressure)
+#     - All C8_1 responses set to "1" (no anxiety)
+#     - All D1 responses set to "2" (female)
+#
+# `simple_synthetic.csv` was created by copying each row in 
+# `simple_responses.csv`100 times for a total of 2000 responses and modifying
+# columns C1 (comorbidities), C8_1 (anxiety), and token (for uniqueness).
+#     - Obs 11 had C1 response set to "4,12" (high blood pressure + type 1 diabetes)
+#     - Obs 1 had C8_1 response set to "4" (anxious all the time)
+#     - Tokens were reset to row numbers to prevent errors due to non-uniqueness
 get_params <- function(output_dir) {
   params <- read_params("params-contingency-full.json")
   params$export_dir <- output_dir
@@ -136,7 +143,7 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
   # Expected file contents
   expected_output <- as.data.frame(tribble(
     ~geo_id, ~mc_gender,
-    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_High_blood_pressure, ~sample_size_pct_comorbidities_High_blood_pressure, ~represented_pct_comorbidities_High_blood_pressure,
     ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
     "us", "Female",
     100, 2000L, 100 * 2000,
@@ -180,7 +187,7 @@ test_that("testing run with multiple aggregations per group", {
   expected_other <- as.data.frame(tribble(
     ~geo_id, ~mc_gender, ~val_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
     ~val_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
-    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_High_blood_pressure, ~sample_size_pct_comorbidities_High_blood_pressure, ~represented_pct_comorbidities_High_blood_pressure,
     ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
     "us", "Female", hh_avg, 2000L, 100 * 2000,
     fever_prop * 100, 2000L, 100 * 2000,
@@ -327,12 +334,12 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
 
   # Expected file contents
   raw_data <- read.csv("./input/simple_synthetic.csv")
-  comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "9"=0, .default=1) , rand_weights)
+  comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "4"=0, .default=1) , rand_weights)
   comorbid_prop <- round(comorbid_prop, digits=7)
-
+  
   expected_output <- as.data.frame(tribble(
     ~geo_id, ~mc_gender,
-    ~val_pct_comorbidities_None_listed, ~sample_size_pct_comorbidities_None_listed, ~represented_pct_comorbidities_None_listed,
+    ~val_pct_comorbidities_High_blood_pressure, ~sample_size_pct_comorbidities_High_blood_pressure, ~represented_pct_comorbidities_High_blood_pressure,
     ~val_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
     "us", "Female",
     100, 2000L, sum(rand_weights),

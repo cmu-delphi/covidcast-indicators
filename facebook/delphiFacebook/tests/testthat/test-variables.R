@@ -59,7 +59,7 @@ test_that("vaccine acceptance is coded", {
   )
 
   out <- code_vaccines(input_data)
-
-  expect_equal(out$v_accept_covid_vaccine_plus,
+  
+  expect_equal(out$v_covid_vaccinated_or_accept,
                c(1, 1, 0, 0, 1, NA))
 })

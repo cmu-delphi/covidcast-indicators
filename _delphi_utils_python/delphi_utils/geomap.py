@@ -425,7 +425,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             # Zero out the duplicate population in megafips to avoid double counting.
             megafips_to_zero = [i in self._megafips_to_zero(df[from_col]) for i in df[from_col]]
             df.loc[megafips_to_zero, "population"] = 0
-            print(megafips_to_zero)
         if from_code == "fips" and not pop_col:
             warnings.warn("Without specifying a population column, megaFIPS populations may be "
                           "double counted later on. If working with populations, add the population "

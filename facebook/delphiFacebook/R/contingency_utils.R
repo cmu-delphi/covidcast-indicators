@@ -13,35 +13,37 @@
 #' @export
 update_params <- function(params) {
   if ( !is.null(params$start_date) ) {
-    if ( !is.null(params$end_date) ) {
-      # Use all data within explicitly set date range.
-      date_range <- list(params$start_time, params$end_time)
-      params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-    } else {
-      stop(paste("both start_date and end_date must be set to produce aggregates",
-                 "over a specific date range"))
-    }
+    # Use all data within the date range, either as explicitly set or assuming
+    # "now" is the end_date.
+    date_range <- list(params$start_time, 
+                       ifelse(!is.null(params$end_date), params$end_date, Sys.Date()))
+    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+    
   } else if ( is.null(params$end_date) & (is.null(params$input) | length(params$input) == 0) ) {
     # Neither end_date nor list of input files is provided, assume want to use
-    # most current dates and data.
+    # most current full time period and data.
     date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+    
   } else if ( !is.null(params$end_date) & (is.null(params$input) | length(params$input) == 0) ) {
     # List of input files is not provided, assume want to use the full period
     # preceding the provided end_date
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+    
   } else if ( is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
     # Use list of input files provided, even if it does not constitute a full 
     # period. Use dates in input files to select range.
     date_range <- get_date_range_from_filenames(params)
+    
   } else if ( !is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
-    stop(paste("both end_date and list of input files cannot be provided in", 
-               "params. To run aggregations on a specific set of input files",
-               "please remove end_date from params."))
+    # Use the full period preceding the provided end_date AND use only the list
+    # of input files provided, even if they don't span the full period.
+    date_range <- get_range_prev_full_period(
+      as_date(params$end_date), params$aggregate_range)
   }
-
+  
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }

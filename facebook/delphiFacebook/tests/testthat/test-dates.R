@@ -77,7 +77,7 @@ test_that("testing get_range_prev_full_period command", {
                     ymd_hms("2020-02-29 23:59:59", tz=timezone)))
 
   expect_error(get_range_prev_full_period(ymd("2020-03-01"), "year"), 
-               "invalid time period selection; must indicate either 'month' or 'week'")
+               "'arg' should be one of \"month\", \"week\"")
 })
 
 ## Date utilities

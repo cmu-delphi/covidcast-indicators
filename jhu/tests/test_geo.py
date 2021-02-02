@@ -38,7 +38,7 @@ class TestGeoMap:
     def test_state(self, jhu_confirmed_test_data):
         df = jhu_confirmed_test_data
         new_df = geo_map(df, "state")
-        assert new_df.loc[0, "population"] == 723231
+
         gmpr = GeoMapper()
         test_df = gmpr.replace_geocode(df, "fips", "state_id", date_col="timestamp", new_col="state")
 
@@ -73,7 +73,7 @@ class TestGeoMap:
             test_df = jhu_confirmed_test_data
             new_df = geo_map(test_df, geo)
             gmpr = GeoMapper()
-            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp", pop_col="population")
+            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
 
             new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
             test_df = test_df.set_index([geo, "timestamp"]).sort_index()

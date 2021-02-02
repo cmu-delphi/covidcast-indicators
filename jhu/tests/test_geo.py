@@ -73,7 +73,7 @@ class TestGeoMap:
             test_df = jhu_confirmed_test_data
             new_df = geo_map(test_df, geo)
             gmpr = GeoMapper()
-            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
+            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp", pop_col="population")
 
             new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
             test_df = test_df.set_index([geo, "timestamp"]).sort_index()
@@ -90,13 +90,9 @@ class TestGeoMap:
             assert not new_df["cumulative_prop"].eq(np.inf).any()
 
     def test_populations(self, jhu_confirmed_test_data):
-        gmpr = GeoMapper()
-        new_df = gmpr.replace_geocode(jhu_confirmed_test_data, "fips", "state_id",
-                                      date_col="timestamp", pop_col="population")
+        new_df = geo_map(jhu_confirmed_test_data, "state")
         assert new_df.loc[0, "population"] == 723231
-        new_df = gmpr.replace_geocode(jhu_confirmed_test_data, "fips", "hhs",
-                                      date_col="timestamp", pop_col="population")
+        new_df = geo_map(jhu_confirmed_test_data, "hhs")
         assert new_df.loc[0, "population"] == 14845063
-        new_df = gmpr.replace_geocode(jhu_confirmed_test_data, "fips", "nation",
-                                      date_col="timestamp", pop_col="population")
+        new_df = geo_map(jhu_confirmed_test_data, "nation")
         assert new_df.loc[0, "population"] == 331940098

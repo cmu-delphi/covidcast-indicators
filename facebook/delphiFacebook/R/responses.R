@@ -31,7 +31,7 @@ load_responses_all <- function(params) {
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
 #' @importFrom readr read_lines cols locale col_character col_integer
-#' @importFrom dplyr arrange desc case_when
+#' @importFrom dplyr arrange desc case_when mutate if_else
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
@@ -55,7 +55,7 @@ load_response_one <- function(input_filename, params) {
   ## are always character data.
   input_data <- read_csv(full_path, skip = 3L, col_names = col_names,
                          col_types = cols(
-                           A2 = col_integer(),
+                           A2 = col_character(),
                            A3 = col_character(),
                            B2 = col_character(),
                            B2_14_TEXT = col_character(),
@@ -116,6 +116,13 @@ load_response_one <- function(input_filename, params) {
   # from knowing their wave. Discard.
   input_data <- filter(input_data, !is.na(SurveyID))
 
+  # Convert A2 to integer, keeping only responses that are integers or have a
+  # single value-less decimal place ("xx.0")
+  input_data <- mutate(input_data,
+                       A2 = if_else(grepl("^[0-9]+[.]?0?$", A2),
+                                    as.integer(A2),
+                                    NA_integer_))
+  
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
 
@@ -298,7 +305,8 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 #' @return corrected data frame, where V4 is the authoritative column
 #' @importFrom dplyr case_when
 bodge_v4_translation <- function(input_data) {
-  if (!("V4_1" %in% names(input_data))) {
+  if (!("V4_1" %in% names(input_data)) &&
+        !("V4a_1" %in% names(input_data))) {
     # Data unaffected; skip.
     return(input_data)
   }

@@ -33,19 +33,15 @@ def geo_map(df: pd.DataFrame, geo_res: str):
 
     gmpr = GeoMapper()
     if geo_res == "county":
-        df.rename(columns={'fips': 'geo_id'}, inplace=True)
+        df.rename(columns={"fips": "geo_id"}, inplace=True)
     elif geo_res == "state":
-        df = df.set_index("fips")
-        # Zero out the state FIPS population to avoid double counting.
-        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1,73)}
-        subset_state_fips_codes = set(df.index.values) & state_fips_codes
-        df.loc[subset_state_fips_codes, "population"] = 0
-        df = df.reset_index()
-        df = gmpr.replace_geocode(df, "fips", "state_id", new_col="geo_id", date_col="timestamp")
+        df = gmpr.replace_geocode(df, "fips", "state_id",
+                                  new_col="geo_id", date_col="timestamp", pop_col="population")
     else:
-        df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
+        df = gmpr.replace_geocode(df, "fips", geo_res,
+                                  new_col="geo_id", date_col="timestamp", pop_col="population")
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
-    df['new_counts'] = df['new_counts']
-    df['cumulative_counts'] = df['cumulative_counts']
+    df["new_counts"] = df["new_counts"]
+    df["cumulative_counts"] = df["cumulative_counts"]
     return df

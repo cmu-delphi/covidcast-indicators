@@ -402,7 +402,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             Specify which column contains the date values. Used for value aggregation.
             If None, then the aggregation is done only on geo_id.
         pop_col: str or None
-            Specify which columns contains population values. Used for correcting for double
+            Specify which columns contains population values. Used to avoid double
             counting if a megafips is present.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
@@ -426,10 +426,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             megafips_to_zero = self._megafips_to_zero(df[from_col])
             megafips_to_zero_mask = [i in megafips_to_zero for i in df[from_col]]
             df.loc[megafips_to_zero_mask, "population"] = 0
-            print(megafips_to_zero)
         if from_code == "fips" and not pop_col:
             warnings.warn("Without specifying a population column, megaFIPS populations may be "
-                          "double counted later on. If working with populations, add the FIPS "
+                          "double counted later on. If working with populations, add the population "
                           "column before replacing the geocode.")
         df = self.add_geocode(
             df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna

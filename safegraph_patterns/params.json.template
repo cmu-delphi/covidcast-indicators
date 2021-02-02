@@ -9,4 +9,5 @@
   "aws_default_region": "",
   "aws_endpoint": "",
   "sync": true,
+  "log_exceptions": false
 }

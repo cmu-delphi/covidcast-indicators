@@ -68,44 +68,23 @@ class TestGeoMap:
         assert not new_df["incidence"].eq(np.inf).any()
         assert not new_df["cumulative_prop"].eq(np.inf).any()
 
+    def test_other_geos(self, jhu_confirmed_test_data):
+        for geo in ["msa", "hrr", "hhs", "nation"]:
+            test_df = jhu_confirmed_test_data
+            new_df = geo_map(test_df, geo)
+            gmpr = GeoMapper()
+            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
 
-    def test_hrr(self, jhu_confirmed_test_data):
-        test_df = jhu_confirmed_test_data
-        new_df = geo_map(test_df, "hrr")
-        gmpr = GeoMapper()
-        test_df = gmpr.replace_geocode(test_df, "fips", "hrr", date_col="timestamp")
+            new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
+            test_df = test_df.set_index([geo, "timestamp"]).sort_index()
 
-        new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
-        test_df = test_df.set_index(["hrr", "timestamp"]).sort_index()
-
-        # Check that the non-proportional columns are identical
-        assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
-        # Check that the proportional signals are identical
-        exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
-        expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"]  * INCIDENCE_BASE
-        assert new_df["incidence"].eq(exp_incidence).all()
-        assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
-        # Make sure the prop signals don't have inf values
-        assert not new_df["incidence"].eq(np.inf).any()
-        assert not new_df["cumulative_prop"].eq(np.inf).any()
-
-
-    def test_msa(self, jhu_confirmed_test_data):
-        test_df = jhu_confirmed_test_data
-        new_df = geo_map(test_df, "msa")
-        gmpr = GeoMapper()
-        test_df = gmpr.replace_geocode(test_df, "fips", "msa", date_col="timestamp")
-
-        new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
-        test_df = test_df.set_index(["msa", "timestamp"]).sort_index()
-
-        # Check that the non-proportional columns are identical
-        assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
-        # Check that the proportional signals are identical
-        exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
-        expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"]  * INCIDENCE_BASE
-        assert new_df["incidence"].eq(exp_incidence).all()
-        assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
-        # Make sure the prop signals don't have inf values
-        assert not new_df["incidence"].eq(np.inf).any()
-        assert not new_df["cumulative_prop"].eq(np.inf).any()
+            # Check that the non-proportional columns are identical
+            assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
+            # Check that the proportional signals are identical
+            exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
+            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"]  * INCIDENCE_BASE
+            assert new_df["incidence"].eq(exp_incidence).all()
+            assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
+            # Make sure the prop signals don't have inf values
+            assert not new_df["incidence"].eq(np.inf).any()
+            assert not new_df["cumulative_prop"].eq(np.inf).any()

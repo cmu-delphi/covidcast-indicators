@@ -37,6 +37,11 @@ def create_export_csv(
         Latest date to export or None if no maximum date restrictions should be applied.
     remove_null_samples: Optional[bool]
         Whether to remove entries whose sample sizes are null.
+
+    Returns
+    ---------
+    dates: pd.Series[datetime]
+        Series of dates for which CSV files were exported.
     """
     df = df.copy()
 
@@ -61,3 +66,4 @@ def create_export_csv(
         if remove_null_samples:
             export_df = export_df[export_df["sample_size"].notnull()]
         export_df.to_csv(export_file, index=False, na_rep="NA")
+    return dates

@@ -22,7 +22,7 @@ class TestRun:
             "20200810",
             "20200811"
         ]
-        geos = ["county", "state"]
+        geos = ["county", "state", "hhs", "nation"]
         metrics = ["anosmia", "ageusia", "sum_anosmia_ageusia"]
         smoother = ["raw", "smoothed"]
 
@@ -36,6 +36,6 @@ class TestRun:
     def test_output_file_format(self, run_as_module):
 
         df = pd.read_csv(
-            join("receiving", "20200810_state_anosmia_wip_smoothed_search.csv")
+            join("receiving", "20200810_state_anosmia_smoothed_search.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

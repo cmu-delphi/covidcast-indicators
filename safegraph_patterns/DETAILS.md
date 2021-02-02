@@ -2,7 +2,7 @@
 
 We import Zip Code-level raw mobility indicators from SafeGraph **Weekly 
 Patterns** dataset, calculate functions of the raw data, and then aggregate 
-he data to the county, hrr, msa and state levels.
+he data to the county, hrr, msa, hhs, nation, and state levels.
 
 ## Brand Information
 SafeGraph provides daily number of visits to points of interest (POIs) in Weekly
@@ -22,6 +22,8 @@ new necessary `brand_info.csv` in `./statics` with suffix YYYYMM(release version
 * `msa`: reported using CBSA (consistent with all other COVIDcast sensors)
 * `hrr`: reported using HRR number (consistent with all other COVIDcast sensors)
 * `state`: reported using two-letter postal code
+* `hhs`: reported using HHS region number
+* `nation`: reported using two-letter country abbreviation. Just `us` for now.
 
 ## Metrics,  Level 1 (`m1`)
 * `bars_visit`: The number of visits to bars(places with NAICS code = 722410)

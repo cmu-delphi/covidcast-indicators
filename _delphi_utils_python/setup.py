@@ -12,6 +12,8 @@ required = [
     "pylint",
     "pytest",
     "pytest-cov",
+    "slackclient",
+    "structlog",
     "xlrd"
 ]
 

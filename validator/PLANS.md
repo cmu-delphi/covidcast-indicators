@@ -22,8 +22,10 @@
 * Most recent date seen in source data is not older than most recent date seen in reference data
 * Similar number of obs per day as recent API data (static threshold)
 * Similar average value as API data (static threshold)
+* Outliers in cases and deaths signals using [this method](https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections)
 * Source data for specified date range is empty
 * API data for specified date range is empty
+* Duplicate rows
 
 
 ## Current features
@@ -38,12 +40,14 @@
 
 ### Starter/small issues
 
-* Check for duplicate rows
 * Backfill problems, especially with JHU and USA Facts, where a change to old data results in a datapoint that doesn’t agree with surrounding data ([JHU examples](https://delphi-org.slack.com/archives/CF9G83ZJ9/p1600729151013900)) or is very different from the value it replaced. If date is already in the API, have any values changed significantly within the "backfill" window (use span_length setting). See [this](https://github.com/cmu-delphi/covidcast-indicators/pull/155#discussion_r504195207) for context.
 * Run check_missing_date_files (or similar) on every geo type-signal type separately in comparative checks loop.
 
 ### Larger issues
 
+* Set up validator to use Sir-complains-a-lot alerting functionality on a signal-by-signal basis (should send alert output as a slack message and "@" a set person), as a stop-gap before the logging server is ready
+  * This is [how Sir-CAL works](https://github.com/benjaminysmith/covidcast-indicators/blob/main/sir_complainsalot/delphi_sir_complainsalot/run.py)
+  * [Example output](https://delphi-org.slack.com/archives/C01E81A3YKF/p1605793508000100)
 * Expand framework to support nchs_mortality, which is provided on a weekly basis and has some differences from the daily data. E.g. filenames use a different format ("weekly_YYYYWW_geotype_signalname.csv")
 * Make backtesting framework so new checks can be run individually on historical indicator data to tune false positives, output verbosity, understand frequency of error raising, etc. Should pull data from API the first time and save locally in `cache` dir.
 * Add DETAILS.md doc with detailed descriptions of what each check does and how. Will be especially important for statistical/anomaly detection checks.
@@ -52,20 +56,18 @@
   * Easier suppression of many errors at once
     * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
   * Nicer formatting for error “report”.
+    * Potentially set `__print__()` method in ValidationError class
     * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
 * Check for erratic data sources that wrongly report all zeroes
   * E.g. the error with the Wisconsin data for the 10/26 forecasts
   * Wary of a purely static check for this
   * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
-  * Also partially captured by outlier checking. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
-* Outlier detection (in progress)
-  * Current approach is tuned to daily cases and daily deaths; use just on those signals?
-  * prophet (package) detection is flexible, but needs 2-3 months historical data to fit on. May make sense to use if other statistical checks also need that much data.
+  * Also partially captured by outlier checking, depending on `size_cut` setting. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
 * If can't get data from API, do we want to use substitute data for the comparative checks instead?
-  * E.g. most recent successful API pull -- might end up being a couple weeks older
   * Currently, any API fetch problems just doesn't do comparative checks at all.
+  * E.g. most recent successful API pull -- might end up being a couple weeks older
 * Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
   * Profiling (iterate)
   * Save intermediate files?
@@ -87,3 +89,4 @@
   * Raise errors when one p-value (per geo region, e.g.) is significant OR when a bunch of p-values for that same type of test (different geo regions, e.g.) are "close" to significant
   * Correct p-values for multiple testing
   * Bonferroni would be easy but is sensitive to choice of "family" of tests; Benjamimi-Hochberg is a bit more involved but is less sensitive to choice of "family"; [comparison of the two](https://delphi-org.slack.com/archives/D01A9KNTPKL/p1603294915000500)
+  * Use prophet package? Would require 2-3 months of API data.

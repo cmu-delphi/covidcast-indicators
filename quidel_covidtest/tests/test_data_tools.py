@@ -91,12 +91,14 @@ class TestDataTools:
 
     @pytest.mark.parametrize("min_obs, expected_pos_prop, expected_se, expected_sample_sz", [
         (3,  # one case of tests < min_obs
-         np.array([np.nan, 1/2, 1/2, 4/10]),
-         np.array([np.nan, np.sqrt(0.25/4), np.sqrt(0.25/6), np.sqrt(0.24/10)]),
+         np.array([np.nan, 2.5/5, 3.5/7, 4.5/11]),
+         np.array([np.nan, np.sqrt(2.5*(5-2.5)/5/5/4), np.sqrt(3.5*(7-3.5)/7/7/6),
+                   np.sqrt(4.5*(11-4.5)/11/11/10)]),
          np.array([np.nan, 4, 6, 10])),
         (1,  # no cases of tests < min_obs
-         np.array([1/2, 2/4, 3/6, 4/10]),
-         np.array([np.sqrt(0.25/2), np.sqrt(0.25/4), np.sqrt(0.25/6), np.sqrt(0.24/10)]),
+         np.array([1.5/3, 2.5/5, 3.5/7, 4.5/11]),
+         np.array([np.sqrt(1.5*(3-1.5)/3/3/2), np.sqrt(2.5*(5-2.5)/5/5/4),
+                   np.sqrt(3.5*(7-3.5)/7/7/6), np.sqrt(4.5*(11-4.5)/11/11/10)]),
          np.array([2, 4, 6, 10])),
     ])
     def test_raw_positive_prop(self, min_obs, expected_pos_prop, expected_se, expected_sample_sz):
@@ -123,16 +125,18 @@ class TestDataTools:
          2,
          None,
          None,
-         np.array([np.nan, 1/2, 1/2, 7/16]),
-         np.array([np.nan, np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
+         np.array([np.nan, 3.5/7, 5.5/11, 7.5/17]),
+         np.array([np.nan, np.sqrt(3.5*(7-3.5)/7/7/6), np.sqrt(5.5*(11-5.5)/11/11/10), 
+                   np.sqrt(7.5*(17-7.5)/17/17/16)]),
          np.array([np.nan, 6, 10, 16]),
          ),
         (3,  # parents case
          2,
          np.array([3, 7, 9, 11]),
          np.array([5, 10, 15, 20]),
-         np.array([1.6/3, 1/2, 1/2, 7/16]),
-         np.array([np.sqrt(56/225/3), np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
+         np.array([(1 + 0.6 + 0.5)/(2 + 1 + 1), 3.5/7, 5.5/11, 7.5/17]),
+         np.array([np.sqrt(2.1*(4-2.1)/4/4/3), np.sqrt(3.5*(7-3.5)/7/7/6), 
+                   np.sqrt(5.5*(11-5.5)/11/11/10), np.sqrt(7.5*(17-7.5)/17/17/16)]),
          np.array([3, 6, 10, 16]),
          ),
     ])

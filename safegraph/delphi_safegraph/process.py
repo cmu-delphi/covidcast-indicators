@@ -5,8 +5,8 @@ from typing import List
 import numpy as np
 import pandas as pd
 from delphi_utils.signal import add_prefix
-
-from delphi_utils import GeoMapper
+from delphi_utils.export import create_export_csv
+from delphi_utils.geomap import GeoMapper
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
@@ -123,17 +123,25 @@ def aggregate(df, signal_names, geo_resolution='county'):
         signals, standard errors, and sample sizes.
     """
     # Prepare geo resolution
+    gmpr = GeoMapper()
     if geo_resolution == 'county':
         geo_transformed_df = df.copy()
         geo_transformed_df['geo_id'] = df['county_fips']
     elif geo_resolution == 'state':
-        gmpr = GeoMapper()
         geo_transformed_df = gmpr.add_geocode(df,
-                              from_col='county_fips',
-                              from_code='fips',
-                              new_code='state_id',
-                              new_col='geo_id',
-                              dropna=False)
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code='state_id',
+                                              new_col='geo_id',
+                                              dropna=False)
+    elif geo_resolution in ['msa', 'nation', 'hrr', 'hhs']:
+        geo_transformed_df = gmpr.add_geocode(df,
+                                              from_col='county_fips',
+                                              from_code='fips',
+                                              new_code=geo_resolution,
+                                              new_col='geo_id',
+                                              dropna=False)
+
     else:
         raise ValueError(
             f'`geo_resolution` must be one of {GEO_RESOLUTIONS}.')
@@ -192,10 +200,12 @@ def process_window(df_list: List[pd.DataFrame],
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
-            date_str = date.strftime('%Y%m%d')
-            df_export.to_csv(f'{export_dir}/{date_str}_{geo_res}_{signal}.csv',
-                             na_rep='NA',
-                             index=False, )
+            df_export["timestamp"] = date.strftime('%Y%m%d')
+            create_export_csv(df_export,
+                              export_dir,
+                              geo_res,
+                              signal,
+                              )
 
 
 def process(filenames: List[str],

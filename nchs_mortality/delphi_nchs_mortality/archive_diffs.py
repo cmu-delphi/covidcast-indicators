@@ -79,7 +79,8 @@ def arch_diffs(params, daily_arch_diff):
         remove(exported_file)
     for exported_file, diff_file in common_diffs.items():
         remove(exported_file)
-        remove(diff_file)
+        if diff_file is not None:
+            remove(diff_file)
 
     # Report failures: someone should probably look at them
     for exported_file in fails:

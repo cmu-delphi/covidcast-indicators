@@ -7,6 +7,7 @@ import pytest
 
 from os import listdir, remove
 from os.path import join
+from shutil import copy
 
 from delphi_utils import read_params
 from delphi_nchs_mortality.run import run_module
@@ -26,6 +27,9 @@ def run_as_module(date):
     for fname in listdir("daily_cache"):
         if ".csv" in fname:
             remove(join("daily_cache", fname))
+
+    # Simulate the cache already being partially populated
+    copy("test_data/weekly_202025_state_wip_deaths_covid_incidence_prop.csv", "daily_cache")
 
     for fname in listdir("daily_receiving"):
         if ".csv" in fname:

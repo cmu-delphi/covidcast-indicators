@@ -9,8 +9,9 @@ from .validate import Validator
 
 
 def run_module():
+    """Run the validator as a module."""
     parent_params = read_params()
     params = parent_params['validation']
 
     validator = Validator(params)
-    validator.validate(parent_params["export_dir"])
+    validator.validate(parent_params["export_dir"]).print_and_exit()

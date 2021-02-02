@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""
-Functions to help generate sensor for different geographical levels
-"""
+"""Functions to help generate sensor for different geographical levels."""
 import pandas as pd
 from .data_tools import (fill_dates, raw_positive_prop,
                          smoothed_positive_prop,
                          smoothed_tests_per_device,
-                         raw_tests_per_device)
+                         raw_tests_per_device,
+                         remove_null_samples)
 
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7
 
 def generate_sensor_for_states(state_groups, smooth, device, first_date, last_date):
     """
-    fit over states
+    Fit over states.
+
     Args:
         state_groups: pd.groupby.generic.DataFrameGroupBy
         state_key: "state_id"
@@ -65,12 +65,13 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
                                                  "val": stat,
                                                  "se": se,
                                                  "sample_size": sample_size}))
-    return state_df
+    return remove_null_samples(state_df)
 
 def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                      device, first_date, last_date):
     """
-    fit over counties/HRRs/MSAs
+    Fit over counties/HRRs/MSAs.
+
     Args:
         data: pd.DataFrame
         res_key: "fips", "cbsa_id" or "hrrnum"
@@ -147,4 +148,4 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                              "val": stat,
                                              "se": se,
                                              "sample_size": sample_size}))
-    return res_df
+    return remove_null_samples(res_df)

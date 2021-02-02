@@ -12,13 +12,11 @@ install: venv
 	pip install -e .
 
 lint:
-	. env/bin/activate; \
-	pylint $(dir); \
-	pydocstyle $(dir)
+	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pydocstyle $(dir)
 
 test:
-	. env/bin/activate ;\
-	(cd tests && ../env/bin/pytest --cov=$(dir) --cov-report=term-missing)
+	. env/bin/activate ; (cd tests && ../env/bin/pytest --cov=$(dir) --cov-report=term-missing)
 
 clean:
 	rm -rf env

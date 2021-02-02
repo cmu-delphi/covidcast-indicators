@@ -49,7 +49,7 @@ class TestGeo:
                                                    11.509470322941867,
                                                    1.918148705320344])
         assert new_df[COMBINED_METRIC].values == pytest.approx(
-                new_df[METRICS[0]].values + new_df[METRICS[1]])
+                list(new_df[METRICS[0]].values + new_df[METRICS[1]]))
         
     def test_msa(self):
         df = pd.DataFrame(
@@ -70,4 +70,4 @@ class TestGeo:
         assert new_df[METRICS[1]].values == pytest.approx([1.9847583762443426,
                                                           14.966647914490075])
         assert new_df[COMBINED_METRIC].values == pytest.approx(
-                new_df[METRICS[0]].values + new_df[METRICS[1]])
+                list(new_df[METRICS[0]].values + new_df[METRICS[1]]))

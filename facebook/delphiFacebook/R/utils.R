@@ -142,7 +142,7 @@ mix_weights <- function(weights, s_mix_coef, s_weight)
 #'     over
 #' @return Tibble of megacounties. Counties that are not grouped are not
 #'     included in the output.
-#' @importFrom dplyr group_by across
+#' @importFrom dplyr group_by across all_of
 megacounty <- function(
   df_intr, threshold, groupby_vars=c("day", "geo_id")
 )
@@ -153,7 +153,7 @@ megacounty <- function(
   df_megacounties <- mutate(df_megacounties,
                             geo_id = make_megacounty_fips(.data$geo_id))
 
-  df_megacounties <- group_by(df_megacounties, across(groupby_vars))
+  df_megacounties <- group_by(df_megacounties, across(all_of(groupby_vars)))
   df_megacounties <- mutate(
       df_megacounties,
       county_weight = .data$effective_sample_size / sum(.data$effective_sample_size))

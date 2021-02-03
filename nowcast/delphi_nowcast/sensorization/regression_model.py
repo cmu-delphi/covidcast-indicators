@@ -10,7 +10,7 @@ MIN_SAMPLE_SIZE = 5  # arbitrarily chosen for now.
 def compute_regression_sensor(day: date,
                               covariate: LocationSeries,
                               response: LocationSeries,
-                              include_intercept: bool = False) -> float:
+                              include_intercept: bool) -> float:
     """
     Fit regression model and get sensorization value for a given date.
 

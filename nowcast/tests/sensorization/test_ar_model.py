@@ -73,11 +73,11 @@ class TestComputeARSensor:
         values = LocationSeries(
             data={date(2020, 1, 1): -4.27815483, date(2020, 1, 2): -4.83962077}
         )
-        assert np.isnan(compute_ar_sensor(date(2020, 1, 2), values))
-        assert np.isnan(compute_ar_sensor(date(2020, 1, 7), values))
+        assert np.isnan(compute_ar_sensor(date(2020, 1, 2), values, 1, 0))
+        assert np.isnan(compute_ar_sensor(date(2020, 1, 7), values, 1, 0))
 
     def test_compute_ar_sensor_out_of_range(self):
         values = LocationSeries(
             data={date(2020, 1, 1): -4.27815483, date(2020, 1, 2): -4.83962077}
         )
-        assert np.isnan(compute_ar_sensor(date(2020, 1, 7), values))
+        assert np.isnan(compute_ar_sensor(date(2020, 1, 7), values, 1, 0))

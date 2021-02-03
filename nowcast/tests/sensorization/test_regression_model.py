@@ -53,8 +53,8 @@ class TestComputeRegressionSensor:
                   date(2020, 1, 4): 29, date(2020, 1, 5): 28, date(2020, 1, 6): 35,
                   date(2020, 1, 7): 42}
         )
-        assert np.isnan(compute_regression_sensor(date(2020, 1, 1), test_covariate, test_response))
-        assert np.isnan(compute_regression_sensor(date(2020, 1, 6), test_covariate, test_response))
+        assert np.isnan(compute_regression_sensor(date(2020, 1, 1), test_covariate, test_response, False))
+        assert np.isnan(compute_regression_sensor(date(2020, 1, 6), test_covariate, test_response, False))
 
     def test_compute_regression_sensor_out_of_range(self):
         test_covariate = LocationSeries(
@@ -67,4 +67,4 @@ class TestComputeRegressionSensor:
                   date(2020, 1, 4): 29, date(2020, 1, 5): 28, date(2020, 1, 6): 35,
                   date(2020, 1, 7): 42}
         )
-        assert np.isnan(compute_regression_sensor(date(2020, 1, 16), test_covariate, test_response))
+        assert np.isnan(compute_regression_sensor(date(2020, 1, 16), test_covariate, test_response, False))

@@ -18,4 +18,3 @@ AR_LAMBDA = 0.1
 # Regression Sensor parameters
 REG_SENSORS = [SensorConfig("placeholder", "placeholder", "placeholder", 0),]
 REG_INTERCEPT = True
-

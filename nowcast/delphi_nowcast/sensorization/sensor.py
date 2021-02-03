@@ -10,13 +10,14 @@ from .ar_model import compute_ar_sensor
 from .get_epidata import get_indicator_data, get_historical_sensor_data
 from .regression_model import compute_regression_sensor
 from ..data_containers import LocationSeries, SensorConfig
+from ..constants import AR_ORDER, AR_LAMBDA, REG_INTERCEPT
 
 
 def compute_sensors(as_of_date: date,
                     regression_sensors: List[SensorConfig],
                     ground_truth_sensor: SensorConfig,
                     ground_truths: List[LocationSeries],
-                    export_data: bool
+                    export_dir: str = "",
                     ) -> DefaultDict[SensorConfig, List[LocationSeries]]:
     """
     Parameters
@@ -29,8 +30,8 @@ def compute_sensors(as_of_date: date,
         SensorConfig of the ground truth signal which is used for the AR sensor.
     ground_truths
         list of LocationSeries, one for each location desired.
-    export_data
-        boolean specifying whether computed regression sensors should be saved out to CSVs.
+    export_dir
+        string of directory to output data. If empty string, no output will be exported.
     Returns
     -------
         Dict where keys are sensor tuples and values are lists, where each list element is a
@@ -42,7 +43,7 @@ def compute_sensors(as_of_date: date,
     indicator_data = get_indicator_data(regression_sensors, ground_truths, as_of_date)
     for loc in ground_truths:
         ground_truth_pred_date = as_of_date - timedelta(ground_truth_sensor.lag)
-        ar_sensor = compute_ar_sensor(ground_truth_pred_date, loc)
+        ar_sensor = compute_ar_sensor(ground_truth_pred_date, loc, AR_ORDER, AR_LAMBDA)
         if not np.isnan(ar_sensor):
             output[ground_truth_sensor].append(
                 LocationSeries(loc.geo_value, loc.geo_type, {ground_truth_pred_date: ar_sensor})
@@ -56,15 +57,15 @@ def compute_sensors(as_of_date: date,
                 # TODO convert to log statements #689
                 print(f"No data: {(sensor.source, sensor.signal, loc.geo_type, loc.geo_value)}")
                 continue
-            reg_sensor = compute_regression_sensor(sensor_pred_date, covariates, loc)
+            reg_sensor = compute_regression_sensor(sensor_pred_date, covariates, loc, REG_INTERCEPT)
             if not np.isnan(reg_sensor):
                 output[sensor].append(
                     LocationSeries(loc.geo_value, loc.geo_type, {sensor_pred_date: reg_sensor})
                 )
-    if export_data:
+    if export_dir:
         for sensor, locations in output.items():
             for loc in locations:
-                print(_export_to_csv(loc, sensor, as_of_date))
+                print(_export_to_csv(loc, sensor, as_of_date, export_dir))
     return output
 
 
@@ -105,7 +106,7 @@ def historical_sensors(start_date: date,
 def _export_to_csv(value: LocationSeries,
                    sensor: SensorConfig,
                    as_of_date: date,
-                   receiving_dir: str = "./receiving"  # convert this to use params file and eventually be /common/covidcast_nowcast/receiving/
+                   receiving_dir: str
                    ) -> List[str]:
     """
     Save value to csv for upload to Epidata database.

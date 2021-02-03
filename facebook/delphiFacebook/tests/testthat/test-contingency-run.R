@@ -32,10 +32,12 @@ mock_load_archive <- function(...) {
 #     - Tokens were reset to row numbers to prevent errors due to non-uniqueness
 get_params <- function(output_dir) {
   params <- read_params("params-contingency-full.json")
-  params$export_dir <- output_dir
   params$input <- c("simple_synthetic.csv")
   params$weights_in_dir <- "./weights_simple"
-
+  
+  params <- relativize_params(params)
+  
+  params$export_dir <- output_dir
   return(params)
 }
 
@@ -91,7 +93,7 @@ test_that("simple equal-weight dataset produces correct unweighted mean", {
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
 
   expected_output <- as.data.frame(tribble(
@@ -116,7 +118,7 @@ test_that("simple equal-weight dataset produces correct percents", {
   expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
 
   expected_output <- as.data.frame(tribble(
@@ -180,7 +182,7 @@ test_that("testing run with multiple aggregations per group", {
   expect_equivalent(out, expected_anxiety)
 
   ## all other aggs
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
   fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
 
@@ -247,7 +249,7 @@ test_that("simple weighted dataset produces correct counts", {
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   anx_freq <- sum( rand_weights[raw_data[3:nrow(raw_data), "C8_1"] == "1"] )
 
   # Expected file contents
@@ -278,7 +280,7 @@ test_that("simple weighted dataset produces weighted mean", {
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), rand_weights)
   hh_avg <- round(hh_avg, digits=7)
 
@@ -306,7 +308,7 @@ test_that("simple weighted dataset produces correct percents", {
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   fever_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) , rand_weights)
 
   expected_output <- as.data.frame(tribble(
@@ -333,7 +335,7 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
 
   # Expected file contents
-  raw_data <- read.csv("./input/simple_synthetic.csv")
+  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
   comorbid_prop <- weighted.mean( recode(raw_data[3:nrow(raw_data), "C1"], "4"=0, .default=1) , rand_weights)
   comorbid_prop <- round(comorbid_prop, digits=7)
   
@@ -347,6 +349,7 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  browser()
   expect_equivalent(out, expected_output)
 })
 

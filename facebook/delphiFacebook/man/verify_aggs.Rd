@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_utils.R
 \name{verify_aggs}
 \alias{verify_aggs}
-\title{Check user-set aggregations for basic validity.}
+\title{Check user-set aggregations for basic validity and add a few necessary cols.}
 \usage{
 verify_aggs(aggregations)
 }
@@ -21,5 +21,5 @@ calculations necessary.}
 a data frame of desired aggregations to calculate
 }
 \description{
-Check user-set aggregations for basic validity.
+Check user-set aggregations for basic validity and add a few necessary cols.
 }

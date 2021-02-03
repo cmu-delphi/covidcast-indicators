@@ -20,5 +20,14 @@
     "individual"
   ],
   "parallel": true,
-  "debug": true
+  "debug": true,
+  "contingency": {
+    "end_date": "2020-06-01",
+    "export_dir": "./receiving_contingency_full",
+    "input": [
+      "full_synthetic.csv"
+    ],
+    "aggregate_range": "month",
+    "debug": false
+  }
 }

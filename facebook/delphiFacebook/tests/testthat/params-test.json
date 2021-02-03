@@ -22,5 +22,14 @@
     "community"
   ],
   "debug": true,
-  "parallel": false
+  "parallel": false,
+  "contingency": {
+    "end_date": "2020-06-01",
+    "export_dir": "./receiving_contingency_test",
+    "input": [
+      "responses.csv"
+    ],
+    "aggregate_range": "month",
+    "debug": false
+  }
 }

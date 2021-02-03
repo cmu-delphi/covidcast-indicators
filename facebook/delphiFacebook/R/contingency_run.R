@@ -31,6 +31,7 @@ set_aggs <- function() {
   
   monthly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
+    "pct_comorbidities", "ms_comorbidities", c("nation"), compute_multiselect, I,
   )
   
   return(list("week"=weekly_aggs, "month"=monthly_aggs))

@@ -30,8 +30,10 @@ mock_load_archive <- function(...) {
 #     - Obs 11 had C1 response set to "4,12" (high blood pressure + type 1 diabetes)
 #     - Obs 1 had C8_1 response set to "4" (anxious all the time)
 #     - Tokens were reset to row numbers to prevent errors due to non-uniqueness
+#
+# Weights are all set to 100.
 get_params <- function(output_dir) {
-  params <- read_params("params-contingency-full.json")
+  params <- read_contingency_params("params-full.json")
   params$input <- c("simple_synthetic.csv")
   params$weights_in_dir <- "./weights_simple"
   
@@ -50,7 +52,7 @@ test_that("small dataset produces no output", {
   # test output directory won't even be created.
   expected_files <- character(0)
   actual_files <- dir(test_path("receiving_contingency_test"))
-
+  
   expect_setequal(expected_files, actual_files)
   expect_equal(dir.exists(test_path("receiving_contingency_test")), FALSE)
 })
@@ -349,7 +351,6 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   ))
 
   out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  browser()
   expect_equivalent(out, expected_output)
 })
 

@@ -1,3 +1,43 @@
+#' Return params file as an R list
+#'
+#' Reads a parameters file. Copies global params to contingency params if not
+#' already defined.
+#'
+#' @param path    path to the parameters file; if not present, will try to copy the file
+#'                "params.json.template"
+#' @param template_path    path to the template parameters file
+#'
+#' @return a named list of parameters values
+#'
+#' @export
+read_contingency_params <- function(path = "params.json", template_path = "params.json.template") {
+  params <- read_params(path, template_path)
+  contingency_params <- params$contingency
+  
+  contingency_params$start_time <- ymd_hms(
+    sprintf("%s 00:00:00", contingency_params$start_date), tz = "America/Los_Angeles"
+  )
+  contingency_params$end_time <- ymd_hms(
+    sprintf("%s 23:59:59", contingency_params$end_date), tz = "America/Los_Angeles"
+  )
+  
+  global_params <- c("archive_days", "backfill_days", "static_dir", "cache_dir", 
+                     "archive_dir", "weights_in_dir", "input_dir", "debug", 
+                     "parallel")
+  for (param in global_params) {
+    if ( is.null(contingency_params[[param]]) ) {
+      contingency_params[[param]] <- params[[param]]
+    }
+  }
+  
+  contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 100L)
+  contingency_params$s_weight <- if_else(contingency_params$debug, 1.00, 0.01)
+  contingency_params$s_mix_coef <- if_else(contingency_params$debug, 0.05, 0.05)
+  
+  return(contingency_params)
+}
+
+
 #' Update date and input files settings from params file
 #' 
 #' Use `end_date` and `aggregate_range` to calculate last full time period

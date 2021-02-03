@@ -24,8 +24,8 @@ aggs <- tribble(
   "anxiety_levels", "weight", "mc_anxiety", c("state"), FALSE, compute_multiple_choice, I,
 )
 
-params <- relativize_params(read_params(test_path("params-contingency-full.json")))
+params <- relativize_params(read_contingency_params(test_path("params-test.json")))
 run_contingency_tables_many_periods(params, aggs)
 
-params <- relativize_params(read_params(test_path("params-contingency-test.json")))
+params <- relativize_params(read_contingency_params(test_path("params-full.json")))
 run_contingency_tables_many_periods(params, aggs)

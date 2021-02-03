@@ -82,7 +82,6 @@ test_that("testing code_multiselect command", {
   )
 
   out <- code_multiselect(as.data.table(input_data), input_aggs, "DDD1_23")
-  browser()
   expect_identical(out, list(as.data.table(expected_output), expected_aggs))
 })
 

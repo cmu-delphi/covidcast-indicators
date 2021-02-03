@@ -5,6 +5,12 @@ from delphi_nowcast.data_containers import SensorConfig
 
 
 def test_constants():
+    """If any of these tests fail, please verify that the constant changes are intended.
+
+    If any sensorization constants are changed, verify that you have updated the sensor name in
+    constants.py so you do not mix the newly configured sensor values with values from previous
+    configurations.
+    """
     assert len(dir(constants)) == 16
     assert constants.GROUND_TRUTH_INDICATOR == SensorConfig("placeholder", "placeholder", "placeholder", 0)
     assert constants.DELAY_DISTRIBUTION == []

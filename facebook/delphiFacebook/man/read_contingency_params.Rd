@@ -19,5 +19,6 @@ read_contingency_params(
 a named list of parameters values
 }
 \description{
-Reads a parameters file. Copies global params to contingency params.
+Reads a parameters file. Copies global params to contingency params if not
+already defined.
 }

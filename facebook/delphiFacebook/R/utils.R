@@ -20,11 +20,12 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   params$num_filter <- if_else(params$debug, 2L, 100L)
   params$s_weight <- if_else(params$debug, 1.00, 0.01)
   params$s_mix_coef <- if_else(params$debug, 0.05, 0.05)
+  
   params$start_time <- ymd_hms(
-    sprintf("%s 00:00:00", params$start_date), tz = "America/Los_Angeles"
+    sprintf("%s 00:00:00", params$start_date), tz = tz_to
   )
   params$end_time <- ymd_hms(
-    sprintf("%s 23:59:59", params$end_date), tz = "America/Los_Angeles"
+    sprintf("%s 23:59:59", params$end_date), tz = tz_to
   )
 
   return(params)

@@ -14,7 +14,6 @@
 #' @export
 write_individual <- function(data_full_w, params)
 {
-  tz_to <- "America/Los_Angeles"
   create_dir_not_exist(params$individual_dir)
 
   data_to_write <- select(data_full_w, -.data$token)

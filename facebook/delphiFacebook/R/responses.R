@@ -144,7 +144,6 @@ load_response_one <- function(input_filename, params) {
   input_data$token <- stri_replace(input_data$token, "-", regex = "^'-")
 
   # clean date time data, forcing to be in the "America/Los_Angeles" timezone
-  tz_to <- "America/Los_Angeles"
   input_data$start_dt <- force_tz(input_data$StartDate, tz_from)
   input_data$start_dt <- with_tz(input_data$start_dt, tz_to)
   input_data$date <- format(input_data$start_dt, "%Y-%m-%d", tz = tz_to)

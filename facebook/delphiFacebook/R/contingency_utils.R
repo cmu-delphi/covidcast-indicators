@@ -15,10 +15,10 @@ read_contingency_params <- function(path = "params.json", template_path = "param
   contingency_params <- params$contingency
   
   contingency_params$start_time <- ymd_hms(
-    sprintf("%s 00:00:00", contingency_params$start_date), tz = "America/Los_Angeles"
+    sprintf("%s 00:00:00", contingency_params$start_date), tz = tz_to
   )
   contingency_params$end_time <- ymd_hms(
-    sprintf("%s 23:59:59", contingency_params$end_date), tz = "America/Los_Angeles"
+    sprintf("%s 23:59:59", contingency_params$end_date), tz = tz_to
   )
   
   global_params <- c("archive_days", "backfill_days", "static_dir", "cache_dir", 

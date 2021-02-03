@@ -167,11 +167,14 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 
   for (col_var in c(group_cols_to_convert, metric_cols_to_convert)) {
     if ( is.null(df[[col_var]]) ) {
-      # Column not defined. Remove all aggregations that use it as metric or in
-      # group_by variables
       aggregations <- aggregations[aggregations$metric != col_var &
                                      !mapply(aggregations$group_by,
                                              FUN=function(x) {col_var %in% x}), ]
+      msg_plain(
+        paste0(
+          col_var, " is not defined. Removing all aggregations that use it. ", 
+          nrow(aggregations), " remaining")
+      )
       next
     }
 

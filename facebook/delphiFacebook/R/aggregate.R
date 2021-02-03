@@ -178,9 +178,7 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
 
         sample_size <- sum(ind_df$weight_in_location)
 
-        ## TODO Fix this. Old pipeline for community responses did not apply
-        ## mixing. To reproduce it, we ignore the mixed weights. Once a better
-        ## mixing/weighting scheme is chosen, all signals should use it.
+        ## TODO: See issue #764
         new_row <- compute_fn(
           response = ind_df[[metric]],
           weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },

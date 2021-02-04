@@ -9,6 +9,7 @@ TODO:
 """
 # pylint: disable=too-many-lines
 from os.path import join
+import warnings
 
 import pandas as pd
 import pkg_resources
@@ -371,6 +372,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         from_col=None,
         new_col=None,
         date_col="date",
+        pop_col=None,
         data_cols=None,
         dropna=True,
     ):
@@ -399,10 +401,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         date_col: str or None, default "date"
             Specify which column contains the date values. Used for value aggregation.
             If None, then the aggregation is done only on geo_id.
+        pop_col: str or None
+            Specify which columns contains population values. Used to avoid double
+            counting if a megafips is present.
         data_cols: list, default None
             A list of data column names to aggregate when doing a weighted coding. If set to
             None, then all the columns are used except for date_col and new_col.
-        dropna: bool, default False
+        dropna: bool, default True
             Determines how the merge with the crosswalk file is done. If True, the join is inner,
             and if False, the join is left. The inner join will drop records from the input database
             that have no translation in the crosswalk, while the outer join will keep those records
@@ -416,6 +421,15 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         from_col = from_code if from_col is None else from_col
         new_col = new_code if new_col is None else new_col
 
+        if from_code == "fips" and pop_col:
+            # Zero out the duplicate population in megafips to avoid double counting.
+            megafips_to_zero = self._megafips_to_zero(df[from_col])
+            megafips_to_zero_mask = [i in megafips_to_zero for i in df[from_col]]
+            df.loc[megafips_to_zero_mask, "population"] = 0
+        if from_code == "fips" and not pop_col:
+            warnings.warn("Without specifying a population column, megaFIPS populations may be "
+                          "double counted later on. If working with populations, add the "
+                          "population column before replacing the geocode.")
         df = self.add_geocode(
             df, from_code, new_code, from_col=from_col, new_col=new_col, dropna=dropna
         ).drop(columns=from_col)
@@ -541,6 +555,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if geo_type == "county":
             return "fips"
         return geo_type
+
     def get_geo_values(self, geo_type):
         """
         Return a set of all values for a given geography type.
@@ -580,3 +595,25 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             crosswalk = pd.read_csv(stream, dtype=str)
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
+
+    def _megafips_to_zero(self, fips_list):
+        """
+        Select megafips values for which we want to zero out the population.
+
+        Parameters
+        ----------
+        fips_list: list
+            List of fips present in the data.
+
+        Returns
+        -------
+            Set of all megafips which are reported for a state which also has other fips reported.
+            This means if a state reports only a megafips and nothing else, it will not be returned.
+            The set may include megafips which are not present in the data if all counties are
+            reported for a state without a megafips.
+        """
+        index = set()
+        for fips in fips_list:
+            if fips[2:] != "000":
+                index.add(fips[:2])
+        return {statecode + "000" for statecode in index}

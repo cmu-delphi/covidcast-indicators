@@ -17,10 +17,11 @@ class TestGeoMapper:
     )
     fips_data_2 = pd.DataFrame(
         {
-            "fips": ["01123", "02340", "02002", "18633", "18181"],
-            "date": [pd.Timestamp("2018-01-01")] * 5,
-            "count": [2, 1, 20, np.nan, 10021],
-            "total": [4, 1, 400, np.nan, 100001],
+            "fips": ["01123", "02122", "02000", "18023", "18025", "18000", "04000"],
+            "date": [pd.Timestamp("2018-01-01")] * 7,
+            "count": [2, 1, 20, np.nan, 10021, 5, 6],
+            "total": [4, 1, 400, np.nan, 100001, 10, 20],
+            "population": [1, 2, 3, 4, 5, 6, 7]
         }
     )
     fips_data_3 = pd.DataFrame(
@@ -252,7 +253,7 @@ class TestGeoMapper:
         )
 
         # hrr -> nation
-        with pytest.raises(ValueError):    
+        with pytest.raises(ValueError):
             new_data = gmpr.replace_geocode(self.zip_data, "zip", "hrr")
             new_data2 = gmpr.replace_geocode(new_data, "hrr", "nation")
 
@@ -310,3 +311,24 @@ class TestGeoMapper:
         assert len(gmpr.get_geo_values("fips")) == 3287
         assert len(gmpr.get_geo_values("state_id")) == 60
         assert len(gmpr.get_geo_values("zip")) == 32976
+
+    def test_megafips_zeroed(self):
+        gmpr = GeoMapper()
+        pd.testing.assert_frame_equal(
+            gmpr.replace_geocode(self.fips_data_2, "fips", "state_code", pop_col="population"),
+            pd.DataFrame({
+                "date": [pd.Timestamp("2018-01-01")] * 4,
+                "state_code": ["01", "02", "04", "18"],
+                "count": [2., 21., 6., 10026.],
+                "total": [4., 401., 20., 100011.],
+                "population": [1, 2, 7, 9]
+            })
+        )
+        with pytest.warns(UserWarning):
+            gmpr.replace_geocode(self.fips_data_2, "fips", "state_id")
+
+    def test__megafips_to_zero(self):
+        gmpr = GeoMapper()
+        test_fips_set = ["01001", "01003", "01000", "02000", "03001",
+                         "04000", "04001", "05000", "06001", "06002"]
+        assert gmpr._megafips_to_zero(test_fips_set) == {"01000", "03000", "04000", "06000"}

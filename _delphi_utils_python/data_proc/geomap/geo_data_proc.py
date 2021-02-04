@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 import requests
 import pandas as pd
+import numpy as np
 
 
 # Source files
@@ -406,7 +407,8 @@ def create_fips_population_table():
         "pop": [23030, 1143, 0, 17, 31329, 159358, 50601, 4170, 51634, 0, 2527, 48220, 3136]
     })
     census_pop_territories = pd.concat([census_pop_pr, territories_pop])
-
+    non_megafips_mask = ~census_pop_territories.fips.str.endswith("000")
+    census_pop_territories = census_pop_territories.loc[non_megafips_mask]
     census_pop_territories.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
 
 
@@ -472,11 +474,16 @@ def derive_fips_state_crosswalk():
     fips_pop = pd.read_csv(
         join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
     )
+
+    megafips = pd.DataFrame({
+        "fips": [i + "000" for i in set(fips_pop.fips.str[:2])],
+        "pop": np.nan
+    })
     state_codes = pd.read_csv(
         join(OUTPUT_DIR, STATE_OUT_FILENAME),
         dtype={"state_code": str, "state_id": str, "state_name": str},
     )
-
+    fips_pop = pd.concat([fips_pop, megafips])
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
     (
         fips_pop.merge(state_codes, on="state_code", how="left")

@@ -22,6 +22,13 @@ from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
 GMPR = GeoMapper()
 
+
+COLUMN_MAPPING = {"time_value": "timestamp",
+                  "geo_value": "geo_id",
+                  "value": "val",
+                  "stderr": "se",
+                  "sample_size": "sample_size"}
+
 def check_none_data_frame(data_frame, label, date_range):
     """Log and return True when a data frame is None."""
     if data_frame is None:
@@ -42,20 +49,53 @@ def maybe_append(df1, df2):
         return df1
     return df1.append(df2)
 
-COLUMN_MAPPING = {"time_value": "timestamp",
-                  "geo_value": "geo_id",
-                  "value": "val",
-                  "stderr": "se",
-                  "sample_size": "sample_size"}
+
+def compute_special_geo_dfs(df, signal, geo):
+    """Compute the signal values for special geos (HHS and nation).
+
+    For `num` signals, just replace the geocode to the appropriate resolution.
+    For `prop` signals, replace the geocode and then compute the proportion.
+
+    Parameters
+    ----------
+    df: DataFrame
+        Dataframe with num values at the county level.
+    signal: str
+        Signal name, should end with 'num' or 'prop'.
+    geo: str
+        Geo level to compute.
+
+    Returns
+    -------
+        DataFrame mapped to the 'geo' level with the correct signal values computed.
+    """
+    df = GMPR.add_population_column(df, "fips", geocode_col="geo_id")
+    df = GMPR.replace_geocode(df,
+                              from_col="geo_id",
+                              from_code="fips",
+                              new_code=geo,
+                              date_col="timestamp")
+    if signal.endswith("prop"):
+        df["val"] = df["val"]/df["population"] * 100000
+    df.drop("population", axis=1, inplace=True)
+    df.rename({geo: "geo_id"}, axis=1, inplace=True)
+    return df
+
+
 def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
-    """Add rows for PR from JHU signals to USA-FACTS signals."""
+    """Add rows for PR from JHU signals to USA-FACTS signals.
+
+    For hhs and nation, fetch the county `num` data so we can compute the proportions correctly
+    and after combining JHU and USAFacts and
+     mapping to the desired geos.
+    """
+    is_special_geo = geo in ["hhs", "nation"]
+    geo_to_fetch = "county" if is_special_geo else geo
+    signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
     print("Fetching usa-facts...")
-    # for hhs and nation, fetch the county data so we can combined JHU and USAFacts before mapping
-    # to the desired geos.
-    geo_to_fetch = "county" if geo in ["hhs", "nation"] else geo
-    usafacts_df = fetcher("usa-facts", signal, date_range[0], date_range[1], geo_to_fetch)
+    usafacts_df = fetcher("usa-facts", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
     print("Fetching jhu-csse...")
-    jhu_df = fetcher("jhu-csse", signal, date_range[0], date_range[1], geo_to_fetch)
+    jhu_df = fetcher("jhu-csse", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
 
     if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
        (geo_to_fetch not in ('state', 'county') or \
@@ -77,12 +117,8 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
         combined_df = usafacts_df
     combined_df.rename(COLUMN_MAPPING, axis=1, inplace=True)
 
-    if geo in ["hhs", "nation"]:
-        combined_df = GMPR.replace_geocode(combined_df,
-                                           from_col="geo_id",
-                                           from_code="fips",
-                                           new_code=geo,
-                                           date_col="timestamp")
+    if is_special_geo:
+        combined_df = compute_special_geo_dfs(combined_df, signal, geo)
         if "se" not in combined_df.columns and "sample_size" not in combined_df.columns:
             # if a column has non numeric data including None, they'll be dropped.
             # se and sample size are required later so we add them back.
@@ -90,6 +126,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
 
     return combined_df
+
 
 def extend_raw_date_range(params, sensor_name):
     """Extend the date range of the raw data backwards by 7 days.

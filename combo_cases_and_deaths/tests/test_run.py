@@ -47,7 +47,7 @@ def test_compute_special_geo_dfs():
         compute_special_geo_dfs(test_df, "prop", "nation"),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
-                      "val": [150/(4903185 + 55869)*100000]})
+                      "val": [150/55869*100000]})
     )
     pd.testing.assert_frame_equal(
         compute_special_geo_dfs(test_df, "num", "nation"),
@@ -116,7 +116,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
         combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
-                      "val": [(50 + 100 + 200) / (4903185 + 55869 + 3723066) * 100000],
+                      "val": [(50 + 100 + 200) / (55869 + 3723066) * 100000],
                       "se": [None],
                       "sample_size": [None]})
     )

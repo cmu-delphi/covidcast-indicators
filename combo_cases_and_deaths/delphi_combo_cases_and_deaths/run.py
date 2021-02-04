@@ -74,7 +74,8 @@ def compute_special_geo_dfs(df, signal, geo):
                               from_col="geo_id",
                               from_code="fips",
                               new_code=geo,
-                              date_col="timestamp")
+                              date_col="timestamp",
+                              pop_col="population")
     if signal.endswith("prop"):
         df["val"] = df["val"]/df["population"] * 100000
     df.drop("population", axis=1, inplace=True)

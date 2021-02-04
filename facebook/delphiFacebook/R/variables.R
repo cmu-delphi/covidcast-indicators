@@ -238,6 +238,18 @@ code_vaccines <- function(input_data) {
   } else {
     input_data$v_covid_vaccinated <- NA_real_
   }
+  
+  if ("V2" %in% names(input_data)) {
+    # coded as 1 = 1 dose/vaccination, 2 = 2 doses, 3 = don't know.
+    input_data$v_received_2_vaccine_doses <- case_when(
+      input_data$V1 == 1 ~ 0,
+      input_data$V1 == 2 ~ 1,
+      input_data$V1 == 3 ~ NA_real_,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_received_2_vaccine_doses <- NA_real_
+  }
 
   if ("V3" %in% names(input_data)) {
     input_data$v_accept_covid_vaccine <- (

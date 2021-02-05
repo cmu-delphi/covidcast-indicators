@@ -2,9 +2,10 @@
 
 import abc
 from logging import Logger
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, Type
 
 from .archive import ArchiveDiffer
+from delphi_validator.validate import Validator
 
 class Indicator(abc.ABC):
     """Abstract base class for all indicators."""
@@ -27,36 +28,16 @@ class Indicator(abc.ABC):
         raise NotImplementedError
 
 
-class Validator(abc.ABC):
-    pass
+def run_indicator(indicator_type: Type[Indicator],
+                  validator_type:  Type[Validator],
+                  archiver_type:  Type[ArchiveDiffer],
+                  params: Dict[str, Any]):
+    """Runs the indicator."""
+    indicator = indicator_type(params)
+    validator = validator_type(params["validation"])
+    archiver = archiver_type(params)
 
-
-class IndicatorRunner:
-    """Class to run indicators."""
-    def __init__(self,
-                 name:  str,
-                 indicator: Type[Indicator],
-                 validators:  List[Type[Validator]],
-                 archiver:  Type[ArchiveDiffer],
-                 logger:  Logger,
-                 params: Dict[str, Any]):
-        self.name = name
-        self.indicator = indicator(params)
-        self.validators = [v(params) for v in validators]
-        self.archiver = archiver(params)
-        self.logger = logger
-
-    def _run_stage(self, stage):
-        """Helper function to run a stage and handle errors."""
-        try:
-            stage.run()
-        except Exception as e:
-            self.logger.log(f"{self.name}.{stage.name} failed with error {e}")
-            raise e
-
-    def run(self):
-        """Runs the indicator."""
-        self._run_stage(self.indicator)
-        for validator in self.validators:
-            self._run_stage(validator)
-        self._run_stage(self.archiver)
+    indicator.run()
+    validation_report = validator.validate()
+    if validation_report.success():         
+        archiver.archive()

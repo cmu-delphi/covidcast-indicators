@@ -34,9 +34,18 @@ CROSSWALK_FILEPATHS = {
     },
     "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
     "state_code": {
-        "hhs": join(DATA_PATH, "state_code_hhs_table.csv")
+        "hhs": join(DATA_PATH, "state_code_hhs_table.csv"),
+        "pop": join(DATA_PATH, "state_pop.csv")
+    },
+    "state_id": {
+        "pop": join(DATA_PATH, "state_pop.csv")
+    },
+    "state_name": {
+        "pop": join(DATA_PATH, "state_pop.csv")
     },
     "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
+    "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv"),},
+    "nation": {"pop": join(DATA_PATH, "nation_pop.csv"),},
 }
 
 
@@ -113,7 +122,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 geo: None for geo in ["zip", "hrr", "msa", "pop", "state", "hhs"]
             },
             "state": {"state": None},
-            "state_code": {"hhs": None},
+            "state_code": {"hhs": None, "pop": None},
+            "state_id": {"pop": None},
+            "state_name": {"pop": None},
+            "hhs": {"pop": None},
+            "nation": {"pop": None},
             "jhu_uid": {"fips": None},
         }
         self.geo_lists = {
@@ -194,13 +207,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                     },
                 )
             # Population tables
-            elif (from_code, to_code) in [("fips", "pop"), ("zip", "pop")]:
+            elif to_code == "pop":
                 self.crosswalks[from_code][to_code] = pd.read_csv(
                     stream,
                     dtype={
                         from_code: str,
                         "pop": int,
                     },
+                    usecols=[
+                        from_code,
+                        "pop"
+                    ]
                 )
         return self.crosswalks[from_code][to_code]
 
@@ -457,25 +474,25 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-
-        if geocode_type not in ["fips", "zip"]:
+        supported_geos = ["fips", "zip", "state_id", "stat_name", "state_code", "hhs", "nation"]
+        if geocode_type not in supported_geos:
             raise ValueError(
-                "Only fips and zip geocodes supported. \
-                For other codes, aggregate those."
+                f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
             )
-
         pop_df = self._load_crosswalk(from_code=geocode_type, to_code="pop")
-
         if not is_string_dtype(data[geocode_col]):
-            data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
-
+            if geocode_type in ["zip", "fips"]:
+                data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
+            elif geocode_type in ["state_code"]:
+                data[geocode_col] = data[geocode_col].astype(str).str.zfill(2)
+            else:
+                data[geocode_col] = data[geocode_col].astype(str)
         merge_type = "inner" if dropna else "left"
         data_with_pop = (
             data
             .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
             .rename(columns={"pop": "population"})
         )
-
         return data_with_pop
 
     @staticmethod

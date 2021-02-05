@@ -75,6 +75,8 @@ get_binary_indicators <- function() {
     "smoothed_wcovid_vaccinated", "weight", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary,
     "smoothed_worried_vaccine_side_effects", "weight_unif", "v_worried_vaccine_side_effects", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wworried_vaccine_side_effects", "weight", "v_worried_vaccine_side_effects", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_2_vaccine_doses", "weight_unif", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_2_vaccine_doses", "weight", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
 
     # who would make more likely to accept vaccine
     "smoothed_vaccine_likely_friends", "weight_unif", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,

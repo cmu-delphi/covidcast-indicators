@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, date
 from typing import List, Tuple
 
 import pandas as pd
@@ -6,7 +6,8 @@ import scipy.stats as stats
 
 
 def get_florida_delay_distribution(
-        update: bool = False) -> Tuple[List[float], List[float]]:
+        update: bool = False,
+        start_date: date = datetime(2020, 5, 1)) -> Tuple[List[float], List[float]]:
     """
     Retrieve distribution of delays from symptom onset to case report. Data is taken from
     the publicly available Florida linelist.
@@ -18,6 +19,9 @@ def get_florida_delay_distribution(
     ----------
     update
         Boolean whether to pull the latest data and recalculate the distribution
+    start_date
+        starting date to clip the delay samples from the linelist data. this is ignored
+        if update=False. the default is May 1, 2020.
 
     Returns
     -------
@@ -29,7 +33,7 @@ def get_florida_delay_distribution(
             parse_dates=["Case_", "EventDate", "ChartDate"])
 
         delay_df = florida_linelist[
-            florida_linelist.EventDate > datetime.datetime(2020, 5, 1)]
+            florida_linelist.EventDate > start_date]
         delay_df["delay"] = (delay_df.ChartDate - delay_df.EventDate).dt.days
         delay_df = delay_df[delay_df.delay.gt(0) & delay_df.delay.lt(45)]
         coefs = stats.gamma.fit(delay_df.delay, floc=0)

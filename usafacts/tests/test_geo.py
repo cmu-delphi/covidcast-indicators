@@ -67,8 +67,8 @@ class TestGeoMap:
         assert set(new_df["incidence"].values) == set(exp_incidence.values)
         assert set(new_df["cumulative_prop"].values) == set(exp_cprop.values)
 
-    def test_state(self):
-        """Tests that values are correctly aggregated at the state level."""
+    def test_state_hhs_nation(self):
+        """Tests that values are correctly aggregated at the state, HHS, and nation level."""
         df = pd.DataFrame(
             {
                 "fips": ["04001", "04003", "04009", "25023", "25000"],
@@ -92,8 +92,36 @@ class TestGeoMap:
         assert (new_df["incidence"].values == exp_incidence).all()
         assert (new_df["cumulative_prop"].values == exp_cprop).all()
 
-    def test_geos(self):
-        """Tests that values are correctly aggregated at the HRR level."""
+        hhs_df = geo_map(df, "hhs", SENSOR)
+        pd.testing.assert_frame_equal(
+            hhs_df,
+            pd.DataFrame({
+                "geo_id": ["1", "9"],
+                "timestamp": ["2020-02-15"]*2,
+                "new_counts": [13.0, 27.0],
+                "cumulative_counts": [60.0, 165.0],
+                "population": [25, 2500],
+                "incidence": [52000.0, 1080.0],
+                "cumulative_prop": [240000.0, 6600.0]
+            })
+        )
+
+        nation_df = geo_map(df, "nation", SENSOR)
+        pd.testing.assert_frame_equal(
+            nation_df,
+            pd.DataFrame({
+                "geo_id": ["us"],
+                "timestamp": ["2020-02-15"],
+                "new_counts": [40.0],
+                "cumulative_counts": [225.0],
+                "population": [2525],
+                "incidence": [1584.15842],
+                "cumulative_prop": [8910.89109]
+            })
+        )
+
+    def test_hrr_msa(self):
+        """Tests that values are correctly aggregated at the HRR and MSA level."""
         df = pd.DataFrame(
             {
                 "fips": ["13009", "13017", "13021", "09015"],
@@ -128,33 +156,5 @@ class TestGeoMap:
                 "population": [300, 25],
                 "incidence": [666.66667, 52000.0],
                 "cumulative_prop": [15000.0, 240000.0]
-            })
-        )
-
-        hhs_df = geo_map(df, "hhs", SENSOR)
-        pd.testing.assert_frame_equal(
-            hhs_df,
-            pd.DataFrame({
-                "geo_id": ["1", "4"],
-                "timestamp": ["2020-02-15"]*2,
-                "new_counts": [13.0, 27.0],
-                "cumulative_counts": [60.0, 165.0],
-                "population": [25, 2500],
-                "incidence": [52000.0, 1080.0],
-                "cumulative_prop": [240000.0, 6600.0]
-            })
-        )
-
-        nation_df = geo_map(df, "nation", SENSOR)
-        pd.testing.assert_frame_equal(
-            nation_df,
-            pd.DataFrame({
-                "geo_id": ["us"],
-                "timestamp": ["2020-02-15"],
-                "new_counts": [40.0],
-                "cumulative_counts": [225.0],
-                "population": [2525],
-                "incidence": [1584.15842],
-                "cumulative_prop": [8910.89109]
             })
         )

@@ -88,3 +88,11 @@ class TestGeoMap:
             # Make sure the prop signals don't have inf values
             assert not new_df["incidence"].eq(np.inf).any()
             assert not new_df["cumulative_prop"].eq(np.inf).any()
+
+    def test_populations(self, jhu_confirmed_test_data):
+        new_df = geo_map(jhu_confirmed_test_data, "state")
+        assert new_df.loc[0, "population"] == 723231
+        new_df = geo_map(jhu_confirmed_test_data, "hhs")
+        assert new_df.loc[0, "population"] == 14845063
+        new_df = geo_map(jhu_confirmed_test_data, "nation")
+        assert new_df.loc[0, "population"] == 331940098

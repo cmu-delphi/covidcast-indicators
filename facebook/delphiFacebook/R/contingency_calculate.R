@@ -18,6 +18,7 @@ compute_numeric <- function(response, weight, sample_size, total_represented)
   response_mean <- compute_count_response(response, weight, sample_size)
   response_mean$sample_size <- sample_size
   response_mean$represented <- total_represented
+  response_mean$se <- NA_real_
   
   return(response_mean)
 }

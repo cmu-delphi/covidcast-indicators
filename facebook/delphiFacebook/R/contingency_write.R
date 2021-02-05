@@ -14,6 +14,7 @@
 #'
 #' @importFrom readr write_csv
 #' @importFrom dplyr arrange across
+#' @importFrom stringi stri_trim
 #' 
 #' @export
 write_contingency_tables <- function(data, params, geo_level, groupby_vars)
@@ -24,8 +25,10 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     # Format reported columns.
     data <- mutate_at(data, vars(-c(groupby_vars)), 
                       function(x) {
-                        formatC(x, digits=7, format="f", drop0trailing=TRUE)
-                        })
+                        stri_trim(
+                          formatC(x, digits=7, format="f", drop0trailing=TRUE)
+                        )
+                      })
     
     # Reduce verbosity of grouping vars for output purposes
     groupby_vars <- gsub("_", "", sub(

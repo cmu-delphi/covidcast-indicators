@@ -65,7 +65,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
     ## To display other response columns ("val", "sample_size", "se",
     ## "effective_sample_size", "represented"), add here.
-    keep_vars <- c("val", "sample_size", "represented")
+    keep_vars <- c("val", "se", "sample_size", "represented")
 
     for (agg_id in names(dfs_out)) {
       agg_metric <- aggregations$name[aggregations$id == agg_id]

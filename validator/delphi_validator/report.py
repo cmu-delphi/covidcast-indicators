@@ -92,7 +92,11 @@ class ValidationReport:
         """
         print(self.summary())
         self.log()
-        if len(self.unsuppressed_errors) == 0:
+        if self.success():
             sys.exit(0)
         else:
             sys.exit(1)
+
+    def success(self):
+        """Determine if the report corresponds to a successful validation run."""
+        return len(self.unsuppressed_errors) == 0

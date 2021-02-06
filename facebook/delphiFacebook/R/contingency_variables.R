@@ -353,8 +353,8 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
     msg_plain(paste0("Splitting each row of multiselect item"))
     split_col <- split_options(df[[col_var]])
     msg_plain(paste0("Remapping response codes for each row in parallel with ", options()$mc.cores, " cores"))
-    df[[col_var]] <- mcmapply(split_col, FUN=function(row) {
-      if ( length(row) == 1 && is.na(row) ) {
+    df[[col_var]] <- mcmapply(head(split_col), FUN=function(row) {
+      if ( length(row) == 1 && all(is.na(row)) ) {
         NA
       } else {
         paste(recode(row, !!!map_old_new, .default=default), collapse=",")

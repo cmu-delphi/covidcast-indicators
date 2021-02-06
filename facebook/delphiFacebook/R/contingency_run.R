@@ -43,6 +43,8 @@ set_aggs <- function() {
 #' @param params    Params object produced by read_params
 #'
 #' @return none
+#' 
+#' @importFrom parallel detectCores
 #'
 #' @export
 run_contingency_tables <- function(params) {
@@ -136,8 +138,6 @@ run_contingency_tables_many_periods <- function(params, aggregations)
 #'   calculations necessary.
 #'
 #' @return none
-#'
-#' @importFrom parallel detectCores
 run_contingency_tables_many_periods_one_period <- function(params, aggregations)
 {
   params <- update_params(params)

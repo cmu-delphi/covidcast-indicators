@@ -29,6 +29,7 @@
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
+  msg_plain(paste0("Producing aggregates..."))
   ## For the date range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
@@ -37,7 +38,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   setkeyv(df, "start_dt")
 
   # Keep only obs in desired date range.
-  df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
+  df <- df[start_dt >= params$start_time & start_dt < params$end_time]
 
   output <- post_process_aggs(df, aggregations, cw_list)
   df <- output[[1]]

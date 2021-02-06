@@ -276,12 +276,14 @@ create_data_for_aggregatation <- function(input_data)
   ### Create variables for community survey.
   ## Question A4: how many people you know in the local community (not your
   ## household) with CLI
+  msg_plain(paste0("Creating variables for community signals"))
   df$community_yes <- as.numeric(as.numeric(df$A4) > 0)
 
   ## Whether you know someone in your local community *or* household who is
   ## sick.
   df$hh_community_yes <- as.numeric(as.numeric(df$A4) + df$hh_number_sick > 0)
 
+  msg_plain(paste0("Finished creating data for aggregations..."))
   return(df)
 }
 
@@ -300,6 +302,7 @@ create_data_for_aggregatation <- function(input_data)
 #' @export
 filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 {
+  msg_plain(paste0("Filtering data for aggregations..."))
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
   df <- df[df$zip5 %in% known_zips$zip5,]
@@ -311,6 +314,7 @@ filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
 
   df <- df[df$day >= (as.Date(params$start_date) - lead_days), ]
 
+  msg_plain(paste0("Finished filtering data for aggregations"))
   return(df)
 }
 

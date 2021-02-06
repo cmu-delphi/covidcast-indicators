@@ -176,8 +176,10 @@ rename_responses <- function(df) {
   )
   
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
-  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
   
+  msg_plain(paste0("Renaming columns..."))
+  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
+  msg_plain(paste0("Finished renaming columns"))
   return(df)
 }
 
@@ -187,6 +189,7 @@ rename_responses <- function(df) {
 #' 
 #' @return data frame of individual response data with newly mapped columns
 remap_responses <- function(df) {
+  msg_plain(paste0("Mapping response codes to meaningful strings..."))
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -314,6 +317,7 @@ remap_responses <- function(df) {
     )
   }
   
+  msg_plain(paste0("Finished remapping response codes"))
   return(df)
 }
 
@@ -337,6 +341,7 @@ remap_responses <- function(df) {
 #'
 #' @return list of data frame of individual response data with newly mapped column
 remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
+  msg_plain(paste0("Mapping response codes for ", col_var, " to meaningful strings..."))
   if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) | inherits(df[[col_var]], "logical") ) {
     # Column is missing/not in this wave or already in boolean format
     return(df)

@@ -53,8 +53,11 @@ def maybe_append(df1, df2):
 
 def compute_special_geo_dfs(df, signal, geo):
     """Compute the signal values for special geos (HHS and nation).
+
     For `num` signals, just replace the geocode to the appropriate resolution.
-    For `prop` signals, replace the geocode and then compute the proportion.
+    For `prop` signals, replace the geocode and then compute the proportion using the total
+    population of the us.
+
     Parameters
     ----------
     df: DataFrame
@@ -70,10 +73,11 @@ def compute_special_geo_dfs(df, signal, geo):
     df = GMPR.replace_geocode(df,
                               from_col="geo_id",
                               from_code="fips",
-                              new_code=geo,
+                              new_code="state_code",
                               date_col="timestamp")
-    df = GMPR.add_population_column(df, geo, geocode_col="geo_id")
-    if signal.endswith("prop"):
+    df = GMPR.add_population_column(df, "state_code")  # use total state population
+    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo, date_col="timestamp")
+    if signal.endswith("_prop"):
         df["val"] = df["val"]/df["population"] * 100000
     df.drop("population", axis=1, inplace=True)
     df.rename({geo: "geo_id"}, axis=1, inplace=True)
@@ -93,9 +97,8 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     usafacts_df = fetcher("usa-facts", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
     print("Fetching jhu-csse...")
     jhu_df = fetcher("jhu-csse", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
-
     if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
-       (geo_to_fetch not in ('state', 'county') or \
+       (geo_to_fetch not in ('state', 'county') or
         check_none_data_frame(jhu_df, "JHU", date_range)):
         return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
 
@@ -121,7 +124,6 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
             # se and sample size are required later so we add them back.
             combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
-
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):

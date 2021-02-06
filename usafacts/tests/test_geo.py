@@ -79,18 +79,19 @@ class TestGeoMap:
             }
         )
 
-        new_df = geo_map(df, "state", SENSOR)
-
-        exp_incidence = np.array([27, 13]) / np.array([2500, 25]) * 100000
-        exp_cprop = np.array([165, 60]) / np.array([2500, 25]) * 100000
-
-        assert (new_df["geo_id"].values == ["az", "ma"]).all()
-        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-        assert (new_df["new_counts"].values == [27, 13]).all()
-        assert (new_df["cumulative_counts"].values == [165, 60]).all()
-        assert (new_df["population"].values == [2500, 25]).all()
-        assert (new_df["incidence"].values == exp_incidence).all()
-        assert (new_df["cumulative_prop"].values == exp_cprop).all()
+        state_df = geo_map(df, "state", SENSOR)
+        pd.testing.assert_frame_equal(
+            state_df,
+            pd.DataFrame({
+                "geo_id": ["az", "ma"],
+                "timestamp": ["2020-02-15"]*2,
+                "new_counts": [27.0, 13.0],
+                "cumulative_counts": [165.0, 60.0],
+                "population": [7278717, 6892503],
+                "incidence": [27 / 7278717 * 100000, 13 / 6892503 * 100000],
+                "cumulative_prop": [165 / 7278717 * 100000, 60 / 6892503 * 100000]
+            })
+        )
 
         hhs_df = geo_map(df, "hhs", SENSOR)
         pd.testing.assert_frame_equal(
@@ -100,9 +101,9 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15"]*2,
                 "new_counts": [13.0, 27.0],
                 "cumulative_counts": [60.0, 165.0],
-                "population": [25, 2500],
-                "incidence": [52000.0, 1080.0],
-                "cumulative_prop": [240000.0, 6600.0]
+                "population": [6892503, 7278717],
+                "incidence": [13 / 6892503 * 100000, 27 / 7278717 * 100000],
+                "cumulative_prop": [60 / 6892503 * 100000, 165 / 7278717 * 100000]
             })
         )
 
@@ -114,9 +115,9 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15"],
                 "new_counts": [40.0],
                 "cumulative_counts": [225.0],
-                "population": [2525],
-                "incidence": [1584.15842],
-                "cumulative_prop": [8910.89109]
+                "population": [7278717 + 6892503],
+                "incidence": [40 / (7278717 + 6892503) * 100000],
+                "cumulative_prop": [225 / (7278717 + 6892503) * 100000]
             })
         )
 

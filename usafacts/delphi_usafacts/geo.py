@@ -91,7 +91,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     # Disburse unallocated cases/deaths in NYC to NYC counties
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
     df = df[df["fips"] != NYC_FIPS[0][0]]
-    geo_mapper = GeoMapper()
+    gmpr = GeoMapper()
     if geo_res == "county":
         if sensor not in PROP_SENSORS:
             # It is not clear how to calculate the proportion for unallocated
@@ -99,18 +99,22 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
             df = df.append(unassigned_counties)
         df.rename({"fips": "geo_id"}, inplace=True, axis=1)
     elif geo_res in ("state", "hhs", "nation"):
-        new_geo = "state_id" if geo_res == "state" else geo_res
+        state_geo = "state_id" if geo_res == "state" else "state_code"
         df = df.append(unassigned_counties)
-        df = geo_mapper.replace_geocode(df, "fips", new_geo, new_col="geo_id", date_col="timestamp")
-        df.drop("population", axis=1, errors="ignore")
-        df = geo_mapper.add_population_column(df, new_geo)
+        df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id", date_col="timestamp")
+        df.drop("population", axis=1, errors="ignore", inplace=True)
+        df = gmpr.add_population_column(df, state_geo, geocode_col="geo_id")
+        if geo_res in ("hhs", "nation"):
+            # for hhs/nation, use reported state populations instead of nation since PR not reported
+            df = gmpr.replace_geocode(df, state_geo, geo_res, from_col="geo_id", date_col="timestamp")
+            df.rename({geo_res: "geo_id"}, inplace=True, axis=1)
     else:
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
             df = disburse(df, fips, fips_list)
         for usafacts_fips, our_fips in REPLACE_FIPS:
             df.loc[df["fips"] == usafacts_fips, "fips"] = our_fips
-        merged = geo_mapper.replace_geocode(df, "fips", geo_res, new_col="geo_id")
+        merged = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
         if "weight" not in merged.columns:
             merged["weight"] = 1
         merged["cumulative_counts"] = merged["cumulative_counts"] * merged["weight"]

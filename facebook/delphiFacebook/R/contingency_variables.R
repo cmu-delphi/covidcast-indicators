@@ -360,7 +360,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
     })
   }
   
-  msg_plain(paste0("Finished remapping response codes for ", col_var"))
+  msg_plain(paste0("Finished remapping response codes for ", col_var))
   return(df)
 }
 

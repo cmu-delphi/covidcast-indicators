@@ -350,7 +350,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   if (response_type %in% c("b", "mc")) {
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
-    split_col <- strsplit(df[[col_var]], ",")
+    split_col <- split_options(df[[col_var]])
     df[[col_var]] <- mcmapply(split_col, FUN=function(row) {
       if ( length(row) == 1 && is.na(row) ) {
         NA
@@ -359,6 +359,8 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
       }
     })
   }
+  
+  msg_plain(paste0("Finished remapping response codes for ", col_var"))
   return(df)
 }
 

@@ -12,13 +12,13 @@
 #'   frame
 #'
 #' @importFrom dplyr bind_rows
+#' @importFrom parallel mclapply
 #' @export
 load_responses_all <- function(params) {
   input_data <- vector("list", length(params$input))
-  for (i in seq_along(input_data))
-  {
-    input_data[[i]] <- load_response_one(params$input[i], params)
-  }
+  input_data <- mclapply(seq_along(input_data), function(i) {
+    load_response_one(params$input[i], params)
+  })
   input_data <- bind_rows(input_data)
   return(input_data)
 }

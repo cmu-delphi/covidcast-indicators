@@ -25,8 +25,8 @@ set_aggs <- function() {
   
   weekly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
-    "pct_total", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "nation"), compute_multiple_choice, post_convert_count_to_pct,
-    "pct_total", "mc_simple_education", c("b_25_or_older", "mc_simple_race", "b_hispanic", "state"), compute_multiple_choice, post_convert_count_to_pct,
+    "pct_comorbidities", "ms_comorbidities", c("nation"), compute_multiselect, I,
+    "pct_hispanic", "b_hispanic", c("mc_education", "mc_race", "nation"), compute_multiselect, I,
   )
   
   monthly_aggs <- tribble(
@@ -47,6 +47,19 @@ set_aggs <- function() {
 #' @export
 run_contingency_tables <- function(params) {
   aggs <- set_aggs()
+  
+  ## Set default number of cores for mclapply to the total available number,
+  ## because we are greedy and this will typically run on a server.
+  if (params$parallel) {
+    cores <- detectCores()
+    
+    if (is.na(cores)) {
+      warning("Could not detect the number of CPU cores; parallel mode disabled")
+      params$parallel <- FALSE
+    } else {
+      options(mc.cores = cores)
+    }
+  }
   
   if (params$aggregate_range == "week") {
     run_contingency_tables_many_periods(params, aggs$week)
@@ -152,19 +165,6 @@ run_contingency_tables_many_periods_one_period <- function(params, aggregations)
 
     data_agg <- join_weights(data_agg, params, weights = "full")
     msg_df("response data to aggregate", data_agg)
-
-    ## Set default number of cores for mclapply to the total available number,
-    ## because we are greedy and this will typically run on a server.
-    if (params$parallel) {
-      cores <- detectCores()
-
-      if (is.na(cores)) {
-        warning("Could not detect the number of CPU cores; parallel mode disabled")
-        params$parallel <- FALSE
-      } else {
-        options(mc.cores = cores)
-      }
-    }
 
     data_agg <- make_human_readable(data_agg)
 

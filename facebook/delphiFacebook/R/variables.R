@@ -23,18 +23,20 @@ split_options <- function(column) {
 #' @param selection one string, such as "14"
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
+#'   
+#' @importFrom parallel mclapply
 is_selected <- function(vec, selection) {
-  selections <- sapply(
+  selections <- unlist(mclapply(
     vec,
     function(resp) {
-      if (length(resp) == 0) {
+      if (length(resp) == 0 || all(is.na(resp))) {
         # All our selection items include "None of the above" or similar, so
         # treat no selection the same as missingness.
         NA
       } else {
         selection %in% resp
       }
-    })
+    }))
 
   return(selections)
 }

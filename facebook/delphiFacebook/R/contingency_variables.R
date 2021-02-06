@@ -333,6 +333,7 @@ remap_responses <- function(df) {
 #'     multi-select.
 #'
 #' @importFrom dplyr recode
+#' @importFrom parallel mcmapply
 #'
 #' @return list of data frame of individual response data with newly mapped column
 remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
@@ -345,7 +346,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
     split_col <- strsplit(df[[col_var]], ",")
-    df[[col_var]] <- mapply(split_col, FUN=function(row) {
+    df[[col_var]] <- mcmapply(split_col, FUN=function(row) {
       if ( length(row) == 1 && is.na(row) ) {
         NA
       } else {

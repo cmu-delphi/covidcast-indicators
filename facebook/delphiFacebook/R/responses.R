@@ -25,6 +25,7 @@ load_responses_all <- function(params) {
   
   msg_plain(paste0("Finished loading CSVs"))
   input_data <- bind_rows(input_data)
+  msg_plain(paste0("Finished combining CSVs"))
   return(input_data)
 }
 
@@ -179,19 +180,28 @@ load_response_one <- function(input_filename, params) {
 #' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, params) {
+  msg_plain(paste0("Filtering data..."))
+  
   # take only the first instance of each token
+  msg_plain(paste0("Sorting responses by start date"))
   input_data <- arrange(input_data, .data$StartDate)
+  msg_plain(paste0("Removing empty tokens"))
   input_data <- input_data[input_data$token != "",]
+  msg_plain(paste0("Removing duplicate tokens"))
   input_data <- input_data[!duplicated(input_data$token),]
 
+  msg_plain(paste0("Keeping consenting responses"))
   input_data <- input_data[input_data$S1 == 1, ]
+  msg_plain(paste0("Removing preview responses"))
   input_data <- input_data[input_data$DistributionChannel != "preview", ]
 
   # take the right dates. We don't filter the start date because the aggregate
   # and individual data pipelines handle that themselves (aggregate in
   # particular needs data well before start_date)
+  msg_plain(paste0("Filtering to desired date range"))
   input_data <- input_data[as.Date(input_data$date) <= params$end_date, ]
 
+  msg_plain(paste0("Finished filtering data"))
   return(input_data)
 }
 
@@ -207,27 +217,33 @@ filter_responses <- function(input_data, params) {
 #' @importFrom dplyr bind_rows
 #' @export
 merge_responses <- function(input_data, archive) {
+  msg_plain(paste0("Merging new and archived data..."))
   # First, merge the new data with the archived data, taking the first start
   # date for any given token. This allows for backfill. Note that the order
   # matters: since arrange() uses order(), which is a stable sort, ties will
   # result in the input data being used in preference over the archive data.
   # This means that if we run the pipeline, then change the input CSV, running
   # again will used the changed data instead of the archived data.
+  msg_plain(paste0("Combining archive and new input data"))
   data <- bind_rows(input_data, archive$input_data)
+  msg_plain(paste0("Sorting by start date"))
   data <- arrange(data, .data$StartDate)
 
+  msg_plain(paste0("Removing duplicated tokens"))
   data <- data[!duplicated(data$token), ]
 
   # Next, filter out responses with tokens that were seen before in responses
   # started before even the responses in `data`. These are responses submitted
   # recently with tokens that were initially used long ago, before the data
   # contained in `archive$input_data`.
+  msg_plain(paste0("Join on seen tokens from archive"))
   if (!is.null(archive$seen_tokens)) {
     data <- left_join(data, archive$seen_tokens,
                       by = "token", suffix = c("", ".seen"))
     data <- data[is.na(data$start_dt.seen) | data$start_dt <= data$start_dt.seen, ]
   }
 
+  msg_plain(paste0("Finished merging new and archived data"))
   return(data)
 }
 
@@ -238,10 +254,12 @@ merge_responses <- function(input_data, archive) {
 #' @export
 create_data_for_aggregatation <- function(input_data)
 {
+  msg_plain(paste0("Creating data for aggregations..."))
   df <- input_data
   df$weight_unif <- 1.0
   df$day <- as.Date(df$date)
 
+  msg_plain(paste0("Creating variables for CLI and ILI signals"))
   # create variables for cli and ili signals
   hh_cols <- c("hh_fever", "hh_soar_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
   df$cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)

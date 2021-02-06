@@ -16,9 +16,14 @@
 #' @export
 load_responses_all <- function(params) {
   input_data <- vector("list", length(params$input))
+  
+  msg_plain(paste0("Loading ", length(params$input), " CSVs"))
+  
   input_data <- mclapply(seq_along(input_data), function(i) {
     load_response_one(params$input[i], params)
   })
+  
+  msg_plain(paste0("Finished loading CSVs"))
   input_data <- bind_rows(input_data)
   return(input_data)
 }

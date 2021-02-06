@@ -63,6 +63,13 @@ run_contingency_tables <- function(params) {
     }
   }
   
+  if (params$parallel) {
+    msg_plain(paste0("Running on ", cores, " cores"))
+  } else {
+    msg_plain("Not running in parallel")
+  }
+  
+  
   if (params$aggregate_range == "week") {
     run_contingency_tables_many_periods(params, aggs$week)
   } else if (params$aggregate_range == "month") {

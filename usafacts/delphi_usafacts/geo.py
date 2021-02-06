@@ -106,7 +106,8 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         df = gmpr.add_population_column(df, state_geo, geocode_col="geo_id")
         if geo_res in ("hhs", "nation"):
             # for hhs/nation, use reported state populations instead of nation since PR not reported
-            df = gmpr.replace_geocode(df, state_geo, geo_res, from_col="geo_id", date_col="timestamp")
+            df = gmpr.replace_geocode(df, state_geo, geo_res,
+                                      from_col="geo_id", date_col="timestamp")
             df.rename({geo_res: "geo_id"}, inplace=True, axis=1)
     else:
         # Map "missing" secondary FIPS to those that are in our canonical set

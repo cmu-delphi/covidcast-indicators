@@ -75,10 +75,10 @@ def diff_export_csv(
 
     before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
     before_df.set_index("geo_id", inplace=True)
-
+    before_df = before_df.round(7)
     after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
     after_df.set_index("geo_id", inplace=True)
-
+    after_df = after_df.round(7)
     deleted_idx = before_df.index.difference(after_df.index)
     common_idx = before_df.index.intersection(after_df.index)
     added_idx = after_df.index.difference(before_df.index)

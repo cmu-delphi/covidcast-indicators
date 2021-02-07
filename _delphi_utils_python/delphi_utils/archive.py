@@ -127,6 +127,9 @@ def run_module(archive_type: str,
                                     kwargs["bucket_name"],
                                     kwargs["indicator_prefix"],
                                     kwargs["aws_credentials"])
+    elif archive_type == "filesystem":
+        arch_diff = FilesystemArchiveDiffer(cache_dir,
+                                            export_dir)
     else:
         raise ValueError(f"No archive type named '{archive_type}'")
     arch_diff.run()
@@ -576,11 +579,17 @@ class GitArchiveDiffer(ArchiveDiffer):
 
         return archive_success, archive_fail
 
+class FilesystemArchiveDiffer(ArchiveDiffer):
+    def archive_exports(self, exported_files):
+        self._exports_archived = True
+        return exported_files,[]
+    def update_cache(self):
+        self._cache_updated = True
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--archive_type", required=True, type=str,
-                        choices=["git", "s3"],
+                        choices=["git", "s3", "filesystem"],
                         help="Type of archive differ to use.")
     parser.add_argument("--indicator_prefix", type=str, default="",
                         help="The prefix for S3 keys related to this indicator."
@@ -601,9 +610,9 @@ if __name__ == "__main__":
     run_module(args.archive_type,
                params["cache_dir"],
                params["export_dir"],
-               aws_credentials=params["aws_credentials"],
+               aws_credentials=params.get("aws_credentials",{}),
                branch_name=args.branch_name,
-               bucket_name=params["bucket_name"],
+               bucket_name=params.get("bucket_name",""),
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

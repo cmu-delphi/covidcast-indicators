@@ -474,7 +474,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-        supported_geos = ["fips", "zip", "state_id", "stat_name", "state_code", "hhs", "nation"]
+        supported_geos = ["fips", "zip", "state_id", "state_name", "state_code", "hhs", "nation"]
         if geocode_type not in supported_geos:
             raise ValueError(
                 f"Only {supported_geos} geocodes supported. For other codes, aggregate those."

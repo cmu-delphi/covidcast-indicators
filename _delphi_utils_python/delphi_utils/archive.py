@@ -580,10 +580,41 @@ class GitArchiveDiffer(ArchiveDiffer):
         return archive_success, archive_fail
 
 class FilesystemArchiveDiffer(ArchiveDiffer):
+    """Filesystem-based backend for archiving.
+
+    This backend is only intended for use to reconstruct historical issues whose
+    versioning history has already been tracked elsewhere. No versioning is
+    performed by this backend and the cache directory is modified in-place
+    without backups. Do not use it for new issues.
+    """
+
     def archive_exports(self, exported_files):
+        """Handle file archiving with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+
+        Parameters
+        ----------
+        exported_files: Files
+            List of files to be archived. Usually new and changed files.
+
+        Returns
+        -------
+        (successes, fails): Tuple[Files, Files]
+            successes: All files from input
+            fails: Empty list
+        """
         self._exports_archived = True
         return exported_files,[]
     def update_cache(self):
+        """Handle cache updates with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+        """
         self._cache_updated = True
 
 if __name__ == "__main__":

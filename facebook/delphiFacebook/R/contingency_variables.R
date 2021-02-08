@@ -180,19 +180,19 @@ rename_responses <- function(df) {
   
   # Make derivative columns.	
   if ("mc_occupational_group" %in% names(df)) {	
-    df$b_work_in_healthcare <- (	
+    df$b_work_in_healthcare <- as.numeric(	
       df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"	
     )	
   } else {	
     df$b_work_in_healthcare <- NA_real_	
   }	
   
-  df$b_65_or_older <- (	
+  df$b_65_or_older <- as.numeric(	
     df$mc_age == "65-74" | df$mc_age == "75+"	
   )
   
   if ("mc_accept_cov_vaccine" %in% names(df)) {	
-    df$b_hesitant_cov_vaccine <- (	
+    df$b_hesitant_cov_vaccine <- as.numeric(	
       df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"	
     )	
   } else {	
@@ -200,25 +200,37 @@ rename_responses <- function(df) {
   }	
   
   if ("mc_concerned_sideeffects" %in% names(df)) {	
-    df$b_concerned_sideeffects <- (	
+    df$b_concerned_sideeffects <- as.numeric(	
       df$mc_concerned_sideeffects == 1 | df$mc_concerned_sideeffects == 2	
     )	
   } else {	
     df$b_concerned_sideeffects <- NA_real_	
   }
   
-  df$b_hesitant_sideeffects <- df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
+  df$b_hesitant_sideeffects <- as.numeric(
+    df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
+  )
   
   if ( "b_vaccine_likely_friends" %in% names(df) &
        "b_vaccine_likely_local_health" %in% names(df) &
        "b_vaccine_likely_who" %in% names(df) &
        "b_vaccine_likely_govt_health" %in% names(df) &
        "b_vaccine_likely_politicians" %in% names(df) ) {
-    df$b_hesitant_trust_fam <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_friends
-    df$b_hesitant_trust_healthcare <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_local_health
-    df$b_hesitant_trust_who <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_who
-    df$b_hesitant_trust_govt <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_govt_health
-    df$b_hesitant_trust_politicians <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_politicians
+    df$b_hesitant_trust_fam <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_friends
+      )
+    df$b_hesitant_trust_healthcare <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_local_health
+      )
+    df$b_hesitant_trust_who <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_who
+      )
+    df$b_hesitant_trust_govt <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_govt_health
+      )
+    df$b_hesitant_trust_politicians <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_politicians
+      )
   } else {
     df$b_hesitant_trust_fam <- NA_real_
     df$b_hesitant_trust_healthcare <- NA_real_

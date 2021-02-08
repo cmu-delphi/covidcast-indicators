@@ -75,8 +75,11 @@ def run_module():
     dfs = []
     for r in date_range:
         response = Epidata.covid_hosp(request_all_states, r)
-        if response['result'] != 1:
+        # The last date range might only have recent days that don't have any data, so don't error.
+        if response["result"] != 1 and r != date_range[-1]:
             raise Exception(f"Bad result from Epidata: {response['message']}")
+        if response["result"] == -2 and r == date_range[-1]:
+            continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
 
@@ -96,7 +99,6 @@ def run_module():
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
-    exported = None
     if geo == "state":
         exported = state.rename(columns={"state":"geo_id"})
     else:

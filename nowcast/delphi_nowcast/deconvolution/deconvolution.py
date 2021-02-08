@@ -1,5 +1,5 @@
-from datetime import datetime, date, timedelta
-from typing import Callable, List, Tuple, Union
+from datetime import date, timedelta
+from typing import Callable, List, Tuple
 
 import numpy as np
 from scipy.linalg import toeplitz
@@ -245,10 +245,11 @@ def _impute_with_neighbors(x: np.ndarray) -> np.ndarray:
 
 
 def deconvolve_signal(convolved_truth_indicator: SensorConfig,
-                      input_dates: List[int],
+                      start_date: date,
+                      end_date: date,
+                      as_of_date: date,
                       input_locations: List[Tuple[str, str]],
                       kernel: np.ndarray,
-                      as_of_date: int,
                       fit_func: Callable = deconvolve_tf_cv,
                       ) -> List[LocationSeries]:
     """
@@ -263,14 +264,16 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
     ----------
     convolved_truth_indicator
         (source, signal) tuple of quantity to deconvolve.
-    input_dates
-        List of dates to train data on and get nowcasts for.
+    start_date
+        First date of data to use.
+    end_date
+        Last date of data to use.
+    as_of_date
+        Date that the data should be retrieved as of.
     input_locations
         List of (location, geo_type) tuples specifying locations to train and obtain nowcasts for.
     kernel
-        Delay distribution from infection to report.
-    as_of_date:
-        Date that the data should be retrieved as of.
+        Delay distribution from infection to report
     fit_func
         Fitting function for the deconvolution.
 
@@ -281,13 +284,11 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
 
     n_locs = len(input_locations)
 
-    def _to_date(date: Union[int, str], fmt: str = '%Y%m%d') -> date:
-        """Convert int to date object, using specified fmt."""
-        return datetime.strptime(str(date), fmt).date()
+    # def _to_date(date: Union[int, str], fmt: str = '%Y%m%d') -> date:
+    #     """Convert int to date object, using specified fmt."""
+    #     return datetime.strptime(str(date), fmt).date()
 
-    # full date range (input_dates can be discontinuous)
-    start_date = _to_date(input_dates[0])
-    end_date = _to_date(input_dates[-1])
+    # full date range
     n_full_dates = (end_date - start_date).days + 1
     full_dates = [start_date + timedelta(days=a) for a in range(n_full_dates)]
     # full_dates = [int(d.strftime('%Y%m%d')) for d in full_dates]
@@ -305,7 +306,7 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
     # epidata call to get convolved truth
     combo_convolved_truth = get_indicator_data([convolved_truth_indicator],
                                                combo_series,
-                                               _to_date(as_of_date))
+                                               as_of_date)
 
     # perform deconvolution on each location individually
     deconvolved_truths = []

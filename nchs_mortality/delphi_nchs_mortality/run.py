@@ -57,7 +57,7 @@ def run_module():
             df["se"] = np.nan
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
-            sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
+            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
                 geo_name=GEO_RES,
@@ -76,7 +76,7 @@ def run_module():
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
-                sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
+                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
                     geo_name=GEO_RES,

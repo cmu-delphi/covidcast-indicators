@@ -108,7 +108,8 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         columns.remove("fips")
         columns.remove("population")
         # Detects whether there is a non-date string column -- not perfect
-        _ = [int(x.replace("/", "")) for x in columns]
+        # USAFacts has used both / and -, so account for both cases.
+        _ = [int(x.replace("/", "").replace("-", "")) for x in columns]
     except ValueError as e:
         raise ValueError(
             "Detected unexpected column(s) "

@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_calculate.R
 \name{compute_multiselect}
 \alias{compute_multiselect}
-\title{Wrapper for `compute_binary`}
+\title{Multiselect wrapper for `compute_binary`}
 \usage{
 compute_multiselect(response, weight, sample_size, total_represented)
 }
@@ -23,5 +23,5 @@ be a non-integer}
 a list of named percentages and other descriptive statistics
 }
 \description{
-Wrapper for `compute_binary`
+Multiselect wrapper for `compute_binary`
 }

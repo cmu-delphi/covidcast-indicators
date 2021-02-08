@@ -45,7 +45,7 @@ compute_binary <- function(response, weight, sample_size, total_represented)
   return(response_pct)
 }
 
-#' Wrapper for `compute_binary`
+#' Multiselect wrapper for `compute_binary`
 #'
 #' @param response a vector of binary (0 or 1) responses
 #' @param weight a vector of sample weights for inverse probability weighting;

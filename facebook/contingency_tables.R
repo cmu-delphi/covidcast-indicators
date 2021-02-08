@@ -1,4 +1,3 @@
-library(tibble)
 library(delphiFacebook)
 
 params <- read_contingency_params("params.json")

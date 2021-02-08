@@ -18,6 +18,8 @@
 #' which does not modify the data.
 #'
 #' @return named list
+#' 
+#' @importFrom tibble tribble
 set_aggs <- function() {
   weekly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,

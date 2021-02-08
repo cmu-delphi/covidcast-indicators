@@ -177,6 +177,7 @@ rename_responses <- function(df) {
   )
   
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
+  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
   
   return(df)
 }

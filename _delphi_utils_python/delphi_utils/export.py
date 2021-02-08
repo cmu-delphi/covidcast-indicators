@@ -19,6 +19,8 @@ def create_export_csv(
 ):
     """Export data in the format expected by the Delphi API.
 
+    This function will round the signal and standard error values to 7 decimals places.
+
     Parameters
     ----------
     df: pd.DataFrame
@@ -65,5 +67,6 @@ def create_export_csv(
         export_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]]
         if remove_null_samples:
             export_df = export_df[export_df["sample_size"].notnull()]
+        export_df = export_df.round({"val": 7, "se": 7})
         export_df.to_csv(export_file, index=False, na_rep="NA")
     return dates

@@ -607,7 +607,8 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
             fails: Empty list
         """
         self._exports_archived = True
-        return exported_files,[]
+        return exported_files, []
+
     def update_cache(self):
         """Handle cache updates with a no-op.
 
@@ -641,9 +642,9 @@ if __name__ == "__main__":
     run_module(args.archive_type,
                params["cache_dir"],
                params["export_dir"],
-               aws_credentials=params.get("aws_credentials",{}),
+               aws_credentials=params.get("aws_credentials", {}),
                branch_name=args.branch_name,
-               bucket_name=params.get("bucket_name",""),
+               bucket_name=params.get("bucket_name", ""),
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

@@ -71,7 +71,7 @@ def get_indicator_data(sensors: List[SensorConfig],
         data = LocationSeries(
             geo_value=location.geo_value,
             geo_type=location.geo_type,
-            data={datetime.strptime(i["time_value"], "%Y%m%d").date(): i["value"]
+            data={datetime.strptime(str(i["time_value"]), "%Y%m%d").date(): i["value"]
                   for i in response.get("epidata", []) if not isnan(i["value"])}
         )
         if data.data:

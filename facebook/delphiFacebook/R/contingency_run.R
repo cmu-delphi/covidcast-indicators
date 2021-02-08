@@ -1,28 +1,24 @@
 #' Make tables specifying aggregations to output
 #'
+#' Each row represents one aggregate to report. `name` is the aggregate's base
+#' column name.`metric` is the column of `df` containing the response value.
+#' `group_by` is a list of variables used to perform the aggregations over.
+#' `compute_fn` is the function that computes the aggregate response given many
+#' rows of data. `post_fn` is applied to the aggregate data and can perform any
+#' final calculations necessary.
+#'
+#' Listing no groupby vars implicitly computes aggregations at the national
+#' level only. Any multiple choice and multi-select questions used in the
+#' aggregations should be recoded to be descriptive in
+#' `contingency_variables::reformat_responses`.
+#'
+#' Compute functions must be one of the `compute_*` set (or another function
+#' with similar format can be created). Post-processing functions should be one
+#' of the `jeffreys_*` set or post_convert_count_to_pct or the identity `I`,
+#' which does not modify the data.
+#'
 #' @return named list
 set_aggs <- function() {
-  # User should add additional desired aggregations here following existing
-  # format. Names should be descriptive. Listing no groupby vars will implicitly
-  # compute aggregations at the national level only. Aggregations will not be
-  # reported if one or more of the metric or grouping variables is missing.
-  #
-  # Each row represents one aggregate to report. `name` is the aggregate's base
-  # column name.`metric` is the column of `df` containing the response value.
-  # `group_by` is a list of variables used to perform the aggregations over.
-  # `compute_fn` is the function that computes the aggregate response given many
-  # rows of data. `post_fn` is applied to the aggregate data and can perform any
-  # final calculations necessary.
-  #
-  # Please verify that any multiple choice and multi-select questions used in the
-  # aggregations are reformatted to be descriptive in
-  # `contingency_variables::reformat_responses`.
-  #
-  # Compute functions must be one of the `compute_*` set (or another function with
-  # similar format can be created). Post-processing functions should be one of the
-  # `jeffreys_*` set or post_convert_count_to_pct or the identity `I`, which does 
-  # not modify the data.
-  
   weekly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   )
@@ -149,7 +145,7 @@ set_aggs <- function() {
     "pct_accepting", "b_accept_cov_vaccine", c("b_65_or_older", "mc_race", "b_hispanic", "state"), compute_binary, jeffreys_binary,
     "pct_accepting", "b_accept_cov_vaccine", c("mc_age", "state"), compute_binary, jeffreys_binary,
     "pct_accepting", "b_accept_cov_vaccine", c("mc_gender", "state"), compute_binary, jeffreys_binary,
-    "pct_accepting", "b_accept_cov_vaccine", c("mc_race", "b_hispanic", "state"), compute_binary, jeffreys_binary,  )
+    "pct_accepting", "b_accept_cov_vaccine", c("mc_race", "b_hispanic", "state"), compute_binary, jeffreys_binary,
   
   )
   

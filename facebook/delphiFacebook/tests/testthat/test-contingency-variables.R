@@ -100,29 +100,3 @@ test_that("testing code_numeric_freeresponse command", {
   
   expect_identical(out, list(expected_output, list()))
 })
-
-## High level call
-test_that("testing make_human_readable command", {
-  input_data <- data.frame(
-    C14 = c(NA, 1, 3, 6, 2),
-    C16 = c(1, NA, 6, 3, 2),
-    C6 = 1,
-    DDD123 = 1,
-    E1_1 = c(1, 1, 5, 2, NA),
-    D7 = c("1", NA, "1,2", "5", "3,4,5"),
-    zip5 = c("12345", "23345", "10009", NA, NA)
-  )
-  
-  expected_output <- data.frame(
-    mc_mask_often = c(NA, 1, 3, 6, 2),
-    mc_cmnty_mask_prevalence = c(1, NA, 6, 3, 2),
-    b_state_travel = 1,
-    DDD123 = 1,
-    b_children_grade_prek_k = c(1, 1, NA, 0, NA),
-    mc_race = c("American Indian or Alaska Native", NA, "Multiracial", "White", "Multiracial"),
-    zip5 = c("12345", "23345", "10009", NA, NA),
-    t_zipcode = c("12345", "23345", "10009", NA, NA)
-  )
-  
-  expect_identical(make_human_readable(input_data), expected_output)
-})

@@ -22,7 +22,8 @@ make_human_readable <- function(input_data) {
   input_data <- remap_responses(input_data)
   input_data <- rename_responses(input_data)
   input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
-  
+  input_data <- create_derivative_columns(input_data)
+
   return(input_data)
 }
 
@@ -177,59 +178,6 @@ rename_responses <- function(df) {
   
   map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
   
-  msg_plain(paste0("Renaming columns..."))
-  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
-  msg_plain(paste0("Finished renaming columns"))
-
-  # Make derivative columns.	
-  if ("mc_occupational_group" %in% names(df)) {	
-    df$b_work_in_healthcare <- (	
-      df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"	
-    )	
-  } else {	
-    df$b_work_in_healthcare <- NA_real_	
-  }	
-  
-  df$b_65_or_older <- (	
-    df$mc_age == "65-74" | df$mc_age == "75+"	
-  )
-  
-  if ("mc_accept_cov_vaccine" %in% names(df)) {	
-    df$b_hesitant_cov_vaccine <- (	
-      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"	
-    )	
-  } else {	
-    df$b_hesitant_cov_vaccine <- NA_real_	
-  }	
-  
-  if ("mc_concerned_sideeffects" %in% names(df)) {	
-    df$b_concerned_sideeffects <- (	
-      df$mc_concerned_sideeffects == 1 | df$mc_concerned_sideeffects == 2	
-    )	
-  } else {	
-    df$b_concerned_sideeffects <- NA_real_	
-  }
-  
-  df$b_hesitant_sideeffects <- df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
-  
-  if ( "b_vaccine_likely_friends" %in% names(df) &
-       "b_vaccine_likely_local_health" %in% names(df) &
-       "b_vaccine_likely_who" %in% names(df) &
-       "b_vaccine_likely_govt_health" %in% names(df) &
-       "b_vaccine_likely_politicians" %in% names(df) ) {
-    df$b_hesitant_trust_fam <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_friends
-    df$b_hesitant_trust_healthcare <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_local_health
-    df$b_hesitant_trust_who <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_who
-    df$b_hesitant_trust_govt <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_govt_health
-    df$b_hesitant_trust_politicians <- df$b_hesitant_cov_vaccine & df$b_vaccine_likely_politicians
-  } else {
-    df$b_hesitant_trust_fam <- NA_real_
-    df$b_hesitant_trust_healthcare <- NA_real_
-    df$b_hesitant_trust_who <- NA_real_
-    df$b_hesitant_trust_govt <- NA_real_
-    df$b_hesitant_trust_politicians <- NA_real_
-  }
-  
   return(df)
 }
 
@@ -370,6 +318,83 @@ remap_responses <- function(df) {
   msg_plain(paste0("Finished remapping response codes"))
   return(df)
 }
+
+
+#' Create new columns, based on existing ones, for use in aggregates.
+#' 
+#' @param df Data frame of individual response data.
+#' 
+#' @return data frame of individual response data with newly derived columns
+create_derivative_columns <- function(df) {
+  # Make derivative columns.	
+  if ("mc_occupational_group" %in% names(df)) {	
+    df$b_work_in_healthcare <- as.numeric(	
+      df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"	
+    )	
+  } else {	
+    df$b_work_in_healthcare <- NA_real_	
+  }	
+  
+  if ("mc_occupational_group" %in% names(df)) {	
+    
+    df$b_65_or_older <- as.numeric(	
+      df$mc_age == "65-74" | df$mc_age == "75+"	
+    )
+  } else {
+    df$b_65_or_older <- NA_real_
+  }
+  
+  if ("mc_accept_cov_vaccine" %in% names(df)) {	
+    df$b_hesitant_cov_vaccine <- as.numeric(	
+      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"	
+    )	
+  } else {	
+    df$b_hesitant_cov_vaccine <- NA_real_	
+  }	
+  
+  if ("mc_concerned_sideeffects" %in% names(df)) {	
+    df$b_concerned_sideeffects <- as.numeric(	
+      df$mc_concerned_sideeffects == 1 | df$mc_concerned_sideeffects == 2	
+    )	
+  } else {	
+    df$b_concerned_sideeffects <- NA_real_	
+  }
+  
+  df$b_hesitant_sideeffects <- as.numeric(
+    df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
+  )
+  
+  if ( "b_vaccine_likely_friends" %in% names(df) &
+       "b_vaccine_likely_local_health" %in% names(df) &
+       "b_vaccine_likely_who" %in% names(df) &
+       "b_vaccine_likely_govt_health" %in% names(df) &
+       "b_vaccine_likely_politicians" %in% names(df) ) {
+    df$b_hesitant_trust_fam <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_friends
+    )
+    df$b_hesitant_trust_healthcare <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_local_health
+    )
+    df$b_hesitant_trust_who <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_who
+    )
+    df$b_hesitant_trust_govt <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_govt_health
+    )
+    df$b_hesitant_trust_politicians <- as.numeric(
+      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_politicians
+    )
+  } else {
+    df$b_hesitant_trust_fam <- NA_real_
+    df$b_hesitant_trust_healthcare <- NA_real_
+    df$b_hesitant_trust_who <- NA_real_
+    df$b_hesitant_trust_govt <- NA_real_
+    df$b_hesitant_trust_politicians <- NA_real_
+  }
+  
+  return(df)
+}
+
 
 #' Convert numeric response codes in a single survey item to values specified in
 #' map. Returns as-is for numeric columns.

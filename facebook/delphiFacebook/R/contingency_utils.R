@@ -83,7 +83,7 @@ update_params <- function(params) {
     date_range <- get_range_prev_full_period(
       as_date(params$end_date), params$aggregate_range)
   }
-  
+
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }

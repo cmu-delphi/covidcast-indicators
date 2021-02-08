@@ -19,6 +19,8 @@ def create_export_csv(
 ):
     """Export data in the format expected by the Delphi API.
 
+    This function will round the signal and standard error values to 7 decimals places.
+
     Parameters
     ----------
     df: pd.DataFrame

@@ -12,7 +12,6 @@
 #' @export
 write_cid <- function(data, type_name, params)
 {
-  tz_to <- "America/Los_Angeles"
   fname <- sprintf(
     "cvid_cids_%s_response_%s_-_%s.csv",
     type_name,

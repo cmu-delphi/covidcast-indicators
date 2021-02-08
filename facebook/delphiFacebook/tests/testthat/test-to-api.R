@@ -1,7 +1,7 @@
 library(dplyr)
 library(readr)
 
-context("Testing functions for exporting data for injestion to the API")
+context("Testing functions for exporting data for ingestion to the API")
 
 test_that("testing write_data_api command", {
   tdir <- tempfile()

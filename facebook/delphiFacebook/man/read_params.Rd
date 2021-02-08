@@ -4,11 +4,13 @@
 \alias{read_params}
 \title{Return params file as an R list}
 \usage{
-read_params(path = "params.json")
+read_params(path = "params.json", template_path = "params.json.template")
 }
 \arguments{
 \item{path}{path to the parameters file; if not present, will try to copy the file
 "params.json.template"}
+
+\item{template_path}{path to the template parameters file}
 }
 \value{
 a named list of parameters values

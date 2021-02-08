@@ -37,7 +37,7 @@ class TestExport:
         {
             "geo_id": ["51093", "51175", "51175", "51620"],
             "timestamp": TIMES,
-            "val": [3.6, 2.1, 2.2, 2.6],
+            "val": [3.12345678910, 2.1, 2.2, 2.6],
             "se": [0.15, 0.22, 0.20, 0.34],
             "sample_size": [100, 100, 101, 100],
         }
@@ -67,6 +67,28 @@ class TestExport:
                 "20200301_county_deaths_test.csv",
                 "20200315_county_deaths_test.csv",
             ]
+        )
+
+    def test_export_rounding(self):
+        """Test that exporting CSVs with the `metrics` argument yields the correct files."""
+
+        # Clean receiving directory
+        _clean_directory(self.TEST_DIR)
+
+        create_export_csv(
+            df=self.DF,
+            start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
+            export_dir=self.TEST_DIR,
+            metric="deaths",
+            geo_res="county",
+            sensor="test",
+        )
+        pd.testing.assert_frame_equal(
+            pd.read_csv(join(self.TEST_DIR, "20200215_county_deaths_test.csv")),
+            pd.DataFrame({"geo_id": [51093, 51175],
+                          "val": [round(3.12345678910, 7), 2.1],
+                          "se": [0.15, 0.22],
+                          "sample_size": [100, 100]})
         )
 
     def test_export_without_metric(self):

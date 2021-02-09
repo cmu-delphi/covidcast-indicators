@@ -59,7 +59,7 @@ def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
     if n_days != len(unique_days):
         raise ValueError(
             f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
+            f"{max_timestamp} is represented."
         )
 
 

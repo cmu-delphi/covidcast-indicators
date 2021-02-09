@@ -8,8 +8,6 @@ from delphi_nowcast.deconvolution import deconvolution
 from delphi_nowcast.sensorization import sensor
 
 
-# todo: add scipy to Makefile
-
 def compute_batch_sensors(input_locations: List[Tuple[str, str]],
                           as_of_dates: List[date],
                           export_dir: str,

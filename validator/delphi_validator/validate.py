@@ -20,7 +20,10 @@ class Validator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        suppressed_errors =  params["global"].get('suppressed_errors', [])
+        self.export_dir = params["global"]["export_dir"]
+
+        validation_params = params["validation"]
+        suppressed_errors =  validation_params["global"].get('suppressed_errors', [])
         for entry in suppressed_errors:
             assert isinstance(entry, dict), "suppressed_errors must be a list of objects"
             assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"]),\
@@ -29,13 +32,13 @@ class Validator:
         self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
-        self.time_window = TimeWindow.from_params(params["global"]["end_date"],
-                                                  params["global"]["span_length"])
+        self.time_window = TimeWindow.from_params(validation_params["global"]["end_date"],
+                                                  validation_params["global"]["span_length"])
 
-        self.static_validation = StaticValidator(params)
-        self.dynamic_validation = DynamicValidator(params)
+        self.static_validation = StaticValidator(validation_params)
+        self.dynamic_validation = DynamicValidator(validation_params)
 
-    def validate(self, export_dir):
+    def validate(self):
         """
         Runs all data checks.
 
@@ -46,7 +49,7 @@ class Validator:
             - ValidationReport collating the validation outcomes
         """
         report = ValidationReport(self.suppressed_errors)
-        frames_list = load_all_files(export_dir, self.time_window.start_date,
+        frames_list = load_all_files(self.export_dir, self.time_window.start_date,
                                      self.time_window.end_date)
         self.static_validation.validate(frames_list, report)
         all_frames = aggregate_frames(frames_list)

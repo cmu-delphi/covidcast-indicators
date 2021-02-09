@@ -10,8 +10,17 @@ from .validate import Validator
 
 def run_module():
     """Run the validator as a module."""
-    parent_params = read_params()
-    params = parent_params['validation']
+    validator = Validator(read_params())
+    validator.validate().print_and_exit()
 
-    validator = Validator(params)
-    validator.validate(parent_params["export_dir"]).print_and_exit()
+
+def from_params(params):
+    """Constructs a validator from `params`.
+    Arguments
+    ---------
+    params: Dict[str, Any]
+        Dictionary of parameters
+    """
+    if "validation" in params:
+        return Validator(params["validator"])
+    return None

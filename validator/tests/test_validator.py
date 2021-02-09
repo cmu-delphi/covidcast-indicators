@@ -9,9 +9,14 @@ class TestValidatorInitialization:
         """Test default initialization."""
         params = {
             "global": {
-                "data_source": "",
-                "span_length": 0,
-                "end_date": "2020-09-01"
+                "export_dir": None
+            },
+            "validation": {
+                "global": {
+                    "data_source": "",
+                    "span_length": 0,
+                    "end_date": "2020-09-01"
+                }
             }
         }
         validator = Validator(params)
@@ -22,15 +27,20 @@ class TestValidatorInitialization:
         """Test initialization with suppressed errors."""
         params = {
             "global": {
-                "data_source": "",
-                "span_length": 0,
-                "end_date": "2020-09-01",
-                "suppressed_errors": [{"check_name": "a",
-                                       "date": None,
-                                       "signal": "b"},
-                                      {"check_name":"c",
-                                       "date": None,
-                                       "geo_type": "d"}]
+                "export_dir": None
+            },
+            "validation": {
+                "global": {
+                    "data_source": "",
+                    "span_length": 0,
+                    "end_date": "2020-09-01",
+                    "suppressed_errors": [{"check_name": "a",
+                                        "date": None,
+                                        "signal": "b"},
+                                        {"check_name":"c",
+                                        "date": None,
+                                        "geo_type": "d"}]
+                }
             }
         }
 
@@ -45,17 +55,22 @@ class TestValidatorInitialization:
             # entry with invalid keys
             Validator({
                 "global": {
-                    "data_source": "",
-                    "span_length": 0,
-                    "end_date": "2020-09-01",
-                    "suppressed_errors": [{"check_name": "a",
-                                           "date": None,
-                                           "signal": "b"},
-                                          {"check_name":"c",
-                                           "date": None,
-                                           "geo_type": "d"},
-                                          {"check_name": "a",
-                                           "fake": "b"}]
+                    "export_dir": None
+                },
+                "validation": {
+                    "global": {
+                        "data_source": "",
+                        "span_length": 0,
+                        "end_date": "2020-09-01",
+                        "suppressed_errors": [{"check_name": "a",
+                                            "date": None,
+                                            "signal": "b"},
+                                            {"check_name":"c",
+                                            "date": None,
+                                            "geo_type": "d"},
+                                            {"check_name": "a",
+                                            "fake": "b"}]
+                    }
                 }
             })
 
@@ -63,6 +78,10 @@ class TestValidatorInitialization:
             # entry that is not a list
             Validator({
                 "global": {
+                    "export_dir": None
+                },
+                "validation": {
+                    "global": {
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01",
@@ -73,5 +92,6 @@ class TestValidatorInitialization:
                                            "date": None,
                                            "geo_type": "d"},
                                           ["ab"]]
+                    }
                 }
             })

@@ -6,6 +6,7 @@ import numpy as np
 
 from .data_containers import SensorConfig
 from .deconvolution import deconvolution
+from .nowcast_fusion import covariance
 
 # todo: update tests once placeholders are replaced
 
@@ -76,3 +77,6 @@ class Default:
     REG_SENSORS = [SensorConfig('usa-facts', 'confirmed_incidence_num', 'ar3', 1),
                    SensorConfig('fb-survey', 'smoothed_hh_cmnty_cli', 'fb', 3), ]
     REG_INTERCEPT = True
+
+    # Sensor fusion parameters
+    COVARIANCE_SHRINKAGE_FUNC = covariance.BlendDiagonal2

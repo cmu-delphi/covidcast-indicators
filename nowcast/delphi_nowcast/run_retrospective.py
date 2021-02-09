@@ -2,14 +2,12 @@ from datetime import date, timedelta
 from typing import List
 
 import numpy as np
-import pandas as pd
 
 from delphi_nowcast.constants import Default
 from delphi_nowcast.deconvolution import deconvolution
 from delphi_nowcast.nowcast_fusion import covariance, fusion
 from delphi_nowcast.sensorization import sensor
 from delphi_nowcast.statespace import statespace
-from delphi_utils import GeoMapper
 
 
 def run_retrospective(state_id: str,
@@ -118,7 +116,7 @@ def run_retrospective(state_id: str,
         state_id, valid_location_types, pop_df)
 
     # estimate covariance
-    R = covariance.mle_cov(noise, covariance.BlendDiagonal2)
+    R = covariance.mle_cov(noise, Default.COVARIANCE_SHRINKAGE_FUNC)
 
     # run SF
     x, P = fusion.fuse(z, R, H)

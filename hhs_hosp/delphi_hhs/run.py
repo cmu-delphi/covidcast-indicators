@@ -78,7 +78,7 @@ def run_module():
         # The last date range might only have recent days that don't have any data, so don't error.
         if response["result"] != 1 and r != date_range[-1]:
             raise Exception(f"Bad result from Epidata: {response['message']}")
-        if response["result"] == -2 and r == date_range[-1]:
+        if response["result"] == -2 and r == date_range[-1]:  # -2 code means no results
             continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)

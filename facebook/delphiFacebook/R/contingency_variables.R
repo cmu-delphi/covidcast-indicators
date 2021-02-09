@@ -336,8 +336,7 @@ create_derivative_columns <- function(df) {
     df$b_work_in_healthcare <- NA_real_	
   }	
   
-  if ("mc_occupational_group" %in% names(df)) {	
-    
+  if ("mc_age" %in% names(df)) {	
     df$b_65_or_older <- as.numeric(	
       df$mc_age == "65-74" | df$mc_age == "75+"	
     )

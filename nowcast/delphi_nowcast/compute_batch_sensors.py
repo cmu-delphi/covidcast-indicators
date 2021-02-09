@@ -3,9 +3,9 @@ from typing import Dict, List, Tuple
 
 import numpy as np
 
+from delphi_nowcast.constants import Default
 from delphi_nowcast.deconvolution import deconvolution
 from delphi_nowcast.sensorization import sensor
-from delphi_nowcast.constants import Default
 
 
 # todo: add scipy to Makefile

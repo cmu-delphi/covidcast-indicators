@@ -39,17 +39,17 @@ def compute_regression_sensor(day: date,
         Float value of sensor on `date`
     """
     previous_day = day - timedelta(1)
-    first_day = max(min(covariate.dates), min(response.dates))
     try:
+        first_day = max(min(covariate.dates), min(response.dates))
         train_Y = response.get_data_range(first_day, previous_day)
         train_covariates = covariate.get_data_range(first_day, previous_day)
     except ValueError:
         return np.nan
     if not train_Y:
         return np.nan
-    train_Y, train_covariates = zip(  # only get pairs where both are not nan
-        *[(i, j) for i, j in zip(train_Y, train_covariates) if not (np.isnan(i) or np.isnan(j))]
-    )
+    non_nan_values = [(i, j) for i, j in zip(train_Y, train_covariates)
+                      if not (np.isnan(i) or np.isnan(j))]
+    train_Y, train_covariates = zip(*non_nan_values) if non_nan_values else ([], [])
     if len(train_Y) < MIN_SAMPLE_SIZE:
         print("insufficient observations")
         return np.nan

@@ -43,7 +43,8 @@ def compute_batch_sensors(input_locations: List[Tuple[str, str]],
         ground_truth = deconvolution.deconvolve_signal(
             convolved_truth_indicator,
             first_data_date,
-            as_of - timedelta(convolved_truth_indicator.lag),
+            # +1 since we only need truths up to to the day before the desired date for training
+            as_of - timedelta(convolved_truth_indicator.lag + 1),
             as_of,
             input_locations,
             np.array(kernel),

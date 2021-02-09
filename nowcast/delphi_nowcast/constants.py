@@ -36,7 +36,7 @@ class Default:
     GROUND_TRUTH_INDICATOR = SensorConfig('usa-facts',
                                           'confirmed_cumulative_prop',
                                           'test_truth',
-                                          2)
+                                          3)
 
     # Delay distribution
     DELAY_DISTRIBUTION = [0.10433699530360944, 0.1164050460454959,
@@ -63,7 +63,7 @@ class Default:
                           3.690507947765323e-05, 2.9553381025720584e-05]
 
     # Deconvolution parameters
-    DECONV_CV_GRID = np.logspace(1, 3.5, 20)
+    DECONV_CV_GRID = np.logspace(1, 3.5, 10)
     DECONV_CV_N_FOLDS = 10
     DECONV_FIT_FUNC = partial(deconvolution.deconvolve_tf_cv,
                               cv_grid=DECONV_CV_GRID,

@@ -94,9 +94,9 @@ def run_retrospective(state_id: str,
         for loc in sorted(valid_locs):
             dates_intersect = sorted(set(y[loc].dates) & set(train_series[loc].dates))
             y_vals = y[loc].get_data_range(
-                dates_intersect[0], dates_intersect[-1])
+                dates_intersect[0], dates_intersect[-1], "mean")
             s_vals = train_series[loc].get_data_range(
-                dates_intersect[0], dates_intersect[-1])
+                dates_intersect[0], dates_intersect[-1], "mean")
 
             inds = [i for i, date in enumerate(dates_intersect) if date in input_dates]
             noise[inds, j] = np.array(y_vals) - np.array(s_vals)

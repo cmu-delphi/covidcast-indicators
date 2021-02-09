@@ -33,7 +33,8 @@ async def fetch_epidata(combos, as_of):
                     "geo_type": location.geo_type,
                     "time_values": f"{EPIDATA_START_DATE}-{as_of}",
                     "geo_value": location.geo_value,
-                    "as_of": as_of
+                    "as_of": as_of,
+                    "lag": sensor.lag
                 }
             task = asyncio.create_task(get(params, session, sensor, location))
             tasks.append(task)

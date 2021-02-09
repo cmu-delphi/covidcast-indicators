@@ -314,13 +314,12 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
         _, _, geo_type, loc = loc_key
         if loc_key in combo_convolved_truth:
             convolved_truth = combo_convolved_truth[loc_key]
-            convolved_truth = convolved_truth.get_data_range(start_date, end_date)
+            convolved_truth = convolved_truth.get_data_range(start_date, end_date, "mean")
             deconvolved_truth = fit_func(np.array(convolved_truth), kernel)
             deconvolved_truths.append(
                 LocationSeries(loc,
                                geo_type,
                                dict(zip(full_dates, deconvolved_truth))))
-
         else:
             # return empty
             deconvolved_truths.append(LocationSeries(loc, geo_type))

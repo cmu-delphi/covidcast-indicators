@@ -41,7 +41,7 @@ def compute_batch_sensors(input_locations: List[Tuple[str, str]],
     ]
 
     convolved_truth_indicator = SensorConfig(
-        'usa-facts', 'confirmed_cumulative_prop', 'test_truth', 0)
+        'usa-facts', 'confirmed_cumulative_prop', 'test_truth', 2)
 
     # get deconvolved ground truth
     kernel, delay_coefs = delay_kernel.get_florida_delay_distribution()  # param-to-store: delay_coefs
@@ -52,14 +52,14 @@ def compute_batch_sensors(input_locations: List[Tuple[str, str]],
 
     out_sensors = {}
     for as_of in as_of_dates:
-        ground_truth = deconvolution.deconvolve_signal(convolved_truth_indicator,
-                                                       first_data_date,
-                                                       as_of - timedelta(days=1),
-                                                       as_of,
-                                                       input_locations,
-                                                       np.array(kernel),
-                                                       deconvolve_func)
-
+        ground_truth = deconvolution.deconvolve_signal(
+            convolved_truth_indicator,
+            first_data_date,
+            as_of - timedelta(convolved_truth_indicator.lag),
+            as_of,
+            input_locations,
+            np.array(kernel),
+            deconvolve_func)
         out_sensors[as_of] = sensor.compute_sensors(as_of,
                                                     regression_indicators,
                                                     convolved_truth_indicator,

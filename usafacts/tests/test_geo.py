@@ -123,8 +123,8 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["31420", "49340"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [2.0, 13.0],
-                "cumulative_counts": [45.0, 60.0],
+                "new_counts": [2, 13],
+                "cumulative_counts": [45, 60],
                 "population": [300, 25],
                 "incidence": [666.66667, 52000.0],
                 "cumulative_prop": [15000.0, 240000.0]
@@ -137,8 +137,8 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["1", "4"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [13.0, 27.0],
-                "cumulative_counts": [60.0, 165.0],
+                "new_counts": [13, 27],
+                "cumulative_counts": [60, 165],
                 "population": [25, 2500],
                 "incidence": [52000.0, 1080.0],
                 "cumulative_prop": [240000.0, 6600.0]
@@ -151,8 +151,8 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["us"],
                 "timestamp": ["2020-02-15"],
-                "new_counts": [40.0],
-                "cumulative_counts": [225.0],
+                "new_counts": [40],
+                "cumulative_counts": [225],
                 "population": [2525],
                 "incidence": [1584.15842],
                 "cumulative_prop": [8910.89109]

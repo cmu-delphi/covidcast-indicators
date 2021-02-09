@@ -54,8 +54,9 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     for col in cols:
         # Get values from the aggregated county:
         vals = df.loc[df["fips"] == pooled_fips, col].values / len(fips_list)
-        for fips in fips_list:
-            df.loc[df["fips"] == fips, col] += vals
+        if len(vals) > 0:
+            for fips in fips_list:
+                df.loc[df["fips"] == fips, col] += vals
     return df
 
 

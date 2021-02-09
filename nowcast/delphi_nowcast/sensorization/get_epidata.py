@@ -118,7 +118,7 @@ def get_historical_sensor_data(sensor: SensorConfig,
         output = LocationSeries(
             geo_value=geo_value,
             geo_type=geo_type,
-            data={datetime.strptime(i["time_value"], "%Y%m%d").date(): i["value"]
+            data={datetime.strptime(str(i["time_value"]), "%Y%m%d").date(): i["value"]
                   for i in response.get("epidata", []) if not isnan(i["value"])}
         )
     elif response["result"] == -2:  # no results

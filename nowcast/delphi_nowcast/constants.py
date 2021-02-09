@@ -74,7 +74,7 @@ class Default:
     AR_LAMBDA = 0.1
 
     # Regression Sensor parameters
-    REG_SENSORS = [SensorConfig('usa-facts', 'confirmed_incidence_num', 'ar3', 1),
+    REG_SENSORS = [SensorConfig('doctor-visits', 'smoothed_adj_cli', 'dv', 5),
                    SensorConfig('fb-survey', 'smoothed_hh_cmnty_cli', 'fb', 3), ]
     REG_INTERCEPT = True
 

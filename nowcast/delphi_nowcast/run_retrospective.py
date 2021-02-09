@@ -1,5 +1,5 @@
 from datetime import date, timedelta
-from typing import List
+from typing import List, Tuple
 
 import numpy as np
 
@@ -14,8 +14,9 @@ def run_retrospective(state_id: str,
                       pred_date: date,
                       as_of: date,
                       export_dir: str,
-                      first_data_date):
-    """Run retrospective nowcasting experiment.
+                      first_data_date: date) -> Tuple[np.ndarray, np.ndarray, List]:
+    """
+    Run retrospective nowcasting experiment as_of specified date.
 
     Parameters
     ----------
@@ -32,7 +33,7 @@ def run_retrospective(state_id: str,
 
     Returns
     -------
-
+        tuple of nowcasts, standard deviation, and corresponding location
     """
     # set to default config
     regression_indicators = Default.REG_SENSORS

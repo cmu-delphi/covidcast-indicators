@@ -52,13 +52,13 @@ def generate_statespace(state_id: str,
     if not pop_df:
         pop_df = get_fips_in_state_pop_df(state_id)
 
+    # list of all atoms (counties)
+    atom_list = list(sorted(set(pop_df.fips)))
+
     # list of all locations: state, county
     all_location_types = [(state_id, 'state')]
-    for loc in pop_df.fips:
+    for loc in atom_list:
         all_location_types.append((loc, 'county'))
-
-    # list of all atoms (counties)
-    atom_list = list(pop_df.fips)
 
     # index pop_df by atoms to speed up search
     pop_df = pop_df.set_index('fips')

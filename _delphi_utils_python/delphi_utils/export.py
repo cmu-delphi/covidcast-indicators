@@ -3,9 +3,31 @@
 from datetime import datetime
 from os.path import join
 from typing import Optional
+import logging
 
 import numpy as np
 import pandas as pd
+
+from .nancodes import Nans
+
+def filter_contradicting_missing_codes(df, sensor, metric, date, logger=None):
+    """Find values with contradictory missingness codes, filter them, and log."""
+    columns = ["val", "se", "sample_size"]
+    # Get indicies where the XNOR is true (i.e. both are true or both are false).
+    masks = [
+        ~(df[column].isna() ^ df["missing_" + column].eq(Nans.NOT_MISSING))
+        for column in columns
+    ]
+    for mask in masks:
+        if not logger is None and df.loc[mask].size > 0:
+            logger.info(
+                "Filtering contradictory missing code in " +
+                "{0}_{1}_{2}.".format(sensor, metric, date.strftime(format="%Y-%m-%d"))
+            )
+            df = df.loc[~mask]
+        elif logger is None and df.loc[mask].size > 0:
+            df = df.loc[~mask]
+    return df
 
 def create_export_csv(
     df: pd.DataFrame,
@@ -15,7 +37,8 @@ def create_export_csv(
     metric: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    remove_null_samples: Optional[bool] = False
+    remove_null_samples: Optional[bool] = False,
+    logger: Optional[logging.Logger] = None
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -39,6 +62,8 @@ def create_export_csv(
         Latest date to export or None if no maximum date restrictions should be applied.
     remove_null_samples: Optional[bool]
         Whether to remove entries whose sample sizes are null.
+    logger: Optional[logging.Logger]
+        Pass a logger object here to log information about contradictory missing codes.
 
     Returns
     ---------
@@ -64,7 +89,20 @@ def create_export_csv(
         else:
             export_filename = f"{date.strftime('%Y%m%d')}_{geo_res}_{metric}_{sensor}.csv"
         export_file = join(export_dir, export_filename)
-        export_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]]
+        expected_columns = [
+            "geo_id",
+            "val",
+            "se",
+            "sample_size",
+            "missing_val",
+            "missing_se",
+            "missing_sample_size"
+        ]
+        export_df = df[df["timestamp"] == date].filter(items=expected_columns)
+        if "missing_val" in export_df.columns:
+            export_df = filter_contradicting_missing_codes(
+                export_df, sensor, metric, date, logger=logger
+            )
         if remove_null_samples:
             export_df = export_df[export_df["sample_size"].notnull()]
         export_df = export_df.round({"val": 7, "se": 7})

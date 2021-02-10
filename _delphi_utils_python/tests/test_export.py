@@ -3,8 +3,11 @@ from datetime import datetime
 from os import listdir, remove
 from os.path import join
 
+import mock
+import numpy as np
 import pandas as pd
-from delphi_utils import create_export_csv
+
+from delphi_utils import create_export_csv, Nans
 
 def _clean_directory(directory):
     """Clean files out of a directory."""
@@ -40,6 +43,34 @@ class TestExport:
             "val": [3.12345678910, 2.1, 2.2, 2.6],
             "se": [0.15, 0.22, 0.20, 0.34],
             "sample_size": [100, 100, 101, 100],
+        }
+    )
+
+    # A sample data frame with missingness.
+    DF2 = pd.DataFrame(
+        {
+            "geo_id": ["51093", "51175", "51175", "51620"],
+            "timestamp": TIMES,
+            "val": [3.12345678910, np.nan, 2.2, 2.6],
+            "se": [0.15, 0.22, np.nan, 0.34],
+            "sample_size": [100, 100, 101, None],
+            "missing_val": [Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING, Nans.NOT_MISSING],
+            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.UNKNOWN]
+        }
+    )
+
+    # A sample data frame with contradictory missing codes.
+    DF3 = pd.DataFrame(
+        {
+            "geo_id": ["51093", "51175", "51175", "51620"],
+            "timestamp": TIMES,
+            "val": [np.nan, np.nan, 2.2, 2.6],
+            "se": [0.15, 0.22, np.nan, 0.34],
+            "sample_size": [100, 100, 101, None],
+            "missing_val": [Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING, Nans.NOT_MISSING],
+            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.UNKNOWN]
         }
     )
 
@@ -235,3 +266,46 @@ class TestExport:
             ]
         )
         assert pd.read_csv(join(self.TEST_DIR, "20200606_state_test.csv")).size > 0
+
+    def test_export_df_with_missingness(self):
+        _clean_directory(self.TEST_DIR)
+
+        create_export_csv(
+            df=self.DF2.copy(),
+            export_dir=self.TEST_DIR,
+            geo_res="state",
+            sensor="test",
+            remove_null_samples=False
+        )
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
+            [
+                "20200215_state_test.csv",
+                "20200301_state_test.csv",
+                "20200315_state_test.csv",
+            ]
+        )
+        assert pd.read_csv(join(self.TEST_DIR, "20200315_state_test.csv")).size > 0
+
+    @mock.patch("delphi_utils.logger")
+    def test_export_df_with_contradictory_missingness(self, mock_logger):
+        _clean_directory(self.TEST_DIR)
+
+        create_export_csv(
+            df=self.DF3.copy(),
+            export_dir=self.TEST_DIR,
+            geo_res="state",
+            sensor="test",
+            remove_null_samples=False,
+            logger=mock_logger
+        )
+        assert _non_ignored_files_set(self.TEST_DIR) == set(
+            [
+                "20200215_state_test.csv",
+                "20200301_state_test.csv",
+                "20200315_state_test.csv",
+            ]
+        )
+        assert pd.read_csv(join(self.TEST_DIR, "20200315_state_test.csv")).size > 0
+        mock_logger.info.assert_called_once_with(
+            "Filtering contradictory missing code in test_None_2020-02-15."
+        )

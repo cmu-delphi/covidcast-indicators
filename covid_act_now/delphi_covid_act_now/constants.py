@@ -11,4 +11,5 @@ GEO_RESOLUTIONS = [
 
 SIGNALS = [
     "pcr_specimen_positivity_rate",
+    "pcr_specimen_total_tests",
 ]

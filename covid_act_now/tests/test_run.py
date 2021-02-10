@@ -4,16 +4,17 @@ from os.path import join
 import pandas as pd
 import pytest
 
-from delphi_covid_act_now.constants import GEO_RESOLUTIONS
+from delphi_covid_act_now.constants import GEO_RESOLUTIONS, SIGNALS
 
 class TestRun:
     def test_output_files(self, run_as_module):
         csv_files = set(listdir("receiving"))
         csv_files.discard(".gitignore")
 
-        expected_files = {
-            f"20210101_{geo}_pcr_specimen_positivity_rate.csv"
-            for geo in GEO_RESOLUTIONS}
+        expected_files = set()
+        for signal in SIGNALS:
+            for geo in GEO_RESOLUTIONS:
+                expected_files.add(f"20210101_{geo}_{signal}.csv")
 
         # All output files exist
         assert csv_files == expected_files

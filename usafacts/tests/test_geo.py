@@ -2,9 +2,10 @@ from os.path import join
 
 import pytest
 
-import numpy as np
 import pandas as pd
+import numpy as np
 from delphi_usafacts.geo import disburse, geo_map
+from delphi_utils.geomap import GeoMapper
 
 SENSOR = "new_counts"
 
@@ -38,7 +39,6 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
                 "new_counts": [10, 15, 2],
                 "cumulative_counts": [100, 20, 45],
-                "population": [100, 2100, 300],
             }
         )
 
@@ -53,12 +53,11 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
                 "new_counts": [10, 15, 2],
                 "cumulative_counts": [100, 20, 45],
-                "population": [100, 2100, 300],
             }
         )
-
         new_df = geo_map(df, "county", SENSOR)
-
+        gmpr = GeoMapper()
+        df = gmpr.add_population_column(df, "fips")
         exp_incidence = df["new_counts"] / df["population"] * 100000
         exp_cprop = df["cumulative_counts"] / df["population"] * 100000
 
@@ -75,7 +74,6 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
                 "new_counts": [10, 15, 2, 13, 1],
                 "cumulative_counts": [100, 20, 45, 60, 1],
-                "population": [100, 2100, 300, 25, 25],
             }
         )
 
@@ -85,11 +83,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["az", "ma"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [27.0, 14.0],
-                "cumulative_counts": [165.0, 61.0],
-                "population": [7278717, 6892503],
-                "incidence": [27 / 7278717 * 100000, 14 / 6892503 * 100000],
-                "cumulative_prop": [165 / 7278717 * 100000, 61 / 6892503 * 100000]
+                "new_counts": [27, 14],
+                "cumulative_counts": [165, 61],
+                "population": [236646., 521202.],
+                "incidence": [27 / 236646 * 100000, 14 / 521202 * 100000],
+                "cumulative_prop": [165 / 236646 * 100000, 61 / 521202 * 100000]
             })
         )
 
@@ -99,11 +97,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["1", "9"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [14.0, 27.0],
-                "cumulative_counts": [61.0, 165.0],
-                "population": [6892503, 7278717],
-                "incidence": [14 / 6892503 * 100000, 27 / 7278717 * 100000],
-                "cumulative_prop": [61 / 6892503 * 100000, 165 / 7278717 * 100000]
+                "new_counts": [14, 27],
+                "cumulative_counts": [61, 165],
+                "population": [521202., 236646.],
+                "incidence": [14 / 521202 * 100000, 27 / 236646 * 100000],
+                "cumulative_prop": [61 / 521202 * 100000, 165 / 236646 * 100000]
             })
         )
 
@@ -113,11 +111,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["us"],
                 "timestamp": ["2020-02-15"],
-                "new_counts": [41.0],
-                "cumulative_counts": [226.0],
-                "population": [7278717 + 6892503],
-                "incidence": [41 / (7278717 + 6892503) * 100000],
-                "cumulative_prop": [226 / (7278717 + 6892503) * 100000]
+                "new_counts": [41],
+                "cumulative_counts": [226],
+                "population": [521202.0 + 236646],
+                "incidence": [41 / (521202 + 236646) * 100000],
+                "cumulative_prop": [226 / (521202 + 236646) * 100000]
             })
         )
 
@@ -129,61 +127,15 @@ class TestGeoMap:
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
                 "new_counts": [10, 15, 2, 13],
                 "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
             }
         )
         hrr_df = geo_map(df, "hrr", SENSOR)
-        pd.testing.assert_frame_equal(
-            hrr_df,
-            pd.DataFrame({
-                "geo_id": ["110", "123", "140", "145", "147"],
-                "timestamp": ["2020-02-15"]*5,
-                "new_counts": [13.0, 0.111432, 0.098673, 0.0080927, 26.7818017],
-                "cumulative_counts": [60.0, 0.148577, 0.131564, 0.080927, 164.638932],
-                "population": [25.0, 15.600544, 13.814223, 0.080927, 2470.504306],
-                "incidence": [52000.0, 714.285714, 714.285714, 10000.0, 1084.062138],
-                "cumulative_prop": [240000.0, 952.380952, 952.380952, 100000.0, 6664.183163]
-            })
-        )
-
         msa_df = geo_map(df, "msa", SENSOR)
-        pd.testing.assert_frame_equal(
-            msa_df,
-            pd.DataFrame({
-                "geo_id": ["31420", "49340"],
-                "timestamp": ["2020-02-15"]*2,
-                "new_counts": [2, 13],
-                "cumulative_counts": [45, 60],
-                "population": [300, 25],
-                "incidence": [666.66667, 52000.0],
-                "cumulative_prop": [15000.0, 240000.0]
-            })
-        )
+        assert msa_df.shape == (2, 7)
+        gmpr = GeoMapper()
+        df = gmpr.add_population_column(df, "fips")
+        assert np.isclose(hrr_df.new_counts.sum(), df.new_counts.sum())
+        assert np.isclose(hrr_df.population.sum(), df.population.sum())
+        assert hrr_df.shape == (5, 7)
 
-        hhs_df = geo_map(df, "hhs", SENSOR)
-        pd.testing.assert_frame_equal(
-            hhs_df,
-            pd.DataFrame({
-                "geo_id": ["1", "4"],
-                "timestamp": ["2020-02-15"]*2,
-                "new_counts": [13, 27],
-                "cumulative_counts": [60, 165],
-                "population": [25, 2500],
-                "incidence": [52000.0, 1080.0],
-                "cumulative_prop": [240000.0, 6600.0]
-            })
-        )
 
-        nation_df = geo_map(df, "nation", SENSOR)
-        pd.testing.assert_frame_equal(
-            nation_df,
-            pd.DataFrame({
-                "geo_id": ["us"],
-                "timestamp": ["2020-02-15"],
-                "new_counts": [40],
-                "cumulative_counts": [225],
-                "population": [2525],
-                "incidence": [1584.15842],
-                "cumulative_prop": [8910.89109]
-            })
-        )

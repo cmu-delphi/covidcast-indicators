@@ -83,16 +83,7 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
     # Conform FIPS
     df["fips"] = df["countyfips"].apply(lambda x: f"{int(x):05d}")
 
-    # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
-    # a corresponding population entry in the GeoMapper so it will be dropped
-    # in the call to `add_population_column()`.  We pull it out here to
-    # reinsert it after the population data is added.
-    nyc_dummy_row = df[df["fips"] == "00001"]
 
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    # Population for unassigned cases/deaths is NAN
-    df = geo_mapper.add_population_column(df, "fips")
-    df = df.append(nyc_dummy_row, ignore_index=True)
 
     # Drop unnecessary columns (state is pre-encoded in fips)
     try:
@@ -107,7 +98,6 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
     try:
         columns = list(df.columns)
         columns.remove("fips")
-        columns.remove("population")
         # Detects whether there is a non-date string column -- not perfect
         # USAFacts has used both / and -, so account for both cases.
         _ = [int(x.replace("/", "").replace("-", "")) for x in columns]
@@ -120,7 +110,7 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         ) from e
     # Reshape dataframe
     df = df.melt(
-        id_vars=["fips", "population"],
+        id_vars=["fips"],
         var_name="timestamp",
         value_name="cumulative_counts",
     )
@@ -159,7 +149,6 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         [  # Reorder
             "fips",
             "timestamp",
-            "population",
             "new_counts",
             "cumulative_counts",
         ],

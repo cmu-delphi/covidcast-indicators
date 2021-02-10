@@ -27,7 +27,6 @@ class TestPullUSAFacts:
             "timestamp": [pd.Timestamp("2020-02-29"), pd.Timestamp("2020-03-01"),
                           pd.Timestamp("2020-03-02"), pd.Timestamp("2020-02-29"),
                           pd.Timestamp("2020-03-01"), pd.Timestamp("2020-03-02")],
-            "population": [np.nan, np.nan, np.nan, 76117., 76117., 76117.],
             "new_counts": [0., 0., 1., 2., 2., 2.],
             "cumulative_counts": [0, 0, 1, 2, 4, 6]},
             index=[1, 2, 3, 5, 6, 7])

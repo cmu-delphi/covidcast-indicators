@@ -32,7 +32,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     if geo_res not in VALID_GEO_RES:
         raise ValueError(f"geo_res must be one of {VALID_GEO_RES}")
     unassigned_counties = df[df["fips"].str.endswith("000")].copy()
-    df = df[df["fips"].astype(int) % 1000 != 0].copy()
+    df = df[~df["fips"].str.endswith("000")].copy()
     gmpr = GeoMapper()
     if geo_res == "county":
         if not sensor.endswith("_prop"):

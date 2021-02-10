@@ -9,12 +9,14 @@ from itertools import product
 import time
 from typing import Dict, Any
 
+import pandas as pd
 import numpy as np
 from delphi_utils import (
     create_export_csv,
     Smoother,
     GeoMapper,
     get_structured_logger,
+    Nans,
 )
 
 from .geo import geo_map
@@ -62,6 +64,34 @@ GEO_RESOLUTIONS = [
 ]
 
 
+def add_nancodes(df, metric, geo_res, smoother):
+    """Add nancodes to the dataframe."""
+    idx = pd.IndexSlice
+
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark early smoothing entries as data insufficient
+    if smoother == "seven_day_average":
+        df.sort_index(inplace=True)
+        min_time_value = df.index.min()[0] + 5 * pd.Timedelta(days=1)
+        df.loc[idx[:min_time_value, :], "missing_val"] = Nans.CENSORED
+
+    # Mark Puerto Rico county deaths with a region exception code
+    # Search "Puerto Rico" here for details:
+    # https://github.com/CSSEGISandData/COVID-19/tree/master/csse_covid_19_data
+    if metric == "deaths" and geo_res == "county":
+        puerto_rico_fips = ["72" + str(i).zfill(3) for i in range(1, 155)]
+        df.loc[idx[:, puerto_rico_fips], "missing_val"] = Nans.REGION_EXCEPTION
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull() & df["missing_val"].eq(Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+    return df
+
+
 def run_module(params: Dict[str, Any]):
     """Run the JHU indicator module.
 
@@ -85,8 +115,10 @@ def run_module(params: Dict[str, Any]):
     export_dir = params["common"]["export_dir"]
     base_url = params["indicator"]["base_url"]
     logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+        __name__,
+        filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True),
+    )
 
     gmpr = GeoMapper()
     dfs = {metric: pull_jhu_data(base_url, metric, gmpr) for metric in METRICS}
@@ -100,16 +132,22 @@ def run_module(params: Dict[str, Any]):
             metric=metric,
             geo_res=geo_res,
             sensor=sensor,
-            smoother=smoother)
+            smoother=smoother,
+        )
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, sensor)
         df.set_index(["timestamp", "geo_id"], inplace=True)
+
+        # Smooth
         df["val"] = df[sensor].groupby(level=1).transform(SMOOTHERS_MAP[smoother][0])
+
+        # JHU is not a survey data source
         df["se"] = np.nan
         df["sample_size"] = np.nan
-        # Drop early entries where data insufficient for smoothing
-        df = df[~df["val"].isnull()]
+
+        df = add_nancodes(df, metric, geo_res, smoother)
+
         df = df.reset_index()
         sensor_name = SENSOR_NAME_MAP[sensor][0]
         # if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
@@ -129,16 +167,21 @@ def run_module(params: Dict[str, Any]):
             if not oldest_final_export_date:
                 oldest_final_export_date = max(exported_csv_dates)
             oldest_final_export_date = min(
-                oldest_final_export_date, max(exported_csv_dates))
+                oldest_final_export_date, max(exported_csv_dates)
+            )
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = None
     formatted_oldest_final_export_date = None
     if oldest_final_export_date:
         max_lag_in_days = (datetime.now() - oldest_final_export_date).days
-        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
-    logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds,
-        csv_export_count = csv_export_count,
-        max_lag_in_days = max_lag_in_days,
-        oldest_final_export_date = formatted_oldest_final_export_date)
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime(
+            "%Y-%m-%d"
+        )
+    logger.info(
+        "Completed indicator run",
+        elapsed_time_in_seconds=elapsed_time_in_seconds,
+        csv_export_count=csv_export_count,
+        max_lag_in_days=max_lag_in_days,
+        oldest_final_export_date=formatted_oldest_final_export_date,
+    )

@@ -24,11 +24,11 @@ class TestGeoMap:
                                       pd.DataFrame({"geo_id": "01001",
                                                     "timestamp": pd.Timestamp("2020-09-15"),
                                                     "cumulative_counts": 1463.0,
-                                                    "population": 55869,
                                                     "new_counts": 1463.0,
+                                                    "population": 55869,
                                                     "incidence": 1463 / 55869 * 100000,
                                                     "cumulative_prop": 1463 / 55869 * 100000},
-                                                   index=[36]),
+                                                   index=[0]),
                                       )
         # Make sure the prop signals don't have inf values
         assert not new_df["incidence"].eq(np.inf).any()
@@ -46,10 +46,10 @@ class TestGeoMap:
                                                     "geo_id": "al",
                                                     "cumulative_counts": 140160.0,
                                                     "new_counts": 140160.0,
-                                                    "population": 4903185,
+                                                    "population": 4903185.0,
                                                     "incidence": 140160 / 4903185 * 100000,
                                                     "cumulative_prop": 140160 / 4903185 * 100000},
-                                                   index=[36])
+                                                   index=[1])
                                       )
         # Make sure the prop signals don't have inf values
         assert not state_df["incidence"].eq(np.inf).any()
@@ -62,7 +62,7 @@ class TestGeoMap:
                                                     "geo_id": "1",
                                                     "cumulative_counts": 218044.0,
                                                     "new_counts": 218044.0,
-                                                    "population": 14845063,
+                                                    "population": 14845063.0,
                                                     "incidence": 218044 / 14845063 * 100000,
                                                     "cumulative_prop": 218044 / 14845063 * 100000},
                                                    index=[0])
@@ -78,9 +78,9 @@ class TestGeoMap:
                                                     "geo_id": "us",
                                                     "cumulative_counts": 6588732.0,
                                                     "new_counts": 6588732.0,
-                                                    "population": 331962589,
-                                                    "incidence": 6588732 / 331962589 * 100000,
-                                                    "cumulative_prop": 6588732 / 331962589 * 100000},
+                                                    "population": 331940098.0,
+                                                    "incidence": 6588732 / 331940098 * 100000,
+                                                    "cumulative_prop": 6588732 / 331940098. * 100000},
                                                    index=[0])
                                       )
         # Make sure the prop signals don't have inf values
@@ -92,6 +92,7 @@ class TestGeoMap:
             test_df = jhu_confirmed_test_data
             new_df = geo_map(test_df, geo, "_prop")
             gmpr = GeoMapper()
+            test_df = gmpr.add_population_column(test_df, "fips")
             test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
 
             new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()

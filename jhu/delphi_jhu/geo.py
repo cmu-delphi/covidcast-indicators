@@ -34,6 +34,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     unassigned_counties = df[df["fips"].str.endswith("000")].copy()
     df = df[~df["fips"].str.endswith("000")].copy()
     gmpr = GeoMapper()
+    df = gmpr.add_population_column(df, "fips")
     if geo_res == "county":
         if not sensor.endswith("_prop"):
             # It is not clear how to calculate the proportion for unallocated
@@ -41,17 +42,9 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
             df = df.append(unassigned_counties)
         df.rename(columns={"fips": "geo_id"}, inplace=True)
     elif geo_res in ("state", "hhs", "nation"):
-        state_geo = "state_id" if geo_res == "state" else "state_code"
+        state_geo = "state_id" if geo_res == "state" else geo_res
         df = df.append(unassigned_counties)
         df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id", date_col="timestamp")
-        df.drop("population", axis=1, errors="ignore", inplace=True)
-        df = gmpr.add_population_column(df, state_geo, geocode_col="geo_id")
-        df.drop("state_id", axis=1, errors="ignore", inplace=True)
-        if geo_res in ("hhs", "nation"):
-            # for hhs/nation, use reported state populations instead of nation since PR not reported
-            df = gmpr.replace_geocode(df, state_geo, geo_res,
-                                      from_col="geo_id", date_col="timestamp")
-            df.rename({geo_res: "geo_id"}, inplace=True, axis=1)
     else:
         df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE

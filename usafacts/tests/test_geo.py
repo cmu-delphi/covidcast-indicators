@@ -73,8 +73,8 @@ class TestGeoMap:
             {
                 "fips": ["04001", "04003", "04009", "25023", "25000"],
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13, 0],
-                "cumulative_counts": [100, 20, 45, 60, 0],
+                "new_counts": [10, 15, 2, 13, 1],
+                "cumulative_counts": [100, 20, 45, 60, 1],
                 "population": [100, 2100, 300, 25, 25],
             }
         )
@@ -85,11 +85,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["az", "ma"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [27.0, 13.0],
-                "cumulative_counts": [165.0, 60.0],
+                "new_counts": [27.0, 14.0],
+                "cumulative_counts": [165.0, 61.0],
                 "population": [7278717, 6892503],
-                "incidence": [27 / 7278717 * 100000, 13 / 6892503 * 100000],
-                "cumulative_prop": [165 / 7278717 * 100000, 60 / 6892503 * 100000]
+                "incidence": [27 / 7278717 * 100000, 14 / 6892503 * 100000],
+                "cumulative_prop": [165 / 7278717 * 100000, 61 / 6892503 * 100000]
             })
         )
 
@@ -99,11 +99,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["1", "9"],
                 "timestamp": ["2020-02-15"]*2,
-                "new_counts": [13.0, 27.0],
-                "cumulative_counts": [60.0, 165.0],
+                "new_counts": [14.0, 27.0],
+                "cumulative_counts": [61.0, 165.0],
                 "population": [6892503, 7278717],
-                "incidence": [13 / 6892503 * 100000, 27 / 7278717 * 100000],
-                "cumulative_prop": [60 / 6892503 * 100000, 165 / 7278717 * 100000]
+                "incidence": [14 / 6892503 * 100000, 27 / 7278717 * 100000],
+                "cumulative_prop": [61 / 6892503 * 100000, 165 / 7278717 * 100000]
             })
         )
 
@@ -113,11 +113,11 @@ class TestGeoMap:
             pd.DataFrame({
                 "geo_id": ["us"],
                 "timestamp": ["2020-02-15"],
-                "new_counts": [40.0],
-                "cumulative_counts": [225.0],
+                "new_counts": [41.0],
+                "cumulative_counts": [226.0],
                 "population": [7278717 + 6892503],
-                "incidence": [40 / (7278717 + 6892503) * 100000],
-                "cumulative_prop": [225 / (7278717 + 6892503) * 100000]
+                "incidence": [41 / (7278717 + 6892503) * 100000],
+                "cumulative_prop": [226 / (7278717 + 6892503) * 100000]
             })
         )
 

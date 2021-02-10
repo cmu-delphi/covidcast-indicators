@@ -1,19 +1,19 @@
 # -*- coding: utf-8 -*-
-"""Functions to help generate sensor for different geographical levels."""
+"""
+Functions to help generate sensor for different geographical levels
+"""
 import pandas as pd
 from .data_tools import (fill_dates, raw_positive_prop,
                          smoothed_positive_prop,
                          smoothed_tests_per_device,
-                         raw_tests_per_device,
-                         remove_null_samples)
+                         raw_tests_per_device)
 
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7
 
 def generate_sensor_for_states(state_groups, smooth, device, first_date, last_date):
     """
-    Fit over states.
-
+    fit over states
     Args:
         state_groups: pd.groupby.generic.DataFrameGroupBy
         state_key: "state_id"
@@ -65,13 +65,12 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
                                                  "val": stat,
                                                  "se": se,
                                                  "sample_size": sample_size}))
-    return remove_null_samples(state_df)
+    return state_df
 
 def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                      device, first_date, last_date):
     """
-    Fit over counties/HRRs/MSAs.
-
+    fit over counties/HRRs/MSAs
     Args:
         data: pd.DataFrame
         res_key: "fips", "cbsa_id" or "hrrnum"
@@ -94,7 +93,7 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
             res_group = res_group.merge(parent_group, how="left",
                                         on="timestamp", suffixes=('', '_parent'))
             res_group = res_group.drop(columns=[res_key, "state_id", "state_id" + '_parent'])
-        except KeyError:
+        except:
             has_parent = False
             res_group = res_group.drop(columns=[res_key, "state_id"])
         res_group.set_index("timestamp", inplace=True)
@@ -148,4 +147,4 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                              "val": stat,
                                              "se": se,
                                              "sample_size": sample_size}))
-    return remove_null_samples(res_df)
+    return res_df

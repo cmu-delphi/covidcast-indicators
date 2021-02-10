@@ -14,7 +14,8 @@ from delphi_utils import (
     create_export_csv,
     get_structured_logger,
     S3ArchiveDiffer,
-    Smoother
+    Smoother,
+    Nans
 )
 
 from .geo import geo_map
@@ -116,8 +117,23 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         )
         df["se"] = np.nan
         df["sample_size"] = np.nan
-        # Drop early entries where data insufficient for smoothing
-        df = df.loc[~df["val"].isnull(), :]
+
+        # Default missing code
+        df["missing_val"] = Nans.NOT_MISSING
+        df["missing_se"] = Nans.NOT_APPLICABLE
+        df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+        # Mark early smoothing entries as data insufficient
+        if smoother == "seven_day_average":
+            df.sort_index(inplace=True)
+            min_time_value = df.index.min()[0] + 6 * pd.Timedelta(days=1)
+            df.loc[idx[:min_time_value, :], "missing_val"] = Nans.DATA_INSUFFICIENT
+
+        # Mark any remaining nans with unknown
+        remaining_nans_mask = df["val"].isnull() & (df["missing_val"] == Nans.NOT_MISSING)
+        df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+
+        df.reset_index(inplace=True)
         sensor_name = SENSOR_NAME_MAP[sensor][0]
         # if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
         #     metric = f"wip_{metric}"

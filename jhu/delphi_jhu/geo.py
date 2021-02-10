@@ -39,11 +39,11 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         if not sensor.endswith("_prop"):
             # It is not clear how to calculate the proportion for unallocated
             # cases/deaths, so we exclude them for those sensors.
-            df = df.append(unassigned_counties)
+            df = df.append(unassigned_counties) if not unassigned_counties.empty else df
         df.rename(columns={"fips": "geo_id"}, inplace=True)
     elif geo_res in ("state", "hhs", "nation"):
         state_geo = "state_id" if geo_res == "state" else geo_res
-        df = df.append(unassigned_counties)
+        df = df.append(unassigned_counties) if not unassigned_counties.empty else df
         df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id", date_col="timestamp")
     else:
         df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")

@@ -4,17 +4,15 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+import time as t
 from datetime import datetime, date, time, timedelta
 from itertools import product
 
-import time as t
 import numpy as np
-
 from delphi_utils import (
     create_export_csv,
     get_structured_logger,
     read_params,
-    GeoMapper,
     S3ArchiveDiffer,
     Smoother
 )
@@ -89,9 +87,7 @@ def run_module():
         params["aws_credentials"])
     arch_diff.update_cache()
 
-    geo_mapper = GeoMapper()
-
-    dfs = {metric: pull_usafacts_data(base_url, metric, geo_mapper) for metric in METRICS}
+    dfs = {metric: pull_usafacts_data(base_url, metric) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         logger.info("generating signal and exporting to CSV",

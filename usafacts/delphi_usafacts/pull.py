@@ -2,7 +2,6 @@
 """Functions for pulling data from the USAFacts website."""
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper
 
 # Columns to drop the the data frame.
 DROP_COLUMNS = [
@@ -13,7 +12,7 @@ DROP_COLUMNS = [
 ]
 
 
-def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
     """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
@@ -45,8 +44,6 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
-    geo_mapper: GeoMapper
-        GeoMapper object with population info.
 
     Returns
     -------

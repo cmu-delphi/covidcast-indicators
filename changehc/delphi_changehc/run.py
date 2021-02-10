@@ -25,9 +25,9 @@ def retrieve_files(params, filedate, logger):
         ## download recent files from FTP server
         logger.info("downloading recent files through SFTP")
         if "covid" in params["types"]:
-            download_covid(params["cache_dir"], params["ftp_conn"])
+            download_covid(filedate, params["cache_dir"], params["ftp_conn"])
         if "cli" in params["types"]:
-            download_cli(params["cache_dir"], params["ftp_conn"])
+            download_cli(filedate, params["cache_dir"], params["ftp_conn"])
 
         denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)
         covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["cache_dir"],filedate)

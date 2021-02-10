@@ -6,10 +6,10 @@ from delphi_utils import GeoMapper
 
 # Columns to drop the the data frame.
 DROP_COLUMNS = [
-    "FIPS",
-    "County Name",
-    "State",
-    "stateFIPS"
+    "countyfips",
+    "county name",
+    "state",
+    "statefips"
 ]
 
 
@@ -54,12 +54,13 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         Dataframe as described above.
     """
     # Read data
-    df = pd.read_csv(base_url.format(metric=metric)).rename({"countyFIPS":"FIPS"}, axis=1)
+    df = pd.read_csv(base_url.format(metric=metric))
+    df.columns = [i.lower() for i in df.columns]
     # Clean commas in count fields in case the input file included them
     df[df.columns[4:]] = df[df.columns[4:]].applymap(
         lambda x: int(x.replace(",", "")) if isinstance(x, str) else x)
     # Check missing FIPS
-    null_mask = pd.isnull(df["FIPS"])
+    null_mask = pd.isnull(df["countyfips"])
     assert null_mask.sum() == 0
 
     unexpected_columns = [x for x in df.columns if "Unnamed" in x]
@@ -71,23 +72,22 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
 
     # Ignore Grand Princess Cruise Ship and Wade Hampton Census Area in AK
     df = df[
-        (df["FIPS"] != 6000)
-        & (df["FIPS"] != 2270)
+        (df["countyfips"] != 6000)
+        & (df["countyfips"] != 2270)
     ]
 
     # Change FIPS from 0 to XX000 for statewise unallocated cases/deaths
-    unassigned_index = (df['FIPS'] == 0)
-    df.loc[unassigned_index, "FIPS"] = df["stateFIPS"].loc[unassigned_index].values * 1000
+    unassigned_index = (df["countyfips"] == 0)
+    df.loc[unassigned_index, "countyfips"] = df["statefips"].loc[unassigned_index].values * 1000
 
     # Conform FIPS
-    df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
+    df["fips"] = df["countyfips"].apply(lambda x: f"{int(x):05d}")
 
     # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
     # a corresponding population entry in the GeoMapper so it will be dropped
     # in the call to `add_population_column()`.  We pull it out here to
     # reinsert it after the population data is added.
     nyc_dummy_row = df[df["fips"] == "00001"]
-    assert len(nyc_dummy_row) == 1
 
     # Merge in population LOWERCASE, consistent across confirmed and deaths
     # Population for unassigned cases/deaths is NAN
@@ -109,7 +109,8 @@ def pull_usafacts_data(base_url: str, metric: str, geo_mapper: GeoMapper) -> pd.
         columns.remove("fips")
         columns.remove("population")
         # Detects whether there is a non-date string column -- not perfect
-        _ = [int(x.replace("/", "")) for x in columns]
+        # USAFacts has used both / and -, so account for both cases.
+        _ = [int(x.replace("/", "").replace("-", "")) for x in columns]
     except ValueError as e:
         raise ValueError(
             "Detected unexpected column(s) "

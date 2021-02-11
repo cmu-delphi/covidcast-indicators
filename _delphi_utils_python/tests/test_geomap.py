@@ -114,6 +114,24 @@ class TestGeoMapper:
             "total": [2, 4, 7, 11, 100, 10, 40],
         }
     )
+    state_data = pd.DataFrame(
+        {
+            "state_code": ["01", "02", "04"],
+            "count": [7, 8, 9],
+        }
+    )
+    hhs_data = pd.DataFrame(
+        {
+            "hhs": [1, 2, 3],
+            "count": [7, 8, 9],
+        }
+    )
+    nation_data = pd.DataFrame(
+        {
+            "nation": ["us"],
+            "count": [7],
+        }
+    )
     # jhu_big_data = pd.read_csv("test_dir/small_deaths.csv")
 
     # Loading tests updated 8/26
@@ -199,6 +217,12 @@ class TestGeoMapper:
             new_data = gmpr.add_population_column(self.zip_data, "hrr")
         new_data = gmpr.add_population_column(self.fips_data_5, "fips")
         assert new_data.shape == (4, 5)
+        new_data = gmpr.add_population_column(self.state_data, "state_code")
+        assert new_data.shape == (3, 3)
+        new_data = gmpr.add_population_column(self.hhs_data, "hhs")
+        assert new_data.shape == (3, 3)
+        new_data = gmpr.add_population_column(self.nation_data, "nation")
+        assert new_data.shape == (1, 3)
 
     def test_add_geocode(self):
         gmpr = GeoMapper()
@@ -307,6 +331,6 @@ class TestGeoMapper:
         gmpr = GeoMapper()
         assert gmpr.get_geo_values("nation") == {"us"}
         assert gmpr.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(gmpr.get_geo_values("fips")) == 3287
+        assert len(gmpr.get_geo_values("fips")) == 3235
         assert len(gmpr.get_geo_values("state_id")) == 60
         assert len(gmpr.get_geo_values("zip")) == 32976

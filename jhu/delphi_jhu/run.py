@@ -103,7 +103,7 @@ def run_module():
             smoother=smoother)
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
-        df = geo_map(df, geo_res)
+        df = geo_map(df, geo_res, sensor)
         df.set_index(["timestamp", "geo_id"], inplace=True)
         df["val"] = df[sensor].groupby(level=1).transform(SMOOTHERS_MAP[smoother][0])
         df["se"] = np.nan

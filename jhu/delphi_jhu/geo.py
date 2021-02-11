@@ -36,7 +36,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     gmpr = GeoMapper()
     df = gmpr.add_population_column(df, "fips")
     if geo_res == "county":
-        if not sensor.endswith("_prop"):
+        if not sensor in ("incidence",  "cumulative_prop"): # prop signals
             # It is not clear how to calculate the proportion for unallocated
             # cases/deaths, so we exclude them for those sensors.
             df = df.append(unassigned_counties) if not unassigned_counties.empty else df

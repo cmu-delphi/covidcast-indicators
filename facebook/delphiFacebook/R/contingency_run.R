@@ -216,7 +216,7 @@ run_contingency_tables <- function(params) {
 run_contingency_tables_many_periods <- function(params, aggregations)
 {
   if (!is.null(params$n_periods)) {
-    msg_plain(paste0("Producing CSVs for ", params$n_periods + 1, " time periods"))
+    msg_plain(paste0("Producing CSVs for ", params$n_periods, " time periods"))
 
     if (params$aggregate_range == "week") {
       period_step <- days(7)
@@ -225,16 +225,31 @@ run_contingency_tables_many_periods <- function(params, aggregations)
     } else if (is.null(params$aggregate_range)) {
       stop("aggregate_range setting must be provided in params")
     }
-
+    
     params$end_date <- ifelse(
       is.null(params$end_date), as.character(Sys.Date()), params$end_date
     )
     # Make list of dates to aggregate over.
-    end_dates <- sort( ymd(params$end_date) - period_step * seq(0, params$n_periods) )
+    end_dates <- as.character(sort(
+      ymd(params$end_date) - period_step * seq(0, params$n_periods - 1)
+    ))
 
     for (end_date in end_dates) {
       period_params <- params
+      
+      # Update start/end date and time.
       period_params$end_date <- end_date
+      if ( !(end_date == end_dates[1]) ) {
+        period_params$start_date <- NULL
+      }
+      
+      period_params$start_time <- ymd_hms(
+        sprintf("%s 00:00:00", period_params$start_date), tz = tz_to
+      )
+      period_params$end_time <- ymd_hms(
+        sprintf("%s 23:59:59", period_params$end_date), tz = tz_to
+      )
+      
       run_contingency_tables_one_period(period_params, aggregations)
     }
   } else {
@@ -264,7 +279,7 @@ run_contingency_tables_one_period <- function(params, aggregations)
   params <- update_params(params)
   aggregations <- verify_aggs(aggregations)
   
-  msg_plain(paste0("Producing aggregtes for ", params$start_date, " through ", params$end_date))
+  msg_plain(paste0("Producing aggregates for ", params$start_date, " through ", params$end_date))
 
   if (nrow(aggregations) > 0) {
     cw_list <- produce_crosswalk_list(params$static_dir)

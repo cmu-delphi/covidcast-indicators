@@ -5,6 +5,8 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
 
+import numpy as np
+
 from delphi_utils import (
     read_params,
     create_export_csv,
@@ -43,14 +45,22 @@ def run_module():
         print(f"Processing {geo_res}")
         df = geo_map(df_county_testing, geo_res)
 
-        # Only 1 signal for now
-        signal = SIGNALS[0]
-
+        # Export 'pcr_specimen_positivity_rate'
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
             geo_res=geo_res,
-            sensor=signal)
+            sensor=SIGNALS[0])
+
+        # Export 'pcr_specimen_total_tests'
+        df["val"] = df["sample_size"]
+        df["sample_size"] = np.nan
+        df["se"] = np.nan
+        exported_csv_dates = create_export_csv(
+            df,
+            export_dir=export_dir,
+            geo_res=geo_res,
+            sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
         print(f"Exported dates: {earliest} to {latest}")

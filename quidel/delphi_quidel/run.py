@@ -31,19 +31,19 @@ def run_module():
     start_time = time.time()
     params = read_params()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
-    cache_dir = params["cache_dir"]
-    export_dir = params["export_dir"]
-    static_file_dir = params["static_file_dir"]
-    export_start_dates = params["export_start_date"]
-    export_end_dates = params["export_end_date"]
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    cache_dir = params["indicator"]["input_cache_dir"]
+    export_dir = params["common"]["export_dir"]
+    static_file_dir = params["indicator"]["static_file_dir"]
+    export_start_dates = params["indicator"]["export_start_date"]
+    export_end_dates = params["indicator"]["export_end_date"]
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
 
     # Pull data and update export date
-    dfs, _end_date = pull_quidel_data(params)
+    dfs, _end_date = pull_quidel_data(params["indicator"])
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -55,7 +55,7 @@ def run_module():
 
     # Add prefix, if required
     sensors = add_prefix(list(SENSORS.keys()),
-                         wip_signal=params["wip_signal"],
+                         wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
 
     for sensor in sensors:

@@ -1,10 +1,70 @@
 # -*- coding: utf-8 -*-
-import numpy as np
+"""Functions to pull data from JHU website."""
+
 import pandas as pd
+import numpy as np
+from delphi_utils import GeoMapper
 
 
-def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFrame:
-    """Pulls the latest Johns Hopkins CSSE data, and conforms it into a dataset
+def download_data(base_url: str, metric: str) -> pd.DataFrame:
+    """
+    Download and format JHU data.
+
+    Downloads the data from the JHU repo, extracts the UID and the date columns, and
+    enforces the date datatype on the the time column.
+    """
+    # Read data
+    df = pd.read_csv(base_url.format(metric=metric))
+    # Keep the UID and the time series columns only
+    # The regex filters for columns with the date format MM-DD-YY or M-D-YY
+    df = df.filter(regex=r"\d{1,2}\/\d{1,2}\/\d{2}|UID").melt(
+        id_vars=["UID"], var_name="timestamp", value_name="cumulative_counts"
+    )
+    df["timestamp"] = pd.to_datetime(df["timestamp"])
+    return df
+
+
+def create_diffs_column(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Compute pairwise differences of cumulative values to get incidence.
+
+    Using the cumulative_counts column from the dataframe, partitions the dataframe
+    into separate time-series based on fips, and then computes pairwise differences
+    of the cumulative values to get the incidence values. Boundary cases are handled
+    by zero-filling the day prior.
+    """
+    # Take time-diffs in each geo_code partition
+    df = df.set_index(["fips", "timestamp"])
+    df["new_counts"] = df.groupby(level=0)["cumulative_counts"].diff()
+    # Fill the NA value for the first date of each partition with the cumulative value that day
+    # (i.e. pretend the cumulative count the day before was 0)
+    na_value_mask = df["new_counts"].isna()
+    df.loc[na_value_mask, "new_counts"] = df.loc[na_value_mask, "cumulative_counts"]
+    df = df.reset_index()
+    return df
+
+
+def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
+    """Perform a final set of sanity checks on the data."""
+    days_by_fips = df.groupby("fips").count()["cumulative_counts"].unique()
+    unique_days = df["timestamp"].unique()
+
+    # each FIPS has same number of rows
+    if (len(days_by_fips) > 1) or (days_by_fips[0] != len(unique_days)):
+        raise ValueError("Differing number of days by fips")
+
+    min_timestamp = min(unique_days)
+    max_timestamp = max(unique_days)
+    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, "D") + 1
+    if n_days != len(unique_days):
+        raise ValueError(
+            f"Not every day between {min_timestamp} and "
+            f"{max_timestamp} is represented."
+        )
+
+
+def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
+    """Pull the latest Johns Hopkins CSSE data, and conform it into a dataset.
 
     The output dataset has:
 
@@ -19,138 +79,37 @@ def pull_jhu_data(base_url: str, metric: str, pop_df: pd.DataFrame) -> pd.DataFr
     may be negative.  This is wholly dependent on the quality of the raw
     dataset.
 
-    We filter the data such that we only keep rows with valid FIPS, or "FIPS"
-    codes defined under the exceptions of the README.  The current  exceptions
-    include:
-
-    - 70002: Dukes County and Nantucket County in Massachusetts, which are
-      reported together
-    - 70003: Kansas City, Missouri, which reports counts separately from the
-      four counties it intesects (Platte, Cass, Clay, Jackson Counties)
+    We filter the data such that we only keep rows with valid FIPS or "FIPS"
+    codes defined under the exceptions of the README.
 
     Parameters
     ----------
     base_url: str
-        Base URL for pulling the JHU CSSE data
+        Base URL for pulling the JHU CSSE data.
     metric: str
         One of 'confirmed' or 'deaths'.
-    pop_df: pd.DataFrame
-        Read from static file "fips_population.csv".
+    gmpr: GeoMapper
+        An instance of the geomapping utility.
 
     Returns
     -------
     pd.DataFrame
         Dataframe as described above.
     """
-    # Constants
-    DROP_COLUMNS = [
-        "UID",
-        "iso2",
-        "iso3",
-        "code3",
-        "Admin2",
-        "Province_State",
-        "Country_Region",
-        "Lat",
-        "Long_",
-        "Combined_Key",
-        "FIPS",
-    ]
-    # Two metrics, two schema...
-    if metric == "deaths":
-        DROP_COLUMNS.append("Population")
-    MIN_FIPS = 1000
-    MAX_FIPS = 57000
-    EXTRA_FIPS = (
-        70002,  # Kansas City, MO
-        70003,  # Dukes and Nantucket Counties, MA
-    )
-    # Read data
-    df = pd.read_csv(base_url.format(metric=metric))
-    # FIPS are missing for some nonstandard FIPS
-    null_mask = pd.isnull(df["FIPS"])
-    df.loc[null_mask, "FIPS"] = df.loc[null_mask, "UID"].apply(
-        lambda x: float(str(x)[3:])
-    )
-    df = df[
-        (
-            (df["FIPS"] >= MIN_FIPS)  # US non-state territories
-            & (df["FIPS"] < MAX_FIPS)
-        )  # "Uncategorized", etc.
-        | df["FIPS"].isin(EXTRA_FIPS)
-    ]
-    # Merge in population LOWERCASE, consistent across confirmed and deaths
-    df = pd.merge(df, pop_df, on="FIPS")
+    df = download_data(base_url, metric)
 
-    # Conform FIPS
-    df["fips"] = df["FIPS"].apply(lambda x: f"{int(x):05d}")
-    # Drop unnecessary columns (state is pre-encoded in fips)
-    try:
-        df.drop(DROP_COLUMNS, axis=1, inplace=True)
-    except KeyError as e:
-        raise ValueError(
-            "Tried to drop non-existent columns. The dataset "
-            "schema may have changed.  Please investigate and "
-            "amend DROP_COLUMNS."
-        )
-    # Check that columns are either FIPS or dates
-    try:
-        columns = list(df.columns)
-        columns.remove("fips")
-        columns.remove("population")
-        # Detects whether there is a non-date string column -- not perfect
-        _ = [int(x.replace("/", "")) for x in columns]
-    except ValueError as e:
-        print(e)
-        raise ValueError(
-            "Detected unexpected column(s) "
-            "after dropping DROP_COLUMNS. The dataset "
-            "schema may have changed. Please investigate and "
-            "amend DROP_COLUMNS."
-        )
-    # Reshape dataframe
-    df = df.melt(
-        id_vars=["fips", "population"],
-        var_name="timestamp",
-        value_name="cumulative_counts",
+    gmpr = GeoMapper()
+    df = gmpr.replace_geocode(
+        df, "jhu_uid", "fips", from_col="UID", date_col="timestamp"
     )
-    # timestamp: str -> datetime
-    df["timestamp"] = pd.to_datetime(df["timestamp"])
-    # Add a dummy first row here on day before first day
-    min_ts = min(df["timestamp"])
-    df_dummy = df.loc[df["timestamp"] == min_ts].copy()
-    df_dummy.loc[:, "timestamp"] = min_ts - pd.Timedelta(days=1)
-    df_dummy.loc[:, "cumulative_counts"] = 0
-    df = pd.concat([df_dummy, df])
-    # Obtain new_counts
-    df.sort_values(["fips", "timestamp"], inplace=True)
-    df["new_counts"] = df["cumulative_counts"].diff()  # 1st discrete difference
-    # Handle edge cases where we diffed across fips
-    mask = df["fips"] != df["fips"].shift(1)
-    df.loc[mask, "new_counts"] = np.nan
-    df.reset_index(inplace=True, drop=True)
+
+    # Merge in population, set population as NAN for fake fips
+    df = gmpr.add_population_column(df, "fips")
+    df = create_diffs_column(df)
 
     # Final sanity checks
-    days_by_fips = df.groupby("fips").count()["cumulative_counts"].unique()
-    unique_days = df["timestamp"].unique()
-    # each FIPS has same number of rows
-    if (len(days_by_fips) > 1) or (days_by_fips[0] != len(unique_days)):
-        raise ValueError("Differing number of days by fips")
-    min_timestamp = min(unique_days)
-    max_timestamp = max(unique_days)
-    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, "D") + 1
-    if n_days != len(unique_days):
-        raise ValueError(
-            f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
-        )
-    return df.loc[
-        df["timestamp"] >= min_ts,
-        [  # Reorder
-            "fips",
-            "timestamp",
-            "population",
-            "new_counts",
-            "cumulative_counts",
-        ],
-    ]
+    sanity_check_data(df)
+
+    # Reorder columns
+    df = df[["fips", "timestamp", "population", "new_counts", "cumulative_counts"]]
+    return df

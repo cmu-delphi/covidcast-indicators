@@ -1,0 +1,9 @@
+{
+  "static_file_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "export_start_date":[2020,4,1],
+  "date_range": "",
+  "source":"",
+  "wip_signal": ""
+}

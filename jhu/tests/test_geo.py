@@ -13,11 +13,11 @@ class TestGeoMap:
         df = jhu_confirmed_test_data
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", "_prop")
+            geo_map(df, "département", "cumulative_prop")
 
     def test_fips(self, jhu_confirmed_test_data):
         test_df = jhu_confirmed_test_data
-        new_df = geo_map(test_df, "county", "_prop")
+        new_df = geo_map(test_df, "county", "cumulative_prop")
 
         pd.testing.assert_frame_equal(new_df.loc[(new_df.geo_id == "01001") &
                                                  (new_df.timestamp == "2020-09-15")],
@@ -39,7 +39,7 @@ class TestGeoMap:
 
     def test_state_hhs_nation(self, jhu_confirmed_test_data):
         df = jhu_confirmed_test_data
-        state_df = geo_map(df, "state", "_prop")
+        state_df = geo_map(df, "state", "cumulative_prop")
         pd.testing.assert_frame_equal(state_df.loc[(state_df.geo_id == "al") &
                                                    (state_df.timestamp == "2020-09-15")],
                                       pd.DataFrame({"timestamp": pd.Timestamp("2020-09-15"),
@@ -55,7 +55,7 @@ class TestGeoMap:
         assert not state_df["incidence"].eq(np.inf).any()
         assert not state_df["cumulative_prop"].eq(np.inf).any()
 
-        hhs_df = geo_map(df, "hhs", "_prop")
+        hhs_df = geo_map(df, "hhs", "cumulative_prop")
         pd.testing.assert_frame_equal(hhs_df.loc[(hhs_df.geo_id == "1") &
                                                  (hhs_df.timestamp == "2020-09-15")],
                                       pd.DataFrame({"timestamp": pd.Timestamp("2020-09-15"),
@@ -71,7 +71,7 @@ class TestGeoMap:
         assert not hhs_df["incidence"].eq(np.inf).any()
         assert not hhs_df["cumulative_prop"].eq(np.inf).any()
 
-        nation_df = geo_map(df, "nation", "_prop")
+        nation_df = geo_map(df, "nation", "cumulative_prop")
         pd.testing.assert_frame_equal(nation_df.loc[(nation_df.geo_id == "us") &
                                                     (nation_df.timestamp == "2020-09-15")],
                                       pd.DataFrame({"timestamp": pd.Timestamp("2020-09-15"),
@@ -90,7 +90,7 @@ class TestGeoMap:
     def test_msa_hrr(self, jhu_confirmed_test_data):
         for geo in ["msa", "hrr"]:
             test_df = jhu_confirmed_test_data
-            new_df = geo_map(test_df, geo, "_prop")
+            new_df = geo_map(test_df, geo, "cumulative_prop")
             gmpr = GeoMapper()
             test_df = gmpr.add_population_column(test_df, "fips")
             test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")

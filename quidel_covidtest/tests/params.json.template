@@ -1,16 +1,20 @@
 {
-  "static_file_dir": "../static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "export_start_date": "2020-06-30",
-  "export_end_date": "",
-  "pull_start_date": "2020-07-09",
-  "pull_end_date":"",
-  "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
+  "common": {
+    "export_dir": "./receiving"
   },
-  "bucket_name": "",
-  "wip_signal": "",
-  "mode": "test"
+  "indicator": {
+    "static_file_dir": "../static",
+    "input_cache_dir": "./cache",
+    "export_start_date": "2020-06-30",
+    "export_end_date": "",
+    "pull_start_date": "2020-07-09",
+    "pull_end_date":"",
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "wip_signal": "",
+    "mode": "test"
+  }
 }

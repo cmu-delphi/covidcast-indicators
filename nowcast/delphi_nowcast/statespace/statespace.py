@@ -49,7 +49,7 @@ def generate_statespace(state_id: str,
         Full rank matrices W and H, and list of output locations
     """
 
-    if not pop_df:
+    if pop_df is None:
         pop_df = get_fips_in_state_pop_df(state_id)
 
     # list of all atoms (counties)

@@ -69,21 +69,20 @@ def run_module():
     csv_export_count = 0
     oldest_final_export_date = None
     params = read_params()
-    export_start_date = params["export_start_date"]
-    export_dir = params["export_dir"]
-    base_url = params["base_url"]
-    cache_dir = params["cache_dir"]
+    export_start_date = params["indicator"]["export_start_date"]
+    export_dir = params["common"]["export_dir"]
+    base_url = params["indicator"]["base_url"]
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
-    if len(params["bucket_name"]) > 0:
+    if params["archive"]:
         arch_diff = S3ArchiveDiffer(
-            cache_dir,
+            params["archive"]["cache_dir"],
             export_dir,
-            params["bucket_name"],
+            params["archive"]["bucket_name"],
             "jhu",
-            params["aws_credentials"],
+            params["archive"]["aws_credentials"],
         )
         arch_diff.update_cache()
     else:

@@ -244,9 +244,9 @@ code_vaccines <- function(input_data) {
   if ("V2" %in% names(input_data)) {
     # coded as 1 = 1 dose/vaccination, 2 = 2 doses, 3 = don't know.
     input_data$v_received_2_vaccine_doses <- case_when(
-      input_data$V1 == 1 ~ 0,
-      input_data$V1 == 2 ~ 1,
-      input_data$V1 == 3 ~ NA_real_,
+      input_data$V2 == 1 ~ 0,
+      input_data$V2 == 2 ~ 1,
+      input_data$V2 == 3 ~ NA_real_,
       TRUE ~ NA_real_
     )
   } else {

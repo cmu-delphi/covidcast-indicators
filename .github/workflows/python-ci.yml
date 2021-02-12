@@ -1,0 +1,42 @@
+# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python package
+
+on:
+  push:
+    branches: [ main, prod ]
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    branches: [ main, prod ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        packages: [_delphi_utils_python, cdc_covidnet, changehc, claims_hosp, combo_cases_and_deaths, covid_act_now, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
+    defaults:
+      run:
+        working-directory: ${{ matrix.packages }}
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Install testing dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pylint pytest pydocstyle wheel
+    - name: Install
+      run: |
+        make install
+    - name: Lint
+      if: ${{ matrix.packages != 'claims_hosp' }}
+      run: |
+        make lint
+    - name: Test
+      run: |
+        make test

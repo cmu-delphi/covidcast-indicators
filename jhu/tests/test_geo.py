@@ -4,157 +4,87 @@ from os.path import join
 
 import numpy as np
 import pandas as pd
-from delphi_jhu.geo import fips_to_state, disburse, geo_map
-
-MAP_DF = pd.read_csv(
-    join("..", "static", "fips_prop_pop.csv"),
-    dtype={"fips": int}
-)
-
-
-class TestFipsToState:
-    def test_exceptions(self):
-
-        assert fips_to_state("70002") == "ma"
-        assert fips_to_state("70003") == "mo"
-
-    def test_normal(self):
-
-        assert fips_to_state("53003") == "wa"
-        assert fips_to_state("48027") == "tx"
-        assert fips_to_state("12003") == "fl"
-        assert fips_to_state("50103") == "vt"
-        assert fips_to_state("15003") == "hi"
-
-
-class TestDisburse:
-    def test_even(self):
-
-        df = pd.DataFrame(
-            {
-                "fips": ["51093", "51175", "51620"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [3, 2, 2],
-                "cumulative_counts": [13, 12, 12],
-                "population": [100, 2100, 300],
-            }
-        ).sort_values(["fips", "timestamp"])
-
-        new_df = disburse(df, "51620", ["51093", "51175"])
-
-        assert new_df["new_counts"].values == pytest.approx([4, 3, 2])
-        assert new_df["cumulative_counts"].values == pytest.approx([19, 18, 12])
+from delphi_jhu.geo import geo_map, INCIDENCE_BASE
+from delphi_utils import GeoMapper
 
 
 class TestGeoMap:
-    def test_incorrect_geo(self):
-
-        df = pd.DataFrame(
-            {
-                "fips": ["53003", "48027", "50103"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2],
-                "cumulative_counts": [100, 20, 45],
-                "population": [100, 2100, 300],
-            }
-        )
+    def test_incorrect_geo(self, jhu_confirmed_test_data):
+        df = jhu_confirmed_test_data
 
         with pytest.raises(ValueError):
-            geo_map(df, "département", MAP_DF)
+            geo_map(df, "département")
 
-    def test_county(self):
+    def test_fips(self, jhu_confirmed_test_data):
+        test_df = jhu_confirmed_test_data
+        new_df = geo_map(test_df, "county")
 
-        df = pd.DataFrame(
-            {
-                "fips": ["53003", "48027", "50103"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2],
-                "cumulative_counts": [100, 20, 45],
-                "population": [100, 2100, 300],
-            }
-        )
+        # Test the same fips and timestamps are present
+        assert new_df["geo_id"].eq(test_df["fips"]).all()
+        assert new_df["timestamp"].eq(test_df["timestamp"]).all()
 
-        new_df = geo_map(df, "county", MAP_DF)
+        new_df = new_df.set_index(["geo_id", "timestamp"])
+        test_df = test_df.set_index(["fips", "timestamp"])
+        expected_incidence = test_df["new_counts"] / test_df["population"] * INCIDENCE_BASE
+        expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"] * INCIDENCE_BASE
 
-        exp_incidence = df["new_counts"] / df["population"] * 100000
-        exp_cprop = df["cumulative_counts"] / df["population"] * 100000
+        # Manually calculate the proportional signals in Alabama and verify equality
+        assert new_df["incidence"].eq(expected_incidence).all()
+        assert new_df["cumulative_prop"].eq(expected_cumulative_prop.values).all()
+        # Make sure the prop signals don't have inf values
+        assert not new_df["incidence"].eq(np.inf).any()
+        assert not new_df["cumulative_prop"].eq(np.inf).any()
 
-        assert set(new_df["geo_id"].values) == set(df["fips"].values)
-        assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
-        assert set(new_df["incidence"].values) == set(exp_incidence.values)
-        assert set(new_df["cumulative_prop"].values) == set(exp_cprop.values)
+    def test_state(self, jhu_confirmed_test_data):
+        df = jhu_confirmed_test_data
+        new_df = geo_map(df, "state")
 
-    def test_state(self):
+        gmpr = GeoMapper()
+        test_df = gmpr.replace_geocode(df, "fips", "state_id", date_col="timestamp", new_col="state")
 
-        df = pd.DataFrame(
-            {
-                "fips": ["04001", "04003", "04009", "25023"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13],
-                "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
-            }
-        )
+        # Test the same states and timestamps are present
+        assert new_df["geo_id"].eq(test_df["state"]).all()
+        assert new_df["timestamp"].eq(test_df["timestamp"]).all()
 
-        new_df = geo_map(df, "state", MAP_DF)
+        new_df = new_df.set_index(["geo_id", "timestamp"])
+        test_df = test_df.set_index(["state", "timestamp"])
 
-        exp_incidence = np.array([27, 13]) / np.array([2500, 25]) * 100000
-        exp_cprop = np.array([165, 60]) / np.array([2500, 25]) * 100000
+        # Get the Alabama state population total in a different way
+        summed_population = df.set_index("fips").filter(regex="01\d{2}[1-9]", axis=0).groupby("fips").first()["population"].sum()
+        mega_fips_record = df.set_index(["fips", "timestamp"]).loc[("01000", "2020-09-15"), "population"].sum()
+        # Compare with the county megaFIPS record
+        assert summed_population == mega_fips_record
+        # Compare with the population in the transformed df
+        assert new_df.loc["al"]["population"].eq(summed_population).all()
+        # Make sure diffs and cumulative are equal
+        assert new_df["new_counts"].eq(test_df["new_counts"]).all()
+        assert new_df["cumulative_counts"].eq(test_df["cumulative_counts"]).all()
+        # Manually calculate the proportional signals in Alabama and verify equality
+        expected_incidence = test_df.loc["al"]["new_counts"] / summed_population * INCIDENCE_BASE
+        expected_cumulative_prop = test_df.loc["al"]["cumulative_counts"] / summed_population * INCIDENCE_BASE
+        assert new_df.loc["al", "incidence"].eq(expected_incidence).all()
+        assert new_df.loc["al", "cumulative_prop"].eq(expected_cumulative_prop).all()
+        # Make sure the prop signals don't have inf values
+        assert not new_df["incidence"].eq(np.inf).any()
+        assert not new_df["cumulative_prop"].eq(np.inf).any()
 
-        assert (new_df["geo_id"].values == ["az", "ma"]).all()
-        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-        assert (new_df["new_counts"].values == [27, 13]).all()
-        assert (new_df["cumulative_counts"].values == [165, 60]).all()
-        assert (new_df["population"].values == [2500, 25]).all()
-        assert (new_df["incidence"].values == exp_incidence).all()
-        assert (new_df["cumulative_prop"].values == exp_cprop).all()
+    def test_other_geos(self, jhu_confirmed_test_data):
+        for geo in ["msa", "hrr", "hhs", "nation"]:
+            test_df = jhu_confirmed_test_data
+            new_df = geo_map(test_df, geo)
+            gmpr = GeoMapper()
+            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
 
-    def test_hrr(self):
+            new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
+            test_df = test_df.set_index([geo, "timestamp"]).sort_index()
 
-        df = pd.DataFrame(
-            {
-                "fips": ["13009", "13017", "13021", "09015"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13],
-                "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
-            }
-        )
-
-        new_df = geo_map(df, "hrr", MAP_DF)
-
-        exp_incidence = np.array([13, 27]) / np.array([25, 2500]) * 100000
-        exp_cprop = np.array([60, 165]) / np.array([25, 2500]) * 100000
-
-        assert (new_df["geo_id"].values == [110, 147]).all()
-        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-        assert new_df["new_counts"].values == pytest.approx([13.0, 27.0])
-        assert new_df["cumulative_counts"].values == pytest.approx([60, 165])
-        assert new_df["population"].values == pytest.approx([25, 2500])
-        assert new_df["incidence"].values == pytest.approx(exp_incidence)
-        assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
-
-    def test_msa(self):
-
-        df = pd.DataFrame(
-            {
-                "fips": ["13009", "13017", "13021", "09015"],
-                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15", "2020-02-15"],
-                "new_counts": [10, 15, 2, 13],
-                "cumulative_counts": [100, 20, 45, 60],
-                "population": [100, 2100, 300, 25],
-            }
-        )
-
-        new_df = geo_map(df, "msa", MAP_DF)
-
-        exp_incidence = np.array([2, 13]) / np.array([300, 25]) * 100000
-        exp_cprop = np.array([45, 60]) / np.array([300, 25]) * 100000
-
-        assert (new_df["geo_id"].values == [31420, 49340]).all()
-        assert (new_df["timestamp"].values == ["2020-02-15", "2020-02-15"]).all()
-        assert new_df["new_counts"].values == pytest.approx([2.0, 13.0])
-        assert new_df["cumulative_counts"].values == pytest.approx([45, 60])
-        assert new_df["population"].values == pytest.approx([300, 25])
-        assert new_df["incidence"].values == pytest.approx(exp_incidence)
-        assert new_df["cumulative_prop"].values == pytest.approx(exp_cprop)
+            # Check that the non-proportional columns are identical
+            assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
+            # Check that the proportional signals are identical
+            exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
+            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"]  * INCIDENCE_BASE
+            assert new_df["incidence"].eq(exp_incidence).all()
+            assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
+            # Make sure the prop signals don't have inf values
+            assert not new_df["incidence"].eq(np.inf).any()
+            assert not new_df["cumulative_prop"].eq(np.inf).any()

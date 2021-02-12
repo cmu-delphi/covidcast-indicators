@@ -55,8 +55,10 @@ update_params <- function(params) {
   if ( !is.null(params$start_date) ) {
     # Use all data within the date range, either as explicitly set or assuming
     # "now" is the end_date.
-    date_range <- list(params$start_time, 
-                       ifelse(!is.null(params$end_time), params$end_time, Sys.Date()))
+    if (is.null(params$end_time)) {
+      params$end_time <- Sys.time()
+    }
+    date_range <- list(params$start_time, params$end_time)
     
     if ( is.null(params$input) ) {
       params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)

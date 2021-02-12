@@ -70,22 +70,22 @@ def run_module():
     csv_export_count = 0
     oldest_final_export_date = None
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
-    export_start_date = params["export_start_date"]
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    export_start_date = params["indicator"]["export_start_date"]
     if export_start_date == "latest":
         export_start_date = datetime.combine(date.today(), time(0, 0)) - timedelta(days=1)
     else:
         export_start_date = datetime.strptime(export_start_date, "%Y-%m-%d")
-    export_dir = params["export_dir"]
-    base_url = params["base_url"]
-    cache_dir = params["cache_dir"]
+    export_dir = params["common"]["export_dir"]
+    base_url = params["indicator"]["base_url"]
 
-    arch_diff = S3ArchiveDiffer(
-        cache_dir, export_dir,
-        params["bucket_name"], "usafacts",
-        params["aws_credentials"])
-    arch_diff.update_cache()
+    if "archive" in params:
+        arch_diff = S3ArchiveDiffer(
+            params["archive"]["cache_dir"], export_dir,
+            params["archive"]["bucket_name"], "usafacts",
+            params["archive"]["aws_credentials"])
+        arch_diff.update_cache()
 
     dfs = {metric: pull_usafacts_data(base_url, metric) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
@@ -129,21 +129,22 @@ def run_module():
             oldest_final_export_date = min(
                 oldest_final_export_date, max(exported_csv_dates))
 
-    # Diff exports, and make incremental versions
-    _, common_diffs, new_files = arch_diff.diff_exports()
+    if "archive" in params:
+        # Diff exports, and make incremental versions
+        _, common_diffs, new_files = arch_diff.diff_exports()
 
-    # Archive changed and new files only
-    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-    to_archive += new_files
-    _, fails = arch_diff.archive_exports(to_archive)
+        # Archive changed and new files only
+        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+        to_archive += new_files
+        _, fails = arch_diff.archive_exports(to_archive)
 
-    # Filter existing exports to exclude those that failed to archive
-    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-    arch_diff.filter_exports(succ_common_diffs)
+        # Filter existing exports to exclude those that failed to archive
+        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+        arch_diff.filter_exports(succ_common_diffs)
 
-    # Report failures: someone should probably look at them
-    for exported_file in fails:
-        print(f"Failed to archive '{exported_file}'")
+        # Report failures: someone should probably look at them
+        for exported_file in fails:
+            print(f"Failed to archive '{exported_file}'")
 
     elapsed_time_in_seconds = round(t.time() - start_time, 2)
     max_lag_in_days = None

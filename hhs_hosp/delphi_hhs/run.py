@@ -66,7 +66,6 @@ def generate_date_ranges(start, end):
 def run_module():
     """Generate ground truth HHS hospitalization data."""
     params = read_params()
-    print(params)
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
 

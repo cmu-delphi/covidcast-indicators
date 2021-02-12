@@ -26,7 +26,7 @@ write_contingency_tables <- function(data, params, geo_level, groupby_vars)
     data <- mutate_at(data, vars(-c(groupby_vars)), 
                       function(x) {
                         stri_trim(
-                          formatC(x, digits=7, format="f", drop0trailing=TRUE)
+                          formatC(as.numeric(x), digits=7, format="f", drop0trailing=TRUE)
                         )
                       })
     

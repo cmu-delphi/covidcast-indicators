@@ -107,6 +107,8 @@ rename_responses <- function(df) {
     "b_vaccine_likely_who" = "v_vaccine_likely_who", # Binary version of V4_3
     "b_vaccine_likely_govt_health" = "v_vaccine_likely_govt_health", # Binary version of V4_4
     "b_vaccine_likely_politicians" = "v_vaccine_likely_politicians", # Binary version of V4_5
+    # Wave 7 additions
+    "b_received_2_vaccine_doses" = "v_received_2_vaccine_doses", # Binary version of V2
     
     ## multiple choice (mc)
     ## Can only select one of n > 2 choices

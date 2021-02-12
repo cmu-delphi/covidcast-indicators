@@ -363,6 +363,7 @@ create_derivative_columns <- function(df) {
   df$b_hesitant_sideeffects <- as.numeric(
     df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
   )
+  df$b_hesitant_sideeffects[df$wave < 7] <- NA_real_
   
   if ( "b_vaccine_likely_friends" %in% names(df) &
        "b_vaccine_likely_local_health" %in% names(df) &

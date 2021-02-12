@@ -1,7 +1,7 @@
 {
   "common": {
-    "export_dir": "./receiving",
-  }
+    "export_dir": "./receiving"
+  },
   "indicator": {
     "static_file_dir": "../static",
     "input_cache_dir": "./cache",

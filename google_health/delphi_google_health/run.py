@@ -22,7 +22,7 @@ from delphi_utils import (
 from .data_tools import format_for_export
 from .pull_api import GoogleHealthTrends, get_counts_states, get_counts_dma
 from .map_values import derived_counts_from_dma
-from .constants import (SIGNALS, RAW, SMOOTHED,
+from .constants import (SIGNALS, SMOOTHED,
                         MSA, HRR, STATE, DMA,
                         PULL_START_DATE)
 
@@ -37,7 +37,7 @@ def run_module():
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
-    
+
     # read parameters
     params = read_params()
     ght_key = params["indicator"]["ght_key"]
@@ -47,22 +47,17 @@ def run_module():
     export_dir = params["common"]["export_dir"]
     data_dir = params["indicator"]["data_dir"]
     wip_signal = params["indicator"]["wip_signal"]
-    cache_dir = params["archive"]["cache_dir"]
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    arch_diff = S3ArchiveDiffer(
-        cache_dir, export_dir,
-        params["archive"]["bucket_name"], "ght",
-        params["archive"]["aws_credentials"])
-    arch_diff.update_cache()
-    print(arch_diff)
-    # if missing start_date, set to today (GMT) minus 5 days
-    if start_date == "":
-        now = datetime.datetime.now(datetime.timezone.utc)
-        start_date = (now - datetime.timedelta(days=4)).strftime("%Y-%m-%d")
+    if params["archive"]:
+        arch_diff = S3ArchiveDiffer(
+            params["archive"]["cache_dir"], export_dir,
+            params["archive"]["bucket_name"], "ght",
+            params["archive"]["aws_credentials"])
+        arch_diff.update_cache()
 
     # if missing start_date, set to today (GMT) minus 5 days
     if start_date == "":
@@ -120,21 +115,7 @@ def run_module():
                     oldest_final_export_date, max(exported_csv_dates))
 
     if params["archive"]:
-        # Diff exports, and make incremental versions
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
+        archive(arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = None
@@ -147,3 +128,29 @@ def run_module():
         csv_export_count = csv_export_count,
         max_lag_in_days = max_lag_in_days,
         oldest_final_export_date = formatted_oldest_final_export_date)
+
+
+def archive(arch_diff):
+    """
+    Perform archiving of new results.
+
+    Parameters
+    ----------
+    arch_diff: ArchiveDiffer
+        archiver with an updated cache
+    """
+    # Diff exports, and make incremental versions
+    _, common_diffs, new_files = arch_diff.diff_exports()
+
+    # Archive changed and new files only
+    to_archive = [f for f, diff in common_diffs.items() if diff is not None]
+    to_archive += new_files
+    _, fails = arch_diff.archive_exports(to_archive)
+
+    # Filter existing exports to exclude those that failed to archive
+    succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
+    arch_diff.filter_exports(succ_common_diffs)
+
+    # Report failures: someone should probably look at them
+    for exported_file in fails:
+        print(f"Failed to archive '{exported_file}'")

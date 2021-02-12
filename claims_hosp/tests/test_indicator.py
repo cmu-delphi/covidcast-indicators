@@ -12,8 +12,8 @@ from delphi_claims_hosp.indicator import ClaimsHospIndicator
 
 CONFIG = Config()
 PARAMS = read_params()
-DATA_FILEPATH = PARAMS["input_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+DATA_FILEPATH = PARAMS["indicator"]["input_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 
 class TestLoadData:

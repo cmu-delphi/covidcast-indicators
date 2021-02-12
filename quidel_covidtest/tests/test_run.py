@@ -23,7 +23,7 @@ class TestRun:
         ]
         geos = GEO_RESOLUTIONS.copy()
         sensors = add_prefix(SENSORS,
-                             wip_signal=read_params()["wip_signal"],
+                             wip_signal=read_params()["indicator"]["wip_signal"],
                              prefix="wip_")
 
         expected_files = []

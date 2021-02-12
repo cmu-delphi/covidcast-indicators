@@ -21,28 +21,28 @@ def run_module():
     params = read_params()
     start_time = time.time()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     # Place to write output files.
-    export_dir = params["export_dir"]
+    export_dir = params["common"]["export_dir"]
     # Location of input files.
-    raw_data_dir = params["raw_data_dir"]
+    raw_data_dir = params["indicator"]["raw_data_dir"]
 
     # Number of cores to use in multiprocessing.
-    n_core = int(params["n_core"])
+    n_core = int(params["indicator"]["n_core"])
 
     # AWS credentials
-    aws_access_key_id = params["aws_access_key_id"]
-    aws_secret_access_key = params["aws_secret_access_key"]
-    aws_default_region = params["aws_default_region"]
-    aws_endpoint = params["aws_endpoint"]
+    aws_access_key_id = params["indicator"]["aws_access_key_id"]
+    aws_secret_access_key = params["indicator"]["aws_secret_access_key"]
+    aws_default_region = params["indicator"]["aws_default_region"]
+    aws_endpoint = params["indicator"]["aws_endpoint"]
     # Whether to sync `raw_data_dir` with an AWS backend.
     # Must be a bool in the JSON file (rather than the string "True" or "False")
-    sync = params["sync"]
+    sync = params["indicator"]["sync"]
 
     # List of work-in-progress signal names.
-    wip_signal = params["wip_signal"]
+    wip_signal = params["indicator"]["wip_signal"]
 
     # Convert `process()` to a single-argument function for use in `pool.map`.
     single_arg_process = functools.partial(

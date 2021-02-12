@@ -9,10 +9,10 @@ from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_col
 from delphi_nchs_mortality.constants import METRICS
 
 params = read_params()
-export_start_date = params["export_start_date"]
-export_dir = params["export_dir"]
-static_file_dir = params["static_file_dir"]
-token = params["token"]
+export_start_date = params["indicator"]["export_start_date"]
+export_dir = params["common"]["export_dir"]
+static_file_dir = params["indicator"]["static_file_dir"]
+token = params["indicator"]["token"]
 
 map_df = pd.read_csv(
     join(static_file_dir, "state_pop.csv"), dtype={"fips": int}

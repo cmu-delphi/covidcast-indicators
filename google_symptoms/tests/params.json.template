@@ -3,5 +3,6 @@
   "static_file_dir": "../static",
   "export_dir": "./receiving",
   "cache_dir": "./cache",
-  "base_url": "./test_data{sub_url}small_{state}symptoms_dataset.csv"
+  "num_export_days": 14,
+  "path_to_bigquery_credentials": ""
 }

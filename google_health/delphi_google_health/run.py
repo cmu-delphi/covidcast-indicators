@@ -52,7 +52,7 @@ def run_module():
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    if params["archive"]:
+    if "archive" in params:
         arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"], export_dir,
             params["archive"]["bucket_name"], "ght",
@@ -114,7 +114,7 @@ def run_module():
                 oldest_final_export_date = min(
                     oldest_final_export_date, max(exported_csv_dates))
 
-    if params["archive"]:
+    if "archive" in params:
         archive(arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

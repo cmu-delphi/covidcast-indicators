@@ -23,4 +23,4 @@ def run_module() -> None:
     for geo, (sig_name, sig_cols, sig_func, sig_offset) in product(GEO_RESOLUTIONS, SIGNALS):
         mapped_df = convert_geo(filled_fips_df, geo, gmpr)
         output_df = generate_signal(mapped_df, sig_cols, sig_func, sig_offset)
-        create_export_csv(output_df, params["export_dir"], geo, sig_name)
+        create_export_csv(output_df, params["common"]["export_dir"], geo, sig_name)

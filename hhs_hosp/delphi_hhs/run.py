@@ -92,7 +92,7 @@ def run_module():
         for geo in GEOS:
             create_export_csv(
                 make_geo(state, geo, geo_mapper),
-                params["export_dir"],
+                params["common"]["export_dir"],
                 geo,
                 sig
             )

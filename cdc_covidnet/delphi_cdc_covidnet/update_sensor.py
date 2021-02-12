@@ -101,7 +101,9 @@ def update_sensor(
     hosp_df["sample_size"] = np.nan
 
     # Write results
-    signals = add_prefix(SIGNALS, wip_signal=read_params()["wip_signal"], prefix="wip_")
+    signals = add_prefix(SIGNALS,
+                         wip_signal=read_params()["indicator"]["wip_signal"],
+                         prefix="wip_")
     for signal in signals:
         write_to_csv(hosp_df, signal, output_path)
     return hosp_df

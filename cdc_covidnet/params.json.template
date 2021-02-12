@@ -5,7 +5,7 @@
   "indicator": {
     "start_date": "2020-03-07",
     "end_date": "",
-    "parallel": false
+    "parallel": false,
     "static_file_dir": "./static",
     "wip_signal": "",
     "input_cache_dir": "./cache"

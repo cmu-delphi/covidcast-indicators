@@ -40,23 +40,23 @@ def run_module():
     
     # read parameters
     params = read_params()
-    ght_key = params["ght_key"]
-    start_date = params["start_date"]
-    end_date = params["end_date"]
-    static_dir = params["static_file_dir"]
-    export_dir = params["export_dir"]
-    data_dir = params["data_dir"]
-    wip_signal = params["wip_signal"]
-    cache_dir = params["cache_dir"]
+    ght_key = params["indicator"]["ght_key"]
+    start_date = params["indicator"]["start_date"]
+    end_date = params["indicator"]["end_date"]
+    static_dir = params["indicator"]["static_file_dir"]
+    export_dir = params["common"]["export_dir"]
+    data_dir = params["indicator"]["data_dir"]
+    wip_signal = params["indicator"]["wip_signal"]
+    cache_dir = params["archive"]["cache_dir"]
 
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     arch_diff = S3ArchiveDiffer(
         cache_dir, export_dir,
-        params["bucket_name"], "ght",
-        params["aws_credentials"])
+        params["archive"]["bucket_name"], "ght",
+        params["archive"]["aws_credentials"])
     arch_diff.update_cache()
     print(arch_diff)
     # if missing start_date, set to today (GMT) minus 5 days
@@ -81,7 +81,7 @@ def run_module():
     # Dictionary mapping geo resolution to the data corresponding to that resolution.
     df_by_geo_res = {}
 
-    if not params["test"]:
+    if not params["indicator"]["test"]:
         # setup class to handle API calls
         ght = GoogleHealthTrends(ght_key=ght_key)
 
@@ -93,8 +93,9 @@ def run_module():
             ght, PULL_START_DATE, end_date, static_dir=static_dir, data_dir=data_dir
         )
     else:
-        df_by_geo_res[STATE] = pd.read_csv(params["test_data_dir"].format(geo_res="state"))
-        df_by_geo_res[DMA] = pd.read_csv(params["test_data_dir"].format(geo_res="dma"))
+        df_by_geo_res[STATE] = pd.read_csv(
+            params["indicator"]["test_data_dir"].format(geo_res="state"))
+        df_by_geo_res[DMA] = pd.read_csv(params["indicator"]["test_data_dir"].format(geo_res="dma"))
 
     df_by_geo_res[HRR], df_by_geo_res[MSA] = derived_counts_from_dma(df_by_geo_res[DMA],
                                                                      static_dir=static_dir)
@@ -118,7 +119,7 @@ def run_module():
                 oldest_final_export_date = min(
                     oldest_final_export_date, max(exported_csv_dates))
 
-    if not params["test"]:
+    if params["archive"]:
         # Diff exports, and make incremental versions
         _, common_diffs, new_files = arch_diff.diff_exports()
 
@@ -134,7 +135,7 @@ def run_module():
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = None
     formatted_oldest_final_export_date = None

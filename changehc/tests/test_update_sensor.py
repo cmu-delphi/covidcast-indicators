@@ -93,17 +93,7 @@ class TestCHCSensorUpdator:
                 self.numtype,
                 self.se
             )
-
-            with mock_s3():
-                # Create the fake bucket we will be using
-                params = read_params()
-                aws_credentials = params["indicator"]["aws_credentials"]
-                s3_client = Session(**aws_credentials).client("s3")
-                s3_client.create_bucket(Bucket=params["indicator"]["bucket_name"])
-                su_inst.update_sensor(
-                    self.small_test_data,
-                    td.name)
-
+            su_inst.update_sensor(self.small_test_data,  td.name)
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
                 f"failed {geo} update sensor test"
             td.cleanup()

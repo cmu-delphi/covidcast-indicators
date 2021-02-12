@@ -20,9 +20,9 @@ from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
 PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
 
 class TestCHCSensorUpdator:
@@ -93,17 +93,7 @@ class TestCHCSensorUpdator:
                 self.numtype,
                 self.se
             )
-
-            with mock_s3():
-                # Create the fake bucket we will be using
-                params = read_params()
-                aws_credentials = params["aws_credentials"]
-                s3_client = Session(**aws_credentials).client("s3")
-                s3_client.create_bucket(Bucket=params["bucket_name"])
-                su_inst.update_sensor(
-                    self.small_test_data,
-                    td.name)
-
+            su_inst.update_sensor(self.small_test_data,  td.name)
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
                 f"failed {geo} update sensor test"
             td.cleanup()

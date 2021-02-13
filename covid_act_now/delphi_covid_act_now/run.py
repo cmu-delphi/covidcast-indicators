@@ -21,16 +21,16 @@ def run_module():
     """Run the CAN testing metrics indicator."""
     # Configuration
     params = read_params()
-    export_dir = params["export_dir"]
-    cache_dir = params["cache_dir"]
-    parquet_url = params["parquet_url"]
+    export_dir = params["common"]["export_dir"]
+    cache_dir = params["archive"]["cache_dir"]
+    parquet_url = params["indicator"]["parquet_url"]
 
     # Archive Differ configuration
-    if len(params["bucket_name"]) > 0:
+    if "archive" in params:
         arch_diff = S3ArchiveDiffer(
             cache_dir, export_dir,
-            params["bucket_name"], "CAN",
-            params["aws_credentials"])
+            params["archive"]["bucket_name"], "CAN",
+            params["archive"]["aws_credentials"])
         arch_diff.update_cache()
     else:
         arch_diff = None

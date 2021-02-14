@@ -76,7 +76,7 @@ def run_module():
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    if params["archive"]:
+    if "archive" in params:
         arch_diff = S3ArchiveDiffer(
             params["archive"]["cache_dir"],
             export_dir,

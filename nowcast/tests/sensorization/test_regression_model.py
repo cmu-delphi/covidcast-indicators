@@ -68,3 +68,8 @@ class TestComputeRegressionSensor:
                   date(2020, 1, 7): 42}
         )
         assert np.isnan(compute_regression_sensor(date(2020, 1, 16), test_covariate, test_response, False))
+
+    def test_compute_regression_sensor_no_data(self):
+        test_covariate = LocationSeries()
+        test_response = LocationSeries()
+        assert np.isnan(compute_regression_sensor(date(2020, 1, 16), test_covariate, test_response, False))

@@ -1,12 +1,11 @@
-import asyncio
+"""Retrieve data from Epidata API."""
 from datetime import datetime, date
-from typing import Tuple, List, Dict
 from itertools import product
-
-from numpy import isnan
-from pandas import date_range
+from typing import Tuple, List, Dict
 
 from delphi_epidata import Epidata
+from numpy import isnan
+from pandas import date_range
 
 from .data_containers import LocationSeries, SensorConfig
 
@@ -18,6 +17,7 @@ def get_indicator_data(sensors: List[SensorConfig],
                        as_of: date) -> Dict[Tuple, LocationSeries]:
     """
     Given a list of sensors and locations, asynchronously gets covidcast data for all combinations.
+
     Parameters
     ----------
     sensors
@@ -29,6 +29,8 @@ def get_indicator_data(sensors: List[SensorConfig],
         Date that the data should be retrieved as of.
     Returns
     -------
+        Dictionary of {(source, signal, geo_type, geo_value): LocationSeries} containing indicator
+        data,
     """
     # gets all available data up to as_of day for now, could be optimized to only get a window
     output = {}
@@ -70,8 +72,10 @@ def get_historical_sensor_data(sensor: SensorConfig,
                                end_date: date) -> Tuple[LocationSeries, list]:
     """
     Query Epidata API for historical sensorization data.
+
     Will only return values if they are not null. If any days are null or are not available,
     they will be listed as missing.
+
     Parameters
     ----------
     sensor
@@ -108,9 +112,8 @@ def get_historical_sensor_data(sensor: SensorConfig,
         )
         missing_dates = [i for i in all_dates if i not in output.dates]
         return output, missing_dates
-    elif response["result"] == -2:  # no results
+    if response["result"] == -2:  # no results
         print("No historical results found")
         output = LocationSeries(geo_value=geo_value, geo_type=geo_type)
         return output, all_dates
     raise Exception(f"Bad result from Epidata: {response['message']}")
-

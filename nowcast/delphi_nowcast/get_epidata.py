@@ -8,7 +8,7 @@ from pandas import date_range
 
 from delphi_epidata import Epidata
 
-from delphi_nowcast.data_containers import LocationSeries, SensorConfig
+from .data_containers import LocationSeries, SensorConfig
 
 EPIDATA_START_DATE = 20200101
 

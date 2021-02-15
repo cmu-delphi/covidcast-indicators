@@ -35,6 +35,7 @@ def get_indicator_data(sensors: List[SensorConfig],
     # gets all available data up to as_of day for now, could be optimized to only get a window
     output = {}
     all_combos = product(sensors, locations)
+    as_of_str = as_of.strftime("%Y%m%d")
     all_params = [
         {"source": "covidcast",
          "data_source": sensor.source,
@@ -42,8 +43,8 @@ def get_indicator_data(sensors: List[SensorConfig],
          "time_type": "day",
          "geo_type": location.geo_type,
          "geo_value": location.geo_value,
-         "time_values": f"{EPIDATA_START_DATE}-{as_of.strftime('%Y%m%d')}",
-         "as_of": as_of.strftime("%Y%m%d")}
+         "time_values": f"{EPIDATA_START_DATE}-{as_of_str}",
+         "as_of": as_of_str}
         for sensor, location in all_combos
     ]
     responses = Epidata.async_epidata(all_params)

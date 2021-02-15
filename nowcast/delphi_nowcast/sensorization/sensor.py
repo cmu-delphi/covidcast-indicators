@@ -7,8 +7,8 @@ from datetime import timedelta, date
 import numpy as np
 
 from .ar_model import compute_ar_sensor
-from .get_epidata import get_indicator_data, get_historical_sensor_data
 from .regression_model import compute_regression_sensor
+from ..get_epidata import get_indicator_data, get_historical_sensor_data
 from ..data_containers import LocationSeries, SensorConfig
 from ..constants import AR_ORDER, AR_LAMBDA, REG_INTERCEPT
 

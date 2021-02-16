@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-
-from os.path import join
 import os
+from os.path import join
+import pytest
 
 
 @pytest.fixture(scope="session")

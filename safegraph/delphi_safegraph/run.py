@@ -10,7 +10,6 @@ import subprocess
 import time
 
 from delphi_utils import get_structured_logger
-from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
 from .process import process, files_in_past_week

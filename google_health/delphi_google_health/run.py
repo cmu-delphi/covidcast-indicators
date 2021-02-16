@@ -12,7 +12,6 @@ import time
 import pandas as pd
 
 from delphi_utils import (
-    read_params,
     S3ArchiveDiffer,
     add_prefix,
     create_export_csv,
@@ -27,19 +26,41 @@ from .constants import (SIGNALS, SMOOTHED,
                         PULL_START_DATE)
 
 
-def run_module():
-    """Main function run when calling the module.
+def run_module(params):
+    """
+    Main function run when calling the module.
 
     Inputs parameters from the file 'params.json' and produces output data in
     the directory defined by the `export_dir` (should be "receiving" expect for
     testing purposes).
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output
+            - "log_exceptions" (optional): bool, whether to log exceptions to file
+            - "log_filename" (optional): str, name of file to write logs
+        - "indicator":
+            - "static_file_dir": str, path to DMA mapping files
+            - "data_dir": str, location of cached CSVs
+            - "start_date": str, YYYY-MM-DD format, first day to generate data for
+            - "end_date": str, YYYY-MM-DD format or empty string, last day to generate data for.
+            - "ght_key": str, GHT API key
+            - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix
+            - "test": str, whether to run in test mode
+            - "test_data_dir": str, path to test data
+        - "archive" (optional): if provided, output will be archived with S3
+            - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+            - "bucket_name: str, name of S3 bucket to read/write
+            - "cache_dir": str, directory of locally cached data
     """
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
 
     # read parameters
-    params = read_params()
     ght_key = params["indicator"]["ght_key"]
     start_date = params["indicator"]["start_date"]
     end_date = params["indicator"]["end_date"]

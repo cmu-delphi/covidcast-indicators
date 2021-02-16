@@ -35,11 +35,11 @@ def run_module(params):
     """
     # Configuration
     export_dir = params["common"]["export_dir"]
-    cache_dir = params["archive"]["cache_dir"]
     parquet_url = params["indicator"]["parquet_url"]
 
     # Archive Differ configuration
     if "archive" in params:
+        cache_dir = params["archive"]["cache_dir"]
         arch_diff = S3ArchiveDiffer(
             cache_dir, export_dir,
             params["archive"]["bucket_name"], "CAN",

@@ -28,7 +28,7 @@ def run_module(params):
         - "aws_secret_access_key": str, access key for AWS S3
         - "aws_default_region": str, name of AWS S3 region
         - "aws_endpoint": str, name of AWS S3 endpoint
-        - "n_core": str, number of cores to use for multithreaded processing
+        - "n_core": int, number of cores to use for multithreaded processing
         - "raw_data_dir": directory from which to read downloaded data from AWS,
         - "static_file_dir": str, directory containing brand and population csv files
         - "sync": bool, whether to sync S3 data before running indicator
@@ -46,7 +46,7 @@ def run_module(params):
     raw_data_dir = params["indicator"]["raw_data_dir"]
 
     # Number of cores to use in multiprocessing.
-    n_core = int(params["indicator"]["n_core"])
+    n_core = params["indicator"]["n_core"]
 
     # AWS credentials
     aws_access_key_id = params["indicator"]["aws_access_key_id"]

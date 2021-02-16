@@ -5,12 +5,27 @@ import pandas as pd
 
 from delphi_safegraph_patterns.run import (run_module, METRICS,
                                            SENSORS, GEO_RESOLUTIONS)
-                                         
+
 
 class TestRun:
-    def test_output_files(self, run_as_module):
+    PARAMS = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "static_file_dir": "./static",
+            "raw_data_dir": "./test_data/safegraph",
+            "n_core": "12",
+            "aws_access_key_id": "",
+            "aws_secret_access_key": "",
+            "aws_default_region": "",
+            "aws_endpoint": "",
+            "sync": False
+        }
+    }
 
-        # Test output exists
+    def test_output_files(self, clear_receiving):
+        run_module(self.PARAMS)
         csv_files = listdir("receiving")
 
         dates = [

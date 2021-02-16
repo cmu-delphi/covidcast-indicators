@@ -7,7 +7,7 @@ Created: 2020-06-12
 
 from datetime import datetime
 from os.path import join
-from typing import List
+from typing import List, Union
 
 import numpy as np
 import pandas as pd
@@ -51,7 +51,8 @@ def update_sensor(
         mmwr_info: pd.DataFrame,
         output_path: str,
         start_date: datetime,
-        end_date: datetime) -> pd.DataFrame:
+        end_date: datetime,
+        wip_signal: Union[List[str], bool]) -> pd.DataFrame:
     """
     Generate sensor values, and write to csv format.
 
@@ -61,6 +62,7 @@ def update_sensor(
         output_path: Path to write the csvs to
         start_date: First sensor date (datetime.datetime)
         end_date: Last sensor date (datetime.datetime)
+        wip_signal: Prefix for WIP signals
 
     Returns:
         The overall pd.DataFrame after all processing
@@ -102,7 +104,7 @@ def update_sensor(
 
     # Write results
     signals = add_prefix(SIGNALS,
-                         wip_signal=read_params()["indicator"]["wip_signal"],
+                         wip_signal=wip_signal,
                          prefix="wip_")
     for signal in signals:
         write_to_csv(hosp_df, signal, output_path)

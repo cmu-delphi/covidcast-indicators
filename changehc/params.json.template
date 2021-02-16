@@ -4,7 +4,6 @@
     "log_exceptions": false
   },
   "indicator": {
-    "static_file_dir": "./static",
     "input_cache_dir": "./cache",
     "input_files": {
       "denom": null,

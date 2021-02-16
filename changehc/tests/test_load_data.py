@@ -2,7 +2,7 @@
 import pytest
 
 # third party
-from delphi_utils import read_params, GeoMapper
+from delphi_utils import GeoMapper
 import pandas as pd
 
 # first party
@@ -10,7 +10,27 @@ from delphi_changehc.config import Config
 from delphi_changehc.load_data import *
 
 CONFIG = Config()
-PARAMS = read_params()
+PARAMS = {
+    "common": {
+        "export_dir": "./receiving"
+    },
+    "indicator": {
+        "static_file_dir": "../static",
+        "input_cache_dir": "./cache",
+        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat",
+        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat",
+        "start_date": "2020-02-01",
+        "end_date": "2020-02-02",
+        "drop_date": "2020-02-02",
+        "n_backfill_days": 60,
+        "n_waiting_days": 3,
+        "se": False,
+        "parallel": False,
+        "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
+        "weekday": [True, False],
+        "wip_signal": ""
+    }
+}
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])

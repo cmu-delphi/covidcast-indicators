@@ -8,7 +8,6 @@ when the module is run with `python -m delphi_covid_act_now`.
 import numpy as np
 
 from delphi_utils import (
-    read_params,
     create_export_csv,
     S3ArchiveDiffer,
 )
@@ -17,10 +16,24 @@ from .constants import GEO_RESOLUTIONS, SIGNALS
 from .geo import geo_map
 from .pull import load_data, extract_testing_metrics
 
-def run_module():
-    """Run the CAN testing metrics indicator."""
+def run_module(params):
+    """
+    Run the CAN testing metrics indicator.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output
+        - "indicator":
+            - "parquet_url": str, URL of source file in parquet format
+        - "archive" (optional): if provided, output will be archived with S3
+            - "cache_dir": str, directory of locally cached data
+            - "bucket_name: str, name of S3 bucket to read/write
+            - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+    """
     # Configuration
-    params = read_params()
     export_dir = params["common"]["export_dir"]
     cache_dir = params["archive"]["cache_dir"]
     parquet_url = params["indicator"]["parquet_url"]

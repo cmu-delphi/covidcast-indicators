@@ -8,17 +8,30 @@ import logging
 from datetime import datetime
 from os import remove
 from os.path import join
-
-from delphi_utils import read_params
+from typing import Dict, Any
 
 from .covidnet import CovidNet
 from .update_sensor import update_sensor
 
 
-def run_module():
-    """Parse parameters and generates csv files for the COVID-NET sensor."""
-    params = read_params()
+def run_module(params: Dict[str, Dict[str, Any]]):
+    """
+    Parse parameters and generates csv files for the COVID-NET sensor.
 
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+        - "indicator":
+            - "start_date": str, YYYY-MM-DD format, first day to generate data for.
+            - "end_date": str, YYYY-MM-DD format or empty string, last day to generate data for.
+                If set to empty string, current day will be used.
+            - "parallel": bool, whether to download source files in parallel.
+            - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
+            - "input_cache_dir": str, directory to download source files.
+    """
     logging.basicConfig(level=logging.DEBUG)
 
     start_date = datetime.strptime(params["indicator"]["start_date"], "%Y-%m-%d")
@@ -52,7 +65,8 @@ def run_module():
         mmwr_info,
         params["common"]["export_dir"],
         start_date,
-        end_date)
+        end_date,
+        params["indicator"]["wip_signal"])
 
     # Cleanup cache dir
     remove(mappings_file)

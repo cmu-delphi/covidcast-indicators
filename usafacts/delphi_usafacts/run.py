@@ -65,7 +65,7 @@ GEO_RESOLUTIONS = [
 
 def run_module(params: Dict[str, Dict[str, Any]]):
     """Run the usafacts indicator.
-    
+
     The `params` argument is expected to have the following structure:
     - "common":
         - "export_dir": str, directory to write output

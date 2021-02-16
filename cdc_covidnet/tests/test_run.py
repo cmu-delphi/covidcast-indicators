@@ -16,7 +16,6 @@ class TestRun:
             "start_date": "2020-03-07",
             "end_date": "",
             "parallel": True,
-            "static_file_dir": "./static",
             "wip_signal": "",
             "input_cache_dir": "./cache"
         }

@@ -29,7 +29,7 @@ class TestRun:
             },
             "bucket_name": "",
             "wip_signal": "",
-            "mode": "test"
+            "test_mode": True
         }
     }
 

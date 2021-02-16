@@ -49,7 +49,7 @@ class TestingPullData:
             },
             "bucket_name": "",
             "wip_signal": "",
-            "mode": "test"
+            "test_mode": True
         })
 
         first_date = df["timestamp"].min().date()

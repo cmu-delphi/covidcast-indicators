@@ -21,7 +21,6 @@ PARAMS = {
         "input_file": "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
         "drop_date": "2020-06-11",
         "obfuscated_prefix": "foo_obfuscated"
-
     }
 }
 DATA_FILEPATH = PARAMS["indicator"]["input_file"]

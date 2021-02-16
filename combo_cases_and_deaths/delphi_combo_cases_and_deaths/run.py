@@ -15,7 +15,7 @@ import time
 import covidcast
 import pandas as pd
 
-from delphi_utils import read_params, add_prefix, get_structured_logger
+from delphi_utils import add_prefix, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
@@ -161,9 +161,8 @@ def sensor_signal(metric, sensor, smoother):
         sensor_name = sensor
     return sensor_name, "_".join([metric, sensor_name])
 
-def configure(variants):
+def configure(variants, params):
     """Validate params file and set date range."""
-    params = read_params()
     params['indicator']['export_start_date'] = date(*params['indicator']['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
     if params['indicator']['date_range'] == 'new':
@@ -205,13 +204,30 @@ def configure(variants):
     return params
 
 
-def run_module():
-    """Produce a combined cases and deaths signal using data from JHU and USA Facts."""
+def run_module(params):
+    """
+    Produce a combined cases and deaths signal using data from JHU and USA Facts.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+            - "log_exceptions" (optional): bool, whether to log exceptions to file.
+            - "log_filename" (optional): str, name of file to write logs
+        - "indicator":
+            - "export_start_date": list of ints, [year, month, day] format, first day to begin
+                data exports from.
+            - "date_range": str, YYYYMMDD-YYYYMMDD format, range of dates to generate data for.
+            - "source": str, name of combo indicator in metadata.
+            - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
+    """
     start_time = time.time()
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
-    params = configure(variants)
+    params = configure(variants, params)
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))

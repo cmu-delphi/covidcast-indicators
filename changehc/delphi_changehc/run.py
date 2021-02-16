@@ -6,16 +6,18 @@ when the module is run with `python -m delphi_changehc`.
 """
 
 # standard packages
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
+from typing import Dict, Any
 
 #  third party
-from delphi_utils import read_params, get_structured_logger
+from delphi_utils import get_structured_logger
 
 # first party
 from .download_ftp_files import download_covid, download_cli
 from .load_data import load_combined_data, load_cli_data
 from .update_sensor import CHCSensorUpdator
+
 
 def retrieve_files(params, filedate, logger):
     """Return filenames of relevant files, downloading them if necessary."""
@@ -75,10 +77,38 @@ def make_asserts(params):
                     "files must be all present or all absent"
 
 
-def run_module():
-    """Run the delphi_changehc module."""
+def run_module(params: Dict[str, Dict[str, Any]]):
+    """
+    Run the delphi_changehc module.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+            - "log_exceptions" (optional): bool, whether to log exceptions to file.
+            - "log_filename" (optional): str, name of file to write logs
+        - "indicator":
+            - "input_cache_dir": str, directory to download source files.
+            - "input_files": dict of str: str or null, optional filenames to download. If null,
+                defaults are set in retrieve_files().
+            - "start_date": str, YYYY-MM-DD format, first day to generate data for.
+            - "end_date": str or null, YYYY-MM-DD format, last day to generate data for.
+               If set to null, end date is derived from drop date and n_waiting_days.
+            - "drop_date": str or null, YYYY-MM-DD format, date data is dropped. If set to
+               null, current day minus 40 hours is used.
+            - "n_backfill_days": int, number of past days to generate estimates for.
+            - "n_waiting_days": int, number of most recent days to skip estimates for.
+            - "se": bool, whether to write out standard errors.
+            - "parallel": bool, whether to update sensor in parallel.
+            - "geos": list of str, geographies to generate sensor for.
+            - "weekday": list of bool, whether to adjust for weekday effects.
+            - "types": list of str, sensor types to generate.
+            - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
+            - "ftp_conn": dict, connection information for source FTP.
+    """
     start_time = time.time()
-    params = read_params()
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -141,7 +171,8 @@ def run_module():
                     params["indicator"]["parallel"],
                     weekday,
                     numtype,
-                    params["indicator"]["se"]
+                    params["indicator"]["se"],
+                    params["indicator"]["wip_signal"]
                 )
                 if numtype == "covid":
                     data = load_combined_data(file_dict["denom"],

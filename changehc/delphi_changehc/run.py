@@ -171,7 +171,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     params["indicator"]["parallel"],
                     weekday,
                     numtype,
-                    params["indicator"]["se"]
+                    params["indicator"]["se"],
+                    params["indicator"]["wip_signal"]
                 )
                 if numtype == "covid":
                     data = load_combined_data(file_dict["denom"],

@@ -53,7 +53,8 @@ class TestCHCSensorUpdator:
             self.parallel,
             self.weekday,
             self.numtype,
-            self.se
+            self.se,
+            ""
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -76,7 +77,8 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.shift_dates()
             data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
@@ -95,7 +97,8 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.update_sensor(self.small_test_data,  td.name)
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\

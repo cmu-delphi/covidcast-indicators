@@ -17,6 +17,7 @@ from .process import process, files_in_past_week
 
 def run_module(params):
     """Create the Safegraph indicator.
+
     The `params` argument is expected to have the following structure:
     - "common":
         - "export_dir": str, directory to write output

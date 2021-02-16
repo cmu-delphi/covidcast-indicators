@@ -1,11 +1,9 @@
-from os.path import join
-
 import pytest
 
 import pandas as pd
 import numpy as np
-from delphi_usafacts.geo import disburse, geo_map
 from delphi_utils.geomap import GeoMapper
+from delphi_usafacts.geo import disburse, geo_map
 
 SENSOR = "new_counts"
 
@@ -137,5 +135,3 @@ class TestGeoMap:
         assert np.isclose(hrr_df.new_counts.sum(), df.new_counts.sum())
         assert np.isclose(hrr_df.population.sum(), df.population.sum())
         assert hrr_df.shape == (5, 7)
-
-

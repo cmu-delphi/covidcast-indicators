@@ -11,11 +11,12 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
+from delphi_utils import GeoMapper, add_prefix
 
-from delphi_utils import read_params, GeoMapper, add_prefix
 from .api_config import APIConfig
-from .covidnet import CovidNet
 from .constants import SIGNALS
+from .covidnet import CovidNet
+
 
 def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
     """

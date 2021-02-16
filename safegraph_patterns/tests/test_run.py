@@ -24,7 +24,7 @@ class TestRun:
         }
     }
 
-    def test_output_files(self, clear_receiving):
+    def test_output_files(self, clean_receiving_dir):
         run_module(self.PARAMS)
         csv_files = listdir("receiving")
 

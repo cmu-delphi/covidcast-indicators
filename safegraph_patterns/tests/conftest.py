@@ -6,7 +6,7 @@ import pytest
 
 
 @pytest.fixture(scope="session")
-def clear_receiving():
+def clean_receiving_dir():
     # Clean receiving directory
     for fname in os.listdir("receiving"):
         if ".csv" in fname:

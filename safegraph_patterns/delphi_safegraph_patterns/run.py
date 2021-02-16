@@ -43,6 +43,7 @@ GEO_RESOLUTIONS = [
 
 def run_module(params):
     """Run module for Safegraph patterns data.
+
     The `params` argument is expected to have the following structure:
     - "common":
         - "export_dir": str, directory to write output

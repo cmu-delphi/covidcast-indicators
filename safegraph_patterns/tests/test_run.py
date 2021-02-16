@@ -15,7 +15,7 @@ class TestRun:
         "indicator": {
             "static_file_dir": "./static",
             "raw_data_dir": "./test_data/safegraph",
-            "n_core": "12",
+            "n_core": 12,
             "aws_access_key_id": "",
             "aws_secret_access_key": "",
             "aws_default_region": "",

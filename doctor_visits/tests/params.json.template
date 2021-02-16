@@ -1,8 +1,0 @@
-{
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
-  "start_date": "2020-01-01",
-  "end_date": "",
-  "parallel": false
-}

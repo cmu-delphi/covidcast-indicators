@@ -525,11 +525,12 @@ def derive_fips_state_crosswalk():
         "fips": [i + "000" for i in set(fips_pop.fips.str[:2])],
         "pop": np.nan
     })
+    fips_pop = pd.concat([fips_pop, megafips])
+
     state_codes = pd.read_csv(
         join(OUTPUT_DIR, STATE_OUT_FILENAME),
         dtype={"state_code": str, "state_id": str, "state_name": str},
     )
-    fips_pop = pd.concat([fips_pop, megafips])
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
     (
         fips_pop.merge(state_codes, on="state_code", how="left")
@@ -605,6 +606,12 @@ def derive_fips_hhs_crosswalk():
     fips_pop = pd.read_csv(
         join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
     )
+    megafips = pd.DataFrame({
+        "fips": [i + "000" for i in set(fips_pop.fips.str[:2])],
+        "pop": np.nan
+    })
+    fips_pop = pd.concat([fips_pop, megafips])
+
     state_hhs = pd.read_csv(
         join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME),
         dtype={"state_code": str, "hhs": str},

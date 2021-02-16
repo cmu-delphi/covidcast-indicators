@@ -22,23 +22,23 @@ def run_module():
     start_time = time.time()
     params = read_params()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
-    export_start_date = params["export_start_date"]
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    export_start_date = params["indicator"]["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday
         export_start_date = date.today() - timedelta(
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
-    daily_export_dir = params["daily_export_dir"]
-    daily_cache_dir = params["daily_cache_dir"]
-    token = params["token"]
-    test_mode = params["mode"]
+    daily_export_dir = params["common"]["daily_export_dir"]
+    daily_cache_dir = params["indicator"]["daily_cache_dir"]
+    token = params["indicator"]["token"]
+    test_mode = params["indicator"]["mode"]
 
-    if params["bucket_name"]:
+    if params["archive"]:
         daily_arch_diff = S3ArchiveDiffer(
             daily_cache_dir, daily_export_dir,
-            params["bucket_name"], "nchs_mortality",
-            params["aws_credentials"])
+            params["archive"]["bucket_name"], "nchs_mortality",
+            params["archive"]["aws_credentials"])
         daily_arch_diff.update_cache()
 
 
@@ -51,7 +51,7 @@ def run_module():
             df["se"] = np.nan
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
-            sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
+            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
                 geo_name=GEO_RES,
@@ -70,7 +70,7 @@ def run_module():
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
-                sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
+                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
                     geo_name=GEO_RES,
@@ -85,7 +85,7 @@ def run_module():
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-    if params["bucket_name"]:
+    if params["archive"]:
         arch_diffs(params, daily_arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

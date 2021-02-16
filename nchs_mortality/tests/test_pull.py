@@ -10,9 +10,9 @@ from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_col
 from delphi_nchs_mortality.constants import METRICS
 
 params = read_params()
-export_start_date = params["export_start_date"]
-export_dir = params["export_dir"]
-token = params["token"]
+export_start_date = params["indicator"]["export_start_date"]
+export_dir = params["common"]["export_dir"]
+token = params["indicator"]["token"]
 
 
 class TestPullNCHS:

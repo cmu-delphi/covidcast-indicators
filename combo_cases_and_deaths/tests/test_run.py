@@ -22,7 +22,7 @@ def test_issue_dates():
     should contain more days of raw data than smoothed data.
     """
     reference_dr = [date.today(), date.today()]
-    params = {'date_range': reference_dr}
+    params = {'indicator': {'date_range': reference_dr}}
     n_changed = 0
     variants = [sensor_signal(metric, sensor, smoother) for
                 metric, sensor, smoother in

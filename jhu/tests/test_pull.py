@@ -22,7 +22,7 @@ class TestPullJHU:
 
         assert (
             df.columns.values
-            == ["fips", "timestamp", "population", "new_counts", "cumulative_counts"]
+            == ["fips", "timestamp", "new_counts", "cumulative_counts"]
         ).all()
         assert True
 

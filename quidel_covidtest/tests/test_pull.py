@@ -41,7 +41,7 @@ class TestingPullData:
         
         params = read_params()
         
-        df, _ = pull_quidel_covidtest(params) 
+        df, _ = pull_quidel_covidtest(params["indicator"]) 
         
         first_date = df["timestamp"].min().date() 
         last_date = df["timestamp"].max().date() 

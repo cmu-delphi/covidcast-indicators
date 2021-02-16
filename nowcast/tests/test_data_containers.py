@@ -37,3 +37,10 @@ class TestLocationSeries:
         test_ls = LocationSeries(data={date(2020, 1, 1): 7, date(2020, 1, 2): np.nan, date(2020, 1, 3): 9})
         with pytest.raises(ValueError, match="Invalid imputation method. Must be None or 'mean'"):
             test_ls.get_data_range(date(2020, 1, 1), date(2020, 1, 3), "fakeimpute")
+
+    def test_no_data(self):
+        test_ls = LocationSeries()
+        with pytest.raises(ValueError, match="No data"):
+            test_ls.dates
+        with pytest.raises(ValueError, match="No data"):
+            test_ls.values

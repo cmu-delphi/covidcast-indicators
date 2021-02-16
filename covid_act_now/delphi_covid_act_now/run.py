@@ -5,6 +5,8 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
 
+import numpy as np
+
 from delphi_utils import (
     read_params,
     create_export_csv,
@@ -19,16 +21,16 @@ def run_module():
     """Run the CAN testing metrics indicator."""
     # Configuration
     params = read_params()
-    export_dir = params["export_dir"]
-    cache_dir = params["cache_dir"]
-    parquet_url = params["parquet_url"]
+    export_dir = params["common"]["export_dir"]
+    cache_dir = params["archive"]["cache_dir"]
+    parquet_url = params["indicator"]["parquet_url"]
 
     # Archive Differ configuration
-    if len(params["bucket_name"]) > 0:
+    if "archive" in params:
         arch_diff = S3ArchiveDiffer(
             cache_dir, export_dir,
-            params["bucket_name"], "CAN",
-            params["aws_credentials"])
+            params["archive"]["bucket_name"], "CAN",
+            params["archive"]["aws_credentials"])
         arch_diff.update_cache()
     else:
         arch_diff = None
@@ -43,14 +45,22 @@ def run_module():
         print(f"Processing {geo_res}")
         df = geo_map(df_county_testing, geo_res)
 
-        # Only 1 signal for now
-        signal = SIGNALS[0]
-
+        # Export 'pcr_specimen_positivity_rate'
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
             geo_res=geo_res,
-            sensor=signal)
+            sensor=SIGNALS[0])
+
+        # Export 'pcr_specimen_total_tests'
+        df["val"] = df["sample_size"]
+        df["sample_size"] = np.nan
+        df["se"] = np.nan
+        exported_csv_dates = create_export_csv(
+            df,
+            export_dir=export_dir,
+            geo_res=geo_res,
+            sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
         print(f"Exported dates: {earliest} to {latest}")

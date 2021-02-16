@@ -15,7 +15,7 @@ import time
 import covidcast
 import pandas as pd
 
-from delphi_utils import read_params, add_prefix, get_structured_logger
+from delphi_utils import add_prefix, get_structured_logger
 from delphi_utils.geomap import GeoMapper
 from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
@@ -138,10 +138,10 @@ def extend_raw_date_range(params, sensor_name):
     """
     if sensor_name.find("7dav") < 0:
         return [
-            params['date_range'][0] - timedelta(days=7),
-            params['date_range'][-1]
+            params['indicator']['date_range'][0] - timedelta(days=7),
+            params['indicator']['date_range'][-1]
             ]
-    return params['date_range']
+    return params['indicator']['date_range']
 
 def next_missing_day(source, signals):
     """Fetch the first day for which we want to generate new data."""
@@ -161,73 +161,91 @@ def sensor_signal(metric, sensor, smoother):
         sensor_name = sensor
     return sensor_name, "_".join([metric, sensor_name])
 
-def configure(variants):
+def configure(variants, params):
     """Validate params file and set date range."""
-    params = read_params()
-    params['export_start_date'] = date(*params['export_start_date'])
+    params['indicator']['export_start_date'] = date(*params['indicator']['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
-    if params['date_range'] == 'new':
+    if params['indicator']['date_range'] == 'new':
         # only create combined file for the newest update
         # (usually for yesterday, but check just in case)
-        params['date_range'] = [
+        params['indicator']['date_range'] = [
             min(
                 yesterday,
                 next_missing_day(
-                    params["source"],
+                    params['indicator']["source"],
                     set(signal[-1] for signal in variants)
                 )
             ),
             yesterday
         ]
-    elif params['date_range'] == 'all':
+    elif params['indicator']['date_range'] == 'all':
         # create combined files for all of the historical reports
-        params['date_range'] = [params['export_start_date'], yesterday]
+        params['indicator']['date_range'] = [params['indicator']['export_start_date'], yesterday]
     else:
-        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['date_range'])
+        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['indicator']['date_range'])
         if len(match_res) == 0:
             raise ValueError(
                 "Invalid date_range parameter. Please choose from (new, all, yyyymmdd-yyyymmdd).")
         try:
-            date1 = datetime.strptime(params['date_range'][:8], '%Y%m%d').date()
+            date1 = datetime.strptime(params['indicator']['date_range'][:8], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
                 "Invalid date_range parameter. Please check the first date.") from error
         try:
-            date2 = datetime.strptime(params['date_range'][-8:], '%Y%m%d').date()
+            date2 = datetime.strptime(params['indicator']['date_range'][-8:], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
                 "Invalid date_range parameter. Please check the second date.") from error
 
         #The the valid start date
-        if date1 < params['export_start_date']:
-            date1 = params['export_start_date']
-        params['date_range'] = [date1, date2]
+        if date1 < params['indicator']['export_start_date']:
+            date1 = params['indicator']['export_start_date']
+        params['indicator']['date_range'] = [date1, date2]
     return params
 
 
-def run_module():
-    """Produce a combined cases and deaths signal using data from JHU and USA Facts."""
+def run_module(params):
+    """
+    Produce a combined cases and deaths signal using data from JHU and USA Facts.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+            - "log_exceptions" (optional): bool, whether to log exceptions to file.
+            - "log_filename" (optional): str, name of file to write logs
+        - "indicator":
+            - "export_start_date": list of ints, [year, month, day] format, first day to begin
+                data exports from.
+            - "date_range": str, YYYYMMDD-YYYYMMDD format, range of dates to generate data for.
+            - "source": str, name of combo indicator in metadata.
+            - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
+    """
     start_time = time.time()
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
-    params = configure(variants)
+    params = configure(variants, params)
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,
                                       geo_res,
                                       extend_raw_date_range(params, sensor_name))
         df["timestamp"] = pd.to_datetime(df["timestamp"])
-        start_date = pd.to_datetime(params['export_start_date'])
-        export_dir = params["export_dir"]
+        start_date = pd.to_datetime(params['indicator']['export_start_date'])
+        export_dir = params["common"]["export_dir"]
         dates = pd.Series(
             df[df["timestamp"] >= start_date]["timestamp"].unique()
         ).sort_values()
 
-        signal_name = add_prefix([signal], wip_signal=params["wip_signal"], prefix="wip_")
+        signal_name = add_prefix([signal],
+                                 wip_signal=params['indicator']["wip_signal"],
+                                 prefix="wip_")
         for date_ in dates:
             export_fn = f'{date_.strftime("%Y%m%d")}_{geo_res}_{signal_name[0]}.csv'
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(

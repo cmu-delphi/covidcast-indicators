@@ -44,7 +44,8 @@ def run_module(params):
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
             - "geos": list of str, geographies to generate sensor for.
-            - "weekday": list of bool, whether to adjust for weekday effects.
+            - "weekday": list of bool, which weekday adjustments to perform. For each value in the list, signals will
+                be generated with weekday adjustments (True) or without adjustments (False).
     """
     start_time = time.time()
     logger = get_structured_logger(

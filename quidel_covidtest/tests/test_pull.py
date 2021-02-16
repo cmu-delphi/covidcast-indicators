@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import datetime
 
 import pandas as pd
 
@@ -30,41 +30,35 @@ class TestFixData:
                                           datetime(2020, 6, 11), datetime(2020, 7, 2)]})
         df = fix_date(df)
 
-        assert set(df["timestamp"]) == set([datetime(2020, 5, 19), 
+        assert set(df["timestamp"]) == set([datetime(2020, 5, 19),
                                             datetime(2020, 6, 11), datetime(2020, 7, 2)])
 
 class TestingPullData:
     def test_pull_quidel_covidtest(self):
 
-        params = {
-            "common": {
-                "export_dir": "./receiving"
+        df, _ = pull_quidel_covidtest({
+            "static_file_dir": "../static",
+            "input_cache_dir": "./cache",
+            "export_start_date": "2020-06-30",
+            "export_end_date": "",
+            "pull_start_date": "2020-07-09",
+            "pull_end_date":"",
+            "aws_credentials": {
+                "aws_access_key_id": "",
+                "aws_secret_access_key": ""
             },
-            "indicator": {
-                "static_file_dir": "../static",
-                "input_cache_dir": "./cache",
-                "export_start_date": "2020-06-30",
-                "export_end_date": "",
-                "pull_start_date": "2020-07-09",
-                "pull_end_date":"",
-                "aws_credentials": {
-                    "aws_access_key_id": "",
-                    "aws_secret_access_key": ""
-                },
-                "bucket_name": "",
-                "wip_signal": "",
-                "mode": "test"
-            }
-        }
+            "bucket_name": "",
+            "wip_signal": "",
+            "mode": "test"
+        })
 
-        df, _ = pull_quidel_covidtest(params["indicator"]) 
-
-        first_date = df["timestamp"].min().date() 
-        last_date = df["timestamp"].max().date() 
+        first_date = df["timestamp"].min().date()
+        last_date = df["timestamp"].max().date()
 
         assert [first_date.month, first_date.day] == [7, 18]
         assert [last_date.month, last_date.day] == [7, 23]
-        assert (df.columns== ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
+        assert (df.columns ==\
+            ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
 
 
     def test_check_intermediate_file(self):
@@ -75,7 +69,8 @@ class TestingPullData:
         # Put the test file back
         previous_df.to_csv("./cache/test_cache_with_file/pulled_until_20200710.csv", index=False)
 
-        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_without_file", None)
+        previous_df, pull_start_date = check_intermediate_file("./cache/test_cache_without_file",
+                                                               None)
         assert previous_df is None
         assert pull_start_date is None
 
@@ -90,7 +85,7 @@ class TestingPullData:
         expected = [datetime(2020, 7, 2), datetime(2020, 7, 2), datetime(2020, 6,15)]
 
         assert tested == expected
-            
+
     def test_check_export_start_date(self):
 
         export_end_date = datetime(2020, 7, 2)

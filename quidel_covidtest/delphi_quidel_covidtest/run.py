@@ -46,7 +46,7 @@ def run_module(params):
                              documentation
         - "bucket_name": str, name of AWS bucket in which to find data
         - "wip_signal": List[str], list of signal names that are works in progress
-        - "mode": str, "test" if in a test mode
+        - "test_mode": bool, whether we are running in test mode
     """
     start_time = time.time()
     logger = get_structured_logger(

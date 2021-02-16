@@ -29,7 +29,7 @@ def run_module(params):
         - "aws_default_region": str, name of AWS S3 region
         - "aws_endpoint": str, name of AWS S3 endpoint
         - "n_core": int, number of cores to use for multithreaded processing
-        - "raw_data_dir": directory from which to read downloaded data from AWS,
+        - "raw_data_dir": str, directory from which to read downloaded data from AWS,
         - "static_file_dir": str, directory containing brand and population csv files
         - "sync": bool, whether to sync S3 data before running indicator
         - "wip_signal": list of str or bool, list of work-in-progress signals to be passed to

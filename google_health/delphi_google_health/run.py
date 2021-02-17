@@ -49,7 +49,6 @@ def run_module(params):
             - "end_date": str, YYYY-MM-DD format or empty string, last day to generate data for.
             - "ght_key": str, GHT API key
             - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix
-            - "test": str, whether to run in test mode
             - "test_data_dir": str, path to test data
         - "archive" (optional): if provided, output will be archived with S3
             - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
@@ -97,7 +96,7 @@ def run_module(params):
     # Dictionary mapping geo resolution to the data corresponding to that resolution.
     df_by_geo_res = {}
 
-    if not params["indicator"]["test"]:
+    if not params["indicator"]["test_data_dir"]:
         # setup class to handle API calls
         ght = GoogleHealthTrends(ght_key=ght_key)
 

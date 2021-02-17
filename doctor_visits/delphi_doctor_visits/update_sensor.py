@@ -39,7 +39,6 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
 
     geo_level = output_dict["geo_level"]
     dates = output_dict["dates"]
-    geo_ids = output_dict["geo_ids"]
     all_rates = output_dict["rates"]
     all_se = output_dict["se"]
     all_include = output_dict["include"]
@@ -54,7 +53,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
         with open(filename, "w") as outfile:
             outfile.write("geo_id,val,se,direction,sample_size\n")
 
-            for geo_id in geo_ids:
+            for geo_id in all_rates.keys():
                 sensor = all_rates[geo_id][i] * 100  # report percentage
                 se_val = all_se[geo_id][i] * 100
 
@@ -73,7 +72,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
                         outfile.write(
                             "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
                     out_n += 1
-    logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+    logging.debug(f"wrote {out_n} rows for {len(all_rates)} {geo_level}")
 
 
 def update_sensor(
@@ -212,12 +211,10 @@ def update_sensor(
                 sensor_se[geo_id] = res["se"][final_sensor_idxs]
                 sensor_include[geo_id] = res["incl"][final_sensor_idxs]
 
-    unique_geo_ids = list(sensor_rates.keys())
     output_dict = {
         "rates": sensor_rates,
         "se": sensor_se,
         "dates": sensor_dates,
-        "geo_ids": unique_geo_ids,
         "geo_level": geo,
         "include": sensor_include,
     }

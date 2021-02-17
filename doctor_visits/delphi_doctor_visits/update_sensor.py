@@ -77,14 +77,13 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
 
 
 def update_sensor(
-        filepath, outpath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, prefix=None
+        filepath, startdate, enddate, dropdate, geo, parallel,
+        weekday, se
 ):
-    """Generate sensor values, and write to csv format.
+    """Generate sensor values.
 
     Args:
       filepath: path to the aggregated doctor-visits data
-      outpath: output path for the csv results
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
@@ -92,7 +91,6 @@ def update_sensor(
       parallel: boolean to run the sensor update in parallel
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
-      prefix: string to prefix to output files (used for obfuscation in producing SEs)
     """
 
     # as of 2020-05-11, input file expected to have 10 columns
@@ -155,7 +153,7 @@ def update_sensor(
         data_groups, _ = geo_map.county_to_hrr(data)
     else:
         logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
-        return False
+        return {}
     unique_geo_ids = list(data_groups.groups.keys())
 
     # run sensor fitting code (maybe in parallel)
@@ -224,12 +222,4 @@ def update_sensor(
         "include": sensor_include,
     }
 
-    # write out results
-    out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
-    if se:
-        assert prefix is not None, "template has no obfuscated prefix"
-        out_name = prefix + "_" + out_name
-
-    write_to_csv(output_dict, se, out_name, outpath)
-    logging.debug(f"wrote files to {outpath}")
-    return True
+    return output_dict

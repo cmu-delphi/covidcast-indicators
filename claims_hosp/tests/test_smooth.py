@@ -1,6 +1,5 @@
 # third party
 import numpy as np
-import pytest
 
 # first party
 from delphi_claims_hosp.smooth import left_gauss_linear

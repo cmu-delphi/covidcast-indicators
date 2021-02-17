@@ -2,12 +2,14 @@
 from datetime import date
 from itertools import product
 import unittest
+from unittest.mock import patch
 import pandas as pd
 
 from delphi_combo_cases_and_deaths.run import (
     extend_raw_date_range,
     sensor_signal,
     combine_usafacts_and_jhu,
+    compute_special_geo_dfs,
     COLUMN_MAPPING)
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
 
@@ -20,7 +22,7 @@ def test_issue_dates():
     should contain more days of raw data than smoothed data.
     """
     reference_dr = [date.today(), date.today()]
-    params = {'date_range': reference_dr}
+    params = {'indicator': {'date_range': reference_dr}}
     n_changed = 0
     variants = [sensor_signal(metric, sensor, smoother) for
                 metric, sensor, smoother in
@@ -74,8 +76,58 @@ output:
 expected rows: {expected_size}
 """
 
-class MyTestCase(unittest.TestCase):
-    pass
+
+def test_compute_special_geo_dfs():
+    test_df = pd.DataFrame({"geo_id": ["01000", "01001"],
+                            "val": [50, 100],
+                            "timestamp": [20200101, 20200101]},)
+    pd.testing.assert_frame_equal(
+        compute_special_geo_dfs(test_df, "_prop", "nation"),
+        pd.DataFrame({"timestamp": [20200101],
+                      "geo_id": ["us"],
+                      "val": [150/4903185*100000]})
+    )
+    pd.testing.assert_frame_equal(
+        compute_special_geo_dfs(test_df, "_num", "nation"),
+        pd.DataFrame({"timestamp": [20200101],
+                      "geo_id": ["us"],
+                      "val": [150]})
+    )
+
+
+@patch("covidcast.covidcast.signal")
+def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
+    mock_covidcast_signal.side_effect = [
+        pd.DataFrame({"geo_value": ["01000", "01001"],
+                      "value": [50, 100],
+                      "timestamp": [20200101, 20200101]}),
+        pd.DataFrame({"geo_value": ["72000", "01001"],
+                      "value": [200, 100],
+                      "timestamp": [20200101, 20200101]}),
+    ] * 3
+    pd.testing.assert_frame_equal(
+        combine_usafacts_and_jhu("confirmed_incidence_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        pd.DataFrame({"timestamp": [20200101],
+                      "geo_id": ["us"],
+                      "val": [50 + 100 + 200],
+                      "se": [None],
+                      "sample_size": [None]})
+    )
+    pd.testing.assert_frame_equal(
+        combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        pd.DataFrame({"timestamp": [20200101],
+                      "geo_id": ["us"],
+                      "val": [(50 + 100 + 200) / (4903185 + 3723066) * 100000],
+                      "se": [None],
+                      "sample_size": [None]})
+    )
+    pd.testing.assert_frame_equal(
+        combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        pd.DataFrame({"geo_id": ["01000", "01001", "72000"],
+                      "val": [50, 100, 200],
+                      "timestamp": [20200101, 20200101, 20200101]},
+                     index=[0, 1, 0])
+    )
 
 
 if __name__ == '__main__':

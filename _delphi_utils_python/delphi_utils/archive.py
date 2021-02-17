@@ -54,6 +54,8 @@ def diff_export_csv(
     """
     Find differences in exported covidcast CSVs, using geo_id as the index.
 
+    The signal and standard error values are rounded to 7 decimal places before comparison.
+
     Treats NA == NA as True.
 
     Parameters
@@ -75,10 +77,10 @@ def diff_export_csv(
 
     before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
     before_df.set_index("geo_id", inplace=True)
-
+    before_df = before_df.round({"val": 7, "se": 7})
     after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
     after_df.set_index("geo_id", inplace=True)
-
+    after_df = after_df.round({"val": 7, "se": 7})
     deleted_idx = before_df.index.difference(after_df.index)
     common_idx = before_df.index.intersection(after_df.index)
     added_idx = after_df.index.difference(before_df.index)
@@ -127,6 +129,9 @@ def run_module(archive_type: str,
                                     kwargs["bucket_name"],
                                     kwargs["indicator_prefix"],
                                     kwargs["aws_credentials"])
+    elif archive_type == "filesystem":
+        arch_diff = FilesystemArchiveDiffer(cache_dir,
+                                            export_dir)
     else:
         raise ValueError(f"No archive type named '{archive_type}'")
     arch_diff.run()
@@ -576,11 +581,49 @@ class GitArchiveDiffer(ArchiveDiffer):
 
         return archive_success, archive_fail
 
+class FilesystemArchiveDiffer(ArchiveDiffer):
+    """Filesystem-based backend for archiving.
+
+    This backend is only intended for use to reconstruct historical issues whose
+    versioning history has already been tracked elsewhere. No versioning is
+    performed by this backend and the cache directory is modified in-place
+    without backups. Do not use it for new issues.
+    """
+
+    def archive_exports(self, exported_files):
+        """Handle file archiving with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+
+        Parameters
+        ----------
+        exported_files: Files
+            List of files to be archived. Usually new and changed files.
+
+        Returns
+        -------
+        (successes, fails): Tuple[Files, Files]
+            successes: All files from input
+            fails: Empty list
+        """
+        self._exports_archived = True
+        return exported_files, []
+
+    def update_cache(self):
+        """Handle cache updates with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+        """
+        self._cache_updated = True
 
 if __name__ == "__main__":
     parser = ArgumentParser()
     parser.add_argument("--archive_type", required=True, type=str,
-                        choices=["git", "s3"],
+                        choices=["git", "s3", "filesystem"],
                         help="Type of archive differ to use.")
     parser.add_argument("--indicator_prefix", type=str, default="",
                         help="The prefix for S3 keys related to this indicator."
@@ -601,9 +644,9 @@ if __name__ == "__main__":
     run_module(args.archive_type,
                params["cache_dir"],
                params["export_dir"],
-               aws_credentials=params["aws_credentials"],
+               aws_credentials=params.get("aws_credentials", {}),
                branch_name=args.branch_name,
-               bucket_name=params["bucket_name"],
+               bucket_name=params.get("bucket_name", ""),
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

@@ -330,7 +330,7 @@ def pull_quidel_data(params):
         datetime.datetime
             the last date of the report
     """
-    cache_dir = params["cache_dir"]
+    cache_dir = params["input_cache_dir"]
 
     mail_server = params["mail_server"]
     account = params["account"]

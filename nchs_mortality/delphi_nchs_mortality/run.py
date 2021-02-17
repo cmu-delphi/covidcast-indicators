@@ -4,51 +4,45 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_nchs_mortality`.
 """
-from datetime import datetime, date, timedelta
-from os.path import join
 import time
+from datetime import datetime, date, timedelta
 
 import numpy as np
-import pandas as pd
 from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
 
-from .pull import pull_nchs_mortality_data
-from .export import export_csv
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
                         SENSORS, INCIDENCE_BASE, GEO_RES)
+from .export import export_csv
+from .pull import pull_nchs_mortality_data
+
 
 def run_module():
     """Run module for processing NCHS mortality data."""
     start_time = time.time()
     params = read_params()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
-    export_start_date = params["export_start_date"]
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    export_start_date = params["indicator"]["export_start_date"]
     if export_start_date == "latest": # Find the previous Saturday
         export_start_date = date.today() - timedelta(
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
-    daily_export_dir = params["daily_export_dir"]
-    daily_cache_dir = params["daily_cache_dir"]
-    static_file_dir = params["static_file_dir"]
-    token = params["token"]
-    test_mode = params["mode"]
+    daily_export_dir = params["common"]["daily_export_dir"]
+    daily_cache_dir = params["indicator"]["daily_cache_dir"]
+    token = params["indicator"]["token"]
+    test_mode = params["indicator"]["mode"]
 
-    if params["bucket_name"]:
+    if params["archive"]:
         daily_arch_diff = S3ArchiveDiffer(
             daily_cache_dir, daily_export_dir,
-            params["bucket_name"], "nchs_mortality",
-            params["aws_credentials"])
+            params["archive"]["bucket_name"], "nchs_mortality",
+            params["archive"]["aws_credentials"])
         daily_arch_diff.update_cache()
 
 
-    map_df = pd.read_csv(
-        join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
-    )
-
-    df_pull = pull_nchs_mortality_data(token, map_df, test_mode)
+    df_pull = pull_nchs_mortality_data(token, test_mode)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
             print(metric)
@@ -57,7 +51,7 @@ def run_module():
             df["se"] = np.nan
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
-            sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric]])
+            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
                 geo_name=GEO_RES,
@@ -76,7 +70,7 @@ def run_module():
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
-                sensor_name = "_".join(["wip", SENSOR_NAME_MAP[metric], sensor])
+                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,
                     geo_name=GEO_RES,
@@ -91,7 +85,7 @@ def run_module():
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-    if params["bucket_name"]:
+    if params["archive"]:
         arch_diffs(params, daily_arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

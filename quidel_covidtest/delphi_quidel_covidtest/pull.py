@@ -217,7 +217,7 @@ def pull_quidel_covidtest(params):
             the last date of the report
 
     """
-    cache_dir = params["cache_dir"]
+    cache_dir = params["input_cache_dir"]
 
     test_mode = (params["mode"] == "test")
 

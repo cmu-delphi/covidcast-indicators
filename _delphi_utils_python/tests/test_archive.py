@@ -19,14 +19,14 @@ CSVS_BEFORE = {
     # Common
     "csv0": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
-        "val": [1.0, 2.0, 3.0],
+        "val": [1.000000001, 2.00000002, 3.00000003],
         "se": [0.1, 0.2, 0.3],
         "sample_size": [10.0, 20.0, 30.0]}),
 
     "csv1": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
         "val": [1.0, 2.0, 3.0],
-        "se": [np.nan, 0.2, 0.3],
+        "se": [np.nan, 0.20000002, 0.30000003],
         "sample_size": [10.0, 20.0, 30.0]}),
 
     # Deleted
@@ -42,7 +42,7 @@ CSVS_AFTER = {
     "csv0": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
         "val": [1.0, 2.0, 3.0],
-        "se": [0.1, 0.2, 0.3],
+        "se": [0.10000001, 0.20000002, 0.30000003],
         "sample_size": [10.0, 20.0, 30.0]}),
 
     "csv1": pd.DataFrame({
@@ -54,7 +54,7 @@ CSVS_AFTER = {
     # Added
     "csv3": pd.DataFrame({
         "geo_id": ["2"],
-        "val": [2.0],
+        "val": [2.0000002],
         "se": [0.2],
         "sample_size": [20.0]}),
 }

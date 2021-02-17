@@ -37,27 +37,31 @@ class TestDownloadFTPFiles:
     def test_get_files(self, mock_path):
 
         # When one new file is present, one file is downloaded
-        one_new = self.MockSFTP([self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)),"foo")])
-        get_files_from_dir(one_new, "")
+        one_new = self.MockSFTP([
+            self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo")
+        ])
+        get_files_from_dir(one_new, "00001122", "")
         assert one_new.num_gets == 1
 
         # When one new file and one old file are present, one file is downloaded
-        one_new_one_old = self.MockSFTP([self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)),"foo"),
-                                         self.FileAttr(dt.timestamp(dt.now()-timedelta(days=10)),"foo")])
-        get_files_from_dir(one_new_one_old, "")
+        one_new_one_old = self.MockSFTP([
+            self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00005566_foo"),
+            self.FileAttr(dt.timestamp(dt.now()-timedelta(days=10)), "00001122_foo")
+        ])
+        get_files_from_dir(one_new_one_old, "00005566", "")
         assert one_new_one_old.num_gets == 1
 
         # When three new files are present, AssertionError
-        new_file1 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)),"foo1")
-        new_file2 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)),"foo2")
-        new_file3 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)),"foo3")
+        new_file1 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo1")
+        new_file2 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo2")
+        new_file3 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo3")
         three_new = self.MockSFTP([new_file1, new_file2, new_file3])
         with pytest.raises(AssertionError):
-            get_files_from_dir(three_new,"")
+            get_files_from_dir(three_new, "00001122", "")
 
         # When the file already exists, no files are downloaded
         mock_path.exists.return_value = True
         one_exists = self.MockSFTP([new_file1])
-        get_files_from_dir(one_new, "")
+        get_files_from_dir(one_new, "00001122", "")
         assert one_exists.num_gets == 0
         

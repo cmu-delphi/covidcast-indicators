@@ -1,12 +1,18 @@
 {
-    "export_start_date": "2020-03-03",
-    "static_file_dir": "../static",
-    "export_dir": "./receiving",
-    "cache_dir": "./cache",
+  "common": {
+    "export_dir": "./receiving"
+  },
+  "indicator": {
     "base_url": "test_data/small_{metric}.csv",
+    "export_start_date": "2020-03-03",
+    "static_file_dir": "../static"
+  },
+  "archive": {
     "aws_credentials": {
       "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
       "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
     },
-    "bucket_name": "test-bucket"
+    "bucket_name": "test-bucket",
+    "cache_dir": "./cache"
+  }
 }

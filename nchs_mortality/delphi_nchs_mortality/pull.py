@@ -5,6 +5,7 @@ from delphi_utils.geomap import GeoMapper
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
+from typing import Optional
 
 
 from .constants import METRICS, RENAME, NEWLINE
@@ -20,7 +21,7 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(token: str, test_mode: str):
+def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -38,8 +39,8 @@ def pull_nchs_mortality_data(token: str, test_mode: str):
     ----------
     token: str
         My App Token for pulling the NCHS mortality data
-    test_mode:str
-        Check whether to run in a test mode
+    test_file: Optional[str]
+        When not null, name of file from which to read test data
 
     Returns
     -------
@@ -51,15 +52,15 @@ def pull_nchs_mortality_data(token: str, test_mode: str):
     type_dict = {key: float for key in keep_columns}
     type_dict["timestamp"] = 'datetime64[ns]'
 
-    if test_mode == "":
+    if test_file:
+        df = pd.read_csv("./test_data/%s"%test_file)
+    else:
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
         # drop "By Total" rows
-        df = df[df["group"].transform(str.lower) == "by week"]
-    else:
-        df = pd.read_csv("./test_data/%s"%test_mode)
+        df = df[df["group"].transform(str.lower) == "by week"]        
 
     df = standardize_columns(df)
 

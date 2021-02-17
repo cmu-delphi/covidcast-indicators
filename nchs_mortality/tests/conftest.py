@@ -19,8 +19,8 @@ PARAMS = {
   },
   "indicator": {
     "export_start_date": "2020-04-11",
-    "mode":"test_data.csv",
     "static_file_dir": "../static",
+    "test_file": "test_data.csv",
     "token": ""
   },
   "archive": {

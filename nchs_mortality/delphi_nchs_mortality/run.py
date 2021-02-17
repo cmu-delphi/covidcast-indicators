@@ -28,8 +28,8 @@ def run_module(params):
         - "log_filename" (optional): str, name of file to write logs
     - "indicator":
         - "export_start_date": str, date from which to export data in YYYY-MM-DD format
-        - "mode": str, whether we are in test mode
         - "static_file_dir": str, directory containing population csv files
+        - "test_file" (optional): str, name of file from which to read test data
         - "token": str, authentication for upstream data pull
     - "archive" (optional): if provided, output will be archived with S3
         - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
@@ -48,7 +48,7 @@ def run_module(params):
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
     token = params["indicator"]["token"]
-    test_mode = params["indicator"]["mode"]
+    test_file = params["indicator"].get("test_file", None)
 
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
@@ -58,7 +58,7 @@ def run_module(params):
         daily_arch_diff.update_cache()
 
 
-    df_pull = pull_nchs_mortality_data(token, test_mode)
+    df_pull = pull_nchs_mortality_data(token, test_file)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
             print(metric)

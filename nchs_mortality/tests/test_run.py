@@ -1,8 +1,7 @@
-import pytest
-
 import datetime as dt
 from os import listdir
 from os.path import join
+import pytest
 
 import pandas as pd
 

@@ -9,9 +9,30 @@ from os import listdir, remove
 from os.path import join
 from shutil import copy
 
-from delphi_utils import read_params
 from delphi_nchs_mortality.run import run_module
 
+
+PARAMS = {
+  "common": {
+    "export_dir": "./receiving",
+    "daily_export_dir": "./daily_receiving"
+  },
+  "indicator": {
+    "daily_cache_dir": "./daily_cache",
+    "export_start_date": "2020-04-11",
+    "mode":"test_data.csv",
+    "static_file_dir": "../static",
+    "token": ""
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+      "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
+    },
+    "bucket_name": "test-bucket",
+    "cache_dir": "./cache"
+  }
+}
 
 @pytest.fixture(scope="function")
 def run_as_module(date):
@@ -38,9 +59,7 @@ def run_as_module(date):
     with mock_s3():
         with freeze_time(date):
             # Create the fake bucket we will be using
-            params = read_params()
-            aws_credentials = params["archive"]["aws_credentials"]
+            aws_credentials = PARAMS["archive"]["aws_credentials"]
             s3_client = Session(**aws_credentials).client("s3")
-            s3_client.create_bucket(Bucket=params["archive"]["bucket_name"])
-
-            run_module()
+            s3_client.create_bucket(Bucket=PARAMS["archive"]["bucket_name"])
+            run_module(PARAMS)

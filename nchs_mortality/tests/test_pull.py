@@ -3,16 +3,35 @@ import pytest
 from os.path import join
 
 import pandas as pd
-from delphi_utils import read_params
 from delphi_utils.geomap import GeoMapper
 
 from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_columns
 from delphi_nchs_mortality.constants import METRICS
 
-params = read_params()
-export_start_date = params["indicator"]["export_start_date"]
-export_dir = params["common"]["export_dir"]
-token = params["indicator"]["token"]
+PARAMS = {
+  "common": {
+    "export_dir": "./receiving",
+    "daily_export_dir": "./daily_receiving"
+  },
+  "indicator": {
+    "daily_cache_dir": "./daily_cache",
+    "export_start_date": "2020-04-11",
+    "mode":"test_data.csv",
+    "static_file_dir": "../static",
+    "token": ""
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
+      "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
+    },
+    "bucket_name": "test-bucket",
+    "cache_dir": "./cache"
+  }
+}
+export_start_date = PARAMS["indicator"]["export_start_date"]
+export_dir = PARAMS["common"]["export_dir"]
+token = PARAMS["indicator"]["token"]
 
 
 class TestPullNCHS:

@@ -10,15 +10,31 @@ import subprocess
 import time
 
 from delphi_utils import get_structured_logger
-from delphi_utils import read_params
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
 from .process import process, files_in_past_week
 
 
-def run_module():
-    """Create the Safegraph indicator."""
-    params = read_params()
+def run_module(params):
+    """Create the Safegraph indicator.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "aws_access_key_id": str, ID of access key for AWS S3
+        - "aws_secret_access_key": str, access key for AWS S3
+        - "aws_default_region": str, name of AWS S3 region
+        - "aws_endpoint": str, name of AWS S3 endpoint
+        - "n_core": int, number of cores to use for multithreaded processing
+        - "raw_data_dir": str, directory from which to read downloaded data from AWS,
+        - "static_file_dir": str, directory containing brand and population csv files
+        - "sync": bool, whether to sync S3 data before running indicator
+        - "wip_signal": list of str or bool, list of work-in-progress signals to be passed to
+                        `delphi_utils.add_prefix()`
+    """
     start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -30,7 +46,7 @@ def run_module():
     raw_data_dir = params["indicator"]["raw_data_dir"]
 
     # Number of cores to use in multiprocessing.
-    n_core = int(params["indicator"]["n_core"])
+    n_core = params["indicator"]["n_core"]
 
     # AWS credentials
     aws_access_key_id = params["indicator"]["aws_access_key_id"]

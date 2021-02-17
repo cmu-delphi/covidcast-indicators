@@ -20,8 +20,7 @@ def run_as_module():
     with mock_s3():
         # Create the fake bucket we will be using
         params = read_params()
-        aws_credentials = params["aws_credentials"]
+        aws_credentials = params["archive"]["aws_credentials"]
         s3_client = Session(**aws_credentials).client("s3")
-        s3_client.create_bucket(Bucket=params["bucket_name"])
+        s3_client.create_bucket(Bucket=params["archive"]["bucket_name"])
         run_module()
-

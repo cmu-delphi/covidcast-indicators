@@ -1,11 +1,16 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "parquet_url": "./test_data/small_CAN_data.parquet",
-  "aws_credentials": {
-    "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
-    "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
+  "common": {
+    "export_dir": "./receiving"
   },
-  "bucket_name": "test-bucket"
+  "indicator": {
+    "parquet_url": "./test_data/small_CAN_data.parquet"
+  },
+  "archive": {
+    "cache_dir": "./cache",
+    "bucket_name": "test-bucket",
+    "aws_credentials": {
+      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+    }
+  }
 }

@@ -29,7 +29,7 @@ class TestRun:
         with tempfile.TemporaryDirectory() as tmp:
             # when adding tests for new signals, change tmp to './expected' to generate new expected files.
             # tests will fail but the files will be created.
-            params.return_value = {"export_dir": tmp}
+            params.return_value = {"common": {"export_dir": tmp}}
             run_module()
             expected_files = ["_".join(["20200131", geo, sig[0]]) + ".csv" for geo, sig
                               in product(GEO_RESOLUTIONS, SIGNALS)]

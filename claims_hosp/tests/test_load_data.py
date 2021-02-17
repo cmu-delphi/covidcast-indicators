@@ -10,8 +10,8 @@ from delphi_utils import read_params
 CONFIG = Config()
 CONSTANTS = GeoConstants()
 PARAMS = read_params()
-DATA_FILEPATH = PARAMS["input_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+DATA_FILEPATH = PARAMS["indicator"]["input_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 
 class TestLoadData:

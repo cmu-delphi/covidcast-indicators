@@ -1,13 +1,19 @@
 {
-  "static_file_dir": "./static",
-  "raw_data_dir": "/mnt/data/safegraph/",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "n_core": "12",
-  "aws_access_key_id": "",
-  "aws_secret_access_key": "",
-  "aws_default_region": "",
-  "aws_endpoint": "",
-  "sync": true,
-  "log_exceptions": false
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "static_file_dir": "./static",
+    "raw_data_dir": "/mnt/data/safegraph/",
+    "n_core": 12,
+    "aws_access_key_id": "",
+    "aws_secret_access_key": "",
+    "aws_default_region": "",
+    "aws_endpoint": "",
+    "sync": true
+  },
+  "archive": {
+    "cache_dir": "./cache"
+  }
 }

@@ -30,16 +30,16 @@ def run_module():
 
     params = read_params()
     export_start_date = datetime.strptime(
-        params["export_start_date"], "%Y-%m-%d")
-    export_dir = params["export_dir"]
-    num_export_days = params.get("num_export_days", "all")
+        params["indicator"]["export_start_date"], "%Y-%m-%d")
+    export_dir = params["common"]["export_dir"]
+    num_export_days = params["indicator"].get("num_export_days", "all")
 
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     # Pull GS data
-    dfs = pull_gs_data(params["path_to_bigquery_credentials"],
+    dfs = pull_gs_data(params["indicator"]["path_to_bigquery_credentials"],
                        export_start_date,
                        num_export_days)
     gmpr = geomap.GeoMapper()

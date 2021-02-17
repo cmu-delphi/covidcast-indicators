@@ -4,11 +4,9 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
-from delphi_utils import read_params
 from delphi_cdc_covidnet.api_config import APIConfig
 from delphi_cdc_covidnet.covidnet import CovidNet
 
-params = read_params()
 
 class TestCovidNet:
 

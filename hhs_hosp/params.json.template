@@ -1,12 +1,6 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "wip_signal": "",
-  "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
-  },
-  "bucket_name": "",
-  "log_filename": "hhs_hosp.log"
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "hhs_hosp.log"
+  }
 }

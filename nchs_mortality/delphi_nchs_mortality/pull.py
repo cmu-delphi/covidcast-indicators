@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
 
-from delphi_utils.geomap import GeoMapper
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
+from delphi_utils.geomap import GeoMapper
 
 from .constants import METRICS, RENAME, NEWLINE
 

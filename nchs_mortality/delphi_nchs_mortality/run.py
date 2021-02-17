@@ -49,7 +49,7 @@ def run_module(params):
     token = params["indicator"]["token"]
     test_mode = params["indicator"]["mode"]
 
-    if params["archive"]:
+    if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
             daily_cache_dir, daily_export_dir,
             params["archive"]["bucket_name"], "nchs_mortality",

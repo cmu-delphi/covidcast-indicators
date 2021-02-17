@@ -2,8 +2,8 @@ from os.path import join
 import re
 import pytest
 
-from delphi_jhu.pull import pull_jhu_data
 from delphi_utils import GeoMapper
+from delphi_jhu.pull import pull_jhu_data
 
 class TestPullJHU:
     test_date_cols = ['2/29/20', '3/1/20', '3/2/20', '3/3/20', '3/4/20', '3/5/20', '3/6/20',
@@ -27,7 +27,7 @@ class TestPullJHU:
     def test_missing_days(self):
         gmpr = GeoMapper()
         with pytest.raises(ValueError):
-            df = pull_jhu_data(
+            pull_jhu_data(
                 join("test_data", "bad_{metric}_missing_days.csv"), "confirmed", gmpr
             )
 

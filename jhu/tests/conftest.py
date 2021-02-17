@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 
-from boto3 import Session
-from moto import mock_s3
-import pytest
-
 from os import listdir, remove
 from os.path import join
+
+from boto3 import Session
+from moto import mock_s3
 import pandas as pd
+import pytest
 
 from delphi_jhu.run import run_module
 

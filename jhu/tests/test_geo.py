@@ -2,9 +2,9 @@ import pytest
 
 import numpy as np
 import pandas as pd
-from delphi_jhu.geo import geo_map, INCIDENCE_BASE
 from delphi_utils import GeoMapper
 
+from delphi_jhu.geo import geo_map, INCIDENCE_BASE
 
 class TestGeoMap:
     def test_incorrect_geo(self, jhu_confirmed_test_data):
@@ -78,7 +78,8 @@ class TestGeoMap:
                                                     "new_counts": 6588732.0,
                                                     "population": 331940098.0,
                                                     "incidence": 6588732 / 331940098 * 100000,
-                                                    "cumulative_prop": 6588732 / 331940098. * 100000},
+                                                    "cumulative_prop": 6588732 / 331940098. *\
+                                                                       100000},
                                                    index=[0])
                                       )
         # Make sure the prop signals don't have inf values
@@ -100,7 +101,8 @@ class TestGeoMap:
             assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
             # Check that the proportional signals are identical
             exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
-            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"]  * INCIDENCE_BASE
+            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"] *\
+                INCIDENCE_BASE
             assert new_df["incidence"].eq(exp_incidence).all()
             assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
             # Make sure the prop signals don't have inf values

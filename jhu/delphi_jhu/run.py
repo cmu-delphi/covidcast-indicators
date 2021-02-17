@@ -11,7 +11,6 @@ from typing import Dict, Any
 
 import numpy as np
 from delphi_utils import (
-    read_params,
     create_export_csv,
     S3ArchiveDiffer,
     Smoother,

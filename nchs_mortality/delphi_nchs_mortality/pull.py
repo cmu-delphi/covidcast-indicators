@@ -2,10 +2,11 @@
 """Functions for pulling NCHS mortality data API."""
 
 from delphi_utils.geomap import GeoMapper
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
-from typing import Optional
 
 
 from .constants import METRICS, RENAME, NEWLINE
@@ -60,7 +61,7 @@ def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
         # drop "By Total" rows
-        df = df[df["group"].transform(str.lower) == "by week"]        
+        df = df[df["group"].transform(str.lower) == "by week"]
 
     df = standardize_columns(df)
 

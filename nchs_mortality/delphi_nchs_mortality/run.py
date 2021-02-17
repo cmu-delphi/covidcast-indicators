@@ -6,6 +6,7 @@ when the module is run with `python -m delphi_nchs_mortality`.
 """
 import time
 from datetime import datetime, date, timedelta
+from typing import Dict, Any
 
 import numpy as np
 from delphi_utils import S3ArchiveDiffer, get_structured_logger
@@ -17,7 +18,7 @@ from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
-def run_module(params):
+def run_module(params: Dict[str, Any]):
     """Run module for processing NCHS mortality data.
 
     The `params` argument is expected to have the following structure:

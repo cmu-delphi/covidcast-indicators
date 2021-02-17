@@ -7,7 +7,6 @@ when the module is run with `python -m delphi_hhs`.
 from datetime import date, datetime, timedelta
 
 from delphi_epidata import Epidata
-from delphi_utils import read_params
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 import numpy as np
@@ -63,14 +62,22 @@ def generate_date_ranges(start, end):
     return output
 
 
-def run_module():
-    """Generate ground truth HHS hospitalization data."""
-    params = read_params()
+def run_module(params):
+    """
+    Generate ground truth HHS hospitalization data.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output
+    """
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
 
     today = date.today()
-    past_reference_day = date(year=2020, month=1, day=1) # first available date in DB
+    past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
     date_range = generate_date_ranges(past_reference_day, today)
     dfs = []
     for r in date_range:

@@ -1,7 +1,5 @@
 import pytest
 
-from os.path import join
-
 import numpy as np
 import pandas as pd
 from delphi_jhu.geo import geo_map, INCIDENCE_BASE

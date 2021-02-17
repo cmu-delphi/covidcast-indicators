@@ -1,9 +1,7 @@
-import pytest
-
 from os.path import join
 import re
+import pytest
 
-import pandas as pd
 from delphi_jhu.pull import pull_jhu_data
 from delphi_utils import GeoMapper
 

@@ -10,7 +10,6 @@ from itertools import product
 
 import numpy as np
 from delphi_utils import (
-    read_params,
     create_export_csv,
     geomap,
     get_structured_logger
@@ -22,13 +21,28 @@ from .geo import geo_map
 from .pull import pull_gs_data
 
 
-def run_module():
-    """Run Google Symptoms module."""
+def run_module(params):
+    """
+    Run Google Symptoms module.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, YYYY-MM-DD format, date from which to export data
+        - "num_export_days": int, number of days before end date (today) to export
+        - "path_to_bigquery_credentials": str, path to BigQuery API key and service account
+            JSON file
+    """
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
 
-    params = read_params()
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")
     export_dir = params["common"]["export_dir"]

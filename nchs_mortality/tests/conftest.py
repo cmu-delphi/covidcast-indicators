@@ -14,11 +14,10 @@ from delphi_nchs_mortality.run import run_module
 
 PARAMS = {
   "common": {
-    "export_dir": "./receiving",
-    "daily_export_dir": "./daily_receiving"
+    "daily_export_dir": "./daily_receiving",
+    "weekly_export_dir": "./receiving"
   },
   "indicator": {
-    "daily_cache_dir": "./daily_cache",
     "export_start_date": "2020-04-11",
     "mode":"test_data.csv",
     "static_file_dir": "../static",
@@ -30,7 +29,8 @@ PARAMS = {
       "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
     },
     "bucket_name": "test-bucket",
-    "cache_dir": "./cache"
+    "daily_cache_dir": "./daily_cache",
+    "weekly_cache_dir": "./cache"
   }
 }
 

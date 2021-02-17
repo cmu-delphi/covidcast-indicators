@@ -1,12 +1,11 @@
 {
   "common": {
     "daily_export_dir": "./daily_receiving",
-    "export_dir": "./receiving",
+    "weekly_export_dir": "./receiving",
     "log_filename": "/var/log/indicators/nchs_mortality.log",
     "log_exceptions": false
   },
   "indicator": {
-    "daily_cache_dir": "./daily_cache",
     "export_start_date": "2020-02-01",
     "mode":"",
     "static_file_dir": "./static",
@@ -18,6 +17,7 @@
       "aws_secret_access_key": ""
     },
     "bucket_name": "",
-    "cache_dir": "./cache"
+    "daily_cache_dir": "./daily_cache",
+    "weekly_cache_dir": "./cache"
   }
 }

@@ -22,7 +22,8 @@ def run_module(params):
 
     The `params` argument is expected to have the following structure:
     - "common":
-        - "daily_export_dir": str, directory to write output
+        - "daily_export_dir": str, directory to write daily output
+        - "weekly_export_dir": str, directory to write weekly output
         - "log_exceptions" (optional): bool, whether to log exceptions to file
         - "log_filename" (optional): str, name of file to write logs
     - "indicator":
@@ -33,7 +34,8 @@ def run_module(params):
     - "archive" (optional): if provided, output will be archived with S3
         - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
         - "bucket_name: str, name of S3 bucket to read/write
-        - "daily_cache_dir": str, directory of locally cached data
+        - "daily_cache_dir": str, directory of locally cached daily data
+        - "weekly_cache_dir": str, directory of locally cached weekly data
     """
     start_time = time.time()
     logger = get_structured_logger(
@@ -45,13 +47,12 @@ def run_module(params):
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
-    daily_cache_dir = params["indicator"]["daily_cache_dir"]
     token = params["indicator"]["token"]
     test_mode = params["indicator"]["mode"]
 
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
-            daily_cache_dir, daily_export_dir,
+            params["archive"]["daily_cache_dir"], daily_export_dir,
             params["archive"]["bucket_name"], "nchs_mortality",
             params["archive"]["aws_credentials"])
         daily_arch_diff.update_cache()
@@ -100,7 +101,7 @@ def run_module(params):
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-    if params["archive"]:
+    if "archive" in params:
         arch_diffs(params, daily_arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

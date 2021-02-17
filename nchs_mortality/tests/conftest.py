@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 
+from os.path import join
+from os import listdir, remove
+from shutil import copy
+
 from boto3 import Session
 from freezegun import freeze_time
 from moto import mock_s3
 import pytest
-
-from os import listdir, remove
-from os.path import join
-from shutil import copy
 
 from delphi_nchs_mortality.run import run_module
 

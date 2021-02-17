@@ -8,7 +8,7 @@ import time
 from datetime import datetime, date, timedelta
 
 import numpy as np
-from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -17,10 +17,25 @@ from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
-def run_module():
-    """Run module for processing NCHS mortality data."""
+def run_module(params):
+    """Run module for processing NCHS mortality data.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "daily_export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, date from which to export data in YYYY-MM-DD format
+        - "mode": str, whether we are in test mode
+        - "static_file_dir": str, directory containing population csv files
+        - "token": str, authentication for upstream data pull
+    - "archive" (optional): if provided, output will be archived with S3
+        - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+        - "bucket_name: str, name of S3 bucket to read/write
+        - "daily_cache_dir": str, directory of locally cached data
+    """
     start_time = time.time()
-    params = read_params()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))

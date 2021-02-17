@@ -1,37 +1,14 @@
 import pytest
 
-from os.path import join
-
 import pandas as pd
 from delphi_utils.geomap import GeoMapper
 
 from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_columns
 from delphi_nchs_mortality.constants import METRICS
 
-PARAMS = {
-  "common": {
-    "export_dir": "./receiving",
-    "daily_export_dir": "./daily_receiving"
-  },
-  "indicator": {
-    "daily_cache_dir": "./daily_cache",
-    "export_start_date": "2020-04-11",
-    "mode":"test_data.csv",
-    "static_file_dir": "../static",
-    "token": ""
-  },
-  "archive": {
-    "aws_credentials": {
-      "aws_access_key_id": "FAKE_TEST_ACCESS_KEY_ID",
-      "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY"
-    },
-    "bucket_name": "test-bucket",
-    "cache_dir": "./cache"
-  }
-}
-export_start_date = PARAMS["indicator"]["export_start_date"]
-export_dir = PARAMS["common"]["export_dir"]
-token = PARAMS["indicator"]["token"]
+# export_start_date = PARAMS["indicator"]["export_start_date"]
+EXPORT_DIR = "./receiving"
+TOKEN = ""
 
 
 class TestPullNCHS:
@@ -50,17 +27,17 @@ class TestPullNCHS:
             "pneumonia_influenza_or_covid_19_deaths": [8]
         })
         pd.testing.assert_frame_equal(expected, df)
-        
+
     def test_good_file(self):
-        df = pull_nchs_mortality_data(token, "test_data.csv")
-        
+        df = pull_nchs_mortality_data(TOKEN, "test_data.csv")
+
         # Test columns
         assert (df.columns.values == [
                 'covid_19_deaths', 'total_deaths', 'percent_of_expected_deaths',
                 'pneumonia_deaths', 'pneumonia_and_covid_19_deaths',
                 'influenza_deaths', 'pneumonia_influenza_or_covid_19_deaths',
                 "timestamp", "geo_id", "population"]).all()
-    
+
         # Test aggregation for NYC and NY
         raw_df = pd.read_csv("./test_data/test_data.csv", parse_dates=["start_week"])
         raw_df = standardize_columns(raw_df)
@@ -93,11 +70,8 @@ class TestPullNCHS:
 
     def test_bad_file_with_inconsistent_time_col(self):
         with pytest.raises(ValueError):
-            df = pull_nchs_mortality_data(token, "bad_data_with_inconsistent_time_col.csv")
-      
-    def test_bad_file_with_inconsistent_time_col(self):
-        with pytest.raises(ValueError):
-            df = pull_nchs_mortality_data(token,
-                                          "bad_data_with_missing_cols.csv")
-    
+            pull_nchs_mortality_data(TOKEN, "bad_data_with_inconsistent_time_col.csv")
 
+    def test_bad_file_with_missing_cols(self):
+        with pytest.raises(ValueError):
+            pull_nchs_mortality_data(TOKEN, "bad_data_with_missing_cols.csv")

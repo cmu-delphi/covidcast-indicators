@@ -5,7 +5,6 @@ import pytest
 # first party
 from delphi_claims_hosp.config import Config, GeoConstants
 from delphi_claims_hosp.load_data import load_data, load_claims_data
-from delphi_utils import read_params
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()

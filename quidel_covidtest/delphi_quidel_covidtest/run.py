@@ -5,6 +5,7 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
 import time
+from typing import Dict, Any
 
 from delphi_utils import (
     add_prefix,
@@ -25,7 +26,7 @@ from .pull import (pull_quidel_covidtest,
                    update_cache_file)
 
 
-def run_module(params):
+def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
 
     The `params` argument is expected to have the following structure:

@@ -6,6 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import time
 from os.path import join
+from typing import Dict, Any
 
 import pandas as pd
 from delphi_utils import (
@@ -25,7 +26,7 @@ from .pull import (pull_quidel_data,
                    update_cache_file)
 
 
-def run_module(params):
+def run_module(params: Dict[str, Any]):
     """Run Quidel flu test module.
 
     The `params` argument is expected to have the following structure:

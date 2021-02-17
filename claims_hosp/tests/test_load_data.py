@@ -9,7 +9,12 @@ from delphi_utils import read_params
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()
-PARAMS = read_params()
+PARAMS = {
+    "indicator": {
+        "input_file": "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+        "drop_date": "2020-06-11",
+    }
+}
 DATA_FILEPATH = PARAMS["indicator"]["input_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 

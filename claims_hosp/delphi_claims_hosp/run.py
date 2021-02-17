@@ -11,17 +11,43 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # third party
-from delphi_utils import read_params, get_structured_logger
+from delphi_utils import get_structured_logger
 
 # first party
 from .config import Config
 from .update_indicator import ClaimsHospIndicatorUpdater
 
 
-def run_module():
-    """Read from params.json and generate updated claims-based hospitalization indicator values."""
+def run_module(params):
+    """
+    Generate updated claims-based hospitalization indicator values.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+            - "log_exceptions" (optional): bool, whether to log exceptions to file.
+            - "log_filename" (optional): str, name of file to write logs
+        - "indicator":
+            - "input_file": str, optional filenames to download. If null,
+                defaults are set in retrieve_files().
+            - "start_date": str, YYYY-MM-DD format, first day to generate data for.
+            - "end_date": str or null, YYYY-MM-DD format, last day to generate data for.
+               If set to null, end date is derived from drop date and n_waiting_days.
+            - "drop_date": str or null, YYYY-MM-DD format, date data is dropped. If set to
+               null, current day minus 40 hours is used.
+            - "n_backfill_days": int, number of past days to generate estimates for.
+            - "n_waiting_days": int, number of most recent days to skip estimates for.
+            - "write_se": bool, whether to write out standard errors.
+            - "obfuscated_prefix": str, prefix for signal name if write_se is True.
+            - "parallel": bool, whether to update sensor in parallel.
+            - "geos": list of str, geographies to generate sensor for.
+            - "weekday": list of bool, which weekday adjustments to perform. For each value in the list, signals will
+                be generated with weekday adjustments (True) or without adjustments (False).
+    """
     start_time = time.time()
-    params = read_params()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))

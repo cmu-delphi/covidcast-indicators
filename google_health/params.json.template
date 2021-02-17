@@ -10,7 +10,6 @@
     "end_date": "",
     "ght_key": "",
     "wip_signal" : "",
-    "test": false,
     "test_data_dir": ""
   },
   "archive": {

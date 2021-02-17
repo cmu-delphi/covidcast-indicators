@@ -17,10 +17,28 @@ from delphi_utils import read_params
 from .update_sensor import update_sensor
 
 
-def run_module():
+def run_module(params):
+    """
+    Run doctor visits indicator.
 
-    params = read_params()
-
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output.
+        - "indicator":
+            - "input_file": str, path to aggregated doctor-visits data.
+            - "drop_date": str, YYYY-MM-DD format, date data is dropped. If set to
+               empty string, current day minus 40 hours is used.
+            - "n_backfill_days": int, number of past days to generate estimates for.
+            - "n_waiting_days": int, number of most recent days to skip estimates for.
+            - "weekday": list of bool, which weekday adjustments to perform. For each value in the list, signals will
+                be generated with weekday adjustments (True) or without adjustments (False)
+            - "se": bool, whether to write out standard errors
+            - "obfuscated_prefix": str, prefix for signal name if write_se is True.
+            - "parallel": bool, whether to update sensor in parallel.
+    """
     logging.basicConfig(level=logging.DEBUG)
 
     ## get end date from input file
@@ -67,7 +85,6 @@ def run_module():
             update_sensor(
                 filepath=params["indicator"]["input_file"],
                 outpath=params["common"]["export_dir"],
-                staticpath=params["indicator"]["static_file_dir"],
                 startdate=startdate,
                 enddate=enddate,
                 dropdate=dropdate,

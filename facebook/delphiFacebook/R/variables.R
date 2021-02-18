@@ -27,7 +27,7 @@ is_selected <- function(vec, selection) {
   selections <- sapply(
     vec,
     function(resp) {
-      if (length(resp) == 0) {
+      if (length(resp) == 0 || all(is.na(resp))) {
         # All our selection items include "None of the above" or similar, so
         # treat no selection the same as missingness.
         NA

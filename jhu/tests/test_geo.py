@@ -1,12 +1,11 @@
 import pytest
 
-from os.path import join
-
 import numpy as np
 import pandas as pd
 from delphi_jhu.geo import geo_map, add_county_pop, INCIDENCE_BASE
 from delphi_utils import GeoMapper
 
+from delphi_jhu.geo import geo_map, INCIDENCE_BASE
 
 class TestGeoMap:
     def test_incorrect_geo(self, jhu_confirmed_test_data):
@@ -26,7 +25,8 @@ class TestGeoMap:
                                                     "new_counts": 1463.0,
                                                     "population": 55869.,
                                                     "incidence": 1463 / 55869 * INCIDENCE_BASE,
-                                                    "cumulative_prop": 1463 / 55869 * INCIDENCE_BASE},
+                                                    "cumulative_prop": 1463 / 55869 *\
+                                                                       INCIDENCE_BASE},
                                                    index=[36]),
                                       )
         # Make sure the prop signals don't have inf values
@@ -46,7 +46,8 @@ class TestGeoMap:
                                                     "new_counts": 140160.0,
                                                     "population": 4903185.0,
                                                     "incidence": 140160 / 4903185 * INCIDENCE_BASE,
-                                                    "cumulative_prop": 140160 / 4903185 * INCIDENCE_BASE},
+                                                    "cumulative_prop": 140160 / 4903185 *\
+                                                                       INCIDENCE_BASE},
                                                    index=[1])
                                       )
         pd.testing.assert_frame_equal(state_df.loc[(state_df.geo_id == "gu") &
@@ -57,7 +58,8 @@ class TestGeoMap:
                                                     "new_counts": 16.0,
                                                     "population": 159358.0,
                                                     "incidence": 16 / 159358 * INCIDENCE_BASE,
-                                                    "cumulative_prop": 502 / 159358 * INCIDENCE_BASE},
+                                                    "cumulative_prop": 502 / 159358 *\
+                                                                       INCIDENCE_BASE},
                                                    index=[11])
                                       )
         # Make sure the prop signals don't have inf values
@@ -73,7 +75,8 @@ class TestGeoMap:
                                                     "new_counts": 218044.0,
                                                     "population": 14845063.0,
                                                     "incidence": 218044 / 14845063 * INCIDENCE_BASE,
-                                                    "cumulative_prop": 218044 / 14845063 * INCIDENCE_BASE},
+                                                    "cumulative_prop": 218044 / 14845063 *\
+                                                                       INCIDENCE_BASE},
                                                    index=[0])
                                       )
         # Make sure the prop signals don't have inf values
@@ -88,8 +91,10 @@ class TestGeoMap:
                                                     "cumulative_counts": 6589234.0,
                                                     "new_counts": 6588748.0,
                                                     "population": 332099456.0,
-                                                    "incidence": 6588748 / 332099456 * INCIDENCE_BASE,
-                                                    "cumulative_prop": 6589234 / 332099456. * INCIDENCE_BASE},
+                                                    "incidence": 6588748 / 332099456 *\
+                                                                 INCIDENCE_BASE,
+                                                    "cumulative_prop": 6589234 / 332099456. *\
+                                                                       INCIDENCE_BASE},
                                                    index=[0])
                                       )
         # Make sure the prop signals don't have inf values
@@ -110,8 +115,9 @@ class TestGeoMap:
             # Check that the non-proportional columns are identical
             assert new_df.eq(test_df)[["new_counts", "population", "cumulative_counts"]].all().all()
             # Check that the proportional signals are identical
-            exp_incidence = test_df["new_counts"] / test_df["population"] * INCIDENCE_BASE
-            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"] * INCIDENCE_BASE
+            exp_incidence = test_df["new_counts"] / test_df["population"]  * INCIDENCE_BASE
+            expected_cumulative_prop = test_df["cumulative_counts"] / test_df["population"] *\
+                INCIDENCE_BASE
             assert new_df["incidence"].eq(exp_incidence).all()
             assert new_df["cumulative_prop"].eq(expected_cumulative_prop).all()
             # Make sure the prop signals don't have inf values

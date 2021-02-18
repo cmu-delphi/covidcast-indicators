@@ -114,7 +114,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
         signal_names = add_prefix(
             signals,
-            wip_signal=read_params()["wip_signal"])
+            wip_signal=read_params()["indicator"]["wip_signal"])
         self.updated_signal_names = signal_names
 
         # initialize members set in shift_dates().

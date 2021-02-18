@@ -12,9 +12,9 @@ from delphi_utils import read_params
 
 CONFIG = Config()
 PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,

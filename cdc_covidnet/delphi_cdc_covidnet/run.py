@@ -21,36 +21,36 @@ def run_module():
 
     logging.basicConfig(level=logging.DEBUG)
 
-    start_date = datetime.strptime(params["start_date"], "%Y-%m-%d")
+    start_date = datetime.strptime(params["indicator"]["start_date"], "%Y-%m-%d")
 
     # If no end_date is specified, assume it is the current date
-    if params["end_date"] == "":
+    if params["indicator"]["end_date"] == "":
         end_date = datetime.now()
     else:
-        end_date = datetime.strptime(params["end_date"], "%Y-%m-%d")
+        end_date = datetime.strptime(params["indicator"]["end_date"], "%Y-%m-%d")
 
     logging.info("start date:\t%s", start_date.date())
     logging.info("end date:\t%s", end_date.date())
 
-    logging.info("outpath:\t%s", params["export_dir"])
-    logging.info("parallel:\t%s", params["parallel"])
+    logging.info("outpath:\t%s", params["common"]["export_dir"])
+    logging.info("parallel:\t%s", params["indicator"]["parallel"])
 
     # Only geo is state, and no weekday adjustment for now
     # COVID-NET data is by weeks anyway, not daily
     logging.info("starting state, no adj")
 
     # Download latest COVID-NET files into the cache directory first
-    mappings_file = join(params["cache_dir"], "init.json")
+    mappings_file = join(params["indicator"]["input_cache_dir"], "init.json")
     CovidNet.download_mappings(outfile=mappings_file)
     _, mmwr_info, _ = CovidNet.read_mappings(mappings_file)
     state_files = CovidNet.download_all_hosp_data(
-        mappings_file, params["cache_dir"],
-        parallel=params["parallel"])
+        mappings_file, params["indicator"]["input_cache_dir"],
+        parallel=params["indicator"]["parallel"])
 
     update_sensor(
         state_files,
         mmwr_info,
-        params["export_dir"],
+        params["common"]["export_dir"],
         start_date,
         end_date)
 

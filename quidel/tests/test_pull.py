@@ -41,7 +41,7 @@ class TestingPullData:
         
         params = read_params()
         
-        dfs, _ = pull_quidel_data(params) 
+        dfs, _ = pull_quidel_data(params["indicator"]) 
         
         # For covid_ag
         df = dfs["covid_ag"]

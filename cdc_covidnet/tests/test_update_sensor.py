@@ -10,7 +10,7 @@ from delphi_utils import read_params
 from delphi_cdc_covidnet.update_sensor import update_sensor
 
 params = read_params()
-STATIC_DIR = params["static_file_dir"]
+STATIC_DIR = params["indicator"]["static_file_dir"]
 
 class TestUpdateSensor:
 

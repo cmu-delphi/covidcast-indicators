@@ -28,6 +28,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+covidcast.covidcast._ASYNC_CALL = True
+
 
 def check_none_data_frame(data_frame, label, date_range):
     """Log and return True when a data frame is None."""
@@ -251,7 +253,6 @@ def run_module(params):
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
-
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)

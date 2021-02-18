@@ -28,7 +28,7 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
-covidcast.covidcast._ASYNC_CALL = True
+covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 
 def check_none_data_frame(data_frame, label, date_range):
@@ -253,6 +253,7 @@ def run_module(params):
             df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -13,9 +13,8 @@ from delphi_hhs_facilities.constants import GEO_RESOLUTIONS, SIGNALS
 
 class TestRun:
 
-    @patch("delphi_hhs_facilities.run.read_params")
     @patch("delphi_hhs_facilities.run.pull_data")
-    def test_run_module(self, pull_data, params):
+    def test_run_module(self, pull_data):
         pull_data.return_value = pd.DataFrame({
             "timestamp": [pd.Timestamp("20200201")]*4,
             "fips_code": ["25013", "25013", np.nan, np.nan],
@@ -29,8 +28,8 @@ class TestRun:
         with tempfile.TemporaryDirectory() as tmp:
             # when adding tests for new signals, change tmp to './expected' to generate new expected files.
             # tests will fail but the files will be created.
-            params.return_value = {"common": {"export_dir": tmp}}
-            run_module()
+            params = {"common": {"export_dir": tmp}}
+            run_module(params)
             expected_files = ["_".join(["20200131", geo, sig[0]]) + ".csv" for geo, sig
                               in product(GEO_RESOLUTIONS, SIGNALS)]
             assert sorted(os.listdir(tmp)) == sorted(expected_files)

@@ -219,7 +219,7 @@ def pull_quidel_covidtest(params):
     """
     cache_dir = params["input_cache_dir"]
 
-    test_mode = (params["mode"] == "test")
+    test_mode = params["test_mode"]
 
     # pull new data only that has not been ingested
     previous_df, pull_start_date = check_intermediate_file(

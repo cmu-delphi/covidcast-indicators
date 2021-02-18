@@ -16,6 +16,6 @@
     },
     "bucket_name": "",
     "wip_signal": [""],
-    "mode": ""
+    "test_mode": false
   }
 }

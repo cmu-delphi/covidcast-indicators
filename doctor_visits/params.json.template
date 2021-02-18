@@ -3,7 +3,6 @@
     "export_dir": "./receiving"
   },
   "indicator": {
-    "static_file_dir": "./static",
     "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
     "drop_date": "",
     "n_backfill_days": 60,

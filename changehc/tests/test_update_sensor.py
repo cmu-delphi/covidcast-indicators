@@ -11,15 +11,19 @@ from boto3 import Session
 from moto import mock_s3
 import pytest
 
-# third party
-from delphi_utils import read_params
 
 # first party
 from delphi_changehc.config import Config
 from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
-PARAMS = read_params()
+PARAMS = {
+    "indicator": {
+        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat",
+        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat",
+        "drop_date": "2020-02-02"
+    }
+}
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
@@ -49,7 +53,8 @@ class TestCHCSensorUpdator:
             self.parallel,
             self.weekday,
             self.numtype,
-            self.se
+            self.se,
+            ""
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -72,7 +77,8 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.shift_dates()
             data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
@@ -91,7 +97,8 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.update_sensor(self.small_test_data,  td.name)
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\

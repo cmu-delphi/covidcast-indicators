@@ -1,7 +1,7 @@
+from datetime import datetime
 from os.path import join, exists
 
 import pandas as pd
-from datetime import datetime
 
 from delphi_nchs_mortality.export import export_csv
 
@@ -29,7 +29,7 @@ class TestExport:
         )
 
         # check data for 2020-06-02
-        expected_name = f"weekly_202023_state_region_thing.csv"
+        expected_name = "weekly_202023_state_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))
@@ -40,7 +40,7 @@ class TestExport:
         assert (output_data.sample_size.values == [100, 500, 80]).all()
 
         # check data for 2020-06-03
-        expected_name = f"weekly_202024_state_region_thing.csv"
+        expected_name = "weekly_202024_state_region_thing.csv"
         assert exists(join("./receiving", expected_name))
 
         output_data = pd.read_csv(join("./receiving", expected_name))

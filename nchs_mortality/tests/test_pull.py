@@ -1,22 +1,15 @@
 import pytest
 
-from os.path import join
-
 import pandas as pd
-from delphi_utils import read_params
+from delphi_utils.geomap import GeoMapper
 
 from delphi_nchs_mortality.pull import pull_nchs_mortality_data, standardize_columns
 from delphi_nchs_mortality.constants import METRICS
 
-params = read_params()
-export_start_date = params["indicator"]["export_start_date"]
-export_dir = params["common"]["export_dir"]
-static_file_dir = params["indicator"]["static_file_dir"]
-token = params["indicator"]["token"]
+# export_start_date = PARAMS["indicator"]["export_start_date"]
+EXPORT_DIR = "./receiving"
+TOKEN = ""
 
-map_df = pd.read_csv(
-    join(static_file_dir, "state_pop.csv"), dtype={"fips": int}
-)
 
 class TestPullNCHS:
     def test_standardize_columns(self):
@@ -34,17 +27,17 @@ class TestPullNCHS:
             "pneumonia_influenza_or_covid_19_deaths": [8]
         })
         pd.testing.assert_frame_equal(expected, df)
-        
+
     def test_good_file(self):
-        df = pull_nchs_mortality_data(token, map_df, "test_data.csv")
-        
+        df = pull_nchs_mortality_data(TOKEN, "test_data.csv")
+
         # Test columns
         assert (df.columns.values == [
                 'covid_19_deaths', 'total_deaths', 'percent_of_expected_deaths',
                 'pneumonia_deaths', 'pneumonia_and_covid_19_deaths',
                 'influenza_deaths', 'pneumonia_influenza_or_covid_19_deaths',
                 "timestamp", "geo_id", "population"]).all()
-    
+
         # Test aggregation for NYC and NY
         raw_df = pd.read_csv("./test_data/test_data.csv", parse_dates=["start_week"])
         raw_df = standardize_columns(raw_df)
@@ -58,7 +51,14 @@ class TestPullNCHS:
             assert set(final_list) == set(ny_list).intersection(set(nyc_list))
 
         # Test missing value
-        for state, geo_id in zip(map_df["state"], map_df["geo_id"]):
+        gmpr = GeoMapper()
+        state_ids = pd.DataFrame(list(gmpr.get_geo_values("state_id")))
+        state_names = gmpr.replace_geocode(state_ids,
+                                           "state_id",
+                                           "state_name",
+                                           from_col=0,
+                                           date_col=None)
+        for state, geo_id in zip(state_names, state_ids):
             if state in set(["New York", "New York City"]):
                 continue
             for metric in METRICS:
@@ -70,13 +70,8 @@ class TestPullNCHS:
 
     def test_bad_file_with_inconsistent_time_col(self):
         with pytest.raises(ValueError):
-            df = pull_nchs_mortality_data(token, map_df,
-                                          "bad_data_with_inconsistent_time_col.csv")
-      
-    def test_bad_file_with_inconsistent_time_col(self):
+            pull_nchs_mortality_data(TOKEN, "bad_data_with_inconsistent_time_col.csv")
+
+    def test_bad_file_with_missing_cols(self):
         with pytest.raises(ValueError):
-            df = pull_nchs_mortality_data(token, map_df,
-                                          "bad_data_with_missing_cols.csv")
-
-    
-
+            pull_nchs_mortality_data(TOKEN, "bad_data_with_missing_cols.csv")

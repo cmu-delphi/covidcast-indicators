@@ -10,7 +10,6 @@ from itertools import product
 
 import numpy as np
 from delphi_utils import (
-    read_params,
     create_export_csv,
     geomap,
     get_structured_logger
@@ -22,24 +21,39 @@ from .geo import geo_map
 from .pull import pull_gs_data
 
 
-def run_module():
-    """Run Google Symptoms module."""
+def run_module(params):
+    """
+    Run Google Symptoms module.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, YYYY-MM-DD format, date from which to export data
+        - "num_export_days": int, number of days before end date (today) to export
+        - "path_to_bigquery_credentials": str, path to BigQuery API key and service account
+            JSON file
+    """
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
 
-    params = read_params()
     export_start_date = datetime.strptime(
-        params["export_start_date"], "%Y-%m-%d")
-    export_dir = params["export_dir"]
-    num_export_days = params.get("num_export_days", "all")
+        params["indicator"]["export_start_date"], "%Y-%m-%d")
+    export_dir = params["common"]["export_dir"]
+    num_export_days = params["indicator"].get("num_export_days", "all")
 
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     # Pull GS data
-    dfs = pull_gs_data(params["path_to_bigquery_credentials"],
+    dfs = pull_gs_data(params["indicator"]["path_to_bigquery_credentials"],
                        export_start_date,
                        num_export_days)
     gmpr = geomap.GeoMapper()

@@ -4,16 +4,39 @@ from os.path import join
 
 import pandas as pd
 
-from delphi_utils import read_params, add_prefix
+from delphi_utils import add_prefix
 from delphi_quidel_covidtest.constants import GEO_RESOLUTIONS, SENSORS
+from delphi_quidel_covidtest.run import run_module
 
 
 class TestRun:
     """Tests for run_module()."""
-    def test_output_files(self, run_as_module):
+
+    PARAMS = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "static_file_dir": "../static",
+            "input_cache_dir": "./cache",
+            "export_start_date": "2020-06-30",
+            "export_end_date": "",
+            "pull_start_date": "2020-07-09",
+            "pull_end_date":"",
+            "aws_credentials": {
+                "aws_access_key_id": "",
+                "aws_secret_access_key": ""
+            },
+            "bucket_name": "",
+            "wip_signal": "",
+            "test_mode": True
+        }
+    }
+
+    def test_output_files(self, clean_receiving_dir):
         """Tests that the proper files are output."""
 
-        # Test output exists
+        run_module(self.PARAMS)
         csv_files = listdir("receiving")
 
         dates = [
@@ -23,7 +46,7 @@ class TestRun:
         ]
         geos = GEO_RESOLUTIONS.copy()
         sensors = add_prefix(SENSORS,
-                             wip_signal=read_params()["indicator"]["wip_signal"],
+                             wip_signal=self.PARAMS["indicator"]["wip_signal"],
                              prefix="wip_")
 
         expected_files = []

@@ -337,7 +337,7 @@ def pull_quidel_data(params):
     password = params["password"]
     sender = params["sender"]
 
-    test_mode = (params["mode"] == "test")
+    test_mode = params["test_mode"]
 
     # pull new data only that has not been ingested
     previous_dfs, pull_start_dates = check_intermediate_file(

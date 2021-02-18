@@ -72,6 +72,7 @@ def run_module(params):
         Dictionary containing indicator configuration. Expected to have the following structure:
         - "common":
             - "export_dir": str, directory to write output
+            - "log_filename" (optional): str, name of file to write logs
     """
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))

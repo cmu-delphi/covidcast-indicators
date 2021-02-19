@@ -1,8 +1,6 @@
 """Tests for run.py."""
 import os
 
-import pandas as pd
-
 from delphi_doctor_visits.run import run_module
 
 EXPORT_DIR = "./receiving"

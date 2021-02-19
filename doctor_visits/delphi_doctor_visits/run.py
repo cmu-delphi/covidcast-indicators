@@ -10,9 +10,6 @@ import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 
-#  third party
-from delphi_utils import read_params
-
 # first party
 from .update_sensor import update_sensor, write_to_csv
 
@@ -33,8 +30,9 @@ def run_module(params):
                empty string, current day minus 40 hours is used.
             - "n_backfill_days": int, number of past days to generate estimates for.
             - "n_waiting_days": int, number of most recent days to skip estimates for.
-            - "weekday": list of bool, which weekday adjustments to perform. For each value in the list, signals will
-                be generated with weekday adjustments (True) or without adjustments (False)
+            - "weekday": list of bool, which weekday adjustments to perform. For each value in the
+                list, signals will be generated with weekday adjustments (True) or without
+                adjustments (False)
             - "se": bool, whether to write out standard errors
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
@@ -58,7 +56,7 @@ def run_module(params):
 
     # range of estimates to produce
     n_backfill_days = params["indicator"]["n_backfill_days"] # produce estimates for n_backfill_days
-    n_waiting_days = params["indicator"]["n_waiting_days"]  # most recent n_waiting_days won't be est
+    n_waiting_days = params["indicator"]["n_waiting_days"] # most recent n_waiting_days won't be est
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     enddate = str(enddate_dt.date())

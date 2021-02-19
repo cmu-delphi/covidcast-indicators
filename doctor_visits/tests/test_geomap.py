@@ -1,5 +1,3 @@
-import pytest
-
 import pandas as pd
 
 from delphi_doctor_visits.geo_maps import GeoMaps

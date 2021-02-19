@@ -136,7 +136,7 @@ def update_sensor(
     params = Weekday.get_params(data) if weekday else None
 
     # handle explicitly if we need to use Jeffreys estimate for binomial proportions
-    jeffreys = True if se else False
+    jeffreys = bool(se)
 
     # get right geography
     geo_map = GeoMaps()

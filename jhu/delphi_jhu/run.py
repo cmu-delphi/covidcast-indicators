@@ -7,10 +7,10 @@ when the module is run with `python -m MODULE_NAME`.
 from datetime import datetime
 from itertools import product
 import time
+from typing import Dict, Any
 
 import numpy as np
 from delphi_utils import (
-    read_params,
     create_export_csv,
     S3ArchiveDiffer,
     Smoother,
@@ -63,12 +63,25 @@ GEO_RESOLUTIONS = [
 ]
 
 
-def run_module():
-    """Run the JHU indicator module."""
+def run_module(params: Dict[str, Any]):
+    """Run the JHU indicator module.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "base_url": str, URL from which to read upstream data
+        - "export_start_date": str, date from which to export data in YYYY-MM-DD format
+    - "archive" (optional): if provided, output will be archived with S3
+        - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+        - "bucket_name: str, name of S3 bucket to read/write
+        - "cache_dir": str, directory of locally cached data
+    """
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
-    params = read_params()
     export_start_date = params["indicator"]["export_start_date"]
     export_dir = params["common"]["export_dir"]
     base_url = params["indicator"]["base_url"]
@@ -130,7 +143,7 @@ def run_module():
             oldest_final_export_date = min(
                 oldest_final_export_date, max(exported_csv_dates))
 
-    if not arch_diff is None:
+    if arch_diff is not None:
         # Diff exports, and make incremental versions
         _, common_diffs, new_files = arch_diff.diff_exports()
 

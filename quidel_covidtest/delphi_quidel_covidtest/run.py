@@ -30,7 +30,7 @@ def log_exit(start_time, logger):
     """Log at program exit"""
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds=elapsed_time_in_seconds)
 
 def run_module():
     """Run the quidel_covidtest indicator."""

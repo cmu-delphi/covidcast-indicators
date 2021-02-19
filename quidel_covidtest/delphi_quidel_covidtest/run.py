@@ -57,13 +57,13 @@ def run_module(params: Dict[str, Any]):
     """
     start_time = time.time()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
     atexit.register(log_exit, start_time, logger)
-    cache_dir = params["cache_dir"]
-    export_dir = params["export_dir"]
-    export_start_date = params["export_start_date"]
-    export_end_date = params["export_end_date"]
+    cache_dir = params["indicator"]["input_cache_dir"]
+    export_dir = params["common"]["export_dir"]
+    export_start_date = params["indicator"]["export_start_date"]
+    export_end_date = params["indicator"]["export_end_date"]
 
     # Pull data and update export date
     df, _end_date = pull_quidel_covidtest(params["indicator"])

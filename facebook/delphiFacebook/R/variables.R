@@ -217,6 +217,12 @@ code_testing <- function(input_data) {
     input_data$t_tested_positive_14d <- NA
     input_data$t_wanted_test_14d <- NA
   }
+  
+  if ( "B10b" %in% names(input_data) ) {
+    input_data$t_screening_tested_positive_14d <- NA_real_
+  } else {
+    input_data$t_screening_tested_positive_14d <- NA_real_
+  }
   return(input_data)
 }
 

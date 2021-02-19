@@ -84,7 +84,10 @@ class TestDataTools:
         tpooled_tests = np.array([1, 2, 3, 4])
         tpooled_ptests = np.array([2, 4, 6, 8])
         assert np.array_equal(
-            data_tools._geographical_pooling(tpooled_tests, tpooled_ptests, min_obs, max_borrow_obs),
+            data_tools._geographical_pooling(tpooled_tests,
+                                             tpooled_ptests,
+                                             min_obs,
+                                             max_borrow_obs),
             expected)
         # nan case
         with pytest.raises(ValueError):
@@ -143,8 +146,8 @@ class TestDataTools:
                                     parent_tests, expected_prop, expected_se, expected_sample_sz):
         positives = np.array([1, 2, 3, 4])
         tests = np.array([2, 4, 6, 10])
-        output = data_tools.smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs, pool_days,
-                                                   parent_positives, parent_tests)
+        output = data_tools.smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs,
+                                                   pool_days, parent_positives, parent_tests)
         assert np.allclose(output[0], expected_prop, equal_nan=True)
         assert np.allclose(output[1], expected_se, equal_nan=True)
         assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
@@ -219,8 +222,9 @@ class TestDataTools:
          np.array([3, 6, 10, 16]),
          ),
     ])
-    def test_smoothed_tests_per_device(self, min_obs, max_borrow_obs, pool_days, parent_devices, parent_tests,
-                                       expected_prop, expected_se, expected_sample_sz):
+    def test_smoothed_tests_per_device(self, min_obs, max_borrow_obs, pool_days, parent_devices,
+                                       parent_tests, expected_prop, expected_se,
+                                       expected_sample_sz):
         devices = np.array([1, 2, 10, 4])
         tests = np.array([2, 4, 6, 10])
         output = data_tools.smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs,

@@ -1,3 +1,5 @@
 {
-  "export_dir": "./receiving"
+  "common": {
+    "export_dir": "./receiving"
+  }
 }

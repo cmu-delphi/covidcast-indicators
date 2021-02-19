@@ -1,18 +1,23 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "data_dir": "./data",
-  "start_date": "",
-  "end_date": "",
-  "ght_key": "",
-  "wip_signal" : "",
-  "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
   },
-  "bucket_name": "",
-  "test": false,
-  "test_data_dir": "",
-  "log_exceptions": false
+  "indicator": {
+    "static_file_dir": "./static",
+    "data_dir": "./data",
+    "start_date": "",
+    "end_date": "",
+    "ght_key": "",
+    "wip_signal" : "",
+    "test_data_dir": ""
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "cache_dir": "./cache"
+  }
 }

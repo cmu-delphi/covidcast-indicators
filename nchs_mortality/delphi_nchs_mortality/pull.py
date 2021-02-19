@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling NCHS mortality data API."""
+
+from typing import Optional
+
 import numpy as np
 import pandas as pd
 from sodapy import Socrata
+
+from delphi_utils.geomap import GeoMapper
+
 from .constants import METRICS, RENAME, NEWLINE
 
 def standardize_columns(df):
@@ -16,7 +22,7 @@ def standardize_columns(df):
     return df.rename(columns=dict(rename_pairs))
 
 
-def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
+def pull_nchs_mortality_data(token: str, test_file: Optional[str]=None):
     """Pull the latest NCHS Mortality data, and conforms it into a dataset.
 
     The output dataset has:
@@ -34,10 +40,8 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     ----------
     token: str
         My App Token for pulling the NCHS mortality data
-    map_df: pd.DataFrame
-        Read from static file "state_pop.csv".
-    test_mode:str
-        Check whether to run in a test mode
+    test_file: Optional[str]
+        When not null, name of file from which to read test data
 
     Returns
     -------
@@ -49,15 +53,15 @@ def pull_nchs_mortality_data(token: str, map_df: pd.DataFrame, test_mode: str):
     type_dict = {key: float for key in keep_columns}
     type_dict["timestamp"] = 'datetime64[ns]'
 
-    if test_mode == "":
+    if test_file:
+        df = pd.read_csv("./test_data/%s"%test_file)
+    else:
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", token)
         results = client.get("r8kw-7aab", limit=10**10)
         df = pd.DataFrame.from_records(results)
         # drop "By Total" rows
         df = df[df["group"].transform(str.lower) == "by week"]
-    else:
-        df = pd.read_csv("./test_data/%s"%test_mode)
 
     df = standardize_columns(df)
 
@@ -109,9 +113,9 @@ Columns available:
     # Drop NYC and NY in the full dataset
     df = df.loc[~df["state"].isin(["New York", "New York City"]), :]
     df = df.append(df_ny).reset_index().sort_values(["state", "timestamp"])
-
     # Add population info
     keep_columns.extend(["timestamp", "geo_id", "population"])
-    df = df.merge(map_df, on="state")[keep_columns]
-
-    return df
+    gmpr = GeoMapper()
+    df = gmpr.add_population_column(df, "state_name", geocode_col="state")
+    df = gmpr.add_geocode(df, "state_name", "state_id", from_col="state", new_col="geo_id")
+    return df[keep_columns]

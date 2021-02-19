@@ -7,7 +7,6 @@ when the module is run with `python -m delphi_hhs`.
 from datetime import date, datetime, timedelta
 
 from delphi_epidata import Epidata
-from delphi_utils import read_params
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 import numpy as np
@@ -63,20 +62,32 @@ def generate_date_ranges(start, end):
     return output
 
 
-def run_module():
-    """Generate ground truth HHS hospitalization data."""
-    params = read_params()
+def run_module(params):
+    """
+    Generate ground truth HHS hospitalization data.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output
+            - "log_filename" (optional): str, name of file to write logs
+    """
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
 
     today = date.today()
-    past_reference_day = date(year=2020, month=1, day=1) # first available date in DB
+    past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
     date_range = generate_date_ranges(past_reference_day, today)
     dfs = []
     for r in date_range:
         response = Epidata.covid_hosp(request_all_states, r)
-        if response['result'] != 1:
+        # The last date range might only have recent days that don't have any data, so don't error.
+        if response["result"] != 1 and r != date_range[-1]:
             raise Exception(f"Bad result from Epidata: {response['message']}")
+        if response["result"] == -2 and r == date_range[-1]:  # -2 code means no results
+            continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
 
@@ -89,14 +100,13 @@ def run_module():
         for geo in GEOS:
             create_export_csv(
                 make_geo(state, geo, geo_mapper),
-                params["export_dir"],
+                params["common"]["export_dir"],
                 geo,
                 sig
             )
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
-    exported = None
     if geo == "state":
         exported = state.rename(columns={"state":"geo_id"})
     else:

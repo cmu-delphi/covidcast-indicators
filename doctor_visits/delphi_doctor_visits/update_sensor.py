@@ -77,7 +77,7 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
 
 
 def update_sensor(
-        filepath, outpath, staticpath, startdate, enddate, dropdate, geo, parallel,
+        filepath, outpath, startdate, enddate, dropdate, geo, parallel,
         weekday, se, prefix=None
 ):
     """Generate sensor values, and write to csv format.
@@ -85,7 +85,6 @@ def update_sensor(
     Args:
       filepath: path to the aggregated doctor-visits data
       outpath: output path for the csv results
-      staticpath: path for the static geographic files
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)

@@ -6,7 +6,7 @@ import pandas as pd
 from delphi_doctor_visits.run import run_module
 
 EXPORT_DIR = "./receiving"
-COMPARISON_DIR = "./comparison"
+COMPARISON_DIR = "./comparison/run"
 
 class TestRun:
     PARAMS = {

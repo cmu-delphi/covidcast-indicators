@@ -19,6 +19,9 @@ split_options <- function(column) {
 
 #' Test if a specific selection is selected
 #'
+#' Checking whether a specific selection is selected in either "" (empty
+#' string) or `NA` responses will produce `NA`s.
+#'
 #' @param vec A list whose entries are character vectors, such as c("14", "15").
 #' @param selection one string, such as "14"
 #' @return a logical vector; for each list entry, whether selection is contained
@@ -28,8 +31,10 @@ is_selected <- function(vec, selection) {
     vec,
     function(resp) {
       if (length(resp) == 0 || all(is.na(resp))) {
-        # All our selection items include "None of the above" or similar, so
-        # treat no selection the same as missingness.
+        # Qualtrics files code no selection as "" (empty string), which is
+        # parsed by `read_csv` as `NA` (missing) by default. Since all our
+        # selection items include "None of the above" or similar, treat both no
+        # selection ("") or missing (NA) as missing, for generality.
         NA
       } else {
         selection %in% resp

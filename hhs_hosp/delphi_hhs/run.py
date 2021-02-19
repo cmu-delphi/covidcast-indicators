@@ -6,9 +6,11 @@ when the module is run with `python -m delphi_hhs`.
 """
 from datetime import date, datetime, timedelta
 
+import time
 from delphi_epidata import Epidata
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
+from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
@@ -74,9 +76,12 @@ def run_module(params):
             - "export_dir": str, directory to write output
             - "log_filename" (optional): str, name of file to write logs
     """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
-
     today = date.today()
     past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
     date_range = generate_date_ranges(past_reference_day, today)
@@ -104,6 +109,10 @@ def run_module(params):
                 geo,
                 sig
             )
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""

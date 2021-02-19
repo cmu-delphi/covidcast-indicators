@@ -38,7 +38,7 @@ def run_module(params) -> None:
         mapped_df = convert_geo(filled_fips_df, geo, gmpr)
         output_df = generate_signal(mapped_df, sig_cols, sig_func, sig_offset)
         create_export_csv(output_df, params["common"]["export_dir"], geo, sig_name)
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
                 elapsed_time_in_seconds=elapsed_time_in_seconds)

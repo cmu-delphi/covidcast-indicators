@@ -109,7 +109,7 @@ def run_module(params):
                 geo,
                 sig
             )
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)

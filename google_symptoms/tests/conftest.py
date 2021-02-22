@@ -69,7 +69,7 @@ def run_as_module():
         "indicator": {
             "export_start_date": "2020-02-20",
             "num_export_days": 14,
-            "path_to_bigquery_credentials": "",
+            "bigquery_credentials": {},
             "static_file_dir": "../static"
         }
     }

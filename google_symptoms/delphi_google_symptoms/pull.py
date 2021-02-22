@@ -236,33 +236,33 @@ def pull_gs_data_one_geolevel(level, date_range):
     return df
 
 
-def initialize_credentials(path_to_credentials):
+def initialize_credentials(credentials):
     """Provide pandas_gbq with BigQuery credentials.
 
     Parameters
     ----------
-    path_to_credentials: str
-        Path to BigQuery API key and service account json file
+    credentials: dict
+        Dict of BigQuery API credentials from service account json file
 
     Returns
     -------
     None
     """
-    credentials = service_account.Credentials.from_service_account_file(
-        path_to_credentials)
+    credentials = service_account.Credentials.from_service_account_info(
+        credentials)
     pandas_gbq.context.credentials = credentials
     pandas_gbq.context.project = credentials.project_id
 
 
-def pull_gs_data(path_to_credentials, export_start_date, num_export_days):
+def pull_gs_data(credentials, export_start_date, num_export_days):
     """Pull latest dataset for each geo level and combine.
 
     PS:  No information for PR
 
     Parameters
     ----------
-    path_to_credentials: str
-        Path to BigQuery API key and service account json file
+    credentials: dict
+        Dict of BigQuery API credentials from service account json file
     level: str
         "county" or "state"
     export_start_date: date
@@ -278,7 +278,7 @@ def pull_gs_data(path_to_credentials, export_start_date, num_export_days):
     retrieve_dates = get_date_range(export_start_date, num_export_days)
     retrieve_dates = format_dates_for_query(retrieve_dates)
 
-    initialize_credentials(path_to_credentials)
+    initialize_credentials(credentials)
 
     # Create dictionary for state and county level data
     dfs = {}

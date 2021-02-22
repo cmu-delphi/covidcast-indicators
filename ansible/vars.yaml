@@ -9,7 +9,7 @@ package: "{{ indicator }}.tar.gz" # {{ indicator }} is passed in from the Jenkin
 python_version: "3.8.2"
 pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }}/bin/python"
 
-# Indicators variables.
+# Indicators variables
 google_health_api_key: "{{ vault_google_health_api_key }}"
 delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
 delphi_aws_secret_access_key: "{{ vault_delphi_aws_secret_access_key }}"
@@ -24,3 +24,14 @@ changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"
+## Google Symptoms
+google_symptoms_account_type: "{{ vault_google_symptoms_account_type }}"
+google_symptoms_project_id: "{{ vault_google_symptoms_project_id }}"
+google_symptoms_private_key_id: "{{ vault_google_symptoms_private_key_id }}"
+google_symptoms_private_key: "{{ vault_google_symptoms_private_key }}"
+google_symptoms_client_email: "{{ vault_google_symptoms_client_email }}"
+google_symptoms_client_id: "{{ vault_google_symptoms_account_type_client_id }}"
+google_symptoms_auth_uri: "{{ vault_google_symptoms_auth_uri }}"
+google_symptoms_token_uri: "{{ vault_google_symptoms_token_uri }}"
+google_symptoms_auth_provider_x509_cert_url: "{{ vault_google_symptoms_auth_provider_x509_cert_url }}"
+google_symptoms_client_x509_cert_url: "{{ vault_google_symptoms_client_x509_cert_url }}"

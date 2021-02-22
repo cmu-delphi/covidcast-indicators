@@ -29,12 +29,34 @@ class TestRun:
         csv_files = listdir("receiving")
 
         dates = [
-            "20190722", "20190723", "20190724", "20190725", "20190726",
-            "20190727", "20190728", "20190729", "20190730", "20190731",
-            "20190801", "20190802", "20190803", "20190804",
-            "20200727", "20200728", "20200729", "20200730", "20200731",
-            "20200801", "20200802", "20200803", "20200804", "20200805",
-            "20200806", "20200807", "20200808", "20200809"
+            "20190722",
+            "20190723",
+            "20190724",
+            "20190725",
+            "20190726",
+            "20190727",
+            "20190728",
+            "20190729",
+            "20190730",
+            "20190731",
+            "20190801",
+            "20190802",
+            "20190803",
+            "20190804",
+            "20200727",
+            "20200728",
+            "20200729",
+            "20200730",
+            "20200731",
+            "20200801",
+            "20200802",
+            "20200803",
+            "20200804",
+            "20200805",
+            "20200806",
+            "20200807",
+            "20200808",
+            "20200809",
         ]
 
         expected_files = []
@@ -48,7 +70,14 @@ class TestRun:
         assert set(expected_files).issubset(set(csv_files))
 
         # Test output format
-        df = pd.read_csv(
-            join("./receiving", "20200729_state_bars_visit_num.csv")
-        )
-        assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
+        df = pd.read_csv(join("./receiving", "20200729_state_bars_visit_num.csv"))
+        expected_columns = [
+            "geo_id",
+            "val",
+            "se",
+            "sample_size",
+            "missing_val",
+            "missing_se",
+            "missing_sample_size",
+        ]
+        assert (df.columns.values == expected_columns).all()

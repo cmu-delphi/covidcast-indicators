@@ -13,7 +13,7 @@
       "flu_like": null,
       "covid_like": null
     },
-    "start_date": "2020-02-01",
+    "start_date": null,
     "end_date": null,
     "drop_date": null,
     "n_backfill_days": 60,

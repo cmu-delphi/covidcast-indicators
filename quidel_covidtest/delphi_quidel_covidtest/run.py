@@ -4,6 +4,7 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+import atexit
 import time
 from typing import Dict, Any
 
@@ -25,6 +26,11 @@ from .pull import (pull_quidel_covidtest,
                    check_export_end_date,
                    update_cache_file)
 
+def log_exit(start_time, logger):
+    """Log at program exit."""
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds)
 
 def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
@@ -53,6 +59,7 @@ def run_module(params: Dict[str, Any]):
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
+    atexit.register(log_exit, start_time, logger)
     cache_dir = params["indicator"]["input_cache_dir"]
     export_dir = params["common"]["export_dir"]
     export_start_date = params["indicator"]["export_start_date"]
@@ -115,7 +122,3 @@ def run_module(params: Dict[str, Any]):
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
     update_cache_file(df, _end_date, cache_dir)
-
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -177,15 +177,9 @@ run_contingency_tables <- function(params) {
       params$parallel <- FALSE
     } else {
       options(mc.cores = cores)
+      msg_plain(paste0("Running on ", cores, " cores"))
     }
   }
-  
-  if (params$parallel) {
-    msg_plain(paste0("Running on ", cores, " cores"))
-  } else {
-    msg_plain("Not running in parallel")
-  }
-  
   
   if (params$aggregate_range == "week") {
     run_contingency_tables_many_periods(params, aggs$week)
@@ -201,9 +195,9 @@ run_contingency_tables <- function(params) {
 }
 
 
-#' Wrapper that runs `run_contingency_tables_many_periods_one_period` over several time periods
+#' Wrapper that runs `run_contingency_tables_one_period` over several time ranges
 #'
-#' Allows pipeline to be create a series of CSVs for a range of dates.
+#' Allows pipeline to create a series of CSVs for a range of dates.
 #'
 #' @param params    Params object produced by read_params
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -221,28 +215,31 @@ run_contingency_tables <- function(params) {
 #' @importFrom lubridate ymd days
 run_contingency_tables_many_periods <- function(params, aggregations)
 {
-  if (!is.null(params$end_date) & !is.null(params$n_periods)) {
-    ## Produce historical CSVs
+  if (!is.null(params$n_periods)) {
+    msg_plain(paste0("Producing CSVs for ", params$n_periods + 1, " time periods"))
 
     if (params$aggregate_range == "week") {
       period_step <- days(7)
     } else if (params$aggregate_range == "month") {
       period_step <- months(1)
     } else if (is.null(params$aggregate_range)) {
-      stop("setting aggregate_range must be provided in params")
+      stop("aggregate_range setting must be provided in params")
     }
 
+    params$end_date <- ifelse(
+      is.null(params$end_date), as.character(Sys.Date()), params$end_date
+    )
     # Make list of dates to aggregate over.
     end_dates <- sort( ymd(params$end_date) - period_step * seq(0, params$n_periods) )
 
     for (end_date in end_dates) {
       period_params <- params
       period_params$end_date <- end_date
-      run_contingency_tables_many_periods_one_period(period_params, aggregations)
+      run_contingency_tables_one_period(period_params, aggregations)
     }
   } else {
     ## Produce CSVs for a single time period
-    run_contingency_tables_many_periods_one_period(params, aggregations)
+    run_contingency_tables_one_period(params, aggregations)
   }
 
 
@@ -262,10 +259,12 @@ run_contingency_tables_many_periods <- function(params, aggregations)
 #'   calculations necessary.
 #'
 #' @return none
-run_contingency_tables_many_periods_one_period <- function(params, aggregations)
+run_contingency_tables_one_period <- function(params, aggregations)
 {
   params <- update_params(params)
   aggregations <- verify_aggs(aggregations)
+  
+  msg_plain(paste0("Producing aggregtes for ", params$start_date, " through ", params$end_date))
 
   if (nrow(aggregations) > 0) {
     cw_list <- produce_crosswalk_list(params$static_dir)

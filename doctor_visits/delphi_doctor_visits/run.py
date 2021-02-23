@@ -101,7 +101,7 @@ def run_module(params):
                 assert prefix is not None, "template has no obfuscated prefix"
                 out_name = prefix + "_" + out_name
 
-            write_to_csv(sensor, se, out_name, export_dir)
+            write_to_csv(sensor, geo, se, out_name, export_dir)
             logging.debug(f"wrote files to {export_dir}")
         logging.info("finished %s", geo)
 

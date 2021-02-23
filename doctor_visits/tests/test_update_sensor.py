@@ -34,7 +34,7 @@ class TestUpdateSensor:
             assert PREFIX is not None, "template has no obfuscated prefix"
             out_name = PREFIX + "_" + out_name
 
-        write_to_csv(actual, SE, out_name, EXPORT_DIR)
+        write_to_csv(actual, GEO, SE, out_name, EXPORT_DIR)
         for fname in os.listdir(EXPORT_DIR):
             if fname.startswith("."):
                 continue

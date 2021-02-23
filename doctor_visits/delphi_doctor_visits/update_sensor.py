@@ -24,7 +24,7 @@ from .sensor import DoctorVisitsSensor
 from .weekday import Weekday
 
 
-def write_to_csv(output_dict, se, out_name, output_path="."):
+def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="."):
     """Write sensor values to csv.
 
     Args:
@@ -37,42 +37,37 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
     if se:
         logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
-    geo_level = output_dict["geo_level"]
-    dates = output_dict["dates"]
-    all_rates = output_dict["rates"]
-    all_se = output_dict["se"]
-    all_include = output_dict["include"]
-
     out_n = 0
-    for i, d in enumerate(dates):
+    for d in set(output_df["date"]):
         filename = "%s/%s_%s_%s.csv" % (output_path,
                                         (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
                                         geo_level,
                                         out_name)
-
+        single_date_df = output_df[output_df["date"] == d]
         with open(filename, "w") as outfile:
             outfile.write("geo_id,val,se,direction,sample_size\n")
 
-            for geo_id in all_rates.keys():
-                sensor = all_rates[geo_id][i] * 100  # report percentage
-                se_val = all_se[geo_id][i] * 100
+            for line in single_date_df.itertuples():
+                if not line.incl:
+                    continue
+                geo_id = line.geo_id
+                sensor = 100 * line.rate # report percentages
+                se_val = 100 * line.se
+                assert not np.isnan(sensor), "sensor value is nan, check pipeline"
+                assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
+                if not np.isnan(se_val):
+                    assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
 
-                if all_include[geo_id][i]:
-                    assert not np.isnan(sensor), "sensor value is nan, check pipeline"
-                    assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
-                    if not np.isnan(se_val):
-                        assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
-
-                    if se:
-                        assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
-                        outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
-                    else:
-                        # for privacy reasons we will not report the standard error
-                        outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
-                    out_n += 1
-    logging.debug(f"wrote {out_n} rows for {len(all_rates)} {geo_level}")
+                if se:
+                    assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
+                    outfile.write(
+                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
+                else:
+                    # for privacy reasons we will not report the standard error
+                    outfile.write(
+                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
+                out_n += 1
+    logging.debug(f"wrote {out_n} rows for {geo_level}")
 
 
 def update_sensor(
@@ -156,9 +151,7 @@ def update_sensor(
     unique_geo_ids = list(data_groups.groups.keys())
 
     # run sensor fitting code (maybe in parallel)
-    sensor_rates = {}
-    sensor_se = {}
-    sensor_include = {}
+    out = []
     if not parallel:
         for geo_id in unique_geo_ids:
             sub_data = data_groups.get_group(geo_id).copy()
@@ -168,15 +161,15 @@ def update_sensor(
             res = DoctorVisitsSensor.fit(
                 sub_data,
                 fit_dates,
+                sensor_dates,
                 burn_in_dates,
+                final_sensor_idxs,
                 geo_id,
                 Config.MIN_RECENT_VISITS,
                 Config.MIN_RECENT_OBS,
                 jeffreys
             )
-            sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-            sensor_se[geo_id] = res["se"][final_sensor_idxs]
-            sensor_include[geo_id] = res["incl"][final_sensor_idxs]
+            out.append(res)
 
     else:
         n_cpu = min(10, cpu_count())
@@ -195,7 +188,9 @@ def update_sensor(
                         args=(
                             sub_data,
                             fit_dates,
+                            sensor_dates,
                             burn_in_dates,
+                            final_sensor_idxs,
                             geo_id,
                             Config.MIN_RECENT_VISITS,
                             Config.MIN_RECENT_OBS,
@@ -203,20 +198,6 @@ def update_sensor(
                         ),
                     )
                 )
-            pool_results = [proc.get() for proc in pool_results]
+            out = [proc.get() for proc in pool_results]
 
-            for res in pool_results:
-                geo_id = res["geo_id"]
-                sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-                sensor_se[geo_id] = res["se"][final_sensor_idxs]
-                sensor_include[geo_id] = res["incl"][final_sensor_idxs]
-
-    output_dict = {
-        "rates": sensor_rates,
-        "se": sensor_se,
-        "dates": sensor_dates,
-        "geo_level": geo,
-        "include": sensor_include,
-    }
-
-    return output_dict
+    return pd.concat(out)

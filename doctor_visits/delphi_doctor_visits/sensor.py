@@ -159,6 +159,8 @@ class DoctorVisitsSensor:
     def fit(y_data,
             fit_dates,
             sensor_dates,
+            burn_in_dates,
+            final_sensor_idxs,
             geo_id,
             recent_min_visits,
             min_recent_obs,
@@ -182,7 +184,7 @@ class DoctorVisitsSensor:
         """
         y_data.set_index("ServiceDate", inplace=True)
         y_data = DoctorVisitsSensor.fill_dates(y_data, fit_dates)
-        sensor_idxs = np.where(y_data.index >= sensor_dates[0])[0]
+        sensor_idxs = np.where(y_data.index >= burn_in_dates[0])[0]
         n_dates = y_data.shape[0]
 
         # combine Flu_like and Mixed columns
@@ -240,4 +242,8 @@ class DoctorVisitsSensor:
             np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
-        return {"geo_id": geo_id, "rate": new_rates, "se": se, "incl": include}
+        return pd.DataFrame(data = {"date": burn_in_dates[final_sensor_idxs][:len(sensor_dates)],
+                                    "geo_id": geo_id,
+                                    "rate": new_rates[final_sensor_idxs][:len(sensor_dates)],
+                                    "se": se[final_sensor_idxs][:len(sensor_dates)],
+                                    "incl": include[final_sensor_idxs][:len(sensor_dates)]})

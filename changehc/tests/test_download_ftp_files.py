@@ -51,13 +51,18 @@ class TestDownloadFTPFiles:
         get_files_from_dir(one_new_one_old, "00005566", "")
         assert one_new_one_old.num_gets == 1
 
-        # When three new files are present, AssertionError
-        new_file1 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo1")
-        new_file2 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo2")
-        new_file3 = self.FileAttr(dt.timestamp(dt.now()-timedelta(minutes=1)), "00001122_foo3")
-        three_new = self.MockSFTP([new_file1, new_file2, new_file3])
+        # When seven new files are present, AssertionError
+        new_file1 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo1")
+        new_file2 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo2")
+        new_file3 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo3")
+        new_file4 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo4")
+        new_file5 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo5")
+        new_file6 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo6")
+        new_file7 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo7")
+        seven_new = self.MockSFTP([new_file1, new_file2, new_file3, new_file4,
+                                    new_file5, new_file6, new_file7])
         with pytest.raises(AssertionError):
-            get_files_from_dir(three_new, "00001122", "")
+            get_files_from_dir(seven_new, "00001122", "")
 
         # When the file already exists, no files are downloaded
         mock_path.exists.return_value = True

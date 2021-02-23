@@ -12,12 +12,30 @@ test_that("is_selected handles selections correctly", {
   expect_equal(is_selected(split_options(c("", "14", "4", "4,6,8")), "1"),
                c(NA, FALSE, FALSE, FALSE))
 
-  expect_equal(is_selected(split_options(c("1", "15", "14", NA)), "14"),
-               c(FALSE, FALSE, TRUE, FALSE))
+  expect_equal(is_selected(split_options(c("1", "15", "14", NA, "")), "14"),
+               c(FALSE, FALSE, TRUE, NA, NA))
 
   expect_equal(is_selected(split_options(c("4,54", "3,6,2,54", "5,4,45")),
                            "54"),
                c(TRUE, TRUE, FALSE))
+})
+
+test_that("activities items correctly coded", {
+  input_data <- data.frame(
+    C13 = c(NA, "1,2,4", "3", "", "6", "2,4")
+  )
+  
+  out <- code_activities(input_data)
+  
+  # expected result
+  input_data$a_work_outside_home_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
+  input_data$a_shop_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
+  input_data$a_restaurant_1d <- c(NA, FALSE, TRUE, NA, FALSE, FALSE)
+  input_data$a_spent_time_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
+  input_data$a_large_event_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
+  input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
+
+  expect_equal(out, input_data)
 })
 
 test_that("mask items correctly coded", {

@@ -79,18 +79,21 @@ def check_source(data_source, meta, params, grace, logger):
             geo_type=row["geo_type"]
         )
 
-        if latest_data is None:
-            logger.info("No signal data retrieved")
-            continue
+        current_lag_in_days = (now - row["max_time"]).days
+        lag_calculated_from_api = False
 
-        unique_dates = [pd.to_datetime(val).date()
-                        for val in latest_data["time_value"].unique()]
-        current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
+        if latest_data is not None:
+            unique_dates = [pd.to_datetime(val).date()
+                            for val in latest_data["time_value"].unique()]
+            current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
+            lag_calculated_from_api = True
+
         logger.info("Signal lag",
                     current_lag_in_days = current_lag_in_days,
                     data_source = data_source,
                     signal = row["signal"],
-                    geo_type=row["geo_type"])
+                    geo_type=row["geo_type"],
+                    lag_calculated_from_api = lag_calculated_from_api)
 
         if current_lag_in_days > source_config["max_age"] + grace:
             if row["signal"] not in age_complaints:
@@ -105,7 +108,7 @@ def check_source(data_source, meta, params, grace, logger):
                 age_complaints[row["signal"]].geo_types.append(row["geo_type"])
 
         # Check max gap
-        if max_allowed_gap == -1:
+        if max_allowed_gap == -1 or latest_data is None:
             # No gap detection for this source
             continue
 

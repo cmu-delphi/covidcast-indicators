@@ -42,6 +42,7 @@ load_responses_all <- function(params) {
 #' @importFrom rlang .data
 #' @export
 load_response_one <- function(input_filename, params) {
+  msg_plain(paste0("Reading ", input_filename))
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
 

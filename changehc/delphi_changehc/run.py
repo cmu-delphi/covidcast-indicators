@@ -31,12 +31,12 @@ def retrieve_files(params, filedate, logger):
         if "cli" in params["indicator"]["types"]:
             download_cli(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
 
-        denom_file = "%s/%s_All_Outpatients_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
-        covid_file = "%s/%s_Covid_Outpatients_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
-        flu_file = "%s/%s_Flu_Patient_Count_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
-        mixed_file = "%s/%s_Mixed_Patient_Count_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
-        flu_like_file = "%s/%s_Flu_Like_Patient_Count_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
-        covid_like_file = "%s/%s_Covid_Like_Patient_Count_By_County.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        denom_file = "%s/%s_Counts_Products_Denom.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        covid_file = "%s/%s_Counts_Products_Covid.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        flu_file = "%s/%s_Counts_Products_Flu.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        mixed_file = "%s/%s_Counts_Products_Mixed.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        flu_like_file = "%s/%s_Counts_Products_Flu_Like.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        covid_like_file = "%s/%s_Counts_Products_Covid_Like.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
     else:
         denom_file = files["denom"]
         covid_file = files["covid"]

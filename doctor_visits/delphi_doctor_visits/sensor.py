@@ -242,8 +242,13 @@ class DoctorVisitsSensor:
             np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
-        return pd.DataFrame(data = {"date": burn_in_dates[final_sensor_idxs][:len(sensor_dates)],
+
+        def select_idx(my_list):
+            return my_list[final_sensor_idxs][:len(sensor_dates)]
+
+        df = pd.DataFrame(data = {"date": select_idx(burn_in_dates),
                                     "geo_id": geo_id,
-                                    "rate": new_rates[final_sensor_idxs][:len(sensor_dates)],
-                                    "se": se[final_sensor_idxs][:len(sensor_dates)],
-                                    "incl": include[final_sensor_idxs][:len(sensor_dates)]})
+                                    "rate": select_idx(new_rates),
+                                    "se": select_idx(se),
+                                    "incl": select_idx(include)})
+        return df

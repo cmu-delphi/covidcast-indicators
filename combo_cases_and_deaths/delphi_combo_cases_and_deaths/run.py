@@ -28,6 +28,15 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+PR_COUNTIES = [fips for fips in GMPR.get_geo_values("fips") if fips.startswith("72")]
+
+def jhu_geos(geo_type):
+    """Restrict geo_values pulled from jhu-csse."""
+    if geo_type == "state":
+        return "pr"
+    if geo_type == "county":
+        return PR_COUNTIES
+    return "*"
 
 def check_none_data_frame(data_frame, label, date_range):
     """Log and return True when a data frame is None."""
@@ -70,15 +79,20 @@ def compute_special_geo_dfs(df, signal, geo):
     -------
         DataFrame mapped to the 'geo' level with the correct signal values computed.
     """
+    #df = GMPR.replace_geocode(df,
+    #                          from_col="geo_id",
+    #                          from_code="fips",
+    #                          new_code="state_code",
+    #                          date_col="timestamp")
+    df = GMPR.add_population_column(df, "fips", "geo_id", dropna=False)
     df = GMPR.replace_geocode(df,
                               from_col="geo_id",
                               from_code="fips",
-                              new_code="state_code",
+                              new_code=geo,
                               date_col="timestamp")
-    df = GMPR.add_population_column(df, "state_code")  # use total state population
-    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo, date_col="timestamp")
     if signal.endswith("_prop"):
-        df["val"] = df["val"]/df["population"] * 100000
+        df["val"] = df["val"] / df["population"] * 100000
+        assert not (df["val"] > 100000).any()
     df.drop("population", axis=1, inplace=True)
     df.rename({geo: "geo_id"}, axis=1, inplace=True)
     return df
@@ -94,24 +108,27 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
     print("Fetching usa-facts...")
-    usafacts_df = fetcher("usa-facts", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
+    usafacts_df = fetcher(
+        "usa-facts", signal_to_fetch,
+        date_range[0], date_range[1],
+        geo_to_fetch
+    )
     print("Fetching jhu-csse...")
-    jhu_df = fetcher("jhu-csse", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
+    jhu_df = fetcher(
+        "jhu-csse", signal_to_fetch,
+        date_range[0], date_range[1],
+        geo_to_fetch, jhu_geos(geo_to_fetch)
+    )
     if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
        (geo_to_fetch not in ('state', 'county') or
         check_none_data_frame(jhu_df, "JHU", date_range)):
         return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
 
-    # State level
-    if geo_to_fetch == 'state':
+    # State & county level are filtered at query time for PR
+    if geo_to_fetch in ('state','county'):
         combined_df = maybe_append(
             usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
-    # County level
-    elif geo_to_fetch == 'county':
-        combined_df = maybe_append(
-            usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == '72000'])
+            jhu_df)
     # For MSA and HRR level, they are the same
     else:
         combined_df = usafacts_df

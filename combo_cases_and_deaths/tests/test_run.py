@@ -45,12 +45,13 @@ def test_unstable_sources():
     frame correctly for all cases where 0, 1, or both signals are
     available.
     """
-    placeholder = lambda geo: pd.DataFrame(
-        [(date.today(),"pr" if geo == "state" else "72000",1,1,1)],
-        columns="time_value geo_value value stderr sample_size".split())
+    def placeholder(geo):
+        return pd.DataFrame(
+            [(date.today(),"pr" if geo == "state" else "72025",1,1,1)],
+            columns="time_value geo_value value stderr sample_size".split())
     fetcher10 = lambda *x: placeholder(x[-1]) if x[0] == "usa-facts" else None
-    fetcher01 = lambda *x: placeholder(x[-1]) if x[0] == "jhu-csse" else None
-    fetcher11 = lambda *x: placeholder(x[-1])
+    fetcher01 = lambda *x: placeholder(x[-2]) if x[0] == "jhu-csse" else None
+    fetcher11 = lambda *x: placeholder(x[-2 if x[0] == "jhu-csse" else -1])
     fetcher00 = lambda *x: None
 
     date_range = [date.today(), date.today()]
@@ -68,7 +69,7 @@ Wrong number of rows in combined data frame for the number of available signals.
 
 input for {geo}:
 {fetcher('usa-facts',geo)}
-{fetcher('jhu-csse',geo)}
+{fetcher('jhu-csse',geo,None)}
 
 output:
 {df}
@@ -82,26 +83,29 @@ def test_compute_special_geo_dfs():
                             "val": [50, 100],
                             "timestamp": [20200101, 20200101]},)
     pd.testing.assert_frame_equal(
-        compute_special_geo_dfs(test_df, "_prop", "nation"),
-        pd.DataFrame({"timestamp": [20200101],
-                      "geo_id": ["us"],
-                      "val": [150/4903185*100000]})
-    )
-    pd.testing.assert_frame_equal(
         compute_special_geo_dfs(test_df, "_num", "nation"),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
                       "val": [150]})
+    )
+    pd.testing.assert_frame_equal(
+        compute_special_geo_dfs(test_df, "_prop", "nation"),
+        pd.DataFrame({"timestamp": [20200101],
+                      "geo_id": ["us"],
+                      # aggregate only pop of 01001
+                      "val": [150/55869*100000]})
     )
 
 
 @patch("covidcast.covidcast.signal")
 def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
     mock_covidcast_signal.side_effect = [
+        # fetched for usa-facts
         pd.DataFrame({"geo_value": ["01000", "01001"],
                       "value": [50, 100],
                       "timestamp": [20200101, 20200101]}),
-        pd.DataFrame({"geo_value": ["72000", "01001"],
+        # fetched for jhu-csse
+        pd.DataFrame({"geo_value": ["72025", "72000"],
                       "value": [200, 100],
                       "timestamp": [20200101, 20200101]}),
     ] * 3
@@ -109,7 +113,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
         combine_usafacts_and_jhu("confirmed_incidence_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
-                      "val": [50 + 100 + 200],
+                      "val": [50 + 100 + 200 + 100],
                       "se": [None],
                       "sample_size": [None]})
     )
@@ -117,16 +121,16 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
         combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
-                      "val": [(50 + 100 + 200) / (4903185 + 3723066) * 100000],
+                      "val": [(50 + 100 + 200 + 100) / (55869 + 142893) * 100000],
                       "se": [None],
                       "sample_size": [None]})
     )
     pd.testing.assert_frame_equal(
         combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal),
-        pd.DataFrame({"geo_id": ["01000", "01001", "72000"],
-                      "val": [50, 100, 200],
-                      "timestamp": [20200101, 20200101, 20200101]},
-                     index=[0, 1, 0])
+        pd.DataFrame({"geo_id": ["01000", "01001", "72025", "72000"],
+                      "val": [50, 100, 200, 100],
+                      "timestamp": [20200101, 20200101, 20200101, 20200101]},
+                     index=[0, 1, 0, 1])
     )
 
 

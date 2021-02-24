@@ -244,7 +244,7 @@ class DoctorVisitsSensor:
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
 
         def select_idx(my_list):
-            return my_list[final_sensor_idxs][:len(sensor_dates)]
+            return my_list[final_sensor_idxs[:len(sensor_dates)]]
 
         df = pd.DataFrame(data = {"date": select_idx(burn_in_dates),
                                     "geo_id": geo_id,

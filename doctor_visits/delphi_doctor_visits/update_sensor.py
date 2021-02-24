@@ -125,7 +125,7 @@ def update_sensor(
     burn_in_dates = drange(burnindate, dropdate)
     sensor_dates = drange(startdate, enddate)
     final_sensor_idxs = np.where(
-        (burn_in_dates >= startdate) & (burn_in_dates <= enddate))
+        (burn_in_dates >= startdate) & (burn_in_dates <= enddate))[0]
 
     # handle if we need to adjust by weekday
     params = Weekday.get_params(data) if weekday else None

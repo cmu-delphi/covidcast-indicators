@@ -5,6 +5,7 @@ import pandas as pd
 import pytest
 
 from delphi_quidel import data_tools
+from delphi_utils import Nans
 
 
 class TestDataTools:
@@ -93,36 +94,49 @@ class TestDataTools:
         with pytest.raises(ValueError):
             data_tools._geographical_pooling(np.array([np.nan]), np.array([1]), 1, 1)
 
-    @pytest.mark.parametrize("min_obs, expected_pos_prop, expected_se, expected_sample_sz", [
+    @pytest.mark.parametrize("min_obs, expected_pos_prop, expected_se, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size",  [
         (3,  # one case of tests < min_obs
          np.array([np.nan, 1/2, 1/2, 4/10]),
          np.array([np.nan, np.sqrt(0.25/4), np.sqrt(0.25/6), np.sqrt(0.24/10)]),
-         np.array([np.nan, 4, 6, 10])),
+         np.array([np.nan, 4, 6, 10]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         ),
         (1,  # no cases of tests < min_obs
          np.array([1/2, 2/4, 3/6, 4/10]),
          np.array([np.sqrt(0.25/2), np.sqrt(0.25/4), np.sqrt(0.25/6), np.sqrt(0.24/10)]),
-         np.array([2, 4, 6, 10])),
+         np.array([2, 4, 6, 10]),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_MISSING, 4))
     ])
-    def test_raw_positive_prop(self, min_obs, expected_pos_prop, expected_se, expected_sample_sz):
+    def test_raw_positive_prop(self, min_obs, expected_pos_prop, expected_se, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size):
         positives = np.array([1, 2, 3, 4])
         tests = np.array([2, 4, 6, 10])
-        output = data_tools.raw_positive_prop(positives, tests, min_obs)
+        missing_val = np.array([0, 0, 0, 0])
+        missing_se = np.array([0, 0, 0, 0])
+        missing_sample_size = np.array([0, 0, 0, 0])
+        output = data_tools.raw_positive_prop(positives, tests, min_obs, missing_val, missing_se, missing_sample_size)
         # np.array_equal() doesn't compare nan's
         assert np.allclose(output[0], expected_pos_prop, equal_nan=True)
         assert np.allclose(output[1], expected_se, equal_nan=True)
         assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+        assert np.allclose(output[3], expected_missing_val, equal_nan=True)
+        assert np.allclose(output[4], expected_missing_se, equal_nan=True)
+        assert np.allclose(output[5], expected_missing_sample_size, equal_nan=True)
         # nan case
         with pytest.raises(ValueError):
-            data_tools.raw_positive_prop(np.array([np.nan]), np.array([1]), 3)
+            data_tools.raw_positive_prop(np.array([np.nan]), np.array([1]), 3, missing_val, missing_se, missing_sample_size)
         # positives > tests case
         with pytest.raises(ValueError):
-            data_tools.raw_positive_prop(np.array([3]), np.array([1]), 3)
+            data_tools.raw_positive_prop(np.array([3]), np.array([1]), 3, missing_val, missing_se, missing_sample_size)
         # min obs <= 0 case
         with pytest.raises(ValueError):
-            data_tools.raw_positive_prop(np.array([1]), np.array([1]), 0)
+            data_tools.raw_positive_prop(np.array([1]), np.array([1]), 0, missing_val, missing_se, missing_sample_size)
 
     @pytest.mark.parametrize("min_obs, max_borrow_obs, pool_days, parent_positives, parent_tests,"
-                             "expected_prop, expected_se, expected_sample_sz", [
+                             "expected_prop, expected_se, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size", [
         (3,  # no parents case
          3,
          2,
@@ -131,6 +145,9 @@ class TestDataTools:
          np.array([np.nan, 1/2, 1/2, 7/16]),
          np.array([np.nan, np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
          np.array([np.nan, 6, 10, 16]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (3,  # parents case
          3,
@@ -140,69 +157,93 @@ class TestDataTools:
          np.array([1.6/3, 1/2, 1/2, 7/16]),
          np.array([np.sqrt(56/225/3), np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
          np.array([3, 6, 10, 16]),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_MISSING, 4)
          ),
     ])
     def test_smoothed_positive_prop(self, min_obs, max_borrow_obs, pool_days, parent_positives,
-                                    parent_tests, expected_prop, expected_se, expected_sample_sz):
+                                    parent_tests, expected_prop, expected_se, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size):
         positives = np.array([1, 2, 3, 4])
         tests = np.array([2, 4, 6, 10])
+        missing_val = np.array([0, 0, 0, 0])
+        missing_se = np.array([0, 0, 0, 0])
+        missing_sample_size = np.array([0, 0, 0, 0])
         output = data_tools.smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs,
-                                                   pool_days, parent_positives, parent_tests)
+                                                   pool_days, missing_val, missing_se, missing_sample_size, parent_positives, parent_tests)
         assert np.allclose(output[0], expected_prop, equal_nan=True)
         assert np.allclose(output[1], expected_se, equal_nan=True)
         assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+        assert np.allclose(output[3], expected_missing_val, equal_nan=True)
+        assert np.allclose(output[4], expected_missing_se, equal_nan=True)
+        assert np.allclose(output[5], expected_missing_sample_size, equal_nan=True)
 
         # nan case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([np.nan]), np.array([1]), 1, 1, 1)
+            data_tools.smoothed_positive_prop(np.array([np.nan]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]))
         # positives > tests case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([2]), np.array([1]), 1, 1, 1)
+            data_tools.smoothed_positive_prop(np.array([2]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]))
         # nan case with parent
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1,
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]),
                                               np.array([np.nan]), np.array([np.nan]))
         # positives > tests case with parent
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1,
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]),
                                               np.array([3]), np.array([1]))
         # min obs <= 0 case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 0, 1, 1)
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 0, 1, 1, np.array([0]), np.array([0]), np.array([0]))
         # pool_days <= 0 case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 0)
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 0, np.array([0]), np.array([0]), np.array([0]))
         # pool_days non int case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1.5)
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 1, 1.5, np.array([0]), np.array([0]), np.array([0]))
         # max_borrow_obs > min_obs case
         with pytest.raises(ValueError):
-            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 2, 1.5)
+            data_tools.smoothed_positive_prop(np.array([1]), np.array([1]), 1, 2, 1.5, np.array([0]), np.array([0]), np.array([0]))
 
-    @pytest.mark.parametrize("min_obs, expected_tests_per_device, expected_sample_sz", [
+    @pytest.mark.parametrize("min_obs, expected_tests_per_device, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size", [
         (3,  # one case of tests < min_obs
          np.array([np.nan, 2, 1/2, 10/4]),
-         np.array([np.nan, 4, 3, 10])),
+         np.array([np.nan, 4, 3, 10]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.repeat(Nans.NOT_APPLICABLE, 4),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         ),
         (1,  # no cases of tests < min_obs
          np.array([2, 2, 1/2, 10/4]),
-         np.array([2, 4, 3, 10])),
+         np.array([2, 4, 3, 10]),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_APPLICABLE, 4),
+         np.repeat(Nans.NOT_MISSING, 4)
+         ),
     ])
-    def test_raw_tests_per_device(self, min_obs, expected_tests_per_device, expected_sample_sz):
+    def test_raw_tests_per_device(self, min_obs, expected_tests_per_device, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size):
         devices = np.array([1, 2, 6, 4])
         tests = np.array([2, 4, 3, 10])
-        output = data_tools.raw_tests_per_device(devices, tests, min_obs)
+        missing_val = np.array([0, 0, 0, 0])
+        missing_se = np.array([0, 0, 0, 0])
+        missing_sample_size = np.array([0, 0, 0, 0])
+        output = data_tools.raw_tests_per_device(devices, tests, min_obs, missing_val, missing_se, missing_sample_size)
         assert np.allclose(output[0], expected_tests_per_device, equal_nan=True)
         assert np.allclose(output[1], np.repeat(np.nan, len(devices)), equal_nan=True)
         assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+        assert np.allclose(output[3], expected_missing_val, equal_nan=True)
+        assert np.allclose(output[4], expected_missing_se, equal_nan=True)
+        assert np.allclose(output[5], expected_missing_sample_size, equal_nan=True)
+
         # nan case
         with pytest.raises(ValueError):
-            data_tools.raw_tests_per_device(np.array([np.nan]), np.array([1]), 3)
+            data_tools.raw_tests_per_device(np.array([np.nan]), np.array([1]), 3, np.array([0]), np.array([0]), np.array([0]))
         # min obs <= 0 case
         with pytest.raises(ValueError):
-            data_tools.raw_tests_per_device(np.array([1]), np.array([1]), 0)
+            data_tools.raw_tests_per_device(np.array([1]), np.array([1]), 0, np.array([0]), np.array([0]), np.array([0]))
 
     @pytest.mark.parametrize("min_obs, max_borrow_obs, pool_days, parent_devices, parent_tests,"
-                             "expected_prop, expected_se, expected_sample_sz", [
+                             "expected_prop, expected_se, expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size", [
         (3,  # no parents case
          3,
          2,
@@ -211,6 +252,9 @@ class TestDataTools:
          np.array([np.nan, 2, 5/6, 8/7]),
          np.repeat(np.nan, 4),
          np.array([np.nan, 6, 10, 16]),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.repeat(Nans.NOT_APPLICABLE, 4),
+         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (3,  # no parents case
          3,
@@ -220,35 +264,44 @@ class TestDataTools:
          np.array([3/1.6, 2, 5/6, 8/7]),
          np.repeat(np.nan, 4),
          np.array([3, 6, 10, 16]),
+         np.repeat(Nans.NOT_MISSING, 4),
+         np.repeat(Nans.NOT_APPLICABLE, 4),
+         np.repeat(Nans.NOT_MISSING, 4)
          ),
     ])
     def test_smoothed_tests_per_device(self, min_obs, max_borrow_obs, pool_days, parent_devices,
                                        parent_tests, expected_prop, expected_se,
-                                       expected_sample_sz):
+                                       expected_sample_sz, expected_missing_val, expected_missing_se, expected_missing_sample_size):
         devices = np.array([1, 2, 10, 4])
         tests = np.array([2, 4, 6, 10])
+        missing_val = np.array([0, 0, 0, 0])
+        missing_se = np.array([0, 0, 0, 0])
+        missing_sample_size = np.array([0, 0, 0, 0])
         output = data_tools.smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs,
-                                                      pool_days, parent_devices, parent_tests)
+                                                      pool_days, missing_val, missing_se, missing_sample_size, parent_devices, parent_tests)
         assert np.allclose(output[0], expected_prop, equal_nan=True)
         assert np.allclose(output[1], expected_se, equal_nan=True)
         assert np.allclose(output[2], expected_sample_sz, equal_nan=True)
+        assert np.allclose(output[3], expected_missing_val, equal_nan=True)
+        assert np.allclose(output[4], expected_missing_se, equal_nan=True)
+        assert np.allclose(output[5], expected_missing_sample_size, equal_nan=True)
 
         # nan case
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([np.nan]), np.array([1]), 1, 1, 1)
+            data_tools.smoothed_tests_per_device(np.array([np.nan]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]))
         # nan case with parent
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 1,
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 1, np.array([0]), np.array([0]), np.array([0]),
                                                  np.array([np.nan]), np.array([np.nan]))
         # min obs <= 0 case
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 0, 0, 1)
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 0, 0, 1, np.array([0]), np.array([0]), np.array([0]))
         # pool_days <= 0 case
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 0)
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 0, np.array([0]), np.array([0]), np.array([0]))
         # pool_days non int case
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 1.5)
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 1, 1.5, np.array([0]), np.array([0]), np.array([0]))
         # max_borrow_obs > min_obs case
         with pytest.raises(ValueError):
-            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 3, 1.5)
+            data_tools.smoothed_tests_per_device(np.array([1]), np.array([1]), 1, 3, 1.5, np.array([0]), np.array([0]), np.array([0]))

@@ -31,31 +31,51 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
 
         # smoothed test per device
         if device & smooth:
-            stat, se, sample_size = smoothed_tests_per_device(
-                devices=state_group["numUniqueDevices"].values,
-                tests=state_group['totalTest'].values,
-                min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                pool_days=POOL_DAYS)
+            stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                smoothed_tests_per_device(
+                    devices=state_group["numUniqueDevices"].values,
+                    tests=state_group['totalTest'].values,
+                    missing_val=state_group['missing_val'].values,
+                    missing_se=state_group['missing_se'].values,
+                    missing_sample_size=state_group['missing_sample_size'].values,
+                    min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                    pool_days=POOL_DAYS)
+            )
         # raw test per device
         elif device & (not smooth):
-            stat, se, sample_size = raw_tests_per_device(
-                devices=state_group["numUniqueDevices"].values,
-                tests=state_group['totalTest'].values,
-                min_obs=MIN_OBS)
+            stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                raw_tests_per_device(
+                    devices=state_group["numUniqueDevices"].values,
+                    tests=state_group['totalTest'].values,
+                    missing_val=state_group['missing_val'].values,
+                    missing_se=state_group['missing_se'].values,
+                    missing_sample_size=state_group['missing_sample_size'].values,
+                    min_obs=MIN_OBS)
+            )
         # smoothed pct positive
         elif (not device) & smooth:
-            stat, se, sample_size = smoothed_positive_prop(
-                tests=state_group['totalTest'].values,
-                positives=state_group['positiveTest'].values,
-                min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                pool_days=POOL_DAYS)
+            stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                smoothed_positive_prop(
+                    tests=state_group['totalTest'].values,
+                    positives=state_group['positiveTest'].values,
+                    missing_val=state_group['missing_val'].values,
+                    missing_se=state_group['missing_se'].values,
+                    missing_sample_size=state_group['missing_sample_size'].values,
+                    min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                    pool_days=POOL_DAYS)
+            )
             stat = stat * 100
         # raw pct positive
         else:
-            stat, se, sample_size = raw_positive_prop(
-                tests=state_group['totalTest'].values,
-                positives=state_group['positiveTest'].values,
-                min_obs=MIN_OBS)
+            stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                raw_positive_prop(
+                    tests=state_group['totalTest'].values,
+                    positives=state_group['positiveTest'].values,
+                    missing_val=state_group['missing_val'].values,
+                    missing_se=state_group['missing_se'].values,
+                    missing_sample_size=state_group['missing_sample_size'].values,
+                    min_obs=MIN_OBS)
+            )
             stat = stat * 100
 
         se = se * 100
@@ -63,7 +83,10 @@ def generate_sensor_for_states(state_groups, smooth, device, first_date, last_da
                                                  "timestamp": state_group.index,
                                                  "val": stat,
                                                  "se": se,
-                                                 "sample_size": sample_size}))
+                                                 "sample_size": sample_size,
+                                                 "missing_val": missing_val,
+                                                 "missing_se": missing_se,
+                                                 "missing_sample_size": missing_sample_size}))
     return state_df
 
 def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
@@ -102,47 +125,77 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
         if smooth:
             if has_parent:
                 if device:
-                    stat, se, sample_size = smoothed_tests_per_device(
-                        devices=res_group["numUniqueDevices"].values,
-                        tests=res_group['totalTest'].values,
-                        min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                        pool_days=POOL_DAYS,
-                        parent_devices=res_group["numUniqueDevices_parent"].values,
-                        parent_tests=res_group["totalTest_parent"].values)
+                    stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                        smoothed_tests_per_device(
+                            devices=res_group["numUniqueDevices"].values,
+                            tests=res_group['totalTest'].values,
+                            missing_val=res_group['missing_val'].values,
+                            missing_se=res_group['missing_se'].values,
+                            missing_sample_size=res_group['missing_sample_size'].values,
+                            min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                            pool_days=POOL_DAYS,
+                            parent_devices=res_group["numUniqueDevices_parent"].values,
+                            parent_tests=res_group["totalTest_parent"].values)
+                    )
                 else:
-                    stat, se, sample_size = smoothed_positive_prop(
-                        tests=res_group['totalTest'].values,
-                        positives=res_group['positiveTest'].values,
-                        min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                        pool_days=POOL_DAYS,
-                        parent_tests=res_group["totalTest_parent"].values,
-                        parent_positives=res_group['positiveTest_parent'].values)
+                    stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                        smoothed_positive_prop(
+                            tests=res_group['totalTest'].values,
+                            positives=res_group['positiveTest'].values,
+                            missing_val=res_group['missing_val'].values,
+                            missing_se=res_group['missing_se'].values,
+                            missing_sample_size=res_group['missing_sample_size'].values,
+                            min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                            pool_days=POOL_DAYS,
+                            parent_tests=res_group["totalTest_parent"].values,
+                            parent_positives=res_group['positiveTest_parent'].values)
+                    )
                     stat = stat * 100
             else:
                 if device:
-                    stat, se, sample_size = smoothed_tests_per_device(
-                        devices=res_group["numUniqueDevices"].values,
-                        tests=res_group['totalTest'].values,
-                        min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                        pool_days=POOL_DAYS)
+                    stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                        smoothed_tests_per_device(
+                            devices=res_group["numUniqueDevices"].values,
+                            tests=res_group['totalTest'].values,
+                            missing_val=res_group['missing_val'].values,
+                            missing_se=res_group['missing_se'].values,
+                            missing_sample_size=res_group['missing_sample_size'].values,
+                            min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                            pool_days=POOL_DAYS)
+                    )
                 else:
-                    stat, se, sample_size = smoothed_positive_prop(
-                        tests=res_group['totalTest'].values,
-                        positives=res_group['positiveTest'].values,
-                        min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
-                        pool_days=POOL_DAYS)
+                    stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                        smoothed_positive_prop(
+                            tests=res_group['totalTest'].values,
+                            positives=res_group['positiveTest'].values,
+                            missing_val=res_group['missing_val'].values,
+                            missing_se=res_group['missing_se'].values,
+                            missing_sample_size=res_group['missing_sample_size'].values,
+                            min_obs=MIN_OBS, max_borrow_obs=MAX_BORROW_OBS,
+                            pool_days=POOL_DAYS)
+                    )
                     stat = stat * 100
         else:
             if device:
-                stat, se, sample_size = raw_tests_per_device(
-                    devices=res_group["numUniqueDevices"].values,
-                    tests=res_group['totalTest'].values,
-                    min_obs=MIN_OBS)
+                stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                    raw_tests_per_device(
+                        devices=res_group["numUniqueDevices"].values,
+                        tests=res_group['totalTest'].values,
+                        missing_val=res_group['missing_val'].values,
+                        missing_se=res_group['missing_se'].values,
+                        missing_sample_size=res_group['missing_sample_size'].values,
+                        min_obs=MIN_OBS)
+                )
             else:
-                stat, se, sample_size = raw_positive_prop(
-                    tests=res_group['totalTest'].values,
-                    positives=res_group['positiveTest'].values,
-                    min_obs=MIN_OBS)
+                stat, se, sample_size, missing_val, missing_se, missing_sample_size = (
+                    raw_positive_prop(
+                        tests=res_group['totalTest'].values,
+                        positives=res_group['positiveTest'].values,
+                        missing_val=res_group['missing_val'].values,
+                        missing_se=res_group['missing_se'].values,
+                        missing_sample_size=res_group['missing_sample_size'].values,
+                        min_obs=MIN_OBS)
+                )
                 stat = stat * 100
 
         se = se * 100
@@ -150,5 +203,8 @@ def generate_sensor_for_other_geores(state_groups, data, res_key, smooth,
                                              "timestamp": res_group.index,
                                              "val": stat,
                                              "se": se,
-                                             "sample_size": sample_size}))
+                                             "sample_size": sample_size,
+                                             "missing_val": missing_val,
+                                             "missing_se": missing_se,
+                                             "missing_sample_size": missing_sample_size}))
     return res_df

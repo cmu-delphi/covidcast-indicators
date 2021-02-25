@@ -3,6 +3,8 @@
 import numpy as np
 import pandas as pd
 
+from delphi_utils import Nans
+
 def _prop_var(p, n):
     """
     Calculate variance of proportion.
@@ -117,7 +119,7 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs, max_borrow_obs
     return borrow_prop
 
 
-def raw_positive_prop(positives, tests, min_obs):
+def raw_positive_prop(positives, tests, min_obs, missing_val, missing_se, missing_sample_size):
     """
     Calculate proportion of positive tests for a single location with no temporal smoothing.
 
@@ -166,10 +168,15 @@ def raw_positive_prop(positives, tests, min_obs):
     positive_prop = positives / tests
     se = np.sqrt(_prop_var(positive_prop, tests))
     sample_size = tests
-    return positive_prop, se, sample_size
+    missing_val[np.isnan(tests) | (tests < min_obs) | np.isnan(positive_prop)] = Nans.PRIVACY
+    missing_se[np.isnan(se)] = Nans.PRIVACY
+    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+
+    return positive_prop, se, sample_size, missing_val, missing_se, missing_sample_size
 
 
 def smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs, pool_days,
+                           missing_val, missing_se, missing_sample_size,
                            parent_positives=None, parent_tests=None):
     """
     Calculate the proportion of negative tests for a single location with temporal smoothing.
@@ -259,10 +266,13 @@ def smoothed_positive_prop(positives, tests, min_obs, max_borrow_obs, pool_days,
         pooled_positives = tpooled_positives
         pooled_tests = tpooled_tests
     ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
-    return raw_positive_prop(pooled_positives, pooled_tests, min_obs)
+    return raw_positive_prop(
+        pooled_positives, pooled_tests, min_obs,
+        missing_val, missing_se, missing_sample_size
+    )
 
 
-def raw_tests_per_device(devices, tests, min_obs):
+def raw_tests_per_device(devices, tests, min_obs, missing_val, missing_se, missing_sample_size):
     """
     Calculate the tests per device for a single geographic location, without any temporal smoothing.
 
@@ -297,14 +307,20 @@ def raw_tests_per_device(devices, tests, min_obs):
                          'with no np.nan')
     if min_obs <= 0:
         raise ValueError('min_obs should be positive')
+
     tests[tests < min_obs] = np.nan
     tests_per_device = tests / devices
     se = np.repeat(np.nan, len(devices))
     sample_size = tests
 
-    return tests_per_device, se, sample_size
+    missing_val[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+    missing_se = np.repeat(Nans.NOT_APPLICABLE, len(devices))
+    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+
+    return tests_per_device, se, sample_size, missing_val, missing_se, missing_sample_size
 
 def smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs, pool_days,
+                              missing_val, missing_se, missing_sample_size,
                               parent_devices=None, parent_tests=None):
     """
     Calculate the ratio of tests per device for a single location with temporal smoothing.
@@ -383,4 +399,7 @@ def smoothed_tests_per_device(devices, tests, min_obs, max_borrow_obs, pool_days
         pooled_devices = tpooled_devices
         pooled_tests = tpooled_tests
     ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
-    return raw_tests_per_device(pooled_devices, pooled_tests, min_obs)
+    return raw_tests_per_device(
+        pooled_devices, pooled_tests, min_obs,
+        missing_val, missing_se, missing_sample_size
+    )

@@ -28,6 +28,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+
 
 def check_none_data_frame(data_frame, label, date_range):
     """Log and return True when a data frame is None."""

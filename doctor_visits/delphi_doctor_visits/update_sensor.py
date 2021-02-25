@@ -48,10 +48,8 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
             outfile.write("geo_id,val,se,direction,sample_size\n")
 
             for line in single_date_df.itertuples():
-                # if not line.incl:
-                #     continue
                 geo_id = line.geo_id
-                sensor = 100 * line.rate # report percentages
+                sensor = 100 * line.val # report percentages
                 se_val = 100 * line.se
                 assert not np.isnan(sensor), "sensor value is nan, check pipeline"
                 assert sensor < 90, f"strangely high percentage {geo_id, sensor}"

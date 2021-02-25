@@ -244,12 +244,12 @@ class DoctorVisitsSensor:
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
 
         included_indices = [x for x in final_sensor_idxs if include[x]]
-        alt_include = include[final_sensor_idxs]
+
         def select_idx(my_list):
             return my_list[included_indices]
 
         df = pd.DataFrame(data = {"date": select_idx(burn_in_dates),
                                     "geo_id": geo_id,
-                                    "rate": select_idx(new_rates),
+                                    "val": select_idx(new_rates),
                                     "se": select_idx(se)})
         return df

@@ -4,10 +4,27 @@ from delphi_validator.validate import Validator
 from .archive import ArchiveDiffer
 from .utils import read_params
 
-def run_indicator_pipeline(indicator_fn:  Callable[[Dict[str, Any]], None],
-                           validator_fn:  Callable[[Dict[str, Any]], Optional[Validator]],
-                           archiver_fn:  Callable[[Dict[str, Any]], Optional[ArchiveDiffer]]):
-    """Runs the indicator."""
+Params = Dict[str, Any]
+
+# Trivial function to use as default value for validator and archive functions.
+NULL_FN = lambda x: None
+
+def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
+                           validator_fn:  Callable[[Params], Optional[Validator]] = NULL_FN,
+                           archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN):
+    """Runs an indicator with its optional validation and archiving.
+
+    Arguments
+    ---------
+    indicator_fn: Callable[[Params], None]
+        function that takes a dictionary of parameters and produces indicator output
+    validator_fn: Callable[[Params], Optional[Validator]]
+        function that takes a dictionary of parameters and produces the associated Validator or
+        None if no validation should be performed.
+    archiver_fn: Callable[[Params], Optional[ArchiveDiffer]]
+        function that takes a dictionary of parameters and produces the associated ArchiveDiffer or
+        None if no archiving should be performed.
+    """
     params = read_params()
     indicator_fn(params)
     validator = validator_fn(params)

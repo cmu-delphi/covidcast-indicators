@@ -33,7 +33,6 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
       out_name: name of the output file
       output_path: outfile path to write the csv (default is current directory)
     """
-
     if se:
         logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
@@ -84,7 +83,6 @@ def update_sensor(
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
     """
-
     # as of 2020-05-11, input file expected to have 10 columns
     # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
     # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed

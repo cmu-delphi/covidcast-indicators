@@ -20,8 +20,7 @@ from .smooth import left_gauss_linear
 
 
 class DoctorVisitsSensor:
-    """Sensor class to fit a signal using CLI counts from doctor visits
-    """
+    """Sensor class to fit a signal using CLI counts from doctor visits."""
 
     @staticmethod
     def transform(
@@ -36,7 +35,6 @@ class DoctorVisitsSensor:
 
         Returns: smoothed and/or adjusted 1D signal
         """
-
         scaler = MinMaxScaler(feature_range=(0, 1))
         sc_sig = scaler.fit_transform(sig)
         sm_sig = smoother(sc_sig, h)
@@ -88,8 +86,9 @@ class DoctorVisitsSensor:
             min_recent_obs_to_include=Config.MIN_RECENT_OBS,
     ):
         """
-        Adjust for backfill (retroactively added observations) by using a
-         variable length smoother, which starts from the    RHS and moves
+        Adjust for backfill (retroactively added observations).
+
+        Use a variable length smoother, which starts from the RHS and moves
          leftwards (backwards through time). We cumulatively sum the total
          visits (denominator), until we have observed some minimum number of
          counts, then calculate the sum over that bin. We restrict the

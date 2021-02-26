@@ -18,6 +18,7 @@ class GeoMaps:
     """Class to map counties to other geographic resolutions."""
 
     def __init__(self):
+        """Create the underlying GeoMapper."""
         self.gmpr = GeoMapper()
 
     @staticmethod

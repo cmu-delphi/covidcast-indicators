@@ -19,7 +19,6 @@ def moving_avg(x, y, k=7):
 
     Returns: tuple of indexing array, without the first k-1 obs, and smoothed values
     """
-
     n = len(y)
     sy = np.zeros((n - k + 1, 1))
     for i in range(len(sy)):
@@ -37,7 +36,6 @@ def padded_moving_avg(y, k=7):
 
     Returns: smoothed values, where the first k-1 obs are padded with 0
     """
-
     n = len(y)
     sy = np.zeros((n - k + 1, 1))
     for i in range(len(sy)):
@@ -57,8 +55,7 @@ def left_gauss(y, h=100):
         h: smoothing bandwidth (in terms of variance)
 
     Returns: a smoothed 1D signal.
- """
-
+    """
     t = np.zeros_like(y)
     n = len(t)
     indices = np.arange(n)
@@ -77,7 +74,6 @@ def left_gauss_linear(s, h=250):
 
     Returns: a smoothed 1D signal.
     """
-
     n = len(s)
     t = np.zeros_like(s)
     X = np.vstack([np.ones(n), np.arange(n)]).T

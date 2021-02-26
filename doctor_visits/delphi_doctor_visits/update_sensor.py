@@ -160,7 +160,6 @@ def update_sensor(
             res = DoctorVisitsSensor.fit(
                 sub_data,
                 fit_dates,
-                sensor_dates,
                 burn_in_dates,
                 final_sensor_idxs,
                 geo_id,
@@ -187,7 +186,6 @@ def update_sensor(
                         args=(
                             sub_data,
                             fit_dates,
-                            sensor_dates,
                             burn_in_dates,
                             final_sensor_idxs,
                             geo_id,

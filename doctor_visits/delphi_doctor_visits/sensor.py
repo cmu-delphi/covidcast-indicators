@@ -158,7 +158,6 @@ class DoctorVisitsSensor:
     @staticmethod
     def fit(y_data,
             fit_dates,
-            sensor_dates,
             burn_in_dates,
             final_sensor_idxs,
             geo_id,
@@ -170,7 +169,8 @@ class DoctorVisitsSensor:
         Args:
             y_data: dataframe for one geo_id, with all 7 cols
             fit_dates: list of sorted datetime for which to use as training
-            sensor_dates: list of sorted datetime for which to produce sensor values
+            burn_in_dates: list of sorted datetime for which to produce sensor values
+            final_sensor_idxs: list of positions in `fit_dates` that correspond to sensors
             geo_id: unique identifier for the location column
             recent_min_visits: location is sparse if it has fewer than min_recent_visits over
                                                 <RECENT_LENGTH> days

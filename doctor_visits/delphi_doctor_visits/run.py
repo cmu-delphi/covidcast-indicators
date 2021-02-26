@@ -72,7 +72,7 @@ def run_module(params):
 
 
     ## print out other vars
-    logging.info("outpath:\t\t%s", params["common"]["export_dir"])
+    logging.info("outpath:\t\t%s", export_dir)
     logging.info("parallel:\t\t%s", params["indicator"]["parallel"])
     logging.info("weekday:\t\t%s", params["indicator"]["weekday"])
     logging.info("write se:\t\t%s", se)

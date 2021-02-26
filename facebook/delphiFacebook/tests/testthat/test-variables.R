@@ -23,6 +23,7 @@ test_that("is_selected handles selections correctly", {
 test_that("activities items correctly coded", {
   # C13 only (pre-Wave 10)
   input_data <- data.frame(
+    wave = rep(1, 6),
     C13 = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
   
@@ -44,33 +45,9 @@ test_that("activities items correctly coded", {
   
   expect_equal(out, input_data)
   
-  # C13 and C13b (pre-Wave 10 and Wave 10 mix)
-  input_data <- data.frame(
-    C13 = c(NA, "1,2,4", "3", "", "6", "2,4"),
-    C13b = c("6", NA, NA, NA, NA, NA)
-  )
-  
-  out <- code_activities(input_data)
-  
-  # expected result
-  input_data$a_work_outside_home_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
-  input_data$a_shop_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
-  input_data$a_restaurant_1d <- c(NA, FALSE, TRUE, NA, FALSE, FALSE)
-  input_data$a_spent_time_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
-  input_data$a_large_event_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
-  
-  input_data$a_public_transit_1d <- c(TRUE, FALSE, FALSE, NA, TRUE, FALSE)
-  
-  input_data$a_work_outside_home_indoors_1d <- c(FALSE, NA, NA, NA, NA, NA)
-  input_data$a_shop_indoors_1d <-  c(FALSE, NA, NA, NA, NA, NA)
-  input_data$a_restaurant_indoors_1d <-  c(FALSE, NA, NA, NA, NA, NA)
-  input_data$a_spent_time_indoors_1d <-  c(FALSE, NA, NA, NA, NA, NA)
-  input_data$a_large_event_indoors_1d <-  c(FALSE, NA, NA, NA, NA, NA)
-  
-  expect_equal(out, input_data)
-  
   # C13b only (Wave 10+)
   input_data <- data.frame(
+    wave = rep(1, 6),
     C13b = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
   

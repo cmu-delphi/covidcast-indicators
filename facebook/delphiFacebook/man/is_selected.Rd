@@ -16,5 +16,6 @@ a logical vector; for each list entry, whether selection is contained
   in the character vector.
 }
 \description{
-Test if a specific selection is selected
+Checking whether a specific selection is selected in either "" (empty
+string) or `NA` responses will produce `NA`s.
 }

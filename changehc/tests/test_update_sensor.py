@@ -11,18 +11,22 @@ from boto3 import Session
 from moto import mock_s3
 import pytest
 
-# third party
-from delphi_utils import read_params
 
 # first party
 from delphi_changehc.config import Config
 from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
-PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat.gz",
+        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat.gz",
+        "drop_date": "2020-06-01"
+    }
+}
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
 
 class TestCHCSensorUpdator:
@@ -49,7 +53,8 @@ class TestCHCSensorUpdator:
             self.parallel,
             self.weekday,
             self.numtype,
-            self.se
+            self.se,
+            ""
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -72,7 +77,8 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.shift_dates()
             data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
@@ -91,19 +97,10 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
-
-            with mock_s3():
-                # Create the fake bucket we will be using
-                params = read_params()
-                aws_credentials = params["aws_credentials"]
-                s3_client = Session(**aws_credentials).client("s3")
-                s3_client.create_bucket(Bucket=params["bucket_name"])
-                su_inst.update_sensor(
-                    self.small_test_data,
-                    td.name)
-
+            su_inst.update_sensor(self.small_test_data,  td.name)
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
                 f"failed {geo} update sensor test"
             td.cleanup()

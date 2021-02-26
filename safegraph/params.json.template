@@ -1,17 +1,23 @@
 {
-  "static_file_dir": "./static",
-  "raw_data_dir": "/mnt/data/safegraph/",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "n_core": "12",
-  "aws_access_key_id": "",
-  "aws_secret_access_key": "",
-  "aws_default_region": "",
-  "aws_endpoint": "",
-  "sync": true,
-  "wip_signal" : ["median_home_dwell_time_7dav",
-                  "completely_home_prop_7dav",
-                  "part_time_work_prop_7dav",
-                  "full_time_work_prop_7dav"],
-  "log_exceptions": false
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "static_file_dir": "./static",
+    "raw_data_dir": "/mnt/data/safegraph/",
+    "n_core": 12,
+    "aws_access_key_id": "",
+    "aws_secret_access_key": "",
+    "aws_default_region": "",
+    "aws_endpoint": "",
+    "sync": true,
+    "wip_signal" : ["median_home_dwell_time_7dav",
+                    "completely_home_prop_7dav",
+                    "part_time_work_prop_7dav",
+                    "full_time_work_prop_7dav"]
+  },
+  "archive": {
+    "cache_dir": "./cache"
+  }
 }

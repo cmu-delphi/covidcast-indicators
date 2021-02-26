@@ -44,7 +44,7 @@ def load_chng_data(filepath, dropdate, base_geo,
 
     data = pd.read_csv(
         filepath,
-        sep="|",
+        sep=",",
         header=None,
         names=col_names,
         dtype=col_types,

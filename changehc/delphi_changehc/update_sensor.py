@@ -84,7 +84,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                  parallel,
                  weekday,
                  numtype,
-                 se):
+                 se,
+                 wip_signal):
         """Init Sensor Updator.
 
         Args:
@@ -96,6 +97,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             weekday: boolean to adjust for weekday effects
             numtype: type of count data used, one of ["covid", "cli"]
             se: boolean to write out standard errors, if true, use an obfuscated name
+            wip_signal: Prefix for WIP signals
         """
         self.startdate, self.enddate, self.dropdate = [
             pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
@@ -114,7 +116,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
         signal_names = add_prefix(
             signals,
-            wip_signal=read_params()["wip_signal"])
+            wip_signal=wip_signal)
         self.updated_signal_names = signal_names
 
         # initialize members set in shift_dates().

@@ -4,9 +4,9 @@ from itertools import product
 
 import pandas as pd
 
+
 class TestRun:
     def test_output_files_exist(self, run_as_module):
-
         csv_files = listdir("receiving")
 
         dates = [
@@ -34,8 +34,8 @@ class TestRun:
         set(csv_files) == set(expected_files)
 
     def test_output_file_format(self, run_as_module):
-
         df = pd.read_csv(
             join("receiving", "20200810_state_anosmia_smoothed_search.csv")
         )
-        assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
+        assert (df.columns.values == [
+                "geo_id", "val", "se", "sample_size"]).all()

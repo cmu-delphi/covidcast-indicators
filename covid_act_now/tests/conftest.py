@@ -8,24 +8,14 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from delphi_utils import read_params
-from delphi_covid_act_now.run import run_module
 
 @pytest.fixture(scope="session")
-def run_as_module():
+def clean_receiving_dir():
     # Clean receiving directory
     for fname in listdir("receiving"):
         if fname not in (".gitkeep", ".gitignore"):
             remove(join("receiving", fname))
 
-    with mock_s3():
-        # Create the fake bucket we will be using
-        params = read_params()
-        aws_credentials = params["aws_credentials"]
-        s3_client = Session(**aws_credentials).client("s3")
-        s3_client.create_bucket(Bucket=params["bucket_name"])
-
-        run_module()
 
 @pytest.fixture
 def CAN_parquet_data():

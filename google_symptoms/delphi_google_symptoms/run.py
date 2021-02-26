@@ -10,7 +10,6 @@ from itertools import product
 
 import numpy as np
 from delphi_utils import (
-    read_params,
     create_export_csv,
     geomap,
     get_structured_logger
@@ -22,24 +21,43 @@ from .geo import geo_map
 from .pull import pull_gs_data
 
 
-def run_module():
-    """Run Google Symptoms module."""
+def run_module(params):
+    """
+    Run Google Symptoms module.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, YYYY-MM-DD format, date from which to export data
+        - "num_export_days": int, number of days before end date (today) to export
+        - "path_to_bigquery_credentials": str, path to BigQuery API key and service account
+            JSON file
+    """
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
 
-    params = read_params()
-    export_start_date = datetime.strptime(params["export_start_date"], "%Y-%m-%d")
-    export_dir = params["export_dir"]
-    base_url = params["base_url"]
+    export_start_date = datetime.strptime(
+        params["indicator"]["export_start_date"], "%Y-%m-%d")
+    export_dir = params["common"]["export_dir"]
+    num_export_days = params["indicator"].get("num_export_days", "all")
 
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     # Pull GS data
-    dfs = pull_gs_data(base_url)
+    dfs = pull_gs_data(params["indicator"]["bigquery_credentials"],
+                       export_start_date,
+                       num_export_days)
     gmpr = geomap.GeoMapper()
+
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
@@ -49,18 +67,24 @@ def run_module():
             df_pull.rename(columns={geo_res: "geo_id"}, inplace=True)
         else:
             df_pull = geo_map(dfs["county"], geo_res)
+
+        if len(df_pull) == 0:
+            continue
         for metric, smoother in product(
                 METRICS+[COMBINED_METRIC], SMOOTHERS):
             print(geo_res, metric, smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
-                                 ).transform(SMOOTHERS_MAP[smoother][0])
+                                           ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
+
+            if len(df) == 0:
+                continue
             exported_csv_dates = create_export_csv(
                 df,
                 export_dir=export_dir,
@@ -81,9 +105,10 @@ def run_module():
     formatted_oldest_final_export_date = None
     if oldest_final_export_date:
         max_lag_in_days = (datetime.now() - oldest_final_export_date).days
-        formatted_oldest_final_export_date = oldest_final_export_date.strftime("%Y-%m-%d")
+        formatted_oldest_final_export_date = oldest_final_export_date.strftime(
+            "%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds,
-        csv_export_count = csv_export_count,
-        max_lag_in_days = max_lag_in_days,
-        oldest_final_export_date = formatted_oldest_final_export_date)
+                elapsed_time_in_seconds=elapsed_time_in_seconds,
+                csv_export_count=csv_export_count,
+                max_lag_in_days=max_lag_in_days,
+                oldest_final_export_date=formatted_oldest_final_export_date)

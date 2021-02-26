@@ -1,8 +1,8 @@
 # Google Symptoms
 
-We import the normalized symptom search term popularity data from the Google 
-Research's Open COVID-19 Data project and export the county-level and state-level 
-data as-is.  We also aggregate the data to the MSA and HRR levels. For detailed 
+We import the normalized symptom search term popularity data from the Google
+Research's Open COVID-19 Data project via BigQuery and export the county-level and state-level
+data as-is.  We also aggregate the data to the MSA and HRR levels. For detailed
 information see the files `DETAILS.md` contained in this directory.
 
 ## Running the Indicator
@@ -17,19 +17,20 @@ make install
 ```
 
 This command will install the package in editable mode, so you can make changes that
-will automatically propagate to the installed package. 
+will automatically propagate to the installed package.
 
-All of the user-changable parameters are stored in `params.json`. To execute the module
+All of the user-changable parameters are stored in `params.json`. You will need to
+acquire a BigQuery API key with affiliated billing to fetch data. To execute the module
 and produce the output datasets (by default, in `receiving`), run the following.
 
 ```
 env/bin/python -m delphi_google_symptoms
 ```
 
-If you want to enter the virtual environment in your shell, 
-you can run `source env/bin/activate`. Run `deactivate` to leave the virtual environment. 
+If you want to enter the virtual environment in your shell,
+you can run `source env/bin/activate`. Run `deactivate` to leave the virtual environment.
 
-Once you are finished, you can remove the virtual environment and 
+Once you are finished, you can remove the virtual environment and
 params file with the following:
 
 ```
@@ -58,7 +59,7 @@ To run individual tests, run the following:
 ```
 
 The output will show the number of unit tests that passed and failed, along
-with the percentage of code covered by the tests. 
+with the percentage of code covered by the tests.
 
 None of the linting or unit tests should fail, and the code lines that are not covered by unit tests should be small and
-should not include critical sub-routines. 
+should not include critical sub-routines.

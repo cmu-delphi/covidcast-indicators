@@ -245,11 +245,8 @@ class DoctorVisitsSensor:
 
         included_indices = [x for x in final_sensor_idxs if include[x]]
 
-        def select_idx(my_list):
-            return my_list[included_indices]
-
-        df = pd.DataFrame(data = {"date": select_idx(burn_in_dates),
-                                    "geo_id": geo_id,
-                                    "val": select_idx(new_rates),
-                                    "se": select_idx(se)})
+        df = pd.DataFrame(data = {"date": burn_in_dates[included_indices],
+                                  "geo_id": geo_id,
+                                  "val": new_rates[included_indices],
+                                  "se": se[included_indices]})
         return df

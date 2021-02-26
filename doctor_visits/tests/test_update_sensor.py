@@ -1,5 +1,4 @@
 """Tests for update_sensor.py."""
-import os
 
 import pandas as pd
 
@@ -18,6 +17,5 @@ class TestUpdateSensor:
             se=False
         )
 
-        comparison = pd.read_csv(os.path.join("./comparison/update_sensor/all.csv"),
-                                 parse_dates=["date"])
+        comparison = pd.read_csv("./comparison/update_sensor/all.csv", parse_dates=["date"])
         pd.testing.assert_frame_equal(actual.reset_index(drop=True), comparison)

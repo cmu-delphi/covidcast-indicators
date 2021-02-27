@@ -86,7 +86,7 @@ class DoctorVisitsSensor:
             min_recent_obs_to_include=Config.MIN_RECENT_OBS,
     ):
         """
-        Adjust for backfill (retroactively added observations).
+        Adjust for retroactively added observations.
 
         Use a variable length smoother, which starts from the RHS and moves
          leftwards (backwards through time). We cumulatively sum the total

@@ -1,5 +1,7 @@
 """
-Functions used to calculate direction. (Thanks to Addison Hu)
+Functions used to calculate direction.
+
+(Thanks to Addison Hu)
 
 Author: Maria Jahja
 Created: 2020-04-17

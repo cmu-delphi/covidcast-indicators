@@ -1,5 +1,6 @@
 """
 This file contains various filters used to smooth the 1-d signals.
+
 Code is courtesy of Addison Hu (minor adjustments by Maria).
 
 Author: Maria Jahja

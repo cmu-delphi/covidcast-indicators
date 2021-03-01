@@ -22,5 +22,5 @@ def from_params(params):
         Dictionary of parameters
     """
     if "validation" in params:
-        return Validator(params["validation"])
+        return Validator(params)
     return None

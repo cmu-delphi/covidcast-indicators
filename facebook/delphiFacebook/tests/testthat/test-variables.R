@@ -21,7 +21,9 @@ test_that("is_selected handles selections correctly", {
 })
 
 test_that("activities items correctly coded", {
+  # C13 only (pre-Wave 10)
   input_data <- data.frame(
+    wave = rep(1, 6),
     C13 = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
   
@@ -35,11 +37,43 @@ test_that("activities items correctly coded", {
   input_data$a_large_event_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
   input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
 
+  input_data$a_work_outside_home_indoors_1d <- rep(NA, 6)
+  input_data$a_shop_indoors_1d <- rep(NA, 6)
+  input_data$a_restaurant_indoors_1d <- rep(NA, 6)
+  input_data$a_spent_time_indoors_1d <- rep(NA, 6)
+  input_data$a_large_event_indoors_1d <- rep(NA, 6)
+  
+  expect_equal(out, input_data)
+  
+  # C13b only (Wave 10+)
+  input_data <- data.frame(
+    wave = rep(1, 6),
+    C13b = c(NA, "1,2,4", "3", "", "6", "2,4")
+  )
+  
+  out <- code_activities(input_data)
+  
+  # expected result
+  input_data$a_work_outside_home_1d <- rep(NA, 6)
+  input_data$a_shop_1d <- rep(NA, 6)
+  input_data$a_restaurant_1d <- rep(NA, 6)
+  input_data$a_spent_time_1d <- rep(NA, 6)
+  input_data$a_large_event_1d <- rep(NA, 6)
+  
+  input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
+  
+  input_data$a_work_outside_home_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
+  input_data$a_shop_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
+  input_data$a_restaurant_indoors_1d <- c(NA, FALSE, TRUE, NA, FALSE, FALSE)
+  input_data$a_spent_time_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
+  input_data$a_large_event_indoors_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
+  
   expect_equal(out, input_data)
 })
 
 test_that("mask items correctly coded", {
   input_data <- data.frame(
+    wave = 1,
     C14 = c(NA, 1, 3, 6, 2, 4),
     C16 = c(1, NA, 6, 3, 2, 5),
     C6 = 1
@@ -50,9 +84,28 @@ test_that("mask items correctly coded", {
   # expected result
   input_data$c_travel_state <- TRUE
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
   input_data$c_work_outside_5d <- NA
-
+  
+  expect_equal(out, input_data)
+  
+  input_data <- data.frame(
+    wave = 1,
+    C14a = c(NA, 1, 3, 6, 2, 4),
+    C16 = c(1, NA, 6, 3, 2, 5),
+    C6 = 1
+  )
+  
+  out <- code_mask_contact(input_data)
+  
+  # expected result
+  input_data$c_travel_state <- TRUE
+  input_data$c_mask_often <- NA
+  input_data$c_mask_often_7d <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_work_outside_5d <- NA
+  
   expect_equal(out, input_data)
 })
 

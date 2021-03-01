@@ -17,6 +17,8 @@ get_binary_indicators <- function() {
     # mask wearing
     "smoothed_wearing_mask", "weight_unif", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwearing_mask", "weight", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wearing_mask_7d", "weight_unif", "c_mask_often_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wwearing_mask_7d", "weight", "c_mask_often_7d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_others_masked", "weight_unif", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wothers_masked", "weight", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
 
@@ -46,6 +48,7 @@ get_binary_indicators <- function() {
     "smoothed_wwork_outside_home_1d", "weight", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
 
     # activities
+    # pre-Wave 10
     "smoothed_shop_1d", "weight_unif", "a_shop_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wshop_1d", "weight", "a_shop_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_restaurant_1d", "weight_unif", "a_restaurant_1d", 6, compute_binary_response, jeffreys_binary,
@@ -56,7 +59,16 @@ get_binary_indicators <- function() {
     "smoothed_wlarge_event_1d", "weight", "a_large_event_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_public_transit_1d", "weight_unif", "a_public_transit_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wpublic_transit_1d", "weight", "a_public_transit_1d", 6, compute_binary_response, jeffreys_binary,
-
+    # Wave 10+
+    "smoothed_shop_indoors_1d", "weight_unif", "a_shop_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wshop_indoors_1d", "weight", "a_shop_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_restaurant_indoors_1d", "weight_unif", "a_restaurant_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wrestaurant_indoors_1d", "weight", "a_restaurant_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_spent_time_indoors_1d", "weight_unif", "a_spent_time_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wspent_time_indoors_1d", "weight", "a_spent_time_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_large_event_indoors_1d", "weight_unif", "a_large_event_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wlarge_event_indoors_1d", "weight", "a_large_event_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    
     # testing
     "smoothed_tested_14d", "weight_unif", "t_tested_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtested_14d", "weight", "t_tested_14d", 6, compute_binary_response, jeffreys_binary,

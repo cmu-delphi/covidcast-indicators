@@ -10,8 +10,7 @@ from datetime import datetime, timedelta
 
 
 class Config:
-    """Static configuration variables.
-    """
+    """Static configuration variables."""
 
     # dates
     FIRST_DATA_DATE = datetime(2020, 1, 1)

@@ -36,7 +36,7 @@ class TestRunIndicator:
     # arbitrary params to pass to function generators
     PARAMS = {
         "indicator": {"a": 1},
-        "validator": {"b": 2},
+        "validation": {"b": 2},
         "archive": {"c": 3}
     }
 

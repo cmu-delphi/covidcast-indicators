@@ -179,6 +179,9 @@ code_mental_health <- function(input_data) {
 #' @return data frame augmented with `c_travel_state`, `c_work_outside_5d`,
 #'   `c_mask_often`, `c_others_masked`
 code_mask_contact <- function(input_data) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
   # private helper for both mask items, which are identically coded: 6 means the
   # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
   most_always <- function(item) {
@@ -197,6 +200,14 @@ code_mask_contact <- function(input_data) {
     input_data$c_mask_often <- most_always(input_data$C14)
   } else {
     input_data$c_mask_often <- NA
+  }
+  
+  if ("C14a" %in% names(input_data)) {
+    # added in wave 8. wearing mask most or all of the time (last 7 days); 
+    # exclude respondents who have not been in public
+    input_data$c_mask_often_7d <- most_always(input_data$C14a)
+  } else {
+    input_data$c_mask_often_7d <- NA
   }
 
   if ("C16" %in% names(input_data)) {

@@ -51,6 +51,9 @@ is_selected <- function(vec, selection) {
 #'   `a_restaurant_1d`, `a_spent_time_1d`, `a_large_event_1d`,
 #'   `a_public_transit_1d`
 code_activities <- function(input_data) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
   if ("C13" %in% names(input_data)) {
     # introduced in wave 4
     activities <- split_options(input_data$C13)
@@ -69,6 +72,29 @@ code_activities <- function(input_data) {
     input_data$a_large_event_1d <- NA
     input_data$a_public_transit_1d <- NA
   }
+  
+  if ("C13b" %in% names(input_data)) {
+    # introduced in wave 10 as "indoors" activities version of C13
+    activities <- split_options(input_data$C13b)
+    
+    input_data$a_work_outside_home_indoors_1d <- is_selected(activities, "1")
+    input_data$a_shop_indoors_1d <- is_selected(activities, "2")
+    input_data$a_restaurant_indoors_1d <- is_selected(activities, "3")
+    input_data$a_spent_time_indoors_1d <- is_selected(activities, "4")
+    input_data$a_large_event_indoors_1d <- is_selected(activities, "5")
+    input_data$a_public_transit_1d <- is_selected(activities, "6")
+  } else {
+    input_data$a_work_outside_home_indoors_1d <- NA
+    input_data$a_shop_indoors_1d <- NA
+    input_data$a_restaurant_indoors_1d <- NA
+    input_data$a_spent_time_indoors_1d <- NA
+    input_data$a_large_event_indoors_1d <- NA
+    
+    if ( is.null(input_data$a_public_transit_1d) ) {
+      input_data$a_public_transit_1d <- NA
+    }
+  }
+  
   return(input_data)
 }
 

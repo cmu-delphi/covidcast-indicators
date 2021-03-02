@@ -10,7 +10,7 @@ code_symptoms(input_data)
 \item{input_data}{input data frame of raw survey data}
 }
 \value{
-data frame augmented with `hh_fever`, `hh_soar_throat`, `hh_cough`,
+data frame augmented with `hh_fever`, `hh_sore_throat`, `hh_cough`,
   `hh_short_breath`, `hh_diff_breath`, `hh_number_sick`
 }
 \description{

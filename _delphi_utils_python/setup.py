@@ -4,6 +4,7 @@ from setuptools import find_packages
 required = [
     "boto3",
     "covidcast",
+    "delphi_validator",
     "gitpython",
     "moto",
     "numpy",

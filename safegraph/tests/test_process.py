@@ -28,7 +28,9 @@ class TestProcess:
             # generate fake files
             open(os.path.join(tmpdir, "social-distancing/2021/01/26/file.csv.gz"), 'w').close()
             open(os.path.join(tmpdir, "social-distancing/2021/01/27/file1.csv.gz"), 'w').close()
-            time.sleep(1)  # have second file generated as second after
+            # have second file generated as second after
+            # since last modified time has second level resolution
+            time.sleep(1)
             open(os.path.join(tmpdir, "social-distancing/2021/01/27/file2.csv.gz"), 'w').close()
             # only second file on 1/27 should be kept since it's more recent
             filepath_dict = get_daily_source_files(

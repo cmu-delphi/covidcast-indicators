@@ -23,6 +23,8 @@ class Validator:
         """
         self.export_dir = params["common"]["export_dir"]
 
+        assert "validation" in params, "params must have a top-level 'validation' object to run "\
+            "validation"
         validation_params = params["validation"]
         suppressed_errors =  validation_params["common"].get('suppressed_errors', [])
         for entry in suppressed_errors:

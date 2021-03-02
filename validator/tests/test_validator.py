@@ -23,6 +23,13 @@ class TestValidatorInitialization:
         assert len(validator.suppressed_errors) == 0
         assert isinstance(validator.suppressed_errors, list)
 
+    def test_validation_params(self):
+        """Test that validation fails with no validation parameters."""
+        with pytest.raises(AssertionError,
+                           match="params must have a top-level 'validation' object to run "\
+                                 "validation"):
+            Validator({"common": {"export_dir": None}})
+
     def test_suppressed_errors(self):
         """Test initialization with suppressed errors."""
         params = {

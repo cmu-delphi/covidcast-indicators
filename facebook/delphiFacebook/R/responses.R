@@ -185,23 +185,25 @@ load_response_one <- function(input_filename, params) {
 #' @param params named list containing values "static_dir", "start_time", and
 #'   "end_time"
 #'
-#' @importFrom dplyr anti_join
+#' @importFrom dplyr anti_join filter
 #' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, params) {
-  # take only the first instance of each token
   input_data <- arrange(input_data, .data$StartDate)
-  input_data <- input_data[input_data$token != "",]
-  input_data <- input_data[!duplicated(input_data$token),]
-
-  input_data <- input_data[input_data$S1 == 1, ]
-  input_data <- input_data[input_data$DistributionChannel != "preview", ]
-
-  # take the right dates. We don't filter the start date because the aggregate
+  
+  ## Remove invalid, duplicated, and out-of-range observations.
+  # Take only the first instance of each token.
+  # Take the right dates. We don't filter the start date because the aggregate
   # and individual data pipelines handle that themselves (aggregate in
   # particular needs data well before start_date)
-  input_data <- input_data[as.Date(input_data$date) <= params$end_date, ]
-
+  input_data <- filter(input_data, 
+                       token != "", 
+                       !duplicated(token), 
+                       S1 == 1, 
+                       DistributionChannel != "preview",
+                       as.Date(date) <= params$end_date
+  )
+  
   return(input_data)
 }
 
@@ -289,19 +291,20 @@ create_data_for_aggregation <- function(input_data)
 #'   smoothing, we'd want to include at least 11 days of data before
 #'   `start_date`, so estimates on `start_date` are based on the correct data.
 #'
+#' @importFrom dplyr filter
 #' @export
 filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 {
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
-  df <- df[df$zip5 %in% known_zips$zip5,]
-
-  df <- df[!is.na(df$hh_number_sick) & !is.na(df$hh_number_total), ]
-  df <- df[dplyr::between(df$hh_number_sick, 0L, 30L), ]
-  df <- df[dplyr::between(df$hh_number_total, 1L, 30L), ]
-  df <- df[df$hh_number_sick <= df$hh_number_total, ]
-
-  df <- df[df$day >= (as.Date(params$start_date) - lead_days), ]
+  df <- filter(df, 
+               zip5 %in% known_zips$zip5,
+               !is.na(hh_number_sick) & !is.na(hh_number_total),
+               dplyr::between(hh_number_sick, 0L, 30L),
+               dplyr::between(hh_number_total, 1L, 30L),
+               hh_number_sick <= hh_number_total,
+               day >= (as.Date(params$start_date) - lead_days),
+  )
 
   return(df)
 }

@@ -25,9 +25,11 @@
 #'   for each geographic level.
 #' @param params Named list of configuration parameters.
 #' @import data.table
-#' @importFrom dplyr filter mutate_at vars
+#' @importFrom dplyr filter mutate_at vars select
 aggregate_indicators <- function(df, indicators, cw_list, params) {
-
+  ## Keep only columns used in indicators, plus supporting columns.
+  df <- select(df, all_of(unique(indicators$metric)), all_of(unique(indicators$var_weight)), day, zip5)
+  
   ## The data frame will include more days than just [start_date, end_date], so
   ## select just the unique days contained in that interval.
   days <- unique(df$day)

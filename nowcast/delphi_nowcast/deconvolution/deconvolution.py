@@ -10,7 +10,8 @@ from ..sensorization.get_epidata import get_indicator_data
 
 
 def _construct_convolution_matrix(signal: np.ndarray,
-                                  kernel: np.ndarray) -> np.ndarray:
+                                  kernel: np.ndarray,
+                                  norm: bool) -> np.ndarray:
     """
     Constructs full convolution matrix (n+m-1) x n,
     where n is the signal length and m the kernel length.
@@ -21,6 +22,8 @@ def _construct_convolution_matrix(signal: np.ndarray,
         array of values to convolve
     kernel
         array with convolution kernel values
+    norm
+        boolean whether to normalize rows to sum to sum(kernel)
 
     Returns
     -------
@@ -32,7 +35,12 @@ def _construct_convolution_matrix(signal: np.ndarray,
     first_col = np.r_[kernel, padding]
     first_row = np.r_[kernel[0], padding]
 
-    return toeplitz(first_col, first_row)
+    P = toeplitz(first_col, first_row)
+
+    if norm:
+        scale = P.sum(axis=1) / kernel.sum()
+        return P / scale[:, np.newaxis]
+    return P
 
 
 def _fft_convolve(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
@@ -100,7 +108,7 @@ def deconvolve_tf(y: np.ndarray,
     n = y.shape[0]
     m = kernel.shape[0]
     rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel)[:n, ]
+    C = _construct_convolution_matrix(y, kernel, True)[:n, ]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
 
@@ -315,7 +323,8 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
         if loc_key in combo_convolved_truth:
             convolved_truth = combo_convolved_truth[loc_key]
             try:
-                convolved_truth = convolved_truth.get_data_range(start_date, end_date, "mean")
+                convolved_truth = convolved_truth.get_data_range(start_date, end_date,
+                                                                 "mean")
             except ValueError:
                 deconvolved_truths.append(LocationSeries(loc, geo_type))
                 continue

@@ -13,7 +13,7 @@ class TestCheckMissingDates:
 
     def test_empty_filelist(self):
         params = {
-            "global": {
+            "common": {
                 "data_source": "",
                 "span_length": 8,
                 "end_date": "2020-09-09"
@@ -31,7 +31,7 @@ class TestCheckMissingDates:
 
     def test_same_day(self):
         params = {
-            "global": {
+            "common": {
                 "data_source": "",
                 "span_length": 0,
                 "end_date": "2020-09-01"
@@ -47,7 +47,7 @@ class TestCheckMissingDates:
 
     def test_duplicate_dates(self):
         params = {
-            "global": {
+            "common": {
                 "data_source": "",
                 "span_length": 1,
                 "end_date": "2020-09-02"
@@ -91,7 +91,7 @@ class TestNameFormat:
 
 class TestCheckBadGeoIdFormat:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 0,
             "end_date": "2020-09-02"
@@ -176,7 +176,7 @@ class TestCheckBadGeoIdFormat:
 
 class TestDuplicatedRows:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 0,
             "end_date": "2020-09-02"
@@ -223,7 +223,7 @@ class TestDuplicatedRows:
 
 class TestCheckBadGeoIdValue:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 0,
             "end_date": "2020-09-02",
@@ -307,7 +307,7 @@ class TestCheckBadGeoIdValue:
 
 class TestCheckBadVal:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"
@@ -363,7 +363,7 @@ class TestCheckBadVal:
 
 class TestCheckBadSe:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"
@@ -448,7 +448,7 @@ class TestCheckBadSe:
 
 class TestCheckBadN:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"

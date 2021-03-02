@@ -8,7 +8,7 @@ from delphi_validator.dynamic import DynamicValidator
 
 class TestCheckRapidChange:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"
@@ -42,7 +42,7 @@ class TestCheckRapidChange:
 
 class TestCheckAvgValDiffs:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"
@@ -161,7 +161,7 @@ class TestCheckAvgValDiffs:
 
 class TestDataOutlier:
     params = {
-        "global": {
+        "common": {
             "data_source": "",
             "span_length": 1,
             "end_date": "2020-09-02"

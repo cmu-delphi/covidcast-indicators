@@ -18,12 +18,13 @@ class Validator:
         Initialize object and set parameters.
 
         Arguments:
-            - params: dictionary of user settings; if empty, defaults will be used
+            - params: dictionary of user settings read from params.json file; if empty, defaults
+                will be used
         """
-        self.export_dir = params["global"]["export_dir"]
+        self.export_dir = params["common"]["export_dir"]
 
         validation_params = params["validation"]
-        suppressed_errors =  validation_params["global"].get('suppressed_errors', [])
+        suppressed_errors =  validation_params["common"].get('suppressed_errors', [])
         for entry in suppressed_errors:
             assert isinstance(entry, dict), "suppressed_errors must be a list of objects"
             assert set(entry.keys()).issubset(["check_name", "date", "geo_type", "signal"]),\
@@ -32,8 +33,8 @@ class Validator:
         self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
-        self.time_window = TimeWindow.from_params(validation_params["global"]["end_date"],
-                                                  validation_params["global"]["span_length"])
+        self.time_window = TimeWindow.from_params(validation_params["common"]["end_date"],
+                                                  validation_params["common"]["span_length"])
 
         self.static_validation = StaticValidator(validation_params)
         self.dynamic_validation = DynamicValidator(validation_params)

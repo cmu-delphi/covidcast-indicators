@@ -32,14 +32,14 @@ class StaticValidator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        global_params = params["global"]
+        common_params = params["common"]
         static_params = params.get("static", dict())
 
         self.params = self.Parameters(
             validator_static_file_dir = static_params.get('validator_static_file_dir',
                                                              '../validator/static'),
-            time_window = TimeWindow.from_params(global_params["end_date"],
-                                                 global_params["span_length"]),
+            time_window = TimeWindow.from_params(common_params["end_date"],
+                                                 common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
             missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False)

@@ -8,11 +8,11 @@ class TestValidatorInitialization:
     def test_default_settings(self):
         """Test default initialization."""
         params = {
-            "global": {
+            "common": {
                 "export_dir": None
             },
             "validation": {
-                "global": {
+                "common": {
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01"
@@ -26,20 +26,20 @@ class TestValidatorInitialization:
     def test_suppressed_errors(self):
         """Test initialization with suppressed errors."""
         params = {
-            "global": {
+            "common": {
                 "export_dir": None
             },
             "validation": {
-                "global": {
+                "common": {
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01",
                     "suppressed_errors": [{"check_name": "a",
-                                        "date": None,
-                                        "signal": "b"},
-                                        {"check_name":"c",
-                                        "date": None,
-                                        "geo_type": "d"}]
+                                           "date": None,
+                                           "signal": "b"},
+                                          {"check_name":"c",
+                                           "date": None,
+                                           "geo_type": "d"}]
                 }
             }
         }
@@ -54,22 +54,22 @@ class TestValidatorInitialization:
                                                  '"check_name", "date", "geo_type", "signal"'):
             # entry with invalid keys
             Validator({
-                "global": {
+                "common": {
                     "export_dir": None
                 },
                 "validation": {
-                    "global": {
+                    "common": {
                         "data_source": "",
                         "span_length": 0,
                         "end_date": "2020-09-01",
                         "suppressed_errors": [{"check_name": "a",
-                                            "date": None,
-                                            "signal": "b"},
-                                            {"check_name":"c",
-                                            "date": None,
-                                            "geo_type": "d"},
-                                            {"check_name": "a",
-                                            "fake": "b"}]
+                                               "date": None,
+                                               "signal": "b"},
+                                              {"check_name":"c",
+                                               "date": None,
+                                               "geo_type": "d"},
+                                              {"check_name": "a",
+                                               "fake": "b"}]
                     }
                 }
             })
@@ -77,11 +77,11 @@ class TestValidatorInitialization:
         with pytest.raises(AssertionError, match="suppressed_errors must be a list of objects"):
             # entry that is not a list
             Validator({
-                "global": {
+                "common": {
                     "export_dir": None
                 },
                 "validation": {
-                    "global": {
+                    "common": {
                     "data_source": "",
                     "span_length": 0,
                     "end_date": "2020-09-01",

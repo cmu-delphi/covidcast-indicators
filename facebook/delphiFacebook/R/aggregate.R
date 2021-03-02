@@ -6,7 +6,7 @@
 #' before `start_date` in case there was backfill for those days.)
 #'
 #' Warning: The maximum value of `smooth_days` needs to be accounted for in
-#' `run.R` in the `lead_days` argument to `filter_data_for_aggregatation`, so
+#' `run.R` in the `lead_days` argument to `filter_data_for_aggregation`, so
 #' the correct amount of archived data is included, plus the expected backfill
 #' length.
 #'
@@ -29,7 +29,7 @@
 aggregate_indicators <- function(df, indicators, cw_list, params) {
   ## Keep only columns used in indicators, plus supporting columns.
   df <- select(df, all_of(unique(indicators$metric)), all_of(unique(indicators$var_weight)), day, zip5)
-  
+
   ## The data frame will include more days than just [start_date, end_date], so
   ## select just the unique days contained in that interval.
   days <- unique(df$day)

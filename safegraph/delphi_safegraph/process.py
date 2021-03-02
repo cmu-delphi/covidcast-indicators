@@ -1,5 +1,7 @@
 """Internal functions for creating Safegraph indicator."""
 import datetime
+import glob
+import pathlib
 import os
 from typing import List
 import numpy as np
@@ -28,27 +30,36 @@ def date_from_timestamp(timestamp) -> datetime.date:
     return datetime.date.fromisoformat(timestamp.split('T')[0])
 
 
-def files_in_past_week(current_filename) -> List[str]:
-    """Construct file paths from previous 6 days.
+def get_daily_source_files(path):
+    """
+    Get daily data files in a given path, handling date collisions if they occur.
+
+    Files are expected to be in a folder structure ending in /year/month/day/filename. If the event
+    there are multiple files for a given date, the most recently modified file is used.
 
     Parameters
     ----------
-    current_filename: str
-        name of CSV file.  Must be of the form
-        {path}/{YYYY}/{MM}/{DD}/{YYYY}-{MM}-{DD}-{CSV_NAME}
+    path str
+        Path of files.
+
     Returns
     -------
-    List of file names corresponding to the 6 days prior to YYYY-MM-DD.
+        Dictionary where keys are the dates and values are str filenames representing the data file
+        for that day.
     """
-    path, year, month, day, _ = current_filename.rsplit('/', 4)
-    current_date = datetime.date(int(year), int(month), int(day))
-    one_day = datetime.timedelta(days=1)
-    for _ in range(1, 7):
-        current_date = current_date - one_day
-        date_str = current_date.isoformat()
-        date_path = date_str.replace('-', '/')
-        new_filename = f'{path}/{date_path}/{date_str}-{CSV_NAME}'
-        yield new_filename
+    all_files = glob.glob(path, recursive=True)
+    output = {}
+    for f in all_files:
+        _, year, month, day, _ = f.rsplit('/', 4)
+        file_date = datetime.date(int(year), int(month), int(day))
+        if file_date in output:
+            new_last_modified = pathlib.Path(f).stat().st_mtime
+            existing_last_modified = pathlib.Path(output[file_date]).stat().st_mtime
+            if new_last_modified > existing_last_modified:
+                output[file_date] = f
+        else:
+            output[file_date] = f
+    return output
 
 
 def add_suffix(signals, suffix):

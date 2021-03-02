@@ -20,8 +20,7 @@ from .smooth import left_gauss_linear
 
 
 class DoctorVisitsSensor:
-    """Sensor class to fit a signal using CLI counts from doctor visits
-    """
+    """Sensor class to fit a signal using CLI counts from doctor visits."""
 
     @staticmethod
     def transform(
@@ -36,7 +35,6 @@ class DoctorVisitsSensor:
 
         Returns: smoothed and/or adjusted 1D signal
         """
-
         scaler = MinMaxScaler(feature_range=(0, 1))
         sc_sig = scaler.fit_transform(sig)
         sm_sig = smoother(sc_sig, h)
@@ -88,8 +86,9 @@ class DoctorVisitsSensor:
             min_recent_obs_to_include=Config.MIN_RECENT_OBS,
     ):
         """
-        Adjust for backfill (retroactively added observations) by using a
-         variable length smoother, which starts from the    RHS and moves
+        Adjust for retroactively added observations.
+
+        Use a variable length smoother, which starts from the RHS and moves
          leftwards (backwards through time). We cumulatively sum the total
          visits (denominator), until we have observed some minimum number of
          counts, then calculate the sum over that bin. We restrict the
@@ -158,7 +157,8 @@ class DoctorVisitsSensor:
     @staticmethod
     def fit(y_data,
             fit_dates,
-            sensor_dates,
+            burn_in_dates,
+            final_sensor_idxs,
             geo_id,
             recent_min_visits,
             min_recent_obs,
@@ -168,7 +168,8 @@ class DoctorVisitsSensor:
         Args:
             y_data: dataframe for one geo_id, with all 7 cols
             fit_dates: list of sorted datetime for which to use as training
-            sensor_dates: list of sorted datetime for which to produce sensor values
+            burn_in_dates: list of sorted datetime for which to produce sensor values
+            final_sensor_idxs: list of positions in `fit_dates` that correspond to sensors
             geo_id: unique identifier for the location column
             recent_min_visits: location is sparse if it has fewer than min_recent_visits over
                                                 <RECENT_LENGTH> days
@@ -182,7 +183,7 @@ class DoctorVisitsSensor:
         """
         y_data.set_index("ServiceDate", inplace=True)
         y_data = DoctorVisitsSensor.fill_dates(y_data, fit_dates)
-        sensor_idxs = np.where(y_data.index >= sensor_dates[0])[0]
+        sensor_idxs = np.where(y_data.index >= burn_in_dates[0])[0]
         n_dates = y_data.shape[0]
 
         # combine Flu_like and Mixed columns
@@ -240,4 +241,11 @@ class DoctorVisitsSensor:
             np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
         logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
-        return {"geo_id": geo_id, "rate": new_rates, "se": se, "incl": include}
+
+        included_indices = [x for x in final_sensor_idxs if include[x]]
+
+        df = pd.DataFrame(data = {"date": burn_in_dates[included_indices],
+                                  "geo_id": geo_id,
+                                  "val": new_rates[included_indices],
+                                  "se": se[included_indices]})
+        return df

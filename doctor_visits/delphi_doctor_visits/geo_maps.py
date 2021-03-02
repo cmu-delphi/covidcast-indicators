@@ -8,20 +8,17 @@ Created: 2020-04-18
 Last modified: 2020-04-30 by Aaron Rumack (add megacounty code)
 """
 
-from os.path import join
-
 import pandas as pd
-import numpy as np
 from delphi_utils.geomap import GeoMapper
 
 from .config import Config
-from .sensor import DoctorVisitsSensor
 
 
 class GeoMaps:
     """Class to map counties to other geographic resolutions."""
 
     def __init__(self):
+        """Create the underlying GeoMapper."""
         self.gmpr = GeoMapper()
 
     @staticmethod

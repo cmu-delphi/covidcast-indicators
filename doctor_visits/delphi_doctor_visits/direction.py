@@ -1,5 +1,7 @@
 """
-Functions used to calculate direction. (Thanks to Addison Hu)
+Functions used to calculate direction.
+
+(Thanks to Addison Hu)
 
 Author: Maria Jahja
 Created: 2020-04-17
@@ -16,8 +18,9 @@ def running_mean(s):
 
 def running_sd(s, mu=None):
     """
-    Compute running standard deviation.    Running mean can be pre-supplied
-    to save on computation.
+    Compute running standard deviation.
+
+    Running mean can be pre-supplied to save on computation.
     """
     if mu is None:
         mu = running_mean(s)
@@ -28,9 +31,10 @@ def running_sd(s, mu=None):
 
 def first_difference_direction(s):
     """
-    Code taken from Addison Hu. Modified to return directional strings.
-    Declares "notable" increases and decreases based on the distribution
-    of past first differences.
+    Declare "notable" increases and decreases.
+
+    Based on the distribution of past first differences.  Code taken from Addison Hu.  Modified to
+    return directional strings.
 
     Args:
         s: input data

@@ -3,16 +3,16 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
-import glob
 import functools
 import multiprocessing as mp
 import subprocess
 import time
+from datetime import timedelta
 
 from delphi_utils import get_structured_logger
 
 from .constants import SIGNALS, GEO_RESOLUTIONS
-from .process import process, files_in_past_week
+from .process import process, get_daily_source_files
 
 
 def run_module(params):
@@ -86,13 +86,14 @@ def run_module(params):
             check=True,
         )
 
-    files = glob.glob(f'{raw_data_dir}/social-distancing/**/*.csv.gz',
-                      recursive=True)
+    files = get_daily_source_files(f'{raw_data_dir}/social-distancing/**/*.csv.gz')
 
     files_with_previous_weeks = []
-    for fname in files:
-        previous_week = [fname]
-        previous_week.extend(files_in_past_week(fname))
+    for day in files:
+        previous_week = [files[day]]
+        for i in range(1, 7):
+            if day - timedelta(i) in files:
+                previous_week.append(files[day - timedelta(i)])
         files_with_previous_weeks.append(previous_week)
 
     with mp.Pool(n_core) as pool:

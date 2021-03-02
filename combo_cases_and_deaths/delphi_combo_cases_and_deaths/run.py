@@ -28,6 +28,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+
 
 def check_none_data_frame(data_frame, label, date_range):
     """Log and return True when a data frame is None."""
@@ -111,7 +113,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     elif geo_to_fetch == 'county':
         combined_df = maybe_append(
             usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == '72000'])
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
     # For MSA and HRR level, they are the same
     else:
         combined_df = usafacts_df

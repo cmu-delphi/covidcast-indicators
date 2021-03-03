@@ -140,8 +140,9 @@ load_response_one <- function(input_filename, params) {
   
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
-
+  
   input_data <- bodge_v4_translation(input_data)
+  input_data <- bodge_C6_C8(input_data)
 
   input_data <- code_symptoms(input_data)
   input_data <- code_hh_size(input_data)
@@ -355,6 +356,37 @@ bodge_v4_translation <- function(input_data) {
       input_data[[bad]]
     )
   }
+
+  return(input_data)
+}
+
+#' Fix column names in Wave 10.
+#'
+#' In Wave 10's deployment, the meaning of items C6 and C8 changed (from "In the
+#' past 5 days, have you traveled outside of your state?" and "In the past 5
+#' days, how often have you... felt depressed?", etc, to "In the past 7
+#' days..."), but the names were not changed. The names are changed in later
+#' waves.
+#'
+#' We rename C6 and C8_\* to C6a and C8a_\*, respectively, to match the existing
+#' naming scheme.
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_C6_C8 <- function(input_data) {
+  wave <- unique(input_data$wave)
+  if ( wave != 10 ) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+  
+  input_data <- rename(input_data,
+                       C6a = C6,
+                       C8a_1 = C8_1,
+                       C8a_2 = C8_2,
+                       C8a_3 = C8_3
+  )
 
   return(input_data)
 }

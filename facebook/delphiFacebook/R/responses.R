@@ -424,7 +424,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
     "V9", # added in Wave 7,
     "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
-    "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
+    "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )

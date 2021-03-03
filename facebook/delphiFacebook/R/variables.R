@@ -153,7 +153,7 @@ code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
 
-  if (wave >= 4 & wave < 10) {
+  if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4

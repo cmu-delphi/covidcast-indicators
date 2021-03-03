@@ -115,7 +115,7 @@ load_response_one <- function(input_filename, params) {
                            Q77 = col_integer(),
                            Q78 = col_integer(),
                            Q79 = col_integer(),
-                           Q80 = col_integer(), 
+                           Q80 = col_integer(),
                            V1 = col_integer()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
@@ -137,7 +137,7 @@ load_response_one <- function(input_filename, params) {
                        A2 = if_else(grepl("^[0-9]+[.]?0?$", A2),
                                     as.integer(A2),
                                     NA_integer_))
-  
+
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
   
@@ -249,21 +249,21 @@ merge_responses <- function(input_data, archive) {
 #' @param input_data   the input data frame of (filtered) responses
 #'
 #' @export
-create_data_for_aggregatation <- function(input_data)
+create_data_for_aggregation <- function(input_data)
 {
   df <- input_data
   df$weight_unif <- 1.0
   df$day <- as.Date(df$date)
 
   # create variables for cli and ili signals
-  hh_cols <- c("hh_fever", "hh_soar_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
+  hh_cols <- c("hh_fever", "hh_sore_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
   df$cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)
   df$hh_number_sick[df$cnt_symptoms <= 0] <- 0
   df$is_cli <- df$hh_fever & (
     df$hh_cough | df$hh_short_breath | df$hh_diff_breath
   )
   df$is_cli[is.na(df$is_cli)] <- FALSE
-  df$is_ili <- df$hh_fever & (df$hh_soar_throat | df$hh_cough)
+  df$is_ili <- df$hh_fever & (df$hh_sore_throat | df$hh_cough)
   df$is_ili[is.na(df$is_ili)] <- FALSE
   df$hh_p_cli <- 100 * df$is_cli * df$hh_number_sick / df$hh_number_total
   df$hh_p_ili <- 100 * df$is_ili * df$hh_number_sick / df$hh_number_total
@@ -292,10 +292,9 @@ create_data_for_aggregatation <- function(input_data)
 #'   smoothing, we'd want to include at least 11 days of data before
 #'   `start_date`, so estimates on `start_date` are based on the correct data.
 #'
-#' @export
-#' 
 #' @importFrom dplyr filter
-filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
+#' @export
+filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 {
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)

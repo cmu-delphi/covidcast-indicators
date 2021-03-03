@@ -105,7 +105,7 @@ class ValidationFailure:
         ----------
         errors_to_suppress: List[ValidationFailure]
             set of data sources to ignore.
-            Because we allow `None` values as wildcards, we cannot assume errors that are equal 
+            Because we allow `None` values as wildcards, we cannot assume errors that are equal
             will hash to the same values.  Thus, we need to use a list rather than a set here.
         """
         return self in suppressed_errors

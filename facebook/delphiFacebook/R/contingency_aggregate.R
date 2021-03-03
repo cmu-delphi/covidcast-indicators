@@ -24,7 +24,7 @@
 #' @return none
 #'
 #' @import data.table
-#' @importFrom dplyr full_join %>% select all_of any_of
+#' @importFrom dplyr full_join %>% select all_of
 #' @importFrom purrr reduce
 #'
 #' @export
@@ -34,10 +34,11 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   aggregations <- output[[2]]
   
   ## Keep only columns used in indicators, plus supporting columns.
+  group_vars <- unique( unlist(aggregations$group_by) )
   df <- select(df, 
                all_of(unique(aggregations$metric)), 
                all_of(unique(aggregations$var_weight)), 
-               any_of( unique( unlist(aggregations$group_by) ) ), 
+               all_of( group_vars[group_vars != "geo_id"] ), 
                zip5,
                start_dt)
   

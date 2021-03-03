@@ -24,11 +24,23 @@
 #' @return none
 #'
 #' @import data.table
-#' @importFrom dplyr full_join %>%
+#' @importFrom dplyr full_join %>% select all_of any_of
 #' @importFrom purrr reduce
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
+  output <- post_process_aggs(df, aggregations, cw_list)
+  df <- output[[1]]
+  aggregations <- output[[2]]
+  
+  ## Keep only columns used in indicators, plus supporting columns.
+  df <- select(df, 
+               all_of(unique(aggregations$metric)), 
+               all_of(unique(aggregations$var_weight)), 
+               any_of( unique( unlist(aggregations$group_by) ) ), 
+               zip5,
+               start_dt)
+  
   msg_plain(paste0("Producing aggregates..."))
   ## For the date range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
@@ -39,10 +51,6 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
-
-  output <- post_process_aggs(df, aggregations, cw_list)
-  df <- output[[1]]
-  aggregations <- output[[2]]
 
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 

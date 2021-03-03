@@ -1,7 +1,7 @@
 """Tests for Validator"""
 import pytest
-from delphi_validator.errors import ValidationFailure
-from delphi_validator.validate import Validator
+from delphi_utils.validator.errors import ValidationFailure
+from delphi_utils.validator.validate import Validator
 
 class TestValidatorInitialization:
     """Tests for proper initialization."""

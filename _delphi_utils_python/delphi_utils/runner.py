@@ -1,8 +1,8 @@
 """Indicator running utilities."""
 from typing import Any, Callable, Dict, Optional
-from delphi_validator.validate import Validator
 from .archive import ArchiveDiffer
 from .utils import read_params
+from .validator.validate import Validator
 
 Params = Dict[str, Any]
 

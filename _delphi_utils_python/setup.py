@@ -5,6 +5,7 @@ required = [
     "boto3",
     "covidcast",
     "delphi_validator",
+    "freezegun",
     "gitpython",
     "moto",
     "numpy",

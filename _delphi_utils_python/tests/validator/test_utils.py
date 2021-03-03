@@ -3,8 +3,8 @@
 from datetime import date, timedelta
 from freezegun import freeze_time
 import pandas as pd
-from delphi_validator.datafetcher import FILENAME_REGEX
-from delphi_validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
+from delphi_utils.validator.datafetcher import FILENAME_REGEX
+from delphi_utils.validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
 
 class TestUtils:
     """Tests for module utils."""

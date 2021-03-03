@@ -3,8 +3,8 @@ from datetime import date, datetime
 import numpy as np
 import pandas as pd
 
-from delphi_validator.report import ValidationReport
-from delphi_validator.dynamic import DynamicValidator
+from delphi_utils.validator.report import ValidationReport
+from delphi_utils.validator.dynamic import DynamicValidator
 
 class TestCheckRapidChange:
     params = {

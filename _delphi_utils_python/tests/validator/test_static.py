@@ -2,9 +2,9 @@
 import numpy as np
 import pandas as pd
 
-from delphi_validator.datafetcher import FILENAME_REGEX
-from delphi_validator.report import ValidationReport
-from delphi_validator.static import StaticValidator
+from delphi_utils.validator.datafetcher import FILENAME_REGEX
+from delphi_utils.validator.report import ValidationReport
+from delphi_utils.validator.static import StaticValidator
 
 # Properly formatted file name to use in tests where the actual value doesn't matter.
 FILENAME = "17760704_nation_num_declarations.csv"
@@ -229,7 +229,7 @@ class TestCheckBadGeoIdValue:
             "end_date": "2020-09-02",
         },
         "static": {
-            "validator_static_file_dir": "../static"
+            "validator_static_file_dir": "../delphi_utils/validator/static"
         }
     }
 

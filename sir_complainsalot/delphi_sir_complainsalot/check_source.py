@@ -120,7 +120,8 @@ def check_source(data_source, meta, params, grace, logger):
         gap_days = [(day - prev_day).days
                     for day, prev_day in zip(unique_dates[1:], unique_dates[:-1])]
 
-        # If we only have a single day of data we can't calculate any gap days.
+        # If we only have a single day of data available then gap days will be
+        # empty.
         if not gap_days:
             continue
 

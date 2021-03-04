@@ -329,7 +329,7 @@ test_that("testing weighted ili/cli values files", {
 
   input_data <- load_responses_all(params)
   input_data <- join_weights(input_data, params)
-  data_agg <- create_data_for_aggregatation(input_data)
+  data_agg <- create_data_for_aggregation(input_data)
 
   ## There are 4 households in PA on 2020-05-11, one with ILI.
   these <- data_agg[data_agg$date == "2020-05-11" & data_agg$zip5 == "15106",]

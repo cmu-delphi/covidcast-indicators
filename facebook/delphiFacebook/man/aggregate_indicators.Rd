@@ -33,7 +33,7 @@ before `start_date` in case there was backfill for those days.)
 }
 \details{
 Warning: The maximum value of `smooth_days` needs to be accounted for in
-`run.R` in the `lead_days` argument to `filter_data_for_aggregatation`, so
+`run.R` in the `lead_days` argument to `filter_data_for_aggregation`, so
 the correct amount of archived data is included, plus the expected backfill
 length.
 }

@@ -8,8 +8,10 @@ logger = get_structured_logger(__name__)
 
 class ValidationReport:
     """Class for reporting the results of validation."""
+
     def __init__(self, errors_to_suppress: List[ValidationFailure]):
         """Initialize a ValidationReport.
+
         Parameters
         ----------
         errors_to_suppress: List[ValidationFailure]
@@ -39,6 +41,7 @@ class ValidationReport:
 
     def add_raised_error(self, error):
         """Add an error to the report.
+
         Parameters
         ----------
         error: Exception
@@ -55,11 +58,12 @@ class ValidationReport:
             self.unsuppressed_errors.append(error)
 
     def increment_total_checks(self):
-        """Records a check."""
+        """Record a check."""
         self.total_checks += 1
 
     def add_raised_warning(self, warning):
         """Add a warning to the report.
+
         Parameters
         ----------
         warning: Warning
@@ -72,7 +76,7 @@ class ValidationReport:
         self.raised_warnings.append(warning)
 
     def summary(self):
-        """String representation of summary of report."""
+        """Represent summary of report as a string."""
         out_str = f"{self.total_checks} checks run\n"
         out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
         out_str += f"{self.num_suppressed} checks suppressed\n"
@@ -87,9 +91,7 @@ class ValidationReport:
             logger.warning(str(warning))
 
     def print_and_exit(self):
-        """
-        Print results and, if any not-suppressed exceptions were raised, exit with non-zero status.
-        """
+        """Print results and, if any unsuppressed exceptions were raised, exit with non-0 status."""
         print(self.summary())
         self.log()
         if self.success():

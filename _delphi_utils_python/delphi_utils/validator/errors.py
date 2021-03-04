@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Custom validator exceptions.
-"""
+"""Custom validator exceptions."""
 import datetime as dt
 from typing import Union, Optional
 
@@ -13,14 +11,17 @@ class APIDataFetchError(Exception):
     """
 
     def __init__(self, custom_msg):
+        """Initialize the APIDataFetchError with `custom_msg`."""
         self.custom_msg = custom_msg
         super().__init__(self.custom_msg)
 
     def __str__(self):
+        """Extract the message."""
         return '{}'.format(self.custom_msg)
 
 class ValidationFailure:
     """Structured report of single validation failure."""
+
     def __init__(self,
                  check_name: str,
                  date: Optional[Union[str, dt.date]]=None,
@@ -29,6 +30,7 @@ class ValidationFailure:
                  message: str="",
                  filename: Optional[str]=None):
         """Initialize a ValidationFailure.
+
         Parameters
         ----------
         check_name: str
@@ -111,6 +113,7 @@ class ValidationFailure:
         return self in suppressed_errors
 
     def __str__(self):
+        """Summarize context of failure."""
         date_str = "*" if self.date is None else self.date.isoformat()
         return f"{self.check_name} failed for {self.signal} at resolution {self.geo_type} on "\
                f"{date_str}: {self.message}"

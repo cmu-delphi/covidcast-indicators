@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Tools to validate CSV source data, including various check methods.
-"""
+"""Tools to validate CSV source data, including various check methods."""
 from .datafetcher import load_all_files
 from .dynamic import DynamicValidator
 from .errors import ValidationFailure
@@ -10,8 +8,10 @@ from .static import StaticValidator
 from .utils import aggregate_frames, TimeWindow
 
 class Validator:
-    """ Class containing validation() function and supporting functions. Stores a list
-    of all raised errors, and user settings. """
+    """Class containing validation() function and supporting functions.
+
+    Stores a list of all raised errors, and user settings.
+    """
 
     def __init__(self, params):
         """
@@ -43,7 +43,7 @@ class Validator:
 
     def validate(self):
         """
-        Runs all data checks.
+        Run all data checks.
 
         Arguments:
             - export_dir: path to data CSVs

@@ -14,6 +14,7 @@ class DynamicValidator:
     @dataclass
     class Parameters:
         """Configuration parameters."""
+
         # data source name, one of
         # https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
         data_source: str
@@ -54,7 +55,7 @@ class DynamicValidator:
 
     def validate(self, all_frames, report):
         """
-        Performs all checks over the combined data set from all files.
+        Perform all checks over the combined data set from all files.
 
         Parameters
         ----------
@@ -320,8 +321,9 @@ class DynamicValidator:
 
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):
         """
-        Adapt Dan's corrections package to Python (only consider spikes) :
-        https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
+        Adapt Dan's corrections package to Python (only consider spikes).
+
+        See https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
 
         Statistics for a right shifted rolling window and a centered rolling window are used
         to determine outliers for both positive and negative spikes.
@@ -452,6 +454,7 @@ class DynamicValidator:
                                    signal_type, report):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
+
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the

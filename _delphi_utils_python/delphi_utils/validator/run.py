@@ -15,7 +15,8 @@ def run_module():
 
 
 def from_params(params):
-    """Constructs a validator from `params`.
+    """Construct a validator from `params`.
+
     Arguments
     ---------
     params: Dict[str, Any]

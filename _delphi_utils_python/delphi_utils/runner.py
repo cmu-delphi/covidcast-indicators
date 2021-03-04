@@ -12,7 +12,7 @@ NULL_FN = lambda x: None
 def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                            validator_fn:  Callable[[Params], Optional[Validator]] = NULL_FN,
                            archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN):
-    """Runs an indicator with its optional validation and archiving.
+    """Run an indicator with its optional validation and archiving.
 
     Arguments
     ---------

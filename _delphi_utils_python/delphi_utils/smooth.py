@@ -203,7 +203,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         return signal_smoothed
 
     def _select_smoother(self):
-        """Selects a smoothing method based on the smoother type."""
+        """Select a smoothing method based on the smoother type."""
         if self.smoother_name == "savgol":
             return self.savgol_smoother
         if self.smoother_name == "left_gauss_linear":

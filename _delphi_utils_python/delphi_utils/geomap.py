@@ -363,7 +363,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         return df
 
     def _add_nation_geocode(self, df, from_code, from_col, new_col):
-        """Special handling for adding nation geocode column to a dataframe.
+        """Add a nation geocode column to a dataframe.
 
         See `add_geocode()` documentation for argument description.
         """

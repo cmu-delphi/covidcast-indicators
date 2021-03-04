@@ -326,7 +326,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 df[from_col] = df[from_col].astype(str)
 
         if new_code == "nation":
-            self._add_nation_geocode(df, from_code, from_col, new_col)
+            return self._add_nation_geocode(df, from_code, from_col, new_col)
 
         # state codes are all stored in one table
         if from_code in state_codes and new_code in state_codes:

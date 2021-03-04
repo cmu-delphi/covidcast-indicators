@@ -105,7 +105,7 @@ def load_csv(path):
 def get_geo_signal_combos(data_source):
     """
     Get list of geo type-signal type combinations that we expect to see.
-    
+
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     meta = covidcast.metadata()
@@ -123,7 +123,7 @@ def get_geo_signal_combos(data_source):
 def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type):
     """
     Get and process API data for use as a reference.
-    
+
     Formatting is changed to match that of source data CSVs.
     """
     api_df = covidcast.signal(

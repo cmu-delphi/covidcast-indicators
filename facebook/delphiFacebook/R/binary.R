@@ -27,18 +27,29 @@ get_binary_indicators <- function() {
     "smoothed_wworried_become_ill", "weight", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
     "smoothed_worried_finances", "weight_unif", "mh_worried_finances", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wworried_finances", "weight", "mh_worried_finances", 6, compute_binary_response, jeffreys_binary,
-
+    # pre-wave 10
     "smoothed_anxious_5d", "weight_unif", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wanxious_5d", "weight", "mh_anxious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_depressed_5d", "weight_unif", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wdepressed_5d", "weight", "mh_depressed", 6, compute_binary_response, jeffreys_binary,
     "smoothed_felt_isolated_5d", "weight_unif", "mh_isolated", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wfelt_isolated_5d", "weight", "mh_isolated", 6, compute_binary_response, jeffreys_binary,
-
+    # wave 10+
+    "smoothed_anxious_7d", "weight_unif", "mh_anxious_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wanxious_7d", "weight", "mh_anxious_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_depressed_7d", "weight_unif", "mh_depressed_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdepressed_7d", "weight", "mh_depressed_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_felt_isolated_7d", "weight_unif", "mh_isolated_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wfelt_isolated_7d", "weight", "mh_isolated_7d", 6, compute_binary_response, jeffreys_binary,
+    
     # travel outside state
+    # pre-wave 10
     "smoothed_travel_outside_state_5d", "weight_unif", "c_travel_state", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtravel_outside_state_5d", "weight", "c_travel_state", 6, compute_binary_response, jeffreys_binary,
-
+    # wave 10+
+    "smoothed_travel_outside_state_7d", "weight_unif", "c_travel_state_7d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtravel_outside_state_7d", "weight", "c_travel_state_7d", 6, compute_binary_response, jeffreys_binary,
+    
     # work outside home
     # pre-wave-4
     "wip_smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,

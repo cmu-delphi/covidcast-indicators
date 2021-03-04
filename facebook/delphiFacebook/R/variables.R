@@ -53,7 +53,7 @@ is_selected <- function(vec, selection) {
 code_activities <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
-  
+
   if ("C13" %in% names(input_data)) {
     # introduced in wave 4
     activities <- split_options(input_data$C13)
@@ -72,11 +72,11 @@ code_activities <- function(input_data) {
     input_data$a_large_event_1d <- NA
     input_data$a_public_transit_1d <- NA
   }
-  
+
   if ("C13b" %in% names(input_data)) {
     # introduced in wave 10 as "indoors" activities version of C13
     activities <- split_options(input_data$C13b)
-    
+
     input_data$a_work_outside_home_indoors_1d <- is_selected(activities, "1")
     input_data$a_shop_indoors_1d <- is_selected(activities, "2")
     input_data$a_restaurant_indoors_1d <- is_selected(activities, "3")
@@ -89,23 +89,19 @@ code_activities <- function(input_data) {
     input_data$a_restaurant_indoors_1d <- NA
     input_data$a_spent_time_indoors_1d <- NA
     input_data$a_large_event_indoors_1d <- NA
-    
-    if ( is.null(input_data$a_public_transit_1d) ) {
-      input_data$a_public_transit_1d <- NA
-    }
   }
-  
+
   return(input_data)
 }
 
 #' Household symptom variables
 #'
 #' @param input_data input data frame of raw survey data
-#' @return data frame augmented with `hh_fever`, `hh_soar_throat`, `hh_cough`,
+#' @return data frame augmented with `hh_fever`, `hh_sore_throat`, `hh_cough`,
 #'   `hh_short_breath`, `hh_diff_breath`, `hh_number_sick`
 code_symptoms <- function(input_data) {
   input_data$hh_fever <- (input_data$A1_1 == 1L)
-  input_data$hh_soar_throat <- (input_data$A1_2 == 1L)
+  input_data$hh_sore_throat <- (input_data$A1_2 == 1L)
   input_data$hh_cough <- (input_data$A1_3 == 1L)
   input_data$hh_short_breath <- (input_data$A1_4 == 1L)
   input_data$hh_diff_breath <- (input_data$A1_5 == 1L)
@@ -157,7 +153,7 @@ code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
 
-  if (wave >= 4) {
+  if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
@@ -170,6 +166,18 @@ code_mental_health <- function(input_data) {
     input_data$mh_isolated <- NA
     input_data$mh_worried_finances <- NA
   }
+  
+  if (wave >= 10) {
+    input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
+    input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
+    input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
+    input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
+    input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
+  } else {
+    input_data$mh_anxious_7d <- NA
+    input_data$mh_depressed_7d <- NA
+    input_data$mh_isolated_7d <- NA
+  }
   return(input_data)
 }
 
@@ -181,7 +189,7 @@ code_mental_health <- function(input_data) {
 code_mask_contact <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
-  
+
   # private helper for both mask items, which are identically coded: 6 means the
   # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
   most_always <- function(item) {
@@ -191,9 +199,19 @@ code_mask_contact <- function(input_data) {
       item == 1 | item ==  2 ~ TRUE,
       TRUE ~ FALSE)
   }
-
-  input_data$c_travel_state <- input_data$C6 == 1
-
+  
+  if ("C6" %in% names(input_data)) {
+    input_data$c_travel_state <- input_data$C6 == 1
+  } else {
+    input_data$c_travel_state <- NA
+  }
+  
+  if ("C6a" %in% names(input_data)) {
+    input_data$c_travel_state_7d <- input_data$C6a == 1
+  } else {
+    input_data$c_travel_state_7d <- NA
+  }
+  
   if ("C14" %in% names(input_data)) {
     # added in wave 4. wearing mask most or all of the time; exclude respondents
     # who have not been in public
@@ -201,9 +219,9 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_mask_often <- NA
   }
-  
+
   if ("C14a" %in% names(input_data)) {
-    # added in wave 8. wearing mask most or all of the time (last 7 days); 
+    # added in wave 8. wearing mask most or all of the time (last 7 days);
     # exclude respondents who have not been in public
     input_data$c_mask_often_7d <- most_always(input_data$C14a)
   } else {

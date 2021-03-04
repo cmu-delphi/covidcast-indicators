@@ -19,7 +19,7 @@ choice (where only a single response can be selected); and with "ms_" are
 so-called multi-select, where multiple responses can be selected.
 }
 \details{
-Only binary responses with a third "I don't know" option are mapped from 
+Only binary responses with a third "I don't know" option are mapped from
 response codes to interpretable values. Multiple choice, multi-select, and
 pure binary (yes/no) questions use the original numeric response codes.
 }

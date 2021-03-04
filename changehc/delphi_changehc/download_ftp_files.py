@@ -32,8 +32,8 @@ def get_files_from_dir(sftp, filedate, out_path):
                 not path.exists(path.join(out_path, filename)):
             filepaths_to_download[filename] = path.join(out_path, filename)
 
-    # make sure we don't download more than 2 files per day
-    assert len(filepaths_to_download) <= 2, "more files dropped than expected"
+    # make sure we don't download more than 6 files per day
+    assert len(filepaths_to_download) <= 6, "more files dropped than expected"
 
     # download!
     for infile, outfile in filepaths_to_download.items():
@@ -60,10 +60,7 @@ def download_covid(filedate, out_path, ftp_conn):
                        allow_agent=False, look_for_keys=False)
         sftp = client.open_sftp()
 
-        sftp.chdir('/dailycounts/All_Outpatients_By_County')
-        get_files_from_dir(sftp, filedate, out_path)
-
-        sftp.chdir('/dailycounts/Covid_Outpatients_By_County')
+        sftp.chdir('/countproducts')
         get_files_from_dir(sftp, filedate, out_path)
 
     finally:
@@ -90,19 +87,7 @@ def download_cli(filedate, out_path, ftp_conn):
                        allow_agent=False, look_for_keys=False)
         sftp = client.open_sftp()
 
-        sftp.chdir('/dailycounts/All_Outpatients_By_County')
-        get_files_from_dir(sftp, filedate, out_path)
-
-        sftp.chdir('/dailycounts/Flu_Patient_Count_By_County')
-        get_files_from_dir(sftp, filedate, out_path)
-
-        sftp.chdir('/dailycounts/Mixed_Patient_Count_By_County')
-        get_files_from_dir(sftp, filedate, out_path)
-
-        sftp.chdir('/dailycounts/Flu_Like_Patient_Count_By_County')
-        get_files_from_dir(sftp, filedate, out_path)
-
-        sftp.chdir('/dailycounts/Covid_Like_Patient_Count_By_County')
+        sftp.chdir('/countproducts')
         get_files_from_dir(sftp, filedate, out_path)
 
     finally:

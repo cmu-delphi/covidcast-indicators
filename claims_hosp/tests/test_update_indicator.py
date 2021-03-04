@@ -5,7 +5,6 @@ from os.path import join, exists
 from tempfile import TemporaryDirectory
 
 # third party
-from delphi_utils import read_params
 import numpy as np
 import pandas as pd
 import pytest

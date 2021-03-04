@@ -53,7 +53,7 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True))
 
     # Pull GS data
-    dfs = pull_gs_data(params["indicator"]["path_to_bigquery_credentials"],
+    dfs = pull_gs_data(params["indicator"]["bigquery_credentials"],
                        export_start_date,
                        num_export_days)
     gmpr = geomap.GeoMapper()

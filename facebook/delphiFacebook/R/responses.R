@@ -67,6 +67,8 @@ load_response_one <- function(input_filename, params) {
                            C1 = col_character(),
                            C13 = col_character(),
                            C13a = col_character(),
+                           C13b = col_character(),
+                           C13c = col_character(),
                            D1_4_TEXT = col_character(),
                            D1b = col_integer(),
                            D7 = col_character(),
@@ -93,6 +95,11 @@ load_response_one <- function(input_filename, params) {
                            V5d = col_character(),
                            V6 = col_character(),
                            V9 = col_integer(),
+                           V11 = col_integer(),
+                           V12 = col_integer(),
+                           V13 = col_integer(),
+                           V14_1 = col_character(),
+                           V14_2 = col_character(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -108,7 +115,7 @@ load_response_one <- function(input_filename, params) {
                            Q77 = col_integer(),
                            Q78 = col_integer(),
                            Q79 = col_integer(),
-                           Q80 = col_integer(), 
+                           Q80 = col_integer(),
                            V1 = col_integer()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
@@ -130,11 +137,12 @@ load_response_one <- function(input_filename, params) {
                        A2 = if_else(grepl("^[0-9]+[.]?0?$", A2),
                                     as.integer(A2),
                                     NA_integer_))
-  
+
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
-
+  
   input_data <- bodge_v4_translation(input_data)
+  input_data <- bodge_C6_C8(input_data)
 
   input_data <- code_symptoms(input_data)
   input_data <- code_hh_size(input_data)
@@ -178,23 +186,25 @@ load_response_one <- function(input_filename, params) {
 #' @param params named list containing values "static_dir", "start_time", and
 #'   "end_time"
 #'
-#' @importFrom dplyr anti_join
+#' @importFrom dplyr anti_join filter
 #' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, params) {
-  # take only the first instance of each token
   input_data <- arrange(input_data, .data$StartDate)
-  input_data <- input_data[input_data$token != "",]
-  input_data <- input_data[!duplicated(input_data$token),]
-
-  input_data <- input_data[input_data$S1 == 1, ]
-  input_data <- input_data[input_data$DistributionChannel != "preview", ]
-
-  # take the right dates. We don't filter the start date because the aggregate
+  
+  ## Remove invalid, duplicated, and out-of-range observations.
+  # Take only the first instance of each token.
+  # Take the right dates. We don't filter the start date because the aggregate
   # and individual data pipelines handle that themselves (aggregate in
   # particular needs data well before start_date)
-  input_data <- input_data[as.Date(input_data$date) <= params$end_date, ]
-
+  input_data <- filter(input_data, 
+                       token != "", 
+                       !duplicated(token), 
+                       S1 == 1, 
+                       DistributionChannel != "preview",
+                       as.Date(date) <= params$end_date
+  )
+  
   return(input_data)
 }
 
@@ -239,21 +249,21 @@ merge_responses <- function(input_data, archive) {
 #' @param input_data   the input data frame of (filtered) responses
 #'
 #' @export
-create_data_for_aggregatation <- function(input_data)
+create_data_for_aggregation <- function(input_data)
 {
   df <- input_data
   df$weight_unif <- 1.0
   df$day <- as.Date(df$date)
 
   # create variables for cli and ili signals
-  hh_cols <- c("hh_fever", "hh_soar_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
+  hh_cols <- c("hh_fever", "hh_sore_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
   df$cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)
   df$hh_number_sick[df$cnt_symptoms <= 0] <- 0
   df$is_cli <- df$hh_fever & (
     df$hh_cough | df$hh_short_breath | df$hh_diff_breath
   )
   df$is_cli[is.na(df$is_cli)] <- FALSE
-  df$is_ili <- df$hh_fever & (df$hh_soar_throat | df$hh_cough)
+  df$is_ili <- df$hh_fever & (df$hh_sore_throat | df$hh_cough)
   df$is_ili[is.na(df$is_ili)] <- FALSE
   df$hh_p_cli <- 100 * df$is_cli * df$hh_number_sick / df$hh_number_total
   df$hh_p_ili <- 100 * df$is_ili * df$hh_number_sick / df$hh_number_total
@@ -282,19 +292,20 @@ create_data_for_aggregatation <- function(input_data)
 #'   smoothing, we'd want to include at least 11 days of data before
 #'   `start_date`, so estimates on `start_date` are based on the correct data.
 #'
+#' @importFrom dplyr filter
 #' @export
-filter_data_for_aggregatation <- function(df, params, lead_days = 12L)
+filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 {
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
-  df <- df[df$zip5 %in% known_zips$zip5,]
-
-  df <- df[!is.na(df$hh_number_sick) & !is.na(df$hh_number_total), ]
-  df <- df[dplyr::between(df$hh_number_sick, 0L, 30L), ]
-  df <- df[dplyr::between(df$hh_number_total, 1L, 30L), ]
-  df <- df[df$hh_number_sick <= df$hh_number_total, ]
-
-  df <- df[df$day >= (as.Date(params$start_date) - lead_days), ]
+  df <- filter(df, 
+               zip5 %in% known_zips$zip5,
+               !is.na(hh_number_sick) & !is.na(hh_number_total),
+               dplyr::between(hh_number_sick, 0L, 30L),
+               dplyr::between(hh_number_total, 1L, 30L),
+               hh_number_sick <= hh_number_total,
+               day >= (as.Date(params$start_date) - lead_days),
+  )
 
   return(df)
 }
@@ -348,6 +359,37 @@ bodge_v4_translation <- function(input_data) {
   return(input_data)
 }
 
+#' Fix column names in Wave 10.
+#'
+#' In Wave 10's deployment, the meaning of items C6 and C8 changed (from "In the
+#' past 5 days, have you traveled outside of your state?" and "In the past 5
+#' days, how often have you... felt depressed?", etc, to "In the past 7
+#' days..."), but the names were not changed. The names are changed in later
+#' waves.
+#'
+#' We rename C6 and C8_\* to C6a and C8a_\*, respectively, to match the existing
+#' naming scheme.
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_C6_C8 <- function(input_data) {
+  wave <- unique(input_data$wave)
+  if ( wave != 10 ) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+  
+  input_data <- rename(input_data,
+                       C6a = C6,
+                       C8a_1 = C8_1,
+                       C8a_2 = C8_2,
+                       C8a_3 = C8_3
+  )
+
+  return(input_data)
+}
+
 #' Create dataset for sharing with research partners
 #'
 #' Different survey waves may have different sets of questions. Here we report
@@ -382,6 +424,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
     "V9", # added in Wave 7,
     "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
+    "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
@@ -448,7 +491,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_2hErnivitm0th8F" = 5,
                 "SV_8HCnaK1BJPsI3BP" = 6,
                 "SV_ddjHkcYrrLWgM2V" = 7,
-                "SV_ewAVaX7Wz3l0UqG" = 8)
+                "SV_ewAVaX7Wz3l0UqG" = 8,
+                "SV_6PADB8DyF9SIyXk" = 10)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

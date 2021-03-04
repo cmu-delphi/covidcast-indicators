@@ -1,5 +1,3 @@
-import pytest
-
 from delphi_doctor_visits.config import Config
 
 

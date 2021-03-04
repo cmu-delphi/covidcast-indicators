@@ -120,8 +120,9 @@ class CHCSensor:
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
-
-        rates = (total_counts.flatten() + 0.5)/(total_visits + 1)
+        total_visits += 1
+        total_counts = total_counts.flatten() + 0.5
+        rates = total_counts/total_visits
         smoothed_rates = CHCSensor.smoother.smooth(rates)
         smoothed_rates = np.clip(smoothed_rates, 0, 1)
 

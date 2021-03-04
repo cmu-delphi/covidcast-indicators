@@ -60,7 +60,7 @@ class TestLoadData:
             sub_data = sub_data.reindex(date_range, fill_value=0)
             res0 = CHCSensor.fit(sub_data, date_range[0], fips)
             # first value is burn-in
-            assert np.min(res0["rate"][1:]) > 0
+            assert np.min(res0["rate"][1:]) >= 0
             assert np.max(res0["rate"][1:]) <= 100
 
             if np.all(np.isnan(res0["se"])):
@@ -69,5 +69,5 @@ class TestLoadData:
                 # binomial standard error, hence largest possible value is
                 # 100 * (0.5 / sqrt(MIN_DEN))
                 assert np.nanmax(res0["se"]) <= 100 * (0.5 / np.sqrt(Config.MIN_DEN))
-                assert np.nanmin(res0["se"]) > 0
+                assert np.nanmin(res0["se"]) >= 0
                 assert res0["incl"].sum() > 0

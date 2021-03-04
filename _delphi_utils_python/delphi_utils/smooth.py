@@ -192,14 +192,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             signal = self.impute(signal, impute_order=impute_order)
 
             # Smooth
-            if self.smoother_name == "savgol":
-                signal_smoothed = self.savgol_smoother(signal)
-            elif self.smoother_name == "left_gauss_linear":
-                signal_smoothed = self.left_gauss_linear_smoother(signal)
-            elif self.smoother_name == "moving_average":
-                signal_smoothed = self.moving_average_smoother(signal)
-            elif self.smoother_name == "identity":
-                signal_smoothed = signal
+            signal_smoothed = self._select_smoother()(signal)
 
         # Append the nans back, since we want to preserve length
         signal_smoothed = np.hstack([np.nan * np.ones(ix), signal_smoothed])
@@ -208,6 +201,18 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             signal_smoothed = pd.Series(signal_smoothed)
             signal_smoothed.index = pandas_index
         return signal_smoothed
+
+    def _select_smoother(self):
+        """Select a smoothing method based on the smoother type."""
+        if self.smoother_name == "savgol":
+            return self.savgol_smoother
+        if self.smoother_name == "left_gauss_linear":
+            return self.left_gauss_linear_smoother
+        if self.smoother_name == "moving_average":
+            return self.moving_average_smoother
+        if self.smoother_name == "identity":
+            return lambda x: x
+        raise ValueError(f"invalid smoother {self.smoother_name}")
 
     def impute(self, signal, impute_order=2):
         """Impute the nan values in the signal.
@@ -421,26 +426,23 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         # - shortened_window (default) applies savgol with a smaller window to do the fit
         # - identity keeps the original signal (doesn't smooth)
         # - nan writes nans
-        if self.boundary_method == "shortened_window":  # pylint: disable=no-else-return
-            for ix in range(min(len(self.coeffs), len(signal))):
-                if ix == 0:
-                    signal_smoothed[ix] = signal[ix]
-                else:
-                    # At the very edge, the design matrix is often singular, in which case
-                    # we just fall back to the raw signal
-                    try:
-                        signal_smoothed[ix] = self.savgol_predict(
-                            signal[: ix + 1], self.poly_fit_degree, 0
-                        )
-                    except np.linalg.LinAlgError:  # for small ix, the design matrix is singular
-                        signal_smoothed[ix] = signal[ix]
+        if self.boundary_method == "nan":
             return signal_smoothed
-        elif self.boundary_method == "identity":
-            for ix in range(min(len(self.coeffs), len(signal))):
+
+        # boundary methods "identity" and "shortened window"
+        for ix in range(min(len(self.coeffs), len(signal))):
+            if ix == 0 or self.boundary_method == "identity":
                 signal_smoothed[ix] = signal[ix]
-            return signal_smoothed
-        elif self.boundary_method == "nan":
-            return signal_smoothed
+            else:
+                # At the very edge, the design matrix is often singular, in which case
+                # we just fall back to the raw signal
+                try:
+                    signal_smoothed[ix] = self.savgol_predict(
+                        signal[: ix + 1], self.poly_fit_degree, 0
+                    )
+                except np.linalg.LinAlgError:  # for small ix, the design matrix is singular
+                    signal_smoothed[ix] = signal[ix]
+        return signal_smoothed
 
     def savgol_impute(self, signal, impute_order):
         """Impute the nan values in signal using savgol.

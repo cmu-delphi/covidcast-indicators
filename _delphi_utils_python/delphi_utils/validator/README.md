@@ -51,7 +51,7 @@ All of the user-changable parameters are stored in the `validation` field of the
 
 Please update the follow settings:
 
-* `global`: global validation settings
+* `common`: global validation settings
    * `data_source`: should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls
    * `end_date`: specifies the last date to be checked; if set to "latest", `end_date` will always be the current date
    * `span_length`: specifies the number of days before the `end_date` to check. `span_length` should be long enough to contain all recent source data that is still in the process of being updated (i.e. in the backfill period), for example, if the data source of interest has a 2-week lag before all reports are in for a given date, `scan_length` should be 14 days

@@ -19,6 +19,7 @@ GEO_REGEX_DICT = {
 @dataclass
 class TimeWindow:
     """Object to store a window of time ending on `end_date` and lasting `span_length`."""
+
     end_date: date
     span_length: timedelta
     start_date: date = field(init=False)
@@ -42,14 +43,12 @@ class TimeWindow:
 
 
 def relative_difference_by_min(x, y):
-    """
-    Calculate relative difference between two numbers.
-    """
+    """Calculate relative difference between two numbers."""
     return (x - y) / min(x, y)
 
 
 def aggregate_frames(frames_list):
-    """Aggregates a list of data frames into a single frame.
+    """Aggregate a list of data frames into a single frame.
 
     Parameters
     ----------

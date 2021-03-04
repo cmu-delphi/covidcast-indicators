@@ -108,7 +108,7 @@ class TestCHCSensorUpdator:
             )
             # As of 3/3/21 (40c258a), this set of data has county outputting data, state and hhs not
             # outputting data, and nation outputting data, which is undesirable. Ideal behaviour
-            # should be all output or only a larger region outputting if the subregions also output,
+            # should be all output or a subregion only outputting if its parent has output,
             # which is what is being tested here.
             small_test_data = pd.DataFrame({
                 "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,

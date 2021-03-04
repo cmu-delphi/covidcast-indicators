@@ -3,8 +3,8 @@
 import mock
 import pytest
 
-from delphi_validator.report import ValidationReport
-from delphi_validator.errors import ValidationFailure
+from delphi_utils.validator.report import ValidationReport
+from delphi_utils.validator.errors import ValidationFailure
 from delphi_utils.runner import run_indicator_pipeline
 
 

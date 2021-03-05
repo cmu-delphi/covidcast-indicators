@@ -332,12 +332,21 @@ bodge_v4_translation <- function(input_data) {
   affected <- c("V4_1", "V4_2", "V4_3", "V4_4", "V4_5")
   corrected <- c("V4a_1", "V4a_2", "V4a_3", "V4a_4", "V4a_5")
 
-  # Step 1: For any non-English results, null out V4 responses. There are NAs
-  # because of filtering earlier in the pipeline that incorrectly handles NA, so
-  # also remove these.
-  non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
-  for (col in affected) {
-    input_data[non_english, col] <- NA
+  if (any(affected %in% names(input_data))) {
+    # This wave is affected by the problem. Step 1: For any non-English results,
+    # null out V4 responses. There are NAs because of filtering earlier in the
+    # pipeline that incorrectly handles NA, so also remove these.
+    non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
+    for (col in affected) {
+      input_data[non_english, col] <- NA
+    }
+  } else {
+    # This wave does not have V4, only V4a. We will move V4a's responses into V4
+    # below, so users do not need to know about our goof. Ensure the columns
+    # exist so the later code can move data into them.
+    for (col in affected) {
+      input_data[[col]] <- NA
+    }
   }
 
   # Step 2: If this data does not have V4a, stop.
@@ -345,6 +354,8 @@ bodge_v4_translation <- function(input_data) {
     return(input_data)
   }
 
+  # Step 3: Wherever there are values in the new columns, move them to the old
+  # columns.
   for (ii in seq_along(affected)) {
     bad <- affected[ii]
     good <- corrected[ii]

@@ -120,20 +120,13 @@ class CHCSensor:
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
-        total_visits += 1
-        total_counts = total_counts.flatten() + 0.5
-        rates = total_counts/total_visits
-        smoothed_rates = CHCSensor.smoother.smooth(rates)
-        smoothed_rates = np.clip(smoothed_rates, 0, 1)
-
-
-        # checks - due to the smoother, the first value will be NA
-        assert (
-                np.sum(np.isnan(smoothed_rates[1:])) == 0
-        ), "NAs in rate calculation"
+        rates = total_counts.flatten() / total_visits
+        smoothed_rate = CHCSensor.smoother.smooth(rates)
+        clipped_smoothed_rate = np.clip(smoothed_rate, 0, 1)
+        jeffreys_rate = (clipped_smoothed_rate * total_visits + 0.5) / (total_visits + 1)
 
         # cut off at sensor indexes
-        rate_data = pd.DataFrame({'rate': smoothed_rates, 'den': total_visits},
+        rate_data = pd.DataFrame({'rate': jeffreys_rate, 'den': total_visits},
                                  index=y_data.index)
         rate_data = rate_data[first_sensor_date:]
         include = rate_data['den'] >= Config.MIN_DEN

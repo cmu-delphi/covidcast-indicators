@@ -94,7 +94,7 @@ def get(fetch,post,params):
                 print()
             wait,waitt = progress(t)
         if progressStatus=="failed":
-            return r
+            raise Exception(f"ERROR: could not download \"{surv['name']}\"\n{json.dumps(r.json(),sort_keys=True,indent=2)}")
         fileId = r.json()['result']['fileId']
         r = fetch(f"{base}{fileId}/file")
         if not r.ok: return r

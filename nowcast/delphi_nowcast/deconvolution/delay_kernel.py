@@ -29,17 +29,17 @@ def get_national_delay_distribution(
 
     if update:
         linelist = pd.read_csv("https://data.cdc.gov/api/views/vbim-akqf/rows.csv",
-                               usecols=["pos_spec_dt", "onset_dt"],
-                               parse_dates=["pos_spec_dt", "onset_dt"])
+                               usecols=["cdc_report_dt", "onset_dt"],
+                               parse_dates=["cdc_report_dt", "onset_dt"])
 
         linelist = linelist[~linelist.onset_dt.isna()]
         delay_df = linelist[linelist.onset_dt > start_date]
-        delay_df["report_delay"] = (delay_df.pos_spec_dt - delay_df.onset_dt).dt.days
+        delay_df["report_delay"] = (delay_df.cdc_report_dt - delay_df.onset_dt).dt.days
         delay_df = delay_df[delay_df.report_delay.gt(0) & delay_df.report_delay.lt(45)]
 
         coefs = stats.gamma.fit(delay_df.report_delay, floc=0)
     else:
-        coefs = (1.717706108504553, 0, 2.2112872173489597)
+        coefs = (1.5867418033937597, 0, 5.191785168093063)
 
     # discretized distribution
     delay_gam = stats.gamma(*coefs)

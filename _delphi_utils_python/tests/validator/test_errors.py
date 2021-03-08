@@ -1,7 +1,7 @@
 """Tests for errors.py."""
 import datetime as dt
 import pytest
-from delphi_validator.errors import ValidationFailure
+from delphi_utils.validator.errors import ValidationFailure
 
 class TestValidationFailure:
     """Tests for ValidationFailure class."""

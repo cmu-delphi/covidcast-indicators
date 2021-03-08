@@ -119,6 +119,17 @@ def check_source(data_source, meta, params, grace, logger):
 
         gap_days = [(day - prev_day).days
                     for day, prev_day in zip(unique_dates[1:], unique_dates[:-1])]
+
+        # If we only have a single day of data available then gap days will be
+        # empty.
+        if not gap_days:
+            logger.info(
+                "Not enough data to calculate gap days.",
+                data_source=data_source,
+                signal=row["signal"],
+                geo_type=row["geo_type"])
+            continue
+
         gap = max(gap_days) - 1
         logger.info("Detecting days with data present",
                     data_source = data_source,

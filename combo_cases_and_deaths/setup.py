@@ -7,7 +7,7 @@ required = [
     "pytest",
     "pytest-cov",
     "pylint",
-    "delphi-utils",
+    "delphi-utils>=0.0.12",
     "covidcast>=0.1.4"
 ]
 

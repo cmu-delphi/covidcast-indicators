@@ -27,19 +27,6 @@ class CHCSensor:
                         gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
-    def gauss_smooth(count,total):
-        """Smooth using the left_gauss_linear.
-
-        Args:
-            count, total: array
-        """
-        count_smooth = CHCSensor.smoother.smooth(count)
-        total_smooth = CHCSensor.smoother.smooth(total)
-        total_clip = np.clip(total_smooth, 0, None)
-        count_clip = np.clip(count_smooth, 0, total_clip)
-        return count_clip, total_clip
-
-    @staticmethod
     def backfill(
             num,
             den,

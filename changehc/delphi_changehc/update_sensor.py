@@ -11,13 +11,41 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
+from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday, Nans
 
 # first party
 from .config import Config
-from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI
 from .sensor import CHCSensor
 
+
+def censor_columns(df, cols, inplace=False):
+    """Replace values with nans in the specified columns."""
+    df = df if inplace else df.copy()
+    df.loc[:, cols] = np.nan
+    return df
+
+def add_nancodes(df, write_se, inplace=False):
+    """Add nancodes to the dataframe."""
+    df = df if inplace else df.copy()
+
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.CENSORED if not write_se else Nans.NOT_MISSING
+    df["missing_sample_size"] = Nans.CENSORED
+
+    # Censor those that weren't included
+    df.loc[~df['incl'], ["val", "se"]] = np.nan  # update to this line after nancodes get merged in
+    df.loc[~df['incl'], ["missing_val", "missing_se"]] = Nans.CENSORED
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull() & df["missing_val"].eq(Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+
+    remaining_nans_mask = df["se"].isnull() & df["missing_se"].eq(Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_se"] = Nans.OTHER
+
+    return df
 
 def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_path=".", start_date=None, end_date=None):
     """Write sensor values to csv.
@@ -25,13 +53,15 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     Args:
         df: dataframe containing unique timestamp, unqiue geo_id, val, se, sample_size
         geo_level: the geographic level being written e.g. county, state
-        write_se: boolean to write out standard errors, if true, use an obfuscated name
         day_shift: a timedelta specifying the time shift to apply to the dates
         out_name: name of the output file
         output_path: outfile path to write the csv (default is current directory)
         start_date: the first date of the dates to be written
         end_date: the last date of the dates to be written
+        logger: a logger object to log events while writing
     """
+    logger = logging if logger is None else logger
+
     df = df.copy()
 
     # shift dates forward for labeling
@@ -40,13 +70,12 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     # suspicious value warnings
     suspicious_se_mask = df["se"].gt(5)
     assert df[suspicious_se_mask].empty, " se contains suspiciously large values"
-    assert not df["se"].isna().any(), " se contains nan values"
+
     if write_se:
         logger.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     else:
         df["se"] = np.nan
 
-    assert not df["val"].isna().any(), " val contains nan values"
     suspicious_val_mask = df["val"].gt(90)
     if not df[suspicious_val_mask].empty:
         for geo in df.loc[suspicious_val_mask, "geo_id"]:
@@ -61,7 +90,8 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
         start_date=start_date,
         end_date=end_date,
         sensor=out_name,
-        write_empty_days=True
+        write_empty_days=True,
+        logger=logger
     )
     logger.debug("wrote {0} rows for {1} {2}".format(
         df.size, df["geo_id"].unique().size, geo_level
@@ -231,14 +261,12 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                     res = pd.DataFrame(res).loc[final_sensor_idxs]
                     dfs.append(res)
 
-        # Form the output dataframe
-        df = pd.concat(dfs)
-        # sample size is never shared
-        df["sample_size"] = np.nan
-        # conform to naming expected by create_export_csv()
-        df = df.reset_index().rename(columns={"rate": "val"})
-        # df.loc[~df['incl'], ["val", "se"]] = np.nan  # update to this line after nancodes get merged in
-        df = df[df["incl"]]
+        # Form the output dataframe and conform to expected naming
+        df = pd.concat(dfs).reset_index().rename(columns={"date": "timestamp", "rate": "val"})
+
+        # sample size is never shared; standard error might be shared
+        df = censor_columns(df, ["sample_size"] if self.se else ["sample_size", "se"])
+        df = add_nancodes(df, self.se)
 
         # write out results
         dates = write_to_csv(

@@ -1,5 +1,6 @@
 # Time zone to use throughout package.
 tz_to <- "America/Los_Angeles"
+Sys.setenv(TZ=tz_to)
 
 #' Get the date of the first day of the previous month.
 #'

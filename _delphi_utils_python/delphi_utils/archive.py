@@ -98,43 +98,44 @@ def diff_export_csv(
         after_df.loc[added_idx, :])
 
 
-def run_module(archive_type: str,
-               cache_dir: str,
-               export_dir: str,
-               **kwargs):
-    """Build and run an ArchiveDiffer.
+def from_params(params):
+    """Build an ArchiveDiffer from `params`.
+
+    The type of ArchiveDiffer constructed is inferred from the parameters
 
     Parameters
     ----------
-    archive_type: str
-        Type of ArchiveDiffer to run.  Must be one of ["git", "s3"] which correspond to
-        `GitArchiveDiffer` and `S3ArchiveDiffer`, respectively.
-    cache_dir: str
-        The directory for storing most recent archived/uploaded CSVs to start diffing from.
-    export_dir: str
-        The directory with most recent exported CSVs to diff to.
-    **kwargs:
-        Keyword arguments corresponding to constructor arguments for the respective ArchiveDiffers.
+    params: Dict[str, Dict[str, Any]]
+        Dictionary of user-defined parameters with the following structure:
+        - "common":
+            - "export_dir": str, directory to which indicator output files have been exported
+        - "archive":
+            - "cache_dir": str, directory containing cached data from previous indicator runs
+            - "branch_name" (required for git archiver): str, name of git branch
     """
-    if archive_type == "git":
-        arch_diff = GitArchiveDiffer(cache_dir,
-                                     export_dir,
-                                     kwargs["branch_name"],
-                                     kwargs["override_dirty"],
-                                     kwargs["commit_partial_success"],
-                                     kwargs["commit_message"])
-    elif archive_type == "s3":
-        arch_diff = S3ArchiveDiffer(cache_dir,
-                                    export_dir,
-                                    kwargs["bucket_name"],
-                                    kwargs["indicator_prefix"],
-                                    kwargs["aws_credentials"])
-    elif archive_type == "filesystem":
-        arch_diff = FilesystemArchiveDiffer(cache_dir,
-                                            export_dir)
-    else:
-        raise ValueError(f"No archive type named '{archive_type}'")
-    arch_diff.run()
+    if "archive" not in params:
+        return None
+
+    common_params = params["common"]
+    export_dir = common_params["export_dir"]
+
+    archive_params = params["archive"]
+    cache_dir = archive_params["cache_dir"]
+
+    if "branch_name" in archive_params:
+        return GitArchiveDiffer(cache_dir,
+                                export_dir,
+                                archive_params["branch_name"],
+                                archive_params["override_dirty"],
+                                archive_params["commit_partial_success"],
+                                archive_params["commit_message"])
+    if "bucket_name" in archive_params:
+        return S3ArchiveDiffer(cache_dir,
+                               export_dir,
+                               archive_params["bucket_name"],
+                               archive_params["indicator_prefix"],
+                               archive_params["aws_credentials"])
+    return FilesystemArchiveDiffer(cache_dir, export_dir)
 
 
 class ArchiveDiffer:
@@ -621,46 +622,13 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
         self._cache_updated = True
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--archive_type", required=True, type=str,
-                        choices=["git", "s3", "filesystem"],
-                        help="Type of archive differ to use.")
-    parser.add_argument("--indicator_prefix", type=str, default="",
-                        help="The prefix for S3 keys related to this indicator."
-                        " Required for `archive_type = 's3'")
-    parser.add_argument("--branch_name", type=str, default="",
-                        help=" Branch to use for `archive_type` = 'git'.")
-    parser.add_argument("--override_dirty", action="store_true",
-                        help="Whether to allow overwriting of untracked &"
-                        " uncommitted changes for `archive_type` = 'git'")
-    parser.add_argument("--commit_partial_success",  action="store_true",
-                        help="Whether to still commit for `archive_type` = "
-                        "'git' even if some files were not archived and "
-                        "staged due to `override_dirty` = False.")
-    parser.add_argument("--commit_message", type=str, default="",
-                        help="Commit message for `archive_type` = 'git'")
-    args = parser.parse_args()
     params = read_params()
 
     # Autodetect whether parameters have been factored hierarchically or not
     # See https://github.com/cmu-delphi/covidcast-indicators/issues/847
     # Once all indicators have their parameters factored in to "common", "indicator", "validation",
     # and "archive", this code will be obsolete.
-    if "archive" in params:
-        archive_params = params["archive"]
-        common_params = params["common"]
-    else:
-        archive_params = params
-        common_params = params
+    if "archive" not in params:
+        params = {"archive": params, "common": params}
 
-    run_module(args.archive_type,
-               archive_params["cache_dir"],
-               common_params["export_dir"],
-               aws_credentials=archive_params.get("aws_credentials", {}),
-               branch_name=args.branch_name,
-               bucket_name=archive_params.get("bucket_name", ""),
-               commit_message=args.commit_message,
-               commit_partial_success=args.commit_partial_success,
-               indicator_prefix=args.indicator_prefix,
-               override_dirty=args.override_dirty
-               )
+    from_params(params).run()

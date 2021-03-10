@@ -26,7 +26,8 @@ split_options <- function(column) {
 #'   
 #' @importFrom parallel mclapply
 is_selected <- function(vec, selection) {
-  selections <- unlist(mclapply(
+  map_fn <- ifelse( is.null(getOption("mc.cores")) , lapply, mclapply)
+  selections <- unlist(map_fn(
     vec,
     function(resp) {
       if (length(resp) == 0 || all(is.na(resp))) {

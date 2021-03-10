@@ -19,7 +19,8 @@ load_responses_all <- function(params) {
   
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
-  input_data <- mclapply(seq_along(input_data), function(i) {
+  map_fn <- ifelse(params$parallel, mclapply, lapply)
+  input_data <- map_fn(seq_along(input_data), function(i) {
     load_response_one(params$input[i], params)
   })
   
@@ -233,7 +234,6 @@ merge_responses <- function(input_data, archive) {
   # result in the input data being used in preference over the archive data.
   # This means that if we run the pipeline, then change the input CSV, running
   # again will used the changed data instead of the archived data.
-  msg_plain(paste0("Combining archive and new input data"))
   data <- bind_rows(input_data, archive$input_data)
   msg_plain(paste0("Sorting by start date"))
   data <- arrange(data, .data$StartDate)

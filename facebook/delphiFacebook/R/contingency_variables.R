@@ -190,7 +190,7 @@ rename_responses <- function(df) {
 #' 
 #' @return data frame of individual response data with newly mapped columns
 remap_responses <- function(df) {
-  msg_plain(paste0("Mapping response codes to meaningful strings..."))
+  msg_plain(paste0("Mapping response codes to descriptive values..."))
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -419,7 +419,7 @@ create_derivative_columns <- function(df) {
 #'
 #' @return list of data frame of individual response data with newly mapped column
 remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
-  msg_plain(paste0("Mapping response codes for ", col_var, " to meaningful strings..."))
+  msg_plain(paste0("Mapping codes for ", col_var))
   if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) | inherits(df[[col_var]], "logical") ) {
     # Column is missing/not in this wave or already in boolean format
     return(df)
@@ -429,7 +429,9 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
     split_col <- split_options(df[[col_var]])
-    df[[col_var]] <- mcmapply(split_col, FUN=function(row) {
+    
+    map_fn <- ifelse( is.null(getOption("mc.cores")) , mapply, mcmapply)
+    df[[col_var]] <- map_fn(split_col, FUN=function(row) {
       if ( length(row) == 1 && all(is.na(row)) ) {
         NA
       } else {

@@ -26,7 +26,6 @@ Author: Eu Jing Chua
 Created: 2020-08-06
 """
 
-from argparse import ArgumentParser
 from contextlib import contextmanager
 import filecmp
 from glob import glob
@@ -622,13 +621,13 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
         self._cache_updated = True
 
 if __name__ == "__main__":
-    params = read_params()
+    _params = read_params()
 
     # Autodetect whether parameters have been factored hierarchically or not
     # See https://github.com/cmu-delphi/covidcast-indicators/issues/847
     # Once all indicators have their parameters factored in to "common", "indicator", "validation",
     # and "archive", this code will be obsolete.
-    if "archive" not in params:
-        params = {"archive": params, "common": params}
+    if "archive" not in _params:
+        _params = {"archive": _params, "common": _params}
 
-    from_params(params).run()
+    from_params(_params).run()

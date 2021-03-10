@@ -100,7 +100,7 @@ def diff_export_csv(
 def archiver_from_params(params):
     """Build an ArchiveDiffer from `params`.
 
-    The type of ArchiveDiffer constructed is inferred from the parameters
+    The type of ArchiveDiffer constructed is inferred from the parameters.
 
     Parameters
     ----------
@@ -111,30 +111,43 @@ def archiver_from_params(params):
         - "archive":
             - "cache_dir": str, directory containing cached data from previous indicator runs
             - "branch_name" (required for git archiver): str, name of git branch
+            - "override_dirty" (optional for git archiver): bool, whether to allow overwriting of
+                untracked & uncommitted changes in `cache_dir`
+            - "commit_partial_success" (optional for git archiver): bool, whether to still commit
+                even if some files were not archived and staged due to `override_dirty=False`
+            - "commit_message" (optional for git archiver): str, commit message to use
+            - "bucket_name" (required for S3 archiver): str, name of S3 bucket to which to upload
+                files
+            - "indicator_prefix" (required for S3 archiver): str, S3 prefix for files from this
+                indicator
+            - "aws_credentials" (required for S3 archiver): Dict[str, str], authentication
+                parameters for S3 to create a boto3.Session
+
+    Returns
+    -------
+    ArchiveDiffer of the inferred type.
     """
     if "archive" not in params:
         return None
 
-    common_params = params["common"]
-    export_dir = common_params["export_dir"]
+    # Copy to kwargs to take advantage of default arguments to archiver
+    kwargs = params["archive"]
+    kwargs["export_dir"] = params["common"]["export_dir"]
 
-    archive_params = params["archive"]
-    cache_dir = archive_params["cache_dir"]
+    if "branch_name" in kwargs:
+        return GitArchiveDiffer(**kwargs)
 
-    if "branch_name" in archive_params:
-        return GitArchiveDiffer(cache_dir,
-                                export_dir,
-                                archive_params["branch_name"],
-                                archive_params["override_dirty"],
-                                archive_params["commit_partial_success"],
-                                archive_params["commit_message"])
-    if "bucket_name" in archive_params:
-        return S3ArchiveDiffer(cache_dir,
-                               export_dir,
-                               archive_params["bucket_name"],
-                               archive_params["indicator_prefix"],
-                               archive_params["aws_credentials"])
-    return FilesystemArchiveDiffer(cache_dir, export_dir)
+    if "bucket_name" in kwargs:
+        assert "indicator_prefix" in kwargs, "Missing indicator_prefix in params"
+        assert "aws_credentials" in kwargs, "Missing aws_credentials in params"
+        return S3ArchiveDiffer(**kwargs)
+
+    # Don't run the filesystem archiver if the user misspecified the archiving params
+    assert set(kwargs.keys()) == set(["cache_dir", "export_dir"]),\
+        'If you intended to run a filesystem archiver, please remove all options other than '\
+        '"cache_dir" from the "archive" params.  Otherwise, please include either "branch_name" '\
+        'or "bucket_name" to run the git or S3 archivers, respectively.'
+    return FilesystemArchiveDiffer(**kwargs)
 
 
 class ArchiveDiffer:

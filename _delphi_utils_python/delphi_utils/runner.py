@@ -2,11 +2,10 @@
 import argparse as ap
 import importlib
 from typing import Any, Callable, Dict, Optional
-from .archive import ArchiveDiffer
-from .archive import from_params as archiver_from_params
+from .archive import ArchiveDiffer, archiver_from_params
 from .utils import read_params
 from .validator.validate import Validator
-from .validator.run import from_params as validator_from_params
+from .validator.run import validator_from_params
 
 Params = Dict[str, Any]
 

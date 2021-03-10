@@ -97,7 +97,7 @@ def diff_export_csv(
         after_df.loc[added_idx, :])
 
 
-def from_params(params):
+def archiver_from_params(params):
     """Build an ArchiveDiffer from `params`.
 
     The type of ArchiveDiffer constructed is inferred from the parameters
@@ -630,4 +630,4 @@ if __name__ == "__main__":
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
 
-    from_params(_params).run()
+    archiver_from_params(_params).run()

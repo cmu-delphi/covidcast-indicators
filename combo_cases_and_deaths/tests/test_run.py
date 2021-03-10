@@ -101,7 +101,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
         pd.DataFrame({"geo_value": ["01000", "01001"],
                       "value": [50, 100],
                       "timestamp": [20200101, 20200101]}),
-        pd.DataFrame({"geo_value": ["72000", "01001"],
+        pd.DataFrame({"geo_value": ["72001", "01001"],
                       "value": [200, 100],
                       "timestamp": [20200101, 20200101]}),
     ] * 3
@@ -123,7 +123,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
     )
     pd.testing.assert_frame_equal(
         combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal),
-        pd.DataFrame({"geo_id": ["01000", "01001", "72000"],
+        pd.DataFrame({"geo_id": ["01000", "01001", "72001"],
                       "val": [50, 100, 200],
                       "timestamp": [20200101, 20200101, 20200101]},
                      index=[0, 1, 0])

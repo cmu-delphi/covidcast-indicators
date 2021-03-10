@@ -144,8 +144,9 @@ class TestClaimsHospIndicatorUpdater:
         expected_name = f"20200502_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
+        expected_columns = ["geo_id", "val", "se", "direction", "sample_size", "missing_val", "missing_se", "missing_sample_size"]
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == expected_columns
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))
@@ -159,10 +160,10 @@ class TestClaimsHospIndicatorUpdater:
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == expected_columns
         ).all()
-        assert (output_data.geo_id == ["a"]).all()
-        assert np.array_equal(output_data.val.values, np.array([0.5]))
+        assert (output_data.geo_id == ["a", "b"]).all()
+        assert np.array_equal(output_data.val.values, np.array([0.5, np.nan]), equal_nan=True)
         assert np.isnan(output_data.se.values).all()
         assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
@@ -171,7 +172,7 @@ class TestClaimsHospIndicatorUpdater:
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == expected_columns
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([1.5, 3]))
@@ -224,8 +225,9 @@ class TestClaimsHospIndicatorUpdater:
         expected_name = f"20200502_geography_{signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
+        expected_columns = ["geo_id", "val", "se", "direction", "sample_size", "missing_val", "missing_se", "missing_sample_size"]
         assert (
-                output_data.columns == ["geo_id", "val", "se", "direction", "sample_size"]
+                output_data.columns == expected_columns
         ).all()
         assert (output_data.geo_id == ["a", "b"]).all()
         assert np.array_equal(output_data.val.values, np.array([0.1, 1]))

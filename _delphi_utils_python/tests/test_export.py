@@ -9,7 +9,6 @@ import pandas as pd
 
 from delphi_utils import create_export_csv, Nans
 
-
 def _clean_directory(directory):
     """Clean files out of a directory."""
     for fname in listdir(directory):

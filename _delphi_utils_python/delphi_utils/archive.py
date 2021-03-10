@@ -627,6 +627,10 @@ if __name__ == "__main__":
     # See https://github.com/cmu-delphi/covidcast-indicators/issues/847
     # Once all indicators have their parameters factored in to "common", "indicator", "validation",
     # and "archive", this code will be obsolete.
+    #
+    # We assume that by virtue of invoking this module from the command line that the user intends
+    # to run validation.  Thus if the "archive" sub-object is not found, we interpret that to mean
+    # the parameters have not be hierarchically refactored.
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
 

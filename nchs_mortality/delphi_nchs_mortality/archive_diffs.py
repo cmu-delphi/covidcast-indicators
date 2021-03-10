@@ -24,9 +24,8 @@ def arch_diffs(params, daily_arch_diff):
     daily_arch_diff: S3ArchiveDiffer
         Used to store and update cache
     """
-    export_dir = params["export_dir"]
-    daily_export_dir = params["daily_export_dir"]
-    cache_dir = params["cache_dir"]
+    weekly_export_dir = params["common"]["weekly_export_dir"]
+    daily_export_dir = params["common"]["daily_export_dir"]
 
     # Weekly run of archive utility on Monday
     # - Does not upload to S3, that is handled by daily run of archive utility
@@ -36,12 +35,12 @@ def arch_diffs(params, daily_arch_diff):
         for output_file in listdir(daily_export_dir):
             copy(
                 join(daily_export_dir, output_file),
-                join(export_dir, output_file))
+                join(weekly_export_dir, output_file))
 
         weekly_arch_diff = S3ArchiveDiffer(
-            cache_dir, export_dir,
-            params["bucket_name"], "nchs_mortality",
-            params["aws_credentials"])
+            params["archive"]["weekly_cache_dir"], weekly_export_dir,
+            params["archive"]["bucket_name"], "nchs_mortality",
+            params["archive"]["aws_credentials"])
 
         # Dont update cache from S3 (has daily files), only simulate a update_cache() call
         weekly_arch_diff._cache_updated = True  # pylint: disable=protected-access

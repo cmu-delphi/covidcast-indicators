@@ -1,8 +1,22 @@
 {
-  "export_start_date": "2020-02-20",
-  "static_file_dir": "./static",
-  "export_dir": "/common/covidcast/receiving/google-symptoms",
-  "cache_dir": "./cache",
-  "base_url": "https://raw.githubusercontent.com/google-research/open-covid-19-data/master/data/exports/search_trends_symptoms_dataset/United%20States%20of%20America{sub_url}2020_US_{state}daily_symptoms_dataset.csv",
-  "log_filename": "/var/log/indicators/google_symptoms.log"
+  "common": {
+    "export_dir": "/common/covidcast/receiving/google-symptoms",
+    "log_filename": "/var/log/indicators/google_symptoms.log"
+  },
+  "indicator": {
+    "export_start_date": "2020-02-20",
+    "num_export_days": 14,
+    "bigquery_credentials": {
+      "type": "{{ google_symptoms_account_type }}",
+      "project_id": "{{ google_symptoms_project_id }}",
+      "private_key_id": "{{ google_symptoms_private_key_id }}",
+      "private_key": "{{ google_symptoms_private_key }}",
+      "client_email": "{{ google_symptoms_client_email }}",
+      "client_id": "{{ google_symptoms_client_id }}",
+      "auth_uri": "{{ google_symptoms_auth_uri }}",
+      "token_uri": "{{ google_symptoms_token_uri }}",
+      "auth_provider_x509_cert_url": "{{ google_symptoms_auth_provider_x509_cert_url }}",
+      "client_x509_cert_url": "{{ google_symptoms_client_x509_cert_url }}"
+    }
+  }
 }

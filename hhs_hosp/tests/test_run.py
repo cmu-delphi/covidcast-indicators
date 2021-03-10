@@ -125,4 +125,9 @@ def test_ignore_last_range_no_results(mock_covid_hosp, mock_export):
         {"result": -2, "message": "no results"}
     ]
     mock_export.return_value = None
-    assert not run_module()  # function should not raise value error and has no return value
+    params = {
+        "common": {
+            "export_dir": "./receiving"
+        }
+    }
+    assert not run_module(params)  # function should not raise value error and has no return value

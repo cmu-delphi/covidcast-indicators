@@ -11,18 +11,22 @@ from boto3 import Session
 from moto import mock_s3
 import pytest
 
-# third party
-from delphi_utils import read_params
 
 # first party
 from delphi_changehc.config import Config
 from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
 
 CONFIG = Config()
-PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat.gz",
+        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat.gz",
+        "drop_date": "2020-06-01"
+    }
+}
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
 
 class TestCHCSensorUpdator:
@@ -49,7 +53,8 @@ class TestCHCSensorUpdator:
             self.parallel,
             self.weekday,
             self.numtype,
-            self.se
+            self.se,
+            ""
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -72,41 +77,56 @@ class TestCHCSensorUpdator:
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
             su_inst.shift_dates()
-            data_frame = su_inst.geo_reindex(self.small_test_data.reset_index())
+            test_data = pd.DataFrame({
+                "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
+                "fips": ['01001'] * 7 + ['04007'] * 6,
+                "den": [1000] * 7 + [2000] * 6,
+                "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
+            data_frame = su_inst.geo_reindex(test_data)
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum() == (4200,19000)).all()
 
     def test_update_sensor(self):
         """Tests that the sensors are properly updated."""
-        for geo in ["state","hrr"]:
+        outputs = {}
+        for geo in ["county", "state", "hhs", "nation"]:
             td = TemporaryDirectory()
             su_inst = CHCSensorUpdator(
-                "02-01-2020",
-                "06-01-2020",
-                "06-12-2020",
+                "03-01-2020",
+                "03-22-2020",
+                "03-27-2020",
                 geo,
                 self.parallel,
                 self.weekday,
                 self.numtype,
-                self.se
+                self.se,
+                ""
             )
-
-            with mock_s3():
-                # Create the fake bucket we will be using
-                params = read_params()
-                aws_credentials = params["aws_credentials"]
-                s3_client = Session(**aws_credentials).client("s3")
-                s3_client.create_bucket(Bucket=params["bucket_name"])
-                su_inst.update_sensor(
-                    self.small_test_data,
-                    td.name)
-
+            # As of 3/3/21 (40c258a), this set of data has county outputting data, state and hhs not
+            # outputting data, and nation outputting data, which is undesirable. Ideal behaviour
+            # should be all output or a subregion only outputting if its parent has output,
+            # which is what is being tested here.
+            small_test_data = pd.DataFrame({
+                "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
+                "fips": ["01001"] * 13 + ["42003"] * 13,
+                "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
+                "date": list(pd.date_range("20200301", "20200313")) * 2}).set_index(
+                ["fips", "date"])
+            su_inst.update_sensor(small_test_data,  td.name)
+            for f in os.listdir(td.name):
+                outputs[f] = pd.read_csv(os.path.join(td.name, f))
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
                 f"failed {geo} update sensor test"
             td.cleanup()
+        assert outputs["20200319_county_smoothed_outpatient_covid.csv"].empty
+        assert outputs["20200319_state_smoothed_outpatient_covid.csv"].empty
+        assert outputs["20200319_hhs_smoothed_outpatient_covid.csv"].empty
+        assert outputs["20200319_nation_smoothed_outpatient_covid.csv"].empty
+
 
 class TestWriteToCsv:
     """Tests for writing output files to CSV."""

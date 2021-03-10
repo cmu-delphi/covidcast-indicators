@@ -1,36 +1,34 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "input_files": {
-    "denom": null,
-    "covid": null,
-    "flu": null,
-    "mixed": null,
-    "flu_like": null,
-    "covid_like": null
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
   },
-  "start_date": "2020-02-01",
-  "end_date": null,
-  "drop_date": null,
-  "n_backfill_days": 60,
-  "n_waiting_days": 3,
-  "se": false,
-  "parallel": false,
-  "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
-  "weekday": [true, false],
-  "types": ["covid","cli"],
-  "wip_signal": "",
-  "aws_credentials": {
-    "aws_access_key_id": "",
-    "aws_secret_access_key": ""
-  },
-  "bucket_name": "",
-  "ftp_conn": {
-    "host": "",
-    "user": "",
-    "pass": "",
-    "port": 0
-  },
-  "log_exceptions": false
+  "indicator": {
+    "input_cache_dir": "./cache",
+    "input_files": {
+      "denom": null,
+      "covid": null,
+      "flu": null,
+      "mixed": null,
+      "flu_like": null,
+      "covid_like": null
+    },
+    "start_date": null,
+    "end_date": null,
+    "drop_date": null,
+    "n_backfill_days": 60,
+    "n_waiting_days": 3,
+    "se": false,
+    "parallel": false,
+    "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
+    "weekday": [true, false],
+    "types": ["covid","cli"],
+    "wip_signal": "",
+    "ftp_conn": {
+      "host": "",
+      "user": "",
+      "pass": "",
+      "port": 0
+    }
+  }
 }

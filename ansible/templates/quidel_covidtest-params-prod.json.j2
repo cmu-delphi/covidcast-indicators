@@ -1,17 +1,21 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "/common/covidcast/receiving/quidel",
-  "cache_dir": "./cache",
-  "export_start_date": "2020-05-26",
-  "export_end_date": "",
-  "pull_start_date": "2020-05-26",
-  "pull_end_date":"",
-  "aws_credentials": {
-    "aws_access_key_id": "{{ quidel_aws_access_key_id }}",
-    "aws_secret_access_key": "{{ quidel_aws_secret_access_key }}"
+  "common": {
+    "export_dir": "/common/covidcast/receiving/quidel",
+    "log_filename": "/var/log/indicators/quidel_covidtest.log"
   },
-  "bucket_name": "{{ quidel_aws_bucket_name }}",
-  "wip_signal": [""],
-  "mode": "",
-  "log_filename": "/var/log/indicators/quidel_covidtest.log"
+  "indicator": {
+    "static_file_dir": "./static",
+    "input_cache_dir": "./cache",
+    "export_start_date": "2020-05-26",
+    "export_end_date": "",
+    "pull_start_date": "2020-05-26",
+    "pull_end_date":"",
+    "aws_credentials": {
+      "aws_access_key_id": "{{ quidel_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ quidel_aws_secret_access_key }}"
+    },
+    "bucket_name": "{{ quidel_aws_bucket_name }}",
+    "wip_signal": [""],
+    "test_mode": false
+  }
 } 

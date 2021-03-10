@@ -641,12 +641,24 @@ if __name__ == "__main__":
                         help="Commit message for `archive_type` = 'git'")
     args = parser.parse_args()
     params = read_params()
+
+    # Autodetect whether parameters have been factored hierarchically or not
+    # See https://github.com/cmu-delphi/covidcast-indicators/issues/847
+    # Once all indicators have their parameters factored in to "common", "indicator", "validation",
+    # and "archive", this code will be obsolete.
+    if "archive" in params:
+        archive_params = params["archive"]
+        common_params = params["common"]
+    else:
+        archive_params = params
+        common_params = params
+
     run_module(args.archive_type,
-               params["cache_dir"],
-               params["export_dir"],
-               aws_credentials=params.get("aws_credentials", {}),
+               archive_params["cache_dir"],
+               common_params["export_dir"],
+               aws_credentials=archive_params.get("aws_credentials", {}),
                branch_name=args.branch_name,
-               bucket_name=params.get("bucket_name", ""),
+               bucket_name=archive_params.get("bucket_name", ""),
                commit_message=args.commit_message,
                commit_partial_success=args.commit_partial_success,
                indicator_prefix=args.indicator_prefix,

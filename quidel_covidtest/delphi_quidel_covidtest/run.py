@@ -4,10 +4,11 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+import atexit
 import time
+from typing import Dict, Any
 
 from delphi_utils import (
-    read_params,
     add_prefix,
     create_export_csv,
     get_structured_logger
@@ -25,21 +26,47 @@ from .pull import (pull_quidel_covidtest,
                    check_export_end_date,
                    update_cache_file)
 
+def log_exit(start_time, logger):
+    """Log at program exit."""
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds)
 
-def run_module():
-    """Run the quidel_covidtest indicator."""
+def run_module(params: Dict[str, Any]):
+    """Run the quidel_covidtest indicator.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - indicator":
+        - "static_file_dir": str, directory name with population information
+        - "input_cache_dir": str, directory in which to cache input data
+        - "export_start_date": str, YYYY-MM-DD format of earliest date to create output
+        - "export_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
+                             through the present
+        - "pull_start_date": str, YYYY-MM-DD format of earliest date to pull input
+        - "pull_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
+                           through the present
+        - "aws_credentials": Dict[str, str], authentication parameters for AWS S3; see S3
+                             documentation
+        - "bucket_name": str, name of AWS bucket in which to find data
+        - "wip_signal": List[str], list of signal names that are works in progress
+        - "test_mode": bool, whether we are running in test mode
+    """
     start_time = time.time()
-    params = read_params()
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
-    cache_dir = params["cache_dir"]
-    export_dir = params["export_dir"]
-    export_start_date = params["export_start_date"]
-    export_end_date = params["export_end_date"]
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    atexit.register(log_exit, start_time, logger)
+    cache_dir = params["indicator"]["input_cache_dir"]
+    export_dir = params["common"]["export_dir"]
+    export_start_date = params["indicator"]["export_start_date"]
+    export_end_date = params["indicator"]["export_end_date"]
 
     # Pull data and update export date
-    df, _end_date = pull_quidel_covidtest(params)
+    df, _end_date = pull_quidel_covidtest(params["indicator"])
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -56,7 +83,7 @@ def run_module():
 
     # Add prefix, if required
     sensors = add_prefix(SENSORS,
-                         wip_signal=read_params()["wip_signal"],
+                         wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
     smoothers = SMOOTHERS.copy()
 
@@ -95,7 +122,3 @@ def run_module():
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
     update_cache_file(df, _end_date, cache_dir)
-
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)

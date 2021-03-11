@@ -17,8 +17,7 @@
     "static": {
       "minimum_sample_size": 100,
       "missing_sample_size_allowed": true,
-      "missing_se_allowed": true,
-      "validator_static_file_dir": "../validator/static"
+      "missing_se_allowed": true
     },
     "dynamic": {
       "expected_lag": {

@@ -19,7 +19,7 @@ load_responses_all <- function(params) {
   
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
-  map_fn <- ifelse(params$parallel, mclapply, lapply)
+  map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(input_data), function(i) {
     load_response_one(params$input[i], params)
   })

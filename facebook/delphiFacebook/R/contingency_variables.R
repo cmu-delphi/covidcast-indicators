@@ -430,7 +430,7 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   } else if (response_type == "ms") {
     split_col <- split_options(df[[col_var]])
     
-    map_fn <- ifelse( is.null(getOption("mc.cores")) , mapply, mcmapply)
+    map_fn <- if (is.null(getOption("mc.cores"))) { mapply } else { mcmapply }
     df[[col_var]] <- map_fn(split_col, FUN=function(row) {
       if ( length(row) == 1 && all(is.na(row)) ) {
         NA

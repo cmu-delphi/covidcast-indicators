@@ -239,7 +239,7 @@ run_contingency_tables_many_periods <- function(params, aggregations)
       
       # Update start/end date and time.
       period_params$end_date <- end_date
-      if ( !(end_date == end_dates[1]) ) {
+      if ( end_date != end_dates[1] ) {
         period_params$start_date <- NULL
       }
       

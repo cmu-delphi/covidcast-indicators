@@ -51,12 +51,15 @@ get_binary_indicators <- function() {
     "smoothed_wtravel_outside_state_7d", "weight", "c_travel_state_7d", 6, compute_binary_response, jeffreys_binary,
     
     # work outside home
-    # pre-wave-4
+    # pre-wave 4
     "wip_smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
     "wip_smoothed_wwork_outside_home_5d", "weight", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
-    # wave 4+
+    # wave 4+, pre-wave 10
     "smoothed_work_outside_home_1d", "weight_unif", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwork_outside_home_1d", "weight", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
+    # wave 10+
+    "smoothed_work_outside_home_indoors_1d", "weight_unif", "a_work_outside_home_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wwork_outside_home_indoors_1d", "weight", "a_work_outside_home_indoors_1d", 6, compute_binary_response, jeffreys_binary,
 
     # activities
     # pre-Wave 10

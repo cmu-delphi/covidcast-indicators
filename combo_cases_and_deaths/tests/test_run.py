@@ -48,10 +48,10 @@ def test_unstable_sources():
     placeholder = lambda geo: pd.DataFrame(
         [(date.today(),"pr" if geo == "state" else "72000",1,1,1)],
         columns="time_value geo_value value stderr sample_size".split())
-    fetcher10 = lambda *x: placeholder(x[-1]) if x[0] == "usa-facts" else None
-    fetcher01 = lambda *x: placeholder(x[-1]) if x[0] == "jhu-csse" else None
-    fetcher11 = lambda *x: placeholder(x[-1])
-    fetcher00 = lambda *x: None
+    fetcher10 = lambda *x, **k: placeholder(x[-1]) if x[0] == "usa-facts" else None
+    fetcher01 = lambda *x, **k: placeholder(x[-1]) if x[0] == "jhu-csse" else None
+    fetcher11 = lambda *x, **k: placeholder(x[-1])
+    fetcher00 = lambda *x, **k: None
 
     date_range = [date.today(), date.today()]
 
@@ -62,7 +62,7 @@ def test_unstable_sources():
                 (fetcher10, 1),
                 (fetcher11, 1 if geo in ["msa", "nation", "hhs"] else 2)
         ]:
-            df = combine_usafacts_and_jhu("", geo, date_range, fetcher)
+            df = combine_usafacts_and_jhu("", geo, date_range, fetcher=fetcher)
             assert df.size == expected_size * len(COLUMN_MAPPING), f"""
 Wrong number of rows in combined data frame for the number of available signals.
 

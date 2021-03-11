@@ -27,7 +27,7 @@ is_selected <- function(vec, selection) {
   selections <- sapply(
     vec,
     function(resp) {
-      if (length(resp) == 0) {
+      if (length(resp) == 0 || all(is.na(resp))) {
         # All our selection items include "None of the above" or similar, so
         # treat no selection the same as missingness.
         NA
@@ -219,7 +219,35 @@ code_testing <- function(input_data) {
   }
   
   if ( "B10b" %in% names(input_data) ) {
-    input_data$t_screening_tested_positive_14d <- NA_real_
+    testing_reasons <- split_options(input_data$B10b)
+    
+    input_data$t_tested_reason_sick <- is_selected(testing_reasons, "1")
+    input_data$t_tested_reason_contact <- is_selected(testing_reasons, "2")
+    input_data$t_tested_reason_medical <- is_selected(testing_reasons, "3")
+    input_data$t_tested_reason_employer <- is_selected(testing_reasons, "4")
+    input_data$t_tested_reason_large_event <- is_selected(testing_reasons, "5")
+    input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
+    input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
+    input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
+    
+    input_data$t_tested_reason_screening <- case_when(
+      input_data$t_tested_reason_sick == TRUE ~ 0,
+      input_data$t_tested_reason_contact == TRUE ~ 0,
+      input_data$t_tested_reason_crowd == TRUE ~ 0,
+      
+      input_data$t_tested_reason_medical == TRUE ~ 1,
+      input_data$t_tested_reason_employer == TRUE ~ 1,
+      input_data$t_tested_reason_large_event == TRUE ~ 1,
+      input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      
+      is.na(input_data$B10b) == FALSE ~ 0,
+      TRUE ~ NA_real_
+    )
+    
+    input_data$t_screening_tested_positive_14d <- case_when(
+      input_data$t_tested_reason_screening == 1 ~ input_data$t_tested_positive_14d,
+      TRUE ~ NA_real_
+    )
   } else {
     input_data$t_screening_tested_positive_14d <- NA_real_
   }

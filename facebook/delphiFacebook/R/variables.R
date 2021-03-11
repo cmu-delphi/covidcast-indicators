@@ -389,6 +389,28 @@ code_vaccines <- function(input_data) {
     input_data$v_hesitancy_reason_pregnant <- NA_real_
     input_data$v_hesitancy_reason_religious <- NA_real_
   }
+  
+  if ( "V6" %in% names(input_data) ) {
+    # introduced in Wave 8
+    dontneed_reasons <- split_options(input_data$V6)
+    
+    input_data$v_dontneed_reason_had_covid <- is_selected(dontneed_reasons, "1")
+    input_data$v_dontneed_reason_dont_spend_time <- is_selected(dontneed_reasons, "2")
+    input_data$v_dontneed_reason_not_high_risk <- is_selected(dontneed_reasons, "3")
+    input_data$v_dontneed_reason_precautions <- is_selected(dontneed_reasons, "4")
+    input_data$v_dontneed_reason_not_serious <- is_selected(dontneed_reasons, "5")
+    input_data$v_dontneed_reason_not_beneficial <- is_selected(dontneed_reasons, "7")
+    input_data$v_dontneed_reason_other <- is_selected(dontneed_reasons, "8")
+    
+  } else {
+    input_data$v_dontneed_reason_had_covid <- NA
+    input_data$v_dontneed_reason_dont_spend_time <- NA
+    input_data$v_dontneed_reason_not_high_risk <- NA
+    input_data$v_dontneed_reason_precautions <- NA
+    input_data$v_dontneed_reason_not_serious <- NA
+    input_data$v_dontneed_reason_not_beneficial <- NA
+    input_data$v_dontneed_reason_other <- NA
+  }
 
   if ("V9" %in% names(input_data)) {
     input_data$v_worried_vaccine_side_effects <- (

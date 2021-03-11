@@ -29,7 +29,7 @@
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
-  msg_plain(paste0("Producing contingency aggregates..."))
+  msg_plain("Producing contingency aggregates...")
   ## For the date range lookups we do on df, use a data.table key. This puts the
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large

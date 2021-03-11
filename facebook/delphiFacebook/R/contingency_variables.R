@@ -190,7 +190,7 @@ rename_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly mapped columns
 remap_responses <- function(df) {
-  msg_plain(paste0("Mapping response codes to descriptive values..."))
+  msg_plain("Mapping response codes to descriptive values...")
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -318,7 +318,7 @@ remap_responses <- function(df) {
     )
   }
   
-  msg_plain(paste0("Finished remapping response codes"))
+  msg_plain("Finished remapping response codes")
   return(df)
 }
 

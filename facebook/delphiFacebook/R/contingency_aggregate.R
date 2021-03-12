@@ -170,47 +170,26 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   
   #### TODO: How do we want to handle multi-select items when used for grouping?
   agg_groups <- unique(aggregations$group_by)
-  group_cols_to_convert <- unique(do.call(c, agg_groups))
-  for (col_var in group_cols_to_convert) {
-    if (col_var == "geo_id") { next }
-    if ( is.null(df[[col_var]]) ) {
-      aggregations <- aggregations[aggregations$metric != col_var &
-                                     !mapply(aggregations$group_by,
-                                             FUN=function(x) {col_var %in% x}), ]
-      msg_plain(
-        paste0(
-          col_var, " is not defined. Removing all aggregations that use it. ", 
-          nrow(aggregations), " remaining")
-      )
-      next
-    }
-
-    if (startsWith(col_var, "b_")) { # Binary
-      output <- code_binary(df, aggregations, col_var)
-    } else if (startsWith(col_var, "n_")) { # Numeric free response
-      output <- code_numeric_freeresponse(df, aggregations, col_var)
-    } else {
-      # Multiple choice, multi-select, and variables that are formatted differently
-      output <- list(df, aggregations)
-    }
-    df <- output[[1]]
-    aggregations <- output[[2]]
-  }
+  group_cols <- unique(do.call(c, agg_groups))
+  group_cols <- group_cols[group_cols != "geo_id"]
   
   metric_cols_to_convert <- unique(aggregations$metric)
-  for (col_var in metric_cols_to_convert) {
-    if ( is.null(df[[col_var]]) ) {
-      aggregations <- aggregations[aggregations$metric != col_var &
-                                     !mapply(aggregations$group_by,
-                                             FUN=function(x) {col_var %in% x}), ]
-      msg_plain(
-        paste0(
-          col_var, " is not defined. Removing all aggregations that use it. ", 
-          nrow(aggregations), " remaining")
-      )
-      next
-    }
-    
+  
+  cols_check_available <- c(group_cols, metric_cols_to_convert)
+  cols_not_available <- cols_check_available[ !(cols_check_available %in% names(df)) ]
+  for (col_var in cols_not_available) {
+    # Remove from aggregations
+    aggregations <- aggregations[aggregations$metric != col_var &
+                                   !mapply(aggregations$group_by,
+                                           FUN=function(x) {col_var %in% x}), ]
+    msg_plain(
+      paste0(
+        col_var, " is not defined. Removing all aggregations that use it. ", 
+        nrow(aggregations), " remaining")
+  }
+  
+  group_cols_to_convert <- group_cols[startsWith(group_cols, "b_")]
+  for (col_var in c(group_cols_to_convert, metric_cols_to_convert) ) {
     if (startsWith(col_var, "b_")) { # Binary
       output <- code_binary(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response

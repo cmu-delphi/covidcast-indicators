@@ -648,7 +648,7 @@ if __name__ == "__main__":
     # the parameters have not be hierarchically refactored.
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
-    
+
     logger = get_structured_logger(
         __name__, filename=_params["common"].get("log_filename"),
         log_exceptions=_params["common"].get("log_exceptions", True))

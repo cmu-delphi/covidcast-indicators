@@ -215,8 +215,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
       output <- code_binary(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response
       output <- code_numeric_freeresponse(df, aggregations, col_var)
-    }
-    else if (startsWith(col_var, "ms_")) { # Multi-select
+    } else if (startsWith(col_var, "ms_")) { # Multi-select
       output <- code_multiselect(df, aggregations, col_var)
     } else {
       # Multiple choice and variables that are formatted differently

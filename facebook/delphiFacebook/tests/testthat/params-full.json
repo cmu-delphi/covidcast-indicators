@@ -27,6 +27,7 @@
     "input": [
       "full_synthetic.csv"
     ],
+    "use_input_asis": true,
     "aggregate_range": "month",
     "debug": false
   }

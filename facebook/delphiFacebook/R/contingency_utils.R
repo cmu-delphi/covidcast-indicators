@@ -33,6 +33,9 @@ read_contingency_params <- function(path = "params.json", template_path = "param
   contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 100L)
   contingency_params$s_weight <- if_else(contingency_params$debug, 1.00, 0.01)
   contingency_params$s_mix_coef <- if_else(contingency_params$debug, 0.05, 0.05)
+  contingency_params$use_input_asis <- if_else(
+    is.null(contingency_params$use_input_asis), FALSE, contingency_params$use_input_asis
+  )
   
   return(contingency_params)
 }
@@ -57,15 +60,19 @@ update_params <- function(params) {
     params$end_time <- Sys.time()
   }
   
+  # Construct aggregate date range.
   if ( !is.null(params$start_date) ) {
     date_range <- list(params$start_time, params$end_time)
   } else {
     # If start_date is not provided, assume want to use preceding full time period.
-    date_range <- get_range_prev_full_period(as_date(params$end_date), params$aggregate_range)
+    date_range <- get_range_prev_full_period(
+      as_date(params$end_date)
+      , params$aggregate_range
+    )
   }
   
   params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-  if (length(params$input) == 0) {
+  if ( length(params[["input"]]) == 0 || all(is.na(params[["input"]])) ) {
     stop("no input files to read in")
   }
   
@@ -89,6 +96,8 @@ update_params <- function(params) {
 #' 
 #' @export
 get_filenames_in_range <- function(start_date, end_date, params) {
+  if (params$use_input_asis) { return(params$input) }
+  
   start_date <- as_date(start_date) - days(params$backfill_days)
   end_date <- as_date(end_date)
   

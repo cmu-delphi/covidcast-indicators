@@ -32,6 +32,7 @@ from glob import glob
 from os import remove, replace
 from os.path import join, basename, abspath
 import shutil
+import time
 from typing import Tuple, List, Dict, Optional
 
 from boto3 import Session
@@ -41,6 +42,7 @@ from git.refs.head import Head
 import pandas as pd
 
 from .utils import read_params
+from .logger import get_structured_logger
 
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]
@@ -646,5 +648,14 @@ if __name__ == "__main__":
     # the parameters have not be hierarchically refactored.
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
+    
+    logger = get_structured_logger(
+        __name__, filename=_params["common"].get("log_filename"),
+        log_exceptions=_params["common"].get("log_exceptions", True))
+    start_time = time.time()
 
     archiver_from_params(_params).run()
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed archive run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds)

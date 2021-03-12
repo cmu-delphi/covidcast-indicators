@@ -345,14 +345,14 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_65_or_older <- NA_real_
   }
-  
-  if ("mc_accept_cov_vaccine" %in% names(df)) {	
-    df$b_hesitant_cov_vaccine <- as.numeric(	
-      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"	
-    )	
-  } else {	
-    df$b_hesitant_cov_vaccine <- NA_real_	
-  }	
+
+  if ("mc_accept_cov_vaccine" %in% names(df)) {
+    df$b_hesitant_cov_vaccine <- as.numeric(
+      df$mc_accept_cov_vaccine == "prob not vaccinate" | df$mc_accept_cov_vaccine == "def not vaccinate"
+    )
+  } else {
+    df$b_hesitant_cov_vaccine <- NA_real_
+  }
 
   if ("mc_concerned_sideeffects" %in% names(df)) {
     df$b_concerned_sideeffects <- as.numeric(
@@ -363,13 +363,9 @@ create_derivative_columns <- function(df) {
   }
 
   df$b_hesitant_sideeffects <- case_when(
-    is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-    is.na(df$b_concerned_sideeffects) == TRUE ~ NA,
-    df$wave < 7 ~ NA,
-    df$b_hesitant_cov_vaccine == 0 ~ NA,
-    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 1 ~ TRUE,
-    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 0 ~ FALSE,
-    TRUE ~ NA
+    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 1 ~ 1,
+    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 0 ~ 0,
+    TRUE ~ NA_real_
   )
   
   if ( "b_vaccine_likely_friends" %in% names(df) &
@@ -378,49 +374,29 @@ create_derivative_columns <- function(df) {
        "b_vaccine_likely_govt_health" %in% names(df) &
        "b_vaccine_likely_politicians" %in% names(df) ) {
     df$b_hesitant_trust_fam <- case_when(
-      is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-      is.na(df$b_vaccine_likely_friends) == TRUE ~ NA,
-      df$wave < 7 ~ NA,
-      df$b_hesitant_cov_vaccine == 0 ~ NA,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 1 ~ TRUE,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 0 ~ FALSE,
-      TRUE ~ NA
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 0 ~ 0,
+      TRUE ~ NA_real_
     )
     df$b_hesitant_trust_healthcare <- case_when(
-      is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-      is.na(df$b_vaccine_likely_local_health) == TRUE ~ NA,
-      df$wave < 7 ~ NA,
-      df$b_hesitant_cov_vaccine == 0 ~ NA,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 1 ~ TRUE,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 0 ~ FALSE,
-      TRUE ~ NA
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 0 ~ 0,
+      TRUE ~ NA_real_
     )
     df$b_hesitant_trust_who <- case_when(
-      is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-      is.na(df$b_vaccine_likely_who) == TRUE ~ NA,
-      df$wave < 7 ~ NA,
-      df$b_hesitant_cov_vaccine == 0 ~ NA,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 1 ~ TRUE,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 0 ~ FALSE,
-      TRUE ~ NA
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 0 ~ 0,
+      TRUE ~ NA_real_
     )
     df$b_hesitant_trust_govt <- case_when(
-      is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-      is.na(df$b_vaccine_likely_govt_health) == TRUE ~ NA,
-      df$wave < 7 ~ NA,
-      df$b_hesitant_cov_vaccine == 0 ~ NA,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 1 ~ TRUE,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 0 ~ FALSE,
-      TRUE ~ NA
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 0 ~ 0,
+      TRUE ~ NA_real_
     )
     df$b_hesitant_trust_politicians <- case_when(
-      is.na(df$b_hesitant_cov_vaccine) == TRUE ~ NA,
-      is.na(df$b_vaccine_likely_politicians) == TRUE ~ NA,
-      df$wave < 7 ~ NA,
-      df$b_hesitant_cov_vaccine == 0 ~ NA,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 1 ~ TRUE,
-      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 0 ~ FALSE,
-      TRUE ~ NA
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 0 ~ 0,
+      TRUE ~ NA_real_
     )
     
   } else {

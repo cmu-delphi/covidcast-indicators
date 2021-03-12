@@ -39,7 +39,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
   # Keep only obs in desired date range.
   df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
-  
+
   output <- post_process_aggs(df, aggregations, cw_list)
   df <- output[[1]]
   aggregations <- output[[2]]
@@ -168,7 +168,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   # each unique level/response code; multi-select used for grouping are left as-is.
   #   - multiple choice items are left as-is
   
-  #### TODO: How do we want to handle multi-select items used for grouping?
+  #### TODO: How do we want to handle multi-select items when used for grouping?
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
   for (col_var in group_cols_to_convert) {

@@ -657,5 +657,5 @@ if __name__ == "__main__":
     archiver_from_params(_params).run()
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed archive run",
+    logger.info("Completed archive run.",
                 elapsed_time_in_seconds=elapsed_time_in_seconds)

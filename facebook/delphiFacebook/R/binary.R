@@ -147,6 +147,22 @@ get_binary_indicators <- function() {
     "smoothed_whesitancy_reason_pregnant", "weight", "v_hesitancy_reason_pregnant", 6, compute_binary_response, jeffreys_binary,
     "smoothed_hesitancy_reason_religious", "weight_unif", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_religious", "weight", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
+    
+    # reasons for belief that vaccine is unnecessary
+    "smoothed_dontneed_reason_had_covid", "weight_unif", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_had_covid", "weight", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_dont_spend_time", "weight_unif", "v_dontneed_reason_dont_spend_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_dont_spend_time", "weight", "v_dontneed_reason_dont_spend_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_high_risk", "weight_unif", "v_dontneed_reason_not_high_risk", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_high_risk", "weight", "v_dontneed_reason_not_high_risk", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_precautions", "weight_unif", "v_dontneed_reason_precautions", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_precautions", "weight", "v_dontneed_reason_precautions", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_serious", "weight_unif", "v_dontneed_reason_not_serious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_serious", "weight", "v_dontneed_reason_not_serious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_beneficial", "weight_unif", "v_dontneed_reason_not_beneficial", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_beneficial", "weight", "v_dontneed_reason_not_beneficial", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_other", "weight_unif", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_other", "weight", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
   )
 
 

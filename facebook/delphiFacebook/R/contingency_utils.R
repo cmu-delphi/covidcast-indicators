@@ -55,10 +55,15 @@ update_params <- function(params) {
   if ( !is.null(params$start_date) ) {
     # Use all data within the date range, either as explicitly set or assuming
     # "now" is the end_date.
-    date_range <- list(params$start_time, 
-                       ifelse(!is.null(params$end_date), params$end_date, Sys.Date()))
-    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+    if (is.null(params$end_time)) {
+      params$end_time <- Sys.time()
+    }
+    date_range <- list(params$start_time, params$end_time)
     
+    if ( is.null(params$input) ) {
+      params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+    }
+
   } else if ( is.null(params$end_date) & (is.null(params$input) | length(params$input) == 0) ) {
     # Neither end_date nor list of input files is provided, assume want to use
     # most current full time period and data.
@@ -87,7 +92,6 @@ update_params <- function(params) {
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }
-  
   params$start_time <- date_range[[1]]
   params$end_time <- date_range[[2]]
 

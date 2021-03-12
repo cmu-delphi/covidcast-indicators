@@ -25,4 +25,4 @@ clean:
 
 run:
 	env/bin/python -m $(dir)
-	env/bin/python -m delphi_utils.archive --archive_type s3 --indicator_prefix $(dir)
+	env/bin/python -m delphi_utils.archive

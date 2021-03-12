@@ -140,8 +140,9 @@ load_response_one <- function(input_filename, params) {
 
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
-
+  
   input_data <- bodge_v4_translation(input_data)
+  input_data <- bodge_C6_C8(input_data)
 
   input_data <- code_symptoms(input_data)
   input_data <- code_hh_size(input_data)
@@ -331,12 +332,21 @@ bodge_v4_translation <- function(input_data) {
   affected <- c("V4_1", "V4_2", "V4_3", "V4_4", "V4_5")
   corrected <- c("V4a_1", "V4a_2", "V4a_3", "V4a_4", "V4a_5")
 
-  # Step 1: For any non-English results, null out V4 responses. There are NAs
-  # because of filtering earlier in the pipeline that incorrectly handles NA, so
-  # also remove these.
-  non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
-  for (col in affected) {
-    input_data[non_english, col] <- NA
+  if (any(affected %in% names(input_data))) {
+    # This wave is affected by the problem. Step 1: For any non-English results,
+    # null out V4 responses. There are NAs because of filtering earlier in the
+    # pipeline that incorrectly handles NA, so also remove these.
+    non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
+    for (col in affected) {
+      input_data[non_english, col] <- NA
+    }
+  } else {
+    # This wave does not have V4, only V4a. We will move V4a's responses into V4
+    # below, so users do not need to know about our goof. Ensure the columns
+    # exist so the later code can move data into them.
+    for (col in affected) {
+      input_data[[col]] <- NA
+    }
   }
 
   # Step 2: If this data does not have V4a, stop.
@@ -344,6 +354,8 @@ bodge_v4_translation <- function(input_data) {
     return(input_data)
   }
 
+  # Step 3: Wherever there are values in the new columns, move them to the old
+  # columns.
   for (ii in seq_along(affected)) {
     bad <- affected[ii]
     good <- corrected[ii]
@@ -354,6 +366,37 @@ bodge_v4_translation <- function(input_data) {
       input_data[[bad]]
     )
   }
+
+  return(input_data)
+}
+
+#' Fix column names in Wave 10.
+#'
+#' In Wave 10's deployment, the meaning of items C6 and C8 changed (from "In the
+#' past 5 days, have you traveled outside of your state?" and "In the past 5
+#' days, how often have you... felt depressed?", etc, to "In the past 7
+#' days..."), but the names were not changed. The names are changed in later
+#' waves.
+#'
+#' We rename C6 and C8_\* to C6a and C8a_\*, respectively, to match the existing
+#' naming scheme.
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_C6_C8 <- function(input_data) {
+  wave <- unique(input_data$wave)
+  if ( wave != 10 ) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+  
+  input_data <- rename(input_data,
+                       C6a = C6,
+                       C8a_1 = C8_1,
+                       C8a_2 = C8_2,
+                       C8a_3 = C8_3
+  )
 
   return(input_data)
 }
@@ -392,7 +435,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
     "V9", # added in Wave 7,
     "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
-    "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
+    "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )

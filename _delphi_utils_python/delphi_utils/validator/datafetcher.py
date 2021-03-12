@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Functions to get CSV filenames and data.
-"""
+"""Functions to get CSV filenames and data."""
 
 import re
 import threading
@@ -19,8 +17,7 @@ FILENAME_REGEX = re.compile(
 
 def make_date_filter(start_date, end_date):
     """
-    Create a function to return a boolean of whether a filename of appropriate
-    format contains a date within (inclusive) the specified date range.
+    Create a function to filter dates in the specified date range (inclusive).
 
     Arguments:
         - start_date: datetime date object
@@ -35,8 +32,7 @@ def make_date_filter(start_date, end_date):
 
     def custom_date_filter(match):
         """
-        Return a boolean of whether a filename of appropriate format contains a date
-        within the specified date range.
+        Determine if a single filename is in the date range.
 
         Arguments:
             - match: regex match object based on FILENAME_REGEX applied to a filename str
@@ -60,6 +56,7 @@ def make_date_filter(start_date, end_date):
 
 def load_all_files(export_dir, start_date, end_date):
     """Load all files in a directory.
+
     Parameters
     ----------
     export_dir: str
@@ -79,14 +76,14 @@ def load_all_files(export_dir, start_date, end_date):
 
 def read_filenames(path):
     """
-    Return a list of tuples of every filename and regex match to the CSV filename
-     format in the specified directory.
+    Read all file names from `path` and match them against FILENAME_REGEX.
 
     Arguments:
         - path: path to the directory containing CSV data files.
 
     Returns:
-        - list of tuples
+        - list of tuples of every filename and regex match to the CSV filename
+          format in the specified directory
     """
     daily_filenames = [(f, FILENAME_REGEX.match(f))
                        for f in listdir(path) if isfile(join(path, f))]
@@ -94,9 +91,7 @@ def read_filenames(path):
 
 
 def load_csv(path):
-    """
-    Load CSV with specified column types.
-    """
+    """Load CSV with specified column types."""
     return pd.read_csv(
         path,
         dtype={
@@ -109,8 +104,9 @@ def load_csv(path):
 
 def get_geo_signal_combos(data_source):
     """
-    Get list of geo type-signal type combinations that we expect to see, based on
-    combinations reported available by COVIDcast metadata.
+    Get list of geo type-signal type combinations that we expect to see.
+
+    Cross references based on combinations reported available by COVIDcast metadata.
     """
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
@@ -126,8 +122,9 @@ def get_geo_signal_combos(data_source):
 
 def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type):
     """
-    Get and process API data for use as a reference. Formatting is changed
-    to match that of source data CSVs.
+    Get and process API data for use as a reference.
+
+    Formatting is changed to match that of source data CSVs.
     """
     api_df = covidcast.signal(
         data_source, signal_type, start_date, end_date, geo_type)
@@ -161,8 +158,9 @@ def get_one_api_df(data_source, min_date, max_date,
                     geo_type, signal_type,
                     api_semaphore, dict_lock, output_dict):
     """
-    Pull API data for a single geo type-signal combination. Raises
-    error if data couldn't be retrieved. Saves data to data dict.
+    Pull API data for a single geo type-signal combination.
+
+    Raises error if data couldn't be retrieved. Saves data to data dict.
     """
     api_semaphore.acquire()
 
@@ -186,10 +184,7 @@ def get_one_api_df(data_source, min_date, max_date,
 
 
 def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=32):
-    """
-    Get data from API for all geo-signal combinations in a threaded way
-    to save time.
-    """
+    """Get data from API for all geo-signal combinations in a threaded way."""
     if n_threads > 32:
         n_threads = 32
         print("Warning: Don't run more than 32 threads at once due "

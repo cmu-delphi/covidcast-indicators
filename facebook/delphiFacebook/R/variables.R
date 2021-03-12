@@ -89,10 +89,6 @@ code_activities <- function(input_data) {
     input_data$a_restaurant_indoors_1d <- NA
     input_data$a_spent_time_indoors_1d <- NA
     input_data$a_large_event_indoors_1d <- NA
-
-    if ( is.null(input_data$a_public_transit_1d) ) {
-      input_data$a_public_transit_1d <- NA
-    }
   }
 
   return(input_data)
@@ -157,7 +153,7 @@ code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
 
-  if (wave >= 4) {
+  if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
@@ -169,6 +165,18 @@ code_mental_health <- function(input_data) {
     input_data$mh_depressed <- NA
     input_data$mh_isolated <- NA
     input_data$mh_worried_finances <- NA
+  }
+  
+  if (wave >= 10) {
+    input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
+    input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
+    input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
+    input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
+    input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
+  } else {
+    input_data$mh_anxious_7d <- NA
+    input_data$mh_depressed_7d <- NA
+    input_data$mh_isolated_7d <- NA
   }
   return(input_data)
 }
@@ -191,9 +199,19 @@ code_mask_contact <- function(input_data) {
       item == 1 | item ==  2 ~ TRUE,
       TRUE ~ FALSE)
   }
-
-  input_data$c_travel_state <- input_data$C6 == 1
-
+  
+  if ("C6" %in% names(input_data)) {
+    input_data$c_travel_state <- input_data$C6 == 1
+  } else {
+    input_data$c_travel_state <- NA
+  }
+  
+  if ("C6a" %in% names(input_data)) {
+    input_data$c_travel_state_7d <- input_data$C6a == 1
+  } else {
+    input_data$c_travel_state_7d <- NA
+  }
+  
   if ("C14" %in% names(input_data)) {
     # added in wave 4. wearing mask most or all of the time; exclude respondents
     # who have not been in public

@@ -6,7 +6,17 @@
   "indicator": {
     "export_start_date": "2020-02-20",
     "num_export_days": 14,
-    "path_to_bigquery_credentials": "credentials.json",
-    "static_file_dir": "./static"
+    "bigquery_credentials": {
+      "type": "{{ google_symptoms_account_type }}",
+      "project_id": "{{ google_symptoms_project_id }}",
+      "private_key_id": "{{ google_symptoms_private_key_id }}",
+      "private_key": "{{ google_symptoms_private_key }}",
+      "client_email": "{{ google_symptoms_client_email }}",
+      "client_id": "{{ google_symptoms_client_id }}",
+      "auth_uri": "{{ google_symptoms_auth_uri }}",
+      "token_uri": "{{ google_symptoms_token_uri }}",
+      "auth_provider_x509_cert_url": "{{ google_symptoms_auth_provider_x509_cert_url }}",
+      "client_x509_cert_url": "{{ google_symptoms_client_x509_cert_url }}"
+    }
   }
 }

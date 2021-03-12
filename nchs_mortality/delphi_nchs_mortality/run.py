@@ -6,9 +6,10 @@ when the module is run with `python -m delphi_nchs_mortality`.
 """
 import time
 from datetime import datetime, date, timedelta
+from typing import Dict, Any
 
 import numpy as np
-from delphi_utils import read_params, S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -17,10 +18,27 @@ from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
-def run_module():
-    """Run module for processing NCHS mortality data."""
+def run_module(params: Dict[str, Any]):
+    """Run module for processing NCHS mortality data.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "daily_export_dir": str, directory to write daily output
+        - "weekly_export_dir": str, directory to write weekly output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "export_start_date": str, date from which to export data in YYYY-MM-DD format
+        - "static_file_dir": str, directory containing population csv files
+        - "test_file" (optional): str, name of file from which to read test data
+        - "token": str, authentication for upstream data pull
+    - "archive" (optional): if provided, output will be archived with S3
+        - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+        - "bucket_name: str, name of S3 bucket to read/write
+        - "daily_cache_dir": str, directory of locally cached daily data
+        - "weekly_cache_dir": str, directory of locally cached weekly data
+    """
     start_time = time.time()
-    params = read_params()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
@@ -30,19 +48,18 @@ def run_module():
                 days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
-    daily_cache_dir = params["indicator"]["daily_cache_dir"]
     token = params["indicator"]["token"]
-    test_mode = params["indicator"]["mode"]
+    test_file = params["indicator"].get("test_file", None)
 
-    if params["archive"]:
+    if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
-            daily_cache_dir, daily_export_dir,
+            params["archive"]["daily_cache_dir"], daily_export_dir,
             params["archive"]["bucket_name"], "nchs_mortality",
             params["archive"]["aws_credentials"])
         daily_arch_diff.update_cache()
 
 
-    df_pull = pull_nchs_mortality_data(token, test_mode)
+    df_pull = pull_nchs_mortality_data(token, test_file)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
             print(metric)
@@ -85,7 +102,7 @@ def run_module():
 #     Daily run of archiving utility
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
-    if params["archive"]:
+    if "archive" in params:
         arch_diffs(params, daily_arch_diff)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

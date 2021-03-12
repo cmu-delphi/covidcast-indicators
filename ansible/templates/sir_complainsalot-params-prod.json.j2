@@ -1,5 +1,4 @@
 {
-  "channel": "#sir-complains-a-lot",
   "log_filename": "/var/log/indicators/sircal.log",
   "slack_token": "{{ sir_complainsalot_slack_token }}",
   "sources": {
@@ -38,7 +37,8 @@
     },
     "fb-survey": {
       "max_age": 3,
-      "maintainers": ["U01069KCRS7"]
+      "maintainers": ["U01069KCRS7"],
+      "retired-signals": ["smoothed_wearing_mask", "smoothed_wwearing_mask"]
     },
     "indicator-combination": {
       "max_age": 4,

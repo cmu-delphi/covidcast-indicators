@@ -1,11 +1,5 @@
-import pytest
-
 from os.path import join
-
 import pandas as pd
-import numpy as np
-
-
 from delphi_quidel.geo_maps import geo_map
 
 
@@ -19,15 +13,15 @@ class TestGeoMap:
         df = pd.DataFrame(
             {
                 "zip": [1607, 1740, 98661, 76010, 76012, 76016],
-                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15",
                               "2020-06-15", "2020-06-15", "2020-06-15"],
                 "totalTest": [100, 50, 200, 200, 250, 500],
                 "positiveTest": [10, 8, 15, 5, 20, 50],
             }
         )
-        
+
         new_df, res_key = geo_map("county", df, map_df)
-        
+
         assert res_key == 'fips'
         assert set(new_df["fips"].values) == set(['25027', '53011', '48439'])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
@@ -39,13 +33,13 @@ class TestGeoMap:
         df = pd.DataFrame(
             {
                 "zip": [1607, 1740, 98661, 76010, 76012, 76016],
-                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15",
                               "2020-06-15", "2020-06-15", "2020-06-15"],
                 "totalTest": [100, 50, 200, 200, 250, 500],
                 "positiveTest": [10, 8, 15, 5, 20, 50],
             }
         )
-        
+
         new_df = geo_map("state", df, map_df)
 
         assert set(new_df["state_id"].values) == set(['ma', 'tx', 'wa'])
@@ -58,14 +52,14 @@ class TestGeoMap:
         df = pd.DataFrame(
             {
                 "zip": [1607, 98661, 76010, 76012, 74435, 74936],
-                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15",
                               "2020-06-15", "2020-06-15", "2020-06-15"],
                 "totalTest": [100, 50, 200, 200, 250, 500],
                 "positiveTest": [10, 8, 15, 5, 20, 50],
             }
         )
-        
-        new_df, res_key = geo_map("hrr", df, map_df)
+
+        new_df, _ = geo_map("hrr", df, map_df)
 
         assert set(new_df["hrrnum"].values) == set([16, 231, 340, 344, 394])
         assert set(new_df["timestamp"].values) == set(df["timestamp"].values)
@@ -77,13 +71,13 @@ class TestGeoMap:
         df = pd.DataFrame(
             {
                 "zip": [1607, 73716, 73719, 76010, 74435, 74936],
-                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15", 
+                "timestamp": ["2020-06-15", "2020-06-15", "2020-06-15",
                               "2020-06-15", "2020-06-15", "2020-06-15"],
                 "totalTest": [100, 50, 200, 200, 250, 500],
                 "positiveTest": [10, 8, 15, 5, 20, 50],
             }
         )
-        
+
         new_df, res_key = geo_map("msa", df, map_df)
 
         assert res_key == 'cbsa_id'

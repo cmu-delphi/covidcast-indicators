@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_run.R
 \name{run_contingency_tables_many_periods}
 \alias{run_contingency_tables_many_periods}
-\title{Wrapper that runs `run_contingency_tables_many_periods_one_period` over several time periods}
+\title{Wrapper that runs `run_contingency_tables_one_period` over several time ranges}
 \usage{
 run_contingency_tables_many_periods(params, aggregations)
 }
@@ -23,5 +23,5 @@ calculations necessary.}
 none
 }
 \description{
-Allows pipeline to be create a series of CSVs for a range of dates.
+Allows pipeline to create a series of CSVs for a range of dates.
 }

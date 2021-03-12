@@ -12,9 +12,9 @@ from delphi_changehc.load_data import *
 CONFIG = Config()
 PARAMS = {
     "indicator": {
-        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat",
-        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat",
-        "drop_date": "2020-02-02"
+        "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
+        "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "drop_date": "2020-06-01"
     }
 }
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]

@@ -12,15 +12,8 @@ from delphi_google_health.run import run_module
 
 
 @pytest.fixture(scope="session")
-def run_as_module():
+def clean_receiving_dir():
     # Clean receiving directory
     for fname in listdir("receiving"):
         if fname != ".gitignore":
             remove(join("receiving", fname))
-    with mock_s3():
-        # Create the fake bucket we will be using
-        params = read_params()
-        aws_credentials = params["archive"]["aws_credentials"]
-        s3_client = Session(**aws_credentials).client("s3")
-        s3_client.create_bucket(Bucket=params["archive"]["bucket_name"])
-        run_module()

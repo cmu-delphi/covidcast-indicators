@@ -1,19 +1,45 @@
 """Tests for Safegraph process functions."""
+from datetime import date
+import tempfile
+import os
+import time
+
 import numpy as np
 import pandas as pd
 
 from delphi_safegraph.process import (
     aggregate,
     construct_signals,
-    files_in_past_week,
+    get_daily_source_files,
     process,
     process_window
 )
 from delphi_safegraph.run import SIGNALS
 
 
+
 class TestProcess:
     """Tests for processing Safegraph indicators."""
+
+    def test_get_source_files(self):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            os.makedirs(os.path.join(tmpdir, "social-distancing/2021/01/26"))
+            os.makedirs(os.path.join(tmpdir, "social-distancing/2021/01/27"))
+            # generate fake files
+            open(os.path.join(tmpdir, "social-distancing/2021/01/26/file.csv.gz"), 'w').close()
+            open(os.path.join(tmpdir, "social-distancing/2021/01/27/file1.csv.gz"), 'w').close()
+            # have second file generated as second after
+            # since last modified time has second level resolution
+            time.sleep(1)
+            open(os.path.join(tmpdir, "social-distancing/2021/01/27/file2.csv.gz"), 'w').close()
+            # only second file on 1/27 should be kept since it's more recent
+            filepath_dict = get_daily_source_files(
+                os.path.join(tmpdir, "social-distancing/**/*.csv.gz")
+            )
+            assert filepath_dict == {
+                date(2021, 1, 26): os.path.join(tmpdir, "social-distancing/2021/01/26/file.csv.gz"),
+                date(2021, 1, 27): os.path.join(tmpdir, "social-distancing/2021/01/27/file2.csv.gz")
+            }
 
     def test_construct_signals_present(self):
         """Tests that all signals are constructed."""
@@ -99,37 +125,6 @@ class TestProcess:
         x = df[f'{SIGNALS[0]}_se'].values
         assert np.all(x[~np.isnan(x)] >= 0)
         assert df.shape == (10, 17)
-
-    def test_files_in_past_week(self):
-        """Tests that `files_in_past_week()` finds the file names corresponding
-        to the previous 6 days."""
-        # Week that stretches over a month boundary.
-        assert tuple(files_in_past_week(
-            'x/y/z/2020/07/04/2020-07-04-social-distancing.csv.gz')) ==\
-            ('x/y/z/2020/07/03/2020-07-03-social-distancing.csv.gz',
-             'x/y/z/2020/07/02/2020-07-02-social-distancing.csv.gz',
-             'x/y/z/2020/07/01/2020-07-01-social-distancing.csv.gz',
-             'x/y/z/2020/06/30/2020-06-30-social-distancing.csv.gz',
-             'x/y/z/2020/06/29/2020-06-29-social-distancing.csv.gz',
-             'x/y/z/2020/06/28/2020-06-28-social-distancing.csv.gz')
-        # Week that stretches over a year boundary.
-        assert tuple(files_in_past_week(
-            'x/y/z/2020/01/04/2020-01-04-social-distancing.csv.gz')) ==\
-            ('x/y/z/2020/01/03/2020-01-03-social-distancing.csv.gz',
-             'x/y/z/2020/01/02/2020-01-02-social-distancing.csv.gz',
-             'x/y/z/2020/01/01/2020-01-01-social-distancing.csv.gz',
-             'x/y/z/2019/12/31/2019-12-31-social-distancing.csv.gz',
-             'x/y/z/2019/12/30/2019-12-30-social-distancing.csv.gz',
-             'x/y/z/2019/12/29/2019-12-29-social-distancing.csv.gz')
-        # Week that includes a leap day.
-        assert tuple(files_in_past_week(
-            'x/y/z/2020/03/01/2020-03-01-social-distancing.csv.gz')) ==\
-            ('x/y/z/2020/02/29/2020-02-29-social-distancing.csv.gz',
-             'x/y/z/2020/02/28/2020-02-28-social-distancing.csv.gz',
-             'x/y/z/2020/02/27/2020-02-27-social-distancing.csv.gz',
-             'x/y/z/2020/02/26/2020-02-26-social-distancing.csv.gz',
-             'x/y/z/2020/02/25/2020-02-25-social-distancing.csv.gz',
-             'x/y/z/2020/02/24/2020-02-24-social-distancing.csv.gz')
 
     def test_process_window(self, tmp_path):
         """Tests that processing over a window correctly aggregates signals."""

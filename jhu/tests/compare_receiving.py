@@ -2,13 +2,10 @@
 ## Short script for comparing the files in the receiving directories
 ##
 
-import pandas as pd
 import os
+import pandas as pd
 
-rec_pattern = ""
-# rec_pattern = "county_deaths_incidence_num"
-
-def load_files(pattern = "", num = 1000):
+def load_files(num = 1000):
     rec_dir = os.listdir('../receiving')
     suff = "stable"
     rec_stable_dir = os.listdir(f'../receiving_{suff}')
@@ -24,12 +21,12 @@ def load_files(pattern = "", num = 1000):
             yield rec, df_join
 
 def main():
-    load_iter = load_files(rec_pattern)
+    load_iter = load_files()
     for rec, df in load_iter:
         if ('msa' in rec) and False:
             msa_ds = (df['val'] - df['val_stable']).sum()
             print(f'{msa_ds} value diff')
-        if (df.eval('abs(val - val_stable)').sum() > 0.01):
+        if df.eval('abs(val - val_stable)').sum() > 0.01:
             print(f'Printing {rec} difference')
             df_diff = df[df.eval('val != val_stable')]
             print(df_diff.shape)

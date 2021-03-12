@@ -1,6 +1,3 @@
-# third party
-import pytest
-
 # first party
 from delphi_claims_hosp.config import Config
 

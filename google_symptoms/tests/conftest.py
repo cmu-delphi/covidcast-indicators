@@ -62,6 +62,18 @@ date_list = [datetime.strptime(date, "%Y%m%d").date() for date in dates]
 
 @pytest.fixture(scope="session")
 def run_as_module():
+    params = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "export_start_date": "2020-02-20",
+            "num_export_days": 14,
+            "bigquery_credentials": {},
+            "static_file_dir": "../static"
+        }
+    }
+
     if exists("receiving"):
         # Clean receiving directory
         for fname in listdir("receiving"):
@@ -75,4 +87,4 @@ def run_as_module():
                         return_value=None) as mock_credentials:
             with mock.patch("pandas_gbq.read_gbq", side_effect=[
                     state_data, county_data]) as mock_read_gbq:
-                delphi_google_symptoms.run.run_module()
+                delphi_google_symptoms.run.run_module(params)

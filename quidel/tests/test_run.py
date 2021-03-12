@@ -4,15 +4,34 @@ from os.path import join
 
 import pandas as pd
 
-from delphi_utils import read_params, add_prefix
+from delphi_utils import add_prefix
 from delphi_quidel.constants import GEO_RESOLUTIONS, SENSORS
-
+from delphi_quidel.run import run_module
 
 class TestRun:
+    PARAMS = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "static_file_dir": "../static",
+            "input_cache_dir": "./cache",
+            "export_start_date": {"covid_ag": "2020-06-30", "flu_ag": "2020-05-30"},
+            "export_end_date": {"covid_ag": "2020-07-09", "flu_ag": "2020-07-05"},
+            "pull_start_date": {"covid_ag": "2020-07-09","flu_ag": "2020-07-05"},
+            "pull_end_date": {"covid_ag": "", "flu_ag": "2020-07-10"},
+            "mail_server": "imap.exchange.andrew.cmu.edu",
+            "account": "delphi-datadrop@andrew.cmu.edu",
+            "password": "",
+            "sender": "",
+            "wip_signal": [""],
+            "test_mode": True
+        }
+    }
     """Tests for running the module."""
-    def test_output_files(self, run_as_module):
+    def test_output_files(self, clean_receiving_dir):
         """Tests that the output files contain the correct results of the run."""
-        params = read_params()
+        run_module(self.PARAMS)
         # Test output exists
         csv_files = listdir("receiving")
 
@@ -43,7 +62,7 @@ class TestRun:
 
         geos = GEO_RESOLUTIONS.copy()
         sensors = add_prefix(list(SENSORS.keys()),
-                             wip_signal=params["indicator"]["wip_signal"],
+                             wip_signal=self.PARAMS["indicator"]["wip_signal"],
                              prefix="wip_")
 
         expected_files = []

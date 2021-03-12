@@ -52,49 +52,25 @@ read_contingency_params <- function(path = "params.json", template_path = "param
 #' 
 #' @export
 update_params <- function(params) {
-  if ( !is.null(params$start_date) ) {
-    # Use all data within the date range, either as explicitly set or assuming
-    # "now" is the end_date.
-    if (is.null(params$end_time)) {
-      params$end_time <- Sys.time()
-    }
-    date_range <- list(params$start_time, params$end_time)
-    
-    if ( is.null(params$input) ) {
-      params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-    }
-
-  } else if ( is.null(params$end_date) & (is.null(params$input) | length(params$input) == 0) ) {
-    # Neither end_date nor list of input files is provided, assume want to use
-    # most current full time period and data.
-    date_range <- get_range_prev_full_period(Sys.Date(), params$aggregate_range)
-    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-    
-  } else if ( !is.null(params$end_date) & (is.null(params$input) | length(params$input) == 0) ) {
-    # List of input files is not provided, assume want to use the full period
-    # preceding the provided end_date
-    date_range <- get_range_prev_full_period(
-      as_date(params$end_date), params$aggregate_range)
-    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-    
-  } else if ( is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
-    # Use list of input files provided, even if it does not constitute a full 
-    # period. Use dates in input files to select range.
-    date_range <- get_date_range_from_filenames(params)
-    
-  } else if ( !is.null(params$end_date) & !is.null(params$input) & length(params$input) != 0 ) {
-    # Use the full period preceding the provided end_date AND use only the list
-    # of input files provided, even if they don't span the full period.
-    date_range <- get_range_prev_full_period(
-      as_date(params$end_date), params$aggregate_range)
+  # Fill in end_time, if missing, with current time.
+  if (is.null(params$end_time)) {
+    params$end_time <- Sys.time()
   }
-
+  
+  if ( !is.null(params$start_date) ) {
+    date_range <- list(params$start_time, params$end_time)
+  } else {
+    # If start_date is not provided, assume want to use preceding full time period.
+    date_range <- get_range_prev_full_period(as_date(params$end_date), params$aggregate_range)
+  }
+  
+  params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
   if (length(params$input) == 0) {
     stop("no input files to read in")
   }
+  
   params$start_time <- date_range[[1]]
   params$end_time <- date_range[[2]]
-
   params$start_date <- as_date(date_range[[1]])
   params$end_date <- as_date(date_range[[2]])
 
@@ -115,12 +91,17 @@ update_params <- function(params) {
 get_filenames_in_range <- function(start_date, end_date, params) {
   start_date <- as_date(start_date) - days(params$backfill_days)
   end_date <- as_date(end_date)
-  date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
-  youtube_pattern <- ".*YouTube[.]csv$"
   
-  filenames <- list.files(path=params$input_dir)
-  filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
-  
+  if ( is.null(params$input) | length(params$input) == 0 ) {
+    date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
+    youtube_pattern <- ".*YouTube[.]csv$"
+    
+    filenames <- list.files(path=params$input_dir)
+    filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
+  } else {
+    filenames <- params$input
+  }
+    
   file_end_dates <- as_date(substr(filenames, 1, 10))
   file_start_dates <- as_date(substr(filenames, 12, 21))
   
@@ -132,34 +113,6 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   
   return(filenames)
 }
-
-
-#' Get date range based on list of input files provided.
-#'
-#' @param params    Params object produced by read_params
-#'
-#' @return Unnamed list of two dates
-#' 
-#' @export
-get_date_range_from_filenames <- function(params) {
-  date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
-  youtube_pattern <- ".*YouTube[.]csv$"
-  
-  filenames <- params$input
-  filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
-
-  dates <- as.Date(unlist(lapply(filenames, function(filename) {
-    file_end_date <- as_date(substr(filenames, 1, 10))
-    file_start_date <- as_date(substr(filenames, 12, 21))
-    
-    return(c(file_end_date, file_start_date))
-  })), origin="1970-01-01")
-  
-  date_range <- list(min(dates), max(dates))
-  
-  return(date_range)
-}
-
 
 #' Check user-set aggregations for basic validity and add a few necessary cols.
 #'

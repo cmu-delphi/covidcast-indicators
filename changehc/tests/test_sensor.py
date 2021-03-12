@@ -53,9 +53,7 @@ class TestLoadData:
     def test_fit_fips(self):
         date_range = pd.date_range("2020-05-01", "2020-05-20")
         all_fips = self.combined_data.index.get_level_values('fips').unique()
-        sample_fips = all_fips
-
-        for fips in sample_fips:
+        for fips in all_fips:
             sub_data = self.combined_data.loc[fips]
             sub_data = sub_data.reindex(date_range, fill_value=0)
             res0 = CHCSensor.fit(sub_data, date_range[0], fips)

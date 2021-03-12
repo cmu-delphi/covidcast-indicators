@@ -545,6 +545,7 @@ code_multiselect <- function(df, aggregations, col_var) {
             sep="_")
       }
     ))
+  
   #### TODO: eval(parse()) here is not the best approach, but I can't find another
   # way to get col_var (a string) to be used as a var that references a column
   # rather than as an actual string. This approach causes a shallow copy to be

@@ -29,6 +29,17 @@
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
+  msg_plain(paste0("Producing aggregates..."))
+  ## For the date range lookups we do on df, use a data.table key. This puts the
+  ## table in sorted order so data.table can use a binary search to find
+  ## matching dates, rather than a linear scan, and is important for very large
+  ## input files.
+  df <- as.data.table(df)
+  setkeyv(df, "start_dt")
+
+  # Keep only obs in desired date range.
+  df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
+  
   output <- post_process_aggs(df, aggregations, cw_list)
   df <- output[[1]]
   aggregations <- output[[2]]
@@ -42,17 +53,6 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
                zip5,
                start_dt)
   
-  msg_plain(paste0("Producing aggregates..."))
-  ## For the date range lookups we do on df, use a data.table key. This puts the
-  ## table in sorted order so data.table can use a binary search to find
-  ## matching dates, rather than a linear scan, and is important for very large
-  ## input files.
-  df <- as.data.table(df)
-  setkeyv(df, "start_dt")
-
-  # Keep only obs in desired date range.
-  df <- df[start_dt >= params$start_time & start_dt <= params$end_time]
-
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
   # For each unique combination of groupby_vars and geo level, run aggregation process once
@@ -168,14 +168,11 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   # each unique level/response code; multi-select used for grouping are left as-is.
   #   - multiple choice items are left as-is
   
-  #### TODO: How do we want to handle multi-select items when used for grouping?
+  #### TODO: How do we want to handle multi-select items used for grouping?
   agg_groups <- unique(aggregations$group_by)
   group_cols_to_convert <- unique(do.call(c, agg_groups))
-  group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
-
-  metric_cols_to_convert <- unique(aggregations$metric)
-
-  for (col_var in c(group_cols_to_convert, metric_cols_to_convert)) {
+  for (col_var in group_cols_to_convert) {
+    if (col_var == "geo_id") { next }
     if ( is.null(df[[col_var]]) ) {
       aggregations <- aggregations[aggregations$metric != col_var &
                                      !mapply(aggregations$group_by,
@@ -190,14 +187,41 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 
     if (startsWith(col_var, "b_")) { # Binary
       output <- code_binary(df, aggregations, col_var)
-    } else if (startsWith(col_var, "ms_")) { # Multiselect
-      output <- code_multiselect(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response
       output <- code_numeric_freeresponse(df, aggregations, col_var)
-    } else if (startsWith(col_var, "mc_")) { # Multiple choice
+    } else {
+      # Multiple choice, multi-select, and variables that are formatted differently
       output <- list(df, aggregations)
     }
+    df <- output[[1]]
+    aggregations <- output[[2]]
+  }
+  
+  metric_cols_to_convert <- unique(aggregations$metric)
+  for (col_var in metric_cols_to_convert) {
+    if ( is.null(df[[col_var]]) ) {
+      aggregations <- aggregations[aggregations$metric != col_var &
+                                     !mapply(aggregations$group_by,
+                                             FUN=function(x) {col_var %in% x}), ]
+      msg_plain(
+        paste0(
+          col_var, " is not defined. Removing all aggregations that use it. ", 
+          nrow(aggregations), " remaining")
+      )
+      next
+    }
     
+    if (startsWith(col_var, "b_")) { # Binary
+      output <- code_binary(df, aggregations, col_var)
+    } else if (startsWith(col_var, "n_")) { # Numeric free response
+      output <- code_numeric_freeresponse(df, aggregations, col_var)
+    }
+    else if (startsWith(col_var, "ms_")) { # Multi-select
+      output <- code_multiselect(df, aggregations, col_var)
+    } else {
+      # Multiple choice and variables that are formatted differently
+      output <- list(df, aggregations)
+    }
     df <- output[[1]]
     aggregations <- output[[2]]
   }

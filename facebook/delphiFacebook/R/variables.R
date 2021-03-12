@@ -26,8 +26,11 @@ split_options <- function(column) {
 #' @param selection one string, such as "14"
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
+#'   
+#' @importFrom parallel mclapply
 is_selected <- function(vec, selection) {
-  selections <- sapply(
+  map_fn <- ifelse( is.null(getOption("mc.cores")) , lapply, mclapply)
+  selections <- unlist(map_fn(
     vec,
     function(resp) {
       if (length(resp) == 0 || all(is.na(resp))) {
@@ -39,7 +42,7 @@ is_selected <- function(vec, selection) {
       } else {
         selection %in% resp
       }
-    })
+    }))
 
   return(selections)
 }

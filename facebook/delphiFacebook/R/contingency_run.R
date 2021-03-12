@@ -18,6 +18,8 @@
 #' which does not modify the data.
 #'
 #' @return named list
+#' 
+#' @importFrom tibble tribble
 set_aggs <- function() {
   weekly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
@@ -158,11 +160,27 @@ set_aggs <- function() {
 #' @param params    Params object produced by read_params
 #'
 #' @return none
+#' 
+#' @importFrom parallel detectCores
 #'
 #' @export
 run_contingency_tables <- function(params) {
   aggs <- set_aggs()
-
+  
+  ## Set default number of cores for mclapply to the total available number,
+  ## because we are greedy and this will typically run on a server.
+  if (params$parallel) {
+    cores <- detectCores()
+    
+    if (is.na(cores)) {
+      warning("Could not detect the number of CPU cores; parallel mode disabled")
+      params$parallel <- FALSE
+    } else {
+      options(mc.cores = cores)
+      msg_plain(paste0("Running on ", cores, " cores"))
+    }
+  }
+  
   if (params$aggregate_range == "week") {
     run_contingency_tables_many_periods(params, aggs$week)
   } else if (params$aggregate_range == "month") {
@@ -173,13 +191,16 @@ run_contingency_tables <- function(params) {
 
     params$aggregate_range <- "month"
     run_contingency_tables_many_periods(params, aggs$month)
+  } else {
+    stop(paste0("aggregate_range setting must be provided in params and be one",
+    " of 'week', 'month', or 'both'"))
   }
 }
 
 
-#' Wrapper that runs `run_contingency_tables_many_periods_one_period` over several time periods
+#' Wrapper that runs `run_contingency_tables_one_period` over several time ranges
 #'
-#' Allows pipeline to be create a series of CSVs for a range of dates.
+#' Allows pipeline to create a series of CSVs for a range of dates.
 #'
 #' @param params    Params object produced by read_params
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
@@ -197,28 +218,44 @@ run_contingency_tables <- function(params) {
 #' @importFrom lubridate ymd days
 run_contingency_tables_many_periods <- function(params, aggregations)
 {
-  if (!is.null(params$end_date) & !is.null(params$n_periods)) {
-    ## Produce historical CSVs
+  if (!is.null(params$n_periods)) {
+    msg_plain(paste0("Producing CSVs for ", params$n_periods, " time periods"))
 
-    if (params$aggregate_range == "week") {
-      period_step <- days(7)
-    } else if (params$aggregate_range == "month") {
+    if (params$aggregate_range == "month") {
       period_step <- months(1)
-    } else if (is.null(params$aggregate_range)) {
-      stop("setting aggregate_range must be provided in params")
+    } else {
+      period_step <- days(7)
     }
-
+    
+    params$end_date <- ifelse(
+      is.null(params$end_date), as.character(Sys.Date()), params$end_date
+    )
     # Make list of dates to aggregate over.
-    end_dates <- sort( ymd(params$end_date) - period_step * seq(0, params$n_periods) )
+    end_dates <- as.character(sort(
+      ymd(params$end_date) - period_step * seq(0, params$n_periods - 1)
+    ))
 
     for (end_date in end_dates) {
       period_params <- params
+      
+      # Update start/end date and time.
       period_params$end_date <- end_date
-      run_contingency_tables_many_periods_one_period(period_params, aggregations)
+      if ( end_date != end_dates[1] ) {
+        period_params$start_date <- NULL
+      }
+      
+      period_params$start_time <- ymd_hms(
+        sprintf("%s 00:00:00", period_params$start_date), tz = tz_to
+      )
+      period_params$end_time <- ymd_hms(
+        sprintf("%s 23:59:59", period_params$end_date), tz = tz_to
+      )
+      
+      run_contingency_tables_one_period(period_params, aggregations)
     }
   } else {
     ## Produce CSVs for a single time period
-    run_contingency_tables_many_periods_one_period(params, aggregations)
+    run_contingency_tables_one_period(params, aggregations)
   }
 
 
@@ -238,12 +275,12 @@ run_contingency_tables_many_periods <- function(params, aggregations)
 #'   calculations necessary.
 #'
 #' @return none
-#'
-#' @importFrom parallel detectCores
-run_contingency_tables_many_periods_one_period <- function(params, aggregations)
+run_contingency_tables_one_period <- function(params, aggregations)
 {
   params <- update_params(params)
   aggregations <- verify_aggs(aggregations)
+  
+  msg_plain(paste0("Producing aggregates for ", params$start_date, " through ", params$end_date))
 
   if (nrow(aggregations) > 0) {
     cw_list <- produce_crosswalk_list(params$static_dir)
@@ -267,19 +304,6 @@ run_contingency_tables_many_periods_one_period <- function(params, aggregations)
 
     data_agg <- join_weights(data_agg, params, weights = "full")
     msg_df("response data to aggregate", data_agg)
-
-    ## Set default number of cores for mclapply to the total available number,
-    ## because we are greedy and this will typically run on a server.
-    if (params$parallel) {
-      cores <- detectCores()
-
-      if (is.na(cores)) {
-        warning("Could not detect the number of CPU cores; parallel mode disabled")
-        params$parallel <- FALSE
-      } else {
-        options(mc.cores = cores)
-      }
-    }
 
     data_agg <- make_human_readable(data_agg)
 

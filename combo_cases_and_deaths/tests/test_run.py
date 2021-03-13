@@ -112,13 +112,15 @@ def test_multiple_issues(mock_covidcast_signal):
     result = combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal)
     pd.testing.assert_frame_equal(
         result,
-        pd.DataFrame({
-            "geo_id": ["01000"],
-            "val": [10],
-            "timestamp": [20200101],
-            "issue": [20200104]
-        },
-                     index=[1])
+        pd.DataFrame(
+            {
+                "geo_id": ["01000"],
+                "val": [10],
+                "timestamp": [20200101],
+                "issue": [20200104]
+            },
+            index=[1]
+        )
     )
 
 def test_compute_special_geo_dfs():

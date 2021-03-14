@@ -236,6 +236,10 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'
 #' @export
 summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
+  if ( nrow(df) == 0 ) {
+    return( list() )
+  }
+  
   ## We do batches of just one set of groupby vars at a time, since we have
   ## to select rows based on this.
   assert( length(unique(aggregations$group_by)) == 1 )
@@ -251,11 +255,14 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   groupby_vars <- aggregations$group_by[[1]]
 
   if (all(groupby_vars %in% names(df))) {
-    # Counts saved in column `Freq`
-    unique_groups_counts <- as.data.frame(table(df[, groupby_vars, with=FALSE]))
+    # Find all unique groups and frequency, saved in column `Freq`
+    unique_groups_counts <- as.data.frame(
+      table(df[, groupby_vars, with=FALSE], exclude=NULL, dnn=groupby_vars), 
+      stringsAsFactors=FALSE
+    )
     unique_groups_counts <- unique_groups_counts[
       complete.cases(unique_groups_counts[, groupby_vars]),
-      ]
+    ]
   } else {
     msg_plain(
       sprintf(
@@ -267,7 +274,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   if ( !exists("unique_groups_counts") || nrow(unique_groups_counts) == 0 ) {
     return( list() )
   }
-
+  
   # If grouping by county, combine low-count counties into megacounties by state
   # prior to aggregation to reduce threads and associated memory needed later.
   if (geo_level == "county") {
@@ -281,8 +288,20 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 
     unique_groups_counts <- rbind(unique_groups_counts, small_groups)
   }
+  
   # Drop groups with less than threshold samples.
   unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
+  if (nrow(unique_groups_counts) == 0) {
+    return( list() )
+  }
+  
+  # Filter on data.table in `calculate_group` requires that columns and filter
+  # values are of the same type.
+  for (col_var in groupby_vars) {
+    if ( class(df[[col_var]]) != class(unique_groups_counts[[col_var]]) ) {
+      class(unique_groups_counts[[col_var]]) <- class(df[[col_var]])
+    }
+  }
 
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and
@@ -290,7 +309,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   setindexv(df, groupby_vars)
 
   calculate_group <- function(ii) {
-    target_group <- unique_groups_counts[ii, groupby_vars]
+    target_group <- unique_groups_counts[ii, groupby_vars, drop=FALSE]
     # Use data.table's index to make this filter efficient
     out <- summarize_aggregations_group(
       df[as.list(target_group), on=names(target_group)],
@@ -326,11 +345,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     dfs_out[[aggregation]] <- dfs_out[[aggregation]][
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", groupby_vars)])) == 0,
     ]
-
-    if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, groupby_vars)
-      dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
-    }
 
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 

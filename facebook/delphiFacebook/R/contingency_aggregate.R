@@ -169,14 +169,14 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   #   - multiple choice items are left as-is
 
   #### TODO: How do we want to handle multi-select items when used for grouping?
-  agg_groups <- unique(aggregations$group_by)
-  group_cols <- unique(do.call(c, agg_groups))
+  group_cols <- unique(do.call(c, aggregations$group_by))
   group_cols <- group_cols[group_cols != "geo_id"]
 
-  metric_cols_to_convert <- unique(aggregations$metric)
-
-  cols_check_available <- c(group_cols, metric_cols_to_convert)
-  cols_not_available <- cols_check_available[ !(cols_check_available %in% names(df)) ]
+  metric_cols <- unique(aggregations$metric)
+  
+  cols_check_available <- unique(c(group_cols, metric_cols))
+  available <- cols_check_available %in% names(df)
+  cols_not_available <- cols_check_available[ !available ]
   for (col_var in cols_not_available) {
     # Remove from aggregations
     aggregations <- aggregations[aggregations$metric != col_var &
@@ -188,8 +188,12 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     )
   }
 
-  group_cols_to_convert <- group_cols[startsWith(group_cols, "b_")]
-  for (col_var in c(group_cols_to_convert, metric_cols_to_convert) ) {
+  cols_available <- cols_check_available[ available ]
+  for (col_var in cols_available) {
+    if ( col_var %in% group_cols & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
+      next
+    }
+
     if (startsWith(col_var, "b_")) { # Binary
       output <- code_binary(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response

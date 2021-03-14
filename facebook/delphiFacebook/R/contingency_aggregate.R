@@ -226,7 +226,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
 #'
-#' @importFrom dplyr inner_join bind_rows
+#' @importFrom dplyr inner_join bind_rows filter group_by summarize across all
 #' @importFrom parallel mclapply
 #' @importFrom stats complete.cases
 #'
@@ -247,8 +247,11 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   groupby_vars <- aggregations$group_by[[1]]
 
   if (all(groupby_vars %in% names(df))) {
-    unique_group_combos <- unique(df[, groupby_vars, with=FALSE])
-    unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
+    # Counts saved in column `Freq`
+    unique_groups_counts <- as.data.frame(table(df[, groupby_vars, with=FALSE]))
+    unique_groups_counts <- unique_groups_counts[
+      complete.cases(unique_groups_counts[, groupby_vars]), 
+      ]
   } else {
     msg_plain(
       sprintf(
@@ -257,10 +260,25 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       ))
   }
 
-  if ( !exists("unique_group_combos") || nrow(unique_group_combos) == 0 ) {
-    return(list())
+  if ( !exists("unique_groups_counts") || nrow(unique_groups_counts) == 0 ) {
+    return( list() )
   }
-
+  
+  # If grouping by county, combine low-count counties into megacounties by state
+  # prior to aggregation to reduce threads and associated memory needed later.
+  if (geo_level == "county") {
+    small_groups <- filter(unique_groups_counts, Freq < params$num_filter)
+    unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
+    
+    small_groups$geo_id <- make_megacounty_fips(small_groups$geo_id)
+    # Combine small groups by new megacounty FIPS.
+    small_groups <- group_by(small_groups, across(all(groupby_vars))) %>%
+      summarize(Freq = sum(Freq))
+    
+    unique_groups_counts <- rbind(unique_groups_counts, small_groups)
+  }
+  # Drop groups with less than threshold samples.
+  unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
 
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and
@@ -268,7 +286,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   setindexv(df, groupby_vars)
 
   calculate_group <- function(ii) {
-    target_group <- unique_group_combos[ii]
+    target_group <- unique_groups_counts[ii, groupby_vars]
     # Use data.table's index to make this filter efficient
     out <- summarize_aggregations_group(
       df[as.list(target_group), on=names(target_group)],
@@ -281,9 +299,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   }
 
   if (params$parallel) {
-    dfs <- mclapply(seq_along(unique_group_combos[[1]]), calculate_group)
+    dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)
   } else {
-    dfs <- lapply(seq_along(unique_group_combos[[1]]), calculate_group)
+    dfs <- lapply(seq_along(unique_groups_counts[[1]]), calculate_group)
   }
 
   ## Now we have a list, with one entry per groupby level, each containing a

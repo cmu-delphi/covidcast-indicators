@@ -43,16 +43,16 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   output <- post_process_aggs(df, aggregations, cw_list)
   df <- output[[1]]
   aggregations <- output[[2]]
-  
+
   ## Keep only columns used in indicators, plus supporting columns.
   group_vars <- unique( unlist(aggregations$group_by) )
-  df <- select(df, 
-               all_of(unique(aggregations$metric)), 
-               all_of(unique(aggregations$var_weight)), 
-               all_of( group_vars[group_vars != "geo_id"] ), 
+  df <- select(df,
+               all_of(unique(aggregations$metric)),
+               all_of(unique(aggregations$var_weight)),
+               all_of( group_vars[group_vars != "geo_id"] ),
                zip5,
                start_dt)
-  
+
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
   # For each unique combination of groupby_vars and geo level, run aggregation process once
@@ -167,14 +167,14 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   #   - multi-select items are converted to a series of binary columns, one for
   # each unique level/response code; multi-select used for grouping are left as-is.
   #   - multiple choice items are left as-is
-  
+
   #### TODO: How do we want to handle multi-select items when used for grouping?
   agg_groups <- unique(aggregations$group_by)
   group_cols <- unique(do.call(c, agg_groups))
   group_cols <- group_cols[group_cols != "geo_id"]
-  
+
   metric_cols_to_convert <- unique(aggregations$metric)
-  
+
   cols_check_available <- c(group_cols, metric_cols_to_convert)
   cols_not_available <- cols_check_available[ !(cols_check_available %in% names(df)) ]
   for (col_var in cols_not_available) {
@@ -183,11 +183,11 @@ post_process_aggs <- function(df, aggregations, cw_list) {
                                    !mapply(aggregations$group_by,
                                            FUN=function(x) {col_var %in% x}), ]
     msg_plain(paste0(
-        col_var, " is not defined. Removing all aggregations that use it. ", 
+        col_var, " is not defined. Removing all aggregations that use it. ",
         nrow(aggregations), " remaining")
     )
   }
-  
+
   group_cols_to_convert <- group_cols[startsWith(group_cols, "b_")]
   for (col_var in c(group_cols_to_convert, metric_cols_to_convert) ) {
     if (startsWith(col_var, "b_")) { # Binary
@@ -226,7 +226,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
 #'
-#' @importFrom dplyr inner_join bind_rows
+#' @importFrom dplyr inner_join bind_rows filter group_by summarize across all_of
 #' @importFrom parallel mclapply
 #' @importFrom stats complete.cases
 #'
@@ -260,7 +260,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   if ( !exists("unique_group_combos") || nrow(unique_group_combos) == 0 ) {
     return(list())
   }
-
 
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and

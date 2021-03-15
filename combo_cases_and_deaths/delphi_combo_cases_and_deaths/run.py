@@ -134,6 +134,14 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
             # se and sample size are required later so we add them back.
             combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
+
+    # default sort from API is ORDER BY signal, time_value, geo_value, issue
+    # we want to drop all but the most recent (last) issue
+    combined_df.drop_duplicates(
+        subset=["geo_id", "timestamp"],
+        keep="last",
+        inplace=True
+    )
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):

@@ -35,8 +35,9 @@ class TimeWindow:
     def from_params(cls, end_date_str: str, span_length_int: int):
         """Create a TimeWindow from param representations of its members."""
         span_length = timedelta(days=span_length_int)
-        if end_date_str == "latest":
-            end_date = date.today()
+        if end_date_str.startswith("today-"):
+            days_back = timedelta(days=int(end_date_str[6:]))
+            end_date = date.today() - days_back
         else:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         return cls(end_date, span_length)

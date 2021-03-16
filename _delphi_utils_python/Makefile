@@ -1,7 +1,5 @@
 .PHONY = venv, lint, test, clean
 
-dir = $(shell find ./delphi_* -name __init__.py | grep -o 'delphi_[_[:alnum:]]*')
-
 venv:
 	python3.8 -m venv env
 
@@ -11,12 +9,12 @@ install: venv
 	pip install -e .
 
 lint:
-	. env/bin/activate; pylint $(dir)
-	. env/bin/activate; pydocstyle $(dir)
+	. env/bin/activate; pylint delphi_utils
+	. env/bin/activate; pydocstyle delphi_utils
 
 test:
 	. env/bin/activate ;\
-	(cd tests && ../env/bin/pytest --cov=$(dir) --cov-report=term-missing)
+	(cd tests && ../env/bin/pytest --cov=delphi_utils --cov-report=term-missing)
 
 clean:
 	rm -rf env

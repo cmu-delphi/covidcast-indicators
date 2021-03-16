@@ -4,11 +4,11 @@ from datetime import date
 import mock
 import numpy as np
 import pandas as pd
-from delphi_validator.datafetcher import (FILENAME_REGEX,
-                                          make_date_filter,
-                                          get_geo_signal_combos,
-                                          threaded_api_calls)
-from delphi_validator.errors import ValidationFailure
+from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
+                                                make_date_filter,
+                                                get_geo_signal_combos,
+                                                threaded_api_calls)
+from delphi_utils.validator.errors import ValidationFailure
 
 
 class TestDataFetcher:

@@ -5,13 +5,15 @@ from os.path import join
 
 from boto3 import Session
 from git import Repo, exc
+import mock
 from moto import mock_s3
 import numpy as np
 import pandas as pd
 from pandas.testing import assert_frame_equal
 import pytest
 
-from delphi_utils import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer
+from delphi_utils.archive import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer,\
+    archiver_from_params
 
 CSV_DTYPES = {"geo_id": str, "val": float, "se": float, "sample_size": float}
 
@@ -467,3 +469,143 @@ class TestGitArchiveDiffer:
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
+
+
+class TestFromParams:
+    """Tests for creating archive differs from params."""
+
+    def test_null_creation(self):
+        """Test that a None object is created with no "archive" params."""
+        assert archiver_from_params({"common": {}}) is None
+
+    @mock.patch("delphi_utils.archive.GitArchiveDiffer")
+    def test_get_git_archiver(self, mock_archiver):
+        """Test that GitArchiveDiffer is created successfully."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache",
+                "branch_name": "branch",
+                "override_dirty": True,
+                "commit_partial_success": True,
+                "commit_message": "msg"
+            }
+        }
+
+        archiver_from_params(params)
+        mock_archiver.assert_called_once_with(
+            export_dir="dir",
+            cache_dir="cache",
+            branch_name="branch",
+            override_dirty=True,
+            commit_partial_success=True,
+            commit_message="msg"
+        )
+
+    @mock.patch("delphi_utils.archive.GitArchiveDiffer")
+    def test_get_git_archiver_with_defaults(self, mock_archiver):
+        """Test that GitArchiveDiffer is created successfully without optional arguments."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache",
+                "branch_name": "branch",
+                "commit_message": "msg"
+            }
+        }
+
+        archiver_from_params(params)
+        mock_archiver.assert_called_once_with(
+            export_dir="dir",
+            cache_dir="cache",
+            branch_name="branch",
+            commit_message="msg"
+        )
+    @mock.patch("delphi_utils.archive.S3ArchiveDiffer")
+    def test_get_s3_archiver(self, mock_archiver):
+        """Test that S3ArchiveDiffer is created successfully."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache",
+                "bucket_name": "bucket",
+                "indicator_prefix": "ind",
+                "aws_credentials": {"pass": "word"}
+            }
+        }
+
+        archiver_from_params(params)
+        mock_archiver.assert_called_once_with(
+            export_dir="dir",
+            cache_dir="cache",
+            bucket_name="bucket",
+            indicator_prefix="ind",
+            aws_credentials={"pass": "word"}
+        )
+
+    def test_get_s3_archiver_without_required(self):
+        """Test that S3ArchiveDiffer is not created without required arguments."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache",
+                "bucket_name": "bucket"
+            }
+        }
+
+        with pytest.raises(AssertionError,
+                           match="Missing indicator_prefix in params"):
+            archiver_from_params(params)
+
+        params["archive"]["indicator_prefix"] = "prefix"
+        with pytest.raises(AssertionError,
+                           match="Missing aws_credentials in params"):
+            archiver_from_params(params)
+
+    @mock.patch("delphi_utils.archive.FilesystemArchiveDiffer")
+    def test_get_filesystem_archiver(self, mock_archiver):
+        """Test that FilesystemArchiveDiffer is created successfully."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache"
+            }
+        }
+
+        archiver_from_params(params)
+        mock_archiver.assert_called_once_with(
+            export_dir="dir",
+            cache_dir="cache"
+        )
+
+    def test_get_filesystem_archiver_with_extra_params(self):
+        """Test that FilesystemArchiveDiffer is not created with extra parameters."""
+        params = {
+            "common": {
+                "export_dir": "dir"
+            },
+            "archive": {
+                "cache_dir": "cache",
+                "indicator_prefix": "prefix"
+            }
+        }
+
+        with pytest.raises(AssertionError,
+                           match="If you intended to run"):
+            archiver_from_params(params)
+
+        del params["archive"]["cache_dir"]
+        del params["archive"]["indicator_prefix"]
+        with pytest.raises(AssertionError,
+                           match="If you intended to run"):
+            archiver_from_params(params)

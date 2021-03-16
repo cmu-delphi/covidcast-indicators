@@ -3,8 +3,8 @@
 from datetime import date, timedelta
 from freezegun import freeze_time
 import pandas as pd
-from delphi_validator.datafetcher import FILENAME_REGEX
-from delphi_validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
+from delphi_utils.validator.datafetcher import FILENAME_REGEX
+from delphi_utils.validator.utils import relative_difference_by_min, aggregate_frames, TimeWindow
 
 class TestUtils:
     """Tests for module utils."""
@@ -45,5 +45,8 @@ class TestTimeWindow:
         """Test that TimeWindows can be derived from strings."""
         window = TimeWindow.from_params("2020-08-23", 366)
         assert window.start_date == date(2019, 8, 23)
-        latest_window = TimeWindow.from_params("latest", 1897)
+        latest_window = TimeWindow.from_params("today-0", 1897)
         assert latest_window.start_date == date(2014, 12, 5)
+        latest_window = TimeWindow.from_params("today-10", 3)
+        assert latest_window.end_date == date(2020, 2, 4)
+        assert latest_window.start_date == date(2020, 2, 1)

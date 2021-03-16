@@ -107,7 +107,9 @@ rename_responses <- function(df) {
     "b_vaccine_likely_who" = "v_vaccine_likely_who", # Binary version of V4_3
     "b_vaccine_likely_govt_health" = "v_vaccine_likely_govt_health", # Binary version of V4_4
     "b_vaccine_likely_politicians" = "v_vaccine_likely_politicians", # Binary version of V4_5
-
+    # Wave 7 additions
+    "b_received_2_vaccine_doses" = "v_received_2_vaccine_doses", # Binary version of V2
+    
     ## multiple choice (mc)
     ## Can only select one of n > 2 choices
     "mc_state" = "A3b",
@@ -188,6 +190,7 @@ rename_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly mapped columns
 remap_responses <- function(df) {
+  msg_plain("Mapping response codes to descriptive values...")
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -314,7 +317,8 @@ remap_responses <- function(df) {
                          map_old_new_responses[[col_var]][["type"]]
     )
   }
-
+  
+  msg_plain("Finished remapping response codes")
   return(df)
 }
 
@@ -325,19 +329,18 @@ remap_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly derived columns
 create_derivative_columns <- function(df) {
-  # Make derivative columns.
-  if ("mc_occupational_group" %in% names(df)) {
-    df$b_work_in_healthcare <- as.numeric(
-      df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"
-    )
-  } else {
-    df$b_work_in_healthcare <- NA_real_
-  }
-
-  if ("mc_occupational_group" %in% names(df)) {
-
-    df$b_65_or_older <- as.numeric(
-      df$mc_age == "65-74" | df$mc_age == "75+"
+  # Make derivative columns.	
+  if ("mc_occupational_group" %in% names(df)) {	
+    df$b_work_in_healthcare <- as.numeric(	
+      df$mc_occupational_group == "Healthcare support" | df$mc_occupational_group == "Healthcare practitioner"	
+    )	
+  } else {	
+    df$b_work_in_healthcare <- NA_real_	
+  }	
+  
+  if ("mc_age" %in% names(df)) {	
+    df$b_65_or_older <- as.numeric(	
+      df$mc_age == "65-74" | df$mc_age == "75+"	
     )
   } else {
     df$b_65_or_older <- NA_real_
@@ -362,7 +365,8 @@ create_derivative_columns <- function(df) {
   df$b_hesitant_sideeffects <- as.numeric(
     df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
   )
-
+  df$b_hesitant_sideeffects[df$wave < 7] <- NA_real_
+  
   if ( "b_vaccine_likely_friends" %in% names(df) &
        "b_vaccine_likely_local_health" %in% names(df) &
        "b_vaccine_likely_who" %in% names(df) &
@@ -411,9 +415,11 @@ create_derivative_columns <- function(df) {
 #'     multi-select.
 #'
 #' @importFrom dplyr recode
+#' @importFrom parallel mcmapply
 #'
 #' @return list of data frame of individual response data with newly mapped column
 remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
+  msg_plain(paste0("Mapping codes for ", col_var))
   if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) | inherits(df[[col_var]], "logical") ) {
     # Column is missing/not in this wave or already in boolean format
     return(df)
@@ -422,15 +428,18 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   if (response_type %in% c("b", "mc")) {
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
-    split_col <- strsplit(df[[col_var]], ",")
-    df[[col_var]] <- mapply(split_col, FUN=function(row) {
-      if ( length(row) == 1 && is.na(row) ) {
+    split_col <- split_options(df[[col_var]])
+    
+    map_fn <- if (is.null(getOption("mc.cores"))) { mapply } else { mcmapply }
+    df[[col_var]] <- map_fn(split_col, FUN=function(row) {
+      if ( length(row) == 1 && all(is.na(row)) ) {
         NA
       } else {
         paste(recode(row, !!!map_old_new, .default=default), collapse=",")
       }
     })
   }
+  
   return(df)
 }
 

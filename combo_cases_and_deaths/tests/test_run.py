@@ -39,36 +39,56 @@ All variants: {variants}
 Date-extended variants: {variants_changed}
 """
 
-
-def test_unstable_sources():
+@patch("covidcast.covidcast.signal")
+def test_unstable_sources(mock_covidcast_signal):
     """Verify that combine_usafacts_and_jhu assembles the combined data
     frame correctly for all cases where 0, 1, or both signals are
     available.
     """
-    placeholder = lambda geo: pd.DataFrame(
-        [(date.today(),"pr" if geo == "state" else "72000",1,1,1)],
-        columns="time_value geo_value value stderr sample_size".split())
-    fetcher10 = lambda *x: placeholder(x[-1]) if x[0] == "usa-facts" else None
-    fetcher01 = lambda *x: placeholder(x[-1]) if x[0] == "jhu-csse" else None
-    fetcher11 = lambda *x: placeholder(x[-1])
-    fetcher00 = lambda *x: None
+    def jhu(geo, c=[0]):
+        c[0] += 1
+        return pd.DataFrame(
+            [(date.fromordinal(c[0]),"pr" if geo == "state" else "72000",1,1,1)],
+            columns="time_value geo_value value stderr sample_size".split())
+    def uf(geo, c=[0]):
+        c[0] += 1
+        return pd.DataFrame(
+            [(date.fromordinal(c[0]),"ny" if geo == "state" else "36000",1,1,1)],
+            columns="time_value geo_value value stderr sample_size".split())
+    def make_mock(geo):
+        return [
+            # 1 0
+            uf(geo), None,
+            # 0 1
+            None, jhu(geo),
+            # 1 1
+            uf(geo), jhu(geo),
+            # 0 0
+            None, None
+        ]
 
+    geos = ["state", "county", "msa", "nation", "hhs"]
+    outputs = [df for g in geos for df in make_mock(g)]
+    mock_covidcast_signal.side_effect = outputs[:]
+    
     date_range = [date.today(), date.today()]
 
-    for geo in ["state", "county", "msa", "nation", "hhs"]:
-        for (fetcher, expected_size) in [
-                (fetcher00, 0),
-                (fetcher01, 0 if geo == "msa" else 1),
-                (fetcher10, 1),
-                (fetcher11, 1 if geo in ["msa", "nation", "hhs"] else 2)
+    calls = -1
+    for geo in geos:
+        for config, expected_size in [
+                ("1 0", 1),
+                ("0 1", 0 if geo == "msa" else 1),
+                ("1 1", 1 if geo in ["msa", "nation", "hhs"] else 2),
+                ("0 0", 0)
         ]:
-            df = combine_usafacts_and_jhu("", geo, date_range, fetcher)
+            calls += 1
+            df = combine_usafacts_and_jhu("", geo, date_range, fetcher=mock_covidcast_signal)
             assert df.size == expected_size * len(COLUMN_MAPPING), f"""
 Wrong number of rows in combined data frame for the number of available signals.
 
-input for {geo}:
-{fetcher('usa-facts',geo)}
-{fetcher('jhu-csse',geo)}
+input for {geo} {config}:
+{outputs[2*calls]}
+{outputs[2*calls + 1]}
 
 output:
 {df}
@@ -76,6 +96,32 @@ output:
 expected rows: {expected_size}
 """
 
+
+@patch("covidcast.covidcast.signal")
+def test_multiple_issues(mock_covidcast_signal):
+    """Verify that only the most recent issue is retained."""
+    mock_covidcast_signal.side_effect = [
+        pd.DataFrame({
+            "geo_value": ["01000", "01000"],
+            "value": [1, 10],
+            "timestamp": [20200101, 20200101],
+            "issue": [20200102, 20200104]
+        }),
+        None
+    ]
+    result = combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal)
+    pd.testing.assert_frame_equal(
+        result,
+        pd.DataFrame(
+            {
+                "geo_id": ["01000"],
+                "val": [10],
+                "timestamp": [20200101],
+                "issue": [20200104]
+            },
+            index=[1]
+        )
+    )
 
 def test_compute_special_geo_dfs():
     test_df = pd.DataFrame({"geo_id": ["01000", "01001"],

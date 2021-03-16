@@ -1,0 +1,14 @@
+{
+  "static_file_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "export_start_date": "2020-02-20",
+  "export_end_date": "",
+  "pull_start_date": "2020-05-08",
+  "pull_end_date":"",
+  "mail_server": "imap.exchange.andrew.cmu.edu",
+  "account": "delphi-datadrop@andrew.cmu.edu",
+  "password": "",
+  "sender": "",
+  "mode":""
+}

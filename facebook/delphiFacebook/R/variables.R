@@ -291,6 +291,9 @@ code_testing <- function(input_data) {
 #'
 #' @importFrom dplyr coalesce
 code_vaccines <- function(input_data) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
   if ("V1" %in% names(input_data)) {
     # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
     # because, well, you'd know.

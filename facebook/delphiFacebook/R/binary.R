@@ -115,7 +115,9 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_likely_govt_health", "weight", "v_vaccine_likely_govt_health", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_likely_politicians", "weight_unif", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_likely_politicians", "weight", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
-
+    "smoothed_vaccine_likely_doctors", "weight_unif", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_doctors", "weight", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
+    
     # vaccine hesitancy reasons
     "smoothed_hesitancy_reason_sideeffects", "weight_unif", "v_hesitancy_reason_sideeffects", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_sideeffects", "weight", "v_hesitancy_reason_sideeffects", 6, compute_binary_response, jeffreys_binary,

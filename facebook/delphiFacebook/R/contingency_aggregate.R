@@ -230,7 +230,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #' @param params a named list with entries "s_weight", "s_mix_coef",
 #'   "num_filter"
 #'
-#' @importFrom dplyr inner_join bind_rows filter group_by summarize across all_of
+#' @importFrom dplyr inner_join bind_rows
 #' @importFrom parallel mclapply
 #' @importFrom stats complete.cases
 #'

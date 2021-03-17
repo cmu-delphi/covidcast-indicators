@@ -7,6 +7,7 @@ Author: Maria Jahja
 Created: 2020-04-18
 Last modified: 2020-04-30 by Aaron Rumack (add megacounty code)
 """
+from functools import partial
 
 import pandas as pd
 from delphi_utils.geomap import GeoMapper
@@ -20,6 +21,14 @@ class GeoMaps:
     def __init__(self):
         """Create the underlying GeoMapper."""
         self.gmpr = GeoMapper()
+        self.geo_func = {"county": partial(self.county_to_megacounty,
+                                           threshold_visits=Config.MIN_RECENT_VISITS,
+                                           threshold_len=Config.RECENT_LENGTH),
+                         "state": self.county_to_state,
+                         "msa": self.county_to_msa,
+                         "hrr": self.county_to_hrr,
+                         "hhs": self.county_to_hhs,
+                         "nation": self.county_to_nation}
 
     @staticmethod
     def convert_fips(x):

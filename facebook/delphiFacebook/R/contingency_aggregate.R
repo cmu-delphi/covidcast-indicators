@@ -221,12 +221,16 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'
 #' @export
 summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) {
+  if (nrow(df) == 0) {
+    return( list() )
+  }
+  
   ## We do batches of just one set of groupby vars at a time, since we have
   ## to select rows based on this.
   assert( length(unique(aggregations$group_by)) == 1 )
 
   if ( length(unique(aggregations$name)) < nrow(aggregations) ) {
-    stop("all aggregations using the same set of groupby variables must have unique names")
+    stop("all aggregations using the same set of grouping variables must have unique names")
   }
 
   ## dplyr complains about joining a data.table, saying it is likely to be
@@ -235,32 +239,57 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 
   groupby_vars <- aggregations$group_by[[1]]
 
-  if (all(groupby_vars %in% names(df))) {
-    unique_group_combos <- unique(df[, groupby_vars, with=FALSE])
-    unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
-  } else {
+  if ( !all(groupby_vars %in% names(df)) ) {
     msg_plain(
       sprintf(
-        "not all of groupby columns %s available in data; skipping aggregation",
+        "not all of grouping columns %s available in data; skipping aggregation",
         paste(groupby_vars, collapse=", ")
       ))
+    return( list( ))
   }
-
-  if ( !exists("unique_group_combos") || nrow(unique_group_combos) == 0 ) {
+  
+  # unique_groups_counts <- unique(df[, groupby_vars, with=FALSE])
+  # unique_groups_counts <- unique_groups_counts[complete.cases(unique_groups_counts)]
+  
+  ## Find all unique groups and associated frequencies, saved in column `Freq`.
+  # Keep rows with missing values initially so that we get the correct column
+  # names. Explicitly drop groups with missing values in second step.
+  unique_groups_counts <- as.data.frame(
+    table(df[, groupby_vars, with=FALSE], exclude=NULL, dnn=groupby_vars), 
+    stringsAsFactors=FALSE
+  )
+  unique_groups_counts <- unique_groups_counts[
+    complete.cases(unique_groups_counts[, groupby_vars]),
+  ]
+  
+  if (geo_level != "county") {
+    # Drop groups with less than threshold sample size. Small county groups are
+    # retained for later construction of megacounties.
+    unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
+  }
+  if ( nrow(unique_groups_counts) == 0 ) {
     return(list())
   }
-
-
+    
+  ## Convert col type in unique_groups to match that in data.
+  # Filter on data.table in `calculate_group` requires that columns and filter
+  # values are of the same type.
+  for (col_var in groupby_vars) {
+    if ( class(df[[col_var]]) != class(unique_groups_counts[[col_var]]) ) {
+      class(unique_groups_counts[[col_var]]) <- class(df[[col_var]])
+    }
+  }
+  
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
   setindexv(df, groupby_vars)
 
   calculate_group <- function(ii) {
-    target_group <- unique_group_combos[ii]
+    target_group <- unique_groups_counts[ii, groupby_vars, drop=FALSE]
     # Use data.table's index to make this filter efficient
     out <- summarize_aggregations_group(
-      df[as.list(target_group), on=names(target_group)],
+      df[as.list(target_group), on=groupby_vars],
       aggregations,
       target_group,
       geo_level,
@@ -270,9 +299,17 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   }
 
   if (params$parallel) {
-    dfs <- mclapply(seq_along(unique_group_combos[[1]]), calculate_group)
+    if (geo_level == "county") {
+      # Batch mclapply runs so we don't run out of memory.
+      batch_size <- 1000
+      batches <- split(seq(nrow(unique_groups_counts)),
+                       seq(nrow(unique_groups_counts)) %/% batch_size)
+      for ( batch in batches ) {dfs <- mclapply(batch, calculate_group)}
+    } else {
+      dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)
+    }
   } else {
-    dfs <- lapply(seq_along(unique_group_combos[[1]]), calculate_group)
+    dfs <- lapply(seq_along(unique_groups_counts[[1]]), calculate_group)
   }
 
   ## Now we have a list, with one entry per groupby level, each containing a

@@ -14,7 +14,6 @@ import time
 
 import covidcast
 import pandas as pd
-from numpy import timedelta64
 
 from delphi_utils import add_prefix, get_structured_logger
 from delphi_utils.geomap import GeoMapper

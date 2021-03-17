@@ -87,7 +87,7 @@ def compute_special_geo_dfs(df, signal, geo):
 
 
 def merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch):
-    """Combines the queried usafacts and jhu dataframes based on the geo type."""
+    """Combine the queried usafacts and jhu dataframes based on the geo type."""
     # State level
     if geo_to_fetch == 'state':
         combined_df = maybe_append(

@@ -216,7 +216,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'   "num_filter"
 #'
 #' @importFrom dplyr inner_join bind_rows
-#' @importFrom parallel mclapply
+#' @importFrom parallel mclapply splitIndices
 #' @importFrom stats complete.cases
 #'
 #' @export
@@ -302,8 +302,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     if (geo_level == "county") {
       # Batch mclapply runs so we don't run out of memory.
       batch_size <- 1000
-      batches <- split(seq(nrow(unique_groups_counts)),
-                       seq(nrow(unique_groups_counts)) %/% batch_size)
+      batches <- splitIndices(nrow(unique_groups_counts), batch_size)
       for ( batch in batches ) {dfs <- mclapply(batch, calculate_group)}
     } else {
       dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)

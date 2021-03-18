@@ -5,15 +5,15 @@ Created on Sun Feb 23 22:39:07 2021
 
 @author: jingjingtang
 
-Derive a detailed definition of "backfill profile", create a "Backfill 
-Profiler" tool for calculating it for any source which can Plot the full 
-backfill value distribution (+mean (bias) and stderr) for each lag till 
+Derive a detailed definition of "backfill profile", create a "Backfill
+Profiler" tool for calculating it for any source which can Plot the full
+backfill value distribution (+mean (bias) and stderr) for each lag till
 "Finalized" date:
-- Aggregated over reference date & locations, but also separately over 
+- Aggregated over reference date & locations, but also separately over
   ref date and over locations.
-- These "backfill curves" are proportions indexed by: lag, reference date, 
+- These "backfill curves" are proportions indexed by: lag, reference date,
   location
-    
+
 """
 import os
 from math import log10, ceil, floor
@@ -41,13 +41,13 @@ def check_create_dir(save_dir:str):
     """
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
-    return
+    return save_dir
 
-def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str, 
+def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str,
                     geo_value_col:str, sample_size_col:str, value_col:str):
     """
-    Conform the input dataframe into COVIDcast format. The  lag_column, 
-    time_value_column, geo_value_column, sample_size_column, value_column are 
+    Conform the input dataframe into COVIDcast format. The  lag_column,
+    time_value_column, geo_value_column, sample_size_column, value_column are
     necesssary. More detailed description of the values in these columns can
     ben found in `help(covidcast.signal)`
 
@@ -74,15 +74,15 @@ def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str,
     for col in [lag_col,  sample_size_col, value_col]:
         try:
             df[col] = df[col].astype(float)
-        except ValueError:
-            raise ValueError("Values in %s are invalid."%col)
-            
+        except ValueError as e:
+            raise ValueError("Values in %s are invalid."%col) from e
+
     try:
         assert df[time_value_col].dtype == 'datetime64[ns]'
-    except AssertionError:
+    except AssertionError as e:
         raise ValueError("The values in the time_value_col should be in \
-                         datetime64[ns] format.")
-        
+                         datetime64[ns] format.") from e
+
     df.rename({lag_col: "lag", time_value_col: "time_value",
                geo_value_col: "geo_value", sample_size_col: "sample_size",
                value_col: "value"}, axis=1, inplace=True)
@@ -93,7 +93,7 @@ def to_backfill_df(df, data_type = "completeness",
                    value_type="total_count", ref_lag=60):
     """
     Conform the dataset in COVIDcast API format into a backfill dataset.
-    
+
     The output dataset has:
     - time_value: Reference date of the estimate which is the date the estiamte
       is for
@@ -101,28 +101,28 @@ def to_backfill_df(df, data_type = "completeness",
     - lag: Integer difference between issue date and time_value, in days.
     - value: The quantity requested
     - value_type: Either "Total counts" (the denominator, usually the total
-      number of counts) or "COVID counts" (the numerator, the number of 
+      number of counts) or "COVID counts" (the numerator, the number of
       quantity interested, such as the number of positive COVID antigen tests)
-    - data_type: Either "completeness" (the percentage of currently reported 
-      counts against the number of reported counts ref_lag days later) 
+    - data_type: Either "completeness" (the percentage of currently reported
+      counts against the number of reported counts ref_lag days later)
       or "log_dailychange" (log10 of the daily change rate)
-    - ref_lag: The fixed lag between the reference date of the estimates and 
+    - ref_lag: The fixed lag between the reference date of the estimates and
       the issue date used to be compared when considering "completeness"
-        
+
 
     Parameters
     ----------
     df : pd.DataFrame
         Dataset in COVIDcast API format
     data_type : str, optional
-        Either "completeness" or "log_dailychange". 
+        Either "completeness" or "log_dailychange".
         The default is "completeness".
     value_type : str, optional
-        Either "total_count" or "value_count". 
+        Either "total_count" or "value_count".
         The default is "total_count".
     ref_lag : int, optional
-        The fixed lag between the reference date of the estimates and 
-      the issue date used to be compared when considering "completeness". 
+        The fixed lag between the reference date of the estimates and
+      the issue date used to be compared when considering "completeness".
       The default is 60.
 
     Returns
@@ -132,40 +132,41 @@ def to_backfill_df(df, data_type = "completeness",
 
     """
     df["count"] = df["sample_size"] * df["value"] / 100
-    
+
     if value_type == "total_count":
         val_col = "sample_size"
         val_name = "Total counts"
     else:
         val_col = "count"
         val_name = "COVID counts"
-    
-    pivot_df = pd.pivot_table(df, values=val_col, 
+
+    pivot_df = pd.pivot_table(df, values=val_col,
                               index=["geo_value", "time_value"],
                               columns="lag").reset_index()
 
     if data_type == "completeness":
         try:
             assert ref_lag <= df["lag"].max()
-        except AssertionError:
+        except AssertionError as e:
             raise ValueError("Not enough days available. ref_lag larger than \
-                             the maxmimum lag included in the provided dataset.")
+                             the maxmimum lag included in the provided \
+                             dataset.") from e
 
         for i in range(df["lag"].min(), df["lag"].max() + 1):
             if i == ref_lag:
                 continue
             pivot_df[i] = pivot_df[i] / pivot_df[60] * 100
         pivot_df[ref_lag] = pivot_df[ref_lag] / pivot_df[ref_lag] * 100
-    
+
     else:
         for i in range(df["lag"].max(), df["lag"].min(), -1):
             pivot_df[i] = (pivot_df[i] - pivot_df[i-1]) / pivot_df[i-1]
         pivot_df.drop(df["lag"].min(), axis=1, inplace=True)
-        
-        
-    backfill_df = pd.melt(pivot_df, id_vars=["geo_value", "time_value"], 
+
+
+    backfill_df = pd.melt(pivot_df, id_vars=["geo_value", "time_value"],
                           var_name="lag", value_name="value")
-    
+
     if data_type == "completeness":
         backfill_df["value_type"] = val_name
         backfill_df["data_type"] = "completeness"
@@ -175,20 +176,20 @@ def to_backfill_df(df, data_type = "completeness",
         backfill_df["value_type"] = val_name
         backfill_df["data_type"] = "log_dailychange"
         backfill_df["ref_lag"] = -1
-        backfill_df["value"] = backfill_df["value"].apply(lambda x:log10(x))
-    
+        backfill_df["value"] = backfill_df["value"].apply(log10)
+
     return backfill_df
 
 
 
-def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame, 
-                                source:str, start_date:datetime, 
-                                end_date:datetime, geo_values=None, 
+def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
+                                source:str, start_date:datetime,
+                                end_date:datetime, geo_values=None,
                                 max_lag=90):
     """
     Create heatmaps of the backfill estimates by lags and reference date for
     each location specified in the geo_values.
-    The reference date will show as the y-axis while the lag will be the 
+    The reference date will show as the y-axis while the lag will be the
     x-axis. The color filled represents the value of the backfill estimates.
     The created heatmaps will be stored in the save_dir as multiple png files.
 
@@ -197,7 +198,7 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     save_dir : str
         Directory for saving the generated figures.
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
@@ -208,12 +209,12 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         visualization, the end_date should be at least ref_lag days latter than
         the start_date.
     geo_values : list of str, optional
-        The list of locations for which the heatmaps will be created. 
-        The default is None, which means all the locations included in the 
+        The list of locations for which the heatmaps will be created.
+        The default is None, which means all the locations included in the
         backfill_df will be considered. Otherwise, only the locations in the
         geo_values list will be considered.
     max_lag : int, optional
-        The maximum lag that will be displayed in the heatmaps. 
+        The maximum lag that will be displayed in the heatmaps.
         The default is 90.
 
     Returns
@@ -223,21 +224,21 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     """
 
     check_create_dir(save_dir)
-    
+
     filtered_backfill_df = backfill_df[backfill_df["lag"]<=max_lag]
-    
-    pivot_df = pd.pivot_table(filtered_backfill_df, 
-                              values="value", 
+
+    pivot_df = pd.pivot_table(filtered_backfill_df,
+                              values="value",
                               index=["geo_value", "time_value"],
                               columns="lag").reset_index()
-    MIN_LAG = filtered_backfill_df["lag"].min()
+    min_lag = filtered_backfill_df["lag"].min()
     value_type = filtered_backfill_df["value_type"].values[0]
     data_type = filtered_backfill_df["data_type"].values[0]
-    
+
     if not geo_values:
-        geo_values = pivot_df["geo_value"].unique()  
+        geo_values = pivot_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].min(), max_lag)
-    
+
     if data_type == "completeness":
         vmax = int((filtered_backfill_df["value"].max()//20 + 1) * 20)
         vmin = int((filtered_backfill_df["value"].min()//20) * 20)
@@ -256,15 +257,15 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         cbar_label = "log10(Daily Change Rate)"
         ref_lag = 0
         fig_title = 'Daily Change Rate\n%s, %s, %s'%(source, value_type, "%s")
-        
+
     n_days = (end_date - start_date).days + 1 - ref_lag
     time_index = np.array([(start_date + timedelta(i)).date() for i in range(n_days)])
-    
-    for geo in geo_values:    
+
+    for geo in geo_values:
         sns.set(font_scale=1.2)
-        heatmap_df = pivot_df.loc[(pivot_df["geo_value"] == geo) 
+        heatmap_df = pivot_df.loc[(pivot_df["geo_value"] == geo)
                                   & (pivot_df["time_value"].isin(time_index)),
-                                  ["time_value"] + list(range(MIN_LAG, max_lag+1))]
+                                  ["time_value"] + list(range(min_lag, max_lag+1))]
         heatmap_df.set_index("time_value", inplace=True)
         plt.figure(figsize = (18, 15))
         plt.style.context("ggplot")
@@ -273,7 +274,7 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         ax = sns.heatmap(heatmap_df, annot=False, cmap=cmap, cbar=True,
                          vmax=vmax, vmin=vmin, center=0,
                          cbar_kws=dict(label=cbar_label,
-                                       ticks=list(range(0, vmax+1, cbar_freq)))) 
+                                       ticks=list(range(0, vmax+1, cbar_freq))))
         xtix = ax.get_xticks()
         plt.xlabel("Lag", fontsize = 25)
         plt.ylabel("Reference Date", fontsize = 25)
@@ -284,27 +285,27 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         ax.set_yticklabels(time_index[selected_ytix])
         ax.set_xticks(xtix[::5])
         plt.savefig(save_dir+"/"+str(geo)+".png")
-    return
 
-def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame, 
-                                  source:str, fig_name:str, 
-                                  start_date:datetime, end_date:datetime, 
+
+def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
+                                  source:str, fig_name:str,
+                                  start_date:datetime, end_date:datetime,
                                   geo_values=None, max_lag=90):
     """
     Create a lineplot of the backfill estimates by lag and location for
     across a certain range of reference dates.
-    The backfill estimates will show as the y-axis while the lag will be the 
-    x-axis. Each line represents the mean across reference dates for a specific 
-    location with 95% confidence interval shown as the band. The created 
-    lineplot will be stored in the save_dir with specified figure name as a 
+    The backfill estimates will show as the y-axis while the lag will be the
+    x-axis. Each line represents the mean across reference dates for a specific
+    location with 95% confidence interval shown as the band. The created
+    lineplot will be stored in the save_dir with specified figure name as a
     png files.
-    
+
     Parameters
     ----------
     save_dir : str
         Directory for saving the generated figures.
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
@@ -315,12 +316,12 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     end_date : datetime
         Display data up to this date, inclusive.
     geo_values : list of str, optional
-        The list of locations for which the heatmaps will be created. 
-        The default is None, which means all the locations included in the 
+        The list of locations for which the heatmaps will be created.
+        The default is None, which means all the locations included in the
         backfill_df will be considered. Otherwise, only the locations in the
         geo_values list will be considered.
     max_lag : int, optional
-        The maximum lag that will be displayed in the heatmaps. 
+        The maximum lag that will be displayed in the heatmaps.
         The default is 90.
 
     Returns
@@ -330,16 +331,16 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     """
 
     check_create_dir(save_dir)
-    
+
     if not geo_values:
-        geo_values = backfill_df["geo_value"].unique() 
+        geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
-    
+
     line_df = backfill_df.loc[(backfill_df["lag"] <=max_lag)
                               & (backfill_df["time_value"]<=end_date)
                               & (backfill_df["time_value"]>=start_date)]
     data_type = line_df["data_type"].values[0]
-    
+
     if data_type == "completeness":
         vmax = int((line_df["value"].max() //20 + 1) * 20)
         vmin = int((line_df["value"].min() //20) * 20)
@@ -348,7 +349,7 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
         fig_title = 'Percentage of Completion\
                 \nAgainst values reported %d days later\
                 \n%s %s, Mean with 95%% CI \
-                \nReference Date: From %s to %s'%(ref_lag, source, value_type,  
+                \nReference Date: From %s to %s'%(ref_lag, source, value_type,
                                           start_date.date(), end_date.date())
         ylabel = "%Reported"
     else:
@@ -358,14 +359,14 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
         value_type = line_df["value_type"].values[0]
         fig_title = 'Daily Change Rate\
                 \n%s %s, Mean with 95%% CI \
-                \nReference Date: From %s to %s'%(source, value_type, 
+                \nReference Date: From %s to %s'%(source, value_type,
                                           start_date.date(), end_date.date())
         ylabel = "log10(Daily Change Rate)"
-            
+
     line_df = line_df[line_df["geo_value"].isin(geo_values)].dropna()
-    
+
     plt.figure(figsize = (10, 10))
-    sns.lineplot(data=line_df, x="lag", y="value", hue="geo_value", 
+    sns.lineplot(data=line_df, x="lag", y="value", hue="geo_value",
                  ci=95, err_style="band")
     plt.xlabel("Lag", fontsize=20)
     plt.ylabel(ylabel, fontsize=20)
@@ -378,17 +379,17 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     plt.xticks(fontsize=15)
     plt.ylim(vmin, vmax)
     plt.savefig(save_dir+"/"+fig_name+".png", bbox_inches='tight')
-    return 
 
-def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame, 
-                               source:str, start_date:datetime, 
-                               end_date:datetime, geo_values=None, 
+
+def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
+                               source:str, start_date:datetime,
+                               end_date:datetime, geo_values=None,
                                max_lag=90):
     """
     Create violinplots of the backfill estimates by lags and location across
     a certain rane of reference date for each location specified in geo_values.
-    Each violin shows the distribution of quantitative backfill estimates 
-    across reference dates for a specific location and lag. The created 
+    Each violin shows the distribution of quantitative backfill estimates
+    across reference dates for a specific location and lag. The created
     violinplots will be stored in the save_dir as multiple png files.
 
     Parameters
@@ -396,7 +397,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
     save_dir : str
         Directory for saving the generated figures.
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
@@ -405,12 +406,12 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
     end_date : datetime
         Display data up to this date, inclusive.
     geo_values : list of str, optional
-        The list of locations for which the heatmaps will be created. 
-        The default is None, which means all the locations included in the 
+        The list of locations for which the heatmaps will be created.
+        The default is None, which means all the locations included in the
         backfill_df will be considered. Otherwise, only the locations in the
         geo_values list will be considered.
     max_lag : int, optional
-        The maximum lag that will be displayed in the heatmaps. 
+        The maximum lag that will be displayed in the heatmaps.
         The default is 90.
 
     Returns
@@ -418,20 +419,20 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
     None.
 
     """
-    
+
 
     check_create_dir(save_dir)
-    
+
     if not geo_values:
-        geo_values = backfill_df["geo_value"].unique()  
+        geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
     selected_lags = list(range(0, max_lag + 10, 10))
-    
+
     line_df = backfill_df.loc[(backfill_df["lag"].isin(selected_lags))
                               & (backfill_df["time_value"]<=end_date)
                               & (backfill_df["time_value"]>=start_date)]
     data_type = line_df["data_type"].values[0]
-    
+
     if data_type == "completeness":
         vmax = int((line_df["value"].max() //20 + 1) * 20)
         vmin = int((line_df["value"].min() //20) * 20)
@@ -440,7 +441,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
         fig_title = 'Percentage of Completion\
                 \nAgainst values reported %d days later\
                 \n%s %s, Mean with 95%%%% CI \
-                \n%s, Reference Date: From %s to %s'%(ref_lag, source, 
+                \n%s, Reference Date: From %s to %s'%(ref_lag, source,
                 value_type, "%s", start_date.date(), end_date.date())
         ylabel = "%Reported"
     else:
@@ -453,9 +454,9 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
                 \n%s, Reference Date: From %s to %s'%(source, value_type, "%s",
                                           start_date.date(), end_date.date())
         ylabel = "log10(Daily Change Rate)"
-            
+
     line_df = line_df[line_df["geo_value"].isin(geo_values)]
-    
+
     for geo in line_df["geo_value"].unique():
         plt.figure(figsize = (10, 10))
         plt.style.context("ggplot")
@@ -466,27 +467,27 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
         plt.ylim(vmin, vmax)
         plt.title(fig_title%geo, fontsize=25, loc="left")
         plt.savefig(save_dir+"/"+geo+".png", bbox_inches='tight')
-    return 
 
-def create_summary_plots(save_dir, backfill_df, 
-                         source, start_date, end_date, 
+
+def create_summary_plots(save_dir, backfill_df,
+                         source, start_date, end_date,
                          geo_values=None, max_lag=90):
     """
-    Create two summary plots for the backfill dateframe. 
-    - A lineplot shows the mean and 95% confidence interval of backfill 
-    estimates by lag across a certain range of reference dates and all 
+    Create two summary plots for the backfill dateframe.
+    - A lineplot shows the mean and 95% confidence interval of backfill
+    estimates by lag across a certain range of reference dates and all
     locations in geo_values.
-    - A lineplot shows the mean and 95% confidence interval of backk fill 
-    estimates by reference date across all locations in geo_values and all 
+    - A lineplot shows the mean and 95% confidence interval of backk fill
+    estimates by reference date across all locations in geo_values and all
     lags
-    
+
 
     Parameters
     ----------
     save_dir : str
         Directory for saving the generated figures.
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
@@ -495,12 +496,12 @@ def create_summary_plots(save_dir, backfill_df,
     end_date : datetime
         Display data up to this date, inclusive.
     geo_values : list of str, optional
-        The list of locations for which the heatmaps will be created. 
-        The default is None, which means all the locations included in the 
+        The list of locations for which the heatmaps will be created.
+        The default is None, which means all the locations included in the
         backfill_df will be considered. Otherwise, only the locations in the
         geo_values list will be considered.
     max_lag : int, optional
-        The maximum lag that will be displayed in the heatmaps. 
+        The maximum lag that will be displayed in the heatmaps.
         The default is 90.
 
     Returns
@@ -508,36 +509,36 @@ def create_summary_plots(save_dir, backfill_df,
     None.
 
     """
-    
+
     check_create_dir(save_dir)
-    
+
     if not geo_values:
-        geo_values = backfill_df["geo_value"].unique()      
+        geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
     try:
         assert (end_date - start_date).days + 1 >= max_lag
-    except AssertionError:
+    except AssertionError as e:
         raise ValueError("Not enough data. The end_date should be at least \
-                         max_lag days latter than the start_date")
+                         max_lag days latter than the start_date") from e
     end_date = end_date-timedelta(days=max_lag)
-    
+
     line_df = backfill_df.loc[(backfill_df["lag"] <=max_lag)
                               & (backfill_df["time_value"]<=end_date)
                               & (backfill_df["time_value"]>=start_date)
                               ]
     data_type = line_df["data_type"].values[0]
     value_type = line_df["value_type"].values[0]
-    
+
     n_days = (end_date - start_date).days + 1
     time_index = np.array([(start_date + timedelta(i)).date() for i in range(n_days)])
-    
+
     if data_type == "completeness":
         ref_lag = line_df["ref_lag"].values[0]
         fig_title_over_lag = 'Percentage of Completion\
             \nAgainst values reported %d days later\
             \n%s %s, Mean with 95%% CI \
             \nAll locations \
-            \nReference Date: From %s to %s'%(ref_lag, source, value_type, 
+            \nReference Date: From %s to %s'%(ref_lag, source, value_type,
             start_date.date(), end_date.date())
         fig_title_over_date = 'Percentage of Completion\
             \nAgainst values reported %d days later\
@@ -549,7 +550,7 @@ def create_summary_plots(save_dir, backfill_df,
         fig_title_over_lag = 'Daily Change Rate\
             \n%s %s, Mean with 95%% CI \
             \nAll locations \
-            \nReference Date: From %s to %s'%(source, value_type, 
+            \nReference Date: From %s to %s'%(source, value_type,
             start_date.date(), end_date.date())
         fig_title_over_date = 'Daily Change Rate\
             \n %s %s, Mean with 95%% CI \
@@ -557,7 +558,7 @@ def create_summary_plots(save_dir, backfill_df,
         ylabel = "log10(Daily Change Rate)"
 
     line_df = line_df[line_df["geo_value"].isin(geo_values)].dropna()
-    
+
     # Lineplot over lags
     plt.figure(figsize = (10, 10))
     plt.style.context("ggplot")
@@ -569,9 +570,9 @@ def create_summary_plots(save_dir, backfill_df,
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
     plt.savefig(save_dir+"/lineplot_by_lag.png", bbox_inches='tight')
-    
-    
-    
+
+
+
     # Lineplot over dates
     plt.figure(figsize = (10, 10))
     plt.style.context("ggplot")
@@ -587,24 +588,24 @@ def create_summary_plots(save_dir, backfill_df,
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15, rotation=45)
     plt.savefig(save_dir+"/lineplot_by_date.png", bbox_inches='tight')
-    return 
-    
 
-def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value, 
-                        test_start_date:datetime, test_end_date:datetime, 
+
+
+def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
+                        test_start_date:datetime, test_end_date:datetime,
                         train_start_date:datetime, train_end_date:datetime):
     """
-    Conduct a two-sided t-test for the null hypothesis that 2 independent 
-    samples have identical average (expected) values. This test assumes that 
+    Conduct a two-sided t-test for the null hypothesis that 2 independent
+    samples have identical average (expected) values. This test assumes that
     the populations have unknown variance.
-    Calculate the T-test for the means of the backfill estimates of two time 
+    Calculate the T-test for the means of the backfill estimates of two time
     period. Use historical data for training, should include at least 28 days.
     Use the dates of interest for testing, should include at least 7 days.
 
     Parameters
     ----------
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     lag : int
         DESCRIPTION.
@@ -629,13 +630,13 @@ def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
     """
     try:
         assert geo_value in backfill_df["geo_value"].values
-    except AssertionError:
-        raise ValueError("Invalid geo_value.")
-        
+    except AssertionError as e:
+        raise ValueError("Invalid geo_value.") from e
+
     try:
         assert lag in backfill_df["lag"].values
-    except AssertionError:
-        raise ValueError("Invalid lag.")
+    except AssertionError as e:
+        raise ValueError("Invalid lag.") from e
 
     test_data = backfill_df.loc[(backfill_df["geo_value"] == geo_value)
                                 & (backfill_df["time_value"]<=test_end_date)
@@ -645,23 +646,26 @@ def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
                                 & (backfill_df["time_value"]<=train_end_date)
                                 & (backfill_df["time_value"]>=train_start_date)
                                 & (backfill_df["lag"] == lag)].dropna()
-    if train_data.shape[0] <= 28:
-        print("The training period is not long enough, should be longer than \
-              28 days")
-        return
-    if test_data.shape[0] <= 7:
-        print("The testing period is not long enough, should be longer than \
-              7 days")
-        return
+    try:
+        assert train_data.shape[0] >= 28
+    except AssertionError as e:
+        raise ValueError("The training period is not long enough, \
+                         should be longer than 28 days") from e
 
-    t, p = stats.ttest_ind(train_data["value"].values, 
-                     test_data["value"].values, 
+    try:
+        assert test_data.shape[0] >= 7
+    except AssertionError as e:
+        raise ValueError("The testing period is not long enough, \
+                         should be longer than 7 days") from e
+
+    t, p = stats.ttest_ind(train_data["value"].values,
+                     test_data["value"].values,
                      equal_var=False)
     return t, p
-    
 
-def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame, 
-                      test_start_date:datetime, test_end_date:datetime, 
+
+def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
+                      test_start_date:datetime, test_end_date:datetime,
                       train_start_date:datetime, train_end_date:datetime,
                       lags=None, geo_values=None):
     """
@@ -674,7 +678,7 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
     save_dir : str
         Directory for saving the analysis result.
     backfill_df : pd.DataFrame
-        The dataframe that contains information on either completeness 
+        The dataframe that contains information on either completeness
         or daily change rate.
     test_start_date : datetime
         Testing period beginning on this date.
@@ -685,14 +689,14 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
     train_end_date : datetime
         Training period up to this date, inclusive.
     lags : list of int, optional
-        The list of lags for which the statistical analysis will consider. 
+        The list of lags for which the statistical analysis will consider.
         The default is None, which means all the lags included in the backfill
-        dataframe will be considered. Otherwise, only the lags specified in 
+        dataframe will be considered. Otherwise, only the lags specified in
         lags list will be considered.
     geo_values : TYPE, optional
-        The list of locations for which the statistical analysis will consider. 
-        The default is None, which means all the locations included in the 
-        backfill dataframe will be considered. Otherwise, only the locations 
+        The list of locations for which the statistical analysis will consider.
+        The default is None, which means all the locations included in the
+        backfill dataframe will be considered. Otherwise, only the locations
         in the geo_values list will be considered.
 
     Returns
@@ -700,27 +704,22 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
     summary_df: pd.DataFrame
 
     """
-    summary_df = pd.DataFrame(columns=["geo_value", "lag", 
+    summary_df = pd.DataFrame(columns=["geo_value", "lag",
                                        "t_statistics", "p"])
     i = 0
     if not geo_values:
-        geo_values = backfill_df["geo_value"].unique() 
+        geo_values = backfill_df["geo_value"].unique()
     if not lags:
         lags = backfill_df.loc[(backfill_df["time_value"]<=test_end_date)
                                & (backfill_df["time_value"]>=test_start_date),
-                               "lag"].unique() 
+                               "lag"].unique()
 
     for geo in geo_values:
         for lag in lags:
-            t, p = backfill_mean_check(backfill_df, lag, geo, 
-                                       test_start_date, test_end_date, 
+            t, p = backfill_mean_check(backfill_df, lag, geo,
+                                       test_start_date, test_end_date,
                                        train_start_date, train_end_date)
             summary_df.loc[i] = [geo, lag, t, p]
             i += 1
     summary_df.to_csv(save_dir+"/mean_check_results.csv", index=False)
     return summary_df
-    
-
-
-
-    

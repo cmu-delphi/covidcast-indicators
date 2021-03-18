@@ -26,8 +26,7 @@ import seaborn as sns
 from scipy import stats
 
 def check_create_dir(save_dir:str):
-    """
-    Create the directory for saving figures if it is not existed
+    """Create the directory for saving figures if it is not existed
 
     Parameters
     ----------
@@ -45,8 +44,7 @@ def check_create_dir(save_dir:str):
 
 def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str,
                     geo_value_col:str, sample_size_col:str, value_col:str):
-    """
-    Conform the input dataframe into COVIDcast format. The  lag_column,
+    """Conform the input dataframe into COVIDcast format. The  lag_column,
     time_value_column, geo_value_column, sample_size_column, value_column are
     necesssary. More detailed description of the values in these columns can
     ben found in `help(covidcast.signal)`
@@ -91,8 +89,7 @@ def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str,
 
 def to_backfill_df(df, data_type = "completeness",
                    value_type="total_count", ref_lag=60):
-    """
-    Conform the dataset in COVIDcast API format into a backfill dataset.
+    """Conform the dataset in COVIDcast API format into a backfill dataset.
 
     The output dataset has:
     - time_value: Reference date of the estimate which is the date the estiamte
@@ -186,8 +183,7 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                                 source:str, start_date:datetime,
                                 end_date:datetime, geo_values=None,
                                 max_lag=90):
-    """
-    Create heatmaps of the backfill estimates by lags and reference date for
+    """Create heatmaps of the backfill estimates by lags and reference date for
     each location specified in the geo_values.
     The reference date will show as the y-axis while the lag will be the
     x-axis. The color filled represents the value of the backfill estimates.
@@ -222,7 +218,6 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     None.
 
     """
-
     check_create_dir(save_dir)
 
     filtered_backfill_df = backfill_df[backfill_df["lag"]<=max_lag]
@@ -291,8 +286,7 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
                                   source:str, fig_name:str,
                                   start_date:datetime, end_date:datetime,
                                   geo_values=None, max_lag=90):
-    """
-    Create a lineplot of the backfill estimates by lag and location for
+    """Create a lineplot of the backfill estimates by lag and location for
     across a certain range of reference dates.
     The backfill estimates will show as the y-axis while the lag will be the
     x-axis. Each line represents the mean across reference dates for a specific
@@ -329,7 +323,6 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     None.
 
     """
-
     check_create_dir(save_dir)
 
     if not geo_values:
@@ -385,8 +378,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
                                source:str, start_date:datetime,
                                end_date:datetime, geo_values=None,
                                max_lag=90):
-    """
-    Create violinplots of the backfill estimates by lags and location across
+    """Create violinplots of the backfill estimates by lags and location across
     a certain rane of reference date for each location specified in geo_values.
     Each violin shows the distribution of quantitative backfill estimates
     across reference dates for a specific location and lag. The created
@@ -419,8 +411,6 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
     None.
 
     """
-
-
     check_create_dir(save_dir)
 
     if not geo_values:
@@ -472,8 +462,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
 def create_summary_plots(save_dir, backfill_df,
                          source, start_date, end_date,
                          geo_values=None, max_lag=90):
-    """
-    Create two summary plots for the backfill dateframe.
+    """Create two summary plots for the backfill dateframe.
     - A lineplot shows the mean and 95% confidence interval of backfill
     estimates by lag across a certain range of reference dates and all
     locations in geo_values.
@@ -509,7 +498,6 @@ def create_summary_plots(save_dir, backfill_df,
     None.
 
     """
-
     check_create_dir(save_dir)
 
     if not geo_values:
@@ -594,8 +582,7 @@ def create_summary_plots(save_dir, backfill_df,
 def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
                         test_start_date:datetime, test_end_date:datetime,
                         train_start_date:datetime, train_end_date:datetime):
-    """
-    Conduct a two-sided t-test for the null hypothesis that 2 independent
+    """Conduct a two-sided t-test for the null hypothesis that 2 independent
     samples have identical average (expected) values. This test assumes that
     the populations have unknown variance.
     Calculate the T-test for the means of the backfill estimates of two time
@@ -668,8 +655,7 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
                       test_start_date:datetime, test_end_date:datetime,
                       train_start_date:datetime, train_end_date:datetime,
                       lags=None, geo_values=None):
-    """
-    Create a csv file for the results of the two-sided t-tests as described
+    """Create a csv file for the results of the two-sided t-tests as described
     in backfill_mean_check function. The t-tests will be conducted for each
     lag and each location.
 

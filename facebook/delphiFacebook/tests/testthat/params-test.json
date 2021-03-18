@@ -29,6 +29,7 @@
     "input": [
       "responses.csv"
     ],
+    "use_input_asis": true,
     "aggregate_range": "month",
     "debug": false
   }

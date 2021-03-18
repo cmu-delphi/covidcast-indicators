@@ -190,7 +190,7 @@ rename_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly mapped columns
 remap_responses <- function(df) {
-  msg_plain(paste0("Mapping response codes to descriptive values..."))
+  msg_plain("Mapping response codes to descriptive values...")
   # Map responses with multiple races selected into a single category.
   if ("D7" %in% names(df)) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
@@ -318,7 +318,7 @@ remap_responses <- function(df) {
     )
   }
   
-  msg_plain(paste0("Finished remapping response codes"))
+  msg_plain("Finished remapping response codes")
   return(df)
 }
 
@@ -441,7 +441,8 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
     df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
   } else if (response_type == "ms") {
     split_col <- split_options(df[[col_var]])
-    map_fn <- ifelse( is.null(getOption("mc.cores")) , mapply, mcmapply)
+    
+    map_fn <- if (is.null(getOption("mc.cores"))) { mapply } else { mcmapply }
     df[[col_var]] <- map_fn(split_col, FUN=function(row) {
       if ( length(row) == 1 && all(is.na(row)) ) {
         NA

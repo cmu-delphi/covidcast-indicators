@@ -169,12 +169,12 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   #   - multiple choice items are left as-is
 
   #### TODO: How do we want to handle multi-select items when used for grouping?
-  group_cols <- unique(do.call(c, aggregations$group_by))
-  group_cols <- group_cols[group_cols != "geo_id"]
+  group_vars <- unique( unlist(aggregations$group_by) )
+  group_vars <- group_vars[group_vars != "geo_id"]
 
   metric_cols <- unique(aggregations$metric)
   
-  cols_check_available <- unique(c(group_cols, metric_cols))
+  cols_check_available <- unique(c(group_vars, metric_cols))
   available <- cols_check_available %in% names(df)
   cols_not_available <- cols_check_available[ !available ]
   for (col_var in cols_not_available) {
@@ -190,7 +190,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 
   cols_available <- cols_check_available[ available ]
   for (col_var in cols_available) {
-    if ( col_var %in% group_cols & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
+    if ( col_var %in% group_vars & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
       next
     }
 

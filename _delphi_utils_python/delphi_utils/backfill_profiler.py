@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Sun Feb 23 22:39:07 2021
-
-@author: jingjingtang
+"""Functions for the backfill profiler.
 
 Derive a detailed definition of "backfill profile", create a "Backfill
 Profiler" tool for calculating it for any source which can Plot the full
@@ -184,9 +181,10 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                                 source:str, start_date:datetime,
                                 end_date:datetime, geo_values=None,
                                 max_lag=90):
-    """Create heatmaps of the backfill estimates by lags and reference date for
-    each location specified in the geo_values.
+    """Create heatmaps of the backfill estimates.
 
+    The heatmaps show backfill estimates by lags and reference date for
+    each location specified in the geo_values.
     The reference date will show as the y-axis while the lag will be the
     x-axis. The color filled represents the value of the backfill estimates.
     The created heatmaps will be stored in the save_dir as multiple png files.
@@ -288,14 +286,14 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
                                   source:str, fig_name:str,
                                   start_date:datetime, end_date:datetime,
                                   geo_values=None, max_lag=90):
-    """Create a lineplot of the backfill estimates by lag and location for
-    across a certain range of reference dates.
+    """Create a lineplot of the backfill estimates.
 
-    The backfill estimates will show as the y-axis while the lag will be the
-    x-axis. Each line represents the mean across reference dates for a specific
-    location with 95% confidence interval shown as the band. The created
-    lineplot will be stored in the save_dir with specified figure name as a
-    png files.
+    The lineplot show the backfill estimates by lag and location for
+    across a certain range of reference dates. The backfill estimates will
+    show as the y-axis while the lag will be the x-axis. Each line represents
+    the mean across reference dates for a specific location with 95% confidence
+    interval shown as the band. The created lineplot will be stored in the
+    save_dir with specified figure name as a png files.
 
     Parameters
     ----------
@@ -381,9 +379,10 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
                                source:str, start_date:datetime,
                                end_date:datetime, geo_values=None,
                                max_lag=90):
-    """Create violinplots of the backfill estimates by lags and location across
-    a certain rane of reference date for each location specified in geo_values.
+    """Create violinplots of the backfill estimates.
 
+    The violinplots show the backfill estimates by lags and location across
+    a certain rane of reference date for each location specified in geo_values.
     Each violin shows the distribution of quantitative backfill estimates
     across reference dates for a specific location and lag. The created
     violinplots will be stored in the save_dir as multiple png files.
@@ -585,13 +584,14 @@ def create_summary_plots(save_dir, backfill_df,
 def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
                         test_start_date:datetime, test_end_date:datetime,
                         train_start_date:datetime, train_end_date:datetime):
-    """Conduct a two-sided t-test for the null hypothesis that 2 independent
-    samples have identical average (expected) values.
+    """Conduct a two-sided t-test for the means of the backfill estimates.
 
-    This test assumes that the populations have unknown variance.
-    Calculate the T-test for the means of the backfill estimates of two time
-    period. Use historical data for training, should include at least 28 days.
-    Use the dates of interest for testing, should include at least 7 days.
+    Two-sided t-test for null hypothesis that 2 independent samples have
+    identical average (expected) values. This test assumes that the
+    populations have unknown variance. Calculate the T-test for the means of
+    the backfill estimates of two time period. Use historical data for
+    training, should include at least 28 days. Use the dates of interest for
+    testing, should include at least 7 days.
 
     Parameters
     ----------
@@ -659,8 +659,7 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
                       test_start_date:datetime, test_end_date:datetime,
                       train_start_date:datetime, train_end_date:datetime,
                       lags=None, geo_values=None):
-    """Create a csv file for the results of the two-sided t-tests as described
-    in backfill_mean_check function.
+    """Create a csv file for the results of the two-sided t-tests.
 
     The t-tests will be conducted for each lag and each location.
 

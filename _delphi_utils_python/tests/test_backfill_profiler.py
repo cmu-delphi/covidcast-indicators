@@ -11,6 +11,7 @@ import pytest
 from datetime import datetime, timedelta
 from os import listdir, remove, system
 from os.path import join, exists
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -23,6 +24,8 @@ from delphi_utils.backfill_profiler import (check_create_dir,
                                             create_summary_plots,
                                             backfill_mean_check,
                                             create_mean_check_df)
+
+warnings.filterwarnings("ignore")
 
 def _clean_directory(directory):
     """Clean files out of a directory."""
@@ -41,24 +44,25 @@ def _non_ignored_files_set(directory):
         out.add(fname)
     return out
 
+timestamps = [datetime(2020, 3, 20) + timedelta(days=i) for i in range(56)]
+geo_values = ["ny", "pa", "ma"]
+lags = list(range(91))
+index = pd.MultiIndex.from_product([timestamps, geo_values, lags], 
+                                   names = ["time_value", "geo_value", "lag"])
+        
+backfill_df = pd.DataFrame(index=index).reset_index()
+backfill_df["value"] = np.random.random_sample(backfill_df.shape[0]) * 1e3
+backfill_df["value_type"] = "Total counts"
+backfill_df["data_type"] = "completeness"
+backfill_df["ref_lag"] = 60
+    
+source = "chng"
+start_date = timestamps[0]
+end_date = timestamps[-1]
 
 class TestExport:
     
-    timestamps = [datetime(2020, 3, 20) + timedelta(days=i) for i in range(56)]
-    geo_values = ["ny", "pa", "ma"]
-    lags = list(range(91))
-    index = pd.MultiIndex.from_product([timestamps, geo_values, lags], 
-                                       names = ["time_value", "geo_value", "lag"])
-        
-    backfill_df = pd.DataFrame(index=index).reset_index()
-    backfill_df["value"] = np.random.random_sample(backfill_df.shape[0]) * 1e3
-    backfill_df["value_type"] = "Total counts"
-    backfill_df["data_type"] = "completeness"
-    backfill_df["ref_lag"] = 60
     
-    source = "chng"
-    start_date = timestamps[0]
-    end_date = timestamps[-1]
     
     def test_check_create_dir(self):
         save_dir = "./test_output"
@@ -80,7 +84,7 @@ class TestExport:
                              geo_value_col="geos", 
                              sample_size_col="totalcounts", 
                              value_col="covidcounts")
-        assert set(["time_value", "geo_value", "sample_size", "lag", "value"]).isin(df.columns)
+        assert set(["time_value", "geo_value", "sample_size", "lag", "value"]).issubset(set(df.columns))
         
         # Invalid case 1
         test_df = pd.DataFrame({"timestamp": ["2021-1-1"],
@@ -127,14 +131,14 @@ class TestExport:
                        value_type="total_count", ref_lag=100)
          
         # Normal case for completeness
-        backfill_df = to_backfill_df(df, data_type = "completeness",
+        test_backfill_df = to_backfill_df(df, data_type = "completeness",
                        value_type="total_count", ref_lag=60)
         
-        assert (backfill_df.loc[backfill_df["lag"] == 60, "value"] == 100).all()
+        assert (test_backfill_df.loc[test_backfill_df["lag"] == 60, "value"] == 100).all()
     
-    def test_create_heatmap_by_refdate(self, backfill_df, source, 
-                                       start_date, end_date):
+    def test_create_heatmap_by_refdate(self):
         save_dir = "./test_dir"
+        _clean_directory(save_dir)
         create_heatmap_by_refdate(save_dir, backfill_df, source, 
                                     start_date, end_date, 
                                     geo_values=None, max_lag=90)
@@ -144,9 +148,9 @@ class TestExport:
         
         _clean_directory(save_dir)
     
-    def test_create_lineplot_by_loations(self, backfill_df, source, 
-                                       start_date, end_date):
+    def test_create_lineplot_by_loations(self):
         save_dir = "./test_dir"
+        _clean_directory(save_dir)
         create_lineplot_by_loations(save_dir, backfill_df, 
                                     source, fig_name="test", 
                                     start_date=start_date, 
@@ -159,9 +163,9 @@ class TestExport:
         _clean_directory(save_dir)
     
         
-    def test_create_violinplot_by_lag(self, backfill_df, source, 
-                                       start_date, end_date):
+    def test_create_violinplot_by_lag(self):
         save_dir = "./test_dir"
+        _clean_directory(save_dir)
         create_violinplot_by_lag(save_dir, backfill_df, source, start_date, 
                                  end_date, geo_values=None, max_lag=90)
         
@@ -170,9 +174,9 @@ class TestExport:
         
         _clean_directory(save_dir)
     
-    def test_create_summary_plots(self, backfill_df, source, 
-                                       start_date, end_date):
+    def test_create_summary_plots(self):
         save_dir = "./test_dir"
+        _clean_directory(save_dir)
         with pytest.raises(ValueError):
             create_summary_plots(save_dir, backfill_df, 
                                  source, start_date, end_date, 
@@ -189,7 +193,7 @@ class TestExport:
         
         _clean_directory(save_dir)
     
-    def test_backfill_mean_check(self, backfill_df):
+    def test_backfill_mean_check(self):
         
         # Invalid lag
         with pytest.raises(ValueError): 
@@ -214,7 +218,7 @@ class TestExport:
                                 train_end_date=datetime(2020, 5, 7)) 
         assert (p > 0) and (p <= 1)
         
-    def test_create_mean_check_df(self, backfill_df):
+    def test_create_mean_check_df(self):
         save_dir = "./test_dir"
         output = create_mean_check_df(save_dir, backfill_df, 
                                       test_start_date=datetime(2020, 5, 7), 

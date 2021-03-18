@@ -15,7 +15,8 @@ required = [
     "pytest-cov",
     "slackclient",
     "structlog",
-    "xlrd"
+    "xlrd",
+    "seaborn"
 ]
 
 setup(

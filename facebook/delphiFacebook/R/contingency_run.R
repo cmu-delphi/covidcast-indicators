@@ -312,6 +312,9 @@ run_contingency_tables <- function(params) {
 
     params$aggregate_range <- "month"
     run_contingency_tables_many_periods(params, aggs$month)
+  } else {
+    stop(paste0("aggregate_range setting must be provided in params and be one",
+    " of 'week', 'month', or 'both'"))
   }
 }
 
@@ -339,12 +342,10 @@ run_contingency_tables_many_periods <- function(params, aggregations)
   if (!is.null(params$n_periods)) {
     msg_plain(paste0("Producing CSVs for ", params$n_periods, " time periods"))
 
-    if (params$aggregate_range == "week") {
-      period_step <- days(7)
-    } else if (params$aggregate_range == "month") {
+    if (params$aggregate_range == "month") {
       period_step <- months(1)
-    } else if (is.null(params$aggregate_range)) {
-      stop("aggregate_range setting must be provided in params")
+    } else {
+      period_step <- days(7)
     }
     
     params$end_date <- ifelse(
@@ -360,7 +361,7 @@ run_contingency_tables_many_periods <- function(params, aggregations)
       
       # Update start/end date and time.
       period_params$end_date <- end_date
-      if ( !(end_date == end_dates[1]) ) {
+      if ( end_date != end_dates[1] ) {
         period_params$start_date <- NULL
       }
       

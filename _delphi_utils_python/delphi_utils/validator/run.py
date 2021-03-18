@@ -14,7 +14,7 @@ def run_module():
     validator.validate().print_and_exit()
 
 
-def from_params(params):
+def validator_from_params(params):
     """Construct a validator from `params`.
 
     Arguments

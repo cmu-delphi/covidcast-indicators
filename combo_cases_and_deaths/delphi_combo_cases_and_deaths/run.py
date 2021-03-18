@@ -86,7 +86,7 @@ def compute_special_geo_dfs(df, signal, geo):
     return df
 
 
-def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
+def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals.
 
     For hhs and nation, fetch the county `num` data so we can compute the proportions correctly
@@ -95,10 +95,18 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     is_special_geo = geo in ["hhs", "nation"]
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
-    print("Fetching usa-facts...")
-    usafacts_df = fetcher("usa-facts", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
-    print("Fetching jhu-csse...")
-    jhu_df = fetcher("jhu-csse", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
+    usafacts_df = fetcher(
+        "usa-facts", signal_to_fetch,
+        date_range[0], date_range[1],
+        geo_to_fetch,
+        issues=issue_range
+    )
+    jhu_df = fetcher(
+        "jhu-csse", signal_to_fetch,
+        date_range[0], date_range[1],
+        geo_to_fetch,
+        issues=issue_range
+    )
     if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
        (geo_to_fetch not in ('state', 'county') or
         check_none_data_frame(jhu_df, "JHU", date_range)):
@@ -126,6 +134,14 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
             # se and sample size are required later so we add them back.
             combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
+
+    # default sort from API is ORDER BY signal, time_value, geo_value, issue
+    # we want to drop all but the most recent (last) issue
+    combined_df.drop_duplicates(
+        subset=["geo_id", "timestamp"],
+        keep="last",
+        inplace=True
+    )
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):
@@ -167,44 +183,65 @@ def configure(variants, params):
     """Validate params file and set date range."""
     params['indicator']['export_start_date'] = date(*params['indicator']['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
-    if params['indicator']['date_range'] == 'new':
+    next_day = next_missing_day(
+        params['indicator']["source"],
+        set(signal[-1] for signal in variants)
+    )
+    configure_range(params, 'date_range', yesterday, next_day)
+    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues
+    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=7))
+    return params
+
+def configure_range(params, range_param, yesterday, next_day):
+    """Configure a parameter which stores a range of dates.
+
+    May be specified in params.json as:
+      "new" - set to [next_day, yesterday]
+      "all" - set to [export_start_date, yesterday]
+      yyyymmdd-yyyymmdd - set to exact range
+    """
+    if range_param not in params['indicator'] or params['indicator'][range_param] == 'new':
         # only create combined file for the newest update
         # (usually for yesterday, but check just in case)
-        params['indicator']['date_range'] = [
+        params['indicator'][range_param] = [
             min(
                 yesterday,
-                next_missing_day(
-                    params['indicator']["source"],
-                    set(signal[-1] for signal in variants)
-                )
+                next_day
             ),
             yesterday
         ]
-    elif params['indicator']['date_range'] == 'all':
+    elif params['indicator'][range_param] == 'all':
         # create combined files for all of the historical reports
-        params['indicator']['date_range'] = [params['indicator']['export_start_date'], yesterday]
+        if range_param == 'date_range':
+            params['indicator'][range_param] = [params['indicator']['export_start_date'], yesterday]
+        elif range_param == 'issue_range':
+            # for issue_range=all we want the latest issue for all requested
+            # dates, aka the default when issue is unspecified
+            params['indicator'][range_param] = None
+        else:
+            raise ValueError(
+                f"Bad Programmer: Invalid range_param '{range_param}';"
+                f"expected 'date_range' or 'issue_range'")
     else:
-        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['indicator']['date_range'])
+        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['indicator'][range_param])
         if len(match_res) == 0:
             raise ValueError(
-                "Invalid date_range parameter. Please choose from (new, all, yyyymmdd-yyyymmdd).")
+                f"Invalid {range_param} parameter. Try (new, all, yyyymmdd-yyyymmdd).")
         try:
-            date1 = datetime.strptime(params['indicator']['date_range'][:8], '%Y%m%d').date()
+            date1 = datetime.strptime(params['indicator'][range_param][:8], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
-                "Invalid date_range parameter. Please check the first date.") from error
+                f"Invalid {range_param} parameter. Please check the first date.") from error
         try:
-            date2 = datetime.strptime(params['indicator']['date_range'][-8:], '%Y%m%d').date()
+            date2 = datetime.strptime(params['indicator'][range_param][-8:], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
-                "Invalid date_range parameter. Please check the second date.") from error
+                f"Invalid {range_param} parameter. Please check the second date.") from error
 
-        #The the valid start date
+        # ensure valid start date
         if date1 < params['indicator']['export_start_date']:
             date1 = params['indicator']['export_start_date']
-        params['indicator']['date_range'] = [date1, date2]
-    return params
-
+        params['indicator'][range_param] = [date1, date2]
 
 def run_module(params):
     """
@@ -237,7 +274,8 @@ def run_module(params):
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,
                                       geo_res,
-                                      extend_raw_date_range(params, sensor_name))
+                                      extend_raw_date_range(params, sensor_name),
+                                      params['indicator']['issue_range'])
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         start_date = pd.to_datetime(params['indicator']['export_start_date'])
         export_dir = params["common"]["export_dir"]

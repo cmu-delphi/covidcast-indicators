@@ -73,23 +73,23 @@ def to_covidcast_df(df:pd.DataFrame, lag_col:str, time_value_col:str,
     """
     for col in [lag_col,  sample_size_col, value_col]:
         try:
-            df[col] = df[col.astype(float)]
+            df[col] = df[col].astype(float)
         except ValueError:
             raise ValueError("Values in %s are invalid."%col)
             
     try:
-        assert df[time_value_col] == 'datetime64[ns]'
+        assert df[time_value_col].dtype == 'datetime64[ns]'
     except AssertionError:
         raise ValueError("The values in the time_value_col should be in \
                          datetime64[ns] format.")
         
     df.rename({lag_col: "lag", time_value_col: "time_value",
                geo_value_col: "geo_value", sample_size_col: "sample_size",
-               value_col: "value"}, inplace=True)
+               value_col: "value"}, axis=1, inplace=True)
     return df
 
 
-def to_backfill_df(df, signal, data_type = "completeness",
+def to_backfill_df(df, data_type = "completeness",
                    value_type="total_count", ref_lag=60):
     """
     Conform the dataset in COVIDcast API format into a backfill dataset.
@@ -114,9 +114,6 @@ def to_backfill_df(df, signal, data_type = "completeness",
     ----------
     df : pd.DataFrame
         Dataset in COVIDcast API format
-    signal : str
-        String identifying the signal from that source to query, such as 
-        "smoothed_cli"
     data_type : str, optional
         Either "completeness" or "log_dailychange". 
         The default is "completeness".
@@ -148,10 +145,11 @@ def to_backfill_df(df, signal, data_type = "completeness",
                               columns="lag").reset_index()
 
     if data_type == "completeness":
-        if ref_lag >= df["lag"].max():
-            print("Not enough days available. ref_lag larger than the \
-                  maxmimum lag included in the provided dataset.")
-            return None
+        try:
+            assert ref_lag <= df["lag"].max()
+        except AssertionError:
+            raise ValueError("Not enough days available. ref_lag larger than \
+                             the maxmimum lag included in the provided dataset.")
 
         for i in range(df["lag"].min(), df["lag"].max() + 1):
             if i == ref_lag:
@@ -183,10 +181,10 @@ def to_backfill_df(df, signal, data_type = "completeness",
 
 
 
-def create_heatmap_over_refdate(save_dir:str, backfill_df:pd.DataFrame, 
-                                source:str, signal:str, 
-                                start_date:datetime, end_date:datetime, 
-                                geo_values=None, max_lag=90):
+def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame, 
+                                source:str, start_date:datetime, 
+                                end_date:datetime, geo_values=None, 
+                                max_lag=90):
     """
     Create heatmaps of the backfill estimates by lags and reference date for
     each location specified in the geo_values.
@@ -203,13 +201,12 @@ def create_heatmap_over_refdate(save_dir:str, backfill_df:pd.DataFrame,
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
-    signal : str
-        String identifying the signal from that source to query, such as 
-        "smoothed_cli".
     start_date : datetime
         Display data beginning on this date.
     end_date : datetime
-        Display data up to this date, inclusive.
+        Display data up to this date, inclusive. In order to have informative
+        visualization, the end_date should be at least ref_lag days latter than
+        the start_date.
     geo_values : list of str, optional
         The list of locations for which the heatmaps will be created. 
         The default is None, which means all the locations included in the 
@@ -287,10 +284,10 @@ def create_heatmap_over_refdate(save_dir:str, backfill_df:pd.DataFrame,
         ax.set_yticklabels(time_index[selected_ytix])
         ax.set_xticks(xtix[::5])
         plt.savefig(save_dir+"/"+str(geo)+".png")
-    return 
+    return
 
-def create_lineplot_over_loations(save_dir:str, backfill_df:pd.DataFrame, 
-                                  source:str, signal:str, fig_name:str, 
+def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame, 
+                                  source:str, fig_name:str, 
                                   start_date:datetime, end_date:datetime, 
                                   geo_values=None, max_lag=90):
     """
@@ -336,7 +333,7 @@ def create_lineplot_over_loations(save_dir:str, backfill_df:pd.DataFrame,
     
     if not geo_values:
         geo_values = backfill_df["geo_value"].unique() 
-    max_lag =min(backfill_df["lag"].min(), max_lag)
+    max_lag =min(backfill_df["lag"].max(), max_lag)
     
     line_df = backfill_df.loc[(backfill_df["lag"] <=max_lag)
                               & (backfill_df["time_value"]<=end_date)
@@ -383,10 +380,10 @@ def create_lineplot_over_loations(save_dir:str, backfill_df:pd.DataFrame,
     plt.savefig(save_dir+"/"+fig_name+".png", bbox_inches='tight')
     return 
 
-def create_violinplot_over_lag(save_dir: str, backfill_df:pd.DataFrame, 
-                               source:str, signal:str, 
-                               start_date:datetime, end_date:datetime, 
-                               geo_values=None, max_lag=90):
+def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame, 
+                               source:str, start_date:datetime, 
+                               end_date:datetime, geo_values=None, 
+                               max_lag=90):
     """
     Create violinplots of the backfill estimates by lags and location across
     a certain rane of reference date for each location specified in geo_values.
@@ -403,9 +400,6 @@ def create_violinplot_over_lag(save_dir: str, backfill_df:pd.DataFrame,
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
-    signal : str
-        String identifying the signal from that source to query, such as 
-        "smoothed_cli".
     start_date : datetime
         Display data beginning on this date.
     end_date : datetime
@@ -475,8 +469,7 @@ def create_violinplot_over_lag(save_dir: str, backfill_df:pd.DataFrame,
     return 
 
 def create_summary_plots(save_dir, backfill_df, 
-                         source, signal, 
-                         start_date, end_date, 
+                         source, start_date, end_date, 
                          geo_values=None, max_lag=90):
     """
     Create two summary plots for the backfill dateframe. 
@@ -497,9 +490,6 @@ def create_summary_plots(save_dir, backfill_df,
         or daily change rate.
     source : str
         String identifying the data source to query, such as "fb-survey".
-    signal : str
-        String identifying the signal from that source to query, such as 
-        "smoothed_cli".
     start_date : datetime
         Display data beginning on this date.
     end_date : datetime
@@ -524,6 +514,11 @@ def create_summary_plots(save_dir, backfill_df,
     if not geo_values:
         geo_values = backfill_df["geo_value"].unique()      
     max_lag =min(backfill_df["lag"].max(), max_lag)
+    try:
+        assert (end_date - start_date).days + 1 >= max_lag
+    except AssertionError:
+        raise ValueError("Not enough data. The end_date should be at least \
+                         max_lag days latter than the start_date")
     end_date = end_date-timedelta(days=max_lag)
     
     line_df = backfill_df.loc[(backfill_df["lag"] <=max_lag)
@@ -573,7 +568,7 @@ def create_summary_plots(save_dir, backfill_df,
     plt.legend(loc="upper left")
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15)
-    plt.savefig(save_dir+"/lineplot_over_lag.png", bbox_inches='tight')
+    plt.savefig(save_dir+"/lineplot_by_lag.png", bbox_inches='tight')
     
     
     
@@ -591,7 +586,7 @@ def create_summary_plots(save_dir, backfill_df,
     plt.legend(loc="upper left")
     plt.yticks(fontsize=15)
     plt.xticks(fontsize=15, rotation=45)
-    plt.savefig(save_dir+"/lineplot_over_date.png", bbox_inches='tight')
+    plt.savefig(save_dir+"/lineplot_by_date.png", bbox_inches='tight')
     return 
     
 
@@ -632,9 +627,16 @@ def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
         The two-tailed p-value.
 
     """
-    if geo_value not in backfill_df["geo_value"]:
-        print("Invalid geo_value.")
-        return
+    try:
+        assert geo_value in backfill_df["geo_value"].values
+    except AssertionError:
+        raise ValueError("Invalid geo_value.")
+        
+    try:
+        assert lag in backfill_df["lag"].values
+    except AssertionError:
+        raise ValueError("Invalid lag.")
+
     test_data = backfill_df.loc[(backfill_df["geo_value"] == geo_value)
                                 & (backfill_df["time_value"]<=test_end_date)
                                 & (backfill_df["time_value"]>=test_start_date)
@@ -699,7 +701,7 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
 
     """
     summary_df = pd.DataFrame(columns=["geo_value", "lag", 
-                                       "p", "t_statistics"])
+                                       "t_statistics", "p"])
     i = 0
     if not geo_values:
         geo_values = backfill_df["geo_value"].unique() 

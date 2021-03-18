@@ -55,7 +55,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
-  # For each unique combination of groupby_vars and geo level, run aggregation process once
+  # For each unique combination of group_vars and geo level, run aggregation process once
   # and calculate all desired aggregations on the grouping. Rename columns. Save
   # to individual files
   for (group_ind in seq_along(agg_groups$group_by)) {
@@ -248,16 +248,16 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## inefficient; profiling shows the cost to be negligible, so shut it up
   df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
 
-  groupby_vars <- aggregations$group_by[[1]]
+  group_vars <- aggregations$group_by[[1]]
 
-  if (all(groupby_vars %in% names(df))) {
-    unique_group_combos <- unique(df[, groupby_vars, with=FALSE])
+  if (all(group_vars %in% names(df))) {
+    unique_group_combos <- unique(df[, group_vars, with=FALSE])
     unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
   } else {
     msg_plain(
       sprintf(
         "not all of groupby columns %s available in data; skipping aggregation",
-        paste(groupby_vars, collapse=", ")
+        paste(group_vars, collapse=", ")
       ))
   }
 
@@ -268,7 +268,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
-  setindexv(df, groupby_vars)
+  setindexv(df, group_vars)
 
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
@@ -301,15 +301,15 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## Do post-processing.
   for (row in seq_len(nrow(aggregations))) {
     aggregation <- aggregations$id[row]
-    groupby_vars <- aggregations$group_by[[row]]
+    group_vars <- aggregations$group_by[[row]]
     post_fn <- aggregations$post_fn[[row]]
 
     dfs_out[[aggregation]] <- dfs_out[[aggregation]][
-      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", groupby_vars)])) == 0,
+      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", group_vars)])) == 0,
     ]
 
     if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, groupby_vars)
+      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, group_vars)
       dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
     }
 

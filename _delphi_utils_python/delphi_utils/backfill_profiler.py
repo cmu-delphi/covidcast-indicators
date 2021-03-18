@@ -582,13 +582,11 @@ def create_summary_plots(save_dir, backfill_df,
     plt.xticks(fontsize=15, rotation=45)
     plt.savefig(save_dir+"/lineplot_by_date.png", bbox_inches='tight')
 
-
-
 def backfill_mean_check(backfill_df:pd.DataFrame, lag:int, geo_value,
                         test_start_date:datetime, test_end_date:datetime,
                         train_start_date:datetime, train_end_date:datetime):
     """Conduct a two-sided t-test for the null hypothesis that 2 independent
-    samples have identical average (expected) values. 
+    samples have identical average (expected) values.
 
     This test assumes that the populations have unknown variance.
     Calculate the T-test for the means of the backfill estimates of two time
@@ -662,7 +660,7 @@ def create_mean_check_df(save_dir:str, backfill_df:pd.DataFrame,
                       train_start_date:datetime, train_end_date:datetime,
                       lags=None, geo_values=None):
     """Create a csv file for the results of the two-sided t-tests as described
-    in backfill_mean_check function. 
+    in backfill_mean_check function.
 
     The t-tests will be conducted for each lag and each location.
 

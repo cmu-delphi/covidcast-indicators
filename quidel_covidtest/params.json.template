@@ -17,5 +17,21 @@
     "bucket_name": "",
     "wip_signal": [""],
     "test_mode": false
-  }
+  },
+  "validation": {
+    "common": {
+      "data_source": "quidel",
+      "span_length": 14,
+      "end_date": "today",
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 50
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "covid_ag_smoothed_pct_positive"
+      ]
+    }
 }

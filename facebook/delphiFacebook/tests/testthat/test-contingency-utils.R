@@ -7,6 +7,7 @@ test_that("testing update_params command", {
   # Empty input list
   params <- list(
     input = c(),
+    use_input_asis = TRUE,
     aggregate_range = "month",
     end_date = "2020-02-01",
     input_dir = "./input"
@@ -17,6 +18,7 @@ test_that("testing update_params command", {
   # Use specified end date
   input_params <- list(
     input = c("full_response.csv"),
+    use_input_asis = TRUE,
     aggregate_range = "month",
     end_date = "2020-02-01"
   )
@@ -25,15 +27,15 @@ test_that("testing update_params command", {
   
   expected_output <- list(
     input = c("full_response.csv"),
+    use_input_asis = TRUE,
     aggregate_range = "month",
     end_date = ymd("2020-01-31"),
-    start_time = ymd_hms("2020-01-01 00:00:00", tz=timezone),
     end_time = ymd_hms("2020-01-31 23:59:59", tz=timezone),
+    start_time = ymd_hms("2020-01-01 00:00:00", tz=timezone),
     start_date = ymd("2020-01-01")
     )
   
   out <- update_params(input_params)
-  
   expect_identical(out, expected_output)
 })
 
@@ -56,6 +58,7 @@ test_that("testing get_filenames_in_range command", {
   
   params <- list(
     input = c(),
+    use_input_asis = FALSE,
     backfill_days = 4,
     input_dir = tdir
   )
@@ -69,28 +72,6 @@ test_that("testing get_filenames_in_range command", {
   )
   
   out <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-  
-  expect_equal(out, expected_output)
-})
-
-test_that("testing get_date_range_from_filenames command", {
-  files <- c(
-    "2019-11-06.2019-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
-    "2019-12-31.2019-12-24_With_Translations.csv",
-    "2020-01-06.2019-12-31_Wave_4.csv",
-    "2020-01-16.2020-01-09_YouTube.csv",
-    "2020-01-16.2020-01-09_Wave_4.csv",
-    "2020-02-06.2020-01-31_Wave_4.csv",
-    "2020-02-16.2020-02-09_Wave_3.csv"
-  )
-  
-  params <- list(
-    backfill_days = 4,
-    input = files
-  )
-  
-  expected_output <- list(ymd("2019-10-30"), ymd("2020-02-16"))
-  out <- get_date_range_from_filenames(params)
   
   expect_equal(out, expected_output)
 })

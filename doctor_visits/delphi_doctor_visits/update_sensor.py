@@ -24,7 +24,7 @@ from .sensor import DoctorVisitsSensor
 from .weekday import Weekday
 
 
-def write_to_csv(output_dict, se, out_name, output_path="."):
+def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="."):
     """Write sensor values to csv.
 
     Args:
@@ -33,68 +33,56 @@ def write_to_csv(output_dict, se, out_name, output_path="."):
       out_name: name of the output file
       output_path: outfile path to write the csv (default is current directory)
     """
-
     if se:
         logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
-    geo_level = output_dict["geo_level"]
-    dates = output_dict["dates"]
-    geo_ids = output_dict["geo_ids"]
-    all_rates = output_dict["rates"]
-    all_se = output_dict["se"]
-    all_include = output_dict["include"]
-
     out_n = 0
-    for i, d in enumerate(dates):
+    for d in set(output_df["date"]):
         filename = "%s/%s_%s_%s.csv" % (output_path,
                                         (d + Config.DAY_SHIFT).strftime("%Y%m%d"),
                                         geo_level,
                                         out_name)
-
+        single_date_df = output_df[output_df["date"] == d]
         with open(filename, "w") as outfile:
             outfile.write("geo_id,val,se,direction,sample_size\n")
 
-            for geo_id in geo_ids:
-                sensor = all_rates[geo_id][i] * 100  # report percentage
-                se_val = all_se[geo_id][i] * 100
+            for line in single_date_df.itertuples():
+                geo_id = line.geo_id
+                sensor = 100 * line.val # report percentages
+                se_val = 100 * line.se
+                assert not np.isnan(sensor), "sensor value is nan, check pipeline"
+                assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
+                if not np.isnan(se_val):
+                    assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
 
-                if all_include[geo_id][i]:
-                    assert not np.isnan(sensor), "sensor value is nan, check pipeline"
-                    assert sensor < 90, f"strangely high percentage {geo_id, sensor}"
-                    if not np.isnan(se_val):
-                        assert se_val < 5, f"standard error suspiciously high! investigate {geo_id}"
-
-                    if se:
-                        assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
-                        outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
-                    else:
-                        # for privacy reasons we will not report the standard error
-                        outfile.write(
-                            "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
-                    out_n += 1
-    logging.debug(f"wrote {out_n} rows for {len(geo_ids)} {geo_level}")
+                if se:
+                    assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
+                    outfile.write(
+                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
+                else:
+                    # for privacy reasons we will not report the standard error
+                    outfile.write(
+                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
+                out_n += 1
+    logging.debug(f"wrote {out_n} rows for {geo_level}")
 
 
 def update_sensor(
-        filepath, outpath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se, prefix=None
+        filepath, startdate, enddate, dropdate, geo, parallel,
+        weekday, se
 ):
-    """Generate sensor values, and write to csv format.
+    """Generate sensor values.
 
     Args:
       filepath: path to the aggregated doctor-visits data
-      outpath: output path for the csv results
       startdate: first sensor date (YYYY-mm-dd)
       enddate: last sensor date (YYYY-mm-dd)
       dropdate: data drop date (YYYY-mm-dd)
-      geo: geographic resolution, one of ["county", "state", "msa", "hrr"]
+      geo: geographic resolution, one of ["county", "state", "msa", "hrr", "nation", "hhs"]
       parallel: boolean to run the sensor update in parallel
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
-      prefix: string to prefix to output files (used for obfuscation in producing SEs)
     """
-
     # as of 2020-05-11, input file expected to have 10 columns
     # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
     # value cols: Denominator, Covid_like, Flu_like, Flu1, Mixed
@@ -132,36 +120,24 @@ def update_sensor(
     fit_dates = drange(Config.FIRST_DATA_DATE, dropdate)
     burn_in_dates = drange(burnindate, dropdate)
     sensor_dates = drange(startdate, enddate)
+    # The ordering of sensor dates corresponds to the order of burn-in dates
     final_sensor_idxs = np.where(
-        (burn_in_dates >= startdate) & (burn_in_dates <= enddate))
+        (burn_in_dates >= startdate) & (burn_in_dates <= enddate))[0][:len(sensor_dates)]
 
     # handle if we need to adjust by weekday
     params = Weekday.get_params(data) if weekday else None
 
     # handle explicitly if we need to use Jeffreys estimate for binomial proportions
-    jeffreys = True if se else False
+    jeffreys = bool(se)
 
     # get right geography
     geo_map = GeoMaps()
-    if geo.lower() == "county":
-        data_groups, _ = geo_map.county_to_megacounty(
-            data, Config.MIN_RECENT_VISITS, Config.RECENT_LENGTH
-        )
-    elif geo.lower() == "state":
-        data_groups, _ = geo_map.county_to_state(data)
-    elif geo.lower() == "msa":
-        data_groups, _ = geo_map.county_to_msa(data)
-    elif geo.lower() == "hrr":
-        data_groups, _ = geo_map.county_to_hrr(data)
-    else:
-        logging.error(f"{geo} is invalid, pick one of 'county', 'state', 'msa', 'hrr'")
-        return False
+    mapping_func = geo_map.geo_func[geo.lower()]
+    data_groups, _ = mapping_func(data)
     unique_geo_ids = list(data_groups.groups.keys())
 
     # run sensor fitting code (maybe in parallel)
-    sensor_rates = {}
-    sensor_se = {}
-    sensor_include = {}
+    out = []
     if not parallel:
         for geo_id in unique_geo_ids:
             sub_data = data_groups.get_group(geo_id).copy()
@@ -172,14 +148,13 @@ def update_sensor(
                 sub_data,
                 fit_dates,
                 burn_in_dates,
+                final_sensor_idxs,
                 geo_id,
                 Config.MIN_RECENT_VISITS,
                 Config.MIN_RECENT_OBS,
                 jeffreys
             )
-            sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-            sensor_se[geo_id] = res["se"][final_sensor_idxs]
-            sensor_include[geo_id] = res["incl"][final_sensor_idxs]
+            out.append(res)
 
     else:
         n_cpu = min(10, cpu_count())
@@ -199,6 +174,7 @@ def update_sensor(
                             sub_data,
                             fit_dates,
                             burn_in_dates,
+                            final_sensor_idxs,
                             geo_id,
                             Config.MIN_RECENT_VISITS,
                             Config.MIN_RECENT_OBS,
@@ -206,30 +182,6 @@ def update_sensor(
                         ),
                     )
                 )
-            pool_results = [proc.get() for proc in pool_results]
+            out = [proc.get() for proc in pool_results]
 
-            for res in pool_results:
-                geo_id = res["geo_id"]
-                sensor_rates[geo_id] = res["rate"][final_sensor_idxs]
-                sensor_se[geo_id] = res["se"][final_sensor_idxs]
-                sensor_include[geo_id] = res["incl"][final_sensor_idxs]
-
-    unique_geo_ids = list(sensor_rates.keys())
-    output_dict = {
-        "rates": sensor_rates,
-        "se": sensor_se,
-        "dates": sensor_dates,
-        "geo_ids": unique_geo_ids,
-        "geo_level": geo,
-        "include": sensor_include,
-    }
-
-    # write out results
-    out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
-    if se:
-        assert prefix is not None, "template has no obfuscated prefix"
-        out_name = prefix + "_" + out_name
-
-    write_to_csv(output_dict, se, out_name, outpath)
-    logging.debug(f"wrote files to {outpath}")
-    return True
+    return pd.concat(out)

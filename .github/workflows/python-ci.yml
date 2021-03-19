@@ -34,7 +34,6 @@ jobs:
       run: |
         make install
     - name: Lint
-      if: ${{ matrix.packages != 'doctor_visits' }}
       run: |
         make lint
     - name: Test

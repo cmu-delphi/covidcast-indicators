@@ -50,15 +50,13 @@ def split_complaints(complaints, n=49):
 
 
 def report_complaints(all_complaints, slack_notifier):
-    """Post complaints to Slack."""
-    if not slack_notifier:
-        print("(dry-run)")
-        return
+    """Log complaints and optionally post to Slack."""
 
     for complaints in split_complaints(all_complaints):
-        blocks = format_complaints_aggregated_by_source(complaints)
-        print(f"blocks: {len(blocks)}")
-        slack_notifier.post_message(blocks)
+        blocks = format_and_log_complaints_aggregated_by_source(complaints)
+
+        if slack_notifier:
+            slack_notifier.post_message(blocks)
 
 def get_maintainers_block(complaints):
     """Build a Slack block to alert maintainers to pay attention."""
@@ -79,7 +77,7 @@ def get_maintainers_block(complaints):
     return maintainers_block
 
 
-def format_complaints_aggregated_by_source(complaints):
+def format_and_log_complaints_aggregated_by_source(complaints):
     """Build formatted Slack message for posting to the API, aggregating
     complaints by source to reduce the number of blocks."""
 

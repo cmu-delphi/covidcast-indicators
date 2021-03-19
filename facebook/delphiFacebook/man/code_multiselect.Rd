@@ -11,9 +11,9 @@ code_multiselect(df, aggregations, col_var)
 
 \item{aggregations}{Data frame with columns `name`, `var_weight`, `metric`,
 `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
-to report. `name` is the aggregate's base column name; `var_weight` is the 
+to report. `name` is the aggregate's base column name; `var_weight` is the
 column to use for its weights; `metric` is the column of `df` containing the
-response value. `group_by` is a list of variables used to perform the 
+response value. `group_by` is a list of variables used to perform the
 aggregations over. `compute_fn` is the function that computes
 the aggregate response given many rows of data. `post_fn` is applied to the
 aggregate data after megacounty aggregation, and can perform any final
@@ -22,7 +22,7 @@ calculations necessary.}
 \item{col_var}{Name of response var}
 }
 \value{
-list of data frame of individual response data and user-set data 
+list of data frame of individual response data and user-set data
 frame of desired aggregations
 }
 \description{

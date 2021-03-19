@@ -11,9 +11,9 @@ from delphi_changehc.sensor import CHCSensor
 CONFIG = Config()
 PARAMS = {
     "indicator": {
-        "input_denom_file": "test_data/20200601_All_Outpatients_By_County.dat",
-        "input_covid_file": "test_data/20200601_Covid_Outpatients_By_County.dat",
-        "drop_date": "2020-02-02"
+        "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
+        "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "drop_date": "2020-06-01"
     }
 }
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
@@ -53,15 +53,17 @@ class TestLoadData:
     def test_fit_fips(self):
         date_range = pd.date_range("2020-05-01", "2020-05-20")
         all_fips = self.combined_data.index.get_level_values('fips').unique()
-        sample_fips = nr.choice(all_fips, 10)
-
-        for fips in sample_fips:
+        for fips in all_fips:
             sub_data = self.combined_data.loc[fips]
             sub_data = sub_data.reindex(date_range, fill_value=0)
             res0 = CHCSensor.fit(sub_data, date_range[0], fips)
-            # first value is burn-in
-            assert np.min(res0["rate"][1:]) > 0
-            assert np.max(res0["rate"][1:]) <= 100
+
+            if np.isnan(res0["rate"]).all():
+                assert res0["incl"].sum() == 0
+            else:
+                # first value is burn-in
+                assert np.min(res0["rate"][1:]) > 0
+                assert np.max(res0["rate"][1:]) <= 100
 
             if np.all(np.isnan(res0["se"])):
                 assert res0["incl"].sum() == 0

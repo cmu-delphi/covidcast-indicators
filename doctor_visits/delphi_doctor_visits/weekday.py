@@ -17,7 +17,7 @@ class Weekday:
 
     @staticmethod
     def get_params(data):
-        """Correct a signal estimated as numerator/denominator for weekday effects.
+        r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
         t. Instead, model
@@ -54,7 +54,6 @@ class Weekday:
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
         """
-
         denoms = data.groupby(Config.DATE_COL).sum()["Denominator"]
         nums = data.groupby(Config.DATE_COL).sum()[Config.CLI_COLS + Config.FLU1_COL]
 
@@ -115,7 +114,6 @@ class Weekday:
         -- this has the same effect.
 
         """
-
         for i, c in enumerate(Config.CLI_COLS + Config.FLU1_COL):
             wd_correction = np.zeros((len(sub_data[c])))
 

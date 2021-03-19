@@ -17,6 +17,7 @@ rm -f ./receiving/*
 # Run the indicator code.
 echo "Running the indicator..."
 env/bin/python -m delphi_safegraph_patterns
+env/bin/python -m delphi_utils.validator
 
 # Copy the files to the ingestion directory.
 # The unwieldy one-liner does the following:

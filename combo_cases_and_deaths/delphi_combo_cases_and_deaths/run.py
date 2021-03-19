@@ -100,7 +100,7 @@ def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
     # For MSA and HRR level, they are the same
     elif geo == 'msa':
-        df = GMPR._load_crosswalk("fips", "msa")
+        df = GMPR._load_crosswalk("fips", "msa") # pylint: disable=protected-access
         puerto_rico_mask = df["fips"].str.startswith("72")
         puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
         combined_df = maybe_append(
@@ -148,7 +148,9 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
 
-    unique_dates = get_updated_dates(signal_to_fetch, geo_to_fetch, date_range, issue_range, fetcher)
+    unique_dates = get_updated_dates(
+        signal_to_fetch, geo_to_fetch, date_range, issue_range, fetcher
+    )
 
     # This occurs if the usafacts ~and the jhu query were empty
     if unique_dates is None:

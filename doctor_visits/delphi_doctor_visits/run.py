@@ -68,7 +68,7 @@ def run_module(params):
     logging.info("n_waiting_days:\t{n_waiting_days}")
 
     ## geographies
-    geos = ["state", "msa", "hrr", "county"]
+    geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
 
     ## print out other vars

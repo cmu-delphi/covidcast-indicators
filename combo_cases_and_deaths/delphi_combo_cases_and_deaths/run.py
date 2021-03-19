@@ -86,33 +86,23 @@ def compute_special_geo_dfs(df, signal, geo):
     return df
 
 
-def merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch):
+def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
     """Combine the queried usafacts and jhu dataframes based on the geo type."""
     # State level
-    if geo_to_fetch == 'state':
+    if geo == 'state':
         combined_df = maybe_append(
             usafacts_df,
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
     # County level
-    elif geo_to_fetch == 'county':
+    elif geo == 'county':
         combined_df = maybe_append(
             usafacts_df,
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
     # For MSA and HRR level, they are the same
-    elif geo_to_fetch == 'msa':
-        # df = GMPR._load_crosswalk("fips", "msa")
-        # puerto_rico_fips = ["72" + str(i).zfill(3) for i in range(999)]
-        # puerto_rico_msas = df[df["fips"].isin(puerto_rico_fips)]["msa"].unique()
-        puerto_rico_msas = [
-            '10380',
-            '11640',
-            '25020',
-            '32420',
-            '38660',
-            '41900',
-            '41980',
-            '49500'
-        ]
+    elif geo == 'msa':
+        df = GMPR._load_crosswalk("fips", "msa")
+        puerto_rico_mask = df["fips"].str.startswith("72")
+        puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
         combined_df = maybe_append(
             usafacts_df,
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].isin(puerto_rico_msas)])
@@ -125,29 +115,25 @@ def merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch):
 
 def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
     """Return the unique dates of the values that were updated in a given issue range in a geo."""
-    is_special_geo = geo in ["hhs", "nation"]
-    geo_to_fetch = "county" if is_special_geo else geo
-    signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
-
     usafacts_df = fetcher(
-        "usa-facts", signal_to_fetch,
+        "usa-facts", signal,
         date_range[0], date_range[1],
-        geo_to_fetch,
+        geo,
         issues=issue_range
     )
     jhu_df = fetcher(
-        "jhu-csse", signal_to_fetch,
+        "jhu-csse", signal,
         date_range[0], date_range[1],
-        geo_to_fetch,
+        geo,
         issues=issue_range
     )
 
     if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
-       (geo_to_fetch not in ('state', 'county', 'msa') or
+       (geo not in ('state', 'county', 'msa') or
         check_none_data_frame(jhu_df, "JHU", date_range)):
         return None
 
-    merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch)
+    merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo)
     unique_dates = merged_df["timestamp"].unique()
     return unique_dates
 
@@ -162,27 +148,27 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
 
-    unique_dates = get_updated_dates(signal, geo, date_range, issue_range, fetcher)
+    unique_dates = get_updated_dates(signal_to_fetch, geo_to_fetch, date_range, issue_range, fetcher)
+
     # This occurs if the usafacts ~and the jhu query were empty
     if unique_dates is None:
         return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
-    # Requery each date with as_of=today, so that every geo is represented
-    query_date_pairs = [(date, date) for date in unique_dates]
-    dfs = []
-    for start, end in query_date_pairs:
-        usafacts_df = fetcher(
-            "usa-facts", signal_to_fetch,
-            start, end,
-            geo_to_fetch,
-        )
-        jhu_df = fetcher(
-            "jhu-csse", signal_to_fetch,
-            start, end,
-            geo_to_fetch,
-        )
-        dfs.append(merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch))
-    # Always non-empty, since the dates were already present in at least on query
-    combined_df = pd.concat(dfs)
+
+    # Query only the represented window so that every geo is represented; a single window call is
+    # faster than a fetch for every date in unique_dates even in cases of 1:10 sparsity,
+    # i.e., len(unique_dates):len(max(unique_dates) - min(unique_dates))
+    query_min, query_max = unique_dates.min(), unique_dates.max()
+    usafacts_df = fetcher(
+        "usa-facts", signal_to_fetch,
+        query_min, query_max,
+        geo_to_fetch,
+    )
+    jhu_df = fetcher(
+        "jhu-csse", signal_to_fetch,
+        query_min, query_max,
+        geo_to_fetch,
+    )
+    combined_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch)
 
     # default sort from API is ORDER BY signal, time_value, geo_value, issue
     # we want to drop all but the most recent (last) issue

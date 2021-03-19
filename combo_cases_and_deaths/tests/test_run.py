@@ -69,7 +69,8 @@ def test_unstable_sources(mock_covidcast_signal):
             [(date.fromordinal(c[0]),geo_val,1,1,1)],
             columns="time_value geo_value value stderr sample_size".split())
     def make_mock(geo):
-        # The first two in each row provide the date for the query of the latter two
+        # The first two in each row provide a unique_date array of the appropriate length for
+        # query of the latter two (in combine_usafacts_and_jhu)
         return [
             # 1 0
             uf(geo), None, uf(geo), None,

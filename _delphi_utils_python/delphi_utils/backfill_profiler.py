@@ -13,7 +13,7 @@ backfill value distribution (+mean (bias) and stderr) for each lag till
 
 """
 import os
-from math import log10, ceil, floor
+from math import log10, ceil, floor, tanh, exp
 from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 
@@ -21,6 +21,16 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from scipy import stats
+
+def logit(x):
+    return 1/1+exp(-3 * x)
+
+def log_trans(x):
+    """
+    Logistic transformation
+    """
+    sign = np.sign(x)
+    return sign * log10((abs(x) + 1))
 
 def check_create_dir(save_dir:str):
     """Create the directory for saving figures if it is not existed.
@@ -100,7 +110,7 @@ def to_backfill_df(df, data_type = "completeness",
       quantity interested, such as the number of positive COVID antigen tests)
     - data_type: Either "completeness" (the percentage of currently reported
       counts against the number of reported counts ref_lag days later)
-      or "log_dailychange" (log10 of the daily change rate)
+      or "dailychange" (log10 of the daily change rate)
     - ref_lag: The fixed lag between the reference date of the estimates and
       the issue date used to be compared when considering "completeness"
 
@@ -110,7 +120,7 @@ def to_backfill_df(df, data_type = "completeness",
     df : pd.DataFrame
         Dataset in COVIDcast API format
     data_type : str, optional
-        Either "completeness" or "log_dailychange".
+        Either "completeness" or "dailychange".
         The default is "completeness".
     value_type : str, optional
         Either "total_count" or "value_count".
@@ -131,9 +141,12 @@ def to_backfill_df(df, data_type = "completeness",
     if value_type == "total_count":
         val_col = "sample_size"
         val_name = "Total counts"
-    else:
+    elif value_type == "value_count":
         val_col = "count"
         val_name = "COVID counts"
+    else:
+        val_col = "value"
+        val_name = "COVID Ratio"
 
     pivot_df = pd.pivot_table(df, values=val_col,
                               index=["geo_value", "time_value"],
@@ -167,11 +180,10 @@ def to_backfill_df(df, data_type = "completeness",
         backfill_df["data_type"] = "completeness"
         backfill_df["ref_lag"] = ref_lag
     else:
-        backfill_df.loc[backfill_df["value"] == 0, "value"] = np.nan
         backfill_df["value_type"] = val_name
-        backfill_df["data_type"] = "log_dailychange"
+        backfill_df["data_type"] = "dailychange"
         backfill_df["ref_lag"] = -1
-        backfill_df["value"] = backfill_df["value"].apply(log10)
+        
 
     return backfill_df
 
@@ -220,24 +232,22 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     """
     check_create_dir(save_dir)
 
-    filtered_backfill_df = backfill_df[backfill_df["lag"]<=max_lag]
-
-    pivot_df = pd.pivot_table(filtered_backfill_df,
-                              values="value",
-                              index=["geo_value", "time_value"],
-                              columns="lag").reset_index()
+    filtered_backfill_df = backfill_df[(backfill_df["lag"]<=max_lag)
+                                       & (backfill_df["time_value"] >= start_date)
+                                       & (backfill_df["time_value"] <= end_date)]
+    
     min_lag = filtered_backfill_df["lag"].min()
     value_type = filtered_backfill_df["value_type"].values[0]
     data_type = filtered_backfill_df["data_type"].values[0]
 
     if not geo_values:
-        geo_values = pivot_df["geo_value"].unique()
-    max_lag =min(backfill_df["lag"].min(), max_lag)
+        geo_values = filtered_backfill_df["geo_value"].unique()
+    max_lag =min(filtered_backfill_df["lag"].max(), max_lag)
 
     if data_type == "completeness":
-        vmax = int((filtered_backfill_df["value"].max()//20 + 1) * 20)
-        vmin = int((filtered_backfill_df["value"].min()//20) * 20)
-        cbar_freq = int((vmax-vmin)/20)
+        vmax = int((filtered_backfill_df["value"].quantile(.99)//20 + 1) * 20)
+        vmin = int((filtered_backfill_df["value"].quantile(.01)//20) * 20)
+        cbar_freq = 21
         cmap = "tab20c_r"
         cbar_label = "Percentage"
         ref_lag = backfill_df["ref_lag"].values[0]
@@ -245,22 +255,35 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                 \nAgainst values reported %d days later\
                 \n%s %s, %s'%(ref_lag, source, value_type, "%s")
     else:
-        vmax = ceil(filtered_backfill_df["value"].max())
-        vmin = floor(filtered_backfill_df["value"].min())
-        cbar_freq = int(vmax/20)
-        cmap = "YlGnBu"
-        cbar_label = "log10(Daily Change Rate)"
+        scale = 2.0 / filtered_backfill_df["value"].quantile(0.95)
+        scale = 10 ** round(log10(scale))
+        filtered_backfill_df["value"] = filtered_backfill_df["value"].apply(lambda x: scale * x).apply(tanh)
+        vmax = (filtered_backfill_df["value"].quantile(.99) // 0.1 + 1) * .1
+        vmin = (filtered_backfill_df["value"].quantile(.01) // .1) * .1
+        cbar_freq = ceil((vmax-vmin)/.1) + 1
+        cmap = "coolwarm"
+        cbar_label = "tanh( %d * Daily Change Rate)"%scale
         ref_lag = 0
         fig_title = 'Daily Change Rate\n%s, %s, %s'%(source, value_type, "%s")
 
     n_days = (end_date - start_date).days + 1 - ref_lag
     time_index = np.array([(start_date + timedelta(i)).date() for i in range(n_days)])
+    
+    
+
+    pivot_df = pd.pivot_table(filtered_backfill_df,
+                              values="value",
+                              index=["geo_value", "time_value"],
+                              columns="lag").reset_index()
+    
 
     for geo in geo_values:
         sns.set(font_scale=1.2)
         heatmap_df = pivot_df.loc[(pivot_df["geo_value"] == geo)
                                   & (pivot_df["time_value"].isin(time_index)),
                                   ["time_value"] + list(range(min_lag, max_lag+1))]
+        if data_type == "dailychange":
+            heatmap_df.insert(loc=1, column=0, value=np.nan)
         heatmap_df.set_index("time_value", inplace=True)
         plt.figure(figsize = (18, 15))
         plt.style.context("ggplot")
@@ -269,7 +292,8 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         ax = sns.heatmap(heatmap_df, annot=False, cmap=cmap, cbar=True,
                          vmax=vmax, vmin=vmin, center=0,
                          cbar_kws=dict(label=cbar_label,
-                                       ticks=list(range(0, vmax+1, cbar_freq))))
+                                       ticks=np.linspace(vmin, vmax,
+                                                         num=cbar_freq)))
         xtix = ax.get_xticks()
         plt.xlabel("Lag", fontsize = 25)
         plt.ylabel("Reference Date", fontsize = 25)
@@ -326,7 +350,7 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     """
     check_create_dir(save_dir)
 
-    if not geo_values:
+    if not geo_values.all(): # TODO
         geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
 
@@ -336,10 +360,12 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     data_type = line_df["data_type"].values[0]
 
     if data_type == "completeness":
-        vmax = int((line_df["value"].max() //20 + 1) * 20)
+        vmax = int((line_df["value"].quantile(.99) //20 + 1) * 20)
         vmin = int((line_df["value"].min() //20) * 20)
+        cbar_freq = ceil((vmax - vmin)/10) + 1
         ref_lag = line_df["ref_lag"].values[0]
         value_type = line_df["value_type"].values[0]
+        legend_loc = "upper left"
         fig_title = 'Percentage of Completion\
                 \nAgainst values reported %d days later\
                 \n%s %s, Mean with 95%% CI \
@@ -347,15 +373,20 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
                                           start_date.date(), end_date.date())
         ylabel = "%Reported"
     else:
-        vmax = ceil(line_df["value"].max())
-        vmin = floor(line_df["value"].min())
+        scale = 2.0 / line_df["value"].quantile(0.95)
+        scale = 10 ** round(log10(scale))
+        line_df["value"] = line_df["value"].apply(lambda x: scale * x).apply(tanh)
+        vmax = (line_df["value"].quantile(.98) // 0.1 + 1) * .1
+        vmin = (line_df["value"].quantile(.01) // .1) * .1
+        cbar_freq = ceil((vmax-vmin)/.1) + 1
         ref_lag = line_df["ref_lag"].values[0]
         value_type = line_df["value_type"].values[0]
+        legend_loc = "upper right"
         fig_title = 'Daily Change Rate\
                 \n%s %s, Mean with 95%% CI \
                 \nReference Date: From %s to %s'%(source, value_type,
                                           start_date.date(), end_date.date())
-        ylabel = "log10(Daily Change Rate)"
+        ylabel = "tanh(%d * Daily Change Rate)"%scale
 
     line_df = line_df[line_df["geo_value"].isin(geo_values)].dropna()
 
@@ -365,12 +396,12 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     plt.xlabel("Lag", fontsize=20)
     plt.ylabel(ylabel, fontsize=20)
     plt.title(fig_title, fontsize=25, loc="left")
-    plt.legend(loc="upper left")
+    plt.legend(loc=legend_loc)
     if data_type == "completeness":
         plt.axhline(90, linestyle = "--")
         plt.axhline(100, linestyle = "--")
-    plt.yticks(np.arange(0, vmax, 10), fontsize=15)
-    plt.xticks(fontsize=15)
+    plt.yticks(np.linspace(vmin, vmax, num=cbar_freq), fontsize=15)
+    plt.xticks(np.linspace(0, 90, num=10), fontsize=15)
     plt.ylim(vmin, vmax)
     plt.savefig(save_dir+"/"+fig_name+".png", bbox_inches='tight')
 

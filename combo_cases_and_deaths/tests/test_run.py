@@ -11,6 +11,8 @@ import numpy as np
 from delphi_combo_cases_and_deaths.run import (
     run_module,
     extend_raw_date_range,
+    add_nancodes,
+    extend_raw_date_range,
     get_updated_dates,
     sensor_signal,
     combine_usafacts_and_jhu,
@@ -18,6 +20,7 @@ from delphi_combo_cases_and_deaths.run import (
     COLUMN_MAPPING)
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
 from delphi_utils.geomap import GeoMapper
+from delphi_utils import Nans
 
 TEST_LOGGER = logging.getLogger()
 
@@ -300,6 +303,21 @@ def test_output_files(mock_combine):
                     continue
                 expected_files += [date + "_" + geo + "_" + metric + ".csv"]
     assert set(csv_files) == set(expected_files)
+
+def test_add_nancodes():
+    df = pd.DataFrame({"geo_id": ["01000", "01001", "01001"],
+                      "val": [50, 100, None],
+                      "timestamp": [20200101, 20200101, 20200101]})
+    expected_df = pd.DataFrame({"geo_id": ["01000", "01001", "01001"],
+                      "val": [50, 100, None],
+                      "timestamp": [20200101, 20200101, 20200101],
+                      "missing_val": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.OTHER],
+                      "missing_se": [Nans.NOT_APPLICABLE] * 3,
+                      "missing_sample_size": [Nans.NOT_APPLICABLE] * 3
+                      })
+    df = add_nancodes(df)
+    pd.testing.assert_frame_equal(df, expected_df)
+
 
 if __name__ == '__main__':
     unittest.main()

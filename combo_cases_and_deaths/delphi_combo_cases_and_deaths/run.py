@@ -28,6 +28,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+EMPTY_FRAME = pd.DataFrame({}, columns=COLUMN_MAPPING.values())
+
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 
@@ -39,18 +41,21 @@ def check_none_data_frame(data_frame, label, date_range):
     return False
 
 
-def maybe_append(df1, df2):
+def maybe_append(usa_facts, jhu):
     """
-    Append dataframes if available, otherwise return non-None one.
+    Append dataframes if available, otherwise return USAFacts.
 
-    If both data frames are available, append them and return. Otherwise, return
-    whichever frame is not None.
+    If both data frames are available, append them and return.
+
+    If only USAFacts is available, return it.
+
+    If USAFacts is not available, return None.
     """
-    if df1 is None:
-        return df2
-    if df2 is None:
-        return df1
-    return df1.append(df2)
+    if usa_facts is None:
+        return None
+    if jhu is None:
+        return usa_facts
+    return usa_facts.append(jhu)
 
 
 def compute_special_geo_dfs(df, signal, geo):
@@ -128,13 +133,12 @@ def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidca
         issues=issue_range
     )
 
-    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
-       (geo not in ('state', 'county', 'msa') or
-        check_none_data_frame(jhu_df, "JHU", date_range)):
+    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range):
         return None
 
     merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo)
-    unique_dates = merged_df["timestamp"].unique()
+    timestamp_mask = merged_df["timestamp"]<=usafacts_df["timestamp"].max()
+    unique_dates = merged_df.loc[timestamp_mask]["timestamp"].unique()
     return unique_dates
 
 
@@ -154,7 +158,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
 
     # This occurs if the usafacts ~and the jhu query were empty
     if unique_dates is None:
-        return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
+        return EMPTY_FRAME
 
     # Query only the represented window so that every geo is represented; a single window call is
     # faster than a fetch for every date in unique_dates even in cases of 1:10 sparsity,

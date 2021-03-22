@@ -234,8 +234,14 @@ def configure(variants, params):
         set(signal[-1] for signal in variants)
     )
     configure_range(params, 'date_range', yesterday, next_day)
-    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues
-    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=7))
+    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues;
+    # issue_days also needs to be set to a value large enough to include values you would like
+    # to reissue
+    try:
+        issue_days = params['indicator']['issue_days']
+    except:
+        issue_days = 7
+    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=issue_days))
     return params
 
 def configure_range(params, range_param, yesterday, next_day):

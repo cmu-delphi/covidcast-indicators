@@ -303,7 +303,7 @@ code_testing <- function(input_data) {
       input_data$t_tested_reason_large_event == TRUE ~ 1,
       input_data$t_tested_reason_visit_fam == TRUE ~ 1,
       
-      is.na(input_data$B10b) == FALSE ~ 0,
+      !is.na(input_data$B10b) ~ 0,
       TRUE ~ NA_real_
     )
     

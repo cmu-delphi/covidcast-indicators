@@ -239,7 +239,7 @@ def configure(variants, params):
     # to reissue
     try:
         issue_days = params['indicator']['issue_days']
-    except:
+    except KeyError:
         issue_days = 7
     configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=issue_days))
     return params

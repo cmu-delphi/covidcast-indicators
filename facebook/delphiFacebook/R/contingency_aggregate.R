@@ -248,9 +248,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     return( list( ))
   }
   
-  # unique_groups_counts <- unique(df[, groupby_vars, with=FALSE])
-  # unique_groups_counts <- unique_groups_counts[complete.cases(unique_groups_counts)]
-  
   ## Find all unique groups and associated frequencies, saved in column `Freq`.
   # Keep rows with missing values initially so that we get the correct column
   # names. Explicitly drop groups with missing values in second step.
@@ -262,11 +259,8 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     complete.cases(unique_groups_counts[, groupby_vars]),
   ]
   
-  if (geo_level != "county") {
-    # Drop groups with less than threshold sample size. Small county groups are
-    # retained for later construction of megacounties.
-    unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
-  }
+  # Drop groups with less than threshold sample size.
+  unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
   if ( nrow(unique_groups_counts) == 0 ) {
     return(list())
   }
@@ -299,17 +293,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   }
 
   if (params$parallel) {
-    if (geo_level == "county") {
-      # Batch mclapply runs so we don't run out of memory.
-      batch_size <- 10000
-      num_batches <- ceiling(nrow(unique_groups_counts) / batch_size)
-      batches <- splitIndices(nrow(unique_groups_counts), num_batches)
-      
-      dfs <- list()
-      for ( batch in batches ) {dfs[batch] <- mclapply(batch, calculate_group)}
-    } else {
-      dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)
-    }
+    dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)
   } else {
     dfs <- lapply(seq_along(unique_groups_counts[[1]]), calculate_group)
   }
@@ -333,14 +317,9 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", groupby_vars)])) == 0,
     ]
 
-    if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, groupby_vars)
-      dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
-    }
-
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 
-    ## *After* gluing together megacounties, apply the post-function
+    ## Apply the post-function
     dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
   }
 

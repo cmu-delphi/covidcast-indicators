@@ -301,9 +301,12 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   if (params$parallel) {
     if (geo_level == "county") {
       # Batch mclapply runs so we don't run out of memory.
-      batch_size <- 1000
-      batches <- splitIndices(nrow(unique_groups_counts), batch_size)
-      for ( batch in batches ) {dfs <- mclapply(batch, calculate_group)}
+      batch_size <- 10000
+      num_batches <- ceiling(nrow(unique_groups_counts) / batch_size)
+      batches <- splitIndices(nrow(unique_groups_counts), num_batches)
+      
+      dfs <- list()
+      for ( batch in batches ) {dfs[batch] <- mclapply(batch, calculate_group)}
     } else {
       dfs <- mclapply(seq_along(unique_groups_counts[[1]]), calculate_group)
     }

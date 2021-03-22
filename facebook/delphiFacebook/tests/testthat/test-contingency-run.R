@@ -397,15 +397,59 @@ test_that("megacounties are created correctly", {
       weight_in_location = 1
     )
   )
-
+  
   output <- summarize_aggs(input, geomap, agg, "county", params)
-  # "AsIs" class causes test failure. Force to common format.
+  # "AsIs" class originating from use of identity `I` causes test failure. Force to common format.
   output[[1]] <- tibble(output[[1]])
   
   expected_output <- list(
     "pct_hh_fever" = tribble(
       ~mc_gender, ~geo_id, ~val, ~se, ~sample_size, ~effective_sample_size, ~represented,
       1, "10000", 30/105 * 100, NA_real_, 105, 105,  NA_real_
+    )
+  )
+  
+  expect_equal(output, expected_output)
+})
+
+
+test_that("megacounty batching works correctly", {
+  tdir <- tempfile()
+  params <- get_params(tdir)
+  params$num_filter <- 1
+  params$s_mix_coef <- 0.05
+  
+  agg <- tribble(
+    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight, ~skip_mixing,
+    "pct_hh_fever", "b_hh_fever", c("mc_gender", "geo_id"), compute_binary, I, "pct_hh_fever", "weight", FALSE
+  )
+  
+  # Number of items should be larger than batch size in `summarize_aggs`
+  zips <- as.character(seq(10001, 22000))
+  geomap <- data.frame(zip5=zips, geo_id=zips)
+  input <- as.data.table(
+    data.frame(
+      mc_gender = 1,
+      b_hh_fever = 0,
+      zip5 = zips,
+      weight = 100,
+      weight_in_location = 1
+    )
+  )
+  
+  output <- summarize_aggs(input, geomap, agg, "county", params)
+  # "AsIs" class originating from use of identity `I` causes test failure. Force to common format.
+  output[[1]] <- tibble(output[[1]])
+  
+  expected_output <- list(
+    "pct_hh_fever" = tibble(
+      mc_gender=1,
+      geo_id=zips,
+      val=0,
+      se=NA_real_,
+      sample_size=1,
+      effective_sample_size=1,
+      represented=100
     )
   )
   

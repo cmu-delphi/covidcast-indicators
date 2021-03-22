@@ -149,6 +149,7 @@ test_that("household size correctly imputes zeros", {
 
 test_that("vaccine acceptance is correctly coded", {
   input_data <- data.frame(
+    wave = 1,
     V1 = c(2, 3, 2, NA, 1, NA),
     V3 = c(1, 2, 3, 4, NA, NA)
   )

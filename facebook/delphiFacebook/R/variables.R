@@ -291,6 +291,9 @@ code_testing <- function(input_data) {
 #'
 #' @importFrom dplyr coalesce
 code_vaccines <- function(input_data) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
   if ("V1" %in% names(input_data)) {
     # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
     # because, well, you'd know.
@@ -342,16 +345,25 @@ code_vaccines <- function(input_data) {
 
   if ("V4_1" %in% names(input_data)) {
     input_data$v_vaccine_likely_friends <- input_data$V4_1 == 1
-    input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
     input_data$v_vaccine_likely_who <- input_data$V4_3 == 1
     input_data$v_vaccine_likely_govt_health <- input_data$V4_4 == 1
     input_data$v_vaccine_likely_politicians <- input_data$V4_5 == 1
+    
+    if (wave < 8) {
+      input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
+      input_data$v_vaccine_likely_doctors <- NA_real_
+    } else {
+      input_data$v_vaccine_likely_local_health <- NA_real_
+      input_data$v_vaccine_likely_doctors <- input_data$V4_2 == 1
+    }
+    
   } else {
     input_data$v_vaccine_likely_friends <- NA_real_
     input_data$v_vaccine_likely_local_health <- NA_real_
     input_data$v_vaccine_likely_who <- NA_real_
     input_data$v_vaccine_likely_govt_health <- NA_real_
     input_data$v_vaccine_likely_politicians <- NA_real_
+    input_data$v_vaccine_likely_doctors <- NA_real_
   }
 
   if ("V5a" %in% names(input_data) && "V5b" %in% names(input_data) && "V5c" %in% names(input_data)) {

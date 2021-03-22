@@ -362,31 +362,43 @@ create_derivative_columns <- function(df) {
     df$b_concerned_sideeffects <- NA_real_
   }
 
-  df$b_hesitant_sideeffects <- as.numeric(
-    df$b_hesitant_cov_vaccine & df$b_concerned_sideeffects
+  df$b_hesitant_sideeffects <- case_when(
+    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 1 ~ 1,
+    df$b_hesitant_cov_vaccine == 1 & df$b_concerned_sideeffects == 0 ~ 0,
+    TRUE ~ NA_real_
   )
-  df$b_hesitant_sideeffects[df$wave < 7] <- NA_real_
   
   if ( "b_vaccine_likely_friends" %in% names(df) &
        "b_vaccine_likely_local_health" %in% names(df) &
        "b_vaccine_likely_who" %in% names(df) &
        "b_vaccine_likely_govt_health" %in% names(df) &
        "b_vaccine_likely_politicians" %in% names(df) ) {
-    df$b_hesitant_trust_fam <- as.numeric(
-      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_friends
+    df$b_hesitant_trust_fam <- case_when(
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_friends == 0 ~ 0,
+      TRUE ~ NA_real_
     )
-    df$b_hesitant_trust_healthcare <- as.numeric(
-      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_local_health
+    df$b_hesitant_trust_healthcare <- case_when(
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_local_health == 0 ~ 0,
+      TRUE ~ NA_real_
     )
-    df$b_hesitant_trust_who <- as.numeric(
-      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_who
+    df$b_hesitant_trust_who <- case_when(
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_who == 0 ~ 0,
+      TRUE ~ NA_real_
     )
-    df$b_hesitant_trust_govt <- as.numeric(
-      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_govt_health
+    df$b_hesitant_trust_govt <- case_when(
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_govt_health == 0 ~ 0,
+      TRUE ~ NA_real_
     )
-    df$b_hesitant_trust_politicians <- as.numeric(
-      df$b_hesitant_cov_vaccine & df$b_vaccine_likely_politicians
+    df$b_hesitant_trust_politicians <- case_when(
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 1 ~ 1,
+      df$b_hesitant_cov_vaccine == 1 & df$b_vaccine_likely_politicians == 0 ~ 0,
+      TRUE ~ NA_real_
     )
+    
   } else {
     df$b_hesitant_trust_fam <- NA_real_
     df$b_hesitant_trust_healthcare <- NA_real_
@@ -510,6 +522,7 @@ code_multiselect <- function(df, aggregations, col_var) {
             sep="_")
       }
     ))
+  
   #### TODO: eval(parse()) here is not the best approach, but I can't find another
   # way to get col_var (a string) to be used as a var that references a column
   # rather than as an actual string. This approach causes a shallow copy to be

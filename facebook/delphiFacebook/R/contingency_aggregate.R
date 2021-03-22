@@ -24,7 +24,7 @@
 #' @return none
 #'
 #' @import data.table
-#' @importFrom dplyr full_join %>%
+#' @importFrom dplyr full_join %>% select all_of
 #' @importFrom purrr reduce
 #'
 #' @export
@@ -44,9 +44,18 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   df <- output[[1]]
   aggregations <- output[[2]]
 
+  ## Keep only columns used in indicators, plus supporting columns.
+  group_vars <- unique( unlist(aggregations$group_by) )
+  df <- select(df,
+               all_of(unique(aggregations$metric)),
+               all_of(unique(aggregations$var_weight)),
+               all_of( group_vars[group_vars != "geo_id"] ),
+               zip5,
+               start_dt)
+
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
-  # For each unique combination of groupby_vars and geo level, run aggregation process once
+  # For each unique combination of group_vars and geo level, run aggregation process once
   # and calculate all desired aggregations on the grouping. Rename columns. Save
   # to individual files
   for (group_ind in seq_along(agg_groups$group_by)) {
@@ -158,37 +167,43 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   #   - multi-select items are converted to a series of binary columns, one for
   # each unique level/response code; multi-select used for grouping are left as-is.
   #   - multiple choice items are left as-is
-  
+
   #### TODO: How do we want to handle multi-select items when used for grouping?
-  agg_groups <- unique(aggregations$group_by)
-  group_cols_to_convert <- unique(do.call(c, agg_groups))
-  group_cols_to_convert <- group_cols_to_convert[startsWith(group_cols_to_convert, "b_")]
+  group_vars <- unique( unlist(aggregations$group_by) )
+  group_vars <- group_vars[group_vars != "geo_id"]
 
-  metric_cols_to_convert <- unique(aggregations$metric)
+  metric_cols <- unique(aggregations$metric)
+  
+  cols_check_available <- unique(c(group_vars, metric_cols))
+  available <- cols_check_available %in% names(df)
+  cols_not_available <- cols_check_available[ !available ]
+  for (col_var in cols_not_available) {
+    # Remove from aggregations
+    aggregations <- aggregations[aggregations$metric != col_var &
+                                   !mapply(aggregations$group_by,
+                                           FUN=function(x) {col_var %in% x}), ]
+    msg_plain(paste0(
+        col_var, " is not defined. Removing all aggregations that use it. ",
+        nrow(aggregations), " remaining")
+    )
+  }
 
-  for (col_var in c(group_cols_to_convert, metric_cols_to_convert)) {
-    if ( is.null(df[[col_var]]) ) {
-      aggregations <- aggregations[aggregations$metric != col_var &
-                                     !mapply(aggregations$group_by,
-                                             FUN=function(x) {col_var %in% x}), ]
-      msg_plain(
-        paste0(
-          col_var, " is not defined. Removing all aggregations that use it. ", 
-          nrow(aggregations), " remaining")
-      )
+  cols_available <- cols_check_available[ available ]
+  for (col_var in cols_available) {
+    if ( col_var %in% group_vars & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
       next
     }
 
     if (startsWith(col_var, "b_")) { # Binary
       output <- code_binary(df, aggregations, col_var)
-    } else if (startsWith(col_var, "ms_")) { # Multiselect
-      output <- code_multiselect(df, aggregations, col_var)
     } else if (startsWith(col_var, "n_")) { # Numeric free response
       output <- code_numeric_freeresponse(df, aggregations, col_var)
-    } else if (startsWith(col_var, "mc_")) { # Multiple choice
+    } else if (startsWith(col_var, "ms_")) { # Multi-select
+      output <- code_multiselect(df, aggregations, col_var)
+    } else {
+      # Multiple choice and variables that are formatted differently
       output <- list(df, aggregations)
     }
-    
     df <- output[[1]]
     aggregations <- output[[2]]
   }
@@ -233,16 +248,16 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## inefficient; profiling shows the cost to be negligible, so shut it up
   df <- suppressWarnings(inner_join(df, crosswalk_data, by = "zip5"))
 
-  groupby_vars <- aggregations$group_by[[1]]
+  group_vars <- aggregations$group_by[[1]]
 
-  if (all(groupby_vars %in% names(df))) {
-    unique_group_combos <- unique(df[, groupby_vars, with=FALSE])
+  if (all(group_vars %in% names(df))) {
+    unique_group_combos <- unique(df[, group_vars, with=FALSE])
     unique_group_combos <- unique_group_combos[complete.cases(unique_group_combos)]
   } else {
     msg_plain(
       sprintf(
         "not all of groupby columns %s available in data; skipping aggregation",
-        paste(groupby_vars, collapse=", ")
+        paste(group_vars, collapse=", ")
       ))
   }
 
@@ -250,11 +265,10 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     return(list())
   }
 
-
   ## Set an index on the groupby var columns so that the groupby step can be
   ## faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
-  setindexv(df, groupby_vars)
+  setindexv(df, group_vars)
 
   calculate_group <- function(ii) {
     target_group <- unique_group_combos[ii]
@@ -287,15 +301,15 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## Do post-processing.
   for (row in seq_len(nrow(aggregations))) {
     aggregation <- aggregations$id[row]
-    groupby_vars <- aggregations$group_by[[row]]
+    group_vars <- aggregations$group_by[[row]]
     post_fn <- aggregations$post_fn[[row]]
 
     dfs_out[[aggregation]] <- dfs_out[[aggregation]][
-      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", groupby_vars)])) == 0,
+      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", group_vars)])) == 0,
     ]
 
     if (geo_level == "county") {
-      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, groupby_vars)
+      df_megacounties <- megacounty(dfs_out[[aggregation]], params$num_filter, group_vars)
       dfs_out[[aggregation]] <- bind_rows(dfs_out[[aggregation]], df_megacounties)
     }
 

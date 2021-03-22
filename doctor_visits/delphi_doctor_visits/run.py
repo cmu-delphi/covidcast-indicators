@@ -61,14 +61,14 @@ def run_module(params):
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     enddate = str(enddate_dt.date())
     startdate = str(startdate_dt.date())
-    logging.info("drop date:\t\t{dropdate}")
-    logging.info("first sensor date:\t{startdate}")
-    logging.info("last sensor date:\t{enddate}")
-    logging.info("n_backfill_days:\t{n_backfill_days}")
-    logging.info("n_waiting_days:\t{n_waiting_days}")
+    logging.info("drop date:\t\t%s", dropdate)
+    logging.info("first sensor date:\t%s", startdate)
+    logging.info("last sensor date:\t%s", enddate)
+    logging.info("n_backfill_days:\t%s", n_backfill_days)
+    logging.info("n_waiting_days:\t%s", n_waiting_days)
 
     ## geographies
-    geos = ["state", "msa", "hrr", "county"]
+    geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
 
     ## print out other vars

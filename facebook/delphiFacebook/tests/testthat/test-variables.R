@@ -26,9 +26,9 @@ test_that("activities items correctly coded", {
     wave = rep(1, 6),
     C13 = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
-  
+
   out <- code_activities(input_data)
-  
+
   # expected result
   input_data$a_work_outside_home_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
   input_data$a_shop_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
@@ -42,32 +42,32 @@ test_that("activities items correctly coded", {
   input_data$a_restaurant_indoors_1d <- rep(NA, 6)
   input_data$a_spent_time_indoors_1d <- rep(NA, 6)
   input_data$a_large_event_indoors_1d <- rep(NA, 6)
-  
+
   expect_equal(out, input_data)
-  
+
   # C13b only (Wave 10+)
   input_data <- data.frame(
     wave = rep(1, 6),
     C13b = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
-  
+
   out <- code_activities(input_data)
-  
+
   # expected result
   input_data$a_work_outside_home_1d <- rep(NA, 6)
   input_data$a_shop_1d <- rep(NA, 6)
   input_data$a_restaurant_1d <- rep(NA, 6)
   input_data$a_spent_time_1d <- rep(NA, 6)
   input_data$a_large_event_1d <- rep(NA, 6)
-  
+
   input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
-  
+
   input_data$a_work_outside_home_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
   input_data$a_shop_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
   input_data$a_restaurant_indoors_1d <- c(NA, FALSE, TRUE, NA, FALSE, FALSE)
   input_data$a_spent_time_indoors_1d <- c(NA, TRUE, FALSE, NA, FALSE, TRUE)
   input_data$a_large_event_indoors_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
-  
+
   expect_equal(out, input_data)
 })
 
@@ -89,18 +89,18 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
   input_data$c_work_outside_5d <- NA
-  
+
   expect_equal(out, input_data)
-  
+
   input_data <- data.frame(
     wave = 1,
     C14a = c(NA, 1, 3, 6, 2, 4),
     C16 = c(1, NA, 6, 3, 2, 5),
     C6 = 1
   )
-  
+
   out <- code_mask_contact(input_data)
-  
+
   # expected result
   input_data$c_travel_state <- TRUE
   input_data$c_travel_state_7d <- NA
@@ -108,9 +108,9 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often_7d <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
   input_data$c_work_outside_5d <- NA
-  
+
   expect_equal(out, input_data)
-  
+
   ## Wave 10+
   input_data <- data.frame(
     wave = 10,
@@ -118,9 +118,9 @@ test_that("mask items correctly coded", {
     C16 = c(1, NA, 6, 3, 2, 5),
     C6a = 1
   )
-  
+
   out <- code_mask_contact(input_data)
-  
+
   # expected result
   input_data$c_travel_state <- NA
   input_data$c_travel_state_7d <- TRUE
@@ -128,9 +128,9 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
   input_data$c_work_outside_5d <- NA
-  
+
   expect_equal(out, input_data)
-  
+
 })
 
 test_that("household size correctly imputes zeros", {
@@ -155,7 +155,7 @@ test_that("vaccine acceptance is correctly coded", {
   )
 
   out <- code_vaccines(input_data)
-  
+
   expect_equal(out$v_covid_vaccinated_or_accept,
                c(1, 1, 0, 0, 1, NA))
 })
@@ -170,9 +170,9 @@ test_that("mental health items are correctly coded", {
     C8_3 = c(1, 2, 3, 4, NA),
     C15 = c(1, 2, 3, 4, NA)
   )
-  
+
   out <- code_mental_health(input_data)
-  
+
   # expected result
   input_data$mh_worried_ill <- NA
   input_data$mh_anxious <- NA
@@ -182,9 +182,9 @@ test_that("mental health items are correctly coded", {
   input_data$mh_anxious_7d <- NA
   input_data$mh_depressed_7d <- NA
   input_data$mh_isolated_7d <- NA
-  
+
   expect_equal(out, input_data)
-  
+
   ## Wave 4+, Pre-Wave 10
   input_data <- data.frame(
     wave = 4,
@@ -194,9 +194,9 @@ test_that("mental health items are correctly coded", {
     C8_3 = c(1, 2, 3, 4, NA),
     C15 = c(1, 2, 3, 4, NA)
   )
-  
+
   out <- code_mental_health(input_data)
-  
+
   # expected result
   input_data$mh_worried_ill <- c(TRUE, TRUE, FALSE, FALSE, NA)
   input_data$mh_anxious <- c(FALSE, FALSE, TRUE, TRUE, NA)
@@ -206,9 +206,9 @@ test_that("mental health items are correctly coded", {
   input_data$mh_anxious_7d <- NA
   input_data$mh_depressed_7d <- NA
   input_data$mh_isolated_7d <- NA
-  
+
   expect_equal(out, input_data)
-  
+
   ## Wave 10+
   input_data <- data.frame(
     wave = 10,
@@ -218,9 +218,9 @@ test_that("mental health items are correctly coded", {
     C8a_3 = c(1, 2, 3, 4, NA),
     C15 = c(1, 2, 3, 4, NA)
   )
-  
+
   out <- code_mental_health(input_data)
-  
+
   # expected result
   input_data$mh_worried_ill <- c(TRUE, TRUE, FALSE, FALSE, NA)
   input_data$mh_anxious <- NA
@@ -232,4 +232,19 @@ test_that("mental health items are correctly coded", {
   input_data$mh_isolated_7d <- c(FALSE, FALSE, TRUE, TRUE, NA)
 
   expect_equal(out, input_data)
+})
+
+test_that("tested reasons are correctly coded", {
+  input_data <- data.frame(
+    B10b = c("1", "2", "3", "4", "5", "6", "7", "8", NA_character_, 
+             "1,2", "1,3", "3,4", "", "3,4,5,7", "3,4,5,7,2")
+  )
+  
+  out <- code_testing(input_data)
+  
+  # expected result
+  input_data$t_tested_reason_screening <- c(0, 0, 1, 1, 1, 0, 1, 0, NA_real_,
+                                            0, 0, 1, 0, 1, 0)
+  
+  expect_equal(out$t_tested_reason_screening, input_data$t_tested_reason_screening)
 })

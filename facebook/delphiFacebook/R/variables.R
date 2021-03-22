@@ -276,8 +276,8 @@ code_testing <- function(input_data) {
     # were not
     input_data$t_wanted_test_14d <- input_data$B12 == 1
   } else {
-    input_data$t_tested_14d <- NA
-    input_data$t_tested_positive_14d <- NA
+    input_data$t_tested_14d <- NA_real_
+    input_data$t_tested_positive_14d <- NA_real_
     input_data$t_wanted_test_14d <- NA
   }
   

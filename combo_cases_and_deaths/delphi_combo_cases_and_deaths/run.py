@@ -86,6 +86,58 @@ def compute_special_geo_dfs(df, signal, geo):
     return df
 
 
+def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
+    """Combine the queried usafacts and jhu dataframes based on the geo type."""
+    # State level
+    if geo == 'state':
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
+    # County level
+    elif geo == 'county':
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
+    # For MSA and HRR level, they are the same
+    elif geo == 'msa':
+        df = GMPR._load_crosswalk("fips", "msa") # pylint: disable=protected-access
+        puerto_rico_mask = df["fips"].str.startswith("72")
+        puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].isin(puerto_rico_msas)])
+    else:
+        combined_df = usafacts_df
+    combined_df.rename(COLUMN_MAPPING, axis=1, inplace=True)
+
+    return combined_df
+
+
+def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
+    """Return the unique dates of the values that were updated in a given issue range in a geo."""
+    usafacts_df = fetcher(
+        "usa-facts", signal,
+        date_range[0], date_range[1],
+        geo,
+        issues=issue_range
+    )
+    jhu_df = fetcher(
+        "jhu-csse", signal,
+        date_range[0], date_range[1],
+        geo,
+        issues=issue_range
+    )
+
+    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
+       (geo not in ('state', 'county', 'msa') or
+        check_none_data_frame(jhu_df, "JHU", date_range)):
+        return None
+
+    merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo)
+    unique_dates = merged_df["timestamp"].unique()
+    return unique_dates
+
+
 def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals.
 
@@ -95,37 +147,38 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
     is_special_geo = geo in ["hhs", "nation"]
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
+
+    unique_dates = get_updated_dates(
+        signal_to_fetch, geo_to_fetch, date_range, issue_range, fetcher
+    )
+
+    # This occurs if the usafacts ~and the jhu query were empty
+    if unique_dates is None:
+        return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
+
+    # Query only the represented window so that every geo is represented; a single window call is
+    # faster than a fetch for every date in unique_dates even in cases of 1:10 sparsity,
+    # i.e., len(unique_dates):len(max(unique_dates) - min(unique_dates))
+    query_min, query_max = unique_dates.min(), unique_dates.max()
     usafacts_df = fetcher(
         "usa-facts", signal_to_fetch,
-        date_range[0], date_range[1],
+        query_min, query_max,
         geo_to_fetch,
-        issues=issue_range
     )
     jhu_df = fetcher(
         "jhu-csse", signal_to_fetch,
-        date_range[0], date_range[1],
+        query_min, query_max,
         geo_to_fetch,
-        issues=issue_range
     )
-    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
-       (geo_to_fetch not in ('state', 'county') or
-        check_none_data_frame(jhu_df, "JHU", date_range)):
-        return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
+    combined_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch)
 
-    # State level
-    if geo_to_fetch == 'state':
-        combined_df = maybe_append(
-            usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
-    # County level
-    elif geo_to_fetch == 'county':
-        combined_df = maybe_append(
-            usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
-    # For MSA and HRR level, they are the same
-    else:
-        combined_df = usafacts_df
-    combined_df.rename(COLUMN_MAPPING, axis=1, inplace=True)
+    # default sort from API is ORDER BY signal, time_value, geo_value, issue
+    # we want to drop all but the most recent (last) issue
+    combined_df.drop_duplicates(
+        subset=["geo_id", "timestamp"],
+        keep="last",
+        inplace=True
+    )
 
     if is_special_geo:
         combined_df = compute_special_geo_dfs(combined_df, signal, geo)
@@ -135,13 +188,6 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
             combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
 
-    # default sort from API is ORDER BY signal, time_value, geo_value, issue
-    # we want to drop all but the most recent (last) issue
-    combined_df.drop_duplicates(
-        subset=["geo_id", "timestamp"],
-        keep="last",
-        inplace=True
-    )
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):
@@ -188,8 +234,14 @@ def configure(variants, params):
         set(signal[-1] for signal in variants)
     )
     configure_range(params, 'date_range', yesterday, next_day)
-    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues
-    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=7))
+    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues;
+    # issue_days also needs to be set to a value large enough to include values you would like
+    # to reissue
+    try:
+        issue_days = params['indicator']['issue_days']
+    except KeyError:
+        issue_days = 7
+    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=issue_days))
     return params
 
 def configure_range(params, range_param, yesterday, next_day):

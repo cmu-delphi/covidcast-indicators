@@ -53,7 +53,7 @@ Please update the follow settings:
 
 * `common`: global validation settings
    * `data_source`: should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls
-   * `end_date`: specifies the last date to be checked; this can be specified as `YYYY-MM-DD` or as `today-{num}`.  The latter is interpretted as `num` days before the current date (with `today-0` being today).
+   * `end_date`: specifies the last date to be checked; this can be specified as `YYYY-MM-DD`, `today`, or `today-{num}`.  The latter is interpretted as `num` days before the current date.
    * `span_length`: specifies the number of days before the `end_date` to check. `span_length` should be long enough to contain all recent source data that is still in the process of being updated (i.e. in the backfill period), for example, if the data source of interest has a 2-week lag before all reports are in for a given date, `span_length` should be 14 days
    * `suppressed_errors`: list of objects specifying errors that have been manually verified as false positives or acceptable deviations from expected.  These errors can be specified with the following variables, where omitted values are interpreted as a wildcard, i.e., not specifying a date applies to all dates:
        * `check_name` (required):  name of the check, as specified in the validation output

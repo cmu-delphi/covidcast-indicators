@@ -119,27 +119,23 @@ class DynamicValidator:
                 continue
 
             # Outlier dataframe
-            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
-                                "confirmed_cumulative_num", "confirmed_incidence_num",
-                                "deaths_7dav_cumulative_num",
-                                "deaths_cumulative_num"]):
-                earliest_available_date = geo_sig_df["time_value"].min()
-                source_df = geo_sig_df.query(
-                    'time_value <= @self.params.time_window.end_date & '
-                    'time_value >= @self.params.time_window.start_date'
-                )
+            earliest_available_date = geo_sig_df["time_value"].min()
+            source_df = geo_sig_df.query(
+                'time_value <= @self.params.time_window.end_date & '
+                'time_value >= @self.params.time_window.start_date'
+            )
 
-                # These variables are interpolated into the call to `api_df_or_error.query()`
-                # below but pylint doesn't recognize that.
-                # pylint: disable=unused-variable
-                outlier_start_date = earliest_available_date - outlier_lookbehind
-                outlier_end_date = earliest_available_date - timedelta(days=1)
-                outlier_api_df = api_df_or_error.query(
-                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-                # pylint: enable=unused-variable
+            # These variables are interpolated into the call to `api_df_or_error.query()`
+            # below but pylint doesn't recognize that.
+            # pylint: disable=unused-variable
+            outlier_start_date = earliest_available_date - outlier_lookbehind
+            outlier_end_date = earliest_available_date - timedelta(days=1)
+            outlier_api_df = api_df_or_error.query(
+                'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+            # pylint: enable=unused-variable
 
-                self.check_positive_negative_spikes(
-                    source_df, outlier_api_df, geo_type, signal_type, report)
+            self.check_positive_negative_spikes(
+                source_df, outlier_api_df, geo_type, signal_type, report)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.

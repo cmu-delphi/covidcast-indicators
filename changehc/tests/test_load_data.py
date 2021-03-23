@@ -2,7 +2,7 @@
 import pytest
 
 # third party
-from delphi_utils import read_params, GeoMapper
+from delphi_utils import GeoMapper
 import pandas as pd
 
 # first party
@@ -10,10 +10,16 @@ from delphi_changehc.config import Config
 from delphi_changehc.load_data import *
 
 CONFIG = Config()
-PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
+        "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "drop_date": "2020-06-01"
+    }
+}
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 
 class TestLoadData:

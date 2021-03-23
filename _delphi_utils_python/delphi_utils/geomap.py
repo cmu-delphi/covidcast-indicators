@@ -34,9 +34,18 @@ CROSSWALK_FILEPATHS = {
     },
     "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
     "state_code": {
-        "hhs": join(DATA_PATH, "state_code_hhs_table.csv")
+        "hhs": join(DATA_PATH, "state_code_hhs_table.csv"),
+        "pop": join(DATA_PATH, "state_pop.csv")
+    },
+    "state_id": {
+        "pop": join(DATA_PATH, "state_pop.csv")
+    },
+    "state_name": {
+        "pop": join(DATA_PATH, "state_pop.csv")
     },
     "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
+    "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv"),},
+    "nation": {"pop": join(DATA_PATH, "nation_pop.csv"),},
 }
 
 
@@ -113,7 +122,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 geo: None for geo in ["zip", "hrr", "msa", "pop", "state", "hhs"]
             },
             "state": {"state": None},
-            "state_code": {"hhs": None},
+            "state_code": {"hhs": None, "pop": None},
+            "state_id": {"pop": None},
+            "state_name": {"pop": None},
+            "hhs": {"pop": None},
+            "nation": {"pop": None},
             "jhu_uid": {"fips": None},
         }
         self.geo_lists = {
@@ -128,81 +141,77 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         assert from_code in self.crosswalk_filepaths, \
             f"No crosswalk files for {from_code}; try {'; '.join(self.crosswalk_filepaths.keys())}"
         assert to_code in self.crosswalk_filepaths[from_code], \
-            f"No crosswalk file from {from_code} to {to_code}; try" \
+            f"No crosswalk file from {from_code} to {to_code}; try " \
             f"{'; '.join(self.crosswalk_filepaths[from_code].keys())}"
+
+        if self.crosswalks[from_code][to_code] is None:
+            self.crosswalks[from_code][to_code] = self._load_crosswalk_from_file(from_code, to_code)
+        return self.crosswalks[from_code][to_code]
+
+    def _load_crosswalk_from_file(self, from_code, to_code):
         stream = pkg_resources.resource_stream(
             __name__, self.crosswalk_filepaths[from_code][to_code]
         )
-        if self.crosswalks[from_code][to_code] is None:
-            # Weighted crosswalks
-            if (from_code, to_code) in [
-                ("zip", "fips"),
-                ("fips", "zip"),
-                ("jhu_uid", "fips"),
-                ("zip", "msa"),
-                ("fips", "hrr"),
-                ("zip", "hhs")
-            ]:
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={
-                        from_code: str,
-                        to_code: str,
-                        "weight": float,
-                    },
-                )
-            # Unweighted crosswalks
-            elif (from_code, to_code) in [
-                ("zip", "hrr"),
-                ("fips", "msa"),
-                ("fips", "hhs"),
-                ("state_code", "hhs")
-            ]:
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={from_code: str, to_code: str},
-                )
-            # Special table of state codes, state IDs, and state names
-            elif (from_code, to_code) == ("state", "state"):
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={
-                        "state_code": str,
-                        "state_id": str,
-                        "state_name": str,
-                    },
-                )
-            elif (from_code, to_code) == ("zip", "state"):
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={
-                        "zip": str,
-                        "weight": float,
-                        "state_code": str,
-                        "state_id": str,
-                        "state_name": str,
-                    },
-                )
-            elif (from_code, to_code) == ("fips", "state"):
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={
-                        "fips": str,
-                        "state_code": str,
-                        "state_id": str,
-                        "state_name": str,
-                    },
-                )
-            # Population tables
-            elif (from_code, to_code) in [("fips", "pop"), ("zip", "pop")]:
-                self.crosswalks[from_code][to_code] = pd.read_csv(
-                    stream,
-                    dtype={
-                        from_code: str,
-                        "pop": int,
-                    },
-                )
-        return self.crosswalks[from_code][to_code]
+        usecols = None
+        dtype = None
+        # Weighted crosswalks
+        if (from_code, to_code) in [
+            ("zip", "fips"),
+            ("fips", "zip"),
+            ("jhu_uid", "fips"),
+            ("zip", "msa"),
+            ("fips", "hrr"),
+            ("zip", "hhs")
+        ]:
+            dtype = {
+                from_code: str,
+                to_code: str,
+                "weight": float,
+            }
+
+        # Unweighted crosswalks
+        elif (from_code, to_code) in [
+            ("zip", "hrr"),
+            ("fips", "msa"),
+            ("fips", "hhs"),
+            ("state_code", "hhs")
+        ]:
+            dtype = {from_code: str, to_code: str}
+
+        # Special table of state codes, state IDs, and state names
+        elif (from_code, to_code) == ("state", "state"):
+            dtype = {
+                "state_code": str,
+                "state_id": str,
+                "state_name": str,
+            }
+        elif (from_code, to_code) == ("zip", "state"):
+            dtype = {
+                "zip": str,
+                "weight": float,
+                "state_code": str,
+                "state_id": str,
+                "state_name": str,
+            }
+        elif (from_code, to_code) == ("fips", "state"):
+            dtype = {
+                    "fips": str,
+                    "state_code": str,
+                    "state_id": str,
+                    "state_name": str,
+            }
+
+        # Population tables
+        elif to_code == "pop":
+            dtype = {
+                from_code: str,
+                "pop": int,
+            }
+            usecols = [
+                from_code,
+                "pop"
+            ]
+        return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
     @staticmethod
     def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
@@ -316,19 +325,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             else:
                 df[from_col] = df[from_col].astype(str)
 
-        # Assuming that the passed-in records are all United States data, at the moment
-        if (from_code, new_code) in [("fips", "nation"), # pylint: disable=no-else-return
-                                     ("zip", "nation"),
-                                     ("state_code", "nation"),
-                                     ("state_name", "nation"),
-                                     ("state_id", "nation")]:
-            df[new_col] = df[from_col].apply(lambda x: "us")
-            return df
-        elif new_code == "nation":
-            raise ValueError(
-                f"Conversion to the nation level is not supported "
-                f"from {from_code}; try fips, zip, or state_*"
-            )
+        if new_code == "nation":
+            return self._add_nation_geocode(df, from_code, from_col, new_col)
 
         # state codes are all stored in one table
         if from_code in state_codes and new_code in state_codes:
@@ -358,10 +356,27 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df.drop(columns=state_codes, inplace=True)
         elif new_code in state_codes and from_code in state_codes:
             state_codes.remove(new_code)
-            state_codes.remove(from_code)
+            if from_code in state_codes:
+                state_codes.remove(from_code)
             df.drop(columns=state_codes, inplace=True)
 
         return df
+
+    def _add_nation_geocode(self, df, from_code, from_col, new_col):
+        """Add a nation geocode column to a dataframe.
+
+        See `add_geocode()` documentation for argument description.
+        """
+        valid_from_codes = ["fips", "zip", "state_code", "state_name", "state_id"]
+        # Assuming that the passed-in records are all United States data, at the moment
+        if from_code in valid_from_codes:
+            df[new_col] = df[from_col].apply(lambda x: "us")
+            return df
+
+        raise ValueError(
+            f"Conversion to the nation level is not supported "
+            f"from {from_code}; try {valid_from_codes}"
+        )
 
     def replace_geocode(
         self,
@@ -457,25 +472,25 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         geocode_col = geocode_type if geocode_col is None else geocode_col
         data = data.copy()
-
-        if geocode_type not in ["fips", "zip"]:
+        supported_geos = ["fips", "zip", "state_id", "state_name", "state_code", "hhs", "nation"]
+        if geocode_type not in supported_geos:
             raise ValueError(
-                "Only fips and zip geocodes supported. \
-                For other codes, aggregate those."
+                f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
             )
-
         pop_df = self._load_crosswalk(from_code=geocode_type, to_code="pop")
-
         if not is_string_dtype(data[geocode_col]):
-            data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
-
+            if geocode_type in ["zip", "fips"]:
+                data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
+            elif geocode_type in ["state_code"]:
+                data[geocode_col] = data[geocode_col].astype(str).str.zfill(2)
+            else:
+                data[geocode_col] = data[geocode_col].astype(str)
         merge_type = "inner" if dropna else "left"
         data_with_pop = (
             data
             .merge(pop_df, left_on=geocode_col, right_on=geocode_type, how=merge_type)
             .rename(columns={"pop": "population"})
         )
-
         return data_with_pop
 
     @staticmethod

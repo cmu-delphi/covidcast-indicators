@@ -13,7 +13,6 @@ from os.path import join
 
 import pandas as pd
 from delphi_utils import get_structured_logger
-from delphi_utils import read_params
 
 from .process import process
 
@@ -42,22 +41,37 @@ GEO_RESOLUTIONS = [
 ]
 
 
-def run_module():
-    """Run module for Safegraph patterns data."""
+def run_module(params):
+    """Run module for Safegraph patterns data.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - "indicator":
+        - "aws_access_key_id": str, ID of access key for AWS S3
+        - "aws_secret_access_key": str, access key for AWS S3
+        - "aws_default_region": str, name of AWS S3 region
+        - "aws_endpoint": str, name of AWS S3 endpoint
+        - "n_core": int, number of cores to use for multithreaded processing
+        - "raw_data_dir": directory from which to read downloaded data from AWS,
+        - "static_file_dir": str, directory containing brand and population csv files
+        - "sync": bool, whether to sync S3 data before running indicator
+    """
     start_time = time.time()
-    params = read_params()
-    export_dir = params["export_dir"]
-    raw_data_dir = params["raw_data_dir"]
-    n_core = int(params["n_core"])
-    aws_endpoint = params["aws_endpoint"]
-    static_file_dir = params["static_file_dir"]
+    export_dir = params["common"]["export_dir"]
+    raw_data_dir = params["indicator"]["raw_data_dir"]
+    n_core = params["indicator"]["n_core"]
+    aws_endpoint = params["indicator"]["aws_endpoint"]
+    static_file_dir = params["indicator"]["static_file_dir"]
     logger = get_structured_logger(
-        __name__, filename=params.get("log_filename"),
-        log_exceptions=params.get("log_exceptions", True))
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
     env_vars = {
-            'AWS_ACCESS_KEY_ID': params["aws_access_key_id"],
-            'AWS_SECRET_ACCESS_KEY': params["aws_secret_access_key"],
-            'AWS_DEFAULT_REGION': params["aws_default_region"],
+            'AWS_ACCESS_KEY_ID': params["indicator"]["aws_access_key_id"],
+            'AWS_SECRET_ACCESS_KEY': params["indicator"]["aws_secret_access_key"],
+            'AWS_DEFAULT_REGION': params["indicator"]["aws_default_region"],
     }
 
     for ver in VERSIONS:
@@ -65,7 +79,7 @@ def run_module():
         # Why call subprocess rather than using a native Python client, e.g. boto3?
         # Because boto3 does not have a simple rsync-like call that can perform
         # the following behavior elegantly.
-        if params["sync"]:
+        if params["indicator"]["sync"]:
             subprocess.run(
                     f'aws s3 sync s3://sg-c19-response/{ver[1]}/ '
                     f'{raw_data_dir}/{ver[1]}/ --endpoint {aws_endpoint}',

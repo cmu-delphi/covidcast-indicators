@@ -1,12 +1,15 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
-  "drop_date": "",
-  "n_backfill_days": 60,
-  "n_waiting_days": 3,
-  "weekday": [true, false],
-  "se": false,
-  "obfuscated_prefix": "wip_XXXXX",
-  "parallel": false
+  "common": {
+    "export_dir": "./receiving"
+  },
+  "indicator": {
+    "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
+    "drop_date": "",
+    "n_backfill_days": 70,
+    "n_waiting_days": 3,
+    "weekday": [true, false],
+    "se": false,
+    "obfuscated_prefix": "wip_XXXXX",
+    "parallel": false
+  }
 }

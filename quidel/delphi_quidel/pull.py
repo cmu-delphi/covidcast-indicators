@@ -330,14 +330,14 @@ def pull_quidel_data(params):
         datetime.datetime
             the last date of the report
     """
-    cache_dir = params["cache_dir"]
+    cache_dir = params["input_cache_dir"]
 
     mail_server = params["mail_server"]
     account = params["account"]
     password = params["password"]
     sender = params["sender"]
 
-    test_mode = (params["mode"] == "test")
+    test_mode = params["test_mode"]
 
     # pull new data only that has not been ingested
     previous_dfs, pull_start_dates = check_intermediate_file(

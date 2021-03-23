@@ -1,12 +1,16 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "/common/covidcast/receiving/covid_act_now",
-  "cache_dir": "./cache",
-  "wip_signal": "",
-  "parquet_url": "https://storage.googleapis.com/us-east4-data-eng-scrapers-a02dc940-bucket/data/final/can_scrape_api_covid_us.parquet",
-  "aws_credentials": {
-    "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
-    "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+  "common": {
+    "export_dir": "/common/covidcast/receiving/covid-act-now"
   },
-  "bucket_name": "delphi-covidcast-indicator-output"
+  "indicator": {
+    "parquet_url": "https://storage.googleapis.com/can-scrape-outputs/final/can_scrape_api_covid_us.parquet"
+  },
+  "archive": {
+    "cache_dir": "./cache",
+    "bucket_name": "delphi-covidcast-indicator-output",
+    "aws_credentials": {
+      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+    }
+  }
 }

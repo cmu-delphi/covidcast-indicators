@@ -7,22 +7,28 @@ Author: Maria Jahja
 Created: 2020-04-18
 Last modified: 2020-04-30 by Aaron Rumack (add megacounty code)
 """
-
-from os.path import join
+from functools import partial
 
 import pandas as pd
-import numpy as np
 from delphi_utils.geomap import GeoMapper
 
 from .config import Config
-from .sensor import DoctorVisitsSensor
 
 
 class GeoMaps:
     """Class to map counties to other geographic resolutions."""
 
     def __init__(self):
+        """Create the underlying GeoMapper."""
         self.gmpr = GeoMapper()
+        self.geo_func = {"county": partial(self.county_to_megacounty,
+                                           threshold_visits=Config.MIN_RECENT_VISITS,
+                                           threshold_len=Config.RECENT_LENGTH),
+                         "state": self.county_to_state,
+                         "msa": self.county_to_msa,
+                         "hrr": self.county_to_hrr,
+                         "hhs": self.county_to_hhs,
+                         "nation": self.county_to_nation}
 
     @staticmethod
     def convert_fips(x):
@@ -63,6 +69,40 @@ class GeoMaps:
         data = data.groupby(["ServiceDate", "state_id"]).sum().reset_index()
 
         return data.groupby("state_id"), "state_id"
+
+    def county_to_hhs(self, data):
+        """Aggregate county data to the HHS region resolution.
+
+        Args:
+            data: dataframe aggregated to the daily-county resolution (all 7 cols expected)
+
+        Returns: tuple of dataframe at the daily-HHS resolution, and geo_id column name
+        """
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "hhs",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
+        data = data.groupby(["ServiceDate", "hhs"]).sum().reset_index()
+
+        return data.groupby("hhs"), "hhs"
+
+    def county_to_nation(self, data):
+        """Aggregate county data to the nation resolution.
+
+        Args:
+            data: dataframe aggregated to the daily-county resolution (all 7 cols expected)
+
+        Returns: tuple of dataframe at the daily-nation resolution, and geo_id column name
+        """
+        data = self.gmpr.add_geocode(data,
+                                     "fips",
+                                     "nation",
+                                     from_col="PatCountyFIPS")
+        data.drop(columns="PatCountyFIPS", inplace=True)
+        data = data.groupby(["ServiceDate", "nation"]).sum().reset_index()
+
+        return data.groupby("nation"), "nation"
 
     def county_to_hrr(self, data):
         """Aggregate county data to the HRR resolution.

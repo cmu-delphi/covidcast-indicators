@@ -42,11 +42,15 @@ class LocationSeries:
     @property
     def dates(self) -> list:
         """Check if there is no stored data in the class."""
+        if not self.data:
+            raise ValueError("No data")
         return list(self.data.keys())
 
     @property
     def values(self) -> list:
         """Check if there is no stored data in the class."""
+        if not self.data:
+            raise ValueError("No data")
         return list(self.data.values())
 
     def get_data_range(self,

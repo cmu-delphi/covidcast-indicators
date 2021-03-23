@@ -27,19 +27,6 @@ class CHCSensor:
                         gaussian_bandwidth=Config.SMOOTHER_BANDWIDTH)
 
     @staticmethod
-    def gauss_smooth(count,total):
-        """Smooth using the left_gauss_linear.
-
-        Args:
-            count, total: array
-        """
-        count_smooth = CHCSensor.smoother.smooth(count)
-        total_smooth = CHCSensor.smoother.smooth(total)
-        total_clip = np.clip(total_smooth, 0, None)
-        count_clip = np.clip(count_smooth, 0, total_clip)
-        return count_clip, total_clip
-
-    @staticmethod
     def backfill(
             num,
             den,
@@ -120,30 +107,13 @@ class CHCSensor:
 
         # calculate smoothed counts and jeffreys rate
         # the left_gauss_linear smoother is not guaranteed to return values greater than 0
-
-        smoothed_total_counts, smoothed_total_visits = CHCSensor.gauss_smooth(
-            total_counts.flatten(), total_visits
-        )
-
-        # in smoothing, the numerator may have become more than the denominator
-        # simple fix is to clip the max values elementwise to the denominator (note that
-        # this has only been observed in synthetic data)
-        # smoothed_total_counts = np.clip(smoothed_total_counts, 0, smoothed_total_visits)
-
-        smoothed_total_rates = (
-                (smoothed_total_counts + 0.5) / (smoothed_total_visits + 1)
-        )
-
-        # checks - due to the smoother, the first value will be NA
-        assert (
-                np.sum(np.isnan(smoothed_total_rates[1:])) == 0
-        ), "NAs in rate calculation"
-        assert (
-                np.sum(smoothed_total_rates[1:] <= 0) == 0
-        ), f"0 or negative value, {geo_id}"
+        rates = total_counts.flatten() / total_visits
+        smoothed_rate = CHCSensor.smoother.smooth(rates)
+        clipped_smoothed_rate = np.clip(smoothed_rate, 0, 1)
+        jeffreys_rate = (clipped_smoothed_rate * total_visits + 0.5) / (total_visits + 1)
 
         # cut off at sensor indexes
-        rate_data = pd.DataFrame({'rate':smoothed_total_rates, 'den': smoothed_total_visits},
+        rate_data = pd.DataFrame({'rate': jeffreys_rate, 'den': total_visits},
                                  index=y_data.index)
         rate_data = rate_data[first_sensor_date:]
         include = rate_data['den'] >= Config.MIN_DEN

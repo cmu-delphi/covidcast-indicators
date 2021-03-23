@@ -37,14 +37,6 @@ def run_module():
                                        params["sources"], params.get("grace", 0), LOGGER))
 
     if len(complaints) > 0:
-        for complaint in complaints:
-            LOGGER.critical(event="signal out of SLA",
-                            message=complaint.message,
-                            data_source=complaint.data_source,
-                            signal=complaint.signal,
-                            geo_types=complaint.geo_types,
-                            last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
-
         report_complaints(complaints, slack_notifier)
     
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
@@ -58,15 +50,13 @@ def split_complaints(complaints, n=49):
 
 
 def report_complaints(all_complaints, slack_notifier):
-    """Post complaints to Slack."""
-    if not slack_notifier:
-        LOGGER.info("(dry-run)")
-        return
+    """Log complaints and optionally post to Slack."""
 
     for complaints in split_complaints(all_complaints):
-        blocks = format_complaints_aggregated_by_source(complaints)
-        LOGGER.info(f"blocks: {len(blocks)}")
-        slack_notifier.post_message(blocks)
+        blocks = format_and_log_complaints_aggregated_by_source(complaints)
+
+        if slack_notifier:
+            slack_notifier.post_message(blocks)
 
 def get_maintainers_block(complaints):
     """Build a Slack block to alert maintainers to pay attention."""
@@ -87,7 +77,7 @@ def get_maintainers_block(complaints):
     return maintainers_block
 
 
-def format_complaints_aggregated_by_source(complaints):
+def format_and_log_complaints_aggregated_by_source(complaints):
     """Build formatted Slack message for posting to the API, aggregating
     complaints by source to reduce the number of blocks."""
 
@@ -107,6 +97,11 @@ def format_complaints_aggregated_by_source(complaints):
                 signal_and_geo_types += "`{signal}: [{geo_types}]`\n".format(
                     signal=complaint.signal,
                     geo_types=", ".join(complaint.geo_types))
+
+            LOGGER.critical(event="Signal out of SLA",
+                            message=message,
+                            data_source=source,
+                            signal_and_geo_types=signal_and_geo_types)
 
             blocks.extend([
                 {

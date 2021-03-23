@@ -1,0 +1,58 @@
+state_code,state_id,state_name,pop
+01,al,Alabama,4903185
+02,ak,Alaska,731545
+04,az,Arizona,7278717
+05,ar,Arkansas,3017804
+06,ca,California,39512223
+08,co,Colorado,5758736
+09,ct,Connecticut,3565287
+10,de,Delaware,973764
+11,dc,District of Columbia,705749
+12,fl,Florida,21477737
+13,ga,Georgia,10617423
+15,hi,Hawaii,1415872
+16,id,Idaho,1787065
+17,il,Illinois,12671821
+18,in,Indiana,6732219
+19,ia,Iowa,3155070
+20,ks,Kansas,2913314
+21,ky,Kentucky,4467673
+22,la,Louisiana,4648794
+23,me,Maine,1344212
+24,md,Maryland,6045680
+25,ma,Massachusetts,6892503
+26,mi,Michigan,9986857
+27,mn,Minnesota,5639632
+28,ms,Mississippi,2976149
+29,mo,Missouri,6137428
+30,mt,Montana,1068778
+31,ne,Nebraska,1934408
+32,nv,Nevada,3080156
+33,nh,New Hampshire,1359711
+34,nj,New Jersey,8882190
+35,nm,New Mexico,2096829
+36,ny,New York,19453561
+37,nc,North Carolina,10488084
+38,nd,North Dakota,762062
+39,oh,Ohio,11689100
+40,ok,Oklahoma,3956971
+41,or,Oregon,4217737
+42,pa,Pennsylvania,12801989
+44,ri,Rhode Island,1059361
+45,sc,South Carolina,5148714
+46,sd,South Dakota,884659
+47,tn,Tennessee,6829174
+48,tx,Texas,28995881
+49,ut,Utah,3205958
+50,vt,Vermont,623989
+51,va,Virginia,8535519
+53,wa,Washington,7614893
+54,wv,West Virginia,1792147
+55,wi,Wisconsin,5822434
+56,wy,Wyoming,578759
+60,as,American Samoa,55519
+66,gu,Guam,159358
+69,mp,Northern Mariana Islands,53883
+70,pw,Republic of Palau,520649
+72,pr,Puerto Rico,3723066
+78,vi,U.S. Virgin Islands,106405

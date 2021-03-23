@@ -227,9 +227,6 @@ class TestCheckBadGeoIdValue:
             "data_source": "",
             "span_length": 0,
             "end_date": "2020-09-02",
-        },
-        "static": {
-            "validator_static_file_dir": "../delphi_utils/validator/static"
         }
     }
 
@@ -291,7 +288,7 @@ class TestCheckBadGeoIdValue:
         report = ValidationReport([])
         df = pd.DataFrame(["ak", "AK"], columns=["geo_id"])
         validator.check_bad_geo_id_value(df, FILENAME, "state", report)
-
+        print(report.summary())
         assert len(report.raised_errors) == 0
         assert len(report.raised_warnings) == 1
         assert report.raised_warnings[0].check_name == "check_geo_id_lowercase"

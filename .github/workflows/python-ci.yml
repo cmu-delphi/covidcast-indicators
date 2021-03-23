@@ -16,7 +16,7 @@ jobs:
     if: github.event.pull_request.draft == false
     strategy:
       matrix:
-        packages: [_delphi_utils_python, cdc_covidnet, changehc, claims_hosp, combo_cases_and_deaths, covid_act_now, doctor_visits, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
+        packages: [_delphi_utils_python, changehc, claims_hosp, combo_cases_and_deaths, covid_act_now, doctor_visits, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph, safegraph_patterns, usafacts]
     defaults:
       run:
         working-directory: ${{ matrix.packages }}

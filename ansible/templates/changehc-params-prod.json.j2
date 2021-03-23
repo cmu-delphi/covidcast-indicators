@@ -30,5 +30,28 @@
       "pass": "{{ changehc_sftp_password }}",
       "port": "{{ changehc_sftp_port }}"
     }
+  },
+  "validation": {
+    "common": {
+      "data_source": "chng",
+      "span_length": 14,
+      "end_date": "today-4",
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": false,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "smoothed_adj_outpatient_cli",
+        "smoothed_adj_outpatient_covid",
+        "smoothed_outpatient_cli",
+        "smoothed_outpatient_covid"
+      ]
+    }
   }
 }

@@ -235,7 +235,6 @@ def test_no_nation_jhu(mock_covidcast_signal):
         20200101,
         "county"
     )
-    #assert False, result
     pd.testing.assert_frame_equal(
         result,
         pd.DataFrame({"timestamp":[20200101],

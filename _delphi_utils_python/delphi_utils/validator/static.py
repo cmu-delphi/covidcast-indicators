@@ -1,5 +1,4 @@
 """Static file checks."""
-from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass

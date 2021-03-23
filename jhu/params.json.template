@@ -38,13 +38,5 @@
         "deaths_7dav_incidence_num",
         "deaths_7dav_incidence_prop"]
     }
-  },
-  "archive": {
-    "aws_credentials": {
-      "aws_access_key_id": "",
-      "aws_secret_access_key": ""
-    },
-    "bucket_name": "",
-    "cache_dir": "./cache"
   }
 }

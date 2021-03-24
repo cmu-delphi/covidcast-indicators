@@ -1,5 +1,4 @@
 """Static file checks."""
-from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass
@@ -7,6 +6,7 @@ import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
 from .utils import GEO_REGEX_DICT, TimeWindow
+from ..geomap import GeoMapper
 
 class StaticValidator:
     """Class for validation of static properties of individual datasets."""
@@ -15,8 +15,6 @@ class StaticValidator:
     class Parameters:
         """Configuration parameters."""
 
-        # Place to find the data files
-        validator_static_file_dir: str
         # Span of time over which to perform checks
         time_window: TimeWindow
         # Threshold for reporting small sample sizes
@@ -37,8 +35,6 @@ class StaticValidator:
         static_params = params.get("static", dict())
 
         self.params = self.Parameters(
-            validator_static_file_dir = static_params.get('validator_static_file_dir',
-                                                             '../validator/static'),
             time_window = TimeWindow.from_params(common_params["end_date"],
                                                  common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
@@ -143,9 +139,14 @@ class StaticValidator:
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
             - report: ValidationReport; report where results are added
         """
-        file_path = join(self.params.validator_static_file_dir, geo_type + '_geo.csv')
-        valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
-        valid_geos = valid_geo_df['geo_id'].values
+        # geomapper uses slightly different naming conventions for geo_types
+        if geo_type == "state":
+            geo_type = "state_id"
+        elif geo_type == "county":
+            geo_type = "fips"
+
+        gmpr = GeoMapper()
+        valid_geos = gmpr.get_geo_values(geo_type)
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:

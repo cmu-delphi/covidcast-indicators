@@ -1,5 +1,4 @@
 """Static file checks."""
-from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass
@@ -8,6 +7,7 @@ import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
 from .utils import GEO_REGEX_DICT, TimeWindow
+from ..geomap import GeoMapper
 
 class StaticValidator:
     """Class for validation of static properties of individual datasets."""
@@ -16,8 +16,6 @@ class StaticValidator:
     class Parameters:
         """Configuration parameters."""
 
-        # Place to find the data files
-        validator_static_file_dir: str
         # Span of time over which to perform checks
         time_window: TimeWindow
         # Threshold for reporting small sample sizes
@@ -40,8 +38,6 @@ class StaticValidator:
         static_params = params.get("static", dict())
 
         self.params = self.Parameters(
-            validator_static_file_dir = static_params.get('validator_static_file_dir',
-                                                             '../validator/static'),
             time_window = TimeWindow.from_params(common_params["end_date"],
                                                  common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),

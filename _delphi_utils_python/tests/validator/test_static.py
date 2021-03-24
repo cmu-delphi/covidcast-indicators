@@ -227,9 +227,6 @@ class TestCheckBadGeoIdValue:
             "data_source": "",
             "span_length": 0,
             "end_date": "2020-09-02",
-        },
-        "static": {
-            "validator_static_file_dir": "../delphi_utils/validator/static"
         }
     }
 

@@ -7,5 +7,27 @@
     "export_start_date": "2020-02-20",
     "num_export_days": 14,
     "bigquery_credentials": {}
+  },
+  "validation": {
+    "common": {
+      "data_source": "google-symptoms",
+      "span_length": 14,
+      "end_date": "today-8",
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "ageusia_smoothed_search",
+        "sum_anosmia_ageusia_smoothed_search",
+        "anosmia_smoothed_search"
+      ]
+    }
   }
 }

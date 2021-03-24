@@ -276,9 +276,43 @@ code_testing <- function(input_data) {
     # were not
     input_data$t_wanted_test_14d <- input_data$B12 == 1
   } else {
-    input_data$t_tested_14d <- NA
-    input_data$t_tested_positive_14d <- NA
+    input_data$t_tested_14d <- NA_real_
+    input_data$t_tested_positive_14d <- NA_real_
     input_data$t_wanted_test_14d <- NA
+  }
+  
+  if ( "B10b" %in% names(input_data) ) {
+    testing_reasons <- split_options(input_data$B10b)
+    
+    input_data$t_tested_reason_sick <- is_selected(testing_reasons, "1")
+    input_data$t_tested_reason_contact <- is_selected(testing_reasons, "2")
+    input_data$t_tested_reason_medical <- is_selected(testing_reasons, "3")
+    input_data$t_tested_reason_employer <- is_selected(testing_reasons, "4")
+    input_data$t_tested_reason_large_event <- is_selected(testing_reasons, "5")
+    input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
+    input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
+    input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
+    
+    input_data$t_tested_reason_screening <- case_when(
+      input_data$t_tested_reason_sick == TRUE ~ 0,
+      input_data$t_tested_reason_contact == TRUE ~ 0,
+      input_data$t_tested_reason_crowd == TRUE ~ 0,
+      
+      input_data$t_tested_reason_medical == TRUE ~ 1,
+      input_data$t_tested_reason_employer == TRUE ~ 1,
+      input_data$t_tested_reason_large_event == TRUE ~ 1,
+      input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      
+      !is.na(input_data$B10b) ~ 0,
+      TRUE ~ NA_real_
+    )
+    
+    input_data$t_screening_tested_positive_14d <- case_when(
+      input_data$t_tested_reason_screening == 1 ~ input_data$t_tested_positive_14d,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_screening_tested_positive_14d <- NA_real_
   }
   return(input_data)
 }

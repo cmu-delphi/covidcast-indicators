@@ -231,7 +231,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
 #'   "num_filter"
 #'
 #' @importFrom dplyr inner_join bind_rows
-#' @importFrom parallel mclapply splitIndices
+#' @importFrom parallel mclapply
 #' @importFrom stats complete.cases
 #'
 #' @export

@@ -305,6 +305,31 @@ class TestCheckBadGeoIdValue:
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
 
+    def test_additional_valid_geo_ids(self):
+        params = self.params.copy()
+        params["static"] = {
+            "additional_valid_geo_values": {
+                    "state": ["confusion"],
+                    "county": ["left", "right"]
+            }
+        }
+        validator = StaticValidator(params)
+        report = ValidationReport([])
+
+        df = pd.DataFrame(["05109", "06019", "left"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "county", report)
+        assert len(report.raised_errors) == 0
+
+        df = pd.DataFrame(["ma", "confusion", "mi"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "state", report)
+        assert len(report.raised_errors) == 0
+
+        df = pd.DataFrame(["right", "02"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "hhs", report)
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
+
+
 class TestCheckBadVal:
     params = {
         "common": {

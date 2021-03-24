@@ -3,6 +3,7 @@ from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass
+from typing import Dict, List
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
@@ -25,6 +26,8 @@ class StaticValidator:
         missing_se_allowed: bool
         # Whether to report missing sample sizes
         missing_sample_size_allowed: bool
+        # Valid geo values not found in the GeoMapper
+        additional_valid_geo_values: Dict[str, List[str]]
 
     def __init__(self, params):
         """
@@ -43,7 +46,8 @@ class StaticValidator:
                                                  common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
-            missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False)
+            missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False),
+            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {})
         )
 
 
@@ -143,9 +147,18 @@ class StaticValidator:
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
             - report: ValidationReport; report where results are added
         """
-        file_path = join(self.params.validator_static_file_dir, geo_type + '_geo.csv')
-        valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
-        valid_geos = valid_geo_df['geo_id'].values
+        # geomapper uses slightly different naming conventions for geo_types
+        if geo_type == "state":
+            geomap_type = "state_id"
+        elif geo_type == "county":
+            geomap_type = "fips"
+        else:
+            geomap_type = geo_type
+
+        gmpr = GeoMapper()
+        valid_geos = gmpr.get_geo_values(geomap_type) |\
+            set(self.params.additional_valid_geo_values.get(geo_type, []))
+        print(set(self.params.additional_valid_geo_values.get(geo_type, [])))
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:

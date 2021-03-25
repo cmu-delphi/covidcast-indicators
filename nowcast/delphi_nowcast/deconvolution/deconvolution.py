@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from functools import partial
 from typing import Callable, List, Tuple
 
 import numpy as np
@@ -66,7 +67,13 @@ def _fft_convolve(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     return np.fft.ifft(signal_freq * kernel_freq).real[:n]
 
 
+def _soft_thresh(x: np.ndarray, lam: float) -> np.ndarray:
+    """Perform soft-thresholding of x with threshold lam."""
+    return np.sign(x) * np.maximum(np.abs(x) - lam, 0)
+
+
 def deconvolve_tf(y: np.ndarray,
+                  x: np.ndarray,
                   kernel: np.ndarray,
                   lam: float,
                   n_iters: int = 100,
@@ -85,6 +92,8 @@ def deconvolve_tf(y: np.ndarray,
     ----------
     y
         array of values to convolve
+    x
+        array of positions
     kernel
         array with convolution kernel values
     lam
@@ -101,14 +110,10 @@ def deconvolve_tf(y: np.ndarray,
         array of the deconvolved signal values
     """
 
-    def _soft_thresh(x: np.ndarray, lam: float) -> np.ndarray:
-        """Perform soft-thresholding of x with threshold lam."""
-        return np.sign(x) * np.maximum(np.abs(x) - lam, 0)
-
     n = y.shape[0]
     m = kernel.shape[0]
     rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel, True)[:n, ]
+    C = _construct_convolution_matrix(y, kernel, False)[:n, ]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
 
@@ -136,10 +141,96 @@ def deconvolve_tf(y: np.ndarray,
 
     return x_k
 
+def _construct_poly_interp_mat(x, n, k):
+    assert k == 3, "poly interpolation matrix only constructed for k=3"
+    S = np.zeros((n, n - k - 1))
+    S[0, 0] = (x[3] - x[0]) / (x[3] - x[2])
+    S[0, 1] = (x[0] - x[2]) / (x[3] - x[2])
+    S[1, 0] = (x[3] - x[1]) / (x[3] - x[2])
+    S[1, 1] = (x[1] - x[2]) / (x[3] - x[2])
+    S[n - 2, n - 6] = (x[n - 3] - x[n - 2]) / (x[n - 3] - x[n - 4])
+    S[n - 2, n - 5] = (x[n - 2] - x[n - 4]) / (x[n - 3] - x[n - 4])
+    S[n - 1, n - 6] = (x[n - 3] - x[n - 1]) / (x[n - 3] - x[n - 4])
+    S[n - 1, n - 5] = (x[n - 1] - x[n - 4]) / (x[n - 3] - x[n - 4])
+    S[2:(n - 2), :] = np.eye(n - k - 1)
+    return S
+
+
+def deconvolve_ntf(y: np.ndarray,
+                   x: np.ndarray,
+                   kernel: np.ndarray,
+                   lam: float,
+                   n_iters: int = 200,
+                   k: int = 3,
+                   clip: bool = False) -> np.ndarray:
+    """
+    Perform natural trend filtering regularized deconvolution. Only implemented for k=3.
+
+    Parameters
+    ----------
+    y
+        array of values to convolve
+    x
+        array of positions
+    kernel
+        array with convolution kernel values
+    lam
+        regularization parameter for trend filtering penalty smoothness
+    n_iters
+        number of ADMM interations to perform.
+    k
+        order of the trend filtering penalty.
+    clip
+        Boolean to clip count values to [0, infty).
+
+    Returns
+    -------
+        array of the deconvolved signal values
+    """
+    assert k == 3, "Natural TF only implemented for k=3"
+
+    k = 3
+    n = y.shape[0]
+    m = kernel.shape[0]
+    rho = lam  # set equal
+    C = _construct_convolution_matrix(y, kernel, False)[:n, ]
+    P = _construct_poly_interp_mat(x, n, k)
+    D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
+    D = np.diff(D, n=k, axis=0)
+    C = C @ P
+    D = D @ P
+
+    # pre-calculations
+    DtD = D.T @ D
+    CtC = C.T @ C / n
+    Cty = C.T @ y / n
+    x_update_1 = np.linalg.inv(CtC + rho * DtD)
+
+    # begin admm loop
+    x_k = None
+    alpha_0 = np.zeros(n - k - 1)
+    u_0 = np.zeros(n - k - 1)
+    for t in range(n_iters):
+        x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 - u_0))
+        Dx_u0 = D @ x_k + u_0
+        alpha_k = _soft_thresh(Dx_u0, lam / rho)
+        u_k = Dx_u0 - alpha_k
+
+        alpha_0 = alpha_k
+        u_0 = u_k
+
+    x_k = P @ x_k
+    if clip:
+        x_k = np.clip(x_k, 0, np.infty)
+
+    return x_k
+
 
 def deconvolve_tf_cv(y: np.ndarray,
+                     x: np.ndarray,
                      kernel: np.ndarray,
-                     method: str = "forward",
+                     fit_func: Callable = deconvolve_tf,
+                     cv_method: str = "forward",
                      cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
                      n_folds: int = 5,
                      n_iters: int = 100,
@@ -163,9 +254,13 @@ def deconvolve_tf_cv(y: np.ndarray,
     ----------
     y
         array of values to convolve
+    x
+        array of positions
     kernel
         array with convolution kernel values
-    method
+    fit_func
+        deconvolution function to use
+    cv_method
         string with one of {"le3o", "forward"} specifying cv type
     cv_grid
         grid of trend filtering penalty values to search over
@@ -175,49 +270,59 @@ def deconvolve_tf_cv(y: np.ndarray,
         number of ADMM interations to perform.
     k
         order of the trend filtering penalty.
+    natural
+        Boolean whether to use natural trend filtering. If True, k is fixed to 3.
     clip
         Boolean to clip count values to [0, infty)
     verbose
         Boolean whether to print debug statements
+
 
     Returns
     -------
         array of the deconvolved signal values
     """
 
-    assert method in {"le3o", "forward"}, (
+    assert cv_method in {"le3o", "forward"}, (
         "cv method specified should be one of {'le3o', 'forward'}"
     )
 
+    fit_func = partial(fit_func, kernel=kernel, n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
     cv_loss = np.zeros((cv_grid.shape[0],))
 
-    if method == "le3o":
+    if cv_method == "le3o":
         for i in range(3):
             if verbose: print(f"Fitting fold {i}/3")
             test_split = np.zeros((n,), dtype=bool)
             test_split[i::3] = True
             for j, reg_par in enumerate(cv_grid):
                 x_hat = np.full((n,), np.nan)
-                x_hat[~test_split] = deconvolve_tf(y[~test_split], kernel, reg_par,
-                                                   n_iters, k, clip)
+                x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
+                                              lam=reg_par)
                 x_hat = _impute_with_neighbors(x_hat)
                 y_hat = _fft_convolve(x_hat, kernel)
                 cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
-    elif method == "forward":
+    elif cv_method == "forward":
+        def _linear_extrapolate(x0, y0, x1, y1, x_new):
+            return y0 + ((x_new - x0) / (x1 - x0)) * (y1 - y0)
+
         for i in range(1, n_folds + 1):
             if verbose: print(f"Fitting fold {i}/{n_folds}")
             for j, reg_par in enumerate(cv_grid):
                 x_hat = np.full((n - i + 1,), np.nan)
-                x_hat[:(n - i)] = deconvolve_tf(y[:(n - i)], kernel,
-                                                reg_par, n_iters, k, clip)
-                x_hat[-1] = x_hat[-2]
+                x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], lam=reg_par)
+                # x_hat[-1] = x_hat[-2] # constant extrapolation
+                pos = x[:(n - i + 1)]
+                x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3],
+                                                pos[-2], x_hat[-2],
+                                                pos[-1])
                 y_hat = _fft_convolve(x_hat, kernel)
-                cv_loss[j] += (y[-1] - y_hat[-1]) ** 2
+                cv_loss[j] += (y[:(n - i + 1)][-1] - y_hat[-1]) ** 2
 
     lam = cv_grid[np.argmin(cv_loss)]
     if verbose: print(f"Chosen parameter: {lam:.4}")
-    x_hat = deconvolve_tf(y, kernel, lam, n_iters, k, clip)
+    x_hat = fit_func(y=y, x=x, lam=lam)
     return x_hat
 
 
@@ -292,10 +397,6 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
 
     n_locs = len(input_locations)
 
-    # def _to_date(date: Union[int, str], fmt: str = '%Y%m%d') -> date:
-    #     """Convert int to date object, using specified fmt."""
-    #     return datetime.strptime(str(date), fmt).date()
-
     # full date range
     n_full_dates = (end_date - start_date).days + 1
     full_dates = [start_date + timedelta(days=a) for a in range(n_full_dates)]
@@ -328,7 +429,9 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
             except ValueError:
                 deconvolved_truths.append(LocationSeries(loc, geo_type))
                 continue
-            deconvolved_truth = fit_func(np.array(convolved_truth), kernel)
+            deconvolved_truth = fit_func(y=np.array(convolved_truth),
+                                         x=np.arange(1, len(convolved_truth) + 1),
+                                         kernel=kernel)
             deconvolved_truths.append(
                 LocationSeries(loc,
                                geo_type,

@@ -245,7 +245,7 @@ class TestCheckBadGeoIdValue:
 
         assert len(report.raised_errors) == 0
 
-        df = pd.DataFrame(["37183", "56000", "04000", "79000" "60000", "78000"], columns=["geo_id"])
+        df = pd.DataFrame(["37183", "56000", "04000", "60000", "78000", "99000"], columns=["geo_id"])
         validator.check_bad_geo_id_value(df, FILENAME, "county", report)
 
         assert len(report.raised_errors) == 1

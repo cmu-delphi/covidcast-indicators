@@ -20,8 +20,8 @@ class TestValidationFailure:
         vf2 = ValidationFailure("chk", dt.date(1990, 10, 3))
         assert vf2.check_name == "chk"
         assert vf2.date == dt.date(1990, 10, 3)
-        assert vf2.geo_type == None
-        assert vf2.signal == None
+        assert vf2.geo_type is None
+        assert vf2.signal is None
         assert vf2.message == ""
 
         # Values extracted from a filename.
@@ -32,6 +32,14 @@ class TestValidationFailure:
         assert vf3.geo_type == "county"
         assert vf3.signal == "cases_7dav"
         assert vf3.message == ""
+
+        # All missing arguments
+        vf4 = ValidationFailure()
+        assert vf4.check_name is None
+        assert vf4.date is None
+        assert vf4.geo_type is None
+        assert vf4.signal is None
+        assert vf4.message == ""
 
         with pytest.raises(AssertionError,
                            match='`filename` argument expected to be in "{date}_{geo_type}_'\

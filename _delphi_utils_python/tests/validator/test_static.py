@@ -237,6 +237,20 @@ class TestCheckBadGeoIdValue:
         validator.check_bad_geo_id_value(empty_df, FILENAME, "county", report)
         assert len(report.raised_errors) == 0
 
+    def test_state_level_fips(self):
+        validator = StaticValidator(self.params)
+        report = ValidationReport([])
+        df = pd.DataFrame(["37183", "56000", "04000", "60000", "78000"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "county", report)
+
+        assert len(report.raised_errors) == 0
+
+        df = pd.DataFrame(["37183", "56000", "04000", "60000", "78000", "99000"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "county", report)
+
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
+
     def test_invalid_geo_id_value_county(self):
         validator = StaticValidator(self.params)
         report = ValidationReport([])
@@ -301,6 +315,31 @@ class TestCheckBadGeoIdValue:
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
+
+    def test_additional_valid_geo_ids(self):
+        params = self.params.copy()
+        params["static"] = {
+            "additional_valid_geo_values": {
+                    "state": ["state1"],
+                    "county": ["county1", "county2"]
+            }
+        }
+        validator = StaticValidator(params)
+        report = ValidationReport([])
+
+        df = pd.DataFrame(["05109", "06019", "county2"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "county", report)
+        assert len(report.raised_errors) == 0
+
+        df = pd.DataFrame(["ma", "state1", "mi"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "state", report)
+        assert len(report.raised_errors) == 0
+
+        df = pd.DataFrame(["county2", "02"], columns=["geo_id"])
+        validator.check_bad_geo_id_value(df, FILENAME, "hhs", report)
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_bad_geo_id_value"
+
 
 class TestCheckBadVal:
     params = {

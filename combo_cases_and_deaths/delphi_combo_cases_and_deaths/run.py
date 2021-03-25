@@ -28,6 +28,8 @@ COLUMN_MAPPING = {"time_value": "timestamp",
                   "stderr": "se",
                   "sample_size": "sample_size"}
 
+EMPTY_FRAME = pd.DataFrame({}, columns=COLUMN_MAPPING.values())
+
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 
@@ -39,18 +41,21 @@ def check_none_data_frame(data_frame, label, date_range):
     return False
 
 
-def maybe_append(df1, df2):
+def maybe_append(usa_facts, jhu):
     """
-    Append dataframes if available, otherwise return non-None one.
+    Append dataframes if available, otherwise return USAFacts.
 
-    If both data frames are available, append them and return. Otherwise, return
-    whichever frame is not None.
+    If both data frames are available, append them and return.
+
+    If only USAFacts is available, return it.
+
+    If USAFacts is not available, return None.
     """
-    if df1 is None:
-        return df2
-    if df2 is None:
-        return df1
-    return df1.append(df2)
+    if usa_facts is None:
+        return None
+    if jhu is None:
+        return usa_facts
+    return usa_facts.append(jhu)
 
 
 def compute_special_geo_dfs(df, signal, geo):
@@ -86,7 +91,58 @@ def compute_special_geo_dfs(df, signal, geo):
     return df
 
 
-def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
+def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
+    """Combine the queried usafacts and jhu dataframes based on the geo type."""
+    # State level
+    if geo == 'state':
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
+    # County level
+    elif geo == 'county':
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
+    # For MSA and HRR level, they are the same
+    elif geo == 'msa':
+        df = GMPR._load_crosswalk("fips", "msa") # pylint: disable=protected-access
+        puerto_rico_mask = df["fips"].str.startswith("72")
+        puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
+        combined_df = maybe_append(
+            usafacts_df,
+            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].isin(puerto_rico_msas)])
+    else:
+        combined_df = usafacts_df
+    combined_df.rename(COLUMN_MAPPING, axis=1, inplace=True)
+
+    return combined_df
+
+
+def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
+    """Return the unique dates of the values that were updated in a given issue range in a geo."""
+    usafacts_df = fetcher(
+        "usa-facts", signal,
+        date_range[0], date_range[1],
+        geo,
+        issues=issue_range
+    )
+    jhu_df = fetcher(
+        "jhu-csse", signal,
+        date_range[0], date_range[1],
+        geo,
+        issues=issue_range
+    )
+
+    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range):
+        return None
+
+    merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo)
+    timestamp_mask = merged_df["timestamp"]<=usafacts_df["timestamp"].max()
+    unique_dates = merged_df.loc[timestamp_mask]["timestamp"].unique()
+    return unique_dates
+
+
+def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals.
 
     For hhs and nation, fetch the county `num` data so we can compute the proportions correctly
@@ -95,29 +151,38 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
     is_special_geo = geo in ["hhs", "nation"]
     geo_to_fetch = "county" if is_special_geo else geo
     signal_to_fetch = signal.replace("_prop", "_num") if is_special_geo else signal
-    print("Fetching usa-facts...")
-    usafacts_df = fetcher("usa-facts", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
-    print("Fetching jhu-csse...")
-    jhu_df = fetcher("jhu-csse", signal_to_fetch, date_range[0], date_range[1], geo_to_fetch)
-    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range) and \
-       (geo_to_fetch not in ('state', 'county') or
-        check_none_data_frame(jhu_df, "JHU", date_range)):
-        return pd.DataFrame({}, columns=COLUMN_MAPPING.values())
 
-    # State level
-    if geo_to_fetch == 'state':
-        combined_df = maybe_append(
-            usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"] == 'pr']) # add territories
-    # County level
-    elif geo_to_fetch == 'county':
-        combined_df = maybe_append(
-            usafacts_df,
-            jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
-    # For MSA and HRR level, they are the same
-    else:
-        combined_df = usafacts_df
-    combined_df.rename(COLUMN_MAPPING, axis=1, inplace=True)
+    unique_dates = get_updated_dates(
+        signal_to_fetch, geo_to_fetch, date_range, issue_range, fetcher
+    )
+
+    # This occurs if the usafacts ~and the jhu query were empty
+    if unique_dates is None:
+        return EMPTY_FRAME
+
+    # Query only the represented window so that every geo is represented; a single window call is
+    # faster than a fetch for every date in unique_dates even in cases of 1:10 sparsity,
+    # i.e., len(unique_dates):len(max(unique_dates) - min(unique_dates))
+    query_min, query_max = unique_dates.min(), unique_dates.max()
+    usafacts_df = fetcher(
+        "usa-facts", signal_to_fetch,
+        query_min, query_max,
+        geo_to_fetch,
+    )
+    jhu_df = fetcher(
+        "jhu-csse", signal_to_fetch,
+        query_min, query_max,
+        geo_to_fetch,
+    )
+    combined_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo_to_fetch)
+
+    # default sort from API is ORDER BY signal, time_value, geo_value, issue
+    # we want to drop all but the most recent (last) issue
+    combined_df.drop_duplicates(
+        subset=["geo_id", "timestamp"],
+        keep="last",
+        inplace=True
+    )
 
     if is_special_geo:
         combined_df = compute_special_geo_dfs(combined_df, signal, geo)
@@ -126,6 +191,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, fetcher=covidcast.signal):
             # se and sample size are required later so we add them back.
             combined_df["se"] = combined_df["sample_size"] = None
         combined_df.rename({geo: "geo_id"}, axis=1, inplace=True)
+
     return combined_df
 
 def extend_raw_date_range(params, sensor_name):
@@ -167,44 +233,71 @@ def configure(variants, params):
     """Validate params file and set date range."""
     params['indicator']['export_start_date'] = date(*params['indicator']['export_start_date'])
     yesterday = date.today() - timedelta(days=1)
-    if params['indicator']['date_range'] == 'new':
+    next_day = next_missing_day(
+        params['indicator']["source"],
+        set(signal[-1] for signal in variants)
+    )
+    configure_range(params, 'date_range', yesterday, next_day)
+    # pad issue range in case we caught jhu but not usafacts or v/v in the last N issues;
+    # issue_days also needs to be set to a value large enough to include values you would like
+    # to reissue
+    try:
+        issue_days = params['indicator']['issue_days']
+    except KeyError:
+        issue_days = 7
+    configure_range(params, 'issue_range', yesterday, next_day - timedelta(days=issue_days))
+    return params
+
+def configure_range(params, range_param, yesterday, next_day):
+    """Configure a parameter which stores a range of dates.
+
+    May be specified in params.json as:
+      "new" - set to [next_day, yesterday]
+      "all" - set to [export_start_date, yesterday]
+      yyyymmdd-yyyymmdd - set to exact range
+    """
+    if range_param not in params['indicator'] or params['indicator'][range_param] == 'new':
         # only create combined file for the newest update
         # (usually for yesterday, but check just in case)
-        params['indicator']['date_range'] = [
+        params['indicator'][range_param] = [
             min(
                 yesterday,
-                next_missing_day(
-                    params['indicator']["source"],
-                    set(signal[-1] for signal in variants)
-                )
+                next_day
             ),
             yesterday
         ]
-    elif params['indicator']['date_range'] == 'all':
+    elif params['indicator'][range_param] == 'all':
         # create combined files for all of the historical reports
-        params['indicator']['date_range'] = [params['indicator']['export_start_date'], yesterday]
+        if range_param == 'date_range':
+            params['indicator'][range_param] = [params['indicator']['export_start_date'], yesterday]
+        elif range_param == 'issue_range':
+            # for issue_range=all we want the latest issue for all requested
+            # dates, aka the default when issue is unspecified
+            params['indicator'][range_param] = None
+        else:
+            raise ValueError(
+                f"Bad Programmer: Invalid range_param '{range_param}';"
+                f"expected 'date_range' or 'issue_range'")
     else:
-        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['indicator']['date_range'])
+        match_res = re.findall(re.compile(r'^\d{8}-\d{8}$'), params['indicator'][range_param])
         if len(match_res) == 0:
             raise ValueError(
-                "Invalid date_range parameter. Please choose from (new, all, yyyymmdd-yyyymmdd).")
+                f"Invalid {range_param} parameter. Try (new, all, yyyymmdd-yyyymmdd).")
         try:
-            date1 = datetime.strptime(params['indicator']['date_range'][:8], '%Y%m%d').date()
+            date1 = datetime.strptime(params['indicator'][range_param][:8], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
-                "Invalid date_range parameter. Please check the first date.") from error
+                f"Invalid {range_param} parameter. Please check the first date.") from error
         try:
-            date2 = datetime.strptime(params['indicator']['date_range'][-8:], '%Y%m%d').date()
+            date2 = datetime.strptime(params['indicator'][range_param][-8:], '%Y%m%d').date()
         except ValueError as error:
             raise ValueError(
-                "Invalid date_range parameter. Please check the second date.") from error
+                f"Invalid {range_param} parameter. Please check the second date.") from error
 
-        #The the valid start date
+        # ensure valid start date
         if date1 < params['indicator']['export_start_date']:
             date1 = params['indicator']['export_start_date']
-        params['indicator']['date_range'] = [date1, date2]
-    return params
-
+        params['indicator'][range_param] = [date1, date2]
 
 def run_module(params):
     """
@@ -237,7 +330,8 @@ def run_module(params):
     for metric, geo_res, sensor_name, signal in variants:
         df = combine_usafacts_and_jhu(signal,
                                       geo_res,
-                                      extend_raw_date_range(params, sensor_name))
+                                      extend_raw_date_range(params, sensor_name),
+                                      params['indicator']['issue_range'])
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         start_date = pd.to_datetime(params['indicator']['export_start_date'])
         export_dir = params["common"]["export_dir"]

@@ -20,10 +20,6 @@
       "max_age": 11,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
     },
-    "ght": {
-      "max_age": 5,
-      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
-    },
     "usa-facts": {
       "max_age": 3,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
@@ -39,12 +35,12 @@
     "fb-survey": {
       "max_age": 3,
       "maintainers": ["U01069KCRS7"],
-      "retired-signals": ["smoothed_wearing_mask"]
+      "retired-signals": ["smoothed_anxious_5d", "smoothed_wanxious_5d", "smoothed_depressed_5d", "smoothed_wdepressed_5d", "smoothed_felt_isolated_5d", "smoothed_wfelt_isolated_5d", "smoothed_large_event_1d", "smoothed_wlarge_event_1d", "smoothed_restaurant_1d", "smoothed_wrestaurant_1d", "smoothed_shop_1d", "smoothed_wshop_1d", "smoothed_spent_time_1d", "smoothed_wspent_time_1d", "smoothed_travel_outside_state_5d", "smoothed_wtravel_outside_state_5d", "smoothed_work_outside_home_1d", "smoothed_wwork_outside_home_1d", "smoothed_wearing_mask", "smoothed_wwearing_mask", "smoothed_vaccine_likely_local_health", "smoothed_wvaccine_likely_local_health"]
     },
     "indicator-combination": {
       "max_age": 3,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
-      "retired-signals": ["nmf_day_doc_fbs_ght"]
+      "retired-signals": ["nmf_day_doc_fbs_ght", "nmf_day_doc_fbc_fbs_ght"]
     },
     "quidel": {
       "max_age":6,

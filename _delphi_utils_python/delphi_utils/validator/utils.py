@@ -19,6 +19,7 @@ GEO_REGEX_DICT = {
 @dataclass
 class TimeWindow:
     """Object to store a window of time ending on `end_date` and lasting `span_length`."""
+
     end_date: date
     span_length: timedelta
     start_date: date = field(init=False)
@@ -34,22 +35,25 @@ class TimeWindow:
     def from_params(cls, end_date_str: str, span_length_int: int):
         """Create a TimeWindow from param representations of its members."""
         span_length = timedelta(days=span_length_int)
-        if end_date_str == "latest":
-            end_date = date.today()
+        if end_date_str.startswith("today"):
+            if end_date_str == "today":
+                days_back = 0
+            else:
+                assert end_date_str.startswith("today-")
+                days_back = int(end_date_str[6:])
+            end_date = date.today() - timedelta(days=days_back)
         else:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         return cls(end_date, span_length)
 
 
 def relative_difference_by_min(x, y):
-    """
-    Calculate relative difference between two numbers.
-    """
+    """Calculate relative difference between two numbers."""
     return (x - y) / min(x, y)
 
 
 def aggregate_frames(frames_list):
-    """Aggregates a list of data frames into a single frame.
+    """Aggregate a list of data frames into a single frame.
 
     Parameters
     ----------

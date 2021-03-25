@@ -26,8 +26,11 @@ split_options <- function(column) {
 #' @param selection one string, such as "14"
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
+#'   
+#' @importFrom parallel mclapply
 is_selected <- function(vec, selection) {
-  selections <- sapply(
+  map_fn <- ifelse( is.null(getOption("mc.cores")) , lapply, mclapply)
+  selections <- unlist(map_fn(
     vec,
     function(resp) {
       if (length(resp) == 0 || all(is.na(resp))) {
@@ -39,7 +42,7 @@ is_selected <- function(vec, selection) {
       } else {
         selection %in% resp
       }
-    })
+    }))
 
   return(selections)
 }
@@ -273,9 +276,43 @@ code_testing <- function(input_data) {
     # were not
     input_data$t_wanted_test_14d <- input_data$B12 == 1
   } else {
-    input_data$t_tested_14d <- NA
-    input_data$t_tested_positive_14d <- NA
+    input_data$t_tested_14d <- NA_real_
+    input_data$t_tested_positive_14d <- NA_real_
     input_data$t_wanted_test_14d <- NA
+  }
+  
+  if ( "B10b" %in% names(input_data) ) {
+    testing_reasons <- split_options(input_data$B10b)
+    
+    input_data$t_tested_reason_sick <- is_selected(testing_reasons, "1")
+    input_data$t_tested_reason_contact <- is_selected(testing_reasons, "2")
+    input_data$t_tested_reason_medical <- is_selected(testing_reasons, "3")
+    input_data$t_tested_reason_employer <- is_selected(testing_reasons, "4")
+    input_data$t_tested_reason_large_event <- is_selected(testing_reasons, "5")
+    input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
+    input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
+    input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
+    
+    input_data$t_tested_reason_screening <- case_when(
+      input_data$t_tested_reason_sick == TRUE ~ 0,
+      input_data$t_tested_reason_contact == TRUE ~ 0,
+      input_data$t_tested_reason_crowd == TRUE ~ 0,
+      
+      input_data$t_tested_reason_medical == TRUE ~ 1,
+      input_data$t_tested_reason_employer == TRUE ~ 1,
+      input_data$t_tested_reason_large_event == TRUE ~ 1,
+      input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      
+      !is.na(input_data$B10b) ~ 0,
+      TRUE ~ NA_real_
+    )
+    
+    input_data$t_screening_tested_positive_14d <- case_when(
+      input_data$t_tested_reason_screening == 1 ~ input_data$t_tested_positive_14d,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_screening_tested_positive_14d <- NA_real_
   }
   return(input_data)
 }
@@ -288,6 +325,9 @@ code_testing <- function(input_data) {
 #'
 #' @importFrom dplyr coalesce
 code_vaccines <- function(input_data) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
   if ("V1" %in% names(input_data)) {
     # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
     # because, well, you'd know.
@@ -339,16 +379,25 @@ code_vaccines <- function(input_data) {
 
   if ("V4_1" %in% names(input_data)) {
     input_data$v_vaccine_likely_friends <- input_data$V4_1 == 1
-    input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
     input_data$v_vaccine_likely_who <- input_data$V4_3 == 1
     input_data$v_vaccine_likely_govt_health <- input_data$V4_4 == 1
     input_data$v_vaccine_likely_politicians <- input_data$V4_5 == 1
+    
+    if (wave < 8) {
+      input_data$v_vaccine_likely_local_health <- input_data$V4_2 == 1
+      input_data$v_vaccine_likely_doctors <- NA_real_
+    } else {
+      input_data$v_vaccine_likely_local_health <- NA_real_
+      input_data$v_vaccine_likely_doctors <- input_data$V4_2 == 1
+    }
+    
   } else {
     input_data$v_vaccine_likely_friends <- NA_real_
     input_data$v_vaccine_likely_local_health <- NA_real_
     input_data$v_vaccine_likely_who <- NA_real_
     input_data$v_vaccine_likely_govt_health <- NA_real_
     input_data$v_vaccine_likely_politicians <- NA_real_
+    input_data$v_vaccine_likely_doctors <- NA_real_
   }
 
   if ("V5a" %in% names(input_data) && "V5b" %in% names(input_data) && "V5c" %in% names(input_data)) {
@@ -388,6 +437,28 @@ code_vaccines <- function(input_data) {
     input_data$v_hesitancy_reason_other <- NA_real_
     input_data$v_hesitancy_reason_pregnant <- NA_real_
     input_data$v_hesitancy_reason_religious <- NA_real_
+  }
+  
+  if ( "V6" %in% names(input_data) ) {
+    # introduced in Wave 8
+    dontneed_reasons <- split_options(input_data$V6)
+    
+    input_data$v_dontneed_reason_had_covid <- is_selected(dontneed_reasons, "1")
+    input_data$v_dontneed_reason_dont_spend_time <- is_selected(dontneed_reasons, "2")
+    input_data$v_dontneed_reason_not_high_risk <- is_selected(dontneed_reasons, "3")
+    input_data$v_dontneed_reason_precautions <- is_selected(dontneed_reasons, "4")
+    input_data$v_dontneed_reason_not_serious <- is_selected(dontneed_reasons, "5")
+    input_data$v_dontneed_reason_not_beneficial <- is_selected(dontneed_reasons, "7")
+    input_data$v_dontneed_reason_other <- is_selected(dontneed_reasons, "8")
+    
+  } else {
+    input_data$v_dontneed_reason_had_covid <- NA
+    input_data$v_dontneed_reason_dont_spend_time <- NA
+    input_data$v_dontneed_reason_not_high_risk <- NA
+    input_data$v_dontneed_reason_precautions <- NA
+    input_data$v_dontneed_reason_not_serious <- NA
+    input_data$v_dontneed_reason_not_beneficial <- NA
+    input_data$v_dontneed_reason_other <- NA
   }
 
   if ("V9" %in% names(input_data)) {

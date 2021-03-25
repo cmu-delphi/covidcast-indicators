@@ -63,7 +63,7 @@ class GeoConstants:
     NUM_COUNTIES = 3141 + 52
     NUM_HRRS = 308
     NUM_MSAS = 392 + 52  # MSA + States
-    NUM_STATES = 52  # including DC and PR
+    NUM_STATES = 54  # including DC, PR, VI, GU
     NUM_HHSS = 10
     NUM_NATIONS = 1
 

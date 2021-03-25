@@ -14,6 +14,7 @@ class DynamicValidator:
     @dataclass
     class Parameters:
         """Configuration parameters."""
+
         # data source name, one of
         # https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
         data_source: str
@@ -36,15 +37,15 @@ class DynamicValidator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        global_params = params["global"]
+        common_params = params["common"]
         dynamic_params = params.get("dynamic", dict())
 
         self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
-            data_source = global_params["data_source"],
-            time_window = TimeWindow.from_params(global_params["end_date"],
-                                                 global_params["span_length"]),
+            data_source = common_params["data_source"],
+            time_window = TimeWindow.from_params(common_params["end_date"],
+                                                 common_params["span_length"]),
             generation_date = date.today(),
             max_check_lookbehind = timedelta(days=dynamic_params.get("ref_window_size", 7)),
             smoothed_signals = set(dynamic_params.get("smoothed_signals", [])),
@@ -54,7 +55,7 @@ class DynamicValidator:
 
     def validate(self, all_frames, report):
         """
-        Performs all checks over the combined data set from all files.
+        Perform all checks over the combined data set from all files.
 
         Parameters
         ----------
@@ -118,27 +119,23 @@ class DynamicValidator:
                 continue
 
             # Outlier dataframe
-            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
-                                "confirmed_cumulative_num", "confirmed_incidence_num",
-                                "deaths_7dav_cumulative_num",
-                                "deaths_cumulative_num"]):
-                earliest_available_date = geo_sig_df["time_value"].min()
-                source_df = geo_sig_df.query(
-                    'time_value <= @self.params.time_window.end_date & '
-                    'time_value >= @self.params.time_window.start_date'
-                )
+            earliest_available_date = geo_sig_df["time_value"].min()
+            source_df = geo_sig_df.query(
+                'time_value <= @self.params.time_window.end_date & '
+                'time_value >= @self.params.time_window.start_date'
+            )
 
-                # These variables are interpolated into the call to `api_df_or_error.query()`
-                # below but pylint doesn't recognize that.
-                # pylint: disable=unused-variable
-                outlier_start_date = earliest_available_date - outlier_lookbehind
-                outlier_end_date = earliest_available_date - timedelta(days=1)
-                outlier_api_df = api_df_or_error.query(
-                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-                # pylint: enable=unused-variable
+            # These variables are interpolated into the call to `api_df_or_error.query()`
+            # below but pylint doesn't recognize that.
+            # pylint: disable=unused-variable
+            outlier_start_date = earliest_available_date - outlier_lookbehind
+            outlier_end_date = earliest_available_date - timedelta(days=1)
+            outlier_api_df = api_df_or_error.query(
+                'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+            # pylint: enable=unused-variable
 
-                self.check_positive_negative_spikes(
-                    source_df, outlier_api_df, geo_type, signal_type, report)
+            self.check_positive_negative_spikes(
+                source_df, outlier_api_df, geo_type, signal_type, report)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -320,8 +317,9 @@ class DynamicValidator:
 
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):
         """
-        Adapt Dan's corrections package to Python (only consider spikes) :
-        https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
+        Adapt Dan's corrections package to Python (only consider spikes).
+
+        See https://github.com/cmu-delphi/covidcast-forecast/tree/dev/corrections/data_corrections
 
         Statistics for a right shifted rolling window and a centered rolling window are used
         to determine outliers for both positive and negative spikes.
@@ -452,6 +450,7 @@ class DynamicValidator:
                                    signal_type, report):
         """
         Compare average values for each variable in test dataframe vs reference dataframe.
+
         Arguments:
             - df_to_test: pandas dataframe of CSV source data
             - df_to_reference: pandas dataframe of reference data, either from the

@@ -12,14 +12,21 @@
 #'   frame
 #'
 #' @importFrom dplyr bind_rows
+#' @importFrom parallel mclapply
 #' @export
 load_responses_all <- function(params) {
   input_data <- vector("list", length(params$input))
-  for (i in seq_along(input_data))
-  {
-    input_data[[i]] <- load_response_one(params$input[i], params)
-  }
+  
+  msg_plain(paste0("Loading ", length(params$input), " CSVs"))
+  
+  map_fn <- if (params$parallel) { mclapply } else { lapply }
+  input_data <- map_fn(seq_along(input_data), function(i) {
+    load_response_one(params$input[i], params)
+  })
+  
+  msg_plain(paste0("Finished loading CSVs"))
   input_data <- bind_rows(input_data)
+  msg_plain(paste0("Finished combining CSVs"))
   return(input_data)
 }
 
@@ -36,6 +43,7 @@ load_responses_all <- function(params) {
 #' @importFrom rlang .data
 #' @export
 load_response_one <- function(input_filename, params) {
+  msg_plain(paste0("Reading ", input_filename))
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
 
@@ -190,6 +198,7 @@ load_response_one <- function(input_filename, params) {
 #' @importFrom rlang .data
 #' @export
 filter_responses <- function(input_data, params) {
+  msg_plain(paste0("Filtering data..."))
   input_data <- arrange(input_data, .data$StartDate)
   
   ## Remove invalid, duplicated, and out-of-range observations.
@@ -220,6 +229,7 @@ filter_responses <- function(input_data, params) {
 #' @importFrom dplyr bind_rows
 #' @export
 merge_responses <- function(input_data, archive) {
+  msg_plain(paste0("Merging new and archived data..."))
   # First, merge the new data with the archived data, taking the first start
   # date for any given token. This allows for backfill. Note that the order
   # matters: since arrange() uses order(), which is a stable sort, ties will
@@ -227,20 +237,24 @@ merge_responses <- function(input_data, archive) {
   # This means that if we run the pipeline, then change the input CSV, running
   # again will used the changed data instead of the archived data.
   data <- bind_rows(input_data, archive$input_data)
+  msg_plain(paste0("Sorting by start date"))
   data <- arrange(data, .data$StartDate)
 
+  msg_plain(paste0("Removing duplicated tokens"))
   data <- data[!duplicated(data$token), ]
 
   # Next, filter out responses with tokens that were seen before in responses
   # started before even the responses in `data`. These are responses submitted
   # recently with tokens that were initially used long ago, before the data
   # contained in `archive$input_data`.
+  msg_plain(paste0("Join on seen tokens from archive"))
   if (!is.null(archive$seen_tokens)) {
     data <- left_join(data, archive$seen_tokens,
                       by = "token", suffix = c("", ".seen"))
     data <- data[is.na(data$start_dt.seen) | data$start_dt <= data$start_dt.seen, ]
   }
 
+  msg_plain(paste0("Finished merging new and archived data"))
   return(data)
 }
 
@@ -251,10 +265,12 @@ merge_responses <- function(input_data, archive) {
 #' @export
 create_data_for_aggregation <- function(input_data)
 {
+  msg_plain(paste0("Creating data for aggregations..."))
   df <- input_data
   df$weight_unif <- 1.0
   df$day <- as.Date(df$date)
 
+  msg_plain(paste0("Creating variables for CLI and ILI signals"))
   # create variables for cli and ili signals
   hh_cols <- c("hh_fever", "hh_sore_throat", "hh_cough", "hh_short_breath", "hh_diff_breath")
   df$cnt_symptoms <- apply(df[,hh_cols], 1, sum, na.rm = TRUE)
@@ -271,12 +287,14 @@ create_data_for_aggregation <- function(input_data)
   ### Create variables for community survey.
   ## Question A4: how many people you know in the local community (not your
   ## household) with CLI
+  msg_plain(paste0("Creating variables for community signals"))
   df$community_yes <- as.numeric(as.numeric(df$A4) > 0)
 
   ## Whether you know someone in your local community *or* household who is
   ## sick.
   df$hh_community_yes <- as.numeric(as.numeric(df$A4) + df$hh_number_sick > 0)
 
+  msg_plain(paste0("Finished creating data for aggregations..."))
   return(df)
 }
 
@@ -296,6 +314,7 @@ create_data_for_aggregation <- function(input_data)
 #' @export
 filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 {
+  msg_plain(paste0("Filtering data for aggregations..."))
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
   df <- filter(df, 
@@ -307,6 +326,7 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
                day >= (as.Date(params$start_date) - lead_days),
   )
 
+  msg_plain(paste0("Finished filtering data for aggregations"))
   return(df)
 }
 
@@ -332,12 +352,21 @@ bodge_v4_translation <- function(input_data) {
   affected <- c("V4_1", "V4_2", "V4_3", "V4_4", "V4_5")
   corrected <- c("V4a_1", "V4a_2", "V4a_3", "V4a_4", "V4a_5")
 
-  # Step 1: For any non-English results, null out V4 responses. There are NAs
-  # because of filtering earlier in the pipeline that incorrectly handles NA, so
-  # also remove these.
-  non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
-  for (col in affected) {
-    input_data[non_english, col] <- NA
+  if (any(affected %in% names(input_data))) {
+    # This wave is affected by the problem. Step 1: For any non-English results,
+    # null out V4 responses. There are NAs because of filtering earlier in the
+    # pipeline that incorrectly handles NA, so also remove these.
+    non_english <- is.na(input_data$UserLanguage) | input_data$UserLanguage != "EN"
+    for (col in affected) {
+      input_data[non_english, col] <- NA
+    }
+  } else {
+    # This wave does not have V4, only V4a. We will move V4a's responses into V4
+    # below, so users do not need to know about our goof. Ensure the columns
+    # exist so the later code can move data into them.
+    for (col in affected) {
+      input_data[[col]] <- NA
+    }
   }
 
   # Step 2: If this data does not have V4a, stop.
@@ -345,6 +374,8 @@ bodge_v4_translation <- function(input_data) {
     return(input_data)
   }
 
+  # Step 3: Wherever there are values in the new columns, move them to the old
+  # columns.
   for (ii in seq_along(affected)) {
     bad <- affected[ii]
     good <- corrected[ii]
@@ -423,8 +454,9 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "C16", "C17", "E1_1", "E1_2", "E1_3", "E1_4", "E2_1", "E2_2", "E3", # added in Wave 5
     "V1", "V2", "V3", "V4_1", "V4_2", "V4_3", "V4_4", "V4_5", # added in Wave 6
     "V9", # added in Wave 7,
-    "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
+    "C14a", "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
     "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
+
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )

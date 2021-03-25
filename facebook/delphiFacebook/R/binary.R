@@ -51,12 +51,15 @@ get_binary_indicators <- function() {
     "smoothed_wtravel_outside_state_7d", "weight", "c_travel_state_7d", 6, compute_binary_response, jeffreys_binary,
     
     # work outside home
-    # pre-wave-4
+    # pre-wave 4
     "wip_smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
     "wip_smoothed_wwork_outside_home_5d", "weight", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
-    # wave 4+
+    # wave 4+, pre-wave 10
     "smoothed_work_outside_home_1d", "weight_unif", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwork_outside_home_1d", "weight", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
+    # wave 10+
+    "smoothed_work_outside_home_indoors_1d", "weight_unif", "a_work_outside_home_indoors_1d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wwork_outside_home_indoors_1d", "weight", "a_work_outside_home_indoors_1d", 6, compute_binary_response, jeffreys_binary,
 
     # activities
     # pre-Wave 10
@@ -85,6 +88,8 @@ get_binary_indicators <- function() {
     "smoothed_wtested_14d", "weight", "t_tested_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_tested_positive_14d", "weight_unif", "t_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtested_positive_14d", "weight", "t_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_screening_tested_positive_14d", "weight_unif", "t_screening_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wscreening_tested_positive_14d", "weight", "t_screening_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wanted_test_14d", "weight_unif", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwanted_test_14d", "weight", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
 
@@ -112,7 +117,9 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_likely_govt_health", "weight", "v_vaccine_likely_govt_health", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_likely_politicians", "weight_unif", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_likely_politicians", "weight", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
-
+    "smoothed_vaccine_likely_doctors", "weight_unif", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_likely_doctors", "weight", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
+    
     # vaccine hesitancy reasons
     "smoothed_hesitancy_reason_sideeffects", "weight_unif", "v_hesitancy_reason_sideeffects", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_sideeffects", "weight", "v_hesitancy_reason_sideeffects", 6, compute_binary_response, jeffreys_binary,
@@ -144,6 +151,22 @@ get_binary_indicators <- function() {
     "smoothed_whesitancy_reason_pregnant", "weight", "v_hesitancy_reason_pregnant", 6, compute_binary_response, jeffreys_binary,
     "smoothed_hesitancy_reason_religious", "weight_unif", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_religious", "weight", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
+    
+    # reasons for belief that vaccine is unnecessary
+    "smoothed_dontneed_reason_had_covid", "weight_unif", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_had_covid", "weight", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_dont_spend_time", "weight_unif", "v_dontneed_reason_dont_spend_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_dont_spend_time", "weight", "v_dontneed_reason_dont_spend_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_high_risk", "weight_unif", "v_dontneed_reason_not_high_risk", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_high_risk", "weight", "v_dontneed_reason_not_high_risk", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_precautions", "weight_unif", "v_dontneed_reason_precautions", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_precautions", "weight", "v_dontneed_reason_precautions", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_serious", "weight_unif", "v_dontneed_reason_not_serious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_serious", "weight", "v_dontneed_reason_not_serious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_not_beneficial", "weight_unif", "v_dontneed_reason_not_beneficial", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_not_beneficial", "weight", "v_dontneed_reason_not_beneficial", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_dontneed_reason_other", "weight_unif", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdontneed_reason_other", "weight", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
   )
 
 

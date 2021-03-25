@@ -13,7 +13,30 @@
     "aws_endpoint": "",
     "sync": true
   },
-  "archive": {
-    "cache_dir": "./cache"
+  "validation": {
+    "common": {
+      "data_source": "safegraph",
+      "span_length": 14,
+      "end_date": "today-4",
+      "suppressed_errors": [
+        {"signal": "completely_home_prop"},
+        {"signal": "completely_home_prop_7dav"},
+        {"signal": "full_time_work_prop"},
+        {"signal": "full_time_work_prop_7dav"},
+        {"signal": "part_time_work_prop"},
+        {"signal": "part_time_work_prop_7dav"},
+        {"signal": "median_home_dwell_time"},
+        {"signal": "median_home_dwell_time_7dav"}
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 100,
+      "missing_se_allowed": false,
+      "missing_sample_size_allowed": false
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": []
+    }
   }
 }

@@ -1,5 +1,4 @@
 """Static file checks."""
-from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass
@@ -7,6 +6,7 @@ import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
 from .utils import GEO_REGEX_DICT, TimeWindow
+from ..geomap import GeoMapper
 
 class StaticValidator:
     """Class for validation of static properties of individual datasets."""
@@ -14,8 +14,7 @@ class StaticValidator:
     @dataclass
     class Parameters:
         """Configuration parameters."""
-        # Place to find the data files
-        validator_static_file_dir: str
+
         # Span of time over which to perform checks
         time_window: TimeWindow
         # Threshold for reporting small sample sizes
@@ -32,14 +31,12 @@ class StaticValidator:
         Arguments:
             - params: dictionary of user settings; if empty, defaults will be used
         """
-        global_params = params["global"]
+        common_params = params["common"]
         static_params = params.get("static", dict())
 
         self.params = self.Parameters(
-            validator_static_file_dir = static_params.get('validator_static_file_dir',
-                                                             '../validator/static'),
-            time_window = TimeWindow.from_params(global_params["end_date"],
-                                                 global_params["span_length"]),
+            time_window = TimeWindow.from_params(common_params["end_date"],
+                                                 common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
             missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False)
@@ -57,7 +54,6 @@ class StaticValidator:
         report: ValidationReport
             report to which the results of these checks will be added
         """
-
         self.check_missing_date_files(file_list, report)
 
         # Individual file checks
@@ -136,17 +132,21 @@ class StaticValidator:
 
     def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
         """
-        Check for bad geo_id values, by comparing to a list of known values (drawn from
-        historical data)
+        Check for bad geo_id values, by comparing to a list of known historical values.
 
         Arguments:
             - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
             - report: ValidationReport; report where results are added
-       """
-        file_path = join(self.params.validator_static_file_dir, geo_type + '_geo.csv')
-        valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
-        valid_geos = valid_geo_df['geo_id'].values
+        """
+        # geomapper uses slightly different naming conventions for geo_types
+        if geo_type == "state":
+            geo_type = "state_id"
+        elif geo_type == "county":
+            geo_type = "fips"
+
+        gmpr = GeoMapper()
+        valid_geos = gmpr.get_geo_values(geo_type)
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:
@@ -180,10 +180,7 @@ class StaticValidator:
             - None
         """
         def find_all_unexpected_geo_ids(df_to_test, geo_regex, geo_type):
-            """
-            Check if any geo_ids in df_to_test aren't formatted correctly, according
-            to the geo type dictionary negated_regex_dict.
-            """
+            """Check if any geo_ids in df_to_test aren't formatted correctly wrt geo_regex."""
             numeric_geo_types = {"msa", "county", "hrr", "dma"}
             fill_len = {"msa": 5, "county": 5, "dma": 3}
 

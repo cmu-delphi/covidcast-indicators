@@ -3,13 +3,27 @@
     "export_dir": "/common/covidcast/receiving/hhs",
     "log_filename": "/var/log/indicators/hhs_hosp.log"
   },
+  "validation": {
+    "common": {
+      "data_source": "hhs",
+      "span_length": 14,
+      "end_date": "today-2",
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
+  },
   "archive": {
     "aws_credentials": {
       "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
       "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
     },
     "bucket_name": "delphi-covidcast-indicator-output",
-    "cache_dir": "./cache"
+    "cache_dir": "./cache",
+    "indicator_prefix": "delphi_hhs_hosp"
   }
-
 }

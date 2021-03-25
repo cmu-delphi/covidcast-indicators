@@ -116,7 +116,7 @@ test_that("filter_responses works correctly", {
                expected)
 })
 
-test_that("filter_data_for_aggregatation works correctly", {
+test_that("filter_data_for_aggregation works correctly", {
   params <- list(start_date=as.Date("2021-01-05"), static_dir=test_path("static"))
   
   input <- tibble(
@@ -135,7 +135,7 @@ test_that("filter_data_for_aggregatation works correctly", {
     date = c("2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01")
   )
 
-  expect_equal(filter_data_for_aggregatation(input, params), 
+  expect_equal(filter_data_for_aggregation(input, params),
                expected)
 })
 
@@ -170,6 +170,73 @@ test_that("V4 bodge works correctly", {
 
   expect_equal(bodge_v4_translation(foo),
                expected)
+
+  # Ensure the bodge works when all responses are in English to V4a; see PR #888
+  foo <- tibble(
+    UserLanguage = "EN",
+    V4a_1 = c(2, NA, NA, NA, 3),
+    V4a_2 = c(2, NA, NA, NA, 3),
+    V4a_3 = c(2, NA, NA, NA, 3),
+    V4a_4 = c(1, NA, NA, NA, 3),
+    V4a_5 = c(2, NA, NA, NA, 3)
+  )
+
+  expected <- tibble(
+    UserLanguage = foo$UserLanguage,
+    V4a_1 = foo$V4a_1,
+    V4a_2 = foo$V4a_2,
+    V4a_3 = foo$V4a_3,
+    V4a_4 = foo$V4a_4,
+    V4a_5 = foo$V4a_5,
+    V4_1 = c(2, NA, NA, NA, 3),
+    V4_2 = c(2, NA, NA, NA, 3),
+    V4_3 = c(2, NA, NA, NA, 3),
+    V4_4 = c(1, NA, NA, NA, 3),
+    V4_5 = c(2, NA, NA, NA, 3)
+  )
+
+  expect_equal(bodge_v4_translation(foo),
+               expected)
+
+  # Ensure the bodge works when *no* responses are in English, but they're to
+  # V4a, which needs no censoring
+  foo <- tibble(
+    UserLanguage = "ES",
+    V4a_1 = c(2, NA, NA, NA, 3),
+    V4a_2 = c(2, NA, NA, NA, 3),
+    V4a_3 = c(2, NA, NA, NA, 3),
+    V4a_4 = c(1, NA, NA, NA, 3),
+    V4a_5 = c(2, NA, NA, NA, 3)
+  )
+
+  expected <- tibble(
+    UserLanguage = foo$UserLanguage,
+    V4a_1 = foo$V4a_1,
+    V4a_2 = foo$V4a_2,
+    V4a_3 = foo$V4a_3,
+    V4a_4 = foo$V4a_4,
+    V4a_5 = foo$V4a_5,
+    V4_1 = c(2, NA, NA, NA, 3),
+    V4_2 = c(2, NA, NA, NA, 3),
+    V4_3 = c(2, NA, NA, NA, 3),
+    V4_4 = c(1, NA, NA, NA, 3),
+    V4_5 = c(2, NA, NA, NA, 3)
+  )
+
+  expect_equal(bodge_v4_translation(foo),
+               expected)
+
+  # Ensure functioning on earlier waves before V4a happened
+  foo <- tibble(
+    UserLanguage = "EN",
+    V4_1 = c(2, NA, NA, NA, 3),
+    V4_2 = c(2, NA, 4, NA, 3),
+    V4_3 = c(2, NA, NA, NA, 3),
+    V4_4 = c(1, NA, NA, NA, 3),
+    V4_5 = c(2, NA, NA, NA, 3)
+  )
+
+  expect_equal(bodge_v4_translation(foo), foo)
 })
 
 
@@ -182,7 +249,7 @@ test_that("C6/8 bodge works correctly", {
     C8_2 = c(1, 2, 3, 4),
     C8_3 = c(1, 2, 3, 4)
   )
-  
+
   expect_equal(bodge_C6_C8(input),
                input)
   

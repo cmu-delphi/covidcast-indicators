@@ -1,7 +1,7 @@
-"""Tests for delphi_validator.report."""
+"""Tests for delphi_utils.validator.report."""
 import mock
-from delphi_validator.errors import ValidationFailure
-from delphi_validator.report import ValidationReport
+from delphi_utils.validator.errors import ValidationFailure
+from delphi_utils.validator.report import ValidationReport
 
 class TestValidationReport:
     """Tests for ValidationReport class."""
@@ -44,7 +44,7 @@ class TestValidationReport:
         assert report.summary() ==\
             "3 checks run\n1 checks failed\n1 checks suppressed\n2 warnings\n"
 
-    @mock.patch("delphi_validator.report.logger")
+    @mock.patch("delphi_utils.validator.report.logger")
     def test_log(self, mock_logger):
         """Test that the logs contain all failures and warnings."""
         report = ValidationReport([self.ERROR_1])

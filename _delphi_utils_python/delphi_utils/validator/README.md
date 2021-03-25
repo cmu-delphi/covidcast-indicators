@@ -64,7 +64,8 @@ Please update the follow settings:
 * `static`: settings for validations that don't require comparison with external COVIDcast API data
    * `minimum_sample_size` (default: 100): threshold for flagging small sample sizes as invalid
    * `missing_se_allowed` (default: False): whether signals with missing standard errors are valid
-   * `misisng_sample_size_allowed` (default: False): whether signals with missing sample sizes are valid
+   * `missing_sample_size_allowed` (default: False): whether signals with missing sample sizes are valid
+   * `additional_valid_geo_values` (default: `{}`): map of geo type names to lists of geo values that are not recorded in the GeoMapper but are nonetheless valid for this indicator
 * `dynamic`: settings for validations that require comparison with external COVIDcast API data
    * `ref_window_size` (default: 7): number of days over which to look back for comparison 
    * `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)

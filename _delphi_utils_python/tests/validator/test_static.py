@@ -320,7 +320,7 @@ class TestCheckBadGeoIdValue:
         params = self.params.copy()
         params["static"] = {
             "additional_valid_geo_values": {
-                    "state": ["confusion"],
+                    "state": ["state1"],
                     "county": ["county1", "county2"]
             }
         }
@@ -331,7 +331,7 @@ class TestCheckBadGeoIdValue:
         validator.check_bad_geo_id_value(df, FILENAME, "county", report)
         assert len(report.raised_errors) == 0
 
-        df = pd.DataFrame(["ma", "confusion", "mi"], columns=["geo_id"])
+        df = pd.DataFrame(["ma", "state1", "mi"], columns=["geo_id"])
         validator.check_bad_geo_id_value(df, FILENAME, "state", report)
         assert len(report.raised_errors) == 0
 

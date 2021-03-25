@@ -134,15 +134,7 @@ class StaticValidator:
 
         report.increment_total_checks()
 
-    def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
-        """
-        Check for bad geo_id values, by comparing to a list of known historical values.
-
-        Arguments:
-            - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check
-            - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
-            - report: ValidationReport; report where results are added
-        """
+    def _get_valid_geo_values(self, geo_type):
         # geomapper uses slightly different naming conventions for geo_types
         if geo_type == "state":
             geomap_type = "state_id"
@@ -152,9 +144,22 @@ class StaticValidator:
             geomap_type = geo_type
 
         gmpr = GeoMapper()
-        valid_geos = gmpr.get_geo_values(geomap_type) |\
-            set(self.params.additional_valid_geo_values.get(geo_type, []))
-        print(set(self.params.additional_valid_geo_values.get(geo_type, [])))
+        valid_geos = gmpr.get_geo_values(geomap_type)
+        valid_geos |= set(self.params.additional_valid_geo_values.get(geo_type, []))
+        if geo_type == "county":
+            valid_geos |= set(x + "000" for x in gmpr.get_geo_values("state_code"))
+        return valid_geos
+
+    def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
+        """
+        Check for bad geo_id values, by comparing to a list of known historical values.
+
+        Arguments:
+            - df_to_test: pandas dataframe of CSV source data containing the geo_id column to check
+            - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
+            - report: ValidationReport; report where results are added
+        """
+        valid_geos = self._get_valid_geo_values(geo_type)
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:

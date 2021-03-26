@@ -1,12 +1,13 @@
 """Static file checks."""
-from os.path import join
 import re
 from datetime import datetime
 from dataclasses import dataclass
+from typing import Dict, List
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
 from .utils import GEO_REGEX_DICT, TimeWindow
+from ..geomap import GeoMapper
 
 class StaticValidator:
     """Class for validation of static properties of individual datasets."""
@@ -15,8 +16,6 @@ class StaticValidator:
     class Parameters:
         """Configuration parameters."""
 
-        # Place to find the data files
-        validator_static_file_dir: str
         # Span of time over which to perform checks
         time_window: TimeWindow
         # Threshold for reporting small sample sizes
@@ -25,6 +24,8 @@ class StaticValidator:
         missing_se_allowed: bool
         # Whether to report missing sample sizes
         missing_sample_size_allowed: bool
+        # Valid geo values not found in the GeoMapper
+        additional_valid_geo_values: Dict[str, List[str]]
 
     def __init__(self, params):
         """
@@ -37,13 +38,12 @@ class StaticValidator:
         static_params = params.get("static", dict())
 
         self.params = self.Parameters(
-            validator_static_file_dir = static_params.get('validator_static_file_dir',
-                                                             '../validator/static'),
             time_window = TimeWindow.from_params(common_params["end_date"],
                                                  common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
-            missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False)
+            missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False),
+            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {})
         )
 
 
@@ -134,6 +134,22 @@ class StaticValidator:
 
         report.increment_total_checks()
 
+    def _get_valid_geo_values(self, geo_type):
+        # geomapper uses slightly different naming conventions for geo_types
+        if geo_type == "state":
+            geomap_type = "state_id"
+        elif geo_type == "county":
+            geomap_type = "fips"
+        else:
+            geomap_type = geo_type
+
+        gmpr = GeoMapper()
+        valid_geos = gmpr.get_geo_values(geomap_type)
+        valid_geos |= set(self.params.additional_valid_geo_values.get(geo_type, []))
+        if geo_type == "county":
+            valid_geos |= set(x + "000" for x in gmpr.get_geo_values("state_code"))
+        return valid_geos
+
     def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
         """
         Check for bad geo_id values, by comparing to a list of known historical values.
@@ -143,9 +159,7 @@ class StaticValidator:
             - geo_type: string from CSV name specifying geo type (state, county, msa, etc.) of data
             - report: ValidationReport; report where results are added
         """
-        file_path = join(self.params.validator_static_file_dir, geo_type + '_geo.csv')
-        valid_geo_df = pd.read_csv(file_path, dtype={'geo_id': str})
-        valid_geos = valid_geo_df['geo_id'].values
+        valid_geos = self._get_valid_geo_values(geo_type)
         unexpected_geos = [geo for geo in df_to_test['geo_id']
                            if geo.lower() not in valid_geos]
         if len(unexpected_geos) > 0:

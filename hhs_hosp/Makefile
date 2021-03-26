@@ -25,4 +25,5 @@ clean:
 
 run:
 	env/bin/python -m $(dir)
+	env/bin/python -m delphi_utils.validator
 	env/bin/python -m delphi_utils.archive

@@ -2,5 +2,19 @@
   "common": {
     "export_dir": "./receiving",
     "log_filename": "hhs_hosp.log"
+  },
+  "validation": {
+    "common": {
+      "data_source": "hhs",
+      "span_length": 14,
+      "end_date": "today-2",
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {}
   }
 }

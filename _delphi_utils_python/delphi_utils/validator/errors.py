@@ -23,7 +23,7 @@ class ValidationFailure:
     """Structured report of single validation failure."""
 
     def __init__(self,
-                 check_name: str,
+                 check_name: Optional[str]=None,
                  date: Optional[Union[str, dt.date]]=None,
                  geo_type: Optional[str]=None,
                  signal: Optional[str]=None,
@@ -33,8 +33,9 @@ class ValidationFailure:
 
         Parameters
         ----------
-        check_name: str
-            Name of check at which the failure happened.
+        check_name: Optional[str]
+            Name of check at which the failure happened.  A value of `None` is used to express all
+            possible checks with a given `date`, `geo_type`, and/or `signal`.
         date: Optional[Union[str, dt.date]]
             Date corresponding to the data over which the failure happened.
             Strings are interpretted in ISO format ("YYYY-MM-DD").

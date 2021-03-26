@@ -2,11 +2,12 @@
 from datetime import date
 from itertools import product
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, call
 import pandas as pd
+import numpy as np
 
 from delphi_combo_cases_and_deaths.run import (
-    extend_raw_date_range,
+    extend_raw_date_range, get_updated_dates,
     sensor_signal,
     combine_usafacts_and_jhu,
     compute_special_geo_dfs,
@@ -45,24 +46,37 @@ def test_unstable_sources(mock_covidcast_signal):
     frame correctly for all cases where 0, 1, or both signals are
     available.
     """
-    def jhu(geo, c=[0]):
-        c[0] += 1
+    date_count = [1]
+    def jhu(geo, c=date_count):
+        if geo == "state":
+            geo_val = "pr"
+        elif geo == "msa":
+            geo_val = "38660"
+        else:
+            geo_val = "72001"
         return pd.DataFrame(
-            [(date.fromordinal(c[0]),"pr" if geo == "state" else "72000",1,1,1)],
-            columns="time_value geo_value value stderr sample_size".split())
-    def uf(geo, c=[0]):
-        c[0] += 1
+            [(date.fromordinal(c[0]),geo_val,1,1,1)],
+            columns="timestamp geo_value value stderr sample_size".split())
+    def uf(geo, c=date_count):
+        if geo == "state":
+            geo_val = "ny"
+        elif geo == "msa":
+            geo_val = "10580"
+        else:
+            geo_val = "36001"
         return pd.DataFrame(
-            [(date.fromordinal(c[0]),"ny" if geo == "state" else "36000",1,1,1)],
-            columns="time_value geo_value value stderr sample_size".split())
+            [(date.fromordinal(c[0]),geo_val,1,1,1)],
+            columns="timestamp geo_value value stderr sample_size".split())
     def make_mock(geo):
+        # The first two in each row provide a unique_date array of the appropriate length for
+        # query of the latter two (in combine_usafacts_and_jhu)
         return [
             # 1 0
-            uf(geo), None,
+            uf(geo), None, uf(geo), None,
             # 0 1
             None, jhu(geo),
             # 1 1
-            uf(geo), jhu(geo),
+            uf(geo), jhu(geo), uf(geo), jhu(geo),
             # 0 0
             None, None
         ]
@@ -70,32 +84,32 @@ def test_unstable_sources(mock_covidcast_signal):
     geos = ["state", "county", "msa", "nation", "hhs"]
     outputs = [df for g in geos for df in make_mock(g)]
     mock_covidcast_signal.side_effect = outputs[:]
-    
+
     date_range = [date.today(), date.today()]
 
-    calls = -1
+    calls = 0
     for geo in geos:
-        for config, expected_size in [
-                ("1 0", 1),
-                ("0 1", 0 if geo == "msa" else 1),
-                ("1 1", 1 if geo in ["msa", "nation", "hhs"] else 2),
-                ("0 0", 0)
+        for config, call_size, expected_size in [
+                ("1 0", 4, 1),
+                ("0 1", 2, 0),
+                ("1 1", 4, 1 if geo in ["nation", "hhs"] else 2),
+                ("0 0", 2, 0)
         ]:
-            calls += 1
             df = combine_usafacts_and_jhu("", geo, date_range, fetcher=mock_covidcast_signal)
             assert df.size == expected_size * len(COLUMN_MAPPING), f"""
 Wrong number of rows in combined data frame for the number of available signals.
 
 input for {geo} {config}:
-{outputs[2*calls]}
-{outputs[2*calls + 1]}
+{outputs[calls]}
+{outputs[calls + 1]}
 
 output:
 {df}
 
 expected rows: {expected_size}
 """
-
+            calls += call_size
+            date_count[0] += 1
 
 @patch("covidcast.covidcast.signal")
 def test_multiple_issues(mock_covidcast_signal):
@@ -108,7 +122,7 @@ def test_multiple_issues(mock_covidcast_signal):
             "issue": [20200102, 20200104]
         }),
         None
-    ]
+    ] * 2
     result = combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal)
     pd.testing.assert_frame_equal(
         result,
@@ -140,6 +154,22 @@ def test_compute_special_geo_dfs():
                       "val": [150]})
     )
 
+@patch("covidcast.covidcast.signal")
+def test_get_updated_dates(mock_covidcast_signal):
+    mock_covidcast_signal.side_effect = [
+        pd.DataFrame({"geo_value": ["01000", "01001"],
+                      "value": [50, 100],
+                      "timestamp": [20200101, 20200103]}),
+        pd.DataFrame({"geo_value": ["72001", "01001"],
+                      "value": [200, 100],
+                      "timestamp": [20200101, 20200101]})
+    ]
+    updated_dates = get_updated_dates(
+        "confirmed_incidence_num",
+        "nation",
+        date_range=(0, 1),
+        fetcher=mock_covidcast_signal)
+    assert np.allclose(updated_dates, np.array([20200101, 20200103]))
 
 @patch("covidcast.covidcast.signal")
 def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
@@ -150,7 +180,8 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
         pd.DataFrame({"geo_value": ["72001", "01001"],
                       "value": [200, 100],
                       "timestamp": [20200101, 20200101]}),
-    ] * 3
+    ] * 6 # each call to combine_usafacts_and_jhu makes (2 + 2 * len(unique_timestamps)) = 12 calls to the fetcher
+
     pd.testing.assert_frame_equal(
         combine_usafacts_and_jhu("confirmed_incidence_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
@@ -173,6 +204,44 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
                       "val": [50, 100, 200],
                       "timestamp": [20200101, 20200101, 20200101]},
                      index=[0, 1, 0])
+    )
+
+@patch("covidcast.covidcast.signal")
+def test_no_nation_jhu(mock_covidcast_signal):
+    """
+    If we get JHU data that extends farther into the future than USAFacts data, trim it off.
+    """
+    cvc_columns = "time_value geo_value value stderr sample_size".split()
+    mock_covidcast_signal.side_effect = [
+        pd.DataFrame({"geo_value": ["01000"],
+                      "value": [50],
+                      "timestamp": [20200101]},),
+        pd.DataFrame({"geo_value": ["72001", "72001"],
+                      "value": [1, 1],
+                      "timestamp": [20200101, 20200102]}),
+        pd.DataFrame({"geo_value": ["01000"],
+                      "value": [50],
+                      "timestamp": [20200101]},),
+        pd.DataFrame({"geo_value": ["72001"],
+                      "value": [1],
+                      "timestamp": [20200101]})
+    ]
+    result = combine_usafacts_and_jhu("_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal)
+
+    assert mock_covidcast_signal.call_args_list[-1] == call(
+        "jhu-csse",
+        "_num",
+        20200101,
+        20200101,
+        "county"
+    )
+    pd.testing.assert_frame_equal(
+        result,
+        pd.DataFrame({"timestamp":[20200101],
+                      "geo_id":["us"],
+                      "val":[51],
+                      "se": [None],
+                      "sample_size": [None]},)
     )
 
 

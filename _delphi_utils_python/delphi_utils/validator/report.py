@@ -92,7 +92,7 @@ class ValidationReport:
 
     def print_and_exit(self, die_on_failures=True):
         """Print results and exit.
-        
+
         Arguments
         ---------
         die_on_failures: bool

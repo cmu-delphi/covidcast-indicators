@@ -45,6 +45,7 @@ def run_module(params):
 
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")
+    # If end_date not specified, use current date.
     export_end_date = datetime.strptime(
         params["indicator"].get(
             "export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")

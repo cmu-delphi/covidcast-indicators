@@ -97,9 +97,9 @@ def preprocess(df, level):
 def get_date_range(export_start_date, export_end_date, num_export_days):
     """Produce date range to retrieve data for.
 
-    Calculate start of date range as a static offset from the end date
-    ("now"). Pad date range by an additional 7 days before the earliest
-    date to produce data for calculating smoothed estimates.
+    Calculate start of date range as a static offset from the end date.
+    Pad date range by an additional 7 days before the earliest date to
+    produce data for calculating smoothed estimates.
 
     Parameters
     ----------
@@ -108,7 +108,7 @@ def get_date_range(export_start_date, export_end_date, num_export_days):
     export_end_date: date
         last date to retrieve data for
     num_export_days: int
-        number of days before end date ("now") to export
+        number of days before end date to export
 
     Returns
     -------

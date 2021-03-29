@@ -46,4 +46,6 @@ if __name__ == "__main__":
                              "must export a `run.run_module(params)` function.")
     args = parser.parse_args()
     indicator_module = importlib.import_module(args.indicator_name)
-    run_indicator_pipeline(indicator_module.run.run_module, validator_from_params, archiver_from_params)
+    run_indicator_pipeline(indicator_module.run.run_module,
+                           validator_from_params,
+                           archiver_from_params)

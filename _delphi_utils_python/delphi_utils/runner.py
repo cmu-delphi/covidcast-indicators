@@ -17,6 +17,12 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                            archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN):
     """Run an indicator with its optional validation and archiving.
 
+    Each argument to this function should itself be a function that will be passed a common set of
+    parameters (see details below).  This parameter dictionary should have four subdictionaries
+    keyed as "indicator", "validation", "archive", and "common" corresponding to parameters to be
+    used in `indicator_fn`, `validator_fn`, `archiver_fn`, and shared across functions,
+    respectively.
+
     Arguments
     ---------
     indicator_fn: Callable[[Params], None]

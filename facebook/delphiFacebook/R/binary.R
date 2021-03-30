@@ -210,9 +210,8 @@ compute_binary_response <- function(response, weight, sample_size)
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
 jeffreys_binary <- function(df) {
-  return(mutate(df,
-                val = jeffreys_percentage(.data$val, .data$sample_size, 2),
-                se = binary_se(.data$val, .data$sample_size)))
+  jeffreys_temp <- jeffreys_multinomial_factory(2)
+  return(jeffreys_temp(df))
 }
 
 #' Generate function that applies Jeffreys correction to multinomial estimates.

@@ -13,7 +13,6 @@ following structure:
             True if all signals in the registry are works in progress, or False if only
             unpublished signals are.  See `delphi_utils.add_prefix()`
         - Any other indicator-specific settings
-If the indicator is m
 """
 from delphi_utils import add_prefix
 from .constants import SIGNALS

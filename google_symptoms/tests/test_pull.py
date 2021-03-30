@@ -48,7 +48,7 @@ class TestPullGoogleSymptoms:
         mock_credentials.return_value = None
 
         dfs = pull_gs_data(
-            "", datetime.strptime("20201230", "%Y%m%d"), 0)
+            "", datetime.strptime("20201230", "%Y%m%d"), date.today(), 0)
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -85,6 +85,7 @@ class TestPullHelperFuncs:
     def test_get_date_range_recent_export_start_date(self):
         output = get_date_range(
             datetime.strptime("20201230", "%Y%m%d"),
+            date.today(),
             14
         )
 
@@ -96,6 +97,7 @@ class TestPullHelperFuncs:
     def test_get_date_range(self):
         output = get_date_range(
             datetime.strptime("20200201", "%Y%m%d"),
+            date.today(),
             14
         )
 

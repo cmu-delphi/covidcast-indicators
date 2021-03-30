@@ -5,7 +5,7 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_google_symptoms`.
 """
 import time
-from datetime import datetime
+from datetime import datetime, date
 from itertools import product
 
 import numpy as np
@@ -45,6 +45,12 @@ def run_module(params):
 
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")
+    # If end_date not specified, use current date.
+    export_end_date = datetime.strptime(
+        params["indicator"].get(
+            "export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")
+        ), "%Y-%m-%d")
+
     export_dir = params["common"]["export_dir"]
     num_export_days = params["indicator"].get("num_export_days", "all")
 
@@ -55,6 +61,7 @@ def run_module(params):
     # Pull GS data
     dfs = pull_gs_data(params["indicator"]["bigquery_credentials"],
                        export_start_date,
+                       export_end_date,
                        num_export_days)
     gmpr = geomap.GeoMapper()
 

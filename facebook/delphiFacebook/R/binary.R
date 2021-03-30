@@ -210,8 +210,7 @@ compute_binary_response <- function(response, weight, sample_size)
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
 jeffreys_binary <- function(df) {
-  jeffreys_temp <- jeffreys_multinomial_factory(2)
-  return(jeffreys_temp(df))
+  return( jeffreys_multinomial_factory(2)(df) )
 }
 
 #' Generate function that applies Jeffreys correction to multinomial estimates.
@@ -234,11 +233,11 @@ jeffreys_multinomial_factory <- function(k) {
   return(jeffreys_multinomial)
 }
 
-#' Adjust a multionmial percentage estimate to use the Jeffreys method.
+#' Adjust a multinomial percentage estimate using the Jeffreys method.
 #'
 #' Takes a previously estimated percentage (calculated with num_group1 / total *
 #' 100) and replaces it with the Jeffreys version, where one pseudo-observation
-#' with 1/k * 100% group1 is inserted.
+#' with 1/k mass in each group is inserted.
 #'
 #' @param percentage Vector of percentages to adjust.
 #' @param sample_size Vector of corresponding sample sizes.

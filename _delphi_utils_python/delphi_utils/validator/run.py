@@ -2,7 +2,7 @@
 """Functions to call when running the tool.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m delphi_validator`.
+when the module is run with `python -m delphi_utils.validator`.
 """
 import argparse as ap
 from .. import read_params

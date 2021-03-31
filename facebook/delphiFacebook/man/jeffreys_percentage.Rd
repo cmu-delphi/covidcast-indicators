@@ -2,20 +2,22 @@
 % Please edit documentation in R/binary.R
 \name{jeffreys_percentage}
 \alias{jeffreys_percentage}
-\title{Adjust a percentage estimate to use the Jeffreys method.}
+\title{Adjust a multinomial percentage estimate using the Jeffreys method.}
 \usage{
-jeffreys_percentage(percentage, sample_size)
+jeffreys_percentage(percentage, sample_size, k)
 }
 \arguments{
 \item{percentage}{Vector of percentages to adjust.}
 
 \item{sample_size}{Vector of corresponding sample sizes.}
+
+\item{k}{Number of groups.}
 }
 \value{
 Vector of adjusted percentages.
 }
 \description{
-Takes a previously estimated percentage (calculated with num_yes / total *
+Takes a previously estimated percentage (calculated with num_group1 / total *
 100) and replaces it with the Jeffreys version, where one pseudo-observation
-with 50% yes is inserted.
+with 1/k mass in each group is inserted.
 }

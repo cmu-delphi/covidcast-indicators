@@ -17,6 +17,12 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                            archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN):
     """Run an indicator with its optional validation and archiving.
 
+    Each argument to this function should itself be a function that will be passed a common set of
+    parameters (see details below).  This parameter dictionary should have four subdictionaries
+    keyed as "indicator", "validation", "archive", and "common" corresponding to parameters to be
+    used in `indicator_fn`, `validator_fn`, `archiver_fn`, and shared across functions,
+    respectively.
+
     Arguments
     ---------
     indicator_fn: Callable[[Params], None]
@@ -43,7 +49,9 @@ if __name__ == "__main__":
     parser.add_argument("indicator_name",
                         type=str,
                         help="Name of the Python package containing the indicator.  This package "
-                             "must export a `run_module(params)` function.")
+                             "must export a `run.run_module(params)` function.")
     args = parser.parse_args()
     indicator_module = importlib.import_module(args.indicator_name)
-    run_indicator_pipeline(indicator_module.run_module, validator_from_params, archiver_from_params)
+    run_indicator_pipeline(indicator_module.run.run_module,
+                           validator_from_params,
+                           archiver_from_params)

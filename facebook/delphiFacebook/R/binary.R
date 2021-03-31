@@ -167,6 +167,12 @@ get_binary_indicators <- function() {
     "smoothed_wdontneed_reason_not_beneficial", "weight", "v_dontneed_reason_not_beneficial", 6, compute_binary_response, jeffreys_binary,
     "smoothed_dontneed_reason_other", "weight_unif", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wdontneed_reason_other", "weight", "v_dontneed_reason_other", 6, compute_binary_response, jeffreys_binary,
+    
+    # schooling
+    "smoothed_inperson_school_fulltime", "weight_unif", "s_inperson_school_fulltime", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_winperson_school_fulltime", "weight", "s_inperson_school_fulltime", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
   )
 
 
@@ -210,22 +216,42 @@ compute_binary_response <- function(response, weight, sample_size)
 #' @return Updated data frame.
 #' @importFrom dplyr mutate
 jeffreys_binary <- function(df) {
-  return(mutate(df,
-                val = jeffreys_percentage(.data$val, .data$sample_size),
-                se = binary_se(.data$val, .data$sample_size)))
+  return( jeffreys_multinomial_factory(2)(df) )
 }
 
-#' Adjust a percentage estimate to use the Jeffreys method.
+#' Generate function that applies Jeffreys correction to multinomial estimates.
 #'
-#' Takes a previously estimated percentage (calculated with num_yes / total *
+#' @param k Number of groups.
+#' 
+#' @return Function to apply multinomial Jeffreys correction.
+#' @importFrom dplyr mutate
+jeffreys_multinomial_factory <- function(k) {
+  # Apply a Jeffreys correction to multinomial estimates and their standard errors.
+  #
+  # Param df: Data frame
+  # Returns: Updated data frame.
+  jeffreys_multinomial <- function(df) {
+    return(mutate(df,
+                  val = jeffreys_percentage(.data$val, .data$sample_size, k),
+                  se = binary_se(.data$val, .data$sample_size)))
+  }
+  
+  return(jeffreys_multinomial)
+}
+
+#' Adjust a multinomial percentage estimate using the Jeffreys method.
+#'
+#' Takes a previously estimated percentage (calculated with num_group1 / total *
 #' 100) and replaces it with the Jeffreys version, where one pseudo-observation
-#' with 50% yes is inserted.
+#' with 1/k mass in each group is inserted.
 #'
 #' @param percentage Vector of percentages to adjust.
 #' @param sample_size Vector of corresponding sample sizes.
+#' @param k Number of groups.
+#' 
 #' @return Vector of adjusted percentages.
-jeffreys_percentage <- function(percentage, sample_size) {
-  return((percentage * sample_size + 50) / (sample_size + 1))
+jeffreys_percentage <- function(percentage, sample_size, k) {
+  return((percentage * sample_size + 100/k) / (sample_size + 1))
 }
 
 #' Calculate the standard error for a binary proportion (as a percentage)

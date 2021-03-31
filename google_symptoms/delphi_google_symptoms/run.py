@@ -47,10 +47,9 @@ def run_module(params):
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")
     export_dir = params["common"]["export_dir"]
+    num_export_days = params["indicator"]["num_export_days"]
 
-    if "num_export_days" in params["indicator"]:
-        num_export_days = params["indicator"]["num_export_days"]
-    else:
+    if num_export_days is None:
         # Get number of days based on what's missing from the API.
         metadata = covidcast.metadata()
         gs_metadata = metadata[(metadata.data_source == "google-symptoms")]

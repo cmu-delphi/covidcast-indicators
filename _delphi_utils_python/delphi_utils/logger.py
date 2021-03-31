@@ -40,16 +40,12 @@ def get_structured_logger(name=__name__,
     is a good choice.
     filename: An (optional) file to write log output.
     """
-    # Configure the underlying logging configuration
-    handlers = [logging.StreamHandler()]
-    if filename:
-        handlers.append(logging.FileHandler(filename))
-
+    # Configure the basic underlying logging configuration
     logging.basicConfig(
         format="%(message)s",
         level=logging.INFO,
-        handlers=handlers
-        )
+        handlers=[logging.StreamHandler()]
+    )    
 
     # Configure structlog. This uses many of the standard suggestions from
     # the structlog documentation.
@@ -84,7 +80,12 @@ def get_structured_logger(name=__name__,
         cache_logger_on_first_use=True,
     )
 
-    logger = structlog.get_logger(name)
+    # Create the underlying python logger and wrap it with structlog
+    system_logger = logging.getLogger(name)
+    if filename:
+        system_logger.addHandler(logging.FileHandler(filename))
+    system_logger.setLevel(logging.INFO)
+    logger = structlog.wrap_logger(system_logger)
 
     if log_exceptions:
         handle_exceptions(logger)

@@ -7,7 +7,7 @@ from .errors import ValidationFailure
 class ValidationReport:
     """Class for reporting the results of validation."""
 
-    def __init__(self, errors_to_suppress: List[ValidationFailure], log_filename=None):
+    def __init__(self, errors_to_suppress: List[ValidationFailure]):
         """Initialize a ValidationReport.
 
         Parameters

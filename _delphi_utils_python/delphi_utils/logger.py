@@ -45,7 +45,7 @@ def get_structured_logger(name=__name__,
         format="%(message)s",
         level=logging.INFO,
         handlers=[logging.StreamHandler()]
-    )    
+    )
 
     # Configure structlog. This uses many of the standard suggestions from
     # the structlog documentation.

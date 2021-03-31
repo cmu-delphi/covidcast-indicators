@@ -7,6 +7,7 @@ when the module is run with `python -m delphi_google_symptoms`.
 import time
 from datetime import datetime, date
 from itertools import product
+import covidcast
 
 import numpy as np
 from delphi_utils import (
@@ -52,7 +53,13 @@ def run_module(params):
         ), "%Y-%m-%d")
 
     export_dir = params["common"]["export_dir"]
-    num_export_days = params["indicator"].get("num_export_days", "all")
+    num_export_days = params["indicator"]["num_export_days"]
+
+    if num_export_days is None:
+        # Get number of days based on what's missing from the API.
+        metadata = covidcast.metadata()
+        gs_metadata = metadata[(metadata.data_source == "google-symptoms")]
+        num_export_days = max(gs_metadata.min_lag)
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

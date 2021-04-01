@@ -51,15 +51,6 @@ county_data = pd.read_csv(
     good_input["county"], parse_dates=["date"])[keep_cols]
 
 
-# Set up fake list of dates to fetch.
-dates = [
-    "20200726",
-    "20200811"
-]
-
-date_list = [datetime.strptime(date, "%Y%m%d") for date in dates]
-
-
 @pytest.fixture(scope="session")
 def run_as_module():
     params = {
@@ -81,10 +72,8 @@ def run_as_module():
     else:
         makedirs("receiving")
 
-    with mock.patch("delphi_google_symptoms.pull.get_date_range",
-                    return_value=date_list) as mock_all_dates:
-        with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
-                        return_value=None) as mock_credentials:
-            with mock.patch("pandas_gbq.read_gbq", side_effect=[
-                    state_data, county_data]) as mock_read_gbq:
-                delphi_google_symptoms.run.run_module(params)
+    with mock.patch("delphi_google_symptoms.pull.initialize_credentials",
+                    return_value=None) as mock_credentials:
+        with mock.patch("pandas_gbq.read_gbq", side_effect=[
+                state_data, county_data]) as mock_read_gbq:
+            delphi_google_symptoms.run.run_module(params)

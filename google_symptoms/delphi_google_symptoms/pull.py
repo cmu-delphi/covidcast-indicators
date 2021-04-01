@@ -120,12 +120,10 @@ def get_date_range(export_start_date, export_end_date, num_export_days):
         # Get all dates since export_start_date.
         start_date = export_start_date
     else:
-        # Don't fetch data before the user-set start date. Convert both
-        # dates/datetimes to date to avoid error from trying to compare
-        # different types.
+        # Don't fetch data before the user-set start date.
         start_date = max(
             export_end_date - timedelta(days=num_export_days),
-            export_start_date.date()
+            export_start_date
         )
 
     retrieve_dates = [

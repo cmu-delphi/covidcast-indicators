@@ -57,7 +57,7 @@ dates = [
     "20200811"
 ]
 
-date_list = [datetime.strptime(date, "%Y%m%d").date() for date in dates]
+date_list = [datetime.strptime(date, "%Y%m%d") for date in dates]
 
 
 @pytest.fixture(scope="session")

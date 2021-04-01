@@ -8,15 +8,19 @@
 #'
 #' @export
 run_contingency_tables <- function(params) {
-  if ( !is.null(params$aggs_in) && file.exists(params$aggs_in) ) {
+  if ( !is.null(params$aggs_in) ) {
+    if ( !file.exists(params$aggs_in) ) {
+      stop("requested aggregate-setting file does not exist")
+    }
+    
     # Run non-default aggregates. File should create an object called `aggs`.
     source(params$aggs_in)
     
-    if ( !exists("aggs") || all(class(aggs) != "data.frame") ) {
+    if ( !exists("aggs") || !inherits(aggs, "data.frame") ) {
       stop("external aggregate-setting file must create a dataframe `aggs`")
     }
   } else {
-    aggs <- set_aggs()
+    aggs <- get_aggs()
   }
   
   ## Set default number of cores for mclapply to the total available number,

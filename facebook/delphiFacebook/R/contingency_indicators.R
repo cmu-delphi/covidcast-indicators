@@ -20,7 +20,7 @@
 #' @return named list
 #' 
 #' @importFrom tibble tribble
-set_aggs <- function() {
+get_aggs <- function() {
   weekly_aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
     #### Cut 1: side effects if hesitant about getting vaccine and generally

@@ -35,6 +35,7 @@ class TestRunIndicator:
     """Fixture for running indicators."""
     # arbitrary params to pass to function generators
     PARAMS = {
+        "common": {},
         "indicator": {"a": 1},
         "validation": {"b": 2},
         "archive": {"c": 3}

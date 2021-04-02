@@ -24,14 +24,6 @@ keep_cols = ["open_covid_region_code", "date"] + symptom_names
 new_keep_cols = ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
 
 
-# Set up fake list of dates to fetch.
-dates = [
-    "20200726",
-    "20200811"
-]
-date_list = [datetime.strptime(date, "%Y%m%d").date() for date in dates]
-
-
 class TestPullGoogleSymptoms:
     @freeze_time("2021-01-05")
     @mock.patch("pandas_gbq.read_gbq")
@@ -47,8 +39,8 @@ class TestPullGoogleSymptoms:
         mock_read_gbq.side_effect = [state_data, county_data]
         mock_credentials.return_value = None
 
-        dfs = pull_gs_data(
-            "", datetime.strptime("20201230", "%Y%m%d"), date.today(), 0)
+        dfs = pull_gs_data("", datetime.strptime(
+            "20201230", "%Y%m%d"), datetime.combine(date.today(), datetime.min.time()), 0)
 
         for level in ["county", "state"]:
             df = dfs[level]
@@ -85,27 +77,28 @@ class TestPullHelperFuncs:
     def test_get_date_range_recent_export_start_date(self):
         output = get_date_range(
             datetime.strptime("20201230", "%Y%m%d"),
-            date.today(),
+            datetime.combine(date.today(), datetime.min.time()),
             14
         )
 
-        expected = [date(2020, 12, 24),
-                    date(2021, 1, 5)]
+        expected = [datetime(2020, 12, 24),
+                    datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
     @freeze_time("2021-01-05")
     def test_get_date_range(self):
         output = get_date_range(
             datetime.strptime("20200201", "%Y%m%d"),
-            date.today(),
+            datetime.combine(date.today(), datetime.min.time()),
             14
         )
 
-        expected = [date(2020, 12, 16), date(2021, 1, 5)]
+        expected = [datetime(2020, 12, 16),
+                    datetime(2021, 1, 5)]
         assert set(output) == set(expected)
 
     def test_format_dates_for_query(self):
-        date_list = [date(2016, 12, 30), date(2021, 1, 5)]
+        date_list = [datetime(2016, 12, 30), datetime(2021, 1, 5)]
         output = format_dates_for_query(date_list)
         expected = ["2016-12-30", "2021-01-05"]
         assert output == expected

@@ -50,15 +50,17 @@ class Default:
                           0.00027405, 0.00022925, 0.00019172, 0.00016028]
 
     # Deconvolution parameters
-    DECONV_CV_GRID = np.logspace(1, 3.5, 10)
-    DECONV_CV_N_FOLDS = 10
-    DECONV_FIT_FUNC = partial(deconvolution.deconvolve_tf_cv,
-                              cv_grid=DECONV_CV_GRID,
-                              n_folds=DECONV_CV_N_FOLDS)
+    DECONV_CV_LAMBDA_GRID = np.logspace(1, 3.5, 10)
+    DECONV_CV_GAMMA_GRID = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]]
+    DECONV_FIT_FUNC = partial(deconvolution.deconvolve_double_smooth_tf_cv,
+                              k=3,
+                              fit_func=deconvolution.deconvolve_double_smooth_ntf,
+                              lam_cv_grid=DECONV_CV_LAMBDA_GRID,
+                              gam_cv_grid=DECONV_CV_GAMMA_GRID)
 
     # AR Sensor parameters
     AR_ORDER = 3
-    AR_LAMBDA = 0.1
+    AR_LAMBDA = 0.5
 
     # Regression Sensor parameters
     REG_SENSORS = [SensorConfig('doctor-visits', 'smoothed_adj_cli', 'dv', 5),

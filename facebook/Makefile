@@ -5,16 +5,20 @@ DRY:=yes
 ifeq ($(DRY),yes)
 	OUTSIDE_EMAIL_FLAGS:=-d
 	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
+	CONTINGENCY_SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 ???@publishing.andrew.cmu.edu\n$${BATCH}"
 	DRY_MESSAGE:="[DRY-RUN] "
 else
 	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu
+	CONTINGENCY_SFTP_POST:=sftp -b <(echo -e "$${BATCH}") ???@publishing.andrew.cmu.edu
 endif
 
 EPOCH:=2020-04-06
 TODAY:=$(shell date +"%Y-%m-%d")
 YESTERDAY:=$(shell date --date "1 day ago" +"%Y-%m-%d")
 ONEWEEK:=$(shell date --date "7 day ago" +"%Y-%m-%d")
+TWOWEEK:=$(shell date --date "14 day ago" +"%Y-%m-%d")
 THREEWEEK:=$(shell date --date "21 day ago" +"%Y-%m-%d")
+FIVEWEEK:=$(shell date --date "35 day ago" +"%Y-%m-%d")
 
 MESSAGES:=$(TODAY).messages
 
@@ -25,6 +29,7 @@ CIDS=$(shell $(PYTHON) -m delphi_utils get weights_out_dir)
 INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
 ARCHIVE=$(shell $(PYTHON) -m delphi_utils get archive_dir)
 RECEIVING=$(shell $(PYTHON) -m delphi_utils get export_dir)
+CONTINGENCY_RECEIVING=$(shell $(PYTHON) -m delphi_utils get contingency.export_dir)
 FB_CC=$(shell $(PYTHON) -m delphi_utils get qualtrics.notify-bad-weights)
 
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
@@ -33,20 +38,22 @@ ANTIJOIN:="antijoin.cids.sorted.txt"
 CIDS_DEST:="fb-interchange/cmu_respondent_ids"
 INDIVID_DEST:="fb-public-results/"
 RAW_DEST:="raw"
+CONTINGENCY_DEST:="delphi-web/surveys"
 
 default:
 	@echo No default implemented yet
 
-tidy: receiving
+tidy: receiving contingency_receiving
 	rm -rf tidy
-	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL)
+	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL) tidy/$(CONTINGENCY_RECEIVING)
 	cp params.json tidy/
 	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
+	mv $(CONTINGENCY_RECEIVING)/*.csv tidy/$(CONTINGENCY_RECEIVING)
 	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
 
 clean:
-	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv
+	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv $(CONTINGENCY_RECEIVING)/*.csv
 
 clean-archive:
 	rm -f $(ARCHIVE)/*.Rds
@@ -57,7 +64,7 @@ install-python:
 	pip install -e ../_delphi_utils_python && \
 	pip install -e delphiFacebook/python
 
-install-R:dev
+install-R: dev
 
 install: install-python install-R
 
@@ -91,6 +98,22 @@ params.json: $(TODAY)
 		parallel true \
 		output cids,individual,covidalert,archive,community \
 		start_date $(YESTERDAY)
+
+weekly-contingency-params: $(TODAY)
+	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
+	$(PYTHON) -m delphi_utils set \
+		contingency.debug false \
+		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(TWOWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.parallel true \
+		contingency.aggregate_range "week"
+
+monthly-contingency-params: $(TODAY)
+	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
+	$(PYTHON) -m delphi_utils set \
+		contingency.debug false \
+		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(FIVEWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.parallel true \
+		contingency.aggregate_range "month"
 
 $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
@@ -127,6 +150,21 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
+
+run-contingency:
+	time Rscript contingency_tables.R
+
+weekly-contingency-pipeline: init-qualtrics weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy
+	grep $(TODAY) params.json
+	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
+	touch $@
+	echo "SUCCESS: $(DRY_MESSAGE)weekly contingency pipeline complete" >> $(MESSAGES)
+
+monthly-contingency-pipeline: init-qualtrics monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy
+	grep $(TODAY) params.json
+	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
+	touch $@
+	echo "SUCCESS: $(DRY_MESSAGE)monthly contingency pipeline complete" >> $(MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'
@@ -182,6 +220,28 @@ post-done: post-cids
 	BATCH="put $(YESTERDAY).done $(CIDS_DEST)\n"; \
 	$(SFTP_POST)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
+
+post-weekly-contingency: $(TODAY)
+	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
+	[ -n "$${POST}" ]; \
+	BATCH=""; \
+	for f in $${POST}; do \
+	    BATCH="$${BATCH}put $$f ${CONTINGENCY_DEST}/weekly\n"; \
+	done; \
+	$(CONTINGENCY_SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` weekly contingency tables" >> $(MESSAGES)
+	touch $@
+
+post-monthly-contingency: $(TODAY)
+	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
+	[ -n "$${POST}" ]; \
+	BATCH=""; \
+	for f in $${POST}; do \
+	    BATCH="$${BATCH}put $$f ${CONTINGENCY_DEST}/monthly\n"; \
+	done; \
+	$(CONTINGENCY_SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` monthly contingency tables" >> $(MESSAGES)
+	touch $@
 
 validate-covidcast:
 	@echo validate-covidcast not yet implemented

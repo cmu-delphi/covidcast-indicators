@@ -5,7 +5,7 @@ DRY:=yes
 ifeq ($(DRY),yes)
 	OUTSIDE_EMAIL_FLAGS:=-d
 	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
-	CONTINGENCY_SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 ???@publishing.andrew.cmu.edu\n$${BATCH}"
+	CONTINGENCY_SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") ???@publishing.andrew.cmu.edu\n$${BATCH}"
 	DRY_MESSAGE:="[DRY-RUN] "
 else
 	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu

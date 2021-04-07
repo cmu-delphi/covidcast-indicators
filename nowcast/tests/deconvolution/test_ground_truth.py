@@ -39,20 +39,19 @@ class TestConstructTruths:
                                        date(2020, 1, 5),
                                        test_config,
                                        test_locations)
-        assert test_output == {("src", "sig", "state", "nv"):
+        assert test_output == {test_config: [
                                    LocationSeries("nv",
                                                   "state",
                                                   {date(2020, 1, 1): 1.5,
                                                    date(2020, 1, 2): 2.5,
                                                    date(2020, 1, 3): 3.5,
                                                    date(2020, 1, 5): 5.5}),
-                               ("src", "sig", "state", "ca"):
                                    LocationSeries("ca",
                                                   "state",
                                                   {date(2020, 1, 1): 1,
                                                    date(2020, 1, 3): 3,
                                                    date(2020, 1, 5): 5})
-                               }
+                               ]}
 
 
 class TestFillMissingDays:

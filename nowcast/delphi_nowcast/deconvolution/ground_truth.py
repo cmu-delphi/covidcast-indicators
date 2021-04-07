@@ -15,7 +15,7 @@ def construct_truths(start_date: date,
                      as_of: date,  # most likely today
                      truth: SensorConfig,
                      locations: List[LocationSeries],
-                     export_dir: str = "") -> Dict[Tuple, LocationSeries]:
+                     export_dir: str = "") -> Dict[SensorConfig, List[LocationSeries]]:
     """
     Construct ground truths for use in training sensors.
 
@@ -36,11 +36,10 @@ def construct_truths(start_date: date,
 
     Returns
     -------
-        Dictionary where keys are (source, signal, geo_type, geo_value) tuples and keys are
-        populated LocationSeries from `location`
+        Dictionary where key is `truth` and values are populated LocationSeries from `location`
     """
     raw_indicator = get_indicator_data([truth], locations, as_of)
-    output = {}
+    output = {truth: []}
     for location in locations:
         indicator_key = (truth.source, truth.signal, location.geo_type, location.geo_value)
         location, missing_dates = get_historical_sensor_data(truth, location, end_date, start_date)
@@ -49,7 +48,7 @@ def construct_truths(start_date: date,
             location, export = fill_missing_days(location, indicator_loc_data, missing_dates)
         else:
             export = None
-        output[indicator_key] = location
+        output[truth].append(location)
         if export_dir and export:
             export_to_csv(export,  truth, as_of, export_dir)
     return output

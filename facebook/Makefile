@@ -16,9 +16,7 @@ EPOCH:=2020-04-06
 TODAY:=$(shell date +"%Y-%m-%d")
 YESTERDAY:=$(shell date --date "1 day ago" +"%Y-%m-%d")
 ONEWEEK:=$(shell date --date "7 day ago" +"%Y-%m-%d")
-TWOWEEK:=$(shell date --date "14 day ago" +"%Y-%m-%d")
 THREEWEEK:=$(shell date --date "21 day ago" +"%Y-%m-%d")
-FIVEWEEK:=$(shell date --date "35 day ago" +"%Y-%m-%d")
 
 MESSAGES:=$(TODAY).messages
 
@@ -117,7 +115,7 @@ weekly-contingency-params: $(WEIGHTS)
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
 		contingency.end_date $(TODAY) \
-		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(TWOWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.input <(find $(QUALTRICS) -maxdepth 1 -mtime -14 -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		contingency.parallel true \
 		contingency.aggregate_range "week"
 
@@ -126,7 +124,7 @@ monthly-contingency-params: $(WEIGHTS)
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
 		contingency.end_date $(TODAY) \
-		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(FIVEWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.input <(find $(QUALTRICS) -maxdepth 1 -mtime -35 -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		contingency.parallel true \
 		contingency.aggregate_range "month"
 

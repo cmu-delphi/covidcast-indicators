@@ -34,9 +34,11 @@ class LocationSeries:
 
         Safer than appending individually since the two lists shouldn't have different lengths.
         """
-        if day in self.dates and not overwrite:
+        if self.data and day in self.dates and not overwrite:
             raise ValueError("Date already exists in LocationSeries. "
                              "To overwrite, use overwrite=True")
+        if not self.data:
+            self.data = {}
         self.data[day] = value
 
     @property

@@ -30,11 +30,29 @@ def construct_truths(start_date: date,
 
 def fill_missing_days(stored_vals: LocationSeries,
                       indicator_data: LocationSeries,
-                      missing_dates: List[date]):
+                      missing_dates: List[date]) -> Tuple[LocationSeries, LocationSeries]:
+    """
+    Compute and add deconvolved truths to a LocationSeries for a set of missing days.
+
+    If a missing day cannot be filled, it will be skipped over.
+
+    Parameters
+    ----------
+    stored_vals
+        LocationSeries containing data with missing dates.
+    indicator_data
+        LocationSeries of convolved data from indicator.
+    missing_dates
+        List of missing dates to fill.
+
+    Returns
+    -------
+        `stored_vals` with missing dates filled if possible.
+    """
     export_data = LocationSeries(stored_vals.geo_value, stored_vals.geo_type)
     for day in missing_dates:
         try:
-            y = np.array(indicator_data.get_data_range(min(indicator_data.dates), day, "linear"))
+            y = np.array(indicator_data.get_data_range(min(indicator_data.dates), day, "mean"))
             x = np.arange(1, len(y) + 1)
         except ValueError:
             continue

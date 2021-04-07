@@ -50,7 +50,7 @@ def construct_truths(start_date: date,
             export = None
         output[truth].append(location)
         if export_dir and export:
-            export_to_csv(export,  truth, as_of, export_dir)
+            print(export_to_csv(export,  truth, as_of, export_dir))
     return output
 
 

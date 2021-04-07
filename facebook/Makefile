@@ -43,14 +43,27 @@ CONTINGENCY_DEST:="delphi-web/surveys"
 default:
 	@echo No default implemented yet
 
-tidy: receiving contingency_receiving
+tidy: receiving
 	rm -rf tidy
-	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL) tidy/$(CONTINGENCY_RECEIVING)
+	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL)
 	cp params.json tidy/
 	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
-	mv $(CONTINGENCY_RECEIVING)/*.csv tidy/$(CONTINGENCY_RECEIVING)
 	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
+
+tidy-weekly-contingency: contingency_receiving
+	rm -rf tidy-weekly
+	mkdir -p tidy-weekly tidy-weekly/$(CONTINGENCY_RECEIVING)
+	cp params.json tidy-weekly/
+	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-weekly/$(CONTINGENCY_RECEIVING)
+	tar -czf tidy-weekly-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-weekly
+
+tidy-monthly-contingency: contingency_receiving
+	rm -rf tidy-monthly
+	mkdir -p tidy-monthly tidy-monthly/$(CONTINGENCY_RECEIVING)
+	cp params.json tidy-monthly/
+	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-monthly/$(CONTINGENCY_RECEIVING)
+	tar -czf tidy-monthly-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-monthly
 
 clean:
 	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv $(CONTINGENCY_RECEIVING)/*.csv
@@ -103,6 +116,7 @@ weekly-contingency-params: $(WEIGHTS)
 	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
+		contingency.end_date $(TODAY) \
 		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(TWOWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		contingency.parallel true \
 		contingency.aggregate_range "week"
@@ -111,6 +125,7 @@ monthly-contingency-params: $(WEIGHTS)
 	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
+		contingency.end_date $(TODAY) \
 		contingency.input <(find $(QUALTRICS) -maxdepth 1 -newermt $(FIVEWEEK) -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		contingency.parallel true \
 		contingency.aggregate_range "month"
@@ -154,11 +169,11 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 run-contingency:
 	time Rscript contingency_tables.R
 
-weekly-contingency-pipeline: weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy-contingency
+weekly-contingency-pipeline: weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy-weekly-contingency
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)weekly contingency pipeline complete" >> $(MESSAGES)
 
-monthly-contingency-pipeline: monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy-contingency
+monthly-contingency-pipeline: monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy-monthly-contingency
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)monthly contingency pipeline complete" >> $(MESSAGES)
 

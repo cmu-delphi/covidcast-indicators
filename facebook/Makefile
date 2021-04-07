@@ -99,7 +99,7 @@ params.json: $(TODAY)
 		output cids,individual,covidalert,archive,community \
 		start_date $(YESTERDAY)
 
-weekly-contingency-params: $(TODAY)
+weekly-contingency-params: $(WEIGHTS)
 	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
@@ -107,7 +107,7 @@ weekly-contingency-params: $(TODAY)
 		contingency.parallel true \
 		contingency.aggregate_range "week"
 
-monthly-contingency-params: $(TODAY)
+monthly-contingency-params: $(WEIGHTS)
 	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
@@ -154,15 +154,11 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 run-contingency:
 	time Rscript contingency_tables.R
 
-weekly-contingency-pipeline: init-qualtrics weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy
-	grep $(TODAY) params.json
-	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
+weekly-contingency-pipeline: weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy-contingency
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)weekly contingency pipeline complete" >> $(MESSAGES)
 
-monthly-contingency-pipeline: init-qualtrics monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy
-	grep $(TODAY) params.json
-	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
+monthly-contingency-pipeline: monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy-contingency
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)monthly contingency pipeline complete" >> $(MESSAGES)
 
@@ -221,7 +217,7 @@ post-done: post-cids
 	$(SFTP_POST)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 
-post-weekly-contingency: $(TODAY)
+post-weekly-contingency:
 	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
 	[ -n "$${POST}" ]; \
 	BATCH=""; \
@@ -232,7 +228,7 @@ post-weekly-contingency: $(TODAY)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` weekly contingency tables" >> $(MESSAGES)
 	touch $@
 
-post-monthly-contingency: $(TODAY)
+post-monthly-contingency:
 	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
 	[ -n "$${POST}" ]; \
 	BATCH=""; \

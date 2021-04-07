@@ -21,6 +21,7 @@ class TestRun:
         run_module(self.PARAMS)
         csv_files = set(listdir("receiving"))
         csv_files.discard(".gitignore")
+        today = pd.Timestamp.today().date().strftime("%Y%m%d")
 
         expected_files = set()
         for signal in SIGNALS:
@@ -30,7 +31,11 @@ class TestRun:
         # All output files exist
         assert csv_files == expected_files
 
+        expected_columns = [
+            "geo_id", "val", "se", "sample_size",
+            "missing_val", "missing_se", "missing_sample_size"
+        ]
         # All output files have correct columns
         for csv_file in csv_files:
             df = pd.read_csv(join("receiving", csv_file))
-            assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
+            assert (df.columns.values == expected_columns).all()

@@ -1,4 +1,4 @@
-"""Functions to construct the ground truth for a given location."""
+"""Functions to construct the ground truth for training sensors."""
 from datetime import date
 from typing import List, Dict, Tuple
 
@@ -16,16 +16,43 @@ def construct_truths(start_date: date,
                      truth: SensorConfig,
                      locations: List[LocationSeries],
                      export_dir: str = "") -> Dict[Tuple, LocationSeries]:
+    """
+    Construct ground truths for use in training sensors.
+
+    Parameters
+    ----------
+    start_date
+        First day to get truths for.
+    end_date
+        Last day to get truths for.
+    as_of
+        Day to get data as of for computing new values.
+    truth
+        SensorConfig of previously stored truths.
+    locations
+        List of LocationSeries containing geo info to get truths for.
+    export_dir
+
+
+    Returns
+    -------
+        Dictionary where keys are (source, signal, geo_type, geo_value) tuples and keys are
+        populated LocationSeries from `location`
+    """
     raw_indicator = get_indicator_data([truth], locations, as_of)
     output = {}
     for location in locations:
         indicator_key = (truth.source, truth.signal, location.geo_type, location.geo_value)
         location, missing_dates = get_historical_sensor_data(truth, location, end_date, start_date)
-        location, export = fill_missing_days(location, raw_indicator[indicator_key], missing_dates)
+        if indicator_key in raw_indicator:
+            indicator_loc_data = raw_indicator[indicator_key]
+            location, export = fill_missing_days(location, indicator_loc_data, missing_dates)
+        else:
+            export = None
         output[indicator_key] = location
-        if export_dir and export.values:
+        if export_dir and export:
             export_to_csv(export,  truth, as_of, export_dir)
-        return output
+    return output
 
 
 def fill_missing_days(stored_vals: LocationSeries,

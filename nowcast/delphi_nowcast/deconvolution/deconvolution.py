@@ -7,7 +7,7 @@ from scipy.linalg import toeplitz
 from scipy.sparse import diags as band
 
 from ..data_containers import LocationSeries, SensorConfig
-from ..sensorization.get_epidata import get_indicator_data
+from ..epidata import get_indicator_data
 
 
 def _construct_convolution_matrix(signal: np.ndarray,

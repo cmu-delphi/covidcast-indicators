@@ -7,7 +7,7 @@ from datetime import timedelta, date
 import numpy as np
 
 from .ar_model import compute_ar_sensor
-from .get_epidata import get_indicator_data, get_historical_sensor_data
+from ..epidata import get_indicator_data, get_historical_sensor_data, export_to_csv
 from .regression_model import compute_regression_sensor
 from ..data_containers import LocationSeries, SensorConfig
 from ..constants import AR_ORDER, AR_LAMBDA, REG_INTERCEPT
@@ -65,7 +65,7 @@ def compute_sensors(as_of_date: date,
     if export_dir:
         for sensor, locations in output.items():
             for loc in locations:
-                print(_export_to_csv(loc, sensor, as_of_date, export_dir))
+                print(export_to_csv(loc, sensor, as_of_date, export_dir))
     return output
 
 
@@ -96,54 +96,8 @@ def historical_sensors(start_date: date,
     for location in ground_truths:
         for sensor in sensors:
             sensor_vals, missing_dates = get_historical_sensor_data(
-                sensor, location.geo_value, location.geo_type, start_date, end_date
+                sensor, location, start_date, end_date
             )
             if sensor_vals.data:
                 output[sensor].append(sensor_vals)
     return output
-
-
-def _export_to_csv(value: LocationSeries,
-                   sensor: SensorConfig,
-                   as_of_date: date,
-                   receiving_dir: str
-                   ) -> List[str]:
-    """
-    Save value to csv for upload to Epidata database.
-    Parameters
-    ----------
-    value
-        LocationSeries containing data.
-    sensor
-        SensorConfig corresponding to value.
-    as_of_date
-        As_of date for the indicator data used to train the sensor.
-    receiving_dir
-        Export directory for Epidata acquisition.
-    Returns
-    -------
-        Filepath of exported files
-    """
-    export_dir = os.path.join(
-        receiving_dir,
-        f"issue_{as_of_date.strftime('%Y%m%d')}",
-        sensor.source
-    )
-    os.makedirs(export_dir, exist_ok=True)
-    exported_files = []
-    for time_value in value.dates:
-        export_file = os.path.join(
-            export_dir,
-            f"{time_value.strftime('%Y%m%d')}_{value.geo_type}_{sensor.signal}.csv"
-        )
-        if os.path.exists(export_file):
-            with open(export_file, "a") as f:
-                f.write(
-                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
-        else:
-            with open(export_file, "a") as f:
-                f.write("sensor_name,geo_value,value\n")
-                f.write(
-                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
-        exported_files.append(export_file)
-    return exported_files

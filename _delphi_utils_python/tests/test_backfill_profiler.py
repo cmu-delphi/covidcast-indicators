@@ -20,10 +20,8 @@ from delphi_utils.backfill_profiler import (check_create_dir,
                                             to_backfill_df,
                                             create_heatmap_by_refdate,
                                             create_lineplot_by_loations,
-                                            create_violinplot_by_lag,
-                                            create_summary_plots,
-                                            backfill_mean_check,
-                                            create_mean_check_df)
+                                            create_lineplot_by_issuedate,
+                                            create_violinplot_by_lag)
 
 warnings.filterwarnings("ignore")
 
@@ -141,7 +139,19 @@ class TestExport:
         _clean_directory(save_dir)
         create_heatmap_by_refdate(save_dir, backfill_df, source, 
                                     start_date, end_date, 
-                                    geo_values=None, max_lag=90)
+                                    geo_values=[], max_lag=90)
+        
+        figs = _non_ignored_files_set(save_dir)
+        assert len(figs) == backfill_df["geo_value"].nunique()
+        
+        _clean_directory(save_dir)
+        
+    def create_lineplot_by_issuedate(self):
+        save_dir = "./test_dir"
+        _clean_directory(save_dir)
+        create_lineplot_by_issuedate(save_dir, backfill_df, source, 
+                                    start_date, end_date, 
+                                    geo_values=[], max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert len(figs) == backfill_df["geo_value"].nunique()
@@ -155,7 +165,7 @@ class TestExport:
                                     source, fig_name="test", 
                                     start_date=start_date, 
                                     end_date=end_date, 
-                                    geo_values=None, max_lag=90)
+                                    geo_values=[], max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert "test.png" in figs
@@ -167,82 +177,9 @@ class TestExport:
         save_dir = "./test_dir"
         _clean_directory(save_dir)
         create_violinplot_by_lag(save_dir, backfill_df, source, start_date, 
-                                 end_date, geo_values=None, max_lag=90)
+                                 end_date, geo_values=[], max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert len(figs) == backfill_df["geo_value"].nunique()
         
         _clean_directory(save_dir)
-    
-    def test_create_summary_plots(self):
-        save_dir = "./test_dir"
-        _clean_directory(save_dir)
-        with pytest.raises(ValueError):
-            create_summary_plots(save_dir, backfill_df, 
-                                 source, start_date, end_date, 
-                                 geo_values=None, max_lag=90)
-        
-        create_summary_plots(save_dir, backfill_df, 
-                                 source, start_date, end_date, 
-                                 geo_values=None, max_lag=10)
-        
-        figs = _non_ignored_files_set(save_dir)
-        
-        assert "lineplot_by_date.png" in figs
-        assert "lineplot_by_lag.png" in figs
-        
-        _clean_directory(save_dir)
-    
-    def test_backfill_mean_check(self):
-        
-        # Invalid lag
-        with pytest.raises(ValueError): 
-            backfill_mean_check(backfill_df, lag=100, geo_value="ny", 
-                                test_start_date=datetime(2020, 5, 7), 
-                                test_end_date=datetime(2020, 5, 14), 
-                                train_start_date=datetime(2020, 3, 20),
-                                train_end_date=datetime(2020, 5, 7))
-        
-        # Invalid geo_value
-        with pytest.raises(ValueError): 
-            backfill_mean_check(backfill_df, lag=10, geo_value="ca", 
-                                test_start_date=datetime(2020, 5, 7), 
-                                test_end_date=datetime(2020, 5, 14), 
-                                train_start_date=datetime(2020, 3, 20),
-                                train_end_date=datetime(2020, 5, 7))
-        # Valid case
-        t, p = backfill_mean_check(backfill_df, lag=10, geo_value="pa", 
-                                test_start_date=datetime(2020, 5, 7), 
-                                test_end_date=datetime(2020, 5, 14), 
-                                train_start_date=datetime(2020, 3, 20),
-                                train_end_date=datetime(2020, 5, 7)) 
-        assert (p > 0) and (p <= 1)
-        
-    def test_create_mean_check_df(self):
-        save_dir = "./test_dir"
-        output = create_mean_check_df(save_dir, backfill_df, 
-                                      test_start_date=datetime(2020, 5, 7), 
-                                      test_end_date=datetime(2020, 5, 14), 
-                                      train_start_date=datetime(2020, 3, 20),
-                                      train_end_date=datetime(2020, 5, 7),
-                                      lags=None, geo_values=None)
-        
-        files = _non_ignored_files_set(save_dir)
-        
-        assert "mean_check_results.csv" in files
-        assert (output["p"] <= 1).all()
-        assert (output["p"] >= 0).all()
-        
-        _clean_directory(save_dir)
-        
-    
-    
-        
-        
-        
-        
-        
-        
-            
-        
-        

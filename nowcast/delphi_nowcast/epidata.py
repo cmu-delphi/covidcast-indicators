@@ -18,6 +18,7 @@ def get_indicator_data(sensors: List[SensorConfig],
                        as_of: date) -> Dict[Tuple, LocationSeries]:
     """
     Given a list of sensors and locations, asynchronously gets covidcast data for all combinations.
+
     Parameters
     ----------
     sensors
@@ -72,8 +73,10 @@ def get_historical_sensor_data(sensor: SensorConfig,
                                end_date: date) -> Tuple[LocationSeries, list]:
     """
     Query Epidata API for historical sensorization data.
+
     Will only return values if they are not null. If any days are null or are not available,
     they will be listed as missing.
+
     Parameters
     ----------
     sensor
@@ -117,6 +120,7 @@ def export_to_csv(value: LocationSeries,
                    ) -> List[str]:
     """
     Save value to csv for upload to Epidata database.
+
     Parameters
     ----------
     value

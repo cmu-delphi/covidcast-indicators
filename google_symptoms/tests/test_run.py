@@ -7,35 +7,25 @@ import pandas as pd
 
 class TestRun:
     def test_output_files_exist(self, run_as_module):
-        csv_files = listdir("receiving")
+        csv_files = set(listdir("receiving"))
 
-        dates = [
-            "20200801",
-            "20200802",
-            "20200803",
-            "20200804",
-            "20200805",
-            "20200806",
-            "20200807",
-            "20200808",
-            "20200809",
-            "20200810",
-            "20200811"
-        ]
-        geos = ["county", "state", "hhs", "nation"]
+        dates = [d.strftime("%Y%m%d") for d in pd.date_range("20200726", "20200811")]
+        geos = ["county", "state", "hhs", "msa", "hrr", "nation"]
         metrics = ["anosmia", "ageusia", "sum_anosmia_ageusia"]
         smoother = ["raw", "smoothed"]
 
-        expected_files = []
-        for date, geo, metric, smoother in product(dates, geos, metrics, smoother):
-            nf = "_".join([date, geo, metric, smoother, "research"]) + ".csv"
-            expected_files.append(nf)
+        expected_files = {
+            f"{date}_{geo}_{metric}_{smoother}_search.csv"
+            for date, geo, metric, smoother in product(dates, geos, metrics, smoother)
+        }
 
-        set(csv_files) == set(expected_files)
+        assert csv_files == expected_files
 
-    def test_output_file_format(self, run_as_module):
         df = pd.read_csv(
             join("receiving", "20200810_state_anosmia_smoothed_search.csv")
         )
-        assert (df.columns.values == [
-                "geo_id", "val", "se", "sample_size"]).all()
+        expected_columns = [
+            "geo_id", "val", "se", "sample_size",
+            "missing_val", "missing_se", "missing_sample_size"
+        ]
+        assert (df.columns.values == expected_columns).all()

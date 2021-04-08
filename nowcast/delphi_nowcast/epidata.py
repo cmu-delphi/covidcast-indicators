@@ -1,4 +1,5 @@
-"""Retrieve data from Epidata API."""
+"""Functions for interfacing with Epidata."""
+import os
 from datetime import datetime, date
 from itertools import product
 from typing import Tuple, List, Dict
@@ -67,8 +68,7 @@ def get_indicator_data(sensors: List[SensorConfig],
 
 
 def get_historical_sensor_data(sensor: SensorConfig,
-                               geo_value: str,
-                               geo_type: str,
+                               location: LocationSeries,
                                start_date: date,
                                end_date: date) -> Tuple[LocationSeries, list]:
     """
@@ -81,10 +81,8 @@ def get_historical_sensor_data(sensor: SensorConfig,
     ----------
     sensor
         SensorConfig specifying which sensor to retrieve.
-    geo_type
-        Geo type to retrieve.
-    geo_value
-        Geo value to retrieve.
+    location
+        LocationSeries for the location to get.
     start_date
         First day to retrieve (inclusive).
     end_date
@@ -98,23 +96,65 @@ def get_historical_sensor_data(sensor: SensorConfig,
         data_source=sensor.source,
         signals=sensor.signal,
         time_type="day",
-        geo_type=geo_type,
+        geo_type=location.geo_type,
         time_values=Epidata.range(start_date.strftime("%Y%m%d"), end_date.strftime("%Y%m%d")),
-        geo_value=geo_value,
+        geo_value=location.geo_value,
         sensor_names=sensor.name,
         lag=sensor.lag)
     all_dates = [i.date() for i in date_range(start_date, end_date)]
     if response["result"] == 1:
-        output = LocationSeries(
-            geo_value=geo_value,
-            geo_type=geo_type,
-            data={datetime.strptime(str(i["time_value"]), "%Y%m%d").date(): i["value"]
-                  for i in response.get("epidata", []) if not isnan(i["value"])}
-        )
-        missing_dates = [i for i in all_dates if i not in output.dates]
-        return output, missing_dates
+        location.data = {datetime.strptime(str(i["time_value"]), "%Y%m%d").date(): i["value"]
+                         for i in response.get("epidata", []) if not isnan(i["value"])}
+        missing_dates = [i for i in all_dates if i not in location.dates]
+        return location, missing_dates
     if response["result"] == -2:  # no results
         print("No historical results found")
-        output = LocationSeries(geo_value=geo_value, geo_type=geo_type)
-        return output, all_dates
+        return location, all_dates
     raise Exception(f"Bad result from Epidata: {response['message']}")
+
+
+def export_to_csv(value: LocationSeries,
+                   sensor: SensorConfig,
+                   as_of_date: date,
+                   receiving_dir: str
+                   ) -> List[str]:
+    """
+    Save value to csv for upload to Epidata database.
+
+    Parameters
+    ----------
+    value
+        LocationSeries containing data.
+    sensor
+        SensorConfig corresponding to value.
+    as_of_date
+        As_of date for the indicator data used to train the sensor.
+    receiving_dir
+        Export directory for Epidata acquisition.
+    Returns
+    -------
+        Filepath of exported files
+    """
+    export_dir = os.path.join(
+        receiving_dir,
+        f"issue_{as_of_date.strftime('%Y%m%d')}",
+        sensor.source
+    )
+    os.makedirs(export_dir, exist_ok=True)
+    exported_files = []
+    for time_value in value.dates:
+        export_file = os.path.join(
+            export_dir,
+            f"{time_value.strftime('%Y%m%d')}_{value.geo_type}_{sensor.signal}.csv"
+        )
+        if os.path.exists(export_file):
+            with open(export_file, "a") as f:
+                f.write(
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
+        else:
+            with open(export_file, "a") as f:
+                f.write("sensor_name,geo_value,value\n")
+                f.write(
+                    f"{sensor.name},{value.geo_value},{value.data.get(time_value, '')}\n")
+        exported_files.append(export_file)
+    return exported_files

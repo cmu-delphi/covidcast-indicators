@@ -9,7 +9,7 @@ from datetime import datetime, date, timedelta
 from typing import Dict, Any
 
 import numpy as np
-from delphi_utils import S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger, Nans
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -17,6 +17,18 @@ from .constants import (METRICS, SENSOR_NAME_MAP,
 from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
+
+def add_nancodes(df):
+    """Add nancodes to the dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    return df
 
 def run_module(params: Dict[str, Any]):
     """Run module for processing NCHS mortality data.
@@ -67,7 +79,8 @@ def run_module(params: Dict[str, Any]):
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
-            df = df[~df["val"].isnull()]
+            df = add_nancodes(df)
+            # df = df[~df["val"].isnull()]
             sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
             export_csv(
                 df,
@@ -86,7 +99,8 @@ def run_module(params: Dict[str, Any]):
                     df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
-                df = df[~df["val"].isnull()]
+                df = add_nancodes(df)
+                # df = df[~df["val"].isnull()]
                 sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 export_csv(
                     df,

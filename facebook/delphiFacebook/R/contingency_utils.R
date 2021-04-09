@@ -71,8 +71,15 @@ update_params <- function(params) {
     )
   }
   
-  params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
-  if ( length(params[["input"]]) == 0 || all(is.na(params[["input"]])) ) {
+  if ( is.null(params[["input"]]) || length(params$input) == 0 ) {
+    # If params$input empty or not provided, fetch filenames from input_dir.
+    params$input <- get_sparse_filenames(date_range[[1]], date_range[[2]], params)
+  } else {
+    # If input files provided, subset to those in desired date range.
+    params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
+  }
+  
+  if ( length(params$input) == 0 || all(is.na(params$input)) ) {
     stop("no input files to read in")
   }
   
@@ -80,7 +87,7 @@ update_params <- function(params) {
   params$end_time <- date_range[[2]]
   params$start_date <- as_date(date_range[[1]])
   params$end_date <- as_date(date_range[[2]])
-
+  
   return(params)
 }
 
@@ -101,7 +108,7 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   start_date <- as_date(start_date) - days(params$backfill_days)
   end_date <- as_date(end_date)
   
-  if ( is.null(params$input) | length(params$input) == 0 ) {
+  if ( is.null(params[["input"]]) || length(params$input) == 0 ) {
     date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
     youtube_pattern <- ".*YouTube[.]csv$"
     
@@ -120,6 +127,45 @@ get_filenames_in_range <- function(start_date, end_date, params) {
     !(( file_start_dates < start_date & file_end_dates < start_date ) | 
         ( file_start_dates > end_date & file_end_dates > end_date ))]
   
+  return(filenames)
+}
+
+#' Get sparse list of input data files from `input_dir`.
+#' 
+#' Finds every fourth + last file by date.
+#'
+#' @param start_date    Start of desired date range 
+#' @param end_date    End of desired date range 
+#' @param params    Params object produced by read_params
+#'
+#' @return Character vector of filenames
+#' 
+#' @importFrom stringr str_remove_all
+#' 
+#' @export
+get_sparse_filenames <- function(start_date, end_date, params) {
+  if (params$use_input_asis) { return(params$input) }
+  
+  filenames <- get_filenames_in_range(start_date, end_date, params)
+  
+  file_end_dates <- as.integer(str_remove_all(substr(filenames, 1, 10), "-"))
+  unique_file_end_dates <- unique(file_end_dates)
+  
+  max_end_date <- max(unique_file_end_dates)
+  
+  # Use every fourth date.
+  stride <- 4L
+  curr_date <- min(unique_file_end_dates)
+  keep_dates <- c()
+  while ( curr_date < max_end_date ) {
+    keep_dates <- c(keep_dates, curr_date)
+    curr_date <- min(curr_date + stride, max_end_date)
+  }
+  
+  # Always add last date
+  keep_dates <- c(keep_dates, max_end_date)
+  
+  filenames <- filenames[file_end_dates %in% keep_dates]
   return(filenames)
 }
 

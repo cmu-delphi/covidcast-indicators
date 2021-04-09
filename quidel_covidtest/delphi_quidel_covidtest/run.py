@@ -11,7 +11,8 @@ from typing import Dict, Any
 from delphi_utils import (
     add_prefix,
     create_export_csv,
-    get_structured_logger
+    get_structured_logger,
+    Nans
 )
 
 from .constants import (END_FROM_TODAY_MINUS,
@@ -31,6 +32,22 @@ def log_exit(start_time, logger):
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
                 elapsed_time_in_seconds=elapsed_time_in_seconds)
+
+def add_nancodes(df):
+    """Add nancodes to the dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_MISSING
+    df["missing_sample_size"] = Nans.NOT_MISSING
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    remaining_nans_mask = df["se"].isnull()
+    df.loc[remaining_nans_mask, "missing_se"] = Nans.UNKNOWN
+    remaining_nans_mask = df["sample_size"].isnull()
+    df.loc[remaining_nans_mask, "missing_sample_size"] = Nans.UNKNOWN
+    return df
 
 def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
@@ -103,6 +120,7 @@ def run_module(params: Dict[str, Any]):
             state_groups, smooth=smoothers[sensor][1],
             device=smoothers[sensor][0], first_date=first_date,
             last_date=last_date)
+        state_df = add_nancodes(state_df)
         create_export_csv(state_df, geo_res="state", sensor=sensor, export_dir=export_dir,
                           start_date=export_start_date, end_date=export_end_date)
 
@@ -115,6 +133,7 @@ def run_module(params: Dict[str, Any]):
                 state_groups, geo_data, res_key, smooth=smoothers[sensor][1],
                 device=smoothers[sensor][0], first_date=first_date,
                 last_date=last_date)
+            res_df = add_nancodes(res_df)
             create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
                               start_date=export_start_date, end_date=export_end_date,
                               remove_null_samples=True)

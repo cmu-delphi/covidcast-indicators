@@ -111,20 +111,18 @@ params.json: $(TODAY)
 		start_date $(YESTERDAY)
 
 weekly-contingency-params: $(WEIGHTS)
-	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
 		contingency.end_date $(TODAY) \
-		contingency.input <(find $(QUALTRICS) -maxdepth 1 -mtime -14 -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.input [] \
 		contingency.parallel true \
 		contingency.aggregate_range "week"
 
 monthly-contingency-params: $(WEIGHTS)
-	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
 		contingency.end_date $(TODAY) \
-		contingency.input <(find $(QUALTRICS) -maxdepth 1 -mtime -35 -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		contingency.input [] \
 		contingency.parallel true \
 		contingency.aggregate_range "month"
 

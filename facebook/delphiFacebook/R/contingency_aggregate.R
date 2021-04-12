@@ -270,9 +270,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     table(df[, group_vars, with=FALSE], exclude=NULL, dnn=group_vars), 
     stringsAsFactors=FALSE
   )
-  unique_groups_counts <- unique_groups_counts[
-    complete.cases(unique_groups_counts[, group_vars]),
-  ]
   
   # Drop groups with less than threshold sample size.
   unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
@@ -327,10 +324,6 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     aggregation <- aggregations$id[row]
     group_vars <- aggregations$group_by[[row]]
     post_fn <- aggregations$post_fn[[row]]
-
-    dfs_out[[aggregation]] <- dfs_out[[aggregation]][
-      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", group_vars)])) == 0,
-    ]
 
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 

@@ -6,6 +6,7 @@ required = [
     "covidcast",
     "freezegun",
     "gitpython",
+    "mock",
     "moto",
     "numpy",
     "pandas>=1.1.0",

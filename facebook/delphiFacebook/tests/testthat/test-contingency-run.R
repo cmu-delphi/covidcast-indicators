@@ -7,7 +7,6 @@ context("Verifying the data manipulation correctness of the contingency_tables p
 base_aggs <- tribble(
   ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   "freq_anxiety", "mc_anxiety", c("mc_gender"), compute_multiple_choice, I,
-  "avg_hh_size", "n_hh_num_total", c("mc_gender"), compute_numeric, I,
   "pct_hh_fever", "b_hh_fever", c("mc_gender"), compute_binary, I,
   "pct_comorbidities", "ms_comorbidities", c("mc_gender"), compute_multiselect, I,
 )
@@ -83,38 +82,13 @@ test_that("simple equal-weight dataset produces correct counts", {
 })
 
 
-test_that("simple equal-weight dataset produces correct unweighted mean", {
-  tdir <- tempfile()
-  params <- get_params(tdir)
-  create_dir_not_exist(params$export_dir)
-
-  local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[2,])
-
-  # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-
-  # Expected file contents
-  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
-  hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
-
-  expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~se_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
-    "us", "Female", hh_avg, NA, 2000L, 100 * 2000
-  ))
-
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  expect_equivalent(df, expected_output)
-})
-
-
 test_that("simple equal-weight dataset produces correct percents", {
   tdir <- tempfile()
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[3,])
+  run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
   expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
@@ -139,7 +113,7 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[4,])
+  run_contingency_tables_many_periods(params, base_aggs[3,])
 
   # Expected files
   expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
@@ -184,17 +158,14 @@ test_that("testing run with multiple aggregations per group", {
 
   ## all other aggs
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
-  hh_avg <- mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]))
   fever_prop <- mean( recode(raw_data[3:nrow(raw_data), "A1_1"], "1"=1, "2"=0) )
 
   expected_other <- as.data.frame(tribble(
     ~geo_id, ~mc_gender,
-    ~val_avg_hh_size, ~se_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
     ~val_pct_hh_fever, ~se_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
     ~val_pct_comorbidities_High_blood_pressure, ~se_pct_comorbidities_High_blood_pressure, ~sample_size_pct_comorbidities_High_blood_pressure, ~represented_pct_comorbidities_High_blood_pressure,
     ~val_pct_comorbidities_Type_1_diabetes, ~se_pct_comorbidities_Type_1_diabetes, ~sample_size_pct_comorbidities_Type_1_diabetes, ~represented_pct_comorbidities_Type_1_diabetes,
     "us", "Female",
-    hh_avg, NA, 2000L, 100 * 2000,
     fever_prop * 100, NA, 2000L, 100 * 2000,
     100, NA, 2000L, 100 * 2000,
     1/2000 * 100, NA, 2000L, 100 * 2000
@@ -268,34 +239,6 @@ test_that("simple weighted dataset produces correct counts", {
 })
 
 
-test_that("simple weighted dataset produces weighted mean", {
-  tdir <- tempfile()
-  params <- get_params(tdir)
-  create_dir_not_exist(params$export_dir)
-
-  local_mock("delphiFacebook::join_weights" = mock_join_weights)
-  local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
-  local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[2,])
-
-  # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
-
-  # Expected file contents
-  raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
-  hh_avg <- weighted.mean(as.numeric(raw_data[3:nrow(raw_data), "A2b"]), rand_weights)
-  hh_avg <- round(hh_avg, digits=7)
-
-  expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~val_avg_hh_size, ~se_avg_hh_size, ~sample_size_avg_hh_size, ~represented_avg_hh_size,
-    "us", "Female", hh_avg, NA, 2000L, sum(rand_weights)
-  ))
-
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
-  expect_equivalent(out, expected_output)
-})
-
-
 test_that("simple weighted dataset produces correct percents", {
   tdir <- tempfile()
   params <- get_params(tdir)
@@ -304,7 +247,7 @@ test_that("simple weighted dataset produces correct percents", {
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[3,])
+  run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
@@ -331,7 +274,7 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
-  run_contingency_tables_many_periods(params, base_aggs[4,])
+  run_contingency_tables_many_periods(params, base_aggs[3,])
 
   # Expected files
   expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))

@@ -26,6 +26,7 @@ VERSIONS = [
         # relaese version, access dir
         ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
         ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*")
+        ("20210408", "weekly-patterns-delivery-2020-12/weekly", "patterns/*/*/*")
 ]
 SENSORS = [
         "num",

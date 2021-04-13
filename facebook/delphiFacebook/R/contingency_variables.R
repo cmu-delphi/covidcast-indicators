@@ -948,7 +948,7 @@ create_derivative_columns <- function(df) {
   # dontneed_reason_not_serious
   # dontneed_reason_not_beneficial
   # dontneed_reason_other
-  # Percentage of all respondents to (V5a, V5b, OR V5c) AND V6 who don’t think
+  # Percentage of all respondents to (V5a, V5b, OR V5c) AND V6 who don’t
   # believe they need a COVID-19 vaccine for X reason
   # (# of respondents who selected “I don't believe I need a COVID-19 vaccine.”
   # in any of V5a, V5b, V5c) AND selected X in V6./ (# of respondents who

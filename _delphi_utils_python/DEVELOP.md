@@ -1,6 +1,6 @@
 # DELPHI Common Utility Functions (Python)
 
-This director contains the Python module `delphi_utils`. It includes a number of
+This directory contains the Python module `delphi_utils`. It includes a number of
 common functions that are useful across multiple indicators.
 
 ## Installing the Module

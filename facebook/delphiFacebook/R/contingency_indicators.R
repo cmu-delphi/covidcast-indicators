@@ -166,8 +166,7 @@ get_aggs <- function() {
     "pct_appointment_have", "b_appointment_have", compute_binary, jeffreys_binary,
     "pct_appointment_tried", "b_appointment_tried", compute_binary, jeffreys_binary
   )
-  names(indicators) <- c("name", "metric", "compute_fn", "post_fn")
-  
+
   aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   )

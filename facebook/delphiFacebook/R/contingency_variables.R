@@ -1019,7 +1019,7 @@ create_derivative_columns <- function(df) {
   # defno_dontneed_reason_not_beneficial
   # defno_dontneed_reason_other
   # Percentage of respondents who would definitely not choose to get vaccinated
-  # AND AND V6 who don’t think believe they need a COVID-19 vaccine for X
+  # AND who don’t believe they need a COVID-19 vaccine for X
   # reason
   # (# of respondents who selected “I don't believe I need a COVID-19 vaccine.”
   # in V5c) AND selected X in V6./ (# of respondents who selected at least one

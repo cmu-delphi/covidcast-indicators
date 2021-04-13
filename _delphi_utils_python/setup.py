@@ -1,6 +1,9 @@
 from setuptools import setup
 from setuptools import find_packages
 
+with open("README.md", "r") as f:
+  long_description = f.read()
+
 required = [
     "boto3",
     "covidcast",
@@ -23,6 +26,8 @@ setup(
     name="delphi_utils",
     version="0.1.0",
     description="Shared Utility Functions for Indicators",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
     author="",
     author_email="",
     url="https://github.com/cmu-delphi/",

@@ -139,7 +139,7 @@ class TestExport:
         _clean_directory(save_dir)
         create_heatmap_by_refdate(save_dir, backfill_df, source, 
                                     start_date, end_date, 
-                                    geo_values=[], max_lag=90)
+                                    geo_values=None, max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert len(figs) == backfill_df["geo_value"].nunique()
@@ -151,7 +151,7 @@ class TestExport:
         _clean_directory(save_dir)
         create_lineplot_by_issuedate(save_dir, backfill_df, source, 
                                     start_date, end_date, 
-                                    geo_values=[], max_lag=90)
+                                    geo_values=None, max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert len(figs) == backfill_df["geo_value"].nunique()
@@ -165,7 +165,7 @@ class TestExport:
                                     source, fig_name="test", 
                                     start_date=start_date, 
                                     end_date=end_date, 
-                                    geo_values=[], max_lag=90)
+                                    geo_values=None, max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert "test.png" in figs
@@ -177,7 +177,7 @@ class TestExport:
         save_dir = "./test_dir"
         _clean_directory(save_dir)
         create_violinplot_by_lag(save_dir, backfill_df, source, start_date, 
-                                 end_date, geo_values=[], max_lag=90)
+                                 end_date, geo_values=None, max_lag=90)
         
         figs = _non_ignored_files_set(save_dir)
         assert len(figs) == backfill_df["geo_value"].nunique()

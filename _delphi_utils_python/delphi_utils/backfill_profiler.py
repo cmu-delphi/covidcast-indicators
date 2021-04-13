@@ -164,7 +164,7 @@ def to_backfill_df(df, data_type = "completeness",
 
     backfill_df = pd.melt(pivot_df, id_vars=["geo_value", "time_value"],
                           var_name="lag", value_name="value")
-    
+
     backfill_df["issue_date"] = [x \
                   + timedelta(days=y) for x,y in zip(backfill_df["time_value"],
                                                      backfill_df["lag"])]
@@ -177,15 +177,12 @@ def to_backfill_df(df, data_type = "completeness",
         backfill_df["value_type"] = val_name
         backfill_df["data_type"] = "dailychange"
         backfill_df["ref_lag"] = -1
-        
 
     return backfill_df
 
-
-
 def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                                 source:str, start_date:datetime,
-                                end_date:datetime, geo_values=[],
+                                end_date:datetime, geo_values=None,
                                 max_lag=90):
     """Create heatmaps of the backfill estimates.
 
@@ -212,7 +209,7 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         the start_date.
     geo_values : list of str, optional
         The list of locations for which the heatmaps will be created.
-        The default is an empty list, which means all the locations included in the
+        The default is None, which means all the locations included in the
         backfill_df will be considered. Otherwise, only the locations in the
         geo_values list will be considered.
     max_lag : int, optional
@@ -229,19 +226,17 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     filtered_backfill_df = backfill_df[(backfill_df["lag"]<=max_lag)
                                        & (backfill_df["time_value"] >= start_date)
                                        & (backfill_df["time_value"] <= end_date)]
-    
+
     min_lag = filtered_backfill_df["lag"].min()
     value_type = filtered_backfill_df["value_type"].values[0]
     data_type = filtered_backfill_df["data_type"].values[0]
 
-    if len(geo_values) == 0:
+    if isinstance(geo_values, type(None)):
         geo_values = filtered_backfill_df["geo_value"].unique()
     max_lag =min(filtered_backfill_df["lag"].max(), max_lag)
 
     if data_type == "completeness":
-        vmax = int((filtered_backfill_df["value"].quantile(.99)//20 + 1) * 20)
-        vmin = int((filtered_backfill_df["value"].quantile(.01)//20) * 20)
-        cbar_freq = ceil((vmax-vmin)/20) + 1
+        inter = 20
         cmap = "magma"
         cbar_label = "Percentage"
         ref_lag = backfill_df["ref_lag"].values[0]
@@ -249,12 +244,11 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                 \nAgainst values reported %d days later\
                 \n%s %s, %s'%(ref_lag, source, value_type, "%s")
     elif data_type == "dailychange":
-        scale = 2.0 / filtered_backfill_df["value"].quantile(0.95)
-        scale = 10 ** round(log10(scale))
-        filtered_backfill_df["value"] = filtered_backfill_df["value"].apply(lambda x: scale * x).apply(tanh)
-        vmax = (filtered_backfill_df["value"].quantile(.99) // 0.1 + 1) * .1
-        vmin = (filtered_backfill_df["value"].quantile(.01) // .1) * .1
-        cbar_freq = ceil((vmax-vmin)/.1) + 1
+        scale = 10 ** round(log10(
+            2.0 / filtered_backfill_df["value"].quantile(0.95)))
+        filtered_backfill_df["value"] = filtered_backfill_df["value"].apply(
+            lambda x: scale * x).apply(tanh)
+        inter = .1
         cmap = "coolwarm"
         cbar_label = "Daily Change"
         ref_lag = 0
@@ -263,11 +257,15 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
     n_days = (end_date - start_date).days + 1 - ref_lag
     time_index = np.array([(start_date + timedelta(i)).date() for i in range(n_days)])
 
+    # Settings for the cbar ticks
+    vmax = int((filtered_backfill_df["value"].quantile(.99)//inter + 1) * inter)
+    vmin = int((filtered_backfill_df["value"].quantile(.01)//inter) * inter)
+    cbar_freq = ceil((vmax-vmin)/inter) + 1
+
     pivot_df = pd.pivot_table(filtered_backfill_df,
                               values="value",
                               index=["geo_value", "time_value"],
                               columns="lag").reset_index()
-    
 
     for geo in geo_values:
         sns.set(font_scale=1.2)
@@ -276,10 +274,9 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                                   ["time_value"] + list(range(min_lag, max_lag+1))]
         if data_type == "dailychange":
             heatmap_df.insert(loc=1, column=0, value=np.nan)
-        heatmap_df.set_index("time_value", inplace=True)
         plt.figure(figsize = (18, 15))
         plt.style.context("ggplot")
-        heatmap_df = heatmap_df.reindex(time_index)
+        heatmap_df = heatmap_df.set_index("time_value").reindex(time_index)
         # Show Sundays on y_axis
         selected_ytix = [x.weekday() == 6 for x in time_index]
         ax = sns.heatmap(heatmap_df, annot=False, cmap=cmap, cbar=True,
@@ -294,8 +291,6 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
                                                        0.1, 0.2, 1]])
             cbar.set_ticklabels(["<-100%", "-20%", "-10%", "-5%", "-2%", "0%",
                                  "+2%", "+5%", "+10%", "+20%", ">+100%"])
-        
-        xtix = ax.get_xticks()
         plt.xlabel("Lag", fontsize = 25)
         plt.ylabel("Reference Date", fontsize = 25)
         plt.title(fig_title%geo, fontsize = 30, loc="left")
@@ -303,16 +298,14 @@ def create_heatmap_by_refdate(save_dir:str, backfill_df:pd.DataFrame,
         plt.yticks(fontsize=15)
         ax.set_yticks(np.arange(0.5, n_days + 0.5)[selected_ytix])
         ax.set_yticklabels(time_index[selected_ytix])
-        ax.set_xticks(xtix[::5])
+        ax.set_xticks(ax.get_xticks()[::5])
         plt.savefig(save_dir+"/"+str(geo)+".png")
-        
-        
 
 
 def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
                                   source:str, fig_name:str,
                                   start_date:datetime, end_date:datetime,
-                                  geo_values=[], max_lag=90):
+                                  geo_values=None, max_lag=90):
     """Create a lineplot of the backfill estimates across locations.
 
     The lineplot show the backfill estimates by lag and location for
@@ -339,7 +332,7 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
         Display data up to this date, inclusive.
     geo_values : list of str, optional
         The list of locations for which the heatmaps will be created.
-        The default is an empty list, which means all the locations included
+        The default is None, which means all the locations included
         in the backfill_df will be considered. Otherwise, only the locations
         in the geo_values list will be considered.
     max_lag : int, optional
@@ -353,7 +346,7 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
     """
     check_create_dir(save_dir)
 
-    if len(geo_values) == 0:
+    if isinstance(geo_values, type(None)):
         geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
 
@@ -406,16 +399,18 @@ def create_lineplot_by_loations(save_dir:str, backfill_df:pd.DataFrame,
         plt.yticks(np.linspace(vmin, vmax, num=cbar_freq), fontsize=15)
         plt.ylim(vmin, vmax)
     else:
-        plt.yticks([tanh(10*x) for x in [-1, -0.2, -0.1, -0.05, -0.02, 0, 0.02, 0.05, 0.1, 0.2, 1]], 
-                   ["<-100%", "- 20%", "- 10%", "- 5%", "- 2%", "0%", "2%", "5%", "10%", "20%", ">100%"])
+        plt.yticks([tanh(10*x) for x in [-1, -0.2, -0.1, -0.05, -0.02, 0,
+                                         0.02, 0.05, 0.1, 0.2, 1]],
+                   ["<-100%", "- 20%", "- 10%", "- 5%", "- 2%", "0%",
+                    "2%", "5%", "10%", "20%", ">100%"])
         plt.ylim(vmin, vmax)
     plt.xticks(np.linspace(0, 90, num=10), fontsize=15)
-    
+
     plt.savefig(save_dir+"/"+fig_name+".png", bbox_inches='tight')
 
 def create_lineplot_by_issuedate(save_dir:str, backfill_df:pd.DataFrame,
                                   source:str, start_date:datetime,
-                                  end_date:datetime, geo_values=[],
+                                  end_date:datetime, geo_values=None,
                                   max_lag=90):
     """Create a lineplot of the backfill estimates across issue date.
 
@@ -443,7 +438,7 @@ def create_lineplot_by_issuedate(save_dir:str, backfill_df:pd.DataFrame,
         Display data up to this date, inclusive.
     geo_values : list of str, optional
         The list of locations for which the heatmaps will be created.
-        The default is an empty list, which means all the locations included
+        The default is None, which means all the locations included
         in the backfill_df will be considered. Otherwise, only the locations
         in the geo_values list will be considered.
     max_lag : int, optional
@@ -457,7 +452,7 @@ def create_lineplot_by_issuedate(save_dir:str, backfill_df:pd.DataFrame,
     """
     check_create_dir(save_dir)
 
-    if len(geo_values) == 0:
+    if isinstance(geo_values, type(None)):
         geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
 
@@ -502,19 +497,19 @@ def create_lineplot_by_issuedate(save_dir:str, backfill_df:pd.DataFrame,
         plt.xticks(np.array(time_index)[selected_xtix], fontsize=10, rotation=90)
         if data_type == "completeness":
             plt.axhline(90, linestyle = "--")
-            plt.axhline(100, linestyle = "--") 
+            plt.axhline(100, linestyle = "--")
             vmax = (subdf["value"].max() // 10 + 1) * 10
             plt.yticks(np.linspace(0, vmax, num=int(vmax//20)+1), fontsize=10)
         else:
             plt.yticks([tanh(10*x) for x in [-1, -0.2, -0.1, -0.05, -0.02, 0,
-                                             0.02, 0.05, 0.1, 0.2, 1]], 
+                                             0.02, 0.05, 0.1, 0.2, 1]],
                       ["<-100%", "-20%", "-10%", "-5%", "-2%", "0%",
                        "+2%", "+5%", "+10%", "+20%", ">+100%"])
         plt.savefig(save_dir+"/"+geo+".png", bbox_inches='tight')
 
 def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
                                source:str, start_date:datetime,
-                               end_date:datetime, geo_values=[],
+                               end_date:datetime, geo_values=None,
                                max_lag=90):
     """Create violinplots of the backfill estimates.
 
@@ -539,7 +534,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
         Display data up to this date, inclusive.
     geo_values : list of str, optional
         The list of locations for which the heatmaps will be created.
-        The default is an empty list, which means all the locations included
+        The default is None, which means all the locations included
         in the backfill_df will be considered. Otherwise, only the locations
         in the geo_values list will be considered.
     max_lag : int, optional
@@ -553,7 +548,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
     """
     check_create_dir(save_dir)
 
-    if len(geo_values) == 0:
+    if isinstance(geo_values, type(None)):
         geo_values = backfill_df["geo_value"].unique()
     max_lag =min(backfill_df["lag"].max(), max_lag)
     selected_lags = list(range(0, max_lag + 10, 10))
@@ -571,7 +566,7 @@ def create_violinplot_by_lag(save_dir: str, backfill_df:pd.DataFrame,
                 \n%s, Reference Date: From %s to %s'%(source, value_type,
                 ref_lag, "%s", start_date.date(), end_date.date())
         ylabel = "%Reported"
-    else:      
+    else:
         fig_title = 'Daily Change Rate, %s %s, \
                 \n%s, Reference Date: From %s to %s'%(source, value_type, "%s",
                                           start_date.date(), end_date.date())

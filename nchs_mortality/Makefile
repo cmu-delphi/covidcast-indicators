@@ -8,7 +8,6 @@ venv:
 install: venv
 	. env/bin/activate; \
 	pip install wheel ; \
-	pip install -e ../_delphi_utils_python ;\
 	pip install -e .
 
 lint:

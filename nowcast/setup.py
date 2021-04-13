@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "aiohttp",
+    "delphi_utils",
     "numpy",
     "pandas",
     "pydocstyle",

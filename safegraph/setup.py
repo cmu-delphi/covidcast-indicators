@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "covidcast",
+    "delphi_utils",
     "numpy",
     "pydocstyle",
     "pandas",

@@ -2,6 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "delphi_utils",
     "numpy",
     "pandas",
     "google-api-python-client",

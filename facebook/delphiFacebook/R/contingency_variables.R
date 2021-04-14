@@ -512,6 +512,23 @@ create_derivative_columns <- function(df) {
   } else {
     df$eligiblepregsmokeobese <- NA
   }
+  
+  # edulevelfull
+  if ("mc_education" %in% names(df)) {
+    df$edulevelfull <- case_when(
+      df$mc_education == "Less than high school" ~ "LessThanHighSchool",
+      df$mc_education == "High school graduate or equivalent" ~ "HighSchool",
+      df$mc_education == "Some college" ~ "SomeCollege",
+      df$mc_education == "2 year degree" ~ "TwoYearDegree",
+      df$mc_education == "4 year degree" ~ "FourYearDegree",
+      df$mc_education == "Master's degree" ~ "MastersDegree",
+      df$mc_education == "Professional degree" ~ "ProfessionalDegree",
+      df$mc_education == "Doctorate" ~ "Doctorate",
+      TRUE ~ NA_character_
+    )
+  } else {
+    df$edulevel <- NA_character_
+  }
 
   # edulevel
   if ("mc_education" %in% names(df)) {

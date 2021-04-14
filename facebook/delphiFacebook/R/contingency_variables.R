@@ -503,13 +503,12 @@ create_derivative_columns <- function(df) {
   }
 
   # eligiblepregsmokeobese
-  if (all(c("eligible", "pregnant", "smoker", "comorbidobese") %in% names(df))) {
-    df$eligiblepregsmokeobese <- any_true(
-      df$eligible,
-      ifelse(df$gender %in% "Male", FALSE, df$pregnant),
-      df$smoker,
+  if (all(c("eligible", "gender", "pregnant", "smoker", "comorbidobese") %in% names(df))) {
+    df$eligiblepregsmokeobese <-
+      df$eligible |
+      ifelse(df$gender %in% "Male", FALSE, df$pregnant) |
+      df$smoker |
       df$comorbidobese
-    )
   } else {
     df$eligiblepregsmokeobese <- NA
   }
@@ -885,33 +884,66 @@ create_derivative_columns <- function(df) {
   # in any of V5b, V5c) AND selected X in V6./ (# of respondents who selected
   # at least one option in any of V5b, V5c AND selected at least one option in
   # V6)
-  if (all(c("V5b", "V5c", "V6", "b_hesitant_barrier_dontneed") %in% names(df))) {
+  if ("b_hesitant_barrier_dontneed" %in% names(df)) {
     dontneed <- df$b_hesitant_barrier_dontneed == 1
-    dontneed_reasons <- split_options(df$V6)
+
+    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_had_covid <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_had_covid)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_had_covid <- NA_real_
+    }
     
-    df$b_hesitant_dontneed_reason_had_covid <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "1"))
-    )
-    df$b_hesitant_dontneed_reason_dont_spend_time <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "2"))
-    )
-    df$b_hesitant_dontneed_reason_not_high_risk <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "3"))
-    )
-    df$b_hesitant_dontneed_reason_precautions <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "4"))
-    )
-    df$b_hesitant_dontneed_reason_not_serious <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "5"))
-    )
-    df$b_hesitant_dontneed_reason_not_beneficial <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "7"))
-    )
-    df$b_hesitant_dontneed_reason_other <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "8"))
-    )
+    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_dont_spend_time <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_dont_spend_time <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_not_high_risk <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_not_high_risk <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_precautions" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_precautions <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_precautions)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_precautions <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_not_serious <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_serious)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_not_serious <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_not_beneficial <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_not_beneficial <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_other" %in% names(df)) {
+      df$b_hesitant_dontneed_reason_other <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_other)
+      )
+    } else {
+      df$b_hesitant_dontneed_reason_other <- NA_real_
+    }
   } else {
-    df$b_hesitant_dontneed_reason_had_covid <- NA_real_
+    df$b_hesitant_dontneed_reason_had_covid <- NA_real_ 
     df$b_hesitant_dontneed_reason_dont_spend_time <- NA_real_
     df$b_hesitant_dontneed_reason_not_high_risk <- NA_real_
     df$b_hesitant_dontneed_reason_precautions <- NA_real_
@@ -1024,33 +1056,66 @@ create_derivative_columns <- function(df) {
   # (# of respondents who selected “I don't believe I need a COVID-19 vaccine.”
   # in V5c) AND selected X in V6./ (# of respondents who selected at least one
   # option in V5c AND selected at least one option in V6)
-  if (all(c("V5c", "V6", "b_defno_barrier_dontneed") %in% names(df))) {
+  if ("b_defno_barrier_dontneed" %in% names(df)) {
     dontneed <- df$b_defno_barrier_dontneed == 1
-    dontneed_reasons <- split_options(df$V6)
     
-    df$b_defno_dontneed_reason_had_covid <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "1"))
-    )
-    df$b_defno_dontneed_reason_dont_spend_time <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "2"))
-    )
-    df$b_defno_dontneed_reason_not_high_risk <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "3"))
-    )
-    df$b_defno_dontneed_reason_precautions <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "4"))
-    )
-    df$b_defno_dontneed_reason_not_serious <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "5"))
-    )
-    df$b_defno_dontneed_reason_not_beneficial <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "7"))
-    )
-    df$b_defno_dontneed_reason_other <- as.numeric(
-      all_true(dontneed, is_selected(dontneed_reasons, "8"))
-    )
+    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+      df$b_defno_dontneed_reason_had_covid <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_had_covid)
+      )
+    } else {
+      df$b_defno_dontneed_reason_had_covid <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+      df$b_defno_dontneed_reason_dont_spend_time <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+      )
+    } else {
+      df$b_defno_dontneed_reason_dont_spend_time <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+      df$b_defno_dontneed_reason_not_high_risk <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+      )
+    } else {
+      df$b_defno_dontneed_reason_not_high_risk <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_precautions" %in% names(df)) {
+      df$b_defno_dontneed_reason_precautions <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_precautions)
+      )
+    } else {
+      df$b_defno_dontneed_reason_precautions <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+      df$b_defno_dontneed_reason_not_serious <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_serious)
+      )
+    } else {
+      df$b_defno_dontneed_reason_not_serious <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+      df$b_defno_dontneed_reason_not_beneficial <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+      )
+    } else {
+      df$b_defno_dontneed_reason_not_beneficial <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_other" %in% names(df)) {
+      df$b_defno_dontneed_reason_other <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_other)
+      )
+    } else {
+      df$b_defno_dontneed_reason_other <- NA_real_
+    }
   } else {
-    df$b_defno_dontneed_reason_had_covid <- NA_real_
+    df$b_defno_dontneed_reason_had_covid <- NA_real_ 
     df$b_defno_dontneed_reason_dont_spend_time <- NA_real_
     df$b_defno_dontneed_reason_not_high_risk <- NA_real_
     df$b_defno_dontneed_reason_precautions <- NA_real_

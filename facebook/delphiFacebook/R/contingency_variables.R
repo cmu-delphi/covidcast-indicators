@@ -527,7 +527,7 @@ create_derivative_columns <- function(df) {
       TRUE ~ NA_character_
     )
   } else {
-    df$edulevel <- NA_character_
+    df$edulevelfull <- NA_character_
   }
 
   # edulevel

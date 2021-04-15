@@ -100,7 +100,7 @@ rename_responses <- function(df) {
     "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
     "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
     # Wave 6 additions
-    "b_vaccinated" = "V1",
+    "b_vaccinated" = "v_covid_vaccinated",
     "b_accept_vaccine" = "v_accept_covid_vaccine", # Binary version of V3; "definitely" and "probably" vaccinate map to TRUE
     "b_vaccinated_or_accept" = "v_covid_vaccinated_or_accept",
     "b_vaccine_likely_friends" = "v_vaccine_likely_friends", # Binary version of V4_1

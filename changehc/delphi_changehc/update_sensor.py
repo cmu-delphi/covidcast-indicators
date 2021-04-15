@@ -229,7 +229,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         df["sample_size"] = np.nan
         # conform to naming expected by create_export_csv()
         df = df.reset_index().rename(columns={"date": "timestamp", "rate": "val"})
-        # df.loc[~df['incl'], ["val", "se"]] = np.nan  # TODO: censor below-threshold values
+        # df.loc[~df['incl'], ["val", "se"]] = np.nan  # update to this line after nancodes get merged in
         df = df[df['incl']]
 
         # write out results

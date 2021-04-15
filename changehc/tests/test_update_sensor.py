@@ -266,7 +266,6 @@ class TestWriteToCsv:
         res3 = res3[res3['include']]
         res3.loc[("2020-05-01", "a"), "se"] = 10
         res3.reset_index(inplace=True)
-        breakpoint()
         with pytest.raises(AssertionError):
             write_to_csv(
                 res3,

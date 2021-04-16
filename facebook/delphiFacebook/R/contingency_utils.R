@@ -1,7 +1,7 @@
 #' Return params file as an R list
 #'
 #' Reads a parameters file. Copies global params to contingency params if not
-#' already defined.
+#' already defined. Uses current date as end_date if not provided.
 #'
 #' @param path    path to the parameters file; if not present, will try to copy the file
 #'                "params.json.template"
@@ -17,15 +17,21 @@ read_contingency_params <- function(path = "params.json", template_path = "param
   contingency_params$start_time <- ymd_hms(
     sprintf("%s 00:00:00", contingency_params$start_date), tz = tz_to
   )
+  
+  # Fill in end_date, if missing, with current date.
+  contingency_params$end_date <- if_else(
+    is.null(contingency_params$end_date), as.character(Sys.Date()), contingency_params$end_date
+  )
+  
   contingency_params$end_time <- ymd_hms(
     sprintf("%s 23:59:59", contingency_params$end_date), tz = tz_to
   )
   
   global_params <- c("archive_days", "backfill_days", "static_dir", "cache_dir", 
                      "archive_dir", "weights_in_dir", "input_dir", "debug", 
-                     "parallel")
+                     "parallel", "qualtrics")
   for (param in global_params) {
-    if ( is.null(contingency_params[[param]]) ) {
+    if ( is.null(contingency_params[[param]]) & !is.null(params[[param]]) ) {
       contingency_params[[param]] <- params[[param]]
     }
   }
@@ -55,19 +61,14 @@ read_contingency_params <- function(path = "params.json", template_path = "param
 #' 
 #' @export
 update_params <- function(params) {
-  # Fill in end_time, if missing, with current time.
-  if (is.null(params$end_time)) {
-    params$end_time <- Sys.time()
-  }
-  
   # Construct aggregate date range.
   if ( !is.null(params$start_date) ) {
+    # If start_date is provided, use start/end dates exactly as given.
     date_range <- list(params$start_time, params$end_time)
   } else {
     # If start_date is not provided, assume want to use preceding full time period.
     date_range <- get_range_prev_full_period(
-      as_date(params$end_date)
-      , params$aggregate_range
+      as_date(params$end_date), params$aggregate_range
     )
   }
   
@@ -92,6 +93,10 @@ update_params <- function(params) {
 }
 
 #' Get relevant input data file names from `input_dir`.
+#' 
+#' Only include files containing data that falls at least somewhat between start
+#' and end dates, and is from an allowed ("active") survey and not a "dormant"
+#' survey.
 #'
 #' @param start_date    Start of desired date range 
 #' @param end_date    End of desired date range 
@@ -109,11 +114,24 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   end_date <- as_date(end_date)
   
   if ( is.null(params[["input"]]) || length(params$input) == 0 ) {
-    date_pattern <- "^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$"
-    youtube_pattern <- ".*YouTube[.]csv$"
+    ## Only keep files from active surveys.
+    
+    if ( !is.null(params[["qualtrics"]]) ) {
+      include_patterns <- names(params$qualtrics$surveys$active)
+      include_patterns <- gsub(" ", "_", include_patterns, fixed=TRUE)
+      
+      exclude_patterns <- names(params$qualtrics$surveys$dormant)
+      exclude_patterns <- gsub(" ", "_", exclude_patterns, fixed=TRUE)
+    } else {
+      include_patterns <- c("^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$")
+      exclude_patterns <- c(".*YouTube[.]csv$")
+    }
     
     filenames <- list.files(path=params$input_dir)
-    filenames <- filenames[grepl(date_pattern, filenames) & !grepl(youtube_pattern, filenames)]
+    
+    include_map <- grepl(paste(include_patterns, collapse="|"), filenames)
+    exclude_map <- grepl(paste(exclude_patterns, collapse="|"), filenames)
+    filenames <- filenames[include_map & !exclude_map]
   } else {
     filenames <- params$input
   }
@@ -121,8 +139,8 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   file_end_dates <- as_date(substr(filenames, 1, 10))
   file_start_dates <- as_date(substr(filenames, 12, 21))
   
-  # Only keep files with data that falls at least somewhat between the desired
-  # start and end range dates.
+  ## Only keep files with data that falls at least somewhat between the desired
+  ## start and end range dates.
   filenames <- filenames[
     !(( file_start_dates < start_date & file_end_dates < start_date ) | 
         ( file_start_dates > end_date & file_end_dates > end_date ))]

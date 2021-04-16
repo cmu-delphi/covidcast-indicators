@@ -80,7 +80,7 @@ update_params <- function(params) {
     params$input <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
   }
   
-  if ( length(params$input) == 0 || all(is.na(params$input)) ) {
+  if ( length(params[["input"]]) == 0 || all(is.na(params$input)) ) {
     stop("no input files to read in")
   }
   

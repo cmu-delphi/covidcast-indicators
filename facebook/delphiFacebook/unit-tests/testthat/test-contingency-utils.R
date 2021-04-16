@@ -10,7 +10,7 @@ test_that("testing update_params command", {
     use_input_asis = TRUE,
     aggregate_range = "month",
     end_date = "2020-02-01",
-    input_dir = "./input"
+    input_dir = "./static" # Using a directory that doesn't contain any valid data files.
   )
   
   expect_error(update_params(params), "no input files to read in")
@@ -30,8 +30,8 @@ test_that("testing update_params command", {
     use_input_asis = TRUE,
     aggregate_range = "month",
     end_date = ymd("2020-01-31"),
-    end_time = ymd_hms("2020-01-31 23:59:59", tz=timezone),
     start_time = ymd_hms("2020-01-01 00:00:00", tz=timezone),
+    end_time = ymd_hms("2020-01-31 23:59:59", tz=timezone),
     start_date = ymd("2020-01-01")
     )
   

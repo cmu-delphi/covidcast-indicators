@@ -135,7 +135,7 @@ add_metadata_vars <- function(data, params, geo_type, groupby_vars) {
     period_end = format(params$end_date, "%Y%m%d"),
     period_val = get_period_val(params$aggregate_range, params$start_date),
     period_type = get_period_type(params$aggregate_range),
-    geo_type = paste(geo_type, collapse = "_"),
+    geo_type = geo_type,
     aggregation_type = paste(aggregation_type, collapse = "_")
   )
   data <- bind_cols(metadata, data)

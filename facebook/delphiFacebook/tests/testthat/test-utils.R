@@ -103,3 +103,25 @@ test_that("testing mix weights", {
   expect_equal(mixed$weights,
                (0.05/101 + 0.95*weights/sum(weights)))
 })
+
+test_that("any_true", {
+  # One true
+  expect_equal(any_true(c(T, T), c(F, F), c(NA, NA)), c(T, T))
+  
+  # One false, none true
+  expect_equal(any_true(c(F, F), c(NA, NA), c(NA, NA)), c(F, F))
+  
+  # All missing
+  expect_equal(any_true(c(NA, NA), c(NA, NA), c(NA, NA)), c(NA, NA))
+})
+
+test_that("all_true", {
+  # All true
+  expect_equal(all_true(c(T, T), c(T, T), c(T, T)), c(T, T))
+  
+  # One false
+  expect_equal(all_true(c(T, T), c(T, T), c(F, F)), c(F, F))
+  
+  # One NA
+  expect_equal(all_true(c(T, T), c(T, T), c(NA, NA)), c(NA, NA))
+})

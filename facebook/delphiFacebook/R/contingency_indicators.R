@@ -18,15 +18,16 @@
 #' which does not modify the data.
 #'
 #' @return named list
-#' 
+#'
 #' @importFrom tibble tribble
+#' @importFrom dplyr filter
 get_aggs <- function() {
-  
+
   regions <- list(
     "nation",
     "state"
   )
-  
+
   groups <- list(
     c(),                # Use no grouping variables.
     c("age", "gender"), # Use age and gender.
@@ -63,7 +64,7 @@ get_aggs <- function() {
     c("pregnant", "raceethnicity"),
     c("race", "hispanic", "pregnant")
   )
-  
+
   indicators <- tribble(
     ~name, ~metric, ~compute_fn, ~post_fn,
     "pct_wearing_mask_5d", "b_wearing_mask_5d", compute_binary, jeffreys_binary,
@@ -167,6 +168,81 @@ get_aggs <- function() {
     "pct_appointment_tried", "b_appointment_tried", compute_binary, jeffreys_binary
   )
 
+  aggs <- create_aggs_product(regions, groups, indicators)
+  
+
+  ### Include handful of original public tables not already covered by set above
+  common_group <- c("agefull", "gender", "race", "hispanic")
+  
+  ## Cut 1: side effects generally and if hesitant about getting vaccine
+  cut1_aggs <- create_aggs_product(
+    regions,
+    list(common_group),
+    filter(indicators, name %in% c("pct_worried_vaccine_sideeffects", "pct_hesitant_worried_vaccine_sideeffects"))
+  )
+  
+  ## Cut 2: trust various institutions if hesitant about getting vaccine
+  cut2_aggs <- create_aggs_product(
+    regions,
+    list(common_group),
+    filter(indicators, startsWith(name, "pct_hesitant_vaccine_likely_"))
+  )
+  
+  ## Cut 3: trust various institutions
+  cut3_aggs <- create_aggs_product(
+    regions,
+    list(common_group),
+    filter(indicators, startsWith(name, "pct_vaccine_likely_"))
+  )
+  
+  ## Cuts 4, 5, 6: vaccinated and accepting generally, or if senior, or in healthcare
+  cut456_groups <- list(
+    c("healthcareworker", "agefull", "gender", "race", "hispanic"),
+    c("age65plus", "gender", "race", "hispanic"),
+    c("agefull", "gender", "race", "hispanic")
+  )
+  
+  cut456_aggs <- create_aggs_product(
+    regions,
+    cut456_groups,
+    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine"))
+  )
+  
+  ## Cuts 4, 5, 6: marginal
+  cut456_marginal_groups <- list(
+    c("healthcareworker", "agefull"),
+    c("healthcareworker", "gender"),
+    c("healthcareworker", "race", "hispanic"),
+    c("age65plus", "race", "hispanic")
+  )
+  
+  cut456_marginal_aggs <- create_aggs_product(
+    list("state"),
+    cut456_marginal_groups,
+    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine"))
+  )
+  
+  ### Combine full set and additional original tables.
+  aggs <- rbind(aggs, cut1_aggs, cut2_aggs, cut3_aggs, cut456_aggs, cut456_marginal_aggs)
+  
+  weekly_aggs <- aggs
+  monthly_aggs <- aggs
+  
+  return(list("week"=weekly_aggs, "month"=monthly_aggs))
+}
+
+
+#' Create aggs from all combinations of provided input sets
+#'
+#' @param regions list of strings indicating geo level
+#' @param groups list of character vectors indicating grouping variables
+#' @param indicators tibble with `name`, `metric`, `compute_fn`, and `post_fn`
+#'   columns
+#'
+#' @return tibble of created aggs
+#'
+#' @importFrom tibble tribble
+create_aggs_product <- function(regions, groups, indicators) {
   aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,
   )
@@ -185,8 +261,5 @@ get_aggs <- function() {
     }
   }
   
-  weekly_aggs <- aggs
-  monthly_aggs <- aggs
-  
-  return(list("week"=weekly_aggs, "month"=monthly_aggs))
+  return(aggs)
 }

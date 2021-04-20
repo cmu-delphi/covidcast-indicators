@@ -65,7 +65,9 @@ write_contingency_tables <- function(data, params, geo_type, groupby_vars)
 #' @noRd
 add_geo_vars <- function(data, params, geo_type) {
   
-  start <- data.frame(
+  overall <- "Overall"
+  
+  first <- data.frame(
     country = "United States",
     ISO_3 = "USA",
     GID_0 = "USA"
@@ -74,11 +76,11 @@ add_geo_vars <- function(data, params, geo_type) {
   if (geo_type == "nation") {
     
     rest <- data.frame(
-      region = "overall",
+      region = overall,
       GID_1 = NA_character_,
-      state = "overall",
+      state = overall,
       state_fips = NA_character_,
-      county = "overall",
+      county = overall,
       county_fips = NA_character_
     )
     
@@ -92,18 +94,15 @@ add_geo_vars <- function(data, params, geo_type) {
     rest <- data.frame(
       region = toupper(data$geo_id),
       state = toupper(data$geo_id),
-      county = "overall",
+      county = overall,
       county_fips = NA_character_
     )
-    
-    rest$state <- toupper(rest$state)
-    states$state <- toupper(states$state)
     
     rest <- left_join(rest, states, by = "state") %>%
       select(region, GID_1, state, state_fips, county, county_fips)
   }
   
-  geo_vars <- bind_cols(start, rest)
+  geo_vars <- bind_cols(first, rest)
   
   # Insert the geographic variables in place of the "geo_id" variable.
   index <- which(names(data) == "geo_id")

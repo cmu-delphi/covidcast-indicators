@@ -48,7 +48,7 @@ pipeline {
                 sh "jenkins/deploy-staging-api-match-list.sh"
             }
         }
-        stage('Deploy staging') {
+        stage('Deploy staging [main-nan-testing]') {
             when {
                 branch "main-nan-testing";
             }

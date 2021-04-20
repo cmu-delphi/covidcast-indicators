@@ -116,7 +116,9 @@ diff_questions <- function(old_qsf, new_qsf) {
 }
 
 ## Compare a single question field.
-diff_question <- function(names, change_type, comparator, old_qsf, new_qsf) {
+diff_question <- function(names, change_type=c("answers", "wording", "display logic", "subquestions"), comparator, old_qsf, new_qsf) {
+  change_type <- match.arg(change_type)
+  
   changed <- c()
   for (question in names) {
     if ( !identical(old_qsf[[question]][[comparator]], new_qsf[[question]][[comparator]]) ) {
@@ -129,24 +131,27 @@ diff_question <- function(names, change_type, comparator, old_qsf, new_qsf) {
 }
 
 ## Print results with custom message.
-print_questions <- function(questions, change_type=c("added", "removed", "answers", "wording", "display logic", "subquestions"), question_data) {
-  change_type <- match.arg(change_type)
-  questions <- sort(questions)
-  
-  if (change_type == "added") {
+print_questions <- function(questions, change_type=c("added", "removed", "answers", "wording", "display logic", "subquestions"), reference_qsf) {
+  if ( length(questions) > 0 ) {
+    change_type <- match.arg(change_type)
+    qids <- sort(questions)
+    item <- sapply(qids, function(question) {reference_qsf[[question]]$DataExportTag})
+    item_text <- sapply(qids, function(question) {reference_qsf[[question]]$QuestionText})
     
-  } else if (change_type == "removed") {
-    
-  } else if (change_type == "wording") {
-    
-  } else if (change_type == "display logic") {
-    
-  } else if (change_type == "answers") {
-    
-  } else if (change_type == "subquestions") {
-    
+    if (change_type == "added") {
+      cat(paste0("Added: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    } else if (change_type == "removed") {
+      cat(paste0("Removed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    } else if (change_type == "wording") {
+      cat(paste0("Wording changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    } else if (change_type == "display logic") {
+      cat(paste0("Display logic changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    } else if (change_type == "answers") {
+      cat(paste0("Answer choices changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    } else if (change_type == "subquestions") {
+      cat(paste0("Subquestions changed: matrix item ", item, " (", qids, ") asking '", item_text, "'.\n"))
+    }
   }
-  
   return(NULL)
 }
 
@@ -161,7 +166,4 @@ if (length(args) != 2) {
 old_qsf <- args[1]
 new_qsf <- args[2]
 
-old_qsf <- "~/Downloads/Survey_of_COVID-Like_Illness_-_Wave_8_slr.qsf"
-new_qsf <- "~/Downloads/Survey_of_COVID-Like_Illness_-_Wave_10.qsf"
-
-diff_qsf_files(old_qsf, new_qsf)
+invisible(diff_qsf_files(old_qsf, new_qsf))

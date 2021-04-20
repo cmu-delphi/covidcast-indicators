@@ -19,7 +19,10 @@ pipeline {
     stages {
         stage('Build and Package') {
             when {
+                anyOf {
                 branch "main";
+                branch "main-nan-testing";
+                }
             }
             steps {
                 script {
@@ -34,7 +37,10 @@ pipeline {
         }
         stage('Deploy staging') {
             when {
+                anyOf {
                 branch "main";
+                branch "main-nan-testing";
+                }
             }
             steps {
                 script {

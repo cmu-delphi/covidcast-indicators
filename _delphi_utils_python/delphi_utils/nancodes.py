@@ -1,10 +1,4 @@
-"""Provides unified not-a-number codes for the indicators.
-
-Currently requires a manual sync between the covidcast-indicators
-and the delphi-epidata repo.
-* in covidcast-indicators: _delphi_utils_python/delphi_utils
-* in delphi-epidata: src/acquisition/covidcast
-"""
+"""Unified not-a-number codes for CMU Delphi codebase."""
 
 from enum import IntEnum
 

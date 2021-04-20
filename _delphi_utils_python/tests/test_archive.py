@@ -52,6 +52,14 @@ CSVS_BEFORE = {
         "missing_se": [Nans.NOT_MISSING],
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
+
+    # Common, but updated with missing columns
+    "csv4": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0]
+        }),
 }
 
 CSVS_AFTER = {
@@ -86,8 +94,18 @@ CSVS_AFTER = {
         "missing_se": [Nans.NOT_MISSING],
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
-}
 
+    # Common, but updated with missing columns
+    "csv4": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0],
+        "missing_val": [Nans.NOT_MISSING],
+        "missing_se": [Nans.NOT_MISSING],
+        "missing_sample_size": [Nans.NOT_MISSING],
+        }),
+}
 
 class TestArchiveDiffer:
 
@@ -137,7 +155,7 @@ class TestArchiveDiffer:
         # Check return values
         assert set(deleted_files) == {join(cache_dir, "csv2.csv")}
         assert set(common_diffs.keys()) == {
-            join(export_dir, f) for f in ["csv0.csv", "csv1.csv"]}
+            join(export_dir, f) for f in ["csv0.csv", "csv1.csv", "csv4.csv"]}
         assert set(new_files) == {join(export_dir, "csv3.csv")}
         assert common_diffs[join(export_dir, "csv0.csv")] is None
         assert common_diffs[join(export_dir, "csv1.csv")] == join(
@@ -145,7 +163,7 @@ class TestArchiveDiffer:
 
         # Check filesystem for actual files
         assert set(listdir(export_dir)) == {
-            "csv0.csv", "csv1.csv", "csv1.csv.diff", "csv3.csv"}
+            "csv0.csv", "csv1.csv", "csv1.csv.diff", "csv3.csv", "csv4.csv", "csv4.csv.diff"}
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv.diff"), dtype=CSV_DTYPES),
             csv1_diff)
@@ -163,7 +181,7 @@ class TestArchiveDiffer:
         arch_diff.filter_exports(common_diffs)
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv"}
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
@@ -290,7 +308,7 @@ class TestS3ArchiveDiffer:
             assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), df)
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv"}
         csv1_diff = pd.DataFrame({
             "geo_id": ["3", "2", "4"],
             "val": [np.nan, 2.1, 4.0],
@@ -503,7 +521,7 @@ class TestGitArchiveDiffer:
         original_branch.checkout()
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv"}
         csv1_diff = pd.DataFrame({
             "geo_id": ["3", "2", "4"],
             "val": [np.nan, 2.1, 4.0],

@@ -77,7 +77,7 @@ def diff_export_csv(
     """
     export_csv_dtypes = {
         "geo_id": str, "val": float, "se": float, "sample_size": float,
-        "missing_val": int, "missing_se":int, "missing_sample_size": int
+        "missing_val": int, "missing_se": int, "missing_sample_size": int
     }
 
     before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
@@ -93,9 +93,14 @@ def diff_export_csv(
     before_df_cmn = before_df.reindex(common_idx)
     after_df_cmn = after_df.reindex(common_idx)
 
-    # Exact comparisons, treating NA == NA as True
-    same_mask = before_df_cmn == after_df_cmn
-    same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
+    # If comparing with an old-style CSV (no missingness), mark all values as new
+    if "missing_val" not in before_df_cmn.columns:
+        same_mask = after_df_cmn.copy()
+        same_mask.loc[:] = False
+    else:
+        # Exact comparisons, treating NA == NA as True
+        same_mask = before_df_cmn == after_df_cmn
+        same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
 
     # Code deleted entries as nans with the deleted missing code
     deleted_df = before_df.loc[deleted_idx, :].copy()

@@ -29,7 +29,7 @@ def export_csv(df, geo_name, sensor, export_dir, start_date):
         date_short = "weekly_" + str(t.year) + str(t.week).zfill(2)
         export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
         expected_columns = [
-            "geo_id", "val", "se", "sample_size"
+            "geo_id", "val", "se", "sample_size",
             "missing_val", "missing_se", "missing_sample_size"
         ]
         result_df = df[df["timestamp"] == date][expected_columns]

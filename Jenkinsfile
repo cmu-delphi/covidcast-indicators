@@ -48,6 +48,21 @@ pipeline {
                 sh "jenkins/deploy-staging-api-match-list.sh"
             }
         }
+        stage('Deploy staging') {
+            when {
+                branch "main-nan-testing";
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        deploy_staging[indicator] = {
+                            sh "jenkins/deploy-staging.sh ${indicator}"
+                        }
+                    }
+                    parallel deploy_staging
+                }
+            }
+        }
         stage('Deploy production') {
             when {
                 branch "prod";

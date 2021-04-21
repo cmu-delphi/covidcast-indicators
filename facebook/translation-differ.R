@@ -134,9 +134,18 @@ diff_question <- function(names, change_type=c("answers", "wording", "display lo
 print_questions <- function(questions, change_type=c("added", "removed", "answers", "wording", "display logic", "subquestions"), reference_qsf) {
   if ( length(questions) > 0 ) {
     change_type <- match.arg(change_type)
+    
     qids <- sort(questions)
     item <- sapply(qids, function(question) {reference_qsf[[question]]$DataExportTag})
     item_text <- sapply(qids, function(question) {reference_qsf[[question]]$QuestionText})
+    
+    # These "questions" are not shown to respondents and thus don't need to be
+    # accounted for in documentation or code. Drop.
+    drop_mask <- item_text == "Click to write the question text"
+    
+    qids <- qids[!drop_mask]
+    item <- item[!drop_mask]
+    item_text <- item_text[!drop_mask]
     
     if (change_type == "added") {
       cat(paste0("Added: item ", item, " (", qids, ") asking '", item_text, "'.\n"))

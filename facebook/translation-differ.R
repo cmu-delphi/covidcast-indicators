@@ -73,6 +73,10 @@ get_qsf_file <- function(path) {
   for (question in questions$Payload) {
     question <- question[names(question) %in% keep_items]
     
+    # These "questions" are not shown to respondents and thus don't need to be
+    # accounted for in documentation or code. Skip.
+    if (question$QuestionText == "Click to write the question text") {next}
+    
     # For matrix questions, "Choices" are the subquestion text and code. For all
     # other questions, "Choices" are the answer choices and corresponding
     # response code.
@@ -104,10 +108,46 @@ get_qsf_file <- function(path) {
       question$DisplayLogic$`0`$`0`$Description
       )
     
-    questions_out[[question$QuestionID]] <- question
+    questions_out <- safe_insert_question(questions_out, question)
   }
   
   return(questions_out)
+}
+
+#' Insert new question data into list without overwriting item of the same name
+#'
+#' @param question_list named list storing a collection of questions
+#' @param question named list storing data for a single trimmed question from `get_qsf_file`
+#'
+#' @return A named list
+safe_insert_question <- function(questions_list, question) {
+  if ( is.null(questions_list[[question$DataExportTag]]) ) {
+    questions_list[[question$DataExportTag]] <- question
+  } else {
+    old_qid <- questions_list[[question$DataExportTag]]$QuestionID
+    new_qid <- question$QuestionID
+    
+    warning(paste0("Multiple copies of item ", question$DataExportTag, " exist; using the newer of ", old_qid, " and ", new_qid))
+    
+    old_qid <- qid_to_int(questions_list[[question$DataExportTag]]$QuestionID)
+    new_qid <- qid_to_int(question$QuestionID)
+    
+    if (old_qid < new_qid) {
+      questions_list[[question$DataExportTag]] <- question
+    }
+  }
+  return(questions_list)
+}
+
+#' Convert QID to integer
+#'
+#' @param qid_str
+#'
+#' @return An integer
+qid_to_int <- function(qid_str) {
+  qid_int <- as.integer(sub("QID", "", qid_str))
+  qid_int <- ifelse(is.na(qid_int), 0, qid_int)
+  return(qid_int)
 }
 
 #' Compare old vs new questions in the two surveys.
@@ -177,17 +217,9 @@ print_questions <- function(questions, change_type=c("added", "removed", "answer
   if ( length(questions) > 0 ) {
     change_type <- match.arg(change_type)
     
-    qids <- sort(questions)
-    item <- sapply(qids, function(question) {reference_qsf[[question]]$DataExportTag})
-    item_text <- sapply(qids, function(question) {reference_qsf[[question]]$QuestionText})
-    
-    # These "questions" are not shown to respondents and thus don't need to be
-    # accounted for in documentation or code. Drop.
-    drop_mask <- item_text == "Click to write the question text"
-    
-    qids <- qids[!drop_mask]
-    item <- item[!drop_mask]
-    item_text <- item_text[!drop_mask]
+    item <- sort(questions)
+    qids <- sapply(item, function(question) {reference_qsf[[question]]$QuestionID})
+    item_text <- sapply(item, function(question) {reference_qsf[[question]]$QuestionText})
     
     if (change_type == "added") {
       cat(paste0("Added: item ", item, " (", qids, ") asking '", item_text, "'.\n"))

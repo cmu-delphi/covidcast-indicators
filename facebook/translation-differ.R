@@ -222,16 +222,22 @@ print_questions <- function(questions, change_type=c("added", "removed", "answer
     item_text <- sapply(item, function(question) {reference_qsf[[question]]$QuestionText})
     
     if (change_type == "added") {
+      cat("\n")
       cat(paste0("Added: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     } else if (change_type == "removed") {
+      cat("\n")
       cat(paste0("Removed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     } else if (change_type == "wording") {
+      cat("\n")
       cat(paste0("Wording changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     } else if (change_type == "display logic") {
+      cat("\n")
       cat(paste0("Display logic changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     } else if (change_type == "answers") {
+      cat("\n")
       cat(paste0("Answer choices changed: item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     } else if (change_type == "subquestions") {
+      cat("\n")
       cat(paste0("Subquestions changed: matrix item ", item, " (", qids, ") asking '", item_text, "'.\n"))
     }
   }
@@ -250,3 +256,5 @@ old_qsf <- args[1]
 new_qsf <- args[2]
 
 invisible(diff_qsf_files(old_qsf, new_qsf))
+cat("\n")
+warnings()

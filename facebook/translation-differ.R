@@ -76,13 +76,10 @@ get_qsf_file <- function(path) {
   for (question in questions$Payload) {
     question <- question[names(question) %in% keep_items]
     
-    # These "questions" are not shown to respondents and thus don't need to be
-    # accounted for in documentation or code. Skip.
+    # These items are remnants of the survey creation process and are not shown
+    # to respondents. Thus, they don't need to be accounted for in documentation
+    # or code. Skip.
     if (question$QuestionText == "Click to write the question text") {
-      warning(paste0("Item ", question$DataExportTag, " (", question$QuestionID,
-                     ") has question text '", question$QuestionText,
-                     "' and appears to be a remnant of the survey creation process; please remove."
-      ))
       next
     }
     

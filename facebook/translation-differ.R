@@ -22,9 +22,10 @@
 ## (survey questions), and RS (response set). Detailed info:
 ## https://gist.github.com/ctesta01/d4255959dace01431fb90618d1e8c241
 
-## We are only interested in survey questions ("SQ"). Within each SQ item,
-## details are stored in the Payload element, which can contain the following
-## fields:
+## We are only interested in block information ("BL") and survey questions
+## ("SQ"). The single BL item lists questions that appear in each block. The
+## "Trash" block contains not-displayed items. Within each SQ item, details are
+## stored in the Payload element, which can contain the following fields:
 
 # [1] "QuestionText"         "QuestionType"         "Selector"             "Configuration"        "QuestionDescription"  "Choices"              "ChoiceOrder"         
 # [8] "Validation"           "AnalyzeChoices"       "Language"             "QuestionText_Unsafe"  "DataExportTag"        "QuestionID"           "DataVisibility"      
@@ -51,7 +52,7 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
   old_qsf <- get_qsf_file(old_qsf_path)
   new_qsf <- get_qsf_file(new_qsf_path)
   
-  diff_questions(old_qsf, new_qsf)
+  diff_surveys(old_qsf, new_qsf)
   
   return(NULL)
 }
@@ -65,10 +66,12 @@ get_qsf_file <- function(path) {
   # Read file as json.
   qsf <- read_json(path, simplifyVector = TRUE)
   
+  ## Questions
   questions <- filter(qsf$SurveyElements, Element == "SQ")
   keep_items <- c("QuestionID", "DataExportTag", "QuestionText",
                   "QuestionType", "Choices", "Answers", "DisplayLogic")
   
+  qid_item_map <- list()
   questions_out <- list()
   for (question in questions$Payload) {
     question <- question[names(question) %in% keep_items]
@@ -114,10 +117,20 @@ get_qsf_file <- function(path) {
       question$DisplayLogic$`0`$`0`$Description
       )
     
-    questions_out <- safe_insert_question(questions_out, question)
+    safe_insert_output <- safe_insert_question(questions_out, question)
+    questions_out <- safe_insert_output$out
+    if (safe_insert_output$success) {
+      qid_item_map <- qid_item_map[qid_item_map != question$DataExportTag]
+      qid_item_map[[question$QuestionID]] <- question$DataExportTag 
+    }
   }
   
-  return(questions_out)
+  ## Block
+  keep_items <- c("Type", "Description", "BlockElements")
+  block_out <- filter(qsf$SurveyElements, Element == "BL")$Payload[[1]]
+  block_out <- block_out[names(block_out) %in% keep_items]
+  
+  return(list(questions=questions_out, block=block_out, qid_item_map=unlist(qid_item_map)))
 }
 
 #' Insert new question data into list without overwriting item of the same name
@@ -127,8 +140,11 @@ get_qsf_file <- function(path) {
 #'
 #' @return A named list
 safe_insert_question <- function(questions_list, question) {
+  success <- FALSE
+  
   if ( is.null(questions_list[[question$DataExportTag]]) ) {
     questions_list[[question$DataExportTag]] <- question
+    success <- TRUE
   } else {
     old_qid <- questions_list[[question$DataExportTag]]$QuestionID
     new_qid <- question$QuestionID
@@ -140,9 +156,10 @@ safe_insert_question <- function(questions_list, question) {
     
     if (old_qid < new_qid) {
       questions_list[[question$DataExportTag]] <- question
+      success <- TRUE
     }
   }
-  return(questions_list)
+  return(list(out=questions_list, success=success))
 }
 
 #' Convert QID to integer
@@ -156,35 +173,39 @@ qid_to_int <- function(qid_str) {
   return(qid_int)
 }
 
-#' Compare old vs new questions in the two surveys.
+#' Compare the two surveys.
 #'
-#' @param old_qsf trimmed output from `get_qsf_file` for older survey
-#' @param new_qsf trimmed output from `get_qsf_file` for newer survey
-diff_questions <- function(old_qsf, new_qsf) {
-  old_names <- names(old_qsf)
-  new_names <- names(new_qsf)
-  browser()
-  added <- setdiff(new_names, old_names)
-  print_questions(added, "added", new_qsf)
+#' @param old_qsf named list of trimmed output from `get_qsf_file` for older survey
+#' @param new_qsf named list of trimmed output from `get_qsf_file` for newer survey
+diff_surveys <- function(old_qsf, new_qsf) {
+  old_qid_item_map <- old_qsf$qid_item_map
+  new_qid_item_map <- new_qsf$qid_item_map
   
-  removed <- setdiff(old_names, new_names)
-  print_questions(removed, "removed", old_qsf)
+  ## Diff blocks
+  old_block <- old_qsf$block
+  new_block <- new_qsf$block
+  
+  old_shown_items <- old_qid_item_map[filter(bind_rows(filter(old_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
+  new_shown_items <- new_qid_item_map[filter(bind_rows(filter(new_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
+  
+  added <- na.omit(setdiff(new_shown_items, old_shown_items))
+  removed <- na.omit(setdiff(old_shown_items, new_shown_items))
+  
+  ## Use question data to print diff in useful way.
+  old_questions <- old_qsf$questions
+  new_questions <- new_qsf$questions
+  
+  print_questions(added, "added", new_questions)
+  print_questions(removed, "removed", old_questions)
   
   ## For questions that appear in both surveys, check for changes in wording,
   ## display logic, and answer options.
-  shared <- intersect(old_names, new_names)
+  shared <- intersect(old_shown_items, new_shown_items)
   
-  # Wording
-  diff_question(shared, "wording", "QuestionText", old_qsf, new_qsf)
-  
-  # Display logic
-  diff_question(shared, "display logic", "DisplayLogic", old_qsf, new_qsf)
-  
-  # Answer choices
-  diff_question(shared, "answers", "Choices", old_qsf, new_qsf)
-  
-  # Matrix sub-questions
-  diff_question(shared, "subquestions", "Subquestions", old_qsf, new_qsf)
+  diff_question(shared, "wording", "QuestionText", old_questions, new_questions)
+  diff_question(shared, "display logic", "DisplayLogic", old_questions, new_questions)
+  diff_question(shared, "answers", "Choices", old_questions, new_questions)
+  diff_question(shared, "subquestions", "Subquestions", old_questions, new_questions)
   
   return(NULL)
 }
@@ -195,8 +216,8 @@ diff_questions <- function(old_qsf, new_qsf) {
 #' @param change_type character; type of change to look for
 #' @param comparator character; name of question element to compare between
 #'   survey versions
-#' @param old_qsf trimmed output from `get_qsf_file` for older survey
-#' @param new_qsf trimmed output from `get_qsf_file` for newer survey
+#' @param old_qsf named list of trimmed output from `get_qsf_file` for older survey
+#' @param new_qsf named list of trimmed output from `get_qsf_file` for newer survey
 diff_question <- function(names, change_type=c("answers", "wording", "display logic", "subquestions"), comparator, old_qsf, new_qsf) {
   change_type <- match.arg(change_type)
   
@@ -216,7 +237,7 @@ diff_question <- function(names, change_type=c("answers", "wording", "display lo
 #' @param questions character vector of Qualtrics question IDs for items that
 #'   changed between survey versions
 #' @param change_type character; type of change to look for
-#' @param reference_qsf trimmed output from `get_qsf_file` for survey that
+#' @param reference_qsf named list of trimmed output from `get_qsf_file` for survey that
 #'   contains descriptive info about a particular type of change. For "removed"
 #'   questions, should be older survey, else newer survey.
 print_questions <- function(questions, change_type=c("added", "removed", "answers", "wording", "display logic", "subquestions"), reference_qsf) {

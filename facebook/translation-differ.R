@@ -75,7 +75,13 @@ get_qsf_file <- function(path) {
     
     # These "questions" are not shown to respondents and thus don't need to be
     # accounted for in documentation or code. Skip.
-    if (question$QuestionText == "Click to write the question text") {next}
+    if (question$QuestionText == "Click to write the question text") {
+      warning(paste0("Item ", question$DataExportTag, " (", question$QuestionID,
+                     ") has question text '", question$QuestionText,
+                     "' and appears to be a remnant of the survey creation process; please remove."
+      ))
+      next
+    }
     
     # For matrix questions, "Choices" are the subquestion text and code. For all
     # other questions, "Choices" are the answer choices and corresponding

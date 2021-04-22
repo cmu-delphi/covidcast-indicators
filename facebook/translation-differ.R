@@ -163,7 +163,7 @@ qid_to_int <- function(qid_str) {
 diff_questions <- function(old_qsf, new_qsf) {
   old_names <- names(old_qsf)
   new_names <- names(new_qsf)
-  
+  browser()
   added <- setdiff(new_names, old_names)
   print_questions(added, "added", new_qsf)
   
@@ -228,22 +228,22 @@ print_questions <- function(questions, change_type=c("added", "removed", "answer
     item_text <- sapply(item, function(question) {reference_qsf[[question]]$QuestionText})
     
     if (change_type == "added") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Added: item ", item, " (", qids, ")", "\n"))
     } else if (change_type == "removed") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Removed: item ", item, " (", qids, ")", "\n"))
     } else if (change_type == "wording") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Wording changed: item ", item, " (", qids, ")", "\n"))
     } else if (change_type == "display logic") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Display logic changed: item ", item, " (", qids, ")", "\n"))
     } else if (change_type == "answers") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Answer choices changed: item ", item, " (", qids, ")", "\n"))
     } else if (change_type == "subquestions") {
-      cat("\n")
+      cat("\n ")
       cat(paste0("Subquestions changed: matrix item ", item, " (", qids, ")", "\n"))
     }
   }
@@ -261,6 +261,8 @@ if (length(args) != 2) {
 old_qsf <- args[1]
 new_qsf <- args[2]
 
+options(nwarnings = 10000)
+
 invisible(diff_qsf_files(old_qsf, new_qsf))
-cat("\n")
-warnings()
+cat("\nWarning messages:\n ")
+cat(paste0(names(warnings()), "\n"))

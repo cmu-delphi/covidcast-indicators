@@ -33,10 +33,13 @@ def get_from_s3(start_date, end_date, bucket):
     for obj in bucket.objects.all():
         if "-sars" in obj.key:
             date_string = obj.key.split("/")[1]
-            yy = int(date_string.split("_")[0])
-            mm = int(date_string.split("_")[1])
-            dd = int(date_string.split("_")[2])
-            received_date = datetime(yy, mm, dd)
+            try:
+                yy = int(date_string.split("_")[0])
+                mm = int(date_string.split("_")[1])
+                dd = int(date_string.split("_")[2])
+                received_date = datetime(yy, mm, dd)
+            except ValueError:
+                continue
             if received_date not in s3_files.keys():
                 s3_files[received_date] = [obj.key]
             else:

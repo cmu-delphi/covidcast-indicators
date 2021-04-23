@@ -4,17 +4,20 @@
 \alias{write_contingency_tables}
 \title{Write csv file for sharing with researchers.}
 \usage{
-write_contingency_tables(data, params, geo_level, groupby_vars)
+write_contingency_tables(data, params, geo_type, groupby_vars)
 }
 \arguments{
-\item{data}{a data frame to save; must contain the columns "geo_id", "val",
-"se", "sample_size", and grouping variables. The first four are saved in the
-output; day is used for spliting the data into files.}
+\item{data}{a data frame to save; must contain the columns in
+`groupby_vars`.}
 
-\item{params}{a named list, containing the value "export_dir" indicating the
-directory where the csv should be saved}
+\item{params}{a named list, containing the values:
+"export_dir" - directory where the csv should be saved
+"static_dir" - directory where the state lookup file is
+"aggregate_range" - "month", "week", etc.
+"start_date" - start date of the aggregate range
+"end_date" - end date of the aggregate range}
 
-\item{geo_level}{name of the geographic level; used for naming the output file}
+\item{geo_type}{name of the geographic level; used for naming the output file}
 
 \item{groupby_vars}{character vector of column names used for grouping to
 calculate aggregations; used for naming the output file}

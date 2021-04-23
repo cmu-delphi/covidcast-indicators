@@ -39,6 +39,7 @@ get_aggs <- function() {
     c("age", "gender", "healthcareworker"),
     c("raceethnicity", "healthcareworker"),
     c("age", "gender", "eligible"),
+    c("age", "gender", "eligiblepregsmokeobese"),
     c("age"),
     c("agefull"),
     c("age65plus"),

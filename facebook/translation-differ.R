@@ -42,9 +42,10 @@
 suppressPackageStartupMessages({
   library(dplyr)
   library(jsonlite)
+  library(stringr)
 })
 
-#' Diff chosen translation files.
+#' Load and diff chosen translation files.
 #'
 #' @param old_qsf_path path to older Qualtrics translation file in .qsf format
 #' @param new_qsf_path path to newer Qualtrics translation file in .qsf format
@@ -57,7 +58,7 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
   return(NULL)
 }
 
-#' Fetch and format a single .qsf translation file.
+#' Fetch and format a single .qsf translation file, keeping block and question info
 #'
 #' @param path path to Qualtrics translation file in .qsf format
 #'
@@ -65,6 +66,13 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
 get_qsf_file <- function(path) {
   # Read file as json.
   qsf <- read_json(path, simplifyVector = TRUE)
+  
+  ## Block
+  keep_items <- c("Type", "Description", "BlockElements")
+  block_out <- filter(qsf$SurveyElements, Element == "BL")$Payload[[1]]
+  block_out <- block_out[names(block_out) %in% keep_items]
+  
+  shown_items <- filter(bind_rows(filter(block_out, Type != "Trash")$BlockElements), Type == "Question")$QuestionID
   
   ## Questions
   questions <- filter(qsf$SurveyElements, Element == "SQ")
@@ -74,58 +82,31 @@ get_qsf_file <- function(path) {
   qid_item_map <- list()
   questions_out <- list()
   for (question in questions$Payload) {
-    question <- question[names(question) %in% keep_items]
-    
-    # These items are remnants of the survey creation process and are not shown
-    # to respondents. Thus, they don't need to be accounted for in documentation
-    # or code. Skip.
-    if (question$QuestionText == "Click to write the question text") {
+    # Skip items not shown to respondents.
+    if ( !(question$QuestionID %in% shown_items) ) {
       next
     }
     
-    # For matrix questions, "Choices" are the subquestion text and code. For all
-    # other questions, "Choices" are the answer choices and corresponding
-    # response code.
-    subquestion <- names(question$Choices)
-    question$Choices <- unlist(question$Choices)
-    names(question$Choices) <- subquestion
+    question <- question[names(question) %in% keep_items]
     
-    # For matrix questions, "Answers" are the answer choices and corresponding
-    # response code. For all other questions, this is not provided.
-    response_codes <- names(question$Answers)
-    question$Answers <- unlist(question$Answers)
-    names(question$Answers) <- response_codes
-    
-    # Rearrange items to be consistent between matrix and other items.
+    # Rearrange Answers/Choices elements to be consistent between matrix and
+    # other items.
     if (question$QuestionType == "Matrix") {
       question$Subquestions <- question$Choices
       question$Choices <- question$Answers
       question$Answers <- NULL
-    } else {
-      question$Subquestions <- "NULL"
     }
     
-    # DisplayLogic "Description" summarizes display logic (e.g. if item is shown
-    # conditional on another question), including the conditioning question
-    # text, comparator, and comparison value.
-    question$DisplayLogic <- ifelse(
-      is.null(question$DisplayLogic$`0`$`0`$Description),
-      "NULL",
-      question$DisplayLogic$`0`$`0`$Description
-      )
+    # DisplayLogic "Description" summarizes display logic, including the text of
+    # the conditioning question. We don't want to detect changes in conditioning
+    # question text if the QID stayed the same, so keep only fields not named
+    # "Description".
+    display_logic <- unlist(question$DisplayLogic)
+    question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
     
-    safe_insert_output <- safe_insert_question(questions_out, question)
-    questions_out <- safe_insert_output$out
-    if (safe_insert_output$success) {
-      qid_item_map <- qid_item_map[qid_item_map != question$DataExportTag]
-      qid_item_map[[question$QuestionID]] <- question$DataExportTag 
-    }
+    questions_out <- safe_insert_question(questions_out, question)
+    qid_item_map[[question$QuestionID]] <- question$DataExportTag
   }
-  
-  ## Block
-  keep_items <- c("Type", "Description", "BlockElements")
-  block_out <- filter(qsf$SurveyElements, Element == "BL")$Payload[[1]]
-  block_out <- block_out[names(block_out) %in% keep_items]
   
   return(list(questions=questions_out, block=block_out, qid_item_map=unlist(qid_item_map)))
 }
@@ -135,39 +116,17 @@ get_qsf_file <- function(path) {
 #' @param question_list named list storing a collection of questions
 #' @param question named list storing data for a single trimmed question from `get_qsf_file`
 #'
-#' @return A named list
+#' @return The modified questions_list object
 safe_insert_question <- function(questions_list, question) {
-  success <- FALSE
-  
-  if ( is.null(questions_list[[question$DataExportTag]]) ) {
-    questions_list[[question$DataExportTag]] <- question
-    success <- TRUE
-  } else {
+  if ( !is.null(questions_list[[question$DataExportTag]]) ) {
     old_qid <- questions_list[[question$DataExportTag]]$QuestionID
     new_qid <- question$QuestionID
     
-    warning(paste0("Multiple copies of item ", question$DataExportTag, " exist; using the newer of ", old_qid, " and ", new_qid))
-    
-    old_qid <- qid_to_int(questions_list[[question$DataExportTag]]$QuestionID)
-    new_qid <- qid_to_int(question$QuestionID)
-    
-    if (old_qid < new_qid) {
-      questions_list[[question$DataExportTag]] <- question
-      success <- TRUE
-    }
+    stop(paste0("Multiple copies of item ", question$DataExportTag, " exist, ", old_qid, " and ", new_qid))
   }
-  return(list(out=questions_list, success=success))
-}
-
-#' Convert QID to integer
-#'
-#' @param qid_str
-#'
-#' @return An integer
-qid_to_int <- function(qid_str) {
-  qid_int <- as.integer(sub("QID", "", qid_str))
-  qid_int <- ifelse(is.na(qid_int), 0, qid_int)
-  return(qid_int)
+  
+  questions_list[[question$DataExportTag]] <- question
+  return(questions_list)
 }
 
 #' Compare the two surveys.
@@ -185,24 +144,23 @@ diff_surveys <- function(old_qsf, new_qsf) {
   old_shown_items <- old_qid_item_map[filter(bind_rows(filter(old_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
   new_shown_items <- new_qid_item_map[filter(bind_rows(filter(new_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
   
-  added <- na.omit(setdiff(new_shown_items, old_shown_items))
-  removed <- na.omit(setdiff(old_shown_items, new_shown_items))
+  added <- setdiff(new_shown_items, old_shown_items)
+  removed <- setdiff(old_shown_items, new_shown_items)
   
-  ## Use question data to print diff in useful way.
   old_questions <- old_qsf$questions
   new_questions <- new_qsf$questions
   
-  print_questions(added, "added", new_questions)
-  print_questions(removed, "removed", old_questions)
+  print_questions(added, "Added", new_questions)
+  print_questions(removed, "Removed", old_questions)
   
   ## For questions that appear in both surveys, check for changes in wording,
   ## display logic, and answer options.
   shared <- intersect(old_shown_items, new_shown_items)
   
-  diff_question(shared, "wording", "QuestionText", old_questions, new_questions)
-  diff_question(shared, "display logic", "DisplayLogic", old_questions, new_questions)
-  diff_question(shared, "answers", "Choices", old_questions, new_questions)
-  diff_question(shared, "subquestions", "Subquestions", old_questions, new_questions)
+  diff_question(shared, "QuestionText", old_questions, new_questions)
+  diff_question(shared, "DisplayLogic", old_questions, new_questions)
+  diff_question(shared, "Choices", old_questions, new_questions)
+  diff_question(shared, "Subquestions", old_questions, new_questions)
   
   return(NULL)
 }
@@ -210,17 +168,18 @@ diff_surveys <- function(old_qsf, new_qsf) {
 #' Compare a single question field in the two surveys.
 #'
 #' @param names character vector of Qualtrics question IDs
-#' @param change_type character; type of change to look for
-#' @param comparator character; name of question element to compare between
-#'   survey versions
-#' @param old_qsf named list of trimmed output from `get_qsf_file` for older survey
-#' @param new_qsf named list of trimmed output from `get_qsf_file` for newer survey
-diff_question <- function(names, change_type=c("answers", "wording", "display logic", "subquestions"), comparator, old_qsf, new_qsf) {
+#' @param change_type character; type of change to look for and name of question
+#'   element to compare between survey versions
+#' @param old_qsf named list of trimmed output from `get_qsf_file` for older
+#'   survey
+#' @param new_qsf named list of trimmed output from `get_qsf_file` for newer
+#'   survey
+diff_question <- function(names, change_type=c("Choices", "QuestionText", "DisplayLogic", "Subquestions"), old_qsf, new_qsf) {
   change_type <- match.arg(change_type)
   
   changed <- c()
   for (question in names) {
-    if ( !identical(old_qsf[[question]][[comparator]], new_qsf[[question]][[comparator]]) ) {
+    if ( !identical(old_qsf[[question]][[change_type]], new_qsf[[question]][[change_type]]) ) {
       changed <- append(changed, question)
     }
   }
@@ -237,7 +196,7 @@ diff_question <- function(names, change_type=c("answers", "wording", "display lo
 #' @param reference_qsf named list of trimmed output from `get_qsf_file` for survey that
 #'   contains descriptive info about a particular type of change. For "removed"
 #'   questions, should be older survey, else newer survey.
-print_questions <- function(questions, change_type=c("added", "removed", "answers", "wording", "display logic", "subquestions"), reference_qsf) {
+print_questions <- function(questions, change_type=c("Added", "Removed", "Choices", "QuestionText", "DisplayLogic", "Subquestions"), reference_qsf) {
   if ( length(questions) > 0 ) {
     change_type <- match.arg(change_type)
     
@@ -245,24 +204,24 @@ print_questions <- function(questions, change_type=c("added", "removed", "answer
     qids <- sapply(item, function(question) {reference_qsf[[question]]$QuestionID})
     item_text <- sapply(item, function(question) {reference_qsf[[question]]$QuestionText})
     
-    if (change_type == "added") {
+    if (change_type == "Added") {
       cat("\n ")
       cat(paste0("Added: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "removed") {
+    } else if (change_type == "Removed") {
       cat("\n ")
       cat(paste0("Removed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "wording") {
+    } else if (change_type == "QuestionText") {
       cat("\n ")
-      cat(paste0("Wording changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "display logic") {
+      cat(paste0("Question wording changed: item ", item, " (", qids, ")", "\n"))
+    } else if (change_type == "DisplayLogic") {
       cat("\n ")
       cat(paste0("Display logic changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "answers") {
+    } else if (change_type == "Choices") {
       cat("\n ")
       cat(paste0("Answer choices changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "subquestions") {
+    } else if (change_type == "Subquestions") {
       cat("\n ")
-      cat(paste0("Subquestions changed: matrix item ", item, " (", qids, ")", "\n"))
+      cat(paste0("Matrix subquestions changed: item ", item, " (", qids, ")", "\n"))
     }
   }
   return(NULL)
@@ -279,8 +238,4 @@ if (length(args) != 2) {
 old_qsf <- args[1]
 new_qsf <- args[2]
 
-options(nwarnings = 10000)
-
 invisible(diff_qsf_files(old_qsf, new_qsf))
-cat("\nWarning messages:\n ")
-cat(paste0(names(warnings()), "\n"))

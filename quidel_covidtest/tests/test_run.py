@@ -23,6 +23,7 @@ class TestRun:
             "export_end_date": "",
             "pull_start_date": "2020-07-09",
             "pull_end_date":"",
+            "export_day_range":40,
             "aws_credentials": {
                 "aws_access_key_id": "",
                 "aws_secret_access_key": ""

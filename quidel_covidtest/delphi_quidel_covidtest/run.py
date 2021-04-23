@@ -14,7 +14,7 @@ from delphi_utils import (
     get_structured_logger
 )
 
-from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+from .constants import (END_FROM_TODAY_MINUS,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
                         GEO_RESOLUTIONS, SENSORS, SMOOTHERS)
@@ -64,6 +64,7 @@ def run_module(params: Dict[str, Any]):
     export_dir = params["common"]["export_dir"]
     export_start_date = params["indicator"]["export_start_date"]
     export_end_date = params["indicator"]["export_end_date"]
+    export_day_range = params["indicator"]["export_day_range"]
 
     # Pull data and update export date
     df, _end_date = pull_quidel_covidtest(params["indicator"])
@@ -73,7 +74,7 @@ def run_module(params: Dict[str, Any]):
     export_end_date = check_export_end_date(export_end_date, _end_date,
                                             END_FROM_TODAY_MINUS)
     export_start_date = check_export_start_date(export_start_date,
-                                                export_end_date, EXPORT_DAY_RANGE)
+                                                export_end_date, export_day_range)
 
     first_date, last_date = df["timestamp"].min(), df["timestamp"].max()
 

@@ -49,19 +49,12 @@ tidy: receiving
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
 	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
 
-tidy-weekly-contingency: contingency_receiving
-	rm -rf tidy-weekly
-	mkdir -p tidy-weekly tidy-weekly/$(CONTINGENCY_RECEIVING)
-	cp params.json tidy-weekly/
-	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-weekly/$(CONTINGENCY_RECEIVING)
-	tar -czf tidy-weekly-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-weekly
-
-tidy-monthly-contingency: contingency_receiving
-	rm -rf tidy-monthly
-	mkdir -p tidy-monthly tidy-monthly/$(CONTINGENCY_RECEIVING)
-	cp params.json tidy-monthly/
-	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-monthly/$(CONTINGENCY_RECEIVING)
-	tar -czf tidy-monthly-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-monthly
+tidy-%-contingency: contingency_receiving
+	rm -rf tidy-$*
+	mkdir -p tidy-$* tidy-$*/$(CONTINGENCY_RECEIVING)
+	cp params.json tidy-$*/
+	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-$*/$(CONTINGENCY_RECEIVING)
+	tar -czf tidy-$*-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-$*
 
 clean:
 	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv $(CONTINGENCY_RECEIVING)/*.csv
@@ -110,21 +103,13 @@ params.json: $(TODAY)
 		output cids,individual,covidalert,archive,community \
 		start_date $(YESTERDAY)
 
-weekly-contingency-params: $(WEIGHTS)
+%ly-contingency-params: $(WEIGHTS)
 	$(PYTHON) -m delphi_utils set \
 		contingency.debug false \
 		contingency.end_date $(TODAY) \
 		contingency.input [] \
 		contingency.parallel true \
-		contingency.aggregate_range "week"
-
-monthly-contingency-params: $(WEIGHTS)
-	$(PYTHON) -m delphi_utils set \
-		contingency.debug false \
-		contingency.end_date $(TODAY) \
-		contingency.input [] \
-		contingency.parallel true \
-		contingency.aggregate_range "month"
+		contingency.aggregate_range "$*"
 
 $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
@@ -165,13 +150,9 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 run-contingency:
 	time Rscript contingency_tables.R
 
-weekly-contingency-pipeline: weekly-contingency-params $(WEIGHTS) run-contingency post-weekly-contingency tidy-weekly-contingency
+%-contingency-pipeline: %-contingency-params $(WEIGHTS) run-contingency post-%-contingency tidy-%-contingency
 	touch $@
-	echo "SUCCESS: $(DRY_MESSAGE)weekly contingency pipeline complete" >> $(MESSAGES)
-
-monthly-contingency-pipeline: monthly-contingency-params $(WEIGHTS) run-contingency post-monthly-contingency tidy-monthly-contingency
-	touch $@
-	echo "SUCCESS: $(DRY_MESSAGE)monthly contingency pipeline complete" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)$* contingency pipeline complete" >> $(MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'
@@ -228,26 +209,15 @@ post-done: post-cids
 	$(SFTP_POST)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 
-post-weekly-contingency:
+post-%-contingency:
 	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
 	[ -n "$${POST}" ]; \
 	BATCH=""; \
 	for f in $${POST}; do \
-	    BATCH="$${BATCH}put $$f ${CONTINGENCY_DEST}/weekly\n"; \
+	    BATCH="$${BATCH}put $$f ${CONTINGENCY_DEST}/$*\n"; \
 	done; \
 	$(CONTINGENCY_SFTP_POST); \
-	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` weekly contingency tables" >> $(MESSAGES)
-	touch $@
-
-post-monthly-contingency:
-	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
-	[ -n "$${POST}" ]; \
-	BATCH=""; \
-	for f in $${POST}; do \
-	    BATCH="$${BATCH}put $$f ${CONTINGENCY_DEST}/monthly\n"; \
-	done; \
-	$(CONTINGENCY_SFTP_POST); \
-	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` monthly contingency tables" >> $(MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` $* contingency tables" >> $(MESSAGES)
 	touch $@
 
 validate-covidcast:

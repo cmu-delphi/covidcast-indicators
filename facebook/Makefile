@@ -53,6 +53,7 @@ tidy-%-contingency: contingency_receiving
 	rm -rf tidy-$*
 	mkdir -p tidy-$* tidy-$*/$(CONTINGENCY_RECEIVING)
 	cp params.json tidy-$*/
+	mv contingency_input.txt tidy-$*/
 	mv $(CONTINGENCY_RECEIVING)/*.csv tidy-$*/$(CONTINGENCY_RECEIVING)
 	tar -czf tidy-$*-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy-$*
 

@@ -78,6 +78,10 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     keep_vars <- c("val", "se", "sample_size", "represented")
 
     for (agg_id in names(dfs_out)) {
+      if (nrow(dfs_out[[agg_id]]) == 0) {
+        dfs_out[[agg_id]] <- NULL
+        next
+      }
       agg_metric <- aggregations$name[aggregations$id == agg_id]
       map_old_new_names <- keep_vars
       names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")

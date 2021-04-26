@@ -11,7 +11,7 @@ from typing import List, Union
 
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix
+from delphi_utils import GeoMapper, add_prefix, Nans
 
 from .api_config import APIConfig
 from .constants import SIGNALS
@@ -45,6 +45,20 @@ def write_to_csv(data: pd.DataFrame, out_name: str, output_path: str):
 
         # Drop extra epiweek column before writing to csv
         sub_df.drop("epiweek", axis=1).to_csv(filename, na_rep="NA")
+
+
+def add_nancodes(df: pd.DataFrame) -> pd.DataFrame:
+    """Add basic missing columns to dataframe."""
+    # Default missing code
+    df["missing_val"] = Nans.NOT_MISSING
+    missing_mask = ~df["val"].isnull()
+    df.loc[missing_mask, "missing_val"] = Nans.OTHER
+
+    # Fill in remaining expected columns
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    return df
 
 
 def update_sensor(
@@ -99,9 +113,10 @@ def update_sensor(
     assert not hosp_df.duplicated(["date", "geo_id"]).any(), "Non-unique (date, geo_id) pairs"
     hosp_df.set_index(["date", "geo_id"], inplace=True)
 
-    # Fill in remaining expected columns
     hosp_df["se"] = np.nan
     hosp_df["sample_size"] = np.nan
+
+    hosp_df = add_nancodes(hosp_df)
 
     # Write results
     signals = add_prefix(SIGNALS,

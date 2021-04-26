@@ -95,7 +95,16 @@ class TestUpdateSensor:
 
             for i, exp_file in enumerate(expected_files):
                 data = pd.read_csv(exp_file)
-                assert (data.columns == ["geo_id", "val", "se", "sample_size"]).all()
+                expected_columns = [
+                    "geo_id",
+                    "val",
+                    "se",
+                    "sample_size",
+                    "missing_val",
+                    "missing_se",
+                    "missing_sample_size"
+                ]
+                assert (data.columns == expected_columns).all()
 
                 # Check data for NA
                 assert (~pd.isna(data["geo_id"])).all()

@@ -5,6 +5,9 @@ params.json
 
 # Do not commit output files
 receiving/*.csv
+daily_receiving/*.csv
+cache/*.csv
+daily_cache/*.csv
 
 # Do not commit test files
 tests/receiving/*.csv

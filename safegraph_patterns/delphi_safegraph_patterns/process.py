@@ -6,7 +6,7 @@ from itertools import product
 import numpy as np
 import pandas as pd
 
-from delphi_utils import create_export_csv, GeoMapper
+from delphi_utils import create_export_csv, GeoMapper, Nans
 
 INCIDENCE_BASE = 100000
 
@@ -124,6 +124,21 @@ def aggregate(df, metric, geo_res):
                             * INCIDENCE_BASE
     return df.rename({geo_key: "geo_id"}, axis=1)
 
+def add_nancodes(df):
+    """Add nan codes to the df."""
+    # Values are not missing unless found to be null
+    df["missing_val"] = Nans.NOT_MISSING
+
+    # These values aren't reported, so are always missing
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = (df["missing_val"] == 0) & df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+
+    return df
+
 def process(fname, sensors, metrics, geo_resolutions,
             export_dir, brand_df):
     """
@@ -185,6 +200,7 @@ def process(fname, sensors, metrics, geo_resolutions,
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
             df_export["sample_size"] = np.nan
+            df_export = add_nancodes(df_export)
 
             if wip:
                 metric = "wip_" + metric

@@ -23,5 +23,5 @@ class TestSmooth:
         raw = raw.groupby('geo_id')['val'].sum()/7.0
         df = pd.merge(smoothed, raw, on='geo_id',
                       suffixes=('_smoothed', '_raw'))
-
+        df = df.dropna(subset=["val_smoothed"])
         assert np.allclose(df['val_smoothed'].values, df['val_raw'].values)

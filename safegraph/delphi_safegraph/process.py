@@ -6,9 +6,12 @@ import os
 from typing import List
 import numpy as np
 import pandas as pd
-from delphi_utils.signal import add_prefix
-from delphi_utils.export import create_export_csv
-from delphi_utils.geomap import GeoMapper
+from delphi_utils import (
+    add_prefix,
+    create_export_csv,
+    GeoMapper,
+    Nans,
+)
 
 from .constants import HOME_DWELL, COMPLETELY_HOME, FULL_TIME_WORK, PART_TIME_WORK, GEO_RESOLUTIONS
 
@@ -183,7 +186,7 @@ def process_window(df_list: List[pd.DataFrame],
 
     Parameters
     ----------
-    cbg_df: pd.DataFrame
+    df_list: pd.DataFrame
         list of census block group-level frames.
     signal_names: List[str]
         signal names to be processed
@@ -203,15 +206,34 @@ def process_window(df_list: List[pd.DataFrame],
     for geo_res in geo_resolutions:
         aggregated_df = aggregate(cbg_df, signal_names, geo_res)
         for signal in signal_names:
+            columns_to_export = (
+                ['geo_id'] +
+                [f'{signal}_{x}' for x in ('mean', 'se', 'n')]
+            )
             df_export = aggregated_df[
-                ['geo_id']
-                + [f'{signal}_{x}' for x in ('mean', 'se', 'n')]
+                columns_to_export
             ].rename({
                 f'{signal}_mean': 'val',
                 f'{signal}_se': 'se',
                 f'{signal}_n': 'sample_size',
             }, axis=1)
             df_export["timestamp"] = date.strftime('%Y%m%d')
+
+            # Default missingness codes
+            df_export["missing_val"] = Nans.NOT_MISSING
+            df_export["missing_se"] = Nans.NOT_MISSING
+            # Sample size will never be missing in this indicator
+            # since sample_size just counts the presence of rows for a geo region
+            df_export["missing_sample_size"] = Nans.NOT_MISSING
+            # Add missingness codes as detected
+            # This may occur if all the values are missing for a geographic region
+            remaining_nans_mask = df_export["val"].isnull()
+            df_export.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+            # This may occur if all the values are missing for a geographic region
+            # or if the sample size is 1
+            remaining_nans_mask = df_export["se"].isnull()
+            df_export.loc[remaining_nans_mask, "missing_se"] = Nans.PRIVACY
+
             create_export_csv(df_export,
                               export_dir,
                               geo_res,

@@ -40,9 +40,11 @@ from boto3.exceptions import S3UploadFailedError
 from git import Repo
 from git.refs.head import Head
 import pandas as pd
+import numpy as np
 
 from .utils import read_params
 from .logger import get_structured_logger
+from .nancodes import Nans
 
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]
@@ -73,8 +75,10 @@ def diff_export_csv(
         changed_df is the pd.DataFrame of common rows from after_csv with changed values.
         added_df is the pd.DataFrame of added rows from after_csv.
     """
-    export_csv_dtypes = {"geo_id": str, "val": float,
-                         "se": float, "sample_size": float}
+    export_csv_dtypes = {
+        "geo_id": str, "val": float, "se": float, "sample_size": float,
+        "missing_val": int, "missing_se": int, "missing_sample_size": int
+    }
 
     before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
     before_df.set_index("geo_id", inplace=True)
@@ -89,12 +93,22 @@ def diff_export_csv(
     before_df_cmn = before_df.reindex(common_idx)
     after_df_cmn = after_df.reindex(common_idx)
 
-    # Exact comparisons, treating NA == NA as True
-    same_mask = before_df_cmn == after_df_cmn
-    same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
+    # If CSVs have different columns (no missingness), mark all values as new
+    if ("missing_val" in before_df_cmn.columns) ^ ("missing_val" in after_df_cmn.columns):
+        same_mask = after_df_cmn.copy()
+        same_mask.loc[:] = False
+    else:
+        # Exact comparisons, treating NA == NA as True
+        same_mask = before_df_cmn == after_df_cmn
+        same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
+
+    # Code deleted entries as nans with the deleted missing code
+    deleted_df = before_df.loc[deleted_idx, :].copy()
+    deleted_df[["val", "se", "sample_size"]] = np.nan
+    deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
 
     return (
-        before_df.loc[deleted_idx, :],
+        deleted_df,
         after_df_cmn.loc[~(same_mask.all(axis=1)), :],
         after_df.loc[added_idx, :])
 
@@ -227,11 +241,11 @@ class ArchiveDiffer:
 
             deleted_df, changed_df, added_df = diff_export_csv(
                 before_file, after_file)
-            new_issues_df = pd.concat([changed_df, added_df], axis=0)
+            new_issues_df = pd.concat([deleted_df, changed_df, added_df], axis=0)
 
             if len(deleted_df) > 0:
                 print(
-                    f"Warning, diff has deleted indices in {after_file} that will be ignored")
+                    f"Diff has deleted indices in {after_file} that have been coded as nans.")
 
             # Write the diffs to diff_file, if applicable
             if len(new_issues_df) > 0:

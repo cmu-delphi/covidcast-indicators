@@ -15,7 +15,7 @@ from delphi_safegraph.process import (
     process_window
 )
 from delphi_safegraph.run import SIGNALS
-
+from delphi_utils import Nans
 
 
 class TestProcess:
@@ -150,7 +150,10 @@ class TestProcess:
             'geo_id': [1053, 1073],
             'val': [0.04, 0.14],
             'se': [0.02, 0.10],
-            'sample_size': [2, 2]
+            'sample_size': [2, 2],
+            'missing_val': [0, 0],
+            'missing_se': [0, 0],
+            'missing_sample_size': [0, 0],
         })
         actual = pd.read_csv(
             export_dir / '20200214_county_completely_home_prop.csv')
@@ -178,49 +181,73 @@ class TestProcess:
                 'geo_id': ['al', 'ga'],
                 'val': [6, 3.5],
                 'se': [None, 0.5],
-                'sample_size': [1, 2]
+                'sample_size': [1, 2],
+                'missing_val': [Nans.NOT_MISSING]*2,
+                'missing_se': [Nans.PRIVACY, Nans.NOT_MISSING],
+                'missing_sample_size': [Nans.NOT_MISSING]*2,
             }),
             'completely_home_prop': pd.DataFrame(data={
                 'geo_id': ['al', 'ga'],
                 'val': [0.15, 0.055],
                 'se': [None, 0.005],
-                'sample_size': [1, 2]
+                'sample_size': [1, 2],
+                'missing_val': [Nans.NOT_MISSING]*2,
+                'missing_se': [Nans.PRIVACY, Nans.NOT_MISSING],
+                'missing_sample_size': [Nans.NOT_MISSING]*2,
             }),
             'part_time_work_prop': pd.DataFrame(data={
                 'geo_id': ['al', 'ga'],
                 'val': [0.35, 0.055],
                 'se': [None, 0.005],
-                'sample_size': [1, 2]
+                'sample_size': [1, 2],
+                'missing_val': [Nans.NOT_MISSING]*2,
+                'missing_se': [Nans.PRIVACY, Nans.NOT_MISSING],
+                'missing_sample_size': [Nans.NOT_MISSING]*2,
             }),
             'full_time_work_prop': pd.DataFrame(data={
                 'geo_id': ['al', 'ga'],
                 'val': [0.45, 0.055],
                 'se': [None, 0.005],
-                'sample_size': [1, 2]
+                'sample_size': [1, 2],
+                'missing_val': [Nans.NOT_MISSING]*2,
+                'missing_se': [Nans.PRIVACY, Nans.NOT_MISSING],
+                'missing_sample_size': [Nans.NOT_MISSING]*2,
             }),
             'median_home_dwell_time_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [4.5, 3.5, 7.5],
                 'se': [1.5, 0.5, 0.5],
-                'sample_size': [2, 2, 2]
+                'sample_size': [2, 2, 2],
+                'missing_val': [Nans.NOT_MISSING]*3,
+                'missing_se': [Nans.NOT_MISSING]*3,
+                'missing_sample_size': [Nans.NOT_MISSING]*3,
             }),
             'wip_completely_home_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.1, 0.055, 0.15],
                 'se': [0.05, 0.005, 0.05],
-                'sample_size': [2, 2, 2]
+                'sample_size': [2, 2, 2],
+                'missing_val': [Nans.NOT_MISSING]*3,
+                'missing_se': [Nans.NOT_MISSING]*3,
+                'missing_sample_size': [Nans.NOT_MISSING]*3,
             }),
             'part_time_work_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.25, 0.055, 0.25],
                 'se': [0.1, 0.005, 0.05],
-                'sample_size': [2, 2, 2]
+                'sample_size': [2, 2, 2],
+                'missing_val': [Nans.NOT_MISSING]*3,
+                'missing_se': [Nans.NOT_MISSING]*3,
+                'missing_sample_size': [Nans.NOT_MISSING]*3,
             }),
             'full_time_work_prop_7dav': pd.DataFrame(data={
                 'geo_id': ['al', 'ga', 'pa'],
                 'val': [0.35, 0.055, 0.35],
                 'se': [0.1, 0.005, 0.05],
-                'sample_size': [2, 2, 2]
+                'sample_size': [2, 2, 2],
+                'missing_val': [Nans.NOT_MISSING]*3,
+                'missing_se': [Nans.NOT_MISSING]*3,
+                'missing_sample_size': [Nans.NOT_MISSING]*3,
             })
         }
         actual = {signal: pd.read_csv(

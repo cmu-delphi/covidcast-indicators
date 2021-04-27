@@ -59,5 +59,13 @@ class TestRun:
             # triggered the error.
             print(filename)
             df = pd.read_csv(os.path.join("receiving", filename))
-            assert (df.columns.values ==
-                ["geo_id", "val", "se", "sample_size"]).all()
+            expected_columns = [
+                "geo_id", 
+                "val", 
+                "se", 
+                "sample_size", 
+                "missing_val", 
+                "missing_se", 
+                "missing_sample_size"
+            ]
+            assert (df.columns.values == expected_columns).all()

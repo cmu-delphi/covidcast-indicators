@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 
 from delphi_hhs_facilities.generate_signals import generate_signal, sum_cols
-
+from delphi_utils import Nans
 
 class TestGenerateSignals:
 
@@ -23,11 +23,15 @@ class TestGenerateSignals:
         expected = pd.DataFrame(
             {"timestamp": [pd.Timestamp("20200131"),
                            pd.Timestamp("20200201"),
-                           pd.Timestamp("20200202")],
-             "geo_id": ["x", "x", "y"],
-             "val": [5., 7., 10.],
-             "se": [np.nan]*3,
-             "sample_size": [np.nan]*3
+                           pd.Timestamp("20200202"),
+                           pd.Timestamp("20200203")],
+             "geo_id": ["x", "x", "y", "z"],
+             "val": [5., 7., 10., np.nan],
+             "se": [np.nan]*4,
+             "sample_size": [np.nan]*4,
+             "missing_val": [Nans.NOT_MISSING] * 3 + [Nans.UNKNOWN],
+             "missing_se": [Nans.NOT_APPLICABLE] * 4,
+             "missing_sample_size": [Nans.NOT_APPLICABLE] * 4,
              })
         pd.testing.assert_frame_equal(test_output, expected)
 

@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 from delphi_hhs_facilities.pull import pull_data_iteratively, pull_data
-
+from delphi_hhs_facilities.constants import NAN_VALUES
 
 class TestPull:
 
@@ -64,8 +64,8 @@ class TestPull:
             output,
             pd.DataFrame({"collection_week": [20201204.],
                           "total_beds_7_day_sum": [2360.0],
-                          "all_adult_hospital_beds_7_day_sum": [np.nan],
-                          "inpatient_beds_7_day_avg": [np.nan],
+                          "all_adult_hospital_beds_7_day_sum": [NAN_VALUES[-999999]],
+                          "inpatient_beds_7_day_avg": [NAN_VALUES[-999999]],
                           "total_icu_beds_7_day_avg": [np.nan],
                           "total_staffed_adult_icu_beds_7_day_avg": [32.4],
                           "timestamp": [pd.Timestamp("2020-12-04")]}),

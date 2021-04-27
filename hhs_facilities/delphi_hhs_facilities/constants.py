@@ -1,7 +1,12 @@
 """Registry for signals and geographies to process."""
+from numpy import nan
 from .generate_signals import sum_cols
 
-NAN_VALUES = [None, -999999, -999999.0]
+NAN_VALUES = {
+    None: nan,
+    -999999: 1.5, # -999,999 represents the data range [0-3], so we use the range mean
+    -999999.0: 1.5
+}
 
 CONFIRMED_ADMISSIONS = "confirmed_admissions_7d"
 CONFIRMED_SUSPECTED_ADMISSIONS = "sum_confirmed_suspected_admissions_7d"

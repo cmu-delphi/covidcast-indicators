@@ -5,6 +5,20 @@ from typing import Callable
 import pandas as pd
 import numpy as np
 
+from delphi_utils import Nans
+
+
+def add_nancodes(df):
+    """Add nancodes to a signal dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    return df
 
 def generate_signal(df: pd.DataFrame,
                     input_cols: list,
@@ -34,10 +48,13 @@ def generate_signal(df: pd.DataFrame,
     df_cols = [df[i] for i in input_cols]
     df["val"] = signal_func(df_cols)
     df["timestamp"] = df["timestamp"] + pd.Timedelta(days=date_offset)
-    df.dropna(subset=["val"], inplace=True)
-    df = df.groupby(["timestamp", "geo_id"], as_index=False).sum()
+    df = df.groupby(["timestamp", "geo_id"], as_index=False).sum(min_count=1)
     df["se"] = df["sample_size"] = np.nan
-    return df[["timestamp", "geo_id", "val", "se", "sample_size"]]
+    df = add_nancodes(df)
+    export_columns = [
+        "timestamp", "geo_id", "val", "se", "sample_size",
+        "missing_val", "missing_se", "missing_sample_size"]
+    return df[export_columns]
 
 
 def sum_cols(cols: list) -> pd.Series:

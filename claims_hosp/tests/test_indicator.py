@@ -57,13 +57,12 @@ class TestLoadData:
         date_range = pd.date_range("2020-05-01", "2020-05-20")
         all_fips = self.fips_data.fips.unique()
         loc_index_fips_data = self.fips_data.set_index(["fips", "date"])
-        sample_fips = nr.choice(all_fips, 10)
+        sample_fips = all_fips[:50]
 
         for fips in sample_fips:
             sub_data = loc_index_fips_data.loc[fips]
             sub_data = sub_data.reindex(date_range, fill_value=0)
             res0 = ClaimsHospIndicator.fit(sub_data, date_range[0], fips)
-            # first value is burn-in
             assert np.min(res0["rate"][1:]) > 0
             assert np.max(res0["rate"][1:]) <= 100
 

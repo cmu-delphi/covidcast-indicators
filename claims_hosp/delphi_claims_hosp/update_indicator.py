@@ -13,7 +13,7 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper
+from delphi_utils import GeoMapper, Nans
 
 # first party
 from .config import Config, GeoConstants
@@ -224,7 +224,7 @@ class ClaimsHospIndicatorUpdater:
         all_rates = output_dict["rates"]
         all_se = output_dict["se"]
         all_include = output_dict["include"]
-        out_n = 0
+        out_n, out_i = 0, 0
         for i, date in enumerate(dates):
             filename = "%s/%s_%s_%s.csv" % (
                 output_path,
@@ -233,7 +233,10 @@ class ClaimsHospIndicatorUpdater:
                 self.signal_name,
             )
             with open(filename, "w") as outfile:
-                outfile.write("geo_id,val,se,direction,sample_size\n")
+                outfile.write(
+                    "geo_id,val,se,direction,sample_size," +
+                    "missing_val,missing_se,missing_sample_size\n"
+                )
                 for geo_id in geo_ids:
                     val = all_rates[geo_id][i]
                     se = all_se[geo_id][i]
@@ -246,11 +249,38 @@ class ClaimsHospIndicatorUpdater:
                         if self.write_se:
                             assert val > 0 and se > 0, "p=0, std_err=0 invalid"
                             outfile.write(
-                                "%s,%f,%s,%s,%s\n" % (geo_id, val, se, "NA", "NA"))
+                                "%s,%f,%s,%s,%s,%d,%d,%d\n" % (
+                                    geo_id, val, se, "NA", "NA",
+                                    Nans.NOT_MISSING.value,
+                                    Nans.NOT_MISSING.value,
+                                    Nans.NOT_APPLICABLE.value
+                                )
+                            )
                         else:
                             # for privacy reasons we will not report the standard error
                             outfile.write(
-                                "%s,%f,%s,%s,%s\n" % (geo_id, val, "NA", "NA", "NA"))
+                                "%s,%f,%s,%s,%s,%d,%d,%d\n" % (
+                                    geo_id, val, "NA", "NA", "NA",
+                                    Nans.NOT_MISSING.value,
+                                    Nans.PRIVACY.value,
+                                    Nans.NOT_APPLICABLE.value
+                                )
+                            )
                         out_n += 1
+                    else:
+                        # Write nans out anyway for versioning
+                        logging.warning("writing insufficient data for geo_id {0}, {1}".format(
+                            geo_id, i
+                        ))
+                        outfile.write(
+                            "%s,%s,%s,%s,%s,%d,%d,%d\n" % (
+                                geo_id, "NA", "NA", "NA", "NA",
+                                Nans.PRIVACY.value,
+                                Nans.PRIVACY.value,
+                                Nans.NOT_APPLICABLE.value
+                            )
+                        )
+                        out_i += 1
 
-        logging.debug("wrote %d rows for %d %s", out_n, len(geo_ids), geo_level)
+        logging.debug("wrote %d valued csvs for %d %s", out_n, len(geo_ids), geo_level)
+        logging.debug("wrote %d nan-valued csvs for %d %s", out_i, len(geo_ids), geo_level)

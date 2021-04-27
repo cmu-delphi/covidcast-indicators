@@ -9,12 +9,14 @@ from datetime import datetime, date, time, timedelta
 from itertools import product
 from typing import Dict, Any
 
+import pandas as pd
 import numpy as np
 from delphi_utils import (
     create_export_csv,
     get_structured_logger,
     S3ArchiveDiffer,
-    Smoother
+    Smoother,
+    Nans
 )
 
 from .geo import geo_map
@@ -61,6 +63,27 @@ GEO_RESOLUTIONS = [
     "hhs",
     "nation"
 ]
+
+
+def add_nancodes(df, smoother):
+    """Add nancodes to the dataframe."""
+    idx = pd.IndexSlice
+
+    # Default nancodes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark early smoothing entries as data insufficient
+    if smoother == "seven_day_average":
+        df.sort_index(inplace=True)
+        min_time_value = df.index.min()[0] + 6 * pd.Timedelta(days=1)
+        df.loc[idx[:min_time_value, :], "missing_val"] = Nans.PRIVACY
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull() & (df["missing_val"] == Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    return df
 
 
 def run_module(params: Dict[str, Dict[str, Any]]):
@@ -111,22 +134,28 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         df = dfs[metric]
         # Aggregate to appropriate geographic resolution
         df = geo_map(df, geo_res, sensor)
-        df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
-            SMOOTHERS_MAP[smoother][0].smooth
-        )
+        df.set_index(["timestamp", "geo_id"], inplace=True)
+
+        # Smooth
+        smooth_obj, smoother_prefix, _, smoother_lag = SMOOTHERS_MAP[smoother]
+        df["val"] = df[sensor].groupby(level=1).transform(smooth_obj.smooth)
+
+        # USAFacts is not a survey indicator
         df["se"] = np.nan
         df["sample_size"] = np.nan
-        # Drop early entries where data insufficient for smoothing
-        df = df.loc[~df["val"].isnull(), :]
+
+        df = add_nancodes(df, smoother)
+
+        df.reset_index(inplace=True)
         sensor_name = SENSOR_NAME_MAP[sensor][0]
-        # if (SENSOR_NAME_MAP[sensor][1] or SMOOTHERS_MAP[smoother][2]):
+        # if (SENSOR_NAME_MAP[sensor][1] or is_smooth_wip):
         #     metric = f"wip_{metric}"
         #     sensor_name = WIP_SENSOR_NAME_MAP[sensor][0]
-        sensor_name = SMOOTHERS_MAP[smoother][1] + sensor_name
+        sensor_name = smoother_prefix + sensor_name
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
-            start_date=SMOOTHERS_MAP[smoother][3](export_start_date),
+            start_date=smoother_lag(export_start_date),
             metric=metric,
             geo_res=geo_res,
             sensor=sensor_name,

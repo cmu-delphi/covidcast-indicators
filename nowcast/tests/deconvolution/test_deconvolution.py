@@ -9,6 +9,7 @@ from delphi_nowcast.deconvolution.deconvolution import (deconvolve_double_smooth
 class TestDeconvolveDoubleSmoothTFCV:
 
     def test_deconvolve_double_smooth_tf_cv(self):
+        # trivial deconvolution case
         np.testing.assert_allclose(
             deconvolve_double_smooth_tf_cv(np.arange(20), np.arange(20), np.array([0,1])),
             np.arange(1,21).astype(float)
@@ -17,13 +18,14 @@ class TestDeconvolveDoubleSmoothTFCV:
 class TestDeconvolveDoubleSmoothNTF:
 
     def test_deconvolve_double_smooth_ntf(self):
+        # trivial deconvolution case
         np.testing.assert_allclose(
             deconvolve_double_smooth_ntf(np.arange(20), np.arange(20), np.array([0,1]), lam=1, gam=0),
             np.arange(1,21).astype(float)
         )
 
     def test_deconvolve_double_smooth_ntf_infgamma(self):
-        # check large gamme means last values are the same
+        # check large gamma means last values are the same
         deconv_vals = deconvolve_double_smooth_ntf(np.arange(20), np.arange(20), np.array([0,1]), lam=1, gam=1e10)
         assert np.isclose(deconv_vals[-1], deconv_vals[-2])
 

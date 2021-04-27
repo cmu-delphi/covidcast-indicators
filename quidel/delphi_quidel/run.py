@@ -12,7 +12,8 @@ import pandas as pd
 from delphi_utils import (
     add_prefix,
     create_export_csv,
-    get_structured_logger
+    get_structured_logger,
+    Nans
 )
 
 from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
@@ -83,6 +84,12 @@ def run_module(params: Dict[str, Any]):
         test_type = "covid_ag" if "covid_ag" in sensor else "flu_ag"
         print("state", sensor)
         data = dfs[test_type].copy()
+
+        # Default missingness values
+        data["missing_val"] = Nans.NOT_MISSING
+        data["missing_se"] = Nans.NOT_MISSING
+        data["missing_sample_size"] = Nans.NOT_MISSING
+
         state_groups = geo_map("state", data, map_df).groupby("state_id")
         first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
 

@@ -81,7 +81,7 @@ class TestRun:
         df = pd.read_csv(
             join("./receiving", "20200709_state_covid_ag_raw_pct_positive.csv")
         )
-        assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
+        assert (df.columns.values == ["geo_id", "val", "se", "sample_size", "missing_val", "missing_se", "missing_sample_size"]).all()
 
         # test_intermediate_file
         flag = None

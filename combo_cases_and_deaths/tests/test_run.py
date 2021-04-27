@@ -7,12 +7,14 @@ import pandas as pd
 import numpy as np
 
 from delphi_combo_cases_and_deaths.run import (
-    extend_raw_date_range, get_updated_dates,
+    add_nancodes, extend_raw_date_range,
+    get_updated_dates,
     sensor_signal,
     combine_usafacts_and_jhu,
     compute_special_geo_dfs,
     COLUMN_MAPPING)
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
+from delphi_utils import Nans
 
 
 def test_issue_dates():
@@ -243,6 +245,21 @@ def test_no_nation_jhu(mock_covidcast_signal):
                       "se": [None],
                       "sample_size": [None]},)
     )
+
+
+def test_add_nancodes():
+    df = pd.DataFrame({"geo_id": ["01000", "01001", "01001"],
+                      "val": [50, 100, None],
+                      "timestamp": [20200101, 20200101, 20200101]})
+    expected_df = pd.DataFrame({"geo_id": ["01000", "01001", "01001"],
+                      "val": [50, 100, None],
+                      "timestamp": [20200101, 20200101, 20200101],
+                      "missing_val": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.UNKNOWN],
+                      "missing_se": [Nans.NOT_APPLICABLE] * 3,
+                      "missing_sample_size": [Nans.NOT_APPLICABLE] * 3
+                      })
+    df = add_nancodes(df)
+    pd.testing.assert_frame_equal(df, expected_df)
 
 
 if __name__ == '__main__':

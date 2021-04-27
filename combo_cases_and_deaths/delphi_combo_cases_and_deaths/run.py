@@ -15,7 +15,7 @@ import time
 import covidcast
 import pandas as pd
 
-from delphi_utils import add_prefix, get_structured_logger
+from delphi_utils import add_prefix, get_structured_logger, Nans
 from delphi_utils.geomap import GeoMapper
 from .constants import METRICS, SMOOTH_TYPES, SENSORS, GEO_RESOLUTIONS
 
@@ -299,6 +299,25 @@ def configure_range(params, range_param, yesterday, next_day):
             date1 = params['indicator']['export_start_date']
         params['indicator'][range_param] = [date1, date2]
 
+def add_nancodes(df):
+    """Add nancodes to the dataframe.
+
+    se and sample_size should already be nan and NOT_APPLICABLE, inheriting from USAFacts
+    and JHU. Due to the geo aggregation, the missingness codes will get mixed up among rows.
+    So for the time being, we use only one missing code (UNKNOWN) for nan values in the val
+    column.
+    """
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Missing codes for `val`
+    missing_mask = df["val"].isnull()
+    df.loc[missing_mask, "missing_val"] = Nans.UNKNOWN
+
+    return df
+
 def run_module(params):
     """
     Produce a combined cases and deaths signal using data from JHU and USA Facts.
@@ -332,7 +351,7 @@ def run_module(params):
                                       geo_res,
                                       extend_raw_date_range(params, sensor_name),
                                       params['indicator']['issue_range'])
-        df["timestamp"] = pd.to_datetime(df["timestamp"])
+        df = add_nancodes(df)
         start_date = pd.to_datetime(params['indicator']['export_start_date'])
         export_dir = params["common"]["export_dir"]
         dates = pd.Series(
@@ -344,7 +363,12 @@ def run_module(params):
                                  prefix="wip_")
         for date_ in dates:
             export_fn = f'{date_.strftime("%Y%m%d")}_{geo_res}_{signal_name[0]}.csv'
-            df[df["timestamp"] == date_][["geo_id", "val", "se", "sample_size", ]].to_csv(
+            date_mask = (df["timestamp"] == date_)
+            columns_to_write = [
+                "geo_id", "val", "se", "sample_size",
+                "missing_val", "missing_se", "missing_sample_size"
+            ]
+            df.loc[date_mask, columns_to_write].to_csv(
                 f"{export_dir}/{export_fn}", index=False, na_rep="NA"
             )
 

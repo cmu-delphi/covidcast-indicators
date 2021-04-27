@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 
 # first party
+from delphi_utils import Nans
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
@@ -44,7 +45,10 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
                                         out_name)
         single_date_df = output_df[output_df["date"] == d]
         with open(filename, "w") as outfile:
-            outfile.write("geo_id,val,se,direction,sample_size\n")
+            outfile.write(
+                "geo_id,val,se,direction,sample_size,"
+                "missing_val,missing_se,missing_sample_size\n"
+            )
 
             for line in single_date_df.itertuples():
                 geo_id = line.geo_id
@@ -58,11 +62,26 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
                 if se:
                     assert sensor > 0 and se_val > 0, "p=0, std_err=0 invalid"
                     outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, se_val, "NA", "NA"))
+                        "%s,%f,%s,%s,%s,%d,%d,%d\n" %
+                        (
+                            geo_id, sensor, se, "NA", "NA",
+                            Nans.NOT_MISSING.value,
+                            Nans.NOT_MISSING.value,
+                            Nans.NOT_APPLICABLE.value
+                        )
+                    )
                 else:
                     # for privacy reasons we will not report the standard error
                     outfile.write(
-                        "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
+                        "%s,%f,%s,%s,%s,%d,%d,%d\n" %
+                        (
+                            geo_id, sensor, "NA", "NA", "NA",
+                            Nans.NOT_MISSING.value,
+                            Nans.PRIVACY.value,
+                            Nans.NOT_APPLICABLE.value
+                        )
+                    )
+
                 out_n += 1
     logging.debug(f"wrote {out_n} rows for {geo_level}")
 

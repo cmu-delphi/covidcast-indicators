@@ -8,9 +8,7 @@ from datetime import date, datetime, timedelta
 
 import time
 from delphi_epidata import Epidata
-from delphi_utils.export import create_export_csv
-from delphi_utils.geomap import GeoMapper
-from delphi_utils import get_structured_logger
+from delphi_utils import create_export_csv, get_structured_logger, Nans, GeoMapper
 import numpy as np
 import pandas as pd
 
@@ -63,6 +61,17 @@ def generate_date_ranges(start, end):
     output.append(Epidata.range(_date_to_int(start), _date_to_int(end)))
     return output
 
+def add_nancodes(df):
+    """Add nancodes to a signal dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    return df
 
 def run_module(params):
     """
@@ -99,12 +108,15 @@ def run_module(params):
     geo_mapper = GeoMapper()
 
     for sig in SIGNALS:
-        state = geo_mapper.add_geocode(make_signal(all_columns, sig),
-                                       "state_id", "state_code",
-                                       from_col="state")
+        state = make_signal(all_columns, sig)
+        state = geo_mapper.add_geocode(state, "state_id", "state_code", from_col="state")
         for geo in GEOS:
+            df = make_geo(state, geo, geo_mapper)
+            df["se"] = np.nan
+            df["sample_size"] = np.nan
+            df = add_nancodes(df)
             create_export_csv(
-                make_geo(state, geo, geo_mapper),
+                df,
                 params["common"]["export_dir"],
                 geo,
                 sig
@@ -123,8 +135,6 @@ def make_geo(state, geo, geo_mapper):
             state, "state_code", geo,
             new_col="geo_id",
             date_col="timestamp")
-    exported["se"] = np.nan
-    exported["sample_size"] = np.nan
     return exported
 
 def make_signal(all_columns, sig):

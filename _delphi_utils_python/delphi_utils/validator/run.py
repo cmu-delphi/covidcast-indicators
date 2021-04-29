@@ -19,8 +19,8 @@ def run_module():
     validator = Validator(params)
     validator.validate().print_and_exit(
         get_structured_logger(__name__,
-                              params["common"].get("log_filename", None),
-                              not args.dry_run))
+                              params["common"].get("log_filename", None)),
+        not args.dry_run)
 
 
 def validator_from_params(params):

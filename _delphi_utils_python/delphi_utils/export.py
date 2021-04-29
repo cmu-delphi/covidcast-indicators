@@ -15,7 +15,8 @@ def create_export_csv(
     metric: Optional[str] = None,
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
-    remove_null_samples: Optional[bool] = False
+    remove_null_samples: Optional[bool] = False,
+    write_empty_days: Optional[bool] = False
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -39,6 +40,9 @@ def create_export_csv(
         Latest date to export or None if no maximum date restrictions should be applied.
     remove_null_samples: Optional[bool]
         Whether to remove entries whose sample sizes are null.
+    write_empty_days: Optional[bool]
+        If true, every day in between start_date and end_date will have a CSV file written
+        even if there is no data for the day. If false, only the days present are written.
 
     Returns
     ---------
@@ -52,11 +56,13 @@ def create_export_csv(
         start_date = min(df["timestamp"])
     if end_date is None:
         end_date = max(df["timestamp"])
-
-    dates = pd.Series(
-        df[np.logical_and(df["timestamp"] >= start_date,
+    if not write_empty_days:
+        dates = pd.Series(
+            df[np.logical_and(df["timestamp"] >= start_date,
                           df["timestamp"] <= end_date)]["timestamp"].unique()
-    ).sort_values()
+        ).sort_values()
+    else:
+        dates = pd.date_range(start_date, end_date)
 
     for date in dates:
         if metric is None:

@@ -293,9 +293,9 @@ remap_responses <- function(df) {
         "3"="Some college",
         "4"="2 year degree",
         "5"="4 year degree",
-        "6"="Master's degree",
-        "7"="Professional degree",
-        "8"="Doctorate"),
+        "8"="Master's degree",
+        "6"="Professional degree",
+        "7"="Doctorate"),
       "default"=NULL,
       "type"="mc"
     ),

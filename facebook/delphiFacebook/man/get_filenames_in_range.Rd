@@ -17,5 +17,7 @@ get_filenames_in_range(start_date, end_date, params)
 Character vector of filenames
 }
 \description{
-Get relevant input data file names from `input_dir`.
+Only include files containing data that falls at least somewhat between start
+and end dates, and is from an allowed ("active") survey and not a "dormant"
+survey.
 }

@@ -5,9 +5,11 @@ DRY:=yes
 ifeq ($(DRY),yes)
 	OUTSIDE_EMAIL_FLAGS:=-d
 	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
+	CONTINGENCY_SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") ???@publishing.andrew.cmu.edu\n$${BATCH}"
 	DRY_MESSAGE:="[DRY-RUN] "
 else
 	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu
+	CONTINGENCY_SFTP_POST:=sftp -b <(echo -e "$${BATCH}") ???@publishing.andrew.cmu.edu
 endif
 
 EPOCH:=2020-04-06
@@ -25,6 +27,7 @@ CIDS=$(shell $(PYTHON) -m delphi_utils get weights_out_dir)
 INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
 ARCHIVE=$(shell $(PYTHON) -m delphi_utils get archive_dir)
 RECEIVING=$(shell $(PYTHON) -m delphi_utils get export_dir)
+CONTINGENCY_RECEIVING=$(shell $(PYTHON) -m delphi_utils get contingency.export_dir)
 FB_CC=$(shell $(PYTHON) -m delphi_utils get qualtrics.notify-bad-weights)
 
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
@@ -33,20 +36,29 @@ ANTIJOIN:="antijoin.cids.sorted.txt"
 CIDS_DEST:="fb-interchange/cmu_respondent_ids"
 INDIVID_DEST:="fb-public-results/"
 RAW_DEST:="raw"
+CONTINGENCY_DEST:=delphi-web/surveys
 
 default:
 	@echo No default implemented yet
 
-tidy: receiving
-	rm -rf tidy
-	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL)
-	cp params.json tidy/
-	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
-	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
-	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
+tidy: $(RECEIVING)
+	rm -rf $@
+	mkdir -p $@/$(RECEIVING) $@/$(INDIVIDUAL)
+	cp params.json $@
+	mv $(RECEIVING)/*.csv $@/$(RECEIVING)
+	mv $(INDIVIDUAL)/*.csv* $@/$(INDIVIDUAL)
+	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz $@
+
+tidy-%-contingency: $(CONTINGENCY_RECEIVING) post-%-contingency
+	rm -rf $@
+	mkdir -p $@/$(CONTINGENCY_RECEIVING)
+	cp params.json $@
+	cp contingency_input.txt $@
+	cp $(CONTINGENCY_RECEIVING)/*.csv $@/$(CONTINGENCY_RECEIVING)
+	tar -czf tidy-$*-`date +"%Y-%m-%d-%H%M%S"`.tgz $@
 
 clean:
-	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv
+	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv $(CONTINGENCY_RECEIVING)/*.csv
 
 clean-archive:
 	rm -f $(ARCHIVE)/*.Rds
@@ -57,12 +69,12 @@ install-python:
 	pip install -e ../_delphi_utils_python && \
 	pip install -e delphiFacebook/python
 
-install-R:dev
+install-R: dev
 
 install: install-python install-R
 
-$(CIDS):
-	[ -f $(CIDS) ] || mkdir -p $(CIDS)
+$(CIDS) $(CONTINGENCY_RECEIVING):
+	[ -f $@ ] || mkdir -p $@
 
 init-qualtrics:
 	grep '"token": "..*"' params.json
@@ -91,6 +103,14 @@ params.json: $(TODAY)
 		parallel true \
 		output cids,individual,covidalert,archive,community \
 		start_date $(YESTERDAY)
+
+%ly-contingency-params: $(WEIGHTS)
+	$(PYTHON) -m delphi_utils set \
+		contingency.debug false \
+		contingency.end_date $(TODAY) \
+		contingency.input [] \
+		contingency.parallel true \
+		contingency.aggregate_range "$*"
 
 $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
@@ -127,6 +147,15 @@ pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual 
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
+
+run-%-contingency: $(CONTINGENCY_RECEIVING) 
+	time Rscript contingency_tables.R
+
+%-contingency-pipeline: %-contingency-params run-%-contingency post-%-contingency tidy-%-contingency
+	rm contingency_input.txt
+	rm $(CONTINGENCY_RECEIVING)/*.csv
+	touch $@
+	echo "SUCCESS: $(DRY_MESSAGE)$* contingency pipeline complete" >> $(MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'
@@ -183,5 +212,19 @@ post-done: post-cids
 	$(SFTP_POST)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 
+post-%-contingency:
+	POST=`find $(CONTINGENCY_RECEIVING) -maxdepth 1 -newer $(TODAY) -name "*.csv"`; \
+	[ -n "$${POST}" ]; \
+	BATCH=""; \
+	for f in $${POST}; do \
+	    BATCH="$${BATCH}put $$f \"${CONTINGENCY_DEST}/$*\"\n"; \
+	done; \
+	$(CONTINGENCY_SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` $* contingency tables" >> $(MESSAGES)
+	touch $@
+
 validate-covidcast:
 	@echo validate-covidcast not yet implemented
+
+CONTINGENCY_TOUCH:=X-contingency-params run-X-contingency tidy-X-contingency
+.PRECIOUS: $(subst X,weekly,$(CONTINGENCY_TOUCH)) $(subst X,monthly,$(CONTINGENCY_TOUCH))

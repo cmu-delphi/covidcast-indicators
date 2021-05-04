@@ -254,6 +254,17 @@ class ArchiveDiffer:
                 new_issues_df.to_csv(diff_file, na_rep="NA")
                 common_diffs[after_file] = diff_file
 
+        # Replace deleted files with empty versions, but only if the cached version is not
+        # already empty
+        for deleted_file in deleted_files:
+            deleted_df = pd.read_csv(deleted_file)
+            if not deleted_df.empty:
+                print(
+                    f"Diff has deleted {deleted_file} and replaced it with an empty CSV.")
+                empty_df = deleted_df[0:0]
+                new_deleted_filename = join(self.export_dir, basename(deleted_file))
+                empty_df.to_csv(new_deleted_filename, index=False)
+
         return deleted_files, common_diffs, new_files
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
@@ -280,9 +291,10 @@ class ArchiveDiffer:
         Filter export directory to only contain relevant files.
 
         Filters down the export_dir to only contain:
-        1) New files, 2) Changed files, filtered-down to the ADDED and CHANGED rows only.
-        Should be called after archive_exports() so we archive the raw exports before
-        potentially modifying them.
+        1) New files, 2) Changed files, filtered-down to the ADDED and CHANGED rows
+        only, and 3) Deleted files replaced with empty CSVs with the same name. Should
+        be called after archive_exports() so we archive the raw exports before potentially
+        modifying them.
 
         Parameters
         ----------
@@ -311,9 +323,9 @@ class ArchiveDiffer:
         self.update_cache()
 
         # Diff exports, and make incremental versions
-        _, common_diffs, new_files = self.diff_exports()
+        deleted_files, common_diffs, new_files = self.diff_exports()
 
-        # Archive changed and new files only
+        # Archive changed, new, and emptied deleted files
         to_archive = [f for f, diff in common_diffs.items()
                       if diff is not None]
         to_archive += new_files

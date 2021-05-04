@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-## Combine and compress contingency tables by aggregation.
+## Combine and compress contingency tables by grouping variable set.
 ##
 ## Usage:
 ##
@@ -45,13 +45,12 @@ run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]
   seen_files <- load_seen_file(seen_file)
   
   for (output_name in names(files)) {
-    browser
     newly_seen_files <- combine_and_save_tables(
       seen_files,
       input_dir,
       files[[output_name]], 
       file.path(output_dir, output_name))
-    browser()  
+    
     write(newly_seen_files, seen_file, append=TRUE)
   }
   
@@ -138,8 +137,8 @@ combine_and_save_tables <- function(seen_files, input_dir, input_files, output_f
     write_csv(input_df, output_file, append=file.exists(output_file))
   } else {
     assert(file.exists(output_file),
-           paste0("The output file ", output_file, " does not exist, but ",
-                  "non-zero files using the same grouping have been seen before."))
+           paste0("The output file ", output_file, " does not exist, but non-zero",
+                  " files using the same grouping variables have been seen before."))
     
     output_df <- read_csv(output_file, col_types = cols)
     
@@ -158,9 +157,11 @@ combine_and_save_tables <- function(seen_files, input_dir, input_files, output_f
       arrange(issue_date) %>% 
       group_by(across(all_of(group_names))) %>% 
       slice_tail() %>% 
-      ungroup()
+      ungroup() %>% 
+      arrange(period_start)
     
-    # Automatically uses gzip compression based on output file name.
+    # Automatically uses gzip compression based on output file name. Overwrites
+    # existing file of the same name.
     write_csv(output_df, output_file)
   }
   

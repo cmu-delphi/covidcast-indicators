@@ -259,6 +259,8 @@ class ArchiveDiffer:
         for deleted_file in deleted_files:
             deleted_df = pd.read_csv(deleted_file)
             if not deleted_df.empty:
+                print(
+                    f"Diff has deleted {deleted_file} and replaced it with an empty CSV.")
                 empty_df = deleted_df[0:0]
                 new_deleted_filename = join(self.export_dir, basename(deleted_file))
                 empty_df.to_csv(new_deleted_filename, index=False)

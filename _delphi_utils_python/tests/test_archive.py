@@ -13,7 +13,8 @@ from pandas.testing import assert_frame_equal
 import pytest
 
 from delphi_utils.archive import ArchiveDiffer, GitArchiveDiffer, S3ArchiveDiffer,\
-    archiver_from_params, Nans
+    archiver_from_params
+from delphi_utils.nancodes import Nans
 
 CSV_DTYPES = {
     "geo_id": str, "val": float, "se": float, "sample_size": float,

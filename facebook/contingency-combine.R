@@ -144,7 +144,15 @@ combine_and_save_tables <- function(seen_files, input_dir, input_files, output_f
     
     # Use all columns up to the first "val" column to find unique rows.
     group_names <- names(output_df)
-    ind_first_val_col <- min(which(startsWith(group_names, "val_")))
+    
+    include_names <- c("val", "se", "sample_size", "represented", "effective_sample_size")
+    assert( any(include_names %in% group_names) ,
+            "No value-reporting columns are available or their names have changed.")
+    
+    include_patterns <- paste0("^", include_names)
+    include_map <- grepl(paste(include_patterns, collapse="|"), group_names)
+    ind_first_val_col <- min(which(include_map))
+
     group_names <- group_names[ 1:ind_first_val_col-1 ]
     
     ## Deduplicate, keeping newest version by issue date of each unique row.

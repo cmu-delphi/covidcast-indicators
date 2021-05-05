@@ -118,19 +118,19 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
     county_fips = col_character()
   )
   
-  # Get input data.
+  # Get input data. Make sure `issue_date` is last column after combining.
   input_df <- map_dfr(
     file.path(input_dir, input_files),
     function(f) {
       read_csv(f, col_types = cols)
-    }
-  )
+    }) %>%
+    relocate(issue_date, .after=last_col())
   
   if (file.exists(output_file)) {
     output_names <- names(read_csv(output_file, n_max = 0L))
     assert(identical(output_names, names(input_df)),
            paste0("Column names and/or order differ between new and old input for ", output_file))
-  }  
+  }
   
   seen_files <- load_seen_file(seen_file)
   any_prev_seen <- any(input_files %in% seen_files)
@@ -163,6 +163,7 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
     # which is a stable sort, ties will result in the input data being used in
     # preference over the existing rollup data.
     output_df <- bind_rows(output_df, input_df) %>%
+      relocate(issue_date, .after=last_col()) %>% 
       arrange(issue_date) %>% 
       group_by(across(all_of(group_names))) %>% 
       slice_tail() %>% 

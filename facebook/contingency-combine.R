@@ -28,6 +28,8 @@ suppressPackageStartupMessages({
 #' @param pattern Regular expression indicating which files in that directory to
 #'   open. By default, selects all `.csv` files with standard table date prefix.
 run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]csv$") {
+  if (!dir.exists(output_dir)) { dir.create(output_dir) }
+  
   files <- list.files(input_dir, pattern = pattern)
   if (length(files) == 0) {
     stop("No matching data files.")
@@ -39,19 +41,21 @@ run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]
   # (and thus same output file) are in a character vector named with the output
   # file.
   files <- lapply(split(files, files$rollup_name), function(x) {x$filename})
-  
-  if (!dir.exists(output_dir)) { dir.create(output_dir) }
+
   seen_file <- file.path(output_dir, "seen.txt")
-  seen_files <- load_seen_file(seen_file)
+  if (any(file.exists(names(files)))) {
+    assert(file.exists(seen_file),
+           paste0("If any output file exists, ", seen_file, " listing input ",
+                  "files previously used in generating a combined table should also exist"))
+  }
   
   for (output_name in names(files)) {
-    newly_seen_files <- combine_and_save_tables(
-      seen_files,
-      input_dir,
+    combined_output <- combine_tables(
+      seen_file, 
+      input_dir, 
       files[[output_name]], 
       file.path(output_dir, output_name))
-    
-    write(newly_seen_files, seen_file, append=TRUE)
+    write_rollup(combined_output, seen_file, file.path(output_dir, output_name))
   }
   
   return(NULL)
@@ -81,22 +85,22 @@ load_seen_file <- function(seen_file) {
   return(seen_files)
 }
 
-#' Combine set of input files with existing output file, and save to disk.
+#' Combine set of input files with existing output file.
 #'
 #' If an input filename has been seen before, the input and output data are
-#' deduplicated to use the newer set of data. Output is saved in gzip-compressed
-#' format.
+#' deduplicated to use the newer set of data.
 #'
-#' @param seen_files Vector of filenames that have been previously loaded into
-#'   an output file.
+#' @param seen_file Path to file listing filenames that have been previously
+#'   loaded into an output file.
 #' @param input_dir Directory in which to look for survey CSV files, relative to
 #'   the current working directory.
 #' @param input_files Vector of paths to input files that share a set of
 #'   grouping variables.
 #' @param output_file Path to corresponding output file.
 #' 
-#' @return Character vector of newly-seen filenames.
-combine_and_save_tables <- function(seen_files, input_dir, input_files, output_file) {
+#' @return Named list of combined output dataframe, character vector, and
+#'   boolean.
+combine_tables <- function(seen_file, input_dir, input_files, output_file) {
   cols <- cols(
     .default = col_guess(),
     survey_geo = col_character(),
@@ -126,34 +130,31 @@ combine_and_save_tables <- function(seen_files, input_dir, input_files, output_f
     output_names <- names(read_csv(output_file, n_max = 0L))
     assert(identical(output_names, names(input_df)),
            paste0("Column names and/or order differ between new and old input for ", output_file))
-  }
+  }  
   
-  # If no input files have been seen before, we can append directly to the
-  # output file without needing to deduplicate. File is created if it doesn't
-  # already exist.
+  seen_files <- load_seen_file(seen_file)
   any_prev_seen <- any(input_files %in% seen_files)
   
-  if (!any_prev_seen) {
-    write_csv(input_df, output_file, append=file.exists(output_file))
-  } else {
+  # If no input files have been seen before, we don't need to deduplicate.
+  if (any_prev_seen) {
     assert(file.exists(output_file),
            paste0("The output file ", output_file, " does not exist, but non-zero",
                   " files using the same grouping variables have been seen before."))
     
     output_df <- read_csv(output_file, col_types = cols)
     
-    # Use all columns up to the first "val" column to find unique rows.
+    # Use all columns up to the first non-aggregate column to find unique rows.
     group_names <- names(output_df)
     
-    include_names <- c("val", "se", "sample_size", "represented", "effective_sample_size")
-    assert( any(include_names %in% group_names) ,
+    report_names <- c("val", "se", "sample_size", "represented", "effective_sample_size")
+    exclude_patterns <- paste0("^", report_names)
+    exclude_map <- grepl(paste(exclude_patterns, collapse="|"), group_names)
+    assert( any(exclude_map) ,
             "No value-reporting columns are available or their names have changed.")
     
-    include_patterns <- paste0("^", include_names)
-    include_map <- grepl(paste(include_patterns, collapse="|"), group_names)
-    ind_first_val_col <- min(which(include_map))
-
-    group_names <- group_names[ 1:ind_first_val_col-1 ]
+    ind_first_report_col <- min(which(exclude_map))
+    
+    group_names <- group_names[ 1:ind_first_report_col-1 ]
     
     ## Deduplicate, keeping newest version by issue date of each unique row.
     # Merge the new data with the existing data, taking the last issue date for
@@ -167,14 +168,50 @@ combine_and_save_tables <- function(seen_files, input_dir, input_files, output_f
       slice_tail() %>% 
       ungroup() %>% 
       arrange(period_start)
-    
-    # Automatically uses gzip compression based on output file name. Overwrites
-    # existing file of the same name.
-    write_csv(output_df, output_file)
+  } else {
+    output_df <- input_df
   }
   
   newly_seen <- setdiff(input_files, seen_files)
-  return(newly_seen)
+  
+  return(list(
+    output_df=output_df,
+    newly_seen_files=newly_seen,
+    any_prev_seen=any_prev_seen))
+}
+
+#' Save a combined dataframe and list of seen files to disk.
+#'
+#' Output is saved using compression format specified in output file name (gzip
+#' by default).
+#'
+#' @param combined_output Named list output from `combine_tables`. Contains an
+#'   `output` dataframe, a list of newly seen files, and a flag indicating
+#'   whether any input filenames have been seen before.
+#' @param seen_file Path to file listing filenames that have been previously
+#'   loaded into an output file.
+#' @param output_file Path to corresponding output file.
+write_rollup <- function(combined_output, seen_file, output_file) {
+  output_df <- combined_output[["output_df"]]
+  newly_seen_files <- combined_output[["newly_seen_files"]]
+  any_prev_seen_files <- combined_output[["any_prev_seen"]]
+  
+  # If some input files have been seen before, overwrite any existing output
+  # file. If no input files have been seen before, we can append directly to the
+  # output file. File is created if it doesn't already exist.
+  if (any_prev_seen_files) {
+    # Automatically uses gzip compression based on output file name. Overwrites
+    # existing file of the same name.
+    write_csv(output_df, output_file)
+  } else {
+    write_csv(output_df, output_file, append=file.exists(output_file))
+  }
+  
+  if (length(newly_seen_files) > 0) {
+    write(newly_seen_files, seen_file, append=TRUE)
+  }
+  
+  return(NULL)
 }
 
 

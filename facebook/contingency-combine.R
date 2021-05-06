@@ -128,15 +128,18 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
   
   if (file.exists(output_file)) {
     output_names <- names(read_csv(output_file, n_max = 0L))
-    assert(identical(output_names, names(input_df)),
-           paste0("Column names and/or order differ between new and old input for ", output_file))
+    identical_names <- identical(output_names, names(input_df))
+  } else {
+    identical_names <- TRUE
   }
   
   seen_files <- load_seen_file(seen_file)
   any_prev_seen <- any(input_files %in% seen_files)
   
-  # If no input files have been seen before, we don't need to deduplicate.
-  if (any_prev_seen) {
+  # If input files have been seen before, we need to deduplicate. If there is a
+  # mismatch between input and output column names/order, we need to explicitly
+  # merge input and output data to make sure columns match up correctly.
+  if (any_prev_seen || !identical_names) {
     assert(file.exists(output_file),
            paste0("The output file ", output_file, " does not exist, but non-zero",
                   " files using the same grouping variables have been seen before."))
@@ -178,7 +181,7 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
   return(list(
     output_df=output_df,
     newly_seen_files=newly_seen,
-    any_prev_seen=any_prev_seen))
+    can_overwrite=any_prev_seen || !identical_names))
 }
 
 #' Save a combined dataframe and list of seen files to disk.
@@ -188,19 +191,20 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
 #'
 #' @param combined_output Named list output from `combine_tables`. Contains an
 #'   `output` dataframe, a list of newly seen files, and a flag indicating
-#'   whether any input filenames have been seen before.
+#'   whether we need to overwrite the existing output file or we can append to
+#'   it.
 #' @param seen_file Path to file listing filenames that have been previously
 #'   loaded into an output file.
 #' @param output_file Path to corresponding output file.
 write_rollup <- function(combined_output, seen_file, output_file) {
   output_df <- combined_output[["output_df"]]
   newly_seen_files <- combined_output[["newly_seen_files"]]
-  any_prev_seen_files <- combined_output[["any_prev_seen"]]
+  can_overwrite <- combined_output[["can_overwrite"]]
   
   # If some input files have been seen before, overwrite any existing output
   # file. If no input files have been seen before, we can append directly to the
   # output file. File is created if it doesn't already exist.
-  if (any_prev_seen_files) {
+  if (can_overwrite) {
     # Automatically uses gzip compression based on output file name. Overwrites
     # existing file of the same name.
     write_csv(output_df, output_file)
@@ -224,5 +228,8 @@ if (length(args) < 2) {
 
 input_path <- args[1]
 output_path <- args[2]
+
+input_path <- "~/Downloads/0418_tables/"
+output_path <- "~/Downloads/rollup_test_FB_press_conf"
 
 invisible(run_rollup(input_path, output_path))

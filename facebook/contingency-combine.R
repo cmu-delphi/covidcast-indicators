@@ -114,12 +114,12 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
     county_fips = col_character()
   )
   
-  # Get input data. Make sure `issue_date` is the last column after combining.
+  # Get input data.
   input_df <- map_dfr(
     file.path(input_dir, input_files),
     function(f) {
       read_csv(f, col_types = cols)
-    }) %>% relocate(issue_date, .after=last_col())
+    })
   
   seen_files <- load_seen_file(seen_file)
   if (any(input_files %in% seen_files)) {
@@ -128,6 +128,7 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
                   " files using the same grouping variables have been seen before."))
   }
   
+  cols <- cols_condense(spec(input_df))
   if ( file.exists(output_file) ) {
     output_df <- read_csv(output_file, col_types = cols)
   } else {

@@ -6,9 +6,9 @@
 ##
 ## Rscript contingency-combine.R path/to/individual/files/ path/to/rollup/files/
 ##
-## Appends a set of newly-generated contingency tables to a rollup CSV that
-## contains all dates for a given set of grouping variables. Can also be used to
-## combine a directory of tables spanning multiple time periods.
+## Combines a set of contingency tables with a rollup CSV that contains all
+## dates for a given set of grouping variables. Can also be used to combine a
+## directory of tables spanning multiple time periods.
 
 suppressPackageStartupMessages({
   library(dplyr)
@@ -18,8 +18,7 @@ suppressPackageStartupMessages({
 })
 
 
-#' Fetch all tables in a chosen directory and combine according to grouping
-#' used.
+#' Fetch all tables in a chosen directory. Combine and save according to grouping.
 #'
 #' @param input_dir Directory in which to look for survey CSV files, relative to
 #'   the current working directory.
@@ -31,22 +30,19 @@ run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]
   if (!dir.exists(output_dir)) { dir.create(output_dir) }
   
   files <- list.files(input_dir, pattern = pattern)
-  if (length(files) == 0) {
-    stop("No matching data files.")
-  }
+  if (length(files) == 0) { stop("No matching data files.") }
 
+  # Get df of input files and corresponding output files. Reformat as a list
+  # such that input files with same grouping variables (and thus same output
+  # file) are in a character vector named with the output file.
   files <- map_dfr(files, get_file_properties)
-  
-  # Reformat files as a list such that input files with same grouping variables
-  # (and thus same output file) are in a character vector named with the output
-  # file.
   files <- lapply(split(files, files$rollup_name), function(x) {x$filename})
 
   seen_file <- file.path(output_dir, "seen.txt")
-  if (any(file.exists(names(files)))) {
+  if ( any(file.exists(names(files))) ) {
     assert(file.exists(seen_file),
-           paste0("If any output file exists, ", seen_file, " listing input ",
-                  "files previously used in generating a combined table should also exist"))
+           paste0("If any output file exists, ", seen_file, ", listing input ",
+                  "files previously used in generating a combined table, should also exist"))
   }
   
   for (output_name in names(files)) {
@@ -55,7 +51,11 @@ run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]
       input_dir, 
       files[[output_name]], 
       file.path(output_dir, output_name))
-    write_rollup(combined_output, seen_file, file.path(output_dir, output_name))
+    write_rollup(
+      combined_output[["newly_seen_files"]],
+      seen_file,
+      combined_output[["output_df"]],
+      file.path(output_dir, output_name))
   }
   
   return(NULL)
@@ -85,10 +85,7 @@ load_seen_file <- function(seen_file) {
   return(seen_files)
 }
 
-#' Combine set of input files with existing output file.
-#'
-#' If an input filename has been seen before, the input and output data are
-#' deduplicated to use the newer set of data.
+#' Combine data from set of input files with existing output data.
 #'
 #' @param seen_file Path to file listing filenames that have been previously
 #'   loaded into an output file.
@@ -98,8 +95,7 @@ load_seen_file <- function(seen_file) {
 #'   grouping variables.
 #' @param output_file Path to corresponding output file.
 #' 
-#' @return Named list of combined output dataframe, character vector, and
-#'   boolean.
+#' @return Named list of combined output dataframe and character vector.
 combine_tables <- function(seen_file, input_dir, input_files, output_file) {
   cols <- cols(
     .default = col_guess(),
@@ -118,99 +114,69 @@ combine_tables <- function(seen_file, input_dir, input_files, output_file) {
     county_fips = col_character()
   )
   
-  # Get input data. Make sure `issue_date` is last column after combining.
+  # Get input data. Make sure `issue_date` is the last column after combining.
   input_df <- map_dfr(
     file.path(input_dir, input_files),
     function(f) {
       read_csv(f, col_types = cols)
-    }) %>%
-    relocate(issue_date, .after=last_col())
-  
-  if (file.exists(output_file)) {
-    output_names <- names(read_csv(output_file, n_max = 0L))
-    identical_names <- identical(output_names, names(input_df))
-  } else {
-    identical_names <- TRUE
-  }
+    }) %>% relocate(issue_date, .after=last_col())
   
   seen_files <- load_seen_file(seen_file)
-  any_prev_seen <- any(input_files %in% seen_files)
-  
-  # If input files have been seen before, we need to deduplicate. If there is a
-  # mismatch between input and output column names/order, we need to explicitly
-  # merge input and output data to make sure columns match up correctly.
-  if (any_prev_seen || !identical_names) {
+  if (any(input_files %in% seen_files)) {
     assert(file.exists(output_file),
            paste0("The output file ", output_file, " does not exist, but non-zero",
                   " files using the same grouping variables have been seen before."))
-    
-    output_df <- read_csv(output_file, col_types = cols)
-    
-    # Use all columns up to the first non-aggregate column to find unique rows.
-    group_names <- names(output_df)
-    
-    report_names <- c("val", "se", "sample_size", "represented", "effective_sample_size")
-    exclude_patterns <- paste0("^", report_names)
-    exclude_map <- grepl(paste(exclude_patterns, collapse="|"), group_names)
-    assert( any(exclude_map) ,
-            "No value-reporting columns are available or their names have changed.")
-    
-    ind_first_report_col <- min(which(exclude_map))
-    
-    group_names <- group_names[ 1:ind_first_report_col-1 ]
-    
-    ## Deduplicate, keeping newest version by issue date of each unique row.
-    # Merge the new data with the existing data, taking the last issue date for
-    # any given grouping/geo level/date combo. This prevents duplication in case
-    # of reissues. Note that the order matters: since arrange() uses order(),
-    # which is a stable sort, ties will result in the input data being used in
-    # preference over the existing rollup data.
-    output_df <- bind_rows(output_df, input_df) %>%
-      relocate(issue_date, .after=last_col()) %>% 
-      arrange(issue_date) %>% 
-      group_by(across(all_of(group_names))) %>% 
-      slice_tail() %>% 
-      ungroup() %>% 
-      arrange(period_start)
-  } else {
-    output_df <- input_df
   }
+  
+  if ( file.exists(output_file) ) {
+    output_df <- read_csv(output_file, col_types = cols)
+  } else {
+    output_df <- input_df[FALSE,]
+  }
+  
+  # Use all columns up to the first non-aggregate column to find unique rows.
+  group_names <- names(output_df)
+  report_names <- c("val", "se", "sample_size", "represented", "effective_sample_size")
+  exclude_patterns <- paste0("^", report_names)
+  exclude_map <- grepl(paste(exclude_patterns, collapse="|"), group_names)
+  assert( any(exclude_map) ,
+          "No value-reporting columns are available or their names have changed.")
+  
+  ind_first_report_col <- min(which(exclude_map))
+  group_names <- group_names[ 1:ind_first_report_col-1 ]
+  
+  ## Deduplicate, keeping newest version by issue date of each unique row.
+  # Merge the new data with the existing data, taking the last issue date for
+  # any given grouping/geo level/date combo. This prevents duplication in case
+  # of reissues. Note that the order matters: since arrange() uses order(),
+  # which is a stable sort, ties will result in the input data being used in
+  # preference over the existing rollup data.
+  output_df <- bind_rows(output_df, input_df) %>%
+    relocate(issue_date, .after=last_col()) %>% 
+    arrange(issue_date) %>% 
+    group_by(across(all_of(group_names))) %>% 
+    slice_tail() %>% 
+    ungroup() %>% 
+    arrange(period_start)
   
   newly_seen <- setdiff(input_files, seen_files)
   
   return(list(
     output_df=output_df,
-    newly_seen_files=newly_seen,
-    can_overwrite=any_prev_seen || !identical_names))
+    newly_seen_files=newly_seen))
 }
 
 #' Save a combined dataframe and list of seen files to disk.
 #'
-#' Output is saved using compression format specified in output file name (gzip
-#' by default).
-#'
-#' @param combined_output Named list output from `combine_tables`. Contains an
-#'   `output` dataframe, a list of newly seen files, and a flag indicating
-#'   whether we need to overwrite the existing output file or we can append to
-#'   it.
+#' @param newly_seen_files Character vector.
 #' @param seen_file Path to file listing filenames that have been previously
 #'   loaded into an output file.
+#' @param output_df Output dataframe.
 #' @param output_file Path to corresponding output file.
-write_rollup <- function(combined_output, seen_file, output_file) {
-  output_df <- combined_output[["output_df"]]
-  newly_seen_files <- combined_output[["newly_seen_files"]]
-  can_overwrite <- combined_output[["can_overwrite"]]
-  
-  # If some input files have been seen before, overwrite any existing output
-  # file. If no input files have been seen before, we can append directly to the
-  # output file. File is created if it doesn't already exist.
-  if (can_overwrite) {
-    # Automatically uses gzip compression based on output file name. Overwrites
-    # existing file of the same name.
-    write_csv(output_df, output_file)
-  } else {
-    write_csv(output_df, output_file, append=file.exists(output_file))
-  }
+write_rollup <- function(newly_seen_files, seen_file, output_df, output_file) {
+  # Automatically uses gzip compression based on output file name. Overwrites
+  # existing file of the same name.
+  write_csv(output_df, output_file)
   
   if (length(newly_seen_files) > 0) {
     write(newly_seen_files, seen_file, append=TRUE)
@@ -228,8 +194,5 @@ if (length(args) < 2) {
 
 input_path <- args[1]
 output_path <- args[2]
-
-input_path <- "~/Downloads/0418_tables/"
-output_path <- "~/Downloads/rollup_test_FB_press_conf"
 
 invisible(run_rollup(input_path, output_path))

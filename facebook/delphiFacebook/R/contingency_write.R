@@ -1,7 +1,8 @@
 #' Write csv file for sharing with researchers.
 #'
 #' CSV name includes date specifying start of time period aggregated, geo level,
-#' and grouping variables.
+#' and grouping variables. These columns are always inserted first in a table,
+#' with reported values (value, standard error, sample size, etc) following.
 #'
 #' @param data           a data frame to save; must contain the columns in
 #'                       `groupby_vars`.

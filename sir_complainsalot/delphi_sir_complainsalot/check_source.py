@@ -66,7 +66,7 @@ def check_source(data_source, meta, params, grace, logger):
             continue
 
         logger.info("Retrieving signal",
-            source=data_source,
+            data_source=data_source,
             signal=row["signal"],
             start_day=(datetime.now() - timedelta(days = 14)).strftime("%Y-%m-%d"),
             end_day=datetime.now().strftime("%Y-%m-%d"),

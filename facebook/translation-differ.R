@@ -65,23 +65,36 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
 #' @return A named list
 get_qsf_file <- function(path) {
   # Read file as json.
-  qsf <- read_json(path, simplifyVector = TRUE)
+  qsf <- read_json(path)
   
   ## Block
-  keep_items <- c("Type", "Description", "BlockElements")
-  block_out <- filter(qsf$SurveyElements, Element == "BL")$Payload[[1]]
-  block_out <- block_out[names(block_out) %in% keep_items]
+  block_filter <- sapply(qsf$SurveyElements, function(elem) { elem[["Element"]] == "BL" })
+  block_out <- qsf$SurveyElements[block_filter][[1]]$Payload
   
-  shown_items <- filter(bind_rows(filter(block_out, Type != "Trash")$BlockElements), Type == "Question")$QuestionID
+  shown_items <- list()
+  for (block in block_out) {
+    if (block$Type == "Trash") {
+      next
+    }
+    
+    shown_items[[block$Description]] <- sapply(
+      block$BlockElements, function(elem) {
+        if (elem$Type == "Question") { elem$QuestionID }
+      })
+  }
+  shown_items <- unlist(shown_items)
   
   ## Questions
-  questions <- filter(qsf$SurveyElements, Element == "SQ")
   keep_items <- c("QuestionID", "DataExportTag", "QuestionText",
                   "QuestionType", "Choices", "Answers", "DisplayLogic")
+  question_filter <- sapply(qsf$SurveyElements, function(elem) { elem[["Element"]] == "SQ" })
+  questions <- qsf$SurveyElements[question_filter]
   
   qid_item_map <- list()
   questions_out <- list()
-  for (question in questions$Payload) {
+  for (question in questions) {
+    question <- question$Payload
+    
     # Skip items not shown to respondents.
     if ( !(question$QuestionID %in% shown_items) ) {
       next
@@ -108,7 +121,10 @@ get_qsf_file <- function(path) {
     qid_item_map[[question$QuestionID]] <- question$DataExportTag
   }
   
-  return(list(questions=questions_out, block=block_out, qid_item_map=unlist(qid_item_map)))
+  qid_item_map <- unlist(qid_item_map)
+  shown_items <- qid_item_map[shown_items]
+  
+  return(list(questions=questions_out, shown_items=shown_items))
 }
 
 #' Insert new question data into list without overwriting item of the same name
@@ -134,21 +150,14 @@ safe_insert_question <- function(questions_list, question) {
 #' @param old_qsf named list of trimmed output from `get_qsf_file` for older survey
 #' @param new_qsf named list of trimmed output from `get_qsf_file` for newer survey
 diff_surveys <- function(old_qsf, new_qsf) {
-  old_qid_item_map <- old_qsf$qid_item_map
-  new_qid_item_map <- new_qsf$qid_item_map
-  
   ## Diff blocks
-  old_block <- old_qsf$block
-  new_block <- new_qsf$block
-  
-  old_shown_items <- old_qid_item_map[filter(bind_rows(filter(old_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
-  new_shown_items <- new_qid_item_map[filter(bind_rows(filter(new_block, Type != "Trash")$BlockElements), Type == "Question")$QuestionID]
+  old_shown_items <- old_qsf$shown_items
+  new_shown_items <- new_qsf$shown_items
+  old_questions <- old_qsf$questions
+  new_questions <- new_qsf$questions
   
   added <- setdiff(new_shown_items, old_shown_items)
   removed <- setdiff(old_shown_items, new_shown_items)
-  
-  old_questions <- old_qsf$questions
-  new_questions <- new_qsf$questions
   
   print_questions(added, "Added", new_questions)
   print_questions(removed, "Removed", old_questions)

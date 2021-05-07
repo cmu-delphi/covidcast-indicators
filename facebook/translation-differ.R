@@ -40,7 +40,6 @@
 
 
 suppressPackageStartupMessages({
-  library(dplyr)
   library(jsonlite)
   library(stringr)
 })

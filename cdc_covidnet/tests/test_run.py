@@ -5,6 +5,7 @@ import pandas as pd
 from pandas.testing import assert_frame_equal
 
 from delphi_cdc_covidnet.run import run_module
+from delphi_cdc_covidnet.update_sensor import add_nancodes
 
 
 class TestRun:
@@ -55,5 +56,6 @@ class TestRun:
 
             # Contents match
             expected_df = pd.read_csv(join("receiving_test", fname))
+            expected_df = add_nancodes(expected_df)
             actual_df = pd.read_csv(join("receiving", fname))
             assert_frame_equal(expected_df, actual_df, check_less_precise=5)

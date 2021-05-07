@@ -209,29 +209,20 @@ print_questions <- function(questions, change_type=c("Added", "Removed", "Choice
   if ( length(questions) > 0 ) {
     change_type <- match.arg(change_type)
     
-    item <- sort(questions)
-    qids <- sapply(item, function(question) {reference_qsf[[question]]$QuestionID})
-    item_text <- sapply(item, function(question) {reference_qsf[[question]]$QuestionText})
+    text_options <- list(
+      Added = "Added: item %s (%s)\n",
+      Removed = "Removed: item %s (%s)\n",
+      QuestionText = "Question wording changed: item %s (%s)\n",
+      DisplayLogic = "Display logic changed: item %s (%s)\n",
+      Choices = "Answer choices changed: item %s (%s)\n",
+      Subquestions = "Matrix subquestions changed: item %s (%s)\n"
+    )
     
-    if (change_type == "Added") {
-      cat("\n ")
-      cat(paste0("Added: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "Removed") {
-      cat("\n ")
-      cat(paste0("Removed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "QuestionText") {
-      cat("\n ")
-      cat(paste0("Question wording changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "DisplayLogic") {
-      cat("\n ")
-      cat(paste0("Display logic changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "Choices") {
-      cat("\n ")
-      cat(paste0("Answer choices changed: item ", item, " (", qids, ")", "\n"))
-    } else if (change_type == "Subquestions") {
-      cat("\n ")
-      cat(paste0("Matrix subquestions changed: item ", item, " (", qids, ")", "\n"))
-    }
+    questions <- sort(questions)
+    qids <- sapply(questions, function(question) { reference_qsf[[question]]$QuestionID })
+    
+    cat("\n ")
+    cat(sprintf(text_options[[change_type]], questions, qids))
   }
   return(NULL)
 }

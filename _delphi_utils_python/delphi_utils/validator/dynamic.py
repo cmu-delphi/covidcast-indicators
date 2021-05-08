@@ -8,6 +8,7 @@ from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow
 
+
 class DynamicValidator:
     """Class for validation of static properties of individual datasets."""
 
@@ -43,15 +44,15 @@ class DynamicValidator:
         self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
-            data_source = common_params["data_source"],
-            time_window = TimeWindow.from_params(common_params["end_date"],
-                                                 common_params["span_length"]),
-            generation_date = date.today(),
-            max_check_lookbehind = timedelta(days=dynamic_params.get("ref_window_size", 7)),
-            smoothed_signals = set(dynamic_params.get("smoothed_signals", [])),
-            expected_lag = dynamic_params.get("expected_lag", dict())
+            data_source=common_params["data_source"],
+            time_window=TimeWindow.from_params(common_params["end_date"],
+                                               common_params["span_length"]),
+            generation_date=date.today(),
+            max_check_lookbehind=timedelta(
+                days=dynamic_params.get("ref_window_size", 7)),
+            smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
+            expected_lag=dynamic_params.get("expected_lag", dict())
         )
-
 
     def validate(self, all_frames, report):
         """
@@ -107,8 +108,10 @@ class DynamicValidator:
                 continue
 
             max_date = geo_sig_df["time_value"].max()
-            self.check_min_allowed_max_date(max_date, geo_type, signal_type, report)
-            self.check_max_allowed_max_date(max_date, geo_type, signal_type, report)
+            self.check_min_allowed_max_date(
+                max_date, geo_type, signal_type, report)
+            self.check_max_allowed_max_date(
+                max_date, geo_type, signal_type, report)
 
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
@@ -166,6 +169,11 @@ class DynamicValidator:
                 reference_start_date = recent_cutoff_date - \
                     min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
                     timedelta(days=1)
+                if signal_type in self.params.smoothed_signals:
+                    # Add an extra 7 days to the reference period.
+                    reference_start_date = reference_start_date - \
+                        timedelta(days=7)
+
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
                 # pylint: enable=unused-variable
 
@@ -381,8 +389,10 @@ class DynamicValidator:
         # Calculate the t-statistics for the two rolling windows (windows center and windows right)
         all_full_frames = []
         for _, group in region_group:
-            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
-            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
+            rolling_windows = group["val"].rolling(
+                window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(
+                window_size, min_periods=window_size, center=True)
             fmedian = rolling_windows.median()
             smedian = center_windows.median().shift(shift_val)
             fsd = rolling_windows.std() + 0.00001  # if std is 0
@@ -399,7 +409,8 @@ class DynamicValidator:
         # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
         # pylint: disable=unused-variable
-        api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
+        api_frames_end = min(api_frames["time_value"].max(
+        ), source_frame_start-timedelta(days=1))
         # pylint: enable=unused-variable
         outlier_df = all_frames.query(
             'time_value >= @api_frames_end & time_value <= @source_frame_end')
@@ -424,9 +435,11 @@ class DynamicValidator:
 
         outliers_list = [outliers]
         if sel_upper_df.size > 0:
-            outliers_list.append(sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
+            outliers_list.append(
+                sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
         if sel_lower_df.size > 0:
-            outliers_list.append(sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
+            outliers_list.append(
+                sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
 
         all_outliers = pd.concat(outliers_list). \
             sort_values(by=['time_value', 'geo_id']). \
@@ -523,7 +536,8 @@ class DynamicValidator:
         # Set thresholds for raw and smoothed variables.
         classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
         raw_thresholds = pd.DataFrame([[1.50, 1.30, 1.80]], columns=classes)
-        smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
+        smoothed_thresholds = raw_thresholds.apply(
+            lambda x: x/(math.sqrt(7) * 1.5))
 
         switcher = {
             'raw': raw_thresholds,
@@ -541,7 +555,8 @@ class DynamicValidator:
                 (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
                  > float(thres["val_mean_stddiff"])).any()
         )
-        mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
+        mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(
+            thres["mean_stdabsdiff"])).any()
 
         if mean_stddiff_high or mean_stdabsdiff_high:
             report.add_raised_error(

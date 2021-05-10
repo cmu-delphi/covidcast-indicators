@@ -75,6 +75,8 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
     ## To display other response columns ("val", "sample_size", "se",
     ## "effective_sample_size", "represented"), add here.
+    # If these names change (e.g. `sample_size` to `n`), update
+    # `contingency-combine.R`.
     keep_vars <- c("val", "se", "sample_size", "represented")
 
     for (agg_id in names(dfs_out)) {

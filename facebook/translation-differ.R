@@ -67,8 +67,7 @@ get_qsf_file <- function(path) {
   qsf <- read_json(path)
   
   ## Block
-  block_filter <- sapply(qsf$SurveyElements, function(elem) { elem[["Element"]] == "BL" })
-  block_out <- qsf$SurveyElements[block_filter][[1]]$Payload
+  block_out <- Filter(function(elem) { elem[["Element"]] == "BL" }, qsf$SurveyElements)[[1]]$Payload
   
   shown_items <- list()
   for (block in block_out) {
@@ -86,8 +85,7 @@ get_qsf_file <- function(path) {
   ## Questions
   keep_items <- c("QuestionID", "DataExportTag", "QuestionText",
                   "QuestionType", "Choices", "Answers", "DisplayLogic")
-  question_filter <- sapply(qsf$SurveyElements, function(elem) { elem[["Element"]] == "SQ" })
-  questions <- qsf$SurveyElements[question_filter]
+  questions <- Filter(function(elem) { elem[["Element"]] == "SQ" }, qsf$SurveyElements)
   
   qid_item_map <- list()
   questions_out <- list()

@@ -1,5 +1,4 @@
 """Dynamic file checks."""
-import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set

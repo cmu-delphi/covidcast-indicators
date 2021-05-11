@@ -15,11 +15,7 @@
       "end_date": "today-1",
       "test_mode": false,
       "suppressed_errors": [
-        {"check_name": "check_val_lt_0"},
-        {"check_name": "check_test_vs_reference_avg_changed",
-         "geo_type": "county"},
-        {"check_name": "check_test_vs_reference_avg_changed",
-         "geo_type": "msa"}         
+        {"check_name": "check_val_lt_0"}
       ]
     },
     "static": {

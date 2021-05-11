@@ -457,6 +457,10 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "V9", # added in Wave 7,
     "C14a", "C17a", "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
     "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
+    "B10c", "B13 ", "C18a", "C18b", "C7a", "D12", "E4",
+    "G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3", "I4", "I5",
+    "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
+    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", # added in Wave 11
 
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
@@ -525,7 +529,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_8HCnaK1BJPsI3BP" = 6,
                 "SV_ddjHkcYrrLWgM2V" = 7,
                 "SV_ewAVaX7Wz3l0UqG" = 8,
-                "SV_6PADB8DyF9SIyXk" = 10)
+                "SV_6PADB8DyF9SIyXk" = 10,
+                "SV_4VEaeffqQtDo33M" = 11)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])

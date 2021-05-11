@@ -108,6 +108,8 @@ load_response_one <- function(input_filename, params) {
                            V13 = col_integer(),
                            V14_1 = col_character(),
                            V14_2 = col_character(),
+                           V15a = col_character(),
+                           V15b = col_character(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -124,7 +126,8 @@ load_response_one <- function(input_filename, params) {
                            Q78 = col_integer(),
                            Q79 = col_integer(),
                            Q80 = col_integer(),
-                           V1 = col_integer()),
+                           I5 = col_character(),
+                           I7 = col_character()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())

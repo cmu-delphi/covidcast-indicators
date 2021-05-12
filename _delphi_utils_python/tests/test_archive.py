@@ -298,6 +298,7 @@ class TestS3ArchiveDiffer:
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)
         mkdir(export_dir)
+        breakpoint()
 
         # Set up current buckets to be `CSVS_BEFORE`.
         s3_client.create_bucket(Bucket=self.bucket_name)

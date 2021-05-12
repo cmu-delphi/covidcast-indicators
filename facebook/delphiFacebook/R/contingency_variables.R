@@ -670,6 +670,8 @@ create_derivative_columns <- function(df) {
       df$mc_accept_cov_vaccine == "prob not vaccinate" | 
       df$mc_accept_cov_vaccine == "def not vaccinate"
     )
+  } else if ("V3a" %in% names(df)) {	
+    df$b_hesitant_vaccine <- as.numeric(df$V3a == 3 | df$V3a == 4)
   } else {	
     df$b_hesitant_vaccine <- NA_real_
   }
@@ -692,6 +694,11 @@ create_derivative_columns <- function(df) {
     df$b_accept_vaccine_probyes <- as.numeric(df$mc_accept_cov_vaccine == "prob vaccinate")
     df$b_accept_vaccine_probno <- as.numeric(df$mc_accept_cov_vaccine == "prob not vaccinate")
     df$b_accept_vaccine_defno <- as.numeric(df$mc_accept_cov_vaccine == "def not vaccinate")
+  } else if ("V3a" %in% names(df)) {	
+    df$b_accept_vaccine_defyes <- as.numeric(df$V3a == 1)
+    df$b_accept_vaccine_probyes <- as.numeric(df$V3a == 2)
+    df$b_accept_vaccine_probno <- as.numeric(df$V3a == 3)
+    df$b_accept_vaccine_defno <- as.numeric(df$V3a == 4)
   } else {
     df$b_accept_vaccine_defyes <- NA_real_
     df$b_accept_vaccine_probyes <- NA_real_
@@ -1173,6 +1180,16 @@ create_derivative_columns <- function(df) {
     df$b_appointment_tried <- as.numeric(df$V12 == 1)
   } else {
     df$b_appointment_tried <- NA_real_
+  }
+  
+  # vaccine_tried
+  # Percentage of people without an appointment who have tried to get a vaccine
+  # # yes / # respondents to V12a
+  if ("V12a" %in% names(df)) {
+    # 1 = "yes", 2 = "no", no "I don't know" option
+    df$b_vaccine_tried <- as.numeric(df$V12a == 1)
+  } else {
+    df$b_vaccine_tried <- NA_real_
   }
 
   return(df)

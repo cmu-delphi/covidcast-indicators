@@ -170,17 +170,30 @@ code_mental_health <- function(input_data) {
     input_data$mh_worried_finances <- NA
   }
   
-  if (wave >= 10) {
+  if (wave == 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
     input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
     input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   } else {
+    input_data$mh_worried_ill <- NA
     input_data$mh_anxious_7d <- NA
     input_data$mh_depressed_7d <- NA
     input_data$mh_isolated_7d <- NA
+    input_data$mh_worried_finances <- NA
   }
+  
+  if (wave >= 11) {
+    input_data$mh_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4
+    input_data$mh_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4
+    input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
+  } else {
+    input_data$mh_anxious_7d <- NA
+    input_data$mh_depressed_7d <- NA
+    input_data$mh_worried_finances <- NA
+  }
+  
   return(input_data)
 }
 
@@ -292,7 +305,8 @@ code_testing <- function(input_data) {
     input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
     input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
     input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
-    
+    input_data$t_tested_reason_travel <- is_selected(testing_reasons, "9")
+        
     input_data$t_tested_reason_screening <- case_when(
       input_data$t_tested_reason_sick == TRUE ~ 0,
       input_data$t_tested_reason_contact == TRUE ~ 0,
@@ -302,6 +316,7 @@ code_testing <- function(input_data) {
       input_data$t_tested_reason_employer == TRUE ~ 1,
       input_data$t_tested_reason_large_event == TRUE ~ 1,
       input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      input_data$t_tested_reason_visit_travel == TRUE ~ 1,
       
       !is.na(input_data$B10b) ~ 0,
       TRUE ~ NA_real_

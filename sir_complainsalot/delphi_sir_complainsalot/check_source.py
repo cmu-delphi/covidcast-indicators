@@ -7,6 +7,8 @@ from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
 
+covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
+
 @dataclass
 class Complaint:
     message: str

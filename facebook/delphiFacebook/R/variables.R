@@ -289,13 +289,24 @@ code_testing <- function(input_data) {
     )
 
     # fraction, of those tested in past 14 days, who tested positive. yes == 1
-    # on B10a, no == 2 on B10a; option 3 is "I don't know", which is excluded
-    input_data$t_tested_positive_14d <- case_when(
-      input_data$B10a == 1 ~ 1, # yes
-      input_data$B10a == 2 ~ 0, # no
-      input_data$B10a == 3 ~ NA_real_, # I don't know
-      TRUE ~ NA_real_
-    )
+    # on B10a/c, no == 2 on B10a/c; option 3 is "I don't know", which is excluded
+    if ("B10a" %in% names(input_data)) {
+      input_data$t_tested_positive_14d <- case_when(
+        input_data$B10a == 1 ~ 1, # yes
+        input_data$B10a == 2 ~ 0, # no
+        input_data$B10a == 3 ~ NA_real_, # I don't know
+        TRUE ~ NA_real_
+      )
+    } else if ("B10c" %in% names(input_data)) {
+      input_data$t_tested_positive_14d <- case_when(
+        input_data$B10c == 1 ~ 1, # yes
+        input_data$B10c == 2 ~ 0, # no
+        input_data$B10c == 3 ~ NA_real_, # I don't know
+        TRUE ~ NA_real_
+      )
+    } else {
+      input_data$t_tested_positive_14d <- NA_real_
+    }
 
     # fraction, of those not tested in past 14 days, who wanted to be tested but
     # were not

@@ -399,7 +399,27 @@ code_vaccines <- function(input_data) {
     input_data$v_vaccine_likely_politicians <- NA_real_
     input_data$v_vaccine_likely_doctors <- NA_real_
   }
-
+  
+  if ( all(c("I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8") %in% names(input_data)) ) {
+    input_data$i_trust_covid_info_doctors <- input_data$I6_1 == 3
+    input_data$i_trust_covid_info_experts <- input_data$I6_2 == 3
+    input_data$i_trust_covid_info_cdc <- input_data$I6_3 == 3
+    input_data$i_trust_covid_info_govt_health <- input_data$I6_4 == 3
+    input_data$i_trust_covid_info_politicians <- input_data$I6_5 == 3
+    input_data$i_trust_covid_info_journalists <- input_data$I6_6 == 3
+    input_data$i_trust_covid_info_friends <- input_data$I6_7 == 3
+    input_data$i_trust_covid_info_religious <- input_data$I6_8 == 3
+  } else {
+    input_data$i_trust_covid_info_doctors <- NA
+    input_data$i_trust_covid_info_experts <- NA
+    input_data$i_trust_covid_info_cdc <- NA
+    input_data$i_trust_covid_info_govt_health <- NA
+    input_data$i_trust_covid_info_politicians <- NA
+    input_data$i_trust_covid_info_journalists <- NA
+    input_data$i_trust_covid_info_friends <- NA
+    input_data$i_trust_covid_info_religious <- NA
+  }
+  
   if ("V5a" %in% names(input_data) && "V5b" %in% names(input_data) && "V5c" %in% names(input_data)) {
     # introduced in Wave 8
     hesitancy_reasons <- coalesce(input_data$V5a, input_data$V5b, input_data$V5c)

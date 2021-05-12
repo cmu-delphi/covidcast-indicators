@@ -251,6 +251,18 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_others_masked <- NA
   }
+  
+  if ("H2" %in% names(input_data)) {
+    # added in wave 11, replaces C16. most/all *others* seen in public wearing
+    # masks; exclude respondents who have not been in public.
+    input_data$c_others_masked_public <- case_when(
+      is.na(input_data$H2) ~ NA,
+      input_data$H2 == 6 ~ NA,
+      input_data$H2 == 4 | input_data$H2 ==  5 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$c_others_masked_public <- NA
+  }
 
   if ("C3" %in% names(input_data)) {
     input_data$c_work_outside_5d <- input_data$C3 == 1
@@ -372,6 +384,10 @@ code_vaccines <- function(input_data) {
     input_data$v_accept_covid_vaccine <- (
       input_data$V3 == 1 | input_data$V3 == 2
     )
+  } else if ("V3a" %in% names(input_data)) {
+    input_data$v_accept_covid_vaccine <- (
+      input_data$V3a == 1 | input_data$V3a == 2
+    )
   } else {
     input_data$v_accept_covid_vaccine <- NA_real_
   }
@@ -386,6 +402,15 @@ code_vaccines <- function(input_data) {
       input_data$V3 == 2 ~ 1,
       input_data$V3 == 3 ~ 0,
       input_data$V3 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else if ("V3a" %in% names(input_data)) {
+    input_data$v_covid_vaccinated_or_accept <- case_when(
+      input_data$V1 == 1 ~ 1,
+      input_data$V3a == 1 ~ 1,
+      input_data$V3a == 2 ~ 1,
+      input_data$V3a == 3 ~ 0,
+      input_data$V3a == 4 ~ 0,
       TRUE ~ NA_real_
     )
   } else {

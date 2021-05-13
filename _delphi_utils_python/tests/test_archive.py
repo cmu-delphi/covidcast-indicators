@@ -135,18 +135,15 @@ class TestArchiveDiffer:
             "missing_sample_size": [Nans.DELETED] + [Nans.NOT_MISSING] * 2,
             })
 
-        csv2_deleted = pd.DataFrame(
-            np.empty(0, dtype=[
-                ("geo_id", str),
-                ("val", float),
-                ("se", float),
-                ("sample_size", float),
-                ("missing_val", int),
-                ("missing_se", int),
-                ("missing_sample_size", int)
-                ]),
-            index=[]
-            )
+        csv2_deleted = pd.DataFrame({
+            "geo_id": ["1"],
+            "val": [np.nan],
+            "se": [np.nan],
+            "sample_size": [np.nan],
+            "missing_val": [Nans.DELETED],
+            "missing_se": [Nans.DELETED],
+            "missing_sample_size": [Nans.DELETED],
+        })
 
         arch_diff = ArchiveDiffer(cache_dir, export_dir)
 
@@ -167,7 +164,7 @@ class TestArchiveDiffer:
         deleted_files, common_diffs, new_files = arch_diff.diff_exports()
 
         # Check return values
-        assert set(deleted_files) == {join(cache_dir, "csv2.csv")}
+        assert set(deleted_files) == {join(export_dir, "csv2.csv")}
         assert set(common_diffs.keys()) == {
             join(export_dir, f) for f in ["csv0.csv", "csv1.csv", "csv4.csv"]}
         assert set(new_files) == {join(export_dir, "csv3.csv")}
@@ -298,7 +295,6 @@ class TestS3ArchiveDiffer:
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)
         mkdir(export_dir)
-        breakpoint()
 
         # Set up current buckets to be `CSVS_BEFORE`.
         s3_client.create_bucket(Bucket=self.bucket_name)
@@ -342,18 +338,15 @@ class TestS3ArchiveDiffer:
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
-        csv2_deleted = pd.DataFrame(
-            np.empty(0, dtype=[
-                ("geo_id", str),
-                ("val", float),
-                ("se", float),
-                ("sample_size", float),
-                ("missing_val", int),
-                ("missing_se", int),
-                ("missing_sample_size", int)
-                ]),
-            index=[]
-            )
+        csv2_deleted = pd.DataFrame({
+            "geo_id": ["1"],
+            "val": [np.nan],
+            "se": [np.nan],
+            "sample_size": [np.nan],
+            "missing_val": [Nans.DELETED],
+            "missing_se": [Nans.DELETED],
+            "missing_sample_size": [Nans.DELETED],
+        })
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv2.csv"), dtype=CSV_DTYPES),
             csv2_deleted)
@@ -570,18 +563,15 @@ class TestGitArchiveDiffer:
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
-        csv2_deleted = pd.DataFrame(
-            np.empty(0, dtype=[
-                ("geo_id", str),
-                ("val", float),
-                ("se", float),
-                ("sample_size", float),
-                ("missing_val", int),
-                ("missing_se", int),
-                ("missing_sample_size", int)
-                ]),
-            index=[]
-            )
+        csv2_deleted = pd.DataFrame({
+            "geo_id": ["1"],
+            "val": [np.nan],
+            "se": [np.nan],
+            "sample_size": [np.nan],
+            "missing_val": [Nans.DELETED],
+            "missing_se": [Nans.DELETED],
+            "missing_sample_size": [Nans.DELETED],
+        })
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv2.csv"), dtype=CSV_DTYPES),
             csv2_deleted)

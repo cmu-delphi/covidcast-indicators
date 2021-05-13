@@ -4,12 +4,14 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
+import time
 
 import numpy as np
 
 from delphi_utils import (
     create_export_csv,
     S3ArchiveDiffer,
+    get_structured_logger
 )
 
 from .constants import GEO_RESOLUTIONS, SIGNALS
@@ -33,6 +35,11 @@ def run_module(params):
             - "bucket_name: str, name of S3 bucket to read/write
             - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
     """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+
     # Configuration
     export_dir = params["common"]["export_dir"]
     parquet_url = params["indicator"]["parquet_url"]
@@ -97,3 +104,6 @@ def run_module(params):
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run", elapsed_time_in_seconds=elapsed_time_in_seconds)

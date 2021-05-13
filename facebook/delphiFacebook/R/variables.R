@@ -258,7 +258,7 @@ code_mask_contact <- function(input_data) {
     input_data$c_others_masked_public <- case_when(
       is.na(input_data$H2) ~ NA,
       input_data$H2 == 6 ~ NA,
-      input_data$H2 == 4 | input_data$H2 ==  5 ~ TRUE,
+      input_data$H2 == 4 | input_data$H2 == 5 ~ TRUE,
       TRUE ~ FALSE)
   } else {
     input_data$c_others_masked_public <- NA

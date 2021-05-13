@@ -254,21 +254,26 @@ class ArchiveDiffer:
                 new_issues_df.to_csv(diff_file, na_rep="NA")
                 common_diffs[after_file] = diff_file
 
+        export_csv_dtypes = {
+            "geo_id": str, "val": float, "se": float, "sample_size": float,
+            "missing_val": int, "missing_se": int, "missing_sample_size": int
+        }
+
         # Replace deleted files with empty versions, but only if the cached version is not
         # already empty
-        new_deleted_files = []
+        deleted_files_export = []
         for deleted_file in deleted_files:
-            breakpoint()
-            deleted_df = pd.read_csv(deleted_file)
-            if not deleted_df.empty:
-                print(
-                    f"Diff has deleted {deleted_file} and replaced it with an empty CSV.")
-                empty_df = deleted_df[0:0]
-                new_deleted_filename = join(self.export_dir, basename(deleted_file))
-                empty_df.to_csv(new_deleted_filename, index=False)
-                new_deleted_files.append(deleted_file)
+            deleted_df = pd.read_csv(deleted_file, dtype=export_csv_dtypes)
+            print(
+                f"Diff has deleted {deleted_file}; generating a CSV with deleted rows."
+            )
+            deleted_df[["val", "se", "sample_size"]] = np.nan
+            deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
+            filename = join(self.export_dir, basename(deleted_file))
+            deleted_df.to_csv(filename, index=False)
+            deleted_files_export.append(filename)
 
-        return new_deleted_files, common_diffs, new_files
+        return deleted_files_export, common_diffs, new_files
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         """
@@ -444,6 +449,9 @@ class S3ArchiveDiffer(ArchiveDiffer):
                 archive_success.append(exported_file)
             except FileNotFoundError:
                 archive_fail.append(exported_file)
+            except shutil.SameFileError:
+                # no need to copy if the cached file is the same
+                archive_success.append(exported_file)
 
         self._exports_archived = True
 

@@ -243,7 +243,7 @@ code_mask_contact <- function(input_data) {
   
   if ("H2" %in% names(input_data)) {
     # added in wave 11, replaces C16. most/all *others* seen in public wearing
-    # masks; exclude respondents who have not been in public.
+    # masks; exclude respondents who have not been in public. Coding is reversed.
     input_data$c_others_masked_public <- case_when(
       is.na(input_data$H2) ~ NA,
       input_data$H2 == 6 ~ NA,
@@ -474,6 +474,7 @@ code_vaccines <- function(input_data) {
     input_data$v_vaccine_likely_doctors <- NA_real_
   }
   
+  # Close analogues to `v_vaccine_likely_*` as of Wave 11.
   if ( all(c("I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8") %in% names(input_data)) ) {
     input_data$i_trust_covid_info_doctors <- input_data$I6_1 == 3
     input_data$i_trust_covid_info_experts <- input_data$I6_2 == 3
@@ -515,6 +516,14 @@ code_vaccines <- function(input_data) {
     input_data$v_hesitancy_reason_pregnant <- is_selected(hesitancy_reasons, "14")
     input_data$v_hesitancy_reason_religious <- is_selected(hesitancy_reasons, "15")
 
+    if (wave >= 11) {
+      input_data$v_hesitancy_reason_allergic <- NA
+      input_data$v_hesitancy_reason_not_recommended <- NA
+      input_data$v_hesitancy_reason_distrust_vaccines <- NA
+      input_data$v_hesitancy_reason_health_condition <- NA
+      input_data$v_hesitancy_reason_pregnant <- NA
+    }
+    
   } else {
     input_data$v_hesitancy_reason_sideeffects <- NA_real_
     input_data$v_hesitancy_reason_allergic <- NA_real_

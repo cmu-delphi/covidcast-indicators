@@ -60,6 +60,9 @@ def run_module(params):
     df_pq = load_data(parquet_url)
     df_county_testing = extract_testing_metrics(df_pq)
 
+    num_exported_files = 0
+    min_dates_exported = []
+    max_dates_exported = []
     # Perform geo aggregations and export to receiving
     for geo_res in GEO_RESOLUTIONS:
         print(f"Processing {geo_res}")
@@ -83,7 +86,9 @@ def run_module(params):
             sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
-        files_exported = df.size * 2  # multiply by two to count both positivity and tests signals
+        min_dates_exported.append(earliest)
+        max_dates_exported.append(latest)
+        num_exported_files += df.size * 2  # multiply by two to count both positivity and tests signals
         print(f"Exported dates: {earliest} to {latest}")
 
     # Perform archive differencing
@@ -109,6 +114,6 @@ def run_module(params):
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
                 elapsed_time_in_seconds=elapsed_time_in_seconds,
-                csv_export_count=files_exported,
-                earliest_export_date=earliest.strftime("%Y-%m-%d"),
-                latest_export_date=latest.strftime("%Y-%m-%d"))
+                csv_export_count=num_exported_files,
+                earliest_export_date=min(earliest).strftime("%Y-%m-%d"),
+                latest_export_date=max(latest).strftime("%Y-%m-%d"))

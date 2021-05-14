@@ -83,6 +83,7 @@ def run_module(params):
             sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
+        files_exported = df.size * 2  # multiply by two to count both positivity and tests signals
         print(f"Exported dates: {earliest} to {latest}")
 
     # Perform archive differencing
@@ -106,4 +107,8 @@ def run_module(params):
             print(f"Failed to archive '{exported_file}'")
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed indicator run", elapsed_time_in_seconds=elapsed_time_in_seconds)
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds,
+                csv_export_count=files_exported,
+                earliest_export_date=earliest.strftime("%Y-%m-%d"),
+                latest_export_date=latest.strftime("%Y-%m-%d"))

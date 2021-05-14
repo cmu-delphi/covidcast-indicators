@@ -113,11 +113,21 @@ get_aggs <- function() {
     "pct_hesitant_worried_vaccine_sideeffects", "b_hesitant_worried_vaccine_sideeffects", compute_binary, jeffreys_binary,
 
     "pct_hesitant_vaccine_likely_friends", "b_hesitant_vaccine_likely_friends", compute_binary, jeffreys_binary,
+    
     "pct_hesitant_vaccine_likely_local_health", "b_hesitant_vaccine_likely_local_health", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_who", "b_hesitant_vaccine_likely_who", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_govt", "b_hesitant_vaccine_likely_govt", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_politicians", "b_hesitant_vaccine_likely_politicians", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_doctors", "b_hesitant_vaccine_likely_doctors", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_doctors", "b_hesitant_trust_covid_info_doctors", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_experts", "b_hesitant_trust_covid_info_experts", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_cdc", "b_hesitant_trust_covid_info_cdc", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_govt_health", "b_hesitant_trust_covid_info_govt_health", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_politicians", "b_hesitant_trust_covid_info_politicians", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_journalists", "b_hesitant_trust_covid_info_journalists", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_friends", "b_hesitant_trust_covid_info_friends", compute_binary, jeffreys_binary,
+    "pct_hesitant_trust_covid_info_religious", "b_hesitant_trust_covid_info_religious", compute_binary, jeffreys_binary,
+    
     "pct_hesitant_barrier_sideeffects", "b_hesitant_barrier_sideeffects", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_allergic", "b_hesitant_barrier_allergic", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_ineffective", "b_hesitant_barrier_ineffective", compute_binary, jeffreys_binary,

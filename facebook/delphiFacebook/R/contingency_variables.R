@@ -845,6 +845,95 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_hesitant_vaccine_likely_doctors <- NA_real_
   }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_doctors") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_doctors <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_doctors == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_doctors == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_doctors <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_experts") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_experts <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_experts == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_experts == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_experts <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_cdc") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_cdc <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_cdc == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_cdc == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_cdc <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_govt_health") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_govt_health <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_govt_health == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_govt_health == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_govt_health <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_politicians") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_politicians <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_politicians == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_politicians == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_politicians <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_journalists") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_journalists <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_journalists == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_journalists == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_journalists <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_friends") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_friends <- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_friends == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_friends == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_friends <- NA_real_
+  }
+  
+  
+  if (all(c("b_hesitant_vaccine", "i_trust_covid_info_religious") %in% names(df))) {
+    df$b_hesitant_trust_covid_info_religious- case_when(
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 0 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    df$b_hesitant_trust_covid_info_religious <- NA_real_
+  }
+  
 
   # hesitant_barrier_sideeffects
   # hesitant_barrier_allergic
@@ -1172,10 +1261,13 @@ create_derivative_columns <- function(df) {
   # Percentage of people who have an appointment to get a COVID-19 vaccine
   # conditional on being accepting
   # # yes / # respondents to V11
+  df$b_appointment_have <- NA_real_
+  df$b_appointment_have_not_vaccinated <- NA_real_
   if ("V11" %in% names(df)) {
     df$b_appointment_have <- as.numeric(df$V11 == 1)
-  } else {
-    df$b_appointment_have <- NA_real_
+  }
+  if ("V11a" %in% names(df)) {
+    df$b_appointment_have_not_vaccinated <- as.numeric(df$V11a == 1)
   }
 
   # appointment_tried
@@ -1190,10 +1282,14 @@ create_derivative_columns <- function(df) {
   
   # vaccine_tried
   # Percentage of people without an appointment who have tried to get a vaccine
+  # conditional on being accepting
   # # yes / # respondents to V12a
   if ("V12a" %in% names(df)) {
     # 1 = "yes", 2 = "no", no "I don't know" option
-    df$b_vaccine_tried <- as.numeric(df$V12a == 1)
+    df$b_vaccine_tried <- case_when(
+      df$v_accept_covid_vaccine_no_appointment == 1 ~ as.numeric(df$V12a == 1),
+      TRUE ~ NA_real_
+    )
   } else {
     df$b_vaccine_tried <- NA_real_
   }

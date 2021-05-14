@@ -115,5 +115,5 @@ def run_module(params):
     logger.info("Completed indicator run",
                 elapsed_time_in_seconds=elapsed_time_in_seconds,
                 csv_export_count=num_exported_files,
-                earliest_export_date=min(earliest).strftime("%Y-%m-%d"),
-                latest_export_date=max(latest).strftime("%Y-%m-%d"))
+                earliest_export_date=min(min_dates_exported).strftime("%Y-%m-%d"),
+                latest_export_date=max(max_dates_exported).strftime("%Y-%m-%d"))

@@ -267,8 +267,10 @@ code_mask_contact <- function(input_data) {
 #' @return data frame augmented with `t_tested_14d`, `t_tested_positive_14d`,
 #'   `t_wanted_test_14d`
 code_testing <- function(input_data) {
-  if ("B8" %in% names(input_data) && "B10" %in% names(input_data) &&
-        "B12" %in% names(input_data)) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
+  if ( all(c("B8", "B10") %in% names(input_data)) ) {
     # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
     # B10 (which codes "no" as 3 for some reason)
     input_data$t_tested_14d <- case_when(
@@ -276,36 +278,46 @@ code_testing <- function(input_data) {
       input_data$B10 == 1 ~ 1,
       TRUE ~ NA_real_
     )
-
-    # fraction, of those tested in past 14 days, who tested positive. yes == 1
-    # on B10a/c, no == 2 on B10a/c; option 3 is "I don't know", which is excluded
-    if ("B10a" %in% names(input_data)) {
-      input_data$t_tested_positive_14d <- case_when(
-        input_data$B10a == 1 ~ 1, # yes
-        input_data$B10a == 2 ~ 0, # no
-        input_data$B10a == 3 ~ NA_real_, # I don't know
+  } else if ("B10" %in% names(input_data) && !("B8" %in% names(input_data))) {
+      # fraction tested in last 14 days. yes == 1 on B10; no == 3 on B10 (which
+      # codes "no" as 3 for some reason)
+      input_data$t_tested_14d <- case_when(
+        input_data$B10 == 3 ~ 0,
+        input_data$B10 == 1 ~ 1,
         TRUE ~ NA_real_
       )
-    } else if ("B10c" %in% names(input_data)) {
-      input_data$t_tested_positive_14d <- case_when(
-        input_data$B10c == 1 ~ 1, # yes
-        input_data$B10c == 2 ~ 0, # no
-        input_data$B10c == 3 ~ NA_real_, # I don't know
-        TRUE ~ NA_real_
-      )
-    } else {
-      input_data$t_tested_positive_14d <- NA_real_
-    }
-
+  } else {
+    input_data$t_tested_14d <- NA_real_
+  }
+  
+  if ("B12" %in% names(input_data)) {
     # fraction, of those not tested in past 14 days, who wanted to be tested but
     # were not
     input_data$t_wanted_test_14d <- input_data$B12 == 1
   } else {
-    input_data$t_tested_14d <- NA_real_
-    input_data$t_tested_positive_14d <- NA_real_
     input_data$t_wanted_test_14d <- NA
   }
   
+  # fraction, of those tested in past 14 days, who tested positive. yes == 1
+  # on B10a/c, no == 2 on B10a/c; option 3 is "I don't know", which is excluded
+  if ("B10a" %in% names(input_data)) {
+    input_data$t_tested_positive_14d <- case_when(
+      input_data$B10a == 1 ~ 1, # yes
+      input_data$B10a == 2 ~ 0, # no
+      input_data$B10a == 3 ~ NA_real_, # I don't know
+      TRUE ~ NA_real_
+    )
+  } else if ("B10c" %in% names(input_data)) {
+    input_data$t_tested_positive_14d <- case_when(
+      input_data$B10c == 1 ~ 1, # yes
+      input_data$B10c == 2 ~ 0, # no
+      input_data$B10c == 3 ~ NA_real_, # I don't know
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_tested_positive_14d <- NA_real_
+  }
+
   if ( "B10b" %in% names(input_data) ) {
     testing_reasons <- split_options(input_data$B10b)
     
@@ -333,7 +345,7 @@ code_testing <- function(input_data) {
       input_data$t_tested_reason_employer == TRUE ~ 1,
       input_data$t_tested_reason_large_event == TRUE ~ 1,
       input_data$t_tested_reason_visit_fam == TRUE ~ 1,
-      input_data$t_tested_reason_visit_travel == TRUE ~ 1,
+      input_data$t_tested_reason_travel == TRUE ~ 1,
       
       !is.na(input_data$B10b) ~ 0,
       TRUE ~ NA_real_

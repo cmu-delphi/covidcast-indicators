@@ -22,5 +22,4 @@ clean:
 
 release: lint test
 	. env/bin/activate ; \
-	python setup.py sdist bdist_wheel ; \
-	twine upload dist/*
+	python setup.py sdist bdist_wheel

@@ -619,7 +619,7 @@ create_derivative_columns <- function(df) {
   # As in API
   # made elsewhere and renamed in `rename_responses`
 
-  # direct_contact
+  # direct_contact (discontinued as of Wave 11)
   # Percentage of respondents that have reported having had direct contact 
   # (longer than 1 minute) with people not staying with them.
   # "respondent = someone who answered any of the four contact types
@@ -657,12 +657,16 @@ create_derivative_columns <- function(df) {
   # # 2 doses/ # V2 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # accept_vaccine
+  # accept_vaccine (discontinued as of Wave 11)
   # Percentage who would definitely or probably choose to get vaccinated
   # # (yes, definitely OR yes, probably) / #V3 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # hesitant_vaccine
+  # accept_vaccine_no_appointment (replacing accept_vaccine as of Wave 11 to not include people with vaccine appointments)
+    
+  # appointment_or_accept_vaccine (replacing accept_vaccine as of Wave 11)
+
+  # hesitant_vaccine (changing meaning as of Wave 11 to not include people with vaccine appointments)
   # Percentage who would definitely or probably NOT choose to get vaccinated
   # # (no, definitely not OR no, probably not) / #V3 responses
   df$b_hesitant_vaccine <- NA_real_
@@ -679,16 +683,17 @@ create_derivative_columns <- function(df) {
     )
   }
   
-  
-
-  # vaccinated_or_accept
+  # vaccinated_or_accept (discontinued as of Wave 11)
   # Percentage who have either already received a COVID vaccine or would 
   # definitely or probably choose to get vaccinated, if a vaccine were offered 
   # to them today.
   # # (yes to V1) OR ((yes, definitely OR yes, probably) to V3) / 
   # # (respondents to V3 OR (yes to V1))
   # made elsewhere and renamed in `rename_responses`
+  
+  # vaccinated_appointment_or_accept (replacing vaccinated_or_accept as of Wave 11 to include people with vaccine appointments)
 
+  ## All replaced by accept_vaccine_no_appointment_* as of Wave 11 to not include people with vaccine apointments
   # accept_vaccine_defyes
   # accept_vaccine_probyes
   # accept_vaccine_probno
@@ -712,34 +717,34 @@ create_derivative_columns <- function(df) {
     df$b_accept_vaccine_no_appointment_defno <- as.numeric(df$V3a == 4)
   }
 
-  # vaccine_likely_friends
+  # vaccine_likely_friends (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by friends & family
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # vaccine_likely_local_health
+  # vaccine_likely_local_health (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by local healthcare
   # workers
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # vaccine_likely_who
+  # vaccine_likely_who (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by WHO
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # vaccine_likely_govt_health
+  # vaccine_likely_govt_health (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by government 
   # health officials
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # vaccine_likely_politicians
+  # vaccine_likely_politicians (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by politicians
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
 
-  # vaccine_likely_doctors
+  # vaccine_likely_doctors (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by doctors and 
   # other health professionals
   # # more likely / # V4 responses
@@ -765,7 +770,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_worried_vaccine_sideeffects <- NA_real_
   }
 
-  # hesitant_vaccine_likely_friends
+  # hesitant_vaccine_likely_friends (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by friends & family
   # among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
@@ -779,7 +784,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_friends <- NA_real_
   }
 
-  # hesitant_vaccine_likely_local_health
+  # hesitant_vaccine_likely_local_health (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by local healthcare
   # workers among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
@@ -793,7 +798,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_local_health <- NA_real_
   }
 
-  # hesitant_vaccine_likely_who
+  # hesitant_vaccine_likely_who (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by WHO among those
   # who are hesitant
   # # more likely / # V4 responses who are also hesitant
@@ -807,7 +812,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_who <- NA_real_
   }
 
-  # hesitant_vaccine_likely_govt
+  # hesitant_vaccine_likely_govt (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by government
   # health officials among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
@@ -821,7 +826,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_govt <- NA_real_
   }
 
-  # hesitant_vaccine_likely_politicians
+  # hesitant_vaccine_likely_politicians (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by politicians
   # among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
@@ -835,7 +840,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_politicians <- NA_real_
   }
 
-  # hesitant_vaccine_likely_doctors
+  # hesitant_vaccine_likely_doctors (discontinued as of Wave 11)
   if (all(c("b_hesitant_vaccine", "b_vaccine_likely_doctors") %in% names(df))) {
     df$b_hesitant_vaccine_likely_doctors <- case_when(
       df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_doctors == 1 ~ 1,
@@ -846,7 +851,7 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_vaccine_likely_doctors <- NA_real_
   }
   
-  
+  # Replacing set of hesitant_vaccine_likely_* indicators as of Wave 11
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_doctors") %in% names(df))) {
     df$b_hesitant_trust_covid_info_doctors <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_doctors == 1 ~ 1,
@@ -856,7 +861,6 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_hesitant_trust_covid_info_doctors <- NA_real_
   }
-  
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_experts") %in% names(df))) {
     df$b_hesitant_trust_covid_info_experts <- case_when(
@@ -868,7 +872,6 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_trust_covid_info_experts <- NA_real_
   }
   
-  
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_cdc") %in% names(df))) {
     df$b_hesitant_trust_covid_info_cdc <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_cdc == 1 ~ 1,
@@ -878,7 +881,6 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_hesitant_trust_covid_info_cdc <- NA_real_
   }
-  
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_govt_health") %in% names(df))) {
     df$b_hesitant_trust_covid_info_govt_health <- case_when(
@@ -890,7 +892,6 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_trust_covid_info_govt_health <- NA_real_
   }
   
-  
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_politicians") %in% names(df))) {
     df$b_hesitant_trust_covid_info_politicians <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_politicians == 1 ~ 1,
@@ -900,7 +901,6 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_hesitant_trust_covid_info_politicians <- NA_real_
   }
-  
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_journalists") %in% names(df))) {
     df$b_hesitant_trust_covid_info_journalists <- case_when(
@@ -912,7 +912,6 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_trust_covid_info_journalists <- NA_real_
   }
   
-  
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_friends") %in% names(df))) {
     df$b_hesitant_trust_covid_info_friends <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_friends == 1 ~ 1,
@@ -922,7 +921,6 @@ create_derivative_columns <- function(df) {
   } else {
     df$b_hesitant_trust_covid_info_friends <- NA_real_
   }
-  
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_religious") %in% names(df))) {
     df$b_hesitant_trust_covid_info_religious- case_when(
@@ -972,6 +970,15 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_barrier_other <- as.numeric(is_selected(hesitancy_reasons, "13"))
     df$b_hesitant_barrier_pregnant <- as.numeric(is_selected(hesitancy_reasons, "14"))
     df$b_hesitant_barrier_religious <- as.numeric(is_selected(hesitancy_reasons, "15"))
+    
+    if (wave >= 11) {
+      input_data$b_hesitant_barrier_allergic <- NA
+      input_data$b_hesitant_barrier_not_recommended <- NA
+      input_data$b_hesitant_barrier_distrust_vaccines <- NA
+      input_data$b_hesitant_barrier_health_condition <- NA
+      input_data$b_hesitant_barrier_pregnant <- NA
+    }
+    
   } else {
     df$b_hesitant_barrier_sideeffects <- NA_real_
     df$b_hesitant_barrier_allergic <- NA_real_
@@ -1144,6 +1151,15 @@ create_derivative_columns <- function(df) {
     df$b_defno_barrier_other <- as.numeric(is_selected(defno_reasons, "13"))
     df$b_defno_barrier_pregnant <- as.numeric(is_selected(defno_reasons, "14"))
     df$b_defno_barrier_religious <- as.numeric(is_selected(defno_reasons, "15"))
+    
+    if (wave >= 11) {
+      input_data$b_defno_barrier_allergic <- NA
+      input_data$b_defno_barrier_not_recommended <- NA
+      input_data$b_defno_barrier_distrust_vaccines <- NA
+      input_data$b_defno_barrier_health_condition <- NA
+      input_data$b_defno_barrier_pregnant <- NA
+    }
+    
   } else {
     df$b_defno_barrier_sideeffects <- NA_real_
     df$b_defno_barrier_allergic <- NA_real_

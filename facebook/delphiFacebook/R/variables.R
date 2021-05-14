@@ -156,44 +156,33 @@ code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
 
+  input_data$mh_worried_ill <- NA
+  input_data$mh_anxious <- NA
+  input_data$mh_depressed <- NA
+  input_data$mh_isolated <- NA
+  input_data$mh_worried_finances <- NA
+  input_data$mh_anxious_7d <- NA
+  input_data$mh_depressed_7d <- NA
+  input_data$mh_isolated_7d <- NA
+  
   if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
     input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
-  } else {
-    input_data$mh_worried_ill <- NA
-    input_data$mh_anxious <- NA
-    input_data$mh_depressed <- NA
-    input_data$mh_isolated <- NA
-    input_data$mh_worried_finances <- NA
-  }
-  
-  if (wave == 10) {
+  } else if (wave == 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
     input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
     input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
-  } else {
-    input_data$mh_worried_ill <- NA
-    input_data$mh_anxious_7d <- NA
-    input_data$mh_depressed_7d <- NA
-    input_data$mh_isolated_7d <- NA
-    input_data$mh_worried_finances <- NA
-  }
-  
-  if (wave >= 11) {
+  } else if (wave >= 11) {
     input_data$mh_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4
     input_data$mh_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
-  } else {
-    input_data$mh_anxious_7d <- NA
-    input_data$mh_depressed_7d <- NA
-    input_data$mh_worried_finances <- NA
   }
-  
+
   return(input_data)
 }
 
@@ -396,19 +385,31 @@ code_vaccines <- function(input_data) {
     input_data$v_received_2_vaccine_doses <- NA_real_
   }
 
+  input_data$v_accept_covid_vaccine <- NA_real_
+  input_data$v_appointment_or_accept_covid_vaccine <- NA_real_
+  input_data$v_accept_covid_vaccine_no_appointment <- NA_real_
   if ("V3" %in% names(input_data)) {
     input_data$v_accept_covid_vaccine <- (
       input_data$V3 == 1 | input_data$V3 == 2
     )
-  } else if ("V3a" %in% names(input_data)) {
-    input_data$v_accept_covid_vaccine <- (
+  } else if ( all(c("V3a", "V11a") %in% names(input_data)) ) {
+    input_data$v_accept_covid_vaccine_no_appointment <- (
       input_data$V3a == 1 | input_data$V3a == 2
     )
-  } else {
-    input_data$v_accept_covid_vaccine <- NA_real_
+    
+    input_data$v_appointment_or_accept_covid_vaccine <- case_when(
+      input_data$V11a == 1 ~ 1,
+      input_data$V3a == 1 ~ 1,
+      input_data$V3a == 2 ~ 1,
+      input_data$V3a == 3 ~ 0,
+      input_data$V3a == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
   }
 
-  if ("V3" %in% names(input_data) && "V1" %in% names(input_data)) {
+  input_data$v_covid_vaccinated_or_accept <- NA_real_
+  input_data$v_covid_vaccinated_appointment_or_accept <- NA_real_
+  if ( all(c("V1", "V3") %in% names(input_data)) ) {
     # "acceptance plus" means you either
     # - already have the vaccine (V1 == 1), or
     # - would get it if offered (V3 == 1 or 2)
@@ -420,17 +421,22 @@ code_vaccines <- function(input_data) {
       input_data$V3 == 4 ~ 0,
       TRUE ~ NA_real_
     )
-  } else if ("V3a" %in% names(input_data)) {
-    input_data$v_covid_vaccinated_or_accept <- case_when(
+  } else if ( all(c("V1", "V3a", "V11a") %in% names(input_data)) ) {
+    # Starting in Wave 11, only if a respondent does not have an appointment to
+    # get a vaccine are they asked if they would get a vaccine (V3a).
+    # "acceptance plus" means you either
+    # - already have the vaccine (V1 == 1), or
+    # - have an appointment to get it (V11a == 1), or
+    # - would get it if offered (V3a == 1 or 2)
+    input_data$v_covid_vaccinated_appointment_or_accept <- case_when(
       input_data$V1 == 1 ~ 1,
+      input_data$V11a == 1 ~ 1,
       input_data$V3a == 1 ~ 1,
       input_data$V3a == 2 ~ 1,
       input_data$V3a == 3 ~ 0,
       input_data$V3a == 4 ~ 0,
       TRUE ~ NA_real_
     )
-  } else {
-    input_data$v_covid_vaccinated_or_accept <- NA_real_
   }
 
   if ("V4_1" %in% names(input_data)) {

@@ -88,7 +88,7 @@ def run_module(params):
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
         min_dates_exported.append(earliest)
         max_dates_exported.append(latest)
-        num_exported_files += df.size * 2  # multiply by two to count both positivity and tests signals
+        num_exported_files += df.size * 2  # x2 to count both positivity and tests signals
         print(f"Exported dates: {earliest} to {latest}")
 
     # Perform archive differencing

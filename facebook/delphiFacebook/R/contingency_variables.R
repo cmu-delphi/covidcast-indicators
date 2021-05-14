@@ -665,16 +665,21 @@ create_derivative_columns <- function(df) {
   # hesitant_vaccine
   # Percentage who would definitely or probably NOT choose to get vaccinated
   # # (no, definitely not OR no, probably not) / #V3 responses
+  df$b_hesitant_vaccine <- NA_real_
   if ("mc_accept_cov_vaccine" %in% names(df)) {	
     df$b_hesitant_vaccine <- as.numeric(
       df$mc_accept_cov_vaccine == "prob not vaccinate" | 
       df$mc_accept_cov_vaccine == "def not vaccinate"
     )
-  } else if ("V3a" %in% names(df)) {	
-    df$b_hesitant_vaccine <- as.numeric(df$V3a == 3 | df$V3a == 4)
-  } else {	
-    df$b_hesitant_vaccine <- NA_real_
   }
+  if ("V3a" %in% names(df)) {
+    df$b_hesitant_vaccine <- coalesce(
+      df$b_hesitant_vaccine,
+      as.numeric(df$V3a == 3 | df$V3a == 4)
+    )
+  }
+  
+  
 
   # vaccinated_or_accept
   # Percentage who have either already received a COVID vaccine or would 
@@ -689,22 +694,23 @@ create_derivative_columns <- function(df) {
   # accept_vaccine_probno
   # accept_vaccine_defno
   # # (option chosen) / # V3 responses
+  df$b_accept_vaccine_defyes <- NA_real_
+  df$b_accept_vaccine_probyes <- NA_real_
+  df$b_accept_vaccine_probno <- NA_real_
+  df$b_accept_vaccine_defno <- NA_real_
+  
   if ("mc_accept_cov_vaccine" %in% names(df)) {
     df$b_accept_vaccine_defyes <- as.numeric(df$mc_accept_cov_vaccine == "def vaccinate")
     df$b_accept_vaccine_probyes <- as.numeric(df$mc_accept_cov_vaccine == "prob vaccinate")
     df$b_accept_vaccine_probno <- as.numeric(df$mc_accept_cov_vaccine == "prob not vaccinate")
     df$b_accept_vaccine_defno <- as.numeric(df$mc_accept_cov_vaccine == "def not vaccinate")
-  } else if ("V3a" %in% names(df)) {	
-    df$b_accept_vaccine_defyes <- as.numeric(df$V3a == 1)
-    df$b_accept_vaccine_probyes <- as.numeric(df$V3a == 2)
-    df$b_accept_vaccine_probno <- as.numeric(df$V3a == 3)
-    df$b_accept_vaccine_defno <- as.numeric(df$V3a == 4)
-  } else {
-    df$b_accept_vaccine_defyes <- NA_real_
-    df$b_accept_vaccine_probyes <- NA_real_
-    df$b_accept_vaccine_probno <- NA_real_
-    df$b_accept_vaccine_defno <- NA_real_
-  }	
+  }
+  if ("V3a" %in% names(df)) {	
+    df$b_accept_vaccine_no_appointment_defyes <- as.numeric(df$V3a == 1)
+    df$b_accept_vaccine_no_appointment_probyes <- as.numeric(df$V3a == 2)
+    df$b_accept_vaccine_no_appointment_probno <- as.numeric(df$V3a == 3)
+    df$b_accept_vaccine_no_appointment_defno <- as.numeric(df$V3a == 4)
+  }
 
   # vaccine_likely_friends
   # Percentage more likely to get vaccinated if recommended by friends & family

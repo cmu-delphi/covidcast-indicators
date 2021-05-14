@@ -1,4 +1,4 @@
-.PHONY = venv, lint, test, clean
+.PHONY = venv, lint, test, clean, release
 
 venv:
 	python3.8 -m venv env
@@ -19,3 +19,8 @@ test:
 clean:
 	rm -rf env
 	rm -f params.json
+
+release: lint test
+	. env/bin/activate ; \
+	python setup.py sdist bdist_wheel ; \
+	twine upload dist/*

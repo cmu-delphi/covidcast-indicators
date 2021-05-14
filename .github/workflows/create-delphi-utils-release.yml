@@ -9,6 +9,9 @@ on:
 jobs:
   create_release:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: _delphi_utils_python
     steps:
       - name: Check out code
         uses: actions/checkout@v2

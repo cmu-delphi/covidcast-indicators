@@ -704,6 +704,11 @@ create_derivative_columns <- function(df) {
   df$b_accept_vaccine_probno <- NA_real_
   df$b_accept_vaccine_defno <- NA_real_
   
+  df$b_accept_vaccine_no_appointment_defyes <- NA
+  df$b_accept_vaccine_no_appointment_probyes <- NA
+  df$b_accept_vaccine_no_appointment_probno <- NA
+  df$b_accept_vaccine_no_appointment_defno <- NA
+  
   if ("mc_accept_cov_vaccine" %in% names(df)) {
     df$b_accept_vaccine_defyes <- as.numeric(df$mc_accept_cov_vaccine == "def vaccinate")
     df$b_accept_vaccine_probyes <- as.numeric(df$mc_accept_cov_vaccine == "prob vaccinate")

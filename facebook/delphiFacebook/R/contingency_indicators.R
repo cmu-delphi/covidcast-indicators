@@ -113,7 +113,6 @@ get_aggs <- function() {
     "pct_hesitant_worried_vaccine_sideeffects", "b_hesitant_worried_vaccine_sideeffects", compute_binary, jeffreys_binary,
 
     "pct_hesitant_vaccine_likely_friends", "b_hesitant_vaccine_likely_friends", compute_binary, jeffreys_binary,
-    
     "pct_hesitant_vaccine_likely_local_health", "b_hesitant_vaccine_likely_local_health", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_who", "b_hesitant_vaccine_likely_who", compute_binary, jeffreys_binary,
     "pct_hesitant_vaccine_likely_govt", "b_hesitant_vaccine_likely_govt", compute_binary, jeffreys_binary,

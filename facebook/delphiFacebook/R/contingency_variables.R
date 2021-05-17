@@ -1278,20 +1278,17 @@ create_derivative_columns <- function(df) {
     df$b_informed_access <- NA_real_
   }
 
-  # appointment_have
+  # appointment_have (discontinued as of Wave 11)
   # Percentage of people who have an appointment to get a COVID-19 vaccine
   # conditional on being accepting
   # # yes / # respondents to V11
   df$b_appointment_have <- NA_real_
-  df$b_appointment_have_not_vaccinated <- NA_real_
   if ("V11" %in% names(df)) {
     df$b_appointment_have <- as.numeric(df$V11 == 1)
   }
-  if ("V11a" %in% names(df)) {
-    df$b_appointment_have_not_vaccinated <- as.numeric(df$V11a == 1)
-  }
+  # Replaced by v_appointment_not_vaccinated (defined in API pipeline)
 
-  # appointment_tried
+  # appointment_tried (discontinued as of Wave 11)
   # Percentage of people without an appointment who have tried to get one
   # conditional on being accepting
   # # yes / # respondents to V12

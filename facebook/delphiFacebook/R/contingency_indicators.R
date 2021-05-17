@@ -202,7 +202,7 @@ get_aggs <- function() {
     "pct_informed_access", "b_informed_access", compute_binary, jeffreys_binary,
     
     "pct_appointment_have", "b_appointment_have", compute_binary, jeffreys_binary,
-    "pct_appointment_have_not_vaccinated", "b_appointment_have_not_vaccinated", compute_binary, jeffreys_binary,
+    "pct_appointment_not_vaccinated", "v_appointment_not_vaccinated", compute_binary, jeffreys_binary,
     "pct_appointment_tried", "b_appointment_tried", compute_binary, jeffreys_binary,
     "pct_vaccine_tried", "b_vaccine_tried", compute_binary, jeffreys_binary
   )

@@ -1,4 +1,5 @@
 name: Create Delphi Utils Release
+
 on:
   workflow_dispatch:
     inputs:
@@ -6,6 +7,7 @@ on:
         description: 'Semantic Version Number (i.e., 5.5.0 or patch, minor, major, prepatch, preminor, premajor, prerelease)'
         required: true
         default: patch
+
 jobs:
   create_release:
     runs-on: ubuntu-latest
@@ -21,7 +23,7 @@ jobs:
       - name: Reset prod branch
         run: |
           git fetch origin main:main
-          git reset --hard prod
+          git reset --hard main
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -31,13 +33,13 @@ jobs:
         run: |
           python -m pip install bump2version
           echo -n "::set-output name=next_tag::"
-          bump2version --list ${{ github.event.inputs.versionName }} | grep new_version | sed -r s,"^.*=",,
+          bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
       - name: Create pull request into prod
         uses: peter-evans/create-pull-request@v3
         with:
           branch: release/${{ steps.version.outputs.next_tag }}
           commit-message: 'chore: release ${{ steps.version.outputs.next_tag }}'
-          base: main
+          base: prod
           title: Release ${{ steps.version.outputs.next_tag }}
           labels: chore
           reviewers: krivard

@@ -72,6 +72,7 @@ $(TODAY):
 	[ -f $(QUALTRICS) ] || mkdir -p $(QUALTRICS)
 	rm -rf tmp
 	touch -d "$(TODAY) 01:00" tmp
+	$(PYTHON) -m delphi_utils set end_date $(YESTERDAY)
 	source env/bin/activate && \
 	python -m delphi_facebook
 	BATCH=""; \

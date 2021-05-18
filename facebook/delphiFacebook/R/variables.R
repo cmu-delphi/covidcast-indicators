@@ -453,9 +453,9 @@ code_vaccines <- function(input_data) {
   
   if ("V11a" %in% names(df)) {
     # Have an appointment to get vaccinated conditional on not being vaccinated.
-    df$v_appointment_not_vaccinated <- df$V11a == 1
+    input_data$v_appointment_not_vaccinated <- df$V11a == 1
   } else {
-    df$v_appointment_not_vaccinated <- NA  
+    input_data$v_appointment_not_vaccinated <- NA  
   }
 
   if ("V4_1" %in% names(input_data)) {

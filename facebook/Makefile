@@ -81,6 +81,7 @@ $(TODAY):
 	done; \
 	$(SFTP_POST); \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo -e $${BATCH} | wc -l` raw files" >> $(MESSAGES)
+	touch -d $(YESTERDAY) params.json
 	mv tmp $@
 
 params.json: $(TODAY)

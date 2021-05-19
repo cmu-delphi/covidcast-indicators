@@ -116,14 +116,6 @@ rename_responses <- function(df) {
     
     "b_worried_vaccine_sideeffects" = "v_worried_vaccine_side_effects",
     
-    "b_dontneed_reason_had_covid" = "v_dontneed_reason_had_covid",
-    "b_dontneed_reason_dont_spend_time" = "v_dontneed_reason_dont_spend_time",
-    "b_dontneed_reason_not_high_risk" = "v_dontneed_reason_not_high_risk",
-    "b_dontneed_reason_precautions" = "v_dontneed_reason_precautions",
-    "b_dontneed_reason_not_serious" = "v_dontneed_reason_not_serious",
-    "b_dontneed_reason_not_beneficial" = "v_dontneed_reason_not_beneficial",
-    "b_dontneed_reason_other" = "v_dontneed_reason_other",
-    
     "b_barrier_sideeffects" = "v_hesitancy_reason_sideeffects",
     "b_barrier_allergic" = "v_hesitancy_reason_allergic",
     "b_barrier_ineffective" = "v_hesitancy_reason_ineffective",
@@ -359,6 +351,9 @@ remap_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly derived columns
 create_derivative_columns <- function(df) {
+  
+  # Get the latest wave available in the data.
+  wave <- max(df$wave)
   
   ###---
   # Grouping variables.
@@ -1117,7 +1112,43 @@ create_derivative_columns <- function(df) {
   # in any of V5a, V5b, V5c) AND selected X in V6./ (# of respondents who
   # selected at least one option in any of V5a, V5b, V5c AND selected at least
   # one option in V6)
-  # made elsewhere and renamed in `rename_responses`
+  if (all(c("V5a", "V5b", "V5c", "V6", "b_barrier_dontneed") %in% names(df))) {
+    # b_barrier_dontneed is those who answered that they don't need the vaccine
+    # to any of questions V5a, V5b, or V6c. It is created originally as
+    # v_hesitancy_reason_unnecessary in variables.R
+    dontneed <- df$b_barrier_dontneed == 1
+    dontneed_reasons <- split_options(df$V6)
+    
+    df$b_dontneed_reason_had_covid <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "1"))
+    )
+    df$b_dontneed_reason_dont_spend_time <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "2"))
+    )
+    df$b_dontneed_reason_not_high_risk <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "3"))
+    )
+    df$b_dontneed_reason_precautions <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "4"))
+    )
+    df$b_dontneed_reason_not_serious <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "5"))
+    )
+    df$b_dontneed_reason_not_beneficial <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "7"))
+    )
+    df$b_dontneed_reason_other <- as.numeric(
+      all_true(dontneed, is_selected(dontneed_reasons, "8"))
+    )
+  } else {
+    df$b_dontneed_reason_had_covid <- NA_real_
+    df$b_dontneed_reason_dont_spend_time <- NA_real_
+    df$b_dontneed_reason_not_high_risk <- NA_real_
+    df$b_dontneed_reason_precautions <- NA_real_
+    df$b_dontneed_reason_not_serious <- NA_real_
+    df$b_dontneed_reason_not_beneficial <- NA_real_
+    df$b_dontneed_reason_other <- NA_real_
+  }
 
   # defno_barrier_sideeffects
   # defno_barrier_allergic

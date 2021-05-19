@@ -75,9 +75,15 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 
     ## To display other response columns ("val", "sample_size", "se",
     ## "effective_sample_size", "represented"), add here.
+    # If these names change (e.g. `sample_size` to `n`), update
+    # `contingency-combine.R`.
     keep_vars <- c("val", "se", "sample_size", "represented")
 
     for (agg_id in names(dfs_out)) {
+      if (nrow(dfs_out[[agg_id]]) == 0) {
+        dfs_out[[agg_id]] <- NULL
+        next
+      }
       agg_metric <- aggregations$name[aggregations$id == agg_id]
       map_old_new_names <- keep_vars
       names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
@@ -254,25 +260,20 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 
   group_vars <- aggregations$group_by[[1]]
 
-  if ( !all(groupby_vars %in% names(df)) ) {
+  if ( !all(group_vars %in% names(df)) ) {
     msg_plain(
       sprintf(
         "not all of grouping columns %s available in data; skipping aggregation",
-        paste(groupby_vars, collapse=", ")
+        paste(group_vars, collapse=", ")
       ))
     return( list( ))
   }
   
   ## Find all unique groups and associated frequencies, saved in column `Freq`.
-  # Keep rows with missing values initially so that we get the correct column
-  # names. Explicitly drop groups with missing values in second step.
   unique_groups_counts <- as.data.frame(
-    table(df[, groupby_vars, with=FALSE], exclude=NULL, dnn=groupby_vars), 
+    table(df[, group_vars, with=FALSE], exclude=NULL, dnn=group_vars), 
     stringsAsFactors=FALSE
   )
-  unique_groups_counts <- unique_groups_counts[
-    complete.cases(unique_groups_counts[, groupby_vars]),
-  ]
   
   # Drop groups with less than threshold sample size.
   unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
@@ -283,7 +284,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   ## Convert col type in unique_groups to match that in data.
   # Filter on data.table in `calculate_group` requires that columns and filter
   # values are of the same type.
-  for (col_var in groupby_vars) {
+  for (col_var in group_vars) {
     if ( class(df[[col_var]]) != class(unique_groups_counts[[col_var]]) ) {
       class(unique_groups_counts[[col_var]]) <- class(df[[col_var]])
     }
@@ -295,10 +296,10 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   setindexv(df, group_vars)
 
   calculate_group <- function(ii) {
-    target_group <- unique_groups_counts[ii, groupby_vars, drop=FALSE]
+    target_group <- unique_groups_counts[ii, group_vars, drop=FALSE]
     # Use data.table's index to make this filter efficient
     out <- summarize_aggregations_group(
-      df[as.list(target_group), on=groupby_vars],
+      df[as.list(target_group), on=group_vars],
       aggregations,
       target_group,
       geo_level,
@@ -327,9 +328,10 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
     aggregation <- aggregations$id[row]
     group_vars <- aggregations$group_by[[row]]
     post_fn <- aggregations$post_fn[[row]]
-
+    
+    # Keep only aggregations where the main value, `val`, is present.
     dfs_out[[aggregation]] <- dfs_out[[aggregation]][
-      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size", group_vars)])) == 0,
+      rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size")])) == 0,
     ]
 
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)

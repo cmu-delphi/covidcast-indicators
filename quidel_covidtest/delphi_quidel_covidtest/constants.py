@@ -3,7 +3,6 @@
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
 END_FROM_TODAY_MINUS = 5 # report data until - X days
-EXPORT_DAY_RANGE = 40 # Number of dates to report
 # Signal names
 SMOOTHED_POSITIVE = "covid_ag_smoothed_pct_positive"
 RAW_POSITIVE = "covid_ag_raw_pct_positive"

@@ -183,3 +183,24 @@ megacounty <- function(
 make_megacounty_fips <- function(fips) {
   paste0(substr(fips, 1, 2), "000")
 }
+
+#' `any_true` returns TRUE if at least one is TRUE
+#' Returns FALSE if at least one is FALSE and none are TRUE
+#' Returns NA if all are NA
+#' 
+#' @param ... One or more logical vectors of the same length.
+#' @return A logical vector of the same length as the input vector(s).
+#' @noRd
+is_true <- function(x) x %in% TRUE
+or <- function(a, b) ifelse(is.na(a) & is.na(b), NA, is_true(a) | is_true(b))
+any_true <- function(...) Reduce(or, list(...), NA)
+
+#' `all_true` returns TRUE if all are TRUE
+#' Returns FALSE if at least one is FALSE and none are NA
+#' Returns NA if at least one is NA
+#' 
+#' @param ... One or more logical vectors of the same length.
+#' @return A logical vector of the same length as the input vector(s).
+#' @noRd
+and <- function(a, b) ifelse(is.na(a) | is.na(b), NA, a & b)
+all_true <- function(...) Reduce(and, list(...), TRUE)

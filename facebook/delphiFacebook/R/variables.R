@@ -471,3 +471,32 @@ code_vaccines <- function(input_data) {
 
   return(input_data)
 }
+
+#' Schooling
+#'
+#' @param input_data input data frame of raw survey data
+#' @return data frame augmented with `hh_number_total`
+code_schooling <- function(input_data) {
+  if ("E2_1" %in% names(input_data)) {
+    # Coded as 2 = "Yes", 3 = "No", 4 = "I don't know"
+    input_data$s_inperson_school_fulltime <- case_when(
+      input_data$E2_1 == 2 ~ 1,
+      input_data$E2_1 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$s_inperson_school_fulltime <- NA_real_
+  }
+  
+  if ("E2_2" %in% names(input_data)) {
+    # Coded as 2 = "Yes", 3 = "No", 4 = "I don't know"
+    input_data$s_inperson_school_parttime <- case_when(
+      input_data$E2_2 == 2 ~ 1,
+      input_data$E2_2 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$s_inperson_school_parttime <- NA_real_
+  }
+  return(input_data)
+}

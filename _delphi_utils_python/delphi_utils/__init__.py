@@ -12,5 +12,6 @@ from .logger import get_structured_logger
 from .geomap import GeoMapper
 from .smooth import Smoother
 from .signal import add_prefix
+from .nancodes import Nans
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

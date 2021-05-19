@@ -44,9 +44,9 @@ class TestValidationReport:
         assert report.summary() ==\
             "3 checks run\n1 checks failed\n1 checks suppressed\n2 warnings\n"
 
-    @mock.patch("delphi_utils.validator.report.logger")
-    def test_log(self, mock_logger):
+    def test_log(self):
         """Test that the logs contain all failures and warnings."""
+        mock_logger = mock.Mock()
         report = ValidationReport([self.ERROR_1])
         report.increment_total_checks()
         report.increment_total_checks()
@@ -56,7 +56,7 @@ class TestValidationReport:
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
 
-        report.log()
+        report.log(mock_logger)
         mock_logger.critical.assert_called_once_with(
             "bad failed for sig2 at resolution county on 2020-11-07: msg 2")
         mock_logger.warning.assert_has_calls([mock.call("wrong import"), mock.call("right import")])

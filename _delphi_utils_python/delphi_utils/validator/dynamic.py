@@ -1,5 +1,4 @@
 """Dynamic file checks."""
-import math
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
@@ -7,6 +6,7 @@ import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow
+
 
 class DynamicValidator:
     """Class for validation of static properties of individual datasets."""
@@ -43,15 +43,15 @@ class DynamicValidator:
         self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
-            data_source = common_params["data_source"],
-            time_window = TimeWindow.from_params(common_params["end_date"],
-                                                 common_params["span_length"]),
-            generation_date = date.today(),
-            max_check_lookbehind = timedelta(days=dynamic_params.get("ref_window_size", 7)),
-            smoothed_signals = set(dynamic_params.get("smoothed_signals", [])),
-            expected_lag = dynamic_params.get("expected_lag", dict())
+            data_source=common_params["data_source"],
+            time_window=TimeWindow.from_params(common_params["end_date"],
+                                               common_params["span_length"]),
+            generation_date=date.today(),
+            max_check_lookbehind=timedelta(
+                days=dynamic_params.get("ref_window_size", 7)),
+            smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
+            expected_lag=dynamic_params.get("expected_lag", dict())
         )
-
 
     def validate(self, all_frames, report):
         """
@@ -107,8 +107,10 @@ class DynamicValidator:
                 continue
 
             max_date = geo_sig_df["time_value"].max()
-            self.check_min_allowed_max_date(max_date, geo_type, signal_type, report)
-            self.check_max_allowed_max_date(max_date, geo_type, signal_type, report)
+            self.check_min_allowed_max_date(
+                max_date, geo_type, signal_type, report)
+            self.check_max_allowed_max_date(
+                max_date, geo_type, signal_type, report)
 
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
@@ -166,6 +168,11 @@ class DynamicValidator:
                 reference_start_date = recent_cutoff_date - \
                     min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
                     timedelta(days=1)
+                if signal_type in self.params.smoothed_signals:
+                    # Add an extra 7 days to the reference period.
+                    reference_start_date = reference_start_date - \
+                        timedelta(days=7)
+
                 reference_end_date = recent_cutoff_date - timedelta(days=1)
                 # pylint: enable=unused-variable
 
@@ -381,8 +388,10 @@ class DynamicValidator:
         # Calculate the t-statistics for the two rolling windows (windows center and windows right)
         all_full_frames = []
         for _, group in region_group:
-            rolling_windows = group["val"].rolling(window_size, min_periods=window_size)
-            center_windows = group["val"].rolling(window_size, min_periods=window_size, center=True)
+            rolling_windows = group["val"].rolling(
+                window_size, min_periods=window_size)
+            center_windows = group["val"].rolling(
+                window_size, min_periods=window_size, center=True)
             fmedian = rolling_windows.median()
             smedian = center_windows.median().shift(shift_val)
             fsd = rolling_windows.std() + 0.00001  # if std is 0
@@ -399,7 +408,8 @@ class DynamicValidator:
         # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
         # pylint: disable=unused-variable
-        api_frames_end = min(api_frames["time_value"].max(), source_frame_start-timedelta(days=1))
+        api_frames_end = min(api_frames["time_value"].max(),
+                             source_frame_start-timedelta(days=1))
         # pylint: enable=unused-variable
         outlier_df = all_frames.query(
             'time_value >= @api_frames_end & time_value <= @source_frame_end')
@@ -424,9 +434,11 @@ class DynamicValidator:
 
         outliers_list = [outliers]
         if sel_upper_df.size > 0:
-            outliers_list.append(sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
+            outliers_list.append(
+                sel_upper_df[sel_upper_df.apply(outlier_nearby, axis=1)])
         if sel_lower_df.size > 0:
-            outliers_list.append(sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
+            outliers_list.append(
+                sel_lower_df[sel_lower_df.apply(outlier_nearby, axis=1)])
 
         all_outliers = pd.concat(outliers_list). \
             sort_values(by=['time_value', 'geo_id']). \
@@ -461,89 +473,84 @@ class DynamicValidator:
         Returns:
             - None
         """
-        # Average each of val, se, and sample_size over all dates for a given geo_id.
-        # Ignores NA by default.
-        df_to_test = df_to_test.groupby(['geo_id'], as_index=False)[
-            ['val', 'se', 'sample_size']].mean()
-        df_to_test["type"] = "test"
+        # Calculate reference mean and standard deviation for each geo_id.
+        reference_mean = df_to_reference.groupby(['geo_id'], as_index=False)[
+            ['val', 'se', 'sample_size']].mean().assign(type="reference mean")
+        reference_sd = df_to_reference.groupby(['geo_id'], as_index=False)[
+            ['val', 'se', 'sample_size']].std().assign(type="reference sd")
 
-        df_to_reference = df_to_reference.groupby(['geo_id'], as_index=False)[
-            ['val', 'se', 'sample_size']].mean()
-        df_to_reference["type"] = "reference"
+        # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
+        replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},
+                        "se": {0: reference_sd.se[reference_sd.se > 0].min()},
+                        "sample_size": {0: reference_sd.se[reference_sd.sample_size > 0].min()}}
+        reference_sd.replace(replacements, inplace=True)
 
-        df_all = pd.concat([df_to_test, df_to_reference])
+        # Duplicate reference_mean and reference_sd for every unique time_value seen in df_to_test
+        reference_df = pd.concat(
+            [reference_mean, reference_sd]
+        ).assign(
+            key=0
+        ).merge(
+            df_to_test.assign(key=0)[["time_value", "key"]].drop_duplicates()
+        ).drop("key", axis=1)
+
+        # Drop unused columns from test data.
+        df_to_test = df_to_test[[
+            "geo_id", "val", "se", "sample_size", "time_value"
+        ]].assign(
+            type="test"
+        )
 
         # For each variable (val, se, and sample size) where not missing, calculate the
-        # relative mean difference and mean absolute difference between the test data
-        # and the reference data across all geographic regions.
+        # mean z-score and mean absolute z-score of the test data across all geographic
+        # regions and dates.
         #
-        # Steps:
-        #   - melt: creates a long version of df, where 'variable' specifies variable
-        # name (val, se, sample size) and 'value' specifies the value of said variable;
-        # geo_id and type columns are unchanged
-        #   - pivot: each row is the test and reference values for a given geo
-        # region-variable type combo
-        #   - reset_index: index is set to auto-incrementing int; geo_id and variable
-        # names are back as normal columns
-        #   - dropna: drop all rows with at least one missing value (makes it
-        # impossible to compare reference and test)
-        #   - assign: create new temporary columns, raw and abs value of difference
-        # between test and reference columns
-        #   - groupby: group by variable name
-        #   - agg: for every variable name group (across geo regions), calculate the
-        # mean of each of the raw difference between test and reference columns, the
-        # abs value of the difference between test and reference columns, all test
-        # values, all reference values
-        #   - assign: use the new aggregate vars to calculate the relative mean
-        # difference, 2 * mean(differences) / sum(means) of two groups.
-        df_all = pd.melt(
-            df_all, id_vars=["geo_id", "type"], value_vars=["val", "se", "sample_size"]
+        # Approach:
+        #  - Use each reference df to calculate mean and sd for each geo_id (above). Merge
+        #    onto test data.
+        #  - Use to calculate z-score for each test datapoint for a given geo_id and date.
+        #  - Avg z-scores over each geo_id, across all dates.
+        #  - Avg all z-scores together.
+        df_all = pd.concat(
+            [df_to_test, reference_df]
+        ).melt(
+            id_vars=["geo_id", "type", "time_value"], value_vars=["val", "se", "sample_size"]
         ).pivot(
-            index=("geo_id", "variable"), columns="type", values="value"
+            index=("geo_id", "variable", "time_value"), columns="type", values="value"
         ).reset_index(
-            ("geo_id", "variable")
+            ("geo_id", "variable", "time_value")
         ).dropna(
         ).assign(
-            type_diff=lambda x: x["test"] - x["reference"],
-            abs_type_diff=lambda x: abs(x["type_diff"])
+            z=lambda x: (
+                x["test"] - x["reference mean"]) / x["reference sd"],
+            abs_z=lambda x: abs(x["z"])
+        ).groupby(
+            ["geo_id", "variable"], as_index=False
+        ).agg(
+            geo_z=("z", "mean"),
+            geo_abs_z=("abs_z", "mean")
         ).groupby(
             "variable", as_index=False
         ).agg(
-            mean_type_diff=("type_diff", "mean"),
-            mean_abs_type_diff=("abs_type_diff", "mean"),
-            mean_test_var=("test", "mean"),
-            mean_ref_var=("reference", "mean")
-        ).assign(
-            mean_stddiff=lambda x: 2 *
-            x["mean_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"]),
-            mean_stdabsdiff=lambda x: 2 *
-            x["mean_abs_type_diff"] / (x["mean_test_var"] + x["mean_ref_var"])
-        )[["variable", "mean_stddiff", "mean_stdabsdiff"]]
+            mean_z=("geo_z", "mean"),
+            mean_abs_z=("geo_abs_z", "mean")
+        )[["variable", "mean_z", "mean_abs_z"]]
 
-        # Set thresholds for raw and smoothed variables.
-        classes = ['mean_stddiff', 'val_mean_stddiff', 'mean_stdabsdiff']
-        raw_thresholds = pd.DataFrame([[1.50, 1.30, 1.80]], columns=classes)
-        smoothed_thresholds = raw_thresholds.apply(lambda x: x/(math.sqrt(7) * 1.5))
-
-        switcher = {
-            'raw': raw_thresholds,
-            'smoothed': smoothed_thresholds,
-        }
-
-        # Get the selected thresholds from switcher dictionary
-        smooth_option = "smoothed" if signal_type in self.params.smoothed_signals else "raw"
-        thres = switcher.get(smooth_option, lambda: "Invalid smoothing option")
+        # Set thresholds for comparison.
+        classes = ['mean_z', 'val_mean_z', 'mean_abs_z']
+        thres = pd.DataFrame([[4.0, 3.5, 4.25]], columns=classes)
 
         # Check if the calculated mean differences are high compared to the thresholds.
-        mean_stddiff_high = (
-            abs(df_all["mean_stddiff"]) > float(thres["mean_stddiff"])).any() or (
+        mean_z_high = (
+            abs(df_all["mean_z"]) > float(thres["mean_z"])).any() or (
                 (df_all["variable"] == "val").any() and
-                (abs(df_all[df_all["variable"] == "val"]["mean_stddiff"])
-                 > float(thres["val_mean_stddiff"])).any()
+                (abs(df_all[df_all["variable"] == "val"]["mean_z"])
+                 > float(thres["val_mean_z"])).any()
         )
-        mean_stdabsdiff_high = (df_all["mean_stdabsdiff"] > float(thres["mean_stdabsdiff"])).any()
+        mean_abs_z_high = (df_all["mean_abs_z"] > float(
+            thres["mean_abs_z"])).any()
 
-        if mean_stddiff_high or mean_stdabsdiff_high:
+        if mean_z_high or mean_abs_z_high:
             report.add_raised_error(
                 ValidationFailure(
                     "check_test_vs_reference_avg_changed",

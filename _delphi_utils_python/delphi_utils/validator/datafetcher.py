@@ -5,6 +5,7 @@ import re
 import threading
 from os import listdir
 from os.path import isfile, join
+import warnings
 import pandas as pd
 import numpy as np
 
@@ -114,9 +115,6 @@ def get_geo_signal_combos(data_source):
     geo_signal_combos = list(map(tuple,
                                  source_meta[["geo_type", "signal"]].to_records(index=False)))
 
-    print("Number of expected geo region-signal combinations:",
-          len(geo_signal_combos))
-
     return geo_signal_combos
 
 
@@ -126,8 +124,10 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
 
     Formatting is changed to match that of source data CSVs.
     """
-    api_df = covidcast.signal(
-        data_source, signal_type, start_date, end_date, geo_type)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        api_df = covidcast.signal(
+            data_source, signal_type, start_date, end_date, geo_type)
 
     if not isinstance(api_df, pd.DataFrame):
         custom_msg = "Error fetching data from " + str(start_date) + \

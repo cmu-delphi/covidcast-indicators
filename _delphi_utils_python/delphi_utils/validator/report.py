@@ -4,8 +4,6 @@ from typing import List
 from ..logger import get_structured_logger
 from .errors import ValidationFailure
 
-logger = get_structured_logger(__name__)
-
 class ValidationReport:
     """Class for reporting the results of validation."""
 
@@ -83,20 +81,29 @@ class ValidationReport:
         out_str += f"{len(self.raised_warnings)} warnings\n"
         return out_str
 
-    def log(self):
+    def log(self, logger=None):
         """Log errors and warnings."""
+        if logger is None:
+            logger = get_structured_logger(__name__)
+
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
         for warning in self.raised_warnings:
             logger.warning(str(warning))
 
-    def print_and_exit(self):
-        """Print results and, if any unsuppressed exceptions were raised, exit with non-0 status."""
+    def print_and_exit(self, logger=None, die_on_failures=True):
+        """Print results and exit.
+
+        Arguments
+        ---------
+        die_on_failures: bool
+            Whether to return non-zero status if any failures were encountered.
+        """
         print(self.summary())
-        self.log()
+        self.log(logger)
         if self.success():
             sys.exit(0)
-        else:
+        elif die_on_failures:
             sys.exit(1)
 
     def success(self):

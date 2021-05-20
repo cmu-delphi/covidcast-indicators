@@ -21,6 +21,8 @@ get_binary_indicators <- function() {
     "smoothed_wwearing_mask_7d", "weight", "c_mask_often_7d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_others_masked", "weight_unif", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wothers_masked", "weight", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_others_masked_public", "weight_unif", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wothers_masked_public", "weight", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
 
     # mental health
     "smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
@@ -96,9 +98,17 @@ get_binary_indicators <- function() {
     # vaccines
     "smoothed_accept_covid_vaccine", "weight_unif", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
     "smoothed_waccept_covid_vaccine", "weight", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_accept_covid_vaccine_no_appointment", "weight_unif", "v_accept_covid_vaccine_no_appointment", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_waccept_covid_vaccine_no_appointment", "weight", "v_accept_covid_vaccine_no_appointment", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_appointment_or_accept_covid_vaccine", "weight_unif", "v_appointment_or_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wappointment_or_accept_covid_vaccine", "weight", "v_appointment_or_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
     "smoothed_covid_vaccinated_or_accept", "weight_unif", "v_covid_vaccinated_or_accept", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wcovid_vaccinated_or_accept", "weight", "v_covid_vaccinated_or_accept", 6, compute_binary_response, jeffreys_binary,
-
+    "smoothed_covid_vaccinated_appointment_or_accept", "weight_unif", "v_covid_vaccinated_appointment_or_accept", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wcovid_vaccinated_appointment_or_accept", "weight", "v_covid_vaccinated_appointment_or_accept", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_appointment_not_vaccinated", "weight_unif", "v_appointment_not_vaccinated", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wappointment_not_vaccinated", "weight", "v_appointment_not_vaccinated", 6, compute_binary_response, jeffreys_binary,
+    
     "smoothed_covid_vaccinated", "weight_unif", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wcovid_vaccinated", "weight", "v_covid_vaccinated", 6, compute_binary_response, jeffreys_binary,
     "smoothed_worried_vaccine_side_effects", "weight_unif", "v_worried_vaccine_side_effects", 6, compute_binary_response, jeffreys_binary,
@@ -119,6 +129,22 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_likely_politicians", "weight", "v_vaccine_likely_politicians", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_likely_doctors", "weight_unif", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_likely_doctors", "weight", "v_vaccine_likely_doctors", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_doctors", "weight_unif", "i_trust_covid_info_doctors", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_doctors", "weight", "i_trust_covid_info_doctors", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_experts", "weight_unif", "i_trust_covid_info_experts", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_experts", "weight", "i_trust_covid_info_experts", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_cdc", "weight_unif", "i_trust_covid_info_cdc", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_cdc", "weight", "i_trust_covid_info_cdc", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_govt_health", "weight_unif", "i_trust_covid_info_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_govt_health", "weight", "i_trust_covid_info_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_politicians", "weight_unif", "i_trust_covid_info_politicians", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_politicians", "weight", "i_trust_covid_info_politicians", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_journalists", "weight_unif", "i_trust_covid_info_journalists", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_journalists", "weight", "i_trust_covid_info_journalists", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_friends", "weight_unif", "i_trust_covid_info_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_friends", "weight", "i_trust_covid_info_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_trust_covid_info_religious", "weight_unif", "i_trust_covid_info_religious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtrust_covid_info_religious", "weight", "i_trust_covid_info_religious", 6, compute_binary_response, jeffreys_binary,
     
     # vaccine hesitancy reasons
     "smoothed_hesitancy_reason_sideeffects", "weight_unif", "v_hesitancy_reason_sideeffects", 6, compute_binary_response, jeffreys_binary,

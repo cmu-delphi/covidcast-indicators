@@ -68,6 +68,7 @@ def get(fetch,post,params):
         end   = datetime.combine(date.today(),time(4,00,00),tzinfo=TZ)
         r = post(base,{
             "format":"csv",
+            "includeDisplayOrder":"true",
             "timeZone":TIMEZONE,
             "startDate":start.isoformat(),
             "endDate":end.isoformat(),

@@ -4,12 +4,14 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
+import time
 
 import numpy as np
 
 from delphi_utils import (
     create_export_csv,
     S3ArchiveDiffer,
+    get_structured_logger
 )
 
 from .constants import GEO_RESOLUTIONS, SIGNALS
@@ -33,6 +35,11 @@ def run_module(params):
             - "bucket_name: str, name of S3 bucket to read/write
             - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
     """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+
     # Configuration
     export_dir = params["common"]["export_dir"]
     parquet_url = params["indicator"]["parquet_url"]
@@ -53,6 +60,9 @@ def run_module(params):
     df_pq = load_data(parquet_url)
     df_county_testing = extract_testing_metrics(df_pq)
 
+    num_exported_files = 0
+    min_dates_exported = []
+    max_dates_exported = []
     # Perform geo aggregations and export to receiving
     for geo_res in GEO_RESOLUTIONS:
         print(f"Processing {geo_res}")
@@ -76,6 +86,10 @@ def run_module(params):
             sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
+        min_dates_exported.append(earliest)
+        max_dates_exported.append(latest)
+        # x2 to count both positivity and tests signals
+        num_exported_files += exported_csv_dates.size * 2
         print(f"Exported dates: {earliest} to {latest}")
 
     # Perform archive differencing
@@ -97,3 +111,10 @@ def run_module(params):
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds,
+                csv_export_count=num_exported_files,
+                earliest_export_date=min(min_dates_exported).strftime("%Y-%m-%d"),
+                latest_export_date=max(max_dates_exported).strftime("%Y-%m-%d"))

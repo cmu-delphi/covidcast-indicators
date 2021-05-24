@@ -156,31 +156,33 @@ code_mental_health <- function(input_data) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
 
+  input_data$mh_worried_ill <- NA
+  input_data$mh_anxious <- NA
+  input_data$mh_depressed <- NA
+  input_data$mh_isolated <- NA
+  input_data$mh_worried_finances <- NA
+  input_data$mh_anxious_7d <- NA
+  input_data$mh_depressed_7d <- NA
+  input_data$mh_isolated_7d <- NA
+  
   if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
     input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
-  } else {
-    input_data$mh_worried_ill <- NA
-    input_data$mh_anxious <- NA
-    input_data$mh_depressed <- NA
-    input_data$mh_isolated <- NA
-    input_data$mh_worried_finances <- NA
-  }
-  
-  if (wave >= 10) {
+  } else if (wave == 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
     input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
     input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
     input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
-  } else {
-    input_data$mh_anxious_7d <- NA
-    input_data$mh_depressed_7d <- NA
-    input_data$mh_isolated_7d <- NA
+  } else if (wave >= 11) {
+    input_data$mh_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4
+    input_data$mh_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4
+    input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   }
+
   return(input_data)
 }
 
@@ -238,6 +240,18 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_others_masked <- NA
   }
+  
+  if ("H2" %in% names(input_data)) {
+    # added in wave 11, replaces C16. most/all *others* seen in public wearing
+    # masks; exclude respondents who have not been in public. Coding is reversed.
+    input_data$c_others_masked_public <- case_when(
+      is.na(input_data$H2) ~ NA,
+      input_data$H2 == 6 ~ NA,
+      input_data$H2 == 4 | input_data$H2 == 5 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$c_others_masked_public <- NA
+  }
 
   if ("C3" %in% names(input_data)) {
     input_data$c_work_outside_5d <- input_data$C3 == 1
@@ -253,8 +267,10 @@ code_mask_contact <- function(input_data) {
 #' @return data frame augmented with `t_tested_14d`, `t_tested_positive_14d`,
 #'   `t_wanted_test_14d`
 code_testing <- function(input_data) {
-  if ("B8" %in% names(input_data) && "B10" %in% names(input_data) &&
-        "B12" %in% names(input_data)) {
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
+  if ( all(c("B8", "B10") %in% names(input_data)) ) {
     # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
     # B10 (which codes "no" as 3 for some reason)
     input_data$t_tested_14d <- case_when(
@@ -262,25 +278,46 @@ code_testing <- function(input_data) {
       input_data$B10 == 1 ~ 1,
       TRUE ~ NA_real_
     )
-
-    # fraction, of those tested in past 14 days, who tested positive. yes == 1
-    # on B10a, no == 2 on B10a; option 3 is "I don't know", which is excluded
+  } else if ("B10" %in% names(input_data) && !("B8" %in% names(input_data))) {
+      # fraction tested in last 14 days. yes == 1 on B10; no == 3 on B10 (which
+      # codes "no" as 3 for some reason)
+      input_data$t_tested_14d <- case_when(
+        input_data$B10 == 3 ~ 0,
+        input_data$B10 == 1 ~ 1,
+        TRUE ~ NA_real_
+      )
+  } else {
+    input_data$t_tested_14d <- NA_real_
+  }
+  
+  if ("B12" %in% names(input_data)) {
+    # fraction, of those not tested in past 14 days, who wanted to be tested but
+    # were not
+    input_data$t_wanted_test_14d <- input_data$B12 == 1
+  } else {
+    input_data$t_wanted_test_14d <- NA
+  }
+  
+  # fraction, of those tested in past 14 days, who tested positive. yes == 1
+  # on B10a/c, no == 2 on B10a/c; option 3 is "I don't know", which is excluded
+  if ("B10a" %in% names(input_data)) {
     input_data$t_tested_positive_14d <- case_when(
       input_data$B10a == 1 ~ 1, # yes
       input_data$B10a == 2 ~ 0, # no
       input_data$B10a == 3 ~ NA_real_, # I don't know
       TRUE ~ NA_real_
     )
-
-    # fraction, of those not tested in past 14 days, who wanted to be tested but
-    # were not
-    input_data$t_wanted_test_14d <- input_data$B12 == 1
+  } else if ("B10c" %in% names(input_data)) {
+    input_data$t_tested_positive_14d <- case_when(
+      input_data$B10c == 1 ~ 1, # yes
+      input_data$B10c == 2 ~ 0, # no
+      input_data$B10c == 3 ~ NA_real_, # I don't know
+      TRUE ~ NA_real_
+    )
   } else {
-    input_data$t_tested_14d <- NA_real_
     input_data$t_tested_positive_14d <- NA_real_
-    input_data$t_wanted_test_14d <- NA
   }
-  
+
   if ( "B10b" %in% names(input_data) ) {
     testing_reasons <- split_options(input_data$B10b)
     
@@ -292,7 +329,13 @@ code_testing <- function(input_data) {
     input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
     input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
     input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
+    input_data$t_tested_reason_travel <- is_selected(testing_reasons, "9")
     
+    if (wave >= 11) {
+      input_data$t_tested_reason_large_event <- NA
+      input_data$t_tested_reason_crowd <- NA
+    }
+        
     input_data$t_tested_reason_screening <- case_when(
       input_data$t_tested_reason_sick == TRUE ~ 0,
       input_data$t_tested_reason_contact == TRUE ~ 0,
@@ -302,6 +345,7 @@ code_testing <- function(input_data) {
       input_data$t_tested_reason_employer == TRUE ~ 1,
       input_data$t_tested_reason_large_event == TRUE ~ 1,
       input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      input_data$t_tested_reason_travel == TRUE ~ 1,
       
       !is.na(input_data$B10b) ~ 0,
       TRUE ~ NA_real_
@@ -353,15 +397,31 @@ code_vaccines <- function(input_data) {
     input_data$v_received_2_vaccine_doses <- NA_real_
   }
 
+  input_data$v_accept_covid_vaccine <- NA_real_
+  input_data$v_appointment_or_accept_covid_vaccine <- NA_real_
+  input_data$v_accept_covid_vaccine_no_appointment <- NA_real_
   if ("V3" %in% names(input_data)) {
     input_data$v_accept_covid_vaccine <- (
       input_data$V3 == 1 | input_data$V3 == 2
     )
-  } else {
-    input_data$v_accept_covid_vaccine <- NA_real_
+  } else if ( all(c("V3a", "V11a") %in% names(input_data)) ) {
+    input_data$v_accept_covid_vaccine_no_appointment <- (
+      input_data$V3a == 1 | input_data$V3a == 2
+    )
+    
+    input_data$v_appointment_or_accept_covid_vaccine <- case_when(
+      input_data$V11a == 1 ~ 1,
+      input_data$V3a == 1 ~ 1,
+      input_data$V3a == 2 ~ 1,
+      input_data$V3a == 3 ~ 0,
+      input_data$V3a == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
   }
 
-  if ("V3" %in% names(input_data) && "V1" %in% names(input_data)) {
+  input_data$v_covid_vaccinated_or_accept <- NA_real_
+  input_data$v_covid_vaccinated_appointment_or_accept <- NA_real_
+  if ( all(c("V1", "V3") %in% names(input_data)) ) {
     # "acceptance plus" means you either
     # - already have the vaccine (V1 == 1), or
     # - would get it if offered (V3 == 1 or 2)
@@ -373,8 +433,29 @@ code_vaccines <- function(input_data) {
       input_data$V3 == 4 ~ 0,
       TRUE ~ NA_real_
     )
+  } else if ( all(c("V1", "V3a", "V11a") %in% names(input_data)) ) {
+    # Starting in Wave 11, only if a respondent does not have an appointment to
+    # get a vaccine are they asked if they would get a vaccine (V3a).
+    # "acceptance plus" means you either
+    # - already have the vaccine (V1 == 1), or
+    # - have an appointment to get it (V11a == 1), or
+    # - would get it if offered (V3a == 1 or 2)
+    input_data$v_covid_vaccinated_appointment_or_accept <- case_when(
+      input_data$V1 == 1 ~ 1,
+      input_data$V11a == 1 ~ 1,
+      input_data$V3a == 1 ~ 1,
+      input_data$V3a == 2 ~ 1,
+      input_data$V3a == 3 ~ 0,
+      input_data$V3a == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  }
+  
+  if ("V11a" %in% names(df)) {
+    # Have an appointment to get vaccinated conditional on not being vaccinated.
+    input_data$v_appointment_not_vaccinated <- df$V11a == 1
   } else {
-    input_data$v_covid_vaccinated_or_accept <- NA_real_
+    input_data$v_appointment_not_vaccinated <- NA  
   }
 
   if ("V4_1" %in% names(input_data)) {
@@ -399,7 +480,28 @@ code_vaccines <- function(input_data) {
     input_data$v_vaccine_likely_politicians <- NA_real_
     input_data$v_vaccine_likely_doctors <- NA_real_
   }
-
+  
+  # Close analogues to `v_vaccine_likely_*` as of Wave 11.
+  if ( all(c("I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8") %in% names(input_data)) ) {
+    input_data$i_trust_covid_info_doctors <- input_data$I6_1 == 3
+    input_data$i_trust_covid_info_experts <- input_data$I6_2 == 3
+    input_data$i_trust_covid_info_cdc <- input_data$I6_3 == 3
+    input_data$i_trust_covid_info_govt_health <- input_data$I6_4 == 3
+    input_data$i_trust_covid_info_politicians <- input_data$I6_5 == 3
+    input_data$i_trust_covid_info_journalists <- input_data$I6_6 == 3
+    input_data$i_trust_covid_info_friends <- input_data$I6_7 == 3
+    input_data$i_trust_covid_info_religious <- input_data$I6_8 == 3
+  } else {
+    input_data$i_trust_covid_info_doctors <- NA
+    input_data$i_trust_covid_info_experts <- NA
+    input_data$i_trust_covid_info_cdc <- NA
+    input_data$i_trust_covid_info_govt_health <- NA
+    input_data$i_trust_covid_info_politicians <- NA
+    input_data$i_trust_covid_info_journalists <- NA
+    input_data$i_trust_covid_info_friends <- NA
+    input_data$i_trust_covid_info_religious <- NA
+  }
+  
   if ("V5a" %in% names(input_data) && "V5b" %in% names(input_data) && "V5c" %in% names(input_data)) {
     # introduced in Wave 8
     hesitancy_reasons <- coalesce(input_data$V5a, input_data$V5b, input_data$V5c)
@@ -421,6 +523,14 @@ code_vaccines <- function(input_data) {
     input_data$v_hesitancy_reason_pregnant <- is_selected(hesitancy_reasons, "14")
     input_data$v_hesitancy_reason_religious <- is_selected(hesitancy_reasons, "15")
 
+    if (wave >= 11) {
+      input_data$v_hesitancy_reason_allergic <- NA
+      input_data$v_hesitancy_reason_not_recommended <- NA
+      input_data$v_hesitancy_reason_distrust_vaccines <- NA
+      input_data$v_hesitancy_reason_health_condition <- NA
+      input_data$v_hesitancy_reason_pregnant <- NA
+    }
+    
   } else {
     input_data$v_hesitancy_reason_sideeffects <- NA_real_
     input_data$v_hesitancy_reason_allergic <- NA_real_

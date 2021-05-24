@@ -88,6 +88,7 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
   input_data$c_mask_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_masked_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
@@ -107,11 +108,12 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often <- NA
   input_data$c_mask_often_7d <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_masked_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
 
-  ## Wave 10+
+  ## Wave 10
   input_data <- data.frame(
     wave = 10,
     C14 = c(NA, 1, 3, 6, 2, 4),
@@ -127,10 +129,32 @@ test_that("mask items correctly coded", {
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
   input_data$c_mask_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_masked_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
 
+  ## Wave 11+
+  input_data <- data.frame(
+    wave = 11,
+    C14 = c(NA, 1, 3, 6, 2, 4),
+    H2 = c(1, NA, 6, 3, 2, 5),
+    C6a = 1
+  )
+  
+  out <- code_mask_contact(input_data)
+  
+  # expected result
+  input_data$c_travel_state <- NA
+  input_data$c_travel_state_7d <- TRUE
+  input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_often_7d <- NA
+  input_data$c_others_masked <- NA
+  input_data$c_others_masked_public <- c(FALSE, NA, NA, FALSE, FALSE, TRUE)
+  input_data$c_work_outside_5d <- NA
+  
+  expect_equal(out, input_data)
+  
 })
 
 test_that("household size correctly imputes zeros", {
@@ -237,7 +261,8 @@ test_that("mental health items are correctly coded", {
 test_that("tested reasons are correctly coded", {
   input_data <- data.frame(
     B10b = c("1", "2", "3", "4", "5", "6", "7", "8", NA_character_, 
-             "1,2", "1,3", "3,4", "", "3,4,5,7", "3,4,5,7,2")
+             "1,2", "1,3", "3,4", "", "3,4,5,7", "3,4,5,7,2"),
+    wave = 10
   )
   
   out <- code_testing(input_data)

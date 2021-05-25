@@ -359,10 +359,6 @@ remap_responses <- function(df) {
 #'
 #' @return data frame of individual response data with newly derived columns
 create_derivative_columns <- function(df) {
-  
-  # Get the latest wave available in the data.
-  wave <- max(df$wave)
-  
   ###---
   # Grouping variables.
   ###---
@@ -931,7 +927,7 @@ create_derivative_columns <- function(df) {
   }
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_religious") %in% names(df))) {
-    df$b_hesitant_trust_covid_info_religious- case_when(
+    df$b_hesitant_trust_covid_info_religious <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 1 ~ 1,
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 0 ~ 0,
       TRUE ~ NA_real_
@@ -979,13 +975,11 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_barrier_pregnant <- as.numeric(is_selected(hesitancy_reasons, "14"))
     df$b_hesitant_barrier_religious <- as.numeric(is_selected(hesitancy_reasons, "15"))
     
-    if (wave >= 11) {
-      input_data$b_hesitant_barrier_allergic <- NA
-      input_data$b_hesitant_barrier_not_recommended <- NA
-      input_data$b_hesitant_barrier_distrust_vaccines <- NA
-      input_data$b_hesitant_barrier_health_condition <- NA
-      input_data$b_hesitant_barrier_pregnant <- NA
-    }
+    df$b_hesitant_barrier_allergic[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_not_recommended[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_distrust_vaccines[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_health_condition[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_pregnant[df$wave >= 11] <- NA
     
   } else {
     df$b_hesitant_barrier_sideeffects <- NA_real_
@@ -1145,13 +1139,11 @@ create_derivative_columns <- function(df) {
     df$b_defno_barrier_pregnant <- as.numeric(is_selected(defno_reasons, "14"))
     df$b_defno_barrier_religious <- as.numeric(is_selected(defno_reasons, "15"))
     
-    if (wave >= 11) {
-      input_data$b_defno_barrier_allergic <- NA
-      input_data$b_defno_barrier_not_recommended <- NA
-      input_data$b_defno_barrier_distrust_vaccines <- NA
-      input_data$b_defno_barrier_health_condition <- NA
-      input_data$b_defno_barrier_pregnant <- NA
-    }
+    df$b_defno_barrier_allergic[df$wave >= 11] <- NA
+    df$b_defno_barrier_not_recommended[df$wave >= 11] <- NA
+    df$b_defno_barrier_distrust_vaccines[df$wave >= 11] <- NA
+    df$b_defno_barrier_health_condition[df$wave >= 11] <- NA
+    df$b_defno_barrier_pregnant[df$wave >= 11] <- NA
     
   } else {
     df$b_defno_barrier_sideeffects <- NA_real_

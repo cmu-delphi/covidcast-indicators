@@ -226,14 +226,17 @@ compute_binary_response <- function(response, weight, sample_size)
 {
   assert(all( (response == 0) | (response == 1) ))
   assert(length(response) == length(weight))
+  assert(sum(weights) == 1)
 
   response_prop <- weighted.mean(response, weight)
 
   val <- 100 * response_prop
+  
+  effective_sample_size <- 1 / sum(weights ^ 2)
 
   return(list(val = val,
               se = NA_real_,
-              effective_sample_size = sample_size)) # TODO effective sample size
+              effective_sample_size = effective_sample_size))
 }
 
 #' Apply a Jeffreys correction to estimates and their standard errors.
@@ -259,7 +262,7 @@ jeffreys_multinomial_factory <- function(k) {
   jeffreys_multinomial <- function(df) {
     return(mutate(df,
                   val = jeffreys_percentage(.data$val, .data$sample_size, k),
-                  se = binary_se(.data$val, .data$sample_size)))
+                  se = binary_se(.data$val, .data$effective_sample_size)))
   }
   
   return(jeffreys_multinomial)

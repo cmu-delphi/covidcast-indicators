@@ -360,6 +360,9 @@ remap_responses <- function(df) {
 #' @return data frame of individual response data with newly derived columns
 create_derivative_columns <- function(df) {
   
+  # Get the latest wave available in the data.
+  wave <- max(df$wave)
+  
   ###---
   # Grouping variables.
   ###---
@@ -1104,21 +1107,6 @@ create_derivative_columns <- function(df) {
   # respondents who selected at least one option in any of V5a, V5b, V5c)
   # made elsewhere and renamed in `rename_responses`.
   
-  # dontneed_reason_had_covid
-  # dontneed_reason_dont_spend_time
-  # dontneed_reason_not_high_risk
-  # dontneed_reason_precautions
-  # dontneed_reason_not_serious
-  # dontneed_reason_not_beneficial
-  # dontneed_reason_other
-  # Percentage of all respondents to (V5a, V5b, OR V5c) AND V6 who don’t
-  # believe they need a COVID-19 vaccine for X reason
-  # (# of respondents who selected “I don't believe I need a COVID-19 vaccine.”
-  # in any of V5a, V5b, V5c) AND selected X in V6./ (# of respondents who
-  # selected at least one option in any of V5a, V5b, V5c AND selected at least
-  # one option in V6)
-  # made elsewhere and renamed in `rename_responses`
-
   # defno_barrier_sideeffects
   # defno_barrier_allergic
   # defno_barrier_ineffective
@@ -1310,6 +1298,94 @@ create_derivative_columns <- function(df) {
     )
   } else {
     df$b_vaccine_tried <- NA_real_
+  }
+  
+  # dontneed_reason_had_covid
+  # dontneed_reason_dont_spend_time
+  # dontneed_reason_not_high_risk
+  # dontneed_reason_precautions
+  # dontneed_reason_not_serious
+  # dontneed_reason_not_beneficial
+  # dontneed_reason_other
+  # Percentage of all respondents to (V5a, V5b, OR V5c) AND V6 who don’t
+  # believe they need a COVID-19 vaccine for X reason
+  # (# of respondents who selected “I don't believe I need a COVID-19 vaccine.”
+  # in any of V5a, V5b, V5c) AND selected X in V6./ (# of respondents who
+  # selected at least one option in any of V5a, V5b, V5c AND selected at least
+  # one option in V6)
+  #
+  # WARNING: This section MUST come after all other variables, since it
+  # modifies the `b_dontneed_reason` variables which are used elsewhere in
+  # this function.
+  if ("b_barrier_dontneed" %in% names(df)) {
+    # b_barrier_dontneed is those who answered that they don't need the vaccine
+    # to any of questions V5a, V5b, or V6c. It is created originally as
+    # v_hesitancy_reason_unnecessary in variables.R.
+    dontneed <- df$b_barrier_dontneed == 1
+    
+    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+      df$b_dontneed_reason_had_covid <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_had_covid)
+      )
+    } else {
+      df$b_dontneed_reason_had_covid <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+      df$b_dontneed_reason_dont_spend_time <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+      )
+    } else {
+      df$b_dontneed_reason_dont_spend_time <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+      df$b_dontneed_reason_not_high_risk <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+      )
+    } else {
+      df$b_dontneed_reason_not_high_risk <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_precautions" %in% names(df)) {
+      df$b_dontneed_reason_precautions <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_precautions)
+      )
+    } else {
+      df$b_dontneed_reason_precautions <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+      df$b_dontneed_reason_not_serious <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_serious)
+      )
+    } else {
+      df$b_dontneed_reason_not_serious <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+      df$b_dontneed_reason_not_beneficial <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+      )
+    } else {
+      df$b_dontneed_reason_not_beneficial <- NA_real_
+    }
+    
+    if ("b_dontneed_reason_other" %in% names(df)) {
+      df$b_dontneed_reason_other <- as.numeric(
+        all_true(dontneed, df$b_dontneed_reason_other)
+      )
+    } else {
+      df$b_dontneed_reason_other <- NA_real_
+    }
+  } else {
+    df$b_dontneed_reason_had_covid <- NA_real_
+    df$b_dontneed_reason_dont_spend_time <- NA_real_
+    df$b_dontneed_reason_not_high_risk <- NA_real_
+    df$b_dontneed_reason_precautions <- NA_real_
+    df$b_dontneed_reason_not_serious <- NA_real_
+    df$b_dontneed_reason_not_beneficial <- NA_real_
+    df$b_dontneed_reason_other <- NA_real_
   }
 
   return(df)

@@ -16,6 +16,14 @@ mock_load_archive <- function(...) {
   return(list(input_data = NULL, seen_tokens = NULL))
 }
 
+mock_metadata <- function(data, params, geo_type, groupby_vars) {
+  return(data)
+}
+
+mock_geo_vars <- function(data, params, geo_type) {
+  return(data)
+}
+
 
 # `simple_responses.csv` was created by copying `responses.csv` and modifying
 # columns C1 (comorbidities), C8_1 (anxiety), and D1 (gender).
@@ -63,21 +71,22 @@ test_that("simple equal-weight dataset produces correct counts", {
   tdir <- tempfile()
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
-
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[1,])
 
   # Expected files
-  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
+  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~se_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
-    "us", "Female", 1L, 100 * (2000 - 1), NA, 2000L -1L, 100 * (2000 - 1)
+    ~geo_id, ~mc_anxiety, ~mc_gender, ~val_freq_anxiety, ~se_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
+    "us", 1L, "Female", 100 * (2000 - 1), NA, 2000L -1L, 100 * (2000 - 1)
     # "us", "Female", 4L, 100 * 1, xx, 1L, xx # censored due to sample size
   ))
 
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  df <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
   expect_equivalent(df, expected_output)
 })
 
@@ -88,10 +97,12 @@ test_that("simple equal-weight dataset produces correct percents", {
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
-  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_gender.csv"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -101,8 +112,8 @@ test_that("simple equal-weight dataset produces correct percents", {
     ~geo_id, ~mc_gender, ~val_pct_hh_fever, ~se_pct_hh_fever, ~sample_size_pct_hh_fever, ~represented_pct_hh_fever,
     "us", "Female", fever_prop * 100, NA, 2000L, 100 * 2000
   ))
-
-  df <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  
+  df <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_gender.csv"))
   expect_equivalent(df, expected_output)
 })
 
@@ -113,10 +124,12 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[3,])
 
   # Expected files
-  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_gender.csv"))
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
@@ -128,7 +141,7 @@ test_that("simple equal-weight dataset produces correct multiselect binary perce
     1/2000 * 100, NA, 2000L, 100 * 2000
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_gender.csv"))
   expect_equivalent(out, expected_output)
 })
 
@@ -139,21 +152,23 @@ test_that("testing run with multiple aggregations per group", {
   create_dir_not_exist(params$export_dir)
 
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs)
 
   ## freq_anxiety
-  expect_setequal(!!dir(params$export_dir), c("20200501_nation_gender.csv",
-                                              "20200501_nation_gender_anxiety.csv"))
+  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_gender.csv",
+                                              "20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
 
   # Expected file contents
   ## freq_anxiety
   expected_anxiety <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety, ~val_freq_anxiety, ~se_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
+    ~geo_id, ~mc_anxiety, ~mc_gender, ~val_freq_anxiety, ~se_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
     # "us", "Female", 4L, 100 * 1, xx, 1L, xx, # censored due to sample size
-    "us", "Female", 1L, 100 * (2000 - 1), NA, 2000L -1L, 100 * (2000 - 1)
+    "us", 1L, "Female", 100 * (2000 - 1), NA, 2000L -1L, 100 * (2000 - 1)
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
   expect_equivalent(out, expected_anxiety)
 
   ## all other aggs
@@ -171,7 +186,7 @@ test_that("testing run with multiple aggregations per group", {
     1/2000 * 100, NA, 2000L, 100 * 2000
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_gender.csv"))
   expect_equivalent(out, expected_other)
 })
 
@@ -216,10 +231,12 @@ test_that("simple weighted dataset produces correct counts", {
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[1,])
 
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender_anxiety.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -227,14 +244,14 @@ test_that("simple weighted dataset produces correct counts", {
 
   # Expected file contents
   expected_output <- as.data.frame(tribble(
-    ~geo_id, ~mc_gender, ~mc_anxiety,
+    ~geo_id, ~mc_anxiety, ~mc_gender,
     ~val_freq_anxiety, ~se_freq_anxiety, ~sample_size_freq_anxiety, ~represented_freq_anxiety,
     # "us", "Female", 4L, xx, xx, 1L, xx, # censored due to sample size
-    "us", "Female", 1L,
+    "us", 1L, "Female",
     anx_freq, NA, 2000L - 1L, sum(rand_weights[2:2000])
   ))
-
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender_anxiety.csv"))
+  
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_anxiety_mc_gender.csv"))
   expect_equivalent(out, expected_output)
 })
 
@@ -247,10 +264,12 @@ test_that("simple weighted dataset produces correct percents", {
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_gender.csv"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -261,7 +280,7 @@ test_that("simple weighted dataset produces correct percents", {
     "us", "Female", fever_prop * 100, NA, 2000L, sum(rand_weights)
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_gender.csv"))
   expect_equivalent(out, expected_output)
 })
 
@@ -274,10 +293,12 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
   local_mock("delphiFacebook::join_weights" = mock_join_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
+  local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)
+  local_mock("delphiFacebook::add_metadata_vars" = mock_metadata)
   run_contingency_tables_many_periods(params, base_aggs[3,])
 
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_nation_gender.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_mc_gender.csv"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -293,7 +314,7 @@ test_that("simple weighted dataset produces correct multiselect binary percents"
     comorbid_prop * 100, NA, 2000L, sum(rand_weights)
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_mc_gender.csv"))
   expect_equivalent(out, expected_output)
 })
 
@@ -311,7 +332,7 @@ test_that("production of historical CSVs for range of dates", {
 
   run_contingency_tables_many_periods(params, base_aggs[2,])
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200503_nation_gender.csv", "20200510_nation_gender.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200503_20200509_weekly_nation_mc_gender.csv", "20200510_20200516_weekly_nation_mc_gender.csv"))
 })
 
 

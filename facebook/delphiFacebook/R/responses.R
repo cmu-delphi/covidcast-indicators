@@ -8,20 +8,22 @@
 #' @param params a named listed containing a value named "input", a vector of
 #'   paths to load by the function, and "input_dir", the directory where the
 #'   input files are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #' @return A data frame of all loaded data files concatenated into one data
 #'   frame
 #'
 #' @importFrom dplyr bind_rows
 #' @importFrom parallel mclapply
 #' @export
-load_responses_all <- function(params) {
+load_responses_all <- function(params, contingency_run = FALSE) {
   input_data <- vector("list", length(params$input))
   
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
   map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(input_data), function(i) {
-    load_response_one(params$input[i], params)
+    load_response_one(params$input[i], params, contingency_run)
   })
   
   msg_plain(paste0("Finished loading CSVs"))
@@ -35,6 +37,8 @@ load_responses_all <- function(params) {
 #' @param input_filename  filename of the input CSV file
 #' @param params          a named list containing a value named "input_dir", the directory
 #'                        where the input file are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
 #' @importFrom readr read_lines cols locale col_character col_integer
@@ -42,7 +46,7 @@ load_responses_all <- function(params) {
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
-load_response_one <- function(input_filename, params) {
+load_response_one <- function(input_filename, params, contingency_run) {
   msg_plain(paste0("Reading ", input_filename))
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)

@@ -25,9 +25,8 @@ def get_from_s3(start_date, end_date, bucket):
     """
     time_flag = None
     selected_columns = ['SofiaSerNum', 'TestDate', 'Facility', 'City',
-                               'State', 'Zip', 'PatientAge', 'Result1',
-                               'Result2', 'OverallResult', 'StorageDate',
-                               'fname']
+                               'State', 'Zip', 'PatientAge', 'OverallResult', 
+                               'StorageDate', 'fname', 'SARSResult']
     df = pd.DataFrame(columns=selected_columns)
     s3_files = {}
     for obj in bucket.objects.all():
@@ -59,6 +58,11 @@ def get_from_s3(start_date, end_date, bucket):
                 newdf = pd.read_csv(obj.get()["Body"],
                                     parse_dates=["StorageDate", "TestDate"],
                                     low_memory=False)
+                # TODO change the date later after we get reply from Quidel
+                if search_date <= datetime.today():
+                    newdf["SARSResult"] = newdf["OverallResult"]
+                else:
+                    newdf["SARSResult"] = newdf["Result3"]
                 newdf["fname"] = fn
                 df = df.append(newdf[selected_columns])
                 time_flag = search_date
@@ -155,13 +159,13 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
 
     # Create a column CanonicalDate according to StarageDate and TestDate
     df = fix_date(df)
-
+    
     # Compute overallPositive
-    overall_pos = df[df["OverallResult"] == "positive"].groupby(
+    overall_pos = df[df["SARSResult"] == "positive"].groupby(
         by=["timestamp", "zip"],
-        as_index=False)['OverallResult'].count()
-    overall_pos["positiveTest"] = overall_pos["OverallResult"]
-    overall_pos.drop(labels="OverallResult", axis="columns", inplace=True)
+        as_index=False)['SARSResult'].count()
+    overall_pos["positiveTest"] = overall_pos["SARSResult"]
+    overall_pos.drop(labels="SARSResult", axis="columns", inplace=True)
 
     # Compute overallTotal
     overall_total = df.groupby(

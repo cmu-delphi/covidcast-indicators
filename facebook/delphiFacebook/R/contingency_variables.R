@@ -37,22 +37,9 @@ remap_responses <- function(df) {
     df[grepl(",", df$D7), "D7"] <- "multiracial"
   }
 
-  # Map "I don't know" to NA in otherwise binary columns.
-  df <- remap_response(df, "B11", c("1"=1, "2"=0, "3"=NA)) %>%
-    remap_response("C17", c("1"=1, "4"=0, "2"=NA)) %>%
-
-    remap_response("E1_1", c("1"=1, "2"=0, "5"=NA)) %>%
-    remap_response("E1_2", c("1"=1, "2"=0, "5"=NA)) %>%
-    remap_response("E1_3", c("1"=1, "2"=0, "5"=NA)) %>%
-    remap_response("E1_4", c("1"=1, "2"=0, "5"=NA)) %>%
-
-    remap_response("E2_1", c("2"=1, "3"=0, "4"=NA)) %>%
-    remap_response("E2_2", c("2"=1, "3"=0, "4"=NA))
-
   ## Specifies human-readable values that response codes correspond to for each
   ## question. `default` is the value that all non-specified response codes map
-  ## to. Please avoid including commas or other punctuation in replacement
-  ## strings for ease of down-stream usage.
+  ## to.
   map_old_new_responses <- list(
     D2=list(
       "map"=c(
@@ -1152,6 +1139,7 @@ create_derivative_columns <- function(df) {
   # WARNING: This section MUST come after all other variables, since it
   # modifies the `b_dontneed_reason` variables which are used elsewhere in
   # this function.
+  
   if ("v_hesitancy_reason_unnecessary" %in% names(df)) {
     # v_hesitancy_reason_unnecessary is those who answered that they don't need the vaccine
     # to any of questions V5a, V5b, or V6c. It is created originally as
@@ -1269,128 +1257,4 @@ remap_response <- function(df, col_var, map_old_new, default=NULL, response_type
   }
 
   return(df)
-}
-
-
-#' Wrapper for `remap_response` that returns `aggregations` also
-#'
-#' Assumes binary response variable and is coded with 1 = TRUE (agree), 2 = FALSE,
-#' 3 = "I don't know"
-#'
-#' @param df Data frame of individual response data.
-#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base column name; `var_weight` is the
-#'   column to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `group_by` is a list of variables used to perform the
-#'   aggregations over. `compute_fn` is the function that computes
-#'   the aggregate response given many rows of data. `post_fn` is applied to the
-#'   aggregate data after megacounty aggregation, and can perform any final
-#'   calculations necessary.
-#' @param col_var Name of response var
-#'
-#' @return list of data frame of individual response data and user-set data
-#' frame of desired aggregations
-#'
-#' @export
-code_binary <- function(df, aggregations, col_var) {
-  df <- remap_response(df, col_var, c("1"=1, "2"=0, "3"=NA))
-  return(list(df, aggregations))
-}
-
-#' Convert a single multi-select response column to a set of boolean columns.
-#'
-#' Update aggregations table to use new set of columns where `col_var` had
-#' previously been used as the metric to aggregate. Does not change columns
-#' referenced in `groupby`
-#'
-#' @param df Data frame of individual response data.
-#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base column name; `var_weight` is the
-#'   column to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `group_by` is a list of variables used to perform the
-#'   aggregations over. `compute_fn` is the function that computes
-#'   the aggregate response given many rows of data. `post_fn` is applied to the
-#'   aggregate data after megacounty aggregation, and can perform any final
-#'   calculations necessary.
-#' @param col_var Name of response var
-#'
-#' @return list of data frame of individual response data and user-set data
-#' frame of desired aggregations
-#'
-#' @importFrom stats na.omit
-#' @importFrom tibble add_row
-#' @importFrom stringi stri_replace_all
-#'
-#' @export
-code_multiselect <- function(df, aggregations, col_var) {
-  # Get unique response codes. Sort alphabetically.
-  response_codes <- sort( na.omit(
-    unique(do.call(c, strsplit(unique(df[[col_var]]), ",")))))
-
-  # Turn each response code into a new binary col
-  new_binary_cols <- as.character(lapply(
-    response_codes,
-    function(code) {
-      paste(col_var,
-            stri_replace_all(code, "_", fixed=" "),
-            sep="_")
-      }
-    ))
-
-  #### TODO: eval(parse()) here is not the best approach, but I can't find another
-  # way to get col_var (a string) to be used as a var that references a column
-  # rather than as an actual string. This approach causes a shallow copy to be
-  # made (warning is raised).
-  df[!is.na(df[[col_var]]), c(new_binary_cols) :=
-       lapply(response_codes, function(code) {
-         as.numeric( grepl(sprintf("^%s$", code), eval(parse(text=col_var))) |
-                       grepl(sprintf("^%s,", code), eval(parse(text=col_var))) |
-                       grepl(sprintf(",%s$", code), eval(parse(text=col_var))) |
-                       grepl(sprintf(",%s,", code), eval(parse(text=col_var))) )
-       })]
-
-  # Update aggregations table
-  old_rows <- aggregations[aggregations$metric == col_var, ]
-  for (row_ind in seq_along(old_rows$id)) {
-    old_row <- old_rows[row_ind, ]
-
-    for (col_ind in seq_along(new_binary_cols)) {
-      new_row <- old_row
-      response_code <- response_codes[col_ind]
-
-      new_row$name <- paste(old_row$name,
-                            stri_replace_all(response_code, "_", fixed=" "),
-                            sep="_")
-      new_row$id <- paste(old_row$id, response_code, sep="_")
-      new_row$metric <- new_binary_cols[col_ind]
-      aggregations <- add_row(aggregations, new_row)
-    }
-  }
-
-  return(list(df, aggregations[aggregations$metric != col_var, ]))
-}
-
-#' Convert a single free response column to numeric.
-#'
-#' @param df Data frame of individual response data.
-#' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
-#'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
-#'   to report. `name` is the aggregate's base column name; `var_weight` is the
-#'   column to use for its weights; `metric` is the column of `df` containing the
-#'   response value. `group_by` is a list of variables used to perform the
-#'   aggregations over. `compute_fn` is the function that computes
-#'   the aggregate response given many rows of data. `post_fn` is applied to the
-#'   aggregate data after megacounty aggregation, and can perform any final
-#'   calculations necessary.
-#' @param col_var Name of response var
-#'
-#' @return list of data frame of individual response data and user-set data
-#' frame of desired aggregations
-#'
-#' @export
-code_numeric_freeresponse <- function(df, aggregations, col_var) {
-  df[[col_var]] <- as.numeric(df[[col_var]])
-  return(list(df, aggregations))
 }

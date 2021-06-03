@@ -20,198 +20,9 @@
 #' @export
 make_human_readable <- function(input_data) {
   input_data <- remap_responses(input_data)
-  input_data <- rename_responses(input_data)
-  input_data$t_zipcode <- input_data$zip5 # Keep existing parsed zipcode column
   input_data <- create_derivative_columns(input_data)
 
   return(input_data)
-}
-
-#' Rename all columns to make more interpretable.
-#'
-#' @param df Data frame of individual response data.
-#'
-#' @return data frame of individual response data with newly mapped columns
-rename_responses <- function(df) {
-  # Named vector of new response names and the response codes they are replacing.
-  # These columns are not available for aggregation:
-  #   "t_zipcode" = "A3", -> Please use `zip5` instead
-  #   "t_symptoms_other" = "B2_14_TEXT",
-  #   "t_unusual_symptoms_other" = "B2c_14_TEXT",
-  #   "t_gender_other" = "D1_4_TEXT",
-  map_new_old_names <- c(
-    ## free response
-    # Either number ("n"; can be averaged although may need processing) or text ("t")
-    "n_hh_num_sick" = "hh_number_sick", # A2
-    "n_hh_num_children" = "A5_1",
-    "n_hh_num_adults" = "A5_2",
-    "n_hh_num_seniors" = "A5_3",
-    "n_cmnty_num_sick" = "A4",
-    "n_days_unusual_symptoms" = "B2b",
-    "n_contact_num_work" = "C10_1_1",
-    "n_contact_num_shopping" = "C10_2_1",
-    "n_contact_num_social" = "C10_3_1",
-    "n_contact_num_other" = "C10_4_1",
-    "n_hh_num_total" = "hh_number_total", # A2b from Waves <4 and summed A5 from Wave 4
-    "n_highest_temp_f" = "Q40",
-    "n_hh_num_children_old" = "D3", # Wave 1, etc versions of A5
-    "n_hh_num_adults_not_self" = "D4",
-    "n_hh_num_seniors_not_self" = "D5",
-
-    ## binary response (b)
-    ## generally, False (no) is mapped to 2 and True (yes/agreement) is mapped to 1
-    "b_consent" = "S1",
-    "b_hh_fever" = "hh_fever", # A1_1
-    "b_hh_sore_throat" = "hh_sore_throat", # A1_2
-    "b_hh_cough" = "hh_cough", # A1_3
-    "b_hh_shortness_of_breath" = "hh_short_breath", # A1_4
-    "b_hh_difficulty_breathing" = "hh_diff_breath", # A1_5
-    "b_tested_ever" = "B8",
-    "b_tested_14d" = "t_tested_14d", # B10; "No" coded as 3, but dealt with in conversion to "t_tested_14d"
-    "b_wanted_test_14d" = "t_wanted_test_14d", # B12
-    "b_state_travel" = "C6", # c_travel_state
-    "b_contact_tested_pos" = "C11",
-    "b_contact_tested_pos_hh" = "C12",
-    "b_hispanic" = "D6",
-    "b_worked_4w" = "D9",
-    "b_worked_outside_home_4w" = "D10",
-    "b_took_temp" = "B3",
-    "b_flu_shot_12m" = "C2",
-    "b_worked_outside_home_5d" = "c_work_outside_5d", # C3
-    "b_worked_healthcare_5d" = "C4",
-    "b_worked_nursing_home_5d" = "C5",
-    "b_anxious" = "mh_anxious", # Binary version of C8_1
-    "b_depressed" = "mh_depressed", # Binary version of C8_2
-    "b_isolated" = "mh_isolated", # Binary version of C8_3
-    "b_worried_family_ill" = "mh_worried_ill", # Binary version of C9
-    "b_public_mask_often" = "c_mask_often", # Binary version of C14
-    "b_tested_pos_14d" = "t_tested_positive_14d", # B10a; binary with an "I don't know" (3) option
-    "b_tested_pos_ever" = "B11", # binary with an "I don't know" (3) option
-    "b_have_cli" = "is_cli", # Based on symptoms in A1
-    "b_have_ili" = "is_ili", # Based on symptoms in A1
-    "b_cmnty_have_cli" = "community_yes",
-    "b_hh_cmnty_cli" = "hh_community_yes",
-    # Wave 5 additions
-    "b_flu_shot_jun2020" = "C17", # binary with "I don't know" option
-    "b_children_grade_prek_k" = "E1_1", # binary with "I don't know" option
-    "b_children_grade_1_5" = "E1_2", # binary with "I don't know" option
-    "b_children_grade_6_8" = "E1_3", # binary with "I don't know" option
-    "b_children_grade_9_12" = "E1_4", # binary with "I don't know" option
-    "b_children_fulltime_school" = "E2_1", # binary with "I don't know" option
-    "b_children_parttime_school" = "E2_2", # binary with "I don't know" option
-    # Wave 6 additions
-    "b_vaccinated" = "v_covid_vaccinated",
-    "b_accept_vaccine" = "v_accept_covid_vaccine", # Binary version of V3; "definitely" and "probably" vaccinate map to TRUE
-    "b_vaccinated_or_accept" = "v_covid_vaccinated_or_accept",
-    "b_vaccine_likely_friends" = "v_vaccine_likely_friends", # Binary version of V4_1
-    "b_vaccine_likely_local_health" = "v_vaccine_likely_local_health", # Binary version of V4_2
-    "b_vaccine_likely_who" = "v_vaccine_likely_who", # Binary version of V4_3
-    "b_vaccine_likely_govt_health" = "v_vaccine_likely_govt_health", # Binary version of V4_4
-    "b_vaccine_likely_politicians" = "v_vaccine_likely_politicians", # Binary version of V4_5
-    # Wave 8
-    "b_vaccine_likely_doctors" = "v_vaccine_likely_doctors",
-    
-    # Wave 7 additions
-    "b_received_2_vaccine_doses" = "v_received_2_vaccine_doses", # Binary version of V2
-    
-    "b_worried_vaccine_sideeffects" = "v_worried_vaccine_side_effects",
-    
-    "b_dontneed_reason_had_covid" = "v_dontneed_reason_had_covid",
-    "b_dontneed_reason_dont_spend_time" = "v_dontneed_reason_dont_spend_time",
-    "b_dontneed_reason_not_high_risk" = "v_dontneed_reason_not_high_risk",
-    "b_dontneed_reason_precautions" = "v_dontneed_reason_precautions",
-    "b_dontneed_reason_not_serious" = "v_dontneed_reason_not_serious",
-    "b_dontneed_reason_not_beneficial" = "v_dontneed_reason_not_beneficial",
-    "b_dontneed_reason_other" = "v_dontneed_reason_other",
-    
-    "b_barrier_sideeffects" = "v_hesitancy_reason_sideeffects",
-    "b_barrier_allergic" = "v_hesitancy_reason_allergic",
-    "b_barrier_ineffective" = "v_hesitancy_reason_ineffective",
-    "b_barrier_dontneed" = "v_hesitancy_reason_unnecessary",
-    "b_barrier_dislike_vaccines" = "v_hesitancy_reason_dislike_vaccines",
-    "b_barrier_not_recommended" = "v_hesitancy_reason_not_recommended",
-    "b_barrier_wait_safety" = "v_hesitancy_reason_wait_safety",
-    "b_barrier_low_priority" = "v_hesitancy_reason_low_priority",
-    "b_barrier_cost" = "v_hesitancy_reason_cost",
-    "b_barrier_distrust_vaccines" = "v_hesitancy_reason_distrust_vaccines",
-    "b_barrier_distrust_govt" = "v_hesitancy_reason_distrust_gov",
-    "b_barrier_religious" = "v_hesitancy_reason_religious",
-    "b_barrier_health_condition" = "v_hesitancy_reason_health_condition",
-    "b_barrier_pregnant" = "v_hesitancy_reason_pregnant",
-    "b_barrier_other" = "v_hesitancy_reason_other",
-
-    ## multiple choice (mc)
-    ## Can only select one of n > 2 choices
-    "mc_state" = "A3b",
-    "mc_mask_often" = "C14",
-    "mc_anxiety" = "C8_1",
-    "mc_depression" = "C8_2",
-    "mc_isolation" = "C8_3",
-    "mc_worried_family_ill" = "C9",
-    "mc_financial_worry" = "C15",
-    "mc_gender" = "D1",
-    "mc_agefull" = "D2",
-    "mc_race" = "D7",
-    "mc_education" = "D8",
-    "mc_occupational_group" = "Q64",
-    "mc_job_type_cmnty_social" = "Q65",
-    "mc_job_type_education" = "Q66",
-    "mc_job_type_arts_media" = "Q67",
-    "mc_job_type_healthcare" = "Q68",
-    "mc_job_type_healthcare_support" = "Q69",
-    "mc_job_type_protective" = "Q70",
-    "mc_job_type_food" = "Q71",
-    "mc_job_type_maintenance" = "Q72",
-    "mc_job_type_personal_care" = "Q73",
-    "mc_job_type_sales" = "Q74",
-    "mc_job_type_office_admin" = "Q75",
-    "mc_job_type_construction" = "Q76",
-    "mc_job_type_repair" = "Q77",
-    "mc_job_type_production" = "Q78",
-    "mc_job_type_transport" = "Q79",
-    "mc_occupational_group_other" = "Q80",
-    "mc_cough_mucus" = "B4",
-    "mc_tested_current_illness" = "B5",
-    "mc_hospital" = "B6",
-    "mc_social_avoidance" = "C7",
-    "mc_financial_threat" = "Q36",
-    "mc_pregnant" = "D1b", # Somewhat of a binary response (yes, no, prefer not to answer, and not applicable)
-    # Wave 5 additions
-    "mc_cmnty_mask_prevalence" = "C16",
-    # Wave 6 additions
-    "mc_accept_cov_vaccine" = "V3",
-    "mc_num_cov_vaccine_doses" = "V2",
-    "mc_vaccine_likely_friends" = "V4_1",
-    "mc_vaccine_likely_local_health" = "V4_2",
-    "mc_vaccine_likely_who" = "V4_3",
-    "mc_vaccine_likely_govt_health" = "V4_4",
-    "mc_vaccine_likely_politicians" = "V4_5",
-    # Wave 7 additions
-    "mc_concerned_sideeffects" = "V9",
-
-    ## multiselect (ms)
-    ## Can select more than one choice; saved as comma-separated list of choice codes
-    "ms_symptoms" = "B2",
-    "ms_unusual_symptoms" = "B2c",
-    "ms_medical_care" = "B7",
-    "ms_reasons_tested_14d" = "B10b",
-    "ms_reasons_not_tested_14d" = "B12a",
-    "ms_trips_outside_home" = "C13",
-    "ms_mask_outside_home" = "C13a",
-    "ms_comorbidities" = "C1",
-    # Wave 5 additions
-    "ms_school_safety_measures" = "E3",
-
-    ## other (created in previous data-cleaning steps)
-    "n_num_symptoms" = "cnt_symptoms", # Based on symptoms in A1
-    "n_hh_prop_cli" = "hh_p_cli", # Based on symptoms in A1, and hh sick and total counts
-    "n_hh_prop_ili" = "hh_p_ili" # Based on symptoms in A1, and hh sick and total counts
-  )
-
-  map_new_old_names <- map_new_old_names[!(names(map_new_old_names) %in% names(df))]
-  df <- rename(df, map_new_old_names[map_new_old_names %in% names(df)])
-
-  return(df)
 }
 
 #' Remap binary columns, race, and others to make more interpretable.
@@ -370,8 +181,8 @@ create_derivative_columns <- function(df) {
   # age
   # agefull
   # age65plus
-  if ("mc_agefull" %in% names(df)) {
-    df$agefull <- df$mc_agefull
+  if ("D2" %in% names(df)) {
+    df$agefull <- df$D2
 
     df$age <- case_when(
       df$agefull == "18-24"  ~ "18-24",
@@ -392,20 +203,20 @@ create_derivative_columns <- function(df) {
   }
 
   # gender
-  if ("mc_gender" %in% names(df)) {
-    df$gender <- df$mc_gender
+  if ("D1" %in% names(df)) {
+    df$gender <- df$D1
   }
 
   # race
-  if ("mc_race" %in% names(df)) {
+  if ("D7" %in% names(df)) {
     df$race <- case_when(
-        df$mc_race == "American Indian or Alaska Native" ~ "AmericanIndianAlaskaNative",
-        df$mc_race == "Asian" ~ "Asian",
-        df$mc_race == "Black or African American" ~ "BlackAfricanAmerican",
-        df$mc_race == "Native Hawaiian or Pacific Islander" ~ "NativeHawaiianPacificIslander",
-        df$mc_race == "White" ~ "White",
-        df$mc_race == "Other" ~ "MultipleOther",
-        df$mc_race == "Multiracial" ~ "MultipleOther",
+        df$D7 == "American Indian or Alaska Native" ~ "AmericanIndianAlaskaNative",
+        df$D7 == "Asian" ~ "Asian",
+        df$D7 == "Black or African American" ~ "BlackAfricanAmerican",
+        df$D7 == "Native Hawaiian or Pacific Islander" ~ "NativeHawaiianPacificIslander",
+        df$D7 == "White" ~ "White",
+        df$D7 == "Other" ~ "MultipleOther",
+        df$D7 == "Multiracial" ~ "MultipleOther",
         TRUE ~ NA_character_
     )
   } else {
@@ -413,8 +224,8 @@ create_derivative_columns <- function(df) {
   }
 
   # hispanic
-  if ("b_hispanic" %in% names(df)) {
-    df$hispanic <- df$b_hispanic == 1
+  if ("D6" %in% names(df)) {
+    df$hispanic <- df$D6 == 1
   } else {
     df$hispanic <- NA
   }
@@ -437,20 +248,20 @@ create_derivative_columns <- function(df) {
   }
 
   # healthcareworker
-  if ("mc_occupational_group" %in% names(df)) {
+  if ("Q64" %in% names(df)) {
     df$healthcareworker <-
-      df$mc_occupational_group == "Healthcare support" |
-      df$mc_occupational_group == "Healthcare practitioner"
+      df$Q64 == "Healthcare support" |
+      df$Q64 == "Healthcare practitioner"
   } else {
     df$healthcareworker <- NA
   }
 
   # pregnant
-  if (all(c("mc_pregnant", "gender") %in% names(df))) {
+  if (all(c("D1b", "gender") %in% names(df))) {
     df$pregnant <- case_when(
-      df$mc_pregnant == 1 ~ TRUE,
-      df$mc_pregnant == 2 ~ FALSE,
-      df$mc_pregnant == 4 ~ NA,
+      df$D1b == 1 ~ TRUE,
+      df$D1b == 2 ~ FALSE,
+      df$D1b == 4 ~ NA,
       df$gender == "Male" ~ NA,
       TRUE ~ NA
     )
@@ -473,8 +284,8 @@ create_derivative_columns <- function(df) {
   # comorbiddiabetes
   # comorbidimmuno
   # comorbidobese
-  if ("ms_comorbidities" %in% names(df)) {
-    comorbidities <- split_options(df$ms_comorbidities)
+  if ("C1" %in% names(df)) {
+    comorbidities <- split_options(df$C1)
 
     df$comorbidheartdisease <- is_selected(comorbidities, "Heart disease")
     df$comorbidcancer <- is_selected(comorbidities, "Cancer")
@@ -517,16 +328,16 @@ create_derivative_columns <- function(df) {
   }
   
   # edulevelfull
-  if ("mc_education" %in% names(df)) {
+  if ("D8" %in% names(df)) {
     df$edulevelfull <- case_when(
-      df$mc_education == "Less than high school" ~ "LessThanHighSchool",
-      df$mc_education == "High school graduate or equivalent" ~ "HighSchool",
-      df$mc_education == "Some college" ~ "SomeCollege",
-      df$mc_education == "2 year degree" ~ "TwoYearDegree",
-      df$mc_education == "4 year degree" ~ "FourYearDegree",
-      df$mc_education == "Master's degree" ~ "MastersDegree",
-      df$mc_education == "Professional degree" ~ "ProfessionalDegree",
-      df$mc_education == "Doctorate" ~ "Doctorate",
+      df$D8 == "Less than high school" ~ "LessThanHighSchool",
+      df$D8 == "High school graduate or equivalent" ~ "HighSchool",
+      df$D8 == "Some college" ~ "SomeCollege",
+      df$D8 == "2 year degree" ~ "TwoYearDegree",
+      df$D8 == "4 year degree" ~ "FourYearDegree",
+      df$D8 == "Master's degree" ~ "MastersDegree",
+      df$D8 == "Professional degree" ~ "ProfessionalDegree",
+      df$D8 == "Doctorate" ~ "Doctorate",
       TRUE ~ NA_character_
     )
   } else {
@@ -534,16 +345,16 @@ create_derivative_columns <- function(df) {
   }
 
   # edulevel
-  if ("mc_education" %in% names(df)) {
+  if ("D8" %in% names(df)) {
     df$edulevel <- case_when(
-      df$mc_education == "Less than high school" ~ "LessThanHighSchool",
-      df$mc_education == "High school graduate or equivalent" ~ "HighSchool",
-      df$mc_education == "Some college" ~ "SomeCollege",
-      df$mc_education == "2 year degree" ~ "SomeCollege",
-      df$mc_education == "4 year degree" ~ "FourYearDegree",
-      df$mc_education == "Master's degree" ~ "PostGraduate",
-      df$mc_education == "Professional degree" ~ "PostGraduate",
-      df$mc_education == "Doctorate" ~ "PostGraduate",
+      df$D8 == "Less than high school" ~ "LessThanHighSchool",
+      df$D8 == "High school graduate or equivalent" ~ "HighSchool",
+      df$D8 == "Some college" ~ "SomeCollege",
+      df$D8 == "2 year degree" ~ "SomeCollege",
+      df$D8 == "4 year degree" ~ "FourYearDegree",
+      df$D8 == "Master's degree" ~ "PostGraduate",
+      df$D8 == "Professional degree" ~ "PostGraduate",
+      df$D8 == "Doctorate" ~ "PostGraduate",
       TRUE ~ NA_character_
     )
   } else {
@@ -551,24 +362,24 @@ create_derivative_columns <- function(df) {
   }
 
   # occupation
-  if ("mc_occupational_group" %in% names(df)) {
+  if ("Q64" %in% names(df)) {
     df$occupation <- case_when(
-      df$mc_occupational_group == "Community and social" ~ "SocialService",
-      df$mc_occupational_group == "Education" ~ "Education",
-      df$mc_occupational_group == "Arts and media" ~ "Arts",
-      df$mc_occupational_group == "Healthcare practitioner" ~ "HealthcarePractitioner",
-      df$mc_occupational_group == "Healthcare support" ~ "HealthcareSupport",
-      df$mc_occupational_group == "Protective" ~ "ProtectiveService",
-      df$mc_occupational_group == "Food" ~ "FoodService",
-      df$mc_occupational_group == "Building upkeep" ~ "BuildingMaintenance",
-      df$mc_occupational_group == "Personal care" ~ "PersonalCare",
-      df$mc_occupational_group == "Sales" ~ "Sales",
-      df$mc_occupational_group == "Administrative" ~ "Office",
-      df$mc_occupational_group == "Construction and extraction" ~ "Construction",
-      df$mc_occupational_group == "Maintenance and repair" ~ "Maintenance",
-      df$mc_occupational_group == "Production" ~ "Production",
-      df$mc_occupational_group == "Transportation and delivery" ~ "Transportation",
-      df$mc_occupational_group == "Other" ~ "Other",
+      df$Q64 == "Community and social" ~ "SocialService",
+      df$Q64 == "Education" ~ "Education",
+      df$Q64 == "Arts and media" ~ "Arts",
+      df$Q64 == "Healthcare practitioner" ~ "HealthcarePractitioner",
+      df$Q64 == "Healthcare support" ~ "HealthcareSupport",
+      df$Q64 == "Protective" ~ "ProtectiveService",
+      df$Q64 == "Food" ~ "FoodService",
+      df$Q64 == "Building upkeep" ~ "BuildingMaintenance",
+      df$Q64 == "Personal care" ~ "PersonalCare",
+      df$Q64 == "Sales" ~ "Sales",
+      df$Q64 == "Administrative" ~ "Office",
+      df$Q64 == "Construction and extraction" ~ "Construction",
+      df$Q64 == "Maintenance and repair" ~ "Maintenance",
+      df$Q64 == "Production" ~ "Production",
+      df$Q64 == "Transportation and delivery" ~ "Transportation",
+      df$Q64 == "Other" ~ "Other",
       TRUE ~ NA_character_
     )
   } else {
@@ -583,8 +394,8 @@ create_derivative_columns <- function(df) {
   # Percentage of people who wore a mask most or all of the time while in
   # public in the past 5/7 days
   # # most of the time OR all of the time / # respondents
-  if ("b_public_mask_often" %in% names(df)) {
-    df$b_wearing_mask_5d <- as.numeric(df$b_public_mask_often == 1)
+  if ("c_mask_often" %in% names(df)) {
+    df$b_wearing_mask_5d <- as.numeric(df$c_mask_often == 1)
   } else {
     df$b_wearing_mask_5d <- NA_real_
   }
@@ -600,8 +411,8 @@ create_derivative_columns <- function(df) {
   # # fever, along with cough, or shortness of breath, or difficulty breathing
   # / # any B2 response
   # defined elsewhere and copied here with the required name
-  if ("n_hh_prop_cli" %in% names(df)) {
-    df$n_cli <- df$n_hh_prop_cli
+  if ("hh_p_cli" %in% names(df)) {
+    df$n_cli <- df$hh_p_cli
   } else {
     df$n_cli <- NA_real_
   }
@@ -610,8 +421,8 @@ create_derivative_columns <- function(df) {
   # Percentage with influenza-like illness
   # # fever, along with cough or sore throat / # any B2 response
   # defined elsewhere and copied here with the required name
-  if ("n_hh_prop_ili" %in% names(df)) {
-    df$n_ili <- df$n_hh_prop_ili
+  if ("hh_p_ili" %in% names(df)) {
+    df$n_ili <- df$hh_p_ili
   } else {
     df$n_ili <- NA_real_
   }
@@ -628,13 +439,13 @@ create_derivative_columns <- function(df) {
   # "respondent = someone who answered any of the four contact types
   # (responses to at least one contact type > 0) / # (responses to at least one
   # contact type)"
-  if (all(c("n_contact_num_work", "n_contact_num_shopping",
-            "n_contact_num_social", "n_contact_num_other") %in% names(df))) {
+  if (all(c("C10_1_1", "C10_2_1",
+            "C10_3_1", "C10_4_1") %in% names(df))) {
     df$b_direct_contact <- as.numeric(any_true(
-      df$n_contact_num_work > 0,
-      df$n_contact_num_shopping > 0,
-      df$n_contact_num_social > 0,
-      df$n_contact_num_other > 0
+      df$C10_1_1 > 0,
+      df$C10_2_1 > 0,
+      df$C10_3_1 > 0,
+      df$C10_4_1 > 0
     ))
   } else {
     df$b_direct_contact <- NA_real_
@@ -643,8 +454,8 @@ create_derivative_columns <- function(df) {
   # anosmia
   # Percentage of respondents experiencing anosmia
   # loss of taste or smell / # any B2 response
-  if ("ms_symptoms" %in% names(df)) {
-    symptoms <- split_options(df$ms_symptoms)
+  if ("B2" %in% names(df)) {
+    symptoms <- split_options(df$B2)
     df$b_anosmia <- as.numeric(is_selected(symptoms, "13"))
   } else {
     df$b_anosmia <- NA_real_
@@ -669,8 +480,8 @@ create_derivative_columns <- function(df) {
   ## respondents indicated that they had not been vaccinated. For the purposes
   ## of the contingency tables, we will ignore responses to V3 and V4 from
   ## before the change.
-  if ("b_accept_vaccine" %in% names(df)) {	
-    df$b_accept_vaccine[df$start_dt < wave6_mod_date] <- NA
+  if ("v_accept_covid_vaccine" %in% names(df)) {	
+    df$v_accept_covid_vaccine[df$start_dt < wave6_mod_date] <- NA
   }
   
   # accept_vaccine_no_appointment (replacing accept_vaccine as of Wave 11 to not include people with vaccine appointments)
@@ -681,8 +492,8 @@ create_derivative_columns <- function(df) {
   # Percentage who would definitely or probably NOT choose to get vaccinated
   # # (no, definitely not OR no, probably not) / #V3 responses
   df$b_hesitant_vaccine <- NA_real_
-  if ("b_accept_vaccine" %in% names(df)) {	
-    df$b_hesitant_vaccine <- as.numeric(!df$b_accept_vaccine)
+  if ("v_accept_covid_vaccine" %in% names(df)) {	
+    df$b_hesitant_vaccine <- as.numeric(!df$v_accept_covid_vaccine)
   }
   if ("V3a" %in% names(df)) {
     df$b_hesitant_vaccine <- coalesce(
@@ -717,13 +528,13 @@ create_derivative_columns <- function(df) {
   df$b_accept_vaccine_no_appointment_probno <- NA
   df$b_accept_vaccine_no_appointment_defno <- NA
   
-  if ("mc_accept_cov_vaccine" %in% names(df)) {
-    df$mc_accept_cov_vaccine[df$start_dt < wave6_mod_date] <- NA
+  if ("V3" %in% names(df)) {
+    df$V3[df$start_dt < wave6_mod_date] <- NA
     
-    df$b_accept_vaccine_defyes <- as.numeric(df$mc_accept_cov_vaccine == "def vaccinate")
-    df$b_accept_vaccine_probyes <- as.numeric(df$mc_accept_cov_vaccine == "prob vaccinate")
-    df$b_accept_vaccine_probno <- as.numeric(df$mc_accept_cov_vaccine == "prob not vaccinate")
-    df$b_accept_vaccine_defno <- as.numeric(df$mc_accept_cov_vaccine == "def not vaccinate")
+    df$b_accept_vaccine_defyes <- as.numeric(df$V3 == "def vaccinate")
+    df$b_accept_vaccine_probyes <- as.numeric(df$V3 == "prob vaccinate")
+    df$b_accept_vaccine_probno <- as.numeric(df$V3 == "prob not vaccinate")
+    df$b_accept_vaccine_defno <- as.numeric(df$V3 == "def not vaccinate")
   }
   if ("V3a" %in% names(df)) {	
     df$b_accept_vaccine_no_appointment_defyes <- as.numeric(df$V3a == 1)
@@ -736,8 +547,8 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by friends & family
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
-  if ("b_vaccine_likely_friends" %in% names(df)) {	
-    df$b_vaccine_likely_friends[df$start_dt < wave6_mod_date] <- NA
+  if ("v_vaccine_likely_friends" %in% names(df)) {	
+    df$v_vaccine_likely_friends[df$start_dt < wave6_mod_date] <- NA
   }
 
   # vaccine_likely_local_health (discontinued as of Wave 11)
@@ -745,16 +556,16 @@ create_derivative_columns <- function(df) {
   # workers
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
-  if ("b_vaccine_likely_local_health" %in% names(df)) {	
-    df$b_vaccine_likely_local_health[df$start_dt < wave6_mod_date] <- NA
+  if ("v_vaccine_likely_local_health" %in% names(df)) {	
+    df$v_vaccine_likely_local_health[df$start_dt < wave6_mod_date] <- NA
   }
 
   # vaccine_likely_who (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by WHO
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-  if ("b_vaccine_likely_who" %in% names(df)) {	
-    df$b_vaccine_likely_who[df$start_dt < wave6_mod_date] <- NA
+  if ("v_vaccine_likely_who" %in% names(df)) {	
+    df$v_vaccine_likely_who[df$start_dt < wave6_mod_date] <- NA
   }
   
   # vaccine_likely_govt_health (discontinued as of Wave 11)
@@ -762,16 +573,16 @@ create_derivative_columns <- function(df) {
   # health officials
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-  if ("b_vaccine_likely_govt_health" %in% names(df)) {	
-    df$b_vaccine_likely_govt_health[df$start_dt < wave6_mod_date] <- NA
+  if ("v_vaccine_likely_govt_health" %in% names(df)) {	
+    df$v_vaccine_likely_govt_health[df$start_dt < wave6_mod_date] <- NA
   }
   
   # vaccine_likely_politicians (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by politicians
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-  if ("b_vaccine_likely_politicians" %in% names(df)) {	
-    df$b_vaccine_likely_politicians[df$start_dt < wave6_mod_date] <- NA
+  if ("v_vaccine_likely_politicians" %in% names(df)) {	
+    df$v_vaccine_likely_politicians[df$start_dt < wave6_mod_date] <- NA
   }
   
   # vaccine_likely_doctors (discontinued as of Wave 11)
@@ -790,10 +601,10 @@ create_derivative_columns <- function(df) {
   # are hesitant
   # # ((very concerned OR moderately concerned) AND (no, probably not OR no
   # definitely not)/# (V3 hesitant AND V9) responses
-  if (all(c("b_hesitant_vaccine", "b_worried_vaccine_sideeffects") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_worried_vaccine_side_effects") %in% names(df))) {
     df$b_hesitant_worried_vaccine_sideeffects <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_worried_vaccine_sideeffects == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_worried_vaccine_sideeffects == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_worried_vaccine_side_effects == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_worried_vaccine_side_effects == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -804,10 +615,10 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by friends & family
   # among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_friends") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_friends") %in% names(df))) {
     df$b_hesitant_vaccine_likely_friends <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_friends == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_friends == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_friends == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_friends == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -818,10 +629,10 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by local healthcare
   # workers among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_local_health") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_local_health") %in% names(df))) {
     df$b_hesitant_vaccine_likely_local_health <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_local_health == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_local_health == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_local_health == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_local_health == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -832,10 +643,10 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by WHO among those
   # who are hesitant
   # # more likely / # V4 responses who are also hesitant
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_who") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_who") %in% names(df))) {
     df$b_hesitant_vaccine_likely_who <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_who == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_who == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_who == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_who == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -846,10 +657,10 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by government
   # health officials among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_govt_health") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_govt_health") %in% names(df))) {
     df$b_hesitant_vaccine_likely_govt <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_govt_health == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_govt_health == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_govt_health == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_govt_health == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -860,10 +671,10 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by politicians
   # among those who are hesitant
   # # more likely / # V4 responses who are also hesitant
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_politicians") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_politicians") %in% names(df))) {
     df$b_hesitant_vaccine_likely_politicians <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_politicians == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_politicians == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_politicians == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_politicians == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -871,10 +682,10 @@ create_derivative_columns <- function(df) {
   }
 
   # hesitant_vaccine_likely_doctors (discontinued as of Wave 11)
-  if (all(c("b_hesitant_vaccine", "b_vaccine_likely_doctors") %in% names(df))) {
+  if (all(c("b_hesitant_vaccine", "v_vaccine_likely_doctors") %in% names(df))) {
     df$b_hesitant_vaccine_likely_doctors <- case_when(
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_doctors == 1 ~ 1,
-      df$b_hesitant_vaccine == 1 & df$b_vaccine_likely_doctors == 0 ~ 0,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_doctors == 1 ~ 1,
+      df$b_hesitant_vaccine == 1 & df$v_vaccine_likely_doctors == 0 ~ 0,
       TRUE ~ NA_real_
     )
   } else {
@@ -1044,57 +855,57 @@ create_derivative_columns <- function(df) {
   if ("b_hesitant_barrier_dontneed" %in% names(df)) {
     dontneed <- df$b_hesitant_barrier_dontneed == 1
 
-    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+    if ("v_dontneed_reason_had_covid" %in% names(df)) {
       df$b_hesitant_dontneed_reason_had_covid <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_had_covid)
+        all_true(dontneed, df$v_dontneed_reason_had_covid)
       )
     } else {
       df$b_hesitant_dontneed_reason_had_covid <- NA_real_
     }
     
-    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+    if ("v_dontneed_reason_dont_spend_time" %in% names(df)) {
       df$b_hesitant_dontneed_reason_dont_spend_time <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+        all_true(dontneed, df$v_dontneed_reason_dont_spend_time)
       )
     } else {
       df$b_hesitant_dontneed_reason_dont_spend_time <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+    if ("v_dontneed_reason_not_high_risk" %in% names(df)) {
       df$b_hesitant_dontneed_reason_not_high_risk <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+        all_true(dontneed, df$v_dontneed_reason_not_high_risk)
       )
     } else {
       df$b_hesitant_dontneed_reason_not_high_risk <- NA_real_
     }
     
-    if ("b_dontneed_reason_precautions" %in% names(df)) {
+    if ("v_dontneed_reason_precautions" %in% names(df)) {
       df$b_hesitant_dontneed_reason_precautions <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_precautions)
+        all_true(dontneed, df$v_dontneed_reason_precautions)
       )
     } else {
       df$b_hesitant_dontneed_reason_precautions <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+    if ("v_dontneed_reason_not_serious" %in% names(df)) {
       df$b_hesitant_dontneed_reason_not_serious <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_serious)
+        all_true(dontneed, df$v_dontneed_reason_not_serious)
       )
     } else {
       df$b_hesitant_dontneed_reason_not_serious <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+    if ("v_dontneed_reason_not_beneficial" %in% names(df)) {
       df$b_hesitant_dontneed_reason_not_beneficial <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+        all_true(dontneed, df$v_dontneed_reason_not_beneficial)
       )
     } else {
       df$b_hesitant_dontneed_reason_not_beneficial <- NA_real_
     }
     
-    if ("b_dontneed_reason_other" %in% names(df)) {
+    if ("v_dontneed_reason_other" %in% names(df)) {
       df$b_hesitant_dontneed_reason_other <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_other)
+        all_true(dontneed, df$v_dontneed_reason_other)
       )
     } else {
       df$b_hesitant_dontneed_reason_other <- NA_real_
@@ -1211,57 +1022,57 @@ create_derivative_columns <- function(df) {
   if ("b_defno_barrier_dontneed" %in% names(df)) {
     dontneed <- df$b_defno_barrier_dontneed == 1
     
-    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+    if ("v_dontneed_reason_had_covid" %in% names(df)) {
       df$b_defno_dontneed_reason_had_covid <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_had_covid)
+        all_true(dontneed, df$v_dontneed_reason_had_covid)
       )
     } else {
       df$b_defno_dontneed_reason_had_covid <- NA_real_
     }
     
-    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+    if ("v_dontneed_reason_dont_spend_time" %in% names(df)) {
       df$b_defno_dontneed_reason_dont_spend_time <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+        all_true(dontneed, df$v_dontneed_reason_dont_spend_time)
       )
     } else {
       df$b_defno_dontneed_reason_dont_spend_time <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+    if ("v_dontneed_reason_not_high_risk" %in% names(df)) {
       df$b_defno_dontneed_reason_not_high_risk <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+        all_true(dontneed, df$v_dontneed_reason_not_high_risk)
       )
     } else {
       df$b_defno_dontneed_reason_not_high_risk <- NA_real_
     }
     
-    if ("b_dontneed_reason_precautions" %in% names(df)) {
+    if ("v_dontneed_reason_precautions" %in% names(df)) {
       df$b_defno_dontneed_reason_precautions <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_precautions)
+        all_true(dontneed, df$v_dontneed_reason_precautions)
       )
     } else {
       df$b_defno_dontneed_reason_precautions <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+    if ("v_dontneed_reason_not_serious" %in% names(df)) {
       df$b_defno_dontneed_reason_not_serious <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_serious)
+        all_true(dontneed, df$v_dontneed_reason_not_serious)
       )
     } else {
       df$b_defno_dontneed_reason_not_serious <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+    if ("v_dontneed_reason_not_beneficial" %in% names(df)) {
       df$b_defno_dontneed_reason_not_beneficial <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+        all_true(dontneed, df$v_dontneed_reason_not_beneficial)
       )
     } else {
       df$b_defno_dontneed_reason_not_beneficial <- NA_real_
     }
     
-    if ("b_dontneed_reason_other" %in% names(df)) {
+    if ("v_dontneed_reason_other" %in% names(df)) {
       df$b_defno_dontneed_reason_other <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_other)
+        all_true(dontneed, df$v_dontneed_reason_other)
       )
     } else {
       df$b_defno_dontneed_reason_other <- NA_real_
@@ -1341,63 +1152,63 @@ create_derivative_columns <- function(df) {
   # WARNING: This section MUST come after all other variables, since it
   # modifies the `b_dontneed_reason` variables which are used elsewhere in
   # this function.
-  if ("b_barrier_dontneed" %in% names(df)) {
-    # b_barrier_dontneed is those who answered that they don't need the vaccine
+  if ("v_hesitancy_reason_unnecessary" %in% names(df)) {
+    # v_hesitancy_reason_unnecessary is those who answered that they don't need the vaccine
     # to any of questions V5a, V5b, or V6c. It is created originally as
     # v_hesitancy_reason_unnecessary in variables.R.
-    dontneed <- df$b_barrier_dontneed == 1
+    dontneed <- df$v_hesitancy_reason_unnecessary == 1
     
-    if ("b_dontneed_reason_had_covid" %in% names(df)) {
+    if ("v_dontneed_reason_had_covid" %in% names(df)) {
       df$b_dontneed_reason_had_covid <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_had_covid)
+        all_true(dontneed, df$v_dontneed_reason_had_covid)
       )
     } else {
       df$b_dontneed_reason_had_covid <- NA_real_
     }
     
-    if ("b_dontneed_reason_dont_spend_time" %in% names(df)) {
+    if ("v_dontneed_reason_dont_spend_time" %in% names(df)) {
       df$b_dontneed_reason_dont_spend_time <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_dont_spend_time)
+        all_true(dontneed, df$v_dontneed_reason_dont_spend_time)
       )
     } else {
       df$b_dontneed_reason_dont_spend_time <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_high_risk" %in% names(df)) {
+    if ("v_dontneed_reason_not_high_risk" %in% names(df)) {
       df$b_dontneed_reason_not_high_risk <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_high_risk)
+        all_true(dontneed, df$v_dontneed_reason_not_high_risk)
       )
     } else {
       df$b_dontneed_reason_not_high_risk <- NA_real_
     }
     
-    if ("b_dontneed_reason_precautions" %in% names(df)) {
+    if ("v_dontneed_reason_precautions" %in% names(df)) {
       df$b_dontneed_reason_precautions <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_precautions)
+        all_true(dontneed, df$v_dontneed_reason_precautions)
       )
     } else {
       df$b_dontneed_reason_precautions <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_serious" %in% names(df)) {
+    if ("v_dontneed_reason_not_serious" %in% names(df)) {
       df$b_dontneed_reason_not_serious <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_serious)
+        all_true(dontneed, df$v_dontneed_reason_not_serious)
       )
     } else {
       df$b_dontneed_reason_not_serious <- NA_real_
     }
     
-    if ("b_dontneed_reason_not_beneficial" %in% names(df)) {
+    if ("v_dontneed_reason_not_beneficial" %in% names(df)) {
       df$b_dontneed_reason_not_beneficial <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_not_beneficial)
+        all_true(dontneed, df$v_dontneed_reason_not_beneficial)
       )
     } else {
       df$b_dontneed_reason_not_beneficial <- NA_real_
     }
     
-    if ("b_dontneed_reason_other" %in% names(df)) {
+    if ("v_dontneed_reason_other" %in% names(df)) {
       df$b_dontneed_reason_other <- as.numeric(
-        all_true(dontneed, df$b_dontneed_reason_other)
+        all_true(dontneed, df$v_dontneed_reason_other)
       )
     } else {
       df$b_dontneed_reason_other <- NA_real_

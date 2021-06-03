@@ -161,7 +161,7 @@ run_contingency_tables_one_period <- function(params, aggregations)
     data_agg <- join_weights(data_agg, params, weights = "full")
     msg_df("response data to aggregate", data_agg)
 
-    data_agg <- make_human_readable(data_agg)
+    data_agg <- create_derivative_columns(data_agg)
 
     produce_aggregates(data_agg, aggregations, cw_list, params)
   }

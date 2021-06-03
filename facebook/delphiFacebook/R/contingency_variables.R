@@ -1,157 +1,6 @@
-## Functions handling renaming, reformatting, or recoding response columns.
+## Functions handling renaming, reformatting, and recoding response columns.
 
-#' Rename question codes to informative descriptions.
-#'
-#' Column names beginning with "b_" are binary (T/F/NA); with "t_" are user-
-#' entered text; with "n_" are user-entered numeric; with "mc_" are multiple
-#' choice (where only a single response can be selected); and with "ms_" are
-#' so-called multi-select, where multiple responses can be selected.
-#'
-#' Only binary responses with a third "I don't know" option are mapped from
-#' response codes to interpretable values. Multiple choice, multi-select, and
-#' pure binary (yes/no) questions use the original numeric response codes.
-#'
-#' @param input_data    Data frame of individual response data
-#'
-#' @return Data frame with descriptive column names
-#'
-#' @importFrom dplyr rename
-#'
-#' @export
-make_human_readable <- function(input_data) {
-  input_data <- remap_responses(input_data)
-  input_data <- create_derivative_columns(input_data)
-
-  return(input_data)
-}
-
-#' Remap binary columns, race, and others to make more interpretable.
-#'
-#' @param df Data frame of individual response data.
-#'
-#' @return data frame of individual response data with newly mapped columns
-remap_responses <- function(df) {
-  msg_plain("Mapping response codes to descriptive values...")
-  # Map responses with multiple races selected into a single category.
-  if ("D7" %in% names(df)) {
-    df[grepl(",", df$D7), "D7"] <- "multiracial"
-  }
-
-  ## Specifies human-readable values that response codes correspond to for each
-  ## question. `default` is the value that all non-specified response codes map
-  ## to.
-  map_old_new_responses <- list(
-    D2=list(
-      "map"=c(
-        "1"="18-24",
-        "2"="25-34",
-        "3"="35-44",
-        "4"="45-54",
-        "5"="55-64",
-        "6"="65-74",
-        "7"="75plus"),
-      "default"=NULL,
-      "type"="mc"
-    ),
-    D7=list(
-      "map"=c(
-        "1"="American Indian or Alaska Native",
-        "2"="Asian",
-        "3"="Black or African American",
-        "4"="Native Hawaiian or Pacific Islander",
-        "5"="White",
-        "6"="Other",
-        "multiracial"="Multiracial"),
-      "default"=NULL,
-      "type"="mc"
-    ),
-    V3=list(
-      "map"=c(
-        "1"="def vaccinate",
-        "2"="prob vaccinate",
-        "3"="prob not vaccinate",
-        "4"="def not vaccinate"),
-      "default"=NULL,
-      "type"="mc"
-    ),
-    D1=list(
-      "map"=c(
-        "1"="Male",
-        "2"="Female",
-        "3"="Other",
-        "4"="Other",
-        "5"=NA),
-      "default"=NULL,
-      "type"="mc"
-    ),
-    D8=list(
-      "map"=c(
-        "1"="Less than high school",
-        "2"="High school graduate or equivalent",
-        "3"="Some college",
-        "4"="2 year degree",
-        "5"="4 year degree",
-        "8"="Master's degree",
-        "6"="Professional degree",
-        "7"="Doctorate"),
-      "default"=NULL,
-      "type"="mc"
-    ),
-    C1=list(
-      "map"=c(
-        "1"="Diabetes", # Waves 1-3; later separated into types 1 and 2
-        "2"="Cancer",
-        "3"="Heart disease",
-        "4"="High blood pressure",
-        "5"="Asthma",
-        "6"="Chronic lung disease",
-        "7"="Kidney disease",
-        "8"="Autoimmune disorder",
-        "9"="None listed",
-        "10"="Type 2 diabetes",
-        "11"="Compromised immune system",
-        "12"="Type 1 diabetes",
-        "13"="Obesity"),
-      "default"=NULL,
-      "type"="ms"
-    ),
-    Q64=list(
-      "map"=c(
-        "1"="Community and social",
-        "2"="Education",
-        "3"="Arts and media",
-        "4"="Healthcare practitioner",
-        "5"="Healthcare support",
-        "6"="Protective",
-        "7"="Food",
-        "8"="Building upkeep",
-        "9"="Personal care",
-        "10"="Sales",
-        "11"="Administrative",
-        "12"="Construction and extraction",
-        "13"="Maintenance and repair",
-        "14"="Production",
-        "15"="Transportation and delivery",
-        "16"="Other"),
-      "default"=NULL,
-      "type"="mc"
-    )
-  )
-
-  for (col_var in names(map_old_new_responses)) {
-    df <- remap_response(df, col_var,
-                         map_old_new_responses[[col_var]][["map"]],
-                         map_old_new_responses[[col_var]][["default"]],
-                         map_old_new_responses[[col_var]][["type"]]
-    )
-  }
-
-  msg_plain("Finished remapping response codes")
-  return(df)
-}
-
-
-#' Create new columns, based on existing ones, for use in aggregates.
+#' Create new columns for use in aggregates.
 #'
 #' @param df Data frame of individual response data.
 #'
@@ -169,19 +18,28 @@ create_derivative_columns <- function(df) {
   # agefull
   # age65plus
   if ("D2" %in% names(df)) {
-    df$agefull <- df$D2
-
-    df$age <- case_when(
-      df$agefull == "18-24"  ~ "18-24",
-      df$agefull == "25-34"  ~ "25-44",
-      df$agefull == "35-44"  ~ "25-44",
-      df$agefull == "45-54"  ~ "45-64",
-      df$agefull == "55-64"  ~ "45-64",
-      df$agefull == "65-74"  ~ "65plus",
-      df$agefull == "75plus" ~ "65plus",
+    df$agefull <- case_when(
+      df$D2 == 1 ~ "18-24",
+      df$D2 == 2 ~ "25-34",
+      df$D2 == 3 ~ "35-44",
+      df$D2 == 4 ~ "45-54",
+      df$D2 == 5 ~ "55-64",
+      df$D2 == 6 ~ "65-74",
+      df$D2 == 7 ~ "75plus",
       TRUE ~ NA_character_
     )
 
+    df$age <- case_when(
+      df$D2 == 1 ~ "18-24",
+      df$D2 == 2 ~ "25-44",
+      df$D2 == 3 ~ "25-44",
+      df$D2 == 4 ~ "45-64",
+      df$D2 == 5 ~ "45-64",
+      df$D2 == 6 ~ "65plus",
+      df$D2 == 7 ~ "65plus",
+      TRUE ~ NA_character_
+    )
+    
     df$age65plus <- df$age == "65plus"
   } else {
     df$agefull <- NA_character_
@@ -191,19 +49,26 @@ create_derivative_columns <- function(df) {
 
   # gender
   if ("D1" %in% names(df)) {
-    df$gender <- df$D1
+    df$gender <- case_when(
+      df$D1 == 1 ~ "Male",
+      df$D1 == 2 ~ "Female",
+      df$D1 == 3 ~ "Other",
+      df$D1 == 4 ~ "Other",
+      df$D1 == 5 ~ NA_character_,
+      TRUE ~ NA_character_
+    )
   }
 
   # race
   if ("D7" %in% names(df)) {
     df$race <- case_when(
-        df$D7 == "American Indian or Alaska Native" ~ "AmericanIndianAlaskaNative",
-        df$D7 == "Asian" ~ "Asian",
-        df$D7 == "Black or African American" ~ "BlackAfricanAmerican",
-        df$D7 == "Native Hawaiian or Pacific Islander" ~ "NativeHawaiianPacificIslander",
-        df$D7 == "White" ~ "White",
-        df$D7 == "Other" ~ "MultipleOther",
-        df$D7 == "Multiracial" ~ "MultipleOther",
+        df$D7 == 1 ~ "AmericanIndianAlaskaNative",
+        df$D7 == 2 ~ "Asian",
+        df$D7 == 3 ~ "BlackAfricanAmerican",
+        df$D7 == 4 ~ "NativeHawaiianPacificIslander",
+        df$D7 == 5 ~ "White",
+        df$D7 == 6 ~ "MultipleOther",
+        grepl(",", df$D7) ~ "MultipleOther", # Multiracial
         TRUE ~ NA_character_
     )
   } else {
@@ -237,8 +102,8 @@ create_derivative_columns <- function(df) {
   # healthcareworker
   if ("Q64" %in% names(df)) {
     df$healthcareworker <-
-      df$Q64 == "Healthcare support" |
-      df$Q64 == "Healthcare practitioner"
+      df$Q64 == 5 |
+      df$Q64 == 4
   } else {
     df$healthcareworker <- NA
   }
@@ -274,16 +139,16 @@ create_derivative_columns <- function(df) {
   if ("C1" %in% names(df)) {
     comorbidities <- split_options(df$C1)
 
-    df$comorbidheartdisease <- is_selected(comorbidities, "Heart disease")
-    df$comorbidcancer <- is_selected(comorbidities, "Cancer")
-    df$comorbidkidneydisease <- is_selected(comorbidities, "Kidney disease")
-    df$comorbidlungdisease <- is_selected(comorbidities, "Chronic lung disease")
+    df$comorbidheartdisease <- is_selected(comorbidities, 3)
+    df$comorbidcancer <- is_selected(comorbidities, 2)
+    df$comorbidkidneydisease <- is_selected(comorbidities, 7)
+    df$comorbidlungdisease <- is_selected(comorbidities, 6)
     df$comorbiddiabetes <-
-      is_selected(comorbidities, "Diabetes") |
-      is_selected(comorbidities, "Type 1 diabetes") |
-      is_selected(comorbidities, "Type 2 diabetes")
-    df$comorbidimmuno <- is_selected(comorbidities, "Compromised immune system")
-    df$comorbidobese <- is_selected(comorbidities, "Obesity")
+      is_selected(comorbidities, 1) |
+      is_selected(comorbidities, 12) |
+      is_selected(comorbidities, 10)
+    df$comorbidimmuno <- is_selected(comorbidities, 11)
+    df$comorbidobese <- is_selected(comorbidities, 13)
     df$eligible <- 
       df$comorbidheartdisease |
       df$comorbidcancer |
@@ -315,58 +180,55 @@ create_derivative_columns <- function(df) {
   }
   
   # edulevelfull
+  # edulevel
   if ("D8" %in% names(df)) {
     df$edulevelfull <- case_when(
-      df$D8 == "Less than high school" ~ "LessThanHighSchool",
-      df$D8 == "High school graduate or equivalent" ~ "HighSchool",
-      df$D8 == "Some college" ~ "SomeCollege",
-      df$D8 == "2 year degree" ~ "TwoYearDegree",
-      df$D8 == "4 year degree" ~ "FourYearDegree",
-      df$D8 == "Master's degree" ~ "MastersDegree",
-      df$D8 == "Professional degree" ~ "ProfessionalDegree",
-      df$D8 == "Doctorate" ~ "Doctorate",
+      df$D8 == 1 ~ "LessThanHighSchool",
+      df$D8 == 2 ~ "HighSchool",
+      df$D8 == 3 ~ "SomeCollege",
+      df$D8 == 4 ~ "TwoYearDegree",
+      df$D8 == 5 ~ "FourYearDegree",
+      df$D8 == 8 ~ "MastersDegree",
+      df$D8 == 6 ~ "ProfessionalDegree",
+      df$D8 == 7 ~ "Doctorate",
+      TRUE ~ NA_character_
+    )
+
+    df$edulevel <- case_when(
+      df$D8 == 1 ~ "LessThanHighSchool",
+      df$D8 == 2 ~ "HighSchool",
+      df$D8 == 3 ~ "SomeCollege",
+      df$D8 == 4 ~ "SomeCollege",
+      df$D8 == 5 ~ "FourYearDegree",
+      df$D8 == 8 ~ "PostGraduate",
+      df$D8 == 6 ~ "PostGraduate",
+      df$D8 == 7 ~ "PostGraduate",
       TRUE ~ NA_character_
     )
   } else {
     df$edulevelfull <- NA_character_
-  }
-
-  # edulevel
-  if ("D8" %in% names(df)) {
-    df$edulevel <- case_when(
-      df$D8 == "Less than high school" ~ "LessThanHighSchool",
-      df$D8 == "High school graduate or equivalent" ~ "HighSchool",
-      df$D8 == "Some college" ~ "SomeCollege",
-      df$D8 == "2 year degree" ~ "SomeCollege",
-      df$D8 == "4 year degree" ~ "FourYearDegree",
-      df$D8 == "Master's degree" ~ "PostGraduate",
-      df$D8 == "Professional degree" ~ "PostGraduate",
-      df$D8 == "Doctorate" ~ "PostGraduate",
-      TRUE ~ NA_character_
-    )
-  } else {
     df$edulevel <- NA_character_
   }
 
   # occupation
   if ("Q64" %in% names(df)) {
     df$occupation <- case_when(
-      df$Q64 == "Community and social" ~ "SocialService",
-      df$Q64 == "Education" ~ "Education",
-      df$Q64 == "Arts and media" ~ "Arts",
-      df$Q64 == "Healthcare practitioner" ~ "HealthcarePractitioner",
-      df$Q64 == "Healthcare support" ~ "HealthcareSupport",
-      df$Q64 == "Protective" ~ "ProtectiveService",
-      df$Q64 == "Food" ~ "FoodService",
-      df$Q64 == "Building upkeep" ~ "BuildingMaintenance",
-      df$Q64 == "Personal care" ~ "PersonalCare",
-      df$Q64 == "Sales" ~ "Sales",
-      df$Q64 == "Administrative" ~ "Office",
-      df$Q64 == "Construction and extraction" ~ "Construction",
-      df$Q64 == "Maintenance and repair" ~ "Maintenance",
-      df$Q64 == "Production" ~ "Production",
-      df$Q64 == "Transportation and delivery" ~ "Transportation",
-      df$Q64 == "Other" ~ "Other",
+      df$Q64 == 1 ~ "SocialService",
+      df$Q64 == 2 ~ "Education",
+      df$Q64 == 3 ~ "Arts",
+      df$Q64 == 4 ~ "HealthcarePractitioner",
+      df$Q64 == 5 ~ "HealthcareSupport",
+      df$Q64 == 6 ~ "ProtectiveService",
+      df$Q64 == 7 ~ "FoodService",
+      df$Q64 == 8 ~ "BuildingMaintenance",
+      df$Q64 == 9 ~ "PersonalCare",
+      df$Q64 == 10 ~ "Sales",
+      df$Q64 == 11 ~ "Office",
+      df$Q64 == 12 ~ "Construction",
+      df$Q64 == 13 ~ "Maintenance",
+      df$Q64 == 14 ~ "Production",
+      df$Q64 == 15 ~ "Transportation",
+      df$Q64 == 16 ~ "Other",
       TRUE ~ NA_character_
     )
   } else {
@@ -518,10 +380,10 @@ create_derivative_columns <- function(df) {
   if ("V3" %in% names(df)) {
     df$V3[df$start_dt < wave6_mod_date] <- NA
     
-    df$b_accept_vaccine_defyes <- as.numeric(df$V3 == "def vaccinate")
-    df$b_accept_vaccine_probyes <- as.numeric(df$V3 == "prob vaccinate")
-    df$b_accept_vaccine_probno <- as.numeric(df$V3 == "prob not vaccinate")
-    df$b_accept_vaccine_defno <- as.numeric(df$V3 == "def not vaccinate")
+    df$b_accept_vaccine_defyes <- as.numeric(df$V3 == 1)
+    df$b_accept_vaccine_probyes <- as.numeric(df$V3 == 2)
+    df$b_accept_vaccine_probno <- as.numeric(df$V3 == 3)
+    df$b_accept_vaccine_defno <- as.numeric(df$V3 == 4)
   }
   if ("V3a" %in% names(df)) {	
     df$b_accept_vaccine_no_appointment_defyes <- as.numeric(df$V3a == 1)
@@ -1139,7 +1001,6 @@ create_derivative_columns <- function(df) {
   # WARNING: This section MUST come after all other variables, since it
   # modifies the `b_dontneed_reason` variables which are used elsewhere in
   # this function.
-  
   if ("v_hesitancy_reason_unnecessary" %in% names(df)) {
     # v_hesitancy_reason_unnecessary is those who answered that they don't need the vaccine
     # to any of questions V5a, V5b, or V6c. It is created originally as
@@ -1209,51 +1070,6 @@ create_derivative_columns <- function(df) {
     df$b_dontneed_reason_not_serious <- NA_real_
     df$b_dontneed_reason_not_beneficial <- NA_real_
     df$b_dontneed_reason_other <- NA_real_
-  }
-
-  return(df)
-}
-
-
-#' Convert numeric response codes in a single survey item to values specified in
-#' map. Returns as-is for numeric columns.
-#'
-#' Maps for recoding are set manually in `remap_responses`.
-#'
-#' @param df Data frame of individual response data.
-#' @param col_var Name of response var to recode
-#' @param map_old_new Named vector of new values we want to use; names are the
-#'     original response codes
-#' @param default Default to use if value is not explicitly remapped in
-#'     `map_old_new`; often `NA`, `NA_character_`, etc. See `recode`
-#'     [documentation](https://rdrr.io/cran/dplyr/man/recode.html) for more info
-#' @param response_type Str indicating if response is binary, multiple choice, or
-#'     multi-select.
-#'
-#' @importFrom dplyr recode
-#' @importFrom parallel mcmapply
-#'
-#' @return list of data frame of individual response data with newly mapped column
-remap_response <- function(df, col_var, map_old_new, default=NULL, response_type="b") {
-  msg_plain(paste0("Mapping codes for ", col_var))
-  if (  is.null(df[[col_var]]) | (response_type == "b" & FALSE %in% df[[col_var]]) | inherits(df[[col_var]], "logical") ) {
-    # Column is missing/not in this wave or already in boolean format
-    return(df)
-  }
-
-  if (response_type %in% c("b", "mc")) {
-    df[[col_var]] <- recode(df[[col_var]], !!!map_old_new, .default=default)
-  } else if (response_type == "ms") {
-    split_col <- split_options(df[[col_var]])
-
-    map_fn <- if (is.null(getOption("mc.cores"))) { mapply } else { mcmapply }
-    df[[col_var]] <- map_fn(split_col, FUN=function(row) {
-      if ( length(row) == 1 && all(is.na(row)) ) {
-        NA
-      } else {
-        paste(recode(row, !!!map_old_new, .default=default), collapse=",")
-      }
-    })
   }
 
   return(df)

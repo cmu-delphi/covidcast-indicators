@@ -2,7 +2,7 @@
 % Please edit documentation in R/contingency_variables.R
 \name{create_derivative_columns}
 \alias{create_derivative_columns}
-\title{Create new columns, based on existing ones, for use in aggregates.}
+\title{Create new columns for use in aggregates.}
 \usage{
 create_derivative_columns(df)
 }
@@ -13,5 +13,5 @@ create_derivative_columns(df)
 data frame of individual response data with newly derived columns
 }
 \description{
-Create new columns, based on existing ones, for use in aggregates.
+Create new columns for use in aggregates.
 }

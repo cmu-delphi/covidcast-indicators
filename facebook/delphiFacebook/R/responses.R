@@ -198,6 +198,25 @@ load_response_one <- function(input_filename, params, contingency_run) {
   # replace these ZIPs with NA.
   input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_,
                             input_data$zip5)
+  
+  if (contingency_run) {
+    ## Create additional fields for aggregations.
+    # Demographic grouping variables
+    input_data <- code_gender(input_data, wave)
+    input_data <- code_age(input_data, wave)
+    input_data <- code_race_ethnicity(input_data, wave)
+    input_data <- code_occupation(input_data, wave)
+    input_data <- code_education(input_data, wave)
+    
+    # Indicators
+    input_data <- code_addl_vaccines(input_data, wave)
+    input_data <- code_attempt_vaccine(input_data, wave)
+    input_data <- code_addl_symptoms(input_data, wave)
+    input_data <- code_health(input_data, wave)
+    input_data <- code_trust(input_data, wave)
+    input_data <- code_vaccine_barriers(input_data, wave)
+    input_data <- code_behaviors(input_data, wave)
+  }
 
   return(input_data)
 }

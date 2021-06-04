@@ -50,13 +50,12 @@ is_selected <- function(vec, selection) {
 #' Activities outside the home
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `a_work_outside_home_1d`, `a_shop_1d`,
 #'   `a_restaurant_1d`, `a_spent_time_1d`, `a_large_event_1d`,
 #'   `a_public_transit_1d`
-code_activities <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_activities <- function(input_data, wave) {
   if ("C13" %in% names(input_data)) {
     # introduced in wave 4
     activities <- split_options(input_data$C13)
@@ -100,9 +99,11 @@ code_activities <- function(input_data) {
 #' Household symptom variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_fever`, `hh_sore_throat`, `hh_cough`,
 #'   `hh_short_breath`, `hh_diff_breath`, `hh_number_sick`
-code_symptoms <- function(input_data) {
+code_symptoms <- function(input_data, wave) {
   input_data$hh_fever <- (input_data$A1_1 == 1L)
   input_data$hh_sore_throat <- (input_data$A1_2 == 1L)
   input_data$hh_cough <- (input_data$A1_3 == 1L)
@@ -116,8 +117,10 @@ code_symptoms <- function(input_data) {
 #' Household total size
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_number_total`
-code_hh_size <- function(input_data) {
+code_hh_size <- function(input_data, wave) {
   if ("A5_1" %in% names(input_data)) {
     # This is Wave 4, where item A2b was replaced with 3 items asking about
     # separate ages. Many respondents leave blank the categories that do not
@@ -150,12 +153,11 @@ code_hh_size <- function(input_data) {
 #' Per our IRB, we only aggregate these variables for wave >= 4.
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `mh_worried_ill`, `mh_anxious`,
 #'   `mh_depressed`, `mh_isolated`, `mh_worried_finances`
-code_mental_health <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_mental_health <- function(input_data, wave) {
   input_data$mh_worried_ill <- NA
   input_data$mh_anxious <- NA
   input_data$mh_depressed <- NA
@@ -189,12 +191,11 @@ code_mental_health <- function(input_data) {
 #' Mask and contact variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `c_travel_state`, `c_work_outside_5d`,
 #'   `c_mask_often`, `c_others_masked`
-code_mask_contact <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_mask_contact <- function(input_data, wave) {
   # private helper for both mask items, which are identically coded: 6 means the
   # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
   most_always <- function(item) {
@@ -264,12 +265,11 @@ code_mask_contact <- function(input_data) {
 #' Testing and test positivity variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `t_tested_14d`, `t_tested_positive_14d`,
 #'   `t_wanted_test_14d`
-code_testing <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-  
+code_testing <- function(input_data, wave) {
   if ( all(c("B8", "B10") %in% names(input_data)) ) {
     # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
     # B10 (which codes "no" as 3 for some reason)
@@ -364,14 +364,13 @@ code_testing <- function(input_data) {
 #' COVID vaccination variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `v_covid_vaccinated` and
 #'   `v_accept_covid_vaccine`
 #'
 #' @importFrom dplyr coalesce
-code_vaccines <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-  
+code_vaccines <- function(input_data, wave) {
   if ("V1" %in% names(input_data)) {
     # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
     # because, well, you'd know.
@@ -585,8 +584,10 @@ code_vaccines <- function(input_data) {
 #' Schooling
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_number_total`
-code_schooling <- function(input_data) {
+code_schooling <- function(input_data, wave) {
   if ("E2_1" %in% names(input_data)) {
     # Coded as 2 = "Yes", 3 = "No", 4 = "I don't know"
     input_data$s_inperson_school_fulltime <- case_when(

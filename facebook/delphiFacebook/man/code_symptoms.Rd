@@ -4,10 +4,12 @@
 \alias{code_symptoms}
 \title{Household symptom variables}
 \usage{
-code_symptoms(input_data)
+code_symptoms(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `hh_fever`, `hh_sore_throat`, `hh_cough`,

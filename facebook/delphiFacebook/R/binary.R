@@ -232,6 +232,10 @@ get_binary_indicators <- function() {
     "smoothed_winperson_school_fulltime", "weight", "s_inperson_school_fulltime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
+    
+    # beliefs
+    "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
   )
 
 

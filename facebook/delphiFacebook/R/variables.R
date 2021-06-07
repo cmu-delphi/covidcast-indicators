@@ -679,3 +679,22 @@ code_schooling <- function(input_data) {
   }
   return(input_data)
 }
+
+#' Beliefs
+#'
+#' @param input_data input data frame of raw survey data
+#' @return augmented data frame
+code_beliefs <- function(input_data) {
+  if ("G3" %in% names(input_data)) {
+    # added in wave 11.
+    input_data$b_belief_masking_effective <- case_when(
+      input_data$G3 == 1 | input_data$G3 == 2 ~ 1,
+      input_data$G3 == 3 | input_data$G3 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_masking_effective <- NA_real_
+  }
+  
+  return(input_data)
+}

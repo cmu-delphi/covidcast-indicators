@@ -14,7 +14,7 @@ get_binary_indicators <- function() {
     "smoothed_whh_cmnty_cli", "weight", "hh_community_yes", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wnohh_cmnty_cli", "weight", "community_yes", 6, compute_binary_response, jeffreys_binary,
 
-    # mask wearing
+    # mask wearing and distancing
     "smoothed_wearing_mask", "weight_unif", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwearing_mask", "weight", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wearing_mask_7d", "weight_unif", "c_mask_often_7d", 6, compute_binary_response, jeffreys_binary,
@@ -23,6 +23,8 @@ get_binary_indicators <- function() {
     "smoothed_wothers_masked", "weight", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
     "smoothed_others_masked_public", "weight_unif", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wothers_masked_public", "weight", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_others_distanced_public", "weight_unif", "c_others_distanced_public", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wothers_distanced_public", "weight", "c_others_distanced_public", 6, compute_binary_response, jeffreys_binary,
 
     # mental health
     "smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,

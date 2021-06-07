@@ -252,6 +252,18 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_others_masked_public <- NA
   }
+  
+  if ("H1" %in% names(input_data)) {
+    # added in wave 11. most/all *others* in public in the last 7 days; exclude
+    # respondents who have not been in public.
+    input_data$c_others_distanced_public <- case_when(
+      is.na(input_data$H1) ~ NA,
+      input_data$H1 == 6 ~ NA,
+      input_data$H1 == 4 | input_data$H1 == 5 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$c_others_distanced_public <- NA
+  }
 
   if ("C3" %in% names(input_data)) {
     input_data$c_work_outside_5d <- input_data$C3 == 1

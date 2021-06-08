@@ -358,11 +358,11 @@ remap_responses <- function(df) {
 #' @param df Data frame of individual response data.
 #'
 #' @return data frame of individual response data with newly derived columns
+#' 
+#' @importFrom lubridate ymd
 create_derivative_columns <- function(df) {
-  
-  # Get the latest wave available in the data.
-  wave <- max(df$wave)
-  
+  wave6_mod_date <- ymd("2021-01-06", tz=tz_to)
+    
   ###---
   # Grouping variables.
   ###---
@@ -664,7 +664,15 @@ create_derivative_columns <- function(df) {
   # Percentage who would definitely or probably choose to get vaccinated
   # # (yes, definitely OR yes, probably) / #V3 responses
   # made elsewhere and renamed in `rename_responses`
-
+  
+  ## Items V3 and V4 display logic was changed mid-wave 6 to be shown only to
+  ## respondents indicated that they had not been vaccinated. For the purposes
+  ## of the contingency tables, we will ignore responses to V3 and V4 from
+  ## before the change.
+  if ("b_accept_vaccine" %in% names(df)) {	
+    df$b_accept_vaccine[df$start_dt < wave6_mod_date] <- NA
+  }
+  
   # accept_vaccine_no_appointment (replacing accept_vaccine as of Wave 11 to not include people with vaccine appointments)
     
   # appointment_or_accept_vaccine (replacing accept_vaccine as of Wave 11)
@@ -673,11 +681,8 @@ create_derivative_columns <- function(df) {
   # Percentage who would definitely or probably NOT choose to get vaccinated
   # # (no, definitely not OR no, probably not) / #V3 responses
   df$b_hesitant_vaccine <- NA_real_
-  if ("mc_accept_cov_vaccine" %in% names(df)) {	
-    df$b_hesitant_vaccine <- as.numeric(
-      df$mc_accept_cov_vaccine == "prob not vaccinate" | 
-      df$mc_accept_cov_vaccine == "def not vaccinate"
-    )
+  if ("b_accept_vaccine" %in% names(df)) {	
+    df$b_hesitant_vaccine <- as.numeric(!df$b_accept_vaccine)
   }
   if ("V3a" %in% names(df)) {
     df$b_hesitant_vaccine <- coalesce(
@@ -713,6 +718,8 @@ create_derivative_columns <- function(df) {
   df$b_accept_vaccine_no_appointment_defno <- NA
   
   if ("mc_accept_cov_vaccine" %in% names(df)) {
+    df$mc_accept_cov_vaccine[df$start_dt < wave6_mod_date] <- NA
+    
     df$b_accept_vaccine_defyes <- as.numeric(df$mc_accept_cov_vaccine == "def vaccinate")
     df$b_accept_vaccine_probyes <- as.numeric(df$mc_accept_cov_vaccine == "prob vaccinate")
     df$b_accept_vaccine_probno <- as.numeric(df$mc_accept_cov_vaccine == "prob not vaccinate")
@@ -729,29 +736,44 @@ create_derivative_columns <- function(df) {
   # Percentage more likely to get vaccinated if recommended by friends & family
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
+  if ("b_vaccine_likely_friends" %in% names(df)) {	
+    df$b_vaccine_likely_friends[df$start_dt < wave6_mod_date] <- NA
+  }
 
   # vaccine_likely_local_health (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by local healthcare
   # workers
   # # more likely / #V4 responses
   # made elsewhere and renamed in `rename_responses`
+  if ("b_vaccine_likely_local_health" %in% names(df)) {	
+    df$b_vaccine_likely_local_health[df$start_dt < wave6_mod_date] <- NA
+  }
 
   # vaccine_likely_who (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by WHO
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-
+  if ("b_vaccine_likely_who" %in% names(df)) {	
+    df$b_vaccine_likely_who[df$start_dt < wave6_mod_date] <- NA
+  }
+  
   # vaccine_likely_govt_health (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by government 
   # health officials
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-
+  if ("b_vaccine_likely_govt_health" %in% names(df)) {	
+    df$b_vaccine_likely_govt_health[df$start_dt < wave6_mod_date] <- NA
+  }
+  
   # vaccine_likely_politicians (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by politicians
   # # more likely / # V4 responses
   # made elsewhere and renamed in `rename_responses`
-
+  if ("b_vaccine_likely_politicians" %in% names(df)) {	
+    df$b_vaccine_likely_politicians[df$start_dt < wave6_mod_date] <- NA
+  }
+  
   # vaccine_likely_doctors (discontinued as of Wave 11)
   # Percentage more likely to get vaccinated if recommended by doctors and 
   # other health professionals
@@ -931,7 +953,7 @@ create_derivative_columns <- function(df) {
   }
   
   if (all(c("b_hesitant_vaccine", "i_trust_covid_info_religious") %in% names(df))) {
-    df$b_hesitant_trust_covid_info_religious- case_when(
+    df$b_hesitant_trust_covid_info_religious <- case_when(
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 1 ~ 1,
       df$b_hesitant_vaccine == 1 & df$i_trust_covid_info_religious == 0 ~ 0,
       TRUE ~ NA_real_
@@ -979,13 +1001,14 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_barrier_pregnant <- as.numeric(is_selected(hesitancy_reasons, "14"))
     df$b_hesitant_barrier_religious <- as.numeric(is_selected(hesitancy_reasons, "15"))
     
-    if (wave >= 11) {
-      input_data$b_hesitant_barrier_allergic <- NA
-      input_data$b_hesitant_barrier_not_recommended <- NA
-      input_data$b_hesitant_barrier_distrust_vaccines <- NA
-      input_data$b_hesitant_barrier_health_condition <- NA
-      input_data$b_hesitant_barrier_pregnant <- NA
-    }
+    # These response choices were removed starting in Wave 11. They are explicitly set to missing
+    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
+    # them if the respondent selected at least once answer choice.
+    df$b_hesitant_barrier_allergic[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_not_recommended[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_distrust_vaccines[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_health_condition[df$wave >= 11] <- NA
+    df$b_hesitant_barrier_pregnant[df$wave >= 11] <- NA
     
   } else {
     df$b_hesitant_barrier_sideeffects <- NA_real_
@@ -1145,13 +1168,14 @@ create_derivative_columns <- function(df) {
     df$b_defno_barrier_pregnant <- as.numeric(is_selected(defno_reasons, "14"))
     df$b_defno_barrier_religious <- as.numeric(is_selected(defno_reasons, "15"))
     
-    if (wave >= 11) {
-      input_data$b_defno_barrier_allergic <- NA
-      input_data$b_defno_barrier_not_recommended <- NA
-      input_data$b_defno_barrier_distrust_vaccines <- NA
-      input_data$b_defno_barrier_health_condition <- NA
-      input_data$b_defno_barrier_pregnant <- NA
-    }
+    # These response choices were removed starting in Wave 11. They are explicitly set to missing
+    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
+    # them if the respondent selected at least once answer choice.
+    df$b_defno_barrier_allergic[df$wave >= 11] <- NA
+    df$b_defno_barrier_not_recommended[df$wave >= 11] <- NA
+    df$b_defno_barrier_distrust_vaccines[df$wave >= 11] <- NA
+    df$b_defno_barrier_health_condition[df$wave >= 11] <- NA
+    df$b_defno_barrier_pregnant[df$wave >= 11] <- NA
     
   } else {
     df$b_defno_barrier_sideeffects <- NA_real_

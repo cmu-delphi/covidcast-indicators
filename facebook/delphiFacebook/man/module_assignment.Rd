@@ -4,11 +4,13 @@
 \alias{module_assignment}
 \title{Process module assignment column.}
 \usage{
-module_assignment(input_data)
+module_assignment(input_data, wave)
 }
 \arguments{
 \item{input_data}{data frame of responses, before subsetting to select
 variables}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame with new `module` column

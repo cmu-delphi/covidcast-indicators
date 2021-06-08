@@ -4,10 +4,12 @@
 \alias{code_beliefs}
 \title{Beliefs}
 \usage{
-code_beliefs(input_data)
+code_beliefs(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 augmented data frame

@@ -156,7 +156,7 @@ load_response_one <- function(input_filename, params) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
   
-  input_data <- module_assignment(input_data)
+  input_data <- module_assignment(input_data, wave)
   input_data <- bodge_v4_translation(input_data, wave)
   input_data <- bodge_C6_C8(input_data, wave)
 
@@ -168,7 +168,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- code_activities(input_data, wave)
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
-  input_data <- code_beliefs(input_data)
+  input_data <- code_beliefs(input_data, wave)
 
   # create testing variables
 
@@ -441,9 +441,11 @@ bodge_C6_C8 <- function(input_data, wave) {
 #' 
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame with new `module` column
 #' @importFrom dplyr case_when
-module_assignment <- function(input_data) {
+module_assignment <- function(input_data, wave) {
   if ( "FL_23_DO" %in% names(input_data) ) {
     input_data$module <- case_when(
       input_data$FL_23_DO == "ModuleA" ~ "A",

@@ -165,6 +165,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- code_activities(input_data)
   input_data <- code_vaccines(input_data)
   input_data <- code_schooling(input_data)
+  input_data <- code_beliefs(input_data)
 
   # create testing variables
 

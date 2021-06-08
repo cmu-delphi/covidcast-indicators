@@ -252,6 +252,18 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_others_masked_public <- NA
   }
+  
+  if ("H1" %in% names(input_data)) {
+    # added in wave 11. most/all *others* in public in the last 7 days; exclude
+    # respondents who have not been in public.
+    input_data$c_others_distanced_public <- case_when(
+      is.na(input_data$H1) ~ NA,
+      input_data$H1 == 6 ~ NA,
+      input_data$H1 == 4 | input_data$H1 == 5 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$c_others_distanced_public <- NA
+  }
 
   if ("C3" %in% names(input_data)) {
     input_data$c_work_outside_5d <- input_data$C3 == 1
@@ -579,6 +591,63 @@ code_vaccines <- function(input_data) {
     input_data$v_worried_vaccine_side_effects <- NA_real_
   }
 
+  if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA, vaccine_barriers)
+    vaccine_barriers <- split_options(vaccine_barriers)
+    
+    input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible <- NA
+    input_data$v_vaccine_barrier_no_appointments <- NA
+    input_data$v_vaccine_barrier_appointment_time <- NA
+    input_data$v_vaccine_barrier_technical_difficulties <- NA
+    input_data$v_vaccine_barrier_document <- NA
+    input_data$v_vaccine_barrier_technology_access <- NA
+    input_data$v_vaccine_barrier_travel <- NA
+    input_data$v_vaccine_barrier_language <- NA
+    input_data$v_vaccine_barrier_childcare <- NA
+    input_data$v_vaccine_barrier_time <- NA
+    input_data$v_vaccine_barrier_type <- NA
+    input_data$v_vaccine_barrier_none <- NA
+  }
+  
+  if ( "E4" %in% names(input_data) ) {
+    # introduced in Wave 11
+    input_data$v_vaccinate_children <- case_when(
+      input_data$E4 == 1 ~ 1,
+      input_data$E4 == 2 ~ 1,
+      input_data$E4 == 3 ~ 0,
+      input_data$E4 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_vaccinate_children <- NA_real_
+  }
+  
+  if ( "V16" %in% names(input_data) ) {
+    # introduced in Wave 11
+    input_data$v_try_vaccinate_1m <- case_when(
+      input_data$V16 %in% c(1, 2) ~ 1,
+      input_data$V16 %in% c(3, 4, 5, 6, 7) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_try_vaccinate_1m <- NA_real_
+  }
+  
   return(input_data)
 }
 
@@ -608,5 +677,24 @@ code_schooling <- function(input_data) {
   } else {
     input_data$s_inperson_school_parttime <- NA_real_
   }
+  return(input_data)
+}
+
+#' Beliefs
+#'
+#' @param input_data input data frame of raw survey data
+#' @return augmented data frame
+code_beliefs <- function(input_data) {
+  if ("G3" %in% names(input_data)) {
+    # added in wave 11.
+    input_data$b_belief_masking_effective <- case_when(
+      input_data$G3 == 1 | input_data$G3 == 2 ~ 1,
+      input_data$G3 == 3 | input_data$G3 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_masking_effective <- NA_real_
+  }
+  
   return(input_data)
 }

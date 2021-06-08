@@ -14,7 +14,7 @@ get_binary_indicators <- function() {
     "smoothed_whh_cmnty_cli", "weight", "hh_community_yes", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wnohh_cmnty_cli", "weight", "community_yes", 6, compute_binary_response, jeffreys_binary,
 
-    # mask wearing
+    # mask wearing and distancing
     "smoothed_wearing_mask", "weight_unif", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwearing_mask", "weight", "c_mask_often", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wearing_mask_7d", "weight_unif", "c_mask_often_7d", 6, compute_binary_response, jeffreys_binary,
@@ -23,6 +23,8 @@ get_binary_indicators <- function() {
     "smoothed_wothers_masked", "weight", "c_others_masked", 6, compute_binary_response, jeffreys_binary,
     "smoothed_others_masked_public", "weight_unif", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wothers_masked_public", "weight", "c_others_masked_public", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_others_distanced_public", "weight_unif", "c_others_distanced_public", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wothers_distanced_public", "weight", "c_others_distanced_public", 6, compute_binary_response, jeffreys_binary,
 
     # mental health
     "smoothed_worried_become_ill", "weight_unif", "mh_worried_ill", 6, compute_binary_response, jeffreys_binary,
@@ -115,7 +117,12 @@ get_binary_indicators <- function() {
     "smoothed_wworried_vaccine_side_effects", "weight", "v_worried_vaccine_side_effects", 6, compute_binary_response, jeffreys_binary,
     "smoothed_received_2_vaccine_doses", "weight_unif", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wreceived_2_vaccine_doses", "weight", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
-
+    
+    "smoothed_vaccinate_children", "weight_unif", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccinate_children", "weight", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_try_vaccinate_1m", "weight_unif", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wtry_vaccinate_1m", "weight", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
+    
     # who would make more likely to accept vaccine
     "smoothed_vaccine_likely_friends", "weight_unif", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_likely_friends", "weight", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,
@@ -178,6 +185,32 @@ get_binary_indicators <- function() {
     "smoothed_hesitancy_reason_religious", "weight_unif", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_religious", "weight", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
     
+    # vaccine barriers
+    "smoothed_vaccine_barrier_eligible", "weight_unif", "v_vaccine_barrier_eligible", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_eligible", "weight", "v_vaccine_barrier_eligible", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_no_appointments", "weight_unif", "v_vaccine_barrier_no_appointments", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_no_appointments", "weight", "v_vaccine_barrier_no_appointments", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_appointment_time", "weight_unif", "v_vaccine_barrier_appointment_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_appointment_time", "weight", "v_vaccine_barrier_appointment_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_technical_difficulties", "weight_unif", "v_vaccine_barrier_technical_difficulties", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_technical_difficulties", "weight", "v_vaccine_barrier_technical_difficulties", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_document", "weight_unif", "v_vaccine_barrier_document", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_document", "weight", "v_vaccine_barrier_document", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_technology_access", "weight_unif", "v_vaccine_barrier_technology_access", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_technology_access", "weight", "v_vaccine_barrier_technology_access", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_travel", "weight_unif", "v_vaccine_barrier_travel", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_travel", "weight", "v_vaccine_barrier_travel", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_language", "weight_unif", "v_vaccine_barrier_language", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_language", "weight", "v_vaccine_barrier_language", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_childcare", "weight_unif", "v_vaccine_barrier_childcare", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_childcare", "weight", "v_vaccine_barrier_childcare", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_time", "weight_unif", "v_vaccine_barrier_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_time", "weight", "v_vaccine_barrier_time", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_type", "weight_unif", "v_vaccine_barrier_type", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_type", "weight", "v_vaccine_barrier_type", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_none", "weight_unif", "v_vaccine_barrier_none", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_none", "weight", "v_vaccine_barrier_none", 6, compute_binary_response, jeffreys_binary,
+    
     # reasons for belief that vaccine is unnecessary
     "smoothed_dontneed_reason_had_covid", "weight_unif", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wdontneed_reason_had_covid", "weight", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
@@ -199,6 +232,10 @@ get_binary_indicators <- function() {
     "smoothed_winperson_school_fulltime", "weight", "s_inperson_school_fulltime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
+    
+    # beliefs
+    "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
   )
 
 

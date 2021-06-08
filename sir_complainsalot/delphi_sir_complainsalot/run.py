@@ -5,30 +5,31 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_sir_complainsalot`.
 """
 
-import logging
-import structlog
-import sys
-
 from itertools import groupby
-
-from slack import WebClient
-from slack.errors import SlackApiError
 
 from delphi_utils import read_params
 from delphi_utils import get_structured_logger
+from delphi_utils import SlackNotifier
 import covidcast
+import time
 
 from .check_source import check_source
 
 def get_logger():
     params = read_params()
-    return get_structured_logger(__name__, filename = params.get("log_filename"))
+    return get_structured_logger(
+        __name__, filename=params.get("log_filename"),
+        log_exceptions=params.get("log_exceptions", True))
 
 LOGGER = get_logger()
 
 def run_module():
+    start_time = time.time()
     params = read_params()
     meta = covidcast.metadata()
+    slack_notifier = None
+    if "channel" in params and "slack_token" in params:
+        slack_notifier = SlackNotifier(params["channel"], params["slack_token"])
 
     complaints = []
     for data_source in params["sources"].keys():
@@ -36,18 +37,11 @@ def run_module():
                                        params["sources"], params.get("grace", 0), LOGGER))
 
     if len(complaints) > 0:
-        for complaint in complaints:
-            LOGGER.critical(event="signal out of SLA",
-                            message=complaint.message,
-                            data_source=complaint.data_source,
-                            signal=complaint.signal,
-                            geo_types=complaint.geo_types,
-                            last_updated=complaint.last_updated.strftime("%Y-%m-%d"))
-
-        report_complaints(complaints, params)
-
-        sys.exit(1)
-
+        report_complaints(complaints, slack_notifier)
+    
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    LOGGER.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)
 
 def split_complaints(complaints, n=49):
     """Yield successive n-sized chunks from complaints list."""
@@ -55,25 +49,14 @@ def split_complaints(complaints, n=49):
         yield complaints[i:i + n]
 
 
-def report_complaints(all_complaints, params):
-    """Post complaints to Slack."""
-    if not params["slack_token"]:
-        LOGGER.info("(dry-run)")
-        return
-
-    client = WebClient(token=params["slack_token"])
+def report_complaints(all_complaints, slack_notifier):
+    """Log complaints and optionally post to Slack."""
 
     for complaints in split_complaints(all_complaints):
-        blocks = format_complaints_aggregated_by_source(complaints)
-        logger.info(f"blocks: {len(blocks)}")
-        try:
-            client.chat_postMessage(
-                channel=params["channel"],
-                blocks=blocks
-            )
-        except SlackApiError as e:
-            # You will get a SlackApiError if "ok" is False
-            assert False, e.response["error"]
+        blocks = format_and_log_complaints_aggregated_by_source(complaints)
+
+        if slack_notifier:
+            slack_notifier.post_message(blocks)
 
 def get_maintainers_block(complaints):
     """Build a Slack block to alert maintainers to pay attention."""
@@ -94,7 +77,7 @@ def get_maintainers_block(complaints):
     return maintainers_block
 
 
-def format_complaints_aggregated_by_source(complaints):
+def format_and_log_complaints_aggregated_by_source(complaints):
     """Build formatted Slack message for posting to the API, aggregating
     complaints by source to reduce the number of blocks."""
 
@@ -114,6 +97,11 @@ def format_complaints_aggregated_by_source(complaints):
                 signal_and_geo_types += "`{signal}: [{geo_types}]`\n".format(
                     signal=complaint.signal,
                     geo_types=", ".join(complaint.geo_types))
+
+            LOGGER.critical(event="Signal out of SLA",
+                            message=message,
+                            data_source=source,
+                            signal_and_geo_types=signal_and_geo_types)
 
             blocks.extend([
                 {

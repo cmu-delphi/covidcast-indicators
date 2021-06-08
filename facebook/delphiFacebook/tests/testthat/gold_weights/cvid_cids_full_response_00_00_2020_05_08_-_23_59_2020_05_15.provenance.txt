@@ -1,0 +1,5 @@
+key=value
+qualtrics.recorded.file=2020-05-15.2020-05-08.2020-05-15.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv
+min_date="list(sec = 0, min = 0, hour = 0, mday = 8, mon = 4, year = 120, wday = 5, yday = 128, isdst = 1, zone = ""PDT"", gmtoff = NA)"
+max_date="list(sec = 59, min = 59, hour = 23, mday = 15, mon = 4, year = 120, wday = 5, yday = 135, isdst = 1, zone = ""PDT"", gmtoff = NA)"
+generated=Fri Jun  5 13:20:47 2020

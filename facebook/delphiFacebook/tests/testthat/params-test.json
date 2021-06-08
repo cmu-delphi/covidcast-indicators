@@ -1,0 +1,36 @@
+{
+  "start_date": "2020-05-10",
+  "end_date": "2020-05-13",
+  "backfill_days": 4,
+  "archive_days": 14,
+  "static_dir": "./static",
+  "export_dir": "./receiving",
+  "cache_dir": "./cache",
+  "archive_dir": "./archive",
+  "individual_dir": "./individual",
+  "weights_in_dir": "./weights_in",
+  "weights_out_dir": "./weights_out",
+  "input_dir": "./input",
+  "input": [
+    "responses.csv"
+  ],
+  "output": [
+    "cids",
+    "individual",
+    "covidalert",
+    "archive",
+    "community"
+  ],
+  "debug": true,
+  "parallel": false,
+  "contingency": {
+    "end_date": "2020-06-01",
+    "export_dir": "./receiving_contingency_test",
+    "input": [
+      "responses.csv"
+    ],
+    "use_input_asis": true,
+    "aggregate_range": "month",
+    "debug": false
+  }
+}

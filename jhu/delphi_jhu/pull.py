@@ -59,7 +59,7 @@ def sanity_check_data(df: pd.DataFrame) -> pd.DataFrame:
     if n_days != len(unique_days):
         raise ValueError(
             f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
+            f"{max_timestamp} is represented."
         )
 
 
@@ -102,14 +102,9 @@ def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
     df = gmpr.replace_geocode(
         df, "jhu_uid", "fips", from_col="UID", date_col="timestamp"
     )
-
-    # Merge in population, set population as NAN for fake fips
-    df = gmpr.add_population_column(df, "fips")
     df = create_diffs_column(df)
-
     # Final sanity checks
     sanity_check_data(df)
-
     # Reorder columns
-    df = df[["fips", "timestamp", "population", "new_counts", "cumulative_counts"]]
+    df = df[["fips", "timestamp", "new_counts", "cumulative_counts"]]
     return df

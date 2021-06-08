@@ -3,8 +3,11 @@ from typing import List
 from delphi_utils import get_structured_logger
 
 import covidcast
+from datetime import datetime, timedelta
 import numpy as np
 import pandas as pd
+
+covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 @dataclass
 class Complaint:
@@ -64,13 +67,40 @@ def check_source(data_source, meta, params, grace, logger):
            row["signal"] in source_config["retired-signals"]:
             continue
 
-        # Check max age
-        age = (now - row["max_time"]).days
+        logger.info("Retrieving signal",
+            data_source=data_source,
+            signal=row["signal"],
+            start_day=(datetime.now() - timedelta(days = 14)).strftime("%Y-%m-%d"),
+            end_day=datetime.now().strftime("%Y-%m-%d"),
+            geo_type=row["geo_type"])
 
-        if age > source_config["max_age"] + grace:
+        latest_data = covidcast.signal(
+            data_source, row["signal"],
+            start_day=datetime.now() - timedelta(days = 14),
+            end_day=datetime.now(),
+            geo_type=row["geo_type"]
+        )
+
+        current_lag_in_days = (now - row["max_time"]).days
+        lag_calculated_from_api = False
+
+        if latest_data is not None:
+            unique_dates = [pd.to_datetime(val).date()
+                            for val in latest_data["time_value"].unique()]
+            current_lag_in_days = (datetime.now().date() - max(unique_dates)).days
+            lag_calculated_from_api = True
+
+        logger.info("Signal lag",
+                    current_lag_in_days = current_lag_in_days,
+                    data_source = data_source,
+                    signal = row["signal"],
+                    geo_type=row["geo_type"],
+                    lag_calculated_from_api = lag_calculated_from_api)
+
+        if current_lag_in_days > source_config["max_age"] + grace:
             if row["signal"] not in age_complaints:
                 age_complaints[row["signal"]] = Complaint(
-                    "is more than {age} days old".format(age=age),
+                    "is {current_lag_in_days} days old".format(current_lag_in_days=current_lag_in_days),
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
@@ -80,33 +110,37 @@ def check_source(data_source, meta, params, grace, logger):
                 age_complaints[row["signal"]].geo_types.append(row["geo_type"])
 
         # Check max gap
-        if max_allowed_gap == -1:
+        if max_allowed_gap == -1 or latest_data is None:
             # No gap detection for this source
             continue
 
-        logger.info("Retrieving signal",
-                    source=data_source,
-                    signal=row["signal"],
-                    start_day=(row["max_time"] -
-                               gap_window).strftime("%Y-%m-%d"),
-                    end_day=row["max_time"].strftime("%Y-%m-%d"),
-                    geo_type=row["geo_type"])
-
-        latest_data = covidcast.signal(
-            data_source, row["signal"],
-            start_day=row["max_time"] - gap_window,
-            end_day=row["max_time"],
-            geo_type=row["geo_type"]
-        )
-
         # convert numpy datetime values to pandas datetimes and then to
         # datetime.date, so we can work with timedeltas after
-        unique_dates = [pd.to_datetime(val).date()
-                        for val in latest_data["time_value"].unique()]
+        unique_issues = [pd.to_datetime(val).date()
+                        for val in latest_data["issue"].unique()]
 
         gap_days = [(day - prev_day).days
                     for day, prev_day in zip(unique_dates[1:], unique_dates[:-1])]
-        gap = max(gap_days)
+
+        # If we only have a single day of data available then gap days will be
+        # empty.
+        if not gap_days:
+            logger.info(
+                "Not enough data to calculate gap days.",
+                data_source=data_source,
+                signal=row["signal"],
+                geo_type=row["geo_type"])
+            continue
+
+        gap = max(gap_days) - 1
+        logger.info("Detecting days with data present",
+                    data_source = data_source,
+                    signal = row["signal"],
+                    geo_type=row["geo_type"],
+                    most_recent_dates_with_data = [x.strftime("%Y-%m-%d") for x in unique_dates],
+                    gap_days = gap_days,
+                    max_gap = gap,
+                    issue_dates = [x.strftime("%Y-%m-%d") for x in unique_issues])
 
         if gap > max_allowed_gap:
             if row["signal"] not in gap_complaints:
@@ -116,7 +150,7 @@ def check_source(data_source, meta, params, grace, logger):
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
-                    row["max_time"],
+                    datetime.now(),
                     source_config["maintainers"])
             else:
                 gap_complaints[row["signal"]].geo_types.append(row["geo_type"])

@@ -5,7 +5,6 @@ from os.path import join, exists
 from tempfile import TemporaryDirectory
 
 # third party
-from delphi_utils import read_params
 import numpy as np
 import pandas as pd
 import pytest
@@ -16,9 +15,15 @@ from delphi_claims_hosp.update_indicator import ClaimsHospIndicatorUpdater
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()
-PARAMS = read_params()
-DATA_FILEPATH = PARAMS["input_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_file": "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+        "drop_date": "2020-06-11",
+        "obfuscated_prefix": "foo_obfuscated"
+    }
+}
+DATA_FILEPATH = PARAMS["indicator"]["input_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH = "test_data/"
 
 
@@ -174,7 +179,7 @@ class TestClaimsHospIndicatorUpdater:
         td.cleanup()
 
     def test_write_to_csv_with_se_results(self):
-        obfuscated_name = PARAMS["obfuscated_prefix"]
+        obfuscated_name = PARAMS["indicator"]["obfuscated_prefix"]
         signal_name = obfuscated_name + "_" + Config.signal_weekday_name
         updater = ClaimsHospIndicatorUpdater(
             "02-01-2020",

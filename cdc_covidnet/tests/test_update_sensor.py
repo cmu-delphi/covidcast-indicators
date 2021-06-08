@@ -6,11 +6,8 @@ from tempfile import TemporaryDirectory
 import numpy as np
 import pandas as pd
 
-from delphi_utils import read_params
 from delphi_cdc_covidnet.update_sensor import update_sensor
 
-params = read_params()
-STATIC_DIR = params["static_file_dir"]
 
 class TestUpdateSensor:
 
@@ -75,7 +72,7 @@ class TestUpdateSensor:
             end_date = datetime(year=2020, month=3, day=17)
 
             # Generate the csvs
-            hosp_df = update_sensor(state_files, mmwr_info, temp_dir, start_date, end_date)
+            hosp_df = update_sensor(state_files, mmwr_info, temp_dir, start_date, end_date, "")
             # Check dataframe returned
             assert hosp_df.index.nlevels == 2
             assert set(hosp_df.index.names) == {"date", "geo_id"}
@@ -90,11 +87,11 @@ class TestUpdateSensor:
             assert pd.isna(hosp_df["sample_size"]).all()
 
             # Check actual files generated
-            expected_files = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
+            expected_files = ["202010_state_covidnet.csv", "202011_state_covidnet.csv"]
             expected_files = [join(temp_dir, exp_file) for exp_file in expected_files]
             for exp_file in expected_files:
                 assert exists(exp_file)
-            assert not exists("202012_state_wip_covidnet.csv")
+            assert not exists("202012_state_covidnet.csv")
 
             for i, exp_file in enumerate(expected_files):
                 data = pd.read_csv(exp_file)

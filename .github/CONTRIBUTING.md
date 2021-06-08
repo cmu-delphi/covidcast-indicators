@@ -4,11 +4,11 @@
 
 * `main`
 
-The primary/authoritative branch of this repository is called `main`, and contains up-to-date code and supporting libraries. This should be your starting point when creating a new indicator. It is protected so that only reviewed pull requests can be merged in.
+The primary branch of this repository is called `main`, and contains the version of the code and supporting libraries currently under development. This should be your starting point when creating a new indicator. It is protected so that only reviewed pull requests can be merged in. The main branch is configured to deploy to our staging environment on push. CI is set up to build and test all indicators on PR.
 
-* `deploy-*`
+* `prod`
 
-Each automated pipeline has a corresponding branch which automatically deploys to a runtime host which runs the pipeline at a designated time each day. New features and bugfixes are merged into this branch using a pull request, so that our CI system can run the lint and test cycles and make sure the package will run correctly on the runtime host. If an indicator does not have a branch named after it starting with `deploy-`, that means the indicator has not yet been automated, and has a designated human keeper who is responsible for making sure the indicator runs each day -- whether that is manually or using a scheduler like cron is the keeper's choice.
+The production branch is configured to automatically deploy to our production environment on push, and is protected so that only administrators can push or merge. CI is set up to build and test all indicators on PR.
 
 * everything else
 
@@ -22,15 +22,6 @@ If you ensure that each issue deals with a single topic (ie a single new propose
 
 Admins will assign issues to one or more people based on balancing expediency, expertise, and team robustness. It may be faster for one person to fix something, but we can reduce the risk of having too many single points of failure if two people work on it together.
 
-## Project Boards
-
-The Delphi Engineering team uses project boards to structure its weekly calls and track active tasks.
-
-Immediate work is tracked on [Release Planning](https://github.com/cmu-delphi/covidcast-indicators/projects/2)
-
-Long-term work and modeling collaborations are tracked on [Refactoring](https://github.com/cmu-delphi/covidcast-indicators/projects/3)
-
-
 ## General workflow for indicators creation and deployment
 
 So, how does one go about developing a pipeline for a new data source?
@@ -40,13 +31,11 @@ So, how does one go about developing a pipeline for a new data source?
 1. Create your new indicator branch from `main`.
 2. Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
 3. Make some stuff!
-4. When your stuff works, push your `dev-*` branch to remote for review.
-5. Consult with a platform engineer for the remaining production setup needs. They will create a branch called `deploy-*` for your indicator.
-6. Initiate a pull request against this new branch.
-7. Following [the source documentation template](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md), create public API documentation for the source. You can submit this as a pull request against the delphi-epidata repository.
-8. If your peers like the code, the documentation is ready, and Jenkins approves, deploy your changes by merging the PR.
-9. An admin will propagate your successful changes to `main`.
-10. Rejoice!
+4. When your stuff works, push your development branch to remote, and open a PR against `main` for review.
+5. Once your PR has been merged, consult with a platform engineer for the remaining production setup needs. They will create a deployment workflow for your indicator including any necessary production parameters. Production secrets are encrypted in the Ansible vault. This workflow will be tested in staging by admins, who will consult you about any problems they encounter.
+6. Following [the source documentation template](https://github.com/cmu-delphi/delphi-epidata/blob/main/docs/api/covidcast-signals/_source-template.md), create public API documentation for the source. You can submit this as a pull request against the delphi-epidata repository.
+7. If your peers like the code, the documentation is ready, and the staging runs are successful, work with admins to schedule your indicator in production, merge the documentation, and announce the new indicator to the mailing list.
+8. Rejoice!
 
 ### Starting out
 
@@ -86,12 +75,11 @@ becomes available to the public.
 
 Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. These include:
 
-- Creating the corresponding `deploy-*` branch in the repo.
 - Adding the necessary Jenkins scripts for your indicator.
 - Preparing the runtime host with any Automation configuration necessities.
 - Reviewing the workflow to make sure it meets the general guidelines and will run as expected on the runtime host.
 
-Once all the last mile configuration is in place you can create a pull request against the correct `deploy-*` branch to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
+Once all the last mile configuration is in place you can create a pull request against `prod` to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
 
 If everything looks ok, you've drafted source documentation, platform engineering has validated the last mile, and the pull request is accepted, you can merge the PR. Deployment will start automatically.
 

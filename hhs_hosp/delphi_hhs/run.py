@@ -6,13 +6,15 @@ when the module is run with `python -m delphi_hhs`.
 """
 from datetime import date, datetime, timedelta
 
+import time
 from delphi_epidata import Epidata
-from delphi_utils import read_params
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
+from delphi_utils import get_structured_logger
+import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, CONFIRMED, SUM_CONF_SUSP
 
 
 def _date_to_int(d):
@@ -62,30 +64,68 @@ def generate_date_ranges(start, end):
     return output
 
 
-def run_module():
-    """Generate ground truth HHS hospitalization data."""
-    params = read_params()
+def run_module(params):
+    """
+    Generate ground truth HHS hospitalization data.
+
+    Parameters
+    ----------
+    params
+        Dictionary containing indicator configuration. Expected to have the following structure:
+        - "common":
+            - "export_dir": str, directory to write output
+            - "log_filename" (optional): str, name of file to write logs
+    """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
-
     today = date.today()
-    past_reference_day = date(year=2020, month=1, day=1) # first available date in DB
+    past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
     date_range = generate_date_ranges(past_reference_day, today)
     dfs = []
     for r in date_range:
         response = Epidata.covid_hosp(request_all_states, r)
-        if response['result'] != 1:
+        # The last date range might only have recent days that don't have any data, so don't error.
+        if response["result"] != 1 and r != date_range[-1]:
             raise Exception(f"Bad result from Epidata: {response['message']}")
+        if response["result"] == -2 and r == date_range[-1]:  # -2 code means no results
+            continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
 
+    geo_mapper = GeoMapper()
+
     for sig in SIGNALS:
-        create_export_csv(
-            make_signal(all_columns, sig),
-            params["export_dir"],
-            "state",
-            sig
-        )
+        state = geo_mapper.add_geocode(make_signal(all_columns, sig),
+                                       "state_id", "state_code",
+                                       from_col="state")
+        for geo in GEOS:
+            create_export_csv(
+                make_geo(state, geo, geo_mapper),
+                params["common"]["export_dir"],
+                geo,
+                sig
+            )
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)
+
+def make_geo(state, geo, geo_mapper):
+    """Transform incoming geo (state) to another geo."""
+    if geo == "state":
+        exported = state.rename(columns={"state":"geo_id"})
+    else:
+        exported = geo_mapper.replace_geocode(
+            state, "state_code", geo,
+            new_col="geo_id",
+            date_col="timestamp")
+    exported["se"] = np.nan
+    exported["sample_size"] = np.nan
+    return exported
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""
@@ -93,25 +133,21 @@ def make_signal(all_columns, sig):
         " familiar names are '{', '.join(SIGNALS)}'"
     if sig == CONFIRMED:
         return pd.DataFrame({
-            "geo_id": all_columns.state.apply(str.lower),
+            "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
             "val": \
             all_columns.previous_day_admission_adult_covid_confirmed + \
-            all_columns.previous_day_admission_pediatric_covid_confirmed,
-            "se": None,
-            "sample_size": None
+            all_columns.previous_day_admission_pediatric_covid_confirmed
         })
     if sig == SUM_CONF_SUSP:
         return pd.DataFrame({
-            "geo_id": all_columns.state.apply(str.lower),
+            "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
             "val": \
             all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
-            "se": None,
-            "sample_size": None
         })
     raise Exception(
         "Bad programmer: signal '{sig}' in SIGNALS but not handled in make_signal"

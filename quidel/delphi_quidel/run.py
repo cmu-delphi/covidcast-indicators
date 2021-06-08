@@ -4,35 +4,66 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+import time
 from os.path import join
+from typing import Dict, Any
 
 import pandas as pd
-from delphi_utils import read_params, add_prefix, create_export_csv
+from delphi_utils import (
+    add_prefix,
+    create_export_csv,
+    get_structured_logger
+)
 
+from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+                        GEO_RESOLUTIONS, SENSORS)
+from .generate_sensor import (generate_sensor_for_states,
+                              generate_sensor_for_other_geores)
 from .geo_maps import geo_map
 from .pull import (pull_quidel_data,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-from .generate_sensor import (generate_sensor_for_states,
-                              generate_sensor_for_other_geores)
-from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
-                        GEO_RESOLUTIONS, SENSORS)
 
-def run_module():
-    """Run Quidel flu test module."""
-    params = read_params()
-    cache_dir = params["cache_dir"]
-    export_dir = params["export_dir"]
-    static_file_dir = params["static_file_dir"]
-    export_start_dates = params["export_start_date"]
-    export_end_dates = params["export_end_date"]
+
+def run_module(params: Dict[str, Any]):
+    """Run Quidel flu test module.
+
+    The `params` argument is expected to have the following structure:
+    - "common":
+        - "export_dir": str, directory to write output
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
+        - "log_filename" (optional): str, name of file to write logs
+    - indicator":
+        - "static_file_dir": str, directory name with population information
+        - "input_cache_dir": str, directory in which to cache input data
+        - "export_start_date": str, YYYY-MM-DD format of earliest date to create output
+        - "export_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
+                             through the present
+        - "pull_start_date": str, YYYY-MM-DD format of earliest date to pull input
+        - "pull_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
+                           through the present
+        - "aws_credentials": Dict[str, str], authentication parameters for AWS S3; see S3
+                             documentation
+        - "bucket_name": str, name of AWS bucket in which to find data
+        - "wip_signal": List[str], list of signal names that are works in progress
+        - "test_mode": bool, whether we are running in test mode
+    """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    cache_dir = params["indicator"]["input_cache_dir"]
+    export_dir = params["common"]["export_dir"]
+    static_file_dir = params["indicator"]["static_file_dir"]
+    export_start_dates = params["indicator"]["export_start_date"]
+    export_end_dates = params["indicator"]["export_end_date"]
     map_df = pd.read_csv(
         join(static_file_dir, "fips_prop_pop.csv"), dtype={"fips": int}
     )
 
     # Pull data and update export date
-    dfs, _end_date = pull_quidel_data(params)
+    dfs, _end_date = pull_quidel_data(params["indicator"])
     if _end_date is None:
         print("The data is up-to-date. Currently, no new data to be ingested.")
         return
@@ -44,7 +75,7 @@ def run_module():
 
     # Add prefix, if required
     sensors = add_prefix(list(SENSORS.keys()),
-                         wip_signal=params["wip_signal"],
+                         wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
 
     for sensor in sensors:
@@ -81,3 +112,7 @@ def run_module():
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
     update_cache_file(dfs, _end_date, cache_dir)
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed indicator run",
+        elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -6,9 +6,24 @@ from pandas.testing import assert_frame_equal
 
 from delphi_cdc_covidnet.run import run_module
 
+
 class TestRun:
+    PARAMS = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "start_date": "2020-03-07",
+            "end_date": "",
+            "parallel": True,
+            "wip_signal": "",
+            "input_cache_dir": "./cache"
+        }
+    }
+
+
     def test_match_old_to_new_output(self):
-        output_fnames = ["202010_state_wip_covidnet.csv", "202011_state_wip_covidnet.csv"]
+        output_fnames = ["202010_state_covidnet.csv", "202011_state_covidnet.csv"]
         cached_files = [
             "networkid_2_catchmentid_11.json",
             "networkid_2_catchmentid_14.json",
@@ -32,7 +47,7 @@ class TestRun:
             assert exists(join("cache", cached_file)), f"Cached file '{cached_file}' not found"
 
         # Run the whole program to completion
-        run_module()
+        run_module(self.PARAMS)
 
         for fname in output_fnames:
             # Target output file exist

@@ -1,8 +1,26 @@
 """Structured logger utility for creating JSON logs in Delphi pipelines."""
 import logging
+import sys
+import threading
 import structlog
 
-def get_structured_logger(name = __name__, filename = None):
+
+def handle_exceptions(logger):
+    """Handle exceptions using the provided logger."""
+    def exception_handler(etype, value, traceback):
+        logger.exception("Top-level exception occurred",
+                         exc_info=(etype, value, traceback))
+
+    def multithread_exception_handler(args):
+        exception_handler(args.exc_type, args.exc_value, args.exc_traceback)
+
+    sys.excepthook = exception_handler
+    threading.excepthook = multithread_exception_handler
+
+
+def get_structured_logger(name=__name__,
+                          filename=None,
+                          log_exceptions=True):
     """Create a new structlog logger.
 
     Use the logger returned from this in indicator code using the standard
@@ -22,16 +40,12 @@ def get_structured_logger(name = __name__, filename = None):
     is a good choice.
     filename: An (optional) file to write log output.
     """
-    # Configure the underlying logging configuration
-    handlers = [logging.StreamHandler()]
-    if filename:
-        handlers.append(logging.FileHandler(filename))
-
+    # Configure the basic underlying logging configuration
     logging.basicConfig(
         format="%(message)s",
         level=logging.INFO,
-        handlers=handlers
-        )
+        handlers=[logging.StreamHandler()]
+    )
 
     # Configure structlog. This uses many of the standard suggestions from
     # the structlog documentation.
@@ -66,4 +80,14 @@ def get_structured_logger(name = __name__, filename = None):
         cache_logger_on_first_use=True,
     )
 
-    return structlog.get_logger(name)
+    # Create the underlying python logger and wrap it with structlog
+    system_logger = logging.getLogger(name)
+    if filename:
+        system_logger.addHandler(logging.FileHandler(filename))
+    system_logger.setLevel(logging.INFO)
+    logger = structlog.wrap_logger(system_logger)
+
+    if log_exceptions:
+        handle_exceptions(logger)
+
+    return logger

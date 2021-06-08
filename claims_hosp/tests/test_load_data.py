@@ -5,13 +5,17 @@ import pytest
 # first party
 from delphi_claims_hosp.config import Config, GeoConstants
 from delphi_claims_hosp.load_data import load_data, load_claims_data
-from delphi_utils import read_params
 
 CONFIG = Config()
 CONSTANTS = GeoConstants()
-PARAMS = read_params()
-DATA_FILEPATH = PARAMS["input_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_file": "test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+        "drop_date": "2020-06-11",
+    }
+}
+DATA_FILEPATH = PARAMS["indicator"]["input_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 
 class TestLoadData:

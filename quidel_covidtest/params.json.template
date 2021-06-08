@@ -1,15 +1,39 @@
 {
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "export_start_date": "2020-05-26",
-  "export_end_date": "",
-  "pull_start_date": "2020-05-26",
-  "pull_end_date":"",
-  "mail_server": "imap.exchange.andrew.cmu.edu",
-  "account": "delphi-datadrop@andrew.cmu.edu",
-  "password": "",
-  "sender": "",
-  "wip_signal": [""],
-  "mode": ""
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "static_file_dir": "./static",
+    "input_cache_dir": "./cache",
+    "export_start_date": "2020-05-26",
+    "export_end_date": "",
+    "pull_start_date": "2020-05-26",
+    "pull_end_date":"",
+    "export_day_range":40,
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "wip_signal": [""],
+    "test_mode": false
+  },
+  "validation": {
+    "common": {
+      "data_source": "quidel",
+      "span_length": 14,
+      "end_date": "today-5",
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 50
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "covid_ag_smoothed_pct_positive"
+      ]
+    }
+  }
 }

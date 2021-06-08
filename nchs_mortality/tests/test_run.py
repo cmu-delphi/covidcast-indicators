@@ -1,8 +1,7 @@
-import pytest
-
 import datetime as dt
 from os import listdir
 from os.path import join
+import pytest
 
 import pandas as pd
 
@@ -38,14 +37,14 @@ class TestRun:
             sensors = ["num", "prop"]
 
             expected_files = []
-            for date in dates:
+            for d in dates:
                 for metric in metrics:
                     if metric == "deaths_percent_of_expected":
-                        expected_files += ["weekly_" + date + "_state_wip_" \
+                        expected_files += ["weekly_" + d + "_state_" \
                                            + metric + ".csv"]
                     else:
                         for sensor in sensors:
-                            expected_files += ["weekly_" + date + "_state_wip_" \
+                            expected_files += ["weekly_" + d + "_state_" \
                                                + metric + "_" + sensor + ".csv"]
             assert set(expected_files).issubset(set(csv_files))
 
@@ -59,6 +58,6 @@ class TestRun:
 
         for output_folder in folders:
             df = pd.read_csv(
-                join(output_folder, "weekly_202026_state_wip_deaths_covid_incidence_prop.csv")
+                join(output_folder, "weekly_202026_state_deaths_covid_incidence_prop.csv")
             )
             assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

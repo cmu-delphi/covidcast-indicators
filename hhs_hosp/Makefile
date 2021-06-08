@@ -12,9 +12,8 @@ install: venv
 	pip install -e .
 
 lint:
-	. env/bin/activate; \
-	pylint $(dir); \
-	pydocstyle $(dir)
+	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pydocstyle $(dir)
 
 test:
 	. env/bin/activate ;\
@@ -23,3 +22,8 @@ test:
 clean:
 	rm -rf env
 	rm -f params.json
+
+run:
+	env/bin/python -m $(dir)
+	env/bin/python -m delphi_utils.validator --dry_run
+	env/bin/python -m delphi_utils.archive

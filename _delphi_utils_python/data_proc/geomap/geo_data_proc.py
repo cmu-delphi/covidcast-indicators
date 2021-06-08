@@ -8,6 +8,7 @@ from zipfile import ZipFile
 
 import requests
 import pandas as pd
+import numpy as np
 
 
 # Source files
@@ -46,6 +47,9 @@ ZIP_STATE_CODE_OUT_FILENAME = "zip_state_code_table.csv"
 ZIP_HHS_FILENAME = "zip_hhs_table.csv"
 STATE_OUT_FILENAME = "state_codes_table.csv"
 STATE_HHS_OUT_FILENAME = "state_code_hhs_table.csv"
+STATE_POPULATION_OUT_FILENAME = "state_pop.csv"
+HHS_POPULATION_OUT_FILENAME = "hhs_pop.csv"
+NATION_POPULATION_OUT_FILENAME = "nation_pop.csv"
 JHU_FIPS_OUT_FILENAME = "jhu_uid_fips_table.csv"
 
 
@@ -400,7 +404,58 @@ def create_fips_population_table():
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
     census_pop_pr = pd.concat([census_pop, df_pr])
 
-    census_pop_pr.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
+    # Filled from https://www.census.gov/data/tables/2010/dec/2010-island-areas.html
+    territories_pop = pd.DataFrame({
+        "fips": ["60010", "60020", "60030", "60040", "60050", "66010", "78010", "78020", "78030", "69085", "69100", "69110", "69120"],
+        "pop": [23030, 1143, 0, 17, 31329, 159358, 50601, 4170, 51634, 0, 2527, 48220, 3136]
+    })
+    census_pop_territories = pd.concat([census_pop_pr, territories_pop])
+    non_megafips_mask = ~census_pop_territories.fips.str.endswith("000")
+    census_pop_territories = census_pop_territories.loc[non_megafips_mask]
+    census_pop_territories.to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
+
+def create_state_population_table():
+    if not isfile(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME)):
+        create_fips_population_table()
+    if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
+        derive_fips_state_crosswalk()
+    census_pop = pd.read_csv(
+        join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
+    )
+    state = pd.read_csv(
+        join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype=str
+    )
+    combined = state.merge(census_pop, on="fips")
+    state_pop = combined.groupby(["state_code", "state_id", "state_name"], as_index=False).sum()
+    state_pop.to_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), index=False)
+
+
+def create_hhs_population_table():
+    if not isfile(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME)):
+        create_state_population_table()
+    if not isfile(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME)):
+        create_state_hhs_crosswalk()
+    state_pop = pd.read_csv(
+        join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), dtype={"state_code": str, "hhs": int},
+        usecols=["state_code", "pop"]
+    )
+    state_hhs = pd.read_csv(
+        join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str
+    )
+    combined = state_pop.merge(state_hhs, on="state_code")
+    hhs_pop = combined.groupby("hhs", as_index=False).sum()
+    hhs_pop.to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
+
+
+def create_nation_population_table():
+    if not isfile(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME)):
+        create_fips_population_table()
+    census_pop = pd.read_csv(
+        join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
+    )
+    nation_pop = pd.DataFrame({"nation": ["us"],
+                               "pop": [census_pop["pop"].sum()]})
+    nation_pop.to_csv(join(OUTPUT_DIR, NATION_POPULATION_OUT_FILENAME), index=False)
 
 
 def derive_zip_population_table():
@@ -465,11 +520,17 @@ def derive_fips_state_crosswalk():
     fips_pop = pd.read_csv(
         join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
     )
+
+    megafips = pd.DataFrame({
+        "fips": [i + "000" for i in set(fips_pop.fips.str[:2])],
+        "pop": np.nan
+    })
+    fips_pop = pd.concat([fips_pop, megafips])
+
     state_codes = pd.read_csv(
         join(OUTPUT_DIR, STATE_OUT_FILENAME),
         dtype={"state_code": str, "state_id": str, "state_name": str},
     )
-
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
     (
         fips_pop.merge(state_codes, on="state_code", how="left")
@@ -545,6 +606,12 @@ def derive_fips_hhs_crosswalk():
     fips_pop = pd.read_csv(
         join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int}
     )
+    megafips = pd.DataFrame({
+        "fips": [i + "000" for i in set(fips_pop.fips.str[:2])],
+        "pop": np.nan
+    })
+    fips_pop = pd.concat([fips_pop, megafips])
+
     state_hhs = pd.read_csv(
         join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME),
         dtype={"state_code": str, "hhs": str},
@@ -591,6 +658,9 @@ if __name__ == "__main__":
     create_state_codes_crosswalk()
     create_state_hhs_crosswalk()
     create_fips_population_table()
+    create_nation_population_table()
+    create_state_population_table()
+    create_hhs_population_table()
 
     derive_fips_hrr_crosswalk()
     derive_zip_msa_crosswalk()

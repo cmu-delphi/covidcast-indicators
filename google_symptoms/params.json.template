@@ -1,7 +1,33 @@
 {
-  "export_start_date": "2020-02-20",
-  "static_file_dir": "./static",
-  "export_dir": "./receiving",
-  "cache_dir": "./cache",
-  "base_url": "https://raw.githubusercontent.com/google-research/open-covid-19-data/master/data/exports/search_trends_symptoms_dataset/United%20States%20of%20America{sub_url}2020_US_{state}daily_symptoms_dataset.csv"
+  "common": {
+    "export_dir": "./receiving",
+    "log_exceptions": false
+  },
+  "indicator": {
+    "export_start_date": "2020-02-20",
+    "num_export_days": null,
+    "bigquery_credentials": {}
+  },
+  "validation": {
+    "common": {
+      "data_source": "google-symptoms",
+      "span_length": 14,
+      "end_date": "today-8",
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "ageusia_smoothed_search",
+        "sum_anosmia_ageusia_smoothed_search",
+        "anosmia_smoothed_search"
+      ]
+    }
+  }
 }

@@ -2,19 +2,24 @@
 import pytest
 
 # third party
-from delphi_utils import read_params
+from delphi_utils import GeoMapper
 import pandas as pd
 
 # first party
-from delphi_changehc.config import Config, Constants
+from delphi_changehc.config import Config
 from delphi_changehc.load_data import *
 
 CONFIG = Config()
-CONSTANTS = Constants()
-PARAMS = read_params()
-COVID_FILEPATH = PARAMS["input_covid_file"]
-DENOM_FILEPATH = PARAMS["input_denom_file"]
-DROP_DATE = pd.to_datetime(PARAMS["drop_date"])
+PARAMS = {
+    "indicator": {
+        "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
+        "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "drop_date": "2020-06-01"
+    }
+}
+COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
 
 class TestLoadData:
@@ -24,6 +29,7 @@ class TestLoadData:
                     Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
                                             "fips")
+    gmpr = GeoMapper()
 
     def test_base_unit(self):
         with pytest.raises(AssertionError):
@@ -78,7 +84,7 @@ class TestLoadData:
                      self.combined_data]:
             assert (
                     len(data.index.get_level_values(
-                        'fips').unique()) <= CONSTANTS.NUM_COUNTIES
+                        'fips').unique()) <= len(self.gmpr.get_geo_values("fips"))
             )
 
     def test_combined_fips_values(self):

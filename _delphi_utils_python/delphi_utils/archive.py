@@ -26,13 +26,13 @@ Author: Eu Jing Chua
 Created: 2020-08-06
 """
 
-from argparse import ArgumentParser
 from contextlib import contextmanager
 import filecmp
 from glob import glob
 from os import remove, replace
 from os.path import join, basename, abspath
 import shutil
+import time
 from typing import Tuple, List, Dict, Optional
 
 from boto3 import Session
@@ -42,6 +42,7 @@ from git.refs.head import Head
 import pandas as pd
 
 from .utils import read_params
+from .logger import get_structured_logger
 
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]
@@ -53,6 +54,8 @@ def diff_export_csv(
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     """
     Find differences in exported covidcast CSVs, using geo_id as the index.
+
+    The signal and standard error values are rounded to 7 decimal places before comparison.
 
     Treats NA == NA as True.
 
@@ -75,10 +78,10 @@ def diff_export_csv(
 
     before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
     before_df.set_index("geo_id", inplace=True)
-
+    before_df = before_df.round({"val": 7, "se": 7})
     after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
     after_df.set_index("geo_id", inplace=True)
-
+    after_df = after_df.round({"val": 7, "se": 7})
     deleted_idx = before_df.index.difference(after_df.index)
     common_idx = before_df.index.intersection(after_df.index)
     added_idx = after_df.index.difference(before_df.index)
@@ -96,40 +99,57 @@ def diff_export_csv(
         after_df.loc[added_idx, :])
 
 
-def run_module(archive_type: str,
-               cache_dir: str,
-               export_dir: str,
-               **kwargs):
-    """Build and run an ArchiveDiffer.
+def archiver_from_params(params):
+    """Build an ArchiveDiffer from `params`.
+
+    The type of ArchiveDiffer constructed is inferred from the parameters.
 
     Parameters
     ----------
-    archive_type: str
-        Type of ArchiveDiffer to run.  Must be one of ["git", "s3"] which correspond to
-        `GitArchiveDiffer` and `S3ArchiveDiffer`, respectively.
-    cache_dir: str
-        The directory for storing most recent archived/uploaded CSVs to start diffing from.
-    export_dir: str
-        The directory with most recent exported CSVs to diff to.
-    **kwargs:
-        Keyword arguments corresponding to constructor arguments for the respective ArchiveDiffers.
+    params: Dict[str, Dict[str, Any]]
+        Dictionary of user-defined parameters with the following structure:
+        - "common":
+            - "export_dir": str, directory to which indicator output files have been exported
+        - "archive":
+            - "cache_dir": str, directory containing cached data from previous indicator runs
+            - "branch_name" (required for git archiver): str, name of git branch
+            - "override_dirty" (optional for git archiver): bool, whether to allow overwriting of
+                untracked & uncommitted changes in `cache_dir`
+            - "commit_partial_success" (optional for git archiver): bool, whether to still commit
+                even if some files were not archived and staged due to `override_dirty=False`
+            - "commit_message" (optional for git archiver): str, commit message to use
+            - "bucket_name" (required for S3 archiver): str, name of S3 bucket to which to upload
+                files
+            - "indicator_prefix" (required for S3 archiver): str, S3 prefix for files from this
+                indicator
+            - "aws_credentials" (required for S3 archiver): Dict[str, str], authentication
+                parameters for S3 to create a boto3.Session
+
+    Returns
+    -------
+    ArchiveDiffer of the inferred type.
     """
-    if archive_type == "git":
-        arch_diff = GitArchiveDiffer(cache_dir,
-                                     export_dir,
-                                     kwargs["branch_name"],
-                                     kwargs["override_dirty"],
-                                     kwargs["commit_partial_success"],
-                                     kwargs["commit_message"])
-    elif archive_type == "s3":
-        arch_diff = S3ArchiveDiffer(cache_dir,
-                                    export_dir,
-                                    kwargs["bucket_name"],
-                                    kwargs["indicator_prefix"],
-                                    kwargs["aws_credentials"])
-    else:
-        raise ValueError(f"No archive type named '{archive_type}'")
-    arch_diff.run()
+    if "archive" not in params:
+        return None
+
+    # Copy to kwargs to take advantage of default arguments to archiver
+    kwargs = params["archive"]
+    kwargs["export_dir"] = params["common"]["export_dir"]
+
+    if "branch_name" in kwargs:
+        return GitArchiveDiffer(**kwargs)
+
+    if "bucket_name" in kwargs:
+        assert "indicator_prefix" in kwargs, "Missing indicator_prefix in params"
+        assert "aws_credentials" in kwargs, "Missing aws_credentials in params"
+        return S3ArchiveDiffer(**kwargs)
+
+    # Don't run the filesystem archiver if the user misspecified the archiving params
+    assert set(kwargs.keys()) == set(["cache_dir", "export_dir"]),\
+        'If you intended to run a filesystem archiver, please remove all options other than '\
+        '"cache_dir" from the "archive" params.  Otherwise, please include either "branch_name" '\
+        'or "bucket_name" to run the git or S3 archivers, respectively.'
+    return FilesystemArchiveDiffer(**kwargs)
 
 
 class ArchiveDiffer:
@@ -576,36 +596,66 @@ class GitArchiveDiffer(ArchiveDiffer):
 
         return archive_success, archive_fail
 
+class FilesystemArchiveDiffer(ArchiveDiffer):
+    """Filesystem-based backend for archiving.
+
+    This backend is only intended for use to reconstruct historical issues whose
+    versioning history has already been tracked elsewhere. No versioning is
+    performed by this backend and the cache directory is modified in-place
+    without backups. Do not use it for new issues.
+    """
+
+    def archive_exports(self, exported_files):
+        """Handle file archiving with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+
+        Parameters
+        ----------
+        exported_files: Files
+            List of files to be archived. Usually new and changed files.
+
+        Returns
+        -------
+        (successes, fails): Tuple[Files, Files]
+            successes: All files from input
+            fails: Empty list
+        """
+        self._exports_archived = True
+        return exported_files, []
+
+    def update_cache(self):
+        """Handle cache updates with a no-op.
+
+        FilesystemArchiveDiffer does not track versioning information, so this
+        just does enough to convince the caller that it's okay to proceed with
+        the next step.
+        """
+        self._cache_updated = True
 
 if __name__ == "__main__":
-    parser = ArgumentParser()
-    parser.add_argument("--archive_type", required=True, type=str,
-                        choices=["git", "s3"],
-                        help="Type of archive differ to use.")
-    parser.add_argument("--indicator_prefix", type=str, default="",
-                        help="The prefix for S3 keys related to this indicator."
-                        " Required for `archive_type = 's3'")
-    parser.add_argument("--branch_name", type=str, default="",
-                        help=" Branch to use for `archive_type` = 'git'.")
-    parser.add_argument("--override_dirty", action="store_true",
-                        help="Whether to allow overwriting of untracked &"
-                        " uncommitted changes for `archive_type` = 'git'")
-    parser.add_argument("--commit_partial_success",  action="store_true",
-                        help="Whether to still commit for `archive_type` = "
-                        "'git' even if some files were not archived and "
-                        "staged due to `override_dirty` = False.")
-    parser.add_argument("--commit_message", type=str, default="",
-                        help="Commit message for `archive_type` = 'git'")
-    args = parser.parse_args()
-    params = read_params()
-    run_module(args.archive_type,
-               params["cache_dir"],
-               params["export_dir"],
-               aws_credentials=params["aws_credentials"],
-               branch_name=args.branch_name,
-               bucket_name=params["bucket_name"],
-               commit_message=args.commit_message,
-               commit_partial_success=args.commit_partial_success,
-               indicator_prefix=args.indicator_prefix,
-               override_dirty=args.override_dirty
-               )
+    _params = read_params()
+
+    # Autodetect whether parameters have been factored hierarchically or not
+    # See https://github.com/cmu-delphi/covidcast-indicators/issues/847
+    # Once all indicators have their parameters factored in to "common", "indicator", "validation",
+    # and "archive", this code will be obsolete.
+    #
+    # We assume that by virtue of invoking this module from the command line that the user intends
+    # to run validation.  Thus if the "archive" sub-object is not found, we interpret that to mean
+    # the parameters have not be hierarchically refactored.
+    if "archive" not in _params:
+        _params = {"archive": _params, "common": _params}
+
+    logger = get_structured_logger(
+        __name__, filename=_params["common"].get("log_filename"),
+        log_exceptions=_params["common"].get("log_exceptions", True))
+    start_time = time.time()
+
+    archiver_from_params(_params).run()
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed archive run.",
+                elapsed_time_in_seconds=elapsed_time_in_seconds)

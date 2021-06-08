@@ -26,7 +26,7 @@ REPLACE_FIPS = [
 
 
 # Valid geographical resolutions output by this indicator.
-VALID_GEO_RES = ("county", "state", "msa", "hrr")
+VALID_GEO_RES = ("county", "state", "msa", "hrr", "hhs", "nation")
 # Sensors that report proportions.  For geo resolutions with unallocated cases
 # or deaths, we avoid reporting these sensors.
 PROP_SENSORS = ("incidence", "cumulative_prop")
@@ -54,8 +54,9 @@ def disburse(df: pd.DataFrame, pooled_fips: str, fips_list: list):
     for col in cols:
         # Get values from the aggregated county:
         vals = df.loc[df["fips"] == pooled_fips, col].values / len(fips_list)
-        for fips in fips_list:
-            df.loc[df["fips"] == fips, col] += vals
+        if len(vals) > 0:
+            for fips in fips_list:
+                df.loc[df["fips"] == fips, col] += vals
     return df
 
 
@@ -69,7 +70,7 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
         Columns: fips, timestamp, new_counts, cumulative_counts, population ...
     geo_res: str
         Geographic resolution to which to aggregate.  Valid options:
-        ("county", "state", "msa", "hrr").
+        ("county", "state", "msa", "hrr", "hhs", "nation").
     sensor: str
         sensor type. Valid options:
         ("new_counts", "cumulative_counts",
@@ -86,48 +87,45 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     # State-level records unassigned to specific counties are coded as fake
     # counties with fips XX000.
     unassigned_counties = df[df["fips"].str.endswith("000")].copy()
-
-    df = df[df["fips"].astype(int) % 1000 != 0].copy()
+    df = df[~df["fips"].str.endswith("000")].copy()
     # Disburse unallocated cases/deaths in NYC to NYC counties
     df = disburse(df, NYC_FIPS[0][0], NYC_FIPS[0][1])
     df = df[df["fips"] != NYC_FIPS[0][0]]
-    geo_mapper = GeoMapper()
+    gmpr = GeoMapper()
+    # The FIPS code 00001 is a dummy for unallocated NYC data.  It doesn't have
+    # a corresponding population entry in the GeoMapper so it will be dropped
+    # in the call to `add_population_column()`.  We pull it out here to
+    # reinsert it after the population data is added.
+    nyc_dummy_row = df[df["fips"] == "00001"]
+
+    # Merge in population LOWERCASE, consistent across confirmed and deaths
+    # Population for unassigned cases/deaths is NAN
+    df = gmpr.add_population_column(df, "fips")
+    df = df.append(nyc_dummy_row, ignore_index=True) if not nyc_dummy_row.empty else df
     if geo_res == "county":
         if sensor not in PROP_SENSORS:
             # It is not clear how to calculate the proportion for unallocated
             # cases/deaths, so we exclude them for those sensors.
-            df = df.append(unassigned_counties)
-        df["geo_id"] = df["fips"]
-    elif geo_res == "state":
-        # Grab first two digits of fips
-        # Map state fips to us postal code
-        # Add unallocated cases/deaths
-        df = df.append(unassigned_counties)
-        df = geo_mapper.add_geocode(df, "fips", "state_id", new_col="geo_id")
-
-        # Zero out the state FIPS population to avoid double counting.
-        df = df.set_index("fips")
-        state_fips_codes = {str(x).zfill(2) + "000" for x in range(1, 73)}
-        subset_state_fips_codes = set(df.index.values) & state_fips_codes
-        df.loc[subset_state_fips_codes, "population"] = 0
-        df = df.reset_index()
+            df = df.append(unassigned_counties) if not unassigned_counties.empty else df
+        df.rename({"fips": "geo_id"}, inplace=True, axis=1)
+    elif geo_res in ("state", "hhs", "nation"):
+        state_geo = "state_id" if geo_res == "state" else geo_res
+        df = df.append(unassigned_counties) if not unassigned_counties.empty else df
+        df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id", date_col="timestamp")
     else:
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
             df = disburse(df, fips, fips_list)
         for usafacts_fips, our_fips in REPLACE_FIPS:
             df.loc[df["fips"] == usafacts_fips, "fips"] = our_fips
-        merged = geo_mapper.add_geocode(df, "fips", geo_res, new_col="geo_id")
-        if geo_res != "hrr":
-            merged["weight"] = 1  # Only HRR requires weight
-        merged["cumulative_counts"] =\
-             merged["cumulative_counts"] * merged["weight"]
+        merged = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
+        if "weight" not in merged.columns:
+            merged["weight"] = 1
+        merged["cumulative_counts"] = merged["cumulative_counts"] * merged["weight"]
         merged["new_counts"] = merged["new_counts"] * merged["weight"]
         merged["population"] = merged["population"] * merged["weight"]
         df = merged.drop(["weight"], axis=1)
-    df = df.drop("fips", axis=1)
     df = df.groupby(["geo_id", "timestamp"]).sum().reset_index()
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
-    df["cumulative_prop"] =\
-         df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
+    df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df

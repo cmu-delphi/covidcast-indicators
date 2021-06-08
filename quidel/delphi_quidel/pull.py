@@ -62,7 +62,7 @@ def read_historical_data():
 
 def regulate_column_names(df, test_type):
     """
-    Regulate column names for flu_ag test data since Quidel changed their column names multiple times.
+    Regulate column names for flu_ag test data since Quidel changed the column names multiple times.
 
     We want to finalize the column name list to be:
         ['SofiaSerNum', 'TestDate', 'Facility',
@@ -311,7 +311,7 @@ def check_intermediate_file(cache_dir, pull_start_dates):
 
 def pull_quidel_data(params):
     """
-    Pull the quidel test data and decide whether to combine the new data with stored historical records in ./cache.
+    Pull new quidel test data and decide whether to combine it with historical records in ./cache.
 
     Parameters:
         params: dict
@@ -330,14 +330,14 @@ def pull_quidel_data(params):
         datetime.datetime
             the last date of the report
     """
-    cache_dir = params["cache_dir"]
+    cache_dir = params["input_cache_dir"]
 
     mail_server = params["mail_server"]
     account = params["account"]
     password = params["password"]
     sender = params["sender"]
 
-    test_mode = (params["mode"] == "test")
+    test_mode = params["test_mode"]
 
     # pull new data only that has not been ingested
     previous_dfs, pull_start_dates = check_intermediate_file(
@@ -402,7 +402,10 @@ def check_export_end_date(input_export_end_dates, _end_date,
 def check_export_start_date(export_start_dates, export_end_dates,
                             export_day_range):
     """
-    Update export_start_date according to the export_end_date so that it could be export_end_date - EXPORT_DAY_RANGE.
+    Update export_start_date according to the export_end_date.
+
+    Update export_start_date according to the export_end_date so that
+    it could be export_end_date - EXPORT_DAY_RANGE.
 
     Parameters:
         export_start_date: dict

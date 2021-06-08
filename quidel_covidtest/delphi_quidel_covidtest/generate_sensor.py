@@ -4,7 +4,8 @@ import pandas as pd
 from .data_tools import (fill_dates, raw_positive_prop,
                          smoothed_positive_prop,
                          smoothed_tests_per_device,
-                         raw_tests_per_device)
+                         raw_tests_per_device,
+                         remove_null_samples)
 
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7
@@ -64,7 +65,7 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, fir
                                                  "val": stat,
                                                  "se": se,
                                                  "sample_size": sample_size}))
-    return state_df
+    return remove_null_samples(state_df)
 
 def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
                                    device, first_date, last_date):
@@ -147,4 +148,4 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
                                              "val": stat,
                                              "se": se,
                                              "sample_size": sample_size}))
-    return res_df
+    return remove_null_samples(res_df)

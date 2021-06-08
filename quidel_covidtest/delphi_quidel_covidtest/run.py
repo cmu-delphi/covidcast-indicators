@@ -14,12 +14,11 @@ from delphi_utils import (
     get_structured_logger
 )
 
-from .constants import (END_FROM_TODAY_MINUS, EXPORT_DAY_RANGE,
+from .constants import (END_FROM_TODAY_MINUS,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
                         PARENT_GEO_RESOLUTIONS, SENSORS, SMOOTHERS, NONPARENT_GEO_RESOLUTIONS)
-from .generate_sensor import (generate_sensor_for_states,
-                              generate_sensor_for_other_geores)
+from .generate_sensor import generate_sensor_for_parent_geo, generate_sensor_for_nonparent_geo
 from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,

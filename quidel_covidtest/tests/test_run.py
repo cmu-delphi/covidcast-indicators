@@ -58,7 +58,7 @@ class TestRun:
                 for sensor in sensors:
                     expected_files += [date + "_" + geo + "_" + sensor + ".csv"]
 
-        assert set(expected_files) == (set(csv_files))
+        assert set(expected_files).issubset(set(csv_files))
         assert '20200721_state_covid_ag_raw_pct_positive.csv' not in csv_files
         assert '20200722_state_covid_ag_raw_pct_positive.csv' not in csv_files
 

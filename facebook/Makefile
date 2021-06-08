@@ -12,9 +12,9 @@ endif
 
 EPOCH:=2020-04-06
 TODAY:=$(shell date +"%Y-%m-%d")
-YESTERDAY:=$(shell date --date "1 day ago" +"%Y-%m-%d")
-ONEWEEK:=$(shell date --date "7 day ago" +"%Y-%m-%d")
-THREEWEEK:=$(shell date --date "21 day ago" +"%Y-%m-%d")
+YESTERDAY:=$(shell date --date "$(TODAY) -1 day" +"%Y-%m-%d")
+ONEWEEK:=$(shell date --date "$(TODAY) -7 day" +"%Y-%m-%d")
+THREEWEEK:=$(shell date --date "$(TODAY) -21 day" +"%Y-%m-%d")
 
 MESSAGES:=$(TODAY).messages
 
@@ -72,6 +72,7 @@ $(TODAY):
 	[ -f $(QUALTRICS) ] || mkdir -p $(QUALTRICS)
 	rm -rf tmp
 	touch -d "$(TODAY) 01:00" tmp
+	$(PYTHON) -m delphi_utils set end_date $(YESTERDAY)
 	source env/bin/activate && \
 	python -m delphi_facebook
 	BATCH=""; \
@@ -80,6 +81,7 @@ $(TODAY):
 	done; \
 	$(SFTP_POST); \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo -e $${BATCH} | wc -l` raw files" >> $(MESSAGES)
+	touch -d $(YESTERDAY) params.json
 	mv tmp $@
 
 params.json: $(TODAY)
@@ -105,7 +107,7 @@ $(WEIGHTS): $(TODAY)
 	sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu || exit 90; \
 	cd -; \
 	MAX_WEIGHTED=`$(MAX_WEIGHTED)`; \
-	EXPECTED_MAX_WEIGHTED=`date --date='3 days ago' +'%Y%m%d'`; \
+	EXPECTED_MAX_WEIGHTED=`date --date='$(TODAY) -3 day' +'%Y%m%d'`; \
 	if [[ $$EXPECTED_MAX_WEIGHTED -gt $$MAX_WEIGHTED ]]; then \
 	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED\nActual most recent file: $$MAX_WEIGHTED"; \
 	  echo "WARNING: $${MSG}" | tr "\n" ";" >> $(MESSAGES); \

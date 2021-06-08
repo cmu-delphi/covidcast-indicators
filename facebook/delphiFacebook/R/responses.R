@@ -132,6 +132,7 @@ load_response_one <- function(input_filename, params) {
   if (nrow(input_data) == 0) {
     return(tibble())
   }
+  
   input_data <- arrange(input_data, desc(.data$StartDate))
   if (!("SurveyID" %in% names(input_data))) {
     # The first wave files didn't actually record their survey id
@@ -155,6 +156,7 @@ load_response_one <- function(input_filename, params) {
   wave <- unique(input_data$wave)
   assert(length(wave) == 1, "can only code one wave at a time")
   
+  input_data <- module_assignment(input_data)
   input_data <- bodge_v4_translation(input_data, wave)
   input_data <- bodge_C6_C8(input_data, wave)
 
@@ -166,6 +168,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- code_activities(input_data, wave)
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
+  input_data <- code_beliefs(input_data)
 
   # create testing variables
 
@@ -431,6 +434,27 @@ bodge_C6_C8 <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Process module assignment column.
+#' 
+#' Rename `module` and recode to A/B/`NA`. Note: module assignment column name
+#' may change with survey version.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @return data frame with new `module` column
+#' @importFrom dplyr case_when
+module_assignment <- function(input_data) {
+  if ( "FL_23_DO" %in% names(input_data) ) {
+    input_data$module <- case_when(
+      input_data$FL_23_DO == "ModuleA" ~ "A",
+      input_data$FL_23_DO == "ModuleB" ~ "B",
+      TRUE ~ NA_character_
+    )
+  }
+  
+  return(input_data)
+}
+
 #' Create dataset for sharing with research partners
 #'
 #' Different survey waves may have different sets of questions. Here we report
@@ -469,7 +493,7 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "B10c", "B13", "C18a", "C18b", "C7a", "D12", "E4",
     "G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3", "I4", "I5",
     "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
-    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", # added in Wave 11
+    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", "module", # added in Wave 11
 
     "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing

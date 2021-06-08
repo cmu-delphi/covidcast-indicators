@@ -1001,6 +1001,9 @@ create_derivative_columns <- function(df) {
     df$b_hesitant_barrier_pregnant <- as.numeric(is_selected(hesitancy_reasons, "14"))
     df$b_hesitant_barrier_religious <- as.numeric(is_selected(hesitancy_reasons, "15"))
     
+    # These response choices were removed starting in Wave 11. They are explicitly set to missing
+    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
+    # them if the respondent selected at least once answer choice.
     df$b_hesitant_barrier_allergic[df$wave >= 11] <- NA
     df$b_hesitant_barrier_not_recommended[df$wave >= 11] <- NA
     df$b_hesitant_barrier_distrust_vaccines[df$wave >= 11] <- NA
@@ -1165,6 +1168,9 @@ create_derivative_columns <- function(df) {
     df$b_defno_barrier_pregnant <- as.numeric(is_selected(defno_reasons, "14"))
     df$b_defno_barrier_religious <- as.numeric(is_selected(defno_reasons, "15"))
     
+    # These response choices were removed starting in Wave 11. They are explicitly set to missing
+    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
+    # them if the respondent selected at least once answer choice.
     df$b_defno_barrier_allergic[df$wave >= 11] <- NA
     df$b_defno_barrier_not_recommended[df$wave >= 11] <- NA
     df$b_defno_barrier_distrust_vaccines[df$wave >= 11] <- NA

@@ -153,19 +153,22 @@ load_response_one <- function(input_filename, params) {
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
   
-  input_data <- module_assignment(input_data)
-  input_data <- bodge_v4_translation(input_data)
-  input_data <- bodge_C6_C8(input_data)
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
+  input_data <- module_assignment(input_data, wave)
+  input_data <- bodge_v4_translation(input_data, wave)
+  input_data <- bodge_C6_C8(input_data, wave)
 
-  input_data <- code_symptoms(input_data)
-  input_data <- code_hh_size(input_data)
-  input_data <- code_mental_health(input_data)
-  input_data <- code_mask_contact(input_data)
-  input_data <- code_testing(input_data)
-  input_data <- code_activities(input_data)
-  input_data <- code_vaccines(input_data)
-  input_data <- code_schooling(input_data)
-  input_data <- code_beliefs(input_data)
+  input_data <- code_symptoms(input_data, wave)
+  input_data <- code_hh_size(input_data, wave)
+  input_data <- code_mental_health(input_data, wave)
+  input_data <- code_mask_contact(input_data, wave)
+  input_data <- code_testing(input_data, wave)
+  input_data <- code_activities(input_data, wave)
+  input_data <- code_vaccines(input_data, wave)
+  input_data <- code_schooling(input_data, wave)
+  input_data <- code_beliefs(input_data, wave)
 
   # create testing variables
 
@@ -347,9 +350,11 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 #' delete non-English V4 responses, then use V4a in place of V4 when present.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return corrected data frame, where V4 is the authoritative column
 #' @importFrom dplyr case_when
-bodge_v4_translation <- function(input_data) {
+bodge_v4_translation <- function(input_data, wave) {
   if (!("V4_1" %in% names(input_data)) &&
         !("V4a_1" %in% names(input_data))) {
     # Data unaffected; skip.
@@ -409,10 +414,11 @@ bodge_v4_translation <- function(input_data) {
 #' naming scheme.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#'   
 #' @return corrected data frame
 #' @importFrom dplyr rename
-bodge_C6_C8 <- function(input_data) {
-  wave <- unique(input_data$wave)
+bodge_C6_C8 <- function(input_data, wave) {
   if ( wave != 10 ) {
     # Data unaffected; skip.
     return(input_data)
@@ -435,9 +441,11 @@ bodge_C6_C8 <- function(input_data) {
 #' 
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame with new `module` column
 #' @importFrom dplyr case_when
-module_assignment <- function(input_data) {
+module_assignment <- function(input_data, wave) {
   if ( "FL_23_DO" %in% names(input_data) ) {
     input_data$module <- case_when(
       input_data$FL_23_DO == "ModuleA" ~ "A",

@@ -23,11 +23,10 @@ test_that("is_selected handles selections correctly", {
 test_that("activities items correctly coded", {
   # C13 only (pre-Wave 10)
   input_data <- data.frame(
-    wave = rep(1, 6),
     C13 = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
 
-  out <- code_activities(input_data)
+  out <- code_activities(input_data, wave = 1)
 
   # expected result
   input_data$a_work_outside_home_1d <- c(NA, TRUE, FALSE, NA, FALSE, FALSE)
@@ -37,28 +36,27 @@ test_that("activities items correctly coded", {
   input_data$a_large_event_1d <- c(NA, FALSE, FALSE, NA, FALSE, FALSE)
   input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
 
-  input_data$a_work_outside_home_indoors_1d <- rep(NA, 6)
-  input_data$a_shop_indoors_1d <- rep(NA, 6)
-  input_data$a_restaurant_indoors_1d <- rep(NA, 6)
-  input_data$a_spent_time_indoors_1d <- rep(NA, 6)
-  input_data$a_large_event_indoors_1d <- rep(NA, 6)
+  input_data$a_work_outside_home_indoors_1d <- NA
+  input_data$a_shop_indoors_1d <- NA
+  input_data$a_restaurant_indoors_1d <- NA
+  input_data$a_spent_time_indoors_1d <- NA
+  input_data$a_large_event_indoors_1d <- NA
 
   expect_equal(out, input_data)
 
   # C13b only (Wave 10+)
   input_data <- data.frame(
-    wave = rep(1, 6),
     C13b = c(NA, "1,2,4", "3", "", "6", "2,4")
   )
 
-  out <- code_activities(input_data)
+  out <- code_activities(input_data, wave = 1)
 
   # expected result
-  input_data$a_work_outside_home_1d <- rep(NA, 6)
-  input_data$a_shop_1d <- rep(NA, 6)
-  input_data$a_restaurant_1d <- rep(NA, 6)
-  input_data$a_spent_time_1d <- rep(NA, 6)
-  input_data$a_large_event_1d <- rep(NA, 6)
+  input_data$a_work_outside_home_1d <- NA
+  input_data$a_shop_1d <- NA
+  input_data$a_restaurant_1d <- NA
+  input_data$a_spent_time_1d <- NA
+  input_data$a_large_event_1d <- NA
 
   input_data$a_public_transit_1d <- c(NA, FALSE, FALSE, NA, TRUE, FALSE)
 
@@ -74,13 +72,12 @@ test_that("activities items correctly coded", {
 test_that("mask items correctly coded", {
   ## Pre-Wave 10
   input_data <- data.frame(
-    wave = 1,
     C14 = c(NA, 1, 3, 6, 2, 4),
     C16 = c(1, NA, 6, 3, 2, 5),
     C6 = 1
   )
 
-  out <- code_mask_contact(input_data)
+  out <- code_mask_contact(input_data, wave = 1)
 
   # expected result
   input_data$c_travel_state <- TRUE
@@ -94,13 +91,12 @@ test_that("mask items correctly coded", {
   expect_equal(out, input_data)
 
   input_data <- data.frame(
-    wave = 1,
     C14a = c(NA, 1, 3, 6, 2, 4),
     C16 = c(1, NA, 6, 3, 2, 5),
     C6 = 1
   )
 
-  out <- code_mask_contact(input_data)
+  out <- code_mask_contact(input_data, wave = 1)
 
   # expected result
   input_data$c_travel_state <- TRUE
@@ -115,13 +111,12 @@ test_that("mask items correctly coded", {
 
   ## Wave 10
   input_data <- data.frame(
-    wave = 10,
     C14 = c(NA, 1, 3, 6, 2, 4),
     C16 = c(1, NA, 6, 3, 2, 5),
     C6a = 1
   )
 
-  out <- code_mask_contact(input_data)
+  out <- code_mask_contact(input_data, wave = 10)
 
   # expected result
   input_data$c_travel_state <- NA
@@ -136,13 +131,12 @@ test_that("mask items correctly coded", {
 
   ## Wave 11+
   input_data <- data.frame(
-    wave = 11,
     C14 = c(NA, 1, 3, 6, 2, 4),
     H2 = c(1, NA, 6, 3, 2, 5),
     C6a = 1
   )
   
-  out <- code_mask_contact(input_data)
+  out <- code_mask_contact(input_data, wave = 11)
   
   # expected result
   input_data$c_travel_state <- NA
@@ -164,7 +158,7 @@ test_that("household size correctly imputes zeros", {
     A5_3 = c(1, NA, NA, 1, 1)
   )
 
-  out <- code_hh_size(input_data)
+  out <- code_hh_size(input_data, wave = NA)
 
   input_data$hh_number_total <- c(1, NA, 1, 4, 1)
 
@@ -173,12 +167,11 @@ test_that("household size correctly imputes zeros", {
 
 test_that("vaccine acceptance is correctly coded", {
   input_data <- data.frame(
-    wave = 1,
     V1 = c(2, 3, 2, NA, 1, NA),
     V3 = c(1, 2, 3, 4, NA, NA)
   )
 
-  out <- code_vaccines(input_data)
+  out <- code_vaccines(input_data, wave = 1)
 
   expect_equal(out$v_covid_vaccinated_or_accept,
                c(1, 1, 0, 0, 1, NA))
@@ -187,7 +180,6 @@ test_that("vaccine acceptance is correctly coded", {
 test_that("mental health items are correctly coded", {
   ## Wave 1+, Pre-Wave 4
   input_data <- data.frame(
-    wave = 1,
     C9 = c(1, 2, 3, 4, NA),
     C8_1 = c(1, 2, 3, 4, NA),
     C8_2 = c(1, 2, 3, 4, NA),
@@ -195,7 +187,7 @@ test_that("mental health items are correctly coded", {
     C15 = c(1, 2, 3, 4, NA)
   )
 
-  out <- code_mental_health(input_data)
+  out <- code_mental_health(input_data, wave = 1)
 
   # expected result
   input_data$mh_worried_ill <- NA
@@ -211,7 +203,6 @@ test_that("mental health items are correctly coded", {
 
   ## Wave 4+, Pre-Wave 10
   input_data <- data.frame(
-    wave = 4,
     C9 = c(1, 2, 3, 4, NA),
     C8_1 = c(1, 2, 3, 4, NA),
     C8_2 = c(1, 2, 3, 4, NA),
@@ -219,7 +210,7 @@ test_that("mental health items are correctly coded", {
     C15 = c(1, 2, 3, 4, NA)
   )
 
-  out <- code_mental_health(input_data)
+  out <- code_mental_health(input_data, wave = 4)
 
   # expected result
   input_data$mh_worried_ill <- c(TRUE, TRUE, FALSE, FALSE, NA)
@@ -235,7 +226,6 @@ test_that("mental health items are correctly coded", {
 
   ## Wave 10+
   input_data <- data.frame(
-    wave = 10,
     C9 = c(1, 2, 3, 4, NA),
     C8a_1 = c(1, 2, 3, 4, NA),
     C8a_2 = c(1, 2, 3, 4, NA),
@@ -243,7 +233,7 @@ test_that("mental health items are correctly coded", {
     C15 = c(1, 2, 3, 4, NA)
   )
 
-  out <- code_mental_health(input_data)
+  out <- code_mental_health(input_data, wave = 10)
 
   # expected result
   input_data$mh_worried_ill <- c(TRUE, TRUE, FALSE, FALSE, NA)
@@ -261,11 +251,10 @@ test_that("mental health items are correctly coded", {
 test_that("tested reasons are correctly coded", {
   input_data <- data.frame(
     B10b = c("1", "2", "3", "4", "5", "6", "7", "8", NA_character_, 
-             "1,2", "1,3", "3,4", "", "3,4,5,7", "3,4,5,7,2"),
-    wave = 10
+             "1,2", "1,3", "3,4", "", "3,4,5,7", "3,4,5,7,2")
   )
   
-  out <- code_testing(input_data)
+  out <- code_testing(input_data, wave = 10)
   
   # expected result
   input_data$t_tested_reason_screening <- c(0, 0, 1, 1, 1, 0, 1, 0, NA_real_,

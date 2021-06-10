@@ -1,0 +1,46 @@
+#' Get list of QIDs of items that were shown to respondents
+#'
+#' Any item not in the "Trash" block of the survey is considered shown to
+#' respondents.
+#'
+#' @param qsf list containing QSF data
+#'
+#' @return list of Qualtrics Question IDs (QIDs) of items shown to respondents
+get_shown_items <- function(qsf) {
+  block_out <- Filter(function(elem) { elem[["Element"]] == "BL" }, qsf$SurveyElements)[[1]]$Payload
+  
+  shown_items <- list()
+  for (block in block_out) {
+    if (block$Type == "Trash") {
+      next
+    }
+    
+    shown_items[[block$Description]] <- sapply(
+      block$BlockElements, function(elem) {
+        if (elem$Type == "Question") { elem$QuestionID }
+      })
+  }
+  shown_items <- unlist(shown_items)
+  
+  return(shown_items)
+}
+
+#' Get wave number from qsf filename
+#'
+#' @param path_to_qsf
+#'
+#' @return integer wave number
+get_wave <- function(path_to_qsf) {
+  qsf_name_pattern <- "(.*Wave_)([0-9]*)([.]qsf)$"
+  if (!grepl(qsf_name_pattern, path_to_qsf)) {
+    stop("qsf filename should be of the format 'Survey_of_COVID-Like_Illness_-_Wave_XX.qsf'")
+  }
+  
+  wave <- as.integer(sub(
+    "(.*Wave_)([0-9]*)([.]qsf)$",
+    "\\2",
+    path_to_qsf)
+  ) 
+  
+  return(wave)
+}

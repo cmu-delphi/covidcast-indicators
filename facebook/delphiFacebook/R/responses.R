@@ -159,6 +159,7 @@ load_response_one <- function(input_filename, params) {
   input_data <- module_assignment(input_data, wave)
   input_data <- bodge_v4_translation(input_data, wave)
   input_data <- bodge_C6_C8(input_data, wave)
+  input_data <- bodge_B13(input_data, wave)
 
   input_data <- code_symptoms(input_data, wave)
   input_data <- code_hh_size(input_data, wave)
@@ -431,6 +432,21 @@ bodge_C6_C8 <- function(input_data, wave) {
                        C8a_3 = C8_3
   )
 
+  return(input_data)
+}
+
+#' Fix B13 name in Wave 11.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'   
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_B13 <- function(input_data, wave) {
+  if ( "B13 " %in% names(input_data) ) {
+    input_data <- rename(input_data, B13 = "B13 ")
+  }
   return(input_data)
 }
 

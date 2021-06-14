@@ -373,7 +373,7 @@ add_qdf_to_codebook <- function(qdf, path_to_codebook) {
   
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
-  codebook <- rbind(codebook, qdf) %>% arrange(wave, item)
+  codebook <- rbind(codebook, qdf) %>% arrange(item, wave)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$item) )
   if ( length(ii_replacing_DNE) > 0 ) {

@@ -105,11 +105,22 @@ process_qsf <- function(path_to_qsf,
       TRUE ~ "none"
     )
   
+  # format display logic
+  # Not all questions have display logic; if NULL, shown to all respondents within section.
+  display_logic <- displayed_questions %>% 
+    map(~ .x$Payload$DisplayLogic) %>% 
+    map(~ map(.x, ~ map(.x, "Description"))) %>% 
+    map(~ paste0(gsub("<.*?>", "'", unlist(.x)), collapse="")) %>% # Remove html tags
+    map(~ gsub("&lt;.*?&gt;", "", .x)) %>% # Remove some other type of formatting
+    map(~ gsub("q://QID[0-9]+/SelectedChoicesCount", "Number of Selections", .x)) %>% # Replace obtuse reference to number of selections made on a given question QIDXX
+    unlist()
+    
   qdf <- tibble(item = items,
                 question = questions,
                 type = qtype,
                 choices = choices,
                 answers = answers,
+                display_logic = display_logic,
                 response_option_randomization = response_option_randomization)
 
   stopifnot(length(qdf$item) == length(unique(qdf$item)))
@@ -117,7 +128,7 @@ process_qsf <- function(path_to_qsf,
   # Remove blank questions (rare).
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
-  # Add short question name mapped to item name
+  # Add short description mapped to item name
   description_map <- read_csv(path_to_shortname_map,
                            col_types = cols(item = col_character(),
                                             description = col_character()
@@ -126,6 +137,9 @@ process_qsf <- function(path_to_qsf,
     column_to_rownames(var="item")
   qdf <- qdf %>% 
     mutate(description = description_map[item, "description"])
+  
+  # set blank display logic to "none"
+  qdf$display_logic <- ifelse(qdf$display_logic == "", "none", qdf$display_logic)
   
   # matrix to separate items (to match exported data)
   nonmatrix_items <- qdf %>% filter(type != "Matrix")
@@ -141,7 +155,8 @@ process_qsf <- function(path_to_qsf,
                response_option_randomization == "randomized", "none", response_option_randomization),
              description = description,
              choices = list(answers),
-             answers = list(list()))
+             answers = list(list()),
+             display_logic = display_logic)
       )) %>% 
     select(new) %>% 
     unnest(new)
@@ -152,9 +167,8 @@ process_qsf <- function(path_to_qsf,
     mutate(item = if_else(str_starts(item, "C10"), paste0(item, "_1"), item),
            type = if_else(str_starts(item, "A5|C10"), "Text", type),
            choices = if_else(str_starts(item, "A5|C10"), list(list()), choices))
-
-  qdf <- bind_rows(nonmatrix_items, matrix_items) %>% 
-    select(-answers, -choices)
+  
+  qdf <- bind_rows(nonmatrix_items, matrix_items)
   
   # indicate which items have replaced old items.
   replaces_map <- read_csv(path_to_replacement_map,
@@ -164,15 +178,12 @@ process_qsf <- function(path_to_qsf,
     remove_rownames() %>%
     column_to_rownames(var="new_item")
   qdf <- qdf %>%
-    mutate(replaces = ifelse(
-      item %in% rownames(replaces_map), 
-      replaces_map[item, "old_item"], 
-      NA_character_),
-      wave = get_wave(path_to_qsf)
+    mutate(replaces = ifelse(item %in% rownames(replaces_map), 
+                             replaces_map[item, "old_item"], 
+                             NA_character_),
+           wave = get_wave(path_to_qsf)
     ) %>% 
-    relocate(replaces, description, .after = item) %>%
-    relocate(matrix_subquestion, .after = question) %>% 
-    relocate(wave, everything())
+    select(wave, item, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization)
   
   # Quality checks
   stopifnot(length(qdf$item) == length(unique(qdf$item)))
@@ -196,8 +207,13 @@ process_qsf <- function(path_to_qsf,
 add_qdf_to_codebook <- function(qdf,
                                 path_to_codebook,
                                 path_to_static_fields="./static/static_microdata_fields.csv") {
+  qdf_wave <- unique(qdf$wave)
+  
   if (!file.exists(path_to_codebook)) {
-    return(qdf)
+    return(qdf %>%
+             add_static_fields(qdf_wave, path_to_static_fields) %>% 
+             arrange(!is.na(.data$type), item, wave)
+    )
   }
   
   codebook <- read_csv(path_to_codebook, col_types = cols(
@@ -211,7 +227,6 @@ add_qdf_to_codebook <- function(qdf,
     response_option_randomization = col_character()
   ))
   
-  qdf_wave <- unique(qdf$wave)
   if (qdf_wave %in% codebook$wave) {
     warning(sprintf("wave %s already added to codebook. removing existing rows and replacing with newer data", qdf_wave))
     codebook <- codebook %>% filter(wave != qdf_wave)
@@ -234,7 +249,7 @@ add_qdf_to_codebook <- function(qdf,
   return(codebook)
 }
 
-#' Add non-Qualtrics data fields to codebook
+#' Add non-Qualtrics data fields to codebook, filling in missing fields with NA
 #'
 #' @param codebook
 #' @param wave integer survey wave number
@@ -246,7 +261,7 @@ add_static_fields <- function(codebook,
                               path_to_static_fields="./static/static_microdata_fields.csv") {
   static_fields <- get_static_fields(wave, path_to_static_fields)
   
-  return(rbind(codebook, static_fields))
+  return(bind_rows(codebook, static_fields))
 }
 
 #' Load dataframe of non-Qualtrics data fields

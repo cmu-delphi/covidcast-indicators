@@ -14,7 +14,9 @@ suppressPackageStartupMessages({
 })
 
 
-process_qsf <- function(path_to_qsf) {
+process_qsf <- function(path_to_qsf,
+                        path_to_shortname_map="./item_shortquestion_map.csv",
+                        path_to_replacement_map="./item_replacement_map.csv") {
   q <- read_json(path_to_qsf)
   
   # get the survey elements that are questions:
@@ -95,12 +97,12 @@ process_qsf <- function(path_to_qsf) {
   raw_scale_reversal <- displayed_questions %>% 
     map(~ .x$Payload$Randomization$ConsistentScaleReversal) %>% 
     map(~ ifelse(is.null(.x), NA, .x))
-  randomization <- case_when(
+  response_option_randomization <- case_when(
       raw_random_type == "All" ~ "randomized",
       raw_random_type == "Advanced" & map(raw_random_all, length) > 0 ~ "randomized",
       raw_random_type == "ScaleReversal" ~ "scale reversal",
       raw_scale_reversal == TRUE ~ "scale reversal",
-      TRUE ~ NA_character_
+      TRUE ~ "none"
     )
   
   qdf <- tibble(item = items,
@@ -108,7 +110,7 @@ process_qsf <- function(path_to_qsf) {
                 type = qtype,
                 choices = choices,
                 answers = answers,
-                randomization = randomization)
+                response_option_randomization = response_option_randomization)
 
   stopifnot(length(qdf$item) == length(unique(qdf$item)))
   
@@ -116,141 +118,16 @@ process_qsf <- function(path_to_qsf) {
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
   # Add short question name mapped to item name
-  short_name_map <- c(
-    S1 = "consent",
-    A1 = "hh symptoms",
-    A2 = "hh num sick",
-    A2b = "hh num total",
-    A5 = "hh num",
-    A3 = "zip code",
-    A3b = "state",
-    A4 = "community num sick",
-    B2 = "symptoms",
-    B2_14_TEXT = "symptoms other text",
-    B2b = "unusual symptoms num days",
-    B2c = "unusual symptoms",
-    B2c_14_TEXT = "unusual symptoms other text",
-    B3 = "taken temp 1d",
-    B4 = "expectorate",
-    B5 = "tested unusual symptoms",
-    B6 = "hospital unusual symptoms 1d",
-    B7 = "unusual symptoms medical care",
-    B8 = "tested ever",
-    B10 = "tested 14d",
-    B10a = "positive test 14d",
-    B10b = "reason tested 14d",
-    B12 = "wanted test 14d",
-    B12a = "reason not tested 14d",
-    B11 = "positive test ever",
-    C1 = "comorbidities",
-    C2 = "flu shot 1y",
-    C3 = "work outside home 5d",
-    C4 = "work healthcare 5d",
-    C5 = "nursing home 5d",
-    C6 = "travel 5d",
-    C7 = "avoid contact",
-    C8 = "mental health 5d",
-    C9 = "worried ill",
-    C10 = "direct contact num 1d",
-    C11 = "direct contact COVID 1d",
-    C12 = "hh direct contact COVID 1d",
-    C13 = "activities 1d",
-    C13a = "activities mask 1d",
-    C14 = "mask public 5d",
-    C15 = "worried finances 1m",
-    D1 = "gender",
-    D1_4_TEXT = "gender other text",
-    D1b = "pregnant",
-    D2 = "age",
-    D3 = "num children",
-    D4 = "num adults",
-    D5 = "num elderly",
-    D6 = "hispanic",
-    D7 = "race",
-    D8 = "education",
-    D9 = "work 1m",
-    Q36 = "financial threat",
-    Q40 = "fever temp",
-    Q64 = "occupation",
-    Q65 = "occupation social",
-    Q66 = "occupation education",
-    Q67 = "occupation arts",
-    Q68 = "occupation healthcare practice",
-    Q69 = "occupation healthcare support",
-    Q70 = "occupation protective",
-    Q71 = "occupation food",
-    Q72 = "occupation building maintenance",
-    Q73 = "occupation personal care",
-    Q74 = "occupation sales",
-    Q75 = "occupation office",
-    Q76 = "occupation construction",
-    Q77 = "occupation repair",
-    Q78 = "occupation production",
-    Q79 = "occupation transportation",
-    Q80 = "occupation other",
-    D10 = "work outside home 1m",
-    C16 = "public others masked 7d",
-    C17 = "flu vaccine since June 2020",
-    E1 = "children",
-    E2 = "children school",
-    E3 = "children school measures",
-    V1 = "vaccinated",
-    V2 = "vaccine doses",
-    V3 = "vaccine accepting",
-    V4 = "trust vaccine recommendation source",
-    V4a = "trust vaccine recommendation source",
-    V9 = "worried side effects",
-    C14a = "mask public 7d",
-    C17a = "flu vaccine since July 1 2020",
-    V2a = "get all vaccine doses",
-    V5a = "vaccine hesitancy reasons prob yes",
-    V5b = "vaccine hesitancy reasons prob no",
-    V5c = "vaccine hesitancy reasons def no",
-    V5d = "vaccine hesitancy reasons not all doses",
-    V6 = "vaccine unnecessary reasons",
-    D11 = "smoke",
-    C6a = "travel 7d",
-    C8a = "mental health 7d",
-    C13b = "indoor activities 1d",
-    C13c = "indoor activities mask 1d",
-    V11 = "have vaccine appointment",
-    V12 = "tried get vaccine appointment",
-    V13 = "informed vaccine access",
-    V14 = "when access vaccine",
-    B10c = "positive test 14d",
-    B13 = "COVID ever",
-    C18a = "anxious 7d",
-    C18b = "depressed 7d",
-    C7a = "avoid contact 7d",
-    D12 = "language",
-    E4 = "vaccinate children",
-    G1 = "worry catch COVID",
-    G2 = "believe distancing",
-    G3 = "believe masking",
-    H1 = "public others distanced 7d",
-    H2 = "public others masked 7d",
-    H3 = "friends fam vaccinated",
-    I1 = "believe stop masking",
-    I2 = "believe children immune",
-    I3 = "belive small group",
-    I4 = "believe govt control",
-    I5 = "news sources 7d",
-    I6 = "trust COVID source",
-    I7 = "want COVID info",
-    K1 = "delay medical care 1y",
-    K2 = "believe racial disrimination",
-    V11a = "have vaccine appointment",
-    V12a = "tried get vaccine",
-    V15a = "vaccine access barriers vaccinated",
-    V15b = "vaccine access barriers unvaccinated",
-    V16 = "when try vaccinated",
-    V3a = "vaccine accepting"
-  )
+  short_name_map <- read_csv(path_to_shortname_map,
+                           col_types = cols(item = col_character(),
+                                            short_question = col_character()
+                           )) %>%
+    remove_rownames() %>%
+    column_to_rownames(var="item")
   qdf <- qdf %>% 
-    mutate(short_question = short_name_map[item])
+    mutate(short_question = short_name_map[item, "short_question"])
   
   # matrix to separate items (to match exported data)
-  # Question text and short-name have subquestion text appended
   nonmatrix_items <- qdf %>% filter(type != "Matrix")
   matrix_items <- qdf %>%
     filter(type == "Matrix") %>% 
@@ -260,7 +137,8 @@ process_qsf <- function(path_to_qsf) {
              question = question,
              matrix_subquestion = unlist(choices),
              type = type,
-             randomization = ifelse(randomization == "randomized", NA_character_, randomization),
+             response_option_randomization = ifelse(
+               response_option_randomization == "randomized", "none", response_option_randomization),
              short_question = short_question,
              choices = list(answers),
              answers = list(list()))
@@ -278,51 +156,17 @@ process_qsf <- function(path_to_qsf) {
   qdf <- bind_rows(nonmatrix_items, matrix_items) %>% 
     select(-answers, -choices)
   
-  # indicate which items have replaced old items. Format: new = old
-  replaces_map <- c(
-    B8 = "B5",
-    B9 = "B5",
-    B10 = "B5",
-    B11 = "B5",
-    B12 = "B5",
-    B7 = "B6",
-    C13 = "C3",
-    D9 = "C3",
-    Q64 = "C4",
-    Q68 = "C4",
-    Q69 = "C4",
-    Q64 = "C5",
-    Q68 = "C5",
-    Q69 = "C5",
-    C13 = "C7",
-    C13a = "C7",
-    C14 = "C7",
-    C6a = "C6",
-    C8a_1 = "C8_1",
-    C8a_2 = "C8_2",
-    C8a_3 = "C8_3",
-    C15a = "C8a_1",
-    C15b = "C8a_2",
-    C15 = "Q36",
-    C13b = "C13",
-    C13c = "C13a",
-    C14a = "C14",
-    C17a = "C17",
-    V2a = "V2",
-    V3a = "V3",
-    V4a_1 = "V4_1",
-    V4a_2 = "V4_2",
-    V4a_3 = "V4_3",
-    V4a_4 = "V4_4",
-    V4a_5 = "V4_5",
-    V11a = "V11",
-    V12a = "V12",
-    C7a = "C7"
-  )
+  # indicate which items have replaced old items.
+  replaces_map <- read_csv(path_to_replacement_map,
+                           col_types = cols(new_item = col_character(),
+                                            old_item = col_character()
+                           )) %>%
+    remove_rownames() %>%
+    column_to_rownames(var="new_item")
   qdf <- qdf %>%
     mutate(replaces = ifelse(
-      item %in% names(replaces_map), 
-      replaces_map[item], 
+      item %in% rownames(replaces_map), 
+      replaces_map[item, "old_item"], 
       NA_character_),
       wave = get_wave(path_to_qsf)
     ) %>% 
@@ -362,7 +206,7 @@ add_qdf_to_codebook <- function(qdf, path_to_codebook) {
     question = col_character(),
     matrix_subquestion = col_character(),
     type = col_character(),
-    randomization = col_character()
+    response_option_randomization = col_character()
   ))
   
   qdf_wave <- unique(qdf$wave)

@@ -267,7 +267,8 @@ get_static_fields <- function(wave,
                                              response_option_randomization = col_character()
                             )) %>%
     mutate(wave = wave) %>% 
-    select(wave, everything())
+    select(wave, everything()) %>% 
+    filter(!(item == "module" & wave < 11))
   
   return(static_fields)
 }

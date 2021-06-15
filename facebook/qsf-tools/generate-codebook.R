@@ -15,8 +15,8 @@ suppressPackageStartupMessages({
 
 
 process_qsf <- function(path_to_qsf,
-                        path_to_shortname_map="./item_shortquestion_map.csv",
-                        path_to_replacement_map="./item_replacement_map.csv") {
+                        path_to_shortname_map="./static/item_shortquestion_map.csv",
+                        path_to_replacement_map="./static/item_replacement_map.csv") {
   q <- read_json(path_to_qsf)
   
   # get the survey elements that are questions:
@@ -118,14 +118,14 @@ process_qsf <- function(path_to_qsf,
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
   # Add short question name mapped to item name
-  short_name_map <- read_csv(path_to_shortname_map,
+  description_map <- read_csv(path_to_shortname_map,
                            col_types = cols(item = col_character(),
-                                            short_question = col_character()
+                                            description = col_character()
                            )) %>%
     remove_rownames() %>%
     column_to_rownames(var="item")
   qdf <- qdf %>% 
-    mutate(short_question = short_name_map[item, "short_question"])
+    mutate(description = description_map[item, "description"])
   
   # matrix to separate items (to match exported data)
   nonmatrix_items <- qdf %>% filter(type != "Matrix")
@@ -139,7 +139,7 @@ process_qsf <- function(path_to_qsf,
              type = type,
              response_option_randomization = ifelse(
                response_option_randomization == "randomized", "none", response_option_randomization),
-             short_question = short_question,
+             description = description,
              choices = list(answers),
              answers = list(list()))
       )) %>% 
@@ -170,15 +170,15 @@ process_qsf <- function(path_to_qsf,
       NA_character_),
       wave = get_wave(path_to_qsf)
     ) %>% 
-    relocate(replaces, short_question, .after = item) %>%
+    relocate(replaces, description, .after = item) %>%
     relocate(matrix_subquestion, .after = question) %>% 
     relocate(wave, everything())
   
   # Quality checks
   stopifnot(length(qdf$item) == length(unique(qdf$item)))
   
-  if (any(is.na(qdf$short_question))) {
-    nonlabelled_items <- qdf$item[is.na(qdf$short_question)]
+  if (any(is.na(qdf$description))) {
+    nonlabelled_items <- qdf$item[is.na(qdf$description)]
     stop(sprintf("items %s do not have a short name assigned",
                  paste(nonlabelled_items, collapse=", "))
     )
@@ -193,7 +193,9 @@ process_qsf <- function(path_to_qsf,
 #' @param path_to_codebook
 #'
 #' @return dataframe of existing codebook augmented with new wave QSF data
-add_qdf_to_codebook <- function(qdf, path_to_codebook) {
+add_qdf_to_codebook <- function(qdf,
+                                path_to_codebook,
+                                path_to_static_fields="./static/static_microdata_fields.csv") {
   if (!file.exists(path_to_codebook)) {
     return(qdf)
   }
@@ -202,7 +204,7 @@ add_qdf_to_codebook <- function(qdf, path_to_codebook) {
     wave = col_integer(),
     item = col_character(),
     replaces = col_character(),
-    short_question = col_character(),
+    description = col_character(),
     question = col_character(),
     matrix_subquestion = col_character(),
     type = col_character(),
@@ -217,7 +219,10 @@ add_qdf_to_codebook <- function(qdf, path_to_codebook) {
   
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
-  codebook <- rbind(codebook, qdf) %>% arrange(item, wave)
+  # Sort so that items with missing type (non-Qualtrics fields) are at the top.
+  codebook <- rbind(codebook, qdf) %>%
+    add_static_fields(qdf_wave, path_to_static_fields) %>% 
+    arrange(!is.na(.data$type), item, wave)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$item) )
   if ( length(ii_replacing_DNE) > 0 ) {
@@ -227,6 +232,44 @@ add_qdf_to_codebook <- function(qdf, path_to_codebook) {
     )
   }
   return(codebook)
+}
+
+#' Add non-Qualtrics data fields to codebook
+#'
+#' @param codebook
+#' @param wave integer survey wave number
+#' @param path_to_static_fields
+#'
+#' @return codebook dataframe augmented with non-Qualtrics fields included in microdata
+add_static_fields <- function(codebook,
+                              wave,
+                              path_to_static_fields="./static/static_microdata_fields.csv") {
+  static_fields <- get_static_fields(wave, path_to_static_fields)
+  
+  return(rbind(codebook, static_fields))
+}
+
+#' Load dataframe of non-Qualtrics data fields
+#'
+#' @param wave integer survey wave number
+#' @param path_to_static_fields
+#'
+#' @return dataframe of non-Qualtrics fields included in microdata
+get_static_fields <- function(wave,
+                              path_to_static_fields="./static/static_microdata_fields.csv") {
+  static_fields <- read_csv(path_to_static_fields,
+                            col_types = cols(item = col_character(),
+                                             replaces = col_character(),
+                                             description = col_character(),
+                                             question = col_character(),
+                                             matrix_subquestion = col_character(),
+                                             type = col_character(),
+                                             response_option_randomization = col_character()
+                            )) %>%
+    mutate(wave = wave) %>% 
+    select(wave, everything())
+  
+  return(static_fields)
 }
 
 #' Run the tool, saving the updated codebook to disk.

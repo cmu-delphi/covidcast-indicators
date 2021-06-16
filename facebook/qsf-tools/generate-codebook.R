@@ -70,6 +70,24 @@ process_qsf <- function(path_to_qsf,
     map(~ .x$Payload$Choices) %>% 
     map(~ map(.x, "Display"))
   
+  # derive from choices where users can fill in "Other" response with free text
+  other_text_option <- displayed_questions %>% 
+    map(~ .x$Payload$Choices) %>% 
+    map(~ map(.x, "TextEntry")) %>%
+    map(~ map(.x, ~ identical(.x, "true")))
+  ii_other_text_option <- other_text_option %>%
+    map(~ any(.x)) %>% 
+    unlist() %>%
+    suppressWarnings()
+  
+  text_elem <- other_text_option[ii_other_text_option] %>%
+    map(unlist) %>%
+    map(which) %>%
+    map(names) %>%
+    unlist()
+  other_text_items <- paste(items[ii_other_text_option], text_elem, "TEXT", sep="_") %>%
+    setNames(items[ii_other_text_option])
+  
   # some questions port the choices from other questions
   ii_carryforward <- displayed_questions %>%
     map(~ .x$Payload$DynamicChoices$Locator) %>%
@@ -184,6 +202,16 @@ process_qsf <- function(path_to_qsf,
            wave = get_wave(path_to_qsf)
     ) %>% 
     select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization)
+  
+  # add free text response options
+  other_text_items <- qdf %>%
+    filter(variable %in% names(other_text_items)) %>%
+    mutate(variable = other_text_items[variable],
+           type = "Text",
+           response_option_randomization = NA,
+           description = paste0(description, " other text")
+    )
+  qdf <- rbind(qdf, other_text_items)
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))

@@ -115,7 +115,7 @@ process_qsf <- function(path_to_qsf,
     map(~ gsub("q://QID[0-9]+/SelectedChoicesCount", "Number of Selections", .x)) %>% # Replace obtuse reference to number of selections made on a given question QIDXX
     unlist()
     
-  qdf <- tibble(item = items,
+  qdf <- tibble(variable = items,
                 question = questions,
                 type = qtype,
                 choices = choices,
@@ -123,12 +123,12 @@ process_qsf <- function(path_to_qsf,
                 display_logic = display_logic,
                 response_option_randomization = response_option_randomization)
 
-  stopifnot(length(qdf$item) == length(unique(qdf$item)))
+  stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
   
   # Remove blank questions (rare).
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
-  # Add short description mapped to item name
+  # Add short description mapped to variable name
   description_map <- read_csv(path_to_shortname_map,
                            col_types = cols(item = col_character(),
                                             description = col_character()
@@ -136,7 +136,7 @@ process_qsf <- function(path_to_qsf,
     remove_rownames() %>%
     column_to_rownames(var="item")
   qdf <- qdf %>% 
-    mutate(description = description_map[item, "description"])
+    mutate(description = description_map[variable, "description"])
   
   # set blank display logic to "none"
   qdf$display_logic <- ifelse(qdf$display_logic == "", "none", qdf$display_logic)
@@ -147,7 +147,7 @@ process_qsf <- function(path_to_qsf,
     filter(type == "Matrix") %>% 
     rowwise() %>% 
     mutate(new = list(
-      tibble(item = paste(item, 1:length(choices), sep = "_"),
+      tibble(variable = paste(variable, 1:length(choices), sep = "_"),
              question = question,
              matrix_subquestion = unlist(choices),
              type = type,
@@ -164,9 +164,9 @@ process_qsf <- function(path_to_qsf,
   # A5 and C10 are special cases b/c of they are matrix of text entry questions:
   # also C10 needs an extra _1.
   matrix_items <- matrix_items %>% 
-    mutate(item = if_else(str_starts(item, "C10"), paste0(item, "_1"), item),
-           type = if_else(str_starts(item, "A5|C10"), "Text", type),
-           choices = if_else(str_starts(item, "A5|C10"), list(list()), choices))
+    mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
+           type = if_else(str_starts(variable, "A5|C10"), "Text", type),
+           choices = if_else(str_starts(variable, "A5|C10"), list(list()), choices))
   
   qdf <- bind_rows(nonmatrix_items, matrix_items)
   
@@ -178,18 +178,18 @@ process_qsf <- function(path_to_qsf,
     remove_rownames() %>%
     column_to_rownames(var="new_item")
   qdf <- qdf %>%
-    mutate(replaces = ifelse(item %in% rownames(replaces_map), 
-                             replaces_map[item, "old_item"], 
+    mutate(replaces = ifelse(variable %in% rownames(replaces_map), 
+                             replaces_map[variable, "old_item"], 
                              NA_character_),
            wave = get_wave(path_to_qsf)
     ) %>% 
-    select(wave, item, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization)
+    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization)
   
   # Quality checks
-  stopifnot(length(qdf$item) == length(unique(qdf$item)))
+  stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
   
   if (any(is.na(qdf$description))) {
-    nonlabelled_items <- qdf$item[is.na(qdf$description)]
+    nonlabelled_items <- qdf$variable[is.na(qdf$description)]
     stop(sprintf("items %s do not have a short name assigned",
                  paste(nonlabelled_items, collapse=", "))
     )
@@ -210,22 +210,21 @@ add_qdf_to_codebook <- function(qdf,
   qdf_wave <- unique(qdf$wave)
   
   if (!file.exists(path_to_codebook)) {
-    return(qdf %>%
-             add_static_fields(qdf_wave, path_to_static_fields) %>% 
-             arrange(!is.na(.data$type), item, wave)
-    )
+    codebook <- qdf[FALSE, ]
+  } else {
+    codebook <- read_csv(path_to_codebook, col_types = cols(
+      .default = col_character(),
+      wave = col_integer(),
+      variable = col_character(),
+      replaces = col_character(),
+      description = col_character(),
+      question = col_character(),
+      matrix_subquestion = col_character(),
+      type = col_character(),
+      display_logic = col_character(),
+      response_option_randomization = col_character()
+    ))
   }
-  
-  codebook <- read_csv(path_to_codebook, col_types = cols(
-    wave = col_integer(),
-    item = col_character(),
-    replaces = col_character(),
-    description = col_character(),
-    question = col_character(),
-    matrix_subquestion = col_character(),
-    type = col_character(),
-    response_option_randomization = col_character()
-  ))
   
   if (qdf_wave %in% codebook$wave) {
     warning(sprintf("wave %s already added to codebook. removing existing rows and replacing with newer data", qdf_wave))
@@ -237,13 +236,13 @@ add_qdf_to_codebook <- function(qdf,
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   codebook <- rbind(codebook, qdf) %>%
     add_static_fields(qdf_wave, path_to_static_fields) %>% 
-    arrange(!is.na(.data$type), item, wave)
+    arrange(!is.na(.data$type), variable, wave)
   
-  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$item) )
+  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) )
   if ( length(ii_replacing_DNE) > 0 ) {
-    replacing_items <- unique( codebook$item[ii_replacing_DNE] )
+    replacing_variables <- unique( codebook$variable[ii_replacing_DNE] )
     warning(sprintf("the items that %s report replacing do not exist in the codebook",
-                 paste(replacing_items, collapse=", "))
+                 paste(replacing_variables, collapse=", "))
     )
   }
   return(codebook)
@@ -273,7 +272,7 @@ add_static_fields <- function(codebook,
 get_static_fields <- function(wave,
                               path_to_static_fields="./static/static_microdata_fields.csv") {
   static_fields <- read_csv(path_to_static_fields,
-                            col_types = cols(item = col_character(),
+                            col_types = cols(variable = col_character(),
                                              replaces = col_character(),
                                              description = col_character(),
                                              question = col_character(),
@@ -283,7 +282,7 @@ get_static_fields <- function(wave,
                             )) %>%
     mutate(wave = wave) %>% 
     select(wave, everything()) %>% 
-    filter(!(item == "module" & wave < 11))
+    filter(!(variable == "module" & wave < 11))
   
   return(static_fields)
 }

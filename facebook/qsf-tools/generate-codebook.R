@@ -10,6 +10,7 @@ suppressPackageStartupMessages({
   library(tidyverse)
   library(jsonlite)
   library(stringr)
+  library(gsubfn)
   source("qsf-utils.R")
 })
 
@@ -127,12 +128,30 @@ process_qsf <- function(path_to_qsf,
   # Not all questions have display logic; if NULL, shown to all respondents within section.
   display_logic <- displayed_questions %>% 
     map(~ .x$Payload$DisplayLogic) %>% 
-    map(~ map(.x, ~ map(.x, "Description"))) %>% 
-    map(~ paste0(gsub("<.*?>", "'", unlist(.x)), collapse="")) %>% # Remove html tags
-    map(~ gsub("&lt;.*?&gt;", "", .x)) %>% # Remove some other type of formatting
-    map(~ gsub("q://QID[0-9]+/SelectedChoicesCount", "Number of Selections", .x)) %>% # Replace obtuse reference to number of selections made on a given question QIDXX
-    unlist()
+    map(~ .x$`0`) %>% 
+    map(~ paste(
+      map(.x, "Conjuction"),
+      map(.x, "LeftOperand"),
+      "Is",
+      map(.x, "Operator"),
+      map(.x, "RightOperand")
+    )) %>% 
+    map(~ gsub("  Is  ", "", .x)) %>% 
+    map(~ gsub("NULL NULL Is NULL NULL", "", .x)) %>%
+    map(~ gsub(" ?NULL ?", "", .x)) %>%
+    map(~ gsub("q://", "", .x)) %>%
+    map(~ gsubfn("(QID[0-9]+)", function(qid) {items[qids == qid]}, .x)) %>% 
+    map(~ paste(.x, collapse=" "))
     
+  logic_type <- displayed_questions %>% 
+    map(~ .x$Payload$DisplayLogic) %>% 
+    map(~ .x$`0`$Type)
+  
+  display_logic <- paste(logic_type, display_logic) %>%
+    map(~ gsub(" ?NULL ?", "", .x)) %>% 
+    map(~ gsub(" $", "", .x)) %>%
+    unlist()
+  
   qdf <- tibble(variable = items,
                 question = questions,
                 type = qtype,

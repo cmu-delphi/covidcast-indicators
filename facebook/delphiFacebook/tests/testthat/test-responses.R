@@ -251,7 +251,7 @@ test_that("C6/8 bodge works correctly", {
 
   expect_equal(bodge_C6_C8(input, wave = 1),
                input)
-  
+
   input <- tibble(
     C6 = c(1, 2, 3, 4),
     C8_1 = c(1, 2, 3, 4),
@@ -261,7 +261,7 @@ test_that("C6/8 bodge works correctly", {
   
   expect_equal(bodge_C6_C8(input, wave = 11),
                input)
-  
+
   ## Wave 10
   input <- tibble(
     C6 = c(1, 2, 3, 4),
@@ -269,7 +269,7 @@ test_that("C6/8 bodge works correctly", {
     C8_2 = c(1, 2, 3, 4),
     C8_3 = c(1, 2, 3, 4)
   )
-  
+
   expected <- tibble(
     C6a = c(1, 2, 3, 4),
     C8a_1 = c(1, 2, 3, 4),
@@ -279,5 +279,37 @@ test_that("C6/8 bodge works correctly", {
   
   expect_equal(bodge_C6_C8(input, wave = 10),
                expected)
+})
+
+test_that("B13 bodge works correctly", {
+  input <- tibble(
+    C6 = c(1, 2, 3, 4),
+    C8_1 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_B13(input, wave = 1),
+               input)
+  
+  input <- tibble(
+    C6 = c(1, 2, 3, 4),
+    C8_1 = c(1, 2, 3, 4),
+    "B13 " = c(1, 2, 3, 4)
+  )
+  
+  expected <- tibble(
+    C6 = c(1, 2, 3, 4),
+    C8_1 = c(1, 2, 3, 4),
+    B13 = c(1, 2, 3, 4)
+  )
+  
+  expect_equal(bodge_B13(input, wave = 11),
+               expected)
+  
+  input <- tibble(
+    C6 = c(1, 2, 3, 4),
+    C8_1 = c(1, 2, 3, 4),
+    B13 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_B13(input, wave = 11),
+               input)
 })
 

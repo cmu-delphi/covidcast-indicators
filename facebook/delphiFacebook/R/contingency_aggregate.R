@@ -107,12 +107,6 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 #' CSV. Alphabetize grouping variables; columns are saved to output CSV in this
 #' order.
 #'
-#' Most columns specified in `aggregations` are converted into the appropriate
-#' format (binary response codes -> logical, etc). Multi-select `metrics` are
-#' turned into a series of binary columns. Each binary is given its own
-#' aggregation, sharing grouping variables and other settings with the original
-#' multi-select agg.
-#'
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
@@ -167,20 +161,11 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
   }
 
-  # Convert columns used in aggregations to appropriate format
-  #   - binary columns are recoded to 0/1
-  #   - numeric items are force converted to numeric
-  #   - multi-select items are converted to a series of binary columns, one for
-  # each unique level/response code; multi-select used for grouping are left as-is.
-  #   - multiple choice items are left as-is
-
-  #### TODO: How do we want to handle multi-select items when used for grouping?
+  # Remove aggregations using unavailable variables.
   group_vars <- unique( unlist(aggregations$group_by) )
-  group_vars <- group_vars[group_vars != "geo_id"]
-
   metric_cols <- unique(aggregations$metric)
   
-  cols_check_available <- unique(c(group_vars, metric_cols))
+  cols_check_available <- unique(c(group_vars[group_vars != "geo_id"], metric_cols))
   available <- cols_check_available %in% names(df)
   cols_not_available <- cols_check_available[ !available ]
   for (col_var in cols_not_available) {
@@ -192,26 +177,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
         col_var, " is not defined. Removing all aggregations that use it. ",
         nrow(aggregations), " remaining")
     )
-  }
-
-  cols_available <- cols_check_available[ available ]
-  for (col_var in cols_available) {
-    if ( col_var %in% group_vars & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
-      next
-    }
-
-    if (startsWith(col_var, "b_")) { # Binary
-      output <- code_binary(df, aggregations, col_var)
-    } else if (startsWith(col_var, "n_")) { # Numeric free response
-      output <- code_numeric_freeresponse(df, aggregations, col_var)
-    } else if (startsWith(col_var, "ms_")) { # Multi-select
-      output <- code_multiselect(df, aggregations, col_var)
-    } else {
-      # Multiple choice and variables that are formatted differently
-      output <- list(df, aggregations)
-    }
-    df <- output[[1]]
-    aggregations <- output[[2]]
   }
 
   return(list(df, aggregations))

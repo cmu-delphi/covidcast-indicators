@@ -408,9 +408,9 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_received_2_vaccine_doses <- NA_real_
   }
 
-  input_data$v_accept_covid_vaccine <- NA_real_
+  input_data$v_accept_covid_vaccine <- NA
   input_data$v_appointment_or_accept_covid_vaccine <- NA_real_
-  input_data$v_accept_covid_vaccine_no_appointment <- NA_real_
+  input_data$v_accept_covid_vaccine_no_appointment <- NA
   if ("V3" %in% names(input_data)) {
     input_data$v_accept_covid_vaccine <- (
       input_data$V3 == 1 | input_data$V3 == 2

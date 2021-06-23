@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling data from the USAFacts website."""
+import hashlib
+from logging import Logger
+
 import numpy as np
 import pandas as pd
 
@@ -12,7 +15,7 @@ DROP_COLUMNS = [
 ]
 
 
-def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
+def pull_usafacts_data(base_url: str, metric: str, logger: Logger) -> pd.DataFrame:
     """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
@@ -52,6 +55,13 @@ def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
     """
     # Read data
     df = pd.read_csv(base_url.format(metric=metric))
+    date_cols = [i for i in df.columns if i.startswith("2")]
+    logger.info("data retrieved from source",
+                num_rows=df.shape[0],
+                num_cols=df.shape[1],
+                min_date=min(date_cols),
+                max_date=max(date_cols),
+                checksum=hashlib.sha256(pd.util.hash_pandas_object(df).values).hexdigest())
     df.columns = [i.lower() for i in df.columns]
     # Clean commas in count fields in case the input file included them
     df[df.columns[4:]] = df[df.columns[4:]].applymap(

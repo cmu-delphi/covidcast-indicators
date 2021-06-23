@@ -1,6 +1,5 @@
 """Registry for signal names."""
 from delphi_utils import Smoother
-from datetime import timedelta
 
 CONFIRMED = "confirmed_admissions_covid_1d"
 SUM_CONF_SUSP = "sum_confirmed_suspected_admissions_covid_1d"

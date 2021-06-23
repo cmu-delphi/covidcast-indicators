@@ -20,6 +20,27 @@ process_qsf <- function(path_to_qsf,
                         path_to_replacement_map="./static/item_replacement_map.csv") {
   q <- read_json(path_to_qsf)
   
+  # get the survey elements with flow logic (should be one per block randomization branch)
+  ii_flow <- q$SurveyElements %>%
+    map_chr("Element") %>%
+    {. == "FL"} %>%
+    which()
+  ii_block_randomizer <- q$SurveyElements[ii_flow] %>%
+    map(~ .x$Payload$Flow) %>%
+    map(~ map(.x,~ .x$Type == "BlockRandomizer")) %>%
+    unlist() %>% 
+    which()
+  random_block_ids <- q$SurveyElements[ii_flow] %>%
+    map(~ .x$Payload$Flow) %>%
+    map(~ .x[ii_block_randomizer]) %>% 
+    map(~ map(.x,~ .x$Flow)) %>% 
+    map(~ map(.x,~ map(.x,~ .x$ID))) %>%
+    unlist()
+  
+  block_id_item_map <- get_block_item_map(q)
+  block_id_item_map <- block_id_item_map %>% filter(BlockID %in% random_block_ids) %>% select(-BlockID)
+  
+  
   # get the survey elements that are questions:
   ii_questions <- q$SurveyElements %>% 
     map_chr("Element") %>%
@@ -152,13 +173,18 @@ process_qsf <- function(path_to_qsf,
     map(~ gsub(" $", "", .x)) %>%
     unlist()
   
+  # format all qsf content lists into a single tibble
   qdf <- tibble(variable = items,
                 question = questions,
+                qid = qids,
                 type = qtype,
                 choices = choices,
                 answers = answers,
                 display_logic = display_logic,
                 response_option_randomization = response_option_randomization)
+  
+  # Add module randomization on
+  qdf <- qdf %>% left_join(block_id_item_map, by=c(qid="Questions")) %>% rename(shown_in_randomized_section = BlockName)
 
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
   
@@ -193,7 +219,8 @@ process_qsf <- function(path_to_qsf,
              description = description,
              choices = list(answers),
              answers = list(list()),
-             display_logic = display_logic)
+             display_logic = display_logic,
+             shown_in_randomized_section = shown_in_randomized_section)
       )) %>% 
     select(new) %>% 
     unnest(new)
@@ -220,7 +247,7 @@ process_qsf <- function(path_to_qsf,
                              NA_character_),
            wave = get_wave(path_to_qsf)
     ) %>% 
-    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization)
+    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization, shown_in_randomized_section)
   
   # add free text response options
   other_text_items <- qdf %>%

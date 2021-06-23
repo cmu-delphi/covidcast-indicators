@@ -25,6 +25,26 @@ get_shown_items <- function(qsf) {
   return(shown_items)
 }
 
+
+get_block_item_map <- function(qsf) {
+  block_out <- Filter(function(elem) { elem[["Element"]] == "BL" }, qsf$SurveyElements)[[1]]$Payload
+  
+  items <- list()
+  for (block in block_out) {
+    if (block$Type == "Trash") {
+      next
+    }
+    
+    items[[block$ID]] <- tibble(BlockID = block$ID, BlockName = block$Description, Questions = sapply(
+      block$BlockElements, function(elem) {
+        if (elem$Type == "Question") { elem$QuestionID }
+      }) %>% unlist())
+  }
+  
+  return(bind_rows(items))
+}
+
+
 #' Get wave number from qsf filename
 #'
 #' @param path_to_qsf

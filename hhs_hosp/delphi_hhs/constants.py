@@ -17,6 +17,6 @@ GEOS = [
 ]
 
 SMOOTHERS = [
-    (Smoother("identity"), ""),
+    (Smoother("identity", impute_method=None), ""),
     (Smoother("moving_average", window_length=7), "7dav_"),
 ]

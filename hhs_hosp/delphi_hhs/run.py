@@ -5,6 +5,7 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_hhs`.
 """
 from datetime import date, datetime, timedelta
+from itertools import product
 
 import time
 from delphi_epidata import Epidata
@@ -14,7 +15,7 @@ from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, GEOS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
 
 
 def _date_to_int(d):
@@ -95,29 +96,44 @@ def run_module(params):
             continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
-
     geo_mapper = GeoMapper()
 
-    for sig in SIGNALS:
-        state = geo_mapper.add_geocode(make_signal(all_columns, sig),
-                                       "state_id", "state_code",
-                                       from_col="state")
-        for geo in GEOS:
-            create_export_csv(
-                make_geo(state, geo, geo_mapper),
-                params["common"]["export_dir"],
-                geo,
-                sig
-            )
+    for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
+        df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
+                                    "state_id",
+                                    "state_code",
+                                    from_col="state")
+        df = make_geo(df, geo, geo_mapper)
+        df = smooth_values(df, smoother[0])
+        if df.empty:
+            continue
+        sensor_name = smoother[1] + sensor
+        # don't export first 6 days for smoothed signals since they'll be nan.
+        start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)
+        create_export_csv(df,
+                          params["common"]["export_dir"],
+                          geo,
+                          sensor_name,
+                          start_date=start_date)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)
 
+
+def smooth_values(df, smoother):
+    """Smooth the value column in the dataframe."""
+    df["val"] = df["val"].astype(float)
+    df["val"] = df[["geo_id", "val"]].groupby("geo_id")["val"].transform(
+        smoother.smooth
+    )
+    return df
+
+
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
     if geo == "state":
-        exported = state.rename(columns={"state":"geo_id"})
+        exported = state.rename(columns={"state": "geo_id"})
     else:
         exported = geo_mapper.replace_geocode(
             state, "state_code", geo,
@@ -126,6 +142,7 @@ def make_geo(state, geo, geo_mapper):
     exported["se"] = np.nan
     exported["sample_size"] = np.nan
     return exported
+
 
 def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""

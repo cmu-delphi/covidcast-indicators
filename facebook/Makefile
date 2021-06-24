@@ -123,7 +123,11 @@ lib:
 	R -e 'roxygen2::roxygenise("delphiFacebook")'
 
 run-R: $(CIDS)
-	time Rscript run.R
+	rm -rf tmp
+	time Rscript run.R 2>&1 |tee tmp
+	grep "run_facebook completed successfully" tmp
+	grep "scheduled core" ; \
+	[ "$$?" -eq 1 ]
 
 pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy
 	grep $(TODAY) params.json

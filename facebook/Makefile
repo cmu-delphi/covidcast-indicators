@@ -126,7 +126,7 @@ run-R: $(CIDS)
 	rm -rf tmp
 	time Rscript run.R 2>&1 |tee tmp
 	grep "run_facebook completed successfully" tmp
-	grep "scheduled core" ; \
+	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
 pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy

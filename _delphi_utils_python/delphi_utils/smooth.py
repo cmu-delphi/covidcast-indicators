@@ -153,10 +153,9 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
     def _select_imputer(self, impute_method, smoother_name):
         if impute_method is None and smoother_name != "identity":
             return "savgol"
-        elif impute_method is None and smoother_name == "identity":
+        if impute_method is None and smoother_name == "identity":
             return "identity"
-        else:
-            return impute_method
+        return impute_method
 
     def smooth(
         self, signal: Union[np.ndarray, pd.Series], impute_order=2

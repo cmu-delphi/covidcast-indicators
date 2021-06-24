@@ -38,8 +38,8 @@ process_qsf <- function(path_to_qsf,
     unlist()
   
   block_id_item_map <- get_block_item_map(q)
-  block_id_item_map <- block_id_item_map %>% filter(BlockID %in% random_block_ids) %>% select(-BlockID)
-  
+  block_id_item_map <- block_id_item_map %>% filter(BlockID %in% random_block_ids) %>%
+    select(-BlockID)
   
   # get the survey elements that are questions:
   ii_questions <- q$SurveyElements %>% 
@@ -176,15 +176,33 @@ process_qsf <- function(path_to_qsf,
   # format all qsf content lists into a single tibble
   qdf <- tibble(variable = items,
                 question = questions,
-                qid = qids,
                 type = qtype,
                 choices = choices,
                 answers = answers,
                 display_logic = display_logic,
                 response_option_randomization = response_option_randomization)
   
-  # Add module randomization on
-  qdf <- qdf %>% left_join(block_id_item_map, by=c(qid="Questions")) %>% rename(shown_in_randomized_section = BlockName)
+  # Add on module randomization
+  block_id_item_map <- block_id_item_map %>%
+    left_join(data.frame(qid=qids, item=items), by=c("Questions"="qid"))
+  qdf <- qdf %>% left_join(block_id_item_map, by=c(variable="item")) %>%
+    rename(group_of_respondents_item_was_shown_to = BlockName)
+  
+  # If a question's display logic depends on a question from a randomized
+  # module, consider it randomized too
+  module_assignment_from_display_logic <- map(qdf$display_logic, ~ sapply(seq_along(block_id_item_map$item), function(i) {
+    if (length(grep(paste0(block_id_item_map$item[i], "/"), .x)) != 0) {
+      block_id_item_map$BlockName[i]
+    } else {
+      NA_character_
+    }
+  })) %>%
+    map(unique) %>%
+    map(~ if (length(.x) > 1) { .x[!is.na(.x)] } else {.x}) %>% 
+    unlist()
+  qdf <- qdf %>% mutate(group_of_respondents_item_was_shown_to=coalesce(group_of_respondents_item_was_shown_to, module_assignment_from_display_logic)) %>%
+    replace_na(list(group_of_respondents_item_was_shown_to = "all"))  
+  
 
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
   
@@ -220,7 +238,7 @@ process_qsf <- function(path_to_qsf,
              choices = list(answers),
              answers = list(list()),
              display_logic = display_logic,
-             shown_in_randomized_section = shown_in_randomized_section)
+             group_of_respondents_item_was_shown_to = group_of_respondents_item_was_shown_to)
       )) %>% 
     select(new) %>% 
     unnest(new)
@@ -247,7 +265,7 @@ process_qsf <- function(path_to_qsf,
                              NA_character_),
            wave = get_wave(path_to_qsf)
     ) %>% 
-    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization, shown_in_randomized_section)
+    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization, group_of_respondents_item_was_shown_to)
   
   # add free text response options
   other_text_items <- qdf %>%

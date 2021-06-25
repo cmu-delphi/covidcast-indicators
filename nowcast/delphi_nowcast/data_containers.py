@@ -88,9 +88,10 @@ class LocationSeries:
             return out_values
         if imputation_method == "mean":
             mean = nanmean(out_values)
-            out_values = [i if not isnan(i) else mean for i in out_values]
-            return out_values
+            return [i if not isnan(i) else mean for i in out_values]
         if imputation_method == "locf":
-            out_values = list(locf(array([out_values])).flatten())
-            return out_values
+            if not any(isnan(i) for i in out_values):
+                return out_values
+            else:
+                return list(locf(array([out_values])).flatten())
         raise ValueError("Invalid imputation method. Must be None, 'mean', or 'locf'")

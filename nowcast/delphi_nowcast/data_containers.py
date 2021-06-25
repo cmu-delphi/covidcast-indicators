@@ -4,9 +4,10 @@ from dataclasses import dataclass
 from typing import List, Dict
 from datetime import date
 
-from numpy import nan, nanmean, isnan
+from numpy import nan, nanmean, isnan, array
 from pandas import date_range
 
+from impyute.imputation.ts import locf
 
 @dataclass(frozen=True)
 class SensorConfig:
@@ -62,6 +63,9 @@ class LocationSeries:
         """
         Return value of LocationSeries between two dates with optional imputation.
 
+        "locf" (last observation carried forward) will also impute starting boundary nans by filling
+        the first non nan observation backward.
+
         Parameters
         ----------
         start_date
@@ -69,7 +73,7 @@ class LocationSeries:
         end_date
             Last day to include in range.
         imputation_method
-            Optional type of imputation to conduct. Currently only "mean" is supported.
+            Optional type of imputation to conduct. Currently only "mean" and "locf" are supported.
 
         Returns
         -------
@@ -86,4 +90,7 @@ class LocationSeries:
             mean = nanmean(out_values)
             out_values = [i if not isnan(i) else mean for i in out_values]
             return out_values
-        raise ValueError("Invalid imputation method. Must be None or 'mean'")
+        if imputation_method == "locf":
+            out_values = list(locf(array([out_values])).flatten())
+            return out_values
+        raise ValueError("Invalid imputation method. Must be None, 'mean', or 'locf'")

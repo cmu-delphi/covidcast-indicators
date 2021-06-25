@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "aiohttp",
+    "impyute",
     "numpy",
     "pandas",
     "pydocstyle",

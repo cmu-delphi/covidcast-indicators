@@ -1,0 +1,7 @@
+item,replaces,description,question,matrix_subquestion,type,response_option_randomization
+StartDatetime,NA,"survey start timestamp",NA,NA,NA,NA
+EndDatetime,NA,"survey end timestamp",NA,NA,NA,NA
+wave,NA,"survey version",NA,NA,NA,NA
+UserLanguage,NA,"survey language",NA,NA,NA,NA
+fips,NA,"county FIPS code",NA,NA,NA,NA
+weight,NA,"Facebook respondent weight",NA,NA,NA,NA

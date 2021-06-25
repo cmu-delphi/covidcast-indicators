@@ -1,53 +1,24 @@
 #!/usr/bin/env Rscript
 
-## Diff two .qsf translation files to find new and changed survey items
+## Diff two .qsf files to find new and changed survey items
 ##
 ## Usage:
 ##
-## Rscript translation-differ.R path/to/old/qsf path/to/new/qsf
+## Rscript qsf-differ.R path/to/old/qsf path/to/new/qsf
 ##
 ## Writes the lists of new and changed items to STDOUT, so redirect STDOUT to
 ## your desired location.
 
-
-#### Background on .qsf files
-
-## A .qsf file is a json containing two elements, SurveyEntry with survey
-## metadata (start date, ID, name, etc) and SurveyElements with a numbered list
-## of survey components. For the purpose of finding differences in survey
-## contents, we are only interested in examining the SurveyElements item.
-
-## SurveyElement types are BL (block), FL (flow), SO (survey options), SCO
-## (scoring), PROJ (?), notes, STAT (statistics), QC (question count), SQ
-## (survey questions), and RS (response set). Detailed info:
-## https://gist.github.com/ctesta01/d4255959dace01431fb90618d1e8c241
-
-## We are only interested in block information ("BL") and survey questions
-## ("SQ"). The single BL item lists questions that appear in each block. The
-## "Trash" block contains not-displayed items. Within each SQ item, details are
-## stored in the Payload element, which can contain the following fields:
-
-# [1] "QuestionText"         "QuestionType"         "Selector"             "Configuration"        "QuestionDescription"  "Choices"              "ChoiceOrder"         
-# [8] "Validation"           "AnalyzeChoices"       "Language"             "QuestionText_Unsafe"  "DataExportTag"        "QuestionID"           "DataVisibility"      
-# [15] "NextChoiceId"         "NextAnswerId"         "DefaultChoices"       "SubSelector"          "DisplayLogic"         "GradingData"          "Answers"             
-# [22] "AnswerOrder"          "ChoiceDataExportTags" "Randomization"        "RecodeValues"         "DynamicChoices"       "DynamicChoicesData"   "SearchSource"        
-# [29] "QuestionJS"  
-
-## The meaning of "Answers" and "Choices" differs for matrix vs non-matrix
-## items. "Choices" list the vertical components -- subquestions for matrix
-## items and answer choices for non-matrix items. "Answers" list the answer
-## choices for matrix items and are missing for non-matrix items.
-
-
 suppressPackageStartupMessages({
   library(jsonlite)
   library(stringr)
+  source("qsf-utils.R")
 })
 
-#' Load and diff chosen translation files.
+#' Load and diff chosen qsf files.
 #'
-#' @param old_qsf_path path to older Qualtrics translation file in .qsf format
-#' @param new_qsf_path path to newer Qualtrics translation file in .qsf format
+#' @param old_qsf_path path to older Qualtrics survey file in .qsf format
+#' @param new_qsf_path path to newer Qualtrics survey file in .qsf format
 diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
   old_qsf <- get_qsf_file(old_qsf_path)
   new_qsf <- get_qsf_file(new_qsf_path)
@@ -57,34 +28,25 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
   return(NULL)
 }
 
-#' Fetch and format a single .qsf translation file, keeping block and question info
+#' Fetch and format a single .qsf file, keeping block and question info
 #'
-#' @param path path to Qualtrics translation file in .qsf format
+#' @param path path to Qualtrics survey file in .qsf format
+#' @param keep_items string or character vector of survey item fields to keep.
+#'   Setting to "all" keeps all fields.
 #'
 #' @return A named list
-get_qsf_file <- function(path) {
+get_qsf_file <- function(path,
+                         keep_items = c("QuestionID", "DataExportTag",
+                                        "QuestionText", "QuestionType",
+                                        "Choices", "Answers", "DisplayLogic")
+) {
   # Read file as json.
   qsf <- read_json(path)
   
   ## Block
-  block_out <- Filter(function(elem) { elem[["Element"]] == "BL" }, qsf$SurveyElements)[[1]]$Payload
-  
-  shown_items <- list()
-  for (block in block_out) {
-    if (block$Type == "Trash") {
-      next
-    }
-    
-    shown_items[[block$Description]] <- sapply(
-      block$BlockElements, function(elem) {
-        if (elem$Type == "Question") { elem$QuestionID }
-      })
-  }
-  shown_items <- unlist(shown_items)
+  shown_items <- get_shown_items(qsf)
   
   ## Questions
-  keep_items <- c("QuestionID", "DataExportTag", "QuestionText",
-                  "QuestionType", "Choices", "Answers", "DisplayLogic")
   questions <- Filter(function(elem) { elem[["Element"]] == "SQ" }, qsf$SurveyElements)
   
   qid_item_map <- list()
@@ -97,22 +59,28 @@ get_qsf_file <- function(path) {
       next
     }
     
-    question <- question[names(question) %in% keep_items]
+    if (keep_items != "all") {
+      question <- question[names(question) %in% c("QuestionID", keep_items)]
+    }
     
     # Rearrange Answers/Choices elements to be consistent between matrix and
     # other items.
-    if (question$QuestionType == "Matrix") {
-      question$Subquestions <- question$Choices
-      question$Choices <- question$Answers
-      question$Answers <- NULL
+    if ("QuestionType" %in% names(question)) {
+      if (question$QuestionType == "Matrix") {
+        question$Subquestions <- question$Choices
+        question$Choices <- question$Answers
+        question$Answers <- NULL
+      }
     }
     
     # DisplayLogic "Description" summarizes display logic, including the text of
     # the conditioning question. We don't want to detect changes in conditioning
     # question text if the QID stayed the same, so keep only fields not named
     # "Description".
-    display_logic <- unlist(question$DisplayLogic)
-    question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
+    if ("DisplayLogic" %in% names(question)) {
+      display_logic <- unlist(question$DisplayLogic)
+      question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
+    }
     
     questions_out <- safe_insert_question(questions_out, question)
     qid_item_map[[question$QuestionID]] <- question$DataExportTag
@@ -229,7 +197,7 @@ print_questions <- function(questions, change_type=c("Added", "Removed", "Choice
 args <- commandArgs(TRUE)
 
 if (length(args) != 2) {
-  stop("Usage: Rscript translation-differ.R path/to/old/qsf path/to/new/qsf")
+  stop("Usage: Rscript qsf-differ.R path/to/old/qsf path/to/new/qsf")
 }
 
 old_qsf <- args[1]

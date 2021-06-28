@@ -86,7 +86,10 @@ def run_module(params):
             continue
         for metric, smoother in product(
                 METRICS+[COMBINED_METRIC], SMOOTHERS):
-            print(geo_res, metric, smoother)
+            logger.info("generating signal and exporting to CSV",
+                        geo_res=geo_res,
+                        metric=metric,
+                        smoother=smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
                                            ).transform(SMOOTHERS_MAP[smoother][0])
@@ -106,8 +109,11 @@ def run_module(params):
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)
-
             if not exported_csv_dates.empty:
+                logger.info("Exported CSV",
+                            csv_export_count=exported_csv_dates.size,
+                            min_csv_export_date=min(exported_csv_dates).strftime("%Y-%m-%d"),
+                            max_csv_export_date=max(exported_csv_dates).strftime("%Y-%m-%d"))
                 csv_export_count += exported_csv_dates.size
                 if not oldest_final_export_date:
                     oldest_final_export_date = max(exported_csv_dates)

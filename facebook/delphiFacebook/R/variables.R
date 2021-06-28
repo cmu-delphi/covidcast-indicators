@@ -50,13 +50,12 @@ is_selected <- function(vec, selection) {
 #' Activities outside the home
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `a_work_outside_home_1d`, `a_shop_1d`,
 #'   `a_restaurant_1d`, `a_spent_time_1d`, `a_large_event_1d`,
 #'   `a_public_transit_1d`
-code_activities <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_activities <- function(input_data, wave) {
   if ("C13" %in% names(input_data)) {
     # introduced in wave 4
     activities <- split_options(input_data$C13)
@@ -100,9 +99,11 @@ code_activities <- function(input_data) {
 #' Household symptom variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_fever`, `hh_sore_throat`, `hh_cough`,
 #'   `hh_short_breath`, `hh_diff_breath`, `hh_number_sick`
-code_symptoms <- function(input_data) {
+code_symptoms <- function(input_data, wave) {
   input_data$hh_fever <- (input_data$A1_1 == 1L)
   input_data$hh_sore_throat <- (input_data$A1_2 == 1L)
   input_data$hh_cough <- (input_data$A1_3 == 1L)
@@ -116,8 +117,10 @@ code_symptoms <- function(input_data) {
 #' Household total size
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_number_total`
-code_hh_size <- function(input_data) {
+code_hh_size <- function(input_data, wave) {
   if ("A5_1" %in% names(input_data)) {
     # This is Wave 4, where item A2b was replaced with 3 items asking about
     # separate ages. Many respondents leave blank the categories that do not
@@ -150,12 +153,11 @@ code_hh_size <- function(input_data) {
 #' Per our IRB, we only aggregate these variables for wave >= 4.
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `mh_worried_ill`, `mh_anxious`,
 #'   `mh_depressed`, `mh_isolated`, `mh_worried_finances`
-code_mental_health <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_mental_health <- function(input_data, wave) {
   input_data$mh_worried_ill <- NA
   input_data$mh_anxious <- NA
   input_data$mh_depressed <- NA
@@ -189,12 +191,11 @@ code_mental_health <- function(input_data) {
 #' Mask and contact variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `c_travel_state`, `c_work_outside_5d`,
 #'   `c_mask_often`, `c_others_masked`
-code_mask_contact <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-
+code_mask_contact <- function(input_data, wave) {
   # private helper for both mask items, which are identically coded: 6 means the
   # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
   most_always <- function(item) {
@@ -252,6 +253,18 @@ code_mask_contact <- function(input_data) {
   } else {
     input_data$c_others_masked_public <- NA
   }
+  
+  if ("H1" %in% names(input_data)) {
+    # added in wave 11. most/all *others* in public in the last 7 days; exclude
+    # respondents who have not been in public.
+    input_data$c_others_distanced_public <- case_when(
+      is.na(input_data$H1) ~ NA,
+      input_data$H1 == 6 ~ NA,
+      input_data$H1 == 4 | input_data$H1 == 5 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$c_others_distanced_public <- NA
+  }
 
   if ("C3" %in% names(input_data)) {
     input_data$c_work_outside_5d <- input_data$C3 == 1
@@ -264,12 +277,11 @@ code_mask_contact <- function(input_data) {
 #' Testing and test positivity variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `t_tested_14d`, `t_tested_positive_14d`,
 #'   `t_wanted_test_14d`
-code_testing <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-  
+code_testing <- function(input_data, wave) {
   if ( all(c("B8", "B10") %in% names(input_data)) ) {
     # fraction tested in last 14 days. yes == 1 on B10; no == 2 on B8 *or* 3 on
     # B10 (which codes "no" as 3 for some reason)
@@ -364,14 +376,13 @@ code_testing <- function(input_data) {
 #' COVID vaccination variables
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `v_covid_vaccinated` and
 #'   `v_accept_covid_vaccine`
 #'
 #' @importFrom dplyr coalesce
-code_vaccines <- function(input_data) {
-  wave <- unique(input_data$wave)
-  assert(length(wave) == 1, "can only code one wave at a time")
-  
+code_vaccines <- function(input_data, wave) {
   if ("V1" %in% names(input_data)) {
     # coded as 1 = Yes, 2 = No, 3 = don't know. We assume that don't know = no,
     # because, well, you'd know.
@@ -397,9 +408,9 @@ code_vaccines <- function(input_data) {
     input_data$v_received_2_vaccine_doses <- NA_real_
   }
 
-  input_data$v_accept_covid_vaccine <- NA_real_
+  input_data$v_accept_covid_vaccine <- NA
   input_data$v_appointment_or_accept_covid_vaccine <- NA_real_
-  input_data$v_accept_covid_vaccine_no_appointment <- NA_real_
+  input_data$v_accept_covid_vaccine_no_appointment <- NA
   if ("V3" %in% names(input_data)) {
     input_data$v_accept_covid_vaccine <- (
       input_data$V3 == 1 | input_data$V3 == 2
@@ -579,14 +590,73 @@ code_vaccines <- function(input_data) {
     input_data$v_worried_vaccine_side_effects <- NA_real_
   }
 
+  if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA, vaccine_barriers)
+    vaccine_barriers <- split_options(vaccine_barriers)
+    
+    input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible <- NA
+    input_data$v_vaccine_barrier_no_appointments <- NA
+    input_data$v_vaccine_barrier_appointment_time <- NA
+    input_data$v_vaccine_barrier_technical_difficulties <- NA
+    input_data$v_vaccine_barrier_document <- NA
+    input_data$v_vaccine_barrier_technology_access <- NA
+    input_data$v_vaccine_barrier_travel <- NA
+    input_data$v_vaccine_barrier_language <- NA
+    input_data$v_vaccine_barrier_childcare <- NA
+    input_data$v_vaccine_barrier_time <- NA
+    input_data$v_vaccine_barrier_type <- NA
+    input_data$v_vaccine_barrier_none <- NA
+  }
+  
+  if ( "E4" %in% names(input_data) ) {
+    # introduced in Wave 11
+    input_data$v_vaccinate_children <- case_when(
+      input_data$E4 == 1 ~ 1,
+      input_data$E4 == 2 ~ 1,
+      input_data$E4 == 3 ~ 0,
+      input_data$E4 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_vaccinate_children <- NA_real_
+  }
+  
+  if ( "V16" %in% names(input_data) ) {
+    # introduced in Wave 11
+    input_data$v_try_vaccinate_1m <- case_when(
+      input_data$V16 %in% c(1, 2) ~ 1,
+      input_data$V16 %in% c(3, 4, 5, 6, 7) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_try_vaccinate_1m <- NA_real_
+  }
+  
   return(input_data)
 }
 
 #' Schooling
 #'
 #' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame augmented with `hh_number_total`
-code_schooling <- function(input_data) {
+code_schooling <- function(input_data, wave) {
   if ("E2_1" %in% names(input_data)) {
     # Coded as 2 = "Yes", 3 = "No", 4 = "I don't know"
     input_data$s_inperson_school_fulltime <- case_when(
@@ -608,5 +678,26 @@ code_schooling <- function(input_data) {
   } else {
     input_data$s_inperson_school_parttime <- NA_real_
   }
+  return(input_data)
+}
+
+#' Beliefs
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_beliefs <- function(input_data, wave) {
+  if ("G3" %in% names(input_data)) {
+    # added in wave 11.
+    input_data$b_belief_masking_effective <- case_when(
+      input_data$G3 == 1 | input_data$G3 == 2 ~ 1,
+      input_data$G3 == 3 | input_data$G3 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_masking_effective <- NA_real_
+  }
+  
   return(input_data)
 }

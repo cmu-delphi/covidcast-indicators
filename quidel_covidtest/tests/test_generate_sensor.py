@@ -2,8 +2,8 @@ from datetime import datetime
 import pandas as pd
 
 from delphi_quidel_covidtest.generate_sensor import (MIN_OBS, POOL_DAYS,
-                                                     generate_sensor_for_states,
-                                                     generate_sensor_for_other_geores)
+                                                     generate_sensor_for_parent_geo,
+                                                     generate_sensor_for_nonparent_geo)
 
 class TestGenerateSensor:
     def test_generate_sensor(self):
@@ -19,8 +19,8 @@ class TestGenerateSensor:
                                  parse_dates=['timestamp']).groupby("state_id")
 
         # raw pct_positive
-        state_pct_positive = generate_sensor_for_states(
-            state_groups, smooth = False, device = False,
+        state_pct_positive = generate_sensor_for_nonparent_geo(
+            state_groups, "state_id", smooth = False, device = False,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 
         assert (state_pct_positive.dropna()["val"] < 100).all()
@@ -29,8 +29,8 @@ class TestGenerateSensor:
         assert state_pct_positive["val"].isnull().sum() == 0
 
         # raw test_per_device
-        state_test_per_device = generate_sensor_for_states(
-            state_groups, smooth = False, device = True,
+        state_test_per_device = generate_sensor_for_nonparent_geo(
+            state_groups, "state_id", smooth = False, device = True,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 
         assert state_test_per_device["se"].isnull().all()
@@ -43,7 +43,7 @@ class TestGenerateSensor:
         # smoothed pct_positive
         msa_data = pd.read_csv("./test_data/msa_data.csv", sep = ",",
                                  parse_dates=['timestamp'])
-        msa_pct_positive = generate_sensor_for_other_geores(
+        msa_pct_positive = generate_sensor_for_parent_geo(
             state_groups, msa_data, "cbsa_id", smooth = True, device = False,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 
@@ -53,7 +53,7 @@ class TestGenerateSensor:
         assert msa_pct_positive["val"].isnull().sum() == 0
 
         # smoothed test_per_device
-        msa_test_per_device = generate_sensor_for_other_geores(
+        msa_test_per_device = generate_sensor_for_parent_geo(
             state_groups, msa_data, "cbsa_id", smooth = True, device = True,
             first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
 

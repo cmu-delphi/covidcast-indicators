@@ -8,20 +8,22 @@
 #' @param params a named listed containing a value named "input", a vector of
 #'   paths to load by the function, and "input_dir", the directory where the
 #'   input files are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #' @return A data frame of all loaded data files concatenated into one data
 #'   frame
 #'
 #' @importFrom dplyr bind_rows
 #' @importFrom parallel mclapply
 #' @export
-load_responses_all <- function(params) {
+load_responses_all <- function(params, contingency_run = FALSE) {
   input_data <- vector("list", length(params$input))
   
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
   map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(input_data), function(i) {
-    load_response_one(params$input[i], params)
+    load_response_one(params$input[i], params, contingency_run)
   })
   
   msg_plain(paste0("Finished loading CSVs"))
@@ -35,6 +37,8 @@ load_responses_all <- function(params) {
 #' @param input_filename  filename of the input CSV file
 #' @param params          a named list containing a value named "input_dir", the directory
 #'                        where the input file are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
 #' @importFrom readr read_lines cols locale col_character col_integer
@@ -42,7 +46,7 @@ load_responses_all <- function(params) {
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
-load_response_one <- function(input_filename, params) {
+load_response_one <- function(input_filename, params, contingency_run) {
   msg_plain(paste0("Reading ", input_filename))
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
@@ -153,18 +157,23 @@ load_response_one <- function(input_filename, params) {
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
   
-  input_data <- module_assignment(input_data)
-  input_data <- bodge_v4_translation(input_data)
-  input_data <- bodge_C6_C8(input_data)
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
+  input_data <- module_assignment(input_data, wave)
+  input_data <- bodge_v4_translation(input_data, wave)
+  input_data <- bodge_C6_C8(input_data, wave)
+  input_data <- bodge_B13(input_data, wave)
 
-  input_data <- code_symptoms(input_data)
-  input_data <- code_hh_size(input_data)
-  input_data <- code_mental_health(input_data)
-  input_data <- code_mask_contact(input_data)
-  input_data <- code_testing(input_data)
-  input_data <- code_activities(input_data)
-  input_data <- code_vaccines(input_data)
-  input_data <- code_schooling(input_data)
+  input_data <- code_symptoms(input_data, wave)
+  input_data <- code_hh_size(input_data, wave)
+  input_data <- code_mental_health(input_data, wave)
+  input_data <- code_mask_contact(input_data, wave)
+  input_data <- code_testing(input_data, wave)
+  input_data <- code_activities(input_data, wave)
+  input_data <- code_vaccines(input_data, wave)
+  input_data <- code_schooling(input_data, wave)
+  input_data <- code_beliefs(input_data, wave)
 
   # create testing variables
 
@@ -190,6 +199,25 @@ load_response_one <- function(input_filename, params) {
   # replace these ZIPs with NA.
   input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_,
                             input_data$zip5)
+  
+  if (contingency_run) {
+    ## Create additional fields for aggregations.
+    # Demographic grouping variables
+    input_data <- code_gender(input_data, wave)
+    input_data <- code_age(input_data, wave)
+    input_data <- code_race_ethnicity(input_data, wave)
+    input_data <- code_occupation(input_data, wave)
+    input_data <- code_education(input_data, wave)
+    
+    # Indicators
+    input_data <- code_addl_vaccines(input_data, wave)
+    input_data <- code_attempt_vaccine(input_data, wave)
+    input_data <- code_addl_symptoms(input_data, wave)
+    input_data <- code_health(input_data, wave)
+    input_data <- code_trust(input_data, wave)
+    input_data <- code_vaccine_barriers(input_data, wave)
+    input_data <- code_behaviors(input_data, wave)
+  }
 
   return(input_data)
 }
@@ -346,9 +374,11 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 #' delete non-English V4 responses, then use V4a in place of V4 when present.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return corrected data frame, where V4 is the authoritative column
 #' @importFrom dplyr case_when
-bodge_v4_translation <- function(input_data) {
+bodge_v4_translation <- function(input_data, wave) {
   if (!("V4_1" %in% names(input_data)) &&
         !("V4a_1" %in% names(input_data))) {
     # Data unaffected; skip.
@@ -408,10 +438,11 @@ bodge_v4_translation <- function(input_data) {
 #' naming scheme.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#'   
 #' @return corrected data frame
 #' @importFrom dplyr rename
-bodge_C6_C8 <- function(input_data) {
-  wave <- unique(input_data$wave)
+bodge_C6_C8 <- function(input_data, wave) {
   if ( wave != 10 ) {
     # Data unaffected; skip.
     return(input_data)
@@ -427,6 +458,21 @@ bodge_C6_C8 <- function(input_data) {
   return(input_data)
 }
 
+#' Fix B13 name in Wave 11.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'   
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_B13 <- function(input_data, wave) {
+  if ( "B13 " %in% names(input_data) ) {
+    input_data <- rename(input_data, B13 = "B13 ")
+  }
+  return(input_data)
+}
+
 #' Process module assignment column.
 #' 
 #' Rename `module` and recode to A/B/`NA`. Note: module assignment column name
@@ -434,9 +480,11 @@ bodge_C6_C8 <- function(input_data) {
 #' 
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return data frame with new `module` column
 #' @importFrom dplyr case_when
-module_assignment <- function(input_data) {
+module_assignment <- function(input_data, wave) {
   if ( "FL_23_DO" %in% names(input_data) ) {
     input_data$module <- case_when(
       input_data$FL_23_DO == "ModuleA" ~ "A",

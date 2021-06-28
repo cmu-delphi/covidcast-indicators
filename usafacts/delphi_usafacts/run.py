@@ -100,7 +100,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
             params["archive"]["aws_credentials"])
         arch_diff.update_cache()
 
-    dfs = {metric: pull_usafacts_data(base_url, metric) for metric in METRICS}
+    dfs = {metric: pull_usafacts_data(base_url, metric, logger) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         logger.info("generating signal and exporting to CSV",

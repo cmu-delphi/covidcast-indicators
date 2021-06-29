@@ -107,7 +107,7 @@ def run_module(params):
         df = smooth_values(df, smoother[0])
         if df.empty:
             continue
-        sensor_name = smoother[1] + sensor
+        sensor_name = sensor + smoother[1]
         # don't export first 6 days for smoothed signals since they'll be nan.
         start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)
         create_export_csv(df,

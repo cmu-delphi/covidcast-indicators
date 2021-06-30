@@ -14,7 +14,7 @@ required = [
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",
-    "pylint",
+    "pylint==2.8.3",
     "pytest",
     "pytest-cov",
     "slackclient",

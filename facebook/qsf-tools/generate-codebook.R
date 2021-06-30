@@ -330,7 +330,7 @@ add_qdf_to_codebook <- function(qdf,
     add_static_fields(qdf_wave, path_to_static_fields) %>% 
     arrange(!is.na(.data$type), variable, wave)
   
-  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) )
+  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) )
   if ( length(ii_replacing_DNE) > 0 ) {
     replacing_variables <- unique( codebook$variable[ii_replacing_DNE] )
     warning(sprintf("the items that %s report replacing do not exist in the codebook",

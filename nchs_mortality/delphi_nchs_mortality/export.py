@@ -33,5 +33,4 @@ def export_csv(df, geo_name, sensor, export_dir, start_date):
         result_df.to_csv(f"{export_dir}/{export_fn}",
                          index=False,
                          float_format="%.8f")
-    print(dates)
     return pd.to_datetime(dates)

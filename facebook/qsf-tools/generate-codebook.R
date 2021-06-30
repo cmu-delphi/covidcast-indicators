@@ -198,7 +198,7 @@ process_qsf <- function(path_to_qsf,
     }
   })) %>%
     map(unique) %>%
-    map(~ if (length(.x) > 1) { .x[!is.na(.x)] } else {.x}) %>% 
+    map(~ if (length(.x) > 1) { .x[!is.na(.x)] } else {NA}) %>% 
     unlist()
   qdf <- qdf %>% mutate(group_of_respondents_item_was_shown_to=coalesce(group_of_respondents_item_was_shown_to, module_assignment_from_display_logic)) %>%
     replace_na(list(group_of_respondents_item_was_shown_to = "all"))  

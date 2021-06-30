@@ -234,7 +234,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         df = df[df['incl']]
 
         # write out results
-        all_dates = []
+        stats = []
         for signal in self.updated_signal_names:
             dates = write_to_csv(
                 df,
@@ -246,5 +246,6 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                 out_name=signal,
                 output_path=output_path
             )
-            all_dates.append(dates)
-        return all_dates
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))
+        return stats

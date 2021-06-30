@@ -98,7 +98,7 @@ def run_module(params):
     all_columns = pd.concat(dfs)
     geo_mapper = GeoMapper()
     stats = []
-    
+
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
                                     "state_id",
@@ -116,7 +116,8 @@ def run_module(params):
                           geo,
                           sensor_name,
                           start_date=start_date)
-        stats.append((max(dates), len(dates)))
+        if len(dates) > 0:
+            stats.append((max(dates), len(dates)))
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = stats and max(s[0] for s in stats)

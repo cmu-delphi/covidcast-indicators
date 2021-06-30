@@ -75,6 +75,7 @@ def run_module(params):
             'AWS_DEFAULT_REGION': params["indicator"]["aws_default_region"],
     }
 
+    stats = []
     for ver in VERSIONS:
         # Update raw data
         # Why call subprocess rather than using a native Python client, e.g. boto3?
@@ -101,11 +102,19 @@ def run_module(params):
                                sensors=SENSORS,
                                geo_resolutions=GEO_RESOLUTIONS,
                                export_dir=export_dir,
+                               stats=stats
                                )
 
         with mp.Pool(n_core) as pool:
             pool.map(process_file, files)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = stats and max(s[0] for s in stats)
+    csv_export_count = sum(s[-1] for s in stats)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

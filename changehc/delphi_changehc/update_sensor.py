@@ -59,7 +59,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
                 geo, out_name
             ))
 
-    create_export_csv(
+    dates = create_export_csv(
         df,
         export_dir=output_path,
         geo_res=geo_level,
@@ -72,6 +72,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
         df.size, df["geo_id"].unique().size, geo_level
     ))
     logging.debug("wrote files to {0}".format(output_path))
+    return dates
 
 
 class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
@@ -233,8 +234,9 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         df = df[df['incl']]
 
         # write out results
+        all_dates = []
         for signal in self.updated_signal_names:
-            write_to_csv(
+            dates = write_to_csv(
                 df,
                 geo_level=self.geo,
                 start_date=min(self.sensor_dates),
@@ -244,3 +246,5 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                 out_name=signal,
                 output_path=output_path
             )
+            all_dates.append(dates)
+        return all_dates

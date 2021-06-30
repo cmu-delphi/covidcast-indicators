@@ -125,7 +125,7 @@ def aggregate(df, metric, geo_res):
     return df.rename({geo_key: "geo_id"}, axis=1)
 
 def process(fname, sensors, metrics, geo_resolutions,
-            export_dir, brand_df):
+            export_dir, brand_df, stats):
     """
     Process an input census block group-level CSV and export it.
 
@@ -143,6 +143,8 @@ def process(fname, sensors, metrics, geo_resolutions,
         List of geo resolutions to export the data.
     brand_df: pd.DataFrame
         mapping info from naics_code to safegraph_brand_id
+    stats: List[Tuple[datetime, int]]
+        List to which we will add (max export date, number of export dates)
 
     Returns
     -------
@@ -188,7 +190,7 @@ def process(fname, sensors, metrics, geo_resolutions,
 
             if wip:
                 metric = "wip_" + metric
-            create_export_csv(
+            dates = create_export_csv(
                 df_export,
                 export_dir=export_dir,
                 start_date=df_export["timestamp"].min(),
@@ -196,3 +198,5 @@ def process(fname, sensors, metrics, geo_resolutions,
                 geo_res=geo_res,
                 sensor=sensor,
             )
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))

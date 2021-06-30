@@ -156,6 +156,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         se = params["indicator"]["se"])
 
     ## start generating
+    min_max_date = None
+    csv_export_count = 0
     for geo in params["indicator"]["geos"]:
         for numtype in params["indicator"]["types"]:
             for weekday in params["indicator"]["weekday"]:
@@ -180,12 +182,22 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 elif numtype == "cli":
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
                              file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
-                su_inst.update_sensor(
+                all_dates = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"]
                 )
+                max_date = min(max(dates) for dates in all_dates)
+                if min_max_date is None or min_max_date > max_date:
+                    min_max_date = max_date
+                csv_export_count += sum(len(dates) for dates in all_dates)
+
             logger.info("finished processing", geo = geo)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

@@ -4,7 +4,7 @@ import pandas as pd
 from epiweeks import Week
 
 def export_csv(df, geo_name, sensor, export_dir, start_date):
-    """Export data set in format expected for injestion by the API.
+    """Export data set in format expected for ingestion by the API.
 
     Parameters
     ----------
@@ -24,7 +24,8 @@ def export_csv(df, geo_name, sensor, export_dir, start_date):
     df = df.copy()
     df = df[df["timestamp"] >= start_date]
 
-    for date in df["timestamp"].unique():
+    dates = df["timestamp"].unique()
+    for date in dates:
         t = Week.fromdate(pd.to_datetime(str(date)))
         date_short = "weekly_" + str(t.year) + str(t.week).zfill(2)
         export_fn = f"{date_short}_{geo_name}_{sensor}.csv"
@@ -32,3 +33,5 @@ def export_csv(df, geo_name, sensor, export_dir, start_date):
         result_df.to_csv(f"{export_dir}/{export_fn}",
                          index=False,
                          float_format="%.8f")
+    print(dates)
+    return pd.to_datetime(dates)

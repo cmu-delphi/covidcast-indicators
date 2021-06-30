@@ -120,7 +120,7 @@ def run_module(params):
             stats.append((max(dates), len(dates)))
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    min_max_date = stats and max(s[0] for s in stats)
+    min_max_date = stats and min(s[0] for s in stats)
     csv_export_count = sum(s[-1] for s in stats)
     max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
     formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")

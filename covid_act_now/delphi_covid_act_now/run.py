@@ -4,6 +4,7 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
+from datetime import datetime
 import time
 
 import numpy as np
@@ -113,8 +114,10 @@ def run_module(params):
             print(f"Failed to archive '{exported_file}'")
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = (datetime.now() - min(max_dates_exported)).days
     logger.info("Completed indicator run",
                 elapsed_time_in_seconds=elapsed_time_in_seconds,
                 csv_export_count=num_exported_files,
+                max_lag_in_days=max_lag_in_days,
                 earliest_export_date=min(min_dates_exported).strftime("%Y-%m-%d"),
                 latest_export_date=max(max_dates_exported).strftime("%Y-%m-%d"))

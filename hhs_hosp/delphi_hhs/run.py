@@ -97,6 +97,7 @@ def run_module(params):
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
     geo_mapper = GeoMapper()
+    stats = []
 
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
@@ -110,15 +111,24 @@ def run_module(params):
         sensor_name = sensor + smoother[1]
         # don't export first 6 days for smoothed signals since they'll be nan.
         start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)
-        create_export_csv(df,
+        dates = create_export_csv(df,
                           params["common"]["export_dir"],
                           geo,
                           sensor_name,
                           start_date=start_date)
+        if len(dates) > 0:
+            stats.append((max(dates), len(dates)))
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = stats and min(s[0] for s in stats)
+    csv_export_count = sum(s[-1] for s in stats)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)
 
 
 def smooth_values(df, smoother):

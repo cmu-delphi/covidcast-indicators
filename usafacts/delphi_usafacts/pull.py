@@ -57,6 +57,7 @@ def pull_usafacts_data(base_url: str, metric: str, logger: Logger) -> pd.DataFra
     df = pd.read_csv(base_url.format(metric=metric))
     date_cols = [i for i in df.columns if i.startswith("2")]
     logger.info("data retrieved from source",
+                metric=metric,
                 num_rows=df.shape[0],
                 num_cols=df.shape[1],
                 min_date=min(date_cols),

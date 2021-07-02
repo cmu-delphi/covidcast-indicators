@@ -1,0 +1,50 @@
+name: Build indicator container images and upload to registry
+
+on:
+  push:
+    branches: [ main, prod ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        packages: [""]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: cmu-delphi-deploy-machine
+          password: ${{ secrets.CMU_DELPHI_DEPLOY_MACHINE_PAT }}
+
+      - name: Build, tag, and push image to Github
+        env:
+          INDICATOR_DOCKER_FILE: ${{ github.workspace }}/${{ matrix.packages }}/Dockerfile
+        run: |
+          baseRef="${GITHUB_REF#*/}"
+          baseRef="${baseRef#*/}"
+          case "${baseRef}" in
+          main)
+            imageTag="dev"
+            ;;
+          prod)
+            imageTag="latest"
+            ;;
+          *)
+            imageTag="${baseRef//\//_}" # replace `/` with `_` in branch name
+            ;;
+          esac
+          cd ${{ matrix.packages }}
+          echo "using tag: --${imageTag}--"
+          docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file ${INDICATOR_DOCKER_FILE} .
+          docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
+
+         # ## trigger a webhook update
+         # #curl -H "Authorization: Bearer ${{ secrets.DELPHI_DEPLOY_WEBHOOK_TOKEN }}" \
+         # #     -X POST ${{ secrets.DELPHI_DEPLOY_WEBHOOK_URL }} \
+         # #     -H "Content-Type: application/x-www-form-urlencoded" \
+         # #     -d "repository=ghcr.io/${{ github.repository }}&tag=$imageTag"

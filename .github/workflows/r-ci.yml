@@ -6,7 +6,7 @@
 # See https://github.com/r-lib/actions/tree/master/examples#readme for
 # additional example workflows available for the R community.
 
-name: R symptoms survey
+name: R facebook survey
 
 on:
   push:
@@ -35,10 +35,17 @@ jobs:
       - name: Install linux dependencies
         run: |
             sudo apt-get install libcurl4-openssl-dev
+      - name: Cache R packages
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-facebook-survey-
       - name: Install R dependencies
         run: |
-          install.packages(c("remotes", "rcmdcheck", "mockr"))
-          remotes::install_deps(dependencies = TRUE)
+          install.packages("remotes")
+          remotes::update_packages(c("rcmdcheck", "mockr", "devtools"), upgrade="always")
+          dependency_list <- devtools::dev_package_deps()
+          remotes::update_packages(dependency_list$package, upgrade="always")
         shell: Rscript {0}
       - name: Check
         run: |

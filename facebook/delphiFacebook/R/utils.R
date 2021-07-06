@@ -28,6 +28,12 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
     sprintf("%s 23:59:59", params$end_date), tz = tz_to
   )
 
+  params$parallel_max_cores <- if_else(
+    is.null(params$parallel_max_cores),
+    .Machine$integer.max,
+    params$parallel_max_cores
+  )
+
   return(params)
 }
 

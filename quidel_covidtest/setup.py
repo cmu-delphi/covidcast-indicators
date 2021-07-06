@@ -11,7 +11,8 @@ required = [
     "delphi-utils",
     "imap-tools",
     "xlrd==1.2.0",
-    "covidcast"
+    "covidcast",
+    "openpyxl"
 ]
 
 setup(

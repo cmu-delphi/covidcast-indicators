@@ -43,7 +43,7 @@ jobs:
       - name: Install R dependencies
         run: |
           install.packages("remotes")
-          remotes::update_packages(c("rcmdcheck", "mockr", "devtools"), upgrade="always")
+          remotes::update_packages(c("rcmdcheck", "mockr", "devtools", "covr", "rmarkdown"), upgrade="always")
           dependency_list <- devtools::dev_package_deps()
           remotes::update_packages(dependency_list$package, upgrade="always")
         shell: Rscript {0}

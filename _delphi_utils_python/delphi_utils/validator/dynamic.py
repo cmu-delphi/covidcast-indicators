@@ -422,9 +422,8 @@ class DynamicValidator:
         api_frames_end = min(api_frames["time_value"].max(),
                              source_frame_start-timedelta(days=1))
         # pylint: enable=unused-variable
-        # Only consider outliers from the source frame
         outlier_df = all_frames.query(
-            'time_value > @api_frames_end & time_value <= @source_frame_end')
+            'time_value >= @api_frames_end & time_value <= @source_frame_end')
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
             .reset_index(drop=True).copy()
         outliers = outlier_df[outlier_df.apply(outlier_flag, axis=1)]

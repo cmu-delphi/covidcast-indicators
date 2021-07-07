@@ -1,6 +1,7 @@
 {
   "common": {
-    "export_dir": "./receiving"
+    "export_dir": "./receiving",
+    "log_filename": "./doctor-visits.log"
   },
   "indicator": {
     "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
@@ -11,5 +12,29 @@
     "se": false,
     "obfuscated_prefix": "wip_XXXXX",
     "parallel": false
+  },
+  "validation": {
+    "common": {
+      "data_source": "doctor-visits",
+      "span_length": 14,
+      "end_date": "today-5",
+      "min_expected_lag": {"all": "3"},
+      "max_expected_lag": {"all": "4"},
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 5,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+      "smoothed_cli",
+      "smoothed_adj_cli"
+      ]
+    }
   }
+}
 }

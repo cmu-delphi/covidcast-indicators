@@ -13,5 +13,33 @@
       "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
       "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
     }
-  }
+  },
+  "validation": {
+    "common": {
+      "data_source": "covid-act-now",
+      "span_length": 14,
+      "end_date": "today-5",
+      "min_expected_lag": {"all": "3"},
+      "max_expected_lag": {"all": "6"},
+      "suppressed_errors": [
+        {"check_name": "check_se_many_missing",
+         "signal": "pcr_specimen_total_tests"},
+        {"check_name": "check_se_not_missing_and_in_range",
+         "signal": "pcr_specimen_total_tests"},
+        {"check_name": "check_n_missing",
+         "signal": "pcr_specimen_total_tests"},
+        {"check_name": "check_se_0_when_val_0"}         
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 100,
+      "missing_se_allowed": false,
+      "missing_sample_size_allowed": false
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+      ]
+    }
+  }  
 }

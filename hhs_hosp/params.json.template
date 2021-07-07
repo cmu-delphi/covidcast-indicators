@@ -1,13 +1,15 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_filename": "hhs_hosp.log"
+    "log_filename": "./hhs_hosp.log"
   },
   "validation": {
     "common": {
       "data_source": "hhs",
       "span_length": 14,
       "end_date": "today-2",
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "7"},
       "suppressed_errors": []
     },
     "static": {

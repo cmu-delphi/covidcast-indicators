@@ -102,7 +102,7 @@ def lag_converter(lag_dict):
             else 1.
     """
     def value_interpret(value):
-        """ Convert value from string to numeric, including sunday+m,n."""
+        """Convert value from string to numeric, including sunday+m,n."""
         if value.startswith("sunday+"):
             value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
             assert value[8] == ","

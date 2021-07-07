@@ -80,7 +80,7 @@ def aggregate_frames(frames_list):
 
 def lag_converter(lag_dict):
     """Convert a dictionary of lag values into the proper format.
-    
+
     Parameters
     ----------
     lag_dict: Dict[str, str]

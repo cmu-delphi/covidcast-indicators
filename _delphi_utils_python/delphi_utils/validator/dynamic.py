@@ -5,7 +5,7 @@ from typing import Dict, Set
 import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow
+from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
 
 class DynamicValidator:
@@ -27,8 +27,10 @@ class DynamicValidator:
         max_check_lookbehind: timedelta
         # names of signals that are smoothed (7-day avg, etc)
         smoothed_signals: Set[str]
-        # how many days behind do we expect each signal to be
-        expected_lag: Dict[str, int]
+        # maximum number of days behind do we expect each signal to be
+        max_expected_lag: Dict[str, int]
+        # minimum number of days behind do we expect each signal to be
+        min_expected_lag: Dict[str, int]
 
     def __init__(self, params):
         """
@@ -50,7 +52,10 @@ class DynamicValidator:
             max_check_lookbehind=timedelta(
                 days=dynamic_params.get("ref_window_size", 7)),
             smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
-            expected_lag=dynamic_params.get("expected_lag", dict())
+            min_expected_lag=lag_converter(common_params.get(
+                "min_expected_lag", dict())),
+            max_expected_lag=lag_converter(common_params.get(
+                "max_expected_lag", dict()))
         )
 
     def validate(self, all_frames, report):

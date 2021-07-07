@@ -6,7 +6,7 @@ from typing import Dict, List
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
-from .utils import GEO_REGEX_DICT, TimeWindow
+from .utils import GEO_REGEX_DICT, TimeWindow, lag_converter
 from ..geomap import GeoMapper
 
 class StaticValidator:
@@ -26,6 +26,8 @@ class StaticValidator:
         missing_sample_size_allowed: bool
         # Valid geo values not found in the GeoMapper
         additional_valid_geo_values: Dict[str, List[str]]
+        # how many days behind do we expect each signal to be
+        max_expected_lag: Dict[str, int]
 
     def __init__(self, params):
         """
@@ -43,7 +45,8 @@ class StaticValidator:
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
             missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False),
-            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {})
+            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {}),
+            max_expected_lag=lag_converter(common_params.get("max_expected_lag", dict()))
         )
 
 

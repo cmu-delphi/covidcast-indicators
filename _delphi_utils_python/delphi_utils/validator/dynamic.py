@@ -224,11 +224,10 @@ class DynamicValidator:
         Returns:
             - None
         """
-        thres = timedelta(
-            days=self.params.expected_lag[signal_type] if signal_type in self.params.expected_lag
-            else 1)
+        min_thres = timedelta(days = self.params.max_expected_lag.get(
+            signal_type, self.params.max_expected_lag.get('all', 10)))
 
-        if max_date < self.params.generation_date - thres:
+        if max_date < self.params.generation_date - min_thres:
             report.add_raised_error(
                 ValidationFailure("check_min_max_date",
                                   geo_type=geo_type,

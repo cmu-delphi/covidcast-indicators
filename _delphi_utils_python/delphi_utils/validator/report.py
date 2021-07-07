@@ -82,7 +82,7 @@ class ValidationReport:
         if logger is not None:
             logger.info(out_str)
         print(out_str)
-        return(out_str)
+        return out_str
 
     def log(self, logger=None):
         """Log errors and warnings."""

@@ -92,7 +92,11 @@ class StaticValidator:
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
 
         # Diff expected and observed dates.
-        check_dateholes = list(set(self.params.time_window.date_seq).difference(unique_dates))
+        expected_dates = self.params.time_window.date_seq
+        max_expected_lag_overall = max(self.params.max_expected_lag.values())
+        expected_dates = [date for date in expected_dates if
+            abs((datetime.today().date() - date).days) > max_expected_lag_overall]
+        check_dateholes = list(set(expected_dates).difference(unique_dates))
         check_dateholes.sort()
 
         if check_dateholes:

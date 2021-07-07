@@ -117,7 +117,7 @@ class DynamicValidator:
 
             report.increment_total_checks()
             if isinstance(api_df_or_error, APIDataFetchError):
-                report.raised_errors.append(api_df_or_error)
+                report.add_raised_error(api_df_or_error)
                 continue
 
             # Outlier dataframe
@@ -449,7 +449,7 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            report.raised_errors.append(
+            report.add_raised_error(
                 ValidationFailure(
                     "check_positive_negative_spikes",
                     source_frame_end,

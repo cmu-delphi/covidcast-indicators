@@ -150,14 +150,18 @@ class DynamicValidator:
                 report.increment_total_checks()
 
                 if recent_df.empty:
-                    report.add_raised_error(
-                        ValidationFailure("check_missing_geo_sig_date_combo",
-                                          checking_date,
-                                          geo_type,
-                                          signal_type,
-                                          "test data for a given checking date-geo type-signal type"
-                                          " combination is missing. Source data may be missing"
-                                          " for one or more dates"))
+                    # If checking_date is within max_lag days, don't give error
+                    min_thres = timedelta(days = self.params.max_expected_lag.get(
+                        signal_type, self.params.max_expected_lag.get('all', 10)))
+                    if checking_date > self.params.generation_date - min_thres:
+                        report.add_raised_error(
+                            ValidationFailure("check_missing_geo_sig_date_combo",
+                                              checking_date,
+                                              geo_type,
+                                              signal_type,
+                                              "test data for a given checking date-geo type-"
+                                              "signal type combination is missing. Source data "
+                                              "may be missing for one or more dates"))
                     continue
 
                 # Reference dataframe runs backwards from the recent_cutoff_date
@@ -209,6 +213,7 @@ class DynamicValidator:
     def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """
         Check if time since data was generated is reasonable or too long ago.
+        The most recent data should be at least max_expected_lag from generation date
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
@@ -219,11 +224,10 @@ class DynamicValidator:
         Returns:
             - None
         """
-        thres = timedelta(
-            days=self.params.expected_lag[signal_type] if signal_type in self.params.expected_lag
-            else 1)
+        min_thres = timedelta(days = self.params.max_expected_lag.get(
+            signal_type, self.params.max_expected_lag.get('all', 10)))
 
-        if max_date < self.params.generation_date - thres:
+        if max_date < self.params.generation_date - min_thres:
             report.add_raised_error(
                 ValidationFailure("check_min_max_date",
                                   geo_type=geo_type,
@@ -235,6 +239,7 @@ class DynamicValidator:
     def check_max_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """
         Check if time since data was generated is reasonable or too recent.
+        The most recent data should be at most min_expected_lag from generation date
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
@@ -245,7 +250,10 @@ class DynamicValidator:
         Returns:
             - None
         """
-        if max_date > self.params.generation_date:
+        max_thres = timedelta(days = self.params.min_expected_lag.get(
+            signal_type, self.params.min_expected_lag.get('all', 1)))
+
+        if max_date > self.params.generation_date - max_thres:
             report.add_raised_error(
                 ValidationFailure("check_max_max_date",
                                   geo_type=geo_type,

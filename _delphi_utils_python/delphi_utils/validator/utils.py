@@ -77,3 +77,39 @@ def aggregate_frames(frames_list):
         all_frames.append(df)
 
     return pd.concat(all_frames).reset_index(drop=True)
+
+def lag_converter(lag_dict):
+    """Convert a dictionary of lag values into the proper format.
+    Parameters
+    ----------
+    lag_dict: Dict[str, str]
+        Keys are either 'all', or signal names
+        Values are either numeric or days of the week, represented by
+            "Sunday+[0-7],[0-9]", first part represents the day of the week
+            the upload happens, while the second number represents lag upon
+            upload.
+    Returns
+    ----------
+    Dict[str, int]
+        Keys are all active signal names for an indicator, or "all"
+        Values are obtained by looking at signal name entries,
+            If not present then by the 'all' indicator,
+            else 1.
+    """
+    def value_interpret(value):
+        """Convert value from string to numeric, including sunday+m,n."""
+        if value.startswith("sunday+"):
+            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+            assert value[8] == ","
+            value_num += int(value[9])
+        else:
+            value_num = int(value)
+        return value_num
+
+    # Add 'all' to lag_dict keys, give it default value of 1
+    lag_dict["all"] = lag_dict.get("all", "1")
+
+    # Converting strings to numeric output
+    output_dict = {sig:value_interpret(lag_dict.get(
+        sig)) for sig in lag_dict.keys()}
+    return output_dict

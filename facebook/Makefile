@@ -144,7 +144,8 @@ lint: coverage
 test: delphiFacebook_1.0.tar.gz
 	if [ ! -f params.json ]; then cp params.json.template params.json; fi
 	grep testthat params.json
-	R CMD check $<
+	R CMD check --test-dir=unit-tests $<
+	R CMD check --test-dir=integration-tests $<
 
 delphiFacebook_1.0.tar.gz: $(wildcard delphiFacebook/R/*.R)
 	R CMD build delphiFacebook

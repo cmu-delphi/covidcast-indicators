@@ -216,8 +216,8 @@ class DynamicValidator:
                 break
 
     def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
-        """
-        Check if time since data was generated is reasonable or too long ago.
+        """Check if time since data was generated is reasonable or too long ago.
+
         The most recent data should be at least max_expected_lag from generation date
 
         Arguments:
@@ -242,8 +242,8 @@ class DynamicValidator:
         report.increment_total_checks()
 
     def check_max_allowed_max_date(self, max_date, geo_type, signal_type, report):
-        """
-        Check if time since data was generated is reasonable or too recent.
+        """Check if time since data was generated is reasonable or too recent.
+        
         The most recent data should be at most min_expected_lag from generation date
 
         Arguments:

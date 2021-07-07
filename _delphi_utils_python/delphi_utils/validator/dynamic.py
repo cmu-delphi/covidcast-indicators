@@ -411,8 +411,9 @@ class DynamicValidator:
         api_frames_end = min(api_frames["time_value"].max(),
                              source_frame_start-timedelta(days=1))
         # pylint: enable=unused-variable
+        # Only consider outliers from the source frame
         outlier_df = all_frames.query(
-            'time_value >= @api_frames_end & time_value <= @source_frame_end')
+            'time_value > @api_frames_end & time_value <= @source_frame_end')
         outlier_df = outlier_df.sort_values(by=['geo_id', 'time_value']) \
             .reset_index(drop=True).copy()
         outliers = outlier_df[outlier_df.apply(outlier_flag, axis=1)]
@@ -428,7 +429,11 @@ class DynamicValidator:
                                 == upper_df["geo_id"]].copy()
         lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
         lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
-        lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
+        # If lower_df is empty, then make lower_compare empty too
+        if lower_df.empty:
+            lower_compare = outliers_reset[0:0]
+        else:
+            lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
         sel_lower_df = lower_df[lower_compare["geo_id"]
                                 == lower_df["geo_id"]].copy()
 

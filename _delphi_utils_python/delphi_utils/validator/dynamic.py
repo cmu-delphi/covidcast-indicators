@@ -367,9 +367,7 @@ class DynamicValidator:
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 5
-        sig_cut = 3
-        sig_consec = 2.25
+        size_cut, sig_cut, sig_consec = 5, 3, 2.25
 
         # Functions mapped to rows to determine outliers based on fstat and ststat values
 

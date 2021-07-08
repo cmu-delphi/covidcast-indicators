@@ -87,11 +87,11 @@ class ValidationReport:
         if logger is None:
             logger = get_structured_logger(__name__)
 
+        logger.info(self.summary)
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
         for warning in self.raised_warnings:
             logger.warning(str(warning))
-        logger.info(self.summary)
 
     def print_and_exit(self, logger=None, die_on_failures=True):
         """Print results and exit.

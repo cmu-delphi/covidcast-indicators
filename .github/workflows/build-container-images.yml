@@ -42,9 +42,3 @@ jobs:
           echo "using tag: --${imageTag}--"
           docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file ${INDICATOR_DOCKER_FILE} .
           docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
-
-         # ## trigger a webhook update
-         # #curl -H "Authorization: Bearer ${{ secrets.DELPHI_DEPLOY_WEBHOOK_TOKEN }}" \
-         # #     -X POST ${{ secrets.DELPHI_DEPLOY_WEBHOOK_URL }} \
-         # #     -H "Content-Type: application/x-www-form-urlencoded" \
-         # #     -d "repository=ghcr.io/${{ github.repository }}&tag=$imageTag"

@@ -26,7 +26,7 @@ Admins will assign issues to one or more people based on balancing expediency, e
 
 So, how does one go about developing a pipeline for a new data source?
 
-**tl;dr**
+### tl;dr
 
 1. Create your new indicator branch from `main`.
 2. Build it using the appropriate template, following the guidelines in the included README.md and REVIEW.md files.
@@ -52,7 +52,7 @@ git checkout -b dev-my-feature-branch
 
 Create a directory for your new indicator by making a copy of `_template_r` or `_template_python` depending on the programming language you intend to use. If using Python, add the name of the directory to the list found in `jobs > build > strategy > matrix > packages` in `.github/workflows/python-ci.yml`, which will enable automated checks for your indicator when you make PRs. The template copies of `README.md` and `REVIEW.md` include the minimum requirements for code structure, documentation, linting, testing, and method of configuration. Beyond that, we don't have any established restrictions on implementation; you can look at other existing indicators see some examples of code layout, organization, and general approach.
 
-- Consult your peers with questions! :handshake:
+* Consult your peers with questions! :handshake:
 
 Once you have something that runs locally and passes tests you set up your remote branch eventual review and production deployment.
 
@@ -75,9 +75,9 @@ becomes available to the public.
 
 Once you have your branch set up you should get in touch with a platform engineer to pair up on the remaining production needs. These include:
 
-- Adding the necessary Jenkins scripts for your indicator.
-- Preparing the runtime host with any Automation configuration necessities.
-- Reviewing the workflow to make sure it meets the general guidelines and will run as expected on the runtime host.
+* Adding the necessary Jenkins scripts for your indicator.
+* Preparing the runtime host with any Automation configuration necessities.
+* Reviewing the workflow to make sure it meets the general guidelines and will run as expected on the runtime host.
 
 Once all the last mile configuration is in place you can create a pull request against `prod` to initiate the CI/CD pipeline which will build, test, and package your indicator for deployment.
 
@@ -97,11 +97,46 @@ Currently, the production indicators all live and run on the venerable and peren
 
 We use a branch-based git workflow coupled with [Jenkins](https://www.jenkins.io/) and [Ansible](https://www.ansible.com/) to build, test, package, and deploy each indicator individually to the runtime host.
 
-- Jenkins dutifully manages the whole process for us by executing several "stages" in the context of a [CI/CD pipeline](https://dzone.com/articles/learn-how-to-setup-a-cicd-pipeline-from-scratch). Each stage does something unique, building on the previous stage. The stages are:
-  - Environment - Sets up some environment-specific needs that the other stages depend on.
-  - Build - Create the Python venv on the Jenkins host.
-  - Test - Run linting and unit tests.
-  - Package - Tar and gzip the built environment.
-  - Deploy - Trigger an Ansible playbook to place the built package onto the runtime host, place any necessary production configuration, and adjust the runtime envirnemnt (if necessary).
+* Jenkins dutifully manages the whole process for us by executing several "stages" in the context of a [CI/CD pipeline](https://dzone.com/articles/learn-how-to-setup-a-cicd-pipeline-from-scratch). Each stage does something unique, building on the previous stage. The stages are:
+  * Environment - Sets up some environment-specific needs that the other stages depend on.
+  * Build - Create the Python venv on the Jenkins host.
+  * Test - Run linting and unit tests.
+  * Package - Tar and gzip the built environment.
+  * Deploy - Trigger an Ansible playbook to place the built package onto the runtime host, place any necessary production configuration, and adjust the runtime envirnemnt (if necessary).
 
 There are several additional Jenkins-specific files that will need to be created for each indicator, as well as some configuration additions to the runtime host. It will be important to pair with a platform engineer to prepare the necessary production environment needs, test the workflow, validate on production, and ultimately sign off on a production release.
+
+### Preparing container images of indicators
+
+It may be desirable to build a container image from an indicator. To do this:
+
+* Edit the `.github/workflows/build-container-images.yml` file and add your indicator directory name to the `matrix.packages` section of the `jobs:` block:
+
+  ```yaml
+  ...
+  jobs:
+    build:
+      runs-on: ubuntu-latest
+      strategy:
+        matrix:
+          packages: [ new_indicator ] # indicator directory name
+  ...
+  ```
+
+* Create a suitable Dockerfile in the root of your indicator directory.
+
+* GitHub Actions will try to build this for you and register it in our private repo.
+
+Currently we will build container images off of `main` and `prod` branches. These can be pulled by systems or humans that have access to the registry.
+
+* `main` builds create a registered image of:
+
+  ```text
+  ghcr.io/cmu-delphi/covidcast-indicators-${indicator_name}:dev
+  ```
+
+* `prod` builds create a registered image of:
+
+  ```text
+  ghcr.io/cmu-delphi/covidcast-indicators-${indicator_name}:latest
+  ```

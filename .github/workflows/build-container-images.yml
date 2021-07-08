@@ -2,14 +2,14 @@ name: Build indicator container images and upload to registry
 
 on:
   push:
-    branches: [ main, prod ]
+    branches: [ main, prod, add-container-build-workflow ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [""]
+        packages: [ "" ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -22,8 +22,6 @@ jobs:
           password: ${{ secrets.CMU_DELPHI_DEPLOY_MACHINE_PAT }}
 
       - name: Build, tag, and push image to Github
-        env:
-          INDICATOR_DOCKER_FILE: ${{ github.workspace }}/${{ matrix.packages }}/Dockerfile
         run: |
           baseRef="${GITHUB_REF#*/}"
           baseRef="${baseRef#*/}"
@@ -38,7 +36,7 @@ jobs:
             imageTag="${baseRef//\//_}" # replace `/` with `_` in branch name
             ;;
           esac
-          cd ${{ matrix.packages }}
+          cd ${{ github.workspace }}/${{ matrix.packages }}
           echo "using tag: --${imageTag}--"
-          docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file ${INDICATOR_DOCKER_FILE} .
+          docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
           docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag

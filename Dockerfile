@@ -8,10 +8,10 @@ RUN install2.r --error \
     stringr \
     stringi \
     data.table \
-    roxygen2
+    roxygen2 \
+    Rcpp
 RUN apt-get update && apt-get install -qq -y python3-venv
 
-ADD ./_delphi_utils_python/ /_delphi_utils_python/
 ADD ./facebook/delphiFacebook /facebook/delphiFacebook/
 ADD ./facebook/Makefile /facebook/Makefile
 WORKDIR /facebook/

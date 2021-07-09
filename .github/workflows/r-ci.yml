@@ -10,7 +10,7 @@ name: R facebook survey
 
 on:
   push:
-    branches: [ main, prod, 'release/*' ]
+    branches: [ main, prod ]
   pull_request:
     types: [ opened, synchronize, reopened, ready_for_review ]
     branches: [ main, prod ]

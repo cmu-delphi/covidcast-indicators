@@ -42,7 +42,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     if validator:
         validation_report = validator.validate()
         validation_report.log(get_structured_logger(
-            __name__,
+            name = indicator_fn.__module__,
             filename=params["common"].get("log_filename", None)))
     if archiver and (not validator or validation_report.success()):
         archiver.archive()

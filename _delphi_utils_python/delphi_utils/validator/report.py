@@ -87,6 +87,7 @@ class ValidationReport:
         if logger is None:
             logger = get_structured_logger(__name__)
 
+        self.set_summary()
         logger.info(self.summary)
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
@@ -101,7 +102,6 @@ class ValidationReport:
         die_on_failures: bool
             Whether to return non-zero status if any failures were encountered.
         """
-        self.set_summary()
         self.log(logger)
         if self.success():
             sys.exit(0)

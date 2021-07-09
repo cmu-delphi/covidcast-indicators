@@ -20,11 +20,12 @@ questions. These mapping files are created manually and need to be updated for
 every new survey wave.
 
 * `item_replacement_map.csv`: Lists in-survey name of an `new_item` and the
-  in-survey name of the `old_item` it replaces. `new_item` should be the name
-  of a single item and be unique, but the `old_item` column has no formatting
-  requirements. It can hold a list of items, if the corresponding new survey
-  item is replacing multiple old questions, and a given item name can appear
-  in multiple rows of the `old_item` field.
+  in-survey name(s) of the `old_item`(s) it replaces. `new_item` should be the
+  name of a single item and be unique; the `old_item` column should be a
+  string. However, `old_item` has no other formatting requirements. For
+  example, it can list several item names (e.g. "A1, A2"), if the
+  corresponding new survey item is replacing multiple old questions. A given
+  item name can also appear in multiple rows of the `old_item` field.
 * `item_shortquestion_map.csv`: Lists in-survey name of an `item` and a short
   description of the contents of the question. `item` should be the name of a
   single item and be unique, but the `description` column has no formatting

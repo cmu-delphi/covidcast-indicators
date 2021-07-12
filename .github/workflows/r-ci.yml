@@ -49,9 +49,9 @@ jobs:
       - name: Install R dependencies
         run: |
           install.packages("remotes")
-          remotes::update_packages(c("rcmdcheck", "mockr"), dependencies=TRUE, upgrade="always")
+          remotes::update_packages(c("rcmdcheck", "mockr"), upgrade="always")
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
-          remotes::update_packages(dependency_list$package, dependencies=TRUE, upgrade="always")
+          remotes::update_packages(dependency_list$package, upgrade="always")
         shell: Rscript {0}
       - name: Check
         run: |

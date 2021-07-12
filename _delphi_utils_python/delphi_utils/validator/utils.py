@@ -83,7 +83,7 @@ def lag_converter(lag_dict):
 
     Parameters
     ----------
-    lag_dict: Dict[str, str]
+    lag_dict: Dict[str, str or int]
         Keys are either 'all', or signal names
         Values are either numeric or days of the week, represented by
             "Sunday+[0-7],[0-9]", first part represents the day of the week

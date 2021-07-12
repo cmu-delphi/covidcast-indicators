@@ -97,8 +97,10 @@ class StaticValidator:
         # Diff expected and observed dates.
         expected_dates = self.params.time_window.date_seq
         max_expected_lag_overall = max(self.params.max_expected_lag.values())
+        # Only check for date if it should definitely be present,
+        # i.e if it is more than max_expected_lag since the checking date
         expected_dates = [date for date in expected_dates if
-            abs((datetime.today().date() - date).days) > max_expected_lag_overall]
+            ((datetime.today().date() - date).days) > max_expected_lag_overall]
         check_dateholes = list(set(expected_dates).difference(unique_dates))
         check_dateholes.sort()
 

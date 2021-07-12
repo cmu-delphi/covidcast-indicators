@@ -192,20 +192,7 @@ class DynamicValidator:
                                           "be performed"))
                     continue
 
-                # If API data is missing (e.g. non-daily updates),
-                # Take data from geo_sig_df
-                reference_api_df_max_date = reference_api_df.time_value.max()
-                if reference_api_df_max_date < reference_end_date:
-                    # Making sure geo_sig_df is similar:
-                    geo_sig_df_supplement = geo_sig_df.query(
-                        'time_value <= @reference_end_date & time_value > \
-                        @reference_api_df_max_date')[[
-                        "geo_id", "val", "se", "sample_size", "time_value"]]
-                    geo_sig_df_supplement["time_value"] = \
-                        pd.to_datetime(geo_sig_df_supplement["time_value"],
-                            format = "%Y-%m-%d %H:%M:%S")
-                    reference_api_df = pd.concat(
-                        [reference_api_df, geo_sig_df_supplement])
+                self.check_reference_api_df(reference_api_df, geo_sig_df, reference_end_date)
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
@@ -268,6 +255,32 @@ class DynamicValidator:
                                   message="date of most recent generated file seems too recent"))
 
         report.increment_total_checks()
+
+    def check_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):
+        """Check if API data is missing, and supplement from test data.
+
+        Arguments:
+            - reference_api_df: API data within lookbehind range
+            - geo_sig_df: Test data
+            - reference_end_date: Supposed end date of reference data
+
+        Returns:
+            - reference_api_df: Supplemented version of original
+        """
+        reference_api_df_max_date = reference_api_df.time_value.max()
+        if reference_api_df_max_date < reference_end_date:
+            # Querying geo_sig_df, only taking relevant rows
+            geo_sig_df_supplement = geo_sig_df.query(
+                'time_value <= @reference_end_date & time_value > \
+                @reference_api_df_max_date')[[
+                "geo_id", "val", "se", "sample_size", "time_value"]]
+            # Matching time_value format
+            geo_sig_df_supplement["time_value"] = \
+                pd.to_datetime(geo_sig_df_supplement["time_value"],
+                    format = "%Y-%m-%d %H:%M:%S")
+            reference_api_df = pd.concat(
+                [reference_api_df, geo_sig_df_supplement])
+        return reference_api_df
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date,
                                     geo_type, signal_type, report):

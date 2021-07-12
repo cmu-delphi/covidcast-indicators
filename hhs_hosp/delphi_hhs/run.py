@@ -166,7 +166,7 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_confirmed
         })
-    if sig == SUM_CONF_SUSP:
+    elif sig == SUM_CONF_SUSP:
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
@@ -176,8 +176,9 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
         })
+    else:
+        raise Exception(
+            "Bad programmer: signal '{sig}' in SIGNALS but not handled in make_signal"
+        )
     df["val"] = df.val.astype(float)
     return df
-    raise Exception(
-        "Bad programmer: signal '{sig}' in SIGNALS but not handled in make_signal"
-    )

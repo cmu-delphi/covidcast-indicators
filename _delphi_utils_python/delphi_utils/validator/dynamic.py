@@ -192,6 +192,21 @@ class DynamicValidator:
                                           "be performed"))
                     continue
 
+                # If API data is missing (e.g. non-daily updates),
+                # Take data from geo_sig_df
+                reference_api_df_max_date = reference_api_df.time_value.max()
+                if reference_api_df_max_date < reference_end_date:
+                    # Making sure geo_sig_df is similar:
+                    geo_sig_df_supplement = geo_sig_df.query(
+                        'time_value <= @reference_end_date & time_value > \
+                        @reference_api_df_max_date')[[
+                        "geo_id", "val", "se", "sample_size", "time_value"]]
+                    geo_sig_df_supplement["time_value"] = \
+                        pd.to_datetime(geo_sig_df_supplement["time_value"],
+                            format = "%Y-%m-%d %H:%M:%S")
+                    reference_api_df = pd.concat(
+                        [reference_api_df, geo_sig_df_supplement])
+
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 

@@ -96,7 +96,9 @@ class StaticValidator:
 
         # Diff expected and observed dates.
         expected_dates = self.params.time_window.date_seq
-        max_expected_lag_overall = max(self.params.max_expected_lag.values())
+        max_expected_lag_overall = 10 if self.params.max_expected_lag else 
+            max(self.params.max_expected_lag.values())
+
         # Only check for date if it should definitely be present,
         # i.e if it is more than max_expected_lag since the checking date
         expected_dates = [date for date in expected_dates if

@@ -63,14 +63,14 @@ def test_make_signal():
     expected_confirmed = pd.DataFrame({
         'state': ['na'],
         'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [5],
+        'val': [5.],
     })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED))
 
     expected_sum = pd.DataFrame({
         'state': ['na'],
         'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [15],
+        'val': [15.],
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
 
@@ -87,7 +87,7 @@ def test_make_geo():
         'state': ['PA', 'WV', 'OH'],
         'state_code': [42, 54, 39],
         'timestamp': [test_timestamp] * 3,
-        'val': [1, 2, 4],
+        'val': [1., 2., 4.],
     })
 
     template = {
@@ -104,12 +104,12 @@ def test_make_geo():
             dict(template,
                  geo_id=['3', '5'],
                  timestamp=[test_timestamp] * 2,
-                 val=[3, 4])),
+                 val=[3., 4.])),
         "nation": pd.DataFrame(
             dict(template,
                  geo_id=['us'],
                  timestamp=[test_timestamp],
-                 val=[7]))
+                 val=[7.]))
     }
     for geo, expected in expecteds.items():
         result = make_geo(data, geo, geo_mapper)

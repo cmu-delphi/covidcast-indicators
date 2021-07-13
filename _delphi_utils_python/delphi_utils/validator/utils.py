@@ -114,9 +114,6 @@ def lag_converter(lag_dict):
             value_num = int(value)
         return value_num
 
-    # Add 'all' to lag_dict keys, give it default value of 1
-    lag_dict["all"] = lag_dict.get("all", "1")
-
     # Converting strings to numeric output
     output_dict = {sig:value_interpret(lag_dict.get(
         sig)) for sig in lag_dict.keys()}

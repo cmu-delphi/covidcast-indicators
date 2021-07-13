@@ -159,6 +159,9 @@ get_file_name <- function(params, geo_type, groupby_vars) {
     paste(aggregation_type, collapse = "_"),
     sep = "_"
   )
+  if (!is.null(params$debug) && params$debug) {
+    file_name <- paste0("DebugOn-DoNotShare_", file_name)
+  }
   file_name <- paste0(file_name, ".csv")
   return(file_name)
 }

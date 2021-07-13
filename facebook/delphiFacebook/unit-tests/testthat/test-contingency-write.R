@@ -50,3 +50,18 @@ test_that("testing write_contingency_tables command", {
   df <- read_csv(file.path(tdir, "20200510_20200516_weekly_state_tested.csv"))
   expect_equivalent(df, test_data)
 })
+
+test_that("testing command to create output filenames", {
+  params <- list(
+    debug=TRUE,
+    aggregate_range="month",
+    start_date=as.Date("2021-01-01"),
+    end_date=as.Date("2021-01-02")
+  )
+  out <- get_file_name(params, "nation", c("gender"))
+  expected <- "DebugOn-DoNotShare_20210101_20210102_monthly_nation_gender.csv"
+  
+  params$debug <- FALSE
+  out <- get_file_name(params, "nation", c("gender", "race", "ethnicity"))
+  expected <- "20210101_20210102_monthly_nation_ethnicity_gender_race.csv"
+})

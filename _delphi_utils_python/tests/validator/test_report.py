@@ -40,8 +40,9 @@ class TestValidationReport:
         report.add_raised_warning(ImportWarning("right import"))
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
+        report.set_summary()
 
-        assert report.summary() ==\
+        assert report.summary ==\
             "3 checks run\n1 checks failed\n1 checks suppressed\n2 warnings\n"
 
     def test_log(self):

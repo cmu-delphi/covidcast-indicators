@@ -8,6 +8,12 @@
 #'
 #' @export
 run_contingency_tables <- function(params) {
+  if (!is.null(params$debug) && params$debug) {
+    debug_msg <- "!!!debug is on and the standard privacy threshold for sample size is disabled!!!"
+    msg_plain(debug_msg)
+    warning(debug_msg)
+  }
+  
   if ( !is.null(params$aggs_in) ) {
     if ( !file.exists(params$aggs_in) ) {
       stop("requested aggregate-setting file does not exist")

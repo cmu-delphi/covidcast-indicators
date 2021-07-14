@@ -27,9 +27,9 @@ class TimeWindow:
 
     def __post_init__(self):
         """Derive the start date of this span."""
-        self.start_date = self.end_date - self.span_length
+        self.start_date = self.end_date - self.span_length + timedelta(days = 1)
         self.date_seq = [self.start_date + timedelta(days=x)
-                         for x in range(self.span_length.days + 1)]
+                         for x in range(self.span_length.days)]
 
     @classmethod
     def from_params(cls, end_date_str: str, span_length_int: int):
@@ -41,6 +41,9 @@ class TimeWindow:
             else:
                 assert end_date_str.startswith("today-")
                 days_back = int(end_date_str[6:])
+            end_date = date.today() - timedelta(days=days_back)
+        elif end_date_str.startswith("sunday+"):
+            days_back = (date.isoweekday() - int(end_date_str[7:])) % 7
             end_date = date.today() - timedelta(days=days_back)
         else:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()

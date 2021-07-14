@@ -5,7 +5,7 @@ from typing import Dict, Set
 import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow
+from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
 
 class DynamicValidator:
@@ -27,8 +27,10 @@ class DynamicValidator:
         max_check_lookbehind: timedelta
         # names of signals that are smoothed (7-day avg, etc)
         smoothed_signals: Set[str]
-        # how many days behind do we expect each signal to be
-        expected_lag: Dict[str, int]
+        # maximum number of days behind do we expect each signal to be
+        max_expected_lag: Dict[str, int]
+        # minimum number of days behind do we expect each signal to be
+        min_expected_lag: Dict[str, int]
 
     def __init__(self, params):
         """
@@ -50,7 +52,10 @@ class DynamicValidator:
             max_check_lookbehind=timedelta(
                 days=dynamic_params.get("ref_window_size", 7)),
             smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
-            expected_lag=dynamic_params.get("expected_lag", dict())
+            min_expected_lag=lag_converter(common_params.get(
+                "min_expected_lag", dict())),
+            max_expected_lag=lag_converter(common_params.get(
+                "max_expected_lag", dict()))
         )
 
     def validate(self, all_frames, report):
@@ -117,7 +122,7 @@ class DynamicValidator:
 
             report.increment_total_checks()
             if isinstance(api_df_or_error, APIDataFetchError):
-                report.raised_errors.append(api_df_or_error)
+                report.add_raised_error(api_df_or_error)
                 continue
 
             # Outlier dataframe
@@ -150,14 +155,18 @@ class DynamicValidator:
                 report.increment_total_checks()
 
                 if recent_df.empty:
-                    report.add_raised_error(
-                        ValidationFailure("check_missing_geo_sig_date_combo",
-                                          checking_date,
-                                          geo_type,
-                                          signal_type,
-                                          "test data for a given checking date-geo type-signal type"
-                                          " combination is missing. Source data may be missing"
-                                          " for one or more dates"))
+                    # If checking_date is within max_lag days, don't give error
+                    min_thres = timedelta(days = self.params.max_expected_lag.get(
+                        signal_type, self.params.max_expected_lag.get('all', 10)))
+                    if checking_date > self.params.generation_date - min_thres:
+                        report.add_raised_error(
+                            ValidationFailure("check_missing_geo_sig_date_combo",
+                                              checking_date,
+                                              geo_type,
+                                              signal_type,
+                                              "test data for a given checking date-geo type-"
+                                              "signal type combination is missing. Source data "
+                                              "may be missing for one or more dates"))
                     continue
 
                 # Reference dataframe runs backwards from the recent_cutoff_date
@@ -207,8 +216,9 @@ class DynamicValidator:
                 break
 
     def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
-        """
-        Check if time since data was generated is reasonable or too long ago.
+        """Check if time since data was generated is reasonable or too long ago.
+
+        The most recent data should be at least max_expected_lag from generation date
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
@@ -219,11 +229,10 @@ class DynamicValidator:
         Returns:
             - None
         """
-        thres = timedelta(
-            days=self.params.expected_lag[signal_type] if signal_type in self.params.expected_lag
-            else 1)
+        min_thres = timedelta(days = self.params.max_expected_lag.get(
+            signal_type, self.params.max_expected_lag.get('all', 10)))
 
-        if max_date < self.params.generation_date - thres:
+        if max_date < self.params.generation_date - min_thres:
             report.add_raised_error(
                 ValidationFailure("check_min_max_date",
                                   geo_type=geo_type,
@@ -233,8 +242,9 @@ class DynamicValidator:
         report.increment_total_checks()
 
     def check_max_allowed_max_date(self, max_date, geo_type, signal_type, report):
-        """
-        Check if time since data was generated is reasonable or too recent.
+        """Check if time since data was generated is reasonable or too recent.
+
+        The most recent data should be at most min_expected_lag from generation date
 
         Arguments:
             - max_date: date of most recent data to be validated; datetime format.
@@ -245,7 +255,10 @@ class DynamicValidator:
         Returns:
             - None
         """
-        if max_date > self.params.generation_date:
+        max_thres = timedelta(days = self.params.min_expected_lag.get(
+            signal_type, self.params.min_expected_lag.get('all', 1)))
+
+        if max_date > self.params.generation_date - max_thres:
             report.add_raised_error(
                 ValidationFailure("check_max_max_date",
                                   geo_type=geo_type,
@@ -354,9 +367,7 @@ class DynamicValidator:
         # check on the minimum value reported, sig_cut is a check
         # on the ftstat or ststat reported (t-statistics) and sig_consec
         # is a lower check for determining outliers that are next to each other.
-        size_cut = 5
-        sig_cut = 3
-        sig_consec = 2.25
+        size_cut, sig_cut, sig_consec = 5, 3, 2.25
 
         # Functions mapped to rows to determine outliers based on fstat and ststat values
 
@@ -428,7 +439,11 @@ class DynamicValidator:
                                 == upper_df["geo_id"]].copy()
         lower_index = list(filter(lambda x: x >= 0, list(outliers.index-1)))
         lower_df = outlier_df.iloc[lower_index, :].reset_index(drop=True)
-        lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
+        # If lower_df is empty, then make lower_compare empty too
+        if lower_df.empty:
+            lower_compare = outliers_reset[0:0]
+        else:
+            lower_compare = outliers_reset[-len(lower_index):].reset_index(drop=True)
         sel_lower_df = lower_df[lower_compare["geo_id"]
                                 == lower_df["geo_id"]].copy()
 
@@ -449,7 +464,7 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            report.raised_errors.append(
+            report.add_raised_error(
                 ValidationFailure(
                     "check_positive_negative_spikes",
                     source_frame_end,

@@ -6,6 +6,72 @@ import pandas as pd
 from delphi_utils.validator.report import ValidationReport
 from delphi_utils.validator.dynamic import DynamicValidator
 
+class TestReferencePadding:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+
+    def test_no_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-06", "%Y-%m-%d").date())
+
+        assert new_ref_df.equals(ref_df)
+
+    def test_half_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        ref_data = {"val": [2, 2, 2, 2, 2, 2], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+        test_data = {"val": [1, 1, 1, 1, 1, 1], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-06", end="2021-01-11")}
+        ref_df = pd.DataFrame(ref_data)
+        test_df = pd.DataFrame(test_data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+
+        # Check it only takes missing dates - so the last 5 dates
+        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
+            "%Y-%m-%d").date()
+        assert new_ref_df.shape[0] == 11
+        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+
+    def test_full_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        ref_data = {"val": [2, 2, 2, 2, 2, 2], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+        test_data = {"val": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                     "se": [np.nan] * 12,
+                "sample_size": [np.nan] * 12, "geo_id": ["1"] * 12,
+                "time_value": pd.date_range(start="2021-01-06", end="2021-01-17")}
+        ref_df = pd.DataFrame(ref_data)
+        test_df = pd.DataFrame(test_data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+
+        # Check it only takes missing dates up to the day before the reference
+        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",
+            "%Y-%m-%d").date()
+        assert new_ref_df.shape[0] == 15
+        assert new_ref_df.loc[:, "val"].iloc[5] == 2
 
 class TestCheckRapidChange:
     params = {

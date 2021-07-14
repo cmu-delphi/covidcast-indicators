@@ -192,7 +192,8 @@ class DynamicValidator:
                                           "be performed"))
                     continue
 
-                self.check_reference_api_df(reference_api_df, geo_sig_df, reference_end_date)
+                reference_api_df = self.pad_reference_api_df(
+                    reference_api_df, geo_sig_df, reference_end_date)
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
@@ -256,7 +257,7 @@ class DynamicValidator:
 
         report.increment_total_checks()
 
-    def check_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):
+    def pad_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):
         """Check if API data is missing, and supplement from test data.
 
         Arguments:

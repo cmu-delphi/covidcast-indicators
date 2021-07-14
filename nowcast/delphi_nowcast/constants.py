@@ -33,7 +33,7 @@ class Default:
     FIRST_DATA_DATE = datetime.date(2020, 5, 1)
 
     # Ground truth parameters
-    GROUND_TRUTH_INDICATOR = SensorConfig('usa-facts',
+    GROUND_TRUTH_INDICATOR = SensorConfig('jhu-csse',
                                           'confirmed_incidence_prop',
                                           'test_truth',
                                           3)

@@ -140,8 +140,12 @@ class DynamicValidator:
             # by default) data from the API.
             for checking_date in self.params.time_window.date_seq:
 
-                recent_df, reference_api_df = self.create_dfs(
-                    geo_sig_df, checking_date, geo_type, signal_type, report)
+                create_dfs_or_error = self.create_dfs(
+                    geo_sig_df, api_df_or_error, checking_date, geo_type, signal_type, report)
+
+                if not create_dfs_or_error:
+                    continue
+                recent_df, reference_api_df = create_dfs_or_error
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
@@ -209,7 +213,23 @@ class DynamicValidator:
 
         report.increment_total_checks()
 
-    def create_dfs(self, geo_sig_df, checking_date, geo_type, signal_type, report):
+    def create_dfs(self, geo_sig_df, api_df_or_error, checking_date, geo_type, signal_type, report):
+        """ Create recent_df and reference_api_df from params.
+
+        Raises error if recent_df is empty.
+
+        Arguments:
+            - geo_sig_df: Pandas dataframe of test data
+            - api_df_or_error: pandas dataframe of reference data, either from the
+            COVIDcast API or semirecent data
+            - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - signal_type: str; signal name as in the CSV name
+            - report: ValidationReport; report where results are added
+
+        Returns:
+            - False if recent_df is empty, else (recent_df, reference_api_df)
+            (after reference_api_df has been padded if necessary)
+        """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
         # Choosing 1 day checks just the daily data.
@@ -235,7 +255,7 @@ class DynamicValidator:
                                   "test data for a given checking date-geo type-signal type"
                                   " combination is missing. Source data may be missing"
                                   " for one or more dates"))
-            continue
+            return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date
         #
@@ -267,9 +287,11 @@ class DynamicValidator:
                                   signal_type,
                                   "reference data is empty; comparative checks could not "
                                   "be performed"))
-            continue
+            return False
 
-        reference_api_df = self.pad_reference_api_df(reference_api_df, geo_sig_df, reference_end_date)
+        reference_api_df = self.pad_reference_api_df(
+            reference_api_df, geo_sig_df, reference_end_date)
+
         return (geo_sig_df, reference_api_df)
 
     def pad_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):

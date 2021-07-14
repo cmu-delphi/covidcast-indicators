@@ -86,13 +86,12 @@ def lag_converter(lag_dict):
 
     Parameters
     ----------
-    lag_dict: Dict[str, str]
+    lag_dict: Dict[str, str or int]
         Keys are either 'all', or signal names
         Values are either numeric or days of the week, represented by
             "Sunday+[0-7],[0-9]", first part represents the day of the week
             the upload happens, while the second number represents lag upon
             upload.
-
     Returns
     ----------
     Dict[str, int]
@@ -103,16 +102,20 @@ def lag_converter(lag_dict):
     """
     def value_interpret(value):
         """Convert value from string to numeric, including sunday+m,n."""
-        if value.startswith("sunday+"):
-            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+        if isinstance(value, int):
+            value_num = value
+        elif value.startswith("sunday+"):
+            # Check that the number proceeding sunday+ has length of 1
             assert value[8] == ","
-            value_num += int(value[9])
+            # Value_num calculates the number of days between today and the
+            # Update day, except that if both days of the week are the same,
+            # Expected lag is 7 (in case updates aren't in yet)
+            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+            # Add on expected lag to lag from weekdays
+            value_num += int(value[9:])
         else:
             value_num = int(value)
         return value_num
-
-    # Add 'all' to lag_dict keys, give it default value of 1
-    lag_dict["all"] = lag_dict.get("all", "1")
 
     # Converting strings to numeric output
     output_dict = {sig:value_interpret(lag_dict.get(

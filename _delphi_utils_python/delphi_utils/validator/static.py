@@ -47,7 +47,6 @@ class StaticValidator:
             missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False),
             additional_valid_geo_values = static_params.get('additional_valid_geo_values', {}),
             max_expected_lag=lag_converter(common_params.get("max_expected_lag", dict()))
-
         )
 
 
@@ -96,7 +95,18 @@ class StaticValidator:
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
 
         # Diff expected and observed dates.
-        check_dateholes = list(set(self.params.time_window.date_seq).difference(unique_dates))
+        expected_dates = self.params.time_window.date_seq
+
+        if len(self.params.max_expected_lag) == 0:
+            max_expected_lag_overall = 10
+        else:
+            max_expected_lag_overall = max(self.params.max_expected_lag.values())
+
+        # Only check for date if it should definitely be present,
+        # i.e if it is more than max_expected_lag since the checking date
+        expected_dates = [date for date in expected_dates if
+            ((datetime.today().date() - date).days) > max_expected_lag_overall]
+        check_dateholes = list(set(expected_dates).difference(unique_dates))
         check_dateholes.sort()
 
         if check_dateholes:

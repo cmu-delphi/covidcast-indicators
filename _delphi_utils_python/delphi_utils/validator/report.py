@@ -36,6 +36,7 @@ class ValidationReport:
         self.raised_errors = []
         self.raised_warnings = []
         self.unsuppressed_errors = []
+        self.summary = ""
 
     def add_raised_error(self, error):
         """Add an error to the report.
@@ -73,19 +74,21 @@ class ValidationReport:
         """
         self.raised_warnings.append(warning)
 
-    def summary(self):
+    def set_summary(self):
         """Represent summary of report as a string."""
         out_str = f"{self.total_checks} checks run\n"
         out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
         out_str += f"{self.num_suppressed} checks suppressed\n"
         out_str += f"{len(self.raised_warnings)} warnings\n"
-        return out_str
+        self.summary = out_str
 
     def log(self, logger=None):
         """Log errors and warnings."""
         if logger is None:
             logger = get_structured_logger(__name__)
 
+        self.set_summary()
+        logger.info(self.summary)
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
         for warning in self.raised_warnings:
@@ -99,7 +102,6 @@ class ValidationReport:
         die_on_failures: bool
             Whether to return non-zero status if any failures were encountered.
         """
-        print(self.summary())
         self.log(logger)
         if self.success():
             sys.exit(0)

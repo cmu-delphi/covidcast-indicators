@@ -69,14 +69,6 @@ class DynamicValidator:
         report: ValidationReport
             report to which the results of these checks will be added
         """
-        # recent_lookbehind: start from the check date and working backward in time,
-        # how many days at a time do we want to check for anomalies?
-        # Choosing 1 day checks just the daily data.
-        recent_lookbehind = timedelta(days=1)
-
-        # semirecent_lookbehind: starting from the check date and working backward
-        # in time, how many days do we use to form the reference statistics.
-        semirecent_lookbehind = timedelta(days=7)
 
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
@@ -147,62 +139,9 @@ class DynamicValidator:
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
             for checking_date in self.params.time_window.date_seq:
-                recent_cutoff_date = checking_date - \
-                    recent_lookbehind + timedelta(days=1)
-                recent_df = geo_sig_df.query(
-                    'time_value <= @checking_date & time_value >= @recent_cutoff_date')
 
-                report.increment_total_checks()
-
-                if recent_df.empty:
-                    # If checking_date is within max_lag days, don't give error
-                    min_thres = timedelta(days = self.params.max_expected_lag.get(
-                        signal_type, self.params.max_expected_lag.get('all', 10)))
-                    if checking_date > self.params.generation_date - min_thres:
-                        report.add_raised_error(
-                            ValidationFailure("check_missing_geo_sig_date_combo",
-                                              checking_date,
-                                              geo_type,
-                                              signal_type,
-                                              "test data for a given checking date-geo type-"
-                                              "signal type combination is missing. Source data "
-                                              "may be missing for one or more dates"))
-                    continue
-
-                # Reference dataframe runs backwards from the recent_cutoff_date
-                #
-                # These variables are interpolated into the call to `api_df_or_error.query()`
-                # below but pylint doesn't recognize that.
-                # pylint: disable=unused-variable
-                reference_start_date = recent_cutoff_date - \
-                    min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
-                    timedelta(days=1)
-                if signal_type in self.params.smoothed_signals:
-                    # Add an extra 7 days to the reference period.
-                    reference_start_date = reference_start_date - \
-                        timedelta(days=7)
-
-                reference_end_date = recent_cutoff_date - timedelta(days=1)
-                # pylint: enable=unused-variable
-
-                # Subset API data to relevant range of dates.
-                reference_api_df = api_df_or_error.query(
-                    "time_value >= @reference_start_date & time_value <= @reference_end_date")
-
-                report.increment_total_checks()
-
-                if reference_api_df.empty:
-                    report.add_raised_error(
-                        ValidationFailure("empty_reference_data",
-                                          checking_date,
-                                          geo_type,
-                                          signal_type,
-                                          "reference data is empty; comparative checks could not "
-                                          "be performed"))
-                    continue
-
-                reference_api_df = self.pad_reference_api_df(
-                    reference_api_df, geo_sig_df, reference_end_date)
+                recent_df, reference_api_df = self.create_dfs(
+                    geo_sig_df, checking_date, geo_type, signal_type, report)
 
                 self.check_max_date_vs_reference(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
@@ -269,6 +208,69 @@ class DynamicValidator:
                                   message="date of most recent generated file seems too recent"))
 
         report.increment_total_checks()
+
+    def create_dfs(self, geo_sig_df, checking_date, geo_type, signal_type, report):
+        # recent_lookbehind: start from the check date and working backward in time,
+        # how many days at a time do we want to check for anomalies?
+        # Choosing 1 day checks just the daily data.
+        recent_lookbehind = timedelta(days=1)
+
+        # semirecent_lookbehind: starting from the check date and working backward
+        # in time, how many days do we use to form the reference statistics.
+        semirecent_lookbehind = timedelta(days=7)
+
+        recent_cutoff_date = checking_date - \
+            recent_lookbehind + timedelta(days=1)
+        recent_df = geo_sig_df.query(
+            'time_value <= @checking_date & time_value >= @recent_cutoff_date')
+
+        report.increment_total_checks()
+
+        if recent_df.empty:
+            report.add_raised_error(
+                ValidationFailure("check_missing_geo_sig_date_combo",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
+                                  "test data for a given checking date-geo type-signal type"
+                                  " combination is missing. Source data may be missing"
+                                  " for one or more dates"))
+            continue
+
+        # Reference dataframe runs backwards from the recent_cutoff_date
+        #
+        # These variables are interpolated into the call to `api_df_or_error.query()`
+        # below but pylint doesn't recognize that.
+        # pylint: disable=unused-variable
+        reference_start_date = recent_cutoff_date - \
+            min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
+            timedelta(days=1)
+        if signal_type in self.params.smoothed_signals:
+            # Add an extra 7 days to the reference period.
+            reference_start_date = reference_start_date - \
+                timedelta(days=7)
+
+        reference_end_date = recent_cutoff_date - timedelta(days=1)
+        # pylint: enable=unused-variable
+
+        # Subset API data to relevant range of dates.
+        reference_api_df = api_df_or_error.query(
+            "time_value >= @reference_start_date & time_value <= @reference_end_date")
+
+        report.increment_total_checks()
+
+        if reference_api_df.empty:
+            report.add_raised_error(
+                ValidationFailure("empty_reference_data",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
+                                  "reference data is empty; comparative checks could not "
+                                  "be performed"))
+            continue
+
+        reference_api_df = self.pad_reference_api_df(reference_api_df, geo_sig_df, reference_end_date)
+        return (geo_sig_df, reference_api_df)
 
     def pad_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):
         """Check if API data is missing, and supplement from test data.

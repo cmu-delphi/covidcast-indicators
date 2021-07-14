@@ -69,7 +69,6 @@ class DynamicValidator:
         report: ValidationReport
             report to which the results of these checks will be added
         """
-
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
@@ -214,7 +213,7 @@ class DynamicValidator:
         report.increment_total_checks()
 
     def create_dfs(self, geo_sig_df, api_df_or_error, checking_date, geo_type, signal_type, report):
-        """ Create recent_df and reference_api_df from params.
+        """Create recent_df and reference_api_df from params.
 
         Raises error if recent_df is empty.
 

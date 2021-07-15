@@ -328,8 +328,8 @@ class StaticValidator:
         df_to_test.eval(
             'se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
 
-        df_to_test['se'] = df_to_test['se'].round(3)
-        df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
+        df_to_test['se'] = df_to_test['se'].round(5)
+        df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(5)
 
         if self.params.missing_se_allowed:
             result = df_to_test.query(
@@ -345,13 +345,13 @@ class StaticValidator:
         else:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
-                '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+                '~((se >= 0) & (se < 50) & (se <= se_upper_limit))')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_not_missing_and_in_range",
                                       filename=nameformat,
-                                      message="se must be in (0, min(50,val*(1+eps))] and not "
+                                      message="se must be in [0, min(50,val*(1+eps))] and not "
                                               "missing"))
 
             report.increment_total_checks()

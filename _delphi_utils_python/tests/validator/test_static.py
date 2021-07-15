@@ -16,7 +16,8 @@ class TestCheckMissingDates:
             "common": {
                 "data_source": "",
                 "span_length": 8,
-                "end_date": "2020-09-09"
+                "end_date": "2020-09-09",
+                "max_expected_lag": {"all": "1"}
             }
         }
         validator = StaticValidator(params)
@@ -50,7 +51,8 @@ class TestCheckMissingDates:
             "common": {
                 "data_source": "",
                 "span_length": 1,
-                "end_date": "2020-09-02"
+                "end_date": "2020-09-02",
+                "max_expected_lag": {"all": "0"}
             }
         }
         validator = StaticValidator(params)

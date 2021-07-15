@@ -9,6 +9,7 @@
 suppressPackageStartupMessages({
   library(tidyverse)
   library(jsonlite)
+  library(rjson)
   library(stringr)
   library(gsubfn)
   source("qsf-utils.R")
@@ -265,7 +266,24 @@ process_qsf <- function(path_to_qsf,
                              NA_character_),
            wave = get_wave(path_to_qsf)
     ) %>% 
-    select(wave, variable, replaces, description, question, matrix_subquestion, type, display_logic, response_option_randomization, group_of_respondents_item_was_shown_to)
+    select(wave,
+           variable,
+           replaces,
+           description,
+           question,
+           matrix_subquestion,
+           choices,
+           type,
+           display_logic,
+           response_option_randomization,
+           group_of_respondents_item_was_shown_to)
+
+  # Format choices as json string
+  qdf$choices <- map(qdf$choices, function(x) {
+    if (is_empty(x)) { NA }
+    else { toJSON(x) }
+  }) %>%
+    unlist()
   
   # add free text response options
   other_text_items <- qdf %>%

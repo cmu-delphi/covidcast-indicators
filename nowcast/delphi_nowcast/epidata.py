@@ -6,10 +6,11 @@ from itertools import product
 
 from numpy import isnan
 from pandas import date_range
-from aiohttp import ClientSession
-
+from aiohttp import ClientSession, ContentTypeError
+from json import JSONDecodeError
 # from ..delphi_epidata import Epidata  # used for local testing
 from delphi_epidata import Epidata
+from tenacity import AsyncRetrying, RetryError, stop_after_attempt
 
 from .data_containers import LocationSeries, SensorConfig
 
@@ -17,9 +18,13 @@ EPIDATA_START_DATE = 20200101
 
 async def get(params, session, sensor, location):
     """Helper function to make Epidata GET requests."""
-    async with session.get(Epidata.BASE_URL, params=params) as response:
-        return await response.json(), sensor, location
-
+    try:
+        async for attempt in AsyncRetrying(stop=stop_after_attempt(4)):
+            with attempt:
+                async with session.get(Epidata.BASE_URL, params=params) as response:
+                    return await response.json(), sensor, location
+    except RetryError:
+        pass
 
 async def fetch_epidata(combos, as_of):
     """Helper function to asynchronously make and aggregate Epidata GET requests."""
@@ -65,6 +70,7 @@ def get_indicator_data(sensors: List[SensorConfig],
     loop = asyncio.get_event_loop()
     future = asyncio.ensure_future(fetch_epidata(all_combos, as_of.strftime("%Y%m%d")))
     responses = loop.run_until_complete(future)
+    responses = [i for i in responses if i]
     for response, sensor, location in responses:
         # -2 = no results, 1 = success. Truncated data or server errors may lead to this Exception.
         if response["result"] not in (-2, 1):

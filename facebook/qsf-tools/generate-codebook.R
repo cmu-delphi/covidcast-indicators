@@ -277,7 +277,7 @@ process_qsf <- function(path_to_qsf,
            display_logic,
            response_option_randomization,
            group_of_respondents_item_was_shown_to)
-
+  
   # Format choices as json string
   qdf$choices <- map(qdf$choices, function(x) {
     if (is_empty(x)) { NA }
@@ -294,6 +294,7 @@ process_qsf <- function(path_to_qsf,
            description = paste0(description, " other text")
     )
   qdf <- rbind(qdf, other_text_items)
+  qdf$choices[qdf$type == "Text"] <- NA
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))

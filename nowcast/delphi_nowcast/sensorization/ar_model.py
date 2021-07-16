@@ -18,7 +18,7 @@ def compute_ar_sensor(day: date,
     and then the predictor at the given date is fed into the model to get the returned sensor value
     for that day.
 
-    Missing values are imputed with mean imputation, though currently this function is called
+    Missing values are imputed with LOCF imputation, though currently this function is called
     on data that has no nan values.
 
     Parameters
@@ -38,7 +38,7 @@ def compute_ar_sensor(day: date,
     """
     previous_day = day - timedelta(1)
     try:
-        window = values.get_data_range(min(values.dates), previous_day, "mean")
+        window = values.get_data_range(min(values.dates), previous_day, "locf")
     except ValueError:
         return np.nan
     B, means, stddevs = _ar_fit(np.array(window), ar_size, lambda_)

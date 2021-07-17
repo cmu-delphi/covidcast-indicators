@@ -111,3 +111,14 @@ class ValidationReport:
     def success(self):
         """Determine if the report corresponds to a successful validation run."""
         return len(self.unsuppressed_errors) == 0
+
+    def print_and(self, logger=None, die_on_failures=True):
+        """Print results and.
+
+        Arguments
+        ---------
+        die_on_failures: bool
+            Whether to return non-zero status if any failures were encountered.
+        """
+        self.log(logger)
+        return 42

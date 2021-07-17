@@ -384,6 +384,8 @@ class DynamicValidator:
                                   signal_type,
                                   "Number of rows per day seems to have changed rapidly (reference "
                                   "vs test data)"))
+            print(checking_date, geo_type, signal_type, "rapid_change_num_rows")
+            print(compare_rows, test_rows_per_reporting_day, reference_rows_per_reporting_day)
 
         report.increment_total_checks()
 
@@ -516,6 +518,8 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
+            print(source_frame_end, geo, sig, "positive_negative_spikes")
+            print(source_outliers)
             report.add_raised_error(
                 ValidationFailure(
                     "check_positive_negative_spikes",
@@ -629,5 +633,7 @@ class DynamicValidator:
                     + 'tending toward one direction or large mean absolute difference, relative '
                     + 'to average values of corresponding variables. For the former check, '
                     + 'tolerances for `val` are more restrictive than those for other columns.'))
+            print(checking_date, geo_type, signal_type, "z-score")
+            print(df_all)
 
         report.increment_total_checks()

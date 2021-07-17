@@ -91,7 +91,7 @@ class ValidationReport:
         logger.info("Validation run complete",
             checks_run = self.total_checks,
             checks_failed = len(self.unsuppressed_errors),
-            checks_suppressed = self.num_suppresed,
+            checks_suppressed = self.num_suppressed,
             warnings = len(self.raised_warnings))
         for error in self.unsuppressed_errors:
             logger.critical(str(error))

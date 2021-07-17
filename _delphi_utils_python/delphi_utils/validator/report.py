@@ -88,7 +88,11 @@ class ValidationReport:
             logger = get_structured_logger(__name__)
 
         self.set_summary()
-        logger.info(self.summary)
+        logger.info("Validation run complete",
+            checks_run = self.total_checks,
+            checks_failed = len(self.unsuppressed_errors),
+            checks_suppressed = self.num_suppresed,
+            warnings = len(self.raised_warnings))
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
         for warning in self.raised_warnings:

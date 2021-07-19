@@ -1,6 +1,7 @@
 {
   "common": {
     "export_dir": "./receiving",
+    "log_filename": "./safegraph.log",
     "log_exceptions": false
   },
   "indicator": {
@@ -18,6 +19,8 @@
       "data_source": "safegraph",
       "span_length": 14,
       "end_date": "today-4",
+      "min_expected_lag": {"all": "sunday+4,4"},
+      "max_expected_lag": {"all": "sunday+4,4"},
       "suppressed_errors": [
         {"signal": "completely_home_prop"},
         {"signal": "completely_home_prop_7dav"},
@@ -31,8 +34,9 @@
     },
     "static": {
       "minimum_sample_size": 100,
-      "missing_se_allowed": false,
-      "missing_sample_size_allowed": false
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true,
+      "additional_valid_geo_values": {"county": ["51515"]}
     },
     "dynamic": {
       "ref_window_size": 7,

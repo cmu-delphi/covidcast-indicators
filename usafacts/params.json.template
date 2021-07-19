@@ -1,7 +1,8 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_exceptions": false
+    "log_exceptions": false,
+    "log_filename": "./usa-facts.log"
   },
   "indicator": {
     "base_url": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_{metric}_usafacts.csv",
@@ -20,6 +21,8 @@
       "data_source": "usa-facts",
       "span_length": 14,
       "end_date": "today-2",
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "5"},
       "suppressed_errors": [
         {"check_name": "check_val_lt_0"},
         {"check_name": "check_test_vs_reference_avg_changed",

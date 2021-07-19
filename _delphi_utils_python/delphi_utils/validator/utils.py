@@ -27,9 +27,9 @@ class TimeWindow:
 
     def __post_init__(self):
         """Derive the start date of this span."""
-        self.start_date = self.end_date - self.span_length
+        self.start_date = self.end_date - self.span_length + timedelta(days = 1)
         self.date_seq = [self.start_date + timedelta(days=x)
-                         for x in range(self.span_length.days + 1)]
+                         for x in range(self.span_length.days)]
 
     @classmethod
     def from_params(cls, end_date_str: str, span_length_int: int):
@@ -41,6 +41,9 @@ class TimeWindow:
             else:
                 assert end_date_str.startswith("today-")
                 days_back = int(end_date_str[6:])
+            end_date = date.today() - timedelta(days=days_back)
+        elif end_date_str.startswith("sunday+"):
+            days_back = (date.isoweekday() - int(end_date_str[7:])) % 7
             end_date = date.today() - timedelta(days=days_back)
         else:
             end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
@@ -77,3 +80,44 @@ def aggregate_frames(frames_list):
         all_frames.append(df)
 
     return pd.concat(all_frames).reset_index(drop=True)
+
+def lag_converter(lag_dict):
+    """Convert a dictionary of lag values into the proper format.
+
+    Parameters
+    ----------
+    lag_dict: Dict[str, str or int]
+        Keys are either 'all', or signal names
+        Values are either numeric or days of the week, represented by
+            "Sunday+[0-7],[0-9]", first part represents the day of the week
+            the upload happens, while the second number represents lag upon
+            upload.
+    Returns
+    ----------
+    Dict[str, int]
+        Keys are all active signal names for an indicator, or "all"
+        Values are obtained by looking at signal name entries,
+            If not present then by the 'all' indicator,
+            else 1.
+    """
+    def value_interpret(value):
+        """Convert value from string to numeric, including sunday+m,n."""
+        if isinstance(value, int):
+            value_num = value
+        elif value.startswith("sunday+"):
+            # Check that the number proceeding sunday+ has length of 1
+            assert value[8] == ","
+            # Value_num calculates the number of days between today and the
+            # Update day, except that if both days of the week are the same,
+            # Expected lag is 7 (in case updates aren't in yet)
+            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+            # Add on expected lag to lag from weekdays
+            value_num += int(value[9:])
+        else:
+            value_num = int(value)
+        return value_num
+
+    # Converting strings to numeric output
+    output_dict = {sig:value_interpret(lag_dict.get(
+        sig)) for sig in lag_dict.keys()}
+    return output_dict

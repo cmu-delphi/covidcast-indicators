@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from functools import partial
 from typing import Callable, List, Tuple
-
+import csv
 import numpy as np
 from scipy.linalg import toeplitz
 from scipy.sparse import diags as band
@@ -235,7 +235,8 @@ def deconvolve_double_smooth_ntf(
         gam: float,
         n_iters: int = 200,
         k: int = 3,
-        clip: bool = False) -> np.ndarray:
+        clip: bool = False,
+        location = None) -> np.ndarray:
     """
         Perform natural trend filtering regularized deconvolution. Only implemented for k=3.
 
@@ -277,7 +278,8 @@ def deconvolve_double_smooth_ntf(
     weights = np.ones((D_m.shape[0],))
     weights[-m:] = np.cumsum(kernel[::-1])
     weights /= np.max(weights)
-    D_m = np.sqrt(np.diag(2 * gam * weights)) @ D_m
+    delta = np.diag(2 * gam * weights)
+    D_m = np.sqrt(delta) @ D_m
     C = C @ P
     D = D @ P
     D_m = D_m @ P
@@ -293,15 +295,22 @@ def deconvolve_double_smooth_ntf(
     x_k = None
     alpha_0 = np.zeros(n - k - 1)
     u_0 = np.zeros(n - k - 1)
+    i = 0
+    objectives = []
     for t in range(n_iters):
         x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 + u_0))
         Dx = D @ x_k
         alpha_k = _soft_thresh(Dx - u_0, lam / rho)
         u_k = u_0 + alpha_k - Dx
-
         alpha_0 = alpha_k
         u_0 = u_k
-
+        i += 1
+        if i % 5 == 0:
+            objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
+            objectives.append([objective])
+    with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
+        write = csv.writer(f)
+        write.writerows(objectives)
     x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
@@ -419,7 +428,8 @@ def deconvolve_double_smooth_tf_cv(
         n_iters: int = 200,
         k: int = 3,
         clip: bool = True,
-        verbose: bool = False) -> np.ndarray:
+        verbose: bool = False,
+        location = None ) -> np.ndarray:
     """
        Run cross-validation to tune smoothness over deconvolve_double_smooth_ntf.
        First, leave-every-third-out CV is performed over lambda, fixing gamma=0. After
@@ -473,7 +483,7 @@ def deconvolve_double_smooth_tf_cv(
         for j, reg_par in enumerate(lam_cv_grid):
             x_hat = np.full((n,), np.nan)
             x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
-                                          lam=reg_par, gam=0)
+                                          lam=reg_par, gam=0, location=location)
             x_hat = _impute_with_neighbors(x_hat)
             y_hat = _fft_convolve(x_hat, kernel)
             lam_cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)

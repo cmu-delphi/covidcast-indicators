@@ -307,7 +307,7 @@ def deconvolve_double_smooth_ntf(
         i += 1
         if i % 5 == 0:
             objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
-            objectives.append([objective])
+            objectives.append([i, objective])
     with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
         write = csv.writer(f)
         write.writerows(objectives)

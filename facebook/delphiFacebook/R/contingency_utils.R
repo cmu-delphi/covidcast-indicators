@@ -176,9 +176,10 @@ get_sparse_filenames <- function(start_date, end_date, params) {
   unique_file_end_dates <- sort(unique(file_end_dates))
   
   # Use every fourth date. Always keep last date.
-  keep_dates <- c(
+  keep_inds <- unique(c(
     seq(1, length(unique_file_end_dates), 4L),
-    length(unique_file_end_dates))
+    length(unique_file_end_dates)))
+  keep_dates <- unique_file_end_dates[keep_inds]
   filenames <- filenames[file_end_dates %in% keep_dates]
   
   return(filenames)

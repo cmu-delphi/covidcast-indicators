@@ -173,23 +173,14 @@ get_sparse_filenames <- function(start_date, end_date, params) {
   filenames <- get_filenames_in_range(start_date, end_date, params)
   
   file_end_dates <- as_date(substr(filenames, 23, 32))
-  unique_file_end_dates <- unique(file_end_dates)
+  unique_file_end_dates <- sort(unique(file_end_dates))
   
-  max_end_date <- max(unique_file_end_dates)
-  
-  # Use every fourth date.
-  stride <- 4L
-  curr_date <- min(unique_file_end_dates)
-  keep_dates <- c()
-  while ( curr_date < max_end_date ) {
-    keep_dates <- c(keep_dates, curr_date)
-    curr_date <- min(curr_date + stride, max_end_date)
-  }
-  
-  # Always add last date
-  keep_dates <- c(keep_dates, max_end_date)
-  
+  # Use every fourth date. Always keep last date.
+  keep_dates <- c(
+    seq(1, length(unique_file_end_dates), 4L),
+    length(unique_file_end_dates))
   filenames <- filenames[file_end_dates %in% keep_dates]
+  
   return(filenames)
 }
 

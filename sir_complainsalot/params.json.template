@@ -49,7 +49,7 @@
       "retired-signals": ["raw_pct_negative","smoothed_pct_negative","raw_tests_per_device","smoothed_tests_per_device"]
     },
     "nchs-mortality": {
-      "max_age":13,
+      "max_age":16,
       "maintainers": []
     },
     "covid-act-now": {

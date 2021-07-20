@@ -7,17 +7,21 @@ from .errors import ValidationFailure
 class ValidationReport:
     """Class for reporting the results of validation."""
 
-    def __init__(self, errors_to_suppress: List[ValidationFailure]):
+    def __init__(self, errors_to_suppress: List[ValidationFailure], data_source: str = ""):
         """Initialize a ValidationReport.
 
         Parameters
         ----------
         errors_to_suppress: List[ValidationFailure]
             List of ValidationFailures to ignore.
+        data_source: str
+            Name of data source as per params
 
         Attributes
         ----------
         errors_to_suppress: List[ValidationFailure]
+            See above
+        data_source: str
             See above
         num_suppressed: int
             Number of errors suppressed
@@ -31,6 +35,7 @@ class ValidationReport:
             Errors raised from validation failures not found in `self.errors_to_suppress`
         """
         self.errors_to_suppress = errors_to_suppress
+        self.data_source = data_source
         self.num_suppressed = 0
         self.total_checks = 0
         self.raised_errors = []
@@ -89,6 +94,7 @@ class ValidationReport:
 
         self.set_summary()
         logger.info("Validation run complete",
+            data_source = self.data_source,
             checks_run = self.total_checks,
             checks_failed = len(self.unsuppressed_errors),
             checks_suppressed = self.num_suppressed,

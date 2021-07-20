@@ -33,8 +33,6 @@ class ValidationReport:
             Warnings raised from validation execution
         unsuppressed_errors: List[Exception]
             Errors raised from validation failures not found in `self.errors_to_suppress`
-        summary: str
-            String summary of validation (checks ran/failed/suppressed + warnings)
         """
         self.errors_to_suppress = errors_to_suppress
         self.data_source = data_source
@@ -43,7 +41,6 @@ class ValidationReport:
         self.raised_errors = []
         self.raised_warnings = []
         self.unsuppressed_errors = []
-        self.summary = ""
 
     def add_raised_error(self, error):
         """Add an error to the report.
@@ -81,20 +78,11 @@ class ValidationReport:
         """
         self.raised_warnings.append(warning)
 
-    def set_summary(self):
-        """Represent summary of report as a string."""
-        out_str = f"{self.total_checks} checks run\n"
-        out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
-        out_str += f"{self.num_suppressed} checks suppressed\n"
-        out_str += f"{len(self.raised_warnings)} warnings\n"
-        self.summary = out_str
-
     def log(self, logger=None):
         """Log errors and warnings."""
         if logger is None:
             logger = get_structured_logger(__name__)
 
-        self.set_summary()
         logger.info("Validation run complete",
             data_source = self.data_source,
             checks_run = self.total_checks,

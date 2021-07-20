@@ -7,17 +7,21 @@ from .errors import ValidationFailure
 class ValidationReport:
     """Class for reporting the results of validation."""
 
-    def __init__(self, errors_to_suppress: List[ValidationFailure]):
+    def __init__(self, errors_to_suppress: List[ValidationFailure], data_source: str = ""):
         """Initialize a ValidationReport.
 
         Parameters
         ----------
         errors_to_suppress: List[ValidationFailure]
             List of ValidationFailures to ignore.
+        data_source: str
+            Name of data source as obtained from params
 
         Attributes
         ----------
         errors_to_suppress: List[ValidationFailure]
+            See above
+        data_source: str
             See above
         num_suppressed: int
             Number of errors suppressed
@@ -31,12 +35,12 @@ class ValidationReport:
             Errors raised from validation failures not found in `self.errors_to_suppress`
         """
         self.errors_to_suppress = errors_to_suppress
+        self.data_source = data_source
         self.num_suppressed = 0
         self.total_checks = 0
         self.raised_errors = []
         self.raised_warnings = []
         self.unsuppressed_errors = []
-        self.summary = ""
 
     def add_raised_error(self, error):
         """Add an error to the report.
@@ -74,21 +78,25 @@ class ValidationReport:
         """
         self.raised_warnings.append(warning)
 
-    def set_summary(self):
-        """Represent summary of report as a string."""
-        out_str = f"{self.total_checks} checks run\n"
-        out_str += f"{len(self.unsuppressed_errors)} checks failed\n"
-        out_str += f"{self.num_suppressed} checks suppressed\n"
-        out_str += f"{len(self.raised_warnings)} warnings\n"
-        self.summary = out_str
-
     def log(self, logger=None):
         """Log errors and warnings."""
         if logger is None:
             logger = get_structured_logger(__name__)
 
-        self.set_summary()
-        logger.info(self.summary)
+        if self.success():
+            logger.info("Validation run successful",
+                data_source = self.data_source,
+                checks_run = self.total_checks,
+                checks_failed = len(self.unsuppressed_errors),
+                checks_suppressed = self.num_suppressed,
+                warnings = len(self.raised_warnings))
+        else:
+            logger.info("Validation run unsuccessful",
+                data_source = self.data_source,
+                checks_run = self.total_checks,
+                checks_failed = len(self.unsuppressed_errors),
+                checks_suppressed = self.num_suppressed,
+                warnings = len(self.raised_warnings))
         for error in self.unsuppressed_errors:
             logger.critical(str(error))
         for warning in self.raised_warnings:

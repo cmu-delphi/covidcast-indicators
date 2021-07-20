@@ -189,7 +189,7 @@ write_rollup <- function(newly_seen_files, seen_file, output_df, output_file) {
 
 args <- commandArgs(TRUE)
 
-if (length(args) < 2) {
+if (length(args) != 2) {
   stop("Usage: Rscript contingency-combine.R path/to/individual/files/ path/to/rollup/files/")
 }
 

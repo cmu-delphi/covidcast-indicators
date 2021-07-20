@@ -117,7 +117,7 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   end_date <- as_date(end_date)
   
   if ( is.null(params[["input"]]) || length(params$input) == 0 ) {
-    ## Only keep files from active surveys.
+    ## Keep all files from active surveys that appear in the input dir.
     
     if ( !is.null(params[["qualtrics"]]) ) {
       include_patterns <- names(params$qualtrics$surveys$active)
@@ -126,6 +126,8 @@ get_filenames_in_range <- function(start_date, end_date, params) {
       exclude_patterns <- names(params$qualtrics$surveys$dormant)
       exclude_patterns <- gsub(" ", "_", exclude_patterns, fixed=TRUE)
     } else {
+      # If no active/dormant survey info provided, use basic patterns to
+      # include/exclude survey files.
       include_patterns <- c("^[0-9]{4}-[0-9]{2}-[0-9]{2}.*[.]csv$")
       exclude_patterns <- c(".*YouTube[.]csv$")
     }
@@ -139,7 +141,8 @@ get_filenames_in_range <- function(start_date, end_date, params) {
     filenames <- params$input
   }
     
-  file_end_dates <- as_date(substr(filenames, 1, 10))
+  # Filenames are formatted as "{generation date}.{start date}.{end date}.{survey name}_-_{survey version}.csv".
+  file_end_dates <- as_date(substr(filenames, 23, 32))
   file_start_dates <- as_date(substr(filenames, 12, 21))
   
   ## Only keep files with data that falls at least somewhat between the desired
@@ -161,7 +164,7 @@ get_filenames_in_range <- function(start_date, end_date, params) {
 #'
 #' @return Character vector of filenames
 #' 
-#' @importFrom stringr str_remove_all
+#' @importFrom lubridate as_date
 #' 
 #' @export
 get_sparse_filenames <- function(start_date, end_date, params) {
@@ -169,7 +172,7 @@ get_sparse_filenames <- function(start_date, end_date, params) {
   
   filenames <- get_filenames_in_range(start_date, end_date, params)
   
-  file_end_dates <- as.integer(str_remove_all(substr(filenames, 1, 10), "-"))
+  file_end_dates <- as_date(substr(filenames, 23, 32))
   unique_file_end_dates <- unique(file_end_dates)
   
   max_end_date <- max(unique_file_end_dates)

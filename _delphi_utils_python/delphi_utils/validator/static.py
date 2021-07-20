@@ -345,13 +345,13 @@ class StaticValidator:
         else:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
-                '~((se >= 0) & (se < 50) & (se <= se_upper_limit))')
+                '~(se >= 0)')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_not_missing_and_in_range",
                                       filename=nameformat,
-                                      message="se must be in [0, min(50,val*(1+eps))] and not "
+                                      message="se must be non-negative and not "
                                               "missing"))
 
             report.increment_total_checks()

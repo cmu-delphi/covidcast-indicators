@@ -33,6 +33,8 @@ class ValidationReport:
             Warnings raised from validation execution
         unsuppressed_errors: List[Exception]
             Errors raised from validation failures not found in `self.errors_to_suppress`
+        summary: str
+            String summary of validation (checks ran/failed/suppressed + warnings)
         """
         self.errors_to_suppress = errors_to_suppress
         self.data_source = data_source

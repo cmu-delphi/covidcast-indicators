@@ -324,7 +324,6 @@ class StaticValidator:
         Returns:
             - None
         """
-        df_to_test['se'] = df_to_test['se'].round(5)
 
         if self.params.missing_se_allowed:
             result = df_to_test.query(

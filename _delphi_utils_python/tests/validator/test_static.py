@@ -441,11 +441,11 @@ class TestCheckBadSe:
         assert "check_se_many_missing" in [
             err.check_name for err in report.raised_errors]
 
-    def test_e_0_missing_allowed(self):
+    def test_e_neg_missing_allowed(self):
         validator = StaticValidator(self.params)
         report = ValidationReport([])
         validator.params.missing_se_allowed = True
-        df = pd.DataFrame([[1, 0, 200], [1, np.nan, np.nan], [
+        df = pd.DataFrame([[1, -1, 200], [1, np.nan, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
         validator.check_bad_se(df, FILENAME, report)
 

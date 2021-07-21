@@ -35,15 +35,15 @@ jobs:
       - name: Install linux dependencies
         run: |
             sudo apt-get install libcurl4-openssl-dev
-      - name: Get month
-        id: get-month
+      - name: Get date
+        id: get-date
         run: |
-          echo "::set-output name=month::$(/bin/date -u "+%Y%m")"
+          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
       - name: Cache R packages
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-facebook-survey-${{ steps.get-month.outputs.month }}
+          key: ${{ runner.os }}-r-facebook-survey-${{ steps.get-date.outputs.date }}
           restore-keys: |
             ${{ runner.os }}-r-facebook-survey-
       - name: Install R dependencies

@@ -42,18 +42,18 @@ test_that("testing update_params command", {
 test_that("testing get_filenames_in_range command", {
   tdir <- tempfile()
   files <- c(
-    "2019-11-06.2019-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
-    "2019-12-31.2019-12-24_With_Translations.csv",
-    "2020-01-06.2019-12-31_Wave_4.csv",
-    "2020-01-16.2020-01-09_YouTube.csv",
-    "2020-01-16.2020-01-09_Wave_4.csv",
-    "2020-02-06.2020-01-31_Wave_4.csv",
-    "2020-02-16.2020-02-09_Wave_3.csv"
+    "2029-01-01.2019-10-30.2019-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
+    "2029-01-01.2019-12-24.2019-12-31_With_Translations.csv",
+    "2029-01-01.2019-12-31.2020-01-06_Wave_4.csv",
+    "2029-01-01.2020-01-09.2020-01-16_YouTube.csv",
+    "2029-01-01.2020-01-09.2020-01-16_Wave_4.csv",
+    "2029-01-01.2020-01-31.2020-02-06_Wave_4.csv",
+    "2029-01-01.2020-02-09.2020-02-16_Wave_3.csv"
   )
   
   create_dir_not_exist(tdir)
   for (filename in files) {
-    write_csv(data.frame(), path = file.path(tdir, filename))
+    write_csv(data.frame(), file.path(tdir, filename))
   }
   
   params <- list(
@@ -65,10 +65,10 @@ test_that("testing get_filenames_in_range command", {
   date_range <- list(ymd("2020-01-01"), ymd("2020-01-31"))
   
   expected_output <- c(
-    "2019-12-31.2019-12-24_With_Translations.csv",
-    "2020-01-06.2019-12-31_Wave_4.csv",
-    "2020-01-16.2020-01-09_Wave_4.csv",
-    "2020-02-06.2020-01-31_Wave_4.csv"
+    "2029-01-01.2019-12-24.2019-12-31_With_Translations.csv",
+    "2029-01-01.2019-12-31.2020-01-06_Wave_4.csv",
+    "2029-01-01.2020-01-09.2020-01-16_Wave_4.csv",
+    "2029-01-01.2020-01-31.2020-02-06_Wave_4.csv"
   )
   
   out <- get_filenames_in_range(date_range[[1]], date_range[[2]], params)
@@ -79,24 +79,24 @@ test_that("testing get_filenames_in_range command", {
 test_that("testing get_sparse_filenames command", {
   tdir <- tempfile()
   files <- c(
-    "2020-01-01.2019-12-26_Wave_4.csv",
-    "2020-01-02.2019-12-27_Wave_4.csv",
-    "2020-01-03.2019-12-28_Wave_4.csv",
-    "2020-01-04.2019-12-29_Wave_4.csv",
-    "2020-01-05.2019-12-30_Wave_4.csv",
-    "2020-01-05.2019-12-30_Wave_5.csv",
-    "2020-01-06.2019-12-31_Wave_4.csv",
-    "2020-01-06.2019-12-31_Wave_5.csv",
-    "2020-01-07.2019-01-01_Wave_4.csv",
-    "2020-01-08.2019-01-02_Wave_4.csv",
-    "2020-01-09.2019-01-03_Wave_4.csv",
-    "2020-01-10.2019-01-04_Wave_4.csv",
+    "2021-12-11.2019-12-26.2020-01-01_Wave_4.csv",
+    "2021-12-11.2019-12-27.2020-01-02_Wave_4.csv",
+    "2021-12-11.2019-12-28.2020-01-03_Wave_4.csv",
+    "2021-12-11.2019-12-29.2020-01-04_Wave_4.csv",
+    "2021-12-11.2019-12-30.2020-01-05_Wave_4.csv",
+    "2021-12-11.2019-12-30.2020-01-05_Wave_5.csv",
+    "2021-12-11.2019-12-31.2020-01-06_Wave_4.csv",
+    "2021-12-11.2019-12-31.2020-01-06_Wave_5.csv",
+    "2021-12-11.2019-01-01.2020-01-07_Wave_4.csv",
+    "2021-12-11.2019-01-02.2020-01-08_Wave_4.csv",
+    "2021-12-11.2019-01-03.2020-01-09_Wave_4.csv",
+    "2021-12-11.2019-01-04.2020-01-10_Wave_4.csv",
     
-    "2019-11-06.2019-10-30.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
-    "2020-01-16.2020-01-09_YouTube.csv",
-    "2020-01-16.2020-01-09_Wave_4.csv",
-    "2020-02-06.2020-01-31_Wave_4.csv",
-    "2020-02-16.2020-02-09_Wave_3.csv"
+    "2011-12-11.2019-10-30.2019-11-06.2020-11-06.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
+    "2021-12-11.2020-01-09.2020-01-16_YouTube.csv",
+    "2021-12-11.2020-01-09.2020-01-16_Wave_4.csv",
+    "2021-12-11.2020-01-31.2020-02-06_Wave_4.csv",
+    "2021-12-11.2020-02-09.2020-02-16_Wave_3.csv"
   )
   
   create_dir_not_exist(tdir)
@@ -112,13 +112,13 @@ test_that("testing get_sparse_filenames command", {
   )
   date_range <- list(ymd("2020-01-01"), ymd("2020-01-6"))
   
-  expected_output <- c(
-    "2020-01-01.2019-12-26_Wave_4.csv",
-    "2020-01-05.2019-12-30_Wave_4.csv",
-    "2020-01-05.2019-12-30_Wave_5.csv",
-    "2020-01-09.2019-01-03_Wave_4.csv",
-    "2020-01-10.2019-01-04_Wave_4.csv"
-  )
+  expected_output <- sort(c(
+    "2021-12-11.2019-12-26.2020-01-01_Wave_4.csv",
+    "2021-12-11.2019-12-30.2020-01-05_Wave_4.csv",
+    "2021-12-11.2019-12-30.2020-01-05_Wave_5.csv",
+    "2021-12-11.2019-01-03.2020-01-09_Wave_4.csv",
+    "2021-12-11.2019-01-04.2020-01-10_Wave_4.csv"
+  ))
   
   out <- get_sparse_filenames(date_range[[1]], date_range[[2]], params)
   expect_equal(out, expected_output)

@@ -112,16 +112,16 @@ test_that("testing get_sparse_filenames command", {
   )
   date_range <- list(ymd("2020-01-01"), ymd("2020-01-6"))
   
-  expected_output <- sort(c(
+  expected_output <- c(
     "2021-12-11.2019-12-26.2020-01-01_Wave_4.csv",
     "2021-12-11.2019-12-30.2020-01-05_Wave_4.csv",
     "2021-12-11.2019-12-30.2020-01-05_Wave_5.csv",
     "2021-12-11.2019-01-03.2020-01-09_Wave_4.csv",
     "2021-12-11.2019-01-04.2020-01-10_Wave_4.csv"
-  ))
+  )
   
   out <- get_sparse_filenames(date_range[[1]], date_range[[2]], params)
-  expect_equal(out, expected_output)
+  expect_setequal(out, expected_output)
 })
 
 

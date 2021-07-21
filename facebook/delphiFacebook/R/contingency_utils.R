@@ -145,8 +145,8 @@ get_filenames_in_range <- function(start_date, end_date, params) {
   file_end_dates <- as_date(substr(filenames, 23, 32))
   file_start_dates <- as_date(substr(filenames, 12, 21))
   
-  ## Only keep files with data that falls at least somewhat between the desired
-  ## start and end range dates.
+  # Only keep files with data that falls at least somewhat between the desired
+  # start and end range dates.
   filenames <- filenames[
     !(( file_start_dates < start_date & file_end_dates < start_date ) | 
         ( file_start_dates > end_date & file_end_dates > end_date ))]

@@ -257,7 +257,7 @@ class DynamicValidator:
                                     "test data for a given checking date-geo type-signal type"
                                     " combination is missing. Source data may be missing"
                                     " for one or more dates"))
-                return False
+            return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date
         #

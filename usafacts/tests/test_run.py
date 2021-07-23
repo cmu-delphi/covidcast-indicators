@@ -54,8 +54,9 @@ class TestRun:
                 for metric in metrics:
                     if "7dav" in metric and date in dates[:6]:
                         continue  # there are no 7dav signals for first 6 days
+                    if "7dav" in metric and "cumulative" in metric:
+                        continue
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
-
         assert set(csv_files) == set(expected_files)
 
     def test_output_file_format(self):

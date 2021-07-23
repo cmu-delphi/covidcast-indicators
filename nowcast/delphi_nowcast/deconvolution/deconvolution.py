@@ -233,7 +233,7 @@ def deconvolve_double_smooth_ntf(
         kernel: np.ndarray,
         lam: float,
         gam: float,
-        n_iters: int = 200,
+        n_iters: int = 1000,
         k: int = 3,
         clip: bool = False) -> np.ndarray:
     """
@@ -416,7 +416,7 @@ def deconvolve_double_smooth_tf_cv(
         lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
         gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
         gam_n_folds: int = 7,
-        n_iters: int = 200,
+        n_iters: int = 1000,
         k: int = 3,
         clip: bool = True,
         verbose: bool = False) -> np.ndarray:

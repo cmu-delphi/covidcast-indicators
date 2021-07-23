@@ -236,7 +236,8 @@ def deconvolve_double_smooth_ntf(
         n_iters: int = 200,
         k: int = 3,
         clip: bool = False,
-        location = None) -> np.ndarray:
+        location = None,
+        output = None) -> np.ndarray:
     """
         Perform natural trend filtering regularized deconvolution. Only implemented for k=3.
 
@@ -305,12 +306,15 @@ def deconvolve_double_smooth_ntf(
         alpha_0 = alpha_k
         u_0 = u_k
         i += 1
-        if i % 5 == 0:
-            objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
-            objectives.append([i, objective])
-    with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
-        write = csv.writer(f)
-        write.writerows(objectives)
+        if output:
+            if i % 50 == 0:
+                objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
+                constraint = alpha_0 - Dx
+                objectives.append([i, np.linalg.norm(alpha_0 - Dx, 2), max(abs( alpha_0 - Dx)), objective])
+    if output:
+        with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
+            write = csv.writer(f)
+            write.writerows(objectives)
     x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
@@ -425,7 +429,7 @@ def deconvolve_double_smooth_tf_cv(
         lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
         gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
         gam_n_folds: int = 7,
-        n_iters: int = 200,
+        n_iters: int = 10000,
         k: int = 3,
         clip: bool = True,
         verbose: bool = False,
@@ -483,7 +487,7 @@ def deconvolve_double_smooth_tf_cv(
         for j, reg_par in enumerate(lam_cv_grid):
             x_hat = np.full((n,), np.nan)
             x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
-                                          lam=reg_par, gam=0, location=location)
+                                          lam=reg_par, gam=0)
             x_hat = _impute_with_neighbors(x_hat)
             y_hat = _fft_convolve(x_hat, kernel)
             lam_cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
@@ -504,7 +508,7 @@ def deconvolve_double_smooth_tf_cv(
 
     gam = gam_cv_grid[np.argmin(gam_cv_loss)]
     if verbose: print(f"Chosen parameters: lam:{lam:.4}, gam:{gam:.4}")
-    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam)
+    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, location=location, output=True)
     return x_hat
 
 

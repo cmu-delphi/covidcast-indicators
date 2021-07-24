@@ -290,7 +290,7 @@ def test_output_files(mock_combine):
                 if "7dav" in metric and "cumulative" in metric:
                     continue
                 expected_files += [date + "_" + geo + "_" + metric + ".csv"]
-        assert set(csv_files) == set(expected_files)
+    assert set(csv_files) == set(expected_files)
 
 if __name__ == '__main__':
     unittest.main()

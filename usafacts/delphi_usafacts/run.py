@@ -103,6 +103,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     dfs = {metric: pull_usafacts_data(base_url, metric, logger) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
+        if "cumulative" in sensor and "seven_day_average" in smoother:
+            continue
         logger.info("generating signal and exporting to CSV",
             geo_res = geo_res,
             metric = metric,

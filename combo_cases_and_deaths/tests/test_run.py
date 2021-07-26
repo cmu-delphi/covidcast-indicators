@@ -1,13 +1,16 @@
 """Tests for running combo cases and deaths indicator."""
 from datetime import date
 from itertools import product
+import os
 import unittest
 from unittest.mock import patch, call
 import pandas as pd
 import numpy as np
 
 from delphi_combo_cases_and_deaths.run import (
-    extend_raw_date_range, get_updated_dates,
+    run_module,
+    extend_raw_date_range,
+    get_updated_dates,
     sensor_signal,
     combine_usafacts_and_jhu,
     compute_special_geo_dfs,
@@ -244,6 +247,50 @@ def test_no_nation_jhu(mock_covidcast_signal):
                       "sample_size": [None]},)
     )
 
+@patch("delphi_combo_cases_and_deaths.run.combine_usafacts_and_jhu")
+def test_output_files(mock_combine):
+    params = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "export_start_date": [2020, 4, 1],
+            "source":"indicator-combination",
+            "wip_signal": ""
+        }
+    }
+    mock_combine.return_value = pd.DataFrame(
+            {
+                "geo_id": ["01000"],
+                "val": [10],
+                "timestamp": [pd.to_datetime("2021-01-04")],
+                "issue": [pd.to_datetime("2021-01-04")],
+                "se": 0,
+                "sample_size": 0
+            },
+            index=[1]
+        )
+    run_module(params)
+    csv_files = [f for f in os.listdir("receiving") if f.endswith(".csv")]
+    dates = ["20210104"]
+    geos = ["county", "hrr", "msa", "state", "hhs", "nation"]
+
+    # enumerate metric names.
+    metrics = []
+    for event, span, stat in product(["deaths", "confirmed"],
+                                     ["cumulative", "incidence"],
+                                     ["num", "prop"]):
+        metrics.append("_".join([event, span, stat]))
+        metrics.append("_".join([event, "7dav", span, stat]))
+
+    expected_files = []
+    for date in dates:
+        for geo in geos:
+            for metric in metrics:
+                if "7dav" in metric and "cumulative" in metric:
+                    continue
+                expected_files += [date + "_" + geo + "_" + metric + ".csv"]
+    assert set(csv_files) == set(expected_files)
 
 if __name__ == '__main__':
     unittest.main()

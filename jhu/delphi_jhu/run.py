@@ -106,7 +106,8 @@ def run_module(params: Dict[str, Any]):
     for metric, geo_res, sensor, smoother in product(
         METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS
     ):
-        print(metric, geo_res, sensor, smoother)
+        if "cumulative" in sensor and "seven_day_average" in smoother:
+            continue
         logger.info(
             event="generating signal and exporting to CSV",
             metric=metric,

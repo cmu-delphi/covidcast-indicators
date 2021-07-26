@@ -148,7 +148,7 @@ add_metadata_vars <- function(data, params, geo_type, groupby_vars) {
 #' @noRd
 get_file_name <- function(params, geo_type, groupby_vars) {
   
-  aggregation_type <- setdiff(groupby_vars, "geo_id")
+  aggregation_type <- sort(setdiff(groupby_vars, "geo_id"))
   if (length(aggregation_type) == 0) aggregation_type <- "overall"
   
   file_name <- paste(

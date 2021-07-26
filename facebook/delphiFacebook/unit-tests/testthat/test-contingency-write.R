@@ -61,7 +61,11 @@ test_that("testing command to create output filenames", {
   out <- get_file_name(params, "nation", c("gender"))
   expected <- "DebugOn-DoNotShare_20210101_20210102_monthly_nation_gender.csv"
   
+  expect_equal(out, expected)
+  
   params$debug <- FALSE
   out <- get_file_name(params, "nation", c("gender", "race", "ethnicity"))
   expected <- "20210101_20210102_monthly_nation_ethnicity_gender_race.csv"
+  
+  expect_equal(out, expected)
 })

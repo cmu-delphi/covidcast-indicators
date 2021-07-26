@@ -324,34 +324,27 @@ class StaticValidator:
         Returns:
             - None
         """
-        # Add a new se_upper_limit column.
-        df_to_test.eval(
-            'se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
-
-        df_to_test['se'] = df_to_test['se'].round(5)
-        df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(5)
-
         if self.params.missing_se_allowed:
             result = df_to_test.query(
-                '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+                '~(se.isnull() | (se >= 0))')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_missing_or_in_range",
                                       filename=nameformat,
-                                      message="se must be NA or in (0, min(50,val*(1+eps))]"))
+                                      message="se must be NA or non-negative"))
 
             report.increment_total_checks()
         else:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
-                '~((se >= 0) & (se < 50) & (se <= se_upper_limit))')
+                '~(se >= 0)')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_not_missing_and_in_range",
                                       filename=nameformat,
-                                      message="se must be in [0, min(50,val*(1+eps))] and not "
+                                      message="se must be non-negative and not "
                                               "missing"))
 
             report.increment_total_checks()
@@ -382,9 +375,6 @@ class StaticValidator:
                                   message="se must be non-zero"))
 
         report.increment_total_checks()
-
-        # Remove se_upper_limit column.
-        df_to_test.drop(columns=["se_upper_limit"])
 
     def check_bad_sample_size(self, df_to_test, nameformat, report):
         """

@@ -54,7 +54,7 @@ class Default:
     DECONV_CV_GAMMA_GRID = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]]
     DECONV_FIT_FUNC = partial(deconvolution.deconvolve_double_smooth_tf_cv,
                               k=3,
-                              fit_func=deconvolution.deconvolve_double_smooth_ntf,
+                              fit_func=deconvolution.deconvolve_double_smooth_ntf_fast,
                               lam_cv_grid=DECONV_CV_LAMBDA_GRID,
                               gam_cv_grid=DECONV_CV_GAMMA_GRID)
 

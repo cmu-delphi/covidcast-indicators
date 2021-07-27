@@ -10,9 +10,10 @@ from ..data_containers import LocationSeries, SensorConfig
 from ..epidata import get_indicator_data
 
 
+
 def _construct_convolution_matrix(signal: np.ndarray,
                                   kernel: np.ndarray,
-                                  norm: bool) -> np.ndarray:
+                                  norm: bool = False) -> np.ndarray:
     """
     Constructs full convolution matrix (n+m-1) x n,
     where n is the signal length and m the kernel length.
@@ -72,75 +73,11 @@ def _soft_thresh(x: np.ndarray, lam: float) -> np.ndarray:
     return np.sign(x) * np.maximum(np.abs(x) - lam, 0)
 
 
-def deconvolve_tf(y: np.ndarray,
-                  x: np.ndarray,
-                  kernel: np.ndarray,
-                  lam: float,
-                  n_iters: int = 100,
-                  k: int = 2,
-                  clip: bool = False) -> np.ndarray:
-    """
-    Perform trend filtering regularized deconvolution through the following optimization
-
-        minimize  (1/2n) ||y - Cx||_2^2 + lam*||D^(k+1)x||_1
-            x
-
-    where C is the discrete convolution matrix, and D^(k+1) the discrete differences
-    operator. The second term adds a trend filtering (tf) penalty.
-
-    Parameters
-    ----------
-    y
-        array of values to convolve
-    x
-        array of positions
-    kernel
-        array with convolution kernel values
-    lam
-        regularization parameter for trend filtering penalty smoothness
-    n_iters
-        number of ADMM interations to perform.
-    k
-        order of the trend filtering penalty.
-    clip
-        Boolean to clip count values to [0, infty).
-
-    Returns
-    -------
-        array of the deconvolved signal values
-    """
-
-    n = y.shape[0]
-    m = kernel.shape[0]
-    rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel, False)[:n, ]
-    D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
-    D = np.diff(D, n=k, axis=0)
-
-    # pre-calculations
-    DtD = D.T @ D
-    CtC = C.T @ C / n
-    Cty = C.T @ y / n
-    x_update_1 = np.linalg.inv(CtC + rho * DtD)
-
-    # begin admm loop
-    x_k = None
-    alpha_0 = np.zeros(n - k - 1)
-    u_0 = np.zeros(n - k - 1)
-    for t in range(n_iters):
-        x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 - u_0))
-        Dx_u0 = np.diff(x_k, n=(k + 1)) + u_0
-        alpha_k = _soft_thresh(Dx_u0, lam / rho)
-        u_k = Dx_u0 - alpha_k
-
-        alpha_0 = alpha_k
-        u_0 = u_k
-
-    if clip:
-        x_k = np.clip(x_k, 0, np.infty)
-
-    return x_k
-
+def criterion(y, x, C, Dk1, D1m, lam, Gam):
+    a = 0.5 * np.sum((y - C @ x)**2)
+    b = lam * np.sum(np.abs(Dk1 @ x))
+    c = x.T @ D1m.T @ Gam @ D1m @ x
+    return a + b + c
 
 def _construct_poly_interp_mat(x, n, k):
     assert k == 3, "poly interpolation matrix only constructed for k=3"
@@ -156,117 +93,25 @@ def _construct_poly_interp_mat(x, n, k):
     S[2:(n - 2), :] = np.eye(n - k - 1)
     return S
 
-
-def deconvolve_ntf(y: np.ndarray,
-                   x: np.ndarray,
-                   kernel: np.ndarray,
-                   lam: float,
-                   n_iters: int = 200,
-                   k: int = 3,
-                   clip: bool = False) -> np.ndarray:
-    """
-    Perform natural trend filtering regularized deconvolution. Only implemented for k=3.
-
-    Parameters
-    ----------
-    y
-        array of values to convolve
-    x
-        array of positions
-    kernel
-        array with convolution kernel values
-    lam
-        regularization parameter for trend filtering penalty smoothness
-    n_iters
-        number of ADMM interations to perform.
-    k
-        order of the trend filtering penalty.
-    clip
-        Boolean to clip count values to [0, infty).
-
-    Returns
-    -------
-        array of the deconvolved signal values
-    """
-    assert k == 3, "Natural TF only implemented for k=3"
-
-    k = 3
-    n = y.shape[0]
-    m = kernel.shape[0]
-    rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel, False)[:n, ]
-    P = _construct_poly_interp_mat(x, n, k)
-    D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
-    D = np.diff(D, n=k, axis=0)
-    C = C @ P
-    D = D @ P
-
-    # pre-calculations
-    DtD = D.T @ D
-    CtC = C.T @ C / n
-    Cty = C.T @ y / n
-    x_update_1 = np.linalg.inv(CtC + rho * DtD)
-
-    # begin admm loop
-    x_k = None
-    alpha_0 = np.zeros(n - k - 1)
-    u_0 = np.zeros(n - k - 1)
-    for t in range(n_iters):
-        x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 - u_0))
-        Dx_u0 = D @ x_k + u_0
-        alpha_k = _soft_thresh(Dx_u0, lam / rho)
-        u_k = Dx_u0 - alpha_k
-
-        alpha_0 = alpha_k
-        u_0 = u_k
-
-    x_k = P @ x_k
-    if clip:
-        x_k = np.clip(x_k, 0, np.infty)
-
-    return x_k
-
-
-def deconvolve_double_smooth_ntf(
+def deconvolve_double_smooth_ntf_fast(
         y: np.ndarray,
         x: np.ndarray,
         kernel: np.ndarray,
         lam: float,
         gam: float,
-        n_iters: int = 1000,
+        n_iters: int = 200,
         k: int = 3,
         clip: bool = False) -> np.ndarray:
-    """
-        Perform natural trend filtering regularized deconvolution. Only implemented for k=3.
-
-        Parameters
-        ----------
-        y
-            array of values to convolve
-        x
-            array of positions
-        kernel
-            array with convolution kernel values
-        lam
-            regularization parameter for trend filtering penalty smoothness
-        gam
-            regularization parameter for penalty on first differences of boundary points
-        n_iters
-            number of ADMM interations to perform.
-        k
-            order of the trend filtering penalty.
-        clip
-            Boolean to clip count values to [0, infty).
-
-        Returns
-        -------
-            array of the deconvolved signal values
-    """
     assert k == 3, "Natural TF only implemented for k=3"
+
     n = y.shape[0]
     m = kernel.shape[0]
+
+    y_sd = np.std(y)
+    y_mean = np.mean(y)
+    y = (y - y_mean) / y_sd
     rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel, False)[:n, ]
+    C = _construct_convolution_matrix(y, kernel)[:n]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
     P = _construct_poly_interp_mat(x, n, k)
@@ -277,146 +122,40 @@ def deconvolve_double_smooth_ntf(
     weights = np.ones((D_m.shape[0],))
     weights[-m:] = np.cumsum(kernel[::-1])
     weights /= np.max(weights)
-    D_m = np.sqrt(np.diag(2 * gam * weights)) @ D_m
+    Gam = gam * np.diag(weights)
+
+    # polynomial interpolation
     C = C @ P
     D = D @ P
     D_m = D_m @ P
 
     # pre-calculations
-    DtD = D.T @ D
-    DmtDm = D_m.T @ D_m
-    CtC = C.T @ C / n
-    Cty = C.T @ y / n
-    x_update_1 = np.linalg.inv(DmtDm + CtC + rho * DtD)
+    Cty = C.T @ y
+    first_x_update = np.linalg.inv((2 * D_m.T @ Gam @ D_m) + C.T @ C + rho * D.T @ D)
+    alpha_k = np.zeros(n - k - 1)
+    u_k = np.zeros(n - k - 1)
+    x_k = first_x_update @ (Cty + rho * D.T @ (alpha_k + u_k))
+    for i in range(n_iters):
+        x_k = first_x_update @ (Cty + rho * D.T @ (alpha_k + u_k))
+        alpha_k = dp_1d(D @ x_k, lam / rho)
+        u_k = u_k + alpha_k - D @ x_k
 
-    # begin admm loop
-    x_k = None
-    alpha_0 = np.zeros(n - k - 1)
-    u_0 = np.zeros(n - k - 1)
-    for t in range(n_iters):
-        x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 + u_0))
-        Dx = D @ x_k
-        alpha_k = _soft_thresh(Dx - u_0, lam / rho)
-        u_k = u_0 + alpha_k - Dx
-
-        alpha_0 = alpha_k
-        u_0 = u_k
 
     x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
-    return x_k
-
-
-def deconvolve_tf_cv(y: np.ndarray,
-                     x: np.ndarray,
-                     kernel: np.ndarray,
-                     fit_func: Callable = deconvolve_tf,
-                     cv_method: str = "forward",
-                     cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
-                     n_folds: int = 5,
-                     n_iters: int = 100,
-                     k: int = 2,
-                     clip: bool = True,
-                     verbose: bool = False) -> np.ndarray:
-    """
-    Run cross-validation to tune smoothness over deconvolve_tf(). Two types of CV are
-    supported
-
-        - "le3o", which leaves out every third value in training, and imputes the
-          missing test value with the average of the neighboring points. The
-          n_folds argument is ignored if method="le3o".
-        - "forward", which trains on values 1,...,t and predicts the (t+1)th value as
-          the fitted value for t. The n_folds argument decides the number of points
-          to hold out, and then "walk forward".
-
-    The smoothness parameter with the smallest mean-squared error is chosen.
-
-    Parameters
-    ----------
-    y
-        array of values to convolve
-    x
-        array of positions
-    kernel
-        array with convolution kernel values
-    fit_func
-        deconvolution function to use
-    cv_method
-        string with one of {"le3o", "forward"} specifying cv type
-    cv_grid
-        grid of trend filtering penalty values to search over
-    n_folds
-        number of splits for cv (see above documentation)
-    n_iters
-        number of ADMM interations to perform.
-    k
-        order of the trend filtering penalty.
-    natural
-        Boolean whether to use natural trend filtering. If True, k is fixed to 3.
-    clip
-        Boolean to clip count values to [0, infty)
-    verbose
-        Boolean whether to print debug statements
-
-
-    Returns
-    -------
-        array of the deconvolved signal values
-    """
-
-    assert cv_method in {"le3o", "forward"}, (
-        "cv method specified should be one of {'le3o', 'forward'}"
-    )
-
-    fit_func = partial(fit_func, kernel=kernel, n_iters=n_iters, k=k, clip=clip)
-    n = y.shape[0]
-    cv_loss = np.zeros((cv_grid.shape[0],))
-
-    if cv_method == "le3o":
-        for i in range(3):
-            if verbose: print(f"Fitting fold {i}/3")
-            test_split = np.zeros((n,), dtype=bool)
-            test_split[i::3] = True
-            for j, reg_par in enumerate(cv_grid):
-                x_hat = np.full((n,), np.nan)
-                x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
-                                              lam=reg_par)
-                x_hat = _impute_with_neighbors(x_hat)
-                y_hat = _fft_convolve(x_hat, kernel)
-                cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
-    elif cv_method == "forward":
-        def _linear_extrapolate(x0, y0, x1, y1, x_new):
-            return y0 + ((x_new - x0) / (x1 - x0)) * (y1 - y0)
-
-        for i in range(1, n_folds + 1):
-            if verbose: print(f"Fitting fold {i}/{n_folds}")
-            for j, reg_par in enumerate(cv_grid):
-                x_hat = np.full((n - i + 1,), np.nan)
-                x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], lam=reg_par)
-                # x_hat[-1] = x_hat[-2] # constant extrapolation
-                pos = x[:(n - i + 1)]
-                x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3],
-                                                pos[-2], x_hat[-2],
-                                                pos[-1])
-                y_hat = _fft_convolve(x_hat, kernel)
-                cv_loss[j] += (y[:(n - i + 1)][-1] - y_hat[-1]) ** 2
-
-    lam = cv_grid[np.argmin(cv_loss)]
-    if verbose: print(f"Chosen parameter: {lam:.4}")
-    x_hat = fit_func(y=y, x=x, lam=lam)
-    return x_hat
+    return (x_k * y_sd) + y_mean
 
 
 def deconvolve_double_smooth_tf_cv(
         y: np.ndarray,
         x: np.ndarray,
         kernel: np.ndarray,
-        fit_func: Callable = deconvolve_double_smooth_ntf,
+        fit_func: Callable = deconvolve_double_smooth_ntf_fast,
         lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
         gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
         gam_n_folds: int = 7,
-        n_iters: int = 1000,
+        n_iters: int = 200,
         k: int = 3,
         clip: bool = True,
         verbose: bool = False) -> np.ndarray:
@@ -527,6 +266,102 @@ def _impute_with_neighbors(x: np.ndarray) -> np.ndarray:
     assert np.isnan(imputed_x).sum() == 0
 
     return imputed_x
+
+
+def dp_1d(y, lam):
+    """Implementation of Nick Johnson's DP solution for 1d fused lasso."""
+    n = y.shape[0]
+    beta = np.zeros(n)
+
+    # knots
+    x = np.zeros((2 * n))
+    a = np.zeros((2 * n))
+    b = np.zeros((2 * n))
+
+    # knots of back-pointers
+    tm = np.zeros((n - 1))
+    tp = np.zeros((n - 1))
+
+    # step through first iteration manually
+    tm[0] = -lam + y[0]
+    tp[0] = lam + y[0]
+    l = n - 1
+    r = n
+    x[l] = tm[0]
+    x[r] = tp[0]
+    a[l] = 1
+    b[l] = -y[0] + lam
+    a[r] = -1
+    b[r] = y[0] + lam
+    afirst = 1
+    bfirst = -y[1] - lam
+    alast = -1
+    blast = y[1] - lam
+    # now iterations 2 through n-1
+    for k in range(1, n - 1):
+        # compute lo
+        alo = afirst
+        blo = bfirst
+        lo = l
+        while lo <= r:
+            if alo * x[lo] + blo > -lam:
+                break
+            alo += a[lo]
+            blo += b[lo]
+            lo += 1
+
+        # compute hi
+        ahi = alast
+        bhi = blast
+        hi = r
+        while hi >= lo:
+            if (-ahi * x[hi] - bhi) < lam:
+                break
+            ahi += a[hi]
+            bhi += b[hi]
+            hi -= 1
+
+        # compute the negative knot
+        tm[k] = (-lam - blo) / alo
+        l = lo - 1
+        x[l] = tm[k]
+
+        # compute the positive knot
+        tp[k] = (lam + bhi) / (-ahi)
+        r = hi + 1
+        x[r] = tp[k]
+
+        # update a and b
+        a[l] = alo
+        b[l] = blo + lam
+        a[r] = ahi
+        b[r] = bhi + lam
+        afirst = 1
+        bfirst = -y[k + 1] - lam
+        alast = -1
+        blast = y[k + 1] - lam
+
+    # compute the last coefficient - function has zero derivative here
+    alo = afirst
+    blo = bfirst
+    for lo in range(l, r + 1):
+        if alo * x[lo] + blo > 0:
+            break
+        alo += a[lo]
+        blo += b[lo]
+
+    beta[n - 1] = -blo / alo
+
+    # compute the rest of the coefficients
+    for k in range(n - 2, -1, -1):
+        if beta[k + 1] > tp[k]:
+            beta[k] = tp[k]
+        elif beta[k + 1] < tm[k]:
+            beta[k] = tm[k]
+        else:
+            beta[k] = beta[k + 1]
+    return beta
+
 
 
 def deconvolve_signal(convolved_truth_indicator: SensorConfig,

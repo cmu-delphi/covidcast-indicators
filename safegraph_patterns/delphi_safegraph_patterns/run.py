@@ -25,7 +25,7 @@ METRICS = [
 ]
 VERSIONS = [
     # release version, access dir, paths glob
-    ("202106", "weekly-patterns-delivery-2020-12/release-2021-07/weekly", "patterns/*/*/*"),    
+    ("202106", "weekly-patterns-delivery-2020-12/release-2021-07/weekly", "patterns/*/*/*"),
 ]
 SENSORS = [
         "num",

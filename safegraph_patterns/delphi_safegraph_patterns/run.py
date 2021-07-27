@@ -24,10 +24,8 @@ METRICS = [
         ('restaurants_visit', 722511, False),
 ]
 VERSIONS = [
-        # relaese version, access dir
-        ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
-        ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*"),
-        ("20210408", "weekly-patterns-delivery-2020-12/weekly", "patterns/*/*/*")
+    # release version, access dir, paths glob
+    ("202106", "weekly-patterns-delivery-2020-12/release-2021-07/weekly", "patterns/*/*/*"),    
 ]
 SENSORS = [
         "num",

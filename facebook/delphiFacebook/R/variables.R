@@ -185,6 +185,18 @@ code_mental_health <- function(input_data, wave) {
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   }
 
+  if ("G1" %in% names(input_data)) {
+    # added in wave 11. Count "a great deal" (1) and "a moderate amount" (2) as
+    # worried.
+    input_data$mh_worried_catch_covid <- case_when(
+      is.na(input_data$G1) ~ NA,
+      input_data$G1 == 1 ~ TRUE,
+      input_data$G1 == 2 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$mh_worried_catch_covid <- NA
+  }
+  
   return(input_data)
 }
 
@@ -370,6 +382,13 @@ code_testing <- function(input_data, wave) {
   } else {
     input_data$t_screening_tested_positive_14d <- NA_real_
   }
+  
+  if ("B13" %in% names(input_data)) {
+    input_data$t_had_covid_ever <- input_data$B13 == 1
+  } else {
+    input_data$t_had_covid_ever <- NA
+  }
+  
   return(input_data)
 }
 
@@ -647,6 +666,17 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_try_vaccinate_1m <- NA_real_
   }
   
+  if ("H3" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = none, 2 = a few people, 3 = some people, 
+    # 4 = most people, 6 = all of the people.
+    input_data$v_covid_vaccinated_friends <- case_when(
+      is.na(input_data$H3) ~ NA,
+      input_data$H3 == 4 | input_data$H3 == 6 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$v_covid_vaccinated_friends <- NA
+  }
+  
   return(input_data)
 }
 
@@ -688,6 +718,17 @@ code_schooling <- function(input_data, wave) {
 #' 
 #' @return augmented data frame
 code_beliefs <- function(input_data, wave) {
+  if ("G2" %in% names(input_data)) {
+    # added in wave 11.
+    input_data$b_belief_distancing_effective <- case_when(
+      input_data$G2 == 1 | input_data$G2 == 2 ~ 1,
+      input_data$G2 == 3 | input_data$G2 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_distancing_effective <- NA_real_
+  }
+  
   if ("G3" %in% names(input_data)) {
     # added in wave 11.
     input_data$b_belief_masking_effective <- case_when(

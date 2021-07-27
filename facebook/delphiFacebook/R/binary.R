@@ -45,6 +45,9 @@ get_binary_indicators <- function() {
     "smoothed_wdepressed_7d", "weight", "mh_depressed_7d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_felt_isolated_7d", "weight_unif", "mh_isolated_7d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wfelt_isolated_7d", "weight", "mh_isolated_7d", 6, compute_binary_response, jeffreys_binary,
+    # wave 11
+    "smoothed_worried_catch_covid", "weight_unif", "mh_worried_catch_covid", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wworried_catch_covid", "weight", "mh_worried_catch_covid", 6, compute_binary_response, jeffreys_binary,
     
     # travel outside state
     # pre-wave 10
@@ -96,6 +99,9 @@ get_binary_indicators <- function() {
     "smoothed_wscreening_tested_positive_14d", "weight", "t_screening_tested_positive_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wanted_test_14d", "weight_unif", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwanted_test_14d", "weight", "t_wanted_test_14d", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_had_covid_ever", "weight_unif", "t_had_covid_ever", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_whad_covid_ever", "weight", "t_had_covid_ever", 6, compute_binary_response, jeffreys_binary,
 
     # vaccines
     "smoothed_accept_covid_vaccine", "weight_unif", "v_accept_covid_vaccine", 6, compute_binary_response, jeffreys_binary,
@@ -117,6 +123,9 @@ get_binary_indicators <- function() {
     "smoothed_wworried_vaccine_side_effects", "weight", "v_worried_vaccine_side_effects", 6, compute_binary_response, jeffreys_binary,
     "smoothed_received_2_vaccine_doses", "weight_unif", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wreceived_2_vaccine_doses", "weight", "v_received_2_vaccine_doses", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_covid_vaccinated_friends", "weight_unif", "v_covid_vaccinated_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wcovid_vaccinated_friends", "weight", "v_covid_vaccinated_friends", 6, compute_binary_response, jeffreys_binary,
     
     "smoothed_vaccinate_children", "weight_unif", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccinate_children", "weight", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
@@ -236,6 +245,8 @@ get_binary_indicators <- function() {
     # beliefs
     "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_belief_distancing_effective", "weight_unif", "b_belief_distancing_effective", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_distancing_effective", "weight", "b_belief_distancing_effective", 6, compute_binary_response, jeffreys_binary,
   )
 
 

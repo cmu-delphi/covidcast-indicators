@@ -623,6 +623,69 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_none <- NA
   }
   
+  if ( "V15a" %in% names(input_data) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- split_options(input_data$V15a)
+    
+    input_data$v_vaccine_barrier_eligible_has <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments_has <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time_has <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties_has <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document_has <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access_has <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel_has <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language_has <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare_has <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time_has <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type_has <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none_has <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible_has <- NA
+    input_data$v_vaccine_barrier_no_appointments_has <- NA
+    input_data$v_vaccine_barrier_appointment_time_has <- NA
+    input_data$v_vaccine_barrier_technical_difficulties_has <- NA
+    input_data$v_vaccine_barrier_document_has <- NA
+    input_data$v_vaccine_barrier_technology_access_has <- NA
+    input_data$v_vaccine_barrier_travel_has <- NA
+    input_data$v_vaccine_barrier_language_has <- NA
+    input_data$v_vaccine_barrier_childcare_has <- NA
+    input_data$v_vaccine_barrier_time_has <- NA
+    input_data$v_vaccine_barrier_type_has <- NA
+    input_data$v_vaccine_barrier_none_has <- NA
+  }
+  
+  if ( "V15b" %in% names(input_data) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
+    vaccine_barriers <- split_options(vaccine_barriers)
+    
+    input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments_tried <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time_tried <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties_tried <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document_tried <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access_tried <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel_tried <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language_tried <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare_tried <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time_tried <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type_tried <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none_tried <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible_tried <- NA
+    input_data$v_vaccine_barrier_no_appointments_tried <- NA
+    input_data$v_vaccine_barrier_appointment_time_tried <- NA
+    input_data$v_vaccine_barrier_technical_difficulties_tried <- NA
+    input_data$v_vaccine_barrier_document_tried <- NA
+    input_data$v_vaccine_barrier_technology_access_tried <- NA
+    input_data$v_vaccine_barrier_travel_tried <- NA
+    input_data$v_vaccine_barrier_language_tried <- NA
+    input_data$v_vaccine_barrier_childcare_tried <- NA
+    input_data$v_vaccine_barrier_time_tried <- NA
+    input_data$v_vaccine_barrier_type_tried <- NA
+    input_data$v_vaccine_barrier_none_tried <- NA
+  }
+  
   if ( "E4" %in% names(input_data) ) {
     # introduced in Wave 11
     input_data$v_vaccinate_children <- case_when(

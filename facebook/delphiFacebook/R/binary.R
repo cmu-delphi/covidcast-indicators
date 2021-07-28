@@ -257,6 +257,12 @@ get_binary_indicators <- function() {
     "smoothed_belief_govt_exploitation", "weight_unif", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_govt_exploitation", "weight", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
     
+    # medical care beliefs and experiences
+    "smoothed_race_treated_fairly_healthcare", "weight_unif", "b_race_treated_fairly_healthcare", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wrace_treated_fairly_healthcare", "weight", "b_race_treated_fairly_healthcare", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_delayed_care_cost", "weight_unif", "b_delayed_care_cost", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wdelayed_care_cost", "weight", "b_delayed_care_cost", 6, compute_binary_response, jeffreys_binary,
+    
     # news
     "smoothed_received_news_local_health", "weight_unif", "i_received_news_local_health", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wreceived_news_local_health", "weight", "i_received_news_local_health", 6, compute_binary_response, jeffreys_binary,

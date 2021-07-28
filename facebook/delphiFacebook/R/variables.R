@@ -768,7 +768,26 @@ code_beliefs <- function(input_data, wave) {
   } else {
     input_data$b_belief_govt_exploitation <- NA_real_
   }
+
+  if ("K1" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Yes, 2 = No
+    input_data$b_delayed_care_cost <- input_data$K1 == 1
+  } else {
+    input_data$b_delayed_care_cost <- NA_real_
+  }
   
+  if ("K2" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Strongly agree, 2 = Somewhat agree, 3 =
+    # Somewhat disagree, 4 = Strongly disagree
+    input_data$b_race_treated_fairly_healthcare <- case_when(
+      input_data$K2 == 1 | input_data$K2 == 2 ~ 1,
+      input_data$K2 == 3 | input_data$K2 == 4 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_race_treated_fairly_healthcare <- NA_real_
+  }
+    
   return(input_data)
 }
 

@@ -246,14 +246,17 @@ class DynamicValidator:
         report.increment_total_checks()
 
         if recent_df.empty:
-            report.add_raised_error(
-                ValidationFailure("check_missing_geo_sig_date_combo",
-                                  checking_date,
-                                  geo_type,
-                                  signal_type,
-                                  "test data for a given checking date-geo type-signal type"
-                                  " combination is missing. Source data may be missing"
-                                  " for one or more dates"))
+            min_thres = timedelta(days = self.params.max_expected_lag.get(
+                signal_type, self.params.max_expected_lag.get('all', 10)))
+            if checking_date < self.params.generation_date - min_thres:
+                report.add_raised_error(
+                    ValidationFailure("check_missing_geo_sig_date_combo",
+                                    checking_date,
+                                    geo_type,
+                                    signal_type,
+                                    "test data for a given checking date-geo type-signal type"
+                                    " combination is missing. Source data may be missing"
+                                    " for one or more dates"))
             return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date

@@ -462,9 +462,9 @@ code_vaccines <- function(input_data, wave) {
     )
   }
   
-  if ("V11a" %in% names(df)) {
+  if ("V11a" %in% names(input_data)) {
     # Have an appointment to get vaccinated conditional on not being vaccinated.
-    input_data$v_appointment_not_vaccinated <- df$V11a == 1
+    input_data$v_appointment_not_vaccinated <- input_data$V11a == 1
   } else {
     input_data$v_appointment_not_vaccinated <- NA  
   }

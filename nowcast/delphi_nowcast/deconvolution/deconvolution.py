@@ -103,7 +103,6 @@ def deconvolve_double_smooth_ntf_fast(
         k: int = 3,
         clip: bool = False) -> np.ndarray:
     assert k == 3, "Natural TF only implemented for k=3"
-
     n = y.shape[0]
     m = kernel.shape[0]
 
@@ -157,7 +156,7 @@ def deconvolve_double_smooth_tf_cv(
         gam_n_folds: int = 7,
         n_iters: int = 200,
         k: int = 3,
-        clip: bool = True,
+        clip: bool = False,
         verbose: bool = False) -> np.ndarray:
     """
        Run cross-validation to tune smoothness over deconvolve_double_smooth_ntf.
@@ -195,7 +194,6 @@ def deconvolve_double_smooth_tf_cv(
        -------
            array of the deconvolved signal values
        """
-
     fit_func = partial(fit_func, kernel=kernel, n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
     m = kernel.size

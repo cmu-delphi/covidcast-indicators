@@ -247,6 +247,15 @@ get_binary_indicators <- function() {
     "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_belief_distancing_effective", "weight_unif", "b_belief_distancing_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_distancing_effective", "weight", "b_belief_distancing_effective", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_belief_vaccinated_mask_unnecessary", "weight_unif", "b_belief_vaccinated_mask_unnecessary", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_vaccinated_mask_unnecessary", "weight", "b_belief_vaccinated_mask_unnecessary", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_belief_children_immune", "weight_unif", "b_belief_children_immune", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_children_immune", "weight", "b_belief_children_immune", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_belief_created_small_group", "weight_unif", "b_belief_created_small_group", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_created_small_group", "weight", "b_belief_created_small_group", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_belief_govt_exploitation", "weight_unif", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wbelief_govt_exploitation", "weight", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
   )
 
 

@@ -719,7 +719,8 @@ code_schooling <- function(input_data, wave) {
 #' @return augmented data frame
 code_beliefs <- function(input_data, wave) {
   if ("G2" %in% names(input_data)) {
-    # added in wave 11.
+    # added in wave 11. Coded as 1 = Very effective, 2 = Moderately effective, 3
+    # = Slightly effective, 4 = Not effective at all
     input_data$b_belief_distancing_effective <- case_when(
       input_data$G2 == 1 | input_data$G2 == 2 ~ 1,
       input_data$G2 == 3 | input_data$G2 == 4 ~ 0,
@@ -730,7 +731,8 @@ code_beliefs <- function(input_data, wave) {
   }
   
   if ("G3" %in% names(input_data)) {
-    # added in wave 11.
+    # added in wave 11. Coded as 1 = Very effective, 2 = Moderately effective, 3
+    # = Slightly effective, 4 = Not effective at all
     input_data$b_belief_masking_effective <- case_when(
       input_data$G3 == 1 | input_data$G3 == 2 ~ 1,
       input_data$G3 == 3 | input_data$G3 == 4 ~ 0,
@@ -738,6 +740,54 @@ code_beliefs <- function(input_data, wave) {
     )
   } else {
     input_data$b_belief_masking_effective <- NA_real_
+  }
+  
+  if ("I1" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Definitely false, 2 = Probably false, 3 = I
+    # really have no idea, 4 = Probably true, 5 = Definitely true
+    input_data$b_belief_vaccinated_mask_unnecessary <- case_when(
+      input_data$I1 == 4 | input_data$I1 == 5 ~ 1,
+      input_data$I1 == 1 | input_data$I1 == 2 | input_data$I1 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_vaccinated_mask_unnecessary <- NA_real_
+  }
+  
+  if ("I2" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Definitely false, 2 = Probably false, 3 = I
+    # really have no idea, 4 = Probably true, 5 = Definitely true
+    input_data$b_belief_children_immune <- case_when(
+      input_data$I2 == 4 | input_data$I2 == 5 ~ 1,
+      input_data$I2 == 1 | input_data$I2 == 2 | input_data$I2 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_children_immune <- NA_real_
+  }
+  
+  if ("I3" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Definitely false, 2 = Probably false, 3 = I
+    # really have no idea, 4 = Probably true, 5 = Definitely true
+    input_data$b_belief_created_small_group <- case_when(
+      input_data$I3 == 4 | input_data$I3 == 5 ~ 1,
+      input_data$I3 == 1 | input_data$I3 == 2 | input_data$I3 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_created_small_group <- NA_real_
+  }
+  
+  if ("I4" %in% names(input_data)) {
+    # added in wave 11. Coded as 1 = Definitely false, 2 = Probably false, 3 = I
+    # really have no idea, 4 = Probably true, 5 = Definitely true
+    input_data$b_belief_govt_exploitation <- case_when(
+      input_data$I4 == 4 | input_data$I4 == 5 ~ 1,
+      input_data$I4 == 1 | input_data$I4 == 2 | input_data$I4 == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$b_belief_govt_exploitation <- NA_real_
   }
   
   return(input_data)

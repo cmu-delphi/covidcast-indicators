@@ -511,27 +511,6 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_likely_doctors <- NA_real_
   }
   
-  # Close analogues to `v_vaccine_likely_*` as of Wave 11.
-  if ( all(c("I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8") %in% names(input_data)) ) {
-    input_data$i_trust_covid_info_doctors <- input_data$I6_1 == 3
-    input_data$i_trust_covid_info_experts <- input_data$I6_2 == 3
-    input_data$i_trust_covid_info_cdc <- input_data$I6_3 == 3
-    input_data$i_trust_covid_info_govt_health <- input_data$I6_4 == 3
-    input_data$i_trust_covid_info_politicians <- input_data$I6_5 == 3
-    input_data$i_trust_covid_info_journalists <- input_data$I6_6 == 3
-    input_data$i_trust_covid_info_friends <- input_data$I6_7 == 3
-    input_data$i_trust_covid_info_religious <- input_data$I6_8 == 3
-  } else {
-    input_data$i_trust_covid_info_doctors <- NA
-    input_data$i_trust_covid_info_experts <- NA
-    input_data$i_trust_covid_info_cdc <- NA
-    input_data$i_trust_covid_info_govt_health <- NA
-    input_data$i_trust_covid_info_politicians <- NA
-    input_data$i_trust_covid_info_journalists <- NA
-    input_data$i_trust_covid_info_friends <- NA
-    input_data$i_trust_covid_info_religious <- NA
-  }
-  
   if ("V5a" %in% names(input_data) && "V5b" %in% names(input_data) && "V5c" %in% names(input_data)) {
     # introduced in Wave 8
     hesitancy_reasons <- coalesce(input_data$V5a, input_data$V5b, input_data$V5c)
@@ -793,36 +772,81 @@ code_beliefs <- function(input_data, wave) {
   return(input_data)
 }
 
-#' COVID news variables
+#' COVID news and information variables
 #'
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
 #' @return augmented data frame
-code_news <- function(input_data, wave) {
+code_news_and_info <- function(input_data, wave) {
   if ("I5" %in% names(input_data)) {
     # introduced in wave 11
     news_sources <- split_options(input_data$I5)
     
-    input_data$n_received_news_local_health <- is_selected(news_sources, "1")
-    input_data$n_received_news_experts <- is_selected(news_sources, "2")
-    input_data$n_received_news_cdc <- is_selected(news_sources, "3")
-    input_data$n_received_news_govt_health <- is_selected(news_sources, "4")
-    input_data$n_received_news_politicians <- is_selected(news_sources, "5")
-    input_data$n_received_news_journalists <- is_selected(news_sources, "6")
-    input_data$n_received_news_friends <- is_selected(news_sources, "7")
-    input_data$n_received_news_religious <- is_selected(news_sources, "8")
-    input_data$n_received_news_none <- is_selected(news_sources, "9")
+    input_data$i_received_news_local_health <- is_selected(news_sources, "1")
+    input_data$i_received_news_experts <- is_selected(news_sources, "2")
+    input_data$i_received_news_cdc <- is_selected(news_sources, "3")
+    input_data$i_received_news_govt_health <- is_selected(news_sources, "4")
+    input_data$i_received_news_politicians <- is_selected(news_sources, "5")
+    input_data$i_received_news_journalists <- is_selected(news_sources, "6")
+    input_data$i_received_news_friends <- is_selected(news_sources, "7")
+    input_data$i_received_news_religious <- is_selected(news_sources, "8")
+    input_data$i_received_news_none <- is_selected(news_sources, "9")
   } else {
-    input_data$n_received_news_local_health <- NA
-    input_data$n_received_news_experts <- NA
-    input_data$n_received_news_cdc <- NA
-    input_data$n_received_news_govt_health <- NA
-    input_data$n_received_news_politicians <- NA
-    input_data$n_received_news_journalists <- NA
-    input_data$n_received_news_friends <- NA
-    input_data$n_received_news_religious <- NA
-    input_data$n_received_news_none <- NA
+    input_data$i_received_news_local_health <- NA
+    input_data$i_received_news_experts <- NA
+    input_data$i_received_news_cdc <- NA
+    input_data$i_received_news_govt_health <- NA
+    input_data$i_received_news_politicians <- NA
+    input_data$i_received_news_journalists <- NA
+    input_data$i_received_news_friends <- NA
+    input_data$i_received_news_religious <- NA
+    input_data$i_received_news_none <- NA
+  }
+
+  # Close analogues to `v_vaccine_likely_*` as of Wave 11.
+  if ( all(c("I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8") %in% names(input_data)) ) {
+    input_data$i_trust_covid_info_doctors <- input_data$I6_1 == 3
+    input_data$i_trust_covid_info_experts <- input_data$I6_2 == 3
+    input_data$i_trust_covid_info_cdc <- input_data$I6_3 == 3
+    input_data$i_trust_covid_info_govt_health <- input_data$I6_4 == 3
+    input_data$i_trust_covid_info_politicians <- input_data$I6_5 == 3
+    input_data$i_trust_covid_info_journalists <- input_data$I6_6 == 3
+    input_data$i_trust_covid_info_friends <- input_data$I6_7 == 3
+    input_data$i_trust_covid_info_religious <- input_data$I6_8 == 3
+  } else {
+    input_data$i_trust_covid_info_doctors <- NA
+    input_data$i_trust_covid_info_experts <- NA
+    input_data$i_trust_covid_info_cdc <- NA
+    input_data$i_trust_covid_info_govt_health <- NA
+    input_data$i_trust_covid_info_politicians <- NA
+    input_data$i_trust_covid_info_journalists <- NA
+    input_data$i_trust_covid_info_friends <- NA
+    input_data$i_trust_covid_info_religious <- NA
   }
   
+  if ("I7" %in% names(input_data)) {
+    # introduced in wave 11
+    info_topic <- split_options(input_data$I7)
+    
+    input_data$i_want_info_covid_treatment <- is_selected(info_topic, "1")
+    input_data$i_want_info_vaccine_access <- is_selected(info_topic, "2")
+    input_data$i_want_info_vaccine_types <- is_selected(info_topic, "3")
+    input_data$i_want_info_covid_variants <- is_selected(info_topic, "6")
+    input_data$i_want_info_children_education <- is_selected(info_topic, "7")
+    input_data$i_want_info_mental_health <- is_selected(info_topic, "8")
+    input_data$i_want_info_relationships <- is_selected(info_topic, "9")
+    input_data$i_want_info_employment <- is_selected(info_topic, "10")
+    input_data$i_want_info_none <- is_selected(info_topic, "11")
+  } else {
+    input_data$i_want_info_covid_treatment <- NA
+    input_data$i_want_info_vaccine_access <- NA
+    input_data$i_want_info_vaccine_types <- NA
+    input_data$i_want_info_covid_variants <- NA
+    input_data$i_want_info_children_education <- NA
+    input_data$i_want_info_mental_health <- NA
+    input_data$i_want_info_relationships <- NA
+    input_data$i_want_info_employment <- NA
+    input_data$i_want_info_none <- NA
+  }
 }

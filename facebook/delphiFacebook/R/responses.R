@@ -174,6 +174,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
+  input_data <- code_news(input_data, wave)
 
   # create testing variables
 

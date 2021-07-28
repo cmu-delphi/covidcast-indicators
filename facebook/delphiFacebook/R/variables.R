@@ -792,3 +792,37 @@ code_beliefs <- function(input_data, wave) {
   
   return(input_data)
 }
+
+#' COVID news variables
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_news <- function(input_data, wave) {
+  if ("I5" %in% names(input_data)) {
+    # introduced in wave 11
+    news_sources <- split_options(input_data$I5)
+    
+    input_data$n_received_news_local_health <- is_selected(news_sources, "1")
+    input_data$n_received_news_experts <- is_selected(news_sources, "2")
+    input_data$n_received_news_cdc <- is_selected(news_sources, "3")
+    input_data$n_received_news_govt_health <- is_selected(news_sources, "4")
+    input_data$n_received_news_politicians <- is_selected(news_sources, "5")
+    input_data$n_received_news_journalists <- is_selected(news_sources, "6")
+    input_data$n_received_news_friends <- is_selected(news_sources, "7")
+    input_data$n_received_news_religious <- is_selected(news_sources, "8")
+    input_data$n_received_news_none <- is_selected(news_sources, "9")
+  } else {
+    input_data$n_received_news_local_health <- NA
+    input_data$n_received_news_experts <- NA
+    input_data$n_received_news_cdc <- NA
+    input_data$n_received_news_govt_health <- NA
+    input_data$n_received_news_politicians <- NA
+    input_data$n_received_news_journalists <- NA
+    input_data$n_received_news_friends <- NA
+    input_data$n_received_news_religious <- NA
+    input_data$n_received_news_none <- NA
+  }
+  
+}

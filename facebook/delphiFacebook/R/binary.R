@@ -256,6 +256,26 @@ get_binary_indicators <- function() {
     "smoothed_wbelief_created_small_group", "weight", "b_belief_created_small_group", 6, compute_binary_response, jeffreys_binary,
     "smoothed_belief_govt_exploitation", "weight_unif", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_govt_exploitation", "weight", "b_belief_govt_exploitation", 6, compute_binary_response, jeffreys_binary,
+    
+    # news
+    "smoothed_received_news_local_health", "weight_unif", "n_received_news_local_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_local_health", "weight", "n_received_news_local_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_experts", "weight_unif", "n_received_news_experts", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_experts", "weight", "n_received_news_experts", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_cdc", "weight_unif", "n_received_news_cdc", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_cdc", "weight", "n_received_news_cdc", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_govt_health", "weight_unif", "n_received_news_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_govt_health", "weight", "n_received_news_govt_health", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_politicians", "weight_unif", "n_received_news_politicians", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_politicians", "weight", "n_received_news_politicians", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_journalists", "weight_unif", "n_received_news_journalists", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_journalists", "weight", "n_received_news_journalists", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_friends", "weight_unif", "n_received_news_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_friends", "weight", "n_received_news_friends", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_religious", "weight_unif", "n_received_news_religious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_religious", "weight", "n_received_news_religious", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_received_news_none", "weight_unif", "n_received_news_none", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wreceived_news_none", "weight", "n_received_news_none", 6, compute_binary_response, jeffreys_binary,
   )
 
 

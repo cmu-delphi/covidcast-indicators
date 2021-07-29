@@ -6,6 +6,7 @@ import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
+import numpy as np
 
 
 class DynamicValidator:
@@ -594,6 +595,8 @@ class DynamicValidator:
             z=lambda x: (
                 x["test"] - x["reference mean"]) / x["reference sd"],
             abs_z=lambda x: abs(x["z"])
+        ).replace([np.inf, -np.inf], np.nan, inplace = False
+        ).dropna(
         ).groupby(
             ["geo_id", "variable"], as_index=False
         ).agg(

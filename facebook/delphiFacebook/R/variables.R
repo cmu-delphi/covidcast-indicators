@@ -687,6 +687,7 @@ code_schooling <- function(input_data, wave) {
   } else {
     input_data$s_inperson_school_parttime <- NA_real_
   }
+  
   return(input_data)
 }
 
@@ -868,4 +869,6 @@ code_news_and_info <- function(input_data, wave) {
     input_data$i_want_info_employment <- NA
     input_data$i_want_info_none <- NA
   }
+  
+  return(input_data)
 }

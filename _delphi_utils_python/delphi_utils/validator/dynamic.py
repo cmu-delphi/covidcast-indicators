@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
 import pandas as pd
+import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
-import numpy as np
 
 
 class DynamicValidator:

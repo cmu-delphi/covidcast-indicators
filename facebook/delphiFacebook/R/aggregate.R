@@ -28,7 +28,12 @@
 #' @importFrom dplyr filter mutate_at vars select
 aggregate_indicators <- function(df, indicators, cw_list, params) {
   ## Keep only columns used in indicators, plus supporting columns.
-  df <- select(df, all_of(unique(indicators$metric)), all_of(unique(indicators$var_weight)), day, zip5)
+  df <- select(df,
+               all_of(unique(indicators$metric)),
+               all_of(unique(indicators$var_weight)),
+               .data$day,
+               .data$zip5
+  )
 
   ## The data frame will include more days than just [start_date, end_date], so
   ## select just the unique days contained in that interval.
@@ -43,7 +48,7 @@ aggregate_indicators <- function(df, indicators, cw_list, params) {
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
   df <- as.data.table(df)
-  setkey(df, day)
+  setkeyv(df, "day")
 
   for (i in seq_along(cw_list))
   {
@@ -95,7 +100,7 @@ summarize_indicators <- function(df, crosswalk_data, indicators, geo_level,
   ## Set an index on the geo_id column so that the lookup by exact geo_id can be
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
-  setindex(df, geo_id)
+  setindexv(df, "geo_id")
 
   ## We do batches of just one smooth_days at a time, since we have to select
   ## rows based on this.

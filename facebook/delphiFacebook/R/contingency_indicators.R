@@ -217,21 +217,21 @@ get_aggs <- function() {
   cut1_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, name %in% c("pct_worried_vaccine_sideeffects", "pct_hesitant_worried_vaccine_sideeffects"))
+    filter(indicators, .data$name %in% c("pct_worried_vaccine_sideeffects", "pct_hesitant_worried_vaccine_sideeffects"))
   )
   
   ## Cut 2: trust various institutions if hesitant about getting vaccine
   cut2_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, startsWith(name, "pct_hesitant_vaccine_likely_"))
+    filter(indicators, startsWith(.data$name, "pct_hesitant_vaccine_likely_"))
   )
   
   ## Cut 3: trust various institutions
   cut3_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, startsWith(name, "pct_vaccine_likely_"))
+    filter(indicators, startsWith(.data$name, "pct_vaccine_likely_"))
   )
   
   ## Cuts 4, 5, 6: vaccinated and accepting generally, or if senior, or in healthcare
@@ -244,7 +244,7 @@ get_aggs <- function() {
   cut456_aggs <- create_aggs_product(
     regions,
     cut456_groups,
-    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
+    filter(indicators, .data$name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
   )
   
   ## Cuts 4, 5, 6: marginal
@@ -258,7 +258,7 @@ get_aggs <- function() {
   cut456_marginal_aggs <- create_aggs_product(
     list("state"),
     cut456_marginal_groups,
-    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
+    filter(indicators, .data$name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
   )
   
   ### Combine full set and additional original tables.

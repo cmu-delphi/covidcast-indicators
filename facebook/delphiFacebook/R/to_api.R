@@ -25,7 +25,7 @@ write_data_api <- function(data, params, geo_name, signal_name)
     tunit <- unique_dates[ii]
 
     df <- data[data$day == tunit, c("geo_id", "val", "se", "sample_size", "effective_sample_size")]
-    df <- mutate_at(df, vars(-geo_id), function(x) {
+    df <- mutate_at(df, vars(-.data$geo_id), function(x) {
       formatC(x, digits=7, format="f", drop0trailing=TRUE)
     })
     file_out <- file.path(

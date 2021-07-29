@@ -204,7 +204,37 @@ get_aggs <- function() {
     "pct_appointment_have", "v_appointment_have", compute_binary, jeffreys_binary,
     "pct_appointment_not_vaccinated", "v_appointment_not_vaccinated", compute_binary, jeffreys_binary,
     "pct_appointment_tried", "v_appointment_tried", compute_binary, jeffreys_binary,
-    "pct_vaccine_tried", "v_vaccine_tried", compute_binary, jeffreys_binary
+    "pct_vaccine_tried", "v_vaccine_tried", compute_binary, jeffreys_binary,
+    
+    "pct_had_covid_ever", "t_had_covid_ever", compute_binary, jeffreys_binary,
+    
+    # vaccine barriers
+    "pct_vaccine_barrier_eligible", "v_vaccine_barrier_eligible", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_no_appointments", "v_vaccine_barrier_no_appointments", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_time", "v_vaccine_barrier_appointment_time", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technical_difficulties", "v_vaccine_barrier_technical_difficulties", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_document", "v_vaccine_barrier_document", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technology_access", "v_vaccine_barrier_technology_access", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_travel", "v_vaccine_barrier_travel", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_language", "v_vaccine_barrier_language", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_childcare", "v_vaccine_barrier_childcare", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_time", "v_vaccine_barrier_time", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_type", "v_vaccine_barrier_type", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_none", "v_vaccine_barrier_none", compute_binary_response, jeffreys_binary,
+    
+    # beliefs
+    "pct_belief_masking_effective", "b_belief_masking_effective", compute_binary_response, jeffreys_binary,
+    "pct_belief_distancing_effective", "b_belief_distancing_effective", compute_binary_response, jeffreys_binary,
+    "pct_belief_vaccinated_mask_unnecessary", "b_belief_vaccinated_mask_unnecessary", compute_binary_response, jeffreys_binary,
+    "pct_belief_children_immune", "b_belief_children_immune", compute_binary_response, jeffreys_binary,
+    "pct_belief_created_small_group", "b_belief_created_small_group", compute_binary_response, jeffreys_binary,
+    "pct_belief_govt_exploitation", "b_belief_govt_exploitation", compute_binary_response, jeffreys_binary,
+    
+    # medical care beliefs and experiences
+    "pct_race_treated_fairly_healthcare", "b_race_treated_fairly_healthcare", compute_binary_response, jeffreys_binary,
+    "pct_delayed_care_cost", "b_delayed_care_cost", compute_binary_response, jeffreys_binary,
+    
+    "pct_worried_catch_covid", "mh_worried_catch_covid", compute_binary_response, jeffreys_binary,
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

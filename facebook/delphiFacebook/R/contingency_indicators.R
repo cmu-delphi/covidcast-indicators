@@ -281,6 +281,7 @@ get_aggs <- function() {
 #' @return tibble of created aggs
 #'
 #' @importFrom tibble tribble
+#' @importFrom stats na.omit
 create_aggs_product <- function(regions, groups, indicators) {
   aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,

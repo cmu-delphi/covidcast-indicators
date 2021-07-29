@@ -17,7 +17,7 @@
 #'                       calculate aggregations; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange across
+#' @importFrom dplyr arrange across everything
 #' @importFrom stringi stri_trim
 #'
 #' @export

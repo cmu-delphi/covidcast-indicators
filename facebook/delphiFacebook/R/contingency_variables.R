@@ -960,6 +960,52 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_stuffy_nose <- NA
   }
   
+  if ("B2C" %in% names(input_data)) {
+    symptoms <- split_options(input_data$B2C)
+    
+    input_data$symp_fever_unusual <- is_selected(symptoms, "1")
+    input_data$symp_cough_unusual <- is_selected(symptoms, "2")
+    input_data$symp_shortness_breath_unusual <- is_selected(symptoms, "3")
+    input_data$symp_diff_breathing_unusual <- is_selected(symptoms, "4")
+    input_data$symp_fatigue_unusual <- is_selected(symptoms, "5")
+    input_data$symp_nasal_congestion_unusual <- is_selected(symptoms, "6")
+    input_data$symp_runny_nose_unusual <- is_selected(symptoms, "7")
+    input_data$symp_aches_unusual <- is_selected(symptoms, "8")
+    input_data$symp_sore_throat_unusual <- is_selected(symptoms, "9")
+    input_data$symp_chest_pain_unusual <- is_selected(symptoms, "10")
+    input_data$symp_nausea_unusual <- is_selected(symptoms, "11")
+    input_data$symp_diarrhea_unusual <- is_selected(symptoms, "12")
+    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "13")
+    input_data$symp_other_unusual <- is_selected(symptoms, "14")
+    input_data$symp_none_unusual <- is_selected(symptoms, "15")
+    input_data$symp_eye_pain_unusual <- is_selected(symptoms, "16")
+    input_data$symp_chills_unusual <- is_selected(symptoms, "17")
+    input_data$symp_headache_unusual <- is_selected(symptoms, "18")
+    input_data$symp_sleep_changes_unusual <- is_selected(symptoms, "19")
+    input_data$symp_stuffy_nose_unusual <- is_selected(symptoms, "20")
+  } else {
+    input_data$symp_fever_unusual <- NA
+    input_data$symp_cough_unusual <- NA
+    input_data$symp_shortness_breath_unusual <- NA
+    input_data$symp_diff_breathing_unusual <- NA
+    input_data$symp_fatigue_unusual <- NA
+    input_data$symp_nasal_congestion_unusual <- NA
+    input_data$symp_runny_nose_unusual <- NA
+    input_data$symp_aches_unusual <- NA
+    input_data$symp_sore_throat_unusual <- NA
+    input_data$symp_chest_pain_unusual <- NA
+    input_data$symp_nausea_unusual <- NA
+    input_data$symp_diarrhea_unusual <- NA
+    input_data$symp_loss_smell_taste_unusual <- NA
+    input_data$symp_other_unusual <- NA
+    input_data$symp_none_unusual <- NA
+    input_data$symp_eye_pain_unusual <- NA
+    input_data$symp_chills_unusual <- NA
+    input_data$symp_headache_unusual <- NA
+    input_data$symp_sleep_changes_unusual <- NA
+    input_data$symp_stuffy_nose_unusual <- NA
+  }
+  
   return(input_data)
 }
 

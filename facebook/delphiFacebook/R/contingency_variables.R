@@ -916,9 +916,48 @@ code_addl_symptoms <- function(input_data, wave) {
   # loss of taste or smell / # any B2 response
   if ("B2" %in% names(input_data)) {
     symptoms <- split_options(input_data$B2)
-    input_data$indiv_anosmia <- is_selected(symptoms, "13")
+    
+    input_data$symp_fever <- is_selected(symptoms, "1")
+    input_data$symp_cough <- is_selected(symptoms, "2")
+    input_data$symp_shortness_breath <- is_selected(symptoms, "3")
+    input_data$symp_diff_breathing <- is_selected(symptoms, "4")
+    input_data$symp_fatigue <- is_selected(symptoms, "5")
+    input_data$symp_nasal_congestion <- is_selected(symptoms, "6")
+    input_data$symp_runny_nose <- is_selected(symptoms, "7")
+    input_data$symp_aches <- is_selected(symptoms, "8")
+    input_data$symp_sore_throat <- is_selected(symptoms, "9")
+    input_data$symp_chest_pain <- is_selected(symptoms, "10")
+    input_data$symp_nausea <- is_selected(symptoms, "11")
+    input_data$symp_diarrhea <- is_selected(symptoms, "12")
+    input_data$symp_loss_smell_taste <- is_selected(symptoms, "13")
+    input_data$symp_other <- is_selected(symptoms, "14")
+    input_data$symp_none <- is_selected(symptoms, "15")
+    input_data$symp_eye_pain <- is_selected(symptoms, "16")
+    input_data$symp_chills <- is_selected(symptoms, "17")
+    input_data$symp_headache <- is_selected(symptoms, "18")
+    input_data$symp_sleep_changes <- is_selected(symptoms, "19")
+    input_data$symp_stuffy_nose <- is_selected(symptoms, "20")
   } else {
-    input_data$indiv_anosmia <- NA
+    input_data$symp_fever <- NA
+    input_data$symp_cough <- NA
+    input_data$symp_shortness_breath <- NA
+    input_data$symp_diff_breathing <- NA
+    input_data$symp_fatigue <- NA
+    input_data$symp_nasal_congestion <- NA
+    input_data$symp_runny_nose <- NA
+    input_data$symp_aches <- NA
+    input_data$symp_sore_throat <- NA
+    input_data$symp_chest_pain <- NA
+    input_data$symp_nausea <- NA
+    input_data$symp_diarrhea <- NA
+    input_data$symp_loss_smell_taste <- NA
+    input_data$symp_other <- NA
+    input_data$symp_none <- NA
+    input_data$symp_eye_pain <- NA
+    input_data$symp_chills <- NA
+    input_data$symp_headache <- NA
+    input_data$symp_sleep_changes <- NA
+    input_data$symp_stuffy_nose <- NA
   }
   
   return(input_data)

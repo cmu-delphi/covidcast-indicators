@@ -80,7 +80,27 @@ get_aggs <- function() {
     "pct_hh_cmnty_cli", "hh_community_yes", compute_binary, jeffreys_binary,
     "pct_direct_contact", "c_direct_contact", compute_binary, jeffreys_binary,
     
-    "pct_anosmia", "indiv_anosmia", compute_binary, jeffreys_binary,
+    # symptoms
+    "pct_symp_fever", "symp_fever", compute_binary, jeffreys_binary,
+    "pct_symp_cough", "symp_cough", compute_binary, jeffreys_binary,
+    "pct_symp_shortness_breath", "symp_shortness_breath", compute_binary, jeffreys_binary,
+    "pct_symp_diff_breathing", "symp_diff_breathing", compute_binary, jeffreys_binary,
+    "pct_symp_fatigue", "symp_fatigue", compute_binary, jeffreys_binary,
+    "pct_symp_nasal_congestion", "symp_nasal_congestion", compute_binary, jeffreys_binary,
+    "pct_symp_runny_nose", "symp_runny_nose", compute_binary, jeffreys_binary,
+    "pct_symp_aches", "symp_aches", compute_binary, jeffreys_binary,
+    "pct_symp_sore_throat", "symp_sore_throat", compute_binary, jeffreys_binary,
+    "pct_symp_chest_pain", "symp_chest_pain", compute_binary, jeffreys_binary,
+    "pct_symp_nausea", "symp_nausea", compute_binary, jeffreys_binary,
+    "pct_symp_diarrhea", "symp_diarrhea", compute_binary, jeffreys_binary,
+    "pct_symp_loss_smell_taste", "symp_loss_smell_taste", compute_binary, jeffreys_binary,
+    "pct_symp_other", "symp_other", compute_binary, jeffreys_binary,
+    "pct_symp_none", "symp_none", compute_binary, jeffreys_binary,
+    "pct_symp_eye_pain", "symp_eye_pain", compute_binary, jeffreys_binary,
+    "pct_symp_chills", "symp_chills", compute_binary, jeffreys_binary,
+    "pct_symp_headache", "symp_headache", compute_binary, jeffreys_binary,
+    "pct_symp_sleep_changes", "symp_sleep_changes", compute_binary, jeffreys_binary,
+    "pct_symp_stuffy_nose", "symp_stuffy_nose", compute_binary, jeffreys_binary,
     
     # vaccines
     "pct_vaccinated", "v_covid_vaccinated", compute_binary, jeffreys_binary,

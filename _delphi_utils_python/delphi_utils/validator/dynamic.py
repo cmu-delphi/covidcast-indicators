@@ -41,12 +41,20 @@ class DynamicValidator:
         """
         common_params = params["common"]
         dynamic_params = params.get("dynamic", dict())
+        min_expected_lag = lag_converter(common_params.get(
+                "min_expected_lag", dict()))
+        if len(min_expected_lag) == 0:
+            min_expected_lag_overall = 1
+        else:
+            min_expected_lag_overall = min(min_expected_lag.values())
+        end_date = common_params.get(
+            "end_date", f"today-{min_expected_lag_overall}")
 
         self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
             data_source=common_params["data_source"],
-            time_window=TimeWindow.from_params(common_params["end_date"],
+            time_window=TimeWindow.from_params(end_date,
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(

@@ -38,9 +38,17 @@ class StaticValidator:
         """
         common_params = params["common"]
         static_params = params.get("static", dict())
+        min_expected_lag = lag_converter(common_params.get(
+                "min_expected_lag", dict()))
+        if len(min_expected_lag) == 0:
+            min_expected_lag_overall = 1
+        else:
+            min_expected_lag_overall = min(min_expected_lag.values())
+        end_date = common_params.get(
+            "end_date", f"today-{min_expected_lag_overall}")
 
         self.params = self.Parameters(
-            time_window = TimeWindow.from_params(common_params["end_date"],
+            time_window = TimeWindow.from_params(end_date,
                                                  common_params["span_length"]),
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),

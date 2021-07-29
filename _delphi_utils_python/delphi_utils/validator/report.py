@@ -89,18 +89,20 @@ class ValidationReport:
                 checks_run = self.total_checks,
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
-                warnings = len(self.raised_warnings))
+                warnings = len(self.raised_warnings),
+                phase = "validation")
         else:
             logger.info("Validation run unsuccessful",
                 data_source = self.data_source,
                 checks_run = self.total_checks,
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
-                warnings = len(self.raised_warnings))
+                warnings = len(self.raised_warnings),
+                phase="validation")
         for error in self.unsuppressed_errors:
-            logger.critical(str(error))
+            logger.critical(str(error), phase="validation")
         for warning in self.raised_warnings:
-            logger.warning(str(warning))
+            logger.warning(str(warning), phase="validation")
 
     def print_and_exit(self, logger=None, die_on_failures=True):
         """Print results and exit.

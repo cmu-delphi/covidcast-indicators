@@ -595,3 +595,87 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             crosswalk = pd.read_csv(stream, dtype=str)
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
+
+    def get_geo_mapper(self, geo_id, geo_type,geo_id_type=None):
+        """
+        Given a geo id (e.g. "ca" for California, a state)
+        and an enclosed geo type (e.g. "county"),
+        return a set of geo ids of the specified type that lie
+        within the specified geo id (e.g. all counties within California)
+        - all states within a nation
+        - all counties within a state
+        - all states within an hhs region
+
+        Parameters
+        ----------
+        geo_id: str of identity of nation/state/or hhs
+            "fips" for return geo_id of state
+            "state_id" for return geo_id of nation and hhs
+        geo_type: str
+            One of "state","county"
+        geo_id_type: str
+            One of "state","nation","hhs"
+
+        Returns
+        -------
+        Set of geo ids of the specified type that lie within the specified geo id,
+        all in string format.
+        """
+
+        if geo_type not in ("county","state"):
+            raise ValueError(f"geo_type must be one of state, nation and hhs")
+
+        if geo_type=="state":
+            if geo_id_type=="nation":
+                if geo_id=="us":
+                    stream = pkg_resources.resource_stream(
+                    __name__, self.crosswalk_filepaths[geo_type][geo_type]
+                    )
+                    crosswalk = pd.read_csv(stream, dtype=str)
+                    self.geo_lists["state_id"] = set(crosswalk["state_id"])
+                    return self.geo_lists["state_id"]
+                else:
+                    raise ValueError(f"geo_id of nation only included us")
+
+            if geo_id_type=="hhs":
+                stream1 = pkg_resources.resource_stream(
+                __name__, self.crosswalk_filepaths["fips"]["hhs"]
+                )
+                stream2= pkg_resources.resource_stream(
+                __name__, self.crosswalk_filepaths["fips"]["state"]
+                )
+                crosswalk1 = pd.read_csv(stream1, dtype=str)
+                crosswalk2 = pd.read_csv(stream2, dtype=str)
+                fips_hhs=[]
+                if geo_id in list(crosswalk1["hhs"]):
+                    for i in range(1,len(crosswalk1["hhs"])):
+                        if crosswalk1["hhs"][i]==geo_id:
+                            fips_hhs.append(crosswalk1["fips"][i])
+                else:
+                    raise ValueError(f"invalid hhs value")
+                self.geo_lists["state_id"]=set()
+                for i in range(len(fips_hhs)):
+                    fips_id=fips_hhs[i]
+                    index=list(crosswalk2["fips"]).index(fips_id)
+                    state_id=crosswalk2["state_id"][index]
+                    if state_id not in self.geo_lists["state_id"]:
+                        self.geo_lists["state_id"].add(state_id)
+                    else:
+                        continue
+                return self.geo_lists["state_id"]
+
+        elif geo_type=="county" and geo_id_type=="state":
+                stream = pkg_resources.resource_stream(
+                __name__, self.crosswalk_filepaths["fips"]["state"]
+                )
+                crosswalk = pd.read_csv(stream, dtype=str)
+                self.geo_lists["fips"]=set()
+                if geo_id in list(crosswalk["state_id"]):
+                    for i in range(1,len(crosswalk["state_id"])):
+                        if crosswalk["state_id"][i]==geo_id:
+                            self.geo_lists["fips"].add(crosswalk["fips"][i])
+                else:
+                    raise ValueError(f"invalid state value")
+                return self.geo_lists["fips"]
+        else:
+            raise ValueError(f"do not satisfied the reqirement")

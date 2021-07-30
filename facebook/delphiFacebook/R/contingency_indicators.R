@@ -320,6 +320,17 @@ get_aggs <- function() {
     "pct_tested_14d", "t_tested_14d", compute_binary_response, jeffreys_binary,
     "pct_tested_positive_14d", "t_tested_positive_14d", compute_binary_response, jeffreys_binary,
     "pct_wanted_test_14d", "t_wanted_test_14d", compute_binary_response, jeffreys_binary,
+    
+    ## testing reasons
+    "pct_tested_reason_sick", "t_tested_reason_sick", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_contact", "t_tested_reason_contact", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_medical", "t_tested_reason_medical", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_employer", "t_tested_reason_employer", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_large_event", "t_tested_reason_large_event", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_crowd", "t_tested_reason_crowd", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_visit", "t_tested_reason_visit", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_other", "t_tested_reason_other", compute_binary_response, jeffreys_binary,
+    "pct_tested_reason_travel", "t_tested_reason_travel", compute_binary_response, jeffreys_binary,
 
     # mental health
     "pct_worried_become_ill", "mh_worried_ill", compute_binary_response, jeffreys_binary,

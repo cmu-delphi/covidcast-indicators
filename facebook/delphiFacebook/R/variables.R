@@ -351,7 +351,7 @@ code_testing <- function(input_data, wave) {
     input_data$t_tested_reason_employer <- is_selected(testing_reasons, "4")
     input_data$t_tested_reason_large_event <- is_selected(testing_reasons, "5")
     input_data$t_tested_reason_crowd <- is_selected(testing_reasons, "6")
-    input_data$t_tested_reason_visit_fam <- is_selected(testing_reasons, "7")
+    input_data$t_tested_reason_visit <- is_selected(testing_reasons, "7")
     input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
     input_data$t_tested_reason_travel <- is_selected(testing_reasons, "9")
     
@@ -368,7 +368,7 @@ code_testing <- function(input_data, wave) {
       input_data$t_tested_reason_medical == TRUE ~ 1,
       input_data$t_tested_reason_employer == TRUE ~ 1,
       input_data$t_tested_reason_large_event == TRUE ~ 1,
-      input_data$t_tested_reason_visit_fam == TRUE ~ 1,
+      input_data$t_tested_reason_visit == TRUE ~ 1,
       input_data$t_tested_reason_travel == TRUE ~ 1,
       
       !is.na(input_data$B10b) ~ 0,

@@ -36,7 +36,7 @@ class Validator:
 
         # Date/time settings
         validation_params["common"]["end_date"] = end_date_helper(validation_params)
-        self.time_window = TimeWindow.from_params(validation_params["end_date"],
+        self.time_window = TimeWindow.from_params(validation_params["common"]["end_date"],
                                                   validation_params["common"]["span_length"])
         self.data_source = validation_params["common"].get("data_source", "")
 

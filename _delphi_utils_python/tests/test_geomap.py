@@ -341,9 +341,3 @@ class TestGeoMapper:
         assert len(gmpr.get_geo_mapper("al","county","state")) == 67
         assert len(gmpr.get_geo_mapper("4","state","hhs")) == 8
         assert gmpr.get_geo_mapper("4","state","hhs") =={'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}
-        with pytest.raises(ValueError):
-            gmpr.get_geo_mapper("ca","state","nation")
-        with pytest.raises(ValueError):
-            gmpr.get_geo_mapper("aa","county","state")
-        with pytest.raises(ValueError):
-            gmpr.get_geo_mapper("11","state","hhs")

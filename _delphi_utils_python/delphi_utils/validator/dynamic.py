@@ -46,7 +46,7 @@ class DynamicValidator:
 
         self.params = self.Parameters(
             data_source=common_params["data_source"],
-            time_window=TimeWindow.from_params(common_params["end date"],
+            time_window=TimeWindow.from_params(common_params["end_date"],
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(

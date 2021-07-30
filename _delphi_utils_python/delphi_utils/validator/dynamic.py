@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
 import pandas as pd
+import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
@@ -599,6 +600,8 @@ class DynamicValidator:
             z=lambda x: (
                 x["test"] - x["reference mean"]) / x["reference sd"],
             abs_z=lambda x: abs(x["z"])
+        ).replace([np.inf, -np.inf], np.nan, inplace = False
+        ).dropna(
         ).groupby(
             ["geo_id", "variable"], as_index=False
         ).agg(

@@ -5,7 +5,7 @@ from typing import Dict, Set
 import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow, lag_converter, end_date_helper
+from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
 
 class DynamicValidator:
@@ -41,13 +41,12 @@ class DynamicValidator:
         """
         common_params = params["common"]
         dynamic_params = params.get("dynamic", dict())
-        end_date = end_date_helper(params)
 
         self.test_mode = dynamic_params.get("test_mode", False)
 
         self.params = self.Parameters(
             data_source=common_params["data_source"],
-            time_window=TimeWindow.from_params(end_date,
+            time_window=TimeWindow.from_params(common_params["end date"],
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(

@@ -35,8 +35,8 @@ class Validator:
         self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
-        end_date = end_date_helper(validation_params)
-        self.time_window = TimeWindow.from_params(end_date,
+        validation_params["common"]["end_date"] = end_date_helper(validation_params)
+        self.time_window = TimeWindow.from_params(validation_params["end_date"],
                                                   validation_params["common"]["span_length"])
         self.data_source = validation_params["common"].get("data_source", "")
 

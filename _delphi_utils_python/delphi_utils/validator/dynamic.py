@@ -5,7 +5,7 @@ from typing import Dict, Set
 import pandas as pd
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
-from .utils import relative_difference_by_min, TimeWindow, lag_converter
+from .utils import relative_difference_by_min, TimeWindow, lag_converter, end_date_helper
 
 
 class DynamicValidator:
@@ -41,14 +41,7 @@ class DynamicValidator:
         """
         common_params = params["common"]
         dynamic_params = params.get("dynamic", dict())
-        min_expected_lag = lag_converter(common_params.get(
-                "min_expected_lag", dict()))
-        if len(min_expected_lag) == 0:
-            min_expected_lag_overall = 1
-        else:
-            min_expected_lag_overall = min(min_expected_lag.values())
-        end_date = common_params.get(
-            "end_date", f"today-{min_expected_lag_overall}")
+        end_date = end_date_helper(params)
 
         self.test_mode = dynamic_params.get("test_mode", False)
 

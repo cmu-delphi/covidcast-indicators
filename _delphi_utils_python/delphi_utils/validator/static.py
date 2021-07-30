@@ -6,7 +6,7 @@ from typing import Dict, List
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
-from .utils import GEO_REGEX_DICT, TimeWindow, lag_converter
+from .utils import GEO_REGEX_DICT, TimeWindow, lag_converter, end_date_helper
 from ..geomap import GeoMapper
 
 class StaticValidator:
@@ -38,14 +38,7 @@ class StaticValidator:
         """
         common_params = params["common"]
         static_params = params.get("static", dict())
-        min_expected_lag = lag_converter(common_params.get(
-                "min_expected_lag", dict()))
-        if len(min_expected_lag) == 0:
-            min_expected_lag_overall = 1
-        else:
-            min_expected_lag_overall = min(min_expected_lag.values())
-        end_date = common_params.get(
-            "end_date", f"today-{min_expected_lag_overall}")
+        end_date = end_date_helper(params)
 
         self.params = self.Parameters(
             time_window = TimeWindow.from_params(end_date,

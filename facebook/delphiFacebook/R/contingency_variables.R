@@ -351,6 +351,12 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_timing_dontknow <- NA
   }
   
+  if ("B8" %in% names(input_data)) {
+    input_data$t_ever_tested <- input_data$B8 == 1
+  } else {
+    input_data$t_ever_tested <- NA
+  }
+  
   return(input_data)
 }
 

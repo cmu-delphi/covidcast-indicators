@@ -328,6 +328,7 @@ get_aggs <- function() {
     "pct_tested_14d", "t_tested_14d", compute_binary_response, jeffreys_binary,
     "pct_tested_positive_14d", "t_tested_positive_14d", compute_binary_response, jeffreys_binary,
     "pct_wanted_test_14d", "t_wanted_test_14d", compute_binary_response, jeffreys_binary,
+    "pct_ever_tested", "t_ever_tested", compute_binary_response, jeffreys_binary,
     
     ## testing reasons
     "pct_tested_reason_sick", "t_tested_reason_sick", compute_binary_response, jeffreys_binary,

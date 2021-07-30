@@ -13,7 +13,6 @@
     "common": {
       "data_source": "google-symptoms",
       "span_length": 14,
-      "end_date": "today-8",
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
       "suppressed_errors": [

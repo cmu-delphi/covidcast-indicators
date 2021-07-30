@@ -5,7 +5,7 @@ from .dynamic import DynamicValidator
 from .errors import ValidationFailure
 from .report import ValidationReport
 from .static import StaticValidator
-from .utils import aggregate_frames, TimeWindow, lag_converter, end_date_helper
+from .utils import aggregate_frames, TimeWindow, end_date_helper
 
 class Validator:
     """Class containing validation() function and supporting functions.

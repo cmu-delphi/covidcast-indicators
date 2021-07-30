@@ -20,7 +20,6 @@
     "common": {
       "data_source": "usa-facts",
       "span_length": 14,
-      "end_date": "today-2",
       "min_expected_lag": {"all": "1"},
       "max_expected_lag": {"all": "5"},
       "suppressed_errors": [

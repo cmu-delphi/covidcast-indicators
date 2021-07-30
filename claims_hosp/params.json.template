@@ -20,7 +20,6 @@
     "common": {
       "data_source": "hospital-admissions",
       "span_length": 14,
-      "end_date": "today-4",
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
       "suppressed_errors": []

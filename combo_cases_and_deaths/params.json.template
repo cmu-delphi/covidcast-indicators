@@ -15,7 +15,6 @@
     "common": {
       "data_source": "indicator-combination",
       "span_length": 14,
-      "end_date": "today-7",
       "min_expected_lag": {"all": "2"},
       "max_expected_lag": {"all": "6"},
       "suppressed_errors": [{"check_name": "check_val_lt_0"} ]

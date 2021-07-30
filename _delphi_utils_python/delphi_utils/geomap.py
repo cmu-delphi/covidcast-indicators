@@ -596,7 +596,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
 
-    def get_geo_mapper(self, geo_id, geo_type,geo_id_type=None):
+    def get_geo_mapper(self, geo_id, geo_type,geo_id_type):
         """
         Given a geo id (e.g. "ca" for California, a state)
         and an enclosed geo type (e.g. "county"),
@@ -623,26 +623,26 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
 
         if geo_type not in ("county","state"):
-            raise ValueError(f"geo_type must be one of state, nation and hhs")
+            raise ValueError("geo_type must be one of state, nation and hhs")
 
         if geo_type=="state":
             if geo_id_type=="nation":
                 if geo_id=="us":
                     stream = pkg_resources.resource_stream(
-                    __name__, self.crosswalk_filepaths[geo_type][geo_type]
+                        __name__, self.crosswalk_filepaths[geo_type][geo_type]
                     )
                     crosswalk = pd.read_csv(stream, dtype=str)
                     self.geo_lists["state_id"] = set(crosswalk["state_id"])
-                    return self.geo_lists["state_id"]
                 else:
-                    raise ValueError(f"geo_id of nation only included us")
+                    raise ValueError("geo_id of nation only included us")
+                return self.geo_lists["state_id"]
 
             if geo_id_type=="hhs":
                 stream1 = pkg_resources.resource_stream(
-                __name__, self.crosswalk_filepaths["fips"]["hhs"]
+                    __name__, self.crosswalk_filepaths["fips"]["hhs"]
                 )
                 stream2= pkg_resources.resource_stream(
-                __name__, self.crosswalk_filepaths["fips"]["state"]
+                    __name__, self.crosswalk_filepaths["fips"]["state"]
                 )
                 crosswalk1 = pd.read_csv(stream1, dtype=str)
                 crosswalk2 = pd.read_csv(stream2, dtype=str)
@@ -652,10 +652,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                         if crosswalk1["hhs"][i]==geo_id:
                             fips_hhs.append(crosswalk1["fips"][i])
                 else:
-                    raise ValueError(f"invalid hhs value")
+                    raise ValueError("invalid hhs value")
                 self.geo_lists["state_id"]=set()
-                for i in range(len(fips_hhs)):
-                    fips_id=fips_hhs[i]
+                for i,fips_id in enumerate(fips_hhs):
                     index=list(crosswalk2["fips"]).index(fips_id)
                     state_id=crosswalk2["state_id"][index]
                     if state_id not in self.geo_lists["state_id"]:
@@ -665,17 +664,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 return self.geo_lists["state_id"]
 
         elif geo_type=="county" and geo_id_type=="state":
-                stream = pkg_resources.resource_stream(
+            stream = pkg_resources.resource_stream(
                 __name__, self.crosswalk_filepaths["fips"]["state"]
-                )
-                crosswalk = pd.read_csv(stream, dtype=str)
-                self.geo_lists["fips"]=set()
-                if geo_id in list(crosswalk["state_id"]):
-                    for i in range(1,len(crosswalk["state_id"])):
-                        if crosswalk["state_id"][i]==geo_id:
-                            self.geo_lists["fips"].add(crosswalk["fips"][i])
-                else:
-                    raise ValueError(f"invalid state value")
-                return self.geo_lists["fips"]
+            )
+            crosswalk = pd.read_csv(stream, dtype=str)
+            self.geo_lists["fips"]=set()
+            if geo_id in list(crosswalk["state_id"]):
+                for i in range(1,len(crosswalk["state_id"])):
+                    if crosswalk["state_id"][i]==geo_id:
+                        self.geo_lists["fips"].add(crosswalk["fips"][i])
+            else:
+                raise ValueError("invalid state value")
+            return self.geo_lists["fips"]
         else:
-            raise ValueError(f"do not satisfied the reqirement")
+            raise ValueError("do not satisfied the reqirement")

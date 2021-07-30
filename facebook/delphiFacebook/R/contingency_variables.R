@@ -334,6 +334,23 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$v_accept_vaccine_no_appointment_defno <- input_data$V3a == 4
   }
   
+  if ( "V16" %in% names(input_data) ) {
+    # introduced in Wave 11
+    input_data$v_vaccine_timing_weeks <- input_data$V16 == 1
+    input_data$v_vaccine_timing_onemonth <- input_data$V16 == 2
+    input_data$v_vaccine_timing_threemonths <- input_data$V16 == 3
+    input_data$v_vaccine_timing_sixmonths <- input_data$V16 == 4
+    input_data$v_vaccine_timing_morethansix <- input_data$V16 == 5
+    input_data$v_vaccine_timing_dontknow <- input_data$V16 == 6
+  } else {
+    input_data$v_vaccine_timing_weeks <- NA
+    input_data$v_vaccine_timing_onemonth <- NA
+    input_data$v_vaccine_timing_threemonths <- NA
+    input_data$v_vaccine_timing_sixmonths <- NA
+    input_data$v_vaccine_timing_morethansix <- NA
+    input_data$v_vaccine_timing_dontknow <- NA
+  }
+  
   return(input_data)
 }
 

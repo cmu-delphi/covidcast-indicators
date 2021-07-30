@@ -123,7 +123,7 @@ def lag_converter(lag_dict):
     return output_dict
 
 def end_date_helper(params):
-    """Calculate end_date from params"""
+    """Calculate end_date from params."""
     common_params = params["common"]
     min_expected_lag = lag_converter(common_params.get(
             "min_expected_lag", dict()))

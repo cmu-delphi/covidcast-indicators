@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
 import pandas as pd
+import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
@@ -116,24 +117,29 @@ class DynamicValidator:
                 report.add_raised_error(api_df_or_error)
                 continue
 
-            # Outlier dataframe
-            earliest_available_date = geo_sig_df["time_value"].min()
-            source_df = geo_sig_df.query(
-                'time_value <= @self.params.time_window.end_date & '
-                'time_value >= @self.params.time_window.start_date'
-            )
+            # Only do outlier check for cases and deaths signals
+            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
+                                "confirmed_cumulative_num", "confirmed_incidence_num",
+                                "deaths_7dav_cumulative_num",
+                                "deaths_cumulative_num"]):
+                # Outlier dataframe
+                earliest_available_date = geo_sig_df["time_value"].min()
+                source_df = geo_sig_df.query(
+                    'time_value <= @self.params.time_window.end_date & '
+                    'time_value >= @self.params.time_window.start_date'
+                )
 
-            # These variables are interpolated into the call to `api_df_or_error.query()`
-            # below but pylint doesn't recognize that.
-            # pylint: disable=unused-variable
-            outlier_start_date = earliest_available_date - outlier_lookbehind
-            outlier_end_date = earliest_available_date - timedelta(days=1)
-            outlier_api_df = api_df_or_error.query(
-                'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-            # pylint: enable=unused-variable
+                # These variables are interpolated into the call to `api_df_or_error.query()`
+                # below but pylint doesn't recognize that.
+                # pylint: disable=unused-variable
+                outlier_start_date = earliest_available_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = api_df_or_error.query(
+                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+                # pylint: enable=unused-variable
 
-            self.check_positive_negative_spikes(
-                source_df, outlier_api_df, geo_type, signal_type, report)
+                self.check_positive_negative_spikes(
+                    source_df, outlier_api_df, geo_type, signal_type, report)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -594,6 +600,8 @@ class DynamicValidator:
             z=lambda x: (
                 x["test"] - x["reference mean"]) / x["reference sd"],
             abs_z=lambda x: abs(x["z"])
+        ).replace([np.inf, -np.inf], np.nan, inplace = False
+        ).dropna(
         ).groupby(
             ["geo_id", "variable"], as_index=False
         ).agg(

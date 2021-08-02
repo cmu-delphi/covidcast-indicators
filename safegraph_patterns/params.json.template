@@ -18,7 +18,6 @@
     "common": {
       "data_source": "safegraph",
       "span_length": 14,
-      "end_date": "today-4",
       "min_expected_lag": {"all": "sunday+4,4"},
       "max_expected_lag": {"all": "sunday+4,4"},
       "suppressed_errors": [

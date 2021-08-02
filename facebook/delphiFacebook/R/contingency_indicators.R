@@ -204,7 +204,35 @@ get_aggs <- function() {
     "pct_appointment_have", "v_appointment_have", compute_binary, jeffreys_binary,
     "pct_appointment_not_vaccinated", "v_appointment_not_vaccinated", compute_binary, jeffreys_binary,
     "pct_appointment_tried", "v_appointment_tried", compute_binary, jeffreys_binary,
-    "pct_vaccine_tried", "v_vaccine_tried", compute_binary, jeffreys_binary
+    "pct_vaccine_tried", "v_vaccine_tried", compute_binary, jeffreys_binary,
+    
+    # vaccine barriers for vaccinated
+    "pct_vaccine_barrier_eligible_has", "v_vaccine_barrier_eligible_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_no_appointments_has", "v_vaccine_barrier_no_appointments_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_time_has", "v_vaccine_barrier_appointment_time_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technical_difficulties_has", "v_vaccine_barrier_technical_difficulties_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_document_has", "v_vaccine_barrier_document_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technology_access_has", "v_vaccine_barrier_technology_access_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_travel_has", "v_vaccine_barrier_travel_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_language_has", "v_vaccine_barrier_language_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_childcare_has", "v_vaccine_barrier_childcare_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_time_has", "v_vaccine_barrier_time_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_type_has", "v_vaccine_barrier_type_has", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_none_has", "v_vaccine_barrier_none_has", compute_binary_response, jeffreys_binary,
+    
+    # vaccine barriers for tried vaccinated
+    "pct_vaccine_barrier_eligible_tried", "v_vaccine_barrier_eligible_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_no_appointments_tried", "v_vaccine_barrier_no_appointments_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_time_tried", "v_vaccine_barrier_appointment_time_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technical_difficulties_tried", "v_vaccine_barrier_technical_difficulties_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_document_tried", "v_vaccine_barrier_document_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_technology_access_tried", "v_vaccine_barrier_technology_access_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_travel_tried", "v_vaccine_barrier_travel_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_language_tried", "v_vaccine_barrier_language_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_childcare_tried", "v_vaccine_barrier_childcare_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_time_tried", "v_vaccine_barrier_time_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_type_tried", "v_vaccine_barrier_type_tried", compute_binary_response, jeffreys_binary,
+    "pct_vaccine_barrier_none_tried", "v_vaccine_barrier_none_tried", compute_binary_response, jeffreys_binary
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)
@@ -217,21 +245,21 @@ get_aggs <- function() {
   cut1_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, name %in% c("pct_worried_vaccine_sideeffects", "pct_hesitant_worried_vaccine_sideeffects"))
+    filter(indicators, .data$name %in% c("pct_worried_vaccine_sideeffects", "pct_hesitant_worried_vaccine_sideeffects"))
   )
   
   ## Cut 2: trust various institutions if hesitant about getting vaccine
   cut2_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, startsWith(name, "pct_hesitant_vaccine_likely_"))
+    filter(indicators, startsWith(.data$name, "pct_hesitant_vaccine_likely_"))
   )
   
   ## Cut 3: trust various institutions
   cut3_aggs <- create_aggs_product(
     regions,
     list(common_group),
-    filter(indicators, startsWith(name, "pct_vaccine_likely_"))
+    filter(indicators, startsWith(.data$name, "pct_vaccine_likely_"))
   )
   
   ## Cuts 4, 5, 6: vaccinated and accepting generally, or if senior, or in healthcare
@@ -244,7 +272,7 @@ get_aggs <- function() {
   cut456_aggs <- create_aggs_product(
     regions,
     cut456_groups,
-    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
+    filter(indicators, .data$name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
   )
   
   ## Cuts 4, 5, 6: marginal
@@ -258,7 +286,7 @@ get_aggs <- function() {
   cut456_marginal_aggs <- create_aggs_product(
     list("state"),
     cut456_marginal_groups,
-    filter(indicators, name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
+    filter(indicators, .data$name %in% c("pct_vaccinated", "pct_accept_vaccine", "pct_appointment_or_accept_vaccine", "pct_accept_vaccine_no_appointment"))
   )
   
   ### Combine full set and additional original tables.
@@ -281,6 +309,7 @@ get_aggs <- function() {
 #' @return tibble of created aggs
 #'
 #' @importFrom tibble tribble
+#' @importFrom stats na.omit
 create_aggs_product <- function(regions, groups, indicators) {
   aggs <- tribble(
     ~name, ~metric, ~group_by, ~compute_fn, ~post_fn,

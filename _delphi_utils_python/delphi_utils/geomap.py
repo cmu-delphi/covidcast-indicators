@@ -596,7 +596,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
 
-    def get_geo_mapper(self, geo_id, geo_type,geo_id_type):
+    def get_geos_within(self, geo_id, geo_type,geo_id_type):
         """
         Return all contained/child regions.
 

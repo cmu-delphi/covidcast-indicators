@@ -419,7 +419,11 @@ class DynamicValidator:
         report.increment_total_checks()
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
+        # This variable is interpolated into the call to `add_raised_error()`
+        # below but pylint doesn't recognize that.
+        # pylint: disable=unused-variable
         source_frame_end = source_df["time_value"].max()
+        # pylint: enable=unused-variable
         all_frames = pd.concat([api_frames, source_df]). \
             drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index(drop=True)
@@ -528,7 +532,7 @@ class DynamicValidator:
             report.add_raised_error(
                 ValidationFailure(
                     "check_positive_negative_spikes",
-                    source_frame_end,
+                    source_outliers["time_value"].max(),
                     geo,
                     sig,
                     "Source dates with flagged ouliers based on the previous 14 days of data "

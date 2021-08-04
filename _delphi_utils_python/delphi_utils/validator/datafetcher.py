@@ -3,12 +3,12 @@
 
 import re
 import threading
+import requests
 from os import listdir
 from os.path import isfile, join
 import warnings
 import pandas as pd
 import numpy as np
-from delphi_epidata import Epidata
 
 import covidcast
 from .errors import APIDataFetchError, ValidationFailure
@@ -122,8 +122,6 @@ def get_geo_signal_combos(data_source):
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
     geo_signal_combos = list(map(tuple,
                                  source_meta[["geo_type", "signal"]].to_records(index=False)))
-    # Changing base URL to search for each signal
-    Epidata.BASE_URL = "https://api.covidcast.cmu.edu/epidata/covidcast/meta"
     # Only add new geo_sig combos if status is active
     new_geo_signal_combos = []
     # Use a seen dict to save on multiple calls:
@@ -140,16 +138,17 @@ def get_geo_signal_combos(data_source):
             if geo_status is True:
                 new_geo_signal_combos.append(combo)
             elif geo_status == "unknown":
-                epidata_signal = Epidata._request({'signal': f"{src}:{geo}"})
+                epidata_signal = requests.get(
+                    "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
+                    params={'signal': f"{src}:{geo}"})
                 # Not an active signal
-                if len(epidata_signal) == 0:
+                active_status = [i['active'] for i in epidata_signal.json()]
+                if active_status == []:
+                    geo_seen[geo] = False
                     continue
-                active_status = (epidata_signal[0])["active"]
-                geo_seen[geo] = active_status
-                if active_status:
+                geo_seen[geo] = active_status[0]
+                if active_status[0] is True:
                     new_geo_signal_combos.append(combo)
-    # Change base URL back to original
-    Epidata.BASE_URL = "https://api.covidcast.cmu.edu/epidata/api.php"
     return new_geo_signal_combos
 
 def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type):

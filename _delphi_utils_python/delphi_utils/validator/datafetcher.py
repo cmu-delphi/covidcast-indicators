@@ -8,6 +8,7 @@ from os.path import isfile, join
 import warnings
 import pandas as pd
 import numpy as np
+from delphi_epidata import Epidata
 
 import covidcast
 from .errors import APIDataFetchError, ValidationFailure
@@ -109,14 +110,47 @@ def get_geo_signal_combos(data_source):
 
     Cross references based on combinations reported available by COVIDcast metadata.
     """
+    # Maps data_source name with what's in the API, lists used in case of multiple names
+    source_signal_mappings = {
+        'chng': ['chng-cli', 'chng-covid'],
+        'indicator-combination': ['indicator-combination-cases-deaths'],
+        'quidel': ['quidel-covid-ag'],
+        'safegraph': ['safegraph-weekly']
+    }
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
     geo_signal_combos = list(map(tuple,
                                  source_meta[["geo_type", "signal"]].to_records(index=False)))
-
-    return geo_signal_combos
-
+    # Changing base URL to search for each signal
+    Epidata.BASE_URL = "https://api.covidcast.cmu.edu/epidata/covidcast/meta"
+    # Only add new geo_sig combos if status is active
+    new_geo_signal_combos = []
+    # Use a seen dict to save on multiple calls:
+    # True/False indicate if status is active, "unknown" means we should check
+    geo_seen = dict()
+    for combo in geo_signal_combos:
+        if source_signal_mappings.get(data_source):
+            src_list = source_signal_mappings.get(data_source)
+        else:
+            src_list = [data_source]
+        for src in src_list:
+            geo = combo[1]
+            geo_status = geo_seen.get(geo, "unknown")
+            if geo_status is True:
+                new_geo_signal_combos.append(combo)
+            elif geo_status == "unknown":
+                epidata_signal = Epidata._request({'signal': f"{src}:{geo}"})
+                # Not an active signal
+                if len(epidata_signal) == 0:
+                    continue
+                active_status = (epidata_signal[0])["active"]
+                geo_seen[geo] = active_status
+                if active_status:
+                    new_geo_signal_combos.append(combo)
+    # Change base URL back to original
+    Epidata.BASE_URL = "https://api.covidcast.cmu.edu/epidata/api.php"
+    return new_geo_signal_combos
 
 def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type):
     """

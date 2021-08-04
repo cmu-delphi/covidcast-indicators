@@ -343,6 +343,7 @@ get_aggs <- function() {
 
     # mental health
     "pct_worried_become_ill", "mh_worried_ill", compute_binary_response, jeffreys_binary,
+    "pct_finance", "mh_worried_finances", compute_binary_response, jeffreys_binary,
     # pre-wave 10
     "pct_anxious_5d", "mh_anxious", compute_binary_response, jeffreys_binary,
     "pct_depressed_5d", "mh_depressed", compute_binary_response, jeffreys_binary,

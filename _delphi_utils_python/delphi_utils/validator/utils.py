@@ -108,9 +108,9 @@ def lag_converter(lag_dict):
             # Check that the number proceeding sunday+ has length of 1
             assert value[8] == ","
             # Value_num calculates the number of days between today and the
-            # Update day, except that if both days of the week are the same,
-            # Expected lag is 7 (in case updates aren't in yet)
-            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+            # Update day, if both days of the week are the same,
+            # Expected lag is 0
+            value_num = (date.today().isoweekday() - int(value[7:8])) % 7
             # Add on expected lag to lag from weekdays
             value_num += int(value[9:])
         else:

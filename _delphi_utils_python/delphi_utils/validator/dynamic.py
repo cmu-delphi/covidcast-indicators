@@ -419,7 +419,11 @@ class DynamicValidator:
         report.increment_total_checks()
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
+        # This variable is interpolated into the call to `add_raised_error()`
+        # below but pylint doesn't recognize that.
+        # pylint: disable=unused-variable
         source_frame_end = source_df["time_value"].max()
+        # pylint: enable=unused-variable
         all_frames = pd.concat([api_frames, source_df]). \
             drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index(drop=True)
@@ -525,14 +529,15 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            report.add_raised_error(
-                ValidationFailure(
-                    "check_positive_negative_spikes",
-                    source_frame_end,
-                    geo,
-                    sig,
-                    "Source dates with flagged ouliers based on the previous 14 days of data "
-                    "available"))
+            for time_val in source_outliers["time_value"].unique():
+                report.add_raised_error(
+                    ValidationFailure(
+                        "check_positive_negative_spikes",
+                        time_val,
+                        geo,
+                        sig,
+                        "Source dates with flagged ouliers based on the previous 14 days of data "
+                        "available"))
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type, report):
@@ -558,7 +563,8 @@ class DynamicValidator:
         # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
         replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},
                         "se": {0: reference_sd.se[reference_sd.se > 0].min()},
-                        "sample_size": {0: reference_sd.se[reference_sd.sample_size > 0].min()}}
+                        "sample_size": {0: reference_sd.sample_size[
+                            reference_sd.sample_size > 0].min()}}
         reference_sd.replace(replacements, inplace=True)
 
         # Duplicate reference_mean and reference_sd for every unique time_value seen in df_to_test

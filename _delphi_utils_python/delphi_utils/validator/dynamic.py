@@ -529,14 +529,15 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            report.add_raised_error(
-                ValidationFailure(
-                    "check_positive_negative_spikes",
-                    source_outliers["time_value"].max(),
-                    geo,
-                    sig,
-                    "Source dates with flagged ouliers based on the previous 14 days of data "
-                    "available"))
+            for time_val in source_outliers["time_value"].unique():
+                report.add_raised_error(
+                    ValidationFailure(
+                        "check_positive_negative_spikes",
+                        time_val,
+                        geo,
+                        sig,
+                        "Source dates with flagged ouliers based on the previous 14 days of data "
+                        "available"))
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type, report):

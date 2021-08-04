@@ -282,7 +282,7 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_neg_outlier(self):
@@ -319,7 +319,7 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_zero_outlier(self):
@@ -428,5 +428,5 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"

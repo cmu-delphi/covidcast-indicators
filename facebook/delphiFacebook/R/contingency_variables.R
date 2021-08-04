@@ -1037,7 +1037,7 @@ code_addl_symptoms <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_behaviors <- function(input_data, wave) {
   # direct_contact (discontinued as of Wave 11)
   # Percentage of respondents that have reported having had direct contact 
@@ -1059,3 +1059,51 @@ code_behaviors <- function(input_data, wave) {
   
   return(input_data)
 }
+
+#' Activities
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_addl_activities <- function(input_data, wave) {
+  if ("C13a" %in% names(input_data)) {
+    # introduced in wave 4
+    activities <- split_options(input_data$C13a)
+    
+    input_data$a_mask_work_outside_home_1d <- is_selected(activities, "1")
+    input_data$a_mask_shop_1d <- is_selected(activities, "2")
+    input_data$a_mask_restaurant_1d <- is_selected(activities, "3")
+    input_data$a_mask_spent_time_1d <- is_selected(activities, "4")
+    input_data$a_mask_large_event_1d <- is_selected(activities, "5")
+    input_data$a_mask_public_transit_1d <- is_selected(activities, "6")
+  } else {
+    input_data$a_mask_work_outside_home_1d <- NA
+    input_data$a_mask_shop_1d <- NA
+    input_data$a_mask_restaurant_1d <- NA
+    input_data$a_mask_spent_time_1d <- NA
+    input_data$a_mask_large_event_1d <- NA
+    input_data$a_mask_public_transit_1d <- NA
+  }
+  
+  if ("C13c" %in% names(input_data)) {
+    # introduced in wave 10 as "indoors" activities version of C13a
+    activities <- split_options(input_data$C13c)
+    
+    input_data$a_mask_work_outside_home_indoors_1d <- is_selected(activities, "1")
+    input_data$a_mask_shop_indoors_1d <- is_selected(activities, "2")
+    input_data$a_mask_restaurant_indoors_1d <- is_selected(activities, "3")
+    input_data$a_mask_spent_time_indoors_1d <- is_selected(activities, "4")
+    input_data$a_mask_large_event_indoors_1d <- is_selected(activities, "5")
+    input_data$a_mask_public_transit_1d <- is_selected(activities, "6")
+  } else {
+    input_data$a_mask_work_outside_home_indoors_1d <- NA
+    input_data$a_mask_shop_indoors_1d <- NA
+    input_data$a_mask_restaurant_indoors_1d <- NA
+    input_data$a_mask_spent_time_indoors_1d <- NA
+    input_data$a_mask_large_event_indoors_1d <- NA
+  }
+  
+  return(input_data)
+}
+

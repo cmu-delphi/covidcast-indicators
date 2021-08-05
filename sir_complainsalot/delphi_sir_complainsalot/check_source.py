@@ -63,7 +63,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
     gap_complaints = {}
 
     for _, row in signals.iterrows():
-        retired_signals = source_config.get("retired-signals", "")
+        retired_signals = source_config.get("retired-signals")
         if _is_retired(row, retired_signals):
             continue
 

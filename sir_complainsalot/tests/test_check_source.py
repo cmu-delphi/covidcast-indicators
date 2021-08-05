@@ -28,3 +28,4 @@ class TestCheckSource:
             ["deaths_7dav_cumulative_prop", "nation"]
         ]
         assert _is_retired(row, retired_signals) == expected
+        assert _is_retired(row, None) == False

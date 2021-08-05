@@ -100,8 +100,7 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
         if current_lag_in_days > source_config["max_age"] + grace:
             if row["signal"] not in age_complaints:
                 age_complaints[row["signal"]] = Complaint(
-                    "is {current_lag_in_days} days old".format(
-                        current_lag_in_days=current_lag_in_days),
+                    f"is {current_lag_in_days} days old",
                     data_source,
                     row["signal"],
                     [row["geo_type"]],

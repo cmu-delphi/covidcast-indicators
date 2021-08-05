@@ -596,12 +596,12 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
 
-    def get_geos_within(self, container_geocode, child_geocode_type,container_geocode_type):
+    def get_geos_within(self, container_geocode, contained_geocode_type,container_geocode_type):
         """
-        Return all contained/child regions.
+        Return all contained regions within same container geocode.
 
         Given a container geocode (e.g. "ca" for California, a state)
-        and an enclosed child geocode type (e.g. "county").
+        and an enclosed contained geocode type (e.g. "county").
         return a set of container geocode value of the specified type that
         lie within the specified geo code (e.g. all counties within California)
         Support these 3 types:
@@ -614,7 +614,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         container_geocode: str of identity of nation/state/hhs
             "fips" for return container_geocode of state
             "state_id" for return container_geocode of nation and hhs
-        child_geocode_type: str
+        contained_geocode_type: str
             One of "state","county"
         container_geocode_type: str
             One of "state","nation","hhs"
@@ -624,30 +624,22 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         Set of geo ids of the specified type that lie within the specified container geocode,
         all in string format.
         """
-        if child_geocode_type not in ("county","state"):
-            raise ValueError("child_geocode_type must be one of state, nation and hhs")
-        get_geo_values=set()
-        if child_geocode_type=="state":
+        if contained_geocode_type not in ("county","state"):
+            raise ValueError("contained_geocode_type must be one of state, nation and hhs")
+        geo_values=set()
+        if contained_geocode_type=="state":
             if container_geocode_type=="nation" and container_geocode=="us":
                 crosswalk = self._load_crosswalk_from_file("state", "state")
-                get_geo_values=set(crosswalk["state_id"])
+                geo_values=set(crosswalk["state_id"])
             if container_geocode_type=="hhs":
-                crosswalk_fips_to_hhs = self._load_crosswalk_from_file("fips", "hhs")
-                crosswalk_fips_to_state = self._load_crosswalk_from_file("fips", "state")
-                fips_hhs=[]
-                for i in range(1,len(crosswalk_fips_to_hhs["hhs"])):
-                    if crosswalk_fips_to_hhs["hhs"][i]==container_geocode:
-                        fips_hhs.append(crosswalk_fips_to_hhs["fips"][i])
-                for i,fips_id in enumerate(fips_hhs):
-                    index=list(crosswalk_fips_to_state["fips"]).index(fips_id)
-                    state_id=crosswalk_fips_to_state["state_id"][index]
-                    if state_id not in get_geo_values:
-                        get_geo_values.add(state_id)
-        elif child_geocode_type=="county" and container_geocode_type=="state":
+                crosswalk_hhs = self._load_crosswalk_from_file("fips", "hhs")
+                crosswalk_state = self._load_crosswalk_from_file("fips", "state")
+                fips_hhs=crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
+                fips_state_id=crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"]
+                geo_values.update(fips_state_id)
+        elif contained_geocode_type=="county" and container_geocode_type=="state":
             crosswalk = self._load_crosswalk_from_file("fips", "state")
-            for i in range(1,len(crosswalk["state_id"])):
-                if crosswalk["state_id"][i]==container_geocode:
-                    get_geo_values.add(crosswalk["fips"][i])
+            geo_values=crosswalk[crosswalk["state_id"]==container_geocode]["fips"]
         else:
-            raise ValueError("do not satisfied the reqirement")
-        return get_geo_values
+            raise ValueError("Do not satisfied the reqirement")
+        return geo_values

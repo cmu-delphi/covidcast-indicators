@@ -338,6 +338,6 @@ class TestGeoMapper:
     def test_get_geos_within(self):
         gmpr = GeoMapper()
         assert len(gmpr.get_geos_within("us","state","nation")) == 60
-        assert len(gmpr.get_geos_within("al","county","state")) == 67
+        assert len(gmpr.get_geos_within("al","county","state")) == 68
         assert len(gmpr.get_geos_within("4","state","hhs")) == 8
         assert gmpr.get_geos_within("4","state","hhs") =={'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}

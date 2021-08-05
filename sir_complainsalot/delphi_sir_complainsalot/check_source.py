@@ -52,10 +52,12 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
 
     """
     source_config = params[data_source]
+    retired_signals = source_config.get("retired-signals")
     gap_window = pd.Timedelta(days=source_config.get("gap_window", 7))
     max_allowed_gap = source_config.get("max_gap", 1)
 
-    signals = meta[meta.data_source == data_source]
+    signals = meta[(meta.data_source == data_source) &
+                   ~meta.apply(_is_retired, axis=1, retired_signals=retired_signals)]
 
     now = pd.Timestamp.now()
 
@@ -63,10 +65,6 @@ def check_source(data_source, meta, params, grace, logger):  # pylint: disable=t
     gap_complaints = {}
 
     for _, row in signals.iterrows():
-        retired_signals = source_config.get("retired-signals")
-        if _is_retired(row, retired_signals):
-            continue
-
         logger.info("Retrieving signal",
             data_source=data_source,
             signal=row["signal"],

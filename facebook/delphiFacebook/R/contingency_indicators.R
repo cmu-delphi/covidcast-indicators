@@ -331,15 +331,15 @@ get_aggs <- function() {
     "pct_ever_tested", "t_ever_tested", compute_binary, jeffreys_binary,
     
     ## testing reasons
-    "pct_tested_reason_sick", "t_tested_reason_sick", compute_binary, jeffreys_binary,
-    "pct_tested_reason_contact", "t_tested_reason_contact", compute_binary, jeffreys_binary,
-    "pct_tested_reason_medical", "t_tested_reason_medical", compute_binary, jeffreys_binary,
-    "pct_tested_reason_employer", "t_tested_reason_employer", compute_binary, jeffreys_binary,
-    "pct_tested_reason_large_event", "t_tested_reason_large_event", compute_binary, jeffreys_binary,
-    "pct_tested_reason_crowd", "t_tested_reason_crowd", compute_binary, jeffreys_binary,
-    "pct_tested_reason_visit", "t_tested_reason_visit", compute_binary, jeffreys_binary,
-    "pct_tested_reason_other", "t_tested_reason_other", compute_binary, jeffreys_binary,
-    "pct_tested_reason_travel", "t_tested_reason_travel", compute_binary, jeffreys_binary,
+    "pct_test_reason_sick", "t_tested_reason_sick", compute_binary, jeffreys_binary,
+    "pct_test_reason_contact", "t_tested_reason_contact", compute_binary, jeffreys_binary,
+    "pct_test_reason_medical", "t_tested_reason_medical", compute_binary, jeffreys_binary,
+    "pct_test_reason_employer", "t_tested_reason_employer", compute_binary, jeffreys_binary,
+    "pct_test_reason_large_event", "t_tested_reason_large_event", compute_binary, jeffreys_binary,
+    "pct_test_reason_crowd", "t_tested_reason_crowd", compute_binary, jeffreys_binary,
+    "pct_test_reason_visit", "t_tested_reason_visit", compute_binary, jeffreys_binary,
+    "pct_test_reason_none", "t_tested_reason_other", compute_binary, jeffreys_binary,
+    "pct_test_reason_travel", "t_tested_reason_travel", compute_binary, jeffreys_binary,
 
     # mental health
     "pct_worried_become_ill", "mh_worried_ill", compute_binary, jeffreys_binary,

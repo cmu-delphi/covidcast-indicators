@@ -381,6 +381,16 @@ code_testing <- function(input_data, wave) {
     )
   } else {
     input_data$t_screening_tested_positive_14d <- NA_real_
+    
+    input_data$t_tested_reason_sick <- NA
+    input_data$t_tested_reason_contact <- NA
+    input_data$t_tested_reason_medical <- NA
+    input_data$t_tested_reason_employer <- NA
+    input_data$t_tested_reason_large_event <- NA
+    input_data$t_tested_reason_crowd <- NA
+    input_data$t_tested_reason_visit <- NA
+    input_data$t_tested_reason_other <- NA
+    input_data$t_tested_reason_travel <- NA
   }
   
   if ("B13" %in% names(input_data)) {

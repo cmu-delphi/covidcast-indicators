@@ -45,7 +45,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
             name = indicator_fn.__module__,
             filename=params["common"].get("log_filename", None)))
     if archiver and (not validator or validation_report.success()):
-        archiver.archive()
+        archiver.run()
 
 
 if __name__ == "__main__":

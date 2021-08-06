@@ -983,8 +983,8 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_stuffy_nose <- NA
   }
   
-  if ("B2C" %in% names(input_data)) {
-    symptoms <- split_options(input_data$B2C)
+  if ("B2c" %in% names(input_data)) {
+    symptoms <- split_options(input_data$B2c)
     
     input_data$symp_fever_unusual <- is_selected(symptoms, "1")
     input_data$symp_cough_unusual <- is_selected(symptoms, "2")

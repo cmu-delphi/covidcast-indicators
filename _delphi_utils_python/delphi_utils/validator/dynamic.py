@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
 import pandas as pd
+import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
@@ -116,24 +117,29 @@ class DynamicValidator:
                 report.add_raised_error(api_df_or_error)
                 continue
 
-            # Outlier dataframe
-            earliest_available_date = geo_sig_df["time_value"].min()
-            source_df = geo_sig_df.query(
-                'time_value <= @self.params.time_window.end_date & '
-                'time_value >= @self.params.time_window.start_date'
-            )
+            # Only do outlier check for cases and deaths signals
+            if (signal_type in ["confirmed_7dav_cumulative_num", "confirmed_7dav_incidence_num",
+                                "confirmed_cumulative_num", "confirmed_incidence_num",
+                                "deaths_7dav_cumulative_num",
+                                "deaths_cumulative_num"]):
+                # Outlier dataframe
+                earliest_available_date = geo_sig_df["time_value"].min()
+                source_df = geo_sig_df.query(
+                    'time_value <= @self.params.time_window.end_date & '
+                    'time_value >= @self.params.time_window.start_date'
+                )
 
-            # These variables are interpolated into the call to `api_df_or_error.query()`
-            # below but pylint doesn't recognize that.
-            # pylint: disable=unused-variable
-            outlier_start_date = earliest_available_date - outlier_lookbehind
-            outlier_end_date = earliest_available_date - timedelta(days=1)
-            outlier_api_df = api_df_or_error.query(
-                'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
-            # pylint: enable=unused-variable
+                # These variables are interpolated into the call to `api_df_or_error.query()`
+                # below but pylint doesn't recognize that.
+                # pylint: disable=unused-variable
+                outlier_start_date = earliest_available_date - outlier_lookbehind
+                outlier_end_date = earliest_available_date - timedelta(days=1)
+                outlier_api_df = api_df_or_error.query(
+                    'time_value <= @outlier_end_date & time_value >= @outlier_start_date')
+                # pylint: enable=unused-variable
 
-            self.check_positive_negative_spikes(
-                source_df, outlier_api_df, geo_type, signal_type, report)
+                self.check_positive_negative_spikes(
+                    source_df, outlier_api_df, geo_type, signal_type, report)
 
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
@@ -246,14 +252,17 @@ class DynamicValidator:
         report.increment_total_checks()
 
         if recent_df.empty:
-            report.add_raised_error(
-                ValidationFailure("check_missing_geo_sig_date_combo",
-                                  checking_date,
-                                  geo_type,
-                                  signal_type,
-                                  "test data for a given checking date-geo type-signal type"
-                                  " combination is missing. Source data may be missing"
-                                  " for one or more dates"))
+            min_thres = timedelta(days = self.params.max_expected_lag.get(
+                signal_type, self.params.max_expected_lag.get('all', 10)))
+            if checking_date < self.params.generation_date - min_thres:
+                report.add_raised_error(
+                    ValidationFailure("check_missing_geo_sig_date_combo",
+                                    checking_date,
+                                    geo_type,
+                                    signal_type,
+                                    "test data for a given checking date-geo type-signal type"
+                                    " combination is missing. Source data may be missing"
+                                    " for one or more dates"))
             return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date
@@ -410,7 +419,11 @@ class DynamicValidator:
         report.increment_total_checks()
         # Combine all possible frames so that the rolling window calculations make sense.
         source_frame_start = source_df["time_value"].min()
+        # This variable is interpolated into the call to `add_raised_error()`
+        # below but pylint doesn't recognize that.
+        # pylint: disable=unused-variable
         source_frame_end = source_df["time_value"].max()
+        # pylint: enable=unused-variable
         all_frames = pd.concat([api_frames, source_df]). \
             drop_duplicates(subset=["geo_id", "time_value"], keep='last'). \
             sort_values(by=['time_value']).reset_index(drop=True)
@@ -516,14 +529,15 @@ class DynamicValidator:
             "time_value >= @source_frame_start & time_value <= @source_frame_end")
 
         if source_outliers.shape[0] > 0:
-            report.add_raised_error(
-                ValidationFailure(
-                    "check_positive_negative_spikes",
-                    source_frame_end,
-                    geo,
-                    sig,
-                    "Source dates with flagged ouliers based on the previous 14 days of data "
-                    "available"))
+            for time_val in source_outliers["time_value"].unique():
+                report.add_raised_error(
+                    ValidationFailure(
+                        "check_positive_negative_spikes",
+                        time_val,
+                        geo,
+                        sig,
+                        "Source dates with flagged ouliers based on the previous 14 days of data "
+                        "available"))
 
     def check_avg_val_vs_reference(self, df_to_test, df_to_reference, checking_date, geo_type,
                                    signal_type, report):
@@ -549,7 +563,8 @@ class DynamicValidator:
         # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
         replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},
                         "se": {0: reference_sd.se[reference_sd.se > 0].min()},
-                        "sample_size": {0: reference_sd.se[reference_sd.sample_size > 0].min()}}
+                        "sample_size": {0: reference_sd.sample_size[
+                            reference_sd.sample_size > 0].min()}}
         reference_sd.replace(replacements, inplace=True)
 
         # Duplicate reference_mean and reference_sd for every unique time_value seen in df_to_test
@@ -591,6 +606,8 @@ class DynamicValidator:
             z=lambda x: (
                 x["test"] - x["reference mean"]) / x["reference sd"],
             abs_z=lambda x: abs(x["z"])
+        ).replace([np.inf, -np.inf], np.nan, inplace = False
+        ).dropna(
         ).groupby(
             ["geo_id", "variable"], as_index=False
         ).agg(

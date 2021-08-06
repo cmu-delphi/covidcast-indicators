@@ -17,7 +17,7 @@
 #'                       calculate aggregations; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange across
+#' @importFrom dplyr arrange across everything
 #' @importFrom stringi stri_trim
 #'
 #' @export
@@ -100,7 +100,14 @@ add_geo_vars <- function(data, params, geo_type) {
     )
     
     rest <- left_join(rest, states, by = "state") %>%
-      select(region, GID_1, state, state_fips, county, county_fips)
+      select(
+        .data$region,
+        .data$GID_1,
+        .data$state,
+        .data$state_fips,
+        .data$county,
+        .data$county_fips
+      )
   }
   
   geo_vars <- bind_cols(first, rest)

@@ -5,7 +5,7 @@ from .dynamic import DynamicValidator
 from .errors import ValidationFailure
 from .report import ValidationReport
 from .static import StaticValidator
-from .utils import aggregate_frames, TimeWindow
+from .utils import aggregate_frames, TimeWindow, end_date_helper
 
 class Validator:
     """Class containing validation() function and supporting functions.
@@ -35,6 +35,7 @@ class Validator:
         self.suppressed_errors = [ValidationFailure(**entry) for entry in suppressed_errors]
 
         # Date/time settings
+        validation_params["common"]["end_date"] = end_date_helper(validation_params)
         self.time_window = TimeWindow.from_params(validation_params["common"]["end_date"],
                                                   validation_params["common"]["span_length"])
         self.data_source = validation_params["common"].get("data_source", "")

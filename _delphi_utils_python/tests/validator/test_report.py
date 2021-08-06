@@ -55,5 +55,8 @@ class TestValidationReport:
 
         report.log(mock_logger)
         mock_logger.critical.assert_called_once_with(
-            "bad failed for sig2 at resolution county on 2020-11-07: msg 2")
-        mock_logger.warning.assert_has_calls([mock.call("wrong import"), mock.call("right import")])
+            "bad failed for sig2 at resolution county on 2020-11-07: msg 2", 
+            phase = "validation")
+        mock_logger.warning.assert_has_calls(
+            [mock.call("wrong import",phase = "validation"), 
+            mock.call("right import", phase = "validation")])

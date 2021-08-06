@@ -145,13 +145,13 @@ load_response_one <- function(input_filename, params, contingency_run) {
 
   # Occasionally we get single responses with no SurveyID, which prevents us
   # from knowing their wave. Discard.
-  input_data <- filter(input_data, !is.na(SurveyID))
+  input_data <- filter(input_data, !is.na(.data$SurveyID))
 
   # Convert A2 to integer, keeping only responses that are integers or have a
   # single value-less decimal place ("xx.0")
   input_data <- mutate(input_data,
-                       A2 = if_else(grepl("^[0-9]+[.]?0?$", A2),
-                                    as.integer(A2),
+                       A2 = if_else(grepl("^[0-9]+[.]?0?$", .data$A2),
+                                    as.integer(.data$A2),
                                     NA_integer_))
 
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
@@ -243,11 +243,11 @@ filter_responses <- function(input_data, params) {
   # and individual data pipelines handle that themselves (aggregate in
   # particular needs data well before start_date)
   input_data <- filter(input_data, 
-                       token != "", 
-                       !duplicated(token), 
-                       S1 == 1, 
-                       DistributionChannel != "preview",
-                       as.Date(date) <= params$end_date
+                       .data$token != "", 
+                       !duplicated(.data$token), 
+                       .data$S1 == 1, 
+                       .data$DistributionChannel != "preview",
+                       as.Date(.data$date) <= params$end_date
   )
   
   return(input_data)
@@ -354,12 +354,12 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
   df <- filter(df, 
-               zip5 %in% known_zips$zip5,
-               !is.na(hh_number_sick) & !is.na(hh_number_total),
-               dplyr::between(hh_number_sick, 0L, 30L),
-               dplyr::between(hh_number_total, 1L, 30L),
-               hh_number_sick <= hh_number_total,
-               day >= (as.Date(params$start_date) - lead_days),
+               .data$zip5 %in% known_zips$zip5,
+               !is.na(.data$hh_number_sick) & !is.na(.data$hh_number_total),
+               dplyr::between(.data$hh_number_sick, 0L, 30L),
+               dplyr::between(.data$hh_number_total, 1L, 30L),
+               .data$hh_number_sick <= .data$hh_number_total,
+               .data$day >= (as.Date(params$start_date) - lead_days),
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
@@ -451,10 +451,10 @@ bodge_C6_C8 <- function(input_data, wave) {
   }
   
   input_data <- rename(input_data,
-                       C6a = C6,
-                       C8a_1 = C8_1,
-                       C8a_2 = C8_2,
-                       C8a_3 = C8_3
+                       C6a = .data$C6,
+                       C8a_1 = .data$C8_1,
+                       C8a_2 = .data$C8_2,
+                       C8a_3 = .data$C8_3
   )
 
   return(input_data)
@@ -653,7 +653,7 @@ filter_complete_responses <- function(data_full, params)
   change_zip <- !is.na(zipitude$keep_in_agg) & !zipitude$keep_in_agg
   data_full$A3[change_zip] <- NA
 
-  data_full <- select(data_full, -zip5)
+  data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
   # UserLanguage + two questions

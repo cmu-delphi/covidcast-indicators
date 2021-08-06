@@ -50,8 +50,9 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
                all_of(unique(aggregations$metric)),
                all_of(unique(aggregations$var_weight)),
                all_of( group_vars[group_vars != "geo_id"] ),
-               zip5,
-               start_dt)
+               .data$zip5,
+               .data$start_dt
+  )
 
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
@@ -241,7 +242,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   )
   
   # Drop groups with less than threshold sample size.
-  unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
+  unique_groups_counts <- filter(unique_groups_counts, .data$Freq >= params$num_filter)
   if ( nrow(unique_groups_counts) == 0 ) {
     return(list())
   }

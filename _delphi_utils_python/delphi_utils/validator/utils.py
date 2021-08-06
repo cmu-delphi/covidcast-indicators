@@ -108,9 +108,9 @@ def lag_converter(lag_dict):
             # Check that the number proceeding sunday+ has length of 1
             assert value[8] == ","
             # Value_num calculates the number of days between today and the
-            # Update day, except that if both days of the week are the same,
-            # Expected lag is 7 (in case updates aren't in yet)
-            value_num = (date.today().isoweekday() - int(value[7:8]) - 1) % 7 + 1
+            # Update day, if both days of the week are the same,
+            # Expected lag is 0
+            value_num = (date.today().isoweekday() - int(value[7:8])) % 7
             # Add on expected lag to lag from weekdays
             value_num += int(value[9:])
         else:
@@ -121,3 +121,16 @@ def lag_converter(lag_dict):
     output_dict = {sig:value_interpret(lag_dict.get(
         sig)) for sig in lag_dict.keys()}
     return output_dict
+
+def end_date_helper(params):
+    """Calculate end_date from params."""
+    common_params = params["common"]
+    min_expected_lag = lag_converter(common_params.get(
+            "min_expected_lag", dict()))
+    if len(min_expected_lag) == 0:
+        min_expected_lag_overall = 1
+    else:
+        min_expected_lag_overall = min(min_expected_lag.values())
+    end_date = common_params.get(
+        "end_date", f"today-{min_expected_lag_overall}")
+    return end_date

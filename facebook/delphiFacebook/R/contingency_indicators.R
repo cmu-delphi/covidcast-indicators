@@ -334,7 +334,7 @@ get_aggs <- function() {
     "pct_test_reason_sick", "t_tested_reason_sick", compute_binary, jeffreys_binary,
     "pct_test_reason_contact", "t_tested_reason_contact", compute_binary, jeffreys_binary,
     "pct_test_reason_medical", "t_tested_reason_medical", compute_binary, jeffreys_binary,
-    "pct_test_reason_employer", "t_tested_reason_employer", compute_binary, jeffreys_binary,
+    "pct_test_reason_required", "t_tested_reason_employer", compute_binary, jeffreys_binary,
     "pct_test_reason_large_event", "t_tested_reason_large_event", compute_binary, jeffreys_binary,
     "pct_test_reason_crowd", "t_tested_reason_crowd", compute_binary, jeffreys_binary,
     "pct_test_reason_visit", "t_tested_reason_visit", compute_binary, jeffreys_binary,

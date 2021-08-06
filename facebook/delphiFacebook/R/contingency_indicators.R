@@ -93,7 +93,6 @@ get_aggs <- function() {
     "pct_symp_chest_pain", "symp_chest_pain", compute_binary, jeffreys_binary,
     "pct_symp_nausea", "symp_nausea", compute_binary, jeffreys_binary,
     "pct_symp_diarrhea", "symp_diarrhea", compute_binary, jeffreys_binary,
-    "pct_symp_loss_smell_taste", "symp_loss_smell_taste", compute_binary, jeffreys_binary,
     "pct_anosmia", "symp_loss_smell_taste", compute_binary, jeffreys_binary,
     "pct_symp_other", "symp_other", compute_binary, jeffreys_binary,
     "pct_symp_none", "symp_none", compute_binary, jeffreys_binary,

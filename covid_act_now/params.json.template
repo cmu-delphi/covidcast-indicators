@@ -9,6 +9,7 @@
   "archive": {
     "cache_dir": "./cache",
     "bucket_name": "",
+    "indicator_prefix": "CAN",
     "aws_credentials": {
       "aws_access_key_id": "",
       "aws_secret_access_key": ""

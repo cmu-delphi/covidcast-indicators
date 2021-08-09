@@ -134,7 +134,7 @@ def get_geo_signal_combos(data_source):
             src_list = [data_source]
         for src in src_list:
             geo = combo[1]
-            geo_status = geo_seen.get(geo, "unknown")
+            geo_status = geo_seen.get((geo, src), "unknown")
             if geo_status is True:
                 new_geo_signal_combos.append(combo)
             elif geo_status == "unknown":
@@ -142,11 +142,12 @@ def get_geo_signal_combos(data_source):
                     "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
                     params={'signal': f"{src}:{geo}"})
                 # Not an active signal
-                active_status = [i['active'] for i in epidata_signal.json()]
+                active_status = [val['active'] for i in epidata_signal.json()
+                    for val in i['signals']]
                 if active_status == []:
-                    geo_seen[geo] = False
+                    geo_seen[(geo, src)] = False
                     continue
-                geo_seen[geo] = active_status[0]
+                geo_seen[(geo, src)] = active_status[0]
                 if active_status[0] is True:
                     new_geo_signal_combos.append(combo)
     return new_geo_signal_combos

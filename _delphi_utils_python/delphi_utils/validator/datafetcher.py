@@ -3,10 +3,10 @@
 
 import re
 import threading
-import requests
 from os import listdir
 from os.path import isfile, join
 import warnings
+import requests
 import pandas as pd
 import numpy as np
 

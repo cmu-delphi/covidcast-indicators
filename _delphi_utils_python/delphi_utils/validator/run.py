@@ -17,10 +17,11 @@ def run_module():
     args = parser.parse_args()
     params = read_params()
     validator = Validator(params)
+    dry_run_param = params["validation"]["common"].get("dry_run", False)
     validator.validate().print_and_exit(
         get_structured_logger(__name__,
                               params["common"].get("log_filename", None)),
-        not args.dry_run)
+        not (args.dry_run or dry_run_param))
 
 
 def validator_from_params(params):

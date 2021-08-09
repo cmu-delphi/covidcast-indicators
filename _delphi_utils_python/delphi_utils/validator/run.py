@@ -16,8 +16,10 @@ def run_module():
                         " status irrespective of the number of failures")
     args = parser.parse_args()
     params = read_params()
-    validator = Validator(params)
+    assert "validation" in params
     dry_run_param = params["validation"]["common"].get("dry_run", False)
+    params["validation"]["common"]["dry_run"] = args.dry_run or dry_run_param
+    validator = Validator(params)
     validator.validate().print_and_exit(
         get_structured_logger(__name__,
                               params["common"].get("log_filename", None)),

@@ -7,6 +7,7 @@ from .errors import ValidationFailure
 class ValidationReport:
     """Class for reporting the results of validation."""
 
+    # pylint: disable=R0902
     def __init__(self, errors_to_suppress: List[ValidationFailure],
                  data_source: str = "", dry_run: bool = False):
         """Initialize a ValidationReport.
@@ -43,6 +44,7 @@ class ValidationReport:
         self.raised_warnings = []
         self.unsuppressed_errors = []
         self.dry_run = dry_run
+    # pylint: enable=R0902
 
     def add_raised_error(self, error):
         """Add an error to the report.

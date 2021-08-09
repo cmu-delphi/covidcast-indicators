@@ -106,9 +106,6 @@ def deconvolve_double_smooth_ntf_fast(
     n = y.shape[0]
     m = kernel.shape[0]
 
-    y_sd = np.std(y)
-    y_mean = np.mean(y)
-    y = (y - y_mean) / y_sd
     rho = lam  # set equal
     C = _construct_convolution_matrix(y, kernel)[:n]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
@@ -143,7 +140,7 @@ def deconvolve_double_smooth_ntf_fast(
     x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
-    return (x_k * y_sd) + y_mean
+    return x_k
 
 
 def deconvolve_double_smooth_tf_cv(

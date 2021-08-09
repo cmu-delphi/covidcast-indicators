@@ -8,6 +8,8 @@
   "cache_dir": "./cache",
   "archive_dir": "./archive",
   "individual_dir": "./individual",
+  "individual_raceeth_dir": "./individual_raceeth",
+  "produce_individual_raceeth": true,
   "weights_in_dir": "./delphiFacebook/tests/testthat/weights_full",
   "weights_out_dir": "./weights_out",
   "input_dir": "./delphiFacebook/tests/testthat/input",

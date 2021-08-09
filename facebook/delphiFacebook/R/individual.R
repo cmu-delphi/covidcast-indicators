@@ -28,6 +28,9 @@ write_individual <- function(data_full_w, params)
     
     data_to_write <- data_to_write %>% select(-raceethnicity)
   }
+  
+  assert(!( "raceethnicity" %in% names(data_to_write) ),
+         "race/ethnicity information should not be included in standard microdata output")
  
   create_dir_not_exist(params$individual_dir) 
   for (ii in seq_along(dates)) {

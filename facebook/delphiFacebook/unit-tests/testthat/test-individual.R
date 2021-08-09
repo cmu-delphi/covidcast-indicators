@@ -46,7 +46,13 @@ test_that("testing write_individual produces race-ethnicity field appropriately"
     produce_individual_raceeth = FALSE, 
     end_date = as.Date("2020-01-05")
   )
+  
+  expect_error(write_individual(test_data, params),
+               "race/ethnicity information should not be included in standard microdata output")
+  
+  test_data <- test_data %>% select(-raceethnicity)
   write_individual(test_data, params)
+  
   expect_setequal(
     !!dir(individual_dir),
     "cvid_responses_2020_01_04_recordedby_2020_01_05.csv"
@@ -68,6 +74,7 @@ test_that("testing write_individual produces race-ethnicity field appropriately"
   individual_dir <- file.path(tdir, "individual")
   individual_raceeth_dir <- file.path(tdir, "individual_raceeth")
   
+  test_data$raceethnicity <- "Hispanic"
   params <- list(
     individual_dir = individual_dir,
     individual_raceeth_dir = individual_raceeth_dir,

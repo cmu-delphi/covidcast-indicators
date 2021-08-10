@@ -23,6 +23,7 @@
       "span_length": 14,
       "min_expected_lag": {"all": "1"},
       "max_expected_lag": {"all": "5"},
+      "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_val_lt_0"},
         {"check_name": "check_test_vs_reference_avg_changed",

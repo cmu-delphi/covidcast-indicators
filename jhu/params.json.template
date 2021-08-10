@@ -16,6 +16,7 @@
       "min_expected_lag": {"all": "1"},
       "max_expected_lag": {"all": "1"},
       "test_mode": false,
+      "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_val_lt_0"}
       ]

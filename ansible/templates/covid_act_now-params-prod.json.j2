@@ -9,6 +9,7 @@
   "archive": {
     "cache_dir": "./cache",
     "bucket_name": "delphi-covidcast-indicator-output",
+    "indicator_prefix": "CAN",
     "aws_credentials": {
       "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
       "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
@@ -20,6 +21,7 @@
       "span_length": 14,
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "6"},
+      "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_se_many_missing",
          "signal": "pcr_specimen_total_tests"},

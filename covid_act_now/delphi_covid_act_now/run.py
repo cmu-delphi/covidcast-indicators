@@ -11,7 +11,6 @@ import numpy as np
 
 from delphi_utils import (
     create_export_csv,
-    S3ArchiveDiffer,
     get_structured_logger
 )
 
@@ -44,17 +43,6 @@ def run_module(params):
     # Configuration
     export_dir = params["common"]["export_dir"]
     parquet_url = params["indicator"]["parquet_url"]
-
-    # Archive Differ configuration
-    if "archive" in params:
-        cache_dir = params["archive"]["cache_dir"]
-        arch_diff = S3ArchiveDiffer(
-            cache_dir, export_dir,
-            params["archive"]["bucket_name"], "CAN",
-            params["archive"]["aws_credentials"])
-        arch_diff.update_cache()
-    else:
-        arch_diff = None
 
     # Load CAN county-level testing data
     print("Pulling CAN data")
@@ -92,26 +80,6 @@ def run_module(params):
         # x2 to count both positivity and tests signals
         num_exported_files += exported_csv_dates.size * 2
         print(f"Exported dates: {earliest} to {latest}")
-
-    # Perform archive differencing
-    if not arch_diff is None:
-        # Diff exports, and make incremental versions
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {
-            f: diff for f, diff in common_diffs.items() if f not in fails
-        }
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = (datetime.now() - min(max_dates_exported)).days

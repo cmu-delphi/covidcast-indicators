@@ -1067,16 +1067,36 @@ code_behaviors <- function(input_data, wave) {
 #' 
 #' @return augmented data frame
 code_addl_activities <- function(input_data, wave) {
+  calc_masking_given_activity <- function(activity, masked_during_activity) {
+    case_when(
+      activity & masked_during_activity ~ TRUE,
+      activity & !masked_during_activity ~ FALSE,
+      TRUE ~ NA
+    )
+  }
+  
   if ("C13a" %in% names(input_data)) {
     # introduced in wave 4
     activities <- split_options(input_data$C13a)
     
-    input_data$a_mask_work_outside_home_1d <- is_selected(activities, "1")
-    input_data$a_mask_shop_1d <- is_selected(activities, "2")
-    input_data$a_mask_restaurant_1d <- is_selected(activities, "3")
-    input_data$a_mask_spent_time_1d <- is_selected(activities, "4")
-    input_data$a_mask_large_event_1d <- is_selected(activities, "5")
-    input_data$a_mask_public_transit_1d <- is_selected(activities, "6")
+    input_data$a_mask_work_outside_home_1d <- calc_masking_given_activity(
+      input_data$a_work_outside_home_1d, is_selected(activities, "1")
+    )
+    input_data$a_mask_shop_1d <- calc_masking_given_activity(
+      input_data$a_shop_1d, is_selected(activities, "2")
+    )
+    input_data$a_mask_restaurant_1d <- calc_masking_given_activity(
+      input_data$a_restaurant_1d, is_selected(activities, "3")
+    )
+    input_data$a_mask_spent_time_1d <- calc_masking_given_activity(
+      input_data$a_spent_time_1d, is_selected(activities, "4")
+    )
+    input_data$a_mask_large_event_1d <- calc_masking_given_activity(
+      input_data$a_large_event_1d, is_selected(activities, "5")
+    )
+    input_data$a_mask_public_transit_1d <- calc_masking_given_activity(
+      input_data$a_public_transit_1d, is_selected(activities, "6")
+    )
   } else {
     input_data$a_mask_work_outside_home_1d <- NA
     input_data$a_mask_shop_1d <- NA
@@ -1090,18 +1110,31 @@ code_addl_activities <- function(input_data, wave) {
     # introduced in wave 10 as "indoors" activities version of C13a
     activities <- split_options(input_data$C13c)
     
-    input_data$a_mask_work_outside_home_indoors_1d <- is_selected(activities, "1")
-    input_data$a_mask_shop_indoors_1d <- is_selected(activities, "2")
-    input_data$a_mask_restaurant_indoors_1d <- is_selected(activities, "3")
-    input_data$a_mask_spent_time_indoors_1d <- is_selected(activities, "4")
-    input_data$a_mask_large_event_indoors_1d <- is_selected(activities, "5")
-    input_data$a_mask_public_transit_1d <- is_selected(activities, "6")
+    input_data$a_mask_work_outside_home_indoors_1d <- calc_masking_given_activity(
+      input_data$a_work_outside_home_indoors_1d, is_selected(activities, "1")
+    )
+    input_data$a_mask_shop_indoors_1d <- calc_masking_given_activity(
+      input_data$a_shop_indoors_1d, is_selected(activities, "2")
+    )
+    input_data$a_mask_restaurant_indoors_1d <- calc_masking_given_activity(
+      input_data$a_restaurant_indoors_1d, is_selected(activities, "3")
+    )
+    input_data$a_mask_spent_time_indoors_1d <- calc_masking_given_activity(
+      input_data$a_spent_time_indoors_1d, is_selected(activities, "4")
+    )
+    input_data$a_mask_large_event_indoors_1d <- calc_masking_given_activity(
+      input_data$a_large_event_indoors_1d, is_selected(activities, "5")
+    )
+    input_data$a_mask_public_transit_1d <- calc_masking_given_activity(
+      input_data$a_public_transit_1d, is_selected(activities, "6")
+    )
   } else {
     input_data$a_mask_work_outside_home_indoors_1d <- NA
     input_data$a_mask_shop_indoors_1d <- NA
     input_data$a_mask_restaurant_indoors_1d <- NA
     input_data$a_mask_spent_time_indoors_1d <- NA
     input_data$a_mask_large_event_indoors_1d <- NA
+    input_data$a_mask_public_transit_1d <- NA
   }
   
   return(input_data)

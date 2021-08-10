@@ -134,7 +134,7 @@ def get_geo_signal_combos(data_source):
             src_list = [data_source]
         for src in src_list:
             geo = combo[1]
-            geo_status = geo_seen.get((geo, src), "unknown")
+            geo_status = geo_seen.get((combo[0], geo, src), "unknown")
             if geo_status is True:
                 new_geo_signal_combos.append(combo)
             elif geo_status == "unknown":
@@ -145,9 +145,9 @@ def get_geo_signal_combos(data_source):
                 active_status = [val['active'] for i in epidata_signal.json()
                     for val in i['signals']]
                 if active_status == []:
-                    geo_seen[(geo, src)] = False
+                    geo_seen[(combo[0], geo, src)] = False
                     continue
-                geo_seen[(geo, src)] = active_status[0]
+                geo_seen[(combo[0], geo, src)] = active_status[0]
                 if active_status[0] is True:
                     new_geo_signal_combos.append(combo)
     return new_geo_signal_combos

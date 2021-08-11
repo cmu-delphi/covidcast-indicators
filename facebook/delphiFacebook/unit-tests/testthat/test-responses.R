@@ -140,26 +140,37 @@ test_that("filter_data_for_aggregation works correctly", {
 })
 
 test_that("filter_complete_responses works correctly", {
-  params <- list(end_date=as.Date("2021-02-01"))
-  
+  params <- list(
+    start_date=as.Date("2020-01-05"),
+    end_date=as.Date("2021-01-05"),
+    backfill_days = 0,
+    static_dir=test_path("static"))
+
   input <- tibble(
-    token = c("", 1, 1, 2, 3, 4, 5, 6, 7),
-    S1 = c(1, 1, 1, 1, 1, 1, 0, 1, 1),
-    DistributionChannel = c("notpreview", "notpreview", "notpreview", "notpreview", NA, "notpreview", "notpreview", "preview", "notpreview"),
-    StartDate = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
-    date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24")
+    token = c("", 1, NA, 2, 3, 4, 5, 6, 7),
+    wave = c("", 1, 1, 2, 3, 4, 5, 6, 7),
+    geo_id = "US",
+    zip5 = "10001",
+    A3 = "10001",
+    B2b = c("1", "2", "2", NA, "32", "8", "8,2", NA, "1"),
+    C11 = c("1", "2", NA, "2", "32", "8", "8,2", NA, "1"),
+    UserLanguage = "English",
+    StartDatetime = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    EndDatetime = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    Date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    raceethnicity = c(NA, "Hispanic", NA, "Hispanic", NA, "Hispanic", NA, "Hispanic", "NonHispanicAsian")
   )
   
-  expected <- tibble(
-    token = c("1", "2", "4"),
-    S1 = c(1, 1, 1),
-    DistributionChannel = c("notpreview", "notpreview", "notpreview"),
-    StartDate = c("2021-01-01", "2021-01-01", "2021-01-01"),
-    date = c("2021-01-01", "2021-01-01", "2021-01-01")
-  )
+  # No raceethnicity field
+  expected <- input[c(1, 2, 4:7), ] %>% select(-c(zip5, raceethnicity))
+  out <- filter_complete_responses(input %>% select(-raceethnicity), params)
+  expect_equal(out, expected)
   
-  expect_equal(filter_responses(input, params), 
-               expected)
+  # raceethnicity field included
+  input$raceethnicity <- "Hispanic"
+  expected <- input[c(1, 2, 4:7), ] %>% select(-c(zip5))
+  out <- filter_complete_responses(input, params)
+  expect_equal(out, expected)
 })
 
 test_that("V4 bodge works correctly", {

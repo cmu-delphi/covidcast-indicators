@@ -115,7 +115,6 @@ get_aggs <- function() {
     "pct_symp_chest_pain_unusual", "symp_chest_pain_unusual", compute_binary, jeffreys_binary,
     "pct_symp_nausea_unusual", "symp_nausea_unusual", compute_binary, jeffreys_binary,
     "pct_symp_diarrhea_unusual", "symp_diarrhea_unusual", compute_binary, jeffreys_binary,
-    "pct_symp_loss_smell_taste_unusual", "symp_loss_smell_taste_unusual", compute_binary, jeffreys_binary,
     "pct_anosmia_unusual", "symp_loss_smell_taste_unusual", compute_binary, jeffreys_binary,
     "pct_symp_other_unusual", "symp_other_unusual", compute_binary, jeffreys_binary,
     "pct_symp_none_unusual", "symp_none_unusual", compute_binary, jeffreys_binary,

@@ -139,6 +139,29 @@ test_that("filter_data_for_aggregation works correctly", {
                expected)
 })
 
+test_that("filter_complete_responses works correctly", {
+  params <- list(end_date=as.Date("2021-02-01"))
+  
+  input <- tibble(
+    token = c("", 1, 1, 2, 3, 4, 5, 6, 7),
+    S1 = c(1, 1, 1, 1, 1, 1, 0, 1, 1),
+    DistributionChannel = c("notpreview", "notpreview", "notpreview", "notpreview", NA, "notpreview", "notpreview", "preview", "notpreview"),
+    StartDate = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24")
+  )
+  
+  expected <- tibble(
+    token = c("1", "2", "4"),
+    S1 = c(1, 1, 1),
+    DistributionChannel = c("notpreview", "notpreview", "notpreview"),
+    StartDate = c("2021-01-01", "2021-01-01", "2021-01-01"),
+    date = c("2021-01-01", "2021-01-01", "2021-01-01")
+  )
+  
+  expect_equal(filter_responses(input, params), 
+               expected)
+})
+
 test_that("V4 bodge works correctly", {
   foo <- tibble(
     UserLanguage = c("EN", "ES", "EN", NA, "ZH"),

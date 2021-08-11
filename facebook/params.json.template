@@ -9,7 +9,7 @@
   "archive_dir": "./archive",
   "individual_dir": "./individual",
   "individual_raceeth_dir": "./individual_raceeth",
-  "produce_individual_raceeth": true,
+  "produce_individual_raceeth": false,
   "weights_in_dir": "./delphiFacebook/integration-tests/testthat/weights_full",
   "weights_out_dir": "./weights_out",
   "input_dir": "./delphiFacebook/integration-tests/testthat/input",

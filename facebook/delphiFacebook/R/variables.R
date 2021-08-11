@@ -796,7 +796,7 @@ code_race_ethnicity <- function(input_data, wave) {
   }
   
   # Combo race-ethnicity
-  if ( "hispanic" %in% names(input_data) &
+  if ( "hispanic" %in% names(input_data) &&
        "race" %in% names(input_data) ) {
     input_data$raceethnicity <- case_when(
       input_data$hispanic ~ "Hispanic",

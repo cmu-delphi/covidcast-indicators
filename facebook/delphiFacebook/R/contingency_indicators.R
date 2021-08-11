@@ -147,12 +147,12 @@ get_aggs <- function() {
     "pct_accept_vaccine_no_appointment_defno", "v_accept_vaccine_no_appointment_defno", compute_binary, jeffreys_multinomial_factory(4),
     
     # vaccine timing
-    "pct_vaccine_timing_weeks", "v_vaccine_timing_weeks", compute_binary, jeffreys_binary,
-    "pct_vaccine_timing_onemonth", "v_vaccine_timing_onemonth", compute_binary, jeffreys_binary,
-    "pct_vaccine_timing_threemonths", "v_vaccine_timing_threemonths", compute_binary, jeffreys_binary,
-    "pct_vaccine_timing_sixmonths", "v_vaccine_timing_sixmonths", compute_binary, jeffreys_binary,
-    "pct_vaccine_timing_morethansix", "v_vaccine_timing_morethansix", compute_binary, jeffreys_binary,
-    "pct_vaccine_timing_dontknow", "v_vaccine_timing_dontknow", compute_binary, jeffreys_binary,
+    "pct_vaccine_timing_weeks", "v_vaccine_timing_weeks", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_vaccine_timing_onemonth", "v_vaccine_timing_onemonth", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_vaccine_timing_threemonths", "v_vaccine_timing_threemonths", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_vaccine_timing_sixmonths", "v_vaccine_timing_sixmonths", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_vaccine_timing_morethansix", "v_vaccine_timing_morethansix", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_vaccine_timing_dontknow", "v_vaccine_timing_dontknow", compute_binary, jeffreys_multinomial_factory(7),
     
     # vaccine influences
     "pct_vaccine_likely_friends", "v_vaccine_likely_friends", compute_binary, jeffreys_binary,

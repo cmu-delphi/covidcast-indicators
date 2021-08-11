@@ -983,29 +983,77 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_stuffy_nose <- NA
   }
   
+  calc_unusual_given_symptom <- function(symptom, unusual_symptom) {
+    case_when(
+      symptom & unusual_symptom ~ TRUE,
+      symptom & !unusual_symptom ~ FALSE,
+      TRUE ~ NA
+    )
+  }
+  
   if ("B2c" %in% names(input_data)) {
     symptoms <- split_options(input_data$B2c)
     
-    input_data$symp_fever_unusual <- is_selected(symptoms, "1")
-    input_data$symp_cough_unusual <- is_selected(symptoms, "2")
-    input_data$symp_shortness_breath_unusual <- is_selected(symptoms, "3")
-    input_data$symp_diff_breathing_unusual <- is_selected(symptoms, "4")
-    input_data$symp_fatigue_unusual <- is_selected(symptoms, "5")
-    input_data$symp_nasal_congestion_unusual <- is_selected(symptoms, "6")
-    input_data$symp_runny_nose_unusual <- is_selected(symptoms, "7")
-    input_data$symp_aches_unusual <- is_selected(symptoms, "8")
-    input_data$symp_sore_throat_unusual <- is_selected(symptoms, "9")
-    input_data$symp_chest_pain_unusual <- is_selected(symptoms, "10")
-    input_data$symp_nausea_unusual <- is_selected(symptoms, "11")
-    input_data$symp_diarrhea_unusual <- is_selected(symptoms, "12")
-    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "13")
-    input_data$symp_other_unusual <- is_selected(symptoms, "14")
-    input_data$symp_none_unusual <- is_selected(symptoms, "15")
-    input_data$symp_eye_pain_unusual <- is_selected(symptoms, "16")
-    input_data$symp_chills_unusual <- is_selected(symptoms, "17")
-    input_data$symp_headache_unusual <- is_selected(symptoms, "18")
-    input_data$symp_sleep_changes_unusual <- is_selected(symptoms, "19")
-    input_data$symp_stuffy_nose_unusual <- is_selected(symptoms, "20")
+    input_data$symp_fever_unusual <- calc_unusual_given_symptom(
+      input_data$symp_fever, is_selected(symptoms, "1")
+    )
+    input_data$symp_cough_unusual <- calc_unusual_given_symptom(
+      input_data$symp_cough, is_selected(symptoms, "2")
+    )
+    input_data$symp_shortness_breath_unusual <- calc_unusual_given_symptom(
+      input_data$symp_shortness_breath, is_selected(symptoms, "3")
+    )
+    input_data$symp_diff_breathing_unusual <- calc_unusual_given_symptom(
+      input_data$symp_diff_breathing, is_selected(symptoms, "4")
+    )
+    input_data$symp_fatigue_unusual <- calc_unusual_given_symptom(
+      input_data$symp_fatigue, is_selected(symptoms, "5")
+    )
+    input_data$symp_nasal_congestion_unusual <- calc_unusual_given_symptom(
+      input_data$symp_nasal_congestion, is_selected(symptoms, "6")
+    )
+    input_data$symp_runny_nose_unusual <- calc_unusual_given_symptom(
+      input_data$symp_runny_nose, is_selected(symptoms, "7")
+    )
+    input_data$symp_aches_unusual <- calc_unusual_given_symptom(
+      input_data$symp_aches, is_selected(symptoms, "8")
+    )
+    input_data$symp_sore_throat_unusual <- calc_unusual_given_symptom(
+      input_data$symp_sore_throat, is_selected(symptoms, "9")
+    )
+    input_data$symp_chest_pain_unusual <- calc_unusual_given_symptom(
+      input_data$symp_chest_pain, is_selected(symptoms, "10")
+    )
+    input_data$symp_nausea_unusual <- calc_unusual_given_symptom(
+      input_data$symp_nausea, is_selected(symptoms, "11")
+    )
+    input_data$symp_diarrhea_unusual <- calc_unusual_given_symptom(
+      input_data$symp_diarrhea, is_selected(symptoms, "12")
+    )
+    input_data$symp_loss_smell_taste_unusual <- calc_unusual_given_symptom(
+      input_data$symp_loss_smell_taste, is_selected(symptoms, "13")
+    )
+    input_data$symp_other_unusual <- calc_unusual_given_symptom(
+      input_data$symp_other, is_selected(symptoms, "14")
+    )
+    input_data$symp_none_unusual <- calc_unusual_given_symptom(
+      input_data$symp_none, is_selected(symptoms, "15")
+    )
+    input_data$symp_eye_pain_unusual <- calc_unusual_given_symptom(
+      input_data$symp_eye_pain, is_selected(symptoms, "16")
+    )
+    input_data$symp_chills_unusual <- calc_unusual_given_symptom(
+      input_data$symp_chills, is_selected(symptoms, "17")
+    )
+    input_data$symp_headache_unusual <- calc_unusual_given_symptom(
+      input_data$symp_headache, is_selected(symptoms, "18")
+    )
+    input_data$symp_sleep_changes_unusual <- calc_unusual_given_symptom(
+      input_data$symp_sleep_changes, is_selected(symptoms, "19")
+    )
+    input_data$symp_stuffy_nose_unusual <- calc_unusual_given_symptom(
+      input_data$symp_stuffy_nose, is_selected(symptoms, "20")
+    )
   } else {
     input_data$symp_fever_unusual <- NA
     input_data$symp_cough_unusual <- NA

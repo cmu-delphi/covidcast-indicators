@@ -10,6 +10,7 @@ from itertools import product
 import covidcast
 
 import numpy as np
+from pandas import to_datetime
 from delphi_utils import (
     create_export_csv,
     geomap,
@@ -59,7 +60,7 @@ def run_module(params):
         # Get number of days based on what's missing from the API.
         metadata = covidcast.metadata()
         gs_metadata = metadata[(metadata.data_source == "google-symptoms")]
-        num_export_days = max(gs_metadata.min_lag)
+        num_export_days = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

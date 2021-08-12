@@ -64,13 +64,12 @@ def run_module(params):
         # Calculate number of days based on what validator expects.
         max_expected_lag = params["validation"]["common"].get("max_expected_lag", {"default": 4})
         global_max_expected_lag = max(map(int, list(max_expected_lag.values()) ))
-        span_length = params["validation"]["common"].get("span_length", 14)
 
         # Select the larger number of days. Prevents validator from complaining about missing dates
         # and backfills in case of an outage.
         num_export_days = max(
             (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1,
-            span_length + global_max_expected_lag
+            params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
             )
 
     logger = get_structured_logger(

@@ -57,10 +57,21 @@ def run_module(params):
     num_export_days = params["indicator"]["num_export_days"]
 
     if num_export_days is None:
-        # Get number of days based on what's missing from the API.
+        # Calculate number of days based on what's missing from the API.
         metadata = covidcast.metadata()
         gs_metadata = metadata[(metadata.data_source == "google-symptoms")]
-        num_export_days = (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1
+
+        # Calculate number of days based on what validator expects.
+        max_expected_lag = params["validation"]["common"].get("max_expected_lag", {"default": 4})
+        global_max_expected_lag = max(map(int, list(max_expected_lag.values()) ))
+        span_length = params["validation"]["common"].get("span_length", 14)
+
+        # Select the larger number of days. Prevents validator from complaining about missing dates
+        # and backfills in case of an outage.
+        num_export_days = max(
+            (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1,
+            span_length + global_max_expected_lag
+            )
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

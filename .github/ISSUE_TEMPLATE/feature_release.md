@@ -3,7 +3,7 @@ name: Feature release
 about: Begin the finishing work for features ready to be included in a release
 title: 'Release NEW_THING'
 labels: 'release'
-assignees: 'benjaminysmith'
+assignees: ''
 ---
 
 - [Link to issue]()

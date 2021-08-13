@@ -44,6 +44,19 @@ def _construct_convolution_matrix(signal: np.ndarray,
         return P / scale[:, np.newaxis]
     return P
 
+def _construct_day_specific_convolution_matrix(y, run_date, delay_kernels):
+    C = _construct_convolution_matrix(y, np.array(delay_kernels[run_date]))
+    first_kernel_date = min(delay_kernels.keys())
+    kernel_length = len(delay_kernels[run_date])
+    for i in range(kernel_length, C.shape[0]):
+        start_index = i-kernel_length+1
+        end_index = min(start_index+kernel_length, C.shape[1])
+        kernel_day = max(run_date-timedelta(start_index), first_kernel_date)
+        day_specific_kernel = np.array(delay_kernels[kernel_day][::-1])
+        assert np.all(C[i,:start_index] == 0)
+        C[i, start_index: end_index] = np.array(day_specific_kernel)[:len(C[i, start_index: end_index])]
+    return C, np.array(delay_kernels[run_date])
+
 
 def _fft_convolve(signal: np.ndarray, kernel: np.ndarray) -> np.ndarray:
     """
@@ -96,6 +109,7 @@ def _construct_poly_interp_mat(x, n, k):
 def deconvolve_double_smooth_ntf_fast(
         y: np.ndarray,
         x: np.ndarray,
+        C: np.ndarray,
         kernel: np.ndarray,
         lam: float,
         gam: float,
@@ -146,7 +160,8 @@ def deconvolve_double_smooth_ntf_fast(
 def deconvolve_double_smooth_tf_cv(
         y: np.ndarray,
         x: np.ndarray,
-        kernel: np.ndarray,
+        delay_kernels,
+        as_of_date,
         fit_func: Callable = deconvolve_double_smooth_ntf_fast,
         lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
         gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
@@ -191,9 +206,8 @@ def deconvolve_double_smooth_tf_cv(
        -------
            array of the deconvolved signal values
        """
-    fit_func = partial(fit_func, kernel=kernel, n_iters=n_iters, k=k, clip=clip)
+    fit_func = partial(fit_func,  n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
-    m = kernel.size
     lam_cv_loss = np.zeros((lam_cv_grid.shape[0],))
     gam_cv_loss = np.zeros((gam_cv_grid.shape[0],))
 
@@ -206,10 +220,16 @@ def deconvolve_double_smooth_tf_cv(
         test_split[i::3] = True
         for j, reg_par in enumerate(lam_cv_grid):
             x_hat = np.full((n,), np.nan)
+            C, kernel = _construct_day_specific_convolution_matrix(y[~test_split],
+                                                                   as_of_date,
+                                                                   delay_kernels)
             x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
-                                          lam=reg_par, gam=0)
+                                          lam=reg_par, gam=0, C=C, kernel=kernel)
             x_hat = _impute_with_neighbors(x_hat)
-            y_hat = _fft_convolve(x_hat, kernel)
+            C, _ = _construct_day_specific_convolution_matrix(x_hat,
+                                                              as_of_date,
+                                                              delay_kernels)
+            y_hat = (C @ x_hat)[:len(x_hat)]
             lam_cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
 
     lam = lam_cv_grid[np.argmin(lam_cv_loss)]
@@ -218,17 +238,26 @@ def deconvolve_double_smooth_tf_cv(
     for i in range(1, gam_n_folds + 1):
         for j, reg_par in enumerate(gam_cv_grid):
             x_hat = np.full((n - i + 1,), np.nan)
-            x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], gam=reg_par, lam=lam)
+            C, kernel = _construct_day_specific_convolution_matrix(y[:(n - i)],
+                                                                   as_of_date,
+                                                                   delay_kernels)
+            x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], gam=reg_par, lam=lam, C=C, kernel=kernel)
             pos = x[:(n - i + 1)]
             x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3],
                                             pos[-2], x_hat[-2],
                                             pos[-1])
-            y_hat = _fft_convolve(x_hat, kernel)
+            C, _ = _construct_day_specific_convolution_matrix(x_hat,
+                                                              as_of_date,
+                                                              delay_kernels)
+            y_hat = (C @ x_hat)[:len(x_hat)]
             gam_cv_loss[j] += np.sum((y[:(n - i + 1)][-1:] - y_hat[-1:]) ** 2)
 
     gam = gam_cv_grid[np.argmin(gam_cv_loss)]
     if verbose: print(f"Chosen parameters: lam:{lam:.4}, gam:{gam:.4}")
-    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam)
+    C, kernel = _construct_day_specific_convolution_matrix(y,
+                                                           as_of_date,
+                                                           delay_kernels)
+    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel)
     return x_hat
 
 
@@ -364,7 +393,7 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
                       end_date: date,
                       as_of_date: date,
                       input_locations: List[Tuple[str, str]],
-                      kernel: np.ndarray,
+                      delay_kernels,
                       fit_func: Callable = deconvolve_double_smooth_tf_cv,
                       ) -> List[LocationSeries]:
     """
@@ -433,7 +462,8 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
                 continue
             deconvolved_truth = fit_func(y=np.array(convolved_truth),
                                          x=np.arange(1, len(convolved_truth) + 1),
-                                         kernel=kernel)
+                                         delay_kernels=delay_kernels,
+                                         as_of_date=as_of_date)
             deconvolved_truths.append(
                 LocationSeries(loc,
                                geo_type,

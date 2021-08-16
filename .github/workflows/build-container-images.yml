@@ -36,7 +36,12 @@ jobs:
             imageTag="${baseRef//\//_}" # replace `/` with `_` in branch name
             ;;
           esac
-          cd ${{ github.workspace }}/${{ matrix.packages }}
-          echo "using tag: --${imageTag}--"
-          docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
-          docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
+          if [ -z ${{ matrix.packages }} ]; then
+            echo "Indicator list is empty!"
+            exit
+          else
+            cd ${{ github.workspace }}/${{ matrix.packages }}
+            echo "using tag: --${imageTag}--"
+            docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
+            docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
+          fi

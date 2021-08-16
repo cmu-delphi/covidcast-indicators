@@ -38,7 +38,6 @@ jobs:
           esac
           if [ -z ${{ matrix.packages }} ]; then
             echo "Indicator list is empty!"
-            exit
           else
             cd ${{ github.workspace }}/${{ matrix.packages }}
             echo "using tag: --${imageTag}--"

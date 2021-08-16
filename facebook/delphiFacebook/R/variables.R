@@ -805,7 +805,7 @@ code_race_ethnicity <- function(input_data, wave) {
       !input_data$hispanic & input_data$race == "BlackAfricanAmerican" ~ "NonHispanicBlackAfricanAmerican",
       !input_data$hispanic & input_data$race == "NativeHawaiianPacificIslander" ~ "NonHispanicNativeHawaiianPacificIslander",
       !input_data$hispanic & input_data$race == "White" ~ "NonHispanicWhite",
-      !input_data$hispanic & input_data$race == "Other" ~ "NonHispanicMultipleOther",
+      !input_data$hispanic & input_data$race == "MultipleOther" ~ "NonHispanicMultipleOther",
       TRUE ~ NA_character_
     )
   } else {

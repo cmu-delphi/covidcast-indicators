@@ -51,7 +51,7 @@ class DynamicValidator:
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(
-                days=dynamic_params.get("ref_window_size", 14)),
+                days=max(14, dynamic_params.get("ref_window_size", 14))),
             smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
             min_expected_lag=lag_converter(common_params.get(
                 "min_expected_lag", dict())),
@@ -240,13 +240,6 @@ class DynamicValidator:
         # Choosing 1 day checks just the daily data.
         recent_lookbehind = timedelta(days=1)
 
-        # semirecent_lookbehind: starting from the check date and working backward
-        # in time, how many days do we use to form the reference statistics,
-        # with 7 as the minimum
-        semirecent_lookbehind = timedelta(days= max(
-            14, self.params.max_check_lookbehind
-            ))
-
         recent_cutoff_date = checking_date - \
             recent_lookbehind + timedelta(days=1)
         recent_df = geo_sig_df.query(
@@ -273,7 +266,7 @@ class DynamicValidator:
         # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
         # pylint: disable=unused-variable
-        reference_start_date = recent_cutoff_date - semirecent_lookbehind
+        reference_start_date = recent_cutoff_date - self.params.max_check_lookbehind
         if signal_type in self.params.smoothed_signals:
             # Add an extra 7 days to the reference period.
             reference_start_date = reference_start_date - \
@@ -596,7 +589,7 @@ class DynamicValidator:
         #  - Use to calculate z-score for each test datapoint for a given geo_id and date.
         #  - Avg z-scores over each geo_id, across all dates.
         #  - Avg all z-scores together.
-        num_ref_dates = max(14, self.params.max_check_lookbehind.days)
+        num_ref_dates = self.params.max_check_lookbehind.days
         if signal_type in self.params.smoothed_signals:
             num_ref_dates += 7
 

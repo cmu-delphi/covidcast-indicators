@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
+import re
 import pandas as pd
 import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
@@ -144,7 +145,6 @@ class DynamicValidator:
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
             for checking_date in self.params.time_window.date_seq:
-
                 create_dfs_or_error = self.create_dfs(
                     geo_sig_df, api_df_or_error, checking_date, geo_type, signal_type, report)
 
@@ -158,8 +158,10 @@ class DynamicValidator:
                 self.check_rapid_change_num_rows(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
-                self.check_avg_val_vs_reference(
-                    recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
+                if not re.search("cumulative", signal_type):
+                    self.check_avg_val_vs_reference(
+                        recent_df, reference_api_df, checking_date, geo_type,
+                        signal_type, report)
 
             # Keeps script from checking all files in a test run.
             kroc += 1
@@ -393,7 +395,6 @@ class DynamicValidator:
                                   signal_type,
                                   "Number of rows per day seems to have changed rapidly (reference "
                                   "vs test data)"))
-
         report.increment_total_checks()
 
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):

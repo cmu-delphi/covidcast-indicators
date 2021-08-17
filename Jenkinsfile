@@ -19,7 +19,7 @@ pipeline {
     stages {
         stage('Build and Package') {
             when {
-                branch "minimal-facebook-setup";
+                branch "main";
             }
             steps {
                 script {

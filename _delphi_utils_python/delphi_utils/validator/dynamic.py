@@ -559,7 +559,7 @@ class DynamicValidator:
         reference_mean = df_to_reference.groupby(['geo_id'], as_index=False)[
             ['val', 'se', 'sample_size']].mean().assign(type="reference mean")
         reference_sd = df_to_reference.groupby(['geo_id'], as_index=False)[
-            ['val', 'se', 'sample_size']].std().assign(type="reference sd")
+            ['val', 'se', 'sample_size']].std().round(8).assign(type="reference sd")
 
         # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
         replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},

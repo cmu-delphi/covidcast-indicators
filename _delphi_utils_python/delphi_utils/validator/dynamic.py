@@ -561,10 +561,10 @@ class DynamicValidator:
             ['val', 'se', 'sample_size']].std().assign(type="reference sd")
 
         # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
-        replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},
-                        "se": {0: reference_sd.se[reference_sd.se > 0].min()},
+        replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].median()},
+                        "se": {0: reference_sd.se[reference_sd.se > 0].median()},
                         "sample_size": {0: reference_sd.sample_size[
-                            reference_sd.sample_size > 0].min()}}
+                            reference_sd.sample_size > 0].median()}}
         reference_sd.replace(replacements, inplace=True)
 
         # Duplicate reference_mean and reference_sd for every unique time_value seen in df_to_test

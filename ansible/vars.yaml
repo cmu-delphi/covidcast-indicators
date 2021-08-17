@@ -24,6 +24,8 @@ changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"
+fb_qualtrics_token: "{{ vault_fb_qualtrics_token }}"
+fb_notify_weights_email_list: "{{ vault_fb_notify_weights_email_list }}"
 ## Google Symptoms
 google_symptoms_account_type: "{{ vault_google_symptoms_account_type }}"
 google_symptoms_project_id: "{{ vault_google_symptoms_project_id }}"

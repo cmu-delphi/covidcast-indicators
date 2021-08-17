@@ -51,7 +51,7 @@ class DynamicValidator:
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(
-                days=max(14, dynamic_params.get("ref_window_size", 14))),
+                days=max(7, dynamic_params.get("ref_window_size", 14))),
             smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
             min_expected_lag=lag_converter(common_params.get(
                 "min_expected_lag", dict())),

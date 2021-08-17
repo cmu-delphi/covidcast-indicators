@@ -15,7 +15,7 @@ from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP,POP_PROP
 
 
 def _date_to_int(d):
@@ -98,7 +98,7 @@ def run_module(params):
     all_columns = pd.concat(dfs)
     geo_mapper = GeoMapper()
     stats = []
-
+    all_columns=geo_mapper.add_population_column(all_columns, "state_code",geocode_col="state")
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
                                     "state_id",
@@ -175,6 +175,17 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
+        })
+    elif sig == POP_PROP:
+        df = pd.DataFrame({
+            "state": all_columns.state.apply(str.lower),
+            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
+            "val": \
+            (all_columns.previous_day_admission_adult_covid_confirmed + \
+            all_columns.previous_day_admission_adult_covid_suspected + \
+            all_columns.previous_day_admission_pediatric_covid_confirmed + \
+            all_columns.previous_day_admission_pediatric_covid_suspected)/ \
+            all_columns["population"] * 100000,
         })
     else:
         raise Exception(

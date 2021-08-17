@@ -6,7 +6,7 @@ import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
     make_signal, make_geo, run_module
-from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, SMOOTHERS, GEOS, SIGNALS
+from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, POP_PROP, SMOOTHERS, GEOS, SIGNALS
 from delphi_utils.geomap import GeoMapper
 from freezegun import freeze_time
 import numpy as np
@@ -54,6 +54,7 @@ def test_make_signal():
     data = pd.DataFrame({
         'state': ['NA'],
         'date': [20200102],
+        'population':[100.],
         'previous_day_admission_adult_covid_confirmed': [1],
         'previous_day_admission_adult_covid_suspected': [2],
         'previous_day_admission_pediatric_covid_confirmed': [4],
@@ -73,6 +74,13 @@ def test_make_signal():
         'val': [15.],
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
+
+    expected_pop_prop = pd.DataFrame({
+        'state': ['na'],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [15000.0],
+    })
+    pd.testing.assert_frame_equal(expected_pop_prop,make_signal(data, POP_PROP))
 
     with pytest.raises(Exception):
         make_signal(data, "zig")

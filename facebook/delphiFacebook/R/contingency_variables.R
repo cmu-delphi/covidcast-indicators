@@ -230,16 +230,16 @@ code_health <- function(input_data, wave) {
   if ("C1" %in% names(input_data)) {
     comorbidities <- split_options(input_data$C1)
     
-    input_data$comorbidheartdisease <- is_selected(comorbidities, 3)
-    input_data$comorbidcancer <- is_selected(comorbidities, 2)
-    input_data$comorbidkidneydisease <- is_selected(comorbidities, 7)
-    input_data$comorbidlungdisease <- is_selected(comorbidities, 6)
+    input_data$comorbidheartdisease <- is_selected(comorbidities, "3")
+    input_data$comorbidcancer <- is_selected(comorbidities, "2")
+    input_data$comorbidkidneydisease <- is_selected(comorbidities, "7")
+    input_data$comorbidlungdisease <- is_selected(comorbidities, "6")
     input_data$comorbiddiabetes <-
-      is_selected(comorbidities, 1) |
-      is_selected(comorbidities, 12) |
-      is_selected(comorbidities, 10)
-    input_data$comorbidimmuno <- is_selected(comorbidities, 11)
-    input_data$comorbidobese <- is_selected(comorbidities, 13)
+      is_selected(comorbidities, "1") |
+      is_selected(comorbidities, "12") |
+      is_selected(comorbidities, "10")
+    input_data$comorbidimmuno <- is_selected(comorbidities, "11")
+    input_data$comorbidobese <- is_selected(comorbidities, "13")
 
     # Combo vaccine-eligibility
     input_data$eligible <- 

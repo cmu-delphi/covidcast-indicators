@@ -14,8 +14,7 @@ outputs should be given for non-trivial functions
 
 **Structure**
 
-- [ ] code should use 4 spaces for indentation; other style decisions are
-flexible, but be consistent within a module
+- [ ] code should pass lint checks (`make lint`)
 - [ ] any required metadata files are checked into the repository and placed
 within the directory `static`
 - [ ] any intermediate files that are created and stored by the module should
@@ -29,11 +28,11 @@ included in this template file
 
 **Testing**
 
-- [ ] module can be installed in a new virtual environment
-- [ ] pylint with the default `.pylint` settings run over the module produces
-minimal warnings; warnings that do exist have been confirmed as false positives
+- [ ] module can be installed in a new virtual environment (`make install`)
 - [ ] reasonably high level of unit test coverage covering all of the main logic
 of the code (e.g., missing coverage for raised errors that do not currently seem
 possible to reach are okay; missing coverage for options that will be needed are
 not)
-- [ ] all unit tests run without errors
+- [ ] all unit tests run without errors (`make test`)
+- [ ] indicator directory has been added to GitHub CI
+(`covidcast-indicators/.github/workflows/python-ci.yml`)

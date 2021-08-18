@@ -38,7 +38,7 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     mapper = GeoMapper()
-    stats = []
+    run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
     all_data = pd.DataFrame(columns=["timestamp", "val", "zip", "sample_size", "se"])
@@ -46,7 +46,7 @@ def run_module(params):
     ## TODO: add num/prop variations if needed
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = mapper.replace_geocode(
-            all_data, "zip",
+            all_data, "zip", geo,
             new_col="geo_id",
             date_col="timestamp")
         ## TODO: recompute sample_size, se here if not NA
@@ -63,11 +63,11 @@ def run_module(params):
             sensor_name,
             start_date=start_date)
         if len(dates) > 0:
-            stats.append((max(dates), len(dates)))
+            run_stats.append((max(dates), len(dates)))
     ## log this indicator run
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    min_max_date = stats and min(s[0] for s in stats)
-    csv_export_count = sum(s[-1] for s in stats)
+    min_max_date = run_stats and min(s[0] for s in run_stats)
+    csv_export_count = sum(s[-1] for s in run_stats)
     max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
     formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",

@@ -151,15 +151,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
 
     aggregations$geo_level[agg_ind] <- geo_level
-
-    # Multiple choice metrics should also be included in the group_by vars
-    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
-      if ( !(aggregations$metric[agg_ind] %in%
-             aggregations$group_by[agg_ind][[1]]) ) {
-        aggregations$group_by[agg_ind][[1]] <-
-          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
-      }
-    }
   }
 
   # Remove aggregations using unavailable variables.

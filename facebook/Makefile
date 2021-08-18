@@ -92,6 +92,7 @@ params.json: $(TODAY)
 	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
 	$(PYTHON) -m delphi_utils set \
 		debug false \
+		produce_individual_raceeth true \
 		end_date $(YESTERDAY) \
 		input <(find $(QUALTRICS) -maxdepth 1 -newer $< -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		parallel true \

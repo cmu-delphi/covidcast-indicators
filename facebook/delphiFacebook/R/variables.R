@@ -27,24 +27,64 @@ split_options <- function(column) {
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
 #'   
-#' @importFrom parallel mclapply
-is_selected <- function(vec, selection) {
-  map_fn <- ifelse( is.null(getOption("mc.cores")) , lapply, mclapply)
-  selections <- unlist(map_fn(
-    vec,
-    function(resp) {
-      if (length(resp) == 0 || all(is.na(resp))) {
-        # Qualtrics files code no selection as "" (empty string), which is
-        # parsed by `read_csv` as `NA` (missing) by default. Since all our
-        # selection items include "None of the above" or similar, treat both no
-        # selection ("") or missing (NA) as missing, for generality.
-        NA
-      } else {
-        selection %in% resp
-      }
-    }))
+#' @importFrom Rcpp cppFunction
+is_selected <- function(vec, selection, use_cpp=TRUE) {
+  
+  cppFunction("
+LogicalVector is_selected_cpp(List responses, String target) {
+  LogicalVector out(responses.size());
 
-  return(selections)
+  for (int i = 0; i < responses.size(); ++i) {
+    if (responses[i] == R_NilValue) {
+      out[i] = NA_LOGICAL;
+      continue;
+    }
+
+    StringVector response(responses[i]);
+    if (response.size() == 0) {
+      out[i] = NA_LOGICAL;
+      continue;
+    }
+
+    for (int j = 0; j < response.size(); ++j ) {
+      if(StringVector::is_na(response[j])) {
+        out[i] = NA_LOGICAL;
+        break;
+      }
+      if(response[j] == target) {
+        out[i] = true;
+        break;
+      }
+    }
+  }
+  return out;
+}")
+  
+  is_selected_r <- function(vec, selection) {
+    vec_unique <- unique(vec)
+    
+    selections <- unlist(lapply(
+      vec_unique,
+      function(resp) {
+        if (length(resp) == 0 || all(is.na(resp))) {
+          # Qualtrics files code no selection as "" (empty string), which is
+          # parsed by `read_csv` as `NA` (missing) by default. Since all our
+          # selection items include "None of the above" or similar, treat both no
+          # selection ("") or missing (NA) as missing, for generality.
+          NA
+        } else {
+          selection %in% resp
+        }
+      }))
+    
+    names(selections) <- vec_unique
+    names(vec) <- vec
+    
+    return( as.logical(selections[names(vec)]) )
+  }
+  
+  split_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)
+  return(split_fn(vec, selection))
 }
 
 #' Activities outside the home

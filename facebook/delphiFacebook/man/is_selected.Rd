@@ -4,7 +4,7 @@
 \alias{is_selected}
 \title{Test if a specific selection is selected}
 \usage{
-is_selected(vec, selection)
+is_selected(vec, selection, use_cpp = TRUE)
 }
 \arguments{
 \item{vec}{A list whose entries are character vectors, such as c("14", "15").}

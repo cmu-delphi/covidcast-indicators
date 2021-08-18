@@ -24,6 +24,7 @@ QUALTRICS=$(shell $(PYTHON) -m delphi_utils get input_dir)
 WEIGHTS=$(shell $(PYTHON) -m delphi_utils get weights_in_dir)
 CIDS=$(shell $(PYTHON) -m delphi_utils get weights_out_dir)
 INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
+INDIVIDUAL_RACEETH=$(shell $(PYTHON) -m delphi_utils get individual_raceeth_dir)
 ARCHIVE=$(shell $(PYTHON) -m delphi_utils get archive_dir)
 RECEIVING=$(shell $(PYTHON) -m delphi_utils get export_dir)
 FB_CC=$(shell $(PYTHON) -m delphi_utils get qualtrics.notify-bad-weights)
@@ -33,6 +34,7 @@ MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
 ANTIJOIN:="antijoin.cids.sorted.txt"
 CIDS_DEST:="fb-interchange/cmu_respondent_ids"
 INDIVID_DEST:="fb-public-results/"
+INDIVID_RACEETH_DEST:="protected-race-ethnicity-data/"
 RAW_DEST:="raw"
 
 default:
@@ -44,10 +46,11 @@ tidy: receiving
 	cp params.json tidy/
 	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
+	mv $(INDIVIDUAL_RACEETH)/*.csv* tidy/$(INDIVIDUAL_RACEETH)
 	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
 
 clean:
-	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv
+	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(INDIVIDUAL_RACEETH)/*.csv  $(CIDS)/*.csv
 
 clean-archive:
 	rm -f $(ARCHIVE)/*.Rds
@@ -129,7 +132,7 @@ run-R: $(CIDS)
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy
+pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-individual-raceeth post-done tidy
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
@@ -183,6 +186,19 @@ post-individual: $(TODAY) $(INDIVIDUAL)
 	done; \
 	$(SFTP_POST); \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` microresponse files" >> $(MESSAGES)
+	touch $@
+
+post-individual-raceeth: $(TODAY) $(INDIVIDUAL_RACEETH)
+	POST=`find $(INDIVIDUAL_RACEETH) -maxdepth 1 -newer $(TODAY) -name "cvid_responses_*.csv"`; \
+	[ -n "$${POST}" ]; \
+	BATCH=""; \
+	for f in $${POST}; do \
+	    (grep token $$f; [[ $$? -eq 1 ]]); \
+	    gzip -f $$f; \
+	    BATCH="$${BATCH}put $${f}.gz ${INDIVID_RACEETH_DEST}\n"; \
+	done; \
+	$(SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` race-ethnicity microresponse files" >> $(MESSAGES)
 	touch $@
 
 post-done: post-cids

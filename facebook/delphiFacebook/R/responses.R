@@ -174,6 +174,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
+  input_data <- code_news_and_info(input_data, wave)
   
   if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
     input_data <- code_race_ethnicity(input_data, wave)
@@ -221,6 +222,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_trust(input_data, wave)
     input_data <- code_vaccine_barriers(input_data, wave)
     input_data <- code_behaviors(input_data, wave)
+    input_data <- code_addl_activities(input_data, wave)
   }
 
   return(input_data)

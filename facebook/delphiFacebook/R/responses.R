@@ -174,6 +174,10 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
+  
+  if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
+    input_data <- code_race_ethnicity(input_data, wave)
+  }
 
   # create testing variables
 
@@ -535,8 +539,8 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3", "I4", "I5",
     "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
     "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", "module", # added in Wave 11
-
-    "token", "wave", "UserLanguage",
+    
+    "raceethnicity", "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
@@ -621,12 +625,12 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
 #' * CID/token IS NOT missing
 #' * distribution source (ie previews) IS NOT irregular
 #' * start date IS IN range, pacific time
+#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
+#' inclusive.
 #' * answered minimum of 2 additional questions, where to "answer" a numeric
 #' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
 #' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
 #' button question is to provide a selection.
-#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
-#' inclusive.
 #'
 #' Most of these criteria are handled by `filter_responses()` above; this
 #' function need only handle the last criterion.
@@ -654,8 +658,10 @@ filter_complete_responses <- function(data_full, params)
   data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions
-  data_full <- data_full[rowSums(!is.na(data_full)) >= 9, ]
+  # UserLanguage + two questions (ignore raceethnicity field which may or may
+  # not exist, depending on params)
+  valid_row_filter <- rowSums( !is.na(data_full[, names(data_full) != "raceethnicity"]) ) >= 9
+  data_full <- data_full[valid_row_filter, ]
 
   return(data_full)
 }

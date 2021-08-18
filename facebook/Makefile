@@ -1,4 +1,4 @@
-SHELL:=/bin/bash
+SHELL:=/bin/bash --rcfile bash-init.sh
 
 # dry-run mode: generate all files, but do not post them anywhere, and disable all emails to outside parties.
 DRY:=yes

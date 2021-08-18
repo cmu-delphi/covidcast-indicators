@@ -481,9 +481,9 @@ code_vaccines <- function(input_data, wave) {
     )
   }
   
-  if ("V11a" %in% names(df)) {
+  if ("V11a" %in% names(input_data)) {
     # Have an appointment to get vaccinated conditional on not being vaccinated.
-    input_data$v_appointment_not_vaccinated <- df$V11a == 1
+    input_data$v_appointment_not_vaccinated <- input_data$V11a == 1
   } else {
     input_data$v_appointment_not_vaccinated <- NA  
   }
@@ -619,6 +619,69 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time <- NA
     input_data$v_vaccine_barrier_type <- NA
     input_data$v_vaccine_barrier_none <- NA
+  }
+  
+  if ( "V15a" %in% names(input_data) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- split_options(input_data$V15a)
+    
+    input_data$v_vaccine_barrier_eligible_has <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments_has <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time_has <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties_has <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document_has <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access_has <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel_has <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language_has <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare_has <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time_has <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type_has <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none_has <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible_has <- NA
+    input_data$v_vaccine_barrier_no_appointments_has <- NA
+    input_data$v_vaccine_barrier_appointment_time_has <- NA
+    input_data$v_vaccine_barrier_technical_difficulties_has <- NA
+    input_data$v_vaccine_barrier_document_has <- NA
+    input_data$v_vaccine_barrier_technology_access_has <- NA
+    input_data$v_vaccine_barrier_travel_has <- NA
+    input_data$v_vaccine_barrier_language_has <- NA
+    input_data$v_vaccine_barrier_childcare_has <- NA
+    input_data$v_vaccine_barrier_time_has <- NA
+    input_data$v_vaccine_barrier_type_has <- NA
+    input_data$v_vaccine_barrier_none_has <- NA
+  }
+  
+  if ( "V15b" %in% names(input_data) ) {
+    # introduced in Wave 11
+    vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
+    vaccine_barriers <- split_options(vaccine_barriers)
+    
+    input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments_tried <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time_tried <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties_tried <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document_tried <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access_tried <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel_tried <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language_tried <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare_tried <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time_tried <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type_tried <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none_tried <- is_selected(vaccine_barriers, "11")
+  } else {
+    input_data$v_vaccine_barrier_eligible_tried <- NA
+    input_data$v_vaccine_barrier_no_appointments_tried <- NA
+    input_data$v_vaccine_barrier_appointment_time_tried <- NA
+    input_data$v_vaccine_barrier_technical_difficulties_tried <- NA
+    input_data$v_vaccine_barrier_document_tried <- NA
+    input_data$v_vaccine_barrier_technology_access_tried <- NA
+    input_data$v_vaccine_barrier_travel_tried <- NA
+    input_data$v_vaccine_barrier_language_tried <- NA
+    input_data$v_vaccine_barrier_childcare_tried <- NA
+    input_data$v_vaccine_barrier_time_tried <- NA
+    input_data$v_vaccine_barrier_type_tried <- NA
+    input_data$v_vaccine_barrier_none_tried <- NA
   }
   
   if ( "E4" %in% names(input_data) ) {
@@ -868,6 +931,56 @@ code_news_and_info <- function(input_data, wave) {
     input_data$i_want_info_relationships <- NA
     input_data$i_want_info_employment <- NA
     input_data$i_want_info_none <- NA
+  }
+  
+  return(input_data)
+}
+
+#' Race/ethnicity
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_race_ethnicity <- function(input_data, wave) {
+  # race
+  if ("D7" %in% names(input_data)) {
+    input_data$race <- case_when(
+      input_data$D7 == 1 ~ "AmericanIndianAlaskaNative",
+      input_data$D7 == 2 ~ "Asian",
+      input_data$D7 == 3 ~ "BlackAfricanAmerican",
+      input_data$D7 == 4 ~ "NativeHawaiianPacificIslander",
+      input_data$D7 == 5 ~ "White",
+      input_data$D7 == 6 ~ "MultipleOther",
+      grepl(",", input_data$D7) ~ "MultipleOther", # Multiracial
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$race <- NA_character_
+  }
+  
+  # ethnicity
+  if ("D6" %in% names(input_data)) {
+    input_data$hispanic <- input_data$D6 == 1
+  } else {
+    input_data$hispanic <- NA
+  }
+  
+  # Combo race-ethnicity
+  if ( "hispanic" %in% names(input_data) &&
+       "race" %in% names(input_data) ) {
+    input_data$raceethnicity <- case_when(
+      input_data$hispanic ~ "Hispanic",
+      !input_data$hispanic & input_data$race == "AmericanIndianAlaskaNative" ~ "NonHispanicAmericanIndianAlaskaNative",
+      !input_data$hispanic & input_data$race == "Asian" ~ "NonHispanicAsian",
+      !input_data$hispanic & input_data$race == "BlackAfricanAmerican" ~ "NonHispanicBlackAfricanAmerican",
+      !input_data$hispanic & input_data$race == "NativeHawaiianPacificIslander" ~ "NonHispanicNativeHawaiianPacificIslander",
+      !input_data$hispanic & input_data$race == "White" ~ "NonHispanicWhite",
+      !input_data$hispanic & input_data$race == "MultipleOther" ~ "NonHispanicMultipleOther",
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$raceethnicity <- NA_character_
   }
   
   return(input_data)

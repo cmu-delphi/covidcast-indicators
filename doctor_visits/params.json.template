@@ -17,9 +17,9 @@
     "common": {
       "data_source": "doctor-visits",
       "span_length": 14,
-      "end_date": "today-5",
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
+      "dry_run": true,
       "suppressed_errors": [
       ]
     },

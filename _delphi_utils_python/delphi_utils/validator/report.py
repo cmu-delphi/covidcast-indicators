@@ -7,7 +7,9 @@ from .errors import ValidationFailure
 class ValidationReport:
     """Class for reporting the results of validation."""
 
-    def __init__(self, errors_to_suppress: List[ValidationFailure], data_source: str = ""):
+    # pylint: disable=R0902
+    def __init__(self, errors_to_suppress: List[ValidationFailure],
+                 data_source: str = "", dry_run: bool = False):
         """Initialize a ValidationReport.
 
         Parameters
@@ -41,6 +43,8 @@ class ValidationReport:
         self.raised_errors = []
         self.raised_warnings = []
         self.unsuppressed_errors = []
+        self.dry_run = dry_run
+    # pylint: enable=R0902
 
     def add_raised_error(self, error):
         """Add an error to the report.
@@ -89,18 +93,20 @@ class ValidationReport:
                 checks_run = self.total_checks,
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
-                warnings = len(self.raised_warnings))
+                warnings = len(self.raised_warnings),
+                phase = "validation")
         else:
             logger.info("Validation run unsuccessful",
                 data_source = self.data_source,
                 checks_run = self.total_checks,
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
-                warnings = len(self.raised_warnings))
+                warnings = len(self.raised_warnings),
+                phase="validation")
         for error in self.unsuppressed_errors:
-            logger.critical(str(error))
+            logger.critical(str(error), phase="validation")
         for warning in self.raised_warnings:
-            logger.warning(str(warning))
+            logger.warning(str(warning), phase="validation")
 
     def print_and_exit(self, logger=None, die_on_failures=True):
         """Print results and exit.
@@ -118,4 +124,4 @@ class ValidationReport:
 
     def success(self):
         """Determine if the report corresponds to a successful validation run."""
-        return len(self.unsuppressed_errors) == 0
+        return len(self.unsuppressed_errors) == 0 or self.dry_run

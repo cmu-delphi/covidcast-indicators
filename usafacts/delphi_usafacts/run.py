@@ -13,7 +13,6 @@ import numpy as np
 from delphi_utils import (
     create_export_csv,
     get_structured_logger,
-    S3ArchiveDiffer,
     Smoother
 )
 
@@ -93,13 +92,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     export_dir = params["common"]["export_dir"]
     base_url = params["indicator"]["base_url"]
 
-    if "archive" in params:
-        arch_diff = S3ArchiveDiffer(
-            params["archive"]["cache_dir"], export_dir,
-            params["archive"]["bucket_name"], "usafacts",
-            params["archive"]["aws_credentials"])
-        arch_diff.update_cache()
-
     dfs = {metric: pull_usafacts_data(base_url, metric, logger) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
@@ -143,23 +135,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 oldest_final_export_date = max(exported_csv_dates)
             oldest_final_export_date = min(
                 oldest_final_export_date, max(exported_csv_dates))
-
-    if "archive" in params:
-        # Diff exports, and make incremental versions
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {f: diff for f, diff in common_diffs.items() if f not in fails}
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
 
     elapsed_time_in_seconds = round(t.time() - start_time, 2)
     max_lag_in_days = None

@@ -15,6 +15,7 @@
       "min_expected_lag": {"all": "1"},
       "max_expected_lag": {"all": "1"},
       "test_mode": false,
+      "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_val_lt_0"}
       ]
@@ -44,6 +45,7 @@
       "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
     },
     "bucket_name": "delphi-covidcast-indicator-output",
-    "cache_dir": "./cache"
+    "cache_dir": "./cache",
+    "indicator_prefix": "jhu"
   }
 }

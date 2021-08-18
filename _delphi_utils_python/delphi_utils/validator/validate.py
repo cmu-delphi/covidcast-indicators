@@ -39,6 +39,7 @@ class Validator:
         self.time_window = TimeWindow.from_params(validation_params["common"]["end_date"],
                                                   validation_params["common"]["span_length"])
         self.data_source = validation_params["common"].get("data_source", "")
+        self.dry_run = validation_params["common"].get("dry_run", False)
 
         self.static_validation = StaticValidator(validation_params)
         self.dynamic_validation = DynamicValidator(validation_params)
@@ -53,7 +54,7 @@ class Validator:
         Returns:
             - ValidationReport collating the validation outcomes
         """
-        report = ValidationReport(self.suppressed_errors, self.data_source)
+        report = ValidationReport(self.suppressed_errors, self.data_source, self.dry_run)
         frames_list = load_all_files(self.export_dir, self.time_window.start_date,
                                      self.time_window.end_date)
         self.static_validation.validate(frames_list, report)

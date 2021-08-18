@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from datetime import date, timedelta
 from typing import Dict, Set
+import re
 import pandas as pd
 import numpy as np
 from .errors import ValidationFailure, APIDataFetchError
@@ -51,7 +52,7 @@ class DynamicValidator:
                                                common_params["span_length"]),
             generation_date=date.today(),
             max_check_lookbehind=timedelta(
-                days=dynamic_params.get("ref_window_size", 7)),
+                days=max(7, dynamic_params.get("ref_window_size", 14))),
             smoothed_signals=set(dynamic_params.get("smoothed_signals", [])),
             min_expected_lag=lag_converter(common_params.get(
                 "min_expected_lag", dict())),
@@ -144,7 +145,6 @@ class DynamicValidator:
             # Check data from a group of dates against recent (previous 7 days,
             # by default) data from the API.
             for checking_date in self.params.time_window.date_seq:
-
                 create_dfs_or_error = self.create_dfs(
                     geo_sig_df, api_df_or_error, checking_date, geo_type, signal_type, report)
 
@@ -158,8 +158,10 @@ class DynamicValidator:
                 self.check_rapid_change_num_rows(
                     recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
 
-                self.check_avg_val_vs_reference(
-                    recent_df, reference_api_df, checking_date, geo_type, signal_type, report)
+                if not re.search("cumulative", signal_type):
+                    self.check_avg_val_vs_reference(
+                        recent_df, reference_api_df, checking_date, geo_type,
+                        signal_type, report)
 
             # Keeps script from checking all files in a test run.
             kroc += 1
@@ -240,10 +242,6 @@ class DynamicValidator:
         # Choosing 1 day checks just the daily data.
         recent_lookbehind = timedelta(days=1)
 
-        # semirecent_lookbehind: starting from the check date and working backward
-        # in time, how many days do we use to form the reference statistics.
-        semirecent_lookbehind = timedelta(days=7)
-
         recent_cutoff_date = checking_date - \
             recent_lookbehind + timedelta(days=1)
         recent_df = geo_sig_df.query(
@@ -270,9 +268,7 @@ class DynamicValidator:
         # These variables are interpolated into the call to `api_df_or_error.query()`
         # below but pylint doesn't recognize that.
         # pylint: disable=unused-variable
-        reference_start_date = recent_cutoff_date - \
-            min(semirecent_lookbehind, self.params.max_check_lookbehind) - \
-            timedelta(days=1)
+        reference_start_date = recent_cutoff_date - self.params.max_check_lookbehind
         if signal_type in self.params.smoothed_signals:
             # Add an extra 7 days to the reference period.
             reference_start_date = reference_start_date - \
@@ -393,7 +389,6 @@ class DynamicValidator:
                                   signal_type,
                                   "Number of rows per day seems to have changed rapidly (reference "
                                   "vs test data)"))
-
         report.increment_total_checks()
 
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):
@@ -558,18 +553,20 @@ class DynamicValidator:
         reference_mean = df_to_reference.groupby(['geo_id'], as_index=False)[
             ['val', 'se', 'sample_size']].mean().assign(type="reference mean")
         reference_sd = df_to_reference.groupby(['geo_id'], as_index=False)[
-            ['val', 'se', 'sample_size']].std().assign(type="reference sd")
+            ['val', 'se', 'sample_size']].std().round(8).assign(type="reference sd")
+        reference_count = df_to_reference.groupby(['geo_id'], as_index=False)[
+            ['val', 'se', 'sample_size']].count().assign(type="reference count")
 
         # Replace standard deviations of 0 with non-zero min sd for that type. Ignores NA.
-        replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].min()},
-                        "se": {0: reference_sd.se[reference_sd.se > 0].min()},
+        replacements = {"val": {0: reference_sd.val[reference_sd.val > 0].median()},
+                        "se": {0: reference_sd.se[reference_sd.se > 0].median()},
                         "sample_size": {0: reference_sd.sample_size[
-                            reference_sd.sample_size > 0].min()}}
+                            reference_sd.sample_size > 0].median()}}
         reference_sd.replace(replacements, inplace=True)
 
         # Duplicate reference_mean and reference_sd for every unique time_value seen in df_to_test
         reference_df = pd.concat(
-            [reference_mean, reference_sd]
+            [reference_mean, reference_sd, reference_count]
         ).assign(
             key=0
         ).merge(
@@ -593,6 +590,10 @@ class DynamicValidator:
         #  - Use to calculate z-score for each test datapoint for a given geo_id and date.
         #  - Avg z-scores over each geo_id, across all dates.
         #  - Avg all z-scores together.
+        num_ref_dates = self.params.max_check_lookbehind.days
+        if signal_type in self.params.smoothed_signals:
+            num_ref_dates += 7
+
         df_all = pd.concat(
             [df_to_test, reference_df]
         ).melt(
@@ -607,6 +608,7 @@ class DynamicValidator:
                 x["test"] - x["reference mean"]) / x["reference sd"],
             abs_z=lambda x: abs(x["z"])
         ).replace([np.inf, -np.inf], np.nan, inplace = False
+        ).query("`reference count` == @num_ref_dates"
         ).dropna(
         ).groupby(
             ["geo_id", "variable"], as_index=False

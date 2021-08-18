@@ -945,3 +945,53 @@ code_news_and_info <- function(input_data, wave) {
   
   return(input_data)
 }
+
+#' Race/ethnicity
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_race_ethnicity <- function(input_data, wave) {
+  # race
+  if ("D7" %in% names(input_data)) {
+    input_data$race <- case_when(
+      input_data$D7 == 1 ~ "AmericanIndianAlaskaNative",
+      input_data$D7 == 2 ~ "Asian",
+      input_data$D7 == 3 ~ "BlackAfricanAmerican",
+      input_data$D7 == 4 ~ "NativeHawaiianPacificIslander",
+      input_data$D7 == 5 ~ "White",
+      input_data$D7 == 6 ~ "MultipleOther",
+      grepl(",", input_data$D7) ~ "MultipleOther", # Multiracial
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$race <- NA_character_
+  }
+  
+  # ethnicity
+  if ("D6" %in% names(input_data)) {
+    input_data$hispanic <- input_data$D6 == 1
+  } else {
+    input_data$hispanic <- NA
+  }
+  
+  # Combo race-ethnicity
+  if ( "hispanic" %in% names(input_data) &&
+       "race" %in% names(input_data) ) {
+    input_data$raceethnicity <- case_when(
+      input_data$hispanic ~ "Hispanic",
+      !input_data$hispanic & input_data$race == "AmericanIndianAlaskaNative" ~ "NonHispanicAmericanIndianAlaskaNative",
+      !input_data$hispanic & input_data$race == "Asian" ~ "NonHispanicAsian",
+      !input_data$hispanic & input_data$race == "BlackAfricanAmerican" ~ "NonHispanicBlackAfricanAmerican",
+      !input_data$hispanic & input_data$race == "NativeHawaiianPacificIslander" ~ "NonHispanicNativeHawaiianPacificIslander",
+      !input_data$hispanic & input_data$race == "White" ~ "NonHispanicWhite",
+      !input_data$hispanic & input_data$race == "MultipleOther" ~ "NonHispanicMultipleOther",
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$raceethnicity <- NA_character_
+  }
+  
+  return(input_data)
+}

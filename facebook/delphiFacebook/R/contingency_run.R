@@ -14,21 +14,6 @@ run_contingency_tables <- function(params) {
     warning(debug_msg)
   }
   
-  if ( !is.null(params$aggs_in) ) {
-    if ( !file.exists(params$aggs_in) ) {
-      stop("requested aggregate-setting file does not exist")
-    }
-    
-    # Run non-default aggregates. File should create an object called `aggs`.
-    source(params$aggs_in)
-    
-    if ( !exists("aggs") || !inherits(aggs, "data.frame") ) {
-      stop("external aggregate-setting file must create a dataframe `aggs`")
-    }
-  } else {
-    aggs <- get_aggs()
-  }
-  
   ## Set default number of cores for mclapply to the total available number,
   ## because we are greedy and this will typically run on a server.
   if (params$parallel) {
@@ -42,6 +27,8 @@ run_contingency_tables <- function(params) {
       msg_plain(paste0("Running on ", cores, " cores"))
     }
   }
+  
+  aggs <- get_aggs()
   
   if (params$aggregate_range == "week") {
     run_contingency_tables_many_periods(params, aggs$week)

@@ -34,7 +34,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
-  df <- as.data.table(df)
+  df <- as.data.table(df)[!is.na(weight), ]
   setkeyv(df, "start_dt")
 
   # Keep only obs in desired date range.
@@ -337,7 +337,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
 
-    agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
+    agg_df <- group_df[!is.na(group_df[[metric]]), ]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

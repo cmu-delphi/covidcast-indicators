@@ -203,6 +203,7 @@ test_that("mental health items are correctly coded", {
   input_data$mh_anxious_7d <- NA
   input_data$mh_depressed_7d <- NA
   input_data$mh_isolated_7d <- NA
+  input_data$mh_worried_catch_covid <- NA
 
   expect_equal(out, input_data)
 
@@ -226,6 +227,7 @@ test_that("mental health items are correctly coded", {
   input_data$mh_anxious_7d <- NA
   input_data$mh_depressed_7d <- NA
   input_data$mh_isolated_7d <- NA
+  input_data$mh_worried_catch_covid <- NA
 
   expect_equal(out, input_data)
 
@@ -235,7 +237,8 @@ test_that("mental health items are correctly coded", {
     C8a_1 = c(1, 2, 3, 4, NA),
     C8a_2 = c(1, 2, 3, 4, NA),
     C8a_3 = c(1, 2, 3, 4, NA),
-    C15 = c(1, 2, 3, 4, NA)
+    C15 = c(1, 2, 3, 4, NA),
+    G1 = c(1, 2, 3, 4, NA)
   )
 
   out <- code_mental_health(input_data, wave = 10)
@@ -249,6 +252,7 @@ test_that("mental health items are correctly coded", {
   input_data$mh_anxious_7d <- c(FALSE, FALSE, TRUE, TRUE, NA)
   input_data$mh_depressed_7d <- c(FALSE, FALSE, TRUE, TRUE, NA)
   input_data$mh_isolated_7d <- c(FALSE, FALSE, TRUE, TRUE, NA)
+  input_data$mh_worried_catch_covid <- c(TRUE, TRUE, FALSE, FALSE, NA)
 
   expect_equal(out, input_data)
 })

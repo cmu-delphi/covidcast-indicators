@@ -1,21 +1,16 @@
+# this file is used only as a hookup for Jenkins. 
+# if you are looking for the setup.py file associated with the 
+# delphi_facebook python package, see `delphiFacebook/python/setup.py`
+
 from setuptools import setup
 from setuptools import find_packages
 
-required = [
-    "numpy",
-    "pandas",
-    "pydocstyle",
-    "pytest",
-    "pytest-cov",
-    "pylint==2.8.3",
-    "delphi-utils",
-    "covidcast"
-]
+required = [ "" ]
 
 setup(
-    name="delphi_NAME",
-    version="0.1.0",
-    description="SHORT DESCRIPTION",
+    name="facebook",
+    version="0.0.1",
+    description="Facebook Survey",
     author="",
     author_email="",
     url="https://github.com/cmu-delphi/covidcast-indicators",

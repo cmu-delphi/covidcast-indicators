@@ -5,7 +5,7 @@ import tempfile
 import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
-    make_signal, make_geo, run_module
+    make_signal, make_geo, run_module, pop_proportion
 from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, POP_PROP, SMOOTHERS, GEOS, SIGNALS
 from delphi_utils.geomap import GeoMapper
 from freezegun import freeze_time
@@ -75,15 +75,23 @@ def test_make_signal():
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
 
-    expected_pop_prop = pd.DataFrame({
-        'state': ['na'],
-        'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [15000.0],
-    })
-    pd.testing.assert_frame_equal(expected_pop_prop,make_signal(data, POP_PROP))
-
     with pytest.raises(Exception):
         make_signal(data, "zig")
+
+def test_pop_proportion():
+    test_df = pd.DataFrame({  
+        'state': ['PA'],
+        'state_code':[42],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [15.],})
+    pd.testing.assert_frame_equal(
+        pop_proportion(test_df),
+        pd.DataFrame({
+            'state': ['PA'],
+            'state_code':[42],
+            'timestamp': [datetime(year=2020, month=1, day=1)],
+            'val': [0.11716929299033142],})
+    )
 
 
 def test_make_geo():

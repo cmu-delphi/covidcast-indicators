@@ -98,12 +98,13 @@ def run_module(params):
     all_columns = pd.concat(dfs)
     geo_mapper = GeoMapper()
     stats = []
-    all_columns=geo_mapper.add_population_column(all_columns, "state_code",geocode_col="state")
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
                                     "state_id",
                                     "state_code",
                                     from_col="state")
+        if sensor==POP_PROP:
+            df=pop_proportion(df)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
         if df.empty:
@@ -139,6 +140,13 @@ def smooth_values(df, smoother):
     )
     return df
 
+def pop_proportion(df):
+    """Get the population-proportionate variants as the dataframe val."""
+    geo_mapper = GeoMapper()
+    pop_val=geo_mapper.add_population_column(df, "state_code")
+    df["val"]=df["val"]/pop_val["population"]*100000
+    pop_val.drop("population", axis=1, inplace=True)
+    return df
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
@@ -176,16 +184,15 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
         })
-    elif sig == POP_PROP:
+    elif sig ==  POP_PROP:
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
             "val": \
-            (all_columns.previous_day_admission_adult_covid_confirmed + \
+            all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
-            all_columns.previous_day_admission_pediatric_covid_suspected)/ \
-            all_columns["population"] * 100000,
+            all_columns.previous_day_admission_pediatric_covid_suspected,
         })
     else:
         raise Exception(

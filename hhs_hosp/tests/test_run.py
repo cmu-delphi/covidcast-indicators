@@ -6,7 +6,7 @@ import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
     make_signal, make_geo, run_module, pop_proportion
-from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, POP_PROP, SMOOTHERS, GEOS, SIGNALS
+from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, SMOOTHERS, GEOS, SIGNALS,CONFIRMED_PROP, SUM_CONF_SUSP_PROP
 from delphi_utils.geomap import GeoMapper
 from freezegun import freeze_time
 import numpy as np
@@ -54,7 +54,6 @@ def test_make_signal():
     data = pd.DataFrame({
         'state': ['NA'],
         'date': [20200102],
-        'population':[100.],
         'previous_day_admission_adult_covid_confirmed': [1],
         'previous_day_admission_adult_covid_suspected': [2],
         'previous_day_admission_pediatric_covid_confirmed': [4],
@@ -68,12 +67,26 @@ def test_make_signal():
     })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED))
 
+    expected_confirmed = pd.DataFrame({
+        'state': ['na'],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [5.],
+    })
+    pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED_PROP))
+
     expected_sum = pd.DataFrame({
         'state': ['na'],
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [15.],
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
+
+    expected_sum = pd.DataFrame({
+        'state': ['na'],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [15.],
+    })
+    pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP_PROP))
 
     with pytest.raises(Exception):
         make_signal(data, "zig")
@@ -91,9 +104,23 @@ def test_pop_proportion():
             'state': ['PA'],
             'state_code':[42],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [0.11716929299033142],})
+            'val': [0.12],})
     )
 
+    test_df= pd.DataFrame({  
+        'state': ['WV'],
+        'state_code':[54],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [150.],})
+
+    pd.testing.assert_frame_equal(
+        pop_proportion(test_df,geo_mapper),
+        pd.DataFrame({
+            'state': ['WV'],
+            'state_code':[54],
+            'timestamp': [datetime(year=2020, month=1, day=1)],
+            'val': [8.37],})
+    )
 
 def test_make_geo():
     """Check that geographies transform correctly."""

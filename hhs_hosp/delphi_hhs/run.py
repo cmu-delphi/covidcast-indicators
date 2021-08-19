@@ -15,8 +15,7 @@ from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP,POP_PROP
-
+from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
 
 def _date_to_int(d):
     """Return a date object as a yyyymmdd int."""
@@ -103,7 +102,7 @@ def run_module(params):
                                     "state_id",
                                     "state_code",
                                     from_col="state")
-        if sensor==POP_PROP:
+        if sensor.endswith("_PROP"):
             df=pop_proportion(df,geo_mapper)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
@@ -143,7 +142,7 @@ def smooth_values(df, smoother):
 def pop_proportion(df,geo_mapper):
     """Get the population-proportionate variants as the dataframe val."""
     pop_val=geo_mapper.add_population_column(df, "state_code")
-    df["val"]=df["val"]/pop_val["population"]*100000
+    df["val"]=round(df["val"]/pop_val["population"]*100000,2)
     pop_val.drop("population", axis=1, inplace=True)
     return df
 
@@ -165,7 +164,7 @@ def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""
     assert sig in SIGNALS, f"Unexpected signal name '{sig}';" + \
         " familiar names are '{', '.join(SIGNALS)}'"
-    if sig == CONFIRMED:
+    if sig.startswith(CONFIRMED):
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
@@ -173,17 +172,7 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_confirmed
         })
-    elif sig == SUM_CONF_SUSP:
-        df = pd.DataFrame({
-            "state": all_columns.state.apply(str.lower),
-            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
-            "val": \
-            all_columns.previous_day_admission_adult_covid_confirmed + \
-            all_columns.previous_day_admission_adult_covid_suspected + \
-            all_columns.previous_day_admission_pediatric_covid_confirmed + \
-            all_columns.previous_day_admission_pediatric_covid_suspected,
-        })
-    elif sig ==  POP_PROP:
+    elif sig.startswith(SUM_CONF_SUSP):
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),

@@ -79,13 +79,14 @@ def test_make_signal():
         make_signal(data, "zig")
 
 def test_pop_proportion():
+    geo_mapper = GeoMapper()
     test_df = pd.DataFrame({  
         'state': ['PA'],
         'state_code':[42],
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [15.],})
     pd.testing.assert_frame_equal(
-        pop_proportion(test_df),
+        pop_proportion(test_df,geo_mapper),
         pd.DataFrame({
             'state': ['PA'],
             'state_code':[42],

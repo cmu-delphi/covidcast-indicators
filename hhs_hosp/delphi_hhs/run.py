@@ -104,7 +104,7 @@ def run_module(params):
                                     "state_code",
                                     from_col="state")
         if sensor==POP_PROP:
-            df=pop_proportion(df)
+            df=pop_proportion(df,geo_mapper)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
         if df.empty:
@@ -140,9 +140,8 @@ def smooth_values(df, smoother):
     )
     return df
 
-def pop_proportion(df):
+def pop_proportion(df,geo_mapper):
     """Get the population-proportionate variants as the dataframe val."""
-    geo_mapper = GeoMapper()
     pop_val=geo_mapper.add_population_column(df, "state_code")
     df["val"]=df["val"]/pop_val["population"]*100000
     pop_val.drop("population", axis=1, inplace=True)

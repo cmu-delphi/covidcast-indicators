@@ -1,9 +1,9 @@
-name: Release Delphi Utils
+name: (Deprecated) Release Delphi Utils
 
 on:
   push:
     branches:
-      - prod
+      - not_prod
     paths:
       - '_delphi_utils_python/**'
   workflow_dispatch:

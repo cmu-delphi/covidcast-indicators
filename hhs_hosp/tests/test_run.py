@@ -66,12 +66,6 @@ def test_make_signal():
         'val': [5.],
     })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED))
-
-    expected_confirmed = pd.DataFrame({
-        'state': ['na'],
-        'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [5.],
-    })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED_PROP))
 
     expected_sum = pd.DataFrame({
@@ -80,12 +74,6 @@ def test_make_signal():
         'val': [15.],
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
-
-    expected_sum = pd.DataFrame({
-        'state': ['na'],
-        'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [15.],
-    })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP_PROP))
 
     with pytest.raises(Exception):
@@ -104,7 +92,7 @@ def test_pop_proportion():
             'state': ['PA'],
             'state_code':[42],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [0.12],})
+            'val': [0.1171693],})
     )
 
     test_df= pd.DataFrame({  
@@ -119,7 +107,7 @@ def test_pop_proportion():
             'state': ['WV'],
             'state_code':[54],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [8.37],})
+            'val': [8.3698491],})
     )
 
 def test_make_geo():

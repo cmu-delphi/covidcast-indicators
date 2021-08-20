@@ -1,4 +1,4 @@
-name: Create Delphi Utils Release
+name: (Deprecated) Create Delphi Utils Release
 
 on:
   workflow_dispatch:

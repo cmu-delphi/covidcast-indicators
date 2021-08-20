@@ -31,6 +31,8 @@ jobs:
         uses: dorny/paths-filter@v2
         id: changes
         with:
+          # when base and ref are the same, changes are detected against the most recent commit before the push.
+          # see https://github.com/dorny/paths-filter#usage for details.
           base: 'prod'
           ref: 'prod'
           filters: |

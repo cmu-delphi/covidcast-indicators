@@ -7,6 +7,7 @@ when the module is run with `python -m delphi_nchs_mortality`.
 import time
 from datetime import datetime, date, timedelta
 from typing import Dict, Any
+from itertools import product
 
 import numpy as np
 from delphi_utils import S3ArchiveDiffer, get_structured_logger
@@ -60,7 +61,7 @@ def run_module(params: Dict[str, Any]):
 
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
-    for metric in METRICS:
+    for metric,geo in product(METRICS,GEO_RES):
         if metric == 'percent_of_expected_deaths':
             print(metric)
             df = df_pull.copy()
@@ -71,7 +72,7 @@ def run_module(params: Dict[str, Any]):
             sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
             dates = export_csv(
                 df,
-                geo_name=GEO_RES,
+                geo_name=geo,
                 export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
@@ -92,7 +93,7 @@ def run_module(params: Dict[str, Any]):
                 sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 dates = export_csv(
                     df,
-                    geo_name=GEO_RES,
+                    geo_name=geo,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,

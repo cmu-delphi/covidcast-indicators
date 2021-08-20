@@ -30,11 +30,12 @@
 
 ## Current features
 
-* Errors and warnings are summarized in class attribute and printed on exit
-* If any non-suppressed errors are raised, the validation process exits with non-zero status
+* Errors and warnings are summarized in class attribute and stored in log files (file path to be specified in params)
+* If any non-suppressed errors are raised and dry-run is set to False, the validation process exits with non-zero status
 * Various check settings are controllable via indicator-specific params.json files
 * User can manually disable specific checks for specific datasets using a field in the params.json file
 * User can enable test mode (checks only a small number of data files) using a field in the params.json file
+* User can enable dry-run mode (prevents system exit with error and ensures that success() method returns True) using a field in the params.json file
 
 ## Checks + features wishlist, and problems to think about
 
@@ -45,9 +46,6 @@
 
 ### Larger issues
 
-* Set up validator to use Sir-complains-a-lot alerting functionality on a signal-by-signal basis (should send alert output as a slack message and "@" a set person), as a stop-gap before the logging server is ready
-  * This is [how Sir-CAL works](https://github.com/benjaminysmith/covidcast-indicators/blob/main/sir_complainsalot/delphi_sir_complainsalot/run.py)
-  * [Example output](https://delphi-org.slack.com/archives/C01E81A3YKF/p1605793508000100)
 * Expand framework to support nchs_mortality, which is provided on a weekly basis and has some differences from the daily data. E.g. filenames use a different format ("weekly_YYYYWW_geotype_signalname.csv")
 * Make backtesting framework so new checks can be run individually on historical indicator data to tune false positives, output verbosity, understand frequency of error raising, etc. Should pull data from API the first time and save locally in `cache` dir.
 * Add DETAILS.md doc with detailed descriptions of what each check does and how. Will be especially important for statistical/anomaly detection checks.
@@ -58,6 +56,7 @@
   * Nicer formatting for error “report”.
     * Potentially set `__print__()` method in ValidationError class
     * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
+    * Consider adding summary counts of each type of error, rather than just a combined number
 * Check for erratic data sources that wrongly report all zeroes
   * E.g. the error with the Wisconsin data for the 10/26 forecasts
   * Wary of a purely static check for this
@@ -65,9 +64,6 @@
   * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
   * Also partially captured by outlier checking, depending on `size_cut` setting. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
 * Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
-* If can't get data from API, do we want to use substitute data for the comparative checks instead?
-  * Currently, any API fetch problems just doesn't do comparative checks at all.
-  * E.g. most recent successful API pull -- might end up being a couple weeks older
 * Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
   * Profiling (iterate)
   * Save intermediate files?

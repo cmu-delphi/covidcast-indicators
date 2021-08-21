@@ -311,26 +311,22 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   being used
 #' @param params Named list of configuration options.
 #'
-#' @importFrom tibble add_column as_tibble
+#' @importFrom tibble add_column
 #' @importFrom dplyr %>%
 #'
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
-  ## Prepare outputs.
-  dfs_out <- list()
-  for (row in seq_along(aggregations$id)) {
-    aggregation <- aggregations$id[row]
-
-    dfs_out[[aggregation]] <- target_group %>%
-      as.list %>%
-      as_tibble %>%
-      add_column(val=NA_real_,
-                 se=NA_real_,
-                 sample_size=NA_real_,
-                 effective_sample_size=NA_real_,
-                 represented=NA_real_)
-  }
-
+  # Prepare outputs.
+  fill_df <- target_group %>%
+    add_column(val=NA_real_,
+               se=NA_real_,
+               sample_size=NA_real_,
+               effective_sample_size=NA_real_,
+               represented=NA_real_)
+  dfs_out <- setNames(
+    rep(list(fill_df), times=length(aggregations$id)),
+    aggregations$id)
+  
   for (row in seq_along(aggregations$id)) {
     aggregation <- aggregations$id[row]
     metric <- aggregations$metric[row]

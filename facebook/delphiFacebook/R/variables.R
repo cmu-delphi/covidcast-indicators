@@ -24,12 +24,14 @@ split_options <- function(column) {
 #'
 #' @param vec A list whose entries are character vectors, such as c("14", "15").
 #' @param selection one string, such as "14"
+#' @param use_cpp boolean indicating whether to use the C++ verion or the R
+#'   version of this function
+#' 
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
-#'   
+#'
 #' @importFrom Rcpp cppFunction
 is_selected <- function(vec, selection, use_cpp=TRUE) {
-  
   cppFunction("
 LogicalVector is_selected_cpp(List responses, String target) {
   LogicalVector out(responses.size());

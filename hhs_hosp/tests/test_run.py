@@ -5,8 +5,8 @@ import tempfile
 import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
-    make_signal, make_geo, run_module
-from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, SMOOTHERS, GEOS, SIGNALS
+    make_signal, make_geo, run_module, pop_proportion
+from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, SMOOTHERS, GEOS, SIGNALS, CONFIRMED_PROP, SUM_CONF_SUSP_PROP
 from delphi_utils.geomap import GeoMapper
 from freezegun import freeze_time
 import numpy as np
@@ -66,6 +66,7 @@ def test_make_signal():
         'val': [5.],
     })
     pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED))
+    pd.testing.assert_frame_equal(expected_confirmed, make_signal(data, CONFIRMED_PROP))
 
     expected_sum = pd.DataFrame({
         'state': ['na'],
@@ -73,10 +74,41 @@ def test_make_signal():
         'val': [15.],
     })
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
+    pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP_PROP))
 
     with pytest.raises(Exception):
         make_signal(data, "zig")
 
+def test_pop_proportion():
+    geo_mapper = GeoMapper()
+    test_df = pd.DataFrame({  
+        'state': ['PA'],
+        'state_code': [42],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [15.],})
+    pd.testing.assert_frame_equal(
+        pop_proportion(test_df, geo_mapper),
+        pd.DataFrame({
+            'state': ['PA'],
+            'state_code': [42],
+            'timestamp': [datetime(year=2020, month=1, day=1)],
+            'val': [0.1171693],})
+    )
+
+    test_df= pd.DataFrame({  
+        'state': ['WV'],
+        'state_code': [54],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [150.],})
+
+    pd.testing.assert_frame_equal(
+        pop_proportion(test_df, geo_mapper),
+        pd.DataFrame({
+            'state': ['WV'],
+            'state_code': [54],
+            'timestamp': [datetime(year=2020, month=1, day=1)],
+            'val': [8.3698491],})
+    )
 
 def test_make_geo():
     """Check that geographies transform correctly."""

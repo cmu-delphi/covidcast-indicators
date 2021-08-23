@@ -139,6 +139,40 @@ test_that("filter_data_for_aggregation works correctly", {
                expected)
 })
 
+test_that("filter_complete_responses works correctly", {
+  params <- list(
+    start_date=as.Date("2020-01-05"),
+    end_date=as.Date("2021-01-05"),
+    backfill_days = 0,
+    static_dir=test_path("static"))
+
+  input <- tibble(
+    token = c("", 1, NA, 2, 3, 4, 5, 6, 7),
+    wave = c("", 1, 1, 2, 3, 4, 5, 6, 7),
+    geo_id = "US",
+    zip5 = "10001",
+    A3 = "10001",
+    B2b = c("1", "2", "2", NA, "32", "8", "8,2", NA, "1"),
+    C11 = c("1", "2", NA, "2", "32", "8", "8,2", NA, "1"),
+    UserLanguage = "English",
+    StartDatetime = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    EndDatetime = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    Date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-02-24"),
+    raceethnicity = c(NA, "Hispanic", NA, "Hispanic", NA, "Hispanic", NA, "Hispanic", "NonHispanicAsian")
+  )
+  
+  # No raceethnicity field
+  expected <- input[c(1, 2, 4:7), ] %>% select(-c(zip5, raceethnicity))
+  out <- filter_complete_responses(input %>% select(-raceethnicity), params)
+  expect_equal(out, expected)
+  
+  # raceethnicity field included
+  input$raceethnicity <- "Hispanic"
+  expected <- input[c(1, 2, 4:7), ] %>% select(-c(zip5))
+  out <- filter_complete_responses(input, params)
+  expect_equal(out, expected)
+})
+
 test_that("V4 bodge works correctly", {
   foo <- tibble(
     UserLanguage = c("EN", "ES", "EN", NA, "ZH"),

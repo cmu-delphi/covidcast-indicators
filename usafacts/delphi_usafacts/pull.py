@@ -25,9 +25,10 @@ def fetch(url: str, cache: str) -> pd.DataFrame:
     """
     r = requests.get(url)
     r.raise_for_status()
-    filename = os.path.join(
-        cache,
-        f"{date.today().strftime('%Y%m%d')}_{url.replace(r'.*/','')}.csv")
+    datestamp = date.today().strftime('%Y%m%d')
+    name = url.split('/')[-1].replace('.csv','')
+    os.makedirs(cache, exist_ok=True)
+    filename = os.path.join(cache, f"{datestamp}_{name}.csv")
     with open(filename, "w") as f:
         f.write(r.text)
     return pd.read_csv(filename)

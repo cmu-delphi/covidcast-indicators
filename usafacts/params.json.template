@@ -1,6 +1,7 @@
 {
   "common": {
     "export_dir": "./receiving",
+    "input_dir": "./input-cache",
     "log_exceptions": false,
     "log_filename": "./usa-facts.log"
   },

@@ -313,6 +313,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'
 #' @importFrom tibble add_column
 #' @importFrom dplyr %>%
+#' @importFrom stats setNames
 #'
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
@@ -333,7 +334,8 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
 
-    agg_df <- group_df[!is.na(group_df[[metric]]), ]
+    select_cols <- c(metric, var_weight, "weight_in_location")
+    agg_df <- group_df[, select_cols, with=FALSE][!is.na(eval(as.name(metric))), ]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

@@ -20,7 +20,8 @@ Imports:
     lubridate,
     data.table,
     tibble,
-    purrr
+    purrr,
+    Rcpp
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

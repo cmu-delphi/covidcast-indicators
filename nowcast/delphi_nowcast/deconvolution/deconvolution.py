@@ -1,3 +1,4 @@
+import csv
 from datetime import date, timedelta
 from functools import partial
 from typing import Callable, List, Tuple
@@ -9,7 +10,9 @@ from scipy.sparse import diags as band
 from ..data_containers import LocationSeries, SensorConfig
 from ..epidata import get_indicator_data
 
-
+from ctypes import *
+so_file = "/home/andrew/Documents/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
+c_dp_1d = CDLL(so_file)
 
 def _construct_convolution_matrix(signal: np.ndarray,
                                   kernel: np.ndarray,
@@ -113,15 +116,17 @@ def deconvolve_double_smooth_ntf_fast(
         kernel: np.ndarray,
         lam: float,
         gam: float,
-        n_iters: int = 200,
+        n_iters: int = 1000,
         k: int = 3,
-        clip: bool = False) -> np.ndarray:
+        clip: bool = False,
+        output=False,
+        location="") -> np.ndarray:
     assert k == 3, "Natural TF only implemented for k=3"
     n = y.shape[0]
     m = kernel.shape[0]
-
+    C = C[:n]
     rho = lam  # set equal
-    C = _construct_convolution_matrix(y, kernel)[:n]
+    C2 = _construct_convolution_matrix(y, kernel)[:n]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
     P = _construct_poly_interp_mat(x, n, k)
@@ -145,12 +150,25 @@ def deconvolve_double_smooth_ntf_fast(
     alpha_k = np.zeros(n - k - 1)
     u_k = np.zeros(n - k - 1)
     x_k = first_x_update @ (Cty + rho * D.T @ (alpha_k + u_k))
+    objectives = []
     for i in range(n_iters):
         x_k = first_x_update @ (Cty + rho * D.T @ (alpha_k + u_k))
-        alpha_k = dp_1d(D @ x_k, lam / rho)
+
+        c_dp_1d.read.argtypes = c_int, POINTER(c_double), c_double, POINTER(c_double)
+        c_dp_1d.read.restype = None
+        x = D @ x_k
+        alpha_k = (c_double * len(x))()
+        x_c = (c_double * len(x))(*x)
+        c_dp_1d.tf_dp(c_int(len(x)), x_c, c_double(lam/rho), alpha_k)
         u_k = u_k + alpha_k - D @ x_k
-
-
+        if output:
+            if i % 25 == 0:
+                objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
+                objectives.append([i, objective, max(abs(alpha_k - D @ x_k))])
+    if output:
+        with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
+            write = csv.writer(f)
+            write.writerows(objectives)
     x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
@@ -166,10 +184,12 @@ def deconvolve_double_smooth_tf_cv(
         lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
         gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
         gam_n_folds: int = 7,
-        n_iters: int = 200,
+        n_iters: int = 1000,
         k: int = 3,
         clip: bool = False,
-        verbose: bool = False) -> np.ndarray:
+        verbose: bool = False,
+        output=False,
+        location="") -> np.ndarray:
     """
        Run cross-validation to tune smoothness over deconvolve_double_smooth_ntf.
        First, leave-every-third-out CV is performed over lambda, fixing gamma=0. After
@@ -206,6 +226,7 @@ def deconvolve_double_smooth_tf_cv(
        -------
            array of the deconvolved signal values
        """
+    print(n_iters)
     fit_func = partial(fit_func,  n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
     lam_cv_loss = np.zeros((lam_cv_grid.shape[0],))
@@ -257,7 +278,7 @@ def deconvolve_double_smooth_tf_cv(
     C, kernel = _construct_day_specific_convolution_matrix(y,
                                                            as_of_date,
                                                            delay_kernels)
-    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel)
+    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output, location=location)
     return x_hat
 
 
@@ -290,102 +311,6 @@ def _impute_with_neighbors(x: np.ndarray) -> np.ndarray:
     assert np.isnan(imputed_x).sum() == 0
 
     return imputed_x
-
-
-def dp_1d(y, lam):
-    """Implementation of Nick Johnson's DP solution for 1d fused lasso."""
-    n = y.shape[0]
-    beta = np.zeros(n)
-
-    # knots
-    x = np.zeros((2 * n))
-    a = np.zeros((2 * n))
-    b = np.zeros((2 * n))
-
-    # knots of back-pointers
-    tm = np.zeros((n - 1))
-    tp = np.zeros((n - 1))
-
-    # step through first iteration manually
-    tm[0] = -lam + y[0]
-    tp[0] = lam + y[0]
-    l = n - 1
-    r = n
-    x[l] = tm[0]
-    x[r] = tp[0]
-    a[l] = 1
-    b[l] = -y[0] + lam
-    a[r] = -1
-    b[r] = y[0] + lam
-    afirst = 1
-    bfirst = -y[1] - lam
-    alast = -1
-    blast = y[1] - lam
-    # now iterations 2 through n-1
-    for k in range(1, n - 1):
-        # compute lo
-        alo = afirst
-        blo = bfirst
-        lo = l
-        while lo <= r:
-            if alo * x[lo] + blo > -lam:
-                break
-            alo += a[lo]
-            blo += b[lo]
-            lo += 1
-
-        # compute hi
-        ahi = alast
-        bhi = blast
-        hi = r
-        while hi >= lo:
-            if (-ahi * x[hi] - bhi) < lam:
-                break
-            ahi += a[hi]
-            bhi += b[hi]
-            hi -= 1
-
-        # compute the negative knot
-        tm[k] = (-lam - blo) / alo
-        l = lo - 1
-        x[l] = tm[k]
-
-        # compute the positive knot
-        tp[k] = (lam + bhi) / (-ahi)
-        r = hi + 1
-        x[r] = tp[k]
-
-        # update a and b
-        a[l] = alo
-        b[l] = blo + lam
-        a[r] = ahi
-        b[r] = bhi + lam
-        afirst = 1
-        bfirst = -y[k + 1] - lam
-        alast = -1
-        blast = y[k + 1] - lam
-
-    # compute the last coefficient - function has zero derivative here
-    alo = afirst
-    blo = bfirst
-    for lo in range(l, r + 1):
-        if alo * x[lo] + blo > 0:
-            break
-        alo += a[lo]
-        blo += b[lo]
-
-    beta[n - 1] = -blo / alo
-
-    # compute the rest of the coefficients
-    for k in range(n - 2, -1, -1):
-        if beta[k + 1] > tp[k]:
-            beta[k] = tp[k]
-        elif beta[k + 1] < tm[k]:
-            beta[k] = tm[k]
-        else:
-            beta[k] = beta[k + 1]
-    return beta
-
 
 
 def deconvolve_signal(convolved_truth_indicator: SensorConfig,

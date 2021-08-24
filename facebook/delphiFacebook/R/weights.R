@@ -46,6 +46,8 @@ write_cid <- function(data, type_name, params)
 #' @param weights Which weights to use -- step1 or full?
 #'
 #' @importFrom dplyr bind_rows left_join
+#' @importFrom data.table fread
+#' 
 #' @export
 join_weights <- function(data, params, weights = c("step1", "full"))
 {
@@ -59,8 +61,12 @@ join_weights <- function(data, params, weights = c("step1", "full"))
 
   weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
   weights_files <- sort(weights_files)
-  agg_weights <- bind_rows(lapply(weights_files, read_csv, col_types = "cd"))
-  agg_weights <- agg_weights[!duplicated(agg_weights$cid),]
+  agg_weights <- bind_rows(lapply(
+    weights_files,
+    fread,
+    colClasses = c(cid="character", weight="double"))
+  )
+  agg_weights <- agg_weights[!duplicated(cid),]
   data <- left_join(data, agg_weights, by = c("token" = "cid"))
 
   return(data)

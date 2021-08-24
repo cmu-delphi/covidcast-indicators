@@ -11,7 +11,7 @@ from ..data_containers import LocationSeries, SensorConfig
 from ..epidata import get_indicator_data
 
 from ctypes import *
-so_file = "/home/andrew/Documents/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
+so_file = "/usr1/achin/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
 c_dp_1d = CDLL(so_file)
 
 def _construct_convolution_matrix(signal: np.ndarray,

@@ -1,9 +1,12 @@
 import pytest
 import logging
+from unittest.mock import patch
 
 import pandas as pd
 
 from delphi_usafacts.pull import pull_usafacts_data
+
+from test_run import local_fetch
 
 BASE_URL_GOOD = "test_data/small_{metric}_pull.csv"
 
@@ -15,6 +18,7 @@ BASE_URL_BAD = {
 
 TEST_LOGGER = logging.getLogger()
 
+@patch("delphi_usafacts.pull.fetch", local_fetch)
 class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"

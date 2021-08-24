@@ -90,9 +90,10 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     else:
         export_start_date = datetime.strptime(export_start_date, "%Y-%m-%d")
     export_dir = params["common"]["export_dir"]
+    input_dir = params["common"]["input_dir"]
     base_url = params["indicator"]["base_url"]
 
-    dfs = {metric: pull_usafacts_data(base_url, metric, logger) for metric in METRICS}
+    dfs = {metric: pull_usafacts_data(base_url, metric, logger, input_dir) for metric in METRICS}
     for metric, geo_res, sensor, smoother in product(
             METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTHERS):
         if "cumulative" in sensor and "seven_day_average" in smoother:

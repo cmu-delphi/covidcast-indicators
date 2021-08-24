@@ -2,16 +2,22 @@
 from itertools import product
 from os import listdir
 from os.path import join
+from unittest.mock import patch
 
 import pandas as pd
 
 from delphi_usafacts.run import run_module
 
+def local_fetch(url, cache):
+    return pd.read_csv(url)
+
+@patch("delphi_usafacts.pull.fetch", local_fetch)
 class TestRun:
     """Tests for the `run_module()` function."""
     PARAMS = {
         "common": {
-            "export_dir": "./receiving"
+            "export_dir": "./receiving",
+            "input_dir": "./input_cache"
         },
         "indicator": {
             "base_url": "./test_data/small_{metric}.csv",

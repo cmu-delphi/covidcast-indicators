@@ -82,14 +82,16 @@ class Weekday:
             penalty = (
                 lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
             )  # L-1 Norm of third differences, rewards smoothness
-            try:
-                prob = cp.Problem(cp.Minimize(-ll + lmbda * penalty))
-                _ = prob.solve()
-            except:
-                # If the magnitude of the objective function is too large, an error is
-                # thrown; Rescale the objective function
-                prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / 1e5))
-                _ = prob.solve()
+            scales = [1, 1e5, 1e10, 1e15]
+            for scale in scales:
+                try:
+                    prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
+                    _ = prob.solve()
+                    break
+                except:
+                    # If the magnitude of the objective function is too large, an error is
+                    # thrown; Rescale the objective function by going through loop
+                    pass
             params[i, :] = b.value
 
         return params

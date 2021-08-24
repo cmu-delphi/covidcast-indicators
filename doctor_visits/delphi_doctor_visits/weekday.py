@@ -90,15 +90,15 @@ class Weekday:
                 try:
                     prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
                     _ = prob.solve()
+                    params[i,:] = b.value
                     break
                 except:
                     # If the magnitude of the objective function is too large, an error is
                     # thrown; Rescale the objective function by going through loop
                     pass
             else:
-                logging.error("Unable to calculate weekday correction, will not adjust")
                 # Leaving params[i,:] = 0 is equivalent to not performing weekday correction
-            params[i, :] = b.value
+                logging.error("Unable to calculate weekday correction")
 
         return params
 

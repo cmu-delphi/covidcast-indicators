@@ -4,6 +4,9 @@ Weekday effects (code from Aaron Rumack).
 Created: 2020-05-06
 """
 
+# standard packages
+import logging
+
 # third party
 import cvxpy as cp
 import numpy as np
@@ -92,6 +95,9 @@ class Weekday:
                     # If the magnitude of the objective function is too large, an error is
                     # thrown; Rescale the objective function by going through loop
                     pass
+            else:
+                logging.error("Unable to calculate weekday correction, will not adjust")
+                # Leaving params[i,:] = 0 is equivalent to not performing weekday correction
             params[i, :] = b.value
 
         return params

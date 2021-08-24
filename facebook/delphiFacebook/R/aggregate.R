@@ -146,23 +146,25 @@ summarize_indicators <- function(df, crosswalk_data, indicators, geo_level,
 #' @param geo_level Name of the geo level (county, state, etc.) for which we are
 #'   aggregating.
 #' @param params Named list of configuration options.
+#' 
 #' @importFrom dplyr mutate filter
+#' @importFrom stats setNames
 #' @importFrom rlang .data
 summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, params) {
   ## Prepare outputs.
-  dfs_out <- list()
   geo_ids <- unique(day_df$geo_id)
-  for (indicator in indicators$name) {
-    dfs_out[[indicator]] <- tibble(
-      geo_id = geo_ids,
-      day = target_day,
-      val = NA_real_,
-      se = NA_real_,
-      sample_size = NA_real_,
-      effective_sample_size = NA_real_
-    )
-  }
-
+  fill_df <- tibble(
+    geo_id = geo_ids,
+    day = target_day,
+    val = NA_real_,
+    se = NA_real_,
+    sample_size = NA_real_,
+    effective_sample_size = NA_real_
+  )
+  dfs_out <- setNames(
+    rep(list(fill_df), times=length(indicators$name)),
+    indicators$name)
+  
   for (ii in seq_along(geo_ids))
   {
     target_geo <- geo_ids[ii]
@@ -175,8 +177,10 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
       var_weight <- indicators$var_weight[row]
       compute_fn <- indicators$compute_fn[[row]]
 
-      ind_df <- sub_df[!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
-
+      # Copy only columns we're using. Makes filter on missing values faster.
+      select_cols <- c(metric, var_weight, "weight_in_location")
+      ind_df <- sub_df[, select_cols, with=FALSE][!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
+      
       if (nrow(ind_df) > 0)
       {
         s_mix_coef <- params$s_mix_coef

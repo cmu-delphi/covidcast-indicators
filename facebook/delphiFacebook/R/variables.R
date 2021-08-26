@@ -75,7 +75,7 @@ LogicalVector is_selected_cpp(List responses, String target) {
           # selection ("") or missing (NA) as missing, for generality.
           NA
         } else {
-          selection %in% resp
+          any(resp == selection)
         }
       }))
     
@@ -85,8 +85,8 @@ LogicalVector is_selected_cpp(List responses, String target) {
     return( as.logical(selections[names(vec)]) )
   }
   
-  split_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)
-  return(split_fn(vec, selection))
+  select_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)
+  return(select_fn(vec, selection))
 }
 
 #' Activities outside the home

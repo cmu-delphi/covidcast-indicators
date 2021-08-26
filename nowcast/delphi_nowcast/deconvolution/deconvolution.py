@@ -11,7 +11,7 @@ from ..data_containers import LocationSeries, SensorConfig
 from ..epidata import get_indicator_data
 
 from ctypes import *
-so_file = "/usr1/achin/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
+so_file = "/usr1/achin/nowcast/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
 c_dp_1d = CDLL(so_file)
 
 def _construct_convolution_matrix(signal: np.ndarray,
@@ -226,7 +226,6 @@ def deconvolve_double_smooth_tf_cv(
        -------
            array of the deconvolved signal values
        """
-    print(n_iters)
     fit_func = partial(fit_func,  n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
     lam_cv_loss = np.zeros((lam_cv_grid.shape[0],))

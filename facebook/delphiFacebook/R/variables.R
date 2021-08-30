@@ -29,64 +29,45 @@ split_options <- function(column) {
 #' 
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
-#'
-#' @importFrom Rcpp cppFunction
+#'   
+#' @useDynLib delphiFacebook, .registration = TRUE
 is_selected <- function(vec, selection, use_cpp=TRUE) {
-  cppFunction("
-LogicalVector is_selected_cpp(List responses, String target) {
-  LogicalVector out(responses.size());
-
-  for (int i = 0; i < responses.size(); ++i) {
-    if (responses[i] == R_NilValue) {
-      out[i] = NA_LOGICAL;
-      continue;
-    }
-
-    StringVector response(responses[i]);
-    if (response.size() == 0) {
-      out[i] = NA_LOGICAL;
-      continue;
-    }
-
-    for (int j = 0; j < response.size(); ++j ) {
-      if(StringVector::is_na(response[j])) {
-        out[i] = NA_LOGICAL;
-        break;
-      }
-      if(response[j] == target) {
-        out[i] = true;
-        break;
-      }
-    }
-  }
-  return out;
-}")
-  
-  is_selected_r <- function(vec, selection) {
-    vec_unique <- unique(vec)
-    
-    selections <- unlist(lapply(
-      vec_unique,
-      function(resp) {
-        if (length(resp) == 0 || all(is.na(resp))) {
-          # Qualtrics files code no selection as "" (empty string), which is
-          # parsed by `read_csv` as `NA` (missing) by default. Since all our
-          # selection items include "None of the above" or similar, treat both no
-          # selection ("") or missing (NA) as missing, for generality.
-          NA
-        } else {
-          any(resp == selection)
-        }
-      }))
-    
-    names(selections) <- vec_unique
-    names(vec) <- vec
-    
-    return( as.logical(selections[names(vec)]) )
-  }
-  
   select_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)
   return(select_fn(vec, selection))
+}
+
+#' Test if a specific selection is selected, R implementation
+#'
+#' Checking whether a specific selection is selected in either "" (empty
+#' string) or `NA` responses will produce `NA`s. Looks only at unique values in
+#' the input vector.
+#'
+#' @param vec A list whose entries are character vectors, such as c("14", "15").
+#' @param selection one string, such as "14"
+#' 
+#' @return a logical vector; for each list entry, whether selection is contained
+#'   in the character vector.
+is_selected_r <- function(vec, selection) {
+  vec_unique <- unique(vec)
+  
+  selections <- unlist(lapply(
+    vec_unique,
+    function(resp) {
+      if (length(resp) == 0 || all(is.na(resp))) {
+        # Qualtrics files code no selection as "" (empty string), which is
+        # parsed by `read_csv` as `NA` (missing) by default. Since all our
+        # selection items include "None of the above" or similar, treat both no
+        # selection ("") or missing (NA) as missing, for generality.
+        NA
+      } else {
+        any(resp == selection)
+      }
+    }))
+  
+  names(selections) <- vec_unique
+  names(vec) <- vec
+  
+  return( as.logical(selections[names(vec)]) )
 }
 
 #' Activities outside the home

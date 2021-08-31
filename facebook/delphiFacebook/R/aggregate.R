@@ -147,22 +147,24 @@ summarize_indicators <- function(df, crosswalk_data, indicators, geo_level,
 #'   aggregating.
 #' @param params Named list of configuration options.
 #' 
-#' @importFrom dplyr mutate filter
+#' @importFrom dplyr mutate filter bind_rows
 #' @importFrom stats setNames
 #' @importFrom rlang .data
 summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, params) {
-  ## Prepare outputs.
+  ## Prepare outputs as list of lists. Saves some time and memory since lists
+  ## are not copied on modify.
   geo_ids <- unique(day_df$geo_id)
-  fill_df <- tibble(
-    geo_id = geo_ids,
-    day = target_day,
-    val = NA_real_,
-    se = NA_real_,
-    sample_size = NA_real_,
-    effective_sample_size = NA_real_
+  n_geo_ids <- length(geo_ids)
+  fill_list <- list(geo_id = geo_ids,
+                    day = rep(target_day, n_geo_ids),
+                    val = rep(NA_real_, n_geo_ids),
+                    se = rep(NA_real_, n_geo_ids),
+                    sample_size = rep(NA_real_, n_geo_ids),
+                    effective_sample_size = rep(NA_real_, n_geo_ids)
   )
+  
   dfs_out <- setNames(
-    rep(list(fill_df), times=length(indicators$name)),
+    rep(list(fill_list), times=length(indicators$name)),
     indicators$name)
   
   for (ii in seq_along(geo_ids))
@@ -177,7 +179,7 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
       var_weight <- indicators$var_weight[row]
       compute_fn <- indicators$compute_fn[[row]]
 
-      # Copy only columns we're using. Makes filter on missing values faster.
+      # Copy only columns we're using.
       select_cols <- c(metric, var_weight, "weight_in_location")
       ind_df <- sub_df[, select_cols, with=FALSE][!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
       
@@ -195,12 +197,17 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
           weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
           sample_size = sample_size)
 
-        dfs_out[[indicator]]$val[ii] <- new_row$val
-        dfs_out[[indicator]]$se[ii] <- new_row$se
-        dfs_out[[indicator]]$sample_size[ii] <- sample_size
-        dfs_out[[indicator]]$effective_sample_size[ii] <- new_row$effective_sample_size
+        dfs_out[[indicator]][["val"]][ii] <- new_row$val
+        dfs_out[[indicator]][["se"]][ii] <- new_row$se
+        dfs_out[[indicator]][["sample_size"]][ii] <- sample_size
+        dfs_out[[indicator]][["effective_sample_size"]][ii] <- new_row$effective_sample_size
       }
     }
+  }
+  
+  # Convert list of lists to list of tibbles.
+  for (indicator in indicators$name) {
+   dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]])
   }
 
   for (row in seq_len(nrow(indicators))) {

@@ -133,7 +133,7 @@ class TestArchiveDiffer:
             "missing_val": [Nans.DELETED] + [Nans.NOT_MISSING] * 2,
             "missing_se": [Nans.DELETED] + [Nans.NOT_MISSING] * 2,
             "missing_sample_size": [Nans.DELETED] + [Nans.NOT_MISSING] * 2,
-            })
+        })
 
         csv2_deleted = pd.DataFrame({
             "geo_id": ["1"],

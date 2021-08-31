@@ -8,6 +8,6 @@ class Nans(IntEnum):
     NOT_MISSING = 0
     NOT_APPLICABLE = 1
     REGION_EXCEPTION = 2
-    PRIVACY = 3
+    CENSORED = 3
     DELETED = 4
-    UNKNOWN = 5
+    OTHER = 5

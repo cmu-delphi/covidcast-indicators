@@ -1,8 +1,12 @@
 import pytest
+import logging
+from unittest.mock import patch
 
 import pandas as pd
 
 from delphi_usafacts.pull import pull_usafacts_data
+
+from test_run import local_fetch
 
 BASE_URL_GOOD = "test_data/small_{metric}_pull.csv"
 
@@ -12,11 +16,13 @@ BASE_URL_BAD = {
     "extra_cols": "test_data/bad_{metric}_extra_cols.csv"
 }
 
+TEST_LOGGER = logging.getLogger()
 
+@patch("delphi_usafacts.pull.fetch", local_fetch)
 class TestPullUSAFacts:
     def test_good_file(self):
         metric = "deaths"
-        df = pull_usafacts_data(BASE_URL_GOOD, metric)
+        df = pull_usafacts_data(BASE_URL_GOOD, metric, TEST_LOGGER)
         expected_df = pd.DataFrame({
             "fips": ["00001", "00001", "00001", "36009", "36009", "36009"],
             "timestamp": [pd.Timestamp("2020-02-29"), pd.Timestamp("2020-03-01"),
@@ -33,7 +39,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             pull_usafacts_data(
-                BASE_URL_BAD["missing_days"], metric
+                BASE_URL_BAD["missing_days"], metric, TEST_LOGGER
             )
 
     def test_missing_cols(self):
@@ -41,7 +47,7 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             pull_usafacts_data(
-                BASE_URL_BAD["missing_cols"], metric
+                BASE_URL_BAD["missing_cols"], metric, TEST_LOGGER
             )
 
     def test_extra_cols(self):
@@ -49,5 +55,5 @@ class TestPullUSAFacts:
         metric = "confirmed"
         with pytest.raises(ValueError):
             pull_usafacts_data(
-                BASE_URL_BAD["extra_cols"], metric
+                BASE_URL_BAD["extra_cols"], metric, TEST_LOGGER
             )

@@ -126,6 +126,9 @@ def update_sensor(
 
     # handle if we need to adjust by weekday
     params = Weekday.get_params(data) if weekday else None
+    if weekday and np.any(np.all(params == 0,axis=1)):
+        # Weekday correction failed for at least one count type
+        return None
 
     # handle explicitly if we need to use Jeffreys estimate for binomial proportions
     jeffreys = bool(se)

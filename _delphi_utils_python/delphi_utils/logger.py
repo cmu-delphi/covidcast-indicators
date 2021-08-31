@@ -82,7 +82,7 @@ def get_structured_logger(name=__name__,
 
     # Create the underlying python logger and wrap it with structlog
     system_logger = logging.getLogger(name)
-    if filename:
+    if filename and not system_logger.handlers:
         system_logger.addHandler(logging.FileHandler(filename))
     system_logger.setLevel(logging.INFO)
     logger = structlog.wrap_logger(system_logger)

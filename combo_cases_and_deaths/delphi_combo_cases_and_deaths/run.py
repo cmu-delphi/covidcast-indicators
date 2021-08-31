@@ -322,6 +322,7 @@ def run_module(params):
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
+    variants = [i for i in variants if not ("7dav" in i[2] and "cumulative" in i[2])]
     params = configure(variants, params)
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

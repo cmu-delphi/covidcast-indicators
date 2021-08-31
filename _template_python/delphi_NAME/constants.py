@@ -1,7 +1,18 @@
 """
-Registry for signal names
+Registry for variations
 """
 
+## example:
+#GEOS = [
+#    "nation",
+#    "hhs",
+#    "state",
+#    "hrr",
+#    "msa",
+#    "county"
+#]
+
+GEOS = []
 
 ## example:
 # FULL_TIME = "full_time_work_prop"
@@ -15,3 +26,11 @@ Registry for signal names
 # ]
 
 SIGNALS = []
+
+## example:
+#SMOOTHERS = [
+#    (Smoother("identity", impute_method=None), ""),
+#    (Smoother("moving_average", window_length=7), "_7dav"),
+#]
+
+SMOOTHERS = []

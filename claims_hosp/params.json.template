@@ -15,5 +15,23 @@
     "parallel": false,
     "geos": ["state", "msa", "hrr", "county"],
     "weekday": [true, false]
+  },
+  "validation": {
+    "common": {
+      "data_source": "hospital-admissions",
+      "span_length": 14,
+      "min_expected_lag": {"all": "3"},
+      "max_expected_lag": {"all": "4"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 5,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7
+    }
   }
 }

@@ -168,9 +168,9 @@ def raw_positive_prop(positives, tests, min_obs, missing_val, missing_se, missin
     positive_prop = positives / tests
     se = np.sqrt(_prop_var(positive_prop, tests))
     sample_size = tests
-    missing_val[np.isnan(tests) | (tests < min_obs) | np.isnan(positive_prop)] = Nans.PRIVACY
-    missing_se[np.isnan(se)] = Nans.PRIVACY
-    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+    missing_val[np.isnan(tests) | (tests < min_obs) | np.isnan(positive_prop)] = Nans.CENSORED
+    missing_se[np.isnan(se)] = Nans.CENSORED
+    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.CENSORED
 
     return positive_prop, se, sample_size, missing_val, missing_se, missing_sample_size
 
@@ -313,9 +313,9 @@ def raw_tests_per_device(devices, tests, min_obs, missing_val, missing_se, missi
     se = np.repeat(np.nan, len(devices))
     sample_size = tests
 
-    missing_val[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+    missing_val[np.isnan(tests) | (tests < min_obs)] = Nans.CENSORED
     missing_se = np.repeat(Nans.NOT_APPLICABLE, len(devices))
-    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.PRIVACY
+    missing_sample_size[np.isnan(tests) | (tests < min_obs)] = Nans.CENSORED
 
     return tests_per_device, se, sample_size, missing_val, missing_se, missing_sample_size
 

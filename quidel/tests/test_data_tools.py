@@ -99,9 +99,9 @@ class TestDataTools:
          np.array([np.nan, 1/2, 1/2, 4/10]),
          np.array([np.nan, np.sqrt(0.25/4), np.sqrt(0.25/6), np.sqrt(0.24/10)]),
          np.array([np.nan, 4, 6, 10]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (1,  # no cases of tests < min_obs
          np.array([1/2, 2/4, 3/6, 4/10]),
@@ -145,9 +145,9 @@ class TestDataTools:
          np.array([np.nan, 1/2, 1/2, 7/16]),
          np.array([np.nan, np.sqrt(0.25/6), np.sqrt(0.25/10), np.sqrt(63/256/16)]),
          np.array([np.nan, 6, 10, 16]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (3,  # parents case
          3,
@@ -209,9 +209,9 @@ class TestDataTools:
         (3,  # one case of tests < min_obs
          np.array([np.nan, 2, 1/2, 10/4]),
          np.array([np.nan, 4, 3, 10]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
          np.repeat(Nans.NOT_APPLICABLE, 4),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (1,  # no cases of tests < min_obs
          np.array([2, 2, 1/2, 10/4]),
@@ -252,9 +252,9 @@ class TestDataTools:
          np.array([np.nan, 2, 5/6, 8/7]),
          np.repeat(np.nan, 4),
          np.array([np.nan, 6, 10, 16]),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING]),
          np.repeat(Nans.NOT_APPLICABLE, 4),
-         np.array([Nans.PRIVACY, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
+         np.array([Nans.CENSORED, Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.NOT_MISSING])
          ),
         (3,  # no parents case
          3,

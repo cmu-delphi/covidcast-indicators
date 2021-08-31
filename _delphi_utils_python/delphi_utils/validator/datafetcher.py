@@ -134,7 +134,7 @@ def get_geo_signal_combos(data_source):
             src_list = [data_source]
         for src in src_list:
             sig = combo[1]
-            geo_status = sig_combo_seen.get(sig, src), "unknown")
+            geo_status = sig_combo_seen.get((sig, src), "unknown")
             if geo_status is True:
                 new_geo_signal_combos.append(combo)
             elif geo_status == "unknown":

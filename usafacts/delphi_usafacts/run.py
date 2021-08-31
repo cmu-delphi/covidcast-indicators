@@ -77,11 +77,11 @@ def add_nancodes(df, smoother):
     if smoother == "seven_day_average":
         df.sort_index(inplace=True)
         min_time_value = df.index.min()[0] + 6 * pd.Timedelta(days=1)
-        df.loc[idx[:min_time_value, :], "missing_val"] = Nans.PRIVACY
+        df.loc[idx[:min_time_value, :], "missing_val"] = Nans.CENSORED
 
     # Mark any remaining nans with unknown
     remaining_nans_mask = df["val"].isnull() & (df["missing_val"] == Nans.NOT_MISSING)
-    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
     return df
 
 

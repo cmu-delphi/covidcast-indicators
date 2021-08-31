@@ -126,28 +126,28 @@ def get_geo_signal_combos(data_source):
     new_geo_signal_combos = []
     # Use a seen dict to save on multiple calls:
     # True/False indicate if status is active, "unknown" means we should check
-    geo_seen = dict()
+    sig_combo_seen = dict()
     for combo in geo_signal_combos:
         if source_signal_mappings.get(data_source):
             src_list = source_signal_mappings.get(data_source)
         else:
             src_list = [data_source]
         for src in src_list:
-            geo = combo[1]
-            geo_status = geo_seen.get((combo[0], geo, src), "unknown")
+            sig = combo[1]
+            geo_status = sig_combo_seen.get(sig, src), "unknown")
             if geo_status is True:
                 new_geo_signal_combos.append(combo)
             elif geo_status == "unknown":
                 epidata_signal = requests.get(
                     "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                    params={'signal': f"{src}:{geo}"})
+                    params={'signal': f"{src}:{sig}"})
                 # Not an active signal
                 active_status = [val['active'] for i in epidata_signal.json()
                     for val in i['signals']]
                 if active_status == []:
-                    geo_seen[(combo[0], geo, src)] = False
+                    sig_combo_seen[(sig, src)] = False
                     continue
-                geo_seen[(combo[0], geo, src)] = active_status[0]
+                sig_combo_seen[(sig, src)] = active_status[0]
                 if active_status[0] is True:
                     new_geo_signal_combos.append(combo)
     return new_geo_signal_combos

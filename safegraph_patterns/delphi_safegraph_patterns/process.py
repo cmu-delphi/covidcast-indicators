@@ -135,7 +135,7 @@ def add_nancodes(df):
 
     # Mark any remaining nans with unknown
     remaining_nans_mask = (df["missing_val"] == 0) & df["val"].isnull()
-    df.loc[remaining_nans_mask, "missing_val"] = Nans.UNKNOWN
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
 
     return df
 

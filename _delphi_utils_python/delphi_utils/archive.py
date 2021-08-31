@@ -261,19 +261,19 @@ class ArchiveDiffer:
 
         # Replace deleted files with empty versions, but only if the cached version is not
         # already empty
-        deleted_files_export = []
+        deleted_files_nanfilled = []
         for deleted_file in deleted_files:
             deleted_df = pd.read_csv(deleted_file, dtype=export_csv_dtypes)
             print(
-                f"Diff has deleted {deleted_file}; generating a CSV with deleted rows."
+                f"Diff has deleted {deleted_file}; generating a CSV with corresponding deleted rows."
             )
             deleted_df[["val", "se", "sample_size"]] = np.nan
             deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
             filename = join(self.export_dir, basename(deleted_file))
             deleted_df.to_csv(filename, index=False)
-            deleted_files_export.append(filename)
+            deleted_files_nanfilled.append(filename)
 
-        return deleted_files_export, common_diffs, new_files
+        return deleted_files_nanfilled, common_diffs, new_files
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         """

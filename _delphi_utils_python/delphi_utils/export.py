@@ -38,8 +38,8 @@ def create_export_csv(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     remove_null_samples: Optional[bool] = False,
-    logger: Optional[logging.Logger] = None,
-    write_empty_days: Optional[bool] = False
+    write_empty_days: Optional[bool] = False,
+    logger: Optional[logging.Logger] = None
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -68,6 +68,8 @@ def create_export_csv(
     write_empty_days: Optional[bool]
         If true, every day in between start_date and end_date will have a CSV file written
         even if there is no data for the day. If false, only the days present are written.
+    logger: Optional[logging.Logger]
+        Pass a logger object here to log information about contradictory missing codes.
 
     Returns
     ---------

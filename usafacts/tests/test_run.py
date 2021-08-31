@@ -2,16 +2,22 @@
 from itertools import product
 from os import listdir
 from os.path import join
+from unittest.mock import patch
 
 import pandas as pd
 
 from delphi_usafacts.run import run_module
 
+def local_fetch(url, cache):
+    return pd.read_csv(url)
+
+@patch("delphi_usafacts.pull.fetch", local_fetch)
 class TestRun:
     """Tests for the `run_module()` function."""
     PARAMS = {
         "common": {
-            "export_dir": "./receiving"
+            "export_dir": "./receiving",
+            "input_dir": "./input_cache"
         },
         "indicator": {
             "base_url": "./test_data/small_{metric}.csv",
@@ -52,8 +58,11 @@ class TestRun:
         for date in dates:
             for geo in geos:
                 for metric in metrics:
+                    if "7dav" in metric and date in dates[:6]:
+                        continue  # there are no 7dav signals for first 6 days
+                    if "7dav" in metric and "cumulative" in metric:
+                        continue
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
-
         assert set(csv_files) == set(expected_files)
 
     def test_output_file_format(self):

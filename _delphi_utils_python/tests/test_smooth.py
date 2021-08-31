@@ -30,7 +30,7 @@ class TestSmoothers:
         with pytest.raises(ValueError):
             signal = np.array([1, 1, 1])
             Smoother(smoother_name="window_average", window_length=5.5).smooth(signal)
-        
+
         # The raw and smoothed lengths should match
         signal = np.ones(30)
         smoother = Smoother(smoother_name="moving_average")
@@ -171,7 +171,7 @@ class TestSmoothers:
 
         # test the nan imputer
         signal = np.array([i if i % 3 else np.nan for i in range(1, 40)])
-        assert np.allclose(Smoother(impute_method=None).impute(signal), signal, equal_nan=True)
+        assert np.allclose(Smoother(impute_method="identity").impute(signal), signal, equal_nan=True)
 
         # test the zeros imputer
         signal = np.array([i if i % 3 else np.nan for i in range(1, 40)])

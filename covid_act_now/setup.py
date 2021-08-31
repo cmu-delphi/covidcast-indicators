@@ -7,7 +7,7 @@ required = [
     "pydocstyle",
     "pytest",
     "pytest-cov",
-    "pylint",
+    "pylint==2.8.3",
     "delphi-utils",
     "covidcast",
     "pyarrow",

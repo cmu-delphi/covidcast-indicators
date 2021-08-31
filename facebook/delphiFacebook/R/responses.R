@@ -8,20 +8,22 @@
 #' @param params a named listed containing a value named "input", a vector of
 #'   paths to load by the function, and "input_dir", the directory where the
 #'   input files are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #' @return A data frame of all loaded data files concatenated into one data
 #'   frame
 #'
 #' @importFrom dplyr bind_rows
 #' @importFrom parallel mclapply
 #' @export
-load_responses_all <- function(params) {
+load_responses_all <- function(params, contingency_run = FALSE) {
   input_data <- vector("list", length(params$input))
   
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
   map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(input_data), function(i) {
-    load_response_one(params$input[i], params)
+    load_response_one(params$input[i], params, contingency_run)
   })
   
   msg_plain(paste0("Finished loading CSVs"))
@@ -35,6 +37,8 @@ load_responses_all <- function(params) {
 #' @param input_filename  filename of the input CSV file
 #' @param params          a named list containing a value named "input_dir", the directory
 #'                        where the input file are found
+#' @param contingency_run boolean indicating if currently running contingency
+#'   code
 #'
 #' @importFrom stringi stri_split stri_extract stri_replace_all stri_replace
 #' @importFrom readr read_lines cols locale col_character col_integer
@@ -42,7 +46,7 @@ load_responses_all <- function(params) {
 #' @importFrom lubridate force_tz with_tz
 #' @importFrom rlang .data
 #' @export
-load_response_one <- function(input_filename, params) {
+load_response_one <- function(input_filename, params, contingency_run) {
   msg_plain(paste0("Reading ", input_filename))
   # read the input data; need to deal with column names manually because of header
   full_path <- file.path(params$input_dir, input_filename)
@@ -108,6 +112,8 @@ load_response_one <- function(input_filename, params) {
                            V13 = col_integer(),
                            V14_1 = col_character(),
                            V14_2 = col_character(),
+                           V15a = col_character(),
+                           V15b = col_character(),
                            Q65 = col_integer(),
                            Q66 = col_integer(),
                            Q67 = col_integer(),
@@ -124,11 +130,13 @@ load_response_one <- function(input_filename, params) {
                            Q78 = col_integer(),
                            Q79 = col_integer(),
                            Q80 = col_integer(),
-                           V1 = col_integer()),
+                           I5 = col_character(),
+                           I7 = col_character()),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())
   }
+  
   input_data <- arrange(input_data, desc(.data$StartDate))
   if (!("SurveyID" %in% names(input_data))) {
     # The first wave files didn't actually record their survey id
@@ -137,29 +145,40 @@ load_response_one <- function(input_filename, params) {
 
   # Occasionally we get single responses with no SurveyID, which prevents us
   # from knowing their wave. Discard.
-  input_data <- filter(input_data, !is.na(SurveyID))
+  input_data <- filter(input_data, !is.na(.data$SurveyID))
 
   # Convert A2 to integer, keeping only responses that are integers or have a
   # single value-less decimal place ("xx.0")
   input_data <- mutate(input_data,
-                       A2 = if_else(grepl("^[0-9]+[.]?0?$", A2),
-                                    as.integer(A2),
+                       A2 = if_else(grepl("^[0-9]+[.]?0?$", .data$A2),
+                                    as.integer(.data$A2),
                                     NA_integer_))
 
   input_data$wave <- surveyID_to_wave(input_data$SurveyID)
   input_data$zip5 <- input_data$A3
   
-  input_data <- bodge_v4_translation(input_data)
-  input_data <- bodge_C6_C8(input_data)
+  wave <- unique(input_data$wave)
+  assert(length(wave) == 1, "can only code one wave at a time")
+  
+  input_data <- module_assignment(input_data, wave)
+  input_data <- bodge_v4_translation(input_data, wave)
+  input_data <- bodge_C6_C8(input_data, wave)
+  input_data <- bodge_B13(input_data, wave)
 
-  input_data <- code_symptoms(input_data)
-  input_data <- code_hh_size(input_data)
-  input_data <- code_mental_health(input_data)
-  input_data <- code_mask_contact(input_data)
-  input_data <- code_testing(input_data)
-  input_data <- code_activities(input_data)
-  input_data <- code_vaccines(input_data)
-  input_data <- code_schooling(input_data)
+  input_data <- code_symptoms(input_data, wave)
+  input_data <- code_hh_size(input_data, wave)
+  input_data <- code_mental_health(input_data, wave)
+  input_data <- code_mask_contact(input_data, wave)
+  input_data <- code_testing(input_data, wave)
+  input_data <- code_activities(input_data, wave)
+  input_data <- code_vaccines(input_data, wave)
+  input_data <- code_schooling(input_data, wave)
+  input_data <- code_beliefs(input_data, wave)
+  input_data <- code_news_and_info(input_data, wave)
+  
+  if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
+    input_data <- code_race_ethnicity(input_data, wave)
+  }
 
   # create testing variables
 
@@ -185,6 +204,26 @@ load_response_one <- function(input_filename, params) {
   # replace these ZIPs with NA.
   input_data$zip5 <- ifelse(nchar(input_data$zip5) > 5, NA_character_,
                             input_data$zip5)
+  
+  if (contingency_run) {
+    ## Create additional fields for aggregations.
+    # Demographic grouping variables
+    input_data <- code_gender(input_data, wave)
+    input_data <- code_age(input_data, wave)
+    input_data <- code_race_ethnicity(input_data, wave)
+    input_data <- code_occupation(input_data, wave)
+    input_data <- code_education(input_data, wave)
+    
+    # Indicators
+    input_data <- code_addl_vaccines(input_data, wave)
+    input_data <- code_attempt_vaccine(input_data, wave)
+    input_data <- code_addl_symptoms(input_data, wave)
+    input_data <- code_health(input_data, wave)
+    input_data <- code_trust(input_data, wave)
+    input_data <- code_vaccine_barriers(input_data, wave)
+    input_data <- code_behaviors(input_data, wave)
+    input_data <- code_addl_activities(input_data, wave)
+  }
 
   return(input_data)
 }
@@ -208,11 +247,11 @@ filter_responses <- function(input_data, params) {
   # and individual data pipelines handle that themselves (aggregate in
   # particular needs data well before start_date)
   input_data <- filter(input_data, 
-                       token != "", 
-                       !duplicated(token), 
-                       S1 == 1, 
-                       DistributionChannel != "preview",
-                       as.Date(date) <= params$end_date
+                       .data$token != "", 
+                       !duplicated(.data$token), 
+                       .data$S1 == 1, 
+                       .data$DistributionChannel != "preview",
+                       as.Date(.data$date) <= params$end_date
   )
   
   return(input_data)
@@ -319,12 +358,12 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
   # Exclude responses with bad zips
   known_zips <- produce_zip_metadata(params$static_dir)
   df <- filter(df, 
-               zip5 %in% known_zips$zip5,
-               !is.na(hh_number_sick) & !is.na(hh_number_total),
-               dplyr::between(hh_number_sick, 0L, 30L),
-               dplyr::between(hh_number_total, 1L, 30L),
-               hh_number_sick <= hh_number_total,
-               day >= (as.Date(params$start_date) - lead_days),
+               .data$zip5 %in% known_zips$zip5,
+               !is.na(.data$hh_number_sick) & !is.na(.data$hh_number_total),
+               dplyr::between(.data$hh_number_sick, 0L, 30L),
+               dplyr::between(.data$hh_number_total, 1L, 30L),
+               .data$hh_number_sick <= .data$hh_number_total,
+               .data$day >= (as.Date(params$start_date) - lead_days),
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
@@ -341,9 +380,11 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
 #' delete non-English V4 responses, then use V4a in place of V4 when present.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#' 
 #' @return corrected data frame, where V4 is the authoritative column
 #' @importFrom dplyr case_when
-bodge_v4_translation <- function(input_data) {
+bodge_v4_translation <- function(input_data, wave) {
   if (!("V4_1" %in% names(input_data)) &&
         !("V4a_1" %in% names(input_data))) {
     # Data unaffected; skip.
@@ -403,22 +444,61 @@ bodge_v4_translation <- function(input_data) {
 #' naming scheme.
 #' @param input_data data frame of responses, before subsetting to select
 #'   variables
+#' @param wave integer indicating survey version
+#'   
 #' @return corrected data frame
 #' @importFrom dplyr rename
-bodge_C6_C8 <- function(input_data) {
-  wave <- unique(input_data$wave)
+bodge_C6_C8 <- function(input_data, wave) {
   if ( wave != 10 ) {
     # Data unaffected; skip.
     return(input_data)
   }
   
   input_data <- rename(input_data,
-                       C6a = C6,
-                       C8a_1 = C8_1,
-                       C8a_2 = C8_2,
-                       C8a_3 = C8_3
+                       C6a = .data$C6,
+                       C8a_1 = .data$C8_1,
+                       C8a_2 = .data$C8_2,
+                       C8a_3 = .data$C8_3
   )
 
+  return(input_data)
+}
+
+#' Fix B13 name in Wave 11.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'   
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_B13 <- function(input_data, wave) {
+  if ( "B13 " %in% names(input_data) ) {
+    input_data <- rename(input_data, B13 = "B13 ")
+  }
+  return(input_data)
+}
+
+#' Process module assignment column.
+#' 
+#' Rename `module` and recode to A/B/`NA`. Note: module assignment column name
+#' may change with survey version.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#' 
+#' @return data frame with new `module` column
+#' @importFrom dplyr case_when
+module_assignment <- function(input_data, wave) {
+  if ( "FL_23_DO" %in% names(input_data) ) {
+    input_data$module <- case_when(
+      input_data$FL_23_DO == "ModuleA" ~ "A",
+      input_data$FL_23_DO == "ModuleB" ~ "B",
+      TRUE ~ NA_character_
+    )
+  }
+  
   return(input_data)
 }
 
@@ -457,8 +537,12 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "V9", # added in Wave 7,
     "C14a", "C17a", "V2a", "V5a", "V5b", "V5c", "V5d", "V6", "D11", # added in Wave 8
     "C6a", "C8a_1", "C8a_2", "C8a_3", "C13b", "C13c", "V11", "V12", "V13", "V14_1", "V14_2", # added in Wave 10
-
-    "token", "wave", "UserLanguage",
+    "B10c", "B13", "C18a", "C18b", "C7a", "D12", "E4",
+    "G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3", "I4", "I5",
+    "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
+    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", "module", # added in Wave 11
+    
+    "raceethnicity", "token", "wave", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
@@ -525,7 +609,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_8HCnaK1BJPsI3BP" = 6,
                 "SV_ddjHkcYrrLWgM2V" = 7,
                 "SV_ewAVaX7Wz3l0UqG" = 8,
-                "SV_6PADB8DyF9SIyXk" = 10)
+                "SV_6PADB8DyF9SIyXk" = 10,
+                "SV_4VEaeffqQtDo33M" = 11)
 
   if (surveyID %in% names(waves)) {
       return(waves[[surveyID]])
@@ -542,12 +627,12 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
 #' * CID/token IS NOT missing
 #' * distribution source (ie previews) IS NOT irregular
 #' * start date IS IN range, pacific time
+#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
+#' inclusive.
 #' * answered minimum of 2 additional questions, where to "answer" a numeric
 #' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
 #' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
 #' button question is to provide a selection.
-#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
-#' inclusive.
 #'
 #' Most of these criteria are handled by `filter_responses()` above; this
 #' function need only handle the last criterion.
@@ -572,11 +657,13 @@ filter_complete_responses <- function(data_full, params)
   change_zip <- !is.na(zipitude$keep_in_agg) & !zipitude$keep_in_agg
   data_full$A3[change_zip] <- NA
 
-  data_full <- select(data_full, -zip5)
+  data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions
-  data_full <- data_full[rowSums(!is.na(data_full)) >= 9, ]
+  # UserLanguage + two questions (ignore raceethnicity field which may or may
+  # not exist, depending on params)
+  valid_row_filter <- rowSums( !is.na(data_full[, names(data_full) != "raceethnicity"]) ) >= 9
+  data_full <- data_full[valid_row_filter, ]
 
   return(data_full)
 }

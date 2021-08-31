@@ -8,6 +8,12 @@
 #'
 #' @export
 run_contingency_tables <- function(params) {
+  if (!is.null(params$debug) && params$debug) {
+    debug_msg <- "!!!debug is on and the standard privacy threshold for sample size is disabled!!!"
+    msg_plain(debug_msg)
+    warning(debug_msg)
+  }
+  
   if ( !is.null(params$aggs_in) ) {
     if ( !file.exists(params$aggs_in) ) {
       stop("requested aggregate-setting file does not exist")
@@ -143,7 +149,7 @@ run_contingency_tables_one_period <- function(params, aggregations)
     archive <- load_archive(params)
     msg_df("archive data loaded", archive$input_data)
 
-    input_data <- load_responses_all(params)
+    input_data <- load_responses_all(params, contingency_run = TRUE)
     input_data <- filter_responses(input_data, params)
     msg_df("response input data", input_data)
 
@@ -160,8 +166,6 @@ run_contingency_tables_one_period <- function(params, aggregations)
 
     data_agg <- join_weights(data_agg, params, weights = "full")
     msg_df("response data to aggregate", data_agg)
-
-    data_agg <- make_human_readable(data_agg)
 
     produce_aggregates(data_agg, aggregations, cw_list, params)
   }

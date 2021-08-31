@@ -4,10 +4,12 @@
 \alias{code_mental_health}
 \title{Mental health variables}
 \usage{
-code_mental_health(input_data)
+code_mental_health(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `mh_worried_ill`, `mh_anxious`,

@@ -4,10 +4,12 @@
 \alias{code_testing}
 \title{Testing and test positivity variables}
 \usage{
-code_testing(input_data)
+code_testing(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `t_tested_14d`, `t_tested_positive_14d`,

@@ -4,10 +4,12 @@
 \alias{code_schooling}
 \title{Schooling}
 \usage{
-code_schooling(input_data)
+code_schooling(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `hh_number_total`

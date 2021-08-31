@@ -5,17 +5,19 @@ This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_sir_complainsalot`.
 """
 
+import time
 from itertools import groupby
 
-from delphi_utils import read_params
-from delphi_utils import get_structured_logger
-from delphi_utils import SlackNotifier
 import covidcast
-import time
+from delphi_utils import SlackNotifier
+from delphi_utils import get_structured_logger
+from delphi_utils import read_params
 
 from .check_source import check_source
 
+
 def get_logger():
+    """Create structured logger."""
     params = read_params()
     return get_structured_logger(
         __name__, filename=params.get("log_filename"),
@@ -24,6 +26,7 @@ def get_logger():
 LOGGER = get_logger()
 
 def run_module():
+    """Run SirCAL."""
     start_time = time.time()
     params = read_params()
     meta = covidcast.metadata()
@@ -38,12 +41,13 @@ def run_module():
 
     if len(complaints) > 0:
         report_complaints(complaints, slack_notifier)
-    
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     LOGGER.info("Completed indicator run",
         elapsed_time_in_seconds = elapsed_time_in_seconds)
 
-def split_complaints(complaints, n=49):
+
+def split_complaints(complaints, n=49):  # pylint: disable=invalid-name
     """Yield successive n-sized chunks from complaints list."""
     for i in range(0, len(complaints), n):
         yield complaints[i:i + n]
@@ -51,7 +55,6 @@ def split_complaints(complaints, n=49):
 
 def report_complaints(all_complaints, slack_notifier):
     """Log complaints and optionally post to Slack."""
-
     for complaints in split_complaints(all_complaints):
         blocks = format_and_log_complaints_aggregated_by_source(complaints)
 
@@ -61,8 +64,8 @@ def report_complaints(all_complaints, slack_notifier):
 def get_maintainers_block(complaints):
     """Build a Slack block to alert maintainers to pay attention."""
     maintainers = set()
-    for c in complaints:
-        maintainers.update(c.maintainers)
+    for complaint in complaints:
+        maintainers.update(complaint.maintainers)
 
     maintainers_block = {
         "type": "section",
@@ -78,9 +81,10 @@ def get_maintainers_block(complaints):
 
 
 def format_and_log_complaints_aggregated_by_source(complaints):
-    """Build formatted Slack message for posting to the API, aggregating
-    complaints by source to reduce the number of blocks."""
+    """Build formatted Slack message for posting to the API.
 
+    Complaints are aggregated by source to reduce the number of blocks.
+    """
     blocks = [get_maintainers_block(complaints)]
 
     def message_for_source(complaint):
@@ -130,7 +134,6 @@ def format_complaints(complaints):
     https://api.slack.com/tools/block-kit-builder
 
     """
-
     blocks = [get_maintainers_block(complaints)]
 
     for complaint in complaints:

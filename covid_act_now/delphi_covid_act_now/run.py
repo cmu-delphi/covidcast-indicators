@@ -4,12 +4,14 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m delphi_covid_act_now`.
 """
+from datetime import datetime
+import time
 
 import numpy as np
 
 from delphi_utils import (
     create_export_csv,
-    S3ArchiveDiffer,
+    get_structured_logger
 )
 
 from .constants import GEO_RESOLUTIONS, SIGNALS
@@ -33,26 +35,23 @@ def run_module(params):
             - "bucket_name: str, name of S3 bucket to read/write
             - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
     """
+    start_time = time.time()
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+
     # Configuration
     export_dir = params["common"]["export_dir"]
     parquet_url = params["indicator"]["parquet_url"]
-
-    # Archive Differ configuration
-    if "archive" in params:
-        cache_dir = params["archive"]["cache_dir"]
-        arch_diff = S3ArchiveDiffer(
-            cache_dir, export_dir,
-            params["archive"]["bucket_name"], "CAN",
-            params["archive"]["aws_credentials"])
-        arch_diff.update_cache()
-    else:
-        arch_diff = None
 
     # Load CAN county-level testing data
     print("Pulling CAN data")
     df_pq = load_data(parquet_url)
     df_county_testing = extract_testing_metrics(df_pq)
 
+    num_exported_files = 0
+    min_dates_exported = []
+    max_dates_exported = []
     # Perform geo aggregations and export to receiving
     for geo_res in GEO_RESOLUTIONS:
         print(f"Processing {geo_res}")
@@ -76,24 +75,17 @@ def run_module(params):
             sensor=SIGNALS[1])
 
         earliest, latest = min(exported_csv_dates), max(exported_csv_dates)
+        min_dates_exported.append(earliest)
+        max_dates_exported.append(latest)
+        # x2 to count both positivity and tests signals
+        num_exported_files += exported_csv_dates.size * 2
         print(f"Exported dates: {earliest} to {latest}")
 
-    # Perform archive differencing
-    if not arch_diff is None:
-        # Diff exports, and make incremental versions
-        _, common_diffs, new_files = arch_diff.diff_exports()
-
-        # Archive changed and new files only
-        to_archive = [f for f, diff in common_diffs.items() if diff is not None]
-        to_archive += new_files
-        _, fails = arch_diff.archive_exports(to_archive)
-
-        # Filter existing exports to exclude those that failed to archive
-        succ_common_diffs = {
-            f: diff for f, diff in common_diffs.items() if f not in fails
-        }
-        arch_diff.filter_exports(succ_common_diffs)
-
-        # Report failures: someone should probably look at them
-        for exported_file in fails:
-            print(f"Failed to archive '{exported_file}'")
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    max_lag_in_days = (datetime.now() - min(max_dates_exported)).days
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds=elapsed_time_in_seconds,
+                csv_export_count=num_exported_files,
+                max_lag_in_days=max_lag_in_days,
+                earliest_export_date=min(min_dates_exported).strftime("%Y-%m-%d"),
+                latest_export_date=max(max_dates_exported).strftime("%Y-%m-%d"))

@@ -1,20 +1,21 @@
-SHELL:=/bin/bash
+SHELL:=/bin/bash --rcfile bash-init.sh
 
 # dry-run mode: generate all files, but do not post them anywhere, and disable all emails to outside parties.
 DRY:=yes
 ifeq ($(DRY),yes)
-	OUTSIDE_EMAIL_FLAGS:=-d
+	EMAIL_SEND:=echo -e "Would send mail: echo -e \"Subject: $${SUBJECT}\n\n$${MSG}\" | sendmail krivard@cs.cmu.edu"
 	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
 	DRY_MESSAGE:="[DRY-RUN] "
 else
+	EMAIL_SEND:=echo -e "Subject: $${SUBJECT}\n\n$${MSG}" | sendmail krivard@cs.cmu.edu
 	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu
 endif
 
 EPOCH:=2020-04-06
 TODAY:=$(shell date +"%Y-%m-%d")
-YESTERDAY:=$(shell date --date "1 day ago" +"%Y-%m-%d")
-ONEWEEK:=$(shell date --date "7 day ago" +"%Y-%m-%d")
-THREEWEEK:=$(shell date --date "21 day ago" +"%Y-%m-%d")
+YESTERDAY:=$(shell date --date "$(TODAY) -1 day" +"%Y-%m-%d")
+ONEWEEK:=$(shell date --date "$(TODAY) -7 day" +"%Y-%m-%d")
+THREEWEEK:=$(shell date --date "$(TODAY) -21 day" +"%Y-%m-%d")
 
 MESSAGES:=$(TODAY).messages
 
@@ -72,6 +73,7 @@ $(TODAY):
 	[ -f $(QUALTRICS) ] || mkdir -p $(QUALTRICS)
 	rm -rf tmp
 	touch -d "$(TODAY) 01:00" tmp
+	$(PYTHON) -m delphi_utils set end_date $(YESTERDAY)
 	source env/bin/activate && \
 	python -m delphi_facebook
 	BATCH=""; \
@@ -80,6 +82,7 @@ $(TODAY):
 	done; \
 	$(SFTP_POST); \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo -e $${BATCH} | wc -l` raw files" >> $(MESSAGES)
+	touch -d $(YESTERDAY) params.json
 	mv tmp $@
 
 params.json: $(TODAY)
@@ -105,12 +108,12 @@ $(WEIGHTS): $(TODAY)
 	sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu || exit 90; \
 	cd -; \
 	MAX_WEIGHTED=`$(MAX_WEIGHTED)`; \
-	EXPECTED_MAX_WEIGHTED=`date --date='3 days ago' +'%Y%m%d'`; \
+	EXPECTED_MAX_WEIGHTED=`date --date='$(TODAY) -3 day' +'%Y%m%d'`; \
 	if [[ $$EXPECTED_MAX_WEIGHTED -gt $$MAX_WEIGHTED ]]; then \
 	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED\nActual most recent file: $$MAX_WEIGHTED"; \
 	  echo "WARNING: $${MSG}" | tr "\n" ";" >> $(MESSAGES); \
-	  echo -e "$(FB_CC)\n\n$${MSG}" | \
-	  s-nail $(OUTSIDE_EMAIL_FLAGS) -t -s "[fb-cmu-cvid] Weights are stale" -. krivard@cs.cmu.edu; \
+	  SUBJECT="[fb-cmu-cvid] Weights are stale"; \
+	  $(EMAIL_SEND) ;\
 	fi
 
 dev: delphiFacebook_1.0.tar.gz
@@ -120,7 +123,11 @@ lib:
 	R -e 'roxygen2::roxygenise("delphiFacebook")'
 
 run-R: $(CIDS)
-	time Rscript run.R
+	rm -rf tmp
+	time Rscript run.R 2>&1 |tee tmp
+	grep "run_facebook completed successfully" tmp
+	grep "scheduled core" tmp ; \
+	[ "$$?" -eq 1 ]
 
 pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy
 	grep $(TODAY) params.json
@@ -137,7 +144,8 @@ lint: coverage
 test: delphiFacebook_1.0.tar.gz
 	if [ ! -f params.json ]; then cp params.json.template params.json; fi
 	grep testthat params.json
-	R CMD check $<
+	R CMD check --test-dir=unit-tests $<
+	R CMD check --test-dir=integration-tests $<
 
 delphiFacebook_1.0.tar.gz: $(wildcard delphiFacebook/R/*.R)
 	R CMD build delphiFacebook

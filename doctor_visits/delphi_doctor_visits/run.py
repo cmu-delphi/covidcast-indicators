@@ -95,6 +95,9 @@ def run_module(params):
                 weekday=weekday,
                 se=params["indicator"]["se"]
             )
+            if sensor is None:
+                logging.error("No sensors calculated, no output will be produced")
+                continue
             # write out results
             out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
             if params["indicator"]["se"]:

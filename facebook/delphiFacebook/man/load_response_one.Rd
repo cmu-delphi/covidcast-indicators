@@ -4,13 +4,16 @@
 \alias{load_response_one}
 \title{Load a single set of responses}
 \usage{
-load_response_one(input_filename, params)
+load_response_one(input_filename, params, contingency_run)
 }
 \arguments{
 \item{input_filename}{filename of the input CSV file}
 
 \item{params}{a named list containing a value named "input_dir", the directory
 where the input file are found}
+
+\item{contingency_run}{boolean indicating if currently running contingency
+code}
 }
 \description{
 Load a single set of responses

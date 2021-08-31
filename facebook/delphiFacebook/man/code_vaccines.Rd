@@ -4,10 +4,12 @@
 \alias{code_vaccines}
 \title{COVID vaccination variables}
 \usage{
-code_vaccines(input_data)
+code_vaccines(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `v_covid_vaccinated` and

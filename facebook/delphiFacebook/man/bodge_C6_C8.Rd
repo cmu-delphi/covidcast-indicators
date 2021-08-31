@@ -4,11 +4,13 @@
 \alias{bodge_C6_C8}
 \title{Fix column names in Wave 10.}
 \usage{
-bodge_C6_C8(input_data)
+bodge_C6_C8(input_data, wave)
 }
 \arguments{
 \item{input_data}{data frame of responses, before subsetting to select
 variables}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 corrected data frame

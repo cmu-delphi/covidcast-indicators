@@ -4,12 +4,15 @@
 \alias{load_responses_all}
 \title{Load all response datasets in a local directory}
 \usage{
-load_responses_all(params)
+load_responses_all(params, contingency_run = FALSE)
 }
 \arguments{
 \item{params}{a named listed containing a value named "input", a vector of
 paths to load by the function, and "input_dir", the directory where the
 input files are found}
+
+\item{contingency_run}{boolean indicating if currently running contingency
+code}
 }
 \value{
 A data frame of all loaded data files concatenated into one data

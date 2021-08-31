@@ -15,9 +15,8 @@ The validator is run by executing the Python module contained in this
 directory from the main directory of the indicator of interest.
 
 The safest way to do this is to create a virtual environment,
-install the common DELPHI tools, install the indicator module and its
-dependencies, and then install the validator module and its
-dependencies to the virtual environment.
+and install the common DELPHI tools, including the validator, and the
+validator module and its dependencies to the virtual environment.
 
 To do this, navigate to the main directory of the indicator of interest and run the following code:
 

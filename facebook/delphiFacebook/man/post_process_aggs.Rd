@@ -34,10 +34,3 @@ include it in list of grouping variables so levels are included in output
 CSV. Alphabetize grouping variables; columns are saved to output CSV in this
 order.
 }
-\details{
-Most columns specified in `aggregations` are converted into the appropriate
-format (binary response codes -> logical, etc). Multi-select `metrics` are
-turned into a series of binary columns. Each binary is given its own
-aggregation, sharing grouping variables and other settings with the original
-multi-select agg.
-}

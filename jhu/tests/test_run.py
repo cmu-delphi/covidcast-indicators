@@ -31,6 +31,8 @@ class TestRun:
         for date in dates:
             for geo in geos:
                 for metric in metrics:
+                    if "7dav" in metric and "cumulative" in metric:
+                        continue
                     # Can't compute 7dav for first few days of data because of NAs
                     if date > "20200305" or "7dav" not in metric:
                         expected_files += [date + "_" + geo + "_" + metric + ".csv"]

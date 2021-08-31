@@ -62,12 +62,13 @@ def get(fetch,post,params):
         #start = datetime.combine(date(2020,4,19),time(00,00,00),tzinfo=TZ)
 
         # Fully incremental: 7 days to capture backfill
-        start = datetime.combine(date.today()-timedelta(days=7),time(00,00,00),tzinfo=TZ)
+        start = datetime.combine(params['date']-timedelta(days=7),time(00,00,00),tzinfo=TZ)
 
         # Account for StartDate->RecordedDate lag:
-        end   = datetime.combine(date.today(),time(4,00,00),tzinfo=TZ)
+        end   = datetime.combine(params['date'],time(4,00,00),tzinfo=TZ)
         r = post(base,{
             "format":"csv",
+            "includeDisplayOrder":"true",
             "timeZone":TIMEZONE,
             "startDate":start.isoformat(),
             "endDate":end.isoformat(),

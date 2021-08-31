@@ -10,11 +10,13 @@ from itertools import product
 import covidcast
 
 import numpy as np
+from pandas import to_datetime
 from delphi_utils import (
     create_export_csv,
     geomap,
     get_structured_logger
 )
+from delphi_utils.validator.utils import lag_converter
 
 from .constants import (METRICS, COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
@@ -56,10 +58,22 @@ def run_module(params):
     num_export_days = params["indicator"]["num_export_days"]
 
     if num_export_days is None:
-        # Get number of days based on what's missing from the API.
+        # Calculate number of days based on what's missing from the API.
         metadata = covidcast.metadata()
         gs_metadata = metadata[(metadata.data_source == "google-symptoms")]
-        num_export_days = max(gs_metadata.min_lag)
+
+        # Calculate number of days based on what validator expects.
+        max_expected_lag = lag_converter(
+            params["validation"]["common"].get("max_expected_lag", {"all": 4})
+            )
+        global_max_expected_lag = max( list(max_expected_lag.values()) )
+
+        # Select the larger number of days. Prevents validator from complaining about missing dates,
+        # and backfills in case of an outage.
+        num_export_days = max(
+            (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1,
+            params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
+            )
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -86,7 +100,10 @@ def run_module(params):
             continue
         for metric, smoother in product(
                 METRICS+[COMBINED_METRIC], SMOOTHERS):
-            print(geo_res, metric, smoother)
+            logger.info("generating signal and exporting to CSV",
+                        geo_res=geo_res,
+                        metric=metric,
+                        smoother=smoother)
             df = df_pull.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].groupby(level=1
                                            ).transform(SMOOTHERS_MAP[smoother][0])
@@ -106,8 +123,11 @@ def run_module(params):
                 metric=metric.lower(),
                 geo_res=geo_res,
                 sensor=sensor_name)
-
             if not exported_csv_dates.empty:
+                logger.info("Exported CSV",
+                            csv_export_count=exported_csv_dates.size,
+                            min_csv_export_date=min(exported_csv_dates).strftime("%Y-%m-%d"),
+                            max_csv_export_date=max(exported_csv_dates).strftime("%Y-%m-%d"))
                 csv_export_count += exported_csv_dates.size
                 if not oldest_final_export_date:
                     oldest_final_export_date = max(exported_csv_dates)

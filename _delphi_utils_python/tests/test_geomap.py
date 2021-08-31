@@ -334,3 +334,10 @@ class TestGeoMapper:
         assert len(gmpr.get_geo_values("fips")) == 3235
         assert len(gmpr.get_geo_values("state_id")) == 60
         assert len(gmpr.get_geo_values("zip")) == 32976
+
+    def test_get_geos_within(self):
+        gmpr = GeoMapper()
+        assert len(gmpr.get_geos_within("us","state","nation")) == 60
+        assert len(gmpr.get_geos_within("al","county","state")) == 68
+        assert len(gmpr.get_geos_within("4","state","hhs")) == 8
+        assert gmpr.get_geos_within("4","state","hhs") =={'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}

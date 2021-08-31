@@ -33,9 +33,8 @@ class TestTimeWindow:
     def test_init(self):
         """Test that the start date is computed correctly."""
         window = TimeWindow(date(2020, 11, 7), timedelta(days=4))
-        assert window.start_date == date(2020, 11, 3)
-        assert window.date_seq == [date(2020, 11, 3),
-                                   date(2020, 11, 4),
+        assert window.start_date == date(2020, 11, 4)
+        assert window.date_seq == [date(2020, 11, 4),
                                    date(2020, 11, 5),
                                    date(2020, 11, 6),
                                    date(2020, 11, 7)]
@@ -44,13 +43,13 @@ class TestTimeWindow:
     def test_string_init(self):
         """Test that TimeWindows can be derived from strings."""
         window = TimeWindow.from_params("2020-08-23", 366)
-        assert window.start_date == date(2019, 8, 23)
+        assert window.start_date == date(2019, 8, 24)
 
         today_window = TimeWindow.from_params("today", 14)
-        assert today_window.start_date == date(2020, 1, 31) 
+        assert today_window.start_date == date(2020, 2, 1) 
 
         latest_window = TimeWindow.from_params("today-0", 1897)
-        assert latest_window.start_date == date(2014, 12, 5)
+        assert latest_window.start_date == date(2014, 12, 6)
         latest_window2 = TimeWindow.from_params("today-10", 3)
         assert latest_window2.end_date == date(2020, 2, 4)
-        assert latest_window2.start_date == date(2020, 2, 1)
+        assert latest_window2.start_date == date(2020, 2, 2)

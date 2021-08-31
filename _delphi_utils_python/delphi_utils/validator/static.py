@@ -6,7 +6,7 @@ from typing import Dict, List
 import pandas as pd
 from .datafetcher import FILENAME_REGEX
 from .errors import ValidationFailure
-from .utils import GEO_REGEX_DICT, TimeWindow
+from .utils import GEO_REGEX_DICT, TimeWindow, lag_converter
 from ..geomap import GeoMapper
 
 class StaticValidator:
@@ -26,6 +26,8 @@ class StaticValidator:
         missing_sample_size_allowed: bool
         # Valid geo values not found in the GeoMapper
         additional_valid_geo_values: Dict[str, List[str]]
+        # how many days behind do we expect each signal to be
+        max_expected_lag: Dict[str, int]
 
     def __init__(self, params):
         """
@@ -43,7 +45,8 @@ class StaticValidator:
             minimum_sample_size = static_params.get('minimum_sample_size', 100),
             missing_se_allowed = static_params.get('missing_se_allowed', False),
             missing_sample_size_allowed = static_params.get('missing_sample_size_allowed', False),
-            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {})
+            additional_valid_geo_values = static_params.get('additional_valid_geo_values', {}),
+            max_expected_lag=lag_converter(common_params.get("max_expected_lag", dict()))
         )
 
 
@@ -92,7 +95,18 @@ class StaticValidator:
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
 
         # Diff expected and observed dates.
-        check_dateholes = list(set(self.params.time_window.date_seq).difference(unique_dates))
+        expected_dates = self.params.time_window.date_seq
+
+        if len(self.params.max_expected_lag) == 0:
+            max_expected_lag_overall = 10
+        else:
+            max_expected_lag_overall = max(self.params.max_expected_lag.values())
+
+        # Only check for date if it should definitely be present,
+        # i.e if it is more than max_expected_lag since the checking date
+        expected_dates = [date for date in expected_dates if
+            ((datetime.today().date() - date).days) > max_expected_lag_overall]
+        check_dateholes = list(set(expected_dates).difference(unique_dates))
         check_dateholes.sort()
 
         if check_dateholes:
@@ -310,34 +324,27 @@ class StaticValidator:
         Returns:
             - None
         """
-        # Add a new se_upper_limit column.
-        df_to_test.eval(
-            'se_upper_limit = (val * sample_size + 50)/(sample_size + 1)', inplace=True)
-
-        df_to_test['se'] = df_to_test['se'].round(3)
-        df_to_test['se_upper_limit'] = df_to_test['se_upper_limit'].round(3)
-
         if self.params.missing_se_allowed:
             result = df_to_test.query(
-                '~(se.isnull() | ((se > 0) & (se < 50) & (se <= se_upper_limit)))')
+                '~(se.isnull() | (se >= 0))')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_missing_or_in_range",
                                       filename=nameformat,
-                                      message="se must be NA or in (0, min(50,val*(1+eps))]"))
+                                      message="se must be NA or non-negative"))
 
             report.increment_total_checks()
         else:
             # Find rows not in the allowed range for se.
             result = df_to_test.query(
-                '~((se > 0) & (se < 50) & (se <= se_upper_limit))')
+                '~(se >= 0)')
 
             if not result.empty:
                 report.add_raised_error(
                     ValidationFailure("check_se_not_missing_and_in_range",
                                       filename=nameformat,
-                                      message="se must be in (0, min(50,val*(1+eps))] and not "
+                                      message="se must be non-negative and not "
                                               "missing"))
 
             report.increment_total_checks()
@@ -368,9 +375,6 @@ class StaticValidator:
                                   message="se must be non-zero"))
 
         report.increment_total_checks()
-
-        # Remove se_upper_limit column.
-        df_to_test.drop(columns=["se_upper_limit"])
 
     def check_bad_sample_size(self, df_to_test, nameformat, report):
         """

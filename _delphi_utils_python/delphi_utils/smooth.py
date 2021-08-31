@@ -116,7 +116,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         poly_fit_degree=2,
         window_length=28,
         gaussian_bandwidth=144,  # a ~2 week window
-        impute_method="savgol",
+        impute_method=None,
         minval=None,
         boundary_method="shortened_window",
     ):
@@ -125,12 +125,12 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
         self.poly_fit_degree = poly_fit_degree
         self.window_length = window_length
         self.gaussian_bandwidth = gaussian_bandwidth
-        self.impute_method = impute_method
+        self.impute_method = self._select_imputer(impute_method, self.smoother_name)
         self.minval = minval
         self.boundary_method = boundary_method
 
         valid_smoothers = {"savgol", "left_gauss_linear", "moving_average", "identity"}
-        valid_impute_methods = {"savgol", "zeros", None}
+        valid_impute_methods = {"savgol", "zeros", "identity"}
         valid_boundary_methods = {"shortened_window", "identity", "nan"}
         if self.smoother_name not in valid_smoothers:
             raise ValueError("Invalid smoother_name given.")
@@ -149,6 +149,13 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             )
         else:
             self.coeffs = None
+
+    def _select_imputer(self, impute_method, smoother_name):
+        if impute_method is None and smoother_name != "identity":
+            return "savgol"
+        if impute_method is None and smoother_name == "identity":
+            return "identity"
+        return impute_method
 
     def smooth(
         self, signal: Union[np.ndarray, pd.Series], impute_order=2
@@ -239,7 +246,7 @@ class Smoother:  # pylint: disable=too-many-instance-attributes
             imputed_signal = self.savgol_impute(signal, impute_order)
         elif self.impute_method == "zeros":
             imputed_signal = np.nan_to_num(signal)
-        elif self.impute_method is None:
+        elif self.impute_method == "identity":
             imputed_signal = np.copy(signal)
 
         return imputed_signal

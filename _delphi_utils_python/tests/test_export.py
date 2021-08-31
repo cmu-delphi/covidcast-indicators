@@ -54,9 +54,9 @@ class TestExport:
             "val": [3.12345678910, np.nan, 2.2, 2.6],
             "se": [0.15, 0.22, np.nan, 0.34],
             "sample_size": [100, 100, 101, None],
-            "missing_val": [Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING, Nans.NOT_MISSING],
-            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING],
-            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.UNKNOWN]
+            "missing_val": [Nans.NOT_MISSING, Nans.OTHER, Nans.NOT_MISSING, Nans.NOT_MISSING],
+            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.OTHER, Nans.NOT_MISSING],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.OTHER]
         }
     )
 
@@ -68,9 +68,9 @@ class TestExport:
             "val": [np.nan, np.nan, 2.2, 2.6],
             "se": [0.15, 0.22, np.nan, 0.34],
             "sample_size": [100, 100, 101, None],
-            "missing_val": [Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING, Nans.NOT_MISSING],
-            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.UNKNOWN, Nans.NOT_MISSING],
-            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.UNKNOWN]
+            "missing_val": [Nans.NOT_MISSING, Nans.OTHER, Nans.NOT_MISSING, Nans.NOT_MISSING],
+            "missing_se": [Nans.NOT_MISSING, Nans.NOT_MISSING, Nans.OTHER, Nans.NOT_MISSING],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.OTHER]
         }
     )
 

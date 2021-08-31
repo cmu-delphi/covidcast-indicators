@@ -12,7 +12,7 @@ today=$(date +"%Y%m%d")
 
 # Purge the receiving directory.
 echo "Purging ./receiving..."
-rm -f ./receiving/*
+find receiving -name "*.csv" -delete
 
 # Run the indicator code.
 echo "Running the indicator..."

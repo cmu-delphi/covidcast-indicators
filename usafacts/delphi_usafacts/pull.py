@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """Functions for pulling data from the USAFacts website."""
+from datetime import date
+import hashlib
+from logging import Logger
+import os
+
 import numpy as np
 import pandas as pd
+import requests
 
 # Columns to drop the the data frame.
 DROP_COLUMNS = [
@@ -11,8 +17,24 @@ DROP_COLUMNS = [
     "statefips"
 ]
 
+def fetch(url: str, cache: str) -> pd.DataFrame:
+    """Handle network I/O for fetching raw input data file.
 
-def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
+    This is necessary because for some reason pd.read_csv is generating
+    403:Forbidden on the new URLs.
+    """
+    r = requests.get(url)
+    r.raise_for_status()
+    datestamp = date.today().strftime('%Y%m%d')
+    name = url.split('/')[-1].replace('.csv','')
+    os.makedirs(cache, exist_ok=True)
+    filename = os.path.join(cache, f"{datestamp}_{name}.csv")
+    with open(filename, "w") as f:
+        f.write(r.text)
+    return pd.read_csv(filename)
+
+
+def pull_usafacts_data(base_url: str, metric: str, logger: Logger, cache: str=None) -> pd.DataFrame:
     """Pull the latest USA Facts data, and conform it into a dataset.
 
     The output dataset has:
@@ -44,6 +66,9 @@ def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
         Base URL for pulling the USA Facts data
     metric: str
         One of 'confirmed' or 'deaths'. The keys of base_url.
+    logger: Logger
+    cache: str
+        Directory where downloaded csvs should be stashed.
 
     Returns
     -------
@@ -51,7 +76,15 @@ def pull_usafacts_data(base_url: str, metric: str) -> pd.DataFrame:
         Dataframe as described above.
     """
     # Read data
-    df = pd.read_csv(base_url.format(metric=metric))
+    df = fetch(base_url.format(metric=metric), cache)
+    date_cols = [i for i in df.columns if i.startswith("2")]
+    logger.info("data retrieved from source",
+                metric=metric,
+                num_rows=df.shape[0],
+                num_cols=df.shape[1],
+                min_date=min(date_cols),
+                max_date=max(date_cols),
+                checksum=hashlib.sha256(pd.util.hash_pandas_object(df).values).hexdigest())
     df.columns = [i.lower() for i in df.columns]
     # Clean commas in count fields in case the input file included them
     df[df.columns[4:]] = df[df.columns[4:]].applymap(

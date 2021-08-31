@@ -4,6 +4,7 @@
 This module should contain a function called `run_module`, that is executed
 when the module is run with `python -m MODULE_NAME`.
 """
+from datetime import datetime
 import glob
 import multiprocessing as mp
 import subprocess
@@ -23,10 +24,8 @@ METRICS = [
         ('restaurants_visit', 722511, False),
 ]
 VERSIONS = [
-        # relaese version, access dir
-        ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
-        ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*"),
-        ("20210408", "weekly-patterns-delivery-2020-12/weekly", "patterns/*/*/*")
+    # release version, access dir, paths glob
+    ("202106", "weekly-patterns-delivery-2020-12/release-2021-07/weekly", "patterns/*/*/*"),
 ]
 SENSORS = [
         "num",
@@ -75,6 +74,7 @@ def run_module(params):
             'AWS_DEFAULT_REGION': params["indicator"]["aws_default_region"],
     }
 
+    stats = []
     for ver in VERSIONS:
         # Update raw data
         # Why call subprocess rather than using a native Python client, e.g. boto3?
@@ -101,11 +101,19 @@ def run_module(params):
                                sensors=SENSORS,
                                geo_resolutions=GEO_RESOLUTIONS,
                                export_dir=export_dir,
+                               stats=stats
                                )
 
         with mp.Pool(n_core) as pool:
             pool.map(process_file, files)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = stats and min(s[0] for s in stats)
+    csv_export_count = sum(s[-1] for s in stats)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

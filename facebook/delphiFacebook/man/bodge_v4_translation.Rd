@@ -4,11 +4,13 @@
 \alias{bodge_v4_translation}
 \title{Fix translation error in Wave 6.}
 \usage{
-bodge_v4_translation(input_data)
+bodge_v4_translation(input_data, wave)
 }
 \arguments{
 \item{input_data}{data frame of responses, before subsetting to select
 variables}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 corrected data frame, where V4 is the authoritative column

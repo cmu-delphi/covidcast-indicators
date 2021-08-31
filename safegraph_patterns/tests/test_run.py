@@ -1,11 +1,18 @@
 from os import listdir
 from os.path import join
+from unittest.mock import patch
 
 import pandas as pd
 
 from delphi_safegraph_patterns.run import (run_module, METRICS,
                                            SENSORS, GEO_RESOLUTIONS)
 
+OLD_VERSIONS = [
+            # release version, access dir
+            ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
+            ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*"),
+            ("20210408", "weekly-patterns-delivery-2020-12/weekly", "patterns/*/*/*")
+    ]
 
 class TestRun:
     PARAMS = {
@@ -13,7 +20,7 @@ class TestRun:
             "export_dir": "./receiving"
         },
         "indicator": {
-            "static_file_dir": "./static",
+            "static_file_dir": "../static",
             "raw_data_dir": "./test_data/safegraph",
             "n_core": 12,
             "aws_access_key_id": "",
@@ -24,6 +31,7 @@ class TestRun:
         }
     }
 
+    @patch("delphi_safegraph_patterns.run.VERSIONS", OLD_VERSIONS)
     def test_output_files(self, clean_receiving_dir):
         run_module(self.PARAMS)
         csv_files = listdir("receiving")

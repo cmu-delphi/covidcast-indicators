@@ -53,7 +53,7 @@ class TestRunIndicator:
         mock_validator_fn.assert_called_once_with(self.PARAMS)
         mock_archiver_fn.assert_called_once_with(self.PARAMS)
         mock_validator_fn.return_value.validate.assert_called_once()
-        mock_archiver_fn.return_value.archive.assert_called_once()
+        mock_archiver_fn.return_value.run.assert_called_once()
 
     @mock.patch("delphi_utils.runner.read_params")
     def test_failed_validation(self, mock_read_params,
@@ -69,7 +69,7 @@ class TestRunIndicator:
         mock_validator_fn.assert_called_once_with(self.PARAMS)
         mock_archiver_fn.assert_called_once_with(self.PARAMS)
         mock_validator_fn.return_value.validate.assert_called_once()
-        mock_archiver_fn.return_value.archive.assert_not_called()
+        mock_archiver_fn.return_value.run.assert_not_called()
 
     @mock.patch("delphi_utils.runner.read_params")
     def test_indicator_only(self, mock_read_params, mock_indicator_fn):
@@ -96,7 +96,7 @@ class TestRunIndicator:
 
         mock_indicator_fn.assert_called_once_with(self.PARAMS)
         mock_archiver_fn.assert_called_once_with(self.PARAMS)
-        mock_archiver_fn.return_value.archive.assert_called_once()
+        mock_archiver_fn.return_value.run.assert_called_once()
 
     @mock.patch("delphi_utils.runner.read_params")
     def test_no_archive(self, mock_read_params, mock_indicator_fn, mock_validator_fn):

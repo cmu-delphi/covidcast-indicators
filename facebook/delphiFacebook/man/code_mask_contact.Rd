@@ -4,10 +4,12 @@
 \alias{code_mask_contact}
 \title{Mask and contact variables}
 \usage{
-code_mask_contact(input_data)
+code_mask_contact(input_data, wave)
 }
 \arguments{
 \item{input_data}{input data frame of raw survey data}
+
+\item{wave}{integer indicating survey version}
 }
 \value{
 data frame augmented with `c_travel_state`, `c_work_outside_5d`,

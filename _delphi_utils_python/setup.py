@@ -14,7 +14,7 @@ required = [
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",
-    "pylint",
+    "pylint==2.8.3",
     "pytest",
     "pytest-cov",
     "slackclient",
@@ -24,7 +24,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.1.0",
+    version="0.1.10",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

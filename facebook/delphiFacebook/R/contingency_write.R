@@ -1,7 +1,8 @@
 #' Write csv file for sharing with researchers.
 #'
 #' CSV name includes date specifying start of time period aggregated, geo level,
-#' and grouping variables.
+#' and grouping variables. These columns are always inserted first in a table,
+#' with reported values (value, standard error, sample size, etc) following.
 #'
 #' @param data           a data frame to save; must contain the columns in
 #'                       `groupby_vars`.
@@ -16,7 +17,7 @@
 #'                       calculate aggregations; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange across
+#' @importFrom dplyr arrange across everything
 #' @importFrom stringi stri_trim
 #'
 #' @export
@@ -99,7 +100,14 @@ add_geo_vars <- function(data, params, geo_type) {
     )
     
     rest <- left_join(rest, states, by = "state") %>%
-      select(region, GID_1, state, state_fips, county, county_fips)
+      select(
+        .data$region,
+        .data$GID_1,
+        .data$state,
+        .data$state_fips,
+        .data$county,
+        .data$county_fips
+      )
   }
   
   geo_vars <- bind_cols(first, rest)
@@ -147,7 +155,7 @@ add_metadata_vars <- function(data, params, geo_type, groupby_vars) {
 #' @noRd
 get_file_name <- function(params, geo_type, groupby_vars) {
   
-  aggregation_type <- setdiff(groupby_vars, "geo_id")
+  aggregation_type <- sort(setdiff(groupby_vars, "geo_id"))
   if (length(aggregation_type) == 0) aggregation_type <- "overall"
   
   file_name <- paste(
@@ -158,6 +166,9 @@ get_file_name <- function(params, geo_type, groupby_vars) {
     paste(aggregation_type, collapse = "_"),
     sep = "_"
   )
+  if (!is.null(params$debug) && params$debug) {
+    file_name <- paste0("DebugOn-DoNotShare_", file_name)
+  }
   file_name <- paste0(file_name, ".csv")
   return(file_name)
 }

@@ -334,6 +334,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
 
+    # Copy only columns we're using.
     select_cols <- c(metric, var_weight, "weight_in_location")
     agg_df <- group_df[, select_cols, with=FALSE][!is.na(eval(as.name(metric))), ]
 

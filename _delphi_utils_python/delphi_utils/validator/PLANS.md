@@ -12,7 +12,6 @@
 * Negative ‘val’ values
 * Out-of-range ‘val’ values (>0 for all signals, <=100 for percents, <=100 000 for proportions)
 * Missing ‘se’ values
-* Appropriate ‘se’ values, within a calculated reasonable range
 * Stderr != 0
 * If signal and stderr both = 0 (seen in Quidel data due to lack of Jeffreys correction, [issue 255](https://github.com/cmu-delphi/covidcast-indicators/issues/255#issuecomment-692196541))
 * Missing ‘sample_size’ values
@@ -30,11 +29,13 @@
 
 ## Current features
 
-* Errors and warnings are summarized in class attribute and printed on exit
-* If any non-suppressed errors are raised, the validation process exits with non-zero status
+* Errors and warnings are summarized in class attribute and stored in log files (file path to be specified in params)
+* If any non-suppressed errors are raised and dry-run is set to False, the validation process exits with non-zero status
 * Various check settings are controllable via indicator-specific params.json files
 * User can manually disable specific checks for specific datasets using a field in the params.json file
 * User can enable test mode (checks only a small number of data files) using a field in the params.json file
+* User can enable dry-run mode (prevents system exit with error and ensures that success() method returns True) using a field in the params.json file
+
 
 ## Checks + features wishlist, and problems to think about
 
@@ -45,37 +46,33 @@
 
 ### Larger issues
 
-* Set up validator to use Sir-complains-a-lot alerting functionality on a signal-by-signal basis (should send alert output as a slack message and "@" a set person), as a stop-gap before the logging server is ready
-  * This is [how Sir-CAL works](https://github.com/benjaminysmith/covidcast-indicators/blob/main/sir_complainsalot/delphi_sir_complainsalot/run.py)
-  * [Example output](https://delphi-org.slack.com/archives/C01E81A3YKF/p1605793508000100)
 * Expand framework to support nchs_mortality, which is provided on a weekly basis and has some differences from the daily data. E.g. filenames use a different format ("weekly_YYYYWW_geotype_signalname.csv")
 * Make backtesting framework so new checks can be run individually on historical indicator data to tune false positives, output verbosity, understand frequency of error raising, etc. Should pull data from API the first time and save locally in `cache` dir.
 * Add DETAILS.md doc with detailed descriptions of what each check does and how. Will be especially important for statistical/anomaly detection checks.
-* Improve errors and error report
-  * Check if [errors raised from validating all signals](https://docs.google.com/spreadsheets/d/1_aRBDrNeaI-3ZwuvkRNSZuZ2wfHJk6Bxj35Ol_XZ9yQ/edit#gid=1226266834) are correct, not false positives, not overly verbose or repetitive
-  * Easier suppression of many errors at once
-    * Maybe store errors as dict of dicts. Keys could be check strings (e.g. "check_bad_se"), then next layer geo type, etc
-  * Nicer formatting for error “report”.
-    * Potentially set `__print__()` method in ValidationError class
-    * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
-* Check for erratic data sources that wrongly report all zeroes
-  * E.g. the error with the Wisconsin data for the 10/26 forecasts
+* Easier-to-read error report
+  * Potentially set `__print__()` method in ValidationError class
+  * E.g. if a single type of error is raised for many different datasets, summarize all error messages into a single message? But it still has to be clear how to suppress each individually
+  * Consider adding summary counts of each type of error, rather than just a combined number
+* Check for data sources that wrongly report all zeroes
+  * E.g. the error with the Wisconsin data for the 10/26/2020 forecasts
   * Wary of a purely static check for this
-  * Are there any geo regions where this might cause false positives? E.g. small counties or MSAs, certain signals (deaths, since it's << cases)
-  * This test is partially captured by checking avgs in source vs reference data, unless erroneous zeroes continue for more than a week
-  * Also partially captured by outlier checking, depending on `size_cut` setting. If zeroes aren't outliers, then it's hard to say that they're erroneous at all.
-* Use known erroneous/anomalous days of source data to tune static thresholds and test behavior
-* If can't get data from API, do we want to use substitute data for the comparative checks instead?
-  * Currently, any API fetch problems just doesn't do comparative checks at all.
-  * E.g. most recent successful API pull -- might end up being a couple weeks older
-* Improve performance and reduce runtime (no particular goal, just avoid being painfully slow!)
+  * Regions with small populations (e.g. small counties or MSAs) and rare signals (e.g. deaths, since it's << cases) likely to cause false positives
+  * This test is captured by `check_avg_val_vs_reference`, as long as erroneous zeroes occur for less than the reference period (1-2 weeks)
+  * Also partially captured by `check_positive_negative_spikes`, depending on `size_cut` setting. However, `check_positive_negative_spikes` has limited applicability and only applies to incident cases and deaths signals.
+* Instead of failing validation for a single check error, compare rate of check failures to historical rate? Requires caching and updating historical failure rates by signal, data source, and geo region. Unclear if worthwhile.
+* Improve performance and reduce runtime (no particular goal, just handle low-hanging fruit and avoid being painfully slow!)
   * Profiling (iterate)
   * Save intermediate files?
   * Currently a bottleneck at "individual file checks" section. Parallelize?
   * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.
-* Ensure validator runs on signals that require AWS credentials (iterate)
+* Revisit tuning of thresholds for outlier-related checks (`check_positive_negative_spikes`, `check_avg_val_vs_reference`) or parameters set in params.json.template
+  * Currently using manually tuned z-score thresholds using 1-2 months of data (June-July 2021), but signal behavior may change
+  * Certain signals (e.g. locally monotonic signals, sparse signals) exhibit different behavior and may require signal-specific paramters for checks such as z-scores.
+  * Use caching to store params and update these dynamically using recent data?
+* Create different error levels for checks beyond warning and critical: useful because certain checks clearly indicate some form of data corruption (e.g. `check_missing_date_files` identifying missing data), while other checks just report abnormal behavior that may be able to be explained.
+* Compare current validator model against known instances of data issues to evaluate performance (may be difficult if data corrections are issued)
 
-### Longer-term issues
+### Longer-term features
 
 * Data correctness and consistency over longer time periods (weeks to months). Compare data against long-ago (3 months?) API data for changes in trends.
   * Long-term trends and correlations between time series. Currently, checks only look at a data window of a few days

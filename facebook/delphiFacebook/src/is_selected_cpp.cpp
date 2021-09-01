@@ -18,11 +18,11 @@ LogicalVector is_selected_cpp(List responses, String target) {
     }
 
     for (int j = 0; j < response.size(); ++j ) {
-      if(StringVector::is_na(response[j])) {
+      if (StringVector::is_na(response[j])) {
         out[i] = NA_LOGICAL;
         break;
       }
-      if(response[j] == target) {
+      if (response[j] == target) {
         out[i] = true;
         break;
       }

@@ -65,6 +65,12 @@
   * Save intermediate files?
   * Currently a bottleneck at "individual file checks" section. Parallelize?
   * Make `all_frames` MultiIndex-ed by geo type and signal name? Make a dict of data indexed by geo type and signal name? May improve performance or may just make access more readable.
+* Revisit tuning of thresholds for outlier-related checks (`check_positive_negative_spikes`, `check_avg_val_vs_reference`) or parameters set in params.json.template
+  * Currently using manually tuned z-score thresholds using 1-2 months of data (June-July 2021), but signal behavior may change
+  * Certain signals (e.g. locally monotonic signals, sparse signals) exhibit different behavior and may require signal-specific paramters for checks such as z-scores.
+  * Use caching to store params and update these dynamically using recent data?
+* Create different error levels for checks beyond warning and critical: useful because certain checks clearly indicate some form of data corruption (e.g. `check_missing_date_files` identifying missing data), while other checks just report abnormal behavior that may be able to be explained.
+* Compare current validator model against known instances of data issues to evaluate performance (may be difficult if data corrections are issued)
 
 ### Longer-term features
 

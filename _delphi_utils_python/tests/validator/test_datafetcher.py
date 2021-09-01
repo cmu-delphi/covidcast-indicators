@@ -24,20 +24,29 @@ class TestDataFetcher:
     @mock.patch("covidcast.metadata")
     def test_get_geo_signal_combos(self, mock_metadata):
         """Test that the geo signal combos are correctly pulled from the covidcast metadata."""
-        mock_metadata.return_value = pd.DataFrame({"data_source": ["a", "a", "a",
-                                                                   "b", "b", "b"],
-                                                   "signal": ["w", "x", "x",
-                                                              "y", "y", "z"],
+        # Need to use actual data_source and signal names since we reference the API
+        mock_metadata.return_value = pd.DataFrame({"data_source": ["chng", "chng", "chng",
+                                                                   "covid-act-now",
+                                                                   "covid-act-now",
+                                                                   "covid-act-now"],
+                                                   "signal": ["smoothed_outpatient_cli",
+                                                              "smoothed_outpatient_covid",
+                                                              "smoothed_outpatient_covid",
+                                                              "pcr_specimen_positivity_rate",
+                                                              "pcr_specimen_positivity_rate",
+                                                              "pcr_specimen_total_tests"],
                                                    "geo_type": ["state", "state", "county",
                                                                 "hrr", "msa", "msa"]
                                                   })
 
-        assert set(get_geo_signal_combos("a")) == set([("state", "w"),
-                                                       ("state", "x"),
-                                                       ("county", "x")])
-        assert set(get_geo_signal_combos("b")) == set([("hrr", "y"),
-                                                       ("msa", "y"),
-                                                       ("msa", "z")])
+        assert set(get_geo_signal_combos("chng")) == set(
+            [("state", "smoothed_outpatient_cli"),
+             ("state", "smoothed_outpatient_covid"),
+             ("county", "smoothed_outpatient_covid")])
+        assert set(get_geo_signal_combos("covid-act-now")) == set(
+            [("hrr", "pcr_specimen_positivity_rate"),
+             ("msa", "pcr_specimen_positivity_rate"),
+             ("msa", "pcr_specimen_total_tests")])
 
     @mock.patch("covidcast.signal")
     def test_threaded_api_calls(self, mock_signal):

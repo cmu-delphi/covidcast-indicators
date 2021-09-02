@@ -5,11 +5,15 @@ context("Testing geographic crosswalk file creation")
 static_dir <- "static"
 
 test_that("testing zip codes metadata", {
-
+  # Number of Puerto Rico zip codes to ignore; other territories not included in zips file.
+  n_pr <- 131L
+  
   zip_metadata <- produce_zip_metadata(static_dir)
+  
   expect_equal(class(zip_metadata$zip5), "character")
   expect_true(all(nchar(zip_metadata$zip5) == 5L))
-  expect_equal(nrow(zip_metadata), 33099L)
+  expect_equal(nrow(zip_metadata), 33099L - n_pr)
+  expect_equal(length(unique(zip_metadata$state_id)), 51) # 50 states + DC
   expect_equal(zip_metadata$keep_in_agg, zip_metadata$population > 100)
 
 })

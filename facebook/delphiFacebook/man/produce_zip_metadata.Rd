@@ -10,5 +10,5 @@ produce_zip_metadata(static_dir)
 \item{static_dir}{local directory containing the file "02_20_uszips.csv"}
 }
 \description{
-Returns metadata about each U.S. Zip Code
+Drops information about US territories, which FB does not provide weights for.
 }

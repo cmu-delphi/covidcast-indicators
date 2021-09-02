@@ -1,9 +1,12 @@
 #' Returns metadata about each U.S. Zip Code
+#' 
+#' Drops information about US territories, which FB does not provide weights for.
 #'
 #' @param static_dir     local directory containing the file "02_20_uszips.csv"
 #'
 #' @importFrom stringi stri_trans_tolower
 #' @importFrom readr read_csv cols
+#' @importFrom dplyr filter
 #' @export
 produce_zip_metadata <- function(static_dir)
 {
@@ -19,6 +22,8 @@ produce_zip_metadata <- function(static_dir)
   zip_metadata$fips <- sprintf("%05d", zip_metadata$fips)
   zip_metadata$zip5 <- sprintf("%05d", zip_metadata$zip)
   zip_metadata$keep_in_agg <- (zip_metadata$population > 100)
+  
+  zip_metadata <- filter(zip_metadata, !(state_id %in% c("as", "gu", "pr", "vi", "mp")))
 
   return(zip_metadata)
 }

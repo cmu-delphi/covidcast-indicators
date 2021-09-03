@@ -544,6 +544,12 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
+  # Remove "raceethnicity" from cols_to_report if not producing race-ethnicity
+  # microdata so we don't get an error that the field doesn't exist.
+  if (is.null(params$produce_individual_raceeth) || !params$produce_individual_raceeth) {
+    cols_to_report <- cols_to_report[cols_to_report != "raceethnicity"]
+  }
+  
   # Not all cols are present in all waves; if our data does not include some
   # questions, don't report them.
   if (any(!(cols_to_report %in% names(input_data)))) {

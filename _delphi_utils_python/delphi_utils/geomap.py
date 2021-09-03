@@ -107,11 +107,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """Initialize geomapper.
 
         Holds loading the crosswalk tables until a conversion function is first used.
-
-        Parameters
-        ---------
-        crosswalk_files : dict
-            A dictionary of the filenames for the crosswalk tables.
         """
         self.crosswalk_filepaths = CROSSWALK_FILEPATHS
         self.crosswalks = {
@@ -464,6 +459,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         geocode_col: str, default None
             The name of the column containing the geocodes. If None, uses the geocode_type
             as the name.
+        dropna: bool, default True
+            Determine whether to drop rows with no population data.
 
         Returns
         --------

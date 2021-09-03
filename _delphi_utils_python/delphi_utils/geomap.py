@@ -44,8 +44,8 @@ CROSSWALK_FILEPATHS = {
         "pop": join(DATA_PATH, "state_pop.csv")
     },
     "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
-    "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv"),},
-    "nation": {"pop": join(DATA_PATH, "nation_pop.csv"),},
+    "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv")},
+    "nation": {"pop": join(DATA_PATH, "nation_pop.csv")},
 }
 
 
@@ -195,10 +195,10 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             }
         elif (from_code, to_code) == ("fips", "state"):
             dtype = {
-                    "fips": str,
-                    "state_code": str,
-                    "state_id": str,
-                    "state_name": str,
+                "fips": str,
+                "state_code": str,
+                "state_id": str,
+                "state_name": str,
             }
 
         # Population tables
@@ -556,6 +556,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if geo_type == "county":
             return "fips"
         return geo_type
+
     def get_geo_values(self, geo_type):
         """
         Return a set of all values for a given geography type.
@@ -596,50 +597,44 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             self.geo_lists[geo_type] = set(crosswalk[geo_type])
             return self.geo_lists[geo_type]
 
-    def get_geos_within(self, container_geocode, contained_geocode_type,container_geocode_type):
+    def get_geos_within(self, container_geocode, contained_geocode_type, container_geocode_type):
         """
-        Return all contained regions within same container geocode.
+        Return all contained regions of the given type within the given container geocode.
 
-        Given a container geocode (e.g. "ca" for California, a state)
-        and an enclosed contained geocode type (e.g. "county").
-        return a set of container geocode value of the specified type that
-        lie within the specified geo code (e.g. all counties within California)
-        Support these 3 types:
+        Given a container_geocode (e.g "ca" for California) of a container_geocode_type
+        (e.g "state"), return:
+            - all (contained_geocode_type) within that (container_geocode_type)
+
+        Supports these 3 combinations:
             - all states within a nation
             - all counties within a state
             - all states within an hhs region
 
         Parameters
         ----------
-        container_geocode: str of identity of nation/state/hhs
-            "fips" for return container_geocode of state
-            "state_id" for return container_geocode of nation and hhs
+        container_geocode: str
+            Instance of nation/state/hhs to find the sub-regions of
         contained_geocode_type: str
-            One of "state","county"
+            The subregion type to get all instance of. One of "state", "county"
         container_geocode_type: str
-            One of "state","nation","hhs"
+            The parent region type. One of "state", "nation", "hhs"
 
         Returns
         -------
-        Set of geo ids of the specified type that lie within the specified container geocode,
-        all in string format.
+        Set of geo code strings of the given type that lie within the given container geocode.
         """
-        if contained_geocode_type not in ("county","state"):
-            raise ValueError("contained_geocode_type must be one of state, nation and hhs")
-        geo_values=set()
-        if contained_geocode_type=="state":
-            if container_geocode_type=="nation" and container_geocode=="us":
+        if contained_geocode_type == "state":
+            if container_geocode_type == "nation" and container_geocode == "us":
                 crosswalk = self._load_crosswalk_from_file("state", "state")
-                geo_values=set(crosswalk["state_id"])
-            if container_geocode_type=="hhs":
+                return set(crosswalk["state_id"])
+            if container_geocode_type == "hhs":
                 crosswalk_hhs = self._load_crosswalk_from_file("fips", "hhs")
                 crosswalk_state = self._load_crosswalk_from_file("fips", "state")
-                fips_hhs=crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
-                fips_state_id=crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"]
-                geo_values.update(fips_state_id)
-        elif contained_geocode_type=="county" and container_geocode_type=="state":
+                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
+                return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
+        elif contained_geocode_type == "county" and container_geocode_type == "state":
             crosswalk = self._load_crosswalk_from_file("fips", "state")
-            geo_values=crosswalk[crosswalk["state_id"]==container_geocode]["fips"]
+            return set(crosswalk[crosswalk["state_id"] == container_geocode]["fips"])
         else:
-            raise ValueError("Do not satisfied the reqirement")
-        return geo_values
+            raise ValueError("(contained_geocode_type, container_geocode_type) must be one of "
+                             "(state, nation), (state, hhs), (county, state)")

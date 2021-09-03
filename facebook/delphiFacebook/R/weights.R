@@ -61,10 +61,15 @@ join_weights <- function(data, params, weights = c("step1", "full"))
 
   weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
   weights_files <- sort(weights_files)
+  
+  col_types <- c("character", "double")
+  col_names <- c("cid", "weight")
   agg_weights <- bind_rows(lapply(
     weights_files,
     fread,
-    colClasses = c(cid="character", weight="double"))
+    colClasses = col_types,
+    col.names = col_names
+    )
   )
   agg_weights <- agg_weights[!duplicated(cid),]
   data <- left_join(data, agg_weights, by = c("token" = "cid"))

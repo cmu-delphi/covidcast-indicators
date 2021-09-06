@@ -598,9 +598,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """
         Return all contained regions of the given type within the given container geocode.
 
-        Given a container_geocode (e.g "ca" for California) of a container_geocode_type
+        Given container_geocode (e.g "ca" for California) of type container_geocode_type
         (e.g "state"), return:
-            - all (contained_geocode_type) within that (container_geocode_type)
+            - all (contained_geocode_type)s within container_geocode
 
         Supports these 3 combinations:
             - all states within a nation

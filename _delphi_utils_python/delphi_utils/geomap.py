@@ -632,5 +632,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         elif contained_geocode_type == "county" and container_geocode_type == "state":
             crosswalk = self._load_crosswalk_from_file("fips", "state")
             return set(crosswalk[crosswalk["state_id"] == container_geocode]["fips"])
-        raise ValueError("(contained_geocode_type, container_geocode_type) must be one of "
+        raise ValueError("(contained_geocode_type, container_geocode_type) was "
+                         f"({contained_geocode_type}, {container_geocode_type}), but must be one of "
                          "(state, nation), (state, hhs), (county, state)")

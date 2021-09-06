@@ -612,7 +612,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         container_geocode: str
             Instance of nation/state/hhs to find the sub-regions of
         contained_geocode_type: str
-            The subregion type to get all instance of. One of "state", "county"
+            The subregion type to retrieve. One of "state", "county"
         container_geocode_type: str
             The parent region type. One of "state", "nation", "hhs"
 

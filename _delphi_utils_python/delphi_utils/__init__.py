@@ -14,4 +14,4 @@ from .smooth import Smoother
 from .signal import add_prefix
 from .nancodes import Nans
 
-__version__ = "0.1.10"
+__version__ = "0.1.11"

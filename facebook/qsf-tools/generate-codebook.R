@@ -92,6 +92,17 @@ process_qsf <- function(path_to_qsf,
   choices <- displayed_questions %>% 
     map(~ .x$Payload$Choices) %>% 
     map(~ map(.x, "Display"))
+  recode_map <- displayed_questions %>% 
+    map(~ .x$Payload$RecodeValues)
+  
+  # Recode response options if overriding Qualtrics auto-assigned coding.
+  ii_recode <- recode_map %>%
+    map(~ !is.null(.x)) %>% 
+    unlist() %>% 
+    which()
+  choices[ii_recode] <- map2(.x=choices[ii_recode], .y=recode_map[ii_recode],
+                             ~ setNames(.x, .y[names(.x)])
+  )
   
   # derive from choices where users can fill in "Other" response with free text
   other_text_option <- displayed_questions %>% 

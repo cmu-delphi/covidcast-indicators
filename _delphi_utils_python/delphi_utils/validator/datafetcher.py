@@ -6,6 +6,7 @@ import threading
 from os import listdir
 from os.path import isfile, join
 import warnings
+import requests
 import pandas as pd
 import numpy as np
 
@@ -109,14 +110,47 @@ def get_geo_signal_combos(data_source):
 
     Cross references based on combinations reported available by COVIDcast metadata.
     """
+    # Maps data_source name with what's in the API, lists used in case of multiple names
+    source_signal_mappings = {
+        'chng': ['chng-cli', 'chng-covid'],
+        'indicator-combination': ['indicator-combination-cases-deaths'],
+        'quidel': ['quidel-covid-ag'],
+        'safegraph': ['safegraph-weekly']
+    }
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
     geo_signal_combos = list(map(tuple,
                                  source_meta[["geo_type", "signal"]].to_records(index=False)))
-
-    return geo_signal_combos
-
+    # Only add new geo_sig combos if status is active
+    new_geo_signal_combos = []
+    # Use a seen dict to save on multiple calls:
+    # True/False indicate if status is active, "unknown" means we should check
+    sig_combo_seen = dict()
+    for combo in geo_signal_combos:
+        if source_signal_mappings.get(data_source):
+            src_list = source_signal_mappings.get(data_source)
+        else:
+            src_list = [data_source]
+        for src in src_list:
+            sig = combo[1]
+            geo_status = sig_combo_seen.get((sig, src), "unknown")
+            if geo_status is True:
+                new_geo_signal_combos.append(combo)
+            elif geo_status == "unknown":
+                epidata_signal = requests.get(
+                    "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
+                    params={'signal': f"{src}:{sig}"})
+                # Not an active signal
+                active_status = [val['active'] for i in epidata_signal.json()
+                    for val in i['signals']]
+                if active_status == []:
+                    sig_combo_seen[(sig, src)] = False
+                    continue
+                sig_combo_seen[(sig, src)] = active_status[0]
+                if active_status[0] is True:
+                    new_geo_signal_combos.append(combo)
+    return new_geo_signal_combos
 
 def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type):
     """

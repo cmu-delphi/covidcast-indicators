@@ -75,6 +75,7 @@ def run_module(params):
         - "common":
             - "export_dir": str, directory to write output
             - "log_filename" (optional): str, name of file to write logs
+            - "epidata" (optional): dict, extra parameters to send to Epidata.covid_hosp
     """
     start_time = time.time()
     logger = get_structured_logger(
@@ -82,15 +83,21 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True))
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
-    today = date.today()
+    end_day = date.today()
+    if "epidata" in params["common"] and \
+       "as_of" in params["common"]["epidata"]:
+        end_day = min(
+            end_day,
+            datetime.strptime(str(params["common"]["epidata"]["as_of"]), "%Y%m%d").date()
+        )
     past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
-    date_range = generate_date_ranges(past_reference_day, today)
+    date_range = generate_date_ranges(past_reference_day, end_day)
     dfs = []
     for r in date_range:
-        response = Epidata.covid_hosp(request_all_states, r)
+        response = Epidata.covid_hosp(request_all_states, r, **params["common"].get("epidata", {}))
         # The last date range might only have recent days that don't have any data, so don't error.
         if response["result"] != 1 and r != date_range[-1]:
-            raise Exception(f"Bad result from Epidata: {response['message']}")
+            raise Exception(f"Bad result from Epidata for {r}: {response['message']}")
         if response["result"] == -2 and r == date_range[-1]:  # -2 code means no results
             continue
         dfs.append(pd.DataFrame(response['epidata']))

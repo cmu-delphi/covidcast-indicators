@@ -169,11 +169,25 @@ process_qsf <- function(path_to_qsf,
       map(.x, "Operator"),
       map(.x, "RightOperand")
     )) %>% 
+    # Remove empty logic
     map(~ gsub("  Is  ", "", .x)) %>% 
     map(~ gsub("NULL NULL Is NULL NULL", "", .x)) %>%
     map(~ gsub(" ?NULL ?", "", .x)) %>%
+    # Remove QID flag
     map(~ gsub("q://", "", .x)) %>%
+    # Recode choice numbers
+    map(~ gsubfn("(QID[0-9]+)(/SelectableChoice/)([0-9]+)", function(qid, selectable_text, option_code) {
+      curr_map <- recode_map[qids == qid][[1]]
+      
+      if ( !is.null(curr_map) ) {
+        option_code <- curr_map[names(curr_map) == option_code]
+      }
+      
+      paste(c(qid, selectable_text, option_code), collapse="")
+    }, .x)) %>% 
+    # Replace QID with question number (A2, etc)
     map(~ gsubfn("(QID[0-9]+)", function(qid) {items[qids == qid]}, .x)) %>% 
+    # Collapse logic into a single string.
     map(~ paste(.x, collapse=" "))
     
   logic_type <- displayed_questions %>% 

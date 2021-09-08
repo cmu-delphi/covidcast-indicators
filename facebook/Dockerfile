@@ -9,9 +9,15 @@ RUN install2.r --error \
     stringi \
     data.table \
     roxygen2 \
-    Rcpp
+    Rcpp \
+    BH
+
 RUN R --no-restore --no-save -e 'devtools::install_version("readr", version="1.4.0")'
-RUN apt-get update && apt-get install -qq -y python3-venv
+RUN apt-get update && apt-get install -qq -y \
+    python3-venv \
+    sshpass \
+    openssh-server \
+    sendmail
 
 ADD ./delphiFacebook /facebook/delphiFacebook/
 ADD ./static /facebook/static/

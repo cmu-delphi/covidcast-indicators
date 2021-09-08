@@ -38,11 +38,11 @@ def add_parent_state(data, geo_res, geo_key):
       population (since a msa/hrr may span multiple states)
     - map from county to the corresponding state
     """
-    fips_to_state = GMPR._load_crosswalk(from_code="fips", to_code="state")  # pylint: disable=protected-access
+    fips_to_state = GMPR.get_crosswalk(from_code="fips", to_code="state")
     if geo_res == "county":
         mix_map = fips_to_state[["fips", "state_id"]]  # pylint: disable=unsubscriptable-object
     else:
-        fips_to_geo_res = GMPR._load_crosswalk(from_code="fips", to_code=geo_res)  # pylint: disable=protected-access
+        fips_to_geo_res = GMPR.get_crosswalk(from_code="fips", to_code=geo_res)
         mix_map = fips_to_geo_res[["fips", geo_res]].merge(
                 fips_to_state[["fips", "state_id"]],  # pylint: disable=unsubscriptable-object
                 on="fips",

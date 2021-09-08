@@ -105,7 +105,7 @@ def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
     # For MSA and HRR level, they are the same
     elif geo == 'msa':
-        df = GMPR._load_crosswalk("fips", "msa") # pylint: disable=protected-access
+        df = GMPR.get_crosswalk("fips", "msa")
         puerto_rico_mask = df["fips"].str.startswith("72")
         puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
         combined_df = maybe_append(

@@ -135,65 +135,21 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     def _load_crosswalk_from_file(self, from_code, to_code, data_path):
         stream = pkg_resources.resource_stream(__name__, data_path)
-        usecols = None
-        dtype = None
-        # Weighted crosswalks
-        if (from_code, to_code) in [
-            ("zip", "fips"),
-            ("fips", "zip"),
-            ("jhu_uid", "fips"),
-            ("zip", "msa"),
-            ("fips", "hrr"),
-            ("zip", "hhs")
-        ]:
-            dtype = {
-                from_code: str,
-                to_code: str,
-                "weight": float,
-            }
-
-        # Unweighted crosswalks
-        elif (from_code, to_code) in [
-            ("zip", "hrr"),
-            ("fips", "msa"),
-            ("fips", "hhs"),
-            ("state_code", "hhs")
-        ]:
-            dtype = {from_code: str, to_code: str}
-
-        # Special table of state codes, state IDs, and state names
-        elif (from_code, to_code) == ("state", "state"):
-            dtype = {
-                "state_code": str,
-                "state_id": str,
-                "state_name": str,
-            }
-        elif (from_code, to_code) == ("zip", "state"):
-            dtype = {
-                "zip": str,
-                "weight": float,
-                "state_code": str,
-                "state_id": str,
-                "state_name": str,
-            }
-        elif (from_code, to_code) == ("fips", "state"):
-            dtype = {
-                "fips": str,
-                "state_code": str,
-                "state_id": str,
-                "state_name": str,
-            }
-
-        # Population tables
-        elif to_code == "pop":
-            dtype = {
-                from_code: str,
-                "pop": int,
-            }
-            usecols = [
-                from_code,
-                "pop"
-            ]
+        dtype = {
+            from_code: str,
+            to_code: str,
+            "fips": str,
+            "zip": str,
+            "hrr": str,
+            "hhs": str,
+            "msa": str,
+            "state_code": str,
+            "state_id": str,
+            "state_name": str,
+            "pop": int,
+            "weight": float
+        }
+        usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 
     def _load_geo_values(self, geo_type):

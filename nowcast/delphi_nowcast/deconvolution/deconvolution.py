@@ -12,6 +12,8 @@ from ..epidata import get_indicator_data
 
 from ctypes import *
 so_file = "/usr1/achin/nowcast/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
+#so_file = "/home/andrew/Documents/covidcast-indicators/nowcast/delphi_nowcast/deconvolution/dp_1d_c.so"
+
 c_dp_1d = CDLL(so_file)
 
 def _construct_convolution_matrix(signal: np.ndarray,
@@ -48,16 +50,18 @@ def _construct_convolution_matrix(signal: np.ndarray,
     return P
 
 def _construct_day_specific_convolution_matrix(y, run_date, delay_kernels):
-    C = _construct_convolution_matrix(y, np.array(delay_kernels[run_date]))
-    first_kernel_date = min(delay_kernels.keys())
+    n = y.shape[0]
     kernel_length = len(delay_kernels[run_date])
-    for i in range(kernel_length, C.shape[0]):
-        start_index = i-kernel_length+1
-        end_index = min(start_index+kernel_length, C.shape[1])
-        kernel_day = max(run_date-timedelta(start_index), first_kernel_date)
+    C = np.zeros((n, n))
+    first_kernel_date = min(delay_kernels.keys())
+    for i in range(C.shape[0]):
+        kernel_day = max(run_date-timedelta(i), first_kernel_date)
+        end_index = max(0, C.shape[1]-i)
+        start_index = max(0, end_index-kernel_length)
         day_specific_kernel = np.array(delay_kernels[kernel_day][::-1])
-        assert np.all(C[i,:start_index] == 0)
-        C[i, start_index: end_index] = np.array(day_specific_kernel)[:len(C[i, start_index: end_index])]
+        row = C.shape[0]-i-1
+        if end_index > 0:
+            C[row, start_index:end_index] = day_specific_kernel[-(end_index-start_index):]
     return C, np.array(delay_kernels[run_date])
 
 

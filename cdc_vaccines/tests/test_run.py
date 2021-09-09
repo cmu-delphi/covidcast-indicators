@@ -20,7 +20,7 @@ class TestRun:
         },
         "indicator": {
             "base_url": "./test_data/small.csv",
-            "export_start_date": "2021-05-01"
+            "export_start_date": "2021-08-10"
         }
     }
 

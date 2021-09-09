@@ -3,7 +3,7 @@
 dir = $(shell find ./delphi_* -name __init__.py | grep -o 'delphi_[_[:alnum:]]*')
 
 venv:
-	python -m venv env
+	python3.8 -m venv env
 
 install: venv
 	. env/bin/activate; \
@@ -23,3 +23,7 @@ clean:
 	rm -rf env
 	rm -f params.json
 
+run: 
+	env/bin/python -m $(dir)
+	env/bin/python -m delphi_utils.validator --dry_run
+	env/bin/python -m delphi_utils.archive

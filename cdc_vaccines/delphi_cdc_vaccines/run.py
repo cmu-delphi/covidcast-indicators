@@ -50,15 +50,20 @@ def run_module(params):
         os.makedirs(params["common"]["export_dir"])
 
     for (sensor, smoother, geo) in product(SIGNALS, SMOOTHERS, GEOS):
+
         logger.info("Running on ",
             sensor=sensor,
             smoother=smoother,
             geo=geo)
+        geo_map = geo
+        if geo=='state':
+            geo_map='state_code'
+
         df = GeoMapper().replace_geocode(
             all_data[['timestamp','fips', sensor]],from_col='fips',
             from_code="fips",
             new_col="geo_id",
-            new_code=geo,
+            new_code=geo_map,
             date_col="timestamp")
         df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
             smoother[0].smooth

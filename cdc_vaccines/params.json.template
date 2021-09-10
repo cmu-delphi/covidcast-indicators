@@ -23,13 +23,4 @@
     },
     "dynamic": {}
   },
-  "archive": {
-    "aws_credentials": {
-      "aws_access_key_id": "",
-      "aws_secret_access_key": ""
-    },
-    "bucket_name": "",
-    "indicator_prefix": "usafacts",
-    "cache_dir": "./cache"
-  }
 }

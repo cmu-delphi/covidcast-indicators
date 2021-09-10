@@ -132,24 +132,6 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
         )
     return df.loc[
         df["timestamp"] >= min(df["timestamp"]),
-        [  # Reorder
-            "fips",
-            "timestamp",
-            "cumulative_counts_tot_vaccine",
-            "counts_tot_vaccine",
-            "cumulative_counts_tot_vaccine_12P",
-            "counts_tot_vaccine_12P",
-            "cumulative_counts_tot_vaccine_18P",
-            "counts_tot_vaccine_18P",
-            "cumulative_counts_tot_vaccine_65P",
-            "counts_tot_vaccine_65P",
-            "cumulative_counts_part_vaccine",
-            "counts_part_vaccine",
-            "cumulative_counts_part_vaccine_12P",
-            "counts_part_vaccine_12P",
-            "cumulative_counts_part_vaccine_18P",
-            "counts_part_vaccine_18P",
-            "cumulative_counts_part_vaccine_65P",
-            "counts_part_vaccine_65P"
-        ],
+        # Reorder
+        ["fips", "timestamp"] + SIGNALS,
     ].reset_index(drop=True)

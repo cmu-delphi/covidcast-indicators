@@ -2,7 +2,7 @@
 
 This indicator provides the number official vaccinations in the US. We export the county-level 
 daily vaccination rates data as-is, and publishes the result as a COVIDcast signal. 
-We also aggregate the data to the HHS, State, and Nation levels. 
+We also aggregate the data to the MSA, HRR, State, HHS Region, and Nation levels. 
 For detailed information see the files DETAILS.md contained in this directory.
 
 Note that individuals could be vaccinated outside of the US. Additionally, 

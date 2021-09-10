@@ -43,7 +43,7 @@ SIGNALS = [
 
 GEOS = [
     "nation",
-    "state_code",
+    "state",
     "hrr",
     "hhs"
 ]
@@ -52,3 +52,10 @@ SMOOTHERS = [
     (Smoother("identity", impute_method=None), ""),
     (Smoother("moving_average", window_length=7), "_7dav"),
 ]
+
+
+DIFFERENCE_MAPPING = {
+    f"{INCIDENCE}_counts_{completeness}_vaccine{age}": f"{CUMULATIVE}_counts_{completeness}_vaccine{age}"
+    for completeness, age in product(COMPLETENESS, AGE)
+}
+SIGNALS = list(DIFFERENCE_MAPPING.keys()) + list(DIFFERENCE_MAPPING.values())

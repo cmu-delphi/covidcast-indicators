@@ -112,20 +112,13 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     df =pd.concat([df_dummy, df])
     # Obtain new_counts
     df.sort_values(["fips", "timestamp"], inplace=True)
-    df["counts_tot_vaccine"] = df["cumulative_counts_tot_vaccine"].diff()  # 1st discrete difference
-    df["counts_tot_vaccine_12P"] = df["cumulative_counts_tot_vaccine_12P"].diff()
-    df["counts_tot_vaccine_18P"] = df["cumulative_counts_tot_vaccine_18P"].diff()
-    df["counts_tot_vaccine_65P"] = df["cumulative_counts_tot_vaccine_65P"].diff()
-    df["counts_part_vaccine"] = df["cumulative_counts_part_vaccine"].diff()
-    df["counts_part_vaccine_12P"] = df["cumulative_counts_part_vaccine_12P"].diff()
-    df["counts_part_vaccine_18P"] = df["cumulative_counts_part_vaccine_18P"].diff()
-    df["counts_part_vaccine_65P"] = df["cumulative_counts_part_vaccine_65P"].diff()
+    for to, from in DIFFERENCE_MAPPING.items():
+        df[to] = df[from].diff()
 
     rem_list = [ x for x in list(df.columns) if x not in ['timestamp', 'fips'] ]
     # Handle edge cases where we diffed across fips
     mask = df["fips"] != df["fips"].shift(1)
     df.loc[mask, rem_list] = np.nan
-    print(rem_list)
     df.reset_index(inplace=True, drop=True)
     # Final sanity checks
     unique_days = df["timestamp"].unique()

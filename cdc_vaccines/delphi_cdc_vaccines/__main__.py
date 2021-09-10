@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Call the function run_module when executed.
 
-This file indicates that calling the module (`python -m MODULE_NAME`) will
+This file indicates that calling the module (`python -m delphi_cdc_vaccines`) will
 call the function `run_module` found within the run.py file. There should be
 no need to change this template.
 """

@@ -60,7 +60,8 @@ def run_module(params):
             geo_map='state_code'
 
         df = GeoMapper().replace_geocode(
-            all_data[['timestamp','fips', sensor]],from_col='fips',
+            all_data[['timestamp','fips', sensor]],
+            from_col='fips',
             from_code="fips",
             new_col="geo_id",
             new_code=geo_map,

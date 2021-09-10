@@ -45,7 +45,8 @@ GEOS = [
     "nation",
     "state",
     "hrr",
-    "hhs"
+    "hhs",
+    "msa"
 ]
 
 SMOOTHERS = [

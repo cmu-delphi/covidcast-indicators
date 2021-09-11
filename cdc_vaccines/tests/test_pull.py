@@ -29,22 +29,27 @@ class TestPullCDCVaccines:
             "timestamp": [pd.Timestamp("2021-08-25"), pd.Timestamp("2021-08-26"),
                           pd.Timestamp("2021-08-25"), pd.Timestamp("2021-08-26"),
                           pd.Timestamp("2021-08-25"), pd.Timestamp("2021-08-26")],
+            
+            "incidence_counts_tot_vaccine": [np.nan,789625.0,np.nan,5537.0,np.nan,0.0],
+            "incidence_counts_tot_vaccine_12P": [np.nan,789591.0,np.nan,5535.0,np.nan,0.0],
+            "incidence_counts_tot_vaccine_18P": [np.nan,733809.0,np.nan,5368.0,np.nan,0.0],
+            "incidence_counts_tot_vaccine_65P": [np.nan,55620.0,np.nan,1696.0,np.nan,0.0],
+            "incidence_counts_part_vaccine": [np.nan,1119266.0,np.nan,6293.0,np.nan,0.0],
+            "incidence_counts_part_vaccine_12P": [np.nan,1119203.0,np.nan,6290.0,np.nan,0.0],
+            "incidence_counts_part_vaccine_18P": [np.nan,1035082.0,np.nan,6014.0,np.nan,0.0],
+            "incidence_counts_part_vaccine_65P": [np.nan,75596.0,np.nan,1877.0,np.nan,0.0],
+
+
+
             "cumulative_counts_tot_vaccine": [np.nan,789625.0,np.nan,5537.0,np.nan,0.0],
-            "counts_tot_vaccine": [np.nan,789625.0,np.nan,5537.0,np.nan,0.0],
             "cumulative_counts_tot_vaccine_12P": [np.nan,789591.0,np.nan,5535.0,np.nan,0.0],
-            "counts_tot_vaccine_12P": [np.nan,789591.0,np.nan,5535.0,np.nan,0.0],
             "cumulative_counts_tot_vaccine_18P": [np.nan,733809.0,np.nan,5368.0,np.nan,0.0],
-            "counts_tot_vaccine_18P": [np.nan,733809.0,np.nan,5368.0,np.nan,0.0],
             "cumulative_counts_tot_vaccine_65P": [np.nan,55620.0,np.nan,1696.0,np.nan,0.0],
-            "counts_tot_vaccine_65P": [np.nan,55620.0,np.nan,1696.0,np.nan,0.0],
             "cumulative_counts_part_vaccine": [np.nan,1119266.0,np.nan,6293.0,np.nan,0.0],
-            "counts_part_vaccine": [np.nan,1119266.0,np.nan,6293.0,np.nan,0.0],
             "cumulative_counts_part_vaccine_12P": [np.nan,1119203.0,np.nan,6290.0,np.nan,0.0],
-            "counts_part_vaccine_12P": [np.nan,1119203.0,np.nan,6290.0,np.nan,0.0],
             "cumulative_counts_part_vaccine_18P": [np.nan,1035082.0,np.nan,6014.0,np.nan,0.0],
-            "counts_part_vaccine_18P": [np.nan,1035082.0,np.nan,6014.0,np.nan,0.0],
-            "cumulative_counts_part_vaccine_65P": [np.nan,75596.0,np.nan,1877.0,np.nan,0.0],
-            "counts_part_vaccine_65P": [np.nan,75596.0,np.nan,1877.0,np.nan,0.0]},
+            "cumulative_counts_part_vaccine_65P": [np.nan,75596.0,np.nan,1877.0,np.nan,0.0]},
+            
             index=[0, 1, 2, 3, 4, 5])
         # sort since rows order doesn't matter
         pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())

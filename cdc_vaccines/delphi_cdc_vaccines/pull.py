@@ -5,8 +5,7 @@ from logging import Logger
 from delphi_utils.geomap import GeoMapper
 import numpy as np
 import pandas as pd
-
-
+from .constants import SIGNALS, DIFFERENCE_MAPPING
 
 
 
@@ -112,8 +111,8 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     df =pd.concat([df_dummy, df])
     # Obtain new_counts
     df.sort_values(["fips", "timestamp"], inplace=True)
-    for to, from in DIFFERENCE_MAPPING.items():
-        df[to] = df[from].diff()
+    for to, from_d in DIFFERENCE_MAPPING.items():
+        df[to] = df[from_d].diff()
 
     rem_list = [ x for x in list(df.columns) if x not in ['timestamp', 'fips'] ]
     # Handle edge cases where we diffed across fips

@@ -72,7 +72,7 @@ def run_module(params):
         df["se"] = np.nan
         df["sample_size"] = np.nan
         sensor_name = sensor + smoother[1]
-
+        print(sensor_name)
         if not(("cumulative" in sensor_name) and ("7dav" in sensor_name)):
             # don't export first 6 days for smoothed signals since they'll be nan.
             start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)

@@ -42,31 +42,30 @@ class TestRun:
             "20210818",
             "20210819",
         ]
-        geos = ["state_code", "hrr", "hhs", "nation"]
+        geos = ["state", "hrr", "hhs", "nation", "msa"]
 
         expected_files = []
         for metric in ["cumulative_counts_tot_vaccine",
-                                    "counts_tot_vaccine",
+                                    "incidence_counts_tot_vaccine",
                                     "cumulative_counts_tot_vaccine_12P",
-                                    "counts_tot_vaccine_12P",
+                                    "incidence_counts_tot_vaccine_12P",
                                     "cumulative_counts_tot_vaccine_18P",
-                                    "counts_tot_vaccine_18P",
+                                    "incidence_counts_tot_vaccine_18P",
                                     "cumulative_counts_tot_vaccine_65P",
-                                    "counts_tot_vaccine_65P",
+                                    "incidence_counts_tot_vaccine_65P",
                                     "cumulative_counts_part_vaccine",
-                                    "counts_part_vaccine",
+                                    "incidence_counts_part_vaccine",
                                     "cumulative_counts_part_vaccine_12P",
-                                    "counts_part_vaccine_12P",
+                                    "incidence_counts_part_vaccine_12P",
                                     "cumulative_counts_part_vaccine_18P",
-                                    "counts_part_vaccine_18P",
+                                    "incidence_counts_part_vaccine_18P",
                                     "cumulative_counts_part_vaccine_65P",
-                                    "counts_part_vaccine_65P"]: 
+                                    "incidence_counts_part_vaccine_65P"]: 
             for date in dates:
                 for geo in geos:
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
                     if not("cumulative" in metric) and not (date in dates[:6]):
                         expected_files += [date + "_" + geo + "_" + metric + "_7dav.csv"]
-
 
         assert set(csv_files) == set(expected_files)
 
@@ -75,6 +74,6 @@ class TestRun:
         run_module(self.PARAMS)
 
         df = pd.read_csv(
-            join("receiving", "20210819_state_code_counts_tot_vaccine.csv")
+            join("receiving", "20210819_state_cumulative_counts_tot_vaccine.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

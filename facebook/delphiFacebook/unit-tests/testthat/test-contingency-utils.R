@@ -101,7 +101,7 @@ test_that("testing get_sparse_filenames command", {
   
   create_dir_not_exist(tdir)
   for (filename in files) {
-    write_csv(data.frame(), path = file.path(tdir, filename))
+    write_csv(data.frame(), file.path(tdir, filename))
   }
   
   params <- list(

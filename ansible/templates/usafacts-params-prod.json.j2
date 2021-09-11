@@ -1,10 +1,11 @@
 {
   "common": {
     "export_dir": "/common/covidcast/receiving/usa-facts",
+    "input_dir": "./input-cache",
     "log_filename": "/var/log/indicators/usafacts.log"
   },
   "indicator": {
-    "base_url": "https://usafactsstatic.blob.core.windows.net/public/data/covid-19/covid_{metric}_usafacts.csv",
+    "base_url": "https://static.usafacts.org/public/data/covid-19/covid_{metric}_usafacts.csv",
     "export_start_date": "2020-02-01"
   },
   "archive": {

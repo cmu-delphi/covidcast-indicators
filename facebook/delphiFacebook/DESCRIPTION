@@ -20,11 +20,13 @@ Imports:
     lubridate,
     data.table,
     tibble,
-    purrr
+    purrr,
+    Rcpp
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),
     testthat (>= 1.0.1),
     covr (>= 2.2.2)
+LinkingTo: Rcpp
 RoxygenNote: 7.1.1
 Encoding: UTF-8

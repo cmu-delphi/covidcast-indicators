@@ -4,6 +4,9 @@ Weekday effects (code from Aaron Rumack).
 Created: 2020-05-06
 """
 
+# standard packages
+import logging
+
 # third party
 import cvxpy as cp
 import numpy as np
@@ -82,15 +85,20 @@ class Weekday:
             penalty = (
                 lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
             )  # L-1 Norm of third differences, rewards smoothness
-            try:
-                prob = cp.Problem(cp.Minimize(-ll + lmbda * penalty))
-                _ = prob.solve()
-            except:
-                # If the magnitude of the objective function is too large, an error is
-                # thrown; Rescale the objective function
-                prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / 1e5))
-                _ = prob.solve()
-            params[i, :] = b.value
+            scales = [1, 1e5, 1e10, 1e15]
+            for scale in scales:
+                try:
+                    prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
+                    _ = prob.solve()
+                    params[i,:] = b.value
+                    break
+                except:
+                    # If the magnitude of the objective function is too large, an error is
+                    # thrown; Rescale the objective function by going through loop
+                    pass
+            else:
+                # Leaving params[i,:] = 0 is equivalent to not performing weekday correction
+                logging.error("Unable to calculate weekday correction")
 
         return params
 

@@ -17,7 +17,6 @@ import pandas as pd
 
 from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
 
-
 def _date_to_int(d):
     """Return a date object as a yyyymmdd int."""
     return int(d.strftime("%Y%m%d"))
@@ -76,6 +75,7 @@ def run_module(params):
         - "common":
             - "export_dir": str, directory to write output
             - "log_filename" (optional): str, name of file to write logs
+            - "epidata" (optional): dict, extra parameters to send to Epidata.covid_hosp
     """
     start_time = time.time()
     logger = get_structured_logger(
@@ -83,27 +83,34 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True))
     mapper = GeoMapper()
     request_all_states = ",".join(mapper.get_geo_values("state_id"))
-    today = date.today()
+    end_day = date.today()
+    if "epidata" in params["common"] and \
+       "as_of" in params["common"]["epidata"]:
+        end_day = min(
+            end_day,
+            datetime.strptime(str(params["common"]["epidata"]["as_of"]), "%Y%m%d").date()
+        )
     past_reference_day = date(year=2020, month=1, day=1)  # first available date in DB
-    date_range = generate_date_ranges(past_reference_day, today)
+    date_range = generate_date_ranges(past_reference_day, end_day)
     dfs = []
     for r in date_range:
-        response = Epidata.covid_hosp(request_all_states, r)
+        response = Epidata.covid_hosp(request_all_states, r, **params["common"].get("epidata", {}))
         # The last date range might only have recent days that don't have any data, so don't error.
         if response["result"] != 1 and r != date_range[-1]:
-            raise Exception(f"Bad result from Epidata: {response['message']}")
+            raise Exception(f"Bad result from Epidata for {r}: {response['message']}")
         if response["result"] == -2 and r == date_range[-1]:  # -2 code means no results
             continue
         dfs.append(pd.DataFrame(response['epidata']))
     all_columns = pd.concat(dfs)
     geo_mapper = GeoMapper()
     stats = []
-
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
                                     "state_id",
                                     "state_code",
                                     from_col="state")
+        if sensor.endswith("_prop"):
+            df=pop_proportion(df, geo_mapper)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
         if df.empty:
@@ -139,6 +146,12 @@ def smooth_values(df, smoother):
     )
     return df
 
+def pop_proportion(df,geo_mapper):
+    """Get the population-proportionate variants as the dataframe val."""
+    pop_val=geo_mapper.add_population_column(df, "state_code")
+    df["val"]=round(df["val"]/pop_val["population"]*100000, 7)
+    pop_val.drop("population", axis=1, inplace=True)
+    return df
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
@@ -158,7 +171,7 @@ def make_signal(all_columns, sig):
     """Generate column sums according to signal name."""
     assert sig in SIGNALS, f"Unexpected signal name '{sig}';" + \
         " familiar names are '{', '.join(SIGNALS)}'"
-    if sig == CONFIRMED:
+    if sig.startswith(CONFIRMED):
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),
@@ -166,7 +179,7 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_confirmed
         })
-    elif sig == SUM_CONF_SUSP:
+    elif sig.startswith(SUM_CONF_SUSP):
         df = pd.DataFrame({
             "state": all_columns.state.apply(str.lower),
             "timestamp":int_date_to_previous_day_datetime(all_columns.date),

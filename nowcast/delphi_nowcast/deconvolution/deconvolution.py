@@ -16,8 +16,8 @@ so_file = "/usr1/achin/nowcast/covidcast-indicators/nowcast/delphi_nowcast/decon
 
 c_dp_1d = CDLL(so_file)
 
-def _construct_convolution_matrix(signal: np.ndarray,
-                                  kernel: np.ndarray,
+
+def _construct_convolution_matrix(signal: np.ndarray, kernel: np.ndarray,
                                   norm: bool = False) -> np.ndarray:
     """
     Constructs full convolution matrix (n+m-1) x n,
@@ -49,19 +49,21 @@ def _construct_convolution_matrix(signal: np.ndarray,
         return P / scale[:, np.newaxis]
     return P
 
+
 def _construct_day_specific_convolution_matrix(y, run_date, delay_kernels):
     n = y.shape[0]
     kernel_length = len(delay_kernels[run_date])
     C = np.zeros((n, n))
     first_kernel_date = min(delay_kernels.keys())
     for i in range(C.shape[0]):
-        kernel_day = max(run_date-timedelta(i), first_kernel_date)
-        end_index = max(0, C.shape[1]-i)
-        start_index = max(0, end_index-kernel_length)
+        kernel_day = max(run_date - timedelta(i), first_kernel_date)
+        end_index = max(0, C.shape[1] - i)
+        start_index = max(0, end_index - kernel_length)
         day_specific_kernel = np.array(delay_kernels[kernel_day][::-1])
-        row = C.shape[0]-i-1
+        row = C.shape[0] - i - 1
         if end_index > 0:
-            C[row, start_index:end_index] = day_specific_kernel[-(end_index-start_index):]
+            C[row, start_index:end_index] = day_specific_kernel[
+                                            -(end_index - start_index):]
     return C, np.array(delay_kernels[run_date])
 
 
@@ -94,10 +96,11 @@ def _soft_thresh(x: np.ndarray, lam: float) -> np.ndarray:
 
 
 def criterion(y, x, C, Dk1, D1m, lam, Gam):
-    a = 0.5 * np.sum((y - C @ x)**2)
+    a = 0.5 * np.sum((y - C @ x) ** 2)
     b = lam * np.sum(np.abs(Dk1 @ x))
     c = x.T @ D1m.T @ Gam @ D1m @ x
     return a + b + c
+
 
 def _construct_poly_interp_mat(x, n, k):
     assert k == 3, "poly interpolation matrix only constructed for k=3"
@@ -113,24 +116,17 @@ def _construct_poly_interp_mat(x, n, k):
     S[2:(n - 2), :] = np.eye(n - k - 1)
     return S
 
-def deconvolve_double_smooth_ntf_fast(
-        y: np.ndarray,
-        x: np.ndarray,
-        C: np.ndarray,
-        kernel: np.ndarray,
-        lam: float,
-        gam: float,
-        n_iters: int = 200,
-        k: int = 3,
-        clip: bool = False,
-        output=False,
-        location="") -> np.ndarray:
+
+def deconvolve_double_smooth_tf_fast(y: np.ndarray, x: np.ndarray, C: np.ndarray,
+                                     kernel: np.ndarray, lam: float, gam: float,
+                                     n_iters: int = 200, k: int = 3, natural: bool = True,
+                                     clip: bool = False, output=False,
+                                     location="") -> np.ndarray:
     assert k == 3, "Natural TF only implemented for k=3"
     n = y.shape[0]
     m = kernel.shape[0]
     C = C[:n]
     rho = lam  # set equal
-    C2 = _construct_convolution_matrix(y, kernel)[:n]
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
     P = _construct_poly_interp_mat(x, n, k)
@@ -144,9 +140,10 @@ def deconvolve_double_smooth_ntf_fast(
     Gam = gam * np.diag(weights)
 
     # polynomial interpolation
-    C = C @ P
-    D = D @ P
-    D_m = D_m @ P
+    if natural:
+        C = C @ P
+        D = D @ P
+        D_m = D_m @ P
 
     # pre-calculations
     Cty = C.T @ y
@@ -163,37 +160,37 @@ def deconvolve_double_smooth_ntf_fast(
         x = D @ x_k
         alpha_k = (c_double * len(x))()
         x_c = (c_double * len(x))(*x)
-        c_dp_1d.tf_dp(c_int(len(x)), x_c, c_double(lam/rho), alpha_k)
+        c_dp_1d.tf_dp(c_int(len(x)), x_c, c_double(lam / rho), alpha_k)
         u_k = u_k + alpha_k - D @ x_k
         if output:
             if i % 25 == 0:
-                objective = 1/2 * np.linalg.norm(y - C @ x_k, 2) ** 2 + lam * np.linalg.norm(D @ x_k, 1) + (D_m @ x_k).T  @ (D_m @ x_k)
+                objective = 1 / 2 * np.linalg.norm(y - C @ x_k,
+                                                   2) ** 2 + lam * np.linalg.norm(D @ x_k,
+                                                                                  1) + (
+                                    D_m @ x_k).T @ (D_m @ x_k)
                 objectives.append([i, objective, max(abs(alpha_k - D @ x_k))])
     if output:
         with open(f"deconv_objectives/{location}_{lam}.txt", "w") as f:
             write = csv.writer(f)
             write.writerows(objectives)
-    x_k = P @ x_k
+
+    if natural:
+        x_k = P @ x_k
     if clip:
         x_k = np.clip(x_k, 0, np.infty)
     return x_k
 
 
-def deconvolve_double_smooth_tf_cv(
-        y: np.ndarray,
-        x: np.ndarray,
-        delay_kernels,
-        as_of_date,
-        fit_func: Callable = deconvolve_double_smooth_ntf_fast,
-        lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
-        gam_cv_grid: np.ndarray = np.r_[np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
-        gam_n_folds: int = 7,
-        n_iters: int = 200,
-        k: int = 3,
-        clip: bool = False,
-        verbose: bool = False,
-        output=False,
-        location="") -> np.ndarray:
+def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray,
+                                   cases_to_infections_kernels,
+                                   infections_to_cases_kernels, as_of_date,
+                                   fit_func: Callable = deconvolve_double_smooth_tf_fast,
+                                   lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
+                                   gam_cv_grid: np.ndarray = np.r_[
+                                       np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
+                                   gam_n_folds: int = 7, n_iters: int = 200, k: int = 3,
+                                   clip: bool = False, verbose: bool = False,
+                                   output=False, location="") -> np.ndarray:
     """
        Run cross-validation to tune smoothness over deconvolve_double_smooth_ntf.
        First, leave-every-third-out CV is performed over lambda, fixing gamma=0. After
@@ -230,7 +227,7 @@ def deconvolve_double_smooth_tf_cv(
        -------
            array of the deconvolved signal values
        """
-    fit_func = partial(fit_func,  n_iters=n_iters, k=k, clip=clip)
+    fit_func = partial(fit_func, n_iters=n_iters, k=k, clip=clip)
     n = y.shape[0]
     lam_cv_loss = np.zeros((lam_cv_grid.shape[0],))
     gam_cv_loss = np.zeros((gam_cv_grid.shape[0],))
@@ -246,13 +243,12 @@ def deconvolve_double_smooth_tf_cv(
             x_hat = np.full((n,), np.nan)
             C, kernel = _construct_day_specific_convolution_matrix(y[~test_split],
                                                                    as_of_date,
-                                                                   delay_kernels)
-            x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split],
-                                          lam=reg_par, gam=0, C=C, kernel=kernel)
+                                                                   cases_to_infections_kernels)
+            x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split], lam=reg_par,
+                                          gam=0, C=C, kernel=kernel)
             x_hat = _impute_with_neighbors(x_hat)
-            C, _ = _construct_day_specific_convolution_matrix(x_hat,
-                                                              as_of_date,
-                                                              delay_kernels)
+            C, _ = _construct_day_specific_convolution_matrix(x_hat, as_of_date,
+                                                              infections_to_cases_kernels)
             y_hat = (C @ x_hat)[:len(x_hat)]
             lam_cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
 
@@ -264,24 +260,23 @@ def deconvolve_double_smooth_tf_cv(
             x_hat = np.full((n - i + 1,), np.nan)
             C, kernel = _construct_day_specific_convolution_matrix(y[:(n - i)],
                                                                    as_of_date,
-                                                                   delay_kernels)
-            x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], gam=reg_par, lam=lam, C=C, kernel=kernel)
+                                                                   cases_to_infections_kernels)
+            x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], gam=reg_par, lam=lam,
+                                       C=C, kernel=kernel)
             pos = x[:(n - i + 1)]
-            x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3],
-                                            pos[-2], x_hat[-2],
+            x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3], pos[-2], x_hat[-2],
                                             pos[-1])
-            C, _ = _construct_day_specific_convolution_matrix(x_hat,
-                                                              as_of_date,
-                                                              delay_kernels)
+            C, _ = _construct_day_specific_convolution_matrix(x_hat, as_of_date,
+                                                              infections_to_cases_kernels)
             y_hat = (C @ x_hat)[:len(x_hat)]
             gam_cv_loss[j] += np.sum((y[:(n - i + 1)][-1:] - y_hat[-1:]) ** 2)
 
     gam = gam_cv_grid[np.argmin(gam_cv_loss)]
     if verbose: print(f"Chosen parameters: lam:{lam:.4}, gam:{gam:.4}")
-    C, kernel = _construct_day_specific_convolution_matrix(y,
-                                                           as_of_date,
-                                                           delay_kernels)
-    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output, location=location)
+    C, kernel = _construct_day_specific_convolution_matrix(y, as_of_date,
+                                                           cases_to_infections_kernels)
+    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output,
+                     location=location)
     return x_hat
 
 
@@ -316,14 +311,12 @@ def _impute_with_neighbors(x: np.ndarray) -> np.ndarray:
     return imputed_x
 
 
-def deconvolve_signal(convolved_truth_indicator: SensorConfig,
-                      start_date: date,
-                      end_date: date,
-                      as_of_date: date,
-                      input_locations: List[Tuple[str, str]],
-                      delay_kernels,
-                      fit_func: Callable = deconvolve_double_smooth_tf_cv,
-                      ) -> List[LocationSeries]:
+def deconvolve_signal(convolved_truth_indicator: SensorConfig, start_date: date,
+                      end_date: date, as_of_date: date,
+                      input_locations: List[Tuple[str, str]], infections_to_cases_kernels,
+                      cases_to_infections_kernels,
+                      fit_func: Callable = deconvolve_double_smooth_tf_cv, ) -> List[
+    LocationSeries]:
     """
     Compute ground truth signal value by deconvolving an indicator with a delay
     distribution.
@@ -367,13 +360,11 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
     for loc, geo_type in input_locations:
         # output corresponds to order of input_locations
         combo_keys.append((convolved_truth_indicator.source,
-                           convolved_truth_indicator.signal,
-                           geo_type, loc))
+                           convolved_truth_indicator.signal, geo_type, loc))
         combo_series.append(LocationSeries(loc, geo_type))
 
     # epidata call to get convolved truth
-    combo_convolved_truth = get_indicator_data([convolved_truth_indicator],
-                                               combo_series,
+    combo_convolved_truth = get_indicator_data([convolved_truth_indicator], combo_series,
                                                as_of_date)
 
     # perform deconvolution on each location individually
@@ -390,12 +381,11 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig,
                 continue
             deconvolved_truth = fit_func(y=np.array(convolved_truth),
                                          x=np.arange(1, len(convolved_truth) + 1),
-                                         delay_kernels=delay_kernels,
+                                         infections_to_cases_kernels=infections_to_cases_kernels,
+                                         cases_to_infections_kernels=cases_to_infections_kernels,
                                          as_of_date=as_of_date)
             deconvolved_truths.append(
-                LocationSeries(loc,
-                               geo_type,
-                               dict(zip(full_dates, deconvolved_truth))))
+                LocationSeries(loc, geo_type, dict(zip(full_dates, deconvolved_truth))))
         else:
             # return empty
             deconvolved_truths.append(LocationSeries(loc, geo_type))

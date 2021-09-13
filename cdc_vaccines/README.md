@@ -6,8 +6,7 @@ We also aggregate the data to the MSA, HRR, State, HHS Region, and Nation levels
 For detailed information see the files DETAILS.md contained in this directory.
 
 Note that individuals could be vaccinated outside of the US. Additionally, 
-there is no county level data for counties in Texas and Hawaii. There are unknown 
-counties in each state and a row for unknown county and unknown state.
+there is no county level data for counties in Texas and Hawaii. Each state has some vaccination counts assigned to "unknown county". Some vaccination counts are assigned to "unknown state, unknown county".
 
 
 ## Running the Indicator

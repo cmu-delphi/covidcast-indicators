@@ -4,12 +4,15 @@
 \alias{is_selected}
 \title{Test if a specific selection is selected}
 \usage{
-is_selected(vec, selection)
+is_selected(vec, selection, use_cpp = TRUE)
 }
 \arguments{
 \item{vec}{A list whose entries are character vectors, such as c("14", "15").}
 
 \item{selection}{one string, such as "14"}
+
+\item{use_cpp}{boolean indicating whether to use the C++ verion or the R
+version of this function}
 }
 \value{
 a logical vector; for each list entry, whether selection is contained

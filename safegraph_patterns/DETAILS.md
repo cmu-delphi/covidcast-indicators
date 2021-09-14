@@ -16,6 +16,31 @@ are corresponding `brand_info.csv` provided in Places Schema dataset. To save
 storage space, we do not download the whole Places Schema dataset, but only add 
 new necessary `brand_info.csv` in `./statics` with suffix YYYYMM(release version).
 
+
+Example procedure for adding a new brand info file:
+
+```{bash}
+$ aws --profile safegraph s3 cp s3://sg-c19-response/weekly-patterns-delivery-2020-12/release-2021-07/weekly/release_metadata/2021/07/21/18/release_metadata.csv - --endpoint https://s3.wasabisys.com
+metadata_description,metadata_value
+core_places_version_used,06-2021
+total_poi,4456874
+total_branded_poi,980083
+$ aws --profile safegraph s3 ls s3://sg-c19-response/core-places-delivery/brand_info/2021/06/ --endpoint https://s3.wasabisys.com --recursive | grep brand_info.csv
+2021-06-04 20:44:04     952825 core-places-delivery/brand_info/2021/06/05/00/brand_info.csv
+$ aws --profile safegraph s3 cp s3://sg-c19-response/core-places-delivery/brand_info/2021/06/05/00/brand_info.csv ./static/brand_info/brand_info_202106.csv --endpoint https://s3.wasabisys.com
+download: s3://sg-c19-response/core-places-delivery/brand_info/2021/06/05/00/brand_info.csv to static/brand_info/brand_info_202106.csv
+```
+
+Example `~/.aws/config` to run the above:
+
+```
+[profile safegraph]
+output = json
+region = us-east-1
+aws_access_key_id = {{ safegraph_aws_access_key_id }}
+aws_secret_access_key = {{ safegraph_aws_secret_access_key }}
+```
+
 ## Geographical Levels
 * `county`: reported using zero-padded FIPS codes (consistency with the 
             other COVIDcast data)

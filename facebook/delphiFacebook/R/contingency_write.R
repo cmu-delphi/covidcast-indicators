@@ -17,7 +17,7 @@
 #'                       calculate aggregations; used for naming the output file
 #'
 #' @importFrom readr write_csv
-#' @importFrom dplyr arrange across
+#' @importFrom dplyr arrange across everything
 #' @importFrom stringi stri_trim
 #'
 #' @export
@@ -100,15 +100,22 @@ add_geo_vars <- function(data, params, geo_type) {
     )
     
     rest <- left_join(rest, states, by = "state") %>%
-      select(region, GID_1, state, state_fips, county, county_fips)
+      select(
+        .data$region,
+        .data$GID_1,
+        .data$state,
+        .data$state_fips,
+        .data$county,
+        .data$county_fips
+      )
   }
   
   geo_vars <- bind_cols(first, rest)
   
   # Insert the geographic variables in place of the "geo_id" variable.
   index <- which(names(data) == "geo_id")
-  before <- if (index > 1) data[1:(index-1)] else NULL
-  after <- data[(index+1):ncol(data)]
+  before <- if (index > 1) data[, 1:(index-1)] else NULL
+  after <- data[, (index+1):ncol(data)]
   result <- bind_cols(before, geo_vars, after)
   
   return(result)
@@ -148,7 +155,7 @@ add_metadata_vars <- function(data, params, geo_type, groupby_vars) {
 #' @noRd
 get_file_name <- function(params, geo_type, groupby_vars) {
   
-  aggregation_type <- setdiff(groupby_vars, "geo_id")
+  aggregation_type <- sort(setdiff(groupby_vars, "geo_id"))
   if (length(aggregation_type) == 0) aggregation_type <- "overall"
   
   file_name <- paste(
@@ -159,6 +166,9 @@ get_file_name <- function(params, geo_type, groupby_vars) {
     paste(aggregation_type, collapse = "_"),
     sep = "_"
   )
+  if (!is.null(params$debug) && params$debug) {
+    file_name <- paste0("DebugOn-DoNotShare_", file_name)
+  }
   file_name <- paste0(file_name, ".csv")
   return(file_name)
 }

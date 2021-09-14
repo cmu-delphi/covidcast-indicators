@@ -105,7 +105,7 @@ def merge_dfs_by_geos(usafacts_df, jhu_df, geo):
             jhu_df if jhu_df is None else jhu_df[jhu_df["geo_value"].str.startswith("72")])
     # For MSA and HRR level, they are the same
     elif geo == 'msa':
-        df = GMPR._load_crosswalk("fips", "msa") # pylint: disable=protected-access
+        df = GMPR.get_crosswalk("fips", "msa")
         puerto_rico_mask = df["fips"].str.startswith("72")
         puerto_rico_msas = df[puerto_rico_mask]["msa"].unique()
         combined_df = maybe_append(
@@ -322,6 +322,7 @@ def run_module(params):
     variants = [tuple((metric, geo_res)+sensor_signal(metric, sensor, smoother))
                 for (metric, geo_res, sensor, smoother) in
                 product(METRICS, GEO_RESOLUTIONS, SENSORS, SMOOTH_TYPES)]
+    variants = [i for i in variants if not ("7dav" in i[2] and "cumulative" in i[2])]
     params = configure(variants, params)
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

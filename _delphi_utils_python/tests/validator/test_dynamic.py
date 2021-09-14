@@ -6,6 +6,72 @@ import pandas as pd
 from delphi_utils.validator.report import ValidationReport
 from delphi_utils.validator.dynamic import DynamicValidator
 
+class TestReferencePadding:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+
+    def test_no_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+
+        test_df = pd.DataFrame(data)
+        ref_df = pd.DataFrame(data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-06", "%Y-%m-%d").date())
+
+        assert new_ref_df.equals(ref_df)
+
+    def test_half_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        ref_data = {"val": [2, 2, 2, 2, 2, 2], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+        test_data = {"val": [1, 1, 1, 1, 1, 1], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-06", end="2021-01-11")}
+        ref_df = pd.DataFrame(ref_data)
+        test_df = pd.DataFrame(test_data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+
+        # Check it only takes missing dates - so the last 5 dates
+        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
+            "%Y-%m-%d").date()
+        assert new_ref_df.shape[0] == 11
+        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+
+    def test_full_padding(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        ref_data = {"val": [2, 2, 2, 2, 2, 2], "se": [np.nan] * 6,
+                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
+                "time_value": pd.date_range(start="2021-01-01", end="2021-01-06")}
+        test_data = {"val": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+                     "se": [np.nan] * 12,
+                "sample_size": [np.nan] * 12, "geo_id": ["1"] * 12,
+                "time_value": pd.date_range(start="2021-01-06", end="2021-01-17")}
+        ref_df = pd.DataFrame(ref_data)
+        test_df = pd.DataFrame(test_data)
+
+        new_ref_df = validator.pad_reference_api_df(
+            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+
+        # Check it only takes missing dates up to the day before the reference
+        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",
+            "%Y-%m-%d").date()
+        assert new_ref_df.shape[0] == 15
+        assert new_ref_df.loc[:, "val"].iloc[5] == 2
 
 class TestCheckRapidChange:
     params = {
@@ -54,9 +120,10 @@ class TestCheckAvgValDiffs:
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
-        data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
-                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        data = {"val": [1, 1, 1, 2, 0, 1, 1]*2, "se": [np.nan] * 14,
+                "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                    "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
@@ -70,9 +137,10 @@ class TestCheckAvgValDiffs:
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
-        data = {"val": [np.nan] * 6, "se": [1, 1, 1, 2, 0, 1],
-                "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        data = {"val": [np.nan] * 14, "se": [1, 1, 1, 2, 0, 1, 1]*2,
+                "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                    "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
@@ -86,9 +154,10 @@ class TestCheckAvgValDiffs:
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
-        data = {"val": [np.nan] * 6, "se": [np.nan] * 6,
-                "sample_size": [1, 1, 1, 2, 0, 1], "geo_id": ["1"] * 6,
-                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        data = {"val": [np.nan] * 14, "se": [np.nan] * 14,
+                "sample_size": [1, 1, 1, 2, 0, 1, 1]*2, "geo_id": ["1"] * 14,
+                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                    "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
@@ -102,9 +171,10 @@ class TestCheckAvgValDiffs:
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
-        data = {"val": [1, 1, 1, 2, 0, 1], "se": [1, 1, 1, 2, 0, 1],
-                "sample_size": [1, 1, 1, 2, 0, 1], "geo_id": ["1"] * 6,
-                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        data = {"val": [1, 1, 1, 2, 0, 1, 1]*2, "se": [1, 1, 1, 2, 0, 1, 1]*2,
+                "sample_size": [1, 1, 1, 2, 0, 1, 1]*2, "geo_id": ["1"] * 14,
+                "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                    "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
@@ -117,12 +187,14 @@ class TestCheckAvgValDiffs:
     def test_10x_val(self):
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
-        test_data = {"val": [1, 1, 1, 20, 0, 1], "se": [np.nan] * 6,
-                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
-        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
-                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        test_data = {"val": [1, 1, 1, 20, 0, 1, 1]*2, "se": [np.nan] * 14,
+                     "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1, 1]*2, "se": [np.nan] * 14,
+                    "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
@@ -136,12 +208,14 @@ class TestCheckAvgValDiffs:
     def test_100x_val(self):
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
-        test_data = {"val": [1, 1, 1, 200, 0, 1], "se": [np.nan] * 6,
-                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
-        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
-                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        test_data = {"val": [1, 1, 1, 200, 0, 1, 1]*2, "se": [np.nan] * 14,
+                     "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1, 1]*2, "se": [np.nan] * 14,
+                    "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
@@ -155,12 +229,14 @@ class TestCheckAvgValDiffs:
     def test_1000x_val(self):
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
-        test_data = {"val": [1, 1, 1, 2000, 0, 1], "se": [np.nan] * 6,
-                     "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
-        ref_data = {"val": [1, 1, 1, 2, 0, 1], "se": [np.nan] * 6,
-                    "sample_size": [np.nan] * 6, "geo_id": ["1"] * 6,
-                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06"]}
+        test_data = {"val": [1, 1, 1, 2000, 0, 1, 1]*2, "se": [np.nan] * 14,
+                     "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                     "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
+        ref_data = {"val": [1, 1, 1, 2, 0, 1, 1]*2, "se": [np.nan] * 14,
+                    "sample_size": [np.nan] * 14, "geo_id": ["1"] * 14,
+                    "time_value": ["2021-01-01", "2021-01-02", "2021-01-03", "2021-01-04", "2021-01-05", "2021-01-06", "2021-01-07",
+                        "2021-01-08", "2021-01-09", "2021-01-10", "2021-01-11", "2021-01-12", "2021-01-13", "2021-01-14"]}
 
         test_df = pd.DataFrame(test_data)
         ref_df = pd.DataFrame(ref_data)
@@ -216,7 +292,7 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_neg_outlier(self):
@@ -253,7 +329,7 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
 
     def test_zero_outlier(self):
@@ -362,5 +438,5 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
+        assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_positive_negative_spikes"

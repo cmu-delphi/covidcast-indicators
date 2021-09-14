@@ -8,19 +8,10 @@
 #'
 #' @export
 run_contingency_tables <- function(params) {
-  if ( !is.null(params$aggs_in) ) {
-    if ( !file.exists(params$aggs_in) ) {
-      stop("requested aggregate-setting file does not exist")
-    }
-    
-    # Run non-default aggregates. File should create an object called `aggs`.
-    source(params$aggs_in)
-    
-    if ( !exists("aggs") || !inherits(aggs, "data.frame") ) {
-      stop("external aggregate-setting file must create a dataframe `aggs`")
-    }
-  } else {
-    aggs <- get_aggs()
+  if (!is.null(params$debug) && params$debug) {
+    debug_msg <- "!!!debug is on and the standard privacy threshold for sample size is disabled!!!"
+    msg_plain(debug_msg)
+    warning(debug_msg)
   }
   
   ## Set default number of cores for mclapply to the total available number,
@@ -37,20 +28,14 @@ run_contingency_tables <- function(params) {
     }
   }
   
-  if (params$aggregate_range == "week") {
-    run_contingency_tables_many_periods(params, aggs$week)
-  } else if (params$aggregate_range == "month") {
-    run_contingency_tables_many_periods(params, aggs$month)
-  } else if (params$aggregate_range == "both") {
-    params$aggregate_range <- "week"
-    run_contingency_tables_many_periods(params, aggs$week)
-
-    params$aggregate_range <- "month"
-    run_contingency_tables_many_periods(params, aggs$month)
-  } else {
+  aggs <- get_aggs()
+  
+  if ( length(params[["aggregate_range"]]) != 1 || !(params$aggregate_range %in% c("week", "month")) ) {
     stop(paste0("aggregate_range setting must be provided in params and be one",
-    " of 'week', 'month', or 'both'"))
+    " of 'week' or 'month'"))
   }
+  
+  run_contingency_tables_many_periods(params, aggs[[params$aggregate_range]])
 }
 
 
@@ -76,17 +61,18 @@ run_contingency_tables_many_periods <- function(params, aggregations)
 {
   if (!is.null(params$n_periods)) {
     msg_plain(paste0("Producing CSVs for ", params$n_periods, " time periods"))
-
+    
+    params$end_date <- ifelse(
+      is.null(params$end_date), as.character(Sys.Date()), params$end_date
+    )
+    
+    # Make list of dates to aggregate over.
     if (params$aggregate_range == "month") {
       period_step <- months(1)
     } else {
       period_step <- days(7)
     }
     
-    params$end_date <- ifelse(
-      is.null(params$end_date), as.character(Sys.Date()), params$end_date
-    )
-    # Make list of dates to aggregate over.
     end_dates <- as.character(sort(
       ymd(params$end_date) - period_step * seq(0, params$n_periods - 1)
     ))

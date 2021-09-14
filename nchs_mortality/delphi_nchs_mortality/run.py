@@ -10,7 +10,7 @@ from typing import Dict, Any
 from itertools import product
 
 import numpy as np
-from delphi_utils import S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger, GeoMapper
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -44,13 +44,14 @@ def run_module(params: Dict[str, Any]):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     export_start_date = params["indicator"]["export_start_date"]
-    if export_start_date == "latest": # Find the previous Saturday
+    if export_start_date == "latest":  # Find the previous Saturday
         export_start_date = date.today() - timedelta(
-                days=date.today().weekday() + 2)
+            days=date.today().weekday() + 2)
         export_start_date = export_start_date.strftime('%Y-%m-%d')
     daily_export_dir = params["common"]["daily_export_dir"]
     token = params["indicator"]["token"]
     test_file = params["indicator"].get("test_file", None)
+    gmpr = GeoMapper()
 
     if "archive" in params:
         daily_arch_diff = S3ArchiveDiffer(
@@ -61,7 +62,7 @@ def run_module(params: Dict[str, Any]):
 
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
-    for metric,geo in product(METRICS,GEO_RES):
+    for metric, geo in product(METRICS, GEO_RES):
         if metric == 'percent_of_expected_deaths':
             print(metric)
             df = df_pull.copy()
@@ -70,6 +71,17 @@ def run_module(params: Dict[str, Any]):
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
             sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
+
+            if geo in ["hhs", "nation"]:
+                df = gmpr.replace_geocode(
+                    df, "state_id", "state_code", from_col="geo_id", date_col="timestamp")
+                # Weight by population when aggregating across geocodes
+                df["weight"] = df["population"]
+                df = gmpr.replace_geocode(
+                    df, "state_code", geo, data_cols=["val"], date_col="timestamp").rename(
+                    columns={geo: "geo_id"})
+                df["val"] = df["val"] / df["population"]
+
             dates = export_csv(
                 df,
                 geo_name=geo,
@@ -83,14 +95,19 @@ def run_module(params: Dict[str, Any]):
             for sensor in SENSORS:
                 print(metric, sensor)
                 df = df_pull.copy()
+                df["se"] = np.nan
+                df["sample_size"] = np.nan
+                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
+                if geo in ["hhs", "nation"]:
+                    df = gmpr.replace_geocode(
+                        df, "state_id", "state_code", from_col="geo_id", date_col="timestamp")
+                    df = gmpr.replace_geocode(
+                        df, "state_code", geo, date_col="timestamp").rename(columns={geo: "geo_id"})
                 if sensor == "num":
                     df["val"] = df[metric]
                 else:
                     df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
-                df["se"] = np.nan
-                df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
-                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
                 dates = export_csv(
                     df,
                     geo_name=geo,
@@ -101,12 +118,12 @@ def run_module(params: Dict[str, Any]):
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
 
-#     Weekly run of archive utility on Monday
-#     - Does not upload to S3, that is handled by daily run of archive utility
-#     - Exports issues into receiving for the API
-#     Daily run of archiving utility
-#     - Uploads changed files to S3
-#     - Does not export any issues into receiving
+    # Weekly run of archive utility on Monday
+    # - Does not upload to S3, that is handled by daily run of archive utility
+    # - Exports issues into receiving for the API
+    # Daily run of archiving utility
+    # - Uploads changed files to S3
+    # - Does not export any issues into receiving
     if "archive" in params:
         arch_diffs(params, daily_arch_diff)
 
@@ -116,7 +133,7 @@ def run_module(params: Dict[str, Any]):
     max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
     formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-                elapsed_time_in_seconds = elapsed_time_in_seconds,
-                csv_export_count = csv_export_count,
-                max_lag_in_days = max_lag_in_days,
-                oldest_final_export_date = formatted_min_max_date)
+                elapsed_time_in_seconds=elapsed_time_in_seconds,
+                csv_export_count=csv_export_count,
+                max_lag_in_days=max_lag_in_days,
+                oldest_final_export_date=formatted_min_max_date)

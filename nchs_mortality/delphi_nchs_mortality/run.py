@@ -19,7 +19,7 @@ from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
-def run_module(params: Dict[str, Any]):
+def run_module(params: Dict[str, Any]):  # pylint: disable=too-many-branches, too-many-statements
     """Run module for processing NCHS mortality data.
 
     The `params` argument is expected to have the following structure:

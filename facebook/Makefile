@@ -66,7 +66,8 @@ clean-archive:
 install-python:
 	python3.8 -m venv env
 	source env/bin/activate && \
-	pip install delphi-utils && \
+	pip install wheel && \
+	pip install delphi_utils && \
 	pip install -e delphiFacebook/python
 
 install-R:dev

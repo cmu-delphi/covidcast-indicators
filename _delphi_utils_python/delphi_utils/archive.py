@@ -265,7 +265,7 @@ class ArchiveDiffer:
         for deleted_file in deleted_files:
             deleted_df = pd.read_csv(deleted_file, dtype=export_csv_dtypes)
             print(
-                f"Diff has deleted {deleted_file}; generating a CSV with corresponding deleted rows."
+                f"Diff deleted {deleted_file}; generating corresponding CSV with deleted rows."
             )
             deleted_df[["val", "se", "sample_size"]] = np.nan
             deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED

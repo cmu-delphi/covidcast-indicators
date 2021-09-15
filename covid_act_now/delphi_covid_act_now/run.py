@@ -11,8 +11,7 @@ import numpy as np
 
 from delphi_utils import (
     create_export_csv,
-    get_structured_logger
-    S3ArchiveDiffer,
+    get_structured_logger,
     Nans
 )
 

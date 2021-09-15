@@ -24,14 +24,34 @@ split_options <- function(column) {
 #'
 #' @param vec A list whose entries are character vectors, such as c("14", "15").
 #' @param selection one string, such as "14"
+#' @param use_cpp boolean indicating whether to use the C++ verion or the R
+#'   version of this function
+#' 
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
 #'   
-#' @importFrom parallel mclapply
-is_selected <- function(vec, selection) {
-  map_fn <- ifelse( is.null(getOption("mc.cores")) , lapply, mclapply)
-  selections <- unlist(map_fn(
-    vec,
+#' @useDynLib delphiFacebook, .registration = TRUE
+is_selected <- function(vec, selection, use_cpp=TRUE) {
+  select_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)
+  return(select_fn(vec, selection))
+}
+
+#' Test if a specific selection is selected, R implementation
+#'
+#' Checking whether a specific selection is selected in either "" (empty
+#' string) or `NA` responses will produce `NA`s. Looks only at unique values in
+#' the input vector.
+#'
+#' @param vec A list whose entries are character vectors, such as c("14", "15").
+#' @param selection one string, such as "14"
+#' 
+#' @return a logical vector; for each list entry, whether selection is contained
+#'   in the character vector.
+is_selected_r <- function(vec, selection) {
+  vec_unique <- unique(vec)
+  
+  selections <- unlist(lapply(
+    vec_unique,
     function(resp) {
       if (length(resp) == 0 || all(is.na(resp))) {
         # Qualtrics files code no selection as "" (empty string), which is
@@ -40,11 +60,14 @@ is_selected <- function(vec, selection) {
         # selection ("") or missing (NA) as missing, for generality.
         NA
       } else {
-        selection %in% resp
+        any(resp == selection)
       }
     }))
-
-  return(selections)
+  
+  names(selections) <- vec_unique
+  names(vec) <- vec
+  
+  return( as.logical(selections[names(vec)]) )
 }
 
 #' Activities outside the home

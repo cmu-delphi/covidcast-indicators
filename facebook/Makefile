@@ -1,23 +1,12 @@
 SHELL:=/bin/bash --rcfile bash-init.sh
 
-# dry-run mode: generate all files, but do not post them anywhere, and disable all emails to outside parties.
-DRY:=yes
-ifeq ($(DRY),yes)
-	EMAIL_SEND:=echo -e "Would send mail: echo -e \"Subject: $${SUBJECT}\n\n$${MSG}\" | sendmail krivard@cs.cmu.edu"
-	SFTP_POST:=echo -e "Would run: sftp -b <(echo -e \"\$${BATCH}\") -P 2222 fb-automation@ftp.delphi.cmu.edu\n$${BATCH}"
-	DRY_MESSAGE:="[DRY-RUN] "
-else
-	EMAIL_SEND:=echo -e "Subject: $${SUBJECT}\n\n$${MSG}" | sendmail krivard@cs.cmu.edu
-	SFTP_POST:=sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu
-endif
-
 EPOCH:=2020-04-06
 TODAY:=$(shell date +"%Y-%m-%d")
 YESTERDAY:=$(shell date --date "$(TODAY) -1 day" +"%Y-%m-%d")
 ONEWEEK:=$(shell date --date "$(TODAY) -7 day" +"%Y-%m-%d")
 THREEWEEK:=$(shell date --date "$(TODAY) -21 day" +"%Y-%m-%d")
 
-MESSAGES:=$(TODAY).messages
+MESSAGES:="messages/$(TODAY).messages"
 
 PYTHON:=env/bin/python
 QUALTRICS=$(shell $(PYTHON) -m delphi_utils get input_dir)
@@ -27,6 +16,10 @@ INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
 ARCHIVE=$(shell $(PYTHON) -m delphi_utils get archive_dir)
 RECEIVING=$(shell $(PYTHON) -m delphi_utils get export_dir)
 FB_CC=$(shell $(PYTHON) -m delphi_utils get qualtrics.notify-bad-weights)
+DELPHI_SURVEY_SFTP_PASSWORD=$(shell $(PYTHON) -m delphi_utils get delphi_survey_sftp_password)
+DELPHI_SURVEY_SFTP_USER=$(shell $(PYTHON) -m delphi_utils get delphi_survey_sftp_user)
+DELPHI_SURVEY_EMAIL_USER=$(shell $(PYTHON) -m delphi_utils get delphi_survey_email_user)
+SFTP_OPTIONS=$(shell $(PYTHON) -m delphi_utils get sftp_options)
 
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
 
@@ -35,16 +28,34 @@ CIDS_DEST:="fb-interchange/cmu_respondent_ids"
 INDIVID_DEST:="fb-public-results/"
 RAW_DEST:="raw"
 
+# dry-run mode: generate all files, but do not post them anywhere, and disable all emails to outside parties.
+DRY:=yes
+ifeq ($(DRY),yes)
+	EMAIL_SEND:=echo -e "Would send mail: echo -e \"Subject: $${SUBJECT}\n\n$${MSG}\" | sendmail $(DELPHI_SURVEY_EMAIL_USER)"
+	SFTP_POST:=echo -e "Would run: sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e \"\$${BATCH}\") -P 2222 $(DELPHI_SURVEY_SFTP_USER)\n$${BATCH}"
+	DRY_MESSAGE:="[DRY-RUN] "
+else
+	EMAIL_SEND:=echo -e "Subject: $${SUBJECT}\n\n$${MSG}" | sendmail $(DELPHI_SURVEY_EMAIL_USER)
+	SFTP_POST:=sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER)
+endif
+
 default:
 	@echo No default implemented yet
 
+scratch:
+	mkdir scratch
+	rm -rf scratch/*
+
 tidy: receiving
-	rm -rf tidy
+	rm -rf tidy/$(RECEIVING)
+	rm -rf tidy/$(INDIVIDUAL)
+	rm -f tidy/params.json
 	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL)
 	cp params.json tidy/
 	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
-	tar -czf tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
+	tar -czf scratch/tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
+	mv scratch/*.tgz tidy/
 
 clean:
 	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(CIDS)/*.csv
@@ -55,7 +66,8 @@ clean-archive:
 install-python:
 	python3.8 -m venv env
 	source env/bin/activate && \
-	pip install -e ../_delphi_utils_python && \
+	pip install wheel && \
+	pip install delphi_utils && \
 	pip install -e delphiFacebook/python
 
 install-R:dev
@@ -67,7 +79,6 @@ $(CIDS):
 
 init-qualtrics:
 	grep '"token": "..*"' params.json
-	git show -s --oneline HEAD >> $(MESSAGES)
 
 $(TODAY):
 	[ -f $(QUALTRICS) ] || mkdir -p $(QUALTRICS)
@@ -99,13 +110,13 @@ $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
 	cd "$(WEIGHTS)"; \
 	BATCH="cd fb-interchange/cmu_respondent_weights\nls -1"; \
-	NEW=`LC_ALL=C comm -23 <(sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu | grep "^202" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
+	NEW=`LC_ALL=C comm -23 <(sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) | grep "^202" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
 	echo "New weights files:"; \
 	echo $${NEW}; \
 	for f in $${NEW}; do \
 	  BATCH="$${BATCH}\nget $$f"; \
 	done; \
-	sftp -b <(echo -e "$${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu || exit 90; \
+	sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) || exit 90; \
 	cd -; \
 	MAX_WEIGHTED=`$(MAX_WEIGHTED)`; \
 	EXPECTED_MAX_WEIGHTED=`date --date='$(TODAY) -3 day' +'%Y%m%d'`; \
@@ -129,11 +140,12 @@ run-R: $(CIDS)
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy
+pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-done tidy
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
+	chmod o+w $(MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'

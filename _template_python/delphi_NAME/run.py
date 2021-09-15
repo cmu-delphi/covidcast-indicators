@@ -14,15 +14,17 @@ the following structure:
             unpublished signals are.  See `delphi_utils.add_prefix()`
         - Any other indicator-specific settings
 """
-from datetime import timedelta
-import pandas as pd
 import time
+from datetime import timedelta, datetime
+from itertools import product
 
+import pandas as pd
+from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
-from delphi_utils import get_structured_logger
 
 from .constants import GEOS, SIGNALS, SMOOTHERS
+
 
 def run_module(params):
     """

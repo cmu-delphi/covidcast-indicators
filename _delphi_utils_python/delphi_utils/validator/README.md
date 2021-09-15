@@ -15,9 +15,8 @@ The validator is run by executing the Python module contained in this
 directory from the main directory of the indicator of interest.
 
 The safest way to do this is to create a virtual environment,
-install the common DELPHI tools, install the indicator module and its
-dependencies, and then install the validator module and its
-dependencies to the virtual environment.
+and install the common DELPHI tools, including the validator, and the
+validator module and its dependencies to the virtual environment.
 
 To do this, navigate to the main directory of the indicator of interest and run the following code:
 
@@ -26,7 +25,6 @@ python -m venv env
 source env/bin/activate
 pip install ../_delphi_utils_python/.
 pip install .
-pip install ../validator
 ```
 
 To execute the module and validate source data (by default, in `receiving`), run the indicator to generate data files, then run
@@ -34,7 +32,7 @@ the validator, as follows:
 
 ```
 env/bin/python -m delphi_INDICATORNAME
-env/bin/python -m delphi_validator
+env/bin/python -m delphi_utils.validator
 ```
 
 Once you are finished with the code, you can deactivate the virtual environment
@@ -53,7 +51,10 @@ Please update the follow settings:
 
 * `common`: global validation settings
    * `data_source`: should match the [formatting](https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html) as used in COVIDcast API calls
-   * `end_date`: specifies the last date to be checked; this can be specified as `YYYY-MM-DD`, `today`, or `today-{num}`.  The latter is interpretted as `num` days before the current date.
+   * `dry_run`: boolean; `true` prevent system exit with error and ensures that the success() method of the ValidationReport always returns true.
+   * `end_date`: specifies the last date to be checked; this can be specified as `YYYY-MM-DD`, `today`, `today-{num}`, or `sunday+{num}`.  `today-num` is interpreted as `num` days before the current date. `sunday+{num}` sets the end date as the most recent day of the week prior to today (as specified by the user). The numeric input represents the day of the week (`sunday+1` denotes Monday, and so on, with 0 or 7 both indicating Sunday). Defaults to the global minimum of `min_expected_lag` days behind today.
+   * `max_expected_lag` (default: 10 for all unspecified signals): dictionary of signal name-string pairs specifying the maximum number of days of expected lag (time between event occurrence and when data about that event was published) for that signal. Default values can also be set using 'all' as the key: individually setting keys on top of this will override the default. Values are either numeric or `sunday+{num},{num}`. `sunday+{num},{num}` is used for indicators that update data on a regular weekly basis. The first number denotes the day of the week (with Monday = 1 and so on, and Sunday taking either 0 or 7). The second number denotes the expected lag for the data upon upload date. In other words, if the signal updates weekly on Wednesday's for the past week's data up til Sunday, the correct parameter would be something like `sunday+3,3`.
+   * `min_expected_lag` (default: 1 for all unspecified signals): dictionary of signal name-string pairs specifying the minimum number of days of expected lag (time between event occurrence and when data about that event was published) for that signal. Default values can be changed by using the 'all' key. See `max_expected_lag` for further details.
    * `span_length`: specifies the number of days before the `end_date` to check. `span_length` should be long enough to contain all recent source data that is still in the process of being updated (i.e. in the backfill period), for example, if the data source of interest has a 2-week lag before all reports are in for a given date, `span_length` should be 14 days
    * `suppressed_errors`: list of objects specifying errors that have been manually verified as false positives or acceptable deviations from expected.  These errors can be specified with the following variables, where omitted values are interpreted as a wildcard, i.e., not specifying a date applies to all dates:
        * `check_name`:  name of the check, as specified in the validation output
@@ -67,9 +68,8 @@ Please update the follow settings:
    * `missing_sample_size_allowed` (default: False): whether signals with missing sample sizes are valid
    * `additional_valid_geo_values` (default: `{}`): map of geo type names to lists of geo values that are not recorded in the GeoMapper but are nonetheless valid for this indicator
 * `dynamic`: settings for validations that require comparison with external COVIDcast API data
-   * `ref_window_size` (default: 7): number of days over which to look back for comparison 
+   * `ref_window_size` (default: 14): number of days over which to look back for comparison 
    * `smoothed_signals`: list of the names of the signals that are smoothed (e.g. 7-day average)
-   * `expected_lag` (default: 1 for all unspecified signals): dictionary of signal name-int pairs specifying the number of days of expected lag (time between event occurrence and when data about that event was published) for that signal
 
 
 ## Testing the code
@@ -80,14 +80,13 @@ To test the code, please create a new virtual environment in the main module dir
 python -m venv env
 source env/bin/activate
 pip install ../_delphi_utils_python/.
-pip install .
 ```
 
 To do a static test of the code style, it is recommended to run **pylint** on
 the module. To do this, run the following from the main module directory:
 
 ```
-env/bin/pylint delphi_validator
+env/bin/pylint delphi_utils.validator
 ```
 
 The most aggressive checks are turned off; only relatively important issues
@@ -96,7 +95,7 @@ should be raised and they should be manually checked (or better, fixed).
 Unit tests are also included in the module. To execute these, run the following command from this directory:
 
 ```
-(cd tests && ../env/bin/pytest --cov=delphi_validator --cov-report=term-missing)
+(cd tests && ../env/bin/pytest --cov=delphi_utils.validator --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along with the percentage of code covered by the tests. None of the tests should fail and the code lines that are not covered by unit tests should be small and should not include critical sub-routines.

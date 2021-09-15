@@ -17,12 +17,10 @@
 #' @importFrom parallel mclapply
 #' @export
 load_responses_all <- function(params, contingency_run = FALSE) {
-  input_data <- vector("list", length(params$input))
-  
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
   
   map_fn <- if (params$parallel) { mclapply } else { lapply }
-  input_data <- map_fn(seq_along(input_data), function(i) {
+  input_data <- map_fn(seq_along(params$input), function(i) {
     load_response_one(params$input[i], params, contingency_run)
   })
   
@@ -58,7 +56,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
 
   col_names <- stri_split(read_lines(full_path, n_max = 1L), fixed = ",")[[1]]
   col_names <- stri_replace_all(col_names, "", fixed = "\"")
-
+  
   ## The CSVs have some columns with column-separated fields showing which of
   ## multiple options a user selected; readr would interpret these as thousand
   ## separators by default, so we tell it that no thousands separators are used.
@@ -363,7 +361,7 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
                dplyr::between(.data$hh_number_sick, 0L, 30L),
                dplyr::between(.data$hh_number_total, 1L, 30L),
                .data$hh_number_sick <= .data$hh_number_total,
-               .data$day >= (as.Date(params$start_date) - lead_days),
+               .data$day >= (as.Date(params$start_date) - lead_days)
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
@@ -546,6 +544,12 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
+  # Remove "raceethnicity" from cols_to_report if not producing race-ethnicity
+  # microdata so we don't get an error that the field doesn't exist.
+  if (is.null(params$produce_individual_raceeth) || !params$produce_individual_raceeth) {
+    cols_to_report <- cols_to_report[cols_to_report != "raceethnicity"]
+  }
+  
   # Not all cols are present in all waves; if our data does not include some
   # questions, don't report them.
   if (any(!(cols_to_report %in% names(input_data)))) {
@@ -612,7 +616,7 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_6PADB8DyF9SIyXk" = 10,
                 "SV_4VEaeffqQtDo33M" = 11)
 
-  if (surveyID %in% names(waves)) {
+  if ( any(names(waves) == surveyID) ) {
       return(waves[[surveyID]])
   }
 

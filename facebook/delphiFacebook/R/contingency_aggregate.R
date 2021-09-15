@@ -34,7 +34,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
-  df <- as.data.table(df)
+  df <- as.data.table(df)[!is.na(weight), ]
   setkeyv(df, "start_dt")
 
   # Keep only obs in desired date range.
@@ -151,15 +151,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
 
     aggregations$geo_level[agg_ind] <- geo_level
-
-    # Multiple choice metrics should also be included in the group_by vars
-    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
-      if ( !(aggregations$metric[agg_ind] %in%
-             aggregations$group_by[agg_ind][[1]]) ) {
-        aggregations$group_by[agg_ind][[1]] <-
-          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
-      }
-    }
   }
 
   # Remove aggregations using unavailable variables.
@@ -320,33 +311,32 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   being used
 #' @param params Named list of configuration options.
 #'
-#' @importFrom tibble add_column as_tibble
+#' @importFrom tibble add_column
 #' @importFrom dplyr %>%
+#' @importFrom stats setNames
 #'
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
-  ## Prepare outputs.
-  dfs_out <- list()
-  for (row in seq_along(aggregations$id)) {
-    aggregation <- aggregations$id[row]
-
-    dfs_out[[aggregation]] <- target_group %>%
-      as.list %>%
-      as_tibble %>%
-      add_column(val=NA_real_,
-                 se=NA_real_,
-                 sample_size=NA_real_,
-                 effective_sample_size=NA_real_,
-                 represented=NA_real_)
-  }
-
+  # Prepare outputs.
+  fill_df <- target_group %>%
+    add_column(val=NA_real_,
+               se=NA_real_,
+               sample_size=NA_real_,
+               effective_sample_size=NA_real_,
+               represented=NA_real_)
+  dfs_out <- setNames(
+    rep(list(fill_df), times=length(aggregations$id)),
+    aggregations$id)
+  
   for (row in seq_along(aggregations$id)) {
     aggregation <- aggregations$id[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
 
-    agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
+    # Copy only columns we're using.
+    select_cols <- c(metric, var_weight, "weight_in_location")
+    agg_df <- group_df[, select_cols, with=FALSE][!is.na(eval(as.name(metric))), ]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

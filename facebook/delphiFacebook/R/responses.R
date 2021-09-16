@@ -368,7 +368,7 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
                dplyr::between(.data$hh_number_total, 1L, 30L),
                .data$hh_number_sick <= .data$hh_number_total,
                .data$day >= (as.Date(params$start_date) - lead_days),
-               !(.data$wave %in% c(12.5)) # Ignore experimental Wave 12 data
+               !(.data$wave != 12.5) # Ignore experimental Wave 12 data
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))

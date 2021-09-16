@@ -179,7 +179,7 @@ post-cids: $(TODAY) $(CIDS)
 	    fi; \
 	    BATCH="$${BATCH}put $$f ${CIDS_DEST}\n"; \
 	done; \
-	$(SFTP_POST); \
+	$(SFTP_POST) || exit 79; \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` cid files" >> $(MESSAGES)
 	touch $@
 
@@ -192,14 +192,14 @@ post-individual: $(TODAY) $(INDIVIDUAL)
 	    gzip -f $$f; \
 	    BATCH="$${BATCH}put $${f}.gz ${INDIVID_DEST}\n"; \
 	done; \
-	$(SFTP_POST); \
+	$(SFTP_POST) || exit 89; \
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` microresponse files" >> $(MESSAGES)
 	touch $@
 
 post-done: post-cids
 	touch $(YESTERDAY).done
 	BATCH="put $(YESTERDAY).done $(CIDS_DEST)\n"; \
-	$(SFTP_POST)
+	$(SFTP_POST) || exit 99
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 
 validate-covidcast:

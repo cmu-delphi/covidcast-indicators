@@ -21,7 +21,7 @@ import os
 import numpy as np
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
-from delphi_utils import get_structured_logger
+from delphi_utils import get_structured_logger, nancodes
 from .constants import GEOS, SIGNALS, SMOOTHERS
 from .pull import pull_cdcvacc_data
 
@@ -69,8 +69,8 @@ def run_module(params):
         df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
             smoother[0].smooth
         )
-        df["se"] = np.nan
-        df["sample_size"] = np.nan
+        df["se"] = nancodes.Nans.NOT_APPLICABLE
+        df["sample_size"] = nancodes.Nans.NOT_APPLICABLE
         sensor_name = sensor + smoother[1]
         print(sensor_name)
         if not(("cumulative" in sensor_name) and ("7dav" in sensor_name)):

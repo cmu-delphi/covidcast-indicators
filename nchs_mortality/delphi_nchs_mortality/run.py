@@ -19,7 +19,7 @@ from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
-def run_module(params: Dict[str, Any]):  # pylint: disable=too-many-branches, too-many-statements
+def run_module(params: Dict[str, Any]):
     """Run module for processing NCHS mortality data.
 
     The `params` argument is expected to have the following structure:
@@ -62,61 +62,47 @@ def run_module(params: Dict[str, Any]):  # pylint: disable=too-many-branches, to
 
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
-    for metric, geo in product(METRICS, GEO_RES):
+    for metric, geo, sensor, in product(METRICS, GEO_RES, SENSORS):
         if metric == 'percent_of_expected_deaths':
-            print(metric)
-            df = df_pull.copy()
-            df["val"] = df[metric]
-            df["se"] = np.nan
-            df["sample_size"] = np.nan
-            df = df[~df["val"].isnull()]
-            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
+            continue
+        print(metric, sensor)
+        sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
+        df = _safe_copy_df(df_pull, metric)
 
-            if geo in ["hhs", "nation"]:
-                df = gmpr.replace_geocode(
-                    df, "state_id", "state_code", from_col="geo_id", date_col="timestamp")
-                # Weight by population when aggregating across geocodes
-                df["weight"] = df["population"]
-                df = gmpr.replace_geocode(
-                    df, "state_code", geo, data_cols=["val"], date_col="timestamp").rename(
-                    columns={geo: "geo_id"})
-                df["val"] = df["val"] / df["population"]
+        if geo in ["hhs", "nation"]:
+            df = _map_from_state(df, geo, gmpr)
 
-            dates = export_csv(
-                df,
-                geo_name=geo,
-                export_dir=daily_export_dir,
-                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-                sensor=sensor_name,
-            )
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
-        else:
-            for sensor in SENSORS:
-                print(metric, sensor)
-                df = df_pull.copy()
-                df["se"] = np.nan
-                df["sample_size"] = np.nan
-                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
-                if geo in ["hhs", "nation"]:
-                    df = gmpr.replace_geocode(
-                        df, "state_id", "state_code", from_col="geo_id", date_col="timestamp")
-                    df = gmpr.replace_geocode(
-                        df, "state_code", geo, date_col="timestamp").rename(columns={geo: "geo_id"})
-                if sensor == "num":
-                    df["val"] = df[metric]
-                else:
-                    df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
-                df = df[~df["val"].isnull()]
-                dates = export_csv(
-                    df,
-                    geo_name=geo,
-                    export_dir=daily_export_dir,
-                    start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-                    sensor=sensor_name,
-                )
-                if len(dates) > 0:
-                    stats.append((max(dates), len(dates)))
+        if sensor == "prop":
+            df["val"] = df["val"] / df["population"] * INCIDENCE_BASE
+
+        dates = export_csv(
+            df,
+            geo_name=geo,
+            export_dir=daily_export_dir,
+            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            sensor=sensor_name,
+        )
+        if len(dates) > 0:
+            stats.append((max(dates), len(dates)))
+
+    for geo in GEO_RES:
+        metric = 'percent_of_expected_deaths'
+        print(metric)
+        sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
+        df = _safe_copy_df(df_pull, metric)
+
+        if geo in ["hhs", "nation"]:
+            df = _map_from_state(df, geo, gmpr, weighted=True)
+
+        dates = export_csv(
+            df,
+            geo_name=geo,
+            export_dir=daily_export_dir,
+            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+            sensor=sensor_name,
+        )
+        if len(dates) > 0:
+            stats.append((max(dates), len(dates)))
 
     # Weekly run of archive utility on Monday
     # - Does not upload to S3, that is handled by daily run of archive utility
@@ -137,3 +123,35 @@ def run_module(params: Dict[str, Any]):  # pylint: disable=too-many-branches, to
                 csv_export_count=csv_export_count,
                 max_lag_in_days=max_lag_in_days,
                 oldest_final_export_date=formatted_min_max_date)
+
+
+def _safe_copy_df(df, metric_col_name):
+    """Create a copy of the given df, and drop rows where the metric is nan."""
+    df_copy = df.copy()
+    df_copy["se"] = np.nan
+    df_copy["sample_size"] = np.nan
+    df_copy["val"] = df_copy[metric_col_name]
+    return df_copy[~df_copy["val"].isnull()]
+
+
+def _map_from_state(df, geo, gmpr, weighted=False):
+    """Map from state_id to another given geocode.
+
+    The weighted flag is used when aggregating metrics which come as percentages
+    rather than raw counts, and therefore need to be weighted by population when
+    combining.
+    """
+    # TODO - this first mapping from state_id to state_code is necessary because
+    #  the GeoMapper does not currently support going directly from state_id to hhs or
+    #  nation. See issue #1255
+    df = gmpr.replace_geocode(
+        df, "state_id", "state_code", from_col="geo_id", date_col="timestamp")
+    if weighted:
+        df["weight"] = df["population"]
+    df = gmpr.replace_geocode(
+        df, "state_code", geo, data_cols=["val"], date_col="timestamp").rename(
+        columns={geo: "geo_id"})
+    if weighted:
+        df["val"] = df["val"] / df["population"]
+
+    return df

@@ -25,7 +25,11 @@ SENSORS = [
         "prop"
 ]
 INCIDENCE_BASE = 100000
-GEO_RES = "state"
+GEO_RES = [
+    "nation",
+    "hhs",
+    "state"
+]
 
 # this is necessary as a delimiter in the f-string expressions we use to
 # construct detailed error reports

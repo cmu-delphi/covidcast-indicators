@@ -92,8 +92,6 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
 
     """
     if (np.any(np.isnan(tpooled_tests)) or np.any(np.isnan(tpooled_ptests))):
-        print(tpooled_tests)
-        print(tpooled_ptests)
         raise ValueError('[parent] tests should be non-negative '
                          'with no np.nan')
     # STEP 1: "TOP UP" USING PARENT LOCATION
@@ -156,7 +154,6 @@ def raw_positive_prop(positives, tests, min_obs):
     positives = positives.astype(float)
     tests = tests.astype(float)
     if np.any(np.isnan(positives)) or np.any(np.isnan(tests)):
-        print(positives, tests)
         raise ValueError('positives and tests should be non-negative '
                          'with no np.nan')
     if np.any(positives > tests):

@@ -133,7 +133,7 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
                     if not whether_in_range:
                         continue
 
-                    logger.info(f"Pulling data", test=test, date=search_date.date())
+                    logger.info("Pulling data", test=test, date=search_date.date())
                     toread = io.BytesIO()
                     toread.write(att.payload)
                     toread.seek(0)  # reset the pointer

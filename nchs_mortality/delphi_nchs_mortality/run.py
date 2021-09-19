@@ -110,7 +110,7 @@ def run_module(params: Dict[str, Any]):
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
     if "archive" in params:
-        arch_diffs(params, daily_arch_diff)
+        arch_diffs(params, daily_arch_diff, logger)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = stats and min(s[0] for s in stats)

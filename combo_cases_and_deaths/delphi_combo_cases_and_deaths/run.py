@@ -134,7 +134,8 @@ def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidca
     return unique_dates
 
 
-def combine_usafacts_and_jhu(signal, geo, date_range, logger, issue_range=None, fetcher=covidcast.signal):
+def combine_usafacts_and_jhu(signal, geo, date_range, logger,
+                             issue_range=None, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals.
 
     For hhs and nation, fetch the county `num` data so we can compute the proportions correctly

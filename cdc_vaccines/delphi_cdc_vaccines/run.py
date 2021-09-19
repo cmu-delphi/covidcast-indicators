@@ -18,7 +18,6 @@ from datetime import timedelta, datetime
 from itertools import product
 import time as tm
 import os
-import numpy as np
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
 from delphi_utils import get_structured_logger, nancodes

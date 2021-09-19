@@ -105,6 +105,10 @@ def run_module(params):
     geo_mapper = GeoMapper()
     stats = []
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
+        logger.info("Generating signal and exporting to CSV",
+                    geo_res = geo,
+                    sensor = sensor,
+                    smoother = smoother)
         df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
                                     "state_id",
                                     "state_code",

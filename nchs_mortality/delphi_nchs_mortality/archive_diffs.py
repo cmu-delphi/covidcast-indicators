@@ -8,7 +8,7 @@ from datetime import datetime
 
 from delphi_utils import S3ArchiveDiffer
 
-def arch_diffs(params, daily_arch_diff):
+def arch_diffs(params, daily_arch_diff, logger):
     """
     Archive differences between new updates and existing data.
 
@@ -23,6 +23,8 @@ def arch_diffs(params, daily_arch_diff):
         Read from params.json
     daily_arch_diff: S3ArchiveDiffer
         Used to store and update cache
+    logger: logging.Logger
+        The structured logger.
     """
     weekly_export_dir = params["common"]["weekly_export_dir"]
     daily_export_dir = params["common"]["daily_export_dir"]
@@ -59,7 +61,7 @@ def arch_diffs(params, daily_arch_diff):
 
         # Report failures: someone should probably look at them
         for exported_file in fails:
-            print(f"Failed to archive (weekly) '{exported_file}'")
+            logger.info("Failed to archive (weekly)", filename={exported_file})
 
     # Daily run of archiving utility
     # - Uploads changed files to S3
@@ -83,4 +85,4 @@ def arch_diffs(params, daily_arch_diff):
 
     # Report failures: someone should probably look at them
     for exported_file in fails:
-        print(f"Failed to archive (daily) '{exported_file}'")
+        logger.info("Failed to archive (daily)", filename={exported_file})

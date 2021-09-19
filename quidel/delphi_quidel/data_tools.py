@@ -290,11 +290,10 @@ def raw_tests_per_device(devices, tests, min_obs):
     """
     devices = devices.astype(float)
     tests = tests.astype(float)
-    if (np.any(np.isnan(devices)) or np.any(np.isnan(tests))):
-        print(devices)
-        print(tests)
-        raise ValueError('devices and tests should be non-negative '
-                         'with no np.nan')
+    if np.any(np.isnan(devices)) or np.any(d < 0 for d in devices):
+        raise ValueError("devices should be non-negative with no np.nan")
+    if np.any(np.isnan(tests)) or np.any(d < 0 for d in tests):
+        raise ValueError("tests should be non-negative with no np.nan")
     if min_obs <= 0:
         raise ValueError('min_obs should be positive')
     tests[tests < min_obs] = np.nan

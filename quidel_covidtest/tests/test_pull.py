@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
@@ -36,6 +37,8 @@ class TestFixData:
 class TestingPullData:
     def test_pull_quidel_covidtest(self):
 
+        logger = logging.Logger("test_logger")
+
         df, _ = pull_quidel_covidtest({
             "static_file_dir": "../static",
             "input_cache_dir": "./cache",
@@ -50,7 +53,7 @@ class TestingPullData:
             "bucket_name": "",
             "wip_signal": "",
             "test_mode": True
-        })
+        }, logger)
 
         first_date = df["timestamp"].min().date()
         last_date = df["timestamp"].max().date()

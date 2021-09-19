@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
@@ -36,6 +37,8 @@ class TestFixData:
 class TestingPullData:
     def test_pull_quidel_data(self):
 
+        logger = logging.Logger("test_logger")
+
         dfs, _ = pull_quidel_data({
             "static_file_dir": "../static",
             "input_cache_dir": "./cache",
@@ -49,7 +52,7 @@ class TestingPullData:
             "sender": "",
             "wip_signal": [""],
             "test_mode": True
-        })
+        }, logger)
 
         # For covid_ag
         df = dfs["covid_ag"]

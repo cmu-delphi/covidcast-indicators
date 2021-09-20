@@ -14,7 +14,8 @@ from delphi_utils import S3ArchiveDiffer, get_structured_logger, GeoMapper
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
-                        SENSORS, INCIDENCE_BASE, GEO_RES)
+                        SENSORS, INCIDENCE_BASE, GEO_RES,
+                        PERCENT_EXPECTED)
 from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
@@ -63,36 +64,24 @@ def run_module(params: Dict[str, Any]):
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
     for metric, geo, sensor, in product(METRICS, GEO_RES, SENSORS):
-        if metric == 'percent_of_expected_deaths':
+        is_percent = metric == PERCENT_EXPECTED
+        if is_percent and sensor == 'prop':
             continue
-        print(metric, sensor)
-        sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
+
+        sensor_name = [SENSOR_NAME_MAP[metric]]
+        if not is_percent:
+            sensor_name.append(sensor)
+        print(sensor_name)
+        sensor_name = "_".join(sensor_name)
+
         df = _safe_copy_df(df_pull, metric)
 
         if geo in ["hhs", "nation"]:
-            df = _map_from_state(df, geo, gmpr)
+            df = _map_from_state(df, geo, gmpr, weighted=is_percent)
 
         if sensor == "prop":
+            # never encountered when is_percent
             df["val"] = df["val"] / df["population"] * INCIDENCE_BASE
-
-        dates = export_csv(
-            df,
-            geo_name=geo,
-            export_dir=daily_export_dir,
-            start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-            sensor=sensor_name,
-        )
-        if len(dates) > 0:
-            stats.append((max(dates), len(dates)))
-
-    for geo in GEO_RES:
-        metric = 'percent_of_expected_deaths'
-        print(metric)
-        sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
-        df = _safe_copy_df(df_pull, metric)
-
-        if geo in ["hhs", "nation"]:
-            df = _map_from_state(df, geo, gmpr, weighted=True)
 
         dates = export_csv(
             df,

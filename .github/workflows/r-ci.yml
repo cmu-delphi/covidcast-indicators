@@ -43,12 +43,12 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-r-facebook-survey-${{ steps.get-date.outputs.date }}
+          key: ${{ runner.os }}-r-facebook-survey-${{ steps.get-date.outputs.date }}-testcache
           restore-keys: |
-            ${{ runner.os }}-r-facebook-survey-
+            ${{ runner.os }}-r-facebook-survey-testcache
       - name: Install R dependencies
         run: |
-          if ( packageVersion("readr") != "1.4.0" ) {
+          if ( !require("readr") || packageVersion("readr") != "1.4.0" ) {
             install.packages("devtools")
             devtools::install_version("readr", version = "1.4.0")
           }

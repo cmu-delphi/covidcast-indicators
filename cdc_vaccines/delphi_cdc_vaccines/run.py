@@ -69,7 +69,10 @@ def run_module(params):
             smoother[0].smooth
         )
         df["se"] = nancodes.Nans.NOT_APPLICABLE
-        df["sample_size"] = nancodes.Nans.NOT_APPLICABLE
+        df["se"] = np.nan
+        df["sample_size"] = np.nan
+        df["missing_se"] = nancodes.Nans.NOT_APPLICABLE
+        df["missing_sample_size"] = nancodes.Nans.NOT_APPLICABLE
         sensor_name = sensor + smoother[1]
         print(sensor_name)
         if not(("cumulative" in sensor_name) and ("7dav" in sensor_name)):

@@ -1,7 +1,7 @@
 import csv
 from datetime import date, timedelta
 from functools import partial
-from typing import Callable, List, Tuple
+from typing import Callable, List, Tuple, Dict
 
 import numpy as np
 from scipy.linalg import toeplitz
@@ -52,6 +52,9 @@ def _construct_convolution_matrix(signal: np.ndarray, kernel: np.ndarray,
 
 def _construct_day_specific_convolution_matrix(y, run_date, delay_kernels):
     n = y.shape[0]
+    if n > len(delay_kernels):
+        assert ValueError('Not enough dates in delay_kernel dictionary')
+
     kernel_length = len(delay_kernels[run_date])
     C = np.zeros((n, n))
     first_kernel_date = min(delay_kernels.keys())
@@ -181,9 +184,8 @@ def deconvolve_double_smooth_tf_fast(y: np.ndarray, x: np.ndarray, C: np.ndarray
     return x_k
 
 
-def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray,
-                                   cases_to_infections_kernels,
-                                   infections_to_cases_kernels, as_of_date,
+def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray, kernel_dict: Dict,
+                                   as_of_date: date,
                                    fit_func: Callable = deconvolve_double_smooth_tf_fast,
                                    lam_cv_grid: np.ndarray = np.logspace(1, 3.5, 10),
                                    gam_cv_grid: np.ndarray = np.r_[
@@ -243,12 +245,12 @@ def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray,
             x_hat = np.full((n,), np.nan)
             C, kernel = _construct_day_specific_convolution_matrix(y[~test_split],
                                                                    as_of_date,
-                                                                   cases_to_infections_kernels)
+                                                                   kernel_dict)
             x_hat[~test_split] = fit_func(y=y[~test_split], x=x[~test_split], lam=reg_par,
                                           gam=0, C=C, kernel=kernel)
             x_hat = _impute_with_neighbors(x_hat)
             C, _ = _construct_day_specific_convolution_matrix(x_hat, as_of_date,
-                                                              infections_to_cases_kernels)
+                                                              kernel_dict)
             y_hat = (C @ x_hat)[:len(x_hat)]
             lam_cv_loss[j] += np.sum((y[test_split] - y_hat[test_split]) ** 2)
 
@@ -260,21 +262,20 @@ def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray,
             x_hat = np.full((n - i + 1,), np.nan)
             C, kernel = _construct_day_specific_convolution_matrix(y[:(n - i)],
                                                                    as_of_date,
-                                                                   cases_to_infections_kernels)
+                                                                   kernel_dict)
             x_hat[:(n - i)] = fit_func(y=y[:(n - i)], x=x[:(n - i)], gam=reg_par, lam=lam,
                                        C=C, kernel=kernel)
             pos = x[:(n - i + 1)]
             x_hat[-1] = _linear_extrapolate(pos[-3], x_hat[-3], pos[-2], x_hat[-2],
                                             pos[-1])
             C, _ = _construct_day_specific_convolution_matrix(x_hat, as_of_date,
-                                                              infections_to_cases_kernels)
+                                                              kernel_dict)
             y_hat = (C @ x_hat)[:len(x_hat)]
             gam_cv_loss[j] += np.sum((y[:(n - i + 1)][-1:] - y_hat[-1:]) ** 2)
 
     gam = gam_cv_grid[np.argmin(gam_cv_loss)]
     if verbose: print(f"Chosen parameters: lam:{lam:.4}, gam:{gam:.4}")
-    C, kernel = _construct_day_specific_convolution_matrix(y, as_of_date,
-                                                           cases_to_infections_kernels)
+    C, kernel = _construct_day_specific_convolution_matrix(y, as_of_date, kernel_dict)
     x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output,
                      location=location)
     return x_hat
@@ -313,8 +314,7 @@ def _impute_with_neighbors(x: np.ndarray) -> np.ndarray:
 
 def deconvolve_signal(convolved_truth_indicator: SensorConfig, start_date: date,
                       end_date: date, as_of_date: date,
-                      input_locations: List[Tuple[str, str]], infections_to_cases_kernels,
-                      cases_to_infections_kernels,
+                      input_locations: List[Tuple[str, str]], kernel_dict: Dict,
                       fit_func: Callable = deconvolve_double_smooth_tf_cv, ) -> List[
     LocationSeries]:
     """
@@ -381,9 +381,7 @@ def deconvolve_signal(convolved_truth_indicator: SensorConfig, start_date: date,
                 continue
             deconvolved_truth = fit_func(y=np.array(convolved_truth),
                                          x=np.arange(1, len(convolved_truth) + 1),
-                                         infections_to_cases_kernels=infections_to_cases_kernels,
-                                         cases_to_infections_kernels=cases_to_infections_kernels,
-                                         as_of_date=as_of_date)
+                                         kernel_dict=kernel_dict, as_of_date=as_of_date)
             deconvolved_truths.append(
                 LocationSeries(loc, geo_type, dict(zip(full_dates, deconvolved_truth))))
         else:

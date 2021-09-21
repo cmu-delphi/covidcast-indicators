@@ -68,8 +68,8 @@ def run_module(params):
         df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
             smoother[0].smooth
         )
-        df["se"] = nancodes.Nans.NOT_APPLICABLE
-        df["sample_size"] = nancodes.Nans.NOT_APPLICABLE
+        df["missing_se"] = nancodes.Nans.NOT_APPLICABLE
+        df["missing_sample_size"] = nancodes.Nans.NOT_APPLICABLE
         sensor_name = sensor + smoother[1]
         print(sensor_name)
         if not(("cumulative" in sensor_name) and ("7dav" in sensor_name)):

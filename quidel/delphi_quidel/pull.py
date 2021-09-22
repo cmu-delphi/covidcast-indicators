@@ -180,7 +180,7 @@ def fix_date(df, logger):
     df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
-    logger.info(f"Fixing {(np.sum(mask) * 100 / len(df)):.2f} of outdated data")
+    logger.info(f"Fixing {(np.sum(mask) * 100 / len(df)):.2f}% of outdated data")
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 

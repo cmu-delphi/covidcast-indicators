@@ -101,7 +101,8 @@ def run_module(params):
                                sensors=SENSORS,
                                geo_resolutions=GEO_RESOLUTIONS,
                                export_dir=export_dir,
-                               stats=stats
+                               stats=stats,
+                               logger=logger,
                                )
 
         with mp.Pool(n_core) as pool:

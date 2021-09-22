@@ -82,7 +82,7 @@ def regulate_column_names(df, test_type):
     return df
 
 def get_from_email(column_names, start_dates, end_dates, mail_server,
-                   account, sender, password):
+                   account, sender, password, logger):
     """
     Get raw data from email account.
 
@@ -98,6 +98,8 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
             email account of the sender
         password: str
             password of the datadrop email
+        logger: logging.Logger
+            The structured logger.
 
     Returns:
         df: pd.DataFrame
@@ -131,7 +133,7 @@ def get_from_email(column_names, start_dates, end_dates, mail_server,
                     if not whether_in_range:
                         continue
 
-                    print(f"Pulling {test} data received on %s"%search_date.date())
+                    logger.info("Pulling data", test=test, date=search_date.date())
                     toread = io.BytesIO()
                     toread.write(att.payload)
                     toread.seek(0)  # reset the pointer
@@ -153,10 +155,9 @@ def fix_zipcode(df):
             zipcode = int(float(zipcode))
             zipcode5.append(zipcode)
     df['zip'] = zipcode5
-    # print('Fixing %.2f %% of the data' % (fixnum * 100 / len(zipcode5)))
     return df
 
-def fix_date(df):
+def fix_date(df, logger):
     """
     Remove invalid dates and select correct test date to use.
 
@@ -175,16 +176,16 @@ def fix_date(df):
     df.insert(2, "timestamp", df["TestDate"])
 
     mask = df["TestDate"] <= df["StorageDate"]
-    print("Removing %.2f%% of unusual data" % ((len(df) - np.sum(mask)) * 100 / len(df)))
+    logger.info(f"Removing {((len(df) - np.sum(mask)) * 100 / len(df)):.2f}% of unusual data")
     df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
-    print("Fixing %.2f%% of outdated data" % (np.sum(mask) * 100 / len(df)))
+    logger.info(f"Fixing {(np.sum(mask) * 100 / len(df)):.2f}% of outdated data")
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
 def preprocess_new_data(start_dates, end_dates, mail_server, account,
-                        sender, password, test_mode):
+                        sender, password, test_mode, logger):
     """
     Pull and pre-process Quidel Antigen Test data from datadrop email.
 
@@ -206,6 +207,8 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
             password of the datadrop email
         test_mode: bool
             pull raw data from email or not
+        logger: logging.Logger
+            The structured logger.
     Returns:
         df: pd.DataFrame
         time_flag: datetime.date:
@@ -220,7 +223,7 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
     else:
         # Get new data from email
         dfs, time_flag = get_from_email(COLUMN_NAMES, start_dates, end_dates,
-                                       mail_server, account, sender, password)
+                                       mail_server, account, sender, password, logger)
 
     # No new data can be pulled
     if time_flag is None:
@@ -228,13 +231,12 @@ def preprocess_new_data(start_dates, end_dates, mail_server, account,
 
     df_finals = {}
     for test_type in TEST_TYPES:
-        print(f"For {test_type}:")
+        logger.info(f"For {test_type}:")
         df = dfs[test_type]
         # Fix some of the fipcodes that are 9 digit instead of 5 digit
         df = fix_zipcode(df)
         # Create a column CanonicalDate according to StarageDate and TestDate
-        df = fix_date(df)
-
+        df = fix_date(df, logger)
         # Compute numUniqueDevices
         numUniqueDevices = df.groupby(
             by=["timestamp", "zip"],
@@ -309,17 +311,15 @@ def check_intermediate_file(cache_dir, pull_start_dates):
                         sep=",", parse_dates=["timestamp"])
     return previous_dfs, pull_start_dates
 
-def pull_quidel_data(params):
+def pull_quidel_data(params, logger):
     """
     Pull new quidel test data and decide whether to combine it with historical records in ./cache.
 
     Parameters:
         params: dict
             including all the information read from params.json
-        END_FROM_TODAY_MINUS: int
-            report data until - X days
-        EXPORT_DAY_RANGE: int
-            number of dates to report
+        logger: logging.Logger
+            The structured logger.
 
     Returns:
         DataFrame:
@@ -355,7 +355,7 @@ def pull_quidel_data(params):
     # Use _end_date to check the most recent date that we received data
     dfs, _end_date = preprocess_new_data(
             pull_start_dates, pull_end_dates, mail_server,
-            account, sender, password, test_mode)
+            account, sender, password, test_mode, logger)
 
     # Utilize previously stored data
     for test_type in TEST_TYPES:

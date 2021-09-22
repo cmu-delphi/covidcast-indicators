@@ -254,26 +254,7 @@ class ArchiveDiffer:
                 new_issues_df.to_csv(diff_file, na_rep="NA")
                 common_diffs[after_file] = diff_file
 
-        export_csv_dtypes = {
-            "geo_id": str, "val": float, "se": float, "sample_size": float,
-            "missing_val": int, "missing_se": int, "missing_sample_size": int
-        }
-
-        # Replace deleted files with empty versions, but only if the cached version is not
-        # already empty
-        deleted_files_nanfilled = []
-        for deleted_file in deleted_files:
-            deleted_df = pd.read_csv(deleted_file, dtype=export_csv_dtypes)
-            print(
-                f"Diff deleted {deleted_file}; generating corresponding CSV with deleted rows."
-            )
-            deleted_df[["val", "se", "sample_size"]] = np.nan
-            deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
-            filename = join(self.export_dir, basename(deleted_file))
-            deleted_df.to_csv(filename, index=False)
-            deleted_files_nanfilled.append(filename)
-
-        return deleted_files_nanfilled, common_diffs, new_files
+        return deleted_files, common_diffs, new_files
 
     def archive_exports(self, exported_files: Files) -> Tuple[Files, Files]:
         """
@@ -331,13 +312,12 @@ class ArchiveDiffer:
         self.update_cache()
 
         # Diff exports, and make incremental versions
-        deleted_files, common_diffs, new_files = self.diff_exports()
+        _, common_diffs, new_files = self.diff_exports()
 
         # Archive changed, new, and emptied deleted files
         to_archive = [f for f, diff in common_diffs.items()
                       if diff is not None]
         to_archive += new_files
-        to_archive += deleted_files
         _, fails = self.archive_exports(to_archive)
 
         # Filter existing exports to exclude those that failed to archive

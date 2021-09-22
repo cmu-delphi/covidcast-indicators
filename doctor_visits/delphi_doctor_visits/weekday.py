@@ -9,6 +9,7 @@ import logging
 
 # third party
 import cvxpy as cp
+from cvxpy.error import SolverError
 import numpy as np
 
 # first party
@@ -92,7 +93,7 @@ class Weekday:
                     _ = prob.solve()
                     params[i,:] = b.value
                     break
-                except:
+                except SolverError:
                     # If the magnitude of the objective function is too large, an error is
                     # thrown; Rescale the objective function by going through loop
                     pass

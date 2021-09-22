@@ -6,7 +6,7 @@ Created: 2020-06-12
 """
 
 import json
-import logging
+from logging import Logger
 import os
 from typing import Tuple, List
 from multiprocessing import cpu_count, Pool
@@ -100,7 +100,7 @@ class CovidNet:
 
     @staticmethod
     def download_all_hosp_data(
-            mappings_file: str, cache_path: str, parallel: bool = False
+            mappings_file: str, cache_path: str, logger: Logger, parallel: bool = False
         ) -> List[str]:
         """
         Download hospitalization data for all states listed in the mappings JSON file to disk.
@@ -146,7 +146,7 @@ class CovidNet:
         else:
             for args in state_args:
                 CovidNet.download_hosp_data(*args)
-                logging.debug("Downloading for nid=%s, cid=%s", args[0], args[1])
+                logger.debug("Downloading for nid=%s, cid=%s", args[0], args[1])
 
         return state_files
 

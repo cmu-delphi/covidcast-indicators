@@ -1,8 +1,10 @@
 """Tests for update_sensor.py."""
-
+import logging
 import pandas as pd
 
 from delphi_doctor_visits.update_sensor import update_sensor
+
+TEST_LOGGER = logging.getLogger()
 
 class TestUpdateSensor:
     def test_update_sensor(self):
@@ -14,7 +16,8 @@ class TestUpdateSensor:
             geo="state",
             parallel=False,
             weekday=False,
-            se=False
+            se=False,
+            logger=TEST_LOGGER,
         )
 
         comparison = pd.read_csv("./comparison/update_sensor/all.csv", parse_dates=["date"])

@@ -1,6 +1,7 @@
 {
   "common": {
     "export_dir": "./receiving",
+    "validation_dir": "./receiving",
     "log_exceptions": false,
     "log_filename": "./google-symptoms.log"   
   },

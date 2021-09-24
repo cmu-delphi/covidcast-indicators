@@ -56,12 +56,12 @@ def make_date_filter(start_date, end_date):
     return custom_date_filter
 
 
-def load_all_files(export_dir, start_date, end_date):
+def load_all_files(validation_dir, start_date, end_date):
     """Load all files in a directory.
 
     Parameters
     ----------
-    export_dir: str
+    validation_dir: str
         directory from which to load files
 
     Returns
@@ -69,11 +69,11 @@ def load_all_files(export_dir, start_date, end_date):
     loaded_data: List[Tuple(str, re.match, pd.DataFrame)]
         triples of filenames, filename matches with the geo regex, and the data from the file
     """
-    export_files = read_filenames(export_dir)
+    export_files = read_filenames(validation_dir)
     date_filter = make_date_filter(start_date, end_date)
 
     # Make list of tuples of CSV names and regex match objects.
-    return [(f, m, load_csv(join(export_dir, f))) for (f, m) in export_files if date_filter(m)]
+    return [(f, m, load_csv(join(validation_dir, f))) for (f, m) in export_files if date_filter(m)]
 
 
 def read_filenames(path):

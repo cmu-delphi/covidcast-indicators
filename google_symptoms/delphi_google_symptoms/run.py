@@ -33,7 +33,7 @@ def run_module(params):
     params
         Dictionary containing indicator configuration. Expected to have the following structure:
     - "common":
-        - "export_dir": str, directory to write output
+        - "validation_dir": str, directory to write output
         - "log_exceptions" (optional): bool, whether to log exceptions to file
         - "log_filename" (optional): str, name of file to write logs
     - "indicator":
@@ -54,7 +54,7 @@ def run_module(params):
             "export_end_date", datetime.strftime(date.today(), "%Y-%m-%d")
         ), "%Y-%m-%d")
 
-    export_dir = params["common"]["export_dir"]
+    validation_dir = params["common"]["validation_dir"]
     num_export_days = params["indicator"]["num_export_days"]
 
     if num_export_days is None:
@@ -118,7 +118,7 @@ def run_module(params):
                 continue
             exported_csv_dates = create_export_csv(
                 df,
-                export_dir=export_dir,
+                validation_dir=validation_dir,
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,

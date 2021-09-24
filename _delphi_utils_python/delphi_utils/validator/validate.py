@@ -21,7 +21,7 @@ class Validator:
             - params: dictionary of user settings read from params.json file; if empty, defaults
                 will be used
         """
-        self.export_dir = params["common"]["export_dir"]
+        self.validation_dir = params["common"]["validation_dir"]
 
         assert "validation" in params, "params must have a top-level 'validation' object to run "\
             "validation"
@@ -49,13 +49,13 @@ class Validator:
         Run all data checks.
 
         Arguments:
-            - export_dir: path to data CSVs
+            - validation_dir: path to data CSVs
 
         Returns:
             - ValidationReport collating the validation outcomes
         """
         report = ValidationReport(self.suppressed_errors, self.data_source, self.dry_run)
-        frames_list = load_all_files(self.export_dir, self.time_window.start_date,
+        frames_list = load_all_files(self.validation_dir, self.time_window.start_date,
                                      self.time_window.end_date)
         self.static_validation.validate(frames_list, report)
         all_frames = aggregate_frames(frames_list)

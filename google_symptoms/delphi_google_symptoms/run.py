@@ -118,7 +118,7 @@ def run_module(params):
                 continue
             exported_csv_dates = create_export_csv(
                 df,
-                validation_dir=validation_dir,
+                export_dir=validation_dir,
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,

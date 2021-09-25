@@ -4,6 +4,7 @@ from datetime import datetime
 from os.path import join
 from typing import Optional
 
+from epiweeks import Week
 import numpy as np
 import pandas as pd
 
@@ -16,7 +17,8 @@ def create_export_csv(
     start_date: Optional[datetime] = None,
     end_date: Optional[datetime] = None,
     remove_null_samples: Optional[bool] = False,
-    write_empty_days: Optional[bool] = False
+    write_empty_days: Optional[bool] = False,
+    weekly_dates = False,
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -65,10 +67,15 @@ def create_export_csv(
         dates = pd.date_range(start_date, end_date)
 
     for date in dates:
-        if metric is None:
-            export_filename = f"{date.strftime('%Y%m%d')}_{geo_res}_{sensor}.csv"
+        if weekly_dates:
+            t = Week.fromdate(pd.to_datetime(str(date)))
+            date_str = "weekly_" + str(t.year) + str(t.week).zfill(2)
         else:
-            export_filename = f"{date.strftime('%Y%m%d')}_{geo_res}_{metric}_{sensor}.csv"
+            date_str = date.strftime('%Y%m%d')
+        if metric is None:
+            export_filename = f"{date_str}_{geo_res}_{sensor}.csv"
+        else:
+            export_filename = f"{date_str}_{geo_res}_{metric}_{sensor}.csv"
         export_file = join(export_dir, export_filename)
         export_df = df[df["timestamp"] == date][["geo_id", "val", "se", "sample_size",]]
         if remove_null_samples:

@@ -9,12 +9,11 @@ from datetime import datetime, date, timedelta
 from typing import Dict, Any
 
 import numpy as np
-from delphi_utils import S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
                         SENSORS, INCIDENCE_BASE, GEO_RES)
-from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
@@ -70,12 +69,13 @@ def run_module(params: Dict[str, Any]):
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
             sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
-            dates = export_csv(
+            dates = create_export_csv(
                 df,
-                geo_name=GEO_RES,
+                geo_res=GEO_RES,
                 export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
+                weekly_dates=True
             )
             if len(dates) > 0:
                 stats.append((max(dates), len(dates)))
@@ -93,12 +93,13 @@ def run_module(params: Dict[str, Any]):
                 df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
                 sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
-                dates = export_csv(
+                dates = create_export_csv(
                     df,
-                    geo_name=GEO_RES,
+                    geo_res=GEO_RES,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
+                    weekly_dates=True
                 )
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))

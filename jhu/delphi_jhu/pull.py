@@ -99,9 +99,7 @@ def pull_jhu_data(base_url: str, metric: str, gmpr: GeoMapper) -> pd.DataFrame:
     df = download_data(base_url, metric)
 
     gmpr = GeoMapper()
-    df = gmpr.replace_geocode(
-        df, "jhu_uid", "fips", from_col="UID", date_col="timestamp"
-    )
+    df = gmpr.replace_geocode(df, "jhu_uid", "fips", from_col="UID")
     df = create_diffs_column(df)
     # Final sanity checks
     sanity_check_data(df)

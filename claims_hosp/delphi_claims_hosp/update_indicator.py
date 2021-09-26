@@ -120,11 +120,11 @@ class ClaimsHospIndicatorUpdater:
             return False
 
         unique_geo_ids = pd.unique(data_frame[self.geo])
-        data_frame.set_index([self.geo, 'date'], inplace=True)
+        data_frame.set_index([self.geo, "timestamp"], inplace=True)
 
         # for each location, fill in all missing dates with 0 values
         multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
-                                                names=[self.geo, "date"])
+                                                names=[self.geo, Config.DATE_COL])
         assert (
                 len(multiindex) <= (GeoConstants.MAX_GEO[self.geo] * len(self.fit_dates))
         ), "more loc-date pairs than maximum number of geographies x number of dates"

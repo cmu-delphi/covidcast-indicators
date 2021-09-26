@@ -34,8 +34,8 @@ class TestLoadData:
     def test_claims_columns(self):
         assert "hrr" in self.hrr_claims_data.index.names
         assert "fips" in self.fips_claims_data.index.names
-        assert "date" in self.hrr_claims_data.index.names
-        assert "date" in self.fips_claims_data.index.names
+        assert "timestamp" in self.hrr_claims_data.index.names
+        assert "timestamp" in self.fips_claims_data.index.names
 
         expected_claims_columns = ["Denominator", "Covid_like"]
         for col in expected_claims_columns:
@@ -47,8 +47,8 @@ class TestLoadData:
     def test_data_columns(self):
         assert "hrr" in self.hrr_data.columns
         assert "fips" in self.fips_data.columns
-        assert "date" in self.hrr_data.columns
-        assert "date" in self.fips_data.columns
+        assert "timestamp" in self.hrr_data.columns
+        assert "timestamp" in self.fips_data.columns
 
         expected_columns = ["num", "den"]
         for col in expected_columns:
@@ -57,12 +57,12 @@ class TestLoadData:
 
     def test_edge_values(self):
         for data in [self.hrr_claims_data, self.fips_claims_data]:
-            assert data.index.get_level_values('date').max() >= Config.FIRST_DATA_DATE
-            assert data.index.get_level_values('date').min() < DROP_DATE
+            assert data.index.get_level_values("timestamp").max() >= Config.FIRST_DATA_DATE
+            assert data.index.get_level_values("timestamp").min() < DROP_DATE
 
         for data in [self.hrr_data, self.fips_data]:
-            assert data.date.max() >= Config.FIRST_DATA_DATE
-            assert data.date.min() < DROP_DATE
+            assert data["timestamp"].max() >= Config.FIRST_DATA_DATE
+            assert data["timestamp"].min() < DROP_DATE
 
     def test_hrrs_values(self):
         assert len(self.hrr_data.hrr.unique()) <= CONSTANTS.NUM_HRRS

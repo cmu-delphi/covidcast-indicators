@@ -37,10 +37,6 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
 
     # shift dates forward for labeling
     df["timestamp"] += day_shift
-    if start_date is None:
-        start_date = min(df["timestamp"])
-    if end_date is None:
-        end_date = max(df["timestamp"])
 
     # suspicious value warnings
     suspicious_se_mask = df["se"].gt(5)
@@ -49,7 +45,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
     if write_se:
         logging.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     else:
-        df.loc[:, "se"] = np.nan
+        df["se"] = np.nan
 
     assert not df["val"].isna().any(), " val contains nan values"
     suspicious_val_mask = df["val"].gt(90)
@@ -113,13 +109,13 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
 
         # output file naming
         if self.numtype == "covid":
-            signals = [SMOOTHED_ADJ if self.weekday else SMOOTHED]
+            signal_name = SMOOTHED_ADJ if self.weekday else SMOOTHED
         elif self.numtype == "cli":
-            signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
-        signal_names = add_prefix(
-            signals,
-            wip_signal=wip_signal)
-        self.updated_signal_names = signal_names
+            signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
+        else:
+            raise ValueError(f'Unsupported numtype received "{numtype}",'
+                             f' must be one of ["covid", "cli"]')
+        self.signal_name = add_prefix([signal_name], wip_signal=wip_signal)[0]
 
         # initialize members set in shift_dates().
         self.burnindate = None
@@ -231,21 +227,20 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         # conform to naming expected by create_export_csv()
         df = df.reset_index().rename(columns={"date": "timestamp", "rate": "val"})
         # df.loc[~df['incl'], ["val", "se"]] = np.nan  # update to this line after nancodes get merged in
-        df = df[df['incl']]
+        df = df[df["incl"]]
 
         # write out results
+        dates = write_to_csv(
+            df,
+            geo_level=self.geo,
+            start_date=min(self.sensor_dates),
+            end_date=max(self.sensor_dates),
+            write_se=self.se,
+            day_shift=Config.DAY_SHIFT,
+            out_name=self.signal_name,
+            output_path=output_path
+        )
         stats = []
-        for signal in self.updated_signal_names:
-            dates = write_to_csv(
-                df,
-                geo_level=self.geo,
-                start_date=min(self.sensor_dates),
-                end_date=max(self.sensor_dates),
-                write_se=self.se,
-                day_shift=Config.DAY_SHIFT,
-                out_name=signal,
-                output_path=output_path
-            )
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
+        if len(dates) > 0:
+            stats = [(max(dates), len(dates))]
         return stats

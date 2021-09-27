@@ -20,7 +20,7 @@ from .sensor import CHCSensor
 from .weekday import Weekday
 
 
-def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", start_date=None, end_date=None):
+def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_path=".", start_date=None, end_date=None):
     """Write sensor values to csv.
 
     Args:
@@ -43,7 +43,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
     assert df[suspicious_se_mask].empty, " se contains suspiciously large values"
     assert not df["se"].isna().any(), " se contains nan values"
     if write_se:
-        logging.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
+        logger.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     else:
         df["se"] = np.nan
 
@@ -51,7 +51,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
     suspicious_val_mask = df["val"].gt(90)
     if not df[suspicious_val_mask].empty:
         for geo in df.loc[suspicious_val_mask, "geo_id"]:
-            logging.warning("value suspiciously high, {0}: {1}".format(
+            logger.warning("value suspiciously high, {0}: {1}".format(
                 geo, out_name
             ))
 
@@ -64,10 +64,10 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, output_path=".", 
         sensor=out_name,
         write_empty_days=True
     )
-    logging.debug("wrote {0} rows for {1} {2}".format(
+    logger.debug("wrote {0} rows for {1} {2}".format(
         df.size, df["geo_id"].unique().size, geo_level
     ))
-    logging.debug("wrote files to {0}".format(output_path))
+    logger.debug("wrote files to {0}".format(output_path))
     return dates
 
 
@@ -83,7 +83,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                  weekday,
                  numtype,
                  se,
-                 wip_signal):
+                 wip_signal,
+                 logger):
         """Init Sensor Updater.
 
         Args:
@@ -96,7 +97,9 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             numtype: type of count data used, one of ["covid", "cli"]
             se: boolean to write out standard errors, if true, use an obfuscated name
             wip_signal: Prefix for WIP signals
+            logger: the structured logger
         """
+        self.logger = logger
         self.startdate, self.enddate, self.dropdate = [
             pd.to_datetime(t) for t in (startdate, enddate, dropdate)]
         # handle dates
@@ -145,7 +148,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         geo = self.geo
         gmpr = GeoMapper()
         if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
-            logging.error("{0} is invalid, pick one of 'county', "
+            self.logger.error("{0} is invalid, pick one of 'county', "
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
@@ -197,12 +200,12 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                 sub_data.reset_index(level=0,inplace=True)
                 if self.weekday:
                     sub_data = Weekday.calc_adjustment(wd_params, sub_data)
-                res = CHCSensor.fit(sub_data, self.burnindate, geo_id)
+                res = CHCSensor.fit(sub_data, self.burnindate, geo_id, self.logger)
                 res = pd.DataFrame(res).loc[final_sensor_idxs]
                 dfs.append(res)
         else:
             n_cpu = min(10, cpu_count())
-            logging.debug("starting pool with {0} workers".format(n_cpu))
+            self.logger.debug("starting pool with {0} workers".format(n_cpu))
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
@@ -211,7 +214,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                         sub_data = Weekday.calc_adjustment(wd_params, sub_data)
                     pool_results.append(
                         pool.apply_async(
-                            CHCSensor.fit, args=(sub_data, self.burnindate, geo_id,),
+                            CHCSensor.fit, args=(sub_data, self.burnindate, geo_id, self.logger),
                         )
                     )
                 pool_results = [proc.get() for proc in pool_results]

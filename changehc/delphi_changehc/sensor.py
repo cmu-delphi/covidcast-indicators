@@ -87,7 +87,7 @@ class CHCSensor:
         return new_num, new_den
 
     @staticmethod
-    def fit(y_data, first_sensor_date, geo_id, num_col="num", den_col="den"):
+    def fit(y_data, first_sensor_date, geo_id, logger, num_col="num", den_col="den"):
         """Fitting routine.
 
         Args:
@@ -121,7 +121,7 @@ class CHCSensor:
         se_valid = valid_rates.eval('sqrt(rate * (1 - rate) / den)')
         rate_data['se'] = se_valid
 
-        logging.debug("{0}: {1:.3f},[{2:.3f}]".format(
+        logger.debug("{0}: {1:.3f},[{2:.3f}]".format(
             geo_id, rate_data['rate'][-1], rate_data['se'][-1]
         ))
         return {"geo_id": geo_id,

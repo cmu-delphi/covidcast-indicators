@@ -1,4 +1,5 @@
 # standard
+import logging
 from copy import deepcopy
 import os
 from os.path import join, exists
@@ -27,6 +28,7 @@ COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
+TEST_LOGGER = logging.getLogger()
 
 class TestCHCSensorUpdater:
     """Tests for updating the sensors."""
@@ -53,7 +55,8 @@ class TestCHCSensorUpdater:
             self.weekday,
             self.numtype,
             self.se,
-            ""
+            "",
+            TEST_LOGGER
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -77,7 +80,8 @@ class TestCHCSensorUpdater:
                 self.weekday,
                 self.numtype,
                 self.se,
-                ""
+                "",
+               TEST_LOGGER
             )
             su_inst.shift_dates()
             test_data = pd.DataFrame({
@@ -103,7 +107,8 @@ class TestCHCSensorUpdater:
                 self.weekday,
                 self.numtype,
                 self.se,
-                ""
+                "",
+                TEST_LOGGER
             )
             # As of 3/3/21 (40c258a), this set of data has county outputting data, state and hhs not
             # outputting data, and nation outputting data, which is undesirable. Ideal behaviour
@@ -149,7 +154,8 @@ class TestWriteToCsv:
             write_se=False,
             day_shift=CONFIG.DAY_SHIFT,
             out_name="name_of_signal",
-            output_path=td.name
+            output_path=td.name,
+            logger=TEST_LOGGER
         )
 
         # check outputs
@@ -203,7 +209,8 @@ class TestWriteToCsv:
             write_se=True,
             day_shift=CONFIG.DAY_SHIFT,
             out_name="name_of_signal",
-            output_path=td.name
+            output_path=td.name,
+            logger=TEST_LOGGER
         )
 
         # check outputs
@@ -243,7 +250,8 @@ class TestWriteToCsv:
                 write_se=False,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         # nan se for included loc-date
@@ -258,7 +266,8 @@ class TestWriteToCsv:
                 write_se=True,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         # large se value
@@ -273,7 +282,8 @@ class TestWriteToCsv:
                 write_se=True,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         td.cleanup()

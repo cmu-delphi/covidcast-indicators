@@ -280,10 +280,9 @@ class ArchiveDiffer:
         Filter export directory to only contain relevant files.
 
         Filters down the export_dir to only contain:
-        1) New files, 2) Changed files, filtered-down to the ADDED and CHANGED rows
-        only, and 3) Deleted files replaced with empty CSVs with the same name. Should
-        be called after archive_exports() so we archive the raw exports before potentially
-        modifying them.
+        1) New files, 2) Changed files, filtered-down to the ADDED and CHANGED rows only.
+        Should be called after archive_exports() so we archive the raw exports before
+        potentially modifying them.
 
         Parameters
         ----------

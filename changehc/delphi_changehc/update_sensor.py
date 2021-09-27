@@ -241,7 +241,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             write_se=self.se,
             day_shift=Config.DAY_SHIFT,
             out_name=self.signal_name,
-            output_path=output_path
+            output_path=output_path,
+            logger=self.logger
         )
         stats = []
         if len(dates) > 0:

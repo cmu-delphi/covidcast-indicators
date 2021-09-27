@@ -1,4 +1,5 @@
 import json
+import logging
 from os.path import join, exists
 from tempfile import TemporaryDirectory
 
@@ -7,6 +8,7 @@ import numpy as np
 from delphi_cdc_covidnet.api_config import APIConfig
 from delphi_cdc_covidnet.covidnet import CovidNet
 
+TEST_LOGGER = logging.getLogger()
 
 class TestCovidNet:
 
@@ -65,14 +67,14 @@ class TestCovidNet:
 
             # Non-parallel
             state_files = CovidNet.download_all_hosp_data(
-                init_file, temp_dir, parallel=False)
+                init_file, temp_dir, TEST_LOGGER, parallel=False)
             assert len(state_files) == num_states
             for state_file in state_files:
                 assert exists(state_file)
 
             # Parallel
             state_files_par = CovidNet.download_all_hosp_data(
-                init_file, temp_dir, parallel=True)
+                init_file, temp_dir, TEST_LOGGER, parallel=True)
             assert set(state_files) == set(state_files_par)
             assert len(state_files_par) == num_states
             for state_file in state_files_par:

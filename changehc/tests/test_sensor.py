@@ -1,4 +1,5 @@
 # standard
+import logging
 
 import numpy as np
 import numpy.random as nr
@@ -19,6 +20,7 @@ PARAMS = {
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
+TEST_LOGGER = logging.getLogger()
 
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
@@ -56,7 +58,7 @@ class TestLoadData:
         for fips in all_fips:
             sub_data = self.combined_data.loc[fips]
             sub_data = sub_data.reindex(date_range, fill_value=0)
-            res0 = CHCSensor.fit(sub_data, date_range[0], fips)
+            res0 = CHCSensor.fit(sub_data, date_range[0], fips, TEST_LOGGER)
 
             if np.isnan(res0["rate"]).all():
                 assert res0["incl"].sum() == 0

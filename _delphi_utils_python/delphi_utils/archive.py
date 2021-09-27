@@ -313,7 +313,7 @@ class ArchiveDiffer:
         # Diff exports, and make incremental versions
         _, common_diffs, new_files = self.diff_exports()
 
-        # Archive changed, new, and emptied deleted files
+        # Archive changed and new files only
         to_archive = [f for f, diff in common_diffs.items()
                       if diff is not None]
         to_archive += new_files

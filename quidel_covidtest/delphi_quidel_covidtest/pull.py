@@ -8,7 +8,7 @@ import boto3
 import pandas as pd
 import numpy as np
 
-def get_from_s3(start_date, end_date, bucket):
+def get_from_s3(start_date, end_date, bucket, logger):
     """
     Get raw data from aws s3 bucket.
 
@@ -19,6 +19,8 @@ def get_from_s3(start_date, end_date, bucket):
             pull data from file tagged with date on/before the end date
         bucket: s3.Bucket
             the aws s3 bucket that stores quidel data
+        logger: logging.Logger
+            The structured logger.
     output:
         df: pd.DataFrame
         time_flag: datetime.datetime
@@ -49,7 +51,7 @@ def get_from_s3(start_date, end_date, bucket):
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
             # Avoid appending duplicate datasets
-            print("Pulling data received on %s"%search_date.date())
+            logger.info(f"Pulling data received on {search_date.date()}")
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
@@ -76,10 +78,9 @@ def fix_zipcode(df):
             zipcode = int(float(zipcode))
             zipcode5.append(zipcode)
     df['zip'] = zipcode5
-    # print('Fixing %.2f %% of the data' % (fixnum * 100 / len(zipcode5)))
     return df
 
-def fix_date(df):
+def fix_date(df, logger):
     """
     Remove invalid dates and select correct test date to use.
 
@@ -98,15 +99,15 @@ def fix_date(df):
     df.insert(2, "timestamp", df["TestDate"])
 
     mask = df["TestDate"] <= df["StorageDate"]
-    print("Removing %.2f%% of unusual data" % ((len(df) - np.sum(mask)) * 100 / len(df)))
+    logger.info(f"Removing {((len(df) - np.sum(mask)) * 100 / len(df)):.2f}% of unusual data")
     df = df[mask]
 
     mask = df["StorageDate"] - df["TestDate"] > pd.Timedelta(days=90)
-    print("Fixing %.2f%% of outdated data" % (np.sum(mask) * 100 / len(df)))
+    logger.info(f"Fixing {(np.sum(mask) * 100 / len(df)):.2f}% of outdated data")
     df["timestamp"].values[mask] = df["StorageDate"].values[mask]
     return df
 
-def preprocess_new_data(start_date, end_date, params, test_mode):
+def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     """
     Pull and pre-process Quidel Covid Test data.
 
@@ -123,6 +124,8 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
             read from params.json
         test_mode: bool
             pull raw data from s3 or not
+        logger: logging.Logger
+            The structured logger.
     output:
         df: pd.DataFrame
         time_flag: datetime.date:
@@ -144,7 +147,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
                             aws_secret_access_key=aws_secret_access_key)
         bucket = s3.Bucket(bucket_name)
         # Get new data from s3
-        df, time_flag = get_from_s3(start_date, end_date, bucket)
+        df, time_flag = get_from_s3(start_date, end_date, bucket, logger)
 
     # No new data can be pulled
     if time_flag is None:
@@ -154,7 +157,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode):
     df = fix_zipcode(df)
 
     # Create a column CanonicalDate according to StarageDate and TestDate
-    df = fix_date(df)
+    df = fix_date(df, logger)
 
     # Compute overallPositive
     overall_pos = df[df["OverallResult"] == "positive"].groupby(
@@ -197,7 +200,7 @@ def check_intermediate_file(cache_dir, pull_start_date):
             return previous_df, pull_start_date
     return None, pull_start_date
 
-def pull_quidel_covidtest(params):
+def pull_quidel_covidtest(params, logger):
     """Pull the quidel covid test data.
 
     Conditionally merge new data with historical data from ./cache.
@@ -205,10 +208,8 @@ def pull_quidel_covidtest(params):
     Parameters:
         params: dict
             including all the information read from params.json
-        end_from_today_minus: int
-            report data until - X days
-        export_day_range: int
-            number of dates to report
+        logger: logging.Logger
+            The structured logger.
 
     Returns:
         DataFrame:
@@ -237,7 +238,7 @@ def pull_quidel_covidtest(params):
     # Pull data from the file at 5 digit zipcode level
     # Use _end_date to check the most recent date that we received data
     df, _end_date = preprocess_new_data(
-            pull_start_date, pull_end_date, params, test_mode)
+            pull_start_date, pull_end_date, params, test_mode, logger)
 
     # Utilize previously stored data
     if previous_df is not None:

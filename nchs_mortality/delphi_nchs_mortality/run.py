@@ -9,12 +9,11 @@ from datetime import datetime, date, timedelta
 from typing import Dict, Any
 
 import numpy as np
-from delphi_utils import S3ArchiveDiffer, get_structured_logger
+from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
                         SENSORS, INCIDENCE_BASE, GEO_RES)
-from .export import export_csv
 from .pull import pull_nchs_mortality_data
 
 
@@ -62,25 +61,29 @@ def run_module(params: Dict[str, Any]):
     df_pull = pull_nchs_mortality_data(token, test_file)
     for metric in METRICS:
         if metric == 'percent_of_expected_deaths':
-            print(metric)
+            logger.info("Generating signal and exporting to CSV",
+                        metric = metric)
             df = df_pull.copy()
             df["val"] = df[metric]
             df["se"] = np.nan
             df["sample_size"] = np.nan
             df = df[~df["val"].isnull()]
             sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
-            dates = export_csv(
+            dates = create_export_csv(
                 df,
-                geo_name=GEO_RES,
+                geo_res=GEO_RES,
                 export_dir=daily_export_dir,
                 start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                 sensor=sensor_name,
+                weekly_dates=True
             )
             if len(dates) > 0:
                 stats.append((max(dates), len(dates)))
         else:
             for sensor in SENSORS:
-                print(metric, sensor)
+                logger.info("Generating signal and exporting to CSV",
+                            metric = metric,
+                            sensor = sensor)
                 df = df_pull.copy()
                 if sensor == "num":
                     df["val"] = df[metric]
@@ -90,12 +93,13 @@ def run_module(params: Dict[str, Any]):
                 df["sample_size"] = np.nan
                 df = df[~df["val"].isnull()]
                 sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
-                dates = export_csv(
+                dates = create_export_csv(
                     df,
-                    geo_name=GEO_RES,
+                    geo_res=GEO_RES,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
+                    weekly_dates=True
                 )
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
@@ -107,7 +111,7 @@ def run_module(params: Dict[str, Any]):
 #     - Uploads changed files to S3
 #     - Does not export any issues into receiving
     if "archive" in params:
-        arch_diffs(params, daily_arch_diff)
+        arch_diffs(params, daily_arch_diff, logger)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     min_max_date = stats and min(s[0] for s in stats)

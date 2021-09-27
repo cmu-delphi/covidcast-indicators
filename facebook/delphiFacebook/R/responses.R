@@ -129,7 +129,10 @@ load_response_one <- function(input_filename, params, contingency_run) {
                            Q79 = col_integer(),
                            Q80 = col_integer(),
                            I5 = col_character(),
-                           I7 = col_character()),
+                           I7 = col_character(),
+                           E2_1 = col_integer(),
+                           E2_2 = col_integer()
+                         ),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())

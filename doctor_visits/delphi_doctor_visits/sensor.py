@@ -6,9 +6,6 @@ Created: 2020-04-17
 
 """
 
-# standard packages
-import logging
-
 # third party
 import numpy as np
 import pandas as pd
@@ -162,7 +159,8 @@ class DoctorVisitsSensor:
             geo_id,
             recent_min_visits,
             min_recent_obs,
-            jeffreys):
+            jeffreys,
+            logger):
         """Fitting routine.
 
         Args:
@@ -217,7 +215,7 @@ class DoctorVisitsSensor:
             # if all rates are zero, don't bother
             if code_vals.sum() == 0:
                 if jeffreys:
-                    logging.error("p is 0 even though we used Jefferys estimate")
+                    logger.error("p is 0 even though we used Jefferys estimate")
                 new_rates.append(np.zeros((n_dates,)))
                 continue
 
@@ -240,7 +238,7 @@ class DoctorVisitsSensor:
         se[include] = np.sqrt(
             np.divide((new_rates[include] * (1 - new_rates[include])), den[include]))
 
-        logging.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
+        logger.debug(f"{geo_id}: {new_rates[-1]:.3f},[{se[-1]:.3f}]")
 
         included_indices = [x for x in final_sensor_idxs if include[x]]
 

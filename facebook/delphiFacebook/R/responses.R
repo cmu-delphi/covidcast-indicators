@@ -132,7 +132,9 @@ load_response_one <- function(input_filename, params, contingency_run) {
                            I7 = col_character(),
                            V1alt = col_character(),
                            V15c = col_character(),
-                           P6 = col_character()
+                           P6 = col_character(),
+                           E2_1 = col_integer(),
+                           E2_2 = col_integer()
                          ),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {

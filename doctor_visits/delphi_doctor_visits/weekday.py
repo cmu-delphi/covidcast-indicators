@@ -4,11 +4,11 @@ Weekday effects (code from Aaron Rumack).
 Created: 2020-05-06
 """
 
-# standard packages
-import logging
+
 
 # third party
 import cvxpy as cp
+from cvxpy.error import SolverError
 import numpy as np
 
 # first party
@@ -19,7 +19,7 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data):
+    def get_params(data, logger):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -92,13 +92,13 @@ class Weekday:
                     _ = prob.solve()
                     params[i,:] = b.value
                     break
-                except:
+                except SolverError:
                     # If the magnitude of the objective function is too large, an error is
                     # thrown; Rescale the objective function by going through loop
                     pass
             else:
                 # Leaving params[i,:] = 0 is equivalent to not performing weekday correction
-                logging.error("Unable to calculate weekday correction")
+                logger.error("Unable to calculate weekday correction")
 
         return params
 

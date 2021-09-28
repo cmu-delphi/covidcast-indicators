@@ -40,6 +40,7 @@ def create_export_csv(
     end_date: Optional[datetime] = None,
     remove_null_samples: Optional[bool] = False,
     write_empty_days: Optional[bool] = False,
+    logger: Optional[logging.Logger] = None,
     weekly_dates = False,
 ):
     """Export data in the format expected by the Delphi API.

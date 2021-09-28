@@ -45,6 +45,9 @@ def create_export_csv(
     write_empty_days: Optional[bool]
         If true, every day in between start_date and end_date will have a CSV file written
         even if there is no data for the day. If false, only the days present are written.
+    weekly_dates: Optional[bool]
+        Whether the output data are weekly or not. If True, will prefix files with
+        "weekly_YYYYWW" where WW is the epiweek instead of the usual YYYYMMDD for daily files.
 
     Returns
     ---------

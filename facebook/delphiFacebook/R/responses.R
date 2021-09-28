@@ -537,11 +537,13 @@ experimental_arm_assignment <- function(input_data, wave) {
 #'
 #' @param input_data data frame of responses
 #' @param county_crosswalk crosswalk mapping ZIP5 to counties
+#' @param params list containing `produce_individual_raceeth`, indicating
+#'   whether or not to issue microdata with race-ethnicity field
 #' @importFrom stringi stri_trim stri_replace_all
 #' @importFrom dplyr left_join group_by filter ungroup select rename
 #'
 #' @export
-create_complete_responses <- function(input_data, county_crosswalk)
+create_complete_responses <- function(input_data, county_crosswalk, params)
 {
   cols_to_report <- c(
     "start_dt", "end_dt", "date",

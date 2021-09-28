@@ -368,7 +368,7 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
                dplyr::between(.data$hh_number_total, 1L, 30L),
                .data$hh_number_sick <= .data$hh_number_total,
                .data$day >= (as.Date(params$start_date) - lead_days),
-               !(.data$wave != 12.5) # Ignore experimental Wave 12 data
+               .data$wave != 12.5 # Ignore experimental Wave 12 data
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
@@ -517,11 +517,11 @@ module_assignment <- function(input_data, wave) {
 #' @importFrom dplyr case_when
 experimental_arm_assignment <- function(input_data, wave) {
   if (wave == 12.5) {
-    assert( "random_num_exp" %in% names(input_data) )
+    assert( "random_number_exp" %in% names(input_data) )
     input_data$w12_treatment <- case_when(
-      input_data$random_num_exp >= 0.6666 ~ 1, # demographics placed after symptom items
-      input_data$random_num_exp >= 0.3333 ~ 2, # demographics placed after vaccine items
-      input_data$random_num_exp < 0.3333 ~ 3, # alternative wording to V1
+      input_data$random_number_exp >= 0.6666 ~ 1, # demographics placed after symptom items
+      input_data$random_number_exp >= 0.3333 ~ 2, # demographics placed after vaccine items
+      input_data$random_number_exp < 0.3333 ~ 3, # alternative wording to V1
       TRUE ~ NA_real_
     )
   }

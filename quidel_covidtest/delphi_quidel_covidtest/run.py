@@ -76,9 +76,9 @@ def run_module(params: Dict[str, Any]):
     export_day_range = params["indicator"]["export_day_range"]
 
     # Pull data and update export date
-    df, _end_date = pull_quidel_covidtest(params["indicator"])
+    df, _end_date = pull_quidel_covidtest(params["indicator"], logger)
     if _end_date is None:
-        print("The data is up-to-date. Currently, no new data to be ingested.")
+        logger.info("The data is up-to-date. Currently, no new data to be ingested.")
         return
     export_end_date = check_export_end_date(export_end_date, _end_date,
                                             END_FROM_TODAY_MINUS)
@@ -98,7 +98,9 @@ def run_module(params: Dict[str, Any]):
         geo_data, res_key = geo_map(geo_res, data)
         geo_groups = geo_data.groupby(res_key)
         for sensor in sensors:
-            print(geo_res, sensor)
+            logger.info("Generating signal and exporting to CSV",
+                        geo_res=geo_res,
+                        sensor=sensor)
             if sensor.endswith(SMOOTHED_POSITIVE):
                 smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
             elif sensor.endswith(RAW_POSITIVE):
@@ -125,7 +127,9 @@ def run_module(params: Dict[str, Any]):
     for geo_res in PARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
         for sensor in sensors:
-            print(geo_res, sensor)
+            logger.info("Generating signal and exporting to CSV",
+                        geo_res=geo_res,
+                        sensor=sensor)
             res_df = generate_sensor_for_parent_geo(
                 geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
                 device=smoothers[sensor][0], first_date=first_date,

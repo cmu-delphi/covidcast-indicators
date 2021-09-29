@@ -125,7 +125,7 @@ def aggregate(df, metric, geo_res):
     return df.rename({geo_key: "geo_id"}, axis=1)
 
 def process(fname, sensors, metrics, geo_resolutions,
-            export_dir, brand_df, stats):
+            export_dir, brand_df, stats, logger):
     """
     Process an input census block group-level CSV and export it.
 
@@ -135,16 +135,20 @@ def process(fname, sensors, metrics, geo_resolutions,
     ----------
     fname: str
         Input filename.
-    metrics: List[Tuple[str, bool]]
-        List of (metric_name, wip).
     sensors: List[str]
         List of (sensor)
+    metrics: List[Tuple[str, bool]]
+        List of (metric_name, wip).
     geo_resolutions: List[str]
         List of geo resolutions to export the data.
+    export_dir: str
+        The directory to export files to.
     brand_df: pd.DataFrame
         mapping info from naics_code to safegraph_brand_id
     stats: List[Tuple[datetime, int]]
         List to which we will add (max export date, number of export dates)
+    logger: logging.Logger
+        The structured logger.
 
     Returns
     -------
@@ -164,7 +168,7 @@ def process(fname, sensors, metrics, geo_resolutions,
                          usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
         dfs = construct_signals(df, metric_names, naics_codes, brand_df)
-        print("Finished pulling data from " + fname)
+        logger.info("Finished pulling data.", filename=fname)
     else:
         files = glob.glob(f'{fname}/**/*.csv.gz', recursive=True)
         dfs_dict = {"bars_visit": [], "restaurants_visit": []}
@@ -180,9 +184,11 @@ def process(fname, sensors, metrics, geo_resolutions,
             ).groupby(["timestamp", "zip"]).sum().reset_index()
         dfs["restaurants_visit"] = pd.concat(dfs_dict["restaurants_visit"]
             ).groupby(["timestamp", "zip"]).sum().reset_index()
-        print("Finished pulling data from " + fname)
+        logger.info("Finished pulling data.", filename=fname)
     for geo_res, sensor in product(geo_resolutions, sensors):
         for metric, wip in zip(metric_names, wips):
+            logger.info("Generating signal and exporting to CSV",
+                        geo_res=geo_res, metric=metric, sensor=sensor)
             df_export = aggregate(dfs[metric], metric, geo_res)
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan

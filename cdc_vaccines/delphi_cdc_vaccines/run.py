@@ -30,6 +30,7 @@ from .pull import pull_cdcvacc_data
 
 
 def add_nancodes(df: DataFrame) -> DataFrame:
+    """Add nancode annotations to the indicator."""
     # Default nancodes for a non-survey indicator
     df["missing_val"] = Nans.NOT_MISSING
     df["missing_se"] = Nans.NOT_APPLICABLE

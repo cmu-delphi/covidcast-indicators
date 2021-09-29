@@ -326,7 +326,7 @@ process_qsf <- function(path_to_qsf,
   
   if (any(is.na(qdf$description))) {
     nonlabelled_items <- qdf$variable[is.na(qdf$description)]
-    stop(sprintf("items %s do not have a short name assigned",
+    stop(sprintf("items %s do not have a description provided",
                  paste(nonlabelled_items, collapse=", "))
     )
   }

@@ -60,7 +60,7 @@ class TestRun:
                                     "cumulative_counts_part_vaccine_18P",
                                     "incidence_counts_part_vaccine_18P",
                                     "cumulative_counts_part_vaccine_65P",
-                                    "incidence_counts_part_vaccine_65P"]: 
+                                    "incidence_counts_part_vaccine_65P"]:
             for date in dates:
                 for geo in geos:
                     expected_files += [date + "_" + geo + "_" + metric + ".csv"]
@@ -76,4 +76,4 @@ class TestRun:
         df = pd.read_csv(
             join("receiving", "20210819_state_cumulative_counts_tot_vaccine.csv")
         )
-        assert (df.columns.values == ["geo_id", "val", "missing_se", "missing_sample_size"]).all()
+        assert (df.columns.values == ["geo_id", "val", "se", "sample_size", "missing_val", "missing_se", "missing_sample_size"]).all()

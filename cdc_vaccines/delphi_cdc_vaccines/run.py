@@ -19,12 +19,28 @@ from datetime import timedelta, datetime
 from itertools import product
 import time as tm
 import os
+
+from pandas import DataFrame
+
 from delphi_utils.export import create_export_csv
 from delphi_utils.geomap import GeoMapper
-from delphi_utils import get_structured_logger, nancodes
+from delphi_utils import get_structured_logger
+from delphi_utils.nancodes import Nans
 from .constants import GEOS, SIGNALS, SMOOTHERS
 from .pull import pull_cdcvacc_data
 
+
+def add_nancodes(df: DataFrame) -> DataFrame:
+    # Default nancodes for a non-survey indicator
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark an values found null to the catch-all category
+    remaining_nans_mask = df["val"].isnull() & df["missing_val"].eq(Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+
+    return df
 
 def run_module(params):
     """
@@ -71,8 +87,9 @@ def run_module(params):
         df["val"] = df[["geo_id", sensor]].groupby("geo_id")[sensor].transform(
             smoother[0].smooth
         )
-        df["missing_se"] = nancodes.Nans.NOT_APPLICABLE
-        df["missing_sample_size"] = nancodes.Nans.NOT_APPLICABLE
+        df["se"] = None
+        df["sample_size"] = None
+        df = add_nancodes(df)
         sensor_name = sensor + smoother[1]
         if not (("cumulative" in sensor_name) and ("7dav" in sensor_name)):
             # don't export first 6 days for smoothed signals since they'll be nan.

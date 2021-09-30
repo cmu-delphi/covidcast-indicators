@@ -8,6 +8,8 @@ import pandas as pd
 
 from delphi_utils import create_export_csv, GeoMapper
 
+from .pull import pull
+
 INCIDENCE_BASE = 100000
 
 GEO_KEY_DICT = {
@@ -120,8 +122,50 @@ def aggregate(df, metric, geo_res):
                             * INCIDENCE_BASE
     return df.rename({geo_key: "geo_id"}, axis=1)
 
-def process(fname, sensors, metrics, geo_resolutions,
-            export_dir, brand_df, stats, logger):
+
+def handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats):
+    for geo_res, sensor in product(geo_resolutions, sensors):
+        for metric, wip in zip(metric_names, wips):
+            df_export = aggregate(dfs[metric], metric, geo_res)
+            df_export["val"] = df_export["_".join([metric, sensor])]
+            df_export["se"] = np.nan
+            df_export["sample_size"] = np.nan
+
+            if wip:
+                metric = "wip_" + metric
+            dates = create_export_csv(
+                df_export,
+                export_dir=export_dir,
+                start_date=df_export["timestamp"].min(),
+                metric=metric,
+                geo_res=geo_res,
+                sensor=sensor,
+            )
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))
+
+def data(params, day, brand_df):
+    df = pull(params, day, brand_df)
+    output_dir = os.path.join(
+        params["indicator"]["raw_data_dir"],
+        "api",
+        "reference_date",
+        day.strftime("%Y%m%d"),
+        "download_date",
+    )
+    os.makedirs(output_dir)
+    df.to_csv(os.path.join(output_dir, f"{date.today()}.csv"))
+    return df
+                
+def process(day, sensors, metrics, geo_resolutions, export_dir, brand_df, stats, params, logger):
+    metric_names, naics_codes, wips = (list(x) for x in zip(*metrics))
+    df = data(params, day, brand_df)
+    dfs = construct_signals(df, metric_names, naics_codes, brand_df)
+    print(f"Finished pulling data for {day}")
+    handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats)
+
+def process_s3(fname, sensors, metrics, geo_resolutions,
+               export_dir, brand_df, stats, logger):
     """
     Process an input census block group-level CSV and export it.
 
@@ -180,7 +224,7 @@ def process(fname, sensors, metrics, geo_resolutions,
             ).groupby(["timestamp", "zip"]).sum().reset_index()
         dfs["restaurants_visit"] = pd.concat(dfs_dict["restaurants_visit"]
             ).groupby(["timestamp", "zip"]).sum().reset_index()
-        logger.info("Finished pulling data.", filename=fname)
+    logger.info("Finished pulling data.", filename=fname)
     for geo_res, sensor in product(geo_resolutions, sensors):
         for metric, wip in zip(metric_names, wips):
             logger.info("Generating signal and exporting to CSV",
@@ -189,16 +233,6 @@ def process(fname, sensors, metrics, geo_resolutions,
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
             df_export["sample_size"] = np.nan
+    handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats)
 
-            if wip:
-                metric = "wip_" + metric
-            dates = create_export_csv(
-                df_export,
-                export_dir=export_dir,
-                start_date=df_export["timestamp"].min(),
-                metric=metric,
-                geo_res=geo_res,
-                sensor=sensor,
-            )
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
+

@@ -160,9 +160,10 @@ class ClaimsHospIndicatorUpdater:
         valid_inds = {}
         if not self.parallel:
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0, inplace=True)
+                sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
                 res = pd.DataFrame(res)
                 rates[geo_id] = np.array(res.loc[final_output_inds, "rate"])
@@ -174,9 +175,10 @@ class ClaimsHospIndicatorUpdater:
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
-                    sub_data.reset_index(level=0, inplace=True)
+                    sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                    sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(
                             ClaimsHospIndicator.fit,

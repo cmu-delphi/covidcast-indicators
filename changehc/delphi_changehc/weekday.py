@@ -90,10 +90,10 @@ class Weekday:
             _ = prob.solve()
         params = b.value
 
-        return params
+        return params.reshape(1, -1)
 
     @staticmethod
-    def calc_adjustment(params, sub_data):
+    def calc_adjustment(params, sub_data, cols):
         """Apply the weekday adjustment to a specific time series.
 
         Extracts the weekday fixed effects from the parameters and uses these to
@@ -112,14 +112,14 @@ class Weekday:
         -- this has the same effect.
 
         """
-        tmp = sub_data.reset_index()
+        tmp = sub_data.copy()
+        for i, c in enumerate(cols):
+            wd_correction = np.zeros((len(tmp[c])))
 
-        wd_correction = np.zeros((len(tmp["num"])))
-        for wd in range(7):
-            mask = tmp[Config.DATE_COL].dt.dayofweek == wd
-            wd_correction[mask] = tmp.loc[mask, "num"] / (
-                np.exp(params[wd]) if wd < 6 else np.exp(-np.sum(params[:6]))
-            )
-        tmp.loc[:, "num"] = wd_correction
-
-        return tmp.set_index(Config.DATE_COL)
+            for wd in range(7):
+                mask = tmp[Config.DATE_COL].dt.dayofweek == wd
+                wd_correction[mask] = tmp.loc[mask, c] / (
+                    np.exp(params[i, wd]) if wd < 6 else np.exp(-np.sum(params[i, :6]))
+                )
+            tmp.loc[:, c] = wd_correction
+        return tmp

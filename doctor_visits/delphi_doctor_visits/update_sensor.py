@@ -145,7 +145,7 @@ def update_sensor(
         for geo_id in unique_geo_ids:
             sub_data = data_groups.get_group(geo_id).copy()
             if weekday:
-                sub_data = Weekday.calc_adjustment(params, sub_data)
+                sub_data = Weekday.calc_adjustment(params,  sub_data,   Config.CLI_COLS + Config.FLU1_COL)
 
             res = DoctorVisitsSensor.fit(
                 sub_data,
@@ -169,7 +169,9 @@ def update_sensor(
             for geo_id in unique_geo_ids:
                 sub_data = data_groups.get_group(geo_id).copy()
                 if weekday:
-                    sub_data = Weekday.calc_adjustment(params, sub_data)
+                    sub_data = Weekday.calc_adjustment(params,
+                                                       sub_data,
+                                                       Config.CLI_COLS + Config.FLU1_COL)
 
                 pool_results.append(
                     pool.apply_async(

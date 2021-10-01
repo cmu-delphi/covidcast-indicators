@@ -201,9 +201,10 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         if not self.parallel:
             dfs = []
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0,inplace=True)
+                sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = CHCSensor.fit(sub_data, self.burnindate, geo_id, self.logger)
                 res = pd.DataFrame(res).loc[final_sensor_idxs]
                 dfs.append(res)
@@ -213,9 +214,10 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
-                    sub_data.reset_index(level=0, inplace=True)
+                    sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                    sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(
                             CHCSensor.fit, args=(sub_data, self.burnindate, geo_id, self.logger),

@@ -18,11 +18,11 @@ from delphi_utils.nancodes import Nans
 
 CSV_DTYPES = {
     "geo_id": str, "val": float, "se": float, "sample_size": float,
-    "missing_val": int, "missing_se":int, "missing_sample_size": int
+    "missing_val": int, "missing_se": int, "missing_sample_size": int
     }
 
 CSVS_BEFORE = {
-    # Common
+    # All rows unchanged
     "csv0": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
         "val": [1.000000001, 2.00000002, 3.00000003],
@@ -33,6 +33,7 @@ CSVS_BEFORE = {
         "missing_sample_size": [Nans.NOT_MISSING] * 3,
         }),
 
+    # One row deleted and one row added
     "csv1": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
         "val": [1.0, 2.0, 3.0],
@@ -43,7 +44,7 @@ CSVS_BEFORE = {
         "missing_sample_size": [Nans.NOT_MISSING] * 3,
         }),
 
-    # Deleted
+    # File deleted
     "csv2": pd.DataFrame({
         "geo_id": ["1"],
         "val": [1.0],
@@ -54,7 +55,7 @@ CSVS_BEFORE = {
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
 
-    # Common, but updated with missing columns
+    # All rows common, but missing columns added
     "csv4": pd.DataFrame({
         "geo_id": ["1"],
         "val": [1.0],
@@ -62,7 +63,7 @@ CSVS_BEFORE = {
         "sample_size": [10.0]
         }),
 
-    # Common, but missing columns removed
+    # All rows common, but missing columns removed
     "csv5": pd.DataFrame({
         "geo_id": ["1"],
         "val": [1.0],
@@ -72,10 +73,34 @@ CSVS_BEFORE = {
         "missing_se": [Nans.NOT_MISSING],
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
+
+    # All rows common, but no missing columns
+    "csv6": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0]
+        }),
+
+    # Row deleted and row added, but no missing columns (will not be uploaded)
+    "csv7": pd.DataFrame({
+        "geo_id": ["1", "2"],
+        "val": [1.0, 2.0],
+        "se": [0.1, 0.2],
+        "sample_size": [10.0, 20.0]
+        }),
+
+    # Row deleted and row added, but no missing columns
+    "csv8": pd.DataFrame({
+        "geo_id": ["1", "2"],
+        "val": [1.0, 2.0],
+        "se": [0.1, 0.2],
+        "sample_size": [10.0, 20.0]
+        }),
 }
 
 CSVS_AFTER = {
-    # Common
+    # All rows unchanged
     "csv0": pd.DataFrame({
         "geo_id": ["1", "2", "3"],
         "val": [1.0, 2.0, 3.0],
@@ -86,6 +111,7 @@ CSVS_AFTER = {
         "missing_sample_size": [Nans.NOT_MISSING] * 3,
         }),
 
+    # One row deleted and one row added
     "csv1": pd.DataFrame({
         "geo_id": ["1", "2", "4"],
         "val": [1.0, 2.1, 4.0],
@@ -96,7 +122,7 @@ CSVS_AFTER = {
         "missing_sample_size": [Nans.NOT_MISSING] * 3,
         }),
 
-    # Added
+    # File added
     "csv3": pd.DataFrame({
         "geo_id": ["2"],
         "val": [2.0000002],
@@ -107,7 +133,7 @@ CSVS_AFTER = {
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
 
-    # Common, but updated with missing columns
+    # All rows common, but missing columns added
     "csv4": pd.DataFrame({
         "geo_id": ["1"],
         "val": [1.0],
@@ -118,12 +144,36 @@ CSVS_AFTER = {
         "missing_sample_size": [Nans.NOT_MISSING],
         }),
 
-    # Common, but missing columns removed
+    # All rows common, but missing columns removed
     "csv5": pd.DataFrame({
         "geo_id": ["1"],
         "val": [1.0],
         "se": [0.1],
         "sample_size": [10.0]
+        }),
+
+    # All rows common, but no missing columns
+    "csv6": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0]
+        }),
+
+    # Row deleted and row added, but no missing columns (will not be uploaded)
+    "csv7": pd.DataFrame({
+        "geo_id": ["1"],
+        "val": [1.0],
+        "se": [0.1],
+        "sample_size": [10.0]
+        }),
+
+    # Row deleted and row added, but no missing columns
+    "csv8": pd.DataFrame({
+        "geo_id": ["1", "3"],
+        "val": [1.0, 3.0],
+        "se": [0.1, 0.3],
+        "sample_size": [10.0, 30.0]
         }),
 }
 
@@ -175,7 +225,7 @@ class TestArchiveDiffer:
         # Check return values
         assert set(deleted_files) == {join(cache_dir, "csv2.csv")}
         assert set(common_diffs.keys()) == {
-            join(export_dir, f) for f in ["csv0.csv", "csv1.csv", "csv4.csv", "csv5.csv"]}
+            join(export_dir, f) for f in ["csv0.csv", "csv1.csv", "csv4.csv", "csv5.csv", "csv6.csv", "csv7.csv", "csv8.csv"]}
         assert set(new_files) == {join(export_dir, "csv3.csv")}
         assert common_diffs[join(export_dir, "csv0.csv")] is None
         assert common_diffs[join(export_dir, "csv1.csv")] == join(
@@ -183,14 +233,19 @@ class TestArchiveDiffer:
 
         # Check filesystem for actual files
         assert set(listdir(export_dir)) == {
-            "csv0.csv", "csv1.csv", "csv1.csv.diff",
-            "csv3.csv", "csv4.csv", "csv4.csv.diff",
-            "csv5.csv", "csv5.csv.diff"
+            "csv0.csv",
+            "csv1.csv", "csv1.csv.diff",
+            "csv3.csv",
+            "csv4.csv", "csv4.csv.diff",
+            "csv5.csv", "csv5.csv.diff",
+            "csv6.csv",
+            "csv7.csv", "csv7.csv.diff",
+            "csv8.csv", "csv8.csv.diff"
         }
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv.diff"), dtype=CSV_DTYPES),
             csv1_diff)
-
+pd.read_csv(join(export_dir, "csv8.csv"))
         # Test filter_exports
         # ===================
 
@@ -204,7 +259,7 @@ class TestArchiveDiffer:
         arch_diff.filter_exports(common_diffs)
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv", "csv7.csv", "csv8.csv"}
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv"), dtype=CSV_DTYPES),
             csv1_diff)
@@ -325,13 +380,11 @@ class TestS3ArchiveDiffer:
 
         # Check that the buckets now contain the exported files.
         for csv_name, df in CSVS_AFTER.items():
-            body = s3_client.get_object(
-                Bucket=self.bucket_name,
-                Key=f"{self.indicator_prefix}/{csv_name}.csv")["Body"]
+            body = s3_client.get_object(Bucket=self.bucket_name, Key=f"{self.indicator_prefix}/{csv_name}.csv")["Body"]
             assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), df)
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv", "csv7.csv", "csv8.csv"}
         csv1_diff = pd.DataFrame({
             "geo_id": ["3", "2", "4"],
             "val": [np.nan, 2.1, 4.0],
@@ -539,12 +592,11 @@ class TestGitArchiveDiffer:
         arch_diff.get_branch(branch_name).checkout()
         for csv_name, df in CSVS_AFTER.items():
             assert_frame_equal(
-                pd.read_csv(
-                    join(cache_dir, f"{csv_name}.csv"), dtype=CSV_DTYPES), df)
+                pd.read_csv(join(cache_dir, f"{csv_name}.csv"), dtype=CSV_DTYPES), df)
         original_branch.checkout()
 
         # Check exports directory just has incremental changes
-        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv"}
+        assert set(listdir(export_dir)) == {"csv1.csv", "csv3.csv", "csv4.csv", "csv5.csv", "csv7.csv", "csv8.csv"}
         csv1_diff = pd.DataFrame({
             "geo_id": ["3", "2", "4"],
             "val": [np.nan, 2.1, 4.0],

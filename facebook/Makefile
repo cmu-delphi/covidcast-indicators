@@ -54,7 +54,7 @@ tidy: receiving
 	cp params.json tidy/
 	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
-	tar -czf scratch/tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz tidy
+	tar -czf scratch/tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz --exclude='tidy-*.tgz' tidy
 	mv scratch/*.tgz tidy/
 
 clean:

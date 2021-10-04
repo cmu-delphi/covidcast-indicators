@@ -245,7 +245,7 @@ class TestArchiveDiffer:
         assert_frame_equal(
             pd.read_csv(join(export_dir, "csv1.csv.diff"), dtype=CSV_DTYPES),
             csv1_diff)
-pd.read_csv(join(export_dir, "csv8.csv"))
+
         # Test filter_exports
         # ===================
 

@@ -336,7 +336,7 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 
     # Copy only columns we're using.
     select_cols <- c(metric, var_weight, "weight_in_location")
-    agg_df <- group_df[, select_cols, with=FALSE][!is.na(eval(as.name(metric))), ]
+    agg_df <- group_df[!is.na(eval(as.name(metric))), select_cols, with=FALSE]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

@@ -16,5 +16,7 @@ variables}
 corrected data frame
 }
 \description{
-Fix E1_* names in Wave 11 data after ~June 16, 2021.
+Items E1_1 through E1_4 are part of a matrix. Qualtrics, for unknown reasons,
+switched to naming these E1_4 through E1_7 in June. Convert back to the
+intended names.
 }

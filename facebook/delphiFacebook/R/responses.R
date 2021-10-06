@@ -505,10 +505,12 @@ bodge_E1 <- function(input_data, wave) {
   assert(!(E14_present && E47_present), "fields E1_1-E1_4 should not be present at the same time as fields E1_4-E1_7")
   
   if ( E47_present ) {
-    input_data <- rename(input_data, E1_1 = "E1_4")
-    input_data <- rename(input_data, E1_2 = "E1_5")
-    input_data <- rename(input_data, E1_3 = "E1_6")
-    input_data <- rename(input_data, E1_4 = "E1_7")
+    input_data <- rename(input_data,
+                         E1_1 = "E1_4",
+                         E1_2 = "E1_5",
+                         E1_3 = "E1_6",
+                         E1_4 = "E1_7"
+    )
   }
   return(input_data)
 }

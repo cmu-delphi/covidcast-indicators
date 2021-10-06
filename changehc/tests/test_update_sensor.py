@@ -132,6 +132,47 @@ class TestCHCSensorUpdator:
         assert outputs["20200319_hhs_smoothed_outpatient_covid.csv"].empty
         assert outputs["20200319_nation_smoothed_outpatient_covid.csv"].empty
 
+    def test_update_sensor_output_daterange(self):
+        """Tests that output does not change when data range changes"""
+        small_test_data = pd.DataFrame({
+            "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
+            "fips": ["01001"] * 13 + ["42003"] * 13,
+            "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
+            "date": list(pd.date_range("20200301", "20200313")) * 2
+        }).set_index(["fips", "date"])
+        startdates = ["2020-03-01", "2020-03-05"]
+        outputs = {s:{} for s in startdates}
+        for startdate in startdates:
+            for geo in ["county", "state", "hhs", "nation"]:
+                td = TemporaryDirectory()
+                su_inst = CHCSensorUpdator(
+                    startdate,
+                    "03-22-2020",
+                    "03-27-2020",
+                    geo,
+                    self.parallel,
+                    self.weekday,
+                    self.numtype,
+                    self.se,
+                    "",
+                    TEST_LOGGER
+                )
+                su_inst.update_sensor(small_test_data.copy(), td.name)
+                for f in os.listdir(td.name):
+                    outputs[startdate][f] = pd.read_csv(os.path.join(td.name, f))
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
+                f"failed {geo} update sensor test"
+            td.cleanup()
+
+        def pretty(key):
+            return "\n".join(f"{s}[{key}]: {len(outputs[s][key])}" for s in startdates)
+        for f in outputs[startdates[-1]]:
+            assert len(outputs[startdates[0]][f]) == len(outputs[startdates[1]][f]), \
+                f"\n{pretty(f)}"
+            assert np.array_equal(
+                outputs[startdates[0]][f].val.values,
+                outputs[startdates[1]][f].val.values
+            ), f
 
 class TestWriteToCsv:
     """Tests for writing output files to CSV."""

@@ -70,6 +70,9 @@ def create_export_csv(
         even if there is no data for the day. If false, only the days present are written.
     logger: Optional[logging.Logger]
         Pass a logger object here to log information about contradictory missing codes.
+    weekly_dates: Optional[bool]
+        Whether the output data are weekly or not. If True, will prefix files with
+        "weekly_YYYYWW" where WW is the epiweek instead of the usual YYYYMMDD for daily files.
 
     Returns
     ---------

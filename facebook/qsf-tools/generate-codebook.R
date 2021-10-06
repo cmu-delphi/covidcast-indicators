@@ -326,7 +326,7 @@ process_qsf <- function(path_to_qsf,
   
   if (any(is.na(qdf$description))) {
     nonlabelled_items <- qdf$variable[is.na(qdf$description)]
-    stop(sprintf("items %s do not have a short name assigned",
+    stop(sprintf("items %s do not have a description provided",
                  paste(nonlabelled_items, collapse=", "))
     )
   }
@@ -396,7 +396,14 @@ add_static_fields <- function(codebook,
                               path_to_static_fields="./static/static_microdata_fields.csv") {
   static_fields <- get_static_fields(wave, path_to_static_fields)
   
-  return(bind_rows(codebook, static_fields))
+  codebook <- bind_rows(codebook, static_fields) %>% 
+    filter(!(variable == "module" & wave < 11), # module field is only available for wave >= 11
+           !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
+           !(variable == "w12_treatment" & wave == 12.5), # experimental arm field is only available for wave == 12.5
+           variable != "Random_Number"
+    )
+
+  return(codebook)
 }
 
 #' Load dataframe of non-Qualtrics data fields
@@ -417,8 +424,7 @@ get_static_fields <- function(wave,
                                              response_option_randomization = col_character()
                             )) %>%
     mutate(wave = wave) %>% 
-    select(wave, everything()) %>% 
-    filter(!(variable == "module" & wave < 11))
+    select(wave, everything())
   
   return(static_fields)
 }

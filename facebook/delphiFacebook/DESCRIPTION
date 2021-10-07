@@ -17,7 +17,7 @@ Imports:
     dplyr,
     stringi,
     jsonlite,
-    lubridate (<= 1.7.10),
+    lubridate,
     data.table,
     tibble,
     purrr,

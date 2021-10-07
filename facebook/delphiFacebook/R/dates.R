@@ -1,6 +1,6 @@
 # Time zone to use throughout package.
 tz_to <- "America/Los_Angeles"
-wave6_mod_date <- ymd("2021-01-06", tz=tz_to)
+wave6_mod_date <- lubridate::ymd("2021-01-06", tz=tz_to)
 
 #' Get the date of the first day of the previous month.
 #'

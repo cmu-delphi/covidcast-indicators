@@ -124,7 +124,8 @@ test_that("filter_data_for_aggregation works correctly", {
     hh_number_sick = c(0, NA, 4, -5, 55, 5, 5, 5, 3, 3, 0, 30, 1),
     hh_number_total = c(1, 4, NA, 5, 5, -5, 100, 5, 5, 1, 1, 30, 1),
     day = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2020-01-01"),
-    date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2020-01-01")
+    date = c("2021-01-01", "2021-01-01", "2021-01-02", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01", "2020-01-01"),
+    wave = 12
   )
   
   expected <- tibble(
@@ -132,7 +133,8 @@ test_that("filter_data_for_aggregation works correctly", {
     hh_number_sick = c(5, 3, 0, 30),
     hh_number_total = c(5, 5, 1, 30),
     day = c("2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01"),
-    date = c("2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01")
+    date = c("2021-01-01", "2021-01-01", "2021-01-01", "2021-01-01"),
+    wave = 12
   )
 
   expect_equal(filter_data_for_aggregation(input, params),
@@ -345,5 +347,45 @@ test_that("B13 bodge works correctly", {
   )
   expect_equal(bodge_B13(input, wave = 11),
                input)
+})
+
+test_that("E1 bodge works correctly", {
+  input <- tibble(
+    E1_1 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_4 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_E1(input, wave = NA), input)
+  
+  input_4_to_7 <- tibble(
+    E1_4 = c(1, 2, 3, 1),
+    E1_5 = c(1, 2, 3, 2),
+    E1_6 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+
+  expect_equal(bodge_E1(input_4_to_7, wave = NA), input)
+  
+  input_mixed <- tibble(
+    E1_4 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_E1(input_mixed, wave = NA), input_mixed)
+  
+  input_both <- tibble(
+    E1_1 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_4 = c(1, 2, 3, 1),
+    E1_5 = c(1, 2, 3, 2),
+    E1_6 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+  expect_error(bodge_E1(input_both, wave = NA),
+               "fields E1_1-E1_4 should not be present at the same time as fields E1_4-E1_7"
+  )
 })
 

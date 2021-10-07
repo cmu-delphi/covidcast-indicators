@@ -23,7 +23,7 @@ def generate_transition_matrix(geo_res):
         The first is a data frame for HRR regions and the second are MSA
         regions.
     """
-    map_df = gmpr._load_crosswalk("fips", geo_res)  # pylint: disable=protected-access
+    map_df = gmpr.get_crosswalk("fips", geo_res)
     # Add population as weights
     map_df = gmpr.add_population_column(map_df, "fips")
     if geo_res == "hrr":
@@ -58,7 +58,7 @@ def geo_map(df, geo_res):
         and columns for signal vals.
         The geo_id has been converted from fips to HRRs/MSAs
     """
-    if geo_res in set(["county", "state"]):
+    if geo_res in {"county", "state"}:
         return df
 
     map_df = generate_transition_matrix(geo_res)

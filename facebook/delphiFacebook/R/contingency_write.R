@@ -114,8 +114,8 @@ add_geo_vars <- function(data, params, geo_type) {
   
   # Insert the geographic variables in place of the "geo_id" variable.
   index <- which(names(data) == "geo_id")
-  before <- if (index > 1) data[1:(index-1)] else NULL
-  after <- data[(index+1):ncol(data)]
+  before <- if (index > 1) data[, 1:(index-1)] else NULL
+  after <- data[, (index+1):ncol(data)]
   result <- bind_cols(before, geo_vars, after)
   
   return(result)

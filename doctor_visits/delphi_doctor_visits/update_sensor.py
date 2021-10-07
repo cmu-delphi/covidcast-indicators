@@ -9,7 +9,6 @@ Modified:
 """
 
 # standard packages
-import logging
 from datetime import timedelta
 from multiprocessing import Pool, cpu_count
 
@@ -24,7 +23,7 @@ from .sensor import DoctorVisitsSensor
 from .weekday import Weekday
 
 
-def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="."):
+def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, output_path="."):
     """Write sensor values to csv.
 
     Args:
@@ -34,7 +33,7 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
       output_path: outfile path to write the csv (default is current directory)
     """
     if se:
-        logging.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
+        logger.info(f"========= WARNING: WRITING SEs TO {out_name} =========")
 
     out_n = 0
     for d in set(output_df["date"]):
@@ -64,12 +63,12 @@ def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, output_path="
                     outfile.write(
                         "%s,%f,%s,%s,%s\n" % (geo_id, sensor, "NA", "NA", "NA"))
                 out_n += 1
-    logging.debug(f"wrote {out_n} rows for {geo_level}")
+    logger.debug(f"wrote {out_n} rows for {geo_level}")
 
 
 def update_sensor(
         filepath, startdate, enddate, dropdate, geo, parallel,
-        weekday, se
+        weekday, se, logger
 ):
     """Generate sensor values.
 
@@ -82,6 +81,7 @@ def update_sensor(
       parallel: boolean to run the sensor update in parallel
       weekday: boolean to adjust for weekday effects
       se: boolean to write out standard errors, if true, use an obfuscated name
+      logger: the structured logger
     """
     # as of 2020-05-11, input file expected to have 10 columns
     # id cols: ServiceDate, PatCountyFIPS, PatAgeGroup, Pat HRR ID/Pat HRR Name
@@ -125,7 +125,10 @@ def update_sensor(
         (burn_in_dates >= startdate) & (burn_in_dates <= enddate))[0][:len(sensor_dates)]
 
     # handle if we need to adjust by weekday
-    params = Weekday.get_params(data) if weekday else None
+    params = Weekday.get_params(data, logger) if weekday else None
+    if weekday and np.any(np.all(params == 0,axis=1)):
+        # Weekday correction failed for at least one count type
+        return None
 
     # handle explicitly if we need to use Jeffreys estimate for binomial proportions
     jeffreys = bool(se)
@@ -152,13 +155,14 @@ def update_sensor(
                 geo_id,
                 Config.MIN_RECENT_VISITS,
                 Config.MIN_RECENT_OBS,
-                jeffreys
+                jeffreys,
+                logger
             )
             out.append(res)
 
     else:
         n_cpu = min(10, cpu_count())
-        logging.debug(f"starting pool with {n_cpu} workers")
+        logger.debug(f"starting pool with {n_cpu} workers")
 
         with Pool(n_cpu) as pool:
             pool_results = []
@@ -179,6 +183,7 @@ def update_sensor(
                             Config.MIN_RECENT_VISITS,
                             Config.MIN_RECENT_OBS,
                             jeffreys,
+                            logger
                         ),
                     )
                 )

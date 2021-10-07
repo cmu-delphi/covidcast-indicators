@@ -63,9 +63,9 @@ def run_module(params: Dict[str, Any]):
     )
 
     # Pull data and update export date
-    dfs, _end_date = pull_quidel_data(params["indicator"])
+    dfs, _end_date = pull_quidel_data(params["indicator"], logger)
     if _end_date is None:
-        print("The data is up-to-date. Currently, no new data to be ingested.")
+        logger.info("The data is up-to-date. Currently, no new data to be ingested.")
         return
     export_end_dates = check_export_end_date(export_end_dates, _end_date,
                                              END_FROM_TODAY_MINUS)
@@ -81,7 +81,6 @@ def run_module(params: Dict[str, Any]):
     for sensor in sensors:
         # Check either covid_ag or flu_ag
         test_type = "covid_ag" if "covid_ag" in sensor else "flu_ag"
-        print("state", sensor)
         data = dfs[test_type].copy()
         state_groups = geo_map("state", data, map_df).groupby("state_id")
         first_date, last_date = data["timestamp"].min(), data["timestamp"].max()
@@ -97,7 +96,9 @@ def run_module(params: Dict[str, Any]):
 
         # County/HRR/MSA level
         for geo_res in GEO_RESOLUTIONS:
-            print(geo_res, sensor)
+            logger.info("Generating signal and exporting to CSV",
+                        geo_res = geo_res,
+                        sensor = sensor)
             data = dfs[test_type].copy()
             data, res_key = geo_map(geo_res, data, map_df)
             res_df = generate_sensor_for_other_geores(

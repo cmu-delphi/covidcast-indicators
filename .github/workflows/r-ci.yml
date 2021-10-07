@@ -54,12 +54,17 @@ jobs:
             devtools::install_version("readr", version = "1.4.0")
           }
 
+          if ( !require("lubridate") || packageVersion("lubridate") != "1.7.10" ) {
+            install.packages("devtools")
+            devtools::install_version("lubridate", version = "1.7.10")
+          }
+
           if ( !require("remotes") ) {
             install.packages("remotes")
           }
           remotes::update_packages(c("rcmdcheck", "mockr", "remotes"), upgrade="always")
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
-          remotes::update_packages(dependency_list$package[dependency_list$package != "readr"], upgrade="always")
+          remotes::update_packages(dependency_list$package[!(dependency_list$package %in% c("readr", "lubridate"))], upgrade="always")
         shell: Rscript {0}
       - name: Check
         run: |

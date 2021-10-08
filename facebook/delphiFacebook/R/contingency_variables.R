@@ -245,8 +245,7 @@ code_vaccinated_breakdown <- function(input_data, wave) {
       input_data$V3a == 4 ~ "Hesitant",
       TRUE ~ NA_character_
     )
-  }
-  else if (all(c("V1", "V3") %in% names(input_data))) {
+  } else if (all(c("V1", "V3") %in% names(input_data))) {
     input_data$vaccinationstatus <- case_when(
       input_data$V1 == 1 ~ "Vaccinated",
       input_data$V3 == 1 ~ "Accept/Appointment",

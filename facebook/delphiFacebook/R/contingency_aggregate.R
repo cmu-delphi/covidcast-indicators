@@ -336,6 +336,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 
     # Copy only columns we're using.
     select_cols <- c(metric, var_weight, "weight_in_location")
+    # This filter uses `x[, cols, with=FALSE]` rather than the newer recommended
+    # `x[, ..cols]` format to take advantage of better performance. Switch to
+    # using `..` if `with` is deprecated in the future.
     agg_df <- group_df[!is.na(eval(as.name(metric))), select_cols, with=FALSE]
 
     if (nrow(agg_df) > 0) {

@@ -235,34 +235,30 @@ code_health <- function(input_data, wave) {
 #' @return augmented data frame
 code_vaccinated_breakdown <- function(input_data, wave) {
   # grouping variable - vaccination status
-  if (any(c("V1", "V3", "V3a", "V11a") %in% names(input_data))){
-    if (all(c("V1", "V3a", "V11a") %in% names(input_data))) {
-      input_data$vaccinationstatus <- case_when(
-        input_data$V1 == 1 ~ "Vaccinated",
-        input_data$V3a == 1 ~ "Accept/Appointment",
-        input_data$V3a == 2 ~ "Accept/Appointment",
-        input_data$V11a == 1 ~ "Accept/Appointment",
-        input_data$V3a == 3 ~ "Hesitant",
-        input_data$V3a == 4 ~ "Hesitant",
-        TRUE ~ NA_character_
-      )
-    }
-    else if (all(c("V1", "V3") %in% names(input_data))) {
-      input_data$vaccinationstatus <- case_when(
-        input_data$V1 == 1 ~ "Vaccinated",
-        input_data$V3 == 1 ~ "Accept/Appointment",
-        input_data$V3 == 2 ~ "Accept/Appointment",
-        input_data$V3 == 3 ~ "Hesitant",
-        input_data$V3 == 4 ~ "Hesitant",
-        TRUE ~ NA_character_
-      )
-    } else {
-      input_data$vaccinationstatus <- NA
-    }
+  if (all(c("V1", "V3a", "V11a") %in% names(input_data))) {
+    input_data$vaccinationstatus <- case_when(
+      input_data$V1 == 1 ~ "Vaccinated",
+      input_data$V3a == 1 ~ "Accept/Appointment",
+      input_data$V3a == 2 ~ "Accept/Appointment",
+      input_data$V11a == 1 ~ "Accept/Appointment",
+      input_data$V3a == 3 ~ "Hesitant",
+      input_data$V3a == 4 ~ "Hesitant",
+      TRUE ~ NA_character_
+    )
+  }
+  else if (all(c("V1", "V3") %in% names(input_data))) {
+    input_data$vaccinationstatus <- case_when(
+      input_data$V1 == 1 ~ "Vaccinated",
+      input_data$V3 == 1 ~ "Accept/Appointment",
+      input_data$V3 == 2 ~ "Accept/Appointment",
+      input_data$V3 == 3 ~ "Hesitant",
+      input_data$V3 == 4 ~ "Hesitant",
+      TRUE ~ NA_character_
+    )
   } else {
     input_data$vaccinationstatus <- NA
   }
-  
+
   return(input_data)
 }
 

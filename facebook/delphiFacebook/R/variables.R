@@ -30,6 +30,7 @@ split_options <- function(column) {
 #' @return a logical vector; for each list entry, whether selection is contained
 #'   in the character vector.
 #'   
+#' @importFrom Rcpp evalCpp
 #' @useDynLib delphiFacebook, .registration = TRUE
 is_selected <- function(vec, selection, use_cpp=TRUE) {
   select_fn <- ifelse(use_cpp, is_selected_cpp, is_selected_r)

@@ -31,11 +31,9 @@ RAW_DEST:="raw"
 # dry-run mode: generate all files, but do not post them anywhere, and disable all emails to outside parties.
 DRY:=yes
 ifeq ($(DRY),yes)
-	EMAIL_SEND:=echo -e "Would send mail: echo -e \"Subject: $${SUBJECT}\n\n$${MSG}\" | sendmail $(DELPHI_SURVEY_EMAIL_USER)"
 	SFTP_POST:=echo -e "Would run: sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e \"\$${BATCH}\") -P 2222 $(DELPHI_SURVEY_SFTP_USER)\n$${BATCH}"
 	DRY_MESSAGE:="[DRY-RUN] "
 else
-	EMAIL_SEND:=echo -e "Subject: $${SUBJECT}\n\n$${MSG}" | sendmail $(DELPHI_SURVEY_EMAIL_USER)
 	SFTP_POST:=sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER)
 endif
 
@@ -121,10 +119,8 @@ $(WEIGHTS): $(TODAY)
 	MAX_WEIGHTED=`$(MAX_WEIGHTED)`; \
 	EXPECTED_MAX_WEIGHTED=`date --date='$(TODAY) -3 day' +'%Y%m%d'`; \
 	if [[ $$EXPECTED_MAX_WEIGHTED -gt $$MAX_WEIGHTED ]]; then \
-	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED\nActual most recent file: $$MAX_WEIGHTED"; \
-	  echo "WARNING: $${MSG}" | tr "\n" ";" >> $(MESSAGES); \
-	  SUBJECT="[fb-cmu-cvid] Weights are stale"; \
-	  $(EMAIL_SEND) ;\
+	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED; Actual most recent file: $$MAX_WEIGHTED"; \
+	  echo "WARNING: $${MSG}" >> $(MESSAGES); \
 	fi
 
 dev: delphiFacebook_1.0.tar.gz

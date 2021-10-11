@@ -7,6 +7,8 @@
   "end_date": "2020-08-28",
   "export_dir": "./receiving",
   "individual_dir": "./individual",
+  "individual_raceeth_dir": "./individual_raceeth",
+  "produce_individual_raceeth": false,
   "input": [
     "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY_......_-_US_Expansion.csv",
     "2020-08-29.2020-08-22.2020-08-29.Survey_of_COVID-Like_Illness_-_TODEPLOY-_US_Expansion_-_With_Translations.csv"

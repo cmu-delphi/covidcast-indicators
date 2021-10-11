@@ -27,6 +27,7 @@ ADD ./monthly-files.R /facebook/monthly-files.R
 ADD ./contingency_tables.R /facebook/contingency_tables.R
 ADD ./contingency-combine.R /facebook/contingency-combine.R
 ADD ./ssmtp.conf /etc/ssmtp/ssmtp.conf
+ADD ./GITREF facebook/GITREF
 WORKDIR /facebook/
 RUN make lib
 RUN make install

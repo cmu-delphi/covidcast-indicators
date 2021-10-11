@@ -10,9 +10,9 @@ RUN install2.r --error \
     data.table \
     roxygen2 \
     Rcpp \
-    BH
+    BH \
+    readr
 
-RUN R --no-restore --no-save -e 'devtools::install_version("readr", version="1.4.0")'
 RUN apt-get update && apt-get install -qq -y \
     python3-venv \
     sshpass \

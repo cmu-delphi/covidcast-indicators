@@ -181,7 +181,10 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
 
       # Copy only columns we're using.
       select_cols <- c(metric, var_weight, "weight_in_location")
-      ind_df <- sub_df[, select_cols, with=FALSE][!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
+      # This filter uses `x[, cols, with=FALSE]` rather than the newer
+      # recommended `x[, ..cols]` format to take advantage of better
+      # performance. Switch to using `..` if `with` is deprecated in the future.
+      ind_df <- sub_df[!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), select_cols, with=FALSE]
       
       if (nrow(ind_df) > 0)
       {

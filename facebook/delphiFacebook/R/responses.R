@@ -220,6 +220,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
+    input_data <- code_vaccinated_breakdown(input_data, wave)
     
     # Indicators
     input_data <- code_addl_vaccines(input_data, wave)

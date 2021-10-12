@@ -67,10 +67,3 @@ class TestPullCDCVaccines:
             pull_cdcvacc_data(
                 BASE_URL_BAD["missing_cols"],TEST_LOGGER
             )
-
-    def test_extra_cols(self):
-        """Test if error is raised when there are extra columns."""
-        with pytest.raises(ValueError):
-            pull_cdcvacc_data(
-                BASE_URL_BAD["extra_cols"], TEST_LOGGER
-            )

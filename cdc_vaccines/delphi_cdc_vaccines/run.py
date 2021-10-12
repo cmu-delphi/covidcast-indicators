@@ -71,7 +71,6 @@ def run_module(params):
         df["missing_se"] = nancodes.Nans.NOT_APPLICABLE
         df["missing_sample_size"] = nancodes.Nans.NOT_APPLICABLE
         sensor_name = sensor + smoother[1]
-        print(sensor_name)
         if not (("cumulative" in sensor_name) and ("7dav" in sensor_name)):
             # don't export first 6 days for smoothed signals since they'll be nan.
             start_date = min(df.timestamp) + timedelta(6) if smoother[1] else min(df.timestamp)

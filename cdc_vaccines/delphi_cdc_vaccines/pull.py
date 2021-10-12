@@ -45,8 +45,7 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     "series_complete_pop_pct",
     "mmwr_week",
     "recip_county",
-    "state_id",
-    "metro_status"
+    "state_id"
     ]
 
 
@@ -62,6 +61,7 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
 
     df['recip_state'] = df['recip_state'].str.lower()
     drop_columns.extend([x for x in df.columns if ("pct" in x) | ("svi" in x)])
+    drop_columns.extend(df.columns[22:])
     drop_columns =  list(set(drop_columns))
     df = GeoMapper().add_geocode(df, "state_id", "state_code",
         from_col="recip_state", new_col="state_id", dropna=False)
@@ -82,6 +82,7 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
             "schema may have changed.  Please investigate and "
             "amend drop_columns."
         ) from e
+
     # timestamp: str -> datetime
     df.columns = ["fips",
                   "cumulative_counts_tot_vaccine",

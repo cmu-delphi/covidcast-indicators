@@ -45,7 +45,8 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     "series_complete_pop_pct",
     "mmwr_week",
     "recip_county",
-    "state_id"
+    "state_id",
+    "metro_status"
     ]
 
 

@@ -4,7 +4,6 @@ from json import load,dump
 from shutil import copyfile, move
 import os
 import sys
-import string
 
 def read_params():
     """Read a file named 'params.json' in the current working directory.

@@ -2,7 +2,7 @@
 """Functions to call when running the function.
 
 This module should contain a function called `run_module`, that is executed
-when the module is run with `python -m MODULE_NAME`.  `run_module`'s lone argument should be a
+when the module is run with `python -m delphi_cdc_vaccines`.  `run_module`'s lone argument should be a
 nested dictionary of parameters loaded from the params.json file.  We expect the `params` to have
 the following structure:
     - "common":

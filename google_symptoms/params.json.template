@@ -31,9 +31,9 @@
         "sum_anosmia_ageusia_smoothed_search",
         "anosmia_smoothed_search"
       ]
-    },
-    "delivery": {
-      "delivery_dir": "./receiving"
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

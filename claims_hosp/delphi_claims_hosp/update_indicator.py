@@ -16,10 +16,10 @@ import pandas as pd
 from delphi_utils import GeoMapper
 
 # first party
+from delphi_utils import Weekday
 from .config import Config, GeoConstants
 from .load_data import load_data
 from .indicator import ClaimsHospIndicator
-from .weekday import Weekday
 
 
 class ClaimsHospIndicatorUpdater:
@@ -133,7 +133,7 @@ class ClaimsHospIndicatorUpdater:
         data_frame.fillna(0, inplace=True)
         return data_frame
 
-    def update_indicator(self, input_filepath, outpath):
+    def update_indicator(self, input_filepath, outpath, logger):
         """
         Generate and output indicator values.
 
@@ -152,7 +152,14 @@ class ClaimsHospIndicatorUpdater:
         data_frame = self.geo_reindex(data)
 
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(data_frame) if self.weekday else None
+        wd_params = Weekday.get_params(
+            data_frame,
+            "den",
+            ["num"],
+            Config.DATE_COL,
+            [1, 1e5],
+            logger,
+        ) if self.weekday else None
 
         # run fitting code (maybe in parallel)
         rates = {}
@@ -162,7 +169,7 @@ class ClaimsHospIndicatorUpdater:
             for geo_id, sub_data in data_frame.groupby(level=0):
                 sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
                 sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
                 res = pd.DataFrame(res)
@@ -177,7 +184,7 @@ class ClaimsHospIndicatorUpdater:
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
                     sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
                     sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(

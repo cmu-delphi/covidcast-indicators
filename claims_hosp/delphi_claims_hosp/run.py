@@ -113,8 +113,11 @@ def run_module(params):
                 params["indicator"]["write_se"],
                 signal_name
             )
-            updater.update_indicator(params["indicator"]["input_file"],
-                                     params["common"]["export_dir"])
+            updater.update_indicator(
+                params["indicator"]["input_file"],
+                params["common"]["export_dir"],
+                logger,
+            )
         logger.info("finished updating", geo = geo)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

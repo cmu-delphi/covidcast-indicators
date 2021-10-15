@@ -11,13 +11,12 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix, create_export_csv
+from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 
 # first party
 from .config import Config
 from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
 from .sensor import CHCSensor
-from .weekday import Weekday
 
 
 def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_path=".", start_date=None, end_date=None):
@@ -180,8 +179,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
 
 
     def update_sensor(self,
-            data,
-            output_path):
+        data,
+        output_path):
         """Generate sensor values, and write to csv format.
 
         Args:
@@ -196,14 +195,21 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(data_frame) if self.weekday else None
+        wd_params = Weekday.get_params(
+            data_frame,
+            "den",
+            ["num"],
+            Config.DATE_COL,
+            [1, 1e5],
+            self.logger,
+        ) if self.weekday else None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []
             for geo_id, sub_data in data_frame.groupby(level=0):
                 sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
                 sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = CHCSensor.fit(sub_data, self.burnindate, geo_id, self.logger)
                 res = pd.DataFrame(res).loc[final_sensor_idxs]
@@ -216,7 +222,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
                     sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"])
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
                     sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(

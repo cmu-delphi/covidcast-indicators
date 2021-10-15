@@ -18,8 +18,9 @@ class Weekday:
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
         """
-        denoms = data.groupby(date_col).sum()[denominator_col]
-        nums = data.groupby(date_col).sum()[numerator_cols]
+        tmp = data.reset_index()
+        denoms = tmp.groupby(date_col).sum()[denominator_col]
+        nums = tmp.groupby(date_col).sum()[numerator_cols]
 
         # Construct design matrix to have weekday indicator columns and then day
         # indicators.

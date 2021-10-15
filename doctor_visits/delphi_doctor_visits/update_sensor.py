@@ -17,10 +17,10 @@ import numpy as np
 import pandas as pd
 
 # first party
+from delphi_utils import Weekday
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
-from .weekday import Weekday
 
 
 def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, output_path="."):
@@ -129,6 +129,7 @@ def update_sensor(
         data,
         "Denominator",
         Config.CLI_COLS + Config.FLU1_COL,
+        Config.DATE_COL,
         [1, 1e5, 1e10, 1e15],
         logger,
     ) if weekday else None
@@ -153,7 +154,8 @@ def update_sensor(
             if weekday:
                 sub_data = Weekday.calc_adjustment(params,
                                                    sub_data,
-                                                   Config.CLI_COLS + Config.FLU1_COL)
+                                                   Config.CLI_COLS + Config.FLU1_COL,
+                                                   Config.DATE_COL)
 
             res = DoctorVisitsSensor.fit(
                 sub_data,
@@ -179,7 +181,8 @@ def update_sensor(
                 if weekday:
                     sub_data = Weekday.calc_adjustment(params,
                                                        sub_data,
-                                                       Config.CLI_COLS + Config.FLU1_COL)
+                                                       Config.CLI_COLS + Config.FLU1_COL,
+                                                       Config.DATE_COL)
 
                 pool_results.append(
                     pool.apply_async(

@@ -7,21 +7,19 @@ import cvxpy as cp
 import numpy as np
 from cvxpy.error import SolverError
 
-from .config import Config
-
 
 class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, denominator_col, numerator_cols, scales, logger):
+    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
         """
-        denoms = data.groupby(Config.DATE_COL).sum()[denominator_col]
-        nums = data.groupby(Config.DATE_COL).sum()[numerator_cols]
+        denoms = data.groupby(date_col).sum()[denominator_col]
+        nums = data.groupby(date_col).sum()[numerator_cols]
 
         # Construct design matrix to have weekday indicator columns and then day
         # indicators.
@@ -36,7 +34,7 @@ class Weekday:
 
         # Loop over the available numerator columns and smooth each separately.
         for i in range(nums.shape[1]):
-            result = _fit(X, scales, npnums[:, i], npdenoms)
+            result = Weekday._fit(X, scales, npnums[:, i], npdenoms)
             if result is None:
                 logger.error("Unable to calculate weekday correction")
             else:
@@ -102,7 +100,7 @@ class Weekday:
                 continue
 
     @staticmethod
-    def calc_adjustment(params, sub_data, cols):
+    def calc_adjustment(params, sub_data, cols, date_col):
         """Apply the weekday adjustment to a specific time series.
 
         Extracts the weekday fixed effects from the parameters and uses these to
@@ -127,7 +125,7 @@ class Weekday:
             wd_correction = np.zeros((len(tmp[c])))
 
             for wd in range(7):
-                mask = tmp[Config.DATE_COL].dt.dayofweek == wd
+                mask = tmp[date_col].dt.dayofweek == wd
                 wd_correction[mask] = tmp.loc[mask, c] / (
                     np.exp(params[i, wd]) if wd < 6 else np.exp(-np.sum(params[i, :6]))
                 )

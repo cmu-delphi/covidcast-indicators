@@ -169,7 +169,8 @@ class ClaimsHospIndicatorUpdater:
             for geo_id, sub_data in data_frame.groupby(level=0):
                 sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                    sub_data = Weekday.calc_adjustment(
+                        wd_params, sub_data, ["num"], Config.DATE_COL)
                 sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = ClaimsHospIndicator.fit(sub_data, self.burnindate, geo_id)
                 res = pd.DataFrame(res)
@@ -184,7 +185,8 @@ class ClaimsHospIndicatorUpdater:
                 for geo_id, sub_data in data_frame.groupby(level=0, as_index=False):
                     sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                        sub_data = Weekday.calc_adjustment(
+                            wd_params, sub_data, ["num"], Config.DATE_COL)
                     sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(

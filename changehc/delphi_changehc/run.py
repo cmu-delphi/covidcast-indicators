@@ -185,7 +185,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],
-                    logger,
                 )
                 stats.extend(more_stats)
 

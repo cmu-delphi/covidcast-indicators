@@ -99,6 +99,7 @@ class Weekday:
                 # If the magnitude of the objective function is too large, an error is
                 # thrown; Rescale the objective function by going through loop
                 continue
+        return None
 
     @staticmethod
     def calc_adjustment(params, sub_data, cols, date_col):

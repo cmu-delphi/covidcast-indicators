@@ -3,15 +3,10 @@ Weekday effects (code from Aaron Rumack).
 
 Created: 2020-05-06
 """
-
-
-
-# third party
 import cvxpy as cp
-from cvxpy.error import SolverError
 import numpy as np
+from cvxpy.error import SolverError
 
-# first party
 from .config import Config
 
 
@@ -19,7 +14,38 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, logger):
+    def get_params(data, denominator_col, numerator_cols, scales, logger):
+        r"""Fit weekday correction for each col in numerator_cols.
+
+        Return a matrix of parameters: the entire vector of betas, for each time
+        series column in the data.
+        """
+        denoms = data.groupby(Config.DATE_COL).sum()[denominator_col]
+        nums = data.groupby(Config.DATE_COL).sum()[numerator_cols]
+
+        # Construct design matrix to have weekday indicator columns and then day
+        # indicators.
+        X = np.zeros((nums.shape[0], 6 + nums.shape[0]))
+        not_sunday = np.where(nums.index.dayofweek != 6)[0]
+        X[not_sunday, np.array(nums.index.dayofweek)[not_sunday]] = 1
+        X[np.where(nums.index.dayofweek == 6)[0], :6] = -1
+        X[:, 6:] = np.eye(X.shape[0])
+
+        npnums, npdenoms = np.array(nums), np.array(denoms)
+        params = np.zeros((nums.shape[1], X.shape[1]))
+
+        # Loop over the available numerator columns and smooth each separately.
+        for i in range(nums.shape[1]):
+            result = _fit(X, scales, npnums[:, i], npdenoms)
+            if result is None:
+                logger.error("Unable to calculate weekday correction")
+            else:
+                params[i,:] = result
+
+        return params
+
+    @staticmethod
+    def _fit(X, scales, npnums, npdenoms):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -53,54 +79,27 @@ class Weekday:
 
         ll = (numerator * (X*b + log(denominator)) - sum(exp(X*b) + log(denominator)))
                 / num_days
-
-        Return a matrix of parameters: the entire vector of betas, for each time
-        series column in the data.
         """
-        denoms = data.groupby(Config.DATE_COL).sum()["Denominator"]
-        nums = data.groupby(Config.DATE_COL).sum()[Config.CLI_COLS + Config.FLU1_COL]
+        b = cp.Variable((X.shape[1]))
 
-        # Construct design matrix to have weekday indicator columns and then day
-        # indicators.
-        X = np.zeros((nums.shape[0], 6 + nums.shape[0]))
-        not_sunday = np.where(nums.index.dayofweek != 6)[0]
-        X[not_sunday, np.array(nums.index.dayofweek)[not_sunday]] = 1
-        X[np.where(nums.index.dayofweek == 6)[0], :6] = -1
-        X[:, 6:] = np.eye(X.shape[0])
+        lmbda = cp.Parameter(nonneg=True)
+        lmbda.value = 10  # Hard-coded for now, seems robust to changes
 
-        npnums, npdenoms = np.array(nums), np.array(denoms)
-        params = np.zeros((nums.shape[1], X.shape[1]))
-
-        # Loop over the available numerator columns and smooth each separately.
-        for i in range(nums.shape[1]):
-            b = cp.Variable((X.shape[1]))
-
-            lmbda = cp.Parameter(nonneg=True)
-            lmbda.value = 10  # Hard-coded for now, seems robust to changes
-
-            ll = (
-                cp.matmul(npnums[:, i], cp.matmul(X, b) + np.log(npdenoms))
-                - cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
-            ) / X.shape[0]
-            penalty = (
-                lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
-            )  # L-1 Norm of third differences, rewards smoothness
-            scales = [1, 1e5, 1e10, 1e15]
-            for scale in scales:
-                try:
-                    prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
-                    _ = prob.solve()
-                    params[i,:] = b.value
-                    break
-                except SolverError:
-                    # If the magnitude of the objective function is too large, an error is
-                    # thrown; Rescale the objective function by going through loop
-                    pass
-            else:
-                # Leaving params[i,:] = 0 is equivalent to not performing weekday correction
-                logger.error("Unable to calculate weekday correction")
-
-        return params
+        ll = (
+            cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms)) -
+            cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
+        ) / X.shape[0]
+        # L-1 Norm of third differences, rewards smoothness
+        penalty = lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
+        for scale in scales:
+            try:
+                prob = cp.Problem(cp.Minimize((-ll + lmbda * penalty) / scale))
+                _ = prob.solve()
+                return b.value
+            except SolverError:
+                # If the magnitude of the objective function is too large, an error is
+                # thrown; Rescale the objective function by going through loop
+                continue
 
     @staticmethod
     def calc_adjustment(params, sub_data, cols):

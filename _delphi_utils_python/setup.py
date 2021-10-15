@@ -7,6 +7,7 @@ with open("README.md", "r") as f:
 required = [
     "boto3",
     "covidcast",
+    "cvxpy",
     "epiweeks",
     "freezegun",
     "gitpython",

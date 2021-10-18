@@ -36,17 +36,29 @@ class TestRun:
                        'deaths_pneumonia_or_flu_or_covid_incidence']
             sensors = ["num", "prop"]
 
-            expected_files = []
+            expected_files_nation = []
+            expected_files_state=[]
+            expected_files_hhs=[]
             for d in dates:
                 for metric in metrics:
                     if metric == "deaths_percent_of_expected":
-                        expected_files += ["weekly_" + d + "_state_" \
+                        expected_files_nation += ["weekly_" + d + "_nation_" \
+                                           + metric + ".csv"]
+                        expected_files_state += ["weekly_" + d + "_state_" \
+                                           + metric + ".csv"]
+                        expected_files_hhs += ["weekly_" + d + "_hhs_" \
                                            + metric + ".csv"]
                     else:
                         for sensor in sensors:
-                            expected_files += ["weekly_" + d + "_state_" \
+                            expected_files_nation += ["weekly_" + d + "_nation_" \
                                                + metric + "_" + sensor + ".csv"]
-            assert set(expected_files).issubset(set(csv_files))
+                            expected_files_state += ["weekly_" + d + "_state_" \
+                                               + metric + "_" + sensor + ".csv"]
+                            expected_files_hhs += ["weekly_" + d + "_hhs_" \
+                                               + metric + "_" + sensor + ".csv"]
+            assert set(expected_files_nation).issubset(set(csv_files))
+            assert set(expected_files_state).issubset(set(csv_files))
+            assert set(expected_files_hhs).issubset(set(csv_files))
 
     @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-18"])
     def test_output_file_format(self, run_as_module, date):

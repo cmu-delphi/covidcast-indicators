@@ -15,7 +15,7 @@ class TestGeoMapper:
     fips_data = pd.DataFrame(
         {
             "fips": ["01123", "02340", "98633", "18181"],
-            "date": [pd.Timestamp("2018-01-01")] * 4,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 4,
             "count": [2, 0, 20, 10021],
             "total": [4, 0, 400, 100001],
         }
@@ -23,7 +23,7 @@ class TestGeoMapper:
     fips_data_2 = pd.DataFrame(
         {
             "fips": ["01123", "02340", "02002", "18633", "18181"],
-            "date": [pd.Timestamp("2018-01-01")] * 5,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 5,
             "count": [2, 1, 20, np.nan, 10021],
             "total": [4, 1, 400, np.nan, 100001],
         }
@@ -31,7 +31,7 @@ class TestGeoMapper:
     fips_data_3 = pd.DataFrame(
         {
             "fips": ["48059", "48253", "48441", "72003", "72005", "10999"],
-            "date": [pd.Timestamp("2018-01-01")] * 3 + [pd.Timestamp("2018-01-03")] * 3,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 3 + [pd.Timestamp("2018-01-03")] * 3,
             "count": [1, 2, 3, 4, 8, 5],
             "total": [2, 4, 7, 11, 100, 10],
         }
@@ -39,7 +39,7 @@ class TestGeoMapper:
     fips_data_4 = pd.DataFrame(
         {
             "fips": ["01123", "48253", "72003", "18181"],
-            "date": [pd.Timestamp("2018-01-01")] * 4,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 4,
             "count": [2, 1, np.nan, 10021],
             "total": [4, 1, np.nan, 100001],
         }
@@ -47,7 +47,7 @@ class TestGeoMapper:
     fips_data_5 = pd.DataFrame(
         {
             "fips": [1123, 48253, 72003, 18181],
-            "date": [pd.Timestamp("2018-01-01")] * 4,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 4,
             "count": [2, 1, np.nan, 10021],
             "total": [4, 1, np.nan, 100001],
         }
@@ -55,7 +55,7 @@ class TestGeoMapper:
     zip_data = pd.DataFrame(
         {
             "zip": ["45140", "95616", "95618"] * 2,
-            "date": [pd.Timestamp("2018-01-01")] * 3 + [pd.Timestamp("2018-01-03")] * 3,
+            "timestamp": [pd.Timestamp("2018-01-01")] * 3 + [pd.Timestamp("2018-01-03")] * 3,
             "count": [99, 345, 456, 100, 344, 442],
         }
     )
@@ -66,7 +66,7 @@ class TestGeoMapper:
             pd.DataFrame(
                 {
                     "fips": ["01001"] * len(jan_month),
-                    "date": jan_month,
+                    "timestamp": jan_month,
                     "count": np.arange(len(jan_month)),
                     "visits": np.arange(len(jan_month)),
                 }
@@ -74,7 +74,7 @@ class TestGeoMapper:
             pd.DataFrame(
                 {
                     "fips": ["01002"] * len(jan_month),
-                    "date": jan_month,
+                    "timestamp": jan_month,
                     "count": np.arange(len(jan_month)),
                     "visits": 2 * np.arange(len(jan_month)),
                 }
@@ -86,7 +86,7 @@ class TestGeoMapper:
             pd.DataFrame(
                 {
                     "fips": ["01001"] * len(jan_month),
-                    "date": jan_month,
+                    "timestamp": jan_month,
                     "count": np.arange(len(jan_month)),
                     "_thr_col_roll": np.arange(len(jan_month)),
                 }
@@ -94,7 +94,7 @@ class TestGeoMapper:
             pd.DataFrame(
                 {
                     "fips": [11001] * len(jan_month),
-                    "date": jan_month,
+                    "timestamp": jan_month,
                     "count": np.arange(len(jan_month)),
                     "_thr_col_roll": np.arange(len(jan_month)),
                 }
@@ -112,7 +112,7 @@ class TestGeoMapper:
                 84000013,
                 84090002,
             ],
-            "date": [pd.Timestamp("2018-01-01")] * 3
+            "timestamp": [pd.Timestamp("2018-01-01")] * 3
             + [pd.Timestamp("2018-01-03")] * 3
             + [pd.Timestamp("2018-01-01")],
             "count": [1, 2, 3, 4, 8, 5, 20],
@@ -245,7 +245,7 @@ class TestGeoMapper:
             new_data,
             pd.DataFrame().from_dict(
                 {
-                    "date": {0: pd.Timestamp("2018-01-01 00:00:00")},
+                    "timestamp": {0: pd.Timestamp("2018-01-01 00:00:00")},
                     "NATION": {0: "us"},
                     "count": {0: 10024.0},
                     "total": {0: 100006.0},
@@ -259,7 +259,7 @@ class TestGeoMapper:
             new_data,
             pd.DataFrame().from_dict(
                 {
-                    "date": {
+                    "timestamp": {
                         0: pd.Timestamp("2018-01-01"),
                         1: pd.Timestamp("2018-01-03"),
                     },
@@ -280,7 +280,7 @@ class TestGeoMapper:
         assert geomapper.add_geocode(self.fips_data_3, "fips", "hrr", dropna=False).isna().any().any()
 
         # fips -> zip (date_col=None chech)
-        new_data = geomapper.replace_geocode(self.fips_data_5.drop(columns=["date"]), "fips", "hrr", date_col=None)
+        new_data = geomapper.replace_geocode(self.fips_data_5.drop(columns=["timestamp"]), "fips", "hrr", date_col=None)
         pd.testing.assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
@@ -293,7 +293,7 @@ class TestGeoMapper:
         )
 
         # fips -> hhs
-        new_data = geomapper.replace_geocode(self.fips_data_3.drop(columns=["date"]),
+        new_data = geomapper.replace_geocode(self.fips_data_3.drop(columns=["timestamp"]),
                                         "fips", "hhs", date_col=None)
         pd.testing.assert_frame_equal(
             new_data,
@@ -313,7 +313,7 @@ class TestGeoMapper:
             new_data,
             pd.DataFrame().from_dict(
                 {
-                    "date": {0: pd.Timestamp("2018-01-01"), 1: pd.Timestamp("2018-01-01"),
+                    "timestamp": {0: pd.Timestamp("2018-01-01"), 1: pd.Timestamp("2018-01-01"),
                              2: pd.Timestamp("2018-01-03"), 3: pd.Timestamp("2018-01-03")},
                     "hhs": {0: "5", 1: "9", 2: "5", 3: "9"},
                     "count": {0: 99.0, 1: 801.0, 2: 100.0, 3: 786.0},

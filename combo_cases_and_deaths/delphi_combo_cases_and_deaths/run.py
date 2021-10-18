@@ -33,14 +33,6 @@ EMPTY_FRAME = pd.DataFrame({}, columns=COLUMN_MAPPING.values())
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 
-def check_none_data_frame(data_frame, label, date_range):
-    """Log and return True when a data frame is None."""
-    if data_frame is None:
-        print(f"{label} completely unavailable in range {date_range}")
-        return True
-    return False
-
-
 def maybe_append(usa_facts, jhu):
     """
     Append dataframes if available, otherwise return USAFacts.
@@ -80,10 +72,9 @@ def compute_special_geo_dfs(df, signal, geo):
     df = GMPR.replace_geocode(df,
                               from_col="geo_id",
                               from_code="fips",
-                              new_code="state_code",
-                              date_col="timestamp")
+                              new_code="state_code")
     df = GMPR.add_population_column(df, "state_code")  # use total state population
-    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo, date_col="timestamp")
+    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo)
     if signal.endswith("_prop"):
         df["val"] = df["val"]/df["population"] * 100000
     df.drop("population", axis=1, inplace=True)
@@ -133,7 +124,7 @@ def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidca
         issues=issue_range
     )
 
-    if check_none_data_frame(usafacts_df, "USA-FACTS", date_range):
+    if usafacts_df is None:
         return None
 
     merged_df = merge_dfs_by_geos(usafacts_df, jhu_df, geo)
@@ -142,7 +133,8 @@ def get_updated_dates(signal, geo, date_range, issue_range=None, fetcher=covidca
     return unique_dates
 
 
-def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=covidcast.signal):
+def combine_usafacts_and_jhu(signal, geo, date_range, logger,
+                             issue_range=None, fetcher=covidcast.signal):
     """Add rows for PR from JHU signals to USA-FACTS signals.
 
     For hhs and nation, fetch the county `num` data so we can compute the proportions correctly
@@ -158,6 +150,7 @@ def combine_usafacts_and_jhu(signal, geo, date_range, issue_range=None, fetcher=
 
     # This occurs if the usafacts ~and the jhu query were empty
     if unique_dates is None:
+        logger.info("USA-FACTS completely unavailable for dates", date_range=date_range)
         return EMPTY_FRAME
 
     # Query only the represented window so that every geo is represented; a single window call is
@@ -329,9 +322,15 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True))
 
     for metric, geo_res, sensor_name, signal in variants:
+        logger.info("Generating signal and exporting to CSV",
+                    geo_res = geo_res,
+                    metric = metric,
+                    sensor = sensor_name,
+                    signal = signal)
         df = combine_usafacts_and_jhu(signal,
                                       geo_res,
                                       extend_raw_date_range(params, sensor_name),
+                                      logger,
                                       params['indicator']['issue_range'])
         df["timestamp"] = pd.to_datetime(df["timestamp"])
         start_date = pd.to_datetime(params['indicator']['export_start_date'])

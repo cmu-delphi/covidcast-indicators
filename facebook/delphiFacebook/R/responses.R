@@ -129,7 +129,13 @@ load_response_one <- function(input_filename, params, contingency_run) {
                            Q79 = col_integer(),
                            Q80 = col_integer(),
                            I5 = col_character(),
-                           I7 = col_character()),
+                           I7 = col_character(),
+                           V1alt = col_character(),
+                           V15c = col_character(),
+                           P6 = col_character(),
+                           E2_1 = col_integer(),
+                           E2_2 = col_integer()
+                         ),
                          locale = locale(grouping_mark = ""))
   if (nrow(input_data) == 0) {
     return(tibble())
@@ -159,9 +165,12 @@ load_response_one <- function(input_filename, params, contingency_run) {
   assert(length(wave) == 1, "can only code one wave at a time")
   
   input_data <- module_assignment(input_data, wave)
+  input_data <- experimental_arm_assignment(input_data, wave)
+  
   input_data <- bodge_v4_translation(input_data, wave)
   input_data <- bodge_C6_C8(input_data, wave)
   input_data <- bodge_B13(input_data, wave)
+  input_data <- bodge_E1(input_data, wave)
 
   input_data <- code_symptoms(input_data, wave)
   input_data <- code_hh_size(input_data, wave)
@@ -211,6 +220,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
+    input_data <- code_vaccinated_breakdown(input_data, wave)
     
     # Indicators
     input_data <- code_addl_vaccines(input_data, wave)
@@ -361,7 +371,8 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
                dplyr::between(.data$hh_number_sick, 0L, 30L),
                dplyr::between(.data$hh_number_total, 1L, 30L),
                .data$hh_number_sick <= .data$hh_number_total,
-               .data$day >= (as.Date(params$start_date) - lead_days)
+               .data$day >= (as.Date(params$start_date) - lead_days),
+               .data$wave != 12.5 # Ignore experimental Wave 12 data
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
@@ -477,6 +488,34 @@ bodge_B13 <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Fix E1_* names in Wave 11 data after ~June 16, 2021.
+#' 
+#' Items E1_1 through E1_4 are part of a matrix. Qualtrics, for unknown reasons,
+#' switched to naming these E1_4 through E1_7 in June. Convert back to the
+#' intended names.
+#'
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'   
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_E1 <- function(input_data, wave) {
+  E14_present <- all(c("E1_1", "E1_2", "E1_3", "E1_4") %in% names(input_data))
+  E47_present <- all(c("E1_4", "E1_5", "E1_6", "E1_7") %in% names(input_data))
+  assert(!(E14_present && E47_present), "fields E1_1-E1_4 should not be present at the same time as fields E1_4-E1_7")
+  
+  if ( E47_present ) {
+    input_data <- rename(input_data,
+                         E1_1 = "E1_4",
+                         E1_2 = "E1_5",
+                         E1_3 = "E1_6",
+                         E1_4 = "E1_7"
+    )
+  }
+  return(input_data)
+}
+
 #' Process module assignment column.
 #' 
 #' Rename `module` and recode to A/B/`NA`. Note: module assignment column name
@@ -500,6 +539,28 @@ module_assignment <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Label arms of experimental Wave 12.
+#' 
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#' 
+#' @return data frame with new `module` column
+#' @importFrom dplyr case_when
+experimental_arm_assignment <- function(input_data, wave) {
+  if (wave == 12.5) {
+    assert( "random_number_exp" %in% names(input_data) )
+    input_data$w12_treatment <- case_when(
+      input_data$random_number_exp >= 0.6666 ~ 1, # demographics placed after symptom items
+      input_data$random_number_exp >= 0.3333 ~ 2, # demographics placed after vaccine items
+      input_data$random_number_exp < 0.3333 ~ 3, # alternative wording to V1
+      TRUE ~ NA_real_
+    )
+  }
+  
+  return(input_data)
+}
+
 #' Create dataset for sharing with research partners
 #'
 #' Different survey waves may have different sets of questions. Here we report
@@ -508,11 +569,13 @@ module_assignment <- function(input_data, wave) {
 #'
 #' @param input_data data frame of responses
 #' @param county_crosswalk crosswalk mapping ZIP5 to counties
+#' @param params list containing `produce_individual_raceeth`, indicating
+#'   whether or not to issue microdata with race-ethnicity field
 #' @importFrom stringi stri_trim stri_replace_all
 #' @importFrom dplyr left_join group_by filter ungroup select rename
 #'
 #' @export
-create_complete_responses <- function(input_data, county_crosswalk)
+create_complete_responses <- function(input_data, county_crosswalk, params)
 {
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
@@ -538,9 +601,10 @@ create_complete_responses <- function(input_data, county_crosswalk)
     "B10c", "B13", "C18a", "C18b", "C7a", "D12", "E4",
     "G1", "G2", "G3", "H1", "H2", "H3", "I1", "I2", "I3", "I4", "I5",
     "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
-    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", "module", # added in Wave 11
+    "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", # added in Wave 11
+    "V1alt", "B13a", "V15c", "P1", "P2", "P3", "P4", "P5", "P6", # added in experimental Wave 12
     
-    "raceethnicity", "token", "wave", "UserLanguage",
+    "raceethnicity", "token", "wave", "w12_treatment", "module", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
 
@@ -614,7 +678,10 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_ddjHkcYrrLWgM2V" = 7,
                 "SV_ewAVaX7Wz3l0UqG" = 8,
                 "SV_6PADB8DyF9SIyXk" = 10,
-                "SV_4VEaeffqQtDo33M" = 11)
+                "SV_4VEaeffqQtDo33M" = 11,
+                "SV_3TL0r243mLkDzCK" = 12.5, # experimental version of Wave 12
+                "TBD finalized version" = 12 # finalized version of Wave 12
+  )
 
   if ( any(names(waves) == surveyID) ) {
       return(waves[[surveyID]])
@@ -664,9 +731,11 @@ filter_complete_responses <- function(data_full, params)
   data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions (ignore raceethnicity field which may or may
-  # not exist, depending on params)
-  valid_row_filter <- rowSums( !is.na(data_full[, names(data_full) != "raceethnicity"]) ) >= 9
+  # UserLanguage + two questions (ignore raceethnicity, module, and
+  # w12_assignment fields which may or may not exist, depending on params and
+  # survey version)
+  ignore_cols <- c("raceethnicity", "w12_assignment", "module")
+  valid_row_filter <- rowSums( !is.na(data_full[, !(names(data_full) %in% ignore_cols)]) ) >= 9
   data_full <- data_full[valid_row_filter, ]
 
   return(data_full)

@@ -6,3 +6,4 @@ UserLanguage,NA,"survey language",NA,NA,NA,NA
 fips,NA,"county FIPS code",NA,NA,NA,NA
 weight,NA,"Facebook respondent weight",NA,NA,NA,NA
 module,NA,"question set respondent was assigned to",NA,NA,NA,NA
+w12_treatment,NA,"experimental treatment respondent was assigned to",NA,NA,NA,NA

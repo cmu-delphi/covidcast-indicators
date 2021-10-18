@@ -36,6 +36,9 @@ def run_module(params) -> None:
     filled_fips_df = fill_missing_fips(raw_df, gmpr)
     stats = []
     for geo, (sig_name, sig_cols, sig_func, sig_offset) in product(GEO_RESOLUTIONS, SIGNALS):
+        logger.info("Generating signal and exporting to CSV",
+                    geo_res = geo,
+                    signal_name = sig_name)
         mapped_df = convert_geo(filled_fips_df, geo, gmpr)
         output_df = generate_signal(mapped_df, sig_cols, sig_func, sig_offset)
         dates = create_export_csv(output_df, params["common"]["export_dir"], geo, sig_name)

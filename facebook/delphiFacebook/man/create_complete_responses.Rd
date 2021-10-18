@@ -4,12 +4,15 @@
 \alias{create_complete_responses}
 \title{Create dataset for sharing with research partners}
 \usage{
-create_complete_responses(input_data, county_crosswalk)
+create_complete_responses(input_data, county_crosswalk, params)
 }
 \arguments{
 \item{input_data}{data frame of responses}
 
 \item{county_crosswalk}{crosswalk mapping ZIP5 to counties}
+
+\item{params}{list containing `produce_individual_raceeth`, indicating
+whether or not to issue microdata with race-ethnicity field}
 }
 \description{
 Different survey waves may have different sets of questions. Here we report

@@ -32,5 +32,8 @@
         "anosmia_smoothed_search"
       ]
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

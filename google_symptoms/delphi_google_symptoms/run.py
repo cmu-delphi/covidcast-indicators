@@ -90,8 +90,7 @@ def run_module(params):
         if geo_res == "state":
             df_pull = dfs["state"]
         elif geo_res in ["hhs", "nation"]:
-            df_pull = gmpr.replace_geocode(dfs["county"], "fips", geo_res, from_col="geo_id",
-                                           date_col="timestamp")
+            df_pull = gmpr.replace_geocode(dfs["county"], "fips", geo_res, from_col="geo_id")
             df_pull.rename(columns={geo_res: "geo_id"}, inplace=True)
         else:
             df_pull = geo_map(dfs["county"], geo_res)

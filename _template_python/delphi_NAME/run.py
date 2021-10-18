@@ -47,10 +47,7 @@ def run_module(params):
     ## aggregate & smooth
     ## TODO: add num/prop variations if needed
     for sensor, smoother, geo in product(SIGNALS, SMOOTHERS, GEOS):
-        df = mapper.replace_geocode(
-            all_data, "zip", geo,
-            new_col="geo_id",
-            date_col="timestamp")
+        df = mapper.replace_geocode(all_data, "zip", geo, new_col="geo_id")
         ## TODO: recompute sample_size, se here if not NA
         df["val"] = df[["geo_id", "val"]].groupby("geo_id")["val"].transform(
             smoother[0].smooth

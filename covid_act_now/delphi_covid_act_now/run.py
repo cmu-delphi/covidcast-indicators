@@ -45,7 +45,7 @@ def run_module(params):
     parquet_url = params["indicator"]["parquet_url"]
 
     # Load CAN county-level testing data
-    print("Pulling CAN data")
+    logger.info("Pulling CAN data")
     df_pq = load_data(parquet_url)
     df_county_testing = extract_testing_metrics(df_pq)
 
@@ -54,7 +54,8 @@ def run_module(params):
     max_dates_exported = []
     # Perform geo aggregations and export to receiving
     for geo_res in GEO_RESOLUTIONS:
-        print(f"Processing {geo_res}")
+        logger.info("Generating signal and exporting to CSV",
+                    geo_res = geo_res)
         df = geo_map(df_county_testing, geo_res)
 
         # Export 'pcr_specimen_positivity_rate'
@@ -79,7 +80,7 @@ def run_module(params):
         max_dates_exported.append(latest)
         # x2 to count both positivity and tests signals
         num_exported_files += exported_csv_dates.size * 2
-        print(f"Exported dates: {earliest} to {latest}")
+        logger.info("Exported for dates between", earliest=earliest, latest=latest)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     max_lag_in_days = (datetime.now() - min(max_dates_exported)).days

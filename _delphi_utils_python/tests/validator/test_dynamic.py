@@ -49,7 +49,7 @@ class TestReferencePadding:
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 11
-        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+        assert new_ref_df["val"].iloc[5] == 2
 
     def test_full_padding(self):
         validator = DynamicValidator(self.params)
@@ -71,7 +71,7 @@ class TestReferencePadding:
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 15
-        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+        assert new_ref_df["val"].iloc[5] == 2
 
 class TestCheckRapidChange:
     params = {

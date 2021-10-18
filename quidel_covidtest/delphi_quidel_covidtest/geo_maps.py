@@ -1,7 +1,6 @@
 """Contains geographic mapping tools."""
 from delphi_utils import GeoMapper
 
-DATE_COL = "timestamp"
 DATA_COLS = ['totalTest', 'numUniqueDevices', 'positiveTest', "population"]
 GMPR = GeoMapper()  # Use geo utils
 GEO_KEY_DICT = {
@@ -21,8 +20,7 @@ def geo_map(geo_res, df):
     # Add population for each zipcode
     data = GMPR.add_population_column(data, "zip")
     # zip -> geo_res
-    data = GMPR.replace_geocode(data, "zip", geo_key,
-                                date_col=DATE_COL, data_cols=DATA_COLS)
+    data = GMPR.replace_geocode(data, "zip", geo_key, data_cols=DATA_COLS)
     if geo_res in ["state", "hhs", "nation"]:
         return data, geo_key
     # Add parent state

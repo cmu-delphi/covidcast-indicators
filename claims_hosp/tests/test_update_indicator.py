@@ -37,8 +37,8 @@ class TestClaimsHospIndicatorUpdater:
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "hrr": [1.0] * 7 + [2.0] * 6,
         "den": [1000] * 7 + [2000] * 6,
-        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(
-        ["hrr", "date"])
+        "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(
+        ["hrr", "timestamp"])
 
     def test_shift_dates(self):
         updater = ClaimsHospIndicatorUpdater(

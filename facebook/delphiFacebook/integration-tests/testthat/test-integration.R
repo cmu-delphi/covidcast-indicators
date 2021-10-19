@@ -163,7 +163,7 @@ test_that("testing weighted community values files", {
   these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
   these_ss <- length(these_yes)
   these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  these_se <- sqrt(these_val * (100 - these_val) / (sum(these_weight) ^ 2 / sum(these_weight ^ 2)) )
 
   x <- read_csv(test_path("receiving", "20200511_state_raw_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "pa")
@@ -180,7 +180,7 @@ test_that("testing weighted community values files", {
   these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
   these_ss <- length(these_yes)
   these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  these_se <- sqrt(these_val * (100 - these_val) / (sum(these_weight) ^ 2 / sum(these_weight ^ 2)) )
 
   x <- read_csv(test_path("receiving", "20200513_state_raw_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "va")
@@ -207,7 +207,7 @@ test_that("testing weighted smoothed community values files", {
   these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
   these_ss <- length(these_yes)
   these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  these_se <- sqrt(these_val * (100 - these_val) / (sum(these_weight) ^ 2 / sum(these_weight ^ 2)) )
 
   x <- read_csv(test_path("receiving", "20200511_state_smoothed_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "pa")

@@ -19,10 +19,7 @@ pipeline {
     stages {
         stage('Build and Package') {
             when {
-                anyOf {
                 branch "main";
-                branch "main-nan-testing";
-                }
             }
             steps {
                 script {
@@ -37,10 +34,7 @@ pipeline {
         }
         stage('Deploy staging') {
             when {
-                anyOf {
                 branch "main";
-                branch "main-nan-testing";
-                }
             }
             steps {
                 script {
@@ -51,23 +45,6 @@ pipeline {
                     }
                     parallel deploy_staging
                 }
-            }
-        }
-        stage('Deploy staging [main-nan-testing]') {
-            when {
-                branch "main-nan-testing";
-                }
-            }
-            steps {
-                script {
-                    indicator_list.each { indicator ->
-                        deploy_staging[indicator] = {
-                            sh "jenkins/deploy-staging.sh ${indicator}"
-                        }
-                    }
-                    parallel deploy_staging
-                }
-                sh "jenkins/deploy-staging-api-match-list.sh"
             }
         }
         stage('Deploy production') {

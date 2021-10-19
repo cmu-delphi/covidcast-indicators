@@ -24,7 +24,7 @@ ZIP_HSA_HRR_FILENAME = "ZipHsaHrr18.csv"
 FIPS_MSA_URL = "https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2018/delineation-files/list1_Sep_2018.xls"
 JHU_FIPS_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
-FIPS_POPULATION_URL = "https://www2.census.gov/programs-surveys/popest/datasets/2010-2019/counties/totals/co-est2019-alldata.csv"
+FIPS_POPULATION_URL = "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/totals/co-est2020-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = (
     "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 )
@@ -360,31 +360,28 @@ def create_fips_population_table():
     )
     census_pop["pop"] = census_pop["POPESTIMATE2019"]
     census_pop = census_pop[["fips", "pop"]]
+
+    # Set population for Dukes and Nantucket combo county
+    dukes_pop = int(census_pop.loc[census_pop["fips"] == "25007", "pop"])
+    nantu_pop = int(census_pop.loc[census_pop["fips"] == "25019", "pop"])
     census_pop = pd.concat(
         [
             census_pop,
             pd.DataFrame(
                 {
-                    "fips": ["70002", "70003"],
-                    "pop": [0, 0],
+                    "fips": [
+                        "70002",  # Dukes and Nantucket combo county
+                        "70003"   # Kansas City
+                    ],
+                    "pop": [
+                        dukes_pop + nantu_pop,
+                        491918    # via Google
+                    ],
                 }
             ),
         ]
     )
     census_pop = census_pop.reset_index(drop=True)
-
-    # Set population for Dukes and Nantucket
-    dn_fips = "70002"
-    dukes_fips = "25007"
-    nantu_fips = "25019"
-
-    census_pop.loc[census_pop["fips"] == dn_fips, "pop"] = (
-        census_pop.loc[census_pop["fips"] == dukes_fips, "pop"].values
-        + census_pop.loc[census_pop["fips"] == nantu_fips, "pop"].values
-    )
-
-    # Set population for Kansas City
-    census_pop.loc[census_pop["fips"] == "70003", "pop"] = 491918  # via Google
 
     # Get the file with Puerto Rico populations
     df_pr = pd.read_csv(FIPS_PUERTO_RICO_POPULATION_URL)

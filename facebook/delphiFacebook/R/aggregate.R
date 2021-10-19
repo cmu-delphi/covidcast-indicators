@@ -208,14 +208,12 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
     }
   }
   
-  # Convert list of lists to list of tibbles.
-  for (indicator in indicators$name) {
-   dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]])
-  }
-
   for (row in seq_len(nrow(indicators))) {
     indicator <- indicators$name[row]
     post_fn <- indicators$post_fn[[row]]
+
+    # Convert list of lists to list of tibbles.
+    dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]])
 
     dfs_out[[indicator]] <- dfs_out[[indicator]][
       rowSums(is.na(dfs_out[[indicator]][, c("val", "sample_size", "geo_id", "day")])) == 0,

@@ -383,13 +383,12 @@ compute_binary_response <- function(response, weight, sample_size)
 {
   assert(all( (response == 0) | (response == 1) ))
   assert(length(response) == length(weight))
-  assert(sum(weights) == 1)
 
   response_prop <- weighted.mean(response, weight)
 
   val <- 100 * response_prop
   
-  effective_sample_size <- 1 / sum(weights ^ 2)
+  effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
 
   return(list(val = val,
               se = NA_real_,

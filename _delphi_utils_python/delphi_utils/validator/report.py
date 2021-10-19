@@ -103,6 +103,15 @@ class ValidationReport:
                 checks_suppressed = self.num_suppressed,
                 warnings = len(self.raised_warnings),
                 phase="validation")
+        excessive_warnings = len(self.raised_warnings) > 200 or len(self.raised_warnings) / self.total_checks > 0.015
+        if excessive_warnings:
+            logger.info("Excessive number of warnings",
+                data_source = self.data_source,
+                checks_run = self.total_checks,
+                checks_failed = len(self.unsuppressed_errors),
+                checks_suppressed = self.num_suppressed,
+                warnings = len(self.raised_warnings),
+                phase = "validation")
         for error in self.unsuppressed_errors:
             logger.critical(str(error), phase="validation")
         for warning in self.raised_warnings:

@@ -27,7 +27,10 @@
       "min_expected_lag": {"all": "5"},
       "max_expected_lag": {"all": "5"},
       "dry_run": true,
-      "suppressed_errors": []
+      "suppressed_errors": [
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive"}
+      ]
     },
     "static": {
       "minimum_sample_size": 50

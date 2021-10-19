@@ -28,7 +28,12 @@
 #' @importFrom dplyr filter mutate_at vars select
 aggregate_indicators <- function(df, indicators, cw_list, params) {
   ## Keep only columns used in indicators, plus supporting columns.
-  df <- select(df, all_of(unique(indicators$metric)), all_of(unique(indicators$var_weight)), day, zip5)
+  df <- select(df,
+               all_of(unique(indicators$metric)),
+               all_of(unique(indicators$var_weight)),
+               .data$day,
+               .data$zip5
+  )
 
   ## The data frame will include more days than just [start_date, end_date], so
   ## select just the unique days contained in that interval.
@@ -43,7 +48,7 @@ aggregate_indicators <- function(df, indicators, cw_list, params) {
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
   df <- as.data.table(df)
-  setkey(df, day)
+  setkeyv(df, "day")
 
   for (i in seq_along(cw_list))
   {
@@ -95,7 +100,7 @@ summarize_indicators <- function(df, crosswalk_data, indicators, geo_level,
   ## Set an index on the geo_id column so that the lookup by exact geo_id can be
   ## dramatically faster; data.table stores the sort order of the column and
   ## uses a binary search to find matching values, rather than a linear scan.
-  setindex(df, geo_id)
+  setindexv(df, "geo_id")
 
   ## We do batches of just one smooth_days at a time, since we have to select
   ## rows based on this.
@@ -141,23 +146,27 @@ summarize_indicators <- function(df, crosswalk_data, indicators, geo_level,
 #' @param geo_level Name of the geo level (county, state, etc.) for which we are
 #'   aggregating.
 #' @param params Named list of configuration options.
-#' @importFrom dplyr mutate filter
+#' 
+#' @importFrom dplyr mutate filter bind_rows
+#' @importFrom stats setNames
 #' @importFrom rlang .data
 summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, params) {
-  ## Prepare outputs.
-  dfs_out <- list()
+  ## Prepare outputs as list of lists. Saves some time and memory since lists
+  ## are not copied on modify.
   geo_ids <- unique(day_df$geo_id)
-  for (indicator in indicators$name) {
-    dfs_out[[indicator]] <- tibble(
-      geo_id = geo_ids,
-      day = target_day,
-      val = NA_real_,
-      se = NA_real_,
-      sample_size = NA_real_,
-      effective_sample_size = NA_real_
-    )
-  }
-
+  n_geo_ids <- length(geo_ids)
+  fill_list <- list(geo_id = geo_ids,
+                    day = rep(target_day, n_geo_ids),
+                    val = rep(NA_real_, n_geo_ids),
+                    se = rep(NA_real_, n_geo_ids),
+                    sample_size = rep(NA_real_, n_geo_ids),
+                    effective_sample_size = rep(NA_real_, n_geo_ids)
+  )
+  
+  dfs_out <- setNames(
+    rep(list(fill_list), times=length(indicators$name)),
+    indicators$name)
+  
   for (ii in seq_along(geo_ids))
   {
     target_geo <- geo_ids[ii]
@@ -170,8 +179,13 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
       var_weight <- indicators$var_weight[row]
       compute_fn <- indicators$compute_fn[[row]]
 
-      ind_df <- sub_df[!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), ]
-
+      # Copy only columns we're using.
+      select_cols <- c(metric, var_weight, "weight_in_location")
+      # This filter uses `x[, cols, with=FALSE]` rather than the newer
+      # recommended `x[, ..cols]` format to take advantage of better
+      # performance. Switch to using `..` if `with` is deprecated in the future.
+      ind_df <- sub_df[!is.na(sub_df[[var_weight]]) & !is.na(sub_df[[metric]]), select_cols, with=FALSE]
+      
       if (nrow(ind_df) > 0)
       {
         s_mix_coef <- params$s_mix_coef
@@ -186,12 +200,17 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
           weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
           sample_size = sample_size)
 
-        dfs_out[[indicator]]$val[ii] <- new_row$val
-        dfs_out[[indicator]]$se[ii] <- new_row$se
-        dfs_out[[indicator]]$sample_size[ii] <- sample_size
-        dfs_out[[indicator]]$effective_sample_size[ii] <- new_row$effective_sample_size
+        dfs_out[[indicator]][["val"]][ii] <- new_row$val
+        dfs_out[[indicator]][["se"]][ii] <- new_row$se
+        dfs_out[[indicator]][["sample_size"]][ii] <- sample_size
+        dfs_out[[indicator]][["effective_sample_size"]][ii] <- new_row$effective_sample_size
       }
     }
+  }
+  
+  # Convert list of lists to list of tibbles.
+  for (indicator in indicators$name) {
+   dfs_out[[indicator]] <- bind_rows(dfs_out[[indicator]])
   }
 
   for (row in seq_len(nrow(indicators))) {

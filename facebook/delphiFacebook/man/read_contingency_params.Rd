@@ -20,5 +20,5 @@ a named list of parameters values
 }
 \description{
 Reads a parameters file. Copies global params to contingency params if not
-already defined.
+already defined. Uses current date as end_date if not provided.
 }

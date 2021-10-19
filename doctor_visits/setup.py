@@ -8,7 +8,7 @@ required = [
     "cvxpy",
     "pytest",
     "pytest-cov",
-    "pylint",
+    "pylint==2.8.3",
     "delphi-utils"
 ]
 
@@ -23,7 +23,7 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
 )

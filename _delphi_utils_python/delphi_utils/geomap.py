@@ -14,40 +14,6 @@ import pandas as pd
 import pkg_resources
 from pandas.api.types import is_string_dtype
 
-DATA_PATH = "data"
-CROSSWALK_FILEPATHS = {
-    "zip": {
-        "fips": join(DATA_PATH, "zip_fips_table.csv"),
-        "hrr": join(DATA_PATH, "zip_hrr_table.csv"),
-        "msa": join(DATA_PATH, "zip_msa_table.csv"),
-        "pop": join(DATA_PATH, "zip_pop.csv"),
-        "state": join(DATA_PATH, "zip_state_code_table.csv"),
-        "hhs": join(DATA_PATH, "zip_hhs_table.csv")
-    },
-    "fips": {
-        "zip": join(DATA_PATH, "fips_zip_table.csv"),
-        "hrr": join(DATA_PATH, "fips_hrr_table.csv"),
-        "msa": join(DATA_PATH, "fips_msa_table.csv"),
-        "pop": join(DATA_PATH, "fips_pop.csv"),
-        "state": join(DATA_PATH, "fips_state_table.csv"),
-        "hhs": join(DATA_PATH, "fips_hhs_table.csv"),
-    },
-    "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
-    "state_code": {
-        "hhs": join(DATA_PATH, "state_code_hhs_table.csv"),
-        "pop": join(DATA_PATH, "state_pop.csv")
-    },
-    "state_id": {
-        "pop": join(DATA_PATH, "state_pop.csv")
-    },
-    "state_name": {
-        "pop": join(DATA_PATH, "state_pop.csv")
-    },
-    "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
-    "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv"),},
-    "nation": {"pop": join(DATA_PATH, "nation_pop.csv"),},
-}
-
 
 class GeoMapper:  # pylint: disable=too-many-public-methods
     """Geo mapping tools commonly used in Delphi.
@@ -103,18 +69,43 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                                 date_col="timestamp", dropna=False)
     """
 
+    DATA_PATH = "data"
+    CROSSWALK_FILEPATHS = {
+        "zip": {
+            "fips": join(DATA_PATH, "zip_fips_table.csv"),
+            "hrr": join(DATA_PATH, "zip_hrr_table.csv"),
+            "msa": join(DATA_PATH, "zip_msa_table.csv"),
+            "pop": join(DATA_PATH, "zip_pop.csv"),
+            "state": join(DATA_PATH, "zip_state_code_table.csv"),
+            "hhs": join(DATA_PATH, "zip_hhs_table.csv")
+        },
+        "fips": {
+            "zip": join(DATA_PATH, "fips_zip_table.csv"),
+            "hrr": join(DATA_PATH, "fips_hrr_table.csv"),
+            "msa": join(DATA_PATH, "fips_msa_table.csv"),
+            "pop": join(DATA_PATH, "fips_pop.csv"),
+            "state": join(DATA_PATH, "fips_state_table.csv"),
+            "hhs": join(DATA_PATH, "fips_hhs_table.csv"),
+        },
+        "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
+        "state_code": {
+            "hhs": join(DATA_PATH, "state_code_hhs_table.csv"),
+            "pop": join(DATA_PATH, "state_pop.csv")
+        },
+        "state_id": {
+            "pop": join(DATA_PATH, "state_pop.csv")
+        },
+        "state_name": {
+            "pop": join(DATA_PATH, "state_pop.csv")
+        },
+        "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
+        "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv")},
+        "nation": {"pop": join(DATA_PATH, "nation_pop.csv")},
+    }
+
     def __init__(self):
-        """Initialize geomapper.
-
-        Holds loading the crosswalk tables until a conversion function is first used.
-
-        Parameters
-        ---------
-        crosswalk_files : dict
-            A dictionary of the filenames for the crosswalk tables.
-        """
-        self.crosswalk_filepaths = CROSSWALK_FILEPATHS
-        self.crosswalks = {
+        """Initialize geomapper."""
+        self._crosswalks = {
             "zip": {
                 geo: None for geo in ["fips", "hrr", "msa", "pop", "state", "hhs"]
             },
@@ -129,89 +120,53 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "nation": {"pop": None},
             "jhu_uid": {"fips": None},
         }
-        self.geo_lists = {
+        self._geo_sets = {
             geo: None for geo in ["zip", "fips", "hrr", "state_id", "state_code",
-                                  "state_name", "hhs", "msa"]
+                                  "state_name", "hhs", "msa", "nation"]
         }
-        self.geo_lists["nation"] = {"us"}
 
-    # Utility functions
-    def _load_crosswalk(self, from_code, to_code):
-        """Load the crosswalk from from_code -> to_code."""
-        assert from_code in self.crosswalk_filepaths, \
-            f"No crosswalk files for {from_code}; try {'; '.join(self.crosswalk_filepaths.keys())}"
-        assert to_code in self.crosswalk_filepaths[from_code], \
-            f"No crosswalk file from {from_code} to {to_code}; try " \
-            f"{'; '.join(self.crosswalk_filepaths[from_code].keys())}"
+        for from_code, to_codes in self.CROSSWALK_FILEPATHS.items():
+            for to_code, file_path in to_codes.items():
+                self._crosswalks[from_code][to_code] = \
+                    self._load_crosswalk_from_file(from_code, to_code, file_path)
 
-        if self.crosswalks[from_code][to_code] is None:
-            self.crosswalks[from_code][to_code] = self._load_crosswalk_from_file(from_code, to_code)
-        return self.crosswalks[from_code][to_code]
+        for geo_type in self._geo_sets:
+            self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
-    def _load_crosswalk_from_file(self, from_code, to_code):
-        stream = pkg_resources.resource_stream(
-            __name__, self.crosswalk_filepaths[from_code][to_code]
-        )
-        usecols = None
-        dtype = None
-        # Weighted crosswalks
-        if (from_code, to_code) in [
-            ("zip", "fips"),
-            ("fips", "zip"),
-            ("jhu_uid", "fips"),
-            ("zip", "msa"),
-            ("fips", "hrr"),
-            ("zip", "hhs")
-        ]:
-            dtype = {
-                from_code: str,
-                to_code: str,
-                "weight": float,
-            }
-
-        # Unweighted crosswalks
-        elif (from_code, to_code) in [
-            ("zip", "hrr"),
-            ("fips", "msa"),
-            ("fips", "hhs"),
-            ("state_code", "hhs")
-        ]:
-            dtype = {from_code: str, to_code: str}
-
-        # Special table of state codes, state IDs, and state names
-        elif (from_code, to_code) == ("state", "state"):
-            dtype = {
-                "state_code": str,
-                "state_id": str,
-                "state_name": str,
-            }
-        elif (from_code, to_code) == ("zip", "state"):
-            dtype = {
-                "zip": str,
-                "weight": float,
-                "state_code": str,
-                "state_id": str,
-                "state_name": str,
-            }
-        elif (from_code, to_code) == ("fips", "state"):
-            dtype = {
-                    "fips": str,
-                    "state_code": str,
-                    "state_id": str,
-                    "state_name": str,
-            }
-
-        # Population tables
-        elif to_code == "pop":
-            dtype = {
-                from_code: str,
-                "pop": int,
-            }
-            usecols = [
-                from_code,
-                "pop"
-            ]
+    def _load_crosswalk_from_file(self, from_code, to_code, data_path):
+        stream = pkg_resources.resource_stream(__name__, data_path)
+        dtype = {
+            from_code: str,
+            to_code: str,
+            "fips": str,
+            "zip": str,
+            "hrr": str,
+            "hhs": str,
+            "msa": str,
+            "state_code": str,
+            "state_id": str,
+            "state_name": str,
+            "pop": int,
+            "weight": float
+        }
+        usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
+
+    def _load_geo_values(self, geo_type):
+        if geo_type == "nation":
+            return {"us"}
+
+        if geo_type.startswith("state"):
+            to_code = from_code = "state"
+        elif geo_type == "fips":
+            from_code = "fips"
+            to_code = "pop"
+        else:
+            from_code = "fips"
+            to_code = geo_type
+
+        crosswalk = self._crosswalks[from_code][to_code]
+        return set(crosswalk[geo_type])
 
     @staticmethod
     def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
@@ -228,7 +183,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         thr_win_len,
         thr_col="visits",
         fips_col="fips",
-        date_col="date",
+        date_col="timestamp",
         mega_col="megafips",
     ):
         """Create megacounty column.
@@ -330,17 +285,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
         # state codes are all stored in one table
         if from_code in state_codes and new_code in state_codes:
-            crosswalk = self._load_crosswalk(from_code="state", to_code="state")
+            crosswalk = self._crosswalks["state"]["state"]
             crosswalk = crosswalk.rename(
                 columns={from_code: from_col, new_code: new_col}
             )
         elif new_code in state_codes:
-            crosswalk = self._load_crosswalk(from_code=from_code, to_code="state")
+            crosswalk = self._crosswalks[from_code]["state"]
             crosswalk = crosswalk.rename(
                 columns={from_code: from_col, new_code: new_col}
             )
         else:
-            crosswalk = self._load_crosswalk(from_code=from_code, to_code=new_code)
+            crosswalk = self._crosswalks[from_code][new_code]
             crosswalk = crosswalk.rename(
                 columns={from_code: from_col, new_code: new_col}
             )
@@ -385,7 +340,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         new_code,
         from_col=None,
         new_col=None,
-        date_col="date",
+        date_col="timestamp",
         data_cols=None,
         dropna=True,
     ):
@@ -411,7 +366,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
                    'hhs'}
             Specifies the geocode type of the data in new_col.
-        date_col: str or None, default "date"
+        date_col: str or None, default "timestamp"
             Specify which column contains the date values. Used for value aggregation.
             If None, then the aggregation is done only on geo_id.
         data_cols: list, default None
@@ -464,6 +419,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         geocode_col: str, default None
             The name of the column containing the geocodes. If None, uses the geocode_type
             as the name.
+        dropna: bool, default True
+            Determine whether to drop rows with no population data.
 
         Returns
         --------
@@ -477,7 +434,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             raise ValueError(
                 f"Only {supported_geos} geocodes supported. For other codes, aggregate those."
             )
-        pop_df = self._load_crosswalk(from_code=geocode_type, to_code="pop")
+        pop_df = self._crosswalks[geocode_type]["pop"]
         if not is_string_dtype(data[geocode_col]):
             if geocode_type in ["zip", "fips"]:
                 data[geocode_col] = data[geocode_col].astype(str).str.zfill(5)
@@ -500,7 +457,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         thr_win_len,
         thr_col="visits",
         fips_col="fips",
-        date_col="date",
+        date_col="timestamp",
         mega_col="megafips",
         count_cols=None,
     ):
@@ -556,18 +513,29 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         if geo_type == "county":
             return "fips"
         return geo_type
+
+    def get_crosswalk(self, from_code, to_code):
+        """Return a dataframe mapping the given geocodes.
+
+        Parameters
+        ----------
+        from_code: str
+          The geo type to translate from.
+        to_code: str
+          The geo type (or "pop" for population) to translate to.
+
+        Returns
+        -------
+        A dataframe containing columbs with the two specified geo types.
+        """
+        try:
+            return self._crosswalks[from_code][to_code]
+        except KeyError as e:
+            raise ValueError(f'Mapping from "{from_code}" to "{to_code}" not found.') from e
+
     def get_geo_values(self, geo_type):
         """
         Return a set of all values for a given geography type.
-
-        Uses the same caching paradigm as _load_crosswalks, storing the value from previous calls
-        and not re-reading the CSVs if the same geo type is requested multiple times. Does not
-        share the same crosswalk cache to keep complexity down.
-
-        Reads the FIPS crosswalk files by default for reference data since those have mappings to
-        all other geos. Exceptions are nation, which has no mapping file and is hard-coded as 'us',
-        and state, which uses the state codes table since the fips/state mapping doesn't include
-        all territories.
 
         Parameters
         ----------
@@ -579,19 +547,49 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         -------
         Set of geo values, all in string format.
         """
-        if self.geo_lists[geo_type]:  # pylint: disable=no-else-return
-            return self.geo_lists[geo_type]
-        else:
-            from_code = "fips"
-            if geo_type.startswith("state"):
-                to_code = from_code = "state"
-            elif geo_type == "fips":
-                to_code = "pop"
-            else:
-                to_code = geo_type
-            stream = pkg_resources.resource_stream(
-                __name__, self.crosswalk_filepaths[from_code][to_code]
-            )
-            crosswalk = pd.read_csv(stream, dtype=str)
-            self.geo_lists[geo_type] = set(crosswalk[geo_type])
-            return self.geo_lists[geo_type]
+        try:
+            return self._geo_sets[geo_type]
+        except KeyError as e:
+            raise ValueError(f'Given geo type "{geo_type}" not found') from e
+
+    def get_geos_within(self, container_geocode, contained_geocode_type, container_geocode_type):
+        """
+        Return all contained regions of the given type within the given container geocode.
+
+        Given container_geocode (e.g "ca" for California) of type container_geocode_type
+        (e.g "state"), return:
+            - all (contained_geocode_type)s within container_geocode
+
+        Supports these 3 combinations:
+            - all states within a nation
+            - all counties within a state
+            - all states within an hhs region
+
+        Parameters
+        ----------
+        container_geocode: str
+            Instance of nation/state/hhs to find the sub-regions of
+        contained_geocode_type: str
+            The subregion type to retrieve. One of "state", "county"
+        container_geocode_type: str
+            The parent region type. One of "state", "nation", "hhs"
+
+        Returns
+        -------
+        Set of geo code strings of the given type that lie within the given container geocode.
+        """
+        if contained_geocode_type == "state":
+            if container_geocode_type == "nation" and container_geocode == "us":
+                crosswalk = self._crosswalks["state"]["state"]
+                return set(crosswalk["state_id"])   # pylint: disable=unsubscriptable-object
+            if container_geocode_type == "hhs":
+                crosswalk_hhs = self._crosswalks["fips"]["hhs"]
+                crosswalk_state = self._crosswalks["fips"]["state"]
+                fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
+                return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
+        elif contained_geocode_type == "county" and container_geocode_type == "state":
+            crosswalk = self._crosswalks["fips"]["state"]
+            return set(crosswalk[crosswalk["state_id"] == container_geocode]["fips"])
+        raise ValueError("(contained_geocode_type, container_geocode_type) was "
+                         f"({contained_geocode_type}, {container_geocode_type}), but "
+                         f"must be one of (state, nation), (state, hhs), (county, state)")

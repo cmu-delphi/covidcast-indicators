@@ -1,0 +1,46 @@
+name: Build indicator container images and upload to registry
+
+on:
+  push:
+    branches: [ main, prod ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        packages: [ facebook ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: cmu-delphi-deploy-machine
+          password: ${{ secrets.CMU_DELPHI_DEPLOY_MACHINE_PAT }}
+
+      - name: Build, tag, and push image to Github
+        run: |
+          baseRef="${GITHUB_REF#*/}"
+          baseRef="${baseRef#*/}"
+          case "${baseRef}" in
+          main)
+            imageTag="dev"
+            ;;
+          prod)
+            imageTag="latest"
+            ;;
+          *)
+            imageTag="${baseRef//\//_}" # replace `/` with `_` in branch name
+            ;;
+          esac
+          if [ -z ${{ matrix.packages }} ]; then
+            echo "The matrix list is empty so we will not build any images."
+          else
+            cd ${{ github.workspace }}/${{ matrix.packages }}
+            echo "using tag: --${imageTag}--"
+            docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
+            docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
+          fi

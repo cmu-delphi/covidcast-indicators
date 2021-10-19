@@ -34,7 +34,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
   ## table in sorted order so data.table can use a binary search to find
   ## matching dates, rather than a linear scan, and is important for very large
   ## input files.
-  df <- as.data.table(df)
+  df <- as.data.table(df)[!is.na(weight), ]
   setkeyv(df, "start_dt")
 
   # Keep only obs in desired date range.
@@ -50,8 +50,9 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
                all_of(unique(aggregations$metric)),
                all_of(unique(aggregations$var_weight)),
                all_of( group_vars[group_vars != "geo_id"] ),
-               zip5,
-               start_dt)
+               .data$zip5,
+               .data$start_dt
+  )
 
   agg_groups <- unique(aggregations[c("group_by", "geo_level")])
 
@@ -107,12 +108,6 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
 #' CSV. Alphabetize grouping variables; columns are saved to output CSV in this
 #' order.
 #'
-#' Most columns specified in `aggregations` are converted into the appropriate
-#' format (binary response codes -> logical, etc). Multi-select `metrics` are
-#' turned into a series of binary columns. Each binary is given its own
-#' aggregation, sharing grouping variables and other settings with the original
-#' multi-select agg.
-#'
 #' @param df Data frame of individual response data.
 #' @param aggregations Data frame with columns `name`, `var_weight`, `metric`,
 #'   `group_by`, `compute_fn`, `post_fn`. Each row represents one aggregate
@@ -156,31 +151,13 @@ post_process_aggs <- function(df, aggregations, cw_list) {
     }
 
     aggregations$geo_level[agg_ind] <- geo_level
-
-    # Multiple choice metrics should also be included in the group_by vars
-    if (startsWith(aggregations$metric[agg_ind], "mc_")) {
-      if ( !(aggregations$metric[agg_ind] %in%
-             aggregations$group_by[agg_ind][[1]]) ) {
-        aggregations$group_by[agg_ind][[1]] <-
-          c(aggregations$group_by[agg_ind][[1]], aggregations$metric[agg_ind])
-      }
-    }
   }
 
-  # Convert columns used in aggregations to appropriate format
-  #   - binary columns are recoded to 0/1
-  #   - numeric items are force converted to numeric
-  #   - multi-select items are converted to a series of binary columns, one for
-  # each unique level/response code; multi-select used for grouping are left as-is.
-  #   - multiple choice items are left as-is
-
-  #### TODO: How do we want to handle multi-select items when used for grouping?
+  # Remove aggregations using unavailable variables.
   group_vars <- unique( unlist(aggregations$group_by) )
-  group_vars <- group_vars[group_vars != "geo_id"]
-
   metric_cols <- unique(aggregations$metric)
   
-  cols_check_available <- unique(c(group_vars, metric_cols))
+  cols_check_available <- unique(c(group_vars[group_vars != "geo_id"], metric_cols))
   available <- cols_check_available %in% names(df)
   cols_not_available <- cols_check_available[ !available ]
   for (col_var in cols_not_available) {
@@ -192,26 +169,6 @@ post_process_aggs <- function(df, aggregations, cw_list) {
         col_var, " is not defined. Removing all aggregations that use it. ",
         nrow(aggregations), " remaining")
     )
-  }
-
-  cols_available <- cols_check_available[ available ]
-  for (col_var in cols_available) {
-    if ( col_var %in% group_vars & !(col_var %in% metric_cols) & !startsWith(col_var, "b_") ) {
-      next
-    }
-
-    if (startsWith(col_var, "b_")) { # Binary
-      output <- code_binary(df, aggregations, col_var)
-    } else if (startsWith(col_var, "n_")) { # Numeric free response
-      output <- code_numeric_freeresponse(df, aggregations, col_var)
-    } else if (startsWith(col_var, "ms_")) { # Multi-select
-      output <- code_multiselect(df, aggregations, col_var)
-    } else {
-      # Multiple choice and variables that are formatted differently
-      output <- list(df, aggregations)
-    }
-    df <- output[[1]]
-    aggregations <- output[[2]]
   }
 
   return(list(df, aggregations))
@@ -276,7 +233,7 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
   )
   
   # Drop groups with less than threshold sample size.
-  unique_groups_counts <- filter(unique_groups_counts, Freq >= params$num_filter)
+  unique_groups_counts <- filter(unique_groups_counts, .data$Freq >= params$num_filter)
   if ( nrow(unique_groups_counts) == 0 ) {
     return(list())
   }
@@ -354,33 +311,35 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
 #'   being used
 #' @param params Named list of configuration options.
 #'
-#' @importFrom tibble add_column as_tibble
+#' @importFrom tibble add_column
 #' @importFrom dplyr %>%
+#' @importFrom stats setNames
 #'
 #' @export
 summarize_aggregations_group <- function(group_df, aggregations, target_group, geo_level, params) {
-  ## Prepare outputs.
-  dfs_out <- list()
-  for (row in seq_along(aggregations$id)) {
-    aggregation <- aggregations$id[row]
-
-    dfs_out[[aggregation]] <- target_group %>%
-      as.list %>%
-      as_tibble %>%
-      add_column(val=NA_real_,
-                 se=NA_real_,
-                 sample_size=NA_real_,
-                 effective_sample_size=NA_real_,
-                 represented=NA_real_)
-  }
-
+  # Prepare outputs.
+  fill_df <- target_group %>%
+    add_column(val=NA_real_,
+               se=NA_real_,
+               sample_size=NA_real_,
+               effective_sample_size=NA_real_,
+               represented=NA_real_)
+  dfs_out <- setNames(
+    rep(list(fill_df), times=length(aggregations$id)),
+    aggregations$id)
+  
   for (row in seq_along(aggregations$id)) {
     aggregation <- aggregations$id[row]
     metric <- aggregations$metric[row]
     var_weight <- aggregations$var_weight[row]
     compute_fn <- aggregations$compute_fn[[row]]
 
-    agg_df <- group_df[!is.na(group_df[[var_weight]]) & !is.na(group_df[[metric]]), ]
+    # Copy only columns we're using.
+    select_cols <- c(metric, var_weight, "weight_in_location")
+    # This filter uses `x[, cols, with=FALSE]` rather than the newer recommended
+    # `x[, ..cols]` format to take advantage of better performance. Switch to
+    # using `..` if `with` is deprecated in the future.
+    agg_df <- group_df[!is.na(eval(as.name(metric))), select_cols, with=FALSE]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

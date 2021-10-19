@@ -6,9 +6,10 @@ when the module is run with `python -m delphi_doctor_visits`.
 """
 
 # standard packages
-import logging
 from datetime import datetime, timedelta
 from pathlib import Path
+
+from delphi_utils import get_structured_logger
 
 # first party
 from .update_sensor import update_sensor, write_to_csv
@@ -37,7 +38,9 @@ def run_module(params):
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
     """
-    logging.basicConfig(level=logging.DEBUG)
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
 
     ## get end date from input file
     # the filename is expected to be in the format:
@@ -61,30 +64,30 @@ def run_module(params):
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     enddate = str(enddate_dt.date())
     startdate = str(startdate_dt.date())
-    logging.info("drop date:\t\t%s", dropdate)
-    logging.info("first sensor date:\t%s", startdate)
-    logging.info("last sensor date:\t%s", enddate)
-    logging.info("n_backfill_days:\t%s", n_backfill_days)
-    logging.info("n_waiting_days:\t%s", n_waiting_days)
+    logger.info("drop date:\t\t%s", dropdate)
+    logger.info("first sensor date:\t%s", startdate)
+    logger.info("last sensor date:\t%s", enddate)
+    logger.info("n_backfill_days:\t%s", n_backfill_days)
+    logger.info("n_waiting_days:\t%s", n_waiting_days)
 
     ## geographies
     geos = ["state", "msa", "hrr", "county", "hhs", "nation"]
 
 
     ## print out other vars
-    logging.info("outpath:\t\t%s", export_dir)
-    logging.info("parallel:\t\t%s", params["indicator"]["parallel"])
-    logging.info("weekday:\t\t%s", params["indicator"]["weekday"])
-    logging.info("write se:\t\t%s", se)
-    logging.info("obfuscated prefix:\t%s", prefix)
+    logger.info("outpath:\t\t%s", export_dir)
+    logger.info("parallel:\t\t%s", params["indicator"]["parallel"])
+    logger.info("weekday:\t\t%s", params["indicator"]["weekday"])
+    logger.info("write se:\t\t%s", se)
+    logger.info("obfuscated prefix:\t%s", prefix)
 
     ## start generating
     for geo in geos:
         for weekday in params["indicator"]["weekday"]:
             if weekday:
-                logging.info("starting %s, weekday adj", geo)
+                logger.info("starting %s, weekday adj", geo)
             else:
-                logging.info("starting %s, no adj", geo)
+                logger.info("starting %s, no adj", geo)
             sensor = update_sensor(
                 filepath=params["indicator"]["input_file"],
                 startdate=startdate,
@@ -93,16 +96,20 @@ def run_module(params):
                 geo=geo,
                 parallel=params["indicator"]["parallel"],
                 weekday=weekday,
-                se=params["indicator"]["se"]
+                se=params["indicator"]["se"],
+                logger=logger,
             )
+            if sensor is None:
+                logger.error("No sensors calculated, no output will be produced")
+                continue
             # write out results
             out_name = "smoothed_adj_cli" if weekday else "smoothed_cli"
             if params["indicator"]["se"]:
                 assert prefix is not None, "template has no obfuscated prefix"
                 out_name = prefix + "_" + out_name
 
-            write_to_csv(sensor, geo, se, out_name, export_dir)
-            logging.debug(f"wrote files to {export_dir}")
-        logging.info("finished %s", geo)
+            write_to_csv(sensor, geo, se, out_name, logger, export_dir)
+            logger.debug(f"wrote files to {export_dir}")
+        logger.info("finished %s", geo)
 
-    logging.info("finished all")
+    logger.info("finished all")

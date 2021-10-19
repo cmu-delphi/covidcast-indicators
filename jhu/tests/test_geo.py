@@ -107,7 +107,7 @@ class TestGeoMap:
             new_df = geo_map(test_df, geo, "cumulative_prop")
             gmpr = GeoMapper()
             test_df = gmpr.add_population_column(test_df, "fips")
-            test_df = gmpr.replace_geocode(test_df, "fips", geo, date_col="timestamp")
+            test_df = gmpr.replace_geocode(test_df, "fips", geo)
 
             new_df = new_df.set_index(["geo_id", "timestamp"]).sort_index()
             test_df = test_df.set_index([geo, "timestamp"]).sort_index()

@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 import pandas as pd
@@ -13,6 +14,7 @@ from delphi_quidel.pull import (
 
 END_FROM_TODAY_MINUS = 5
 EXPORT_DAY_RANGE = 40
+TEST_LOGGER = logging.getLogger()
 
 class TestFixData:
     def test_fix_zipcode(self):
@@ -28,7 +30,7 @@ class TestFixData:
                                           datetime(2020, 6, 14), datetime(2020, 7, 10)],
                            "TestDate":[datetime(2020, 1, 19), datetime(2020, 6, 10),
                                           datetime(2020, 6, 11), datetime(2020, 7, 2)]})
-        df = fix_date(df)
+        df = fix_date(df, TEST_LOGGER)
 
         assert set(df["timestamp"]) == set([datetime(2020, 5, 19),
                                             datetime(2020, 6, 11), datetime(2020, 7, 2)])
@@ -49,7 +51,7 @@ class TestingPullData:
             "sender": "",
             "wip_signal": [""],
             "test_mode": True
-        })
+        }, TEST_LOGGER)
 
         # For covid_ag
         df = dfs["covid_ag"]

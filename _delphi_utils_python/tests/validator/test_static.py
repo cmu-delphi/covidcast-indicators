@@ -16,7 +16,8 @@ class TestCheckMissingDates:
             "common": {
                 "data_source": "",
                 "span_length": 8,
-                "end_date": "2020-09-09"
+                "end_date": "2020-09-09",
+                "max_expected_lag": {"all": "1"}
             }
         }
         validator = StaticValidator(params)
@@ -50,7 +51,8 @@ class TestCheckMissingDates:
             "common": {
                 "data_source": "",
                 "span_length": 1,
-                "end_date": "2020-09-02"
+                "end_date": "2020-09-02",
+                "max_expected_lag": {"all": "0"}
             }
         }
         validator = StaticValidator(params)
@@ -439,11 +441,11 @@ class TestCheckBadSe:
         assert "check_se_many_missing" in [
             err.check_name for err in report.raised_errors]
 
-    def test_e_0_missing_allowed(self):
+    def test_e_0_neg_missing_allowed(self):
         validator = StaticValidator(self.params)
         report = ValidationReport([])
         validator.params.missing_se_allowed = True
-        df = pd.DataFrame([[1, 0, 200], [1, np.nan, np.nan], [
+        df = pd.DataFrame([[1, -1, 200], [1, 0, np.nan], [
                           1, np.nan, np.nan]], columns=["val", "se", "sample_size"])
         validator.check_bad_se(df, FILENAME, report)
 

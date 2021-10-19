@@ -16,7 +16,7 @@ from delphi_utils import get_structured_logger
 # first party
 from .download_ftp_files import download_covid, download_cli
 from .load_data import load_combined_data, load_cli_data
-from .update_sensor import CHCSensorUpdator
+from .update_sensor import CHCSensorUpdater
 
 
 def retrieve_files(params, filedate, logger):
@@ -156,6 +156,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         se = params["indicator"]["se"])
 
     ## start generating
+    stats = []
     for geo in params["indicator"]["geos"]:
         for numtype in params["indicator"]["types"]:
             for weekday in params["indicator"]["weekday"]:
@@ -163,7 +164,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     logger.info("starting weekday adj", geo = geo, numtype = numtype)
                 else:
                     logger.info("starting no adj", geo = geo, numtype = numtype)
-                su_inst = CHCSensorUpdator(
+                su_inst = CHCSensorUpdater(
                     startdate,
                     enddate,
                     dropdate,
@@ -172,7 +173,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     weekday,
                     numtype,
                     params["indicator"]["se"],
-                    params["indicator"]["wip_signal"]
+                    params["indicator"]["wip_signal"],
+                    logger
                 )
                 if numtype == "covid":
                     data = load_combined_data(file_dict["denom"],
@@ -180,12 +182,21 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 elif numtype == "cli":
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
                              file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
-                su_inst.update_sensor(
+                more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"]
                 )
+                stats.extend(more_stats)
+
             logger.info("finished processing", geo = geo)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = stats and min(s[0] for s in stats)
+    csv_export_count = sum(s[-1] for s in stats)
+    max_lag_in_days = min_max_date and (datetime.now() - min_max_date).days
+    formatted_min_max_date = min_max_date and min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

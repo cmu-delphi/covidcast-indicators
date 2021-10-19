@@ -1,9 +1,9 @@
-name: Release Delphi Utils
+name: (Deprecated) Release Delphi Utils
 
 on:
   push:
     branches:
-      - prod
+      - not_prod
     paths:
       - '_delphi_utils_python/**'
   workflow_dispatch:
@@ -75,7 +75,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          password: ${{ secrets.DELPHI_PYPI_PROD_TOKEN }}
           packages_dir: _delphi_utils_python/dist/
           skip_existing: true
           # repository_url: https://test.pypi.org/legacy/

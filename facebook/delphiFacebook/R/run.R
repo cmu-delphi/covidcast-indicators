@@ -31,7 +31,7 @@ run_facebook <- function(params)
   msg_df("response data to aggregate", data_agg)
 
   # create "complete" data that will be shared with research partners
-  data_full <- create_complete_responses(input_data, cw_list$county)
+  data_full <- create_complete_responses(input_data, cw_list$county, params)
   data_full <- filter_complete_responses(data_full, params)
   data_full <- join_weights(data_full, params, weights = "full")
   msg_df("full data to share with research partners", data_full)
@@ -45,7 +45,7 @@ run_facebook <- function(params)
       warning("Could not detect the number of CPU cores; parallel mode disabled")
       params$parallel <- FALSE
     } else {
-      options(mc.cores = cores)
+      options(mc.cores = min(params$parallel_max_cores, cores))
     }
   }
 

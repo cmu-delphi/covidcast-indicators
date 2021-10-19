@@ -4,7 +4,7 @@ import importlib
 from typing import Any, Callable, Dict, Optional
 from .archive import ArchiveDiffer, archiver_from_params
 from .logger import get_structured_logger
-from .utils import read_params
+from .utils import read_params, transfer_files
 from .validator.validate import Validator
 from .validator.run import validator_from_params
 
@@ -41,9 +41,14 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     archiver = archiver_fn(params)
     if validator:
         validation_report = validator.validate()
-        validation_report.log(get_structured_logger(params["common"].get("log_filename", None)))
-    if archiver and (not validator or validation_report.success()):
-        archiver.archive()
+        validation_report.log(get_structured_logger(
+            name = indicator_fn.__module__,
+            filename=params["common"].get("log_filename", None)))
+    if (not validator or validation_report.success()):
+        if archiver:
+            archiver.run()
+        if "delivery" in params:
+            transfer_files()
 
 
 if __name__ == "__main__":

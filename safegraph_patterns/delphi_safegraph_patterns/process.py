@@ -114,18 +114,14 @@ def aggregate(df, metric, geo_res):
     gmpr = GeoMapper()
     geo_key = GEO_KEY_DICT[geo_res]
     df = gmpr.add_population_column(df, "zip")
-    df = gmpr.replace_geocode(df,
-                              "zip",
-                              geo_key,
-                              date_col="timestamp",
-                              data_cols=[metric_count_name, "population"])
+    df = gmpr.replace_geocode(df, "zip", geo_key, data_cols=[metric_count_name, "population"])
 
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE
     return df.rename({geo_key: "geo_id"}, axis=1)
 
 def process(fname, sensors, metrics, geo_resolutions,
-            export_dir, brand_df):
+            export_dir, brand_df, stats, logger):
     """
     Process an input census block group-level CSV and export it.
 
@@ -135,14 +131,20 @@ def process(fname, sensors, metrics, geo_resolutions,
     ----------
     fname: str
         Input filename.
-    metrics: List[Tuple[str, bool]]
-        List of (metric_name, wip).
     sensors: List[str]
         List of (sensor)
+    metrics: List[Tuple[str, bool]]
+        List of (metric_name, wip).
     geo_resolutions: List[str]
         List of geo resolutions to export the data.
+    export_dir: str
+        The directory to export files to.
     brand_df: pd.DataFrame
         mapping info from naics_code to safegraph_brand_id
+    stats: List[Tuple[datetime, int]]
+        List to which we will add (max export date, number of export dates)
+    logger: logging.Logger
+        The structured logger.
 
     Returns
     -------
@@ -162,7 +164,7 @@ def process(fname, sensors, metrics, geo_resolutions,
                          usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
         dfs = construct_signals(df, metric_names, naics_codes, brand_df)
-        print("Finished pulling data from " + fname)
+        logger.info("Finished pulling data.", filename=fname)
     else:
         files = glob.glob(f'{fname}/**/*.csv.gz', recursive=True)
         dfs_dict = {"bars_visit": [], "restaurants_visit": []}
@@ -178,9 +180,11 @@ def process(fname, sensors, metrics, geo_resolutions,
             ).groupby(["timestamp", "zip"]).sum().reset_index()
         dfs["restaurants_visit"] = pd.concat(dfs_dict["restaurants_visit"]
             ).groupby(["timestamp", "zip"]).sum().reset_index()
-        print("Finished pulling data from " + fname)
+        logger.info("Finished pulling data.", filename=fname)
     for geo_res, sensor in product(geo_resolutions, sensors):
         for metric, wip in zip(metric_names, wips):
+            logger.info("Generating signal and exporting to CSV",
+                        geo_res=geo_res, metric=metric, sensor=sensor)
             df_export = aggregate(dfs[metric], metric, geo_res)
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
@@ -188,7 +192,7 @@ def process(fname, sensors, metrics, geo_resolutions,
 
             if wip:
                 metric = "wip_" + metric
-            create_export_csv(
+            dates = create_export_csv(
                 df_export,
                 export_dir=export_dir,
                 start_date=df_export["timestamp"].min(),
@@ -196,3 +200,5 @@ def process(fname, sensors, metrics, geo_resolutions,
                 geo_res=geo_res,
                 sensor=sensor,
             )
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))

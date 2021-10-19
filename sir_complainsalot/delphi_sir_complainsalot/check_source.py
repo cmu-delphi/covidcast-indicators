@@ -1,16 +1,18 @@
+"""Evaluate data source for problems."""
+
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import List
-from delphi_utils import get_structured_logger
 
 import covidcast
-from datetime import datetime, timedelta
-import numpy as np
 import pandas as pd
 
 covidcast.covidcast._ASYNC_CALL = True  # pylint: disable=protected-access
 
 @dataclass
 class Complaint:
+    """Container for a SirCAL complaint."""
+
     message: str
     data_source: str
     signal: str
@@ -20,19 +22,18 @@ class Complaint:
 
     def __str__(self):
         """Plain text string form of complaint."""
-
         return "{source}::{signal} ({geos}) {message}; last updated {updated}".format(
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
 
     def to_md(self):
         """Markdown formatted form of complaint."""
-
         return "*{source}* `{signal}` ({geos}) {message}; last updated {updated}.".format(
             source=self.data_source, signal=self.signal, geos=", ".join(self.geo_types),
             message=self.message, updated=self.last_updated.strftime("%Y-%m-%d"))
 
-def check_source(data_source, meta, params, grace, logger):
+
+def check_source(data_source, meta, params, grace, logger):  # pylint: disable=too-many-locals
     """Iterate over all signals from a source and check for problems.
 
     Possible problems:
@@ -50,12 +51,13 @@ def check_source(data_source, meta, params, grace, logger):
     10 days means we check the most recent 10 days of data. Defaults to 7.
 
     """
-
     source_config = params[data_source]
+    retired_signals = source_config.get("retired-signals")
     gap_window = pd.Timedelta(days=source_config.get("gap_window", 7))
     max_allowed_gap = source_config.get("max_gap", 1)
 
-    signals = meta[meta.data_source == data_source]
+    signals = meta[(meta.data_source == data_source) &
+                   ~meta.apply(_is_retired, axis=1, retired_signals=retired_signals)]
 
     now = pd.Timestamp.now()
 
@@ -63,10 +65,6 @@ def check_source(data_source, meta, params, grace, logger):
     gap_complaints = {}
 
     for _, row in signals.iterrows():
-        if "retired-signals" in source_config and \
-           row["signal"] in source_config["retired-signals"]:
-            continue
-
         logger.info("Retrieving signal",
             data_source=data_source,
             signal=row["signal"],
@@ -100,7 +98,7 @@ def check_source(data_source, meta, params, grace, logger):
         if current_lag_in_days > source_config["max_age"] + grace:
             if row["signal"] not in age_complaints:
                 age_complaints[row["signal"]] = Complaint(
-                    "is {current_lag_in_days} days old".format(current_lag_in_days=current_lag_in_days),
+                    f"is {current_lag_in_days} days old",
                     data_source,
                     row["signal"],
                     [row["geo_type"]],
@@ -156,3 +154,15 @@ def check_source(data_source, meta, params, grace, logger):
                 gap_complaints[row["signal"]].geo_types.append(row["geo_type"])
 
     return list(age_complaints.values()) + list(gap_complaints.values())
+
+
+def _is_retired(row, retired_signals):
+    """Determine if a row of the metadata belongs to a retired signal according to the params."""
+    if not retired_signals:
+        return False
+    for signal in retired_signals:
+        if row["signal"] == signal:
+            return True
+        if isinstance(signal, list) and {row["signal"], row["geo_type"]}.issubset(set(signal)):
+            return True
+    return False

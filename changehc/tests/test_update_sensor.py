@@ -1,4 +1,5 @@
 # standard
+import logging
 from copy import deepcopy
 import os
 from os.path import join, exists
@@ -13,7 +14,7 @@ import pytest
 
 # first party
 from delphi_changehc.config import Config
-from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
+from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdater
 
 CONFIG = Config()
 PARAMS = {
@@ -27,8 +28,9 @@ COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
+TEST_LOGGER = logging.getLogger()
 
-class TestCHCSensorUpdator:
+class TestCHCSensorUpdater:
     """Tests for updating the sensors."""
     geo = "county"
     parallel = False
@@ -40,11 +42,11 @@ class TestCHCSensorUpdator:
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "fips": ['01001'] * 7 + ['04007'] * 6,
         "den": [1000] * 7 + [2000] * 6,
-        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
+        "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","timestamp"])
 
     def test_shift_dates(self):
         """Tests that dates in the data are shifted according to the burn-in and lag."""
-        su_inst = CHCSensorUpdator(
+        su_inst = CHCSensorUpdater(
             "02-01-2020",
             "06-01-2020",
             "06-12-2020",
@@ -53,7 +55,8 @@ class TestCHCSensorUpdator:
             self.weekday,
             self.numtype,
             self.se,
-            ""
+            "",
+            TEST_LOGGER
         )
         ## Test init
         assert su_inst.startdate.month == 2
@@ -68,7 +71,7 @@ class TestCHCSensorUpdator:
     def test_geo_reindex(self):
         """Tests that the geo reindexer changes the geographic resolution."""
         for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
-            su_inst = CHCSensorUpdator(
+            su_inst = CHCSensorUpdater(
                 "02-01-2020",
                 "06-01-2020",
                 "06-12-2020",
@@ -77,14 +80,15 @@ class TestCHCSensorUpdator:
                 self.weekday,
                 self.numtype,
                 self.se,
-                ""
+                "",
+               TEST_LOGGER
             )
             su_inst.shift_dates()
             test_data = pd.DataFrame({
                 "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
                 "fips": ['01001'] * 7 + ['04007'] * 6,
                 "den": [1000] * 7 + [2000] * 6,
-                "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
+                "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
             data_frame = su_inst.geo_reindex(test_data)
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum() == (4200,19000)).all()
@@ -94,7 +98,7 @@ class TestCHCSensorUpdator:
         outputs = {}
         for geo in ["county", "state", "hhs", "nation"]:
             td = TemporaryDirectory()
-            su_inst = CHCSensorUpdator(
+            su_inst = CHCSensorUpdater(
                 "03-01-2020",
                 "03-22-2020",
                 "03-27-2020",
@@ -103,7 +107,8 @@ class TestCHCSensorUpdator:
                 self.weekday,
                 self.numtype,
                 self.se,
-                ""
+                "",
+                TEST_LOGGER
             )
             # As of 3/3/21 (40c258a), this set of data has county outputting data, state and hhs not
             # outputting data, and nation outputting data, which is undesirable. Ideal behaviour
@@ -113,8 +118,8 @@ class TestCHCSensorUpdator:
                 "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
                 "fips": ["01001"] * 13 + ["42003"] * 13,
                 "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
-                "date": list(pd.date_range("20200301", "20200313")) * 2
-            }).set_index(["fips", "date"])
+                "timestamp": list(pd.date_range("20200301", "20200313")) * 2
+            }).set_index(["fips", "timestamp"])
             su_inst.update_sensor(small_test_data,  td.name)
             for f in os.listdir(td.name):
                 outputs[f] = pd.read_csv(os.path.join(td.name, f))
@@ -149,7 +154,8 @@ class TestWriteToCsv:
             write_se=False,
             day_shift=CONFIG.DAY_SHIFT,
             out_name="name_of_signal",
-            output_path=td.name
+            output_path=td.name,
+            logger=TEST_LOGGER
         )
 
         # check outputs
@@ -203,7 +209,8 @@ class TestWriteToCsv:
             write_se=True,
             day_shift=CONFIG.DAY_SHIFT,
             out_name="name_of_signal",
-            output_path=td.name
+            output_path=td.name,
+            logger=TEST_LOGGER
         )
 
         # check outputs
@@ -243,7 +250,8 @@ class TestWriteToCsv:
                 write_se=False,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         # nan se for included loc-date
@@ -258,7 +266,8 @@ class TestWriteToCsv:
                 write_se=True,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         # large se value
@@ -273,7 +282,8 @@ class TestWriteToCsv:
                 write_se=True,
                 day_shift=CONFIG.DAY_SHIFT,
                 out_name="name_of_signal",
-                output_path=td.name
+                output_path=td.name,
+                logger=TEST_LOGGER
             )
 
         td.cleanup()

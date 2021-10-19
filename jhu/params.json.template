@@ -1,7 +1,8 @@
 {
   "common": {
     "export_dir": "./receiving",
-    "log_exceptions": false
+    "log_exceptions": false,
+    "log_filename": "./jhu-csse.log"
   },
   "indicator": {
     "base_url": "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_{metric}_US.csv",
@@ -12,8 +13,10 @@
     "common": {
       "data_source": "jhu-csse",
       "span_length": 14,
-      "end_date": "today-1",
+      "min_expected_lag": {"all": "1"},
+      "max_expected_lag": {"all": "1"},
       "test_mode": false,
+      "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_val_lt_0"}
       ]
@@ -36,5 +39,14 @@
         "deaths_7dav_incidence_num",
         "deaths_7dav_incidence_prop"]
     }
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "",
+      "aws_secret_access_key": ""
+    },
+    "bucket_name": "",
+    "cache_dir": "./cache",
+    "indicator_prefix": "jhu"
   }
 }

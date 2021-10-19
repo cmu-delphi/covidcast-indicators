@@ -1,19 +1,24 @@
 """Tests for running combo cases and deaths indicator."""
+import logging
 from datetime import date
 from itertools import product
+import os
 import unittest
 from unittest.mock import patch, call
 import pandas as pd
 import numpy as np
 
 from delphi_combo_cases_and_deaths.run import (
-    extend_raw_date_range, get_updated_dates,
+    run_module,
+    extend_raw_date_range,
+    get_updated_dates,
     sensor_signal,
     combine_usafacts_and_jhu,
     compute_special_geo_dfs,
     COLUMN_MAPPING)
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
 
+TEST_LOGGER = logging.getLogger()
 
 def test_issue_dates():
     """The smoothed value for a particular date is computed from the raw
@@ -95,7 +100,7 @@ def test_unstable_sources(mock_covidcast_signal):
                 ("1 1", 4, 1 if geo in ["nation", "hhs"] else 2),
                 ("0 0", 2, 0)
         ]:
-            df = combine_usafacts_and_jhu("", geo, date_range, fetcher=mock_covidcast_signal)
+            df = combine_usafacts_and_jhu("", geo, date_range, TEST_LOGGER, fetcher=mock_covidcast_signal)
             assert df.size == expected_size * len(COLUMN_MAPPING), f"""
 Wrong number of rows in combined data frame for the number of available signals.
 
@@ -123,7 +128,7 @@ def test_multiple_issues(mock_covidcast_signal):
         }),
         None
     ] * 2
-    result = combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal)
+    result = combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal)
     pd.testing.assert_frame_equal(
         result,
         pd.DataFrame(
@@ -183,7 +188,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
     ] * 6 # each call to combine_usafacts_and_jhu makes (2 + 2 * len(unique_timestamps)) = 12 calls to the fetcher
 
     pd.testing.assert_frame_equal(
-        combine_usafacts_and_jhu("confirmed_incidence_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        combine_usafacts_and_jhu("confirmed_incidence_num", "nation", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
                       "val": [50 + 100 + 200],
@@ -191,7 +196,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
                       "sample_size": [None]})
     )
     pd.testing.assert_frame_equal(
-        combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal),
         pd.DataFrame({"timestamp": [20200101],
                       "geo_id": ["us"],
                       "val": [(50 + 100 + 200) / (4903185 + 3723066) * 100000],
@@ -199,7 +204,7 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
                       "sample_size": [None]})
     )
     pd.testing.assert_frame_equal(
-        combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), fetcher=mock_covidcast_signal),
+        combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal),
         pd.DataFrame({"geo_id": ["01000", "01001", "72001"],
                       "val": [50, 100, 200],
                       "timestamp": [20200101, 20200101, 20200101]},
@@ -226,7 +231,7 @@ def test_no_nation_jhu(mock_covidcast_signal):
                       "value": [1],
                       "timestamp": [20200101]})
     ]
-    result = combine_usafacts_and_jhu("_num", "nation", date_range=(0, 1), fetcher=mock_covidcast_signal)
+    result = combine_usafacts_and_jhu("_num", "nation", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal)
 
     assert mock_covidcast_signal.call_args_list[-1] == call(
         "jhu-csse",
@@ -244,6 +249,50 @@ def test_no_nation_jhu(mock_covidcast_signal):
                       "sample_size": [None]},)
     )
 
+@patch("delphi_combo_cases_and_deaths.run.combine_usafacts_and_jhu")
+def test_output_files(mock_combine):
+    params = {
+        "common": {
+            "export_dir": "./receiving"
+        },
+        "indicator": {
+            "export_start_date": [2020, 4, 1],
+            "source":"indicator-combination",
+            "wip_signal": ""
+        }
+    }
+    mock_combine.return_value = pd.DataFrame(
+            {
+                "geo_id": ["01000"],
+                "val": [10],
+                "timestamp": [pd.to_datetime("2021-01-04")],
+                "issue": [pd.to_datetime("2021-01-04")],
+                "se": 0,
+                "sample_size": 0
+            },
+            index=[1]
+        )
+    run_module(params)
+    csv_files = [f for f in os.listdir("receiving") if f.endswith(".csv")]
+    dates = ["20210104"]
+    geos = ["county", "hrr", "msa", "state", "hhs", "nation"]
+
+    # enumerate metric names.
+    metrics = []
+    for event, span, stat in product(["deaths", "confirmed"],
+                                     ["cumulative", "incidence"],
+                                     ["num", "prop"]):
+        metrics.append("_".join([event, span, stat]))
+        metrics.append("_".join([event, "7dav", span, stat]))
+
+    expected_files = []
+    for date in dates:
+        for geo in geos:
+            for metric in metrics:
+                if "7dav" in metric and "cumulative" in metric:
+                    continue
+                expected_files += [date + "_" + geo + "_" + metric + ".csv"]
+    assert set(csv_files) == set(expected_files)
 
 if __name__ == '__main__':
     unittest.main()

@@ -77,7 +77,7 @@ def update_sensor(
                             right_on=["year", "weeknumber"])
 
     # Select relevant columns and standardize naming
-    hosp_df = hosp_df.loc[:, APIConfig.HOSP_RENAME_COLS.keys()]\
+    hosp_df = hosp_df[APIConfig.HOSP_RENAME_COLS.keys()]\
         .rename(columns=APIConfig.HOSP_RENAME_COLS)
 
     # Restrict to start and end date

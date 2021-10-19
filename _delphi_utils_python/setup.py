@@ -7,6 +7,7 @@ with open("README.md", "r") as f:
 required = [
     "boto3",
     "covidcast",
+    "epiweeks",
     "freezegun",
     "gitpython",
     "mock",
@@ -14,7 +15,7 @@ required = [
     "numpy",
     "pandas>=1.1.0",
     "pydocstyle",
-    "pylint",
+    "pylint==2.8.3",
     "pytest",
     "pytest-cov",
     "slackclient",
@@ -24,7 +25,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.1.1",
+    version="0.1.17",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -35,7 +36,7 @@ setup(
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
     package_data={'': ['data/*.csv']}

@@ -9,14 +9,14 @@ class TestSmooth:
         dates = [str(x) for x in range(20200303, 20200310)]
 
         smoothed = pd.read_csv(
-            join("./receiving", f"{dates[-1]}_state_confirmed_7dav_cumulative_num.csv")
+            join("./receiving", f"{dates[-1]}_state_confirmed_7dav_incidence_num.csv")
         )
 
         # Build a dataframe out of the individual day files
         raw = pd.concat(
             [
                 pd.read_csv(
-                    join("./receiving", f"{date}_state_confirmed_cumulative_num.csv")
+                    join("./receiving", f"{date}_state_confirmed_incidence_num.csv")
                 )
                 for date in dates
             ]

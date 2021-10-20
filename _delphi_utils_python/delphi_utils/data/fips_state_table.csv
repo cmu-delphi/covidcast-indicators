@@ -3235,60 +3235,60 @@ fips,state_code,state_id,state_name
 69100,69,mp,Northern Mariana Islands
 69110,69,mp,Northern Mariana Islands
 69120,69,mp,Northern Mariana Islands
-01000,01,al,Alabama
-66000,66,gu,Guam
-08000,08,co,Colorado
-12000,12,fl,Florida
-37000,37,nc,North Carolina
+27000,27,mn,Minnesota
+40000,40,ok,Oklahoma
+70000,70,pw,Republic of Palau
+31000,31,ne,Nebraska
 09000,09,ct,Connecticut
-36000,36,ny,New York
-29000,29,mo,Missouri
-21000,21,ky,Kentucky
-35000,35,nm,New Mexico
+48000,48,tx,Texas
+32000,32,nv,Nevada
+50000,50,vt,Vermont
+25000,25,ma,Massachusetts
+53000,53,wa,Washington
+17000,17,il,Illinois
+28000,28,ms,Mississippi
+02000,02,ak,Alaska
 49000,49,ut,Utah
-69000,69,mp,Northern Mariana Islands
-18000,18,in,Indiana
+54000,54,wv,West Virginia
+20000,20,ks,Kansas
+08000,08,co,Colorado
+34000,34,nj,New Jersey
+35000,35,nm,New Mexico
+45000,45,sc,South Carolina
+29000,29,mo,Missouri
+66000,66,gu,Guam
+05000,05,ar,Arkansas
+41000,41,or,Oregon
+37000,37,nc,North Carolina
+55000,55,wi,Wisconsin
+44000,44,ri,Rhode Island
+56000,56,wy,Wyoming
+36000,36,ny,New York
+19000,19,ia,Iowa
 24000,24,md,Maryland
-78000,78,vi,U.S. Virgin Islands
-26000,26,mi,Michigan
 46000,46,sd,South Dakota
 38000,38,nd,North Dakota
-10000,10,de,Delaware
 72000,72,pr,Puerto Rico
-05000,05,ar,Arkansas
-40000,40,ok,Oklahoma
-22000,22,la,Louisiana
-02000,02,ak,Alaska
-17000,17,il,Illinois
-42000,42,pa,Pennsylvania
-55000,55,wi,Wisconsin
-31000,31,ne,Nebraska
-32000,32,nv,Nevada
-53000,53,wa,Washington
-54000,54,wv,West Virginia
-60000,60,as,American Samoa
-44000,44,ri,Rhode Island
-19000,19,ia,Iowa
-30000,30,mt,Montana
-27000,27,mn,Minnesota
-28000,28,ms,Mississippi
-33000,33,nh,New Hampshire
-34000,34,nj,New Jersey
-56000,56,wy,Wyoming
-45000,45,sc,South Carolina
-48000,48,tx,Texas
-15000,15,hi,Hawaii
-06000,06,ca,California
-41000,41,or,Oregon
-50000,50,vt,Vermont
 23000,23,me,Maine
-13000,13,ga,Georgia
-70000,70,pw,Republic of Palau
+78000,78,vi,U.S. Virgin Islands
 16000,16,id,Idaho
-20000,20,ks,Kansas
-04000,04,az,Arizona
-51000,51,va,Virginia
-11000,11,dc,District of Columbia
-39000,39,oh,Ohio
-25000,25,ma,Massachusetts
 47000,47,tn,Tennessee
+22000,22,la,Louisiana
+13000,13,ga,Georgia
+30000,30,mt,Montana
+39000,39,oh,Ohio
+18000,18,in,Indiana
+11000,11,dc,District of Columbia
+15000,15,hi,Hawaii
+42000,42,pa,Pennsylvania
+01000,01,al,Alabama
+12000,12,fl,Florida
+10000,10,de,Delaware
+04000,04,az,Arizona
+69000,69,mp,Northern Mariana Islands
+06000,06,ca,California
+33000,33,nh,New Hampshire
+26000,26,mi,Michigan
+21000,21,ky,Kentucky
+60000,60,as,American Samoa
+51000,51,va,Virginia

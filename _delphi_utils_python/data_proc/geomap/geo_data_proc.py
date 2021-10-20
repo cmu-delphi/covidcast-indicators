@@ -358,7 +358,7 @@ def create_fips_population_table():
     census_pop["fips"] = census_pop.apply(
         lambda x: f"{x['STATE']:02d}{x['COUNTY']:03d}", axis=1
     )
-    census_pop["pop"] = census_pop["POPESTIMATE2019"]
+    census_pop["pop"] = census_pop["POPESTIMATE2020"]
     census_pop = census_pop[["fips", "pop"]]
 
     # Set population for Dukes and Nantucket combo county

@@ -29,7 +29,14 @@
       "dry_run": true,
       "suppressed_errors": [
         {"check_name": "check_rapid_change_num_rows",
-        "signal": "covid_ag_raw_pct_positive"}
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "hrr"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "msa"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "county"}
       ]
     },
     "static": {

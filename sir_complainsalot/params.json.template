@@ -77,7 +77,8 @@
         ["smoothed_vaccine_barrier_technology_access_tried", "msa"], ["smoothed_wvaccine_barrier_technology_access_tried", "msa"],
         ["smoothed_vaccine_barrier_time_tried", "msa"], ["smoothed_wvaccine_barrier_time_tried", "msa"],
         ["smoothed_vaccine_barrier_travel_tried", "msa"], ["smoothed_wvaccine_barrier_travel_tried", "msa"],
-        ["smoothed_vaccine_barrier_type_tried", "msa"], ["smoothed_wvaccine_barrier_type_tried", "msa"]
+        ["smoothed_vaccine_barrier_type_tried", "msa"], ["smoothed_wvaccine_barrier_type_tried", "msa"],
+        ["smoothed_try_vaccinate_1m", "hrr"], ["smoothed_wtry_vaccinate_1m", "hrr"]
       ]
     },
     "indicator-combination": {

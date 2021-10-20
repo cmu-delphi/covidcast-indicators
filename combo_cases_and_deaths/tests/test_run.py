@@ -17,6 +17,7 @@ from delphi_combo_cases_and_deaths.run import (
     compute_special_geo_dfs,
     COLUMN_MAPPING)
 from delphi_combo_cases_and_deaths.constants import METRICS, SMOOTH_TYPES, SENSORS
+from delphi_utils.geomap import GeoMapper
 
 TEST_LOGGER = logging.getLogger()
 
@@ -146,12 +147,15 @@ def test_compute_special_geo_dfs():
     test_df = pd.DataFrame({"geo_id": ["01000", "01001"],
                             "val": [50, 100],
                             "timestamp": [20200101, 20200101]},)
-    pd.testing.assert_frame_equal(
-        compute_special_geo_dfs(test_df, "_prop", "nation"),
-        pd.DataFrame({"timestamp": [20200101],
-                      "geo_id": ["us"],
-                      "val": [150/4903185*100000]})
-    )
+    df = compute_special_geo_dfs(test_df, "_prop", "nation")
+    state_pop = GeoMapper().get_crosswalk("state_code", "pop")
+    state_pop = int(state_pop.loc[state_pop.state_code == "01", "pop"])
+    expected_df = pd.DataFrame({
+        "timestamp": [20200101],
+        "geo_id": ["us"],
+        "val": [150/state_pop*100000]
+    })
+    pd.testing.assert_frame_equal(df, expected_df)
     pd.testing.assert_frame_equal(
         compute_special_geo_dfs(test_df, "_num", "nation"),
         pd.DataFrame({"timestamp": [20200101],
@@ -195,14 +199,17 @@ def test_combine_usafacts_and_jhu_special_geos(mock_covidcast_signal):
                       "se": [None],
                       "sample_size": [None]})
     )
-    pd.testing.assert_frame_equal(
-        combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal),
-        pd.DataFrame({"timestamp": [20200101],
-                      "geo_id": ["us"],
-                      "val": [(50 + 100 + 200) / (4903185 + 3723066) * 100000],
-                      "se": [None],
-                      "sample_size": [None]})
-    )
+    df = combine_usafacts_and_jhu("confirmed_incidence_prop", "nation", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal)
+    state_pop = GeoMapper().get_crosswalk("state_code", "pop")
+    state_pop = int(state_pop.loc[state_pop.state_code.isin(["01", "72"]), "pop"].sum())
+    expected_df = pd.DataFrame({
+        "timestamp": [20200101],
+        "geo_id": ["us"],
+        "val": [(50 + 100 + 200) / state_pop * 100000],
+        "se": [None],
+        "sample_size": [None]
+    })
+    pd.testing.assert_frame_equal(df, expected_df)
     pd.testing.assert_frame_equal(
         combine_usafacts_and_jhu("confirmed_incidence_num", "county", date_range=(0, 1), logger=TEST_LOGGER, fetcher=mock_covidcast_signal),
         pd.DataFrame({"geo_id": ["01000", "01001", "72001"],

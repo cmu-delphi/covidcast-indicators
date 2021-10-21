@@ -3,6 +3,7 @@ Authors: Dmitry Shemetov @dshemetov, James Sharpnack @jsharpna
 """
 
 from io import BytesIO
+from os import remove, listdir
 from os.path import join, isfile
 from zipfile import ZipFile
 
@@ -498,7 +499,14 @@ def derive_zip_hhs_crosswalk():
     zip_state.merge(state_hhs, on="state_code", how="left").drop(columns=["state_code", "state_id", "state_name"]).sort_values(["zip", "hhs"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
 
 
+def clear_dir(dir_path: str):
+    for fname in listdir(dir_path):
+        remove(join(dir_path, fname))
+
+
 if __name__ == "__main__":
+    clear_dir(OUTPUT_DIR)
+
     create_fips_zip_crosswalk()
     create_zip_hsa_hrr_crosswalk()
     create_fips_msa_crosswalk()

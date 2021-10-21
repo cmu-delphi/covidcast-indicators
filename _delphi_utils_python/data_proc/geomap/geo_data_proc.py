@@ -74,11 +74,11 @@ def create_fips_zip_crosswalk():
     # Rename and write to file
     fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
     fips_zip = fips_zip[fips_zip["weight"] > 0.0]
-    fips_zip.to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
+    fips_zip.sort_values(["fips", "zip"]).to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
 
     zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
     zip_fips = zip_fips[zip_fips["weight"] > 0.0]
-    zip_fips.to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
+    zip_fips.sort_values(["zip", "fips"]).to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
 
 
 def create_zip_hsa_hrr_crosswalk():
@@ -98,8 +98,8 @@ def create_zip_hsa_hrr_crosswalk():
     hsa_df["zip"] = hsa_df["zip"].astype(str).str.zfill(5)
     hsa_df["hsa"] = hsa_df["hsa"].astype(str)
 
-    hsa_df.to_csv(join(OUTPUT_DIR, ZIP_HSA_OUT_FILENAME), index=False)
-    hrr_df.to_csv(join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), index=False)
+    hsa_df.sort_values(["zip", "hsa"]).to_csv(join(OUTPUT_DIR, ZIP_HSA_OUT_FILENAME), index=False)
+    hrr_df.sort_values(["zip", "hrr"]).to_csv(join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), index=False)
 
 
 def create_fips_msa_crosswalk():
@@ -125,7 +125,7 @@ def create_fips_msa_crosswalk():
     # Combine state and county codes into a single FIPS code
     msa_df["fips"] = msa_df["FIPS State Code"].str.cat(msa_df["FIPS County Code"])
 
-    msa_df.rename(columns={"CBSA Code": "msa"})[["fips", "msa"]].to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), index=False)
+    msa_df.rename(columns={"CBSA Code": "msa"})[["fips", "msa"]].sort_values(["fips", "msa"]).to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), index=False)
 
 
 def create_jhu_uid_fips_crosswalk():
@@ -223,7 +223,7 @@ def create_jhu_uid_fips_crosswalk():
     jhu_df["weight"] = 1.0
     jhu_df = pd.concat([jhu_df, hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned])
     jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
-    jhu_df.to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), index=False)
+    jhu_df.sort_values(["jhu_uid", "fips"]).to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), index=False)
 
 
 def create_state_codes_crosswalk():
@@ -259,7 +259,7 @@ def create_state_codes_crosswalk():
     )
     df = pd.concat((df, territories))
 
-    df.to_csv(join(OUTPUT_DIR, STATE_OUT_FILENAME), index=False)
+    df.sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_OUT_FILENAME), index=False)
 
 
 def create_state_hhs_crosswalk():
@@ -292,7 +292,7 @@ def create_state_hhs_crosswalk():
     hhs_df = pd.DataFrame(hhs_state_pairs, columns=["hhs", "state_name"])
     hhs_df["hhs"] = hhs_df["hhs"].astype(str)
 
-    ss_df.merge(hhs_df, on="state_name", how="left").dropna()[["state_code", "hhs"]].to_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), index=False)
+    ss_df.merge(hhs_df, on="state_name", how="left").dropna()[["state_code", "hhs"]].sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), index=False)
 
 
 def create_fips_population_table():
@@ -344,6 +344,7 @@ def create_fips_population_table():
     census_pop_territories = pd.concat([census_pop_pr, territories_pop])
     non_megafips_mask = ~census_pop_territories.fips.str.endswith("000")
     census_pop_territories = census_pop_territories.loc[non_megafips_mask]
+    census_pop_territories.sort_values("fips").to_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), index=False)
 
 
 def create_state_population_table():
@@ -367,7 +368,7 @@ def create_hhs_population_table():
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str)
     combined = state_pop.merge(state_hhs, on="state_code")
     hhs_pop = combined.groupby("hhs", as_index=False).sum()
-    hhs_pop.to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
+    hhs_pop.sort_values("hhs").to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
 
 
 def create_nation_population_table():
@@ -396,7 +397,7 @@ def derive_zip_population_table():
     df["pop"] = df["pop"].multiply(df["weight"], axis=0)
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
     df["pop"] = df["pop"].astype(int)
-    df.to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)
+    df.sort_values("zip").to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)
 
 
 def derive_fips_hrr_crosswalk():
@@ -411,7 +412,7 @@ def derive_fips_hrr_crosswalk():
     fz_df = pd.read_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), dtype={"fips": str, "zip": str, "weight": float})
     zh_df = pd.read_csv(join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), dtype={"zip": str, "hrr": str})
 
-    fz_df.merge(zh_df, on="zip", how="left").drop(columns="zip").groupby(["fips", "hrr"]).sum().reset_index().to_csv(join(OUTPUT_DIR, FIPS_HRR_OUT_FILENAME), index=False)
+    fz_df.merge(zh_df, on="zip", how="left").drop(columns="zip").groupby(["fips", "hrr"]).sum().reset_index().sort_values(["fips", "hrr"]).to_csv(join(OUTPUT_DIR, FIPS_HRR_OUT_FILENAME), index=False)
 
 
 def derive_fips_state_crosswalk():
@@ -426,7 +427,7 @@ def derive_fips_state_crosswalk():
 
     state_codes = pd.read_csv(join(OUTPUT_DIR, STATE_OUT_FILENAME), dtype={"state_code": str, "state_id": str, "state_name": str})
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
-    fips_pop.merge(state_codes, on="state_code", how="left").drop(columns="pop").to_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), index=False)
+    fips_pop.merge(state_codes, on="state_code", how="left").drop(columns="pop").sort_values(["fips", "state_code"]).to_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), index=False)
 
 
 def derive_zip_msa_crosswalk():
@@ -443,7 +444,7 @@ def derive_zip_msa_crosswalk():
     zf_df = pd.read_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), dtype={"zip": str, "fips": str, "weight": float})
     fm_df = pd.read_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), dtype={"fips": str, "msa": str})
 
-    zf_df.merge(fm_df, on="fips").drop(columns="fips").groupby(["msa", "zip"]).sum().reset_index().to_csv(join(OUTPUT_DIR, ZIP_MSA_OUT_FILENAME), index=False)
+    zf_df.merge(fm_df, on="fips").drop(columns="fips").groupby(["msa", "zip"]).sum().reset_index().sort_values(["zip", "msa"]).to_csv(join(OUTPUT_DIR, ZIP_MSA_OUT_FILENAME), index=False)
 
 
 def derive_zip_to_state_code():
@@ -460,7 +461,7 @@ def derive_zip_to_state_code():
     zf_cf = pd.read_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), dtype={"zip": str, "fips": str})
 
     zf_cf["state_code"] = zf_cf["fips"].str[:2]
-    zf_cf.merge(sdf, left_on="state_code", right_on="state_code", how="left").drop(columns=["fips"]).to_csv(join(OUTPUT_DIR, ZIP_STATE_CODE_OUT_FILENAME), index=False)
+    zf_cf.merge(sdf, left_on="state_code", right_on="state_code", how="left").drop(columns=["fips"]).sort_values(["zip", "state_code"]).to_csv(join(OUTPUT_DIR, ZIP_STATE_CODE_OUT_FILENAME), index=False)
 
 
 def derive_fips_hhs_crosswalk():
@@ -479,7 +480,7 @@ def derive_fips_hhs_crosswalk():
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype={"state_code": str, "hhs": str})
 
     fips_pop["state_code"] = fips_pop["fips"].str[:2]
-    fips_pop.merge(state_hhs, on="state_code", how="left").drop(columns=["state_code", "pop"]).to_csv(join(OUTPUT_DIR, FIPS_HHS_FILENAME), index=False)
+    fips_pop.merge(state_hhs, on="state_code", how="left").drop(columns=["state_code", "pop"]).sort_values(["fips", "hhs"]).to_csv(join(OUTPUT_DIR, FIPS_HHS_FILENAME), index=False)
 
 
 def derive_zip_hhs_crosswalk():
@@ -494,7 +495,7 @@ def derive_zip_hhs_crosswalk():
     zip_state = pd.read_csv(join(OUTPUT_DIR, ZIP_STATE_CODE_OUT_FILENAME), dtype={"zip": str, "pop": int, "state_code": str})
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype={"state_code": str, "hhs": str})
 
-    zip_state.merge(state_hhs, on="state_code", how="left").drop(columns=["state_code", "state_id", "state_name"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
+    zip_state.merge(state_hhs, on="state_code", how="left").drop(columns=["state_code", "state_id", "state_name"]).sort_values(["zip", "hhs"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
 
 
 if __name__ == "__main__":

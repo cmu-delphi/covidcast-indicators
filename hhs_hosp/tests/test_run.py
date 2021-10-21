@@ -81,18 +81,22 @@ def test_make_signal():
 
 def test_pop_proportion():
     geo_mapper = GeoMapper()
+    state_pop = geo_mapper.get_crosswalk("state_code", "pop")
+
     test_df = pd.DataFrame({  
         'state': ['PA'],
         'state_code': [42],
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [15.],})
+
+    pa_pop = int(state_pop.loc[state_pop.state_code == "42", "pop"])
     pd.testing.assert_frame_equal(
         pop_proportion(test_df, geo_mapper),
         pd.DataFrame({
             'state': ['PA'],
             'state_code': [42],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [0.1171693],})
+            'val': [15/pa_pop*100000],})
     )
 
     test_df= pd.DataFrame({  
@@ -101,13 +105,14 @@ def test_pop_proportion():
         'timestamp': [datetime(year=2020, month=1, day=1)],
         'val': [150.],})
 
+    wv_pop = int(state_pop.loc[state_pop.state_code == "54", "pop"])
     pd.testing.assert_frame_equal(
         pop_proportion(test_df, geo_mapper),
         pd.DataFrame({
             'state': ['WV'],
             'state_code': [54],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [8.3698491],})
+            'val': [150/wv_pop*100000],})
     )
 
 def test_make_geo():

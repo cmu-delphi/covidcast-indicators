@@ -271,7 +271,7 @@ class TestGeoMapper:
         )
 
         # hrr -> nation
-        with pytest.raises(ValueError):    
+        with pytest.raises(ValueError):
             new_data = geomapper.replace_geocode(self.zip_data, "zip", "hrr")
             new_data2 = geomapper.replace_geocode(new_data, "hrr", "nation")
 
@@ -325,7 +325,7 @@ class TestGeoMapper:
     def test_get_geos(self, geomapper):
         assert geomapper.get_geo_values("nation") == {"us"}
         assert geomapper.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(geomapper.get_geo_values("fips")) == 3235
+        assert len(geomapper.get_geo_values("fips")) == 3236
         assert len(geomapper.get_geo_values("state_id")) == 60
         assert len(geomapper.get_geo_values("zip")) == 32976
 

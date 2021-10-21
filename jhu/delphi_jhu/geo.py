@@ -44,9 +44,9 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     elif geo_res in ("state", "hhs", "nation"):
         geo = "state_id" if geo_res == "state" else geo_res
         df = df.append(unassigned_counties) if not unassigned_counties.empty else df
-        df = gmpr.replace_geocode(df, "fips", geo, new_col="geo_id", date_col="timestamp")
+        df = gmpr.replace_geocode(df, "fips", geo, new_col="geo_id")
     else:
-        df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
+        df = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id")
     df["incidence"] = df["new_counts"] / df["population"] * INCIDENCE_BASE
     df["cumulative_prop"] = df["cumulative_counts"] / df["population"] * INCIDENCE_BASE
     return df

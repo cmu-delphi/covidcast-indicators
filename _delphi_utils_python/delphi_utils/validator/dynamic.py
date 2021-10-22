@@ -525,7 +525,7 @@ class DynamicValidator:
 
         if source_outliers.shape[0] > 0:
             for time_val in source_outliers["time_value"].unique():
-                report.add_raised_error(
+                report.add_raised_warning(
                     ValidationFailure(
                         "check_positive_negative_spikes",
                         time_val,
@@ -637,7 +637,7 @@ class DynamicValidator:
             thres["mean_abs_z"])).any()
 
         if mean_z_high or mean_abs_z_high:
-            report.add_raised_error(
+            report.add_raised_warning(
                 ValidationFailure(
                     "check_test_vs_reference_avg_changed",
                     checking_date,

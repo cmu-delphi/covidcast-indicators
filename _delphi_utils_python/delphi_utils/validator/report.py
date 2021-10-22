@@ -103,6 +103,19 @@ class ValidationReport:
                 checks_suppressed = self.num_suppressed,
                 warnings = len(self.raised_warnings),
                 phase="validation")
+        # Threshold for slack alerts if warnings are excessive,
+        # Currently extremely strict, set by observation of 1 month's logs
+        excessive_warnings = self.total_checks > 0 and \
+            (len(self.raised_warnings) > 200 or \
+            len(self.raised_warnings) / self.total_checks > 0.015)
+        if excessive_warnings:
+            logger.info("Excessive number of warnings",
+                data_source = self.data_source,
+                checks_run = self.total_checks,
+                checks_failed = len(self.unsuppressed_errors),
+                checks_suppressed = self.num_suppressed,
+                warnings = len(self.raised_warnings),
+                phase = "validation")
         for error in self.unsuppressed_errors:
             date_str = "*" if error.date is None else error.date.isoformat()
             logger.critical(str(error),

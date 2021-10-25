@@ -57,18 +57,12 @@ JHU_FIPS_OUT_FILENAME = "jhu_uid_fips_table.csv"
 
 def create_fips_zip_crosswalk():
     """Build (weighted) crosswalk tables for FIPS to ZIP and ZIP to FIPS."""
-    pop_df = pd.read_csv(FIPS_BY_ZIP_POP_URL)
-
+    pop_df = pd.read_csv(FIPS_BY_ZIP_POP_URL).rename(columns={"POPPT": "pop"})
     # Create the FIPS column by combining the state and county codes
-    state_codes = pop_df["STATE"].astype(str).str.zfill(2)
-    county_codes = pop_df["COUNTY"].astype(str).str.zfill(3)
-    pop_df["fips"] = state_codes + county_codes
-
+    pop_df["fips"] = pop_df["STATE"].astype(str).str.zfill(2) + pop_df["COUNTY"].astype(str).str.zfill(3)
     # Create the ZIP column by adding leading zeros to the ZIP
     pop_df["zip"] = pop_df["ZCTA5"].astype(str).str.zfill(5)
-
-    # Pare down the dataframe to just the relevant columns: zip, fips, and population
-    pop_df = pop_df[["zip", "fips", "POPPT"]].rename(columns={"POPPT": "pop"})
+    pop_df = pop_df[["zip", "fips", "pop"]]
 
     # Find the population fractions (the heaviest computation, takes about a minute)
     # Note that the denominator in the fractions is the source population
@@ -77,54 +71,39 @@ def create_fips_zip_crosswalk():
     zip_fips: DataFrame = pop_df.groupby("zip", as_index=False).apply(lambda g: g["pop"] / g["pop"].sum())
 
     # Rename and write to file
-    fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
-    fips_zip = fips_zip[fips_zip["weight"] > 0.0]
+    fips_zip = fips_zip.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"}).query("weight > 0.0")
     fips_zip.sort_values(["fips", "zip"]).to_csv(join(OUTPUT_DIR, FIPS_ZIP_OUT_FILENAME), index=False)
 
-    zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"})
-    zip_fips = zip_fips[zip_fips["weight"] > 0.0]
+    zip_fips = zip_fips.reset_index(level=["fips", "zip"]).rename(columns={"pop": "weight"}).query("weight > 0.0")
     zip_fips.sort_values(["zip", "fips"]).to_csv(join(OUTPUT_DIR, ZIP_FIPS_OUT_FILENAME), index=False)
 
 
 def create_zip_hsa_hrr_crosswalk():
     """Build a crosswalk table for ZIP to HSA and for ZIP to HRR."""
-    zipped_csv = ZipFile(BytesIO(requests.get(ZIP_HSA_HRR_URL).content))
-    zip_df = pd.read_csv(zipped_csv.open(ZIP_HSA_HRR_FILENAME))
+    with ZipFile(BytesIO(requests.get(ZIP_HSA_HRR_URL).content)) as zipped_csv:
+        zip_df = pd.read_csv(zipped_csv.open(ZIP_HSA_HRR_FILENAME))
 
-    # Build the HSA table
     hsa_df = zip_df[["zipcode18", "hsanum"]].rename(columns={"zipcode18": "zip", "hsanum": "hsa"})
-
-    # Build the HRR table
-    hrr_df = zip_df[["zipcode18", "hrrnum"]].rename(columns={"zipcode18": "zip", "hrrnum": "hrr"})
-
-    # Convert to zero-padded strings
-    hrr_df["zip"] = hrr_df["zip"].astype(str).str.zfill(5)
-    hrr_df["hrr"] = hrr_df["hrr"].astype(str)
     hsa_df["zip"] = hsa_df["zip"].astype(str).str.zfill(5)
     hsa_df["hsa"] = hsa_df["hsa"].astype(str)
-
     hsa_df.sort_values(["zip", "hsa"]).to_csv(join(OUTPUT_DIR, ZIP_HSA_OUT_FILENAME), index=False)
+
+    hrr_df = zip_df[["zipcode18", "hrrnum"]].rename(columns={"zipcode18": "zip", "hrrnum": "hrr"})
+    hrr_df["zip"] = hrr_df["zip"].astype(str).str.zfill(5)
+    hrr_df["hrr"] = hrr_df["hrr"].astype(str)
     hrr_df.sort_values(["zip", "hrr"]).to_csv(join(OUTPUT_DIR, ZIP_HRR_OUT_FILENAME), index=False)
 
 
 def create_fips_msa_crosswalk():
     """Build a crosswalk table for FIPS to MSA."""
-    msa_cols = {
-        "CBSA Code": int,
-        "Metropolitan/Micropolitan Statistical Area": str,
-        "FIPS State Code": str,
-        "FIPS County Code": str,
-    }
-    # The following line requires the xlrd package.
-    msa_df = pd.read_excel(FIPS_MSA_URL, skiprows=2, skipfooter=4, usecols=msa_cols.keys(), dtype=msa_cols)
-
-    metro_bool = msa_df["Metropolitan/Micropolitan Statistical Area"] == "Metropolitan Statistical Area"
-    msa_df = msa_df[metro_bool]
+    # Requires xlrd.
+    msa_df = pd.read_excel(FIPS_MSA_URL, skiprows=2, skipfooter=4, dtype={"CBSA Code": int, "Metropolitan/Micropolitan Statistical Area": str, "FIPS State Code": str, "FIPS County Code": str}).rename(columns={"CBSA Code": "msa"})
+    msa_df = msa_df[msa_df["Metropolitan/Micropolitan Statistical Area"] == "Metropolitan Statistical Area"]
 
     # Combine state and county codes into a single FIPS code
     msa_df["fips"] = msa_df["FIPS State Code"].str.cat(msa_df["FIPS County Code"])
 
-    msa_df.rename(columns={"CBSA Code": "msa"}).sort_values(["fips", "msa"]).to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), columns=["fips", "msa"], index=False)
+    msa_df.sort_values(["fips", "msa"]).to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), columns=["fips", "msa"], index=False)
 
 
 def create_jhu_uid_fips_crosswalk():
@@ -177,23 +156,19 @@ def create_jhu_uid_fips_crosswalk():
             {"jhu_uid": "84070020", "fips": "49000", "weight": 1.0},
         ]
     )
+    # Map the Unassigned category to a custom megaFIPS XX000
     unassigned_states = pd.DataFrame(
-        [
-            # Map the Unassigned category to a custom megaFIPS XX000
-            {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-            for x in range(84090001, 84090057)
-        ]
+        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
+        for x in range(84090001, 84090057)
     )
+    # Map the Out of State category to a custom megaFIPS XX000
     out_of_state = pd.DataFrame(
-        [
-            # Map the Out of State category to a custom megaFIPS XX000
-            {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-            for x in range(84080001, 84080057)
-        ]
+        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
+        for x in range(84080001, 84080057)
     )
+    # Map the Unassigned and Out of State categories to the cusom megaFIPS 72000
     puerto_rico_unassigned = pd.DataFrame(
         [
-            # Map the Unassigned and Out of State categories to the cusom megaFIPS 72000
             {"jhu_uid": "63072888", "fips": "72000", "weight": 1.0},
             {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
         ]
@@ -206,35 +181,29 @@ def create_jhu_uid_fips_crosswalk():
     )
 
     jhu_df = pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str}).query("Country_Region == 'US'")
-    jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])[["jhu_uid", "fips"]]
+    jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])
 
     # FIPS Codes that are just two digits long should be zero filled on the right.
     # These are US state codes (XX) and the territories Guam (66), Northern Mariana Islands (69),
     # Virgin Islands (78), and Puerto Rico (72).
-    fips_st = jhu_df["fips"].str.len() <= 2
-    jhu_df.loc[fips_st, "fips"] = jhu_df.loc[fips_st, "fips"].str.ljust(5, "0")
+    fips_territories = jhu_df["fips"].str.len() <= 2
+    jhu_df.loc[fips_territories, "fips"] = jhu_df.loc[fips_territories, "fips"].str.ljust(5, "0")
 
     # Drop the JHU UIDs that were hand-modified
     manual_correction_ids = pd.concat([hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned, cruise_ships])["jhu_uid"]
-    dup_ind = jhu_df["jhu_uid"].isin(manual_correction_ids)
-    jhu_df.drop(jhu_df.index[dup_ind], inplace=True)
+    jhu_df.drop(jhu_df.index[jhu_df["jhu_uid"].isin(manual_correction_ids)], inplace=True)
 
     # Add weights of 1.0 to everything not in hand additions, then merge in hand-additions
     # Finally, zero fill FIPS
     jhu_df["weight"] = 1.0
     jhu_df = pd.concat([jhu_df, hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned])
     jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
-    jhu_df.sort_values(["jhu_uid", "fips"]).to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), index=False)
+    jhu_df.sort_values(["jhu_uid", "fips"]).to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), columns=["jhu_uid", "fips", "weight"], index=False)
 
 
 def create_state_codes_crosswalk():
     """Build a State ID -> State Name -> State code crosswalk file."""
-    column_rename_map = {
-        "STATE": "state_code",
-        "STUSAB": "state_id",
-        "STATE_NAME": "state_name",
-    }
-    df = pd.read_csv(STATE_CODES_URL, delimiter="|").drop(columns="STATENS").rename(columns=column_rename_map)
+    df = pd.read_csv(STATE_CODES_URL, delimiter="|").drop(columns="STATENS").rename(columns={"STATE": "state_code", "STUSAB": "state_id", "STATE_NAME": "state_name"})
     df["state_code"] = df["state_code"].astype(str).str.zfill(2)
     df["state_id"] = df["state_id"].astype(str).str.lower()
 
@@ -259,7 +228,6 @@ def create_state_codes_crosswalk():
         ]
     )
     df = pd.concat((df, territories))
-
     df.sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_OUT_FILENAME), index=False)
 
 
@@ -288,8 +256,7 @@ def create_state_hhs_crosswalk():
     hhs_state_pairs.append((9, "Northern Mariana Islands"))
 
     # Make dataframe
-    hhs_df = pd.DataFrame(hhs_state_pairs, columns=["hhs", "state_name"])
-    hhs_df["hhs"] = hhs_df["hhs"].astype(str)
+    hhs_df = pd.DataFrame(hhs_state_pairs, columns=["hhs", "state_name"], dtype=str)
 
     ss_df = ss_df.merge(hhs_df, on="state_name", how="left").dropna()
     ss_df.sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), columns=["state_code", "hhs"], index=False)
@@ -319,13 +286,12 @@ def create_fips_population_table():
     census_pop = census_pop.reset_index(drop=True)
 
     # Get the file with Puerto Rico populations
-    df_pr = pd.read_csv(FIPS_PUERTO_RICO_POPULATION_URL)
+    df_pr = pd.read_csv(FIPS_PUERTO_RICO_POPULATION_URL).rename(columns={"POPPT": "pop"})
     df_pr["fips"] = df_pr["STATE"].astype(str).str.zfill(2) + df_pr["COUNTY"].astype(str).str.zfill(3)
-    df_pr = df_pr.rename(columns={"POPPT": "pop"})[["fips", "pop"]]
+    df_pr = df_pr[["fips", "pop"]]
     # Create the Puerto Rico megaFIPS
     df_pr = df_pr[df_pr["fips"].isin([str(x) for x in range(72000, 72999)])]
     df_pr = pd.concat([df_pr, pd.DataFrame([{"fips": "72000", "pop": df_pr["pop"].sum()}])])
-
     # Fill the missing Puerto Rico data with 2010 information
     df_pr = df_pr.groupby("fips").sum().reset_index()
     df_pr = df_pr[~df_pr["fips"].isin(census_pop["fips"])]
@@ -354,8 +320,7 @@ def create_state_population_table():
 
     census_pop = pd.read_csv(join(OUTPUT_DIR, FIPS_POPULATION_OUT_FILENAME), dtype={"fips": str, "pop": int})
     state: DataFrame = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype=str)
-    combined = state.merge(census_pop, on="fips")
-    state_pop = combined.groupby(["state_code", "state_id", "state_name"], as_index=False).sum()
+    state_pop = state.merge(census_pop, on="fips").groupby(["state_code", "state_id", "state_name"], as_index=False).sum()
     state_pop.sort_values("state_code").to_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), index=False)
 
 
@@ -369,8 +334,7 @@ def create_hhs_population_table():
 
     state_pop = pd.read_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), dtype={"state_code": str, "hhs": int}, usecols=["state_code", "pop"])
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str)
-    combined = state_pop.merge(state_hhs, on="state_code")
-    hhs_pop = combined.groupby("hhs", as_index=False).sum()
+    hhs_pop = state_pop.merge(state_hhs, on="state_code").groupby("hhs", as_index=False).sum()
     hhs_pop.sort_values("hhs").to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
 
 

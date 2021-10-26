@@ -105,7 +105,8 @@ def diff_export_csv(
     # Code deleted entries as nans with the deleted missing code
     deleted_df = before_df.loc[deleted_idx, :].copy()
     deleted_df[["val", "se", "sample_size"]] = np.nan
-    deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
+    if "missing_val" in after_df_cmn.columns:
+        deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
 
     return (
         deleted_df,

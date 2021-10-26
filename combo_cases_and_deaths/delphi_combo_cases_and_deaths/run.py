@@ -72,10 +72,9 @@ def compute_special_geo_dfs(df, signal, geo):
     df = GMPR.replace_geocode(df,
                               from_col="geo_id",
                               from_code="fips",
-                              new_code="state_code",
-                              date_col="timestamp")
+                              new_code="state_code")
     df = GMPR.add_population_column(df, "state_code")  # use total state population
-    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo, date_col="timestamp")
+    df = GMPR.replace_geocode(df, from_code="state_code", new_code=geo)
     if signal.endswith("_prop"):
         df["val"] = df["val"]/df["population"] * 100000
     df.drop("population", axis=1, inplace=True)

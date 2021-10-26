@@ -103,10 +103,35 @@ class ValidationReport:
                 checks_suppressed = self.num_suppressed,
                 warnings = len(self.raised_warnings),
                 phase="validation")
+        # Threshold for slack alerts if warnings are excessive,
+        # Currently extremely strict, set by observation of 1 month's logs
+        excessive_warnings = self.total_checks > 0 and \
+            (len(self.raised_warnings) > 200 or \
+            len(self.raised_warnings) / self.total_checks > 0.015)
+        if excessive_warnings:
+            logger.info("Excessive number of warnings",
+                data_source = self.data_source,
+                checks_run = self.total_checks,
+                checks_failed = len(self.unsuppressed_errors),
+                checks_suppressed = self.num_suppressed,
+                warnings = len(self.raised_warnings),
+                phase = "validation")
         for error in self.unsuppressed_errors:
-            logger.critical(str(error), phase="validation")
+            date_str = "*" if error.date is None else error.date.isoformat()
+            logger.critical(str(error),
+                phase = "validation",
+                error_name = error.check_name,
+                signal = error.signal,
+                resolution = error.geo_type,
+                date = date_str)
         for warning in self.raised_warnings:
-            logger.warning(str(warning), phase="validation")
+            date_str = "*" if warning.date is None else warning.date.isoformat()
+            logger.warning(str(warning),
+                phase="validation",
+                error_name = warning.check_name,
+                signal = warning.signal,
+                resolution = warning.geo_type,
+                date = date_str)
 
     def print_and_exit(self, logger=None, die_on_failures=True):
         """Print results and exit.

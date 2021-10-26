@@ -16,7 +16,7 @@ from delphi_utils import get_structured_logger
 # first party
 from .download_ftp_files import download_covid, download_cli
 from .load_data import load_combined_data, load_cli_data
-from .update_sensor import CHCSensorUpdator
+from .update_sensor import CHCSensorUpdater
 
 
 def retrieve_files(params, filedate, logger):
@@ -164,7 +164,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     logger.info("starting weekday adj", geo = geo, numtype = numtype)
                 else:
                     logger.info("starting no adj", geo = geo, numtype = numtype)
-                su_inst = CHCSensorUpdator(
+                su_inst = CHCSensorUpdater(
                     startdate,
                     enddate,
                     dropdate,

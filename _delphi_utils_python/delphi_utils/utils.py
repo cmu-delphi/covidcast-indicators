@@ -1,8 +1,8 @@
 """Read parameter files containing configuration information."""
 # -*- coding: utf-8 -*-
 from json import load,dump
-from os.path import exists
-from shutil import copyfile
+from shutil import copyfile, move
+import os
 import sys
 
 def read_params():
@@ -11,7 +11,7 @@ def read_params():
     If the file does not exist, it copies the file 'params.json.template' to
     'params.json' and then reads the file.
     """
-    if not exists("params.json"):
+    if not os.path.exists("params.json"):
         copyfile("params.json.template", "params.json")
 
     with open("params.json", "r") as json_file:
@@ -87,3 +87,13 @@ Usage:
         with open("params.json", "w") as f:
             dump(params, f, sort_keys=True, indent=2)
         print(f"Updated {n} items")
+
+def transfer_files():
+    """Transfer files to prepare for acquisition."""
+    params = read_params()
+    export_dir = params["common"].get("export_dir", None)
+    delivery_dir = params["delivery"].get("delivery_dir", None)
+    files_to_export = os.listdir(export_dir)
+    for file_name in files_to_export:
+        if file_name.endswith(".csv") or file_name.endswith(".CSV"):
+            move(os.path.join(export_dir, file_name), delivery_dir)

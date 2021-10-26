@@ -12,6 +12,8 @@ class TestValidationReport:
     ERROR_2 = ValidationFailure("bad",
                                 filename="20201107_county_sig2.csv",
                                 message="msg 2")
+    WARNING_1 = ValidationFailure("wrong import", date = None)
+    WARNING_2 = ValidationFailure("right import", date = None)
 
     def test_add_raised_unsuppressed_error(self):
         """Test that an unsupressed error shows up in the unsuppressed error list."""
@@ -36,8 +38,8 @@ class TestValidationReport:
         report.increment_total_checks()
         report.increment_total_checks()
         report.increment_total_checks()
-        report.add_raised_warning(ImportWarning("wrong import"))
-        report.add_raised_warning(ImportWarning("right import"))
+        report.add_raised_warning(self.WARNING_1)
+        report.add_raised_warning(self.WARNING_2)
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
 
@@ -48,15 +50,27 @@ class TestValidationReport:
         report.increment_total_checks()
         report.increment_total_checks()
         report.increment_total_checks()
-        report.add_raised_warning(ImportWarning("wrong import"))
-        report.add_raised_warning(ImportWarning("right import"))
+        report.add_raised_warning(self.WARNING_1)
+        report.add_raised_warning(self.WARNING_2)
         report.add_raised_error(self.ERROR_1)
         report.add_raised_error(self.ERROR_2)
 
         report.log(mock_logger)
         mock_logger.critical.assert_called_once_with(
             "bad failed for sig2 at resolution county on 2020-11-07: msg 2", 
-            phase = "validation")
+            phase = "validation", error_name = "bad",
+            signal = "sig2", resolution = "county",
+            date = "2020-11-07")
         mock_logger.warning.assert_has_calls(
-            [mock.call("wrong import",phase = "validation"), 
-            mock.call("right import", phase = "validation")])
+            [mock.call("wrong import failed for None at resolution None on *: ",
+                phase = "validation",
+                error_name = "wrong import",
+                signal = None,
+                resolution = None,
+                date = '*'), 
+            mock.call("right import failed for None at resolution None on *: ",
+                phase = "validation",
+                error_name = "right import",
+                signal = None,
+                resolution = None,
+                date = '*')])

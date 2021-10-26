@@ -170,6 +170,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- bodge_v4_translation(input_data, wave)
   input_data <- bodge_C6_C8(input_data, wave)
   input_data <- bodge_B13(input_data, wave)
+  input_data <- bodge_E1(input_data, wave)
 
   input_data <- code_symptoms(input_data, wave)
   input_data <- code_hh_size(input_data, wave)
@@ -219,6 +220,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
+    input_data <- code_vaccinated_breakdown(input_data, wave)
     
     # Indicators
     input_data <- code_addl_vaccines(input_data, wave)
@@ -482,6 +484,34 @@ bodge_C6_C8 <- function(input_data, wave) {
 bodge_B13 <- function(input_data, wave) {
   if ( "B13 " %in% names(input_data) ) {
     input_data <- rename(input_data, B13 = "B13 ")
+  }
+  return(input_data)
+}
+
+#' Fix E1_* names in Wave 11 data after ~June 16, 2021.
+#' 
+#' Items E1_1 through E1_4 are part of a matrix. Qualtrics, for unknown reasons,
+#' switched to naming these E1_4 through E1_7 in June. Convert back to the
+#' intended names.
+#'
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'   
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_E1 <- function(input_data, wave) {
+  E14_present <- all(c("E1_1", "E1_2", "E1_3", "E1_4") %in% names(input_data))
+  E47_present <- all(c("E1_4", "E1_5", "E1_6", "E1_7") %in% names(input_data))
+  assert(!(E14_present && E47_present), "fields E1_1-E1_4 should not be present at the same time as fields E1_4-E1_7")
+  
+  if ( E47_present ) {
+    input_data <- rename(input_data,
+                         E1_1 = "E1_4",
+                         E1_2 = "E1_5",
+                         E1_3 = "E1_6",
+                         E1_4 = "E1_7"
+    )
   }
   return(input_data)
 }

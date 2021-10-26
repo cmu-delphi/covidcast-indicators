@@ -49,7 +49,7 @@ class TestReferencePadding:
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 11
-        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+        assert new_ref_df["val"].iloc[5] == 2
 
     def test_full_padding(self):
         validator = DynamicValidator(self.params)
@@ -71,7 +71,7 @@ class TestReferencePadding:
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 15
-        assert new_ref_df.loc[:, "val"].iloc[5] == 2
+        assert new_ref_df["val"].iloc[5] == 2
 
 class TestCheckRapidChange:
     params = {
@@ -202,8 +202,8 @@ class TestCheckAvgValDiffs:
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal", report)
 
-        assert len(report.raised_errors) == 1
-        assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
+        assert len(report.raised_warnings) == 1
+        assert report.raised_warnings[0].check_name == "check_test_vs_reference_avg_changed"
 
     def test_100x_val(self):
         validator = DynamicValidator(self.params)
@@ -223,8 +223,8 @@ class TestCheckAvgValDiffs:
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal", report)
 
-        assert len(report.raised_errors) == 1
-        assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
+        assert len(report.raised_warnings) == 1
+        assert report.raised_warnings[0].check_name == "check_test_vs_reference_avg_changed"
 
     def test_1000x_val(self):
         validator = DynamicValidator(self.params)
@@ -244,8 +244,8 @@ class TestCheckAvgValDiffs:
             test_df, ref_df,
             datetime.combine(date.today(), datetime.min.time()), "geo", "signal", report)
 
-        assert len(report.raised_errors) == 1
-        assert report.raised_errors[0].check_name == "check_test_vs_reference_avg_changed"
+        assert len(report.raised_warnings) == 1
+        assert report.raised_warnings[0].check_name == "check_test_vs_reference_avg_changed"
 
 
 class TestDataOutlier:
@@ -292,8 +292,8 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 2
-        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
+        assert len(report.raised_warnings) == 2
+        assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
 
     def test_neg_outlier(self):
         validator = DynamicValidator(self.params)
@@ -329,8 +329,8 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 2
-        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
+        assert len(report.raised_warnings) == 2
+        assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
 
     def test_zero_outlier(self):
         validator = DynamicValidator(self.params)
@@ -365,8 +365,8 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 1
-        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
+        assert len(report.raised_warnings) == 1
+        assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
 
     def test_no_outlier(self):
         validator = DynamicValidator(self.params)
@@ -402,7 +402,7 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 0
+        assert len(report.raised_warnings) == 0
 
     def test_source_api_overlap(self):
         validator = DynamicValidator(self.params)
@@ -438,5 +438,5 @@ class TestDataOutlier:
         validator.check_positive_negative_spikes(
             test_df, ref_df, "state", "signal", report)
 
-        assert len(report.raised_errors) == 2
-        assert report.raised_errors[0].check_name == "check_positive_negative_spikes"
+        assert len(report.raised_warnings) == 2
+        assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"

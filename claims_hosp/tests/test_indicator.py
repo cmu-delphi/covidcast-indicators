@@ -56,7 +56,7 @@ class TestLoadData:
     def test_fit_fips(self):
         date_range = pd.date_range("2020-05-01", "2020-05-20")
         all_fips = self.fips_data.fips.unique()
-        loc_index_fips_data = self.fips_data.set_index(["fips", "date"])
+        loc_index_fips_data = self.fips_data.set_index(["fips", "timestamp"])
         sample_fips = nr.choice(all_fips, 10)
 
         for fips in sample_fips:
@@ -79,7 +79,7 @@ class TestLoadData:
     def test_fit_hrrs(self):
         date_range = pd.date_range("2020-05-01", "2020-05-20")
         all_hrrs = self.hrr_data.hrr.unique()
-        loc_index_hrr_data = self.hrr_data.set_index(["hrr", "date"])
+        loc_index_hrr_data = self.hrr_data.set_index(["hrr", "timestamp"])
         sample_hrrs = nr.choice(all_hrrs, 10)
 
         for hrr in sample_hrrs:

@@ -14,7 +14,7 @@ class Config:
 
     # dates
     FIRST_DATA_DATE = datetime(2020, 1, 1)
-    DAY_SHIFT = timedelta(days=1)  # shift dates forward for labeling purposes
+    DAY_SHIFT = timedelta(days=0) # don't shift dates for labeling purposes
 
     # data columns
     CLI_COLS = ["Covid_like", "Flu_like", "Mixed"]

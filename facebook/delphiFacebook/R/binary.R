@@ -417,7 +417,7 @@ jeffreys_multinomial_factory <- function(k) {
   # Returns: Updated data frame.
   jeffreys_multinomial <- function(df) {
     return(mutate(df,
-                  val = jeffreys_percentage(.data$val, .data$sample_size, k),
+                  val = jeffreys_percentage(.data$val, .data$effective_sample_size, k),
                   se = binary_se(.data$val, .data$effective_sample_size)))
   }
   

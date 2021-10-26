@@ -15,7 +15,7 @@ from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP, CONFIRMED_FLU
 
 def _date_to_int(d):
     """Return a date object as a yyyymmdd int."""
@@ -189,6 +189,13 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
+        })
+    elif sig.startswith(CONFIRMED_FLU):
+        df = pd.DataFrame({
+            "state": all_columns.state.apply(str.lower),
+            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
+            "val": \
+            all_columns.previous_day_admission_influenza_confirmed
         })
     else:
         raise Exception(

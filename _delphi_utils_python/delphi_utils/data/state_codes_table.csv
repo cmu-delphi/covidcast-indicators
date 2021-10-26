@@ -51,11 +51,11 @@ state_code,state_id,state_name
 55,wi,Wisconsin
 56,wy,Wyoming
 60,as,American Samoa
+64,fm,Federated States of Micronesia
 66,gu,Guam
+68,mh,Marshall Islands
 69,mp,Northern Mariana Islands
+70,pw,Republic of Palau
 72,pr,Puerto Rico
 74,um,U.S. Minor Outlying Islands
 78,vi,U.S. Virgin Islands
-70,pw,Republic of Palau
-68,mh,Marshall Islands
-64,fm,Federated States of Micronesia

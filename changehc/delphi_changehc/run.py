@@ -184,7 +184,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                              file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
                 more_stats = su_inst.update_sensor(
                     data,
-                    params["common"]["export_dir"]
+                    params["common"]["export_dir"],
                 )
                 stats.extend(more_stats)
 

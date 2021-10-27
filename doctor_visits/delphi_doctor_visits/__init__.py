@@ -15,6 +15,5 @@ from . import run
 from . import sensor
 from . import smooth
 from . import update_sensor
-from . import weekday
 
 __version__ = "0.1.0"

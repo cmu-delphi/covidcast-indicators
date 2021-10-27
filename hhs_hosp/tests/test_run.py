@@ -6,7 +6,8 @@ import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
     make_signal, make_geo, run_module, pop_proportion
-from delphi_hhs.constants import CONFIRMED, SUM_CONF_SUSP, SMOOTHERS, GEOS, SIGNALS, CONFIRMED_PROP, SUM_CONF_SUSP_PROP
+from delphi_hhs.constants import SMOOTHERS, GEOS, SIGNALS, \
+    CONFIRMED, SUM_CONF_SUSP, CONFIRMED_FLU, CONFIRMED_PROP, SUM_CONF_SUSP_PROP, CONFIRMED_FLU_PROP
 from delphi_utils.geomap import GeoMapper
 from freezegun import freeze_time
 import numpy as np
@@ -57,7 +58,8 @@ def test_make_signal():
         'previous_day_admission_adult_covid_confirmed': [1],
         'previous_day_admission_adult_covid_suspected': [2],
         'previous_day_admission_pediatric_covid_confirmed': [4],
-        'previous_day_admission_pediatric_covid_suspected': [8]
+        'previous_day_admission_pediatric_covid_suspected': [8],
+        'previous_day_admission_influenza_confirmed': [16]
     })
 
     expected_confirmed = pd.DataFrame({
@@ -76,6 +78,14 @@ def test_make_signal():
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP))
     pd.testing.assert_frame_equal(expected_sum, make_signal(data, SUM_CONF_SUSP_PROP))
 
+    expected_flu = pd.DataFrame({
+        'state': ['na'],
+        'timestamp': [datetime(year=2020, month=1, day=1)],
+        'val': [16.],
+    })
+    pd.testing.assert_frame_equal(expected_flu, make_signal(data, CONFIRMED_FLU))
+    pd.testing.assert_frame_equal(expected_flu, make_signal(data, CONFIRMED_FLU_PROP))
+    
     with pytest.raises(Exception):
         make_signal(data, "zig")
 
@@ -184,7 +194,8 @@ def test_ignore_last_range_no_results(mock_covid_hosp, mock_export):
               "previous_day_admission_adult_covid_confirmed": [0],
               "previous_day_admission_adult_covid_suspected": [0],
               "previous_day_admission_pediatric_covid_confirmed": [0],
-              "previous_day_admission_pediatric_covid_suspected": [0]
+              "previous_day_admission_pediatric_covid_suspected": [0],
+              "previous_day_admission_influenza_confirmed": [0]
               }
          },
         {"result": -2, "message": "no results"}

@@ -44,5 +44,8 @@
       "smoothed_signals": [
       ]
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

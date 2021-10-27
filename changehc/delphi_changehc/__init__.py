@@ -13,6 +13,5 @@ from . import load_data
 from . import run
 from . import sensor
 from . import update_sensor
-from . import weekday
 
 __version__ = "0.0.0"

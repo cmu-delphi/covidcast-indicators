@@ -48,5 +48,8 @@
         "covid_ag_smoothed_pct_positive"
       ]
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

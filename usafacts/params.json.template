@@ -49,5 +49,8 @@
         "deaths_7dav_incidence_num",
         "deaths_7dav_incidence_prop"]
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

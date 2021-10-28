@@ -105,8 +105,13 @@ params.json: $(TODAY)
 		end_date $(YESTERDAY) \
 		input <(find $(QUALTRICS) -maxdepth 1 -newer $< -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		parallel true \
-		output cids,individual,covidalert,archive,community \
+		output cids \
 		start_date $(YESTERDAY)
+
+update-params.json: params.json
+$(PYTHON) -m delphi_utils set \
+		output individual,covidalert,archive,community
+
 
 $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
@@ -140,7 +145,7 @@ run-R: $(CIDS)
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-individual-raceeth post-done tidy
+pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids update-params.json run-R post-individual post-individual-raceeth post-done tidy
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@

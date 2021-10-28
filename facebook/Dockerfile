@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -qq -y \
     python3-venv \
     sshpass \
     openssh-server \
-    ssmtp
+    ssmtp \
+    python3.8-dev
 
 ADD ./delphiFacebook /facebook/delphiFacebook/
 ADD ./static /facebook/static/

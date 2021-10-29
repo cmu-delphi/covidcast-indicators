@@ -625,9 +625,15 @@ code_vaccines <- function(input_data, wave) {
   if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
     # introduced in Wave 11
     vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
-    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA, vaccine_barriers)
-    vaccine_barriers <- split_options(vaccine_barriers)
-    
+
+    # If the entire column is NA, ifelse() results in a logical vector, not a
+    # character vector, which confuses split_options; since the result should be
+    # NA anyway
+    if (any(!is.na(vaccine_barriers))) {
+      vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
+      vaccine_barriers <- split_options(vaccine_barriers)
+    }
+
     input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
     input_data$v_vaccine_barrier_appointment_time <- is_selected(vaccine_barriers, "3")
@@ -685,12 +691,19 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_type_has <- NA
     input_data$v_vaccine_barrier_none_has <- NA
   }
-  
+
   if ( "V15b" %in% names(input_data) ) {
     # introduced in Wave 11
-    vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
-    vaccine_barriers <- split_options(vaccine_barriers)
-    
+    # If the entire column is NA, ifelse() results in a logical vector, not a
+    # character vector, which confuses split_options; since the result should be
+    # NA anyway
+    if (any(!is.na(input_data$V15b))) {
+      vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
+      vaccine_barriers <- split_options(vaccine_barriers)
+    } else {
+      vaccine_barriers <- input_data$V15b
+    }
+
     input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments_tried <- is_selected(vaccine_barriers, "2")
     input_data$v_vaccine_barrier_appointment_time_tried <- is_selected(vaccine_barriers, "3")

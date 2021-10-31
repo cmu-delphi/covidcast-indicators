@@ -266,7 +266,7 @@ def create_state_hhs_crosswalk():
 def create_fips_population_table():
     """Build a table of populations by FIPS county codes.
 
-    Uses US Census Bureau population data from 2020, with 2010 population data for Puerto Rico and a few exceptions.
+    Uses US Census Bureau population data as determined by the YEAR variable, with 2010 population data for Puerto Rico and a few exceptions.
     """
     census_pop = pd.read_csv(FIPS_POPULATION_URL, encoding="ISO-8859-1")
     census_pop["fips"] = census_pop.apply(lambda x: f"{x['STATE']:02d}{x['COUNTY']:03d}", axis=1)

@@ -69,42 +69,47 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                                 date_col="timestamp", dropna=False)
     """
 
-    DATA_PATH = "data"
-    CROSSWALK_FILEPATHS = {
+    CROSSWALK_FILENAMES = {
         "zip": {
-            "fips": join(DATA_PATH, "zip_fips_table.csv"),
-            "hrr": join(DATA_PATH, "zip_hrr_table.csv"),
-            "msa": join(DATA_PATH, "zip_msa_table.csv"),
-            "pop": join(DATA_PATH, "zip_pop.csv"),
-            "state": join(DATA_PATH, "zip_state_code_table.csv"),
-            "hhs": join(DATA_PATH, "zip_hhs_table.csv")
+            "fips": "zip_fips_table.csv",
+            "hrr": "zip_hrr_table.csv",
+            "msa": "zip_msa_table.csv",
+            "pop": "zip_pop.csv",
+            "state": "zip_state_code_table.csv",
+            "hhs": "zip_hhs_table.csv"
         },
         "fips": {
-            "zip": join(DATA_PATH, "fips_zip_table.csv"),
-            "hrr": join(DATA_PATH, "fips_hrr_table.csv"),
-            "msa": join(DATA_PATH, "fips_msa_table.csv"),
-            "pop": join(DATA_PATH, "fips_pop.csv"),
-            "state": join(DATA_PATH, "fips_state_table.csv"),
-            "hhs": join(DATA_PATH, "fips_hhs_table.csv"),
+            "zip": "fips_zip_table.csv",
+            "hrr": "fips_hrr_table.csv",
+            "msa": "fips_msa_table.csv",
+            "pop": "fips_pop.csv",
+            "state": "fips_state_table.csv",
+            "hhs": "fips_hhs_table.csv",
         },
-        "state": {"state": join(DATA_PATH, "state_codes_table.csv")},
+        "state": {"state": "state_codes_table.csv"},
         "state_code": {
-            "hhs": join(DATA_PATH, "state_code_hhs_table.csv"),
-            "pop": join(DATA_PATH, "state_pop.csv")
+            "hhs": "state_code_hhs_table.csv",
+            "pop": "state_pop.csv"
         },
         "state_id": {
-            "pop": join(DATA_PATH, "state_pop.csv")
+            "pop": "state_pop.csv"
         },
         "state_name": {
-            "pop": join(DATA_PATH, "state_pop.csv")
+            "pop": "state_pop.csv"
         },
-        "jhu_uid": {"fips": join(DATA_PATH, "jhu_uid_fips_table.csv")},
-        "hhs": {"pop": join(DATA_PATH, "hhs_pop.csv")},
-        "nation": {"pop": join(DATA_PATH, "nation_pop.csv")},
+        "jhu_uid": {"fips": "jhu_uid_fips_table.csv"},
+        "hhs": {"pop": "hhs_pop.csv"},
+        "nation": {"pop": "nation_pop.csv"},
     }
 
-    def __init__(self):
-        """Initialize geomapper."""
+    def __init__(self, census_year=2020):
+        """Initialize geomapper.
+
+        Parameters
+        ---------
+        census_year: int
+            Year of Census population data. 2019 estimates and 2020 full Census supported.
+        """
         self._crosswalks = {
             "zip": {
                 geo: None for geo in ["fips", "hrr", "msa", "pop", "state", "hhs"]
@@ -125,10 +130,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                                   "state_name", "hhs", "msa", "nation"]
         }
 
-        for from_code, to_codes in self.CROSSWALK_FILEPATHS.items():
+        for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
                 self._crosswalks[from_code][to_code] = \
-                    self._load_crosswalk_from_file(from_code, to_code, file_path)
+                    self._load_crosswalk_from_file(from_code,
+                                                   to_code,
+                                                   join(f"data/{census_year}", file_path)
+                                                   )
 
         for geo_type in self._geo_sets:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)

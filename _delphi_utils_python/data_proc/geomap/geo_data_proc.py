@@ -20,15 +20,16 @@ import numpy as np
 
 
 # Source files
+YEAR = 2019
 INPUT_DIR = "./old_source_files"
-OUTPUT_DIR = "../../delphi_utils/data"
+OUTPUT_DIR = f"../../delphi_utils/data/{YEAR}"
 FIPS_BY_ZIP_POP_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?#"
 ZIP_HSA_HRR_URL = "https://atlasdata.dartmouth.edu/downloads/geography/ZipHsaHrr18.csv.zip"
 ZIP_HSA_HRR_FILENAME = "ZipHsaHrr18.csv"
 FIPS_MSA_URL = "https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2018/delineation-files/list1_Sep_2018.xls"
 JHU_FIPS_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
-FIPS_POPULATION_URL = "https://www2.census.gov/programs-surveys/popest/datasets/2010-2020/counties/totals/co-est2020-alldata.csv"
+FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
 
@@ -269,7 +270,7 @@ def create_fips_population_table():
     """
     census_pop = pd.read_csv(FIPS_POPULATION_URL, encoding="ISO-8859-1")
     census_pop["fips"] = census_pop.apply(lambda x: f"{x['STATE']:02d}{x['COUNTY']:03d}", axis=1)
-    census_pop = census_pop.rename(columns={"POPESTIMATE2020": "pop"})[["fips", "pop"]]
+    census_pop = census_pop.rename(columns={f"POPESTIMATE{YEAR}": "pop"})[["fips", "pop"]]
 
     # Set population for Dukes and Nantucket combo county
     dukes_pop = int(census_pop.loc[census_pop["fips"] == "25007", "pop"])

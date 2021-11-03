@@ -74,5 +74,28 @@ join_weights <- function(data, params, weights = c("step1", "full"))
   agg_weights <- agg_weights[!duplicated(cid),]
   data <- left_join(data, agg_weights, by = c("token" = "cid"))
 
+  # Join on experimental weights too
+  path_to_experiment_weights <- "/home/ndefries/fb-experimental-weights/weights/2021-08-01_2021-10-15_covid19_dap_adults_finish_full_survey_weights.csv"
+  col_types <- c(rep("character", 3), rep("double", 8))
+  col_names <- c("row_num", "cid", "date",
+    "weight_test_0",
+    "weight_test_1",
+    "weight_test_2",
+    "weight_test_3",
+    "weight_test_4",
+    "weight_test_5",
+    "weight_test_6",
+    "weight_test_7"
+  )
+  exp_weights <- fread(
+    path_to_experiment_weights,
+    colClasses = col_types,
+    col.names = col_names
+  ) %>%
+  mutate(date = as.Date(date)) %>%
+  filter(date == as.Date(params$start_date)) %>%
+  select(-date, -row_num)
+  data <- left_join(data, exp_weights, by = c("token" = "cid"))
+
   return(data)
 }

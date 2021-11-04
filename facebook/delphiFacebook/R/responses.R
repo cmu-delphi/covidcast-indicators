@@ -38,7 +38,7 @@ load_responses_all <- function(params, contingency_run = FALSE) {
   which_errors <- unlist(lapply(input_data, inherits, "try-error"))
   if (any( which_errors )) {
     errored_filenames <- paste(params$input[which_errors], collapse=", ")
-    stop(paste("ingestion and field creation failed for input data file(s)", errored_filenames))
+    stop("ingestion and field creation failed for input data file(s)", errored_filenames)
   }
   
   input_data <- bind_rows(input_data)

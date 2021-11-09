@@ -117,6 +117,12 @@ def run_module(params):
             df=pop_proportion(df, geo_mapper)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
+        # Fix N/A MA values, see issue #1360
+        if geo == "state" and sensor.startswith(CONFIRMED_FLU):
+            print(df.shape, geo, smoother, sensor)
+            df = df[~np.logical_and(np.logical_and(df.val.isna(), df.geo_id == "ma"),
+                                    df.timestamp > "08-01-2021")]
+            print(df.shape)
         if df.empty:
             continue
         sensor_name = sensor + smoother[1]

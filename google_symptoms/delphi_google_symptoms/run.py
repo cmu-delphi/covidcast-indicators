@@ -10,11 +10,12 @@ from itertools import product
 import covidcast
 
 import numpy as np
-from pandas import to_datetime
+import pandas as pd
 from delphi_utils import (
     create_export_csv,
     geomap,
-    get_structured_logger
+    get_structured_logger,
+    Nans
 )
 from delphi_utils.validator.utils import lag_converter
 
@@ -23,6 +24,26 @@ from .constants import (METRICS, COMBINED_METRIC,
 from .geo import geo_map
 from .pull import pull_gs_data
 
+
+def add_nancodes(df, smoother):
+    """Add nancodes to the dataframe."""
+    idx = pd.IndexSlice
+
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = Nans.NOT_APPLICABLE
+
+    # Mark early smoothing entries as data insufficient
+    if smoother == "smoothed":
+        df.sort_index(inplace=True)
+        min_time_value = df.index.min()[0] + 5 * pd.Timedelta(days=1)
+        df.loc[idx[:min_time_value, :], "missing_val"] = Nans.CENSORED
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull() & df["missing_val"].eq(Nans.NOT_MISSING)
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+    return df
 
 def run_module(params):
     """
@@ -71,7 +92,7 @@ def run_module(params):
         # Select the larger number of days. Prevents validator from complaining about missing dates,
         # and backfills in case of an outage.
         num_export_days = max(
-            (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1,
+            (datetime.today() - pd.to_datetime(min(gs_metadata.max_time))).days + 1,
             params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
             )
 
@@ -108,8 +129,7 @@ def run_module(params):
                                            ).transform(SMOOTHERS_MAP[smoother][0])
             df["se"] = np.nan
             df["sample_size"] = np.nan
-            # Drop early entries where data insufficient for smoothing
-            df = df.loc[~df["val"].isnull(), :]
+            df = add_nancodes(df, smoother)
             df = df.reset_index()
             sensor_name = "_".join([smoother, "search"])
 
@@ -121,7 +141,9 @@ def run_module(params):
                 start_date=SMOOTHERS_MAP[smoother][1](export_start_date),
                 metric=metric.lower(),
                 geo_res=geo_res,
-                sensor=sensor_name)
+                sensor=sensor_name,
+                logger=logger)
+
             if not exported_csv_dates.empty:
                 logger.info("Exported CSV",
                             csv_export_count=exported_csv_dates.size,

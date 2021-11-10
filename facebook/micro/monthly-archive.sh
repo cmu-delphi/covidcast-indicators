@@ -14,7 +14,7 @@ perform_rollup_and_post ()
     BATCH="cd $1\nls -1 cvid_responses_${MONTH}*.gz"
     sftp -b <(echo -e "${BATCH}") -P 2222 fb-automation@ftp.delphi.cmu.edu 2>/dev/null | \
         grep "^cvid" | \
-        awk -F_ 'BEGIN{print "cd '"$1"'"} {key=$3 $4 $5; if (key!=last && last!="") {print record} last=key; record=$0} END{print record}' | \
+        awk -F_ -vDIR="$1"  'BEGIN{print "cd " DIR} {key=$3 $4 $5; if (key!=last && last!="") {print record} last=key; record=$0} END{print record}' | \
         sed '/^cvid/ s/^/get /' >fetch.sftp
     sftp -b fetch.sftp -P 2222 fb-automation@ftp.delphi.cmu.edu
     OUT=${MONTH/_/-}

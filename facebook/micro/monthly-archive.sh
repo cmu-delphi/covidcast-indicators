@@ -21,6 +21,9 @@ perform_rollup_and_post ()
     Rscript ../monthly-files.R ${MONTH%_*} ${R_MONTH} . >${OUT}.csv
     gzip ${OUT}.csv
     sftp -b <(echo -e "cd $1\nput ${OUT}.csv.gz") -P 2222 fb-automation@ftp.delphi.cmu.edu
+    rm -rf $1
+    mkdir $1
+    mv *.gz $1/
 }
 
 perform_rollup_and_post "fb-public-results"

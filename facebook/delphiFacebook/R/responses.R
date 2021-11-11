@@ -19,16 +19,7 @@
 load_responses_all <- function(params, contingency_run = FALSE) {
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
 
-  # To prevent errors from one file from "contaminating" output for other files
-  # that happen to be in the same `mclapply` group, turn `mc.preschedule` off.
-  # This makes debugging problematic input files easier.
-  # See https://stackoverflow.com/questions/18330274/an-error-in-one-job-contaminates-others-with-mclapply
-  # for details.
-  mclapply_no_preschedule <- function(...) {
-    mclapply(..., mc.preschedule = FALSE)
-  }
-
-  map_fn <- if (params$parallel) { mclapply_no_preschedule } else { lapply }
+  map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(params$input), function(i) {
     load_response_one(params$input[i], params, contingency_run)
   })
@@ -38,7 +29,12 @@ load_responses_all <- function(params, contingency_run = FALSE) {
   which_errors <- unlist(lapply(input_data, inherits, "try-error"))
   if (any( which_errors )) {
     errored_filenames <- paste(params$input[which_errors], collapse=", ")
-    stop("ingestion and field creation failed for input data file(s)", errored_filenames)
+    stop(
+      "ingestion and field creation failed for at least one of input data file(s) ",
+      errored_filenames,
+      " with error(s)\n",
+      unique(input_data[which_errors])
+    )
   }
   
   input_data <- bind_rows(input_data)

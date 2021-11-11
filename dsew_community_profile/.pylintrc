@@ -1,0 +1,22 @@
+
+[MESSAGES CONTROL]
+
+disable=logging-format-interpolation,
+    too-many-locals,
+    too-many-arguments,
+    # Allow pytest functions to be part of a class.
+    no-self-use,
+    # Allow pytest classes to have one test.
+    too-few-public-methods
+
+[BASIC]
+
+# Allow arbitrarily short-named variables.
+variable-rgx=[a-z_][a-z0-9_]*
+argument-rgx=[a-z_][a-z0-9_]*
+attr-rgx=[a-z_][a-z0-9_]*
+
+[DESIGN]
+
+# Don't complain about pytest "unused" arguments.
+ignored-argument-names=(_.*|run_as_module)

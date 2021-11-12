@@ -446,6 +446,6 @@ jeffreys_percentage <- function(percentage, sample_size, k) {
 #' @return Vector of standard errors; NA when a sample size is 0.
 binary_se <- function(val, sample_size) {
   return(ifelse(sample_size > 0,
-                sqrt( (val * (100 - val) / sample_size) ),
+                sqrt( val * (100 - val) / (sample_size + 1) ),
                 NA))
 }

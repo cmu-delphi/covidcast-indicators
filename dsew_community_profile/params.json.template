@@ -4,7 +4,8 @@
     "log_filename": "dsew_cpr.log"
   },
   "indicator": {
-    "input_cache": "./input_cache"
+    "input_cache": "./input_cache",
+    "reports": "new"
   },
   "validation": {
     "common": {

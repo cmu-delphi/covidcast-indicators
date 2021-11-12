@@ -3,6 +3,7 @@ from setuptools import find_packages
 
 required = [
     "numpy",
+    "openpyxl",
     "pandas",
     "pydocstyle",
     "pytest",

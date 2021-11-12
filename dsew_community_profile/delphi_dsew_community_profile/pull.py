@@ -11,7 +11,7 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import TRANSFORMS, SIGNALS
+from .constants import TRANSFORMS, SIGNALS, NEWLINE
 from .constants import DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING
 
 # YYYYMMDD
@@ -20,10 +20,10 @@ RE_DATE_FROM_FILENAME = re.compile(r'.*([0-9]{4})([0-9]{2})([0-9]{2}).*xlsx')
 
 # example: "TESTING: LAST WEEK (October 24-30, Test Volume October 20-26)"
 # example: "TESTING: PREVIOUS WEEK (October 17-23, Test Volume October 13-19)"
-DATE_EXP = r'(?:(.*) )?([0-9]{1,2})'
+DATE_EXP = r'(?:([A-Za-z]*) )?([0-9]{1,2})'
 DATE_RANGE_EXP = f"{DATE_EXP}-{DATE_EXP}"
 RE_DATE_FROM_HEADER = re.compile(
-    rf'TESTING: (.*) WEEK \({DATE_RANGE_EXP}, Test Volume ({DATE_RANGE_EXP})\)'
+    rf'.*TESTING: (.*) WEEK \({DATE_RANGE_EXP}(?:, Test Volume ({DATE_RANGE_EXP}))? *\)'
 )
 
 # example: "NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)"
@@ -37,6 +37,33 @@ class DatasetTimes:
     column: str
     positivity_reference_date: datetime.date
     total_reference_date: datetime.date
+
+    @staticmethod
+    def from_header(header, publish_date):
+        """Convert reference dates in overheader to DatasetTimes."""
+        assert RE_DATE_FROM_HEADER.match(header), \
+            f"Couldn't find reference date in header '{header}'"
+        findall_result = RE_DATE_FROM_HEADER.findall(header)[0]
+        def as_date(sub_result):
+            month = sub_result[2] if sub_result[2] else sub_result[0]
+            assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
+            month_numeric = datetime.datetime.strptime(month, "%B").month
+            day = sub_result[3]
+            year = publish_date.year
+            # year boundary
+            if month_numeric > publish_date.month:
+                year -= 1
+            return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
+
+        column = findall_result[0].lower()
+        positivity_reference_date = as_date(findall_result[1:5])
+        if findall_result[6]:
+            # Reports published starting 2021-03-17 specify different reference
+            # dates for positivity and total test volume
+            total_reference_date = as_date(findall_result[6:10])
+        else:
+            total_reference_date = positivity_reference_date
+        return DatasetTimes(column, positivity_reference_date, total_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
         if key.lower()=="positivity":
@@ -53,16 +80,6 @@ class DatasetTimes:
             other.positivity_reference_date == self.positivity_reference_date and \
             other.total_reference_date == self.total_reference_date
 
-def as_reference_date(header, year=2021):
-    """Convert reference dates in overheader to DatasetTimes."""
-    findall_result = RE_DATE_FROM_HEADER.findall(header)[0]
-    def as_date(sub_result):
-        month = sub_result[2] if sub_result[2] else sub_result[0]
-        day = sub_result[3]
-        return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
-    column = findall_result[0].lower()
-    return DatasetTimes(column, as_date(findall_result[1:5]), as_date(findall_result[6:10]))
-
 class Dataset:
     """All data extracted from a single report file."""
 
@@ -73,19 +90,17 @@ class Dataset:
 
         Parse the file into data frames at multiple geo levels.
         """
-        self.publish_date = datetime.date(
-            *[int(x) for x in RE_DATE_FROM_FILENAME.findall(config['filename'])[0]]
-        )
-
+        self.publish_date = self.parse_publish_date(config['filename'])
         self.url = DOWNLOAD_ATTACHMENT.format(
-            asset_id=config['assetId'],
+            assetId=config['assetId'],
             filename=quote_as_url(config['filename'])
         )
-        if logger:
-            logger.info("Downloading file", filename=config['cached_filename'])
-        resp = requests.get(self.url)
-        with open(config['cached_filename'], 'wb') as f:
-            f.write(resp.content)
+        if not os.path.exists(config['cached_filename']):
+            if logger:
+                logger.info("Downloading file", filename=config['cached_filename'])
+            resp = requests.get(self.url)
+            with open(config['cached_filename'], 'wb') as f:
+                f.write(resp.content)
 
         self.workbook = pd.ExcelFile(config['cached_filename'])
 
@@ -97,47 +112,61 @@ class Dataset:
                 logger.info("Building dfs",
                             sheet=f"{si}",
                             filename=config['cached_filename'])
-            sheet = TRANSFORMS[sheet]
+            sheet = TRANSFORMS[si]
             self._parse_times_for_sheet(sheet)
             self._parse_sheet(sheet)
 
     @staticmethod
+    def parse_publish_date(report_filename):
+        """Extract publish date from filename."""
+        return datetime.date(
+            *[int(x) for x in RE_DATE_FROM_FILENAME.findall(report_filename)[0]]
+        )
+    @staticmethod
     def skip_overheader(header):
         """Ignore irrelevant overheaders."""
-        # include "TESTING: LAST WEEK (October 24-30, Test Volume October 20-26)"
-        # include "TESTING: PREVIOUS WEEK (October 17-23, Test Volume October 13-19)"
-        return not (isinstance(header, str) and header.startswith("TESTING:") \
+        # include "TESTING: [LAST|PREVIOUS] WEEK (October 24-30, Test Volume October 20-26)"
+        # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
+        return not (isinstance(header, str) and \
+                    (header.startswith("TESTING:") or \
+                     header.startswith("VIRAL (RT-PCR) LAB TESTING:")) and \
                     # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
-                    and header.find("WEEK (") > 0)
+                    header.find("WEEK (") > 0)
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
         # grab reference dates from overheaders
-        for h in pd.read_excel(
+        overheaders = pd.read_excel(
                 self.workbook, sheet_name=sheet.name,
                 header=None,
                 nrows=1
-        ).values.flatten().tolist():
+        ).values.flatten().tolist()
+        for h in overheaders:
             if self.skip_overheader(h):
                 continue
 
-            dt = as_reference_date(h)
+            dt = DatasetTimes.from_header(h, self.publish_date)
             if dt.column in self.times:
                 assert self.times[dt.column] == dt, \
                     f"Conflicting reference date from {sheet.name} {dt}" + \
                     f"vs previous {self.times[dt.column]}"
             else:
                 self.times[dt.column] = dt
+        assert len(self.times) == 2, \
+            f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
     def retain_header(header):
         """Ignore irrelevant headers."""
         return all([
-            # include "Total NAATs - last 7 days ..."
-            # include "Total NAATs - previous 7 days ..."
-            # include "NAAT positivity rate - last 7 days ..."
-            # include "NAAT positivity rate - previous 7 days ..."
-            (header.startswith("Total NAATs") or header.startswith("NAAT positivity rate")),
+            # include "Total NAATs - [last|previous] 7 days ..."
+            # include "Total RT-PCR diagnostic tests - [last|previous] 7 days ..."
+            # include "NAAT positivity rate - [last|previous] 7 days ..."
+            # include "Viral (RT-PCR) lab test positivity rate - [last|previous] 7 days ..."
+            (header.startswith("Total NAATs") or
+             header.startswith("NAAT positivity rate") or
+             header.startswith("Total RT-PCR") or
+             header.startswith("Viral (RT-PCR)")),
             # exclude "NAAT positivity rate - absolute change ..."
             header.find("7 days") > 0,
             # exclude "NAAT positivity rate - last 7 days - ages <5"
@@ -158,8 +187,11 @@ class Dataset:
             for h in list(df.columns)
             if self.retain_header(h)
         ]
+
         for sig in SIGNALS:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
+            assert len(sig_select) > 0, \
+                f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
             self.dfs[(sheet.level, sig)] = pd.concat([
                 pd.DataFrame({
                     "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
@@ -190,8 +222,18 @@ def fetch_listing(params):
         for el in listing if el['filename'].endswith("xlsx")
     ]
 
-    # drop files we already have in the input cache
-    listing = [el for el in listing if os.path.exists(el['cached_filename'])]
+    if params['indicator']['reports'] == 'new':
+        # drop files we already have in the input cache
+        listing = [el for el in listing if not os.path.exists(el['cached_filename'])]
+    elif params['indicator']['reports'].find("--") > 0:
+        # drop files outside the specified publish-date range
+        start_str, _, end_str = params['indicator']['reports'].partition("--")
+        start_date = datetime.datetime.strptime(start_str, "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
+        def keep(attachment):
+            publish_date = Dataset.parse_publish_date(attachment['filename'])
+            return start_date <= publish_date <= end_date
+        listing = [el for el in listing if keep(el)]
     return listing
 
 def download_and_parse(listing, logger):

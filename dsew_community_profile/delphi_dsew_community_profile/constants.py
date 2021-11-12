@@ -54,3 +54,5 @@ SIGNALS = [
 def make_signal_name(key):
     """Convert a signal key to the corresponding signal name for the API."""
     return f"naats_{key}_7dav"
+
+NEWLINE="\n"

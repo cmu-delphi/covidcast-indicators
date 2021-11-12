@@ -4,11 +4,11 @@ from unittest.mock import patch
 import tempfile
 import os
 
-from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
+from delphi_hhs.run import _date_to_int, add_nancodes, int_date_to_previous_day_datetime, generate_date_ranges, \
     make_signal, make_geo, run_module, pop_proportion
 from delphi_hhs.constants import SMOOTHERS, GEOS, SIGNALS, \
     CONFIRMED, SUM_CONF_SUSP, CONFIRMED_FLU, CONFIRMED_PROP, SUM_CONF_SUSP_PROP, CONFIRMED_FLU_PROP
-from delphi_utils.geomap import GeoMapper
+from delphi_utils import GeoMapper, Nans
 from freezegun import freeze_time
 import numpy as np
 import pandas as pd
@@ -85,7 +85,7 @@ def test_make_signal():
     })
     pd.testing.assert_frame_equal(expected_flu, make_signal(data, CONFIRMED_FLU))
     pd.testing.assert_frame_equal(expected_flu, make_signal(data, CONFIRMED_FLU_PROP))
-    
+
     with pytest.raises(Exception):
         make_signal(data, "zig")
 
@@ -93,7 +93,7 @@ def test_pop_proportion():
     geo_mapper = GeoMapper()
     state_pop = geo_mapper.get_crosswalk("state_code", "pop")
 
-    test_df = pd.DataFrame({  
+    test_df = pd.DataFrame({
         'state': ['PA'],
         'state_code': [42],
         'timestamp': [datetime(year=2020, month=1, day=1)],
@@ -109,7 +109,7 @@ def test_pop_proportion():
             'val': [15/pa_pop*100000],})
     )
 
-    test_df= pd.DataFrame({  
+    test_df= pd.DataFrame({
         'state': ['WV'],
         'state_code': [54],
         'timestamp': [datetime(year=2020, month=1, day=1)],
@@ -137,30 +137,23 @@ def test_make_geo():
         'val': [1., 2., 4.],
     })
 
-    template = {
-        'se': np.nan,
-        'sample_size': np.nan,
-    }
     expecteds = {
         "state": pd.DataFrame(
-            dict(template,
-                 geo_id=data.state,
+            dict(geo_id=data.state,
                  timestamp=data.timestamp,
                  val=data.val)),
         "hhs": pd.DataFrame(
-            dict(template,
-                 geo_id=['3', '5'],
+            dict(geo_id=['3', '5'],
                  timestamp=[test_timestamp] * 2,
                  val=[3., 4.])),
         "nation": pd.DataFrame(
-            dict(template,
-                 geo_id=['us'],
+            dict(geo_id=['us'],
                  timestamp=[test_timestamp],
                  val=[7.]))
     }
     for geo, expected in expecteds.items():
         result = make_geo(data, geo, geo_mapper)
-        for series in ["geo_id", "timestamp", "val", "se", "sample_size"]:
+        for series in ["geo_id", "timestamp", "val"]:
             pd.testing.assert_series_equal(expected[series], result[series], obj=f"{geo}:{series}")
 
 
@@ -207,3 +200,25 @@ def test_ignore_last_range_no_results(mock_covid_hosp, mock_export):
         }
     }
     assert not run_module(params)  # function should not raise value error and has no return value
+
+def test_add_nancode():
+    data = pd.DataFrame({
+        'state': ['PA','WV','OH'],
+        'state_code': [42, 54, 39],
+        'timestamp': [pd.to_datetime("20200601")]*3,
+        'val': [1, 2, np.nan],
+        'se': [np.nan] * 3,
+        'sample_size': [np.nan] * 3,
+    })
+    expected = pd.DataFrame({
+        'state': ['PA','WV','OH'],
+        'state_code': [42, 54, 39],
+        'timestamp': [pd.to_datetime("20200601")]*3,
+        'val': [1, 2, np.nan],
+        'se': [np.nan] * 3,
+        'sample_size': [np.nan] * 3,
+        'missing_val': [Nans.NOT_MISSING] * 2 + [Nans.OTHER],
+        'missing_se': [Nans.NOT_APPLICABLE] * 3,
+        'missing_sample_size': [Nans.NOT_APPLICABLE] * 3,
+    })
+    pd.testing.assert_frame_equal(expected, add_nancodes(data))

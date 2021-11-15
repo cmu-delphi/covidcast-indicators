@@ -17,7 +17,7 @@ perform_rollup_and_post ()
         awk -F_ -vDIR="$1"  'BEGIN{print "cd " DIR} {key=$3 $4 $5; if (key!=last && last!="") {print record} last=key; record=$0} END{print record}' | \
         sed '/^cvid/ s/^/get /' >fetch.sftp
     sftp -b fetch.sftp -P 2222 fb-automation@ftp.delphi.cmu.edu
-    OUT=${MONTH/_/-}
+    OUT=${MONTH/_/-}$2
     Rscript ../monthly-files.R ${MONTH%_*} ${R_MONTH} . >${OUT}.csv
     gzip ${OUT}.csv
     sftp -b <(echo -e "cd $1\nput ${OUT}.csv.gz") -P 2222 fb-automation@ftp.delphi.cmu.edu
@@ -26,5 +26,5 @@ perform_rollup_and_post ()
     mv *.gz $1/
 }
 
-perform_rollup_and_post "fb-public-results"
-perform_rollup_and_post "protected-race-ethnicity-data"
+perform_rollup_and_post "fb-public-results" ""
+perform_rollup_and_post "protected-race-ethnicity-data" "-race-ethnicity"

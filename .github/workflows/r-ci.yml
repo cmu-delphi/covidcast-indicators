@@ -58,3 +58,4 @@ jobs:
       - name: Check
         run: |
           make test
+        working-directory: facebook

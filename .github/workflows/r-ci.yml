@@ -57,5 +57,4 @@ jobs:
         shell: Rscript {0}
       - name: Check
         run: |
-          rcmdcheck::rcmdcheck(args = c("--no-manual", "--test-dir=unit-tests"), error_on = "error")
-        shell: Rscript {0}
+          make test

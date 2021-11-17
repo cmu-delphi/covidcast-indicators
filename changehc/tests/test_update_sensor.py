@@ -138,7 +138,7 @@ class TestCHCSensorUpdater:
             "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
             "fips": ["01001"] * 13 + ["42003"] * 13,
             "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
-            "date": list(pd.date_range("20200301", "20200313")) * 2
+            "timestamp": list(pd.date_range("20200301", "20200313")) * 2
         }).set_index(["fips", "date"])
         startdates = ["2020-03-01", "2020-03-05"]
         outputs = {s:{} for s in startdates}

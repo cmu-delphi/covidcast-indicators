@@ -75,7 +75,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     return dates
 
 
-class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
+class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
     """Contains methods to update sensor and write results to csv."""
 
     def __init__(self,
@@ -89,7 +89,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                  se,
                  wip_signal,
                  logger):
-        """Init Sensor Updator.
+        """Init Sensor Updater.
 
         Args:
             startdate: first sensor date (YYYY-mm-dd)

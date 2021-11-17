@@ -14,7 +14,7 @@ import pytest
 
 # first party
 from delphi_changehc.config import Config
-from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdator
+from delphi_changehc.update_sensor import write_to_csv, CHCSensorUpdater
 
 CONFIG = Config()
 PARAMS = {
@@ -30,7 +30,7 @@ DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH="test_data/"
 TEST_LOGGER = logging.getLogger()
 
-class TestCHCSensorUpdator:
+class TestCHCSensorUpdater:
     """Tests for updating the sensors."""
     geo = "county"
     parallel = False
@@ -46,7 +46,7 @@ class TestCHCSensorUpdator:
 
     def test_shift_dates(self):
         """Tests that dates in the data are shifted according to the burn-in and lag."""
-        su_inst = CHCSensorUpdator(
+        su_inst = CHCSensorUpdater(
             "02-01-2020",
             "06-01-2020",
             "06-12-2020",
@@ -71,7 +71,7 @@ class TestCHCSensorUpdator:
     def test_geo_reindex(self):
         """Tests that the geo reindexer changes the geographic resolution."""
         for geo, multiple in [("nation", 1), ("county", 2), ("hhs", 2)]:
-            su_inst = CHCSensorUpdator(
+            su_inst = CHCSensorUpdater(
                 "02-01-2020",
                 "06-01-2020",
                 "06-12-2020",
@@ -98,7 +98,7 @@ class TestCHCSensorUpdator:
         outputs = {}
         for geo in ["county", "state", "hhs", "nation"]:
             td = TemporaryDirectory()
-            su_inst = CHCSensorUpdator(
+            su_inst = CHCSensorUpdater(
                 "03-01-2020",
                 "03-22-2020",
                 "03-27-2020",
@@ -145,7 +145,7 @@ class TestCHCSensorUpdator:
         for startdate in startdates:
             for geo in ["county", "state", "hhs", "nation"]:
                 td = TemporaryDirectory()
-                su_inst = CHCSensorUpdator(
+                su_inst = CHCSensorUpdater(
                     startdate,
                     "03-22-2020",
                     "03-27-2020",

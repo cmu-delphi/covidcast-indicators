@@ -160,11 +160,13 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
                                                  thr_col="den",
-                                                 mega_col=geo)
+                                                 mega_col=geo,
+                                                 date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
+            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
+                                              date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", geo)
+            data_frame = gmpr.replace_geocode(data, "fips", geo, date_col=Config.DATE_COL)
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)

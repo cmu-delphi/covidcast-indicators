@@ -641,8 +641,24 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
             successes: All files from input
             fails: Empty list
         """
+
+        archive_success, archive_fail = [], []
+        for exported_file in exported_files:
+            archive_file = abspath(
+                join(self.cache_dir, basename(exported_file)))
+
+            # Copy export to cache
+            try:
+                # Archive
+                shutil.copyfile(exported_file, archive_file)
+                archive_success.append(exported_file)
+
+            except FileNotFoundError as ex:
+                print(ex)
+                archive_fail.append(exported_file)
+
         self._exports_archived = True
-        return exported_files, []
+        return archive_success, archive_fail
 
     def update_cache(self):
         """Handle cache updates with a no-op.

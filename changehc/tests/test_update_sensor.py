@@ -138,8 +138,8 @@ class TestCHCSensorUpdater:
             "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
             "fips": ["01001"] * 13 + ["42003"] * 13,
             "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
-            "date": list(pd.date_range("20200301", "20200313")) * 2
-        }).set_index(["fips", "date"])
+            "timestamp": list(pd.date_range("20200301", "20200313")) * 2
+        }).set_index(["fips", "timestamp"])
         startdates = ["2020-03-01", "2020-03-05"]
         outputs = {s:{} for s in startdates}
         for startdate in startdates:
@@ -182,7 +182,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, np.nan, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         })
@@ -238,7 +238,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, np.nan, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         })
@@ -272,7 +272,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, 0.5, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         }).set_index(["timestamp", "geo_id"]).sort_index()
@@ -282,7 +282,7 @@ class TestWriteToCsv:
         # nan value for included loc-date
         res1 = res0.copy()
         res1 = res1[res1['include']]
-        res1.loc[("2020-05-01", "a"), "val"] = np.nan
+        res1.loc[("2020-05-02", "a"), "val"] = np.nan
         res1.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(
@@ -298,7 +298,7 @@ class TestWriteToCsv:
         # nan se for included loc-date
         res2 = res0.copy()
         res2 = res2[res2['include']]
-        res2.loc[("2020-05-01", "a"), "se"] = np.nan
+        res2.loc[("2020-05-02", "a"), "se"] = np.nan
         res2.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(
@@ -314,7 +314,7 @@ class TestWriteToCsv:
         # large se value
         res3 = res0.copy()
         res3 = res3[res3['include']]
-        res3.loc[("2020-05-01", "a"), "se"] = 10
+        res3.loc[("2020-05-02", "a"), "se"] = 10
         res3.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(

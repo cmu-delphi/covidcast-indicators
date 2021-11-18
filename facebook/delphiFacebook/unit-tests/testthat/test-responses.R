@@ -349,3 +349,43 @@ test_that("B13 bodge works correctly", {
                input)
 })
 
+test_that("E1 bodge works correctly", {
+  input <- tibble(
+    E1_1 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_4 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_E1(input, wave = NA), input)
+  
+  input_4_to_7 <- tibble(
+    E1_4 = c(1, 2, 3, 1),
+    E1_5 = c(1, 2, 3, 2),
+    E1_6 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+
+  expect_equal(bodge_E1(input_4_to_7, wave = NA), input)
+  
+  input_mixed <- tibble(
+    E1_4 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_E1(input_mixed, wave = NA), input_mixed)
+  
+  input_both <- tibble(
+    E1_1 = c(1, 2, 3, 1),
+    E1_2 = c(1, 2, 3, 2),
+    E1_3 = c(1, 2, 3, 3),
+    E1_4 = c(1, 2, 3, 1),
+    E1_5 = c(1, 2, 3, 2),
+    E1_6 = c(1, 2, 3, 3),
+    E1_7 = c(1, 2, 3, 4)
+  )
+  expect_error(bodge_E1(input_both, wave = NA),
+               "fields E1_1-E1_4 should not be present at the same time as fields E1_4-E1_7"
+  )
+})
+

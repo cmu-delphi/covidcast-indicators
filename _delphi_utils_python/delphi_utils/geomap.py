@@ -183,7 +183,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         thr_win_len,
         thr_col="visits",
         fips_col="fips",
-        date_col="date",
+        date_col="timestamp",
         mega_col="megafips",
     ):
         """Create megacounty column.
@@ -340,7 +340,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         new_code,
         from_col=None,
         new_col=None,
-        date_col="date",
+        date_col="timestamp",
         data_cols=None,
         dropna=True,
     ):
@@ -366,7 +366,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         new_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name', 'hrr', 'msa',
                    'hhs'}
             Specifies the geocode type of the data in new_col.
-        date_col: str or None, default "date"
+        date_col: str or None, default "timestamp"
             Specify which column contains the date values. Used for value aggregation.
             If None, then the aggregation is done only on geo_id.
         data_cols: list, default None
@@ -457,7 +457,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         thr_win_len,
         thr_col="visits",
         fips_col="fips",
-        date_col="date",
+        date_col="timestamp",
         mega_col="megafips",
         count_cols=None,
     ):

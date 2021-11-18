@@ -13,7 +13,7 @@ Depends:
 Imports:
     stats,
     rlang,
-    readr (<= 1.4.0),
+    readr,
     dplyr,
     stringi,
     jsonlite,

@@ -48,17 +48,12 @@ jobs:
             ${{ runner.os }}-r-facebook-survey-
       - name: Install R dependencies
         run: |
-          if ( !require("readr") || packageVersion("readr") != "1.4.0" ) {
-            install.packages("devtools")
-            devtools::install_version("readr", version = "1.4.0")
-          }
-
           if ( !require("remotes") ) {
             install.packages("remotes")
           }
           remotes::update_packages(c("rcmdcheck", "mockr", "remotes"), upgrade="always")
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
-          remotes::update_packages(dependency_list$package[dependency_list$package != "readr"], upgrade="always")
+          remotes::update_packages(dependency_list$package, upgrade="always")
         shell: Rscript {0}
       - name: Check
         run: |

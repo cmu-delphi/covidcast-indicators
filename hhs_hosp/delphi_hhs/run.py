@@ -162,10 +162,7 @@ def make_geo(state, geo, geo_mapper):
     if geo == "state":
         exported = state.rename(columns={"state": "geo_id"})
     else:
-        exported = geo_mapper.replace_geocode(
-            state, "state_code", geo,
-            new_col="geo_id",
-            date_col="timestamp")
+        exported = geo_mapper.replace_geocode(state, "state_code", geo, new_col="geo_id")
     exported["se"] = np.nan
     exported["sample_size"] = np.nan
     return exported

@@ -98,7 +98,7 @@ Columns available:
 
     # Drop rows for locations outside US
     df = df[df["state"] != "United States"]
-    df = df.loc[:, keep_columns + ["timestamp", "state"]].set_index("timestamp")
+    df = df[keep_columns + ["timestamp", "state"]].set_index("timestamp")
 
     # NCHS considers NYC as an individual state, however, we want it included
     # in NY. If values are nan for both NYC and NY, the aggreagtion should

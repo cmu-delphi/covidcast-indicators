@@ -42,7 +42,7 @@ class TestCHCSensorUpdater:
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "fips": ['01001'] * 7 + ['04007'] * 6,
         "den": [1000] * 7 + [2000] * 6,
-        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","date"])
+        "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(["fips","timestamp"])
 
     def test_shift_dates(self):
         """Tests that dates in the data are shifted according to the burn-in and lag."""
@@ -88,7 +88,7 @@ class TestCHCSensorUpdater:
                 "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
                 "fips": ['01001'] * 7 + ['04007'] * 6,
                 "den": [1000] * 7 + [2000] * 6,
-                "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
+                "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
             data_frame = su_inst.geo_reindex(test_data)
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum() == (4200,19000)).all()
@@ -118,8 +118,8 @@ class TestCHCSensorUpdater:
                 "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
                 "fips": ["01001"] * 13 + ["42003"] * 13,
                 "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
-                "date": list(pd.date_range("20200301", "20200313")) * 2
-            }).set_index(["fips", "date"])
+                "timestamp": list(pd.date_range("20200301", "20200313")) * 2
+            }).set_index(["fips", "timestamp"])
             su_inst.update_sensor(small_test_data,  td.name)
             for f in os.listdir(td.name):
                 outputs[f] = pd.read_csv(os.path.join(td.name, f))

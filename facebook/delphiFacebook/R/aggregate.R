@@ -194,10 +194,9 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
 
         sample_size <- sum(ind_df$weight_in_location)
 
-        ## TODO: See issue #764
         new_row <- compute_fn(
           response = ind_df[[metric]],
-          weight = if (indicators$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
+          weight = mixing$weights,
           sample_size = sample_size)
 
         dfs_out[[indicator]][["val"]][ii] <- new_row$val

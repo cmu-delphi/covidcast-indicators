@@ -358,9 +358,6 @@ get_binary_indicators <- function() {
     
   )
 
-
-  ind$skip_mixing <- TRUE
-
   return(ind)
 }
 

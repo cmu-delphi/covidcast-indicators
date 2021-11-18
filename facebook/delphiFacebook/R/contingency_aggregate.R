@@ -354,10 +354,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       sample_size <- sum(agg_df$weight_in_location)
       total_represented <- sum(agg_df[[var_weight]] * agg_df$weight_in_location)
 
-      ## TODO: See issue #764
       new_row <- compute_fn(
         response = agg_df[[metric]],
-        weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
+        weight = mixing$weights,
         sample_size = sample_size,
         total_represented = total_represented)
 

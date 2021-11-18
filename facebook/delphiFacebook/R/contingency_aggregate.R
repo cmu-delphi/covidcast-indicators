@@ -171,7 +171,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
                                    !mapply(aggregations$group_by,
                                            FUN=function(x) {col_var %in% x}), ]
     msg_plain(paste0(
-        col_var, " is not defined. Removing all aggregations that use it. ",
+        col_var, " is not available or not defined. Removing all aggregations that use it. ",
         nrow(aggregations), " remaining")
     )
   }

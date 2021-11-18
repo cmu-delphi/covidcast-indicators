@@ -47,6 +47,7 @@ write_cid <- function(data, type_name, params)
 #'
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom data.table fread
+#' @importFrom stringi stri_extract_first
 #' 
 #' @export
 join_weights <- function(data, params, weights = c("step1", "full"))
@@ -61,6 +62,11 @@ join_weights <- function(data, params, weights = c("step1", "full"))
 
   weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
   weights_files <- sort(weights_files)
+
+  latest_weight <- tail(weights_files, n = 1)
+  latest_weight_date <- as.Date(
+    stri_extract_first(latest_weight, regex = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
+  )
   
   col_types <- c("character", "double")
   col_names <- c("cid", "weight")
@@ -74,5 +80,5 @@ join_weights <- function(data, params, weights = c("step1", "full"))
   agg_weights <- agg_weights[!duplicated(cid),]
   data <- left_join(data, agg_weights, by = c("token" = "cid"))
 
-  return(data)
+  return( list(df = data, weight_date = latest_weight_date) )
 }

@@ -320,9 +320,9 @@ class ArchiveDiffer:
                       if diff is not None]
         if logger:
             logger.debug("Diffed exports",
-                        phase="archiving"
-                        new_files_count=len(new_files),
-                        common_diffs_count=len(to_archive))
+                         phase="archiving",
+                         new_files_count=len(new_files),
+                         common_diffs_count=len(to_archive))
         to_archive += new_files
         _, fails = self.archive_exports(to_archive)
 

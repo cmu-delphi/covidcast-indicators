@@ -200,7 +200,7 @@ class TestWriteToCsv:
         )
 
         # check outputs
-        expected_name = "20200501_geography_name_of_signal.csv"
+        expected_name = "20200502_geography_name_of_signal.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         expected_columns = ["geo_id", "val", "se", "sample_size"]
@@ -212,7 +212,7 @@ class TestWriteToCsv:
         assert np.isnan(output_data.se.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
-        expected_name = "20200502_geography_name_of_signal.csv"
+        expected_name = "20200503_geography_name_of_signal.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (output_data.columns == expected_columns).all()
@@ -221,7 +221,7 @@ class TestWriteToCsv:
         assert np.isnan(output_data.se.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
-        expected_name = "20200504_geography_name_of_signal.csv"
+        expected_name = "20200505_geography_name_of_signal.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (output_data.columns == expected_columns).all()
@@ -255,7 +255,7 @@ class TestWriteToCsv:
         )
 
         # check outputs
-        expected_name = "20200501_geography_name_of_signal.csv"
+        expected_name = "20200502_geography_name_of_signal.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         expected_columns = ["geo_id", "val", "se", "sample_size"]

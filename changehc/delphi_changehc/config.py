@@ -19,7 +19,7 @@ class Config:
     BURN_IN_PERIOD = timedelta(days=1)
 
     # shift dates forward for labeling purposes
-    DAY_SHIFT = timedelta(days=0)
+    DAY_SHIFT = timedelta(days=1)
 
     ## data columns
     COVID_COL = "COVID"

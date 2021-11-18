@@ -641,7 +641,6 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
             successes: All files from input
             fails: Empty list
         """
-
         archive_success, archive_fail = [], []
         for exported_file in exported_files:
             archive_file = abspath(

@@ -21,6 +21,12 @@
       "missing_se_allowed": true,
       "missing_sample_size_allowed": true
     },
-    "dynamic": {}
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "naats_total_7dav",
+        "naats_positivity_7dav"
+      ]
+    }
   }
 }

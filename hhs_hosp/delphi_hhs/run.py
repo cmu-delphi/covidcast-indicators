@@ -119,10 +119,9 @@ def run_module(params):
         df = smooth_values(df, smoother[0])
         # Fix N/A MA values, see issue #1360
         if geo == "state" and sensor.startswith(CONFIRMED_FLU):
-            print(df.shape, geo, smoother, sensor)
-            df = df[~np.logical_and(np.logical_and(df.val.isna(), df.geo_id == "ma"),
-                                    df.timestamp > "08-01-2021")]
-            print(df.shape)
+            ma_filter = df.val.isna() & (df.geo_id == "ma") & (df.timestamp > "08-01-2021") & \
+                (df.timestamp.dt.day_name() == "Tuesday")
+            df = df[~ma_filter]
         if df.empty:
             continue
         sensor_name = sensor + smoother[1]

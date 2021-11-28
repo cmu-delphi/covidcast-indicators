@@ -36,7 +36,7 @@ class Default:
     GROUND_TRUTH_INDICATOR = SensorConfig('jhu-csse',
                                           'confirmed_incidence_prop',
                                           'test_truth',
-                                          3)
+                                          1)
 
     # Delay distribution
     DELAY_DISTRIBUTION = [0.06879406, 0.08521725, 0.08916559, 0.08706704, 0.08185865,

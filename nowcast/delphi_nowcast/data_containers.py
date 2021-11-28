@@ -26,6 +26,7 @@ class LocationSeries:
     geo_value: str = None
     geo_type: str = None
     data: Dict[date, float] = None
+    num_extrapolated: int = 0
 
     def add_data(self,
                  day: date,

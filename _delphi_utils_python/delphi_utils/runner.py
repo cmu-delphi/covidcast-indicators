@@ -36,17 +36,19 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         None if no archiving should be performed.
     """
     params = read_params()
+    logger = get_structured_logger(
+        name=indicator_fn.__module__,
+        filename=params["common"].get("log_filename", None),
+        log_exceptions=params["common"].get("log_exceptions", True))
     indicator_fn(params)
     validator = validator_fn(params)
     archiver = archiver_fn(params)
     if validator:
         validation_report = validator.validate()
-        validation_report.log(get_structured_logger(
-            name = indicator_fn.__module__,
-            filename=params["common"].get("log_filename", None)))
+        validation_report.log(logger)
     if (not validator or validation_report.success()):
         if archiver:
-            archiver.run()
+            archiver.run(logger)
         if "delivery" in params:
             transfer_files()
 

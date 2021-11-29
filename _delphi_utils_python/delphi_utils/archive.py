@@ -307,8 +307,9 @@ class ArchiveDiffer:
             else:
                 replace(diff_file, exported_file)
 
-    def run(self):
+    def run(self, logger=None):
         """Run the differ and archive the changed and new files."""
+        start_time = time.time()
         self.update_cache()
 
         # Diff exports, and make incremental versions
@@ -317,6 +318,11 @@ class ArchiveDiffer:
         # Archive changed and new files only
         to_archive = [f for f, diff in common_diffs.items()
                       if diff is not None]
+        if logger:
+            logger.debug("Diffed exports",
+                         phase="archiving",
+                         new_files_count=len(new_files),
+                         common_diffs_count=len(to_archive))
         to_archive += new_files
         _, fails = self.archive_exports(to_archive)
 
@@ -328,6 +334,14 @@ class ArchiveDiffer:
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+
+        elapsed_time_in_seconds = round(time.time() - start_time, 2)
+        if logger:
+            logger.info("Completed archive run",
+                        phase="archiving",
+                        elapsed_time_in_seconds=elapsed_time_in_seconds,
+                        new_changed_count=len(to_archive),
+                        fail_count=len(fails))
 
 
 class S3ArchiveDiffer(ArchiveDiffer):
@@ -685,10 +699,5 @@ if __name__ == "__main__":
     logger = get_structured_logger(
         __name__, filename=_params["common"].get("log_filename"),
         log_exceptions=_params["common"].get("log_exceptions", True))
-    start_time = time.time()
 
-    archiver_from_params(_params).run()
-
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed archive run.",
-                elapsed_time_in_seconds=elapsed_time_in_seconds)
+    archiver_from_params(_params).run(logger)

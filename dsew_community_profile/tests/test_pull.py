@@ -1,10 +1,13 @@
 from collections import namedtuple
 from datetime import date
+from itertools import chain
 import pandas as pd
 import pytest
+from unittest.mock import patch, Mock
 
 from delphi_dsew_community_profile.pull import DatasetTimes
 from delphi_dsew_community_profile.pull import Dataset
+from delphi_dsew_community_profile.pull import fetch_listing
 
 example = namedtuple("example", "given expected")
         
@@ -93,3 +96,49 @@ class TestPull:
     def test_Dataset_parse_sheet(self):
         # TODO
         pass
+    @patch('requests.get')
+    @patch('os.path.exists')
+    def test_fetch_listing(self, mock_listing, mock_exists):
+        inst = namedtuple("attachment", "assetId filename publish cache")
+        instances = list(chain(*[
+            [
+                inst(f"{i}", f"2021010{i}.xlsx", date(2021, 1, i), f"{i}---2021010{i}.xlsx"),
+                inst(f"p{i}", f"2021010{i}.pdf", date(2021, 1, i), f"p{i}---2021010{i}.pdf"),
+            ]
+            for i in [1, 2, 3, 4, 5]
+        ]))
+        
+        mock_listing.return_value = Mock()
+        mock_listing.return_value.json = Mock(
+            return_value = {
+                'metadata': {
+                    'attachments': [
+                        {"assetId": i.assetId, "filename": i.filename}
+                        for i in instances
+                    ]
+                }
+            }
+        )
+
+        mock_exists.reset_mock(return_value=False)
+
+        def as_listing(instance):
+            return {
+                "assetId": instance.assetId,
+                "filename": instance.filename,
+                "cached_filename": instance.cache,
+                "publish_date": instance.publish
+            }
+        ex = example(
+            {'indicator':{'reports':'new'}},
+            [
+                as_listing(instance)
+                for i, instance in filter(lambda x: x[0]%2 == 0, enumerate(instances))
+            ]
+        )
+                
+            
+        for actual, expected in zip(fetch_listing(ex.given), ex.expected):
+            assert actual == expected
+
+        

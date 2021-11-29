@@ -9,11 +9,11 @@ This indicator extracts COVID-19 test figures from these reports.
 
 Indicator-specific parameters:
 
-* input_cache: a directory where Excel (.xlsx) files downloaded from
+* `input_cache`: a directory where Excel (.xlsx) files downloaded from
   healthdata.gov will be stored for posterity. Each file is 3.3 MB in size, so
   we expect this directory to require ~1GB of disk space for each year of
   operation.
-* reports: {new | all | YYYY-mm-dd--YYYY-mm-dd} a string indicating which
+* `reports`: {new | all | YYYY-mm-dd--YYYY-mm-dd} a string indicating which
   reports to export. The default, "new", downloads and exports only reports not
   already found in the input cache. The "all" setting exports data for all
   available reports, downloading them to the input cache if necessary. The date
@@ -21,6 +21,8 @@ Indicator-specific parameters:
   presumably the publish date. Only reports named with a date within the
   specified range (inclusive) will be downloaded to the input cache if necessary
   and exported.
+* `export_start_date`: a YYYY-mm-dd string indicating the first date to export.
+* `export_end_date`: a YYYY-mm-dd string indicating the final date to export.
 
 ## Running the Indicator
 

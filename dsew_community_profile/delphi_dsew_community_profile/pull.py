@@ -218,7 +218,11 @@ def fetch_listing(params):
 
     # drop the pdf files
     listing = [
-        dict(el, cached_filename=as_cached_filename(params, el))
+        dict(
+            el,
+            cached_filename=as_cached_filename(params, el),
+            publish_date=Dataset.parse_publish_date(el['filename'])
+        )
         for el in listing if el['filename'].endswith("xlsx")
     ]
 
@@ -230,10 +234,18 @@ def fetch_listing(params):
         start_str, _, end_str = params['indicator']['reports'].partition("--")
         start_date = datetime.datetime.strptime(start_str, "%Y-%m-%d").date()
         end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
-        def keep(attachment):
-            publish_date = Dataset.parse_publish_date(attachment['filename'])
-            return start_date <= publish_date <= end_date
-        listing = [el for el in listing if keep(el)]
+        listing = [
+            el for el in listing
+            if start_date <= el['publish_date'] <= end_date
+        ]
+    # reference date is guaranteed to be before publish date, so we can trim
+    # reports that are too early
+    if 'export_start_date' in params['indicator']:
+        listing = [
+            el for el in listing
+            if params['indicator']['export_start_date'] < el['publish_date']
+        ]
+    # can't do the same for export_end_date
     return listing
 
 def download_and_parse(listing, logger):

@@ -36,6 +36,16 @@ def run_module(params):
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
+    def replace_date_param(p):
+        if p in params["indicator"]:
+            date_param = datetime.strptime(params["indicator"][p], "%Y-%m-%d").date()
+            params["indicator"][p] = date_param
+    replace_date_param("export_start_date")
+    replace_date_param("export_end_date")
+    export_params = {
+        'start_date': params["indicator"].get("export_start_date", None),
+        'end_date': params["indicator"].get("export_end_date", None)
+    }
 
     run_stats = []
     dfs = fetch_new_reports(params, logger)
@@ -45,7 +55,8 @@ def run_module(params):
             df,
             params['common']['export_dir'],
             geo,
-            make_signal_name(sig)
+            make_signal_name(sig),
+            **export_params
         )
         if len(dates)>0:
             run_stats.append((max(dates), len(dates)))

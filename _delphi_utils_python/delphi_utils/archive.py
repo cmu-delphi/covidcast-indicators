@@ -696,8 +696,6 @@ if __name__ == "__main__":
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
 
-    logger = get_structured_logger(
+    archiver_from_params(_params).run(get_structured_logger(
         __name__, filename=_params["common"].get("log_filename"),
-        log_exceptions=_params["common"].get("log_exceptions", True))
-
-    archiver_from_params(_params).run(logger)
+        log_exceptions=_params["common"].get("log_exceptions", True)))

@@ -1,4 +1,4 @@
-geo_id,val,se,sample_size
-10380,0.4353796445880453,NA,NA
-38660,76.56462035541196,NA,NA
-44140,33.0,NA,NA
+geo_id,val,se,sample_size,missing_val,missing_se,missing_sample_size
+10380,0.43537960,NA,NA,0,1,1
+38660,76.56462040,NA,NA,0,1,1
+44140,33.00000000,NA,NA,0,1,1

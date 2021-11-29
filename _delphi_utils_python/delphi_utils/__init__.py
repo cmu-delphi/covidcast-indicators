@@ -15,4 +15,4 @@ from .signal import add_prefix
 from .nancodes import Nans
 from .weekday import Weekday
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"

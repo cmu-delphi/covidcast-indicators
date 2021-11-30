@@ -182,8 +182,8 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
       # Prevent smoothed weighted signals from being reported for dates after
       # the latest available weight data.
       if (target_day > params$latest_weight_date &&
-          indicators$smooth_days[row] == 6 &&
-          indicators$var_weight[row] == "weight") {
+          indicators$smooth_days[row] > 1 &&
+          indicators$var_weight[row] != "weight_unif") {
         
         next
       }

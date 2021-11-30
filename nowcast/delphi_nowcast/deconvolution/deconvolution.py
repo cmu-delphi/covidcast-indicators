@@ -119,6 +119,15 @@ def _construct_poly_interp_mat(x, n, k):
     S[2:(n - 2), :] = np.eye(n - k - 1)
     return S
 
+def _construct_poly_interp_mat_right_only(x, n, k):
+    assert k == 3, "poly interpolation matrix only constructed for k=3"
+    S = np.zeros((n, n - k + 1))
+    S[n - 2, n - 4] = (x[n - 3] - x[n - 2]) / (x[n - 3] - x[n - 4])
+    S[n - 2, n - 3] = (x[n - 2] - x[n - 4]) / (x[n - 3] - x[n - 4])
+    S[n - 1, n - 4] = (x[n - 3] - x[n - 1]) / (x[n - 3] - x[n - 4])
+    S[n - 1, n - 3] = (x[n - 1] - x[n - 4]) / (x[n - 3] - x[n - 4])
+    S[:(n - 2), :] = np.eye(n - k + 1)
+    return S
 
 def deconvolve_double_smooth_tf_fast(y: np.ndarray, x: np.ndarray, C: np.ndarray,
                                      kernel: np.ndarray, lam: float, gam: float,
@@ -132,7 +141,7 @@ def deconvolve_double_smooth_tf_fast(y: np.ndarray, x: np.ndarray, C: np.ndarray
     rho = lam  # set equal
     D = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D = np.diff(D, n=k, axis=0)
-    P = _construct_poly_interp_mat(x, n, k)
+    P = _construct_poly_interp_mat_right_only(x, n, k)
     D_m = band([-1, 1], [0, 1], shape=(n - 1, n)).toarray()
     D_m[:-m, :] = 0
 

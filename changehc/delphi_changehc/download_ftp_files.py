@@ -42,61 +42,7 @@ def get_files_from_dir(sftp, filedate, out_path):
 
 
 def download_covid(filedate, out_path, ftp_conn):
-    """Download files necessary to create chng-covid signal from ftp server.
-
-    Args:
-        filedate: YYYYmmdd string for which the files are named
-        out_path: Path to local directory into which to download the files
-        ftp_conn: Dict containing login credentials to ftp server
-    """
-    # open client
-    try:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        client.connect(ftp_conn["host"], username=ftp_conn["user"],
-                       password=ftp_conn["pass"],
-                       port=ftp_conn["port"],
-                       allow_agent=False, look_for_keys=False)
-        sftp = client.open_sftp()
-
-        sftp.chdir('/countproducts')
-        get_files_from_dir(sftp, filedate, out_path)
-
-    finally:
-        if client:
-            client.close()
-
-
-def download_cli(filedate, out_path, ftp_conn):
-    """Download files necessary to create chng-cli signal from ftp server.
-
-    Args:
-        filedate: YYYYmmdd string for which the files are named
-        out_path: Path to local directory into which to download the files
-        ftp_conn: Dict containing login credentials to ftp server
-    """
-    # open client
-    try:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-        client.connect(ftp_conn["host"], username=ftp_conn["user"],
-                       password=ftp_conn["pass"],
-                       port=ftp_conn["port"],
-                       allow_agent=False, look_for_keys=False)
-        sftp = client.open_sftp()
-
-        sftp.chdir('/countproducts')
-        get_files_from_dir(sftp, filedate, out_path)
-
-    finally:
-        if client:
-            client.close()
-
-
-def download_flu(filedate, out_path, ftp_conn):
-    """Download files necessary to create chng-flu signal from ftp server.
+    """Download files necessary to create chng- signals from ftp server.
 
     Args:
         filedate: YYYYmmdd string for which the files are named

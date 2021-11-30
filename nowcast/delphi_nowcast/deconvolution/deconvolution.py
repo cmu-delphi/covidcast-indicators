@@ -1,4 +1,5 @@
 import csv
+import json
 from datetime import date, timedelta
 from functools import partial
 from typing import Callable, List, Tuple, Dict
@@ -201,7 +202,8 @@ def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray, kernel_dict: Di
                                        np.logspace(0, 0.2, 6) - 1, [1, 5, 10, 50]],
                                    gam_n_folds: int = 7, n_iters: int = 200, k: int = 3,
                                    clip: bool = False, verbose: bool = False,
-                                   output=False, location="") -> np.ndarray:
+                                   output_tuning=False, output_tuning_file=None,
+                                   output_objective=False, location="") -> np.ndarray:
     """
        Run cross-validation to tune smoothness over deconvolve_double_smooth_ntf.
        First, leave-every-third-out CV is performed over lambda, fixing gamma=0. After
@@ -285,8 +287,23 @@ def deconvolve_double_smooth_tf_cv(y: np.ndarray, x: np.ndarray, kernel_dict: Di
     gam = gam_cv_grid[np.argmin(gam_cv_loss)]
     if verbose: print(f"Chosen parameters: lam:{lam:.4}, gam:{gam:.4}")
     C, kernel = _construct_day_specific_convolution_matrix(y, as_of_date, kernel_dict)
-    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output,
+    x_hat = fit_func(y=y, x=x, lam=lam, gam=gam, C=C, kernel=kernel, output=output_objective,
                      location=location)
+
+    if output_tuning:
+        tuning_dict = {'geo_value': location,
+                       'as_of': str(as_of_date),
+                       'n_iters': n_iters,
+                       'clip': clip,
+                       'k': k}
+        tuning_dict['lam_grid'] = lam_cv_grid.tolist()
+        tuning_dict['gam_grid'] = gam_cv_grid.tolist()
+        tuning_dict['lam_loss'] = lam_cv_loss.tolist()
+        tuning_dict['gam_loss'] = gam_cv_loss.tolist()
+        tuning_dict['best_lam'] = float(lam)
+        tuning_dict['best_gam'] = float(gam)
+        json.dump(tuning_dict, open(output_tuning_file, 'w'))
+
     return x_hat
 
 

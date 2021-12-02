@@ -41,7 +41,7 @@ def get_files_from_dir(sftp, filedate, out_path):
         sftp.get(infile, outfile, callback=callback_for_filename)
 
 
-def download_covid(filedate, out_path, ftp_conn):
+def download_counts(filedate, out_path, ftp_conn):
     """Download files necessary to create chng- signals from ftp server.
 
     Args:

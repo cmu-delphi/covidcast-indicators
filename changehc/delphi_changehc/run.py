@@ -14,7 +14,7 @@ from typing import Dict, Any
 from delphi_utils import get_structured_logger
 
 # first party
-from .download_ftp_files import download_covid
+from .download_ftp_files import download_counts
 from .load_data import load_combined_data, load_cli_data, load_flu_data
 from .update_sensor import CHCSensorUpdater
 
@@ -26,13 +26,7 @@ def retrieve_files(params, filedate, logger):
 
         ## download recent files from FTP server
         logger.info("downloading recent files through SFTP")
-        #if "covid" in params["indicator"]["types"]:
-        #    download_covid(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
-        #if "cli" in params["indicator"]["types"]:
-        #    download_cli(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
-        #if "flu" in params["indicator"]["types"]:
-        #    download_flu(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
-        download_covid(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
+        download_counts(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
 
         denom_file = "%s/%s_Counts_Products_Denom.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
         covid_file = "%s/%s_Counts_Products_Covid.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)

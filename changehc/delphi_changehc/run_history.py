@@ -24,7 +24,7 @@ from .update_sensor import CHCSensorUpdater
 def retrieve_files(params, filedate, logger):
     """Return filenames of relevant files, downloading them if necessary."""
     files = params["indicator"]["input_files"]
-    if True:
+    if files["denom"] is None:
 
         ## download recent files from FTP server
         logger.info("downloading recent files through SFTP")
@@ -116,7 +116,7 @@ def run_module(params: Dict[str, Dict[str, Any]]):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
-    for drop_date in pd.date_range("2020-01-01","2021-07-04"):
+    for drop_date in pd.date_range("2020-03-01","2021-11-30"):
         params["indicator"]["drop_date"] = drop_date.strftime("%Y-%m-%d")
         params["common"]["export_dir"] = \
             "./receiving/issue_%s/chng"%(drop_date.strftime("%Y%m%d"))

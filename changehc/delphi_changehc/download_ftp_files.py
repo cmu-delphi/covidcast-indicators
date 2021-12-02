@@ -60,7 +60,7 @@ def download_covid(filedate, out_path, ftp_conn):
                        allow_agent=False, look_for_keys=False)
         sftp = client.open_sftp()
 
-        sftp.chdir('/countproducts')
+        sftp.chdir('/countproducts_history')
         get_files_from_dir(sftp, filedate, out_path)
 
     finally:

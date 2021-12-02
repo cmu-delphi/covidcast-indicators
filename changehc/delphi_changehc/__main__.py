@@ -6,6 +6,6 @@ call the function `run_module` found within the run.py file. There should be
 no need to change this template.
 """
 from delphi_utils import read_params
-from .run import run_module  # pragma: no cover
+from .run_history import run_module  # pragma: no cover
 
 run_module(read_params())  # pragma: no cover

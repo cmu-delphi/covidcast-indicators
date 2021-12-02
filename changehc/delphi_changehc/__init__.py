@@ -12,6 +12,7 @@ from . import config
 from . import load_data
 from . import run
 from . import sensor
+from . import run_history
 from . import update_sensor
 
 __version__ = "0.0.0"

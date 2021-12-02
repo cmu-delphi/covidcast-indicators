@@ -14,8 +14,8 @@ from typing import Dict, Any
 from delphi_utils import get_structured_logger
 
 # first party
-from .download_ftp_files import download_covid, download_cli
-from .load_data import load_combined_data, load_cli_data
+from .download_ftp_files import download_counts
+from .load_data import load_combined_data, load_cli_data, load_flu_data
 from .update_sensor import CHCSensorUpdater
 
 
@@ -26,10 +26,7 @@ def retrieve_files(params, filedate, logger):
 
         ## download recent files from FTP server
         logger.info("downloading recent files through SFTP")
-        if "covid" in params["indicator"]["types"]:
-            download_covid(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
-        if "cli" in params["indicator"]["types"]:
-            download_cli(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
+        download_counts(filedate, params["indicator"]["input_cache_dir"], params["indicator"]["ftp_conn"])
 
         denom_file = "%s/%s_Counts_Products_Denom.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
         covid_file = "%s/%s_Counts_Products_Covid.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
@@ -53,6 +50,8 @@ def retrieve_files(params, filedate, logger):
         file_dict["mixed"] = mixed_file
         file_dict["flu_like"] = flu_like_file
         file_dict["covid_like"] = covid_like_file
+    if "flu" in params["indicator"]["types"]:
+        file_dict["flu"] = flu_file
     return file_dict
 
 
@@ -75,6 +74,9 @@ def make_asserts(params):
                     files["flu_like"] is not None and \
                     files["covid_like"] is not None,\
                     "files must be all present or all absent"
+    if "flu" in params["indicator"]["types"]:
+        assert (files["denom"] is None) == (files["flu"] is None), \
+            "exactly one of denom and flu files are provided"
 
 
 def run_module(params: Dict[str, Dict[str, Any]]):
@@ -182,6 +184,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 elif numtype == "cli":
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
                              file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
+                elif numtype == "flu":
+                    data = load_flu_data(file_dict["denom"],file_dict["flu"],
+                             dropdate_dt,"fips")
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],

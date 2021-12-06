@@ -76,46 +76,49 @@ class TestGeoMap:
         )
 
         state_df = geo_map(df, "state", SENSOR)
-        pd.testing.assert_frame_equal(
-            state_df,
-            pd.DataFrame({
-                "geo_id": ["az", "ma"],
-                "timestamp": ["2020-02-15"]*2,
-                "new_counts": [27, 14],
-                "cumulative_counts": [165, 61],
-                "population": [236646., 521202.],
-                "incidence": [27 / 236646 * 100000, 14 / 521202 * 100000],
-                "cumulative_prop": [165 / 236646 * 100000, 61 / 521202 * 100000]
-            })
-        )
+        gmpr = GeoMapper()
+        fips_pop = gmpr.get_crosswalk("fips", "pop")
+        pop04 = float(fips_pop.loc[fips_pop.fips.isin(["04001", "04003", "04009"]), "pop"].sum())
+        pop25 = float(fips_pop.loc[fips_pop.fips.isin(["25023", "25000"]), "pop"].sum())
+        expected_df = pd.DataFrame({
+            "geo_id": ["az", "ma"],
+            "timestamp": ["2020-02-15"]*2,
+            "new_counts": [27, 14],
+            "cumulative_counts": [165, 61],
+            "population": [pop04, pop25],
+            "incidence": [27 / pop04 * 100000, 14 / pop25 * 100000],
+            "cumulative_prop": [165 / pop04 * 100000, 61 / pop25 * 100000]
+        })
+        pd.testing.assert_frame_equal(state_df, expected_df)
 
         hhs_df = geo_map(df, "hhs", SENSOR)
-        pd.testing.assert_frame_equal(
-            hhs_df,
-            pd.DataFrame({
-                "geo_id": ["1", "9"],
-                "timestamp": ["2020-02-15"]*2,
-                "new_counts": [14, 27],
-                "cumulative_counts": [61, 165],
-                "population": [521202., 236646.],
-                "incidence": [14 / 521202 * 100000, 27 / 236646 * 100000],
-                "cumulative_prop": [61 / 521202 * 100000, 165 / 236646 * 100000]
-            })
-        )
+        hhs_pop = gmpr.replace_geocode(gmpr.add_geocode(df, "fips", "pop"), "fips", "hhs")
+        pop1 = float(hhs_pop.loc[hhs_pop.hhs == "1", "pop"])
+        pop9 = float(hhs_pop.loc[hhs_pop.hhs == "9", "pop"])
+        expected_df = pd.DataFrame({
+            "geo_id": ["1", "9"],
+            "timestamp": ["2020-02-15"]*2,
+            "new_counts": [14, 27],
+            "cumulative_counts": [61, 165],
+            "population": [pop1, pop9],
+            "incidence": [14 / pop1 * 100000, 27 / pop9 * 100000],
+            "cumulative_prop": [61 / pop1 * 100000, 165 / pop9 * 100000]
+        })
+        pd.testing.assert_frame_equal(hhs_df, expected_df)
 
         nation_df = geo_map(df, "nation", SENSOR)
-        pd.testing.assert_frame_equal(
-            nation_df,
-            pd.DataFrame({
-                "geo_id": ["us"],
-                "timestamp": ["2020-02-15"],
-                "new_counts": [41],
-                "cumulative_counts": [226],
-                "population": [521202.0 + 236646],
-                "incidence": [41 / (521202 + 236646) * 100000],
-                "cumulative_prop": [226 / (521202 + 236646) * 100000]
-            })
-        )
+        nation_pop = gmpr.replace_geocode(gmpr.add_geocode(df, "fips", "pop"), "fips", "nation")
+        us_pop = float(nation_pop.loc[nation_pop.nation == "us", "pop"])
+        expected_df = pd.DataFrame({
+            "geo_id": ["us"],
+            "timestamp": ["2020-02-15"],
+            "new_counts": [41],
+            "cumulative_counts": [226],
+            "population": [us_pop],
+            "incidence": [41 / us_pop * 100000],
+            "cumulative_prop": [226 / us_pop * 100000]
+        })
+        pd.testing.assert_frame_equal(nation_df, expected_df)
 
     def test_hrr_msa(self):
         """Tests that values are correctly aggregated at the HRR and MSA level."""

@@ -13,5 +13,6 @@ from .geomap import GeoMapper
 from .smooth import Smoother
 from .signal import add_prefix
 from .nancodes import Nans
+from .weekday import Weekday
 
-__version__ = "0.1.17"
+__version__ = "0.2.6"

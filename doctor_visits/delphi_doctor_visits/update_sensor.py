@@ -17,10 +17,10 @@ import numpy as np
 import pandas as pd
 
 # first party
+from delphi_utils import Weekday
 from .config import Config
 from .geo_maps import GeoMaps
 from .sensor import DoctorVisitsSensor
-from .weekday import Weekday
 
 
 def write_to_csv(output_df: pd.DataFrame, geo_level, se, out_name, logger, output_path="."):
@@ -125,7 +125,14 @@ def update_sensor(
         (burn_in_dates >= startdate) & (burn_in_dates <= enddate))[0][:len(sensor_dates)]
 
     # handle if we need to adjust by weekday
-    params = Weekday.get_params(data, logger) if weekday else None
+    params = Weekday.get_params(
+        data,
+        "Denominator",
+        Config.CLI_COLS + Config.FLU1_COL,
+        Config.DATE_COL,
+        [1, 1e5, 1e10, 1e15],
+        logger,
+    ) if weekday else None
     if weekday and np.any(np.all(params == 0,axis=1)):
         # Weekday correction failed for at least one count type
         return None
@@ -145,7 +152,10 @@ def update_sensor(
         for geo_id in unique_geo_ids:
             sub_data = data_groups.get_group(geo_id).copy()
             if weekday:
-                sub_data = Weekday.calc_adjustment(params, sub_data)
+                sub_data = Weekday.calc_adjustment(params,
+                                                   sub_data,
+                                                   Config.CLI_COLS + Config.FLU1_COL,
+                                                   Config.DATE_COL)
 
             res = DoctorVisitsSensor.fit(
                 sub_data,
@@ -169,7 +179,10 @@ def update_sensor(
             for geo_id in unique_geo_ids:
                 sub_data = data_groups.get_group(geo_id).copy()
                 if weekday:
-                    sub_data = Weekday.calc_adjustment(params, sub_data)
+                    sub_data = Weekday.calc_adjustment(params,
+                                                       sub_data,
+                                                       Config.CLI_COLS + Config.FLU1_COL,
+                                                       Config.DATE_COL)
 
                 pool_results.append(
                     pool.apply_async(

@@ -7,6 +7,7 @@ with open("README.md", "r") as f:
 required = [
     "boto3",
     "covidcast",
+    "cvxpy",
     "epiweeks",
     "freezegun",
     "gitpython",
@@ -25,7 +26,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.1.17",
+    version="0.2.6",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -39,5 +40,5 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     packages=find_packages(),
-    package_data={'': ['data/*.csv']}
+    package_data={'': ['data/20*/*.csv']}
 )

@@ -5,7 +5,6 @@ required = [
     "numpy",
     "pandas",
     "sklearn",
-    "cvxpy",
     "pytest",
     "pytest-cov",
     "pylint==2.8.3",

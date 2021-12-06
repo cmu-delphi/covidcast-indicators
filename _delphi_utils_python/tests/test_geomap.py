@@ -8,8 +8,11 @@ import numpy as np
 
 @pytest.fixture(scope="class")
 def geomapper():
-    return GeoMapper()
+    return GeoMapper(census_year=2020)
 
+@pytest.fixture(scope="class")
+def geomapper_2019():
+    return GeoMapper(census_year=2019)
 
 class TestGeoMapper:
     fips_data = pd.DataFrame(
@@ -271,7 +274,7 @@ class TestGeoMapper:
         )
 
         # hrr -> nation
-        with pytest.raises(ValueError):    
+        with pytest.raises(ValueError):
             new_data = geomapper.replace_geocode(self.zip_data, "zip", "hrr")
             new_data2 = geomapper.replace_geocode(new_data, "hrr", "nation")
 
@@ -325,12 +328,20 @@ class TestGeoMapper:
     def test_get_geos(self, geomapper):
         assert geomapper.get_geo_values("nation") == {"us"}
         assert geomapper.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(geomapper.get_geo_values("fips")) == 3235
+        assert len(geomapper.get_geo_values("fips")) == 3236
         assert len(geomapper.get_geo_values("state_id")) == 60
         assert len(geomapper.get_geo_values("zip")) == 32976
+
+    def test_get_geos_2019(self, geomapper_2019):
+        assert len(geomapper_2019.get_geo_values("fips")) == 3235
 
     def test_get_geos_within(self, geomapper):
         assert len(geomapper.get_geos_within("us","state","nation")) == 60
         assert len(geomapper.get_geos_within("al","county","state")) == 68
         assert len(geomapper.get_geos_within("4","state","hhs")) == 8
         assert geomapper.get_geos_within("4","state","hhs") =={'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}
+
+    def test_census_year_pop(self, geomapper, geomapper_2019):
+        df = pd.DataFrame({"fips": ["01001"]})
+        assert geomapper.add_population_column(df, "fips").population[0] == 56145
+        assert geomapper_2019.add_population_column(df, "fips").population[0] == 55869

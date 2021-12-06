@@ -27,7 +27,17 @@
       "min_expected_lag": {"all": "5"},
       "max_expected_lag": {"all": "5"},
       "dry_run": true,
-      "suppressed_errors": []
+      "suppressed_errors": [
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "hrr"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "msa"},
+        {"check_name": "check_rapid_change_num_rows",
+        "signal": "covid_ag_raw_pct_positive",
+        "geo_type": "county"}
+      ]
     },
     "static": {
       "minimum_sample_size": 50
@@ -38,5 +48,8 @@
         "covid_ag_smoothed_pct_positive"
       ]
     }
+  },
+  "delivery": {
+    "delivery_dir": "./receiving"
   }
 }

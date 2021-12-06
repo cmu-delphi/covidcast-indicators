@@ -391,3 +391,10 @@ test_that("testing national aggregation", {
   }
 
 })
+
+test_that("testing load_responses behavior for missing input", {
+  params <- relativize_params(read_params(test_path("params-test.json")))
+  params$input <- c(params$input, "file-does-not-exist.csv")
+  params$parallel <- TRUE
+  expect_error(load_responses_all(params), regexp="ingestion and field creation failed")
+})

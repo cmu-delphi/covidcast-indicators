@@ -1,4 +1,5 @@
 fips,state_code,state_id,state_name
+01000,01,al,Alabama
 01001,01,al,Alabama
 01003,01,al,Alabama
 01005,01,al,Alabama
@@ -66,6 +67,7 @@ fips,state_code,state_id,state_name
 01129,01,al,Alabama
 01131,01,al,Alabama
 01133,01,al,Alabama
+02000,02,ak,Alaska
 02013,02,ak,Alaska
 02016,02,ak,Alaska
 02020,02,ak,Alaska
@@ -95,6 +97,7 @@ fips,state_code,state_id,state_name
 02275,02,ak,Alaska
 02282,02,ak,Alaska
 02290,02,ak,Alaska
+04000,04,az,Arizona
 04001,04,az,Arizona
 04003,04,az,Arizona
 04005,04,az,Arizona
@@ -110,6 +113,7 @@ fips,state_code,state_id,state_name
 04023,04,az,Arizona
 04025,04,az,Arizona
 04027,04,az,Arizona
+05000,05,ar,Arkansas
 05001,05,ar,Arkansas
 05003,05,ar,Arkansas
 05005,05,ar,Arkansas
@@ -185,6 +189,7 @@ fips,state_code,state_id,state_name
 05145,05,ar,Arkansas
 05147,05,ar,Arkansas
 05149,05,ar,Arkansas
+06000,06,ca,California
 06001,06,ca,California
 06003,06,ca,California
 06005,06,ca,California
@@ -243,6 +248,7 @@ fips,state_code,state_id,state_name
 06111,06,ca,California
 06113,06,ca,California
 06115,06,ca,California
+08000,08,co,Colorado
 08001,08,co,Colorado
 08003,08,co,Colorado
 08005,08,co,Colorado
@@ -307,6 +313,7 @@ fips,state_code,state_id,state_name
 08121,08,co,Colorado
 08123,08,co,Colorado
 08125,08,co,Colorado
+09000,09,ct,Connecticut
 09001,09,ct,Connecticut
 09003,09,ct,Connecticut
 09005,09,ct,Connecticut
@@ -315,10 +322,13 @@ fips,state_code,state_id,state_name
 09011,09,ct,Connecticut
 09013,09,ct,Connecticut
 09015,09,ct,Connecticut
+10000,10,de,Delaware
 10001,10,de,Delaware
 10003,10,de,Delaware
 10005,10,de,Delaware
+11000,11,dc,District of Columbia
 11001,11,dc,District of Columbia
+12000,12,fl,Florida
 12001,12,fl,Florida
 12003,12,fl,Florida
 12005,12,fl,Florida
@@ -386,6 +396,7 @@ fips,state_code,state_id,state_name
 12129,12,fl,Florida
 12131,12,fl,Florida
 12133,12,fl,Florida
+13000,13,ga,Georgia
 13001,13,ga,Georgia
 13003,13,ga,Georgia
 13005,13,ga,Georgia
@@ -545,11 +556,13 @@ fips,state_code,state_id,state_name
 13317,13,ga,Georgia
 13319,13,ga,Georgia
 13321,13,ga,Georgia
+15000,15,hi,Hawaii
 15001,15,hi,Hawaii
 15003,15,hi,Hawaii
 15005,15,hi,Hawaii
 15007,15,hi,Hawaii
 15009,15,hi,Hawaii
+16000,16,id,Idaho
 16001,16,id,Idaho
 16003,16,id,Idaho
 16005,16,id,Idaho
@@ -594,6 +607,7 @@ fips,state_code,state_id,state_name
 16083,16,id,Idaho
 16085,16,id,Idaho
 16087,16,id,Idaho
+17000,17,il,Illinois
 17001,17,il,Illinois
 17003,17,il,Illinois
 17005,17,il,Illinois
@@ -696,6 +710,7 @@ fips,state_code,state_id,state_name
 17199,17,il,Illinois
 17201,17,il,Illinois
 17203,17,il,Illinois
+18000,18,in,Indiana
 18001,18,in,Indiana
 18003,18,in,Indiana
 18005,18,in,Indiana
@@ -788,6 +803,7 @@ fips,state_code,state_id,state_name
 18179,18,in,Indiana
 18181,18,in,Indiana
 18183,18,in,Indiana
+19000,19,ia,Iowa
 19001,19,ia,Iowa
 19003,19,ia,Iowa
 19005,19,ia,Iowa
@@ -887,6 +903,7 @@ fips,state_code,state_id,state_name
 19193,19,ia,Iowa
 19195,19,ia,Iowa
 19197,19,ia,Iowa
+20000,20,ks,Kansas
 20001,20,ks,Kansas
 20003,20,ks,Kansas
 20005,20,ks,Kansas
@@ -992,6 +1009,7 @@ fips,state_code,state_id,state_name
 20205,20,ks,Kansas
 20207,20,ks,Kansas
 20209,20,ks,Kansas
+21000,21,ky,Kentucky
 21001,21,ky,Kentucky
 21003,21,ky,Kentucky
 21005,21,ky,Kentucky
@@ -1112,6 +1130,7 @@ fips,state_code,state_id,state_name
 21235,21,ky,Kentucky
 21237,21,ky,Kentucky
 21239,21,ky,Kentucky
+22000,22,la,Louisiana
 22001,22,la,Louisiana
 22003,22,la,Louisiana
 22005,22,la,Louisiana
@@ -1176,6 +1195,7 @@ fips,state_code,state_id,state_name
 22123,22,la,Louisiana
 22125,22,la,Louisiana
 22127,22,la,Louisiana
+23000,23,me,Maine
 23001,23,me,Maine
 23003,23,me,Maine
 23005,23,me,Maine
@@ -1192,6 +1212,7 @@ fips,state_code,state_id,state_name
 23027,23,me,Maine
 23029,23,me,Maine
 23031,23,me,Maine
+24000,24,md,Maryland
 24001,24,md,Maryland
 24003,24,md,Maryland
 24005,24,md,Maryland
@@ -1216,6 +1237,7 @@ fips,state_code,state_id,state_name
 24045,24,md,Maryland
 24047,24,md,Maryland
 24510,24,md,Maryland
+25000,25,ma,Massachusetts
 25001,25,ma,Massachusetts
 25003,25,ma,Massachusetts
 25005,25,ma,Massachusetts
@@ -1230,6 +1252,7 @@ fips,state_code,state_id,state_name
 25023,25,ma,Massachusetts
 25025,25,ma,Massachusetts
 25027,25,ma,Massachusetts
+26000,26,mi,Michigan
 26001,26,mi,Michigan
 26003,26,mi,Michigan
 26005,26,mi,Michigan
@@ -1313,6 +1336,7 @@ fips,state_code,state_id,state_name
 26161,26,mi,Michigan
 26163,26,mi,Michigan
 26165,26,mi,Michigan
+27000,27,mn,Minnesota
 27001,27,mn,Minnesota
 27003,27,mn,Minnesota
 27005,27,mn,Minnesota
@@ -1400,6 +1424,7 @@ fips,state_code,state_id,state_name
 27169,27,mn,Minnesota
 27171,27,mn,Minnesota
 27173,27,mn,Minnesota
+28000,28,ms,Mississippi
 28001,28,ms,Mississippi
 28003,28,ms,Mississippi
 28005,28,ms,Mississippi
@@ -1482,6 +1507,7 @@ fips,state_code,state_id,state_name
 28159,28,ms,Mississippi
 28161,28,ms,Mississippi
 28163,28,ms,Mississippi
+29000,29,mo,Missouri
 29001,29,mo,Missouri
 29003,29,mo,Missouri
 29005,29,mo,Missouri
@@ -1597,6 +1623,7 @@ fips,state_code,state_id,state_name
 29227,29,mo,Missouri
 29229,29,mo,Missouri
 29510,29,mo,Missouri
+30000,30,mt,Montana
 30001,30,mt,Montana
 30003,30,mt,Montana
 30005,30,mt,Montana
@@ -1653,6 +1680,7 @@ fips,state_code,state_id,state_name
 30107,30,mt,Montana
 30109,30,mt,Montana
 30111,30,mt,Montana
+31000,31,ne,Nebraska
 31001,31,ne,Nebraska
 31003,31,ne,Nebraska
 31005,31,ne,Nebraska
@@ -1746,6 +1774,7 @@ fips,state_code,state_id,state_name
 31181,31,ne,Nebraska
 31183,31,ne,Nebraska
 31185,31,ne,Nebraska
+32000,32,nv,Nevada
 32001,32,nv,Nevada
 32003,32,nv,Nevada
 32005,32,nv,Nevada
@@ -1763,6 +1792,7 @@ fips,state_code,state_id,state_name
 32031,32,nv,Nevada
 32033,32,nv,Nevada
 32510,32,nv,Nevada
+33000,33,nh,New Hampshire
 33001,33,nh,New Hampshire
 33003,33,nh,New Hampshire
 33005,33,nh,New Hampshire
@@ -1773,6 +1803,7 @@ fips,state_code,state_id,state_name
 33015,33,nh,New Hampshire
 33017,33,nh,New Hampshire
 33019,33,nh,New Hampshire
+34000,34,nj,New Jersey
 34001,34,nj,New Jersey
 34003,34,nj,New Jersey
 34005,34,nj,New Jersey
@@ -1794,6 +1825,7 @@ fips,state_code,state_id,state_name
 34037,34,nj,New Jersey
 34039,34,nj,New Jersey
 34041,34,nj,New Jersey
+35000,35,nm,New Mexico
 35001,35,nm,New Mexico
 35003,35,nm,New Mexico
 35005,35,nm,New Mexico
@@ -1827,6 +1859,7 @@ fips,state_code,state_id,state_name
 35057,35,nm,New Mexico
 35059,35,nm,New Mexico
 35061,35,nm,New Mexico
+36000,36,ny,New York
 36001,36,ny,New York
 36003,36,ny,New York
 36005,36,ny,New York
@@ -1889,6 +1922,7 @@ fips,state_code,state_id,state_name
 36119,36,ny,New York
 36121,36,ny,New York
 36123,36,ny,New York
+37000,37,nc,North Carolina
 37001,37,nc,North Carolina
 37003,37,nc,North Carolina
 37005,37,nc,North Carolina
@@ -1989,6 +2023,7 @@ fips,state_code,state_id,state_name
 37195,37,nc,North Carolina
 37197,37,nc,North Carolina
 37199,37,nc,North Carolina
+38000,38,nd,North Dakota
 38001,38,nd,North Dakota
 38003,38,nd,North Dakota
 38005,38,nd,North Dakota
@@ -2042,6 +2077,7 @@ fips,state_code,state_id,state_name
 38101,38,nd,North Dakota
 38103,38,nd,North Dakota
 38105,38,nd,North Dakota
+39000,39,oh,Ohio
 39001,39,oh,Ohio
 39003,39,oh,Ohio
 39005,39,oh,Ohio
@@ -2130,6 +2166,7 @@ fips,state_code,state_id,state_name
 39171,39,oh,Ohio
 39173,39,oh,Ohio
 39175,39,oh,Ohio
+40000,40,ok,Oklahoma
 40001,40,ok,Oklahoma
 40003,40,ok,Oklahoma
 40005,40,ok,Oklahoma
@@ -2207,6 +2244,7 @@ fips,state_code,state_id,state_name
 40149,40,ok,Oklahoma
 40151,40,ok,Oklahoma
 40153,40,ok,Oklahoma
+41000,41,or,Oregon
 41001,41,or,Oregon
 41003,41,or,Oregon
 41005,41,or,Oregon
@@ -2243,6 +2281,7 @@ fips,state_code,state_id,state_name
 41067,41,or,Oregon
 41069,41,or,Oregon
 41071,41,or,Oregon
+42000,42,pa,Pennsylvania
 42001,42,pa,Pennsylvania
 42003,42,pa,Pennsylvania
 42005,42,pa,Pennsylvania
@@ -2310,11 +2349,13 @@ fips,state_code,state_id,state_name
 42129,42,pa,Pennsylvania
 42131,42,pa,Pennsylvania
 42133,42,pa,Pennsylvania
+44000,44,ri,Rhode Island
 44001,44,ri,Rhode Island
 44003,44,ri,Rhode Island
 44005,44,ri,Rhode Island
 44007,44,ri,Rhode Island
 44009,44,ri,Rhode Island
+45000,45,sc,South Carolina
 45001,45,sc,South Carolina
 45003,45,sc,South Carolina
 45005,45,sc,South Carolina
@@ -2361,6 +2402,7 @@ fips,state_code,state_id,state_name
 45087,45,sc,South Carolina
 45089,45,sc,South Carolina
 45091,45,sc,South Carolina
+46000,46,sd,South Dakota
 46003,46,sd,South Dakota
 46005,46,sd,South Dakota
 46007,46,sd,South Dakota
@@ -2427,6 +2469,7 @@ fips,state_code,state_id,state_name
 46129,46,sd,South Dakota
 46135,46,sd,South Dakota
 46137,46,sd,South Dakota
+47000,47,tn,Tennessee
 47001,47,tn,Tennessee
 47003,47,tn,Tennessee
 47005,47,tn,Tennessee
@@ -2522,6 +2565,7 @@ fips,state_code,state_id,state_name
 47185,47,tn,Tennessee
 47187,47,tn,Tennessee
 47189,47,tn,Tennessee
+48000,48,tx,Texas
 48001,48,tx,Texas
 48003,48,tx,Texas
 48005,48,tx,Texas
@@ -2776,6 +2820,7 @@ fips,state_code,state_id,state_name
 48503,48,tx,Texas
 48505,48,tx,Texas
 48507,48,tx,Texas
+49000,49,ut,Utah
 49001,49,ut,Utah
 49003,49,ut,Utah
 49005,49,ut,Utah
@@ -2805,6 +2850,7 @@ fips,state_code,state_id,state_name
 49053,49,ut,Utah
 49055,49,ut,Utah
 49057,49,ut,Utah
+50000,50,vt,Vermont
 50001,50,vt,Vermont
 50003,50,vt,Vermont
 50005,50,vt,Vermont
@@ -2819,6 +2865,7 @@ fips,state_code,state_id,state_name
 50023,50,vt,Vermont
 50025,50,vt,Vermont
 50027,50,vt,Vermont
+51000,51,va,Virginia
 51001,51,va,Virginia
 51003,51,va,Virginia
 51005,51,va,Virginia
@@ -2952,6 +2999,7 @@ fips,state_code,state_id,state_name
 51820,51,va,Virginia
 51830,51,va,Virginia
 51840,51,va,Virginia
+53000,53,wa,Washington
 53001,53,wa,Washington
 53003,53,wa,Washington
 53005,53,wa,Washington
@@ -2991,6 +3039,7 @@ fips,state_code,state_id,state_name
 53073,53,wa,Washington
 53075,53,wa,Washington
 53077,53,wa,Washington
+54000,54,wv,West Virginia
 54001,54,wv,West Virginia
 54003,54,wv,West Virginia
 54005,54,wv,West Virginia
@@ -3046,6 +3095,7 @@ fips,state_code,state_id,state_name
 54105,54,wv,West Virginia
 54107,54,wv,West Virginia
 54109,54,wv,West Virginia
+55000,55,wi,Wisconsin
 55001,55,wi,Wisconsin
 55003,55,wi,Wisconsin
 55005,55,wi,Wisconsin
@@ -3118,6 +3168,7 @@ fips,state_code,state_id,state_name
 55137,55,wi,Wisconsin
 55139,55,wi,Wisconsin
 55141,55,wi,Wisconsin
+56000,56,wy,Wyoming
 56001,56,wy,Wyoming
 56003,56,wy,Wyoming
 56005,56,wy,Wyoming
@@ -3141,8 +3192,23 @@ fips,state_code,state_id,state_name
 56041,56,wy,Wyoming
 56043,56,wy,Wyoming
 56045,56,wy,Wyoming
+60000,60,as,American Samoa
+60010,60,as,American Samoa
+60020,60,as,American Samoa
+60030,60,as,American Samoa
+60040,60,as,American Samoa
+60050,60,as,American Samoa
+66000,66,gu,Guam
+66010,66,gu,Guam
+69000,69,mp,Northern Mariana Islands
+69085,69,mp,Northern Mariana Islands
+69100,69,mp,Northern Mariana Islands
+69110,69,mp,Northern Mariana Islands
+69120,69,mp,Northern Mariana Islands
+70000,70,pw,Republic of Palau
 70002,70,pw,Republic of Palau
 70003,70,pw,Republic of Palau
+72000,72,pr,Puerto Rico
 72001,72,pr,Puerto Rico
 72003,72,pr,Puerto Rico
 72005,72,pr,Puerto Rico
@@ -3221,73 +3287,7 @@ fips,state_code,state_id,state_name
 72149,72,pr,Puerto Rico
 72151,72,pr,Puerto Rico
 72153,72,pr,Puerto Rico
-60010,60,as,American Samoa
-60020,60,as,American Samoa
-60030,60,as,American Samoa
-60040,60,as,American Samoa
-60050,60,as,American Samoa
-66010,66,gu,Guam
+78000,78,vi,U.S. Virgin Islands
 78010,78,vi,U.S. Virgin Islands
 78020,78,vi,U.S. Virgin Islands
 78030,78,vi,U.S. Virgin Islands
-69085,69,mp,Northern Mariana Islands
-69100,69,mp,Northern Mariana Islands
-69110,69,mp,Northern Mariana Islands
-69120,69,mp,Northern Mariana Islands
-46000,46,sd,South Dakota
-70000,70,pw,Republic of Palau
-15000,15,hi,Hawaii
-35000,35,nm,New Mexico
-53000,53,wa,Washington
-28000,28,ms,Mississippi
-33000,33,nh,New Hampshire
-51000,51,va,Virginia
-32000,32,nv,Nevada
-55000,55,wi,Wisconsin
-25000,25,ma,Massachusetts
-47000,47,tn,Tennessee
-21000,21,ky,Kentucky
-50000,50,vt,Vermont
-06000,06,ca,California
-13000,13,ga,Georgia
-08000,08,co,Colorado
-41000,41,or,Oregon
-48000,48,tx,Texas
-29000,29,mo,Missouri
-05000,05,ar,Arkansas
-22000,22,la,Louisiana
-37000,37,nc,North Carolina
-16000,16,id,Idaho
-31000,31,ne,Nebraska
-40000,40,ok,Oklahoma
-54000,54,wv,West Virginia
-20000,20,ks,Kansas
-66000,66,gu,Guam
-24000,24,md,Maryland
-34000,34,nj,New Jersey
-44000,44,ri,Rhode Island
-04000,04,az,Arizona
-42000,42,pa,Pennsylvania
-11000,11,dc,District of Columbia
-17000,17,il,Illinois
-09000,09,ct,Connecticut
-69000,69,mp,Northern Mariana Islands
-01000,01,al,Alabama
-26000,26,mi,Michigan
-72000,72,pr,Puerto Rico
-02000,02,ak,Alaska
-78000,78,vi,U.S. Virgin Islands
-27000,27,mn,Minnesota
-45000,45,sc,South Carolina
-56000,56,wy,Wyoming
-23000,23,me,Maine
-12000,12,fl,Florida
-18000,18,in,Indiana
-19000,19,ia,Iowa
-38000,38,nd,North Dakota
-30000,30,mt,Montana
-10000,10,de,Delaware
-49000,49,ut,Utah
-36000,36,ny,New York
-60000,60,as,American Samoa
-39000,39,oh,Ohio

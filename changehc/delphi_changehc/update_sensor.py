@@ -11,13 +11,13 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix, create_export_csv
+from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 
 # first party
 from .config import Config
-from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
+                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
 from .sensor import CHCSensor
-from .weekday import Weekday
 
 
 def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_path=".", start_date=None, end_date=None):
@@ -115,9 +115,11 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             signal_name = SMOOTHED_ADJ if self.weekday else SMOOTHED
         elif self.numtype == "cli":
             signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
+        elif self.numtype == "flu":
+            signal_name = SMOOTHED_ADJ_FLU if self.weekday else SMOOTHED_FLU
         else:
             raise ValueError(f'Unsupported numtype received "{numtype}",'
-                             f' must be one of ["covid", "cli"]')
+                             f' must be one of ["covid", "cli", "flu"]')
         self.signal_name = add_prefix([signal_name], wip_signal=wip_signal)[0]
 
         # initialize members set in shift_dates().
@@ -156,11 +158,13 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
                                                  thr_col="den",
-                                                 mega_col=geo)
+                                                 mega_col=geo,
+                                                 date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
+            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
+                                              date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", geo)
+            data_frame = gmpr.replace_geocode(data, "fips", geo, date_col=Config.DATE_COL)
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
@@ -176,8 +180,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
 
 
     def update_sensor(self,
-            data,
-            output_path):
+        data,
+        output_path):
         """Generate sensor values, and write to csv format.
 
         Args:
@@ -192,14 +196,22 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(data_frame) if self.weekday else None
+        wd_params = Weekday.get_params(
+            data_frame,
+            "den",
+            ["num"],
+            Config.DATE_COL,
+            [1, 1e5],
+            self.logger,
+        ) if self.weekday else None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0,inplace=True)
+                sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = CHCSensor.fit(sub_data, self.burnindate, geo_id, self.logger)
                 res = pd.DataFrame(res).loc[final_sensor_idxs]
                 dfs.append(res)
@@ -209,9 +221,10 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
-                    sub_data.reset_index(level=0, inplace=True)
+                    sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                    sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(
                             CHCSensor.fit, args=(sub_data, self.burnindate, geo_id, self.logger),

@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 # third party
 import numpy as np
 import pandas as pd
+import logging
 import pytest
 
 # first party
@@ -25,6 +26,7 @@ PARAMS = {
 DATA_FILEPATH = PARAMS["indicator"]["input_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH = "test_data/"
+TEST_LOGGER = logging.getLogger()
 
 
 class TestClaimsHospIndicatorUpdater:
@@ -93,7 +95,8 @@ class TestClaimsHospIndicatorUpdater:
 
             updater.update_indicator(
                 DATA_FILEPATH,
-                td.name
+                td.name,
+                TEST_LOGGER
             )
 
             assert len(os.listdir(td.name)) == len(

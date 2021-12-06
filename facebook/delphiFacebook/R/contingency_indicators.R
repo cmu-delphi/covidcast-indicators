@@ -63,7 +63,8 @@ get_aggs <- function() {
     c("gender", "edulevel"),
     c("occupation"),
     c("pregnant", "raceethnicity"),
-    c("race", "hispanic", "pregnant")
+    c("race", "hispanic", "pregnant"),
+    c("vaccinationstatus")
   )
 
   indicators <- tribble(

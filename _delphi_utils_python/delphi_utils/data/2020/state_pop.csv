@@ -1,0 +1,58 @@
+state_code,state_id,state_name,pop
+01,al,Alabama,4921532
+02,ak,Alaska,731158
+04,az,Arizona,7421401
+05,ar,Arkansas,3030522
+06,ca,California,39368078
+08,co,Colorado,5807719
+09,ct,Connecticut,3557006
+10,de,Delaware,986809
+11,dc,District of Columbia,712816
+12,fl,Florida,21733312
+13,ga,Georgia,10710017
+15,hi,Hawaii,1407006
+16,id,Idaho,1826913
+17,il,Illinois,12587530
+18,in,Indiana,6754953
+19,ia,Iowa,3163561
+20,ks,Kansas,2913805
+21,ky,Kentucky,4477251
+22,la,Louisiana,4645318
+23,me,Maine,1350141
+24,md,Maryland,6055802
+25,ma,Massachusetts,6893574
+26,mi,Michigan,9966555
+27,mn,Minnesota,5657342
+28,ms,Mississippi,2966786
+29,mo,Missouri,6151548
+30,mt,Montana,1080577
+31,ne,Nebraska,1937552
+32,nv,Nevada,3138259
+33,nh,New Hampshire,1366275
+34,nj,New Jersey,8882371
+35,nm,New Mexico,2106319
+36,ny,New York,19336776
+37,nc,North Carolina,10600823
+38,nd,North Dakota,765309
+39,oh,Ohio,11693217
+40,ok,Oklahoma,3980783
+41,or,Oregon,4241507
+42,pa,Pennsylvania,12783254
+44,ri,Rhode Island,1057125
+45,sc,South Carolina,5218040
+46,sd,South Dakota,892717
+47,tn,Tennessee,6886834
+48,tx,Texas,29360759
+49,ut,Utah,3249879
+50,vt,Vermont,623347
+51,va,Virginia,8590563
+53,wa,Washington,7693612
+54,wv,West Virginia,1784787
+55,wi,Wisconsin,5832655
+56,wy,Wyoming,582328
+60,as,American Samoa,55519
+66,gu,Guam,159358
+69,mp,Northern Mariana Islands,53883
+70,pw,Republic of Palau,520755
+72,pr,Puerto Rico,3723066
+78,vi,U.S. Virgin Islands,106405

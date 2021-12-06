@@ -14,10 +14,12 @@ PARAMS = {
     "indicator": {
         "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
         "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "input_flu_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
         "drop_date": "2020-06-01"
     }
 }
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
+FLU_FILEPATH = PARAMS["indicator"]["input_flu_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
@@ -28,6 +30,8 @@ class TestLoadData:
     covid_data = load_chng_data(COVID_FILEPATH, DROP_DATE, "fips",
                     Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
+                                            "fips")
+    flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE,
                                             "fips")
     gmpr = GeoMapper()
 
@@ -43,9 +47,12 @@ class TestLoadData:
         with pytest.raises(AssertionError):
             load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo")
 
+        with pytest.raises(AssertionError):
+            load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE, "foo")
+
     def test_denom_columns(self):
         assert "fips" in self.denom_data.index.names
-        assert "date" in self.denom_data.index.names
+        assert "timestamp" in self.denom_data.index.names
 
         expected_denom_columns = ["Denominator"]
         for col in expected_denom_columns:
@@ -54,7 +61,7 @@ class TestLoadData:
 
     def test_claims_columns(self):
         assert "fips" in self.covid_data.index.names
-        assert "date" in self.covid_data.index.names
+        assert "timestamp" in self.covid_data.index.names
 
         expected_covid_columns = ["COVID"]
         for col in expected_covid_columns:
@@ -63,7 +70,7 @@ class TestLoadData:
 
     def test_combined_columns(self):
         assert "fips" in self.combined_data.index.names
-        assert "date" in self.combined_data.index.names
+        assert "timestamp" in self.combined_data.index.names
 
         expected_combined_columns = ["num", "den"]
         for col in expected_combined_columns:
@@ -71,12 +78,22 @@ class TestLoadData:
         assert len(
             set(self.combined_data.columns) - set(expected_combined_columns)) == 0
 
+    def test_flu_columns(self):
+        assert "fips" in self.flu_data.index.names
+        assert "timestamp" in self.flu_data.index.names
+
+        expected_flu_columns = ["num", "den"]
+        for col in expected_flu_columns:
+            assert col in self.flu_data.columns
+        assert len(
+            set(self.flu_data.columns) - set(expected_flu_columns)) == 0
+
     def test_edge_values(self):
         for data in [self.denom_data,
                      self.covid_data,
                      self.combined_data]:
-            assert data.index.get_level_values('date').max() >= Config.FIRST_DATA_DATE
-            assert data.index.get_level_values('date').min() < DROP_DATE
+            assert data.index.get_level_values("timestamp").max() >= Config.FIRST_DATA_DATE
+            assert data.index.get_level_values("timestamp").min() < DROP_DATE
 
     def test_fips_values(self):
         for data in [self.denom_data,
@@ -84,7 +101,7 @@ class TestLoadData:
                      self.combined_data]:
             assert (
                     len(data.index.get_level_values(
-                        'fips').unique()) <= len(self.gmpr.get_geo_values("fips"))
+                        "fips").unique()) <= len(self.gmpr.get_geo_values("fips"))
             )
 
     def test_combined_fips_values(self):

@@ -7,6 +7,7 @@ import pandas as pd
 
 from delphi_google_symptoms.geo import geo_map
 from delphi_google_symptoms.constants import METRICS, COMBINED_METRIC
+from delphi_utils.geomap import GeoMapper
 
 class TestGeo:
     def test_fips(self):
@@ -27,6 +28,7 @@ class TestGeo:
         assert (new_df[COMBINED_METRIC] == df[COMBINED_METRIC]).all()
         
     def test_hrr(self):
+        gmpr = GeoMapper()
         df = pd.DataFrame(
             {
                 "geo_id": ["01001", "01009", "01007"],
@@ -36,22 +38,40 @@ class TestGeo:
                 COMBINED_METRIC: [110, 35, 47],
             }
         )
+
+        fips2hrr = gmpr.add_population_column(gmpr.get_crosswalk("fips", "hrr"), "fips"
+            ).assign(population = lambda x: x.weight * x.population
+            ).drop("weight", axis="columns")
+        hrr_pop = fips2hrr.groupby("hrr"
+            ).sum(
+            ).reset_index(
+            ).rename(columns={"population": "hrr_pop"})
+        df_plus = df.merge(fips2hrr, left_on="geo_id", right_on="fips", how="left"
+            ).merge(hrr_pop, on="hrr", how="left"
+            ).assign(
+                fractional_pop = lambda x: x.population / x.hrr_pop,
+                metric_0 = lambda x: x.fractional_pop * x[METRICS[0]],
+                metric_1 = lambda x: x.fractional_pop * x[METRICS[1]],
+                combined_metric = lambda x: x.metric_0 + x.metric_1
+            ).groupby("hrr"
+            ).sum(
+            ).drop(
+                labels=[METRICS[0], METRICS[1], COMBINED_METRIC],
+                axis="columns"
+            ).rename(
+                columns={"metric_0": METRICS[0], "metric_1": METRICS[1], "combined_metric": COMBINED_METRIC}
+            )
+
         new_df = geo_map(df, "hrr").dropna()
-        
+
         assert set(new_df.keys()) == set(df.keys())
         assert set(new_df["geo_id"]) == set(["1", "5", "7", "9"])
-        assert new_df[METRICS[0]].values == pytest.approx([0.39030655604059333, 
-                                                          0.014572815050225169,
-                                                          1.1509470322941868,
-                                                          0.08525105356979307])
-        assert new_df[METRICS[1]].values == pytest.approx([0.7973533171562179,
-                                                   0.019430420066966894,
-                                                   11.509470322941867,
-                                                   1.918148705320344])
-        assert new_df[COMBINED_METRIC].values == pytest.approx(
-                list(new_df[METRICS[0]].values + new_df[METRICS[1]]))
+        assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
+        assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
+        assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())
         
     def test_msa(self):
+        gmpr = GeoMapper()
         df = pd.DataFrame(
             {
                 "geo_id": ["01001", "01009", "01007"],
@@ -61,13 +81,32 @@ class TestGeo:
                 COMBINED_METRIC: [110, 35, 47],
             }
         )
+
+        fips2msa = gmpr.add_population_column(gmpr.get_crosswalk("fips", "msa"), "fips")
+        msa_pop = fips2msa.groupby("msa"
+            ).sum(
+            ).reset_index(
+            ).rename(columns={"population": "msa_pop"})
+        df_plus = df.merge(fips2msa, left_on="geo_id", right_on="fips", how="left"
+            ).merge(msa_pop, on="msa", how="left"
+            ).assign(
+                fractional_pop = lambda x: x.population / x.msa_pop,
+                metric_0 = lambda x: x.fractional_pop * x[METRICS[0]],
+                metric_1 = lambda x: x.fractional_pop * x[METRICS[1]],
+                combined_metric = lambda x: x.metric_0 + x.metric_1
+            ).groupby("msa"
+            ).sum(
+            ).drop(
+                labels=[METRICS[0], METRICS[1], COMBINED_METRIC],
+                axis="columns"
+            ).rename(
+                columns={"metric_0": METRICS[0], "metric_1": METRICS[1], "combined_metric": COMBINED_METRIC}
+            )
+
         new_df = geo_map(df, "msa").dropna()
-        
+
         assert set(new_df.keys()) == set(df.keys())
         assert set(new_df["geo_id"]) == set(["13820", "33860"])
-        assert new_df[METRICS[0]].values == pytest.approx([0.8365267072315176,
-                                                          1.4966647914490074])
-        assert new_df[METRICS[1]].values == pytest.approx([1.9847583762443426,
-                                                          14.966647914490075])
-        assert new_df[COMBINED_METRIC].values == pytest.approx(
-                list(new_df[METRICS[0]].values + new_df[METRICS[1]]))
+        assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
+        assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
+        assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())

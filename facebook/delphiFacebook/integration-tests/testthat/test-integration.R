@@ -152,7 +152,7 @@ test_that("testing weighted community values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)
+  input_data <- join_weights(input_data, params)$df
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[input_data$date == "2020-05-11" & input_data$zip5 == "15106",]
@@ -194,7 +194,7 @@ test_that("testing weighted smoothed community values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)
+  input_data <- join_weights(input_data, params)$df
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[
@@ -328,7 +328,7 @@ test_that("testing weighted ili/cli values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)
+  input_data <- join_weights(input_data, params)$df
   data_agg <- create_data_for_aggregation(input_data)
 
   ## There are 4 households in PA on 2020-05-11, one with ILI.
@@ -384,4 +384,11 @@ test_that("testing national aggregation", {
     if (nrow(x_state) == 1L) { expect_equal(x_state$val, x_national$val) }
   }
 
+})
+
+test_that("testing load_responses behavior for missing input", {
+  params <- relativize_params(read_params(test_path("params-test.json")))
+  params$input <- c(params$input, "file-does-not-exist.csv")
+  params$parallel <- TRUE
+  expect_error(load_responses_all(params), regexp="ingestion and field creation failed")
 })

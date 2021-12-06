@@ -7,6 +7,7 @@ from tempfile import TemporaryDirectory
 # third party
 import numpy as np
 import pandas as pd
+import logging
 import pytest
 
 # first party
@@ -25,6 +26,7 @@ PARAMS = {
 DATA_FILEPATH = PARAMS["indicator"]["input_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 OUTPATH = "test_data/"
+TEST_LOGGER = logging.getLogger()
 
 
 class TestClaimsHospIndicatorUpdater:
@@ -37,8 +39,8 @@ class TestClaimsHospIndicatorUpdater:
         "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600],
         "hrr": [1.0] * 7 + [2.0] * 6,
         "den": [1000] * 7 + [2000] * 6,
-        "date": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(
-        ["hrr", "date"])
+        "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]}).set_index(
+        ["hrr", "timestamp"])
 
     def test_shift_dates(self):
         updater = ClaimsHospIndicatorUpdater(
@@ -93,7 +95,8 @@ class TestClaimsHospIndicatorUpdater:
 
             updater.update_indicator(
                 DATA_FILEPATH,
-                td.name
+                td.name,
+                TEST_LOGGER
             )
 
             assert len(os.listdir(td.name)) == len(

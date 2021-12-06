@@ -114,11 +114,7 @@ def aggregate(df, metric, geo_res):
     gmpr = GeoMapper()
     geo_key = GEO_KEY_DICT[geo_res]
     df = gmpr.add_population_column(df, "zip")
-    df = gmpr.replace_geocode(df,
-                              "zip",
-                              geo_key,
-                              date_col="timestamp",
-                              data_cols=[metric_count_name, "population"])
+    df = gmpr.replace_geocode(df, "zip", geo_key, data_cols=[metric_count_name, "population"])
 
     df[metric_prop_name] = df[metric_count_name] / df["population"] \
                             * INCIDENCE_BASE

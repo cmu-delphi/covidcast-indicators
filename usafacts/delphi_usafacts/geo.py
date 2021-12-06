@@ -111,14 +111,14 @@ def geo_map(df: pd.DataFrame, geo_res: str, sensor: str):
     elif geo_res in ("state", "hhs", "nation"):
         state_geo = "state_id" if geo_res == "state" else geo_res
         df = df.append(unassigned_counties) if not unassigned_counties.empty else df
-        df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id", date_col="timestamp")
+        df = gmpr.replace_geocode(df, "fips", state_geo, new_col="geo_id")
     else:
         # Map "missing" secondary FIPS to those that are in our canonical set
         for fips, fips_list in SECONDARY_FIPS:
             df = disburse(df, fips, fips_list)
         for usafacts_fips, our_fips in REPLACE_FIPS:
             df.loc[df["fips"] == usafacts_fips, "fips"] = our_fips
-        merged = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id", date_col="timestamp")
+        merged = gmpr.replace_geocode(df, "fips", geo_res, new_col="geo_id")
         if "weight" not in merged.columns:
             merged["weight"] = 1
         merged["cumulative_counts"] = merged["cumulative_counts"] * merged["weight"]

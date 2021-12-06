@@ -10,14 +10,15 @@ RUN install2.r --error \
     data.table \
     roxygen2 \
     Rcpp \
-    BH
+    BH \
+    readr
 
-RUN R --no-restore --no-save -e 'devtools::install_version("readr", version="1.4.0")'
 RUN apt-get update && apt-get install -qq -y \
     python3-venv \
     sshpass \
     openssh-server \
-    ssmtp
+    ssmtp \
+    python3.8-dev
 
 ADD ./delphiFacebook /facebook/delphiFacebook/
 ADD ./static /facebook/static/
@@ -27,6 +28,7 @@ ADD ./monthly-files.R /facebook/monthly-files.R
 ADD ./contingency_tables.R /facebook/contingency_tables.R
 ADD ./contingency-combine.R /facebook/contingency-combine.R
 ADD ./ssmtp.conf /etc/ssmtp/ssmtp.conf
+ADD ./GITREF facebook/GITREF
 WORKDIR /facebook/
 RUN make lib
 RUN make install

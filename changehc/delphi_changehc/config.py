@@ -19,7 +19,7 @@ class Config:
     BURN_IN_PERIOD = timedelta(days=1)
 
     # shift dates forward for labeling purposes
-    DAY_SHIFT = timedelta(days=1)
+    DAY_SHIFT = timedelta(days=0)
 
     ## data columns
     COVID_COL = "COVID"
@@ -29,7 +29,7 @@ class Config:
     FLU_LIKE_COL = "Flu-like"
     COVID_LIKE_COL = "Covid-like"
     COUNT_COLS = [COVID_COL,DENOM_COL,FLU_COL,MIXED_COL,FLU_LIKE_COL,COVID_LIKE_COL]
-    DATE_COL = "date"
+    DATE_COL = "timestamp"
     GEO_COL = "fips"
     ID_COLS = [DATE_COL] + [GEO_COL]
     FILT_COLS = ID_COLS + COUNT_COLS

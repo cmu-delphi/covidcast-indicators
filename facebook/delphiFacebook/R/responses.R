@@ -18,13 +18,25 @@
 #' @export
 load_responses_all <- function(params, contingency_run = FALSE) {
   msg_plain(paste0("Loading ", length(params$input), " CSVs"))
-  
+
   map_fn <- if (params$parallel) { mclapply } else { lapply }
   input_data <- map_fn(seq_along(params$input), function(i) {
     load_response_one(params$input[i], params, contingency_run)
   })
   
   msg_plain(paste0("Finished loading CSVs"))
+  
+  which_errors <- unlist(lapply(input_data, inherits, "try-error"))
+  if (any( which_errors )) {
+    errored_filenames <- paste(params$input[which_errors], collapse=", ")
+    stop(
+      "ingestion and field creation failed for at least one of input data file(s) ",
+      errored_filenames,
+      " with error(s)\n",
+      unique(input_data[which_errors])
+    )
+  }
+  
   input_data <- bind_rows(input_data)
   msg_plain(paste0("Finished combining CSVs"))
   return(input_data)
@@ -220,6 +232,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
+    input_data <- code_vaccinated_breakdown(input_data, wave)
     
     # Indicators
     input_data <- code_addl_vaccines(input_data, wave)

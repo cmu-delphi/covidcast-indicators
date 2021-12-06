@@ -15,7 +15,7 @@ from delphi_utils import get_structured_logger
 import numpy as np
 import pandas as pd
 
-from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP
+from .constants import SIGNALS, GEOS, SMOOTHERS, CONFIRMED, SUM_CONF_SUSP, CONFIRMED_FLU
 
 def _date_to_int(d):
     """Return a date object as a yyyymmdd int."""
@@ -117,6 +117,11 @@ def run_module(params):
             df=pop_proportion(df, geo_mapper)
         df = make_geo(df, geo, geo_mapper)
         df = smooth_values(df, smoother[0])
+        # Fix N/A MA values, see issue #1360
+        if geo == "state" and sensor.startswith(CONFIRMED_FLU):
+            ma_filter = df.val.isna() & (df.geo_id == "ma") & (df.timestamp > "08-01-2021") & \
+                (df.timestamp.dt.day_name() == "Tuesday")
+            df = df[~ma_filter]
         if df.empty:
             continue
         sensor_name = sensor + smoother[1]
@@ -162,10 +167,7 @@ def make_geo(state, geo, geo_mapper):
     if geo == "state":
         exported = state.rename(columns={"state": "geo_id"})
     else:
-        exported = geo_mapper.replace_geocode(
-            state, "state_code", geo,
-            new_col="geo_id",
-            date_col="timestamp")
+        exported = geo_mapper.replace_geocode(state, "state_code", geo, new_col="geo_id")
     exported["se"] = np.nan
     exported["sample_size"] = np.nan
     return exported
@@ -192,6 +194,13 @@ def make_signal(all_columns, sig):
             all_columns.previous_day_admission_adult_covid_suspected + \
             all_columns.previous_day_admission_pediatric_covid_confirmed + \
             all_columns.previous_day_admission_pediatric_covid_suspected,
+        })
+    elif sig.startswith(CONFIRMED_FLU):
+        df = pd.DataFrame({
+            "state": all_columns.state.apply(str.lower),
+            "timestamp":int_date_to_previous_day_datetime(all_columns.date),
+            "val": \
+            all_columns.previous_day_admission_influenza_confirmed
         })
     else:
         raise Exception(

@@ -158,7 +158,12 @@ post_process_aggs <- function(df, aggregations, cw_list) {
   metric_cols <- unique(aggregations$metric)
   
   cols_check_available <- unique(c(group_vars[group_vars != "geo_id"], metric_cols))
-  available <- cols_check_available %in% names(df)
+  available <- unlist(
+    lapply(cols_check_available, function(col) {
+      # Exists in dataframe and column is not only NAs
+      col %in% names(df) && !all(is.na( unique(df[[col]] )))
+    })
+  )
   cols_not_available <- cols_check_available[ !available ]
   for (col_var in cols_not_available) {
     # Remove from aggregations
@@ -166,7 +171,7 @@ post_process_aggs <- function(df, aggregations, cw_list) {
                                    !mapply(aggregations$group_by,
                                            FUN=function(x) {col_var %in% x}), ]
     msg_plain(paste0(
-        col_var, " is not defined. Removing all aggregations that use it. ",
+        col_var, " is not available or not defined. Removing all aggregations that use it. ",
         nrow(aggregations), " remaining")
     )
   }
@@ -336,7 +341,10 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
 
     # Copy only columns we're using.
     select_cols <- c(metric, var_weight, "weight_in_location")
-    agg_df <- group_df[, select_cols, with=FALSE][!is.na(eval(as.name(metric))), ]
+    # This filter uses `x[, cols, with=FALSE]` rather than the newer recommended
+    # `x[, ..cols]` format to take advantage of better performance. Switch to
+    # using `..` if `with` is deprecated in the future.
+    agg_df <- group_df[!is.na(eval(as.name(metric))), select_cols, with=FALSE]
 
     if (nrow(agg_df) > 0) {
       s_mix_coef <- params$s_mix_coef

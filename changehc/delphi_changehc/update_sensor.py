@@ -11,13 +11,13 @@ from multiprocessing import Pool, cpu_count
 # third party
 import numpy as np
 import pandas as pd
-from delphi_utils import GeoMapper, add_prefix, create_export_csv
+from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 
 # first party
 from .config import Config
-from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI, NA
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
+                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
 from .sensor import CHCSensor
-from .weekday import Weekday
 
 
 def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_path=".", start_date=None, end_date=None):
@@ -37,10 +37,6 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
 
     # shift dates forward for labeling
     df["timestamp"] += day_shift
-    if start_date is None:
-        start_date = min(df["timestamp"])
-    if end_date is None:
-        end_date = max(df["timestamp"])
 
     # suspicious value warnings
     suspicious_se_mask = df["se"].gt(5)
@@ -49,7 +45,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     if write_se:
         logger.info("========= WARNING: WRITING SEs TO {0} =========".format(out_name))
     else:
-        df.loc[:, "se"] = np.nan
+        df["se"] = np.nan
 
     assert not df["val"].isna().any(), " val contains nan values"
     suspicious_val_mask = df["val"].gt(90)
@@ -75,7 +71,7 @@ def write_to_csv(df, geo_level, write_se, day_shift, out_name, logger, output_pa
     return dates
 
 
-class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
+class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
     """Contains methods to update sensor and write results to csv."""
 
     def __init__(self,
@@ -89,7 +85,7 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                  se,
                  wip_signal,
                  logger):
-        """Init Sensor Updator.
+        """Init Sensor Updater.
 
         Args:
             startdate: first sensor date (YYYY-mm-dd)
@@ -116,13 +112,15 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
 
         # output file naming
         if self.numtype == "covid":
-            signals = [SMOOTHED_ADJ if self.weekday else SMOOTHED]
+            signal_name = SMOOTHED_ADJ if self.weekday else SMOOTHED
         elif self.numtype == "cli":
-            signals = [SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI]
-        signal_names = add_prefix(
-            signals,
-            wip_signal=wip_signal)
-        self.updated_signal_names = signal_names
+            signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
+        elif self.numtype == "flu":
+            signal_name = SMOOTHED_ADJ_FLU if self.weekday else SMOOTHED_FLU
+        else:
+            raise ValueError(f'Unsupported numtype received "{numtype}",'
+                             f' must be one of ["covid", "cli", "flu"]')
+        self.signal_name = add_prefix([signal_name], wip_signal=wip_signal)[0]
 
         # initialize members set in shift_dates().
         self.burnindate = None
@@ -160,11 +158,13 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
                                                  thr_col="den",
-                                                 mega_col=geo)
+                                                 mega_col=geo,
+                                                 date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state")
+            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
+                                              date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", geo)
+            data_frame = gmpr.replace_geocode(data, "fips", geo, date_col=Config.DATE_COL)
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
@@ -180,8 +180,8 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
 
 
     def update_sensor(self,
-            data,
-            output_path):
+        data,
+        output_path):
         """Generate sensor values, and write to csv format.
 
         Args:
@@ -196,14 +196,22 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         data.reset_index(inplace=True)
         data_frame = self.geo_reindex(data)
         # handle if we need to adjust by weekday
-        wd_params = Weekday.get_params(data_frame) if self.weekday else None
+        wd_params = Weekday.get_params(
+            data_frame,
+            "den",
+            ["num"],
+            Config.DATE_COL,
+            [1, 1e5],
+            self.logger,
+        ) if self.weekday else None
         # run sensor fitting code (maybe in parallel)
         if not self.parallel:
             dfs = []
             for geo_id, sub_data in data_frame.groupby(level=0):
-                sub_data.reset_index(level=0,inplace=True)
+                sub_data.reset_index(inplace=True)
                 if self.weekday:
-                    sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                    sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                sub_data.set_index(Config.DATE_COL, inplace=True)
                 res = CHCSensor.fit(sub_data, self.burnindate, geo_id, self.logger)
                 res = pd.DataFrame(res).loc[final_sensor_idxs]
                 dfs.append(res)
@@ -213,9 +221,10 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
             with Pool(n_cpu) as pool:
                 pool_results = []
                 for geo_id, sub_data in data_frame.groupby(level=0,as_index=False):
-                    sub_data.reset_index(level=0, inplace=True)
+                    sub_data.reset_index(inplace=True)
                     if self.weekday:
-                        sub_data = Weekday.calc_adjustment(wd_params, sub_data)
+                        sub_data = Weekday.calc_adjustment(wd_params, sub_data, ["num"], Config.DATE_COL)
+                    sub_data.set_index(Config.DATE_COL, inplace=True)
                     pool_results.append(
                         pool.apply_async(
                             CHCSensor.fit, args=(sub_data, self.burnindate, geo_id, self.logger),
@@ -232,24 +241,23 @@ class CHCSensorUpdator:  # pylint: disable=too-many-instance-attributes
         # sample size is never shared
         df["sample_size"] = np.nan
         # conform to naming expected by create_export_csv()
-        df = df.reset_index().rename(columns={"date": "timestamp", "rate": "val"})
+        df = df.reset_index().rename(columns={"rate": "val"})
         # df.loc[~df['incl'], ["val", "se"]] = np.nan  # update to this line after nancodes get merged in
-        df = df[df['incl']]
+        df = df[df["incl"]]
 
         # write out results
+        dates = write_to_csv(
+            df,
+            geo_level=self.geo,
+            start_date=min(self.sensor_dates),
+            end_date=max(self.sensor_dates),
+            write_se=self.se,
+            day_shift=Config.DAY_SHIFT,
+            out_name=self.signal_name,
+            output_path=output_path,
+            logger=self.logger
+        )
         stats = []
-        for signal in self.updated_signal_names:
-            dates = write_to_csv(
-                df,
-                geo_level=self.geo,
-                start_date=min(self.sensor_dates),
-                end_date=max(self.sensor_dates),
-                write_se=self.se,
-                day_shift=Config.DAY_SHIFT,
-                out_name=signal,
-                output_path=output_path,
-                logger=self.logger
-            )
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
+        if len(dates) > 0:
+            stats = [(max(dates), len(dates))]
         return stats

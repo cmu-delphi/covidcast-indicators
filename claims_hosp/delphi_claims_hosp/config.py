@@ -32,8 +32,13 @@ class Config:
     # data columns
     CLAIMS_COUNT_COLS = ["Denominator", "Covid_like"]
     CLAIMS_DATE_COL = "ServiceDate"
-    CLAIMS_RENAME_COLS = {"Pat HRR ID": "hrr", "ServiceDate": "date",
-                          "PatCountyFIPS": "fips", "PatAgeGroup": "age_group"}
+    FIPS_COL = "fips"
+    DATE_COL = "timestamp"
+    AGE_COL = "age_group"
+    HRR_COL = "hrr"
+
+    CLAIMS_RENAME_COLS = {"Pat HRR ID": HRR_COL, "ServiceDate":  DATE_COL,
+                          "PatCountyFIPS": FIPS_COL, "PatAgeGroup": AGE_COL}
     CLAIMS_DTYPES = {
         "ServiceDate": str,
         "PatCountyFIPS": str,
@@ -43,10 +48,7 @@ class Config:
         "Pat HRR ID": str,
     }
 
-    FIPS_COL = "fips"
-    DATE_COL = "date"
-    AGE_COL = "age_group"
-    HRR_COL = "hrr"
+
 
     SMOOTHER_BANDWIDTH = 100  # bandwidth for the linear left Gaussian filter
     MIN_DEN = 100  # number of total visits needed to produce a sensor

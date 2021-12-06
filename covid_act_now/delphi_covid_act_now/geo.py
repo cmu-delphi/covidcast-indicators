@@ -92,8 +92,7 @@ def geo_map(df: pd.DataFrame, geo_res: str) -> pd.DataFrame:
 
         df = (df
             .loc[:, ["fips", "timestamp", "pcr_tests_positive", "pcr_tests_total"]]
-            .pipe(gmpr.replace_geocode, "fips", geo_res, new_col="geo_id",
-                date_col="timestamp")
+            .pipe(gmpr.replace_geocode, "fips", geo_res, new_col="geo_id")
             .rename(columns={"pcr_tests_total": "sample_size"})
             .assign(val=positivity_rate, se=std_err)
             .reset_index()

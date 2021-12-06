@@ -179,6 +179,15 @@ summarize_indicators_day <- function(day_df, indicators, target_day, geo_level, 
       var_weight <- indicators$var_weight[row]
       compute_fn <- indicators$compute_fn[[row]]
 
+      # Prevent smoothed weighted signals from being reported for dates after
+      # the latest available weight data.
+      if (target_day > params$latest_weight_date &&
+          indicators$smooth_days[row] > 1 &&
+          indicators$var_weight[row] != "weight_unif") {
+        
+        next
+      }
+
       # Copy only columns we're using.
       select_cols <- c(metric, var_weight, "weight_in_location")
       # This filter uses `x[, cols, with=FALSE]` rather than the newer

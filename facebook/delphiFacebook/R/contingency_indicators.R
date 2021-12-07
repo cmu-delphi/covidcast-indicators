@@ -412,7 +412,11 @@ get_aggs <- function() {
     "pct_vaccine_barrier_childcare_tried", "v_vaccine_barrier_childcare_tried", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_time_tried", "v_vaccine_barrier_time_tried", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_type_tried", "v_vaccine_barrier_type_tried", compute_binary, jeffreys_binary,
-    "pct_vaccine_barrier_none_tried", "v_vaccine_barrier_none_tried", compute_binary, jeffreys_binary
+    "pct_vaccine_barrier_none_tried", "v_vaccine_barrier_none_tried", compute_binary, jeffreys_binary,
+    
+    # schooling
+    "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
+    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

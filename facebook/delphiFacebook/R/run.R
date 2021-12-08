@@ -42,6 +42,11 @@ run_facebook <- function(params)
   data_full <- join_weights(data_full, params, weights = "full")$df
   msg_df("full data to share with research partners", data_full)
 
+  # create module-complete data used to create CID lists separately for each module
+  data_module_complete <- filter_module_complete_responses(input_data, params)
+  data_module_complete_a <- data_module_complete["a"]
+  data_module_complete_b <- data_module_complete["b"]
+  
   ## Set default number of cores for mclapply to the total available number,
   ## because we are greedy and this will typically run on a server.
   if (params$parallel) {
@@ -60,6 +65,11 @@ run_facebook <- function(params)
   {
     write_cid(data_full, "full", params)
     write_cid(data_agg, "part_a", params)
+    
+    write_cid_experimental(data_full, "full", params, "")
+    write_cid_experimental(data_agg, "part_a", params, "")
+    write_cid_experimental(data_module_complete_a, "module_complete", params, "modul_a_")
+    write_cid_experimental(data_module_complete_b, "module_complete", params, "modul_b_")
   }
   if ( "archive" %in% params$output )
   {

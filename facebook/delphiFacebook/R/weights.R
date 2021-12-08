@@ -7,17 +7,13 @@
 #' @param params a named list; must contain entries "start_time", "end_time",
 #'   and "weights_out_dir". These are used in constructing the path where the
 #'   output data will be stored.
+#' @param module_type character value used to indicate module filtering, if any
 #'
 #' @importFrom readr write_csv
 #' @export
-write_cid <- function(data, type_name, params)
+write_cid <- function(data, type_name, params, module_type="")
 {
-  fname <- sprintf(
-    "cvid_cids_%s_response_%s_-_%s.csv",
-    type_name,
-    format(params$start_time, "%H_%M_%Y_%m_%d", tz = tz_to),
-    format(params$end_time, "%H_%M_%Y_%m_%d", tz = tz_to)
-  )
+  fname <- generate_cid_list_filename(type_name, params, module_type)
 
   create_dir_not_exist(params$weights_out_dir)
 
@@ -32,6 +28,42 @@ write_cid <- function(data, type_name, params)
   msg_df(sprintf("writing weights data for %s", type_name), token_data)
   write_csv(select(token_data, "token"), file.path(params$weights_out_dir, fname),
             col_names = FALSE)
+}
+
+#' Write a file containing newly-seen tokens, using new CID list names
+#'
+#' @param data a data frame containing a column named "token"
+#' @param type_name character value used for naming the output file
+#' @param params a named list; must contain entries "start_time", "end_time",
+#'   and "weights_out_dir". These are used in constructing the path where the
+#'   output data will be stored.
+#' @param module_type character value used to indicate module filtering, if any
+#'
+#' @export
+write_cid_experimental_wrapper <- function(data, type_name, params, module_type)
+{
+  map_type <- c(full = "partial",
+                part_a = "part_a",
+                module_complete = "full")
+  type_name <- map_type[type_name]
+  
+  write_cid(data, type_name, params, module_type)
+}
+
+#' Create filename to output list of tokens.
+#'
+#' @param type_name character value used for naming the output file
+#' @param params a named list; must contain entries "start_time" and "end_time".
+#'   These are used in constructing the file name.
+#' @param module_type character value used to indicate module filtering, if any
+generate_cid_list_filename <- function(type_name, params, module_type) {
+  sprintf(
+    "cvid_cids_%s_response_%s%s_-_%s.csv",
+    type_name,
+    module_type,
+    format(params$start_time, "%H_%M_%Y_%m_%d", tz = tz_to),
+    format(params$end_time, "%H_%M_%Y_%m_%d", tz = tz_to)
+  )
 }
 
 #' Add weights to a dataset of responses

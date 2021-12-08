@@ -194,6 +194,8 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_schooling(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
   input_data <- code_news_and_info(input_data, wave)
+  input_data <- code_gender(input_data, wave)
+  input_data <- code_age(input_data, wave)
   
   if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
     input_data <- code_race_ethnicity(input_data, wave)
@@ -227,8 +229,6 @@ load_response_one <- function(input_filename, params, contingency_run) {
   if (contingency_run) {
     ## Create additional fields for aggregations.
     # Demographic grouping variables
-    input_data <- code_gender(input_data, wave)
-    input_data <- code_age(input_data, wave)
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
@@ -752,3 +752,47 @@ filter_complete_responses <- function(data_full, params)
 
   return(data_full)
 }
+
+#' Filter responses to those that are "module-complete"
+#'
+#' Inclusion criteria:
+#'
+#' * answered age consent
+#' * CID/token IS NOT missing
+#' * distribution source (ie previews) IS NOT irregular
+#' * start date IS IN range, pacific time
+#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
+#' inclusive.
+#' * answered minimum of 2 additional questions, where to "answer" a numeric
+#' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
+#' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
+#' button question is to provide a selection.
+#' * reached the end of the survey (i.e. sees the "Thank you" message)
+#' * answered age and gender questions
+#'
+#' Most of these criteria are handled by `filter_responses()` and
+#' `filter_complete_responses()` above; this function need only handle the last
+#' two criteria.
+#'
+#' @param data_full data frame of responses
+#'
+#' @importFrom dplyr filter
+#' @importFrom rlang .data
+#' @export
+filter_module_complete_responses <- function(data_full, params)
+{
+  browser()
+  date_col <- if ("day" %in% names(data_full)) { "day" } else { "Date" }
+  data_full <- rename(data_full, Date = .data$date) %>% 
+    filter_complete_responses(params) %>% 
+    filter(!is.na(.data$age),
+           !is.na(.data$gender),
+           .data$Finished == 1) %>% 
+    select(date_col, token, module)
+  
+  data_a <- filter(data_full, .data$module == "A")
+  data_b <- filter(data_full, .data$module == "B")
+  
+  return(list(a = data_a, b = data_b))
+}
+

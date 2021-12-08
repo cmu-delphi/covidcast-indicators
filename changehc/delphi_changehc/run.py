@@ -15,7 +15,7 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .download_ftp_files import download_counts
-from .load_data import load_combined_data, load_cli_data, load_flu_data
+from .load_data import load_combined_data, load_cli_data, load_flu_data, load_ili_data
 from .update_sensor import CHCSensorUpdater
 
 
@@ -52,6 +52,9 @@ def retrieve_files(params, filedate, logger):
         file_dict["covid_like"] = covid_like_file
     if "flu" in params["indicator"]["types"]:
         file_dict["flu"] = flu_file
+    if "ili" in params["indicator"]["types"]:
+        file_dict["flu"] = flu_file
+        file_dict["flu_like"] = flu_like_file
     return file_dict
 
 
@@ -77,6 +80,15 @@ def make_asserts(params):
     if "flu" in params["indicator"]["types"]:
         assert (files["denom"] is None) == (files["flu"] is None), \
             "exactly one of denom and flu files are provided"
+    if "ili" in params["indicator"]["types"]:
+        if files["denom"] is None:
+            assert files["flu"] is None and \
+                    files["flu_like"] is None,\
+                    "files must be all present or all absent"
+        else:
+            assert files["flu"] is not None and \
+                    files["flu_like"] is not None,\
+                    "files must be all present or all absent"
 
 
 def run_module(params: Dict[str, Dict[str, Any]]):
@@ -187,6 +199,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 elif numtype == "flu":
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
                              dropdate_dt,"fips")
+                elif numtype == "ili":
+                    data = load_ili_data(file_dict["denom"],file_dict["flu"],
+                             file_dict["flu_like"],dropdate_dt,"fips")
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],

@@ -15,11 +15,13 @@ PARAMS = {
         "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
         "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
         "input_flu_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "input_flu_like_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
         "drop_date": "2020-06-01"
     }
 }
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 FLU_FILEPATH = PARAMS["indicator"]["input_flu_file"]
+FLU_LIKE_FILEPATH = PARAMS["indicator"]["input_flu_like_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 
@@ -33,6 +35,8 @@ class TestLoadData:
                                             "fips")
     flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE,
                                             "fips")
+    ili_data = load_ili_data(DENOM_FILEPATH, FLU_FILEPATH, FLU_LIKE_FILEPATH,
+                                         DROP_DATE,"fips")
     gmpr = GeoMapper()
 
     def test_base_unit(self):
@@ -49,6 +53,9 @@ class TestLoadData:
 
         with pytest.raises(AssertionError):
             load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE, "foo")
+
+        with pytest.raises(AssertionError):
+            load_ili_data(DENOM_FILEPATH, FLU_FILEPATH, FLU_LIKE_FILEPATH, DROP_DATE, "foo")
 
     def test_denom_columns(self):
         assert "fips" in self.denom_data.index.names
@@ -87,6 +94,16 @@ class TestLoadData:
             assert col in self.flu_data.columns
         assert len(
             set(self.flu_data.columns) - set(expected_flu_columns)) == 0
+
+    def test_ili_columns(self):
+        assert "fips" in self.ili_data.index.names
+        assert "timestamp" in self.ili_data.index.names
+
+        expected_ili_columns = ["num", "den"]
+        for col in expected_ili_columns:
+            assert col in self.ili_data.columns
+        assert len(
+            set(self.ili_data.columns) - set(expected_ili_columns)) == 0
 
     def test_edge_values(self):
         for data in [self.denom_data,

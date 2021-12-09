@@ -26,6 +26,33 @@ Each indicator pipeline includes its own documentation.
 * Consult REVIEW.md for the checklist to use for code reviews. 
 * Consult DETAILS.md (if present) for implementation details, including handling of corner cases.
 
+## Development
+
+`prod` reflects what is currently in production. `main` is the staging branch for the next release.
+
+1. Branch from `main` to develop a new change
+2. PR into `main` and assign a reviewer (or tag someone) to get feedback on your change. List the issue number under `Fixes` if your change resolves an existing [GitHub Issue](https://github.com/cmu-delphi/covidcast-indicators/issues).
+3. Add new commits to your branch in response to feedback.
+4. When approved, tag an admin to merge the PR. Let them know if this change should be released immediately, at a set future date, or if it can just go along for the ride whenever the next release happens.
+
+## Release Process
+
+The release process consists of multiple steps which can all be done via the GitHub website:
+
+1. Got to [create_release GitHub Action](https://github.com/cmu-delphi/covidcast-indicators/actions/workflows/create-release.yml) and click the `Run workflow` dropdown button. Leave branch as `main` unless you know what you're doing. Enter the type of release (patch: bugfixes, params file changes, new signals for existing indicators; minor: new indicators, new utilities; major: backwards-incompatible changes requiring substantial refactoring) and GitHub will automatically compute the next version number for you; alternately, specify the version number by hand. Hit the green `Run workflow` button.
+2. The action will prepare a new release and generate an associated [Pull Request](https://github.com/cmu-delphi/covidcast-indicators/pulls).
+3. Edit the PR description and **list all pull requests included in this release**. This is a manual step to make sure you are aware of 100% of the changes that will be deployed. You can use `#xxx` notation and GitHub will automatically render the title of each PR in Preview mode and when the edit is saved.
+4. Verify that CI passes for the PR as a whole and for the most-recent/bottom-most commit in the PR. We're currently having problems where [python-ci does not run on release PRs](https://github.com/cmu-delphi/covidcast-indicators/issues/1310), but if you see a green check next to the most-recent commit you should be fine.
+5. Approve the PR, merge it, and delete the branch.
+6. Jenkins will automatically deploy the most-recently-built indicator packages to the pipeline servers
+7. Another GitHub action will automatically
+   1. Create a git tag
+   2. Create another [Pull Request](https://github.com/cmu-delphi/covidcast-indicators/pulls) to merge the changes back into the `main` branch
+   3. (if `delphi-utils` was updated) Upload the new version of `delphi-utils` to PyPI
+8. Approve the sync PR, merge it, and delete the branch
+9. Done
+
+You may need to be an admin to perform some of the steps above.
 
 ## License
 

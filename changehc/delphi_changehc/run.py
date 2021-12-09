@@ -105,7 +105,7 @@ def get_data(file_dict, numtype, dropdate_dt):
     elif numtype == "ili":
         data = load_ili_data(file_dict["denom"],file_dict["flu"],
                  file_dict["flu_like"],dropdate_dt,"fips")
-    return(data)
+    return data
 
 
 def run_module(params: Dict[str, Dict[str, Any]]):

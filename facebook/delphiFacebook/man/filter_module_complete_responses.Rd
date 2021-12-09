@@ -4,7 +4,7 @@
 \alias{filter_module_complete_responses}
 \title{Filter responses to those that are "module-complete"}
 \usage{
-filter_module_complete_responses(data_full)
+filter_module_complete_responses(data_full, params)
 }
 \arguments{
 \item{data_full}{data frame of responses}

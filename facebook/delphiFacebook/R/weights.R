@@ -5,18 +5,23 @@
 #' @param data a data frame containing a column named "token"
 #' @param type_name character value used for naming the output file
 #' @param params a named list; must contain entries "start_time", "end_time",
-#'   and "weights_out_dir". These are used in constructing the path where the
-#'   output data will be stored.
+#'   and "weights_out_dir" or "experimental_weights_out_dir". These are used in
+#'   constructing the path where the output data will be stored.
 #' @param module_type character value used to indicate module filtering, if any
 #'
 #' @importFrom readr write_csv
 #' @export
-write_cid <- function(data, type_name, params, module_type="")
+write_cid <- function(data, type_name, params, module_type="", experimental_cids=FALSE)
 {
+  if (experimental_cids) {
+    weights_out_dir <- params$experimental_weights_out_dir
+  } else {
+    weights_out_dir <- params$weights_out_dir
+  }
+  create_dir_not_exist(weights_out_dir)
+
   fname <- generate_cid_list_filename(type_name, params, module_type)
-
-  create_dir_not_exist(params$weights_out_dir)
-
+  
   # aggregate data contains a `day` column that is a Date object. individual
   # data contains a `Date` column for the same purpose, which is *not* a `Date`
   # object but a formatted string. This sure is elegant!
@@ -26,7 +31,7 @@ write_cid <- function(data, type_name, params, module_type="")
                        data[[date_col]] <= as.Date(params$end_date), ]
 
   msg_df(sprintf("writing weights data for %s", type_name), token_data)
-  write_csv(select(token_data, "token"), file.path(params$weights_out_dir, fname),
+  write_csv(select(token_data, "token"), file.path(weights_out_dir, fname),
             col_names = FALSE)
 }
 
@@ -35,8 +40,8 @@ write_cid <- function(data, type_name, params, module_type="")
 #' @param data a data frame containing a column named "token"
 #' @param type_name character value used for naming the output file
 #' @param params a named list; must contain entries "start_time", "end_time",
-#'   and "weights_out_dir". These are used in constructing the path where the
-#'   output data will be stored.
+#'   and "experimental_weights_out_dir". These are used in constructing the path
+#'   where the output data will be stored.
 #' @param module_type character value used to indicate module filtering, if any
 #'
 #' @export

@@ -4,7 +4,7 @@
 \alias{write_cid}
 \title{Write a file containing the new tokens seen in the dataset}
 \usage{
-write_cid(data, type_name, params, module_type = "")
+write_cid(data, type_name, params, module_type = "", experimental_cids = FALSE)
 }
 \arguments{
 \item{data}{a data frame containing a column named "token"}
@@ -12,8 +12,8 @@ write_cid(data, type_name, params, module_type = "")
 \item{type_name}{character value used for naming the output file}
 
 \item{params}{a named list; must contain entries "start_time", "end_time",
-and "weights_out_dir". These are used in constructing the path where the
-output data will be stored.}
+and "weights_out_dir" or "experimental_weights_out_dir". These are used in
+constructing the path where the output data will be stored.}
 
 \item{module_type}{character value used to indicate module filtering, if any}
 }

@@ -12,8 +12,8 @@ write_cid_experimental_wrapper(data, type_name, params, module_type)
 \item{type_name}{character value used for naming the output file}
 
 \item{params}{a named list; must contain entries "start_time", "end_time",
-and "weights_out_dir". These are used in constructing the path where the
-output data will be stored.}
+and "experimental_weights_out_dir". These are used in constructing the path
+where the output data will be stored.}
 
 \item{module_type}{character value used to indicate module filtering, if any}
 }

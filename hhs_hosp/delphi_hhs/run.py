@@ -150,7 +150,7 @@ def transform_signal(sensor, smoother, geo, df, geo_mapper):
     # handling population:
     #   add population column
     #   sum admission counts *and* population counts during make_geo
-    #   *then* divide counts by population to get the proportion 
+    #   *then* divide counts by population to get the proportion
     if sensor.endswith("_prop"):
         df=geo_mapper.add_population_column(df, "state_code")
     df = make_geo(df, geo, geo_mapper)

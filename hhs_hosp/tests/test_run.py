@@ -102,13 +102,6 @@ def test_transform_signal_pop():
 
     pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
     wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
-    assert True, \
-        transform_signal(
-            CONFIRMED_PROP,
-            identity_smoother,
-            'state',
-            test_df.copy(),
-            geo_mapper)
     pd.testing.assert_frame_equal(
         transform_signal(
             CONFIRMED_PROP,

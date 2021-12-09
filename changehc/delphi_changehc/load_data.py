@@ -194,7 +194,7 @@ def load_ili_data(denom_filepath, flu_filepath, flu_like_filepath, dropdate, bas
     Args:
         denom_filepath: path to the aggregated denominator data
         flu_filepath: path to the aggregated flu data
-	flu_like_filepath: path to the aggregated flu_like data
+        flu_like_filepath: path to the aggregated flu_like data
         dropdate: data drop date (datetime object)
         base_geo: base geographic unit before aggregation ('fips')
 

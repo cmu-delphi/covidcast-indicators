@@ -92,7 +92,7 @@ def make_asserts(params):
 
 
 def get_data(file_dict, numtype, dropdate_dt):
-    """Call correct load_data function depending on numtype"""
+    """Call correct load_data function depending on numtype."""
     if numtype == "covid":
         data = load_combined_data(file_dict["denom"],
                  file_dict["covid"],dropdate_dt,"fips")

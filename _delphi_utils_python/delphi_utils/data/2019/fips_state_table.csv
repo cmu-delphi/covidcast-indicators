@@ -1,0 +1,3293 @@
+fips,state_code,state_id,state_name
+01000,01,al,Alabama
+01001,01,al,Alabama
+01003,01,al,Alabama
+01005,01,al,Alabama
+01007,01,al,Alabama
+01009,01,al,Alabama
+01011,01,al,Alabama
+01013,01,al,Alabama
+01015,01,al,Alabama
+01017,01,al,Alabama
+01019,01,al,Alabama
+01021,01,al,Alabama
+01023,01,al,Alabama
+01025,01,al,Alabama
+01027,01,al,Alabama
+01029,01,al,Alabama
+01031,01,al,Alabama
+01033,01,al,Alabama
+01035,01,al,Alabama
+01037,01,al,Alabama
+01039,01,al,Alabama
+01041,01,al,Alabama
+01043,01,al,Alabama
+01045,01,al,Alabama
+01047,01,al,Alabama
+01049,01,al,Alabama
+01051,01,al,Alabama
+01053,01,al,Alabama
+01055,01,al,Alabama
+01057,01,al,Alabama
+01059,01,al,Alabama
+01061,01,al,Alabama
+01063,01,al,Alabama
+01065,01,al,Alabama
+01067,01,al,Alabama
+01069,01,al,Alabama
+01071,01,al,Alabama
+01073,01,al,Alabama
+01075,01,al,Alabama
+01077,01,al,Alabama
+01079,01,al,Alabama
+01081,01,al,Alabama
+01083,01,al,Alabama
+01085,01,al,Alabama
+01087,01,al,Alabama
+01089,01,al,Alabama
+01091,01,al,Alabama
+01093,01,al,Alabama
+01095,01,al,Alabama
+01097,01,al,Alabama
+01099,01,al,Alabama
+01101,01,al,Alabama
+01103,01,al,Alabama
+01105,01,al,Alabama
+01107,01,al,Alabama
+01109,01,al,Alabama
+01111,01,al,Alabama
+01113,01,al,Alabama
+01115,01,al,Alabama
+01117,01,al,Alabama
+01119,01,al,Alabama
+01121,01,al,Alabama
+01123,01,al,Alabama
+01125,01,al,Alabama
+01127,01,al,Alabama
+01129,01,al,Alabama
+01131,01,al,Alabama
+01133,01,al,Alabama
+02000,02,ak,Alaska
+02013,02,ak,Alaska
+02016,02,ak,Alaska
+02020,02,ak,Alaska
+02050,02,ak,Alaska
+02060,02,ak,Alaska
+02068,02,ak,Alaska
+02070,02,ak,Alaska
+02090,02,ak,Alaska
+02100,02,ak,Alaska
+02105,02,ak,Alaska
+02110,02,ak,Alaska
+02122,02,ak,Alaska
+02130,02,ak,Alaska
+02150,02,ak,Alaska
+02158,02,ak,Alaska
+02164,02,ak,Alaska
+02170,02,ak,Alaska
+02180,02,ak,Alaska
+02185,02,ak,Alaska
+02188,02,ak,Alaska
+02195,02,ak,Alaska
+02198,02,ak,Alaska
+02220,02,ak,Alaska
+02230,02,ak,Alaska
+02240,02,ak,Alaska
+02261,02,ak,Alaska
+02275,02,ak,Alaska
+02282,02,ak,Alaska
+02290,02,ak,Alaska
+04000,04,az,Arizona
+04001,04,az,Arizona
+04003,04,az,Arizona
+04005,04,az,Arizona
+04007,04,az,Arizona
+04009,04,az,Arizona
+04011,04,az,Arizona
+04012,04,az,Arizona
+04013,04,az,Arizona
+04015,04,az,Arizona
+04017,04,az,Arizona
+04019,04,az,Arizona
+04021,04,az,Arizona
+04023,04,az,Arizona
+04025,04,az,Arizona
+04027,04,az,Arizona
+05000,05,ar,Arkansas
+05001,05,ar,Arkansas
+05003,05,ar,Arkansas
+05005,05,ar,Arkansas
+05007,05,ar,Arkansas
+05009,05,ar,Arkansas
+05011,05,ar,Arkansas
+05013,05,ar,Arkansas
+05015,05,ar,Arkansas
+05017,05,ar,Arkansas
+05019,05,ar,Arkansas
+05021,05,ar,Arkansas
+05023,05,ar,Arkansas
+05025,05,ar,Arkansas
+05027,05,ar,Arkansas
+05029,05,ar,Arkansas
+05031,05,ar,Arkansas
+05033,05,ar,Arkansas
+05035,05,ar,Arkansas
+05037,05,ar,Arkansas
+05039,05,ar,Arkansas
+05041,05,ar,Arkansas
+05043,05,ar,Arkansas
+05045,05,ar,Arkansas
+05047,05,ar,Arkansas
+05049,05,ar,Arkansas
+05051,05,ar,Arkansas
+05053,05,ar,Arkansas
+05055,05,ar,Arkansas
+05057,05,ar,Arkansas
+05059,05,ar,Arkansas
+05061,05,ar,Arkansas
+05063,05,ar,Arkansas
+05065,05,ar,Arkansas
+05067,05,ar,Arkansas
+05069,05,ar,Arkansas
+05071,05,ar,Arkansas
+05073,05,ar,Arkansas
+05075,05,ar,Arkansas
+05077,05,ar,Arkansas
+05079,05,ar,Arkansas
+05081,05,ar,Arkansas
+05083,05,ar,Arkansas
+05085,05,ar,Arkansas
+05087,05,ar,Arkansas
+05089,05,ar,Arkansas
+05091,05,ar,Arkansas
+05093,05,ar,Arkansas
+05095,05,ar,Arkansas
+05097,05,ar,Arkansas
+05099,05,ar,Arkansas
+05101,05,ar,Arkansas
+05103,05,ar,Arkansas
+05105,05,ar,Arkansas
+05107,05,ar,Arkansas
+05109,05,ar,Arkansas
+05111,05,ar,Arkansas
+05113,05,ar,Arkansas
+05115,05,ar,Arkansas
+05117,05,ar,Arkansas
+05119,05,ar,Arkansas
+05121,05,ar,Arkansas
+05123,05,ar,Arkansas
+05125,05,ar,Arkansas
+05127,05,ar,Arkansas
+05129,05,ar,Arkansas
+05131,05,ar,Arkansas
+05133,05,ar,Arkansas
+05135,05,ar,Arkansas
+05137,05,ar,Arkansas
+05139,05,ar,Arkansas
+05141,05,ar,Arkansas
+05143,05,ar,Arkansas
+05145,05,ar,Arkansas
+05147,05,ar,Arkansas
+05149,05,ar,Arkansas
+06000,06,ca,California
+06001,06,ca,California
+06003,06,ca,California
+06005,06,ca,California
+06007,06,ca,California
+06009,06,ca,California
+06011,06,ca,California
+06013,06,ca,California
+06015,06,ca,California
+06017,06,ca,California
+06019,06,ca,California
+06021,06,ca,California
+06023,06,ca,California
+06025,06,ca,California
+06027,06,ca,California
+06029,06,ca,California
+06031,06,ca,California
+06033,06,ca,California
+06035,06,ca,California
+06037,06,ca,California
+06039,06,ca,California
+06041,06,ca,California
+06043,06,ca,California
+06045,06,ca,California
+06047,06,ca,California
+06049,06,ca,California
+06051,06,ca,California
+06053,06,ca,California
+06055,06,ca,California
+06057,06,ca,California
+06059,06,ca,California
+06061,06,ca,California
+06063,06,ca,California
+06065,06,ca,California
+06067,06,ca,California
+06069,06,ca,California
+06071,06,ca,California
+06073,06,ca,California
+06075,06,ca,California
+06077,06,ca,California
+06079,06,ca,California
+06081,06,ca,California
+06083,06,ca,California
+06085,06,ca,California
+06087,06,ca,California
+06089,06,ca,California
+06091,06,ca,California
+06093,06,ca,California
+06095,06,ca,California
+06097,06,ca,California
+06099,06,ca,California
+06101,06,ca,California
+06103,06,ca,California
+06105,06,ca,California
+06107,06,ca,California
+06109,06,ca,California
+06111,06,ca,California
+06113,06,ca,California
+06115,06,ca,California
+08000,08,co,Colorado
+08001,08,co,Colorado
+08003,08,co,Colorado
+08005,08,co,Colorado
+08007,08,co,Colorado
+08009,08,co,Colorado
+08011,08,co,Colorado
+08013,08,co,Colorado
+08014,08,co,Colorado
+08015,08,co,Colorado
+08017,08,co,Colorado
+08019,08,co,Colorado
+08021,08,co,Colorado
+08023,08,co,Colorado
+08025,08,co,Colorado
+08027,08,co,Colorado
+08029,08,co,Colorado
+08031,08,co,Colorado
+08033,08,co,Colorado
+08035,08,co,Colorado
+08037,08,co,Colorado
+08039,08,co,Colorado
+08041,08,co,Colorado
+08043,08,co,Colorado
+08045,08,co,Colorado
+08047,08,co,Colorado
+08049,08,co,Colorado
+08051,08,co,Colorado
+08053,08,co,Colorado
+08055,08,co,Colorado
+08057,08,co,Colorado
+08059,08,co,Colorado
+08061,08,co,Colorado
+08063,08,co,Colorado
+08065,08,co,Colorado
+08067,08,co,Colorado
+08069,08,co,Colorado
+08071,08,co,Colorado
+08073,08,co,Colorado
+08075,08,co,Colorado
+08077,08,co,Colorado
+08079,08,co,Colorado
+08081,08,co,Colorado
+08083,08,co,Colorado
+08085,08,co,Colorado
+08087,08,co,Colorado
+08089,08,co,Colorado
+08091,08,co,Colorado
+08093,08,co,Colorado
+08095,08,co,Colorado
+08097,08,co,Colorado
+08099,08,co,Colorado
+08101,08,co,Colorado
+08103,08,co,Colorado
+08105,08,co,Colorado
+08107,08,co,Colorado
+08109,08,co,Colorado
+08111,08,co,Colorado
+08113,08,co,Colorado
+08115,08,co,Colorado
+08117,08,co,Colorado
+08119,08,co,Colorado
+08121,08,co,Colorado
+08123,08,co,Colorado
+08125,08,co,Colorado
+09000,09,ct,Connecticut
+09001,09,ct,Connecticut
+09003,09,ct,Connecticut
+09005,09,ct,Connecticut
+09007,09,ct,Connecticut
+09009,09,ct,Connecticut
+09011,09,ct,Connecticut
+09013,09,ct,Connecticut
+09015,09,ct,Connecticut
+10000,10,de,Delaware
+10001,10,de,Delaware
+10003,10,de,Delaware
+10005,10,de,Delaware
+11000,11,dc,District of Columbia
+11001,11,dc,District of Columbia
+12000,12,fl,Florida
+12001,12,fl,Florida
+12003,12,fl,Florida
+12005,12,fl,Florida
+12007,12,fl,Florida
+12009,12,fl,Florida
+12011,12,fl,Florida
+12013,12,fl,Florida
+12015,12,fl,Florida
+12017,12,fl,Florida
+12019,12,fl,Florida
+12021,12,fl,Florida
+12023,12,fl,Florida
+12027,12,fl,Florida
+12029,12,fl,Florida
+12031,12,fl,Florida
+12033,12,fl,Florida
+12035,12,fl,Florida
+12037,12,fl,Florida
+12039,12,fl,Florida
+12041,12,fl,Florida
+12043,12,fl,Florida
+12045,12,fl,Florida
+12047,12,fl,Florida
+12049,12,fl,Florida
+12051,12,fl,Florida
+12053,12,fl,Florida
+12055,12,fl,Florida
+12057,12,fl,Florida
+12059,12,fl,Florida
+12061,12,fl,Florida
+12063,12,fl,Florida
+12065,12,fl,Florida
+12067,12,fl,Florida
+12069,12,fl,Florida
+12071,12,fl,Florida
+12073,12,fl,Florida
+12075,12,fl,Florida
+12077,12,fl,Florida
+12079,12,fl,Florida
+12081,12,fl,Florida
+12083,12,fl,Florida
+12085,12,fl,Florida
+12086,12,fl,Florida
+12087,12,fl,Florida
+12089,12,fl,Florida
+12091,12,fl,Florida
+12093,12,fl,Florida
+12095,12,fl,Florida
+12097,12,fl,Florida
+12099,12,fl,Florida
+12101,12,fl,Florida
+12103,12,fl,Florida
+12105,12,fl,Florida
+12107,12,fl,Florida
+12109,12,fl,Florida
+12111,12,fl,Florida
+12113,12,fl,Florida
+12115,12,fl,Florida
+12117,12,fl,Florida
+12119,12,fl,Florida
+12121,12,fl,Florida
+12123,12,fl,Florida
+12125,12,fl,Florida
+12127,12,fl,Florida
+12129,12,fl,Florida
+12131,12,fl,Florida
+12133,12,fl,Florida
+13000,13,ga,Georgia
+13001,13,ga,Georgia
+13003,13,ga,Georgia
+13005,13,ga,Georgia
+13007,13,ga,Georgia
+13009,13,ga,Georgia
+13011,13,ga,Georgia
+13013,13,ga,Georgia
+13015,13,ga,Georgia
+13017,13,ga,Georgia
+13019,13,ga,Georgia
+13021,13,ga,Georgia
+13023,13,ga,Georgia
+13025,13,ga,Georgia
+13027,13,ga,Georgia
+13029,13,ga,Georgia
+13031,13,ga,Georgia
+13033,13,ga,Georgia
+13035,13,ga,Georgia
+13037,13,ga,Georgia
+13039,13,ga,Georgia
+13043,13,ga,Georgia
+13045,13,ga,Georgia
+13047,13,ga,Georgia
+13049,13,ga,Georgia
+13051,13,ga,Georgia
+13053,13,ga,Georgia
+13055,13,ga,Georgia
+13057,13,ga,Georgia
+13059,13,ga,Georgia
+13061,13,ga,Georgia
+13063,13,ga,Georgia
+13065,13,ga,Georgia
+13067,13,ga,Georgia
+13069,13,ga,Georgia
+13071,13,ga,Georgia
+13073,13,ga,Georgia
+13075,13,ga,Georgia
+13077,13,ga,Georgia
+13079,13,ga,Georgia
+13081,13,ga,Georgia
+13083,13,ga,Georgia
+13085,13,ga,Georgia
+13087,13,ga,Georgia
+13089,13,ga,Georgia
+13091,13,ga,Georgia
+13093,13,ga,Georgia
+13095,13,ga,Georgia
+13097,13,ga,Georgia
+13099,13,ga,Georgia
+13101,13,ga,Georgia
+13103,13,ga,Georgia
+13105,13,ga,Georgia
+13107,13,ga,Georgia
+13109,13,ga,Georgia
+13111,13,ga,Georgia
+13113,13,ga,Georgia
+13115,13,ga,Georgia
+13117,13,ga,Georgia
+13119,13,ga,Georgia
+13121,13,ga,Georgia
+13123,13,ga,Georgia
+13125,13,ga,Georgia
+13127,13,ga,Georgia
+13129,13,ga,Georgia
+13131,13,ga,Georgia
+13133,13,ga,Georgia
+13135,13,ga,Georgia
+13137,13,ga,Georgia
+13139,13,ga,Georgia
+13141,13,ga,Georgia
+13143,13,ga,Georgia
+13145,13,ga,Georgia
+13147,13,ga,Georgia
+13149,13,ga,Georgia
+13151,13,ga,Georgia
+13153,13,ga,Georgia
+13155,13,ga,Georgia
+13157,13,ga,Georgia
+13159,13,ga,Georgia
+13161,13,ga,Georgia
+13163,13,ga,Georgia
+13165,13,ga,Georgia
+13167,13,ga,Georgia
+13169,13,ga,Georgia
+13171,13,ga,Georgia
+13173,13,ga,Georgia
+13175,13,ga,Georgia
+13177,13,ga,Georgia
+13179,13,ga,Georgia
+13181,13,ga,Georgia
+13183,13,ga,Georgia
+13185,13,ga,Georgia
+13187,13,ga,Georgia
+13189,13,ga,Georgia
+13191,13,ga,Georgia
+13193,13,ga,Georgia
+13195,13,ga,Georgia
+13197,13,ga,Georgia
+13199,13,ga,Georgia
+13201,13,ga,Georgia
+13205,13,ga,Georgia
+13207,13,ga,Georgia
+13209,13,ga,Georgia
+13211,13,ga,Georgia
+13213,13,ga,Georgia
+13215,13,ga,Georgia
+13217,13,ga,Georgia
+13219,13,ga,Georgia
+13221,13,ga,Georgia
+13223,13,ga,Georgia
+13225,13,ga,Georgia
+13227,13,ga,Georgia
+13229,13,ga,Georgia
+13231,13,ga,Georgia
+13233,13,ga,Georgia
+13235,13,ga,Georgia
+13237,13,ga,Georgia
+13239,13,ga,Georgia
+13241,13,ga,Georgia
+13243,13,ga,Georgia
+13245,13,ga,Georgia
+13247,13,ga,Georgia
+13249,13,ga,Georgia
+13251,13,ga,Georgia
+13253,13,ga,Georgia
+13255,13,ga,Georgia
+13257,13,ga,Georgia
+13259,13,ga,Georgia
+13261,13,ga,Georgia
+13263,13,ga,Georgia
+13265,13,ga,Georgia
+13267,13,ga,Georgia
+13269,13,ga,Georgia
+13271,13,ga,Georgia
+13273,13,ga,Georgia
+13275,13,ga,Georgia
+13277,13,ga,Georgia
+13279,13,ga,Georgia
+13281,13,ga,Georgia
+13283,13,ga,Georgia
+13285,13,ga,Georgia
+13287,13,ga,Georgia
+13289,13,ga,Georgia
+13291,13,ga,Georgia
+13293,13,ga,Georgia
+13295,13,ga,Georgia
+13297,13,ga,Georgia
+13299,13,ga,Georgia
+13301,13,ga,Georgia
+13303,13,ga,Georgia
+13305,13,ga,Georgia
+13307,13,ga,Georgia
+13309,13,ga,Georgia
+13311,13,ga,Georgia
+13313,13,ga,Georgia
+13315,13,ga,Georgia
+13317,13,ga,Georgia
+13319,13,ga,Georgia
+13321,13,ga,Georgia
+15000,15,hi,Hawaii
+15001,15,hi,Hawaii
+15003,15,hi,Hawaii
+15005,15,hi,Hawaii
+15007,15,hi,Hawaii
+15009,15,hi,Hawaii
+16000,16,id,Idaho
+16001,16,id,Idaho
+16003,16,id,Idaho
+16005,16,id,Idaho
+16007,16,id,Idaho
+16009,16,id,Idaho
+16011,16,id,Idaho
+16013,16,id,Idaho
+16015,16,id,Idaho
+16017,16,id,Idaho
+16019,16,id,Idaho
+16021,16,id,Idaho
+16023,16,id,Idaho
+16025,16,id,Idaho
+16027,16,id,Idaho
+16029,16,id,Idaho
+16031,16,id,Idaho
+16033,16,id,Idaho
+16035,16,id,Idaho
+16037,16,id,Idaho
+16039,16,id,Idaho
+16041,16,id,Idaho
+16043,16,id,Idaho
+16045,16,id,Idaho
+16047,16,id,Idaho
+16049,16,id,Idaho
+16051,16,id,Idaho
+16053,16,id,Idaho
+16055,16,id,Idaho
+16057,16,id,Idaho
+16059,16,id,Idaho
+16061,16,id,Idaho
+16063,16,id,Idaho
+16065,16,id,Idaho
+16067,16,id,Idaho
+16069,16,id,Idaho
+16071,16,id,Idaho
+16073,16,id,Idaho
+16075,16,id,Idaho
+16077,16,id,Idaho
+16079,16,id,Idaho
+16081,16,id,Idaho
+16083,16,id,Idaho
+16085,16,id,Idaho
+16087,16,id,Idaho
+17000,17,il,Illinois
+17001,17,il,Illinois
+17003,17,il,Illinois
+17005,17,il,Illinois
+17007,17,il,Illinois
+17009,17,il,Illinois
+17011,17,il,Illinois
+17013,17,il,Illinois
+17015,17,il,Illinois
+17017,17,il,Illinois
+17019,17,il,Illinois
+17021,17,il,Illinois
+17023,17,il,Illinois
+17025,17,il,Illinois
+17027,17,il,Illinois
+17029,17,il,Illinois
+17031,17,il,Illinois
+17033,17,il,Illinois
+17035,17,il,Illinois
+17037,17,il,Illinois
+17039,17,il,Illinois
+17041,17,il,Illinois
+17043,17,il,Illinois
+17045,17,il,Illinois
+17047,17,il,Illinois
+17049,17,il,Illinois
+17051,17,il,Illinois
+17053,17,il,Illinois
+17055,17,il,Illinois
+17057,17,il,Illinois
+17059,17,il,Illinois
+17061,17,il,Illinois
+17063,17,il,Illinois
+17065,17,il,Illinois
+17067,17,il,Illinois
+17069,17,il,Illinois
+17071,17,il,Illinois
+17073,17,il,Illinois
+17075,17,il,Illinois
+17077,17,il,Illinois
+17079,17,il,Illinois
+17081,17,il,Illinois
+17083,17,il,Illinois
+17085,17,il,Illinois
+17087,17,il,Illinois
+17089,17,il,Illinois
+17091,17,il,Illinois
+17093,17,il,Illinois
+17095,17,il,Illinois
+17097,17,il,Illinois
+17099,17,il,Illinois
+17101,17,il,Illinois
+17103,17,il,Illinois
+17105,17,il,Illinois
+17107,17,il,Illinois
+17109,17,il,Illinois
+17111,17,il,Illinois
+17113,17,il,Illinois
+17115,17,il,Illinois
+17117,17,il,Illinois
+17119,17,il,Illinois
+17121,17,il,Illinois
+17123,17,il,Illinois
+17125,17,il,Illinois
+17127,17,il,Illinois
+17129,17,il,Illinois
+17131,17,il,Illinois
+17133,17,il,Illinois
+17135,17,il,Illinois
+17137,17,il,Illinois
+17139,17,il,Illinois
+17141,17,il,Illinois
+17143,17,il,Illinois
+17145,17,il,Illinois
+17147,17,il,Illinois
+17149,17,il,Illinois
+17151,17,il,Illinois
+17153,17,il,Illinois
+17155,17,il,Illinois
+17157,17,il,Illinois
+17159,17,il,Illinois
+17161,17,il,Illinois
+17163,17,il,Illinois
+17165,17,il,Illinois
+17167,17,il,Illinois
+17169,17,il,Illinois
+17171,17,il,Illinois
+17173,17,il,Illinois
+17175,17,il,Illinois
+17177,17,il,Illinois
+17179,17,il,Illinois
+17181,17,il,Illinois
+17183,17,il,Illinois
+17185,17,il,Illinois
+17187,17,il,Illinois
+17189,17,il,Illinois
+17191,17,il,Illinois
+17193,17,il,Illinois
+17195,17,il,Illinois
+17197,17,il,Illinois
+17199,17,il,Illinois
+17201,17,il,Illinois
+17203,17,il,Illinois
+18000,18,in,Indiana
+18001,18,in,Indiana
+18003,18,in,Indiana
+18005,18,in,Indiana
+18007,18,in,Indiana
+18009,18,in,Indiana
+18011,18,in,Indiana
+18013,18,in,Indiana
+18015,18,in,Indiana
+18017,18,in,Indiana
+18019,18,in,Indiana
+18021,18,in,Indiana
+18023,18,in,Indiana
+18025,18,in,Indiana
+18027,18,in,Indiana
+18029,18,in,Indiana
+18031,18,in,Indiana
+18033,18,in,Indiana
+18035,18,in,Indiana
+18037,18,in,Indiana
+18039,18,in,Indiana
+18041,18,in,Indiana
+18043,18,in,Indiana
+18045,18,in,Indiana
+18047,18,in,Indiana
+18049,18,in,Indiana
+18051,18,in,Indiana
+18053,18,in,Indiana
+18055,18,in,Indiana
+18057,18,in,Indiana
+18059,18,in,Indiana
+18061,18,in,Indiana
+18063,18,in,Indiana
+18065,18,in,Indiana
+18067,18,in,Indiana
+18069,18,in,Indiana
+18071,18,in,Indiana
+18073,18,in,Indiana
+18075,18,in,Indiana
+18077,18,in,Indiana
+18079,18,in,Indiana
+18081,18,in,Indiana
+18083,18,in,Indiana
+18085,18,in,Indiana
+18087,18,in,Indiana
+18089,18,in,Indiana
+18091,18,in,Indiana
+18093,18,in,Indiana
+18095,18,in,Indiana
+18097,18,in,Indiana
+18099,18,in,Indiana
+18101,18,in,Indiana
+18103,18,in,Indiana
+18105,18,in,Indiana
+18107,18,in,Indiana
+18109,18,in,Indiana
+18111,18,in,Indiana
+18113,18,in,Indiana
+18115,18,in,Indiana
+18117,18,in,Indiana
+18119,18,in,Indiana
+18121,18,in,Indiana
+18123,18,in,Indiana
+18125,18,in,Indiana
+18127,18,in,Indiana
+18129,18,in,Indiana
+18131,18,in,Indiana
+18133,18,in,Indiana
+18135,18,in,Indiana
+18137,18,in,Indiana
+18139,18,in,Indiana
+18141,18,in,Indiana
+18143,18,in,Indiana
+18145,18,in,Indiana
+18147,18,in,Indiana
+18149,18,in,Indiana
+18151,18,in,Indiana
+18153,18,in,Indiana
+18155,18,in,Indiana
+18157,18,in,Indiana
+18159,18,in,Indiana
+18161,18,in,Indiana
+18163,18,in,Indiana
+18165,18,in,Indiana
+18167,18,in,Indiana
+18169,18,in,Indiana
+18171,18,in,Indiana
+18173,18,in,Indiana
+18175,18,in,Indiana
+18177,18,in,Indiana
+18179,18,in,Indiana
+18181,18,in,Indiana
+18183,18,in,Indiana
+19000,19,ia,Iowa
+19001,19,ia,Iowa
+19003,19,ia,Iowa
+19005,19,ia,Iowa
+19007,19,ia,Iowa
+19009,19,ia,Iowa
+19011,19,ia,Iowa
+19013,19,ia,Iowa
+19015,19,ia,Iowa
+19017,19,ia,Iowa
+19019,19,ia,Iowa
+19021,19,ia,Iowa
+19023,19,ia,Iowa
+19025,19,ia,Iowa
+19027,19,ia,Iowa
+19029,19,ia,Iowa
+19031,19,ia,Iowa
+19033,19,ia,Iowa
+19035,19,ia,Iowa
+19037,19,ia,Iowa
+19039,19,ia,Iowa
+19041,19,ia,Iowa
+19043,19,ia,Iowa
+19045,19,ia,Iowa
+19047,19,ia,Iowa
+19049,19,ia,Iowa
+19051,19,ia,Iowa
+19053,19,ia,Iowa
+19055,19,ia,Iowa
+19057,19,ia,Iowa
+19059,19,ia,Iowa
+19061,19,ia,Iowa
+19063,19,ia,Iowa
+19065,19,ia,Iowa
+19067,19,ia,Iowa
+19069,19,ia,Iowa
+19071,19,ia,Iowa
+19073,19,ia,Iowa
+19075,19,ia,Iowa
+19077,19,ia,Iowa
+19079,19,ia,Iowa
+19081,19,ia,Iowa
+19083,19,ia,Iowa
+19085,19,ia,Iowa
+19087,19,ia,Iowa
+19089,19,ia,Iowa
+19091,19,ia,Iowa
+19093,19,ia,Iowa
+19095,19,ia,Iowa
+19097,19,ia,Iowa
+19099,19,ia,Iowa
+19101,19,ia,Iowa
+19103,19,ia,Iowa
+19105,19,ia,Iowa
+19107,19,ia,Iowa
+19109,19,ia,Iowa
+19111,19,ia,Iowa
+19113,19,ia,Iowa
+19115,19,ia,Iowa
+19117,19,ia,Iowa
+19119,19,ia,Iowa
+19121,19,ia,Iowa
+19123,19,ia,Iowa
+19125,19,ia,Iowa
+19127,19,ia,Iowa
+19129,19,ia,Iowa
+19131,19,ia,Iowa
+19133,19,ia,Iowa
+19135,19,ia,Iowa
+19137,19,ia,Iowa
+19139,19,ia,Iowa
+19141,19,ia,Iowa
+19143,19,ia,Iowa
+19145,19,ia,Iowa
+19147,19,ia,Iowa
+19149,19,ia,Iowa
+19151,19,ia,Iowa
+19153,19,ia,Iowa
+19155,19,ia,Iowa
+19157,19,ia,Iowa
+19159,19,ia,Iowa
+19161,19,ia,Iowa
+19163,19,ia,Iowa
+19165,19,ia,Iowa
+19167,19,ia,Iowa
+19169,19,ia,Iowa
+19171,19,ia,Iowa
+19173,19,ia,Iowa
+19175,19,ia,Iowa
+19177,19,ia,Iowa
+19179,19,ia,Iowa
+19181,19,ia,Iowa
+19183,19,ia,Iowa
+19185,19,ia,Iowa
+19187,19,ia,Iowa
+19189,19,ia,Iowa
+19191,19,ia,Iowa
+19193,19,ia,Iowa
+19195,19,ia,Iowa
+19197,19,ia,Iowa
+20000,20,ks,Kansas
+20001,20,ks,Kansas
+20003,20,ks,Kansas
+20005,20,ks,Kansas
+20007,20,ks,Kansas
+20009,20,ks,Kansas
+20011,20,ks,Kansas
+20013,20,ks,Kansas
+20015,20,ks,Kansas
+20017,20,ks,Kansas
+20019,20,ks,Kansas
+20021,20,ks,Kansas
+20023,20,ks,Kansas
+20025,20,ks,Kansas
+20027,20,ks,Kansas
+20029,20,ks,Kansas
+20031,20,ks,Kansas
+20033,20,ks,Kansas
+20035,20,ks,Kansas
+20037,20,ks,Kansas
+20039,20,ks,Kansas
+20041,20,ks,Kansas
+20043,20,ks,Kansas
+20045,20,ks,Kansas
+20047,20,ks,Kansas
+20049,20,ks,Kansas
+20051,20,ks,Kansas
+20053,20,ks,Kansas
+20055,20,ks,Kansas
+20057,20,ks,Kansas
+20059,20,ks,Kansas
+20061,20,ks,Kansas
+20063,20,ks,Kansas
+20065,20,ks,Kansas
+20067,20,ks,Kansas
+20069,20,ks,Kansas
+20071,20,ks,Kansas
+20073,20,ks,Kansas
+20075,20,ks,Kansas
+20077,20,ks,Kansas
+20079,20,ks,Kansas
+20081,20,ks,Kansas
+20083,20,ks,Kansas
+20085,20,ks,Kansas
+20087,20,ks,Kansas
+20089,20,ks,Kansas
+20091,20,ks,Kansas
+20093,20,ks,Kansas
+20095,20,ks,Kansas
+20097,20,ks,Kansas
+20099,20,ks,Kansas
+20101,20,ks,Kansas
+20103,20,ks,Kansas
+20105,20,ks,Kansas
+20107,20,ks,Kansas
+20109,20,ks,Kansas
+20111,20,ks,Kansas
+20113,20,ks,Kansas
+20115,20,ks,Kansas
+20117,20,ks,Kansas
+20119,20,ks,Kansas
+20121,20,ks,Kansas
+20123,20,ks,Kansas
+20125,20,ks,Kansas
+20127,20,ks,Kansas
+20129,20,ks,Kansas
+20131,20,ks,Kansas
+20133,20,ks,Kansas
+20135,20,ks,Kansas
+20137,20,ks,Kansas
+20139,20,ks,Kansas
+20141,20,ks,Kansas
+20143,20,ks,Kansas
+20145,20,ks,Kansas
+20147,20,ks,Kansas
+20149,20,ks,Kansas
+20151,20,ks,Kansas
+20153,20,ks,Kansas
+20155,20,ks,Kansas
+20157,20,ks,Kansas
+20159,20,ks,Kansas
+20161,20,ks,Kansas
+20163,20,ks,Kansas
+20165,20,ks,Kansas
+20167,20,ks,Kansas
+20169,20,ks,Kansas
+20171,20,ks,Kansas
+20173,20,ks,Kansas
+20175,20,ks,Kansas
+20177,20,ks,Kansas
+20179,20,ks,Kansas
+20181,20,ks,Kansas
+20183,20,ks,Kansas
+20185,20,ks,Kansas
+20187,20,ks,Kansas
+20189,20,ks,Kansas
+20191,20,ks,Kansas
+20193,20,ks,Kansas
+20195,20,ks,Kansas
+20197,20,ks,Kansas
+20199,20,ks,Kansas
+20201,20,ks,Kansas
+20203,20,ks,Kansas
+20205,20,ks,Kansas
+20207,20,ks,Kansas
+20209,20,ks,Kansas
+21000,21,ky,Kentucky
+21001,21,ky,Kentucky
+21003,21,ky,Kentucky
+21005,21,ky,Kentucky
+21007,21,ky,Kentucky
+21009,21,ky,Kentucky
+21011,21,ky,Kentucky
+21013,21,ky,Kentucky
+21015,21,ky,Kentucky
+21017,21,ky,Kentucky
+21019,21,ky,Kentucky
+21021,21,ky,Kentucky
+21023,21,ky,Kentucky
+21025,21,ky,Kentucky
+21027,21,ky,Kentucky
+21029,21,ky,Kentucky
+21031,21,ky,Kentucky
+21033,21,ky,Kentucky
+21035,21,ky,Kentucky
+21037,21,ky,Kentucky
+21039,21,ky,Kentucky
+21041,21,ky,Kentucky
+21043,21,ky,Kentucky
+21045,21,ky,Kentucky
+21047,21,ky,Kentucky
+21049,21,ky,Kentucky
+21051,21,ky,Kentucky
+21053,21,ky,Kentucky
+21055,21,ky,Kentucky
+21057,21,ky,Kentucky
+21059,21,ky,Kentucky
+21061,21,ky,Kentucky
+21063,21,ky,Kentucky
+21065,21,ky,Kentucky
+21067,21,ky,Kentucky
+21069,21,ky,Kentucky
+21071,21,ky,Kentucky
+21073,21,ky,Kentucky
+21075,21,ky,Kentucky
+21077,21,ky,Kentucky
+21079,21,ky,Kentucky
+21081,21,ky,Kentucky
+21083,21,ky,Kentucky
+21085,21,ky,Kentucky
+21087,21,ky,Kentucky
+21089,21,ky,Kentucky
+21091,21,ky,Kentucky
+21093,21,ky,Kentucky
+21095,21,ky,Kentucky
+21097,21,ky,Kentucky
+21099,21,ky,Kentucky
+21101,21,ky,Kentucky
+21103,21,ky,Kentucky
+21105,21,ky,Kentucky
+21107,21,ky,Kentucky
+21109,21,ky,Kentucky
+21111,21,ky,Kentucky
+21113,21,ky,Kentucky
+21115,21,ky,Kentucky
+21117,21,ky,Kentucky
+21119,21,ky,Kentucky
+21121,21,ky,Kentucky
+21123,21,ky,Kentucky
+21125,21,ky,Kentucky
+21127,21,ky,Kentucky
+21129,21,ky,Kentucky
+21131,21,ky,Kentucky
+21133,21,ky,Kentucky
+21135,21,ky,Kentucky
+21137,21,ky,Kentucky
+21139,21,ky,Kentucky
+21141,21,ky,Kentucky
+21143,21,ky,Kentucky
+21145,21,ky,Kentucky
+21147,21,ky,Kentucky
+21149,21,ky,Kentucky
+21151,21,ky,Kentucky
+21153,21,ky,Kentucky
+21155,21,ky,Kentucky
+21157,21,ky,Kentucky
+21159,21,ky,Kentucky
+21161,21,ky,Kentucky
+21163,21,ky,Kentucky
+21165,21,ky,Kentucky
+21167,21,ky,Kentucky
+21169,21,ky,Kentucky
+21171,21,ky,Kentucky
+21173,21,ky,Kentucky
+21175,21,ky,Kentucky
+21177,21,ky,Kentucky
+21179,21,ky,Kentucky
+21181,21,ky,Kentucky
+21183,21,ky,Kentucky
+21185,21,ky,Kentucky
+21187,21,ky,Kentucky
+21189,21,ky,Kentucky
+21191,21,ky,Kentucky
+21193,21,ky,Kentucky
+21195,21,ky,Kentucky
+21197,21,ky,Kentucky
+21199,21,ky,Kentucky
+21201,21,ky,Kentucky
+21203,21,ky,Kentucky
+21205,21,ky,Kentucky
+21207,21,ky,Kentucky
+21209,21,ky,Kentucky
+21211,21,ky,Kentucky
+21213,21,ky,Kentucky
+21215,21,ky,Kentucky
+21217,21,ky,Kentucky
+21219,21,ky,Kentucky
+21221,21,ky,Kentucky
+21223,21,ky,Kentucky
+21225,21,ky,Kentucky
+21227,21,ky,Kentucky
+21229,21,ky,Kentucky
+21231,21,ky,Kentucky
+21233,21,ky,Kentucky
+21235,21,ky,Kentucky
+21237,21,ky,Kentucky
+21239,21,ky,Kentucky
+22000,22,la,Louisiana
+22001,22,la,Louisiana
+22003,22,la,Louisiana
+22005,22,la,Louisiana
+22007,22,la,Louisiana
+22009,22,la,Louisiana
+22011,22,la,Louisiana
+22013,22,la,Louisiana
+22015,22,la,Louisiana
+22017,22,la,Louisiana
+22019,22,la,Louisiana
+22021,22,la,Louisiana
+22023,22,la,Louisiana
+22025,22,la,Louisiana
+22027,22,la,Louisiana
+22029,22,la,Louisiana
+22031,22,la,Louisiana
+22033,22,la,Louisiana
+22035,22,la,Louisiana
+22037,22,la,Louisiana
+22039,22,la,Louisiana
+22041,22,la,Louisiana
+22043,22,la,Louisiana
+22045,22,la,Louisiana
+22047,22,la,Louisiana
+22049,22,la,Louisiana
+22051,22,la,Louisiana
+22053,22,la,Louisiana
+22055,22,la,Louisiana
+22057,22,la,Louisiana
+22059,22,la,Louisiana
+22061,22,la,Louisiana
+22063,22,la,Louisiana
+22065,22,la,Louisiana
+22067,22,la,Louisiana
+22069,22,la,Louisiana
+22071,22,la,Louisiana
+22073,22,la,Louisiana
+22075,22,la,Louisiana
+22077,22,la,Louisiana
+22079,22,la,Louisiana
+22081,22,la,Louisiana
+22083,22,la,Louisiana
+22085,22,la,Louisiana
+22087,22,la,Louisiana
+22089,22,la,Louisiana
+22091,22,la,Louisiana
+22093,22,la,Louisiana
+22095,22,la,Louisiana
+22097,22,la,Louisiana
+22099,22,la,Louisiana
+22101,22,la,Louisiana
+22103,22,la,Louisiana
+22105,22,la,Louisiana
+22107,22,la,Louisiana
+22109,22,la,Louisiana
+22111,22,la,Louisiana
+22113,22,la,Louisiana
+22115,22,la,Louisiana
+22117,22,la,Louisiana
+22119,22,la,Louisiana
+22121,22,la,Louisiana
+22123,22,la,Louisiana
+22125,22,la,Louisiana
+22127,22,la,Louisiana
+23000,23,me,Maine
+23001,23,me,Maine
+23003,23,me,Maine
+23005,23,me,Maine
+23007,23,me,Maine
+23009,23,me,Maine
+23011,23,me,Maine
+23013,23,me,Maine
+23015,23,me,Maine
+23017,23,me,Maine
+23019,23,me,Maine
+23021,23,me,Maine
+23023,23,me,Maine
+23025,23,me,Maine
+23027,23,me,Maine
+23029,23,me,Maine
+23031,23,me,Maine
+24000,24,md,Maryland
+24001,24,md,Maryland
+24003,24,md,Maryland
+24005,24,md,Maryland
+24009,24,md,Maryland
+24011,24,md,Maryland
+24013,24,md,Maryland
+24015,24,md,Maryland
+24017,24,md,Maryland
+24019,24,md,Maryland
+24021,24,md,Maryland
+24023,24,md,Maryland
+24025,24,md,Maryland
+24027,24,md,Maryland
+24029,24,md,Maryland
+24031,24,md,Maryland
+24033,24,md,Maryland
+24035,24,md,Maryland
+24037,24,md,Maryland
+24039,24,md,Maryland
+24041,24,md,Maryland
+24043,24,md,Maryland
+24045,24,md,Maryland
+24047,24,md,Maryland
+24510,24,md,Maryland
+25000,25,ma,Massachusetts
+25001,25,ma,Massachusetts
+25003,25,ma,Massachusetts
+25005,25,ma,Massachusetts
+25007,25,ma,Massachusetts
+25009,25,ma,Massachusetts
+25011,25,ma,Massachusetts
+25013,25,ma,Massachusetts
+25015,25,ma,Massachusetts
+25017,25,ma,Massachusetts
+25019,25,ma,Massachusetts
+25021,25,ma,Massachusetts
+25023,25,ma,Massachusetts
+25025,25,ma,Massachusetts
+25027,25,ma,Massachusetts
+26000,26,mi,Michigan
+26001,26,mi,Michigan
+26003,26,mi,Michigan
+26005,26,mi,Michigan
+26007,26,mi,Michigan
+26009,26,mi,Michigan
+26011,26,mi,Michigan
+26013,26,mi,Michigan
+26015,26,mi,Michigan
+26017,26,mi,Michigan
+26019,26,mi,Michigan
+26021,26,mi,Michigan
+26023,26,mi,Michigan
+26025,26,mi,Michigan
+26027,26,mi,Michigan
+26029,26,mi,Michigan
+26031,26,mi,Michigan
+26033,26,mi,Michigan
+26035,26,mi,Michigan
+26037,26,mi,Michigan
+26039,26,mi,Michigan
+26041,26,mi,Michigan
+26043,26,mi,Michigan
+26045,26,mi,Michigan
+26047,26,mi,Michigan
+26049,26,mi,Michigan
+26051,26,mi,Michigan
+26053,26,mi,Michigan
+26055,26,mi,Michigan
+26057,26,mi,Michigan
+26059,26,mi,Michigan
+26061,26,mi,Michigan
+26063,26,mi,Michigan
+26065,26,mi,Michigan
+26067,26,mi,Michigan
+26069,26,mi,Michigan
+26071,26,mi,Michigan
+26073,26,mi,Michigan
+26075,26,mi,Michigan
+26077,26,mi,Michigan
+26079,26,mi,Michigan
+26081,26,mi,Michigan
+26083,26,mi,Michigan
+26085,26,mi,Michigan
+26087,26,mi,Michigan
+26089,26,mi,Michigan
+26091,26,mi,Michigan
+26093,26,mi,Michigan
+26095,26,mi,Michigan
+26097,26,mi,Michigan
+26099,26,mi,Michigan
+26101,26,mi,Michigan
+26103,26,mi,Michigan
+26105,26,mi,Michigan
+26107,26,mi,Michigan
+26109,26,mi,Michigan
+26111,26,mi,Michigan
+26113,26,mi,Michigan
+26115,26,mi,Michigan
+26117,26,mi,Michigan
+26119,26,mi,Michigan
+26121,26,mi,Michigan
+26123,26,mi,Michigan
+26125,26,mi,Michigan
+26127,26,mi,Michigan
+26129,26,mi,Michigan
+26131,26,mi,Michigan
+26133,26,mi,Michigan
+26135,26,mi,Michigan
+26137,26,mi,Michigan
+26139,26,mi,Michigan
+26141,26,mi,Michigan
+26143,26,mi,Michigan
+26145,26,mi,Michigan
+26147,26,mi,Michigan
+26149,26,mi,Michigan
+26151,26,mi,Michigan
+26153,26,mi,Michigan
+26155,26,mi,Michigan
+26157,26,mi,Michigan
+26159,26,mi,Michigan
+26161,26,mi,Michigan
+26163,26,mi,Michigan
+26165,26,mi,Michigan
+27000,27,mn,Minnesota
+27001,27,mn,Minnesota
+27003,27,mn,Minnesota
+27005,27,mn,Minnesota
+27007,27,mn,Minnesota
+27009,27,mn,Minnesota
+27011,27,mn,Minnesota
+27013,27,mn,Minnesota
+27015,27,mn,Minnesota
+27017,27,mn,Minnesota
+27019,27,mn,Minnesota
+27021,27,mn,Minnesota
+27023,27,mn,Minnesota
+27025,27,mn,Minnesota
+27027,27,mn,Minnesota
+27029,27,mn,Minnesota
+27031,27,mn,Minnesota
+27033,27,mn,Minnesota
+27035,27,mn,Minnesota
+27037,27,mn,Minnesota
+27039,27,mn,Minnesota
+27041,27,mn,Minnesota
+27043,27,mn,Minnesota
+27045,27,mn,Minnesota
+27047,27,mn,Minnesota
+27049,27,mn,Minnesota
+27051,27,mn,Minnesota
+27053,27,mn,Minnesota
+27055,27,mn,Minnesota
+27057,27,mn,Minnesota
+27059,27,mn,Minnesota
+27061,27,mn,Minnesota
+27063,27,mn,Minnesota
+27065,27,mn,Minnesota
+27067,27,mn,Minnesota
+27069,27,mn,Minnesota
+27071,27,mn,Minnesota
+27073,27,mn,Minnesota
+27075,27,mn,Minnesota
+27077,27,mn,Minnesota
+27079,27,mn,Minnesota
+27081,27,mn,Minnesota
+27083,27,mn,Minnesota
+27085,27,mn,Minnesota
+27087,27,mn,Minnesota
+27089,27,mn,Minnesota
+27091,27,mn,Minnesota
+27093,27,mn,Minnesota
+27095,27,mn,Minnesota
+27097,27,mn,Minnesota
+27099,27,mn,Minnesota
+27101,27,mn,Minnesota
+27103,27,mn,Minnesota
+27105,27,mn,Minnesota
+27107,27,mn,Minnesota
+27109,27,mn,Minnesota
+27111,27,mn,Minnesota
+27113,27,mn,Minnesota
+27115,27,mn,Minnesota
+27117,27,mn,Minnesota
+27119,27,mn,Minnesota
+27121,27,mn,Minnesota
+27123,27,mn,Minnesota
+27125,27,mn,Minnesota
+27127,27,mn,Minnesota
+27129,27,mn,Minnesota
+27131,27,mn,Minnesota
+27133,27,mn,Minnesota
+27135,27,mn,Minnesota
+27137,27,mn,Minnesota
+27139,27,mn,Minnesota
+27141,27,mn,Minnesota
+27143,27,mn,Minnesota
+27145,27,mn,Minnesota
+27147,27,mn,Minnesota
+27149,27,mn,Minnesota
+27151,27,mn,Minnesota
+27153,27,mn,Minnesota
+27155,27,mn,Minnesota
+27157,27,mn,Minnesota
+27159,27,mn,Minnesota
+27161,27,mn,Minnesota
+27163,27,mn,Minnesota
+27165,27,mn,Minnesota
+27167,27,mn,Minnesota
+27169,27,mn,Minnesota
+27171,27,mn,Minnesota
+27173,27,mn,Minnesota
+28000,28,ms,Mississippi
+28001,28,ms,Mississippi
+28003,28,ms,Mississippi
+28005,28,ms,Mississippi
+28007,28,ms,Mississippi
+28009,28,ms,Mississippi
+28011,28,ms,Mississippi
+28013,28,ms,Mississippi
+28015,28,ms,Mississippi
+28017,28,ms,Mississippi
+28019,28,ms,Mississippi
+28021,28,ms,Mississippi
+28023,28,ms,Mississippi
+28025,28,ms,Mississippi
+28027,28,ms,Mississippi
+28029,28,ms,Mississippi
+28031,28,ms,Mississippi
+28033,28,ms,Mississippi
+28035,28,ms,Mississippi
+28037,28,ms,Mississippi
+28039,28,ms,Mississippi
+28041,28,ms,Mississippi
+28043,28,ms,Mississippi
+28045,28,ms,Mississippi
+28047,28,ms,Mississippi
+28049,28,ms,Mississippi
+28051,28,ms,Mississippi
+28053,28,ms,Mississippi
+28055,28,ms,Mississippi
+28057,28,ms,Mississippi
+28059,28,ms,Mississippi
+28061,28,ms,Mississippi
+28063,28,ms,Mississippi
+28065,28,ms,Mississippi
+28067,28,ms,Mississippi
+28069,28,ms,Mississippi
+28071,28,ms,Mississippi
+28073,28,ms,Mississippi
+28075,28,ms,Mississippi
+28077,28,ms,Mississippi
+28079,28,ms,Mississippi
+28081,28,ms,Mississippi
+28083,28,ms,Mississippi
+28085,28,ms,Mississippi
+28087,28,ms,Mississippi
+28089,28,ms,Mississippi
+28091,28,ms,Mississippi
+28093,28,ms,Mississippi
+28095,28,ms,Mississippi
+28097,28,ms,Mississippi
+28099,28,ms,Mississippi
+28101,28,ms,Mississippi
+28103,28,ms,Mississippi
+28105,28,ms,Mississippi
+28107,28,ms,Mississippi
+28109,28,ms,Mississippi
+28111,28,ms,Mississippi
+28113,28,ms,Mississippi
+28115,28,ms,Mississippi
+28117,28,ms,Mississippi
+28119,28,ms,Mississippi
+28121,28,ms,Mississippi
+28123,28,ms,Mississippi
+28125,28,ms,Mississippi
+28127,28,ms,Mississippi
+28129,28,ms,Mississippi
+28131,28,ms,Mississippi
+28133,28,ms,Mississippi
+28135,28,ms,Mississippi
+28137,28,ms,Mississippi
+28139,28,ms,Mississippi
+28141,28,ms,Mississippi
+28143,28,ms,Mississippi
+28145,28,ms,Mississippi
+28147,28,ms,Mississippi
+28149,28,ms,Mississippi
+28151,28,ms,Mississippi
+28153,28,ms,Mississippi
+28155,28,ms,Mississippi
+28157,28,ms,Mississippi
+28159,28,ms,Mississippi
+28161,28,ms,Mississippi
+28163,28,ms,Mississippi
+29000,29,mo,Missouri
+29001,29,mo,Missouri
+29003,29,mo,Missouri
+29005,29,mo,Missouri
+29007,29,mo,Missouri
+29009,29,mo,Missouri
+29011,29,mo,Missouri
+29013,29,mo,Missouri
+29015,29,mo,Missouri
+29017,29,mo,Missouri
+29019,29,mo,Missouri
+29021,29,mo,Missouri
+29023,29,mo,Missouri
+29025,29,mo,Missouri
+29027,29,mo,Missouri
+29029,29,mo,Missouri
+29031,29,mo,Missouri
+29033,29,mo,Missouri
+29035,29,mo,Missouri
+29037,29,mo,Missouri
+29039,29,mo,Missouri
+29041,29,mo,Missouri
+29043,29,mo,Missouri
+29045,29,mo,Missouri
+29047,29,mo,Missouri
+29049,29,mo,Missouri
+29051,29,mo,Missouri
+29053,29,mo,Missouri
+29055,29,mo,Missouri
+29057,29,mo,Missouri
+29059,29,mo,Missouri
+29061,29,mo,Missouri
+29063,29,mo,Missouri
+29065,29,mo,Missouri
+29067,29,mo,Missouri
+29069,29,mo,Missouri
+29071,29,mo,Missouri
+29073,29,mo,Missouri
+29075,29,mo,Missouri
+29077,29,mo,Missouri
+29079,29,mo,Missouri
+29081,29,mo,Missouri
+29083,29,mo,Missouri
+29085,29,mo,Missouri
+29087,29,mo,Missouri
+29089,29,mo,Missouri
+29091,29,mo,Missouri
+29093,29,mo,Missouri
+29095,29,mo,Missouri
+29097,29,mo,Missouri
+29099,29,mo,Missouri
+29101,29,mo,Missouri
+29103,29,mo,Missouri
+29105,29,mo,Missouri
+29107,29,mo,Missouri
+29109,29,mo,Missouri
+29111,29,mo,Missouri
+29113,29,mo,Missouri
+29115,29,mo,Missouri
+29117,29,mo,Missouri
+29119,29,mo,Missouri
+29121,29,mo,Missouri
+29123,29,mo,Missouri
+29125,29,mo,Missouri
+29127,29,mo,Missouri
+29129,29,mo,Missouri
+29131,29,mo,Missouri
+29133,29,mo,Missouri
+29135,29,mo,Missouri
+29137,29,mo,Missouri
+29139,29,mo,Missouri
+29141,29,mo,Missouri
+29143,29,mo,Missouri
+29145,29,mo,Missouri
+29147,29,mo,Missouri
+29149,29,mo,Missouri
+29151,29,mo,Missouri
+29153,29,mo,Missouri
+29155,29,mo,Missouri
+29157,29,mo,Missouri
+29159,29,mo,Missouri
+29161,29,mo,Missouri
+29163,29,mo,Missouri
+29165,29,mo,Missouri
+29167,29,mo,Missouri
+29169,29,mo,Missouri
+29171,29,mo,Missouri
+29173,29,mo,Missouri
+29175,29,mo,Missouri
+29177,29,mo,Missouri
+29179,29,mo,Missouri
+29181,29,mo,Missouri
+29183,29,mo,Missouri
+29185,29,mo,Missouri
+29186,29,mo,Missouri
+29187,29,mo,Missouri
+29189,29,mo,Missouri
+29195,29,mo,Missouri
+29197,29,mo,Missouri
+29199,29,mo,Missouri
+29201,29,mo,Missouri
+29203,29,mo,Missouri
+29205,29,mo,Missouri
+29207,29,mo,Missouri
+29209,29,mo,Missouri
+29211,29,mo,Missouri
+29213,29,mo,Missouri
+29215,29,mo,Missouri
+29217,29,mo,Missouri
+29219,29,mo,Missouri
+29221,29,mo,Missouri
+29223,29,mo,Missouri
+29225,29,mo,Missouri
+29227,29,mo,Missouri
+29229,29,mo,Missouri
+29510,29,mo,Missouri
+30000,30,mt,Montana
+30001,30,mt,Montana
+30003,30,mt,Montana
+30005,30,mt,Montana
+30007,30,mt,Montana
+30009,30,mt,Montana
+30011,30,mt,Montana
+30013,30,mt,Montana
+30015,30,mt,Montana
+30017,30,mt,Montana
+30019,30,mt,Montana
+30021,30,mt,Montana
+30023,30,mt,Montana
+30025,30,mt,Montana
+30027,30,mt,Montana
+30029,30,mt,Montana
+30031,30,mt,Montana
+30033,30,mt,Montana
+30035,30,mt,Montana
+30037,30,mt,Montana
+30039,30,mt,Montana
+30041,30,mt,Montana
+30043,30,mt,Montana
+30045,30,mt,Montana
+30047,30,mt,Montana
+30049,30,mt,Montana
+30051,30,mt,Montana
+30053,30,mt,Montana
+30055,30,mt,Montana
+30057,30,mt,Montana
+30059,30,mt,Montana
+30061,30,mt,Montana
+30063,30,mt,Montana
+30065,30,mt,Montana
+30067,30,mt,Montana
+30069,30,mt,Montana
+30071,30,mt,Montana
+30073,30,mt,Montana
+30075,30,mt,Montana
+30077,30,mt,Montana
+30079,30,mt,Montana
+30081,30,mt,Montana
+30083,30,mt,Montana
+30085,30,mt,Montana
+30087,30,mt,Montana
+30089,30,mt,Montana
+30091,30,mt,Montana
+30093,30,mt,Montana
+30095,30,mt,Montana
+30097,30,mt,Montana
+30099,30,mt,Montana
+30101,30,mt,Montana
+30103,30,mt,Montana
+30105,30,mt,Montana
+30107,30,mt,Montana
+30109,30,mt,Montana
+30111,30,mt,Montana
+31000,31,ne,Nebraska
+31001,31,ne,Nebraska
+31003,31,ne,Nebraska
+31005,31,ne,Nebraska
+31007,31,ne,Nebraska
+31009,31,ne,Nebraska
+31011,31,ne,Nebraska
+31013,31,ne,Nebraska
+31015,31,ne,Nebraska
+31017,31,ne,Nebraska
+31019,31,ne,Nebraska
+31021,31,ne,Nebraska
+31023,31,ne,Nebraska
+31025,31,ne,Nebraska
+31027,31,ne,Nebraska
+31029,31,ne,Nebraska
+31031,31,ne,Nebraska
+31033,31,ne,Nebraska
+31035,31,ne,Nebraska
+31037,31,ne,Nebraska
+31039,31,ne,Nebraska
+31041,31,ne,Nebraska
+31043,31,ne,Nebraska
+31045,31,ne,Nebraska
+31047,31,ne,Nebraska
+31049,31,ne,Nebraska
+31051,31,ne,Nebraska
+31053,31,ne,Nebraska
+31055,31,ne,Nebraska
+31057,31,ne,Nebraska
+31059,31,ne,Nebraska
+31061,31,ne,Nebraska
+31063,31,ne,Nebraska
+31065,31,ne,Nebraska
+31067,31,ne,Nebraska
+31069,31,ne,Nebraska
+31071,31,ne,Nebraska
+31073,31,ne,Nebraska
+31075,31,ne,Nebraska
+31077,31,ne,Nebraska
+31079,31,ne,Nebraska
+31081,31,ne,Nebraska
+31083,31,ne,Nebraska
+31085,31,ne,Nebraska
+31087,31,ne,Nebraska
+31089,31,ne,Nebraska
+31091,31,ne,Nebraska
+31093,31,ne,Nebraska
+31095,31,ne,Nebraska
+31097,31,ne,Nebraska
+31099,31,ne,Nebraska
+31101,31,ne,Nebraska
+31103,31,ne,Nebraska
+31105,31,ne,Nebraska
+31107,31,ne,Nebraska
+31109,31,ne,Nebraska
+31111,31,ne,Nebraska
+31113,31,ne,Nebraska
+31115,31,ne,Nebraska
+31117,31,ne,Nebraska
+31119,31,ne,Nebraska
+31121,31,ne,Nebraska
+31123,31,ne,Nebraska
+31125,31,ne,Nebraska
+31127,31,ne,Nebraska
+31129,31,ne,Nebraska
+31131,31,ne,Nebraska
+31133,31,ne,Nebraska
+31135,31,ne,Nebraska
+31137,31,ne,Nebraska
+31139,31,ne,Nebraska
+31141,31,ne,Nebraska
+31143,31,ne,Nebraska
+31145,31,ne,Nebraska
+31147,31,ne,Nebraska
+31149,31,ne,Nebraska
+31151,31,ne,Nebraska
+31153,31,ne,Nebraska
+31155,31,ne,Nebraska
+31157,31,ne,Nebraska
+31159,31,ne,Nebraska
+31161,31,ne,Nebraska
+31163,31,ne,Nebraska
+31165,31,ne,Nebraska
+31167,31,ne,Nebraska
+31169,31,ne,Nebraska
+31171,31,ne,Nebraska
+31173,31,ne,Nebraska
+31175,31,ne,Nebraska
+31177,31,ne,Nebraska
+31179,31,ne,Nebraska
+31181,31,ne,Nebraska
+31183,31,ne,Nebraska
+31185,31,ne,Nebraska
+32000,32,nv,Nevada
+32001,32,nv,Nevada
+32003,32,nv,Nevada
+32005,32,nv,Nevada
+32007,32,nv,Nevada
+32009,32,nv,Nevada
+32011,32,nv,Nevada
+32013,32,nv,Nevada
+32015,32,nv,Nevada
+32017,32,nv,Nevada
+32019,32,nv,Nevada
+32021,32,nv,Nevada
+32023,32,nv,Nevada
+32027,32,nv,Nevada
+32029,32,nv,Nevada
+32031,32,nv,Nevada
+32033,32,nv,Nevada
+32510,32,nv,Nevada
+33000,33,nh,New Hampshire
+33001,33,nh,New Hampshire
+33003,33,nh,New Hampshire
+33005,33,nh,New Hampshire
+33007,33,nh,New Hampshire
+33009,33,nh,New Hampshire
+33011,33,nh,New Hampshire
+33013,33,nh,New Hampshire
+33015,33,nh,New Hampshire
+33017,33,nh,New Hampshire
+33019,33,nh,New Hampshire
+34000,34,nj,New Jersey
+34001,34,nj,New Jersey
+34003,34,nj,New Jersey
+34005,34,nj,New Jersey
+34007,34,nj,New Jersey
+34009,34,nj,New Jersey
+34011,34,nj,New Jersey
+34013,34,nj,New Jersey
+34015,34,nj,New Jersey
+34017,34,nj,New Jersey
+34019,34,nj,New Jersey
+34021,34,nj,New Jersey
+34023,34,nj,New Jersey
+34025,34,nj,New Jersey
+34027,34,nj,New Jersey
+34029,34,nj,New Jersey
+34031,34,nj,New Jersey
+34033,34,nj,New Jersey
+34035,34,nj,New Jersey
+34037,34,nj,New Jersey
+34039,34,nj,New Jersey
+34041,34,nj,New Jersey
+35000,35,nm,New Mexico
+35001,35,nm,New Mexico
+35003,35,nm,New Mexico
+35005,35,nm,New Mexico
+35006,35,nm,New Mexico
+35007,35,nm,New Mexico
+35009,35,nm,New Mexico
+35011,35,nm,New Mexico
+35013,35,nm,New Mexico
+35015,35,nm,New Mexico
+35017,35,nm,New Mexico
+35019,35,nm,New Mexico
+35021,35,nm,New Mexico
+35023,35,nm,New Mexico
+35025,35,nm,New Mexico
+35027,35,nm,New Mexico
+35028,35,nm,New Mexico
+35029,35,nm,New Mexico
+35031,35,nm,New Mexico
+35033,35,nm,New Mexico
+35035,35,nm,New Mexico
+35037,35,nm,New Mexico
+35039,35,nm,New Mexico
+35041,35,nm,New Mexico
+35043,35,nm,New Mexico
+35045,35,nm,New Mexico
+35047,35,nm,New Mexico
+35049,35,nm,New Mexico
+35051,35,nm,New Mexico
+35053,35,nm,New Mexico
+35055,35,nm,New Mexico
+35057,35,nm,New Mexico
+35059,35,nm,New Mexico
+35061,35,nm,New Mexico
+36000,36,ny,New York
+36001,36,ny,New York
+36003,36,ny,New York
+36005,36,ny,New York
+36007,36,ny,New York
+36009,36,ny,New York
+36011,36,ny,New York
+36013,36,ny,New York
+36015,36,ny,New York
+36017,36,ny,New York
+36019,36,ny,New York
+36021,36,ny,New York
+36023,36,ny,New York
+36025,36,ny,New York
+36027,36,ny,New York
+36029,36,ny,New York
+36031,36,ny,New York
+36033,36,ny,New York
+36035,36,ny,New York
+36037,36,ny,New York
+36039,36,ny,New York
+36041,36,ny,New York
+36043,36,ny,New York
+36045,36,ny,New York
+36047,36,ny,New York
+36049,36,ny,New York
+36051,36,ny,New York
+36053,36,ny,New York
+36055,36,ny,New York
+36057,36,ny,New York
+36059,36,ny,New York
+36061,36,ny,New York
+36063,36,ny,New York
+36065,36,ny,New York
+36067,36,ny,New York
+36069,36,ny,New York
+36071,36,ny,New York
+36073,36,ny,New York
+36075,36,ny,New York
+36077,36,ny,New York
+36079,36,ny,New York
+36081,36,ny,New York
+36083,36,ny,New York
+36085,36,ny,New York
+36087,36,ny,New York
+36089,36,ny,New York
+36091,36,ny,New York
+36093,36,ny,New York
+36095,36,ny,New York
+36097,36,ny,New York
+36099,36,ny,New York
+36101,36,ny,New York
+36103,36,ny,New York
+36105,36,ny,New York
+36107,36,ny,New York
+36109,36,ny,New York
+36111,36,ny,New York
+36113,36,ny,New York
+36115,36,ny,New York
+36117,36,ny,New York
+36119,36,ny,New York
+36121,36,ny,New York
+36123,36,ny,New York
+37000,37,nc,North Carolina
+37001,37,nc,North Carolina
+37003,37,nc,North Carolina
+37005,37,nc,North Carolina
+37007,37,nc,North Carolina
+37009,37,nc,North Carolina
+37011,37,nc,North Carolina
+37013,37,nc,North Carolina
+37015,37,nc,North Carolina
+37017,37,nc,North Carolina
+37019,37,nc,North Carolina
+37021,37,nc,North Carolina
+37023,37,nc,North Carolina
+37025,37,nc,North Carolina
+37027,37,nc,North Carolina
+37029,37,nc,North Carolina
+37031,37,nc,North Carolina
+37033,37,nc,North Carolina
+37035,37,nc,North Carolina
+37037,37,nc,North Carolina
+37039,37,nc,North Carolina
+37041,37,nc,North Carolina
+37043,37,nc,North Carolina
+37045,37,nc,North Carolina
+37047,37,nc,North Carolina
+37049,37,nc,North Carolina
+37051,37,nc,North Carolina
+37053,37,nc,North Carolina
+37055,37,nc,North Carolina
+37057,37,nc,North Carolina
+37059,37,nc,North Carolina
+37061,37,nc,North Carolina
+37063,37,nc,North Carolina
+37065,37,nc,North Carolina
+37067,37,nc,North Carolina
+37069,37,nc,North Carolina
+37071,37,nc,North Carolina
+37073,37,nc,North Carolina
+37075,37,nc,North Carolina
+37077,37,nc,North Carolina
+37079,37,nc,North Carolina
+37081,37,nc,North Carolina
+37083,37,nc,North Carolina
+37085,37,nc,North Carolina
+37087,37,nc,North Carolina
+37089,37,nc,North Carolina
+37091,37,nc,North Carolina
+37093,37,nc,North Carolina
+37095,37,nc,North Carolina
+37097,37,nc,North Carolina
+37099,37,nc,North Carolina
+37101,37,nc,North Carolina
+37103,37,nc,North Carolina
+37105,37,nc,North Carolina
+37107,37,nc,North Carolina
+37109,37,nc,North Carolina
+37111,37,nc,North Carolina
+37113,37,nc,North Carolina
+37115,37,nc,North Carolina
+37117,37,nc,North Carolina
+37119,37,nc,North Carolina
+37121,37,nc,North Carolina
+37123,37,nc,North Carolina
+37125,37,nc,North Carolina
+37127,37,nc,North Carolina
+37129,37,nc,North Carolina
+37131,37,nc,North Carolina
+37133,37,nc,North Carolina
+37135,37,nc,North Carolina
+37137,37,nc,North Carolina
+37139,37,nc,North Carolina
+37141,37,nc,North Carolina
+37143,37,nc,North Carolina
+37145,37,nc,North Carolina
+37147,37,nc,North Carolina
+37149,37,nc,North Carolina
+37151,37,nc,North Carolina
+37153,37,nc,North Carolina
+37155,37,nc,North Carolina
+37157,37,nc,North Carolina
+37159,37,nc,North Carolina
+37161,37,nc,North Carolina
+37163,37,nc,North Carolina
+37165,37,nc,North Carolina
+37167,37,nc,North Carolina
+37169,37,nc,North Carolina
+37171,37,nc,North Carolina
+37173,37,nc,North Carolina
+37175,37,nc,North Carolina
+37177,37,nc,North Carolina
+37179,37,nc,North Carolina
+37181,37,nc,North Carolina
+37183,37,nc,North Carolina
+37185,37,nc,North Carolina
+37187,37,nc,North Carolina
+37189,37,nc,North Carolina
+37191,37,nc,North Carolina
+37193,37,nc,North Carolina
+37195,37,nc,North Carolina
+37197,37,nc,North Carolina
+37199,37,nc,North Carolina
+38000,38,nd,North Dakota
+38001,38,nd,North Dakota
+38003,38,nd,North Dakota
+38005,38,nd,North Dakota
+38007,38,nd,North Dakota
+38009,38,nd,North Dakota
+38011,38,nd,North Dakota
+38013,38,nd,North Dakota
+38015,38,nd,North Dakota
+38017,38,nd,North Dakota
+38019,38,nd,North Dakota
+38021,38,nd,North Dakota
+38023,38,nd,North Dakota
+38025,38,nd,North Dakota
+38027,38,nd,North Dakota
+38029,38,nd,North Dakota
+38031,38,nd,North Dakota
+38033,38,nd,North Dakota
+38035,38,nd,North Dakota
+38037,38,nd,North Dakota
+38039,38,nd,North Dakota
+38041,38,nd,North Dakota
+38043,38,nd,North Dakota
+38045,38,nd,North Dakota
+38047,38,nd,North Dakota
+38049,38,nd,North Dakota
+38051,38,nd,North Dakota
+38053,38,nd,North Dakota
+38055,38,nd,North Dakota
+38057,38,nd,North Dakota
+38059,38,nd,North Dakota
+38061,38,nd,North Dakota
+38063,38,nd,North Dakota
+38065,38,nd,North Dakota
+38067,38,nd,North Dakota
+38069,38,nd,North Dakota
+38071,38,nd,North Dakota
+38073,38,nd,North Dakota
+38075,38,nd,North Dakota
+38077,38,nd,North Dakota
+38079,38,nd,North Dakota
+38081,38,nd,North Dakota
+38083,38,nd,North Dakota
+38085,38,nd,North Dakota
+38087,38,nd,North Dakota
+38089,38,nd,North Dakota
+38091,38,nd,North Dakota
+38093,38,nd,North Dakota
+38095,38,nd,North Dakota
+38097,38,nd,North Dakota
+38099,38,nd,North Dakota
+38101,38,nd,North Dakota
+38103,38,nd,North Dakota
+38105,38,nd,North Dakota
+39000,39,oh,Ohio
+39001,39,oh,Ohio
+39003,39,oh,Ohio
+39005,39,oh,Ohio
+39007,39,oh,Ohio
+39009,39,oh,Ohio
+39011,39,oh,Ohio
+39013,39,oh,Ohio
+39015,39,oh,Ohio
+39017,39,oh,Ohio
+39019,39,oh,Ohio
+39021,39,oh,Ohio
+39023,39,oh,Ohio
+39025,39,oh,Ohio
+39027,39,oh,Ohio
+39029,39,oh,Ohio
+39031,39,oh,Ohio
+39033,39,oh,Ohio
+39035,39,oh,Ohio
+39037,39,oh,Ohio
+39039,39,oh,Ohio
+39041,39,oh,Ohio
+39043,39,oh,Ohio
+39045,39,oh,Ohio
+39047,39,oh,Ohio
+39049,39,oh,Ohio
+39051,39,oh,Ohio
+39053,39,oh,Ohio
+39055,39,oh,Ohio
+39057,39,oh,Ohio
+39059,39,oh,Ohio
+39061,39,oh,Ohio
+39063,39,oh,Ohio
+39065,39,oh,Ohio
+39067,39,oh,Ohio
+39069,39,oh,Ohio
+39071,39,oh,Ohio
+39073,39,oh,Ohio
+39075,39,oh,Ohio
+39077,39,oh,Ohio
+39079,39,oh,Ohio
+39081,39,oh,Ohio
+39083,39,oh,Ohio
+39085,39,oh,Ohio
+39087,39,oh,Ohio
+39089,39,oh,Ohio
+39091,39,oh,Ohio
+39093,39,oh,Ohio
+39095,39,oh,Ohio
+39097,39,oh,Ohio
+39099,39,oh,Ohio
+39101,39,oh,Ohio
+39103,39,oh,Ohio
+39105,39,oh,Ohio
+39107,39,oh,Ohio
+39109,39,oh,Ohio
+39111,39,oh,Ohio
+39113,39,oh,Ohio
+39115,39,oh,Ohio
+39117,39,oh,Ohio
+39119,39,oh,Ohio
+39121,39,oh,Ohio
+39123,39,oh,Ohio
+39125,39,oh,Ohio
+39127,39,oh,Ohio
+39129,39,oh,Ohio
+39131,39,oh,Ohio
+39133,39,oh,Ohio
+39135,39,oh,Ohio
+39137,39,oh,Ohio
+39139,39,oh,Ohio
+39141,39,oh,Ohio
+39143,39,oh,Ohio
+39145,39,oh,Ohio
+39147,39,oh,Ohio
+39149,39,oh,Ohio
+39151,39,oh,Ohio
+39153,39,oh,Ohio
+39155,39,oh,Ohio
+39157,39,oh,Ohio
+39159,39,oh,Ohio
+39161,39,oh,Ohio
+39163,39,oh,Ohio
+39165,39,oh,Ohio
+39167,39,oh,Ohio
+39169,39,oh,Ohio
+39171,39,oh,Ohio
+39173,39,oh,Ohio
+39175,39,oh,Ohio
+40000,40,ok,Oklahoma
+40001,40,ok,Oklahoma
+40003,40,ok,Oklahoma
+40005,40,ok,Oklahoma
+40007,40,ok,Oklahoma
+40009,40,ok,Oklahoma
+40011,40,ok,Oklahoma
+40013,40,ok,Oklahoma
+40015,40,ok,Oklahoma
+40017,40,ok,Oklahoma
+40019,40,ok,Oklahoma
+40021,40,ok,Oklahoma
+40023,40,ok,Oklahoma
+40025,40,ok,Oklahoma
+40027,40,ok,Oklahoma
+40029,40,ok,Oklahoma
+40031,40,ok,Oklahoma
+40033,40,ok,Oklahoma
+40035,40,ok,Oklahoma
+40037,40,ok,Oklahoma
+40039,40,ok,Oklahoma
+40041,40,ok,Oklahoma
+40043,40,ok,Oklahoma
+40045,40,ok,Oklahoma
+40047,40,ok,Oklahoma
+40049,40,ok,Oklahoma
+40051,40,ok,Oklahoma
+40053,40,ok,Oklahoma
+40055,40,ok,Oklahoma
+40057,40,ok,Oklahoma
+40059,40,ok,Oklahoma
+40061,40,ok,Oklahoma
+40063,40,ok,Oklahoma
+40065,40,ok,Oklahoma
+40067,40,ok,Oklahoma
+40069,40,ok,Oklahoma
+40071,40,ok,Oklahoma
+40073,40,ok,Oklahoma
+40075,40,ok,Oklahoma
+40077,40,ok,Oklahoma
+40079,40,ok,Oklahoma
+40081,40,ok,Oklahoma
+40083,40,ok,Oklahoma
+40085,40,ok,Oklahoma
+40087,40,ok,Oklahoma
+40089,40,ok,Oklahoma
+40091,40,ok,Oklahoma
+40093,40,ok,Oklahoma
+40095,40,ok,Oklahoma
+40097,40,ok,Oklahoma
+40099,40,ok,Oklahoma
+40101,40,ok,Oklahoma
+40103,40,ok,Oklahoma
+40105,40,ok,Oklahoma
+40107,40,ok,Oklahoma
+40109,40,ok,Oklahoma
+40111,40,ok,Oklahoma
+40113,40,ok,Oklahoma
+40115,40,ok,Oklahoma
+40117,40,ok,Oklahoma
+40119,40,ok,Oklahoma
+40121,40,ok,Oklahoma
+40123,40,ok,Oklahoma
+40125,40,ok,Oklahoma
+40127,40,ok,Oklahoma
+40129,40,ok,Oklahoma
+40131,40,ok,Oklahoma
+40133,40,ok,Oklahoma
+40135,40,ok,Oklahoma
+40137,40,ok,Oklahoma
+40139,40,ok,Oklahoma
+40141,40,ok,Oklahoma
+40143,40,ok,Oklahoma
+40145,40,ok,Oklahoma
+40147,40,ok,Oklahoma
+40149,40,ok,Oklahoma
+40151,40,ok,Oklahoma
+40153,40,ok,Oklahoma
+41000,41,or,Oregon
+41001,41,or,Oregon
+41003,41,or,Oregon
+41005,41,or,Oregon
+41007,41,or,Oregon
+41009,41,or,Oregon
+41011,41,or,Oregon
+41013,41,or,Oregon
+41015,41,or,Oregon
+41017,41,or,Oregon
+41019,41,or,Oregon
+41021,41,or,Oregon
+41023,41,or,Oregon
+41025,41,or,Oregon
+41027,41,or,Oregon
+41029,41,or,Oregon
+41031,41,or,Oregon
+41033,41,or,Oregon
+41035,41,or,Oregon
+41037,41,or,Oregon
+41039,41,or,Oregon
+41041,41,or,Oregon
+41043,41,or,Oregon
+41045,41,or,Oregon
+41047,41,or,Oregon
+41049,41,or,Oregon
+41051,41,or,Oregon
+41053,41,or,Oregon
+41055,41,or,Oregon
+41057,41,or,Oregon
+41059,41,or,Oregon
+41061,41,or,Oregon
+41063,41,or,Oregon
+41065,41,or,Oregon
+41067,41,or,Oregon
+41069,41,or,Oregon
+41071,41,or,Oregon
+42000,42,pa,Pennsylvania
+42001,42,pa,Pennsylvania
+42003,42,pa,Pennsylvania
+42005,42,pa,Pennsylvania
+42007,42,pa,Pennsylvania
+42009,42,pa,Pennsylvania
+42011,42,pa,Pennsylvania
+42013,42,pa,Pennsylvania
+42015,42,pa,Pennsylvania
+42017,42,pa,Pennsylvania
+42019,42,pa,Pennsylvania
+42021,42,pa,Pennsylvania
+42023,42,pa,Pennsylvania
+42025,42,pa,Pennsylvania
+42027,42,pa,Pennsylvania
+42029,42,pa,Pennsylvania
+42031,42,pa,Pennsylvania
+42033,42,pa,Pennsylvania
+42035,42,pa,Pennsylvania
+42037,42,pa,Pennsylvania
+42039,42,pa,Pennsylvania
+42041,42,pa,Pennsylvania
+42043,42,pa,Pennsylvania
+42045,42,pa,Pennsylvania
+42047,42,pa,Pennsylvania
+42049,42,pa,Pennsylvania
+42051,42,pa,Pennsylvania
+42053,42,pa,Pennsylvania
+42055,42,pa,Pennsylvania
+42057,42,pa,Pennsylvania
+42059,42,pa,Pennsylvania
+42061,42,pa,Pennsylvania
+42063,42,pa,Pennsylvania
+42065,42,pa,Pennsylvania
+42067,42,pa,Pennsylvania
+42069,42,pa,Pennsylvania
+42071,42,pa,Pennsylvania
+42073,42,pa,Pennsylvania
+42075,42,pa,Pennsylvania
+42077,42,pa,Pennsylvania
+42079,42,pa,Pennsylvania
+42081,42,pa,Pennsylvania
+42083,42,pa,Pennsylvania
+42085,42,pa,Pennsylvania
+42087,42,pa,Pennsylvania
+42089,42,pa,Pennsylvania
+42091,42,pa,Pennsylvania
+42093,42,pa,Pennsylvania
+42095,42,pa,Pennsylvania
+42097,42,pa,Pennsylvania
+42099,42,pa,Pennsylvania
+42101,42,pa,Pennsylvania
+42103,42,pa,Pennsylvania
+42105,42,pa,Pennsylvania
+42107,42,pa,Pennsylvania
+42109,42,pa,Pennsylvania
+42111,42,pa,Pennsylvania
+42113,42,pa,Pennsylvania
+42115,42,pa,Pennsylvania
+42117,42,pa,Pennsylvania
+42119,42,pa,Pennsylvania
+42121,42,pa,Pennsylvania
+42123,42,pa,Pennsylvania
+42125,42,pa,Pennsylvania
+42127,42,pa,Pennsylvania
+42129,42,pa,Pennsylvania
+42131,42,pa,Pennsylvania
+42133,42,pa,Pennsylvania
+44000,44,ri,Rhode Island
+44001,44,ri,Rhode Island
+44003,44,ri,Rhode Island
+44005,44,ri,Rhode Island
+44007,44,ri,Rhode Island
+44009,44,ri,Rhode Island
+45000,45,sc,South Carolina
+45001,45,sc,South Carolina
+45003,45,sc,South Carolina
+45005,45,sc,South Carolina
+45007,45,sc,South Carolina
+45009,45,sc,South Carolina
+45011,45,sc,South Carolina
+45013,45,sc,South Carolina
+45015,45,sc,South Carolina
+45017,45,sc,South Carolina
+45019,45,sc,South Carolina
+45021,45,sc,South Carolina
+45023,45,sc,South Carolina
+45025,45,sc,South Carolina
+45027,45,sc,South Carolina
+45029,45,sc,South Carolina
+45031,45,sc,South Carolina
+45033,45,sc,South Carolina
+45035,45,sc,South Carolina
+45037,45,sc,South Carolina
+45039,45,sc,South Carolina
+45041,45,sc,South Carolina
+45043,45,sc,South Carolina
+45045,45,sc,South Carolina
+45047,45,sc,South Carolina
+45049,45,sc,South Carolina
+45051,45,sc,South Carolina
+45053,45,sc,South Carolina
+45055,45,sc,South Carolina
+45057,45,sc,South Carolina
+45059,45,sc,South Carolina
+45061,45,sc,South Carolina
+45063,45,sc,South Carolina
+45065,45,sc,South Carolina
+45067,45,sc,South Carolina
+45069,45,sc,South Carolina
+45071,45,sc,South Carolina
+45073,45,sc,South Carolina
+45075,45,sc,South Carolina
+45077,45,sc,South Carolina
+45079,45,sc,South Carolina
+45081,45,sc,South Carolina
+45083,45,sc,South Carolina
+45085,45,sc,South Carolina
+45087,45,sc,South Carolina
+45089,45,sc,South Carolina
+45091,45,sc,South Carolina
+46000,46,sd,South Dakota
+46003,46,sd,South Dakota
+46005,46,sd,South Dakota
+46007,46,sd,South Dakota
+46009,46,sd,South Dakota
+46011,46,sd,South Dakota
+46013,46,sd,South Dakota
+46015,46,sd,South Dakota
+46017,46,sd,South Dakota
+46019,46,sd,South Dakota
+46021,46,sd,South Dakota
+46023,46,sd,South Dakota
+46025,46,sd,South Dakota
+46027,46,sd,South Dakota
+46029,46,sd,South Dakota
+46031,46,sd,South Dakota
+46033,46,sd,South Dakota
+46035,46,sd,South Dakota
+46037,46,sd,South Dakota
+46039,46,sd,South Dakota
+46041,46,sd,South Dakota
+46043,46,sd,South Dakota
+46045,46,sd,South Dakota
+46047,46,sd,South Dakota
+46049,46,sd,South Dakota
+46051,46,sd,South Dakota
+46053,46,sd,South Dakota
+46055,46,sd,South Dakota
+46057,46,sd,South Dakota
+46059,46,sd,South Dakota
+46061,46,sd,South Dakota
+46063,46,sd,South Dakota
+46065,46,sd,South Dakota
+46067,46,sd,South Dakota
+46069,46,sd,South Dakota
+46071,46,sd,South Dakota
+46073,46,sd,South Dakota
+46075,46,sd,South Dakota
+46077,46,sd,South Dakota
+46079,46,sd,South Dakota
+46081,46,sd,South Dakota
+46083,46,sd,South Dakota
+46085,46,sd,South Dakota
+46087,46,sd,South Dakota
+46089,46,sd,South Dakota
+46091,46,sd,South Dakota
+46093,46,sd,South Dakota
+46095,46,sd,South Dakota
+46097,46,sd,South Dakota
+46099,46,sd,South Dakota
+46101,46,sd,South Dakota
+46102,46,sd,South Dakota
+46103,46,sd,South Dakota
+46105,46,sd,South Dakota
+46107,46,sd,South Dakota
+46109,46,sd,South Dakota
+46111,46,sd,South Dakota
+46115,46,sd,South Dakota
+46117,46,sd,South Dakota
+46119,46,sd,South Dakota
+46121,46,sd,South Dakota
+46123,46,sd,South Dakota
+46125,46,sd,South Dakota
+46127,46,sd,South Dakota
+46129,46,sd,South Dakota
+46135,46,sd,South Dakota
+46137,46,sd,South Dakota
+47000,47,tn,Tennessee
+47001,47,tn,Tennessee
+47003,47,tn,Tennessee
+47005,47,tn,Tennessee
+47007,47,tn,Tennessee
+47009,47,tn,Tennessee
+47011,47,tn,Tennessee
+47013,47,tn,Tennessee
+47015,47,tn,Tennessee
+47017,47,tn,Tennessee
+47019,47,tn,Tennessee
+47021,47,tn,Tennessee
+47023,47,tn,Tennessee
+47025,47,tn,Tennessee
+47027,47,tn,Tennessee
+47029,47,tn,Tennessee
+47031,47,tn,Tennessee
+47033,47,tn,Tennessee
+47035,47,tn,Tennessee
+47037,47,tn,Tennessee
+47039,47,tn,Tennessee
+47041,47,tn,Tennessee
+47043,47,tn,Tennessee
+47045,47,tn,Tennessee
+47047,47,tn,Tennessee
+47049,47,tn,Tennessee
+47051,47,tn,Tennessee
+47053,47,tn,Tennessee
+47055,47,tn,Tennessee
+47057,47,tn,Tennessee
+47059,47,tn,Tennessee
+47061,47,tn,Tennessee
+47063,47,tn,Tennessee
+47065,47,tn,Tennessee
+47067,47,tn,Tennessee
+47069,47,tn,Tennessee
+47071,47,tn,Tennessee
+47073,47,tn,Tennessee
+47075,47,tn,Tennessee
+47077,47,tn,Tennessee
+47079,47,tn,Tennessee
+47081,47,tn,Tennessee
+47083,47,tn,Tennessee
+47085,47,tn,Tennessee
+47087,47,tn,Tennessee
+47089,47,tn,Tennessee
+47091,47,tn,Tennessee
+47093,47,tn,Tennessee
+47095,47,tn,Tennessee
+47097,47,tn,Tennessee
+47099,47,tn,Tennessee
+47101,47,tn,Tennessee
+47103,47,tn,Tennessee
+47105,47,tn,Tennessee
+47107,47,tn,Tennessee
+47109,47,tn,Tennessee
+47111,47,tn,Tennessee
+47113,47,tn,Tennessee
+47115,47,tn,Tennessee
+47117,47,tn,Tennessee
+47119,47,tn,Tennessee
+47121,47,tn,Tennessee
+47123,47,tn,Tennessee
+47125,47,tn,Tennessee
+47127,47,tn,Tennessee
+47129,47,tn,Tennessee
+47131,47,tn,Tennessee
+47133,47,tn,Tennessee
+47135,47,tn,Tennessee
+47137,47,tn,Tennessee
+47139,47,tn,Tennessee
+47141,47,tn,Tennessee
+47143,47,tn,Tennessee
+47145,47,tn,Tennessee
+47147,47,tn,Tennessee
+47149,47,tn,Tennessee
+47151,47,tn,Tennessee
+47153,47,tn,Tennessee
+47155,47,tn,Tennessee
+47157,47,tn,Tennessee
+47159,47,tn,Tennessee
+47161,47,tn,Tennessee
+47163,47,tn,Tennessee
+47165,47,tn,Tennessee
+47167,47,tn,Tennessee
+47169,47,tn,Tennessee
+47171,47,tn,Tennessee
+47173,47,tn,Tennessee
+47175,47,tn,Tennessee
+47177,47,tn,Tennessee
+47179,47,tn,Tennessee
+47181,47,tn,Tennessee
+47183,47,tn,Tennessee
+47185,47,tn,Tennessee
+47187,47,tn,Tennessee
+47189,47,tn,Tennessee
+48000,48,tx,Texas
+48001,48,tx,Texas
+48003,48,tx,Texas
+48005,48,tx,Texas
+48007,48,tx,Texas
+48009,48,tx,Texas
+48011,48,tx,Texas
+48013,48,tx,Texas
+48015,48,tx,Texas
+48017,48,tx,Texas
+48019,48,tx,Texas
+48021,48,tx,Texas
+48023,48,tx,Texas
+48025,48,tx,Texas
+48027,48,tx,Texas
+48029,48,tx,Texas
+48031,48,tx,Texas
+48033,48,tx,Texas
+48035,48,tx,Texas
+48037,48,tx,Texas
+48039,48,tx,Texas
+48041,48,tx,Texas
+48043,48,tx,Texas
+48045,48,tx,Texas
+48047,48,tx,Texas
+48049,48,tx,Texas
+48051,48,tx,Texas
+48053,48,tx,Texas
+48055,48,tx,Texas
+48057,48,tx,Texas
+48059,48,tx,Texas
+48061,48,tx,Texas
+48063,48,tx,Texas
+48065,48,tx,Texas
+48067,48,tx,Texas
+48069,48,tx,Texas
+48071,48,tx,Texas
+48073,48,tx,Texas
+48075,48,tx,Texas
+48077,48,tx,Texas
+48079,48,tx,Texas
+48081,48,tx,Texas
+48083,48,tx,Texas
+48085,48,tx,Texas
+48087,48,tx,Texas
+48089,48,tx,Texas
+48091,48,tx,Texas
+48093,48,tx,Texas
+48095,48,tx,Texas
+48097,48,tx,Texas
+48099,48,tx,Texas
+48101,48,tx,Texas
+48103,48,tx,Texas
+48105,48,tx,Texas
+48107,48,tx,Texas
+48109,48,tx,Texas
+48111,48,tx,Texas
+48113,48,tx,Texas
+48115,48,tx,Texas
+48117,48,tx,Texas
+48119,48,tx,Texas
+48121,48,tx,Texas
+48123,48,tx,Texas
+48125,48,tx,Texas
+48127,48,tx,Texas
+48129,48,tx,Texas
+48131,48,tx,Texas
+48133,48,tx,Texas
+48135,48,tx,Texas
+48137,48,tx,Texas
+48139,48,tx,Texas
+48141,48,tx,Texas
+48143,48,tx,Texas
+48145,48,tx,Texas
+48147,48,tx,Texas
+48149,48,tx,Texas
+48151,48,tx,Texas
+48153,48,tx,Texas
+48155,48,tx,Texas
+48157,48,tx,Texas
+48159,48,tx,Texas
+48161,48,tx,Texas
+48163,48,tx,Texas
+48165,48,tx,Texas
+48167,48,tx,Texas
+48169,48,tx,Texas
+48171,48,tx,Texas
+48173,48,tx,Texas
+48175,48,tx,Texas
+48177,48,tx,Texas
+48179,48,tx,Texas
+48181,48,tx,Texas
+48183,48,tx,Texas
+48185,48,tx,Texas
+48187,48,tx,Texas
+48189,48,tx,Texas
+48191,48,tx,Texas
+48193,48,tx,Texas
+48195,48,tx,Texas
+48197,48,tx,Texas
+48199,48,tx,Texas
+48201,48,tx,Texas
+48203,48,tx,Texas
+48205,48,tx,Texas
+48207,48,tx,Texas
+48209,48,tx,Texas
+48211,48,tx,Texas
+48213,48,tx,Texas
+48215,48,tx,Texas
+48217,48,tx,Texas
+48219,48,tx,Texas
+48221,48,tx,Texas
+48223,48,tx,Texas
+48225,48,tx,Texas
+48227,48,tx,Texas
+48229,48,tx,Texas
+48231,48,tx,Texas
+48233,48,tx,Texas
+48235,48,tx,Texas
+48237,48,tx,Texas
+48239,48,tx,Texas
+48241,48,tx,Texas
+48243,48,tx,Texas
+48245,48,tx,Texas
+48247,48,tx,Texas
+48249,48,tx,Texas
+48251,48,tx,Texas
+48253,48,tx,Texas
+48255,48,tx,Texas
+48257,48,tx,Texas
+48259,48,tx,Texas
+48261,48,tx,Texas
+48263,48,tx,Texas
+48265,48,tx,Texas
+48267,48,tx,Texas
+48269,48,tx,Texas
+48271,48,tx,Texas
+48273,48,tx,Texas
+48275,48,tx,Texas
+48277,48,tx,Texas
+48279,48,tx,Texas
+48281,48,tx,Texas
+48283,48,tx,Texas
+48285,48,tx,Texas
+48287,48,tx,Texas
+48289,48,tx,Texas
+48291,48,tx,Texas
+48293,48,tx,Texas
+48295,48,tx,Texas
+48297,48,tx,Texas
+48299,48,tx,Texas
+48301,48,tx,Texas
+48303,48,tx,Texas
+48305,48,tx,Texas
+48307,48,tx,Texas
+48309,48,tx,Texas
+48311,48,tx,Texas
+48313,48,tx,Texas
+48315,48,tx,Texas
+48317,48,tx,Texas
+48319,48,tx,Texas
+48321,48,tx,Texas
+48323,48,tx,Texas
+48325,48,tx,Texas
+48327,48,tx,Texas
+48329,48,tx,Texas
+48331,48,tx,Texas
+48333,48,tx,Texas
+48335,48,tx,Texas
+48337,48,tx,Texas
+48339,48,tx,Texas
+48341,48,tx,Texas
+48343,48,tx,Texas
+48345,48,tx,Texas
+48347,48,tx,Texas
+48349,48,tx,Texas
+48351,48,tx,Texas
+48353,48,tx,Texas
+48355,48,tx,Texas
+48357,48,tx,Texas
+48359,48,tx,Texas
+48361,48,tx,Texas
+48363,48,tx,Texas
+48365,48,tx,Texas
+48367,48,tx,Texas
+48369,48,tx,Texas
+48371,48,tx,Texas
+48373,48,tx,Texas
+48375,48,tx,Texas
+48377,48,tx,Texas
+48379,48,tx,Texas
+48381,48,tx,Texas
+48383,48,tx,Texas
+48385,48,tx,Texas
+48387,48,tx,Texas
+48389,48,tx,Texas
+48391,48,tx,Texas
+48393,48,tx,Texas
+48395,48,tx,Texas
+48397,48,tx,Texas
+48399,48,tx,Texas
+48401,48,tx,Texas
+48403,48,tx,Texas
+48405,48,tx,Texas
+48407,48,tx,Texas
+48409,48,tx,Texas
+48411,48,tx,Texas
+48413,48,tx,Texas
+48415,48,tx,Texas
+48417,48,tx,Texas
+48419,48,tx,Texas
+48421,48,tx,Texas
+48423,48,tx,Texas
+48425,48,tx,Texas
+48427,48,tx,Texas
+48429,48,tx,Texas
+48431,48,tx,Texas
+48433,48,tx,Texas
+48435,48,tx,Texas
+48437,48,tx,Texas
+48439,48,tx,Texas
+48441,48,tx,Texas
+48443,48,tx,Texas
+48445,48,tx,Texas
+48447,48,tx,Texas
+48449,48,tx,Texas
+48451,48,tx,Texas
+48453,48,tx,Texas
+48455,48,tx,Texas
+48457,48,tx,Texas
+48459,48,tx,Texas
+48461,48,tx,Texas
+48463,48,tx,Texas
+48465,48,tx,Texas
+48467,48,tx,Texas
+48469,48,tx,Texas
+48471,48,tx,Texas
+48473,48,tx,Texas
+48475,48,tx,Texas
+48477,48,tx,Texas
+48479,48,tx,Texas
+48481,48,tx,Texas
+48483,48,tx,Texas
+48485,48,tx,Texas
+48487,48,tx,Texas
+48489,48,tx,Texas
+48491,48,tx,Texas
+48493,48,tx,Texas
+48495,48,tx,Texas
+48497,48,tx,Texas
+48499,48,tx,Texas
+48501,48,tx,Texas
+48503,48,tx,Texas
+48505,48,tx,Texas
+48507,48,tx,Texas
+49000,49,ut,Utah
+49001,49,ut,Utah
+49003,49,ut,Utah
+49005,49,ut,Utah
+49007,49,ut,Utah
+49009,49,ut,Utah
+49011,49,ut,Utah
+49013,49,ut,Utah
+49015,49,ut,Utah
+49017,49,ut,Utah
+49019,49,ut,Utah
+49021,49,ut,Utah
+49023,49,ut,Utah
+49025,49,ut,Utah
+49027,49,ut,Utah
+49029,49,ut,Utah
+49031,49,ut,Utah
+49033,49,ut,Utah
+49035,49,ut,Utah
+49037,49,ut,Utah
+49039,49,ut,Utah
+49041,49,ut,Utah
+49043,49,ut,Utah
+49045,49,ut,Utah
+49047,49,ut,Utah
+49049,49,ut,Utah
+49051,49,ut,Utah
+49053,49,ut,Utah
+49055,49,ut,Utah
+49057,49,ut,Utah
+50000,50,vt,Vermont
+50001,50,vt,Vermont
+50003,50,vt,Vermont
+50005,50,vt,Vermont
+50007,50,vt,Vermont
+50009,50,vt,Vermont
+50011,50,vt,Vermont
+50013,50,vt,Vermont
+50015,50,vt,Vermont
+50017,50,vt,Vermont
+50019,50,vt,Vermont
+50021,50,vt,Vermont
+50023,50,vt,Vermont
+50025,50,vt,Vermont
+50027,50,vt,Vermont
+51000,51,va,Virginia
+51001,51,va,Virginia
+51003,51,va,Virginia
+51005,51,va,Virginia
+51007,51,va,Virginia
+51009,51,va,Virginia
+51011,51,va,Virginia
+51013,51,va,Virginia
+51015,51,va,Virginia
+51017,51,va,Virginia
+51019,51,va,Virginia
+51021,51,va,Virginia
+51023,51,va,Virginia
+51025,51,va,Virginia
+51027,51,va,Virginia
+51029,51,va,Virginia
+51031,51,va,Virginia
+51033,51,va,Virginia
+51035,51,va,Virginia
+51036,51,va,Virginia
+51037,51,va,Virginia
+51041,51,va,Virginia
+51043,51,va,Virginia
+51045,51,va,Virginia
+51047,51,va,Virginia
+51049,51,va,Virginia
+51051,51,va,Virginia
+51053,51,va,Virginia
+51057,51,va,Virginia
+51059,51,va,Virginia
+51061,51,va,Virginia
+51063,51,va,Virginia
+51065,51,va,Virginia
+51067,51,va,Virginia
+51069,51,va,Virginia
+51071,51,va,Virginia
+51073,51,va,Virginia
+51075,51,va,Virginia
+51077,51,va,Virginia
+51079,51,va,Virginia
+51081,51,va,Virginia
+51083,51,va,Virginia
+51085,51,va,Virginia
+51087,51,va,Virginia
+51089,51,va,Virginia
+51091,51,va,Virginia
+51093,51,va,Virginia
+51095,51,va,Virginia
+51097,51,va,Virginia
+51099,51,va,Virginia
+51101,51,va,Virginia
+51103,51,va,Virginia
+51105,51,va,Virginia
+51107,51,va,Virginia
+51109,51,va,Virginia
+51111,51,va,Virginia
+51113,51,va,Virginia
+51115,51,va,Virginia
+51117,51,va,Virginia
+51119,51,va,Virginia
+51121,51,va,Virginia
+51125,51,va,Virginia
+51127,51,va,Virginia
+51131,51,va,Virginia
+51133,51,va,Virginia
+51135,51,va,Virginia
+51137,51,va,Virginia
+51139,51,va,Virginia
+51141,51,va,Virginia
+51143,51,va,Virginia
+51145,51,va,Virginia
+51147,51,va,Virginia
+51149,51,va,Virginia
+51153,51,va,Virginia
+51155,51,va,Virginia
+51157,51,va,Virginia
+51159,51,va,Virginia
+51161,51,va,Virginia
+51163,51,va,Virginia
+51165,51,va,Virginia
+51167,51,va,Virginia
+51169,51,va,Virginia
+51171,51,va,Virginia
+51173,51,va,Virginia
+51175,51,va,Virginia
+51177,51,va,Virginia
+51179,51,va,Virginia
+51181,51,va,Virginia
+51183,51,va,Virginia
+51185,51,va,Virginia
+51187,51,va,Virginia
+51191,51,va,Virginia
+51193,51,va,Virginia
+51195,51,va,Virginia
+51197,51,va,Virginia
+51199,51,va,Virginia
+51510,51,va,Virginia
+51520,51,va,Virginia
+51530,51,va,Virginia
+51540,51,va,Virginia
+51550,51,va,Virginia
+51570,51,va,Virginia
+51580,51,va,Virginia
+51590,51,va,Virginia
+51595,51,va,Virginia
+51600,51,va,Virginia
+51610,51,va,Virginia
+51620,51,va,Virginia
+51630,51,va,Virginia
+51640,51,va,Virginia
+51650,51,va,Virginia
+51660,51,va,Virginia
+51670,51,va,Virginia
+51678,51,va,Virginia
+51680,51,va,Virginia
+51683,51,va,Virginia
+51685,51,va,Virginia
+51690,51,va,Virginia
+51700,51,va,Virginia
+51710,51,va,Virginia
+51720,51,va,Virginia
+51730,51,va,Virginia
+51735,51,va,Virginia
+51740,51,va,Virginia
+51750,51,va,Virginia
+51760,51,va,Virginia
+51770,51,va,Virginia
+51775,51,va,Virginia
+51790,51,va,Virginia
+51800,51,va,Virginia
+51810,51,va,Virginia
+51820,51,va,Virginia
+51830,51,va,Virginia
+51840,51,va,Virginia
+53000,53,wa,Washington
+53001,53,wa,Washington
+53003,53,wa,Washington
+53005,53,wa,Washington
+53007,53,wa,Washington
+53009,53,wa,Washington
+53011,53,wa,Washington
+53013,53,wa,Washington
+53015,53,wa,Washington
+53017,53,wa,Washington
+53019,53,wa,Washington
+53021,53,wa,Washington
+53023,53,wa,Washington
+53025,53,wa,Washington
+53027,53,wa,Washington
+53029,53,wa,Washington
+53031,53,wa,Washington
+53033,53,wa,Washington
+53035,53,wa,Washington
+53037,53,wa,Washington
+53039,53,wa,Washington
+53041,53,wa,Washington
+53043,53,wa,Washington
+53045,53,wa,Washington
+53047,53,wa,Washington
+53049,53,wa,Washington
+53051,53,wa,Washington
+53053,53,wa,Washington
+53055,53,wa,Washington
+53057,53,wa,Washington
+53059,53,wa,Washington
+53061,53,wa,Washington
+53063,53,wa,Washington
+53065,53,wa,Washington
+53067,53,wa,Washington
+53069,53,wa,Washington
+53071,53,wa,Washington
+53073,53,wa,Washington
+53075,53,wa,Washington
+53077,53,wa,Washington
+54000,54,wv,West Virginia
+54001,54,wv,West Virginia
+54003,54,wv,West Virginia
+54005,54,wv,West Virginia
+54007,54,wv,West Virginia
+54009,54,wv,West Virginia
+54011,54,wv,West Virginia
+54013,54,wv,West Virginia
+54015,54,wv,West Virginia
+54017,54,wv,West Virginia
+54019,54,wv,West Virginia
+54021,54,wv,West Virginia
+54023,54,wv,West Virginia
+54025,54,wv,West Virginia
+54027,54,wv,West Virginia
+54029,54,wv,West Virginia
+54031,54,wv,West Virginia
+54033,54,wv,West Virginia
+54035,54,wv,West Virginia
+54037,54,wv,West Virginia
+54039,54,wv,West Virginia
+54041,54,wv,West Virginia
+54043,54,wv,West Virginia
+54045,54,wv,West Virginia
+54047,54,wv,West Virginia
+54049,54,wv,West Virginia
+54051,54,wv,West Virginia
+54053,54,wv,West Virginia
+54055,54,wv,West Virginia
+54057,54,wv,West Virginia
+54059,54,wv,West Virginia
+54061,54,wv,West Virginia
+54063,54,wv,West Virginia
+54065,54,wv,West Virginia
+54067,54,wv,West Virginia
+54069,54,wv,West Virginia
+54071,54,wv,West Virginia
+54073,54,wv,West Virginia
+54075,54,wv,West Virginia
+54077,54,wv,West Virginia
+54079,54,wv,West Virginia
+54081,54,wv,West Virginia
+54083,54,wv,West Virginia
+54085,54,wv,West Virginia
+54087,54,wv,West Virginia
+54089,54,wv,West Virginia
+54091,54,wv,West Virginia
+54093,54,wv,West Virginia
+54095,54,wv,West Virginia
+54097,54,wv,West Virginia
+54099,54,wv,West Virginia
+54101,54,wv,West Virginia
+54103,54,wv,West Virginia
+54105,54,wv,West Virginia
+54107,54,wv,West Virginia
+54109,54,wv,West Virginia
+55000,55,wi,Wisconsin
+55001,55,wi,Wisconsin
+55003,55,wi,Wisconsin
+55005,55,wi,Wisconsin
+55007,55,wi,Wisconsin
+55009,55,wi,Wisconsin
+55011,55,wi,Wisconsin
+55013,55,wi,Wisconsin
+55015,55,wi,Wisconsin
+55017,55,wi,Wisconsin
+55019,55,wi,Wisconsin
+55021,55,wi,Wisconsin
+55023,55,wi,Wisconsin
+55025,55,wi,Wisconsin
+55027,55,wi,Wisconsin
+55029,55,wi,Wisconsin
+55031,55,wi,Wisconsin
+55033,55,wi,Wisconsin
+55035,55,wi,Wisconsin
+55037,55,wi,Wisconsin
+55039,55,wi,Wisconsin
+55041,55,wi,Wisconsin
+55043,55,wi,Wisconsin
+55045,55,wi,Wisconsin
+55047,55,wi,Wisconsin
+55049,55,wi,Wisconsin
+55051,55,wi,Wisconsin
+55053,55,wi,Wisconsin
+55055,55,wi,Wisconsin
+55057,55,wi,Wisconsin
+55059,55,wi,Wisconsin
+55061,55,wi,Wisconsin
+55063,55,wi,Wisconsin
+55065,55,wi,Wisconsin
+55067,55,wi,Wisconsin
+55069,55,wi,Wisconsin
+55071,55,wi,Wisconsin
+55073,55,wi,Wisconsin
+55075,55,wi,Wisconsin
+55077,55,wi,Wisconsin
+55078,55,wi,Wisconsin
+55079,55,wi,Wisconsin
+55081,55,wi,Wisconsin
+55083,55,wi,Wisconsin
+55085,55,wi,Wisconsin
+55087,55,wi,Wisconsin
+55089,55,wi,Wisconsin
+55091,55,wi,Wisconsin
+55093,55,wi,Wisconsin
+55095,55,wi,Wisconsin
+55097,55,wi,Wisconsin
+55099,55,wi,Wisconsin
+55101,55,wi,Wisconsin
+55103,55,wi,Wisconsin
+55105,55,wi,Wisconsin
+55107,55,wi,Wisconsin
+55109,55,wi,Wisconsin
+55111,55,wi,Wisconsin
+55113,55,wi,Wisconsin
+55115,55,wi,Wisconsin
+55117,55,wi,Wisconsin
+55119,55,wi,Wisconsin
+55121,55,wi,Wisconsin
+55123,55,wi,Wisconsin
+55125,55,wi,Wisconsin
+55127,55,wi,Wisconsin
+55129,55,wi,Wisconsin
+55131,55,wi,Wisconsin
+55133,55,wi,Wisconsin
+55135,55,wi,Wisconsin
+55137,55,wi,Wisconsin
+55139,55,wi,Wisconsin
+55141,55,wi,Wisconsin
+56000,56,wy,Wyoming
+56001,56,wy,Wyoming
+56003,56,wy,Wyoming
+56005,56,wy,Wyoming
+56007,56,wy,Wyoming
+56009,56,wy,Wyoming
+56011,56,wy,Wyoming
+56013,56,wy,Wyoming
+56015,56,wy,Wyoming
+56017,56,wy,Wyoming
+56019,56,wy,Wyoming
+56021,56,wy,Wyoming
+56023,56,wy,Wyoming
+56025,56,wy,Wyoming
+56027,56,wy,Wyoming
+56029,56,wy,Wyoming
+56031,56,wy,Wyoming
+56033,56,wy,Wyoming
+56035,56,wy,Wyoming
+56037,56,wy,Wyoming
+56039,56,wy,Wyoming
+56041,56,wy,Wyoming
+56043,56,wy,Wyoming
+56045,56,wy,Wyoming
+60000,60,as,American Samoa
+60010,60,as,American Samoa
+60020,60,as,American Samoa
+60030,60,as,American Samoa
+60040,60,as,American Samoa
+60050,60,as,American Samoa
+66000,66,gu,Guam
+66010,66,gu,Guam
+69000,69,mp,Northern Mariana Islands
+69085,69,mp,Northern Mariana Islands
+69100,69,mp,Northern Mariana Islands
+69110,69,mp,Northern Mariana Islands
+69120,69,mp,Northern Mariana Islands
+70000,70,pw,Republic of Palau
+70002,70,pw,Republic of Palau
+70003,70,pw,Republic of Palau
+72000,72,pr,Puerto Rico
+72001,72,pr,Puerto Rico
+72003,72,pr,Puerto Rico
+72005,72,pr,Puerto Rico
+72007,72,pr,Puerto Rico
+72009,72,pr,Puerto Rico
+72011,72,pr,Puerto Rico
+72013,72,pr,Puerto Rico
+72015,72,pr,Puerto Rico
+72017,72,pr,Puerto Rico
+72019,72,pr,Puerto Rico
+72021,72,pr,Puerto Rico
+72023,72,pr,Puerto Rico
+72025,72,pr,Puerto Rico
+72027,72,pr,Puerto Rico
+72029,72,pr,Puerto Rico
+72031,72,pr,Puerto Rico
+72033,72,pr,Puerto Rico
+72035,72,pr,Puerto Rico
+72037,72,pr,Puerto Rico
+72039,72,pr,Puerto Rico
+72041,72,pr,Puerto Rico
+72043,72,pr,Puerto Rico
+72045,72,pr,Puerto Rico
+72047,72,pr,Puerto Rico
+72049,72,pr,Puerto Rico
+72051,72,pr,Puerto Rico
+72053,72,pr,Puerto Rico
+72054,72,pr,Puerto Rico
+72055,72,pr,Puerto Rico
+72057,72,pr,Puerto Rico
+72059,72,pr,Puerto Rico
+72061,72,pr,Puerto Rico
+72063,72,pr,Puerto Rico
+72065,72,pr,Puerto Rico
+72067,72,pr,Puerto Rico
+72069,72,pr,Puerto Rico
+72071,72,pr,Puerto Rico
+72073,72,pr,Puerto Rico
+72075,72,pr,Puerto Rico
+72077,72,pr,Puerto Rico
+72079,72,pr,Puerto Rico
+72081,72,pr,Puerto Rico
+72083,72,pr,Puerto Rico
+72085,72,pr,Puerto Rico
+72087,72,pr,Puerto Rico
+72089,72,pr,Puerto Rico
+72091,72,pr,Puerto Rico
+72093,72,pr,Puerto Rico
+72095,72,pr,Puerto Rico
+72097,72,pr,Puerto Rico
+72099,72,pr,Puerto Rico
+72101,72,pr,Puerto Rico
+72103,72,pr,Puerto Rico
+72105,72,pr,Puerto Rico
+72107,72,pr,Puerto Rico
+72109,72,pr,Puerto Rico
+72111,72,pr,Puerto Rico
+72113,72,pr,Puerto Rico
+72115,72,pr,Puerto Rico
+72117,72,pr,Puerto Rico
+72119,72,pr,Puerto Rico
+72121,72,pr,Puerto Rico
+72123,72,pr,Puerto Rico
+72125,72,pr,Puerto Rico
+72127,72,pr,Puerto Rico
+72129,72,pr,Puerto Rico
+72131,72,pr,Puerto Rico
+72133,72,pr,Puerto Rico
+72135,72,pr,Puerto Rico
+72137,72,pr,Puerto Rico
+72139,72,pr,Puerto Rico
+72141,72,pr,Puerto Rico
+72143,72,pr,Puerto Rico
+72145,72,pr,Puerto Rico
+72147,72,pr,Puerto Rico
+72149,72,pr,Puerto Rico
+72151,72,pr,Puerto Rico
+72153,72,pr,Puerto Rico
+78000,78,vi,U.S. Virgin Islands
+78010,78,vi,U.S. Virgin Islands
+78020,78,vi,U.S. Virgin Islands
+78030,78,vi,U.S. Virgin Islands

@@ -153,3 +153,36 @@ def load_cli_data(denom_filepath, flu_filepath, mixed_filepath, flu_like_filepat
     data = data[["num", "den"]]
 
     return data
+
+
+def load_flu_data(denom_filepath, flu_filepath, dropdate, base_geo):
+    """Load in denominator and flu data, and combine them.
+
+    Args:
+        denom_filepath: path to the aggregated denominator data
+        flu_filepath: path to the aggregated flu data
+        dropdate: data drop date (datetime object)
+        base_geo: base geographic unit before aggregation ('fips')
+
+    Returns:
+        combined multiindexed dataframe, index 0 is geo_base, index 1 is date
+    """
+    assert base_geo == "fips", "base unit must be 'fips'"
+
+    # load each data stream
+    denom_data = load_chng_data(denom_filepath, dropdate, base_geo,
+                     Config.DENOM_COLS, Config.DENOM_DTYPES, Config.DENOM_COL)
+    flu_data = load_chng_data(flu_filepath, dropdate, base_geo,
+                     Config.FLU_COLS, Config.FLU_DTYPES, Config.FLU_COL)
+
+    # merge data
+    data = denom_data.merge(flu_data, how="outer", left_index=True, right_index=True)
+    assert data.isna().all(axis=1).sum() == 0, "entire row is NA after merge"
+
+    # calculate combined numerator and denominator
+    data.fillna(0, inplace=True)
+    data["num"] = data[Config.FLU_COL]
+    data["den"] = data[Config.DENOM_COL]
+    data = data[["num", "den"]]
+
+    return data

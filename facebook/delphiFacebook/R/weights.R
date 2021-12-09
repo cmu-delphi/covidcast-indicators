@@ -8,6 +8,8 @@
 #'   and "weights_out_dir" or "experimental_weights_out_dir". These are used in
 #'   constructing the path where the output data will be stored.
 #' @param module_type character value used to indicate module filtering, if any
+#' @param experimental_cids boolean flag indicating if CIDs to save should use
+#'   the, as of now, experimental format
 #'
 #' @importFrom readr write_csv
 #' @export
@@ -29,8 +31,11 @@ write_cid <- function(data, type_name, params, module_type="", experimental_cids
 
   token_data <- data[data[[date_col]] >= as.Date(params$start_date) &
                        data[[date_col]] <= as.Date(params$end_date), ]
-
-  msg_df(sprintf("writing weights data for %s", type_name), token_data)
+  
+  msg <- ifelse(is.na(module_type) || module_type == "" || length(module_type) == 0,
+                sprintf("writing weights data for %s", type_name),
+                sprintf("writing weights data for %s, %s", type_name, module_type))
+  msg_df(msg, token_data)
   write_csv(select(token_data, "token"), file.path(weights_out_dir, fname),
             col_names = FALSE)
 }
@@ -52,7 +57,7 @@ write_cid_experimental_wrapper <- function(data, type_name, params, module_type)
                 module_complete = "full")
   type_name <- map_type[type_name]
   
-  write_cid(data, type_name, params, module_type)
+  write_cid(data, type_name, params, module_type, experimental_cids=TRUE)
 }
 
 #' Create filename to output list of tokens.
@@ -85,6 +90,7 @@ generate_cid_list_filename <- function(type_name, params, module_type) {
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom data.table fread
 #' @importFrom stringi stri_extract_first
+#' @importFrom utils tail
 #' 
 #' @export
 join_weights <- function(data, params, weights = c("step1", "full"))

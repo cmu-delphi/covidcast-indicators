@@ -16,6 +16,9 @@ and "weights_out_dir" or "experimental_weights_out_dir". These are used in
 constructing the path where the output data will be stored.}
 
 \item{module_type}{character value used to indicate module filtering, if any}
+
+\item{experimental_cids}{boolean flag indicating if CIDs to save should use
+the, as of now, experimental format}
 }
 \description{
 Write only tokens that appeared between `start_date` and `end_date`.

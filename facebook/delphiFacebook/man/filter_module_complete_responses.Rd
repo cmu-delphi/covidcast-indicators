@@ -2,12 +2,15 @@
 % Please edit documentation in R/responses.R
 \name{filter_module_complete_responses}
 \alias{filter_module_complete_responses}
-\title{Filter responses to those that are "module-complete"}
+\title{Filter responses to those that are "module-complete". Splits by module assignment}
 \usage{
 filter_module_complete_responses(data_full, params)
 }
 \arguments{
 \item{data_full}{data frame of responses}
+
+\item{params}{named list of configuration options from `read_params()`,
+containing `start_date`, `backfill_days`, and `end_date`}
 }
 \description{
 Inclusion criteria:

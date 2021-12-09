@@ -546,6 +546,8 @@ module_assignment <- function(input_data, wave) {
       input_data$FL_23_DO == "ModuleB" ~ "B",
       TRUE ~ NA_character_
     )
+  } else {
+    input_data$module <- NA_character_
   }
   
   return(input_data)
@@ -753,7 +755,7 @@ filter_complete_responses <- function(data_full, params)
   return(data_full)
 }
 
-#' Filter responses to those that are "module-complete"
+#' Filter responses to those that are "module-complete". Splits by module assignment
 #'
 #' Inclusion criteria:
 #'
@@ -775,20 +777,21 @@ filter_complete_responses <- function(data_full, params)
 #' two criteria.
 #'
 #' @param data_full data frame of responses
+#' @param params named list of configuration options from `read_params()`,
+#'   containing `start_date`, `backfill_days`, and `end_date`
 #'
 #' @importFrom dplyr filter
 #' @importFrom rlang .data
 #' @export
 filter_module_complete_responses <- function(data_full, params)
 {
-  browser()
   date_col <- if ("day" %in% names(data_full)) { "day" } else { "Date" }
   data_full <- rename(data_full, Date = .data$date) %>% 
     filter_complete_responses(params) %>% 
     filter(!is.na(.data$age),
            !is.na(.data$gender),
            .data$Finished == 1) %>% 
-    select(date_col, token, module)
+    select(date_col, .data$token, .data$module)
   
   data_a <- filter(data_full, .data$module == "A")
   data_b <- filter(data_full, .data$module == "B")

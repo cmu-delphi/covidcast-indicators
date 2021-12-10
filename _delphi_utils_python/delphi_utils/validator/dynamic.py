@@ -110,6 +110,8 @@ class DynamicValidator:
             self.check_max_allowed_max_date(
                 max_date, geo_type, signal_type, report)
 
+            self.check_na_vals(geo_sig_df, geo_type, signal_type, report)
+
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
@@ -167,6 +169,40 @@ class DynamicValidator:
             kroc += 1
             if self.test_mode and kroc == 2:
                 break
+
+    def check_na_vals(self, geo_sig_df, geo_type, signal_type, report):
+        """Check if there are any NA values.
+
+        In particular, make sure that error doesn't occur for new Geo IDs introduced.
+
+        Arguments:
+            - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - signal_type: str; signal name as in the CSV name
+            - report: ValidationReport; report where results are added
+
+        Returns:
+            - None
+        """
+        def replace_first_six(df):
+            x = df.val.isnull()
+            # First 6 days have to be null
+            x.iloc[:6] = False
+            return df.time_value[x]
+
+        grouped_df = geo_sig_df.groupby('geo_id')
+        error_df = grouped_df.apply(replace_first_six)
+
+        if not error_df.empty:
+            for index, value in error_df.iteritems():
+                report.add_raised_error(
+                    ValidationFailure(f"check_val_missing (geo_id {index[0]})",
+                                      geo_type=geo_type,
+                                      signal=signal_type,
+                                      date=value
+                                      )
+                )
+
+        report.increment_total_checks()
 
     def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """Check if time since data was generated is reasonable or too long ago.

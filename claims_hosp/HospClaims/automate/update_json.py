@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def get_hosp(edi_file, geo_dir, out_dir, receiving_dir, se):
-    """Output the json.params file needed to run the emr_hosp package.
+    """Output the json.params file needed to run the claims_hosp package.
     
     Args:
         edi_file: Path to EDI file (claims)

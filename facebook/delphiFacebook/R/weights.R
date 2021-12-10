@@ -65,7 +65,7 @@ join_weights <- function(data, params, weights = c("step1", "full"))
 
   latest_weight <- tail(weights_files, n = 1)
   latest_weight_date <- as.Date(
-    stri_extract_first(latest_weight, regex = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
+    stri_extract_first(basename(latest_weight), regex = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
   )
   
   col_types <- c("character", "double")

@@ -105,7 +105,25 @@ class TestCheckRapidChange:
 
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_rapid_change_num_rows"
+class TestCheckNaVals:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+    def test_missing(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        data = {"val": [np.nan] * 14, "geo_id": [0,1] * 7, "time_value": ["2021-09-01"] * 14 }
+        df = pd.DataFrame(data)
+        #df.set_index(range(7), inplace=True)
+        validator.check_na_vals(df, "geo", "signal", report)
 
+        assert len(report.raised_errors) == 2
+        assert report.raised_errors[0].check_name == "check_val_missing (geo_id 0)"
+        assert report.raised_errors[1].check_name == "check_val_missing (geo_id 1)"
 
 class TestCheckAvgValDiffs:
     params = {

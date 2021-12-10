@@ -20,7 +20,6 @@ from delphi_utils.validator.utils import lag_converter
 
 from .constants import (METRICS, COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
-from .geo import geo_map
 from .pull import pull_gs_data
 
 

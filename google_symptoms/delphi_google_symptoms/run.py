@@ -89,11 +89,8 @@ def run_module(params):
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
-        elif geo_res in ["hhs", "nation"]:
-            df_pull = gmpr.replace_geocode(dfs["county"], "fips", geo_res, from_col="geo_id")
-            df_pull.rename(columns={geo_res: "geo_id"}, inplace=True)
         else:
-            df_pull = geo_map(dfs["county"], geo_res)
+            df_pull = dfs["county"]
 
         if len(df_pull) == 0:
             continue

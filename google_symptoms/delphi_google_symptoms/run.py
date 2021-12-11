@@ -13,7 +13,6 @@ import numpy as np
 from pandas import to_datetime
 from delphi_utils import (
     create_export_csv,
-    geomap,
     get_structured_logger
 )
 from delphi_utils.validator.utils import lag_converter
@@ -83,7 +82,6 @@ def run_module(params):
                        export_start_date,
                        export_end_date,
                        num_export_days)
-    gmpr = geomap.GeoMapper()
 
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":

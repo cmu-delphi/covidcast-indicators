@@ -19,6 +19,7 @@ from delphi_utils.validator.utils import lag_converter
 
 from .constants import (METRICS, COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
+from .geo import geo_map
 from .pull import pull_gs_data
 
 
@@ -87,7 +88,7 @@ def run_module(params):
         if geo_res == "state":
             df_pull = dfs["state"]
         else:
-            df_pull = dfs["county"]
+            df_pull = geo_map(dfs["county"], geo_res)
 
         if len(df_pull) == 0:
             continue

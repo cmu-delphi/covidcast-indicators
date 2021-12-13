@@ -7,6 +7,10 @@ data as-is.  We also aggregate the data to the MSA and HRR levels.
 ## Geographical Levels (`geo`)
 * `county`: reported using zero-padded FIPS codes.  The county level data is derived 
 from `/subregions/state/2020_US_state_daily_symptoms_dataset.csv`.
+* `msa`: reported using cbsa (consistent with all other COVIDcast sensors). The msa
+level data is derived from county level data using population weighted average.
+* `hrr`: reported using HRR number (consistent with all other COVIDcast sensors). The 
+hrr level data is derived from county level data using population weighted average.
 * `state`: reported using two-letter postal code. The state level data is derived from
 `2020_US_daily_symptoms_dataset.csv` which includes data for District of Columbia.
 

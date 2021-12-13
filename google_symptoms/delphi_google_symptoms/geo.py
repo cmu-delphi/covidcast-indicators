@@ -31,8 +31,7 @@ def generate_transition_matrix(geo_res):
     else:
         mapping_flag = "state_id"
         map_df = gmpr.get_crosswalk("state", "state")
-        map_df = gmpr.add_geocode(map_df, "state_code", "hhs")
-        map_df = gmpr.add_geocode(map_df, "state_code", "nation")
+        map_df = gmpr.add_geocode(map_df, "state_code", geo_res)
         map_df = gmpr.add_population_column(map_df, "state_code")
 
     if geo_res == "hrr":

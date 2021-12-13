@@ -309,7 +309,7 @@ class DynamicValidator:
         Returns:
             - reference_api_df: Supplemented version of original
         """
-        reference_api_df_max_date = reference_api_df.time_value.max()
+        reference_api_df_max_date = reference_api_df.time_value.max().date()
         if reference_api_df_max_date < reference_end_date:
             # Querying geo_sig_df, only taking relevant rows
             geo_sig_df_supplement = geo_sig_df.query(

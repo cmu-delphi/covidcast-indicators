@@ -115,7 +115,7 @@ class TestGeo:
         gmpr = GeoMapper()
         df = pd.DataFrame(
             {
-                "geo_id": ["01001", "01009", "01007"],
+                "geo_id": ["al", "fl", "tx"],
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
                 METRICS[0]: [10, 15, 2],
                 METRICS[1]: [100, 20, 45],
@@ -123,12 +123,13 @@ class TestGeo:
             }
         )
 
-        fips2hhs = gmpr.add_population_column(gmpr.get_crosswalk("fips", "hhs"), "fips")
-        hhs_pop = fips2hhs.groupby("hhs"
+        state2hhs = gmpr.add_population_column(gmpr.get_crosswalk("state", "state"), "state_code")
+        state2hhs = gmpr.add_geocode(state2hhs, "state_code", "hhs")
+        hhs_pop = state2hhs.groupby("hhs"
             ).sum(
             ).reset_index(
             ).rename(columns={"population": "hhs_pop"})
-        df_plus = df.merge(fips2hhs, left_on="geo_id", right_on="fips", how="left"
+        df_plus = df.merge(state2hhs, left_on="geo_id", right_on="state_id", how="left"
             ).merge(hhs_pop, on="hhs", how="left"
             ).assign(
                 fractional_pop = lambda x: x.population / x.hhs_pop,
@@ -147,7 +148,7 @@ class TestGeo:
         new_df = geo_map(df, "hhs").dropna()
 
         assert set(new_df.keys()) == set(df.keys())
-        assert set(new_df["geo_id"]) == set(["4"])
+        assert set(new_df["geo_id"]) == set(["4", "6"])
         assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
         assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
         assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())
@@ -156,7 +157,7 @@ class TestGeo:
         gmpr = GeoMapper()
         df = pd.DataFrame(
             {
-                "geo_id": ["01001", "01009", "01007"],
+                "geo_id": ["al", "il", "tx"],
                 "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
                 METRICS[0]: [10, 15, 2],
                 METRICS[1]: [100, 20, 45],
@@ -164,14 +165,13 @@ class TestGeo:
             }
         )
 
-        fips2nation = gmpr.add_population_column(gmpr.get_crosswalk("fips", "hhs"), "fips")
-        fips2nation.rename({"hhs": "nation"}, axis=1, inplace=True)
-        fips2nation["nation"] = "nation"
-        nation_pop = fips2nation.groupby("nation"
+        state2nation = gmpr.add_population_column(gmpr.get_crosswalk("state", "state"), "state_code")
+        state2nation = gmpr.add_geocode(state2nation, "state_code", "nation")
+        nation_pop = state2nation.groupby("nation"
             ).sum(
             ).reset_index(
             ).rename(columns={"population": "nation_pop"})
-        df_plus = df.merge(fips2nation, left_on="geo_id", right_on="fips", how="left"
+        df_plus = df.merge(state2nation, left_on="geo_id", right_on="state_id", how="left"
             ).merge(nation_pop, on="nation", how="left"
             ).assign(
                 fractional_pop = lambda x: x.population / x.nation_pop,
@@ -190,7 +190,7 @@ class TestGeo:
         new_df = geo_map(df, "nation").dropna()
 
         assert set(new_df.keys()) == set(df.keys())
-        assert set(new_df["geo_id"]) == set(["nation"])
+        assert set(new_df["geo_id"]) == set(["us"])
         assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
         assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
         assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())

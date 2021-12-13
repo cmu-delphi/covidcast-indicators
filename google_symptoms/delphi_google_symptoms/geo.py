@@ -23,15 +23,21 @@ def generate_transition_matrix(geo_res):
         The first is a data frame for HRR regions and the second are MSA
         regions.
     """
-    if geo_res != "nation":
+    if geo_res in ["hrr", "msa"]:
+        mapping_flag = "fips"
         map_df = gmpr.get_crosswalk("fips", geo_res)
+        # Add population as weights
+        map_df = gmpr.add_population_column(map_df, "fips")
     else:
-        map_df = gmpr.get_crosswalk("fips", "hhs")
-        map_df[geo_res] = "nation"
-    # Add population as weights
-    map_df = gmpr.add_population_column(map_df, "fips")
+        mapping_flag = "state_id"
+        map_df = gmpr.get_crosswalk("state", "state")
+        map_df = gmpr.add_geocode(map_df, "state_code", "hhs")
+        map_df = gmpr.add_geocode(map_df, "state_code", "nation")
+        map_df = gmpr.add_population_column(map_df, "state_code")
+
     if geo_res == "hrr":
         map_df["population"] = map_df["population"] *  map_df["weight"]
+
     aggregated_pop = map_df.groupby(geo_res).sum().reset_index()
     map_df = map_df.merge(
             aggregated_pop, on=geo_res, how="inner", suffixes=["_raw", "_groupsum"]
@@ -39,8 +45,8 @@ def generate_transition_matrix(geo_res):
     map_df["weight"] = map_df["population_raw"] / map_df["population_groupsum"]
 
     map_df = pd.pivot_table(
-                 map_df, values='weight', index=["fips"], columns=[geo_res]
-              ).fillna(0).reset_index().rename({"fips": "geo_id"}, axis = 1)
+                 map_df, values='weight', index=[mapping_flag], columns=[geo_res]
+              ).fillna(0).reset_index().rename({mapping_flag: "geo_id"}, axis = 1)
     return map_df
 
 def geo_map(df, geo_res):

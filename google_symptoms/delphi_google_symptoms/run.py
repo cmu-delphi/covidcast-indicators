@@ -87,6 +87,8 @@ def run_module(params):
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
+        elif geo_res in ["hhs", "nation"]:
+            df_pull = geo_map(dfs["state"], geo_res)
         else:
             df_pull = geo_map(dfs["county"], geo_res)
 

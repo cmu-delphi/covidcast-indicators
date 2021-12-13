@@ -110,3 +110,88 @@ class TestGeo:
         assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
         assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
         assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())
+        
+    def test_hhs(self):
+        gmpr = GeoMapper()
+        df = pd.DataFrame(
+            {
+                "geo_id": ["al", "fl", "tx"],
+                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
+                METRICS[0]: [10, 15, 2],
+                METRICS[1]: [100, 20, 45],
+                COMBINED_METRIC: [110, 35, 47],
+            }
+        )
+
+        state2hhs = gmpr.add_population_column(gmpr.get_crosswalk("state", "state"), "state_code")
+        state2hhs = gmpr.add_geocode(state2hhs, "state_code", "hhs")
+        hhs_pop = state2hhs.groupby("hhs"
+            ).sum(
+            ).reset_index(
+            ).rename(columns={"population": "hhs_pop"})
+        df_plus = df.merge(state2hhs, left_on="geo_id", right_on="state_id", how="left"
+            ).merge(hhs_pop, on="hhs", how="left"
+            ).assign(
+                fractional_pop = lambda x: x.population / x.hhs_pop,
+                metric_0 = lambda x: x.fractional_pop * x[METRICS[0]],
+                metric_1 = lambda x: x.fractional_pop * x[METRICS[1]],
+                combined_metric = lambda x: x.metric_0 + x.metric_1
+            ).groupby("hhs"
+            ).sum(
+            ).drop(
+                labels=[METRICS[0], METRICS[1], COMBINED_METRIC],
+                axis="columns"
+            ).rename(
+                columns={"metric_0": METRICS[0], "metric_1": METRICS[1], "combined_metric": COMBINED_METRIC}
+            )
+
+        new_df = geo_map(df, "hhs").dropna()
+
+        assert set(new_df.keys()) == set(df.keys())
+        assert set(new_df["geo_id"]) == set(["4", "6"])
+        assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
+        assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
+        assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())
+    
+    def test_nation(self):
+        gmpr = GeoMapper()
+        df = pd.DataFrame(
+            {
+                "geo_id": ["al", "il", "tx"],
+                "timestamp": ["2020-02-15", "2020-02-15", "2020-02-15"],
+                METRICS[0]: [10, 15, 2],
+                METRICS[1]: [100, 20, 45],
+                COMBINED_METRIC: [110, 35, 47],
+            }
+        )
+
+        state2nation = gmpr.add_population_column(gmpr.get_crosswalk("state", "state"), "state_code")
+        state2nation = gmpr.add_geocode(state2nation, "state_code", "nation")
+        nation_pop = state2nation.groupby("nation"
+            ).sum(
+            ).reset_index(
+            ).rename(columns={"population": "nation_pop"})
+        df_plus = df.merge(state2nation, left_on="geo_id", right_on="state_id", how="left"
+            ).merge(nation_pop, on="nation", how="left"
+            ).assign(
+                fractional_pop = lambda x: x.population / x.nation_pop,
+                metric_0 = lambda x: x.fractional_pop * x[METRICS[0]],
+                metric_1 = lambda x: x.fractional_pop * x[METRICS[1]],
+                combined_metric = lambda x: x.metric_0 + x.metric_1
+            ).groupby("nation"
+            ).sum(
+            ).drop(
+                labels=[METRICS[0], METRICS[1], COMBINED_METRIC],
+                axis="columns"
+            ).rename(
+                columns={"metric_0": METRICS[0], "metric_1": METRICS[1], "combined_metric": COMBINED_METRIC}
+            )
+
+        new_df = geo_map(df, "nation").dropna()
+
+        assert set(new_df.keys()) == set(df.keys())
+        assert set(new_df["geo_id"]) == set(["us"])
+        assert new_df[METRICS[0]].values == pytest.approx(df_plus[METRICS[0]].tolist())
+        assert new_df[METRICS[1]].values == pytest.approx(df_plus[METRICS[1]].tolist())
+        assert new_df[COMBINED_METRIC].values == pytest.approx(df_plus[COMBINED_METRIC].tolist())
+

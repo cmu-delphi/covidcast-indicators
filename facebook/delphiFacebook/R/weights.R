@@ -5,22 +5,25 @@
 #' @param data a data frame containing a column named "token"
 #' @param type_name character value used for naming the output file
 #' @param params a named list; must contain entries "start_time", "end_time",
-#'   and "weights_out_dir". These are used in constructing the path where the
-#'   output data will be stored.
+#'   and "weights_out_dir" or "experimental_weights_out_dir". These are used in
+#'   constructing the path where the output data will be stored.
+#' @param module_type character value used to indicate module filtering, if any
+#' @param experimental_cids boolean flag indicating if CIDs to save should use
+#'   the, as of now, experimental format
 #'
 #' @importFrom readr write_csv
 #' @export
-write_cid <- function(data, type_name, params)
+write_cid <- function(data, type_name, params, module_type="", experimental_cids=FALSE)
 {
-  fname <- sprintf(
-    "cvid_cids_%s_response_%s_-_%s.csv",
-    type_name,
-    format(params$start_time, "%H_%M_%Y_%m_%d", tz = tz_to),
-    format(params$end_time, "%H_%M_%Y_%m_%d", tz = tz_to)
-  )
+  if (experimental_cids) {
+    weights_out_dir <- params$experimental_weights_out_dir
+  } else {
+    weights_out_dir <- params$weights_out_dir
+  }
+  create_dir_not_exist(weights_out_dir)
 
-  create_dir_not_exist(params$weights_out_dir)
-
+  fname <- generate_cid_list_filename(type_name, params, module_type)
+  
   # aggregate data contains a `day` column that is a Date object. individual
   # data contains a `Date` column for the same purpose, which is *not* a `Date`
   # object but a formatted string. This sure is elegant!
@@ -28,10 +31,49 @@ write_cid <- function(data, type_name, params)
 
   token_data <- data[data[[date_col]] >= as.Date(params$start_date) &
                        data[[date_col]] <= as.Date(params$end_date), ]
-
-  msg_df(sprintf("writing weights data for %s", type_name), token_data)
-  write_csv(select(token_data, "token"), file.path(params$weights_out_dir, fname),
+  
+  msg <- ifelse(is.na(module_type) || module_type == "" || length(module_type) == 0,
+                sprintf("writing weights data for %s", type_name),
+                sprintf("writing weights data for %s, %s", type_name, module_type))
+  msg_df(msg, token_data)
+  write_csv(select(token_data, "token"), file.path(weights_out_dir, fname),
             col_names = FALSE)
+}
+
+#' Write a file containing newly-seen tokens, using new CID list names
+#'
+#' @param data a data frame containing a column named "token"
+#' @param type_name character value used for naming the output file
+#' @param params a named list; must contain entries "start_time", "end_time",
+#'   and "experimental_weights_out_dir". These are used in constructing the path
+#'   where the output data will be stored.
+#' @param module_type character value used to indicate module filtering, if any
+#'
+#' @export
+write_cid_experimental_wrapper <- function(data, type_name, params, module_type)
+{
+  map_type <- c(full = "partial",
+                part_a = "part_a",
+                module_complete = "full")
+  type_name <- map_type[type_name]
+  
+  write_cid(data, type_name, params, module_type, experimental_cids=TRUE)
+}
+
+#' Create filename to output list of tokens.
+#'
+#' @param type_name character value used for naming the output file
+#' @param params a named list; must contain entries "start_time" and "end_time".
+#'   These are used in constructing the file name.
+#' @param module_type character value used to indicate module filtering, if any
+generate_cid_list_filename <- function(type_name, params, module_type) {
+  sprintf(
+    "cvid_cids_%s_response_%s%s_-_%s.csv",
+    type_name,
+    module_type,
+    format(params$start_time, "%H_%M_%Y_%m_%d", tz = tz_to),
+    format(params$end_time, "%H_%M_%Y_%m_%d", tz = tz_to)
+  )
 }
 
 #' Add weights to a dataset of responses
@@ -48,6 +90,7 @@ write_cid <- function(data, type_name, params)
 #' @importFrom dplyr bind_rows left_join
 #' @importFrom data.table fread
 #' @importFrom stringi stri_extract_first
+#' @importFrom utils tail
 #' 
 #' @export
 join_weights <- function(data, params, weights = c("step1", "full"))

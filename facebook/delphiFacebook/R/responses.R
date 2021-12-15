@@ -692,7 +692,7 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_6PADB8DyF9SIyXk" = 10,
                 "SV_4VEaeffqQtDo33M" = 11,
                 "SV_3TL0r243mLkDzCK" = 12.5, # experimental version of Wave 12
-                "TBD finalized version" = 12 # finalized version of Wave 12
+                "SV_eDISRi5wQcNU70G" = 12 # finalized version of Wave 12
   )
 
   if ( any(names(waves) == surveyID) ) {

@@ -209,9 +209,8 @@ verify_aggs <- function(aggregations) {
                            MARGIN=1, FUN=paste, collapse="_")
   
   aggregations$var_weight <- "weight"
-  aggregations$skip_mixing <- FALSE
   
-  expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
+  expected_names <- c("name", "var_weight", "metric", "group_by",
                       "compute_fn", "post_fn", "id")
   if ( !all(expected_names %in% names(aggregations)) ) {
     stop(sprintf(

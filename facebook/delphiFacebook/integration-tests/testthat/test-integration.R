@@ -156,7 +156,7 @@ test_that("testing weighted community values files", {
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[input_data$date == "2020-05-11" & input_data$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
   
   n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))
@@ -175,7 +175,7 @@ test_that("testing weighted community values files", {
 
   # there are 2 / 4 households in VA on 2020-05-13 for community
   these <- input_data[input_data$date == "2020-05-13" & input_data$zip5 == "23220",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
 
   n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))
@@ -204,7 +204,7 @@ test_that("testing weighted smoothed community values files", {
   these <- input_data[
      ((input_data$date == "2020-05-10") | (input_data$date == "2020-05-11")) &
      input_data$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
 
   n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))

@@ -240,8 +240,8 @@ test_that("county aggs are created correctly", {
   params$s_mix_coef <- 0.05
   
   agg <- tribble(
-    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight, ~skip_mixing,
-    "pct_hh_fever", "hh_fever", c("gender", "geo_id"), compute_binary, I, "pct_hh_fever", "weight", FALSE
+    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight,
+    "pct_hh_fever", "hh_fever", c("gender", "geo_id"), compute_binary, I, "pct_hh_fever", "weight"
   )
   geomap <- tribble(
     ~zip5, ~geo_id,

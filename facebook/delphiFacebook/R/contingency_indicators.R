@@ -82,6 +82,8 @@ get_aggs <- function() {
     "pct_hh_cmnty_cli", "hh_community_yes", compute_binary, jeffreys_binary,
     "pct_nohh_cmnty_cli", "community_yes", compute_binary, jeffreys_binary,
     "pct_direct_contact", "c_direct_contact", compute_binary, jeffreys_binary,
+    "pct_avoid_contact", "c_avoid_contact", compute_binary, jeffreys_binary,
+    "pct_avoid_contact_7d", "c_avoid_contact_7d", compute_binary, jeffreys_binary,
     
     # symptoms
     "pct_symp_fever", "symp_fever", compute_binary, jeffreys_binary,

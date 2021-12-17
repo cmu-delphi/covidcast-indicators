@@ -1080,6 +1080,36 @@ code_behaviors <- function(input_data, wave) {
   } else {
     input_data$c_direct_contact <- NA
   }
+
+  # avoid_contact
+  # Percentage of respondents that have reported having intentionally avoided
+  # contact with other people all or most of the time
+  # 1 = all of the time, 2 = most of the time, 3 = some of the time,
+  # 4 = none of the time
+  if ("C7" %in% names(input_data)) {
+    input_data$c_avoid_contact <- case_when(
+      input_data$C7 %in% c(1, 2) ~ 1,
+      input_data$C7 %in% c(3, 4) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$c_avoid_contact <- NA_real_
+  }
+
+  # avoid_contact_7d
+  # Percentage of respondents that have reported having intentionally avoided
+  # contact with other people all or most of the time in the last 7 days
+  # 1 = all of the time, 2 = most of the time, 3 = some of the time,
+  # 4 = a little of the time, 5 = none of the time
+  if ("C7a" %in% names(input_data)) {
+    input_data$c_avoid_contact_7d <- case_when(
+      input_data$C7a %in% c(1, 2) ~ 1,
+      input_data$C7a %in% c(3, 4, 5) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$c_avoid_contact_7d <- NA_real_
+  }
   
   return(input_data)
 }

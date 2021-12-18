@@ -12,6 +12,7 @@ PYTHON:=env/bin/python
 QUALTRICS=$(shell $(PYTHON) -m delphi_utils get input_dir)
 WEIGHTS=$(shell $(PYTHON) -m delphi_utils get weights_in_dir)
 CIDS=$(shell $(PYTHON) -m delphi_utils get weights_out_dir)
+CIDS_EXP=$(shell $(PYTHON) -m delphi_utils get experimental_weights_out_dir)
 INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
 INDIVIDUAL_RACEETH=$(shell $(PYTHON) -m delphi_utils get individual_raceeth_dir)
 ARCHIVE=$(shell $(PYTHON) -m delphi_utils get archive_dir)
@@ -25,7 +26,9 @@ SFTP_OPTIONS=$(shell $(PYTHON) -m delphi_utils get sftp_options)
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
 
 ANTIJOIN:="antijoin.cids.sorted.txt"
+ANTIJOIN_EXP:="antijoin.experimental.cids.sorted.txt"
 CIDS_DEST:="fb-interchange/cmu_respondent_ids"
+CIDS_EXP_DEST:="fb-interchange/cmu_respondent_ww_ids"
 INDIVID_DEST:="fb-public-results/"
 INDIVID_RACEETH_DEST:="protected-race-ethnicity-data/"
 RAW_DEST:="raw"
@@ -59,7 +62,7 @@ tidy: receiving
 	mv scratch/*.tgz tidy/
 
 clean:
-	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(INDIVIDUAL_RACEETH)/*.csv  $(CIDS)/*.csv
+	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(INDIVIDUAL_RACEETH)/*.csv $(CIDS)/*.csv $(CIDS_EXP)/*.csv
 
 clean-archive:
 	rm -f $(ARCHIVE)/*.Rds
@@ -77,6 +80,9 @@ install: install-python install-R
 
 $(CIDS):
 	[ -f $(CIDS) ] || mkdir -p $(CIDS)
+
+$(CIDS_EXP):
+	[ -f $(CIDS_EXP) ] || mkdir -p $(CIDS_EXP)
 
 init-qualtrics:
 	grep '"token": "..*"' params.json
@@ -133,14 +139,14 @@ dev: delphiFacebook_1.0.tar.gz
 lib:
 	R -e 'roxygen2::roxygenise("delphiFacebook")'
 
-run-R: $(CIDS)
+run-R: $(CIDS) $(CIDS_EXP)
 	rm -rf tmp
 	time Rscript run.R 2>&1 |tee tmp
 	grep "run_facebook completed successfully" tmp
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-individual post-individual-raceeth post-done tidy
+pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-experimental-cids post-individual post-individual-raceeth post-done tidy
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
@@ -184,6 +190,28 @@ post-cids: $(TODAY) $(CIDS)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` cid files" >> $(MESSAGES)
 	touch $@
 
+post-experimental-cids: $(TODAY) $(CIDS_EXP)
+	rm -rf tmp
+	touch $(ANTIJOIN_EXP)
+	POST=`find $(CIDS_EXP) -maxdepth 1 -newer $(TODAY) -name "cvid_cids_*.csv"`; \
+	[ -n "$${POST}" ]; \
+	LC_ALL=C find $(CIDS_EXP) -maxdepth 1 -daystart -mtime +0 -name "cvid_cids*.csv" -exec sort -u -o ${ANTIJOIN_EXP} {} +; \
+	BATCH=""; \
+	for f in $${POST}; do \
+	    LC_ALL=C comm -23 <(LC_ALL=C sort $$f) ${ANTIJOIN_EXP} >tmp; \
+	    diff -q tmp $$f || mv $$f $$f.bak; \
+	    mv tmp $$f; \
+	    ncids=`wc -l $$f | awk '{print $$1}'`; \
+	    if [[ $$ncids == "0" ]]; then \
+		echo "ERROR: 0 CIDs reported for $$f"; \
+		exit 73; \
+	    fi; \
+	    BATCH="$${BATCH}put $$f ${CIDS_EXP_DEST}\n"; \
+	done; \
+	$(SFTP_POST); \
+	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` experimental cid files" >> $(MESSAGES)
+	touch $@
+
 post-individual: $(TODAY) $(INDIVIDUAL)
 	POST=`find $(INDIVIDUAL) -maxdepth 1 -newer $(TODAY) -name "cvid_responses_*.csv"`; \
 	[ -n "$${POST}" ]; \
@@ -210,9 +238,11 @@ post-individual-raceeth: $(TODAY) $(INDIVIDUAL_RACEETH)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted `echo $${POST} | wc -w` race-ethnicity microresponse files" >> $(MESSAGES)
 	touch $@
 
-post-done: post-cids
+post-done: post-cids post-experimental-cids
 	touch $(YESTERDAY).done
 	BATCH="put $(YESTERDAY).done $(CIDS_DEST)\n"; \
+	$(SFTP_POST)
+	BATCH="put $(YESTERDAY).done $(CIDS_EXP_DEST)\n"; \
 	$(SFTP_POST)
 	echo "SUCCESS: $(DRY_MESSAGE)Posted $(YESTERDAY).done" >> $(MESSAGES)
 

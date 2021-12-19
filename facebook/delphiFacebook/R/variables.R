@@ -646,7 +646,9 @@ code_vaccines <- function(input_data, wave) {
     # If the entire column is NA, ifelse() results in a logical vector, not a
     # character vector, which confuses split_options; since the result should be
     # NA anyway
-    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
+    vaccine_barriers <- as.character(
+      ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
+    )
     if (any(!is.na(vaccine_barriers))) {
       vaccine_barriers <- split_options(vaccine_barriers)
     }
@@ -786,7 +788,9 @@ code_vaccines <- function(input_data, wave) {
     # If the entire column is NA, ifelse() results in a logical vector, not a
     # character vector, which confuses split_options; since the result should be
     # NA anyway
-    vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
+    vaccine_barriers <- as.character(
+      ifelse(input_data$V15b == "13", NA, input_data$V15b)
+    )
     if (any(!is.na(vaccine_barriers))) {
       vaccine_barriers <- split_options(vaccine_barriers)
     } else {

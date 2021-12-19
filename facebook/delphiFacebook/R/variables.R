@@ -793,8 +793,6 @@ code_vaccines <- function(input_data, wave) {
     )
     if (any(!is.na(vaccine_barriers))) {
       vaccine_barriers <- split_options(vaccine_barriers)
-    } else {
-      vaccine_barriers <- input_data$V15b
     }
 
     input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")

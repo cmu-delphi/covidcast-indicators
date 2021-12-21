@@ -10,10 +10,14 @@ from .constants import SIGNALS, DIFFERENCE_MAPPING
 
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
 =======
 def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: str, logger: Logger) -> pd.DataFrame:
 >>>>>>> backup-branch
+=======
+def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
+>>>>>>> 3d66880ed6bf8823b8086d3d9e742d09cb6e3a6b
     """Pull the latest data from the CDC on vaccines and conform it into a dataset.
 
     The output dataset has:
@@ -37,12 +41,15 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: st
     base_url: str
         Base URL for pulling the CDC Vaccination Data
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
     export_start_date: str 
         The start date for the csv file (can be empty)
     export_end_date: 
         The end date for the csv file (can be empty)
 >>>>>>> backup-branch
+=======
+>>>>>>> 3d66880ed6bf8823b8086d3d9e742d09cb6e3a6b
     logger: Logger
     Returns
     -------
@@ -125,6 +132,9 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: st
 
     # timestamp: str -> datetime
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 3d66880ed6bf8823b8086d3d9e742d09cb6e3a6b
     df.columns = ["fips",
                   "cumulative_counts_tot_vaccine",
                   "cumulative_counts_tot_vaccine_12P",
@@ -135,6 +145,7 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: st
                   "cumulative_counts_part_vaccine_18P",
                   "cumulative_counts_part_vaccine_65P",
                   "timestamp"]
+<<<<<<< HEAD
 =======
     try:
         df.columns = ["fips",
@@ -155,6 +166,8 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: st
         ) from e
 
 >>>>>>> backup-branch
+=======
+>>>>>>> 3d66880ed6bf8823b8086d3d9e742d09cb6e3a6b
     df_dummy = df.loc[(df["fips"]!='00000') & (df["timestamp"] == min(df["timestamp"]))].copy()
     #handle fips 00000 separately
     df_oth = df.loc[((df["fips"]=='00000') &

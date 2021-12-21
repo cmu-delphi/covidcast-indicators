@@ -9,7 +9,7 @@ from .constants import SIGNALS, DIFFERENCE_MAPPING
 
 
 
-def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
+def pull_cdcvacc_data(base_url: str, export_start_date: str, export_end_date: str, logger: Logger) -> pd.DataFrame:
     """Pull the latest data from the CDC on vaccines and conform it into a dataset.
 
     The output dataset has:
@@ -32,6 +32,10 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     ----------
     base_url: str
         Base URL for pulling the CDC Vaccination Data
+    export_start_date: str 
+        The start date for the csv file (can be empty)
+    export_end_date: 
+        The end date for the csv file (can be empty)
     logger: Logger
     Returns
     -------
@@ -49,8 +53,38 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
     ]
 
 
-    # Read data
+    # Read data and cut off by designated start date
+    
     df = pd.read_csv(base_url)
+    df['Date']=pd.to_datetime(df['Date'])
+    try:
+        export_start_date = pd.to_datetime(export_start_date)
+        df = df.query('@export_start_date <= Date')
+    except KeyError as e:
+        raise ValueError(
+            "Tried to convert export_start_date param "
+            "to datetime and filter but failed. Please "
+            "check this input."
+        ) from e
+    
+    try:
+        export_end_date = pd.to_datetime(export_end_date)
+        df = df.query('export_end_date >= Date')
+    except KeyError as e:
+        raise ValueError(
+            "Tried to convert export_end_date param "
+            "to datetime and filter but failed. Please "
+            "check this input."
+        ) from e
+
+    if df['Date'].shape[0] == 0:
+        raise ValueError(
+            "Output df has no rows. Please check  "
+            "if export_start_date is later than "
+            "export_end_date. Else check if base_url"
+            " still functional."
+        ) from e
+
     logger.info("data retrieved from source",
                 num_rows=df.shape[0],
                 num_cols=df.shape[1],
@@ -84,16 +118,24 @@ def pull_cdcvacc_data(base_url: str, logger: Logger) -> pd.DataFrame:
         ) from e
 
     # timestamp: str -> datetime
-    df.columns = ["fips",
-                  "cumulative_counts_tot_vaccine",
-                  "cumulative_counts_tot_vaccine_12P",
-                  "cumulative_counts_tot_vaccine_18P",
-                  "cumulative_counts_tot_vaccine_65P",
-                  "cumulative_counts_part_vaccine",
-                  "cumulative_counts_part_vaccine_12P",
-                  "cumulative_counts_part_vaccine_18P",
-                  "cumulative_counts_part_vaccine_65P",
-                  "timestamp"]
+    try:
+        df.columns = ["fips",
+                      "cumulative_counts_tot_vaccine",
+                      "cumulative_counts_tot_vaccine_12P",
+                      "cumulative_counts_tot_vaccine_18P",
+                      "cumulative_counts_tot_vaccine_65P",
+                      "cumulative_counts_part_vaccine",
+                      "cumulative_counts_part_vaccine_12P",
+                      "cumulative_counts_part_vaccine_18P",
+                      "cumulative_counts_part_vaccine_65P",
+                      "timestamp"]
+    except KeyError as e:
+        raise ValueError(
+            "Tried to name wrong number of columns. The dataset "
+            "schema may have changed.  Please investigate and "
+            "amend drop_columns."
+        ) from e
+
     df_dummy = df.loc[(df["fips"]!='00000') & (df["timestamp"] == min(df["timestamp"]))].copy()
     #handle fips 00000 separately
     df_oth = df.loc[((df["fips"]=='00000') &

@@ -5,7 +5,8 @@
   },
   "indicator": {
     "base_url": "https://data.cdc.gov/api/views/8xkx-amqh/rows.csv",
-    "export_start_date": "2020-12-13"
+    "export_start_date": "2020-12-13",
+    "export_end_date": "2020-12-15"
   },
   "validation": {
     "common": {

@@ -40,8 +40,10 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     base_url = params["indicator"]["base_url"]
+    export_start_date = params["indicator"]["export_start_date"]
+    export_end_date = params["indicator"]["export_end_date"]
     ## build the base version of the signal at the most detailed geo level you can get.
-    all_data = pull_cdcvacc_data(base_url, logger)
+    all_data = pull_cdcvacc_data(base_url, export_start_date, export_end_date, logger)
     run_stats = []
     ## aggregate & smooth
 

@@ -23,7 +23,7 @@ class TestPullCDCVaccines:
     """Tests for the `pull_cdcvacc_data()` function."""
     def test_good_file(self):
         """Test the expected output from a smaller file."""
-        df = pull_cdcvacc_data(BASE_URL_GOOD, TEST_LOGGER)
+        df = pull_cdcvacc_data(BASE_URL_GOOD, "", "", TEST_LOGGER)
         expected_df = pd.DataFrame({
             "fips": ["00000","00000","32013","32013","48305","48305"],
             "timestamp": [pd.Timestamp("2021-08-25"), pd.Timestamp("2021-08-26"),
@@ -52,18 +52,19 @@ class TestPullCDCVaccines:
             
             index=[0, 1, 2, 3, 4, 5])
         # sort since rows order doesn't matter
+        print(df.sort_index().to_string())
         pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())
 
     def test_missing_days(self):
         """Test if error is raised when there are missing days."""
         with pytest.raises(ValueError):
             pull_cdcvacc_data(
-                BASE_URL_BAD["missing_days"], TEST_LOGGER
+                BASE_URL_BAD["missing_days"], "","", TEST_LOGGER
             )
 
     def test_missing_cols(self):
         """Test if error is raised when there are missing columns."""
         with pytest.raises(ValueError):
             pull_cdcvacc_data(
-                BASE_URL_BAD["missing_cols"],TEST_LOGGER
+                BASE_URL_BAD["missing_cols"],"","",TEST_LOGGER
             )

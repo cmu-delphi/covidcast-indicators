@@ -57,21 +57,23 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
     df = pd.read_csv(base_url)
     df['Date']=pd.to_datetime(df['Date'])
     try:
-        export_start_date = pd.to_datetime(export_start_date)
-        df = df.query('@export_start_date <= Date')
+        export_start_date = pd.to_datetime(0) if (pd.to_datetime(export_start_date)
+            is pd.NaT) else pd.to_datetime(export_start_date)
+        export_end_date = pd.Timestamp.max if (pd.to_datetime(export_end_date)
+            is pd.NaT) else pd.to_datetime(export_end_date)
     except KeyError as e:
         raise ValueError(
-            "Tried to convert export_start_date param "
-            "to datetime and filter but failed. Please "
+            "Tried to convert export_start/end_date param "
+            "to datetime but failed. Please "
             "check this input."
         ) from e
     try:
-        export_end_date = pd.to_datetime(export_end_date)
-        df = df.query('export_end_date >= Date')
+        df = df.query('@export_start_date <= Date')
+        df = df.query('@export_end_date >= Date')
     except KeyError as e:
         raise ValueError(
-            "Tried to convert export_end_date param "
-            "to datetime and filter but failed. Please "
+            "Used export_start/end_date param "
+            "to filter dataframe but failed. Please "
             "check this input."
         ) from e
     if df['Date'].shape[0] == 0:
@@ -90,10 +92,10 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
                 checksum=hashlib.sha256(pd.util.hash_pandas_object(df).values).hexdigest())
     df.columns = [i.lower() for i in df.columns]
 
-    df['recip_state'] = df['recip_state'].str.lower()
-    drop_columns.extend([x for x in df.columns if ("pct" in x) | ("svi" in x)])
-    drop_columns.extend(df.columns[22:])
-    drop_columns =  list(set(drop_columns))
+    df.loc[:,'recip_state'] = df['recip_state'].str.lower().copy()
+
+    drop_columns =  list(set(drop_columns + [x for x in df.columns if
+        ("pct" in x) | ("svi" in x)] + list(df.columns[22:])))
     df = GeoMapper().add_geocode(df, "state_id", "state_code",
         from_col="recip_state", new_col="state_id", dropna=False)
     df['state_id'] = df['state_id'].fillna('0').astype(int)
@@ -133,11 +135,7 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
             "amend drop_columns."
         ) from e
 
-    df_dummy = df.loc[(df["fips"]!='00000') & (df["timestamp"] == min(df["timestamp"]))].copy()
-    #handle fips 00000 separately
-    df_oth = df.loc[((df["fips"]=='00000') &
-        (df["timestamp"]==min(df[df['fips'] == '00000']['timestamp'])))].copy()
-    df_dummy = pd.concat([df_dummy, df_oth])
+    df_dummy = df.loc[(df["timestamp"] == min(df["timestamp"]))].copy()
     df_dummy.loc[:, "timestamp"] = df_dummy.loc[:, "timestamp"] - pd.Timedelta(days=1)
     df_dummy.loc[:, ["cumulative_counts_tot_vaccine",
                     "cumulative_counts_tot_vaccine_12P",
@@ -162,13 +160,11 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
     df.reset_index(inplace=True, drop=True)
     # Final sanity checks
     unique_days = df["timestamp"].unique()
-    min_timestamp = min(unique_days)
-    max_timestamp = max(unique_days)
-    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, "D") + 1
+    n_days = (max(unique_days) - min(unique_days)) / np.timedelta64(1, "D") + 1
     if n_days != len(unique_days):
         raise ValueError(
-            f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
+            f"Not every day between {min(unique_days)} and "
+            "{max(unique_days)} is represented."
         )
     return df.loc[
         df["timestamp"] >= min(df["timestamp"]),

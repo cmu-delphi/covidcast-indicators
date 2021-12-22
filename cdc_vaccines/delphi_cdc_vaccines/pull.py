@@ -69,7 +69,7 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
         ) from e
     try:
         df = df.query('@export_start_date <= Date')
-        df = df.query('@export_end_date >= Date')
+        df = df.query('Date <= @export_end_date')
     except KeyError as e:
         raise ValueError(
             "Used export_start/end_date param "
@@ -82,7 +82,7 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
             "if export_start_date is later than "
             "export_end_date. Else check if base_url"
             " still functional."
-        ) from e
+        )
 
     logger.info("data retrieved from source",
                 num_rows=df.shape[0],

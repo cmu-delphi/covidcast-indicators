@@ -2,7 +2,6 @@
 import pytest
 import logging
 from unittest.mock import patch
-
 import pandas as pd
 import numpy as np
 from delphi_cdc_vaccines.pull import pull_cdcvacc_data
@@ -67,4 +66,18 @@ class TestPullCDCVaccines:
         with pytest.raises(ValueError):
             pull_cdcvacc_data(
                 BASE_URL_BAD["missing_cols"],"","",TEST_LOGGER
+            )
+
+    def test_start_date(self):
+        """ Test that there is an error if start date > end date. """
+        with pytest.raises(ValueError):
+            pull_cdcvacc_data(
+                BASE_URL_BAD["missing_cols"],"2021-12-12","2021-08-25",TEST_LOGGER
+            )
+
+    def test_bad_start_only(self):
+        """ Test if there is an export_start_date which is not a date"""
+        with pytest.raises(ValueError):
+            pull_cdcvacc_data(
+                BASE_URL_BAD["missing_cols"],"abcd","2021-08-25",TEST_LOGGER
             )

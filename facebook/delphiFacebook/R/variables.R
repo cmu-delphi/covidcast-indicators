@@ -639,6 +639,12 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_worried_vaccine_side_effects <- NA_real_
   }
 
+  
+  # Wave  V15a  V15b  V15c
+  # 11    Yes   Yes   No
+  # 12    No    Yes   Yes
+  #
+  # V15c replaces V15a as of Wave 12
   if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
     # introduced in Wave 11
     vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)

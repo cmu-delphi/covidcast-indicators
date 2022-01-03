@@ -11,6 +11,12 @@ install: venv
 	pip install -e ../_delphi_utils_python ;\
 	pip install -e .
 
+install-ci: venv
+	. env/bin/activate; \
+	pip install wheel ; \
+	pip install ../_delphi_utils_python ;\
+	pip install .
+
 lint:
 	. env/bin/activate; pylint $(dir)
 	. env/bin/activate; pydocstyle $(dir) --match-dir '(?!nowcast_fusion)'

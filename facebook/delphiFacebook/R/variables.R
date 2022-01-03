@@ -14,7 +14,11 @@
 #' @return list of same length, each entry of which is a vector of selected
 #'   options
 split_options <- function(column) {
-  return(strsplit(column, ",", fixed = TRUE))
+  if ( any(!is.na(column)) ) {
+    return(strsplit(column, ",", fixed = TRUE))
+  } else {
+    return(rep(NA_character_, length(column)))
+  }
 }
 
 #' Test if a specific selection is selected

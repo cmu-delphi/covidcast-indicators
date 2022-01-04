@@ -653,15 +653,10 @@ code_vaccines <- function(input_data, wave) {
     # introduced in Wave 11
     vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
 
-    # If the entire column is NA, ifelse() results in a logical vector, not a
-    # character vector, which confuses split_options; since the result should be
-    # NA anyway
     vaccine_barriers <- as.character(
       ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
     )
-    if (any(!is.na(vaccine_barriers))) {
-      vaccine_barriers <- split_options(vaccine_barriers)
-    }
+    vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
@@ -773,15 +768,10 @@ code_vaccines <- function(input_data, wave) {
   
   if ( "V15b" %in% names(input_data) ) {
     # introduced in Wave 11
-    # If the entire column is NA, ifelse() results in a logical vector, not a
-    # character vector, which confuses split_options; since the result should be
-    # NA anyway
     vaccine_barriers <- as.character(
       ifelse(input_data$V15b == "13", NA, input_data$V15b)
     )
-    if (any(!is.na(vaccine_barriers))) {
-      vaccine_barriers <- split_options(vaccine_barriers)
-    }
+    vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments_tried <- is_selected(vaccine_barriers, "2")

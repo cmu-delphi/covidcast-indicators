@@ -350,7 +350,7 @@ add_qdf_to_codebook <- function(qdf,
   } else {
     codebook <- read_csv(path_to_codebook, col_types = cols(
       .default = col_character(),
-      wave = col_integer(),
+      wave = col_double(),
       variable = col_character(),
       replaces = col_character(),
       description = col_character(),

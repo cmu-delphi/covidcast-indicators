@@ -17,7 +17,7 @@ split_options <- function(column) {
   if ( any(!is.na(column)) ) {
     return(strsplit(column, ",", fixed = TRUE))
   } else {
-    return(rep(NA_character_, length(column)))
+    return(rep(list(NA_character_), length(column)))
   }
 }
 
@@ -652,10 +652,7 @@ code_vaccines <- function(input_data, wave) {
   if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
     # introduced in Wave 11
     vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
-
-    vaccine_barriers <- as.character(
-      ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
-    )
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
     vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
@@ -676,7 +673,7 @@ code_vaccines <- function(input_data, wave) {
   } else if ( all(c("V15c", "V15b") %in% names(input_data)) ) {
     # V15c introduced in Wave 12, replacing V15a with clarified wording.
     vaccine_barriers <- coalesce(input_data$V15c, input_data$V15b)
-    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA, vaccine_barriers)
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
     vaccine_barriers <- split_options(vaccine_barriers)
     
     input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
@@ -768,9 +765,7 @@ code_vaccines <- function(input_data, wave) {
   
   if ( "V15b" %in% names(input_data) ) {
     # introduced in Wave 11
-    vaccine_barriers <- as.character(
-      ifelse(input_data$V15b == "13", NA, input_data$V15b)
-    )
+    vaccine_barriers <- ifelse(input_data$V15b == "13", NA_character_, input_data$V15b)
     vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")

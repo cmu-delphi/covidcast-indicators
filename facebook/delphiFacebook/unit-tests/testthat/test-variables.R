@@ -2,6 +2,22 @@ library(testthat)
 
 context("Testing response coding")
 
+test_that("split_options splits correctly", {
+  expect_equal(split_options(c("1", "", "1,2")),
+               list(c("1"), character(0), c("1", "2")))
+  
+  # Input logical vector
+  expect_equal(split_options(c(NA, NA, NA)),
+               list(NA_character_, NA_character_, NA_character_))
+  
+  # Input character vector
+  expect_equal(split_options(c(NA_character_, NA_character_, NA_character_)),
+               list(NA_character_, NA_character_, NA_character_))
+  
+  expect_equal(split_options(c("", NA_character_, NA)),
+               list(character(0), NA_character_, NA_character_))
+})
+
 test_that("is_selected handles selections correctly", {
   expect_equal(is_selected(split_options(c("1", "", "1,2")), "1"),
                c(TRUE, NA, TRUE))
@@ -18,6 +34,18 @@ test_that("is_selected handles selections correctly", {
   expect_equal(is_selected(split_options(c("4,54", "3,6,2,54", "5,4,45")),
                            "54"),
                c(TRUE, TRUE, FALSE))
+  
+  expect_equal(is_selected(c(NA, NA, NA), "14"),
+               c(NA, NA, NA))
+  
+  expect_equal(is_selected(c(NA_character_, NA_character_, NA_character_), "14"),
+               c(NA, NA, NA))
+  
+  expect_equal(is_selected(list(NA, NA, NA), "14"),
+               c(NA, NA, NA))
+  
+  expect_equal(is_selected(list(NA_character_, NA_character_, NA_character_), "14"),
+               c(NA, NA, NA))
 })
 
 test_that("activities items correctly coded", {

@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta, date
+"""Fit linear regression mdels."""
+
+from datetime import timedelta, date
 
 import numpy as np
 

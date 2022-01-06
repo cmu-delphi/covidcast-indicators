@@ -399,7 +399,7 @@ add_static_fields <- function(codebook,
   codebook <- bind_rows(codebook, static_fields) %>% 
     filter(!(variable == "module" & wave < 11), # module field is only available for wave >= 11
            !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
-           !(variable == "w12_treatment" & wave == 12.5), # experimental arm field is only available for wave == 12.5
+           !(variable == "w12_treatment" & wave != 12.5), # experimental arm field is only available for wave == 12.5
            variable != "Random_Number"
     )
 

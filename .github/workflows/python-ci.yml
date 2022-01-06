@@ -32,7 +32,7 @@ jobs:
         pip install pylint pytest pydocstyle wheel
     - name: Install
       run: |
-        make install
+        make install-ci
     - name: Lint
       run: |
         make lint

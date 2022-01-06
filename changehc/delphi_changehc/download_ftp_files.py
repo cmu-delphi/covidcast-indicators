@@ -8,6 +8,7 @@ from os import path
 # third party
 import paramiko
 
+from .constants import EXPECTED_FILES_PER_DROP
 
 def print_callback(filename, bytes_so_far, bytes_total):
     """Log file transfer progress."""
@@ -32,8 +33,8 @@ def get_files_from_dir(sftp, filedate, out_path):
                 not path.exists(path.join(out_path, filename)):
             filepaths_to_download[filename] = path.join(out_path, filename)
 
-    # make sure we don't download more than 7 files per day
-    assert len(filepaths_to_download) <= 7, "more files dropped than expected"
+    # make sure we don't download too many files per day
+    assert len(filepaths_to_download) <= EXPECTED_FILES_PER_DROP, "more files dropped than expected"
 
     # download!
     for infile, outfile in filepaths_to_download.items():

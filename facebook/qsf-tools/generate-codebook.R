@@ -438,7 +438,7 @@ get_static_fields <- function(wave,
 add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook) {
   qdf <- process_qsf(path_to_qsf)
   codebook <- add_qdf_to_codebook(qdf, path_to_codebook)
-  write_excel_csv(codebook, path_to_codebook)
+  write_excel_csv(codebook, path_to_codebook, quote="needed")
 }
 
 

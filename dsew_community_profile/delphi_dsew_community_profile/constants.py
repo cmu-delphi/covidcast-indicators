@@ -46,10 +46,11 @@ TRANSFORMS = {
         )
     ]}
 
-SIGNALS = [
-    "total",
-    "positivity"
-]
+# signal id : is_rate
+SIGNALS = {
+    "total": False,
+    "positivity": True
+}
 
 def make_signal_name(key):
     """Convert a signal key to the corresponding signal name for the API."""

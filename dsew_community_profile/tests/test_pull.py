@@ -1,13 +1,15 @@
 from collections import namedtuple
-from datetime import date
+from datetime import date, datetime
 from itertools import chain
 import pandas as pd
 import pytest
 from unittest.mock import patch, Mock
 
+from delphi_utils.geomap import GeoMapper
+
 from delphi_dsew_community_profile.pull import DatasetTimes
 from delphi_dsew_community_profile.pull import Dataset
-from delphi_dsew_community_profile.pull import fetch_listing
+from delphi_dsew_community_profile.pull import fetch_listing, nation_from_state
 
 example = namedtuple("example", "given expected")
         
@@ -141,4 +143,51 @@ class TestPull:
         for actual, expected in zip(fetch_listing(ex.given), ex.expected):
             assert actual == expected
 
+    def test_nation_from_state(self):
+        geomapper = GeoMapper()
+        state_pop = geomapper.get_crosswalk("state_id", "pop")
+
+        test_df = geomapper.replace_geocode(
+            pd.DataFrame({
+                'geo_id': ['pa', 'wv'],
+                'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+                'val': [15., 150.],}),
+            "state_id",
+            "state_code",
+            "geo_id"
+        )
         
+        pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
+        wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
+        tot_pop = pa_pop + wv_pop
+
+        assert True, nation_from_state(
+                test_df.copy(),
+                "total",
+                geomapper
+            )
+        pd.testing.assert_frame_equal(
+            nation_from_state(
+                test_df.copy(),
+                "total",
+                geomapper
+            ),
+            pd.DataFrame({
+                'geo_id': ['us'],
+                'timestamp': [datetime(year=2020, month=1, day=1)],
+                'val': [15. + 150.],}),
+            check_like=True
+        )
+
+        pd.testing.assert_frame_equal(
+            nation_from_state(
+                test_df.copy(),
+                "positivity",
+                geomapper
+            ),
+            pd.DataFrame({
+                'geo_id': ['us'],
+                'timestamp': [datetime(year=2020, month=1, day=1)],
+                'val': [15*pa_pop/tot_pop + 150*wv_pop/tot_pop],}),
+            check_like=True
+        )

@@ -111,8 +111,9 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
+    # TODO: https://github.com/cmu-delphi/covidcast-indicators/issues/1457
+    # Extract this mapping from meta response instead of hard-coding
     source_signal_mappings = {
-        'chng': ['chng-cli', 'chng-covid'],
         'indicator-combination': ['indicator-combination-cases-deaths'],
         'quidel': ['quidel-covid-ag'],
         'safegraph': ['safegraph-weekly']

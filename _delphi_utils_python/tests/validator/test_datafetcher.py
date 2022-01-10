@@ -21,8 +21,9 @@ class TestDataFetcher:
         assert not date_filter(FILENAME_REGEX.match("20200620_a_b.csv"))
         assert not date_filter(FILENAME_REGEX.match("202006_a_b.csv"))
 
-    # TODO: https://github.com/cmu-delphi/covidcast-indicators/issues/1456
-    # mock out the advanced meta endpoint /covidcast/meta as well
+    # pylint: disable=fixme
+    # TODO: mock out the advanced meta endpoint /covidcast/meta as well
+    # https://github.com/cmu-delphi/covidcast-indicators/issues/1456
     @mock.patch("covidcast.metadata")
     def test_get_geo_signal_combos(self, mock_metadata):
         """Test that the geo signal combos are correctly pulled from the covidcast metadata."""

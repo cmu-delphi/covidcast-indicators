@@ -350,7 +350,7 @@ add_qdf_to_codebook <- function(qdf,
   } else {
     codebook <- read_csv(path_to_codebook, col_types = cols(
       .default = col_character(),
-      wave = col_integer(),
+      wave = col_double(),
       variable = col_character(),
       replaces = col_character(),
       description = col_character(),
@@ -399,7 +399,7 @@ add_static_fields <- function(codebook,
   codebook <- bind_rows(codebook, static_fields) %>% 
     filter(!(variable == "module" & wave < 11), # module field is only available for wave >= 11
            !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
-           !(variable == "w12_treatment" & wave == 12.5), # experimental arm field is only available for wave == 12.5
+           !(variable == "w12_treatment" & wave != 12.5), # experimental arm field is only available for wave == 12.5
            variable != "Random_Number"
     )
 
@@ -438,7 +438,7 @@ get_static_fields <- function(wave,
 add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook) {
   qdf <- process_qsf(path_to_qsf)
   codebook <- add_qdf_to_codebook(qdf, path_to_codebook)
-  write_excel_csv(codebook, path_to_codebook)
+  write_excel_csv(codebook, path_to_codebook, quote="needed")
 }
 
 

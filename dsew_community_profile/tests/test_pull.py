@@ -98,6 +98,7 @@ class TestPull:
     def test_Dataset_parse_sheet(self):
         # TODO
         pass
+
     @patch('requests.get')
     @patch('os.path.exists')
     def test_fetch_listing(self, mock_listing, mock_exists):
@@ -109,7 +110,7 @@ class TestPull:
             ]
             for i in [1, 2, 3, 4, 5]
         ]))
-        
+
         mock_listing.return_value = Mock()
         mock_listing.return_value.json = Mock(
             return_value = {
@@ -138,8 +139,7 @@ class TestPull:
                 for i, instance in filter(lambda x: x[0]%2 == 0, enumerate(instances))
             ]
         )
-                
-            
+
         for actual, expected in zip(fetch_listing(ex.given), ex.expected):
             assert actual == expected
 
@@ -156,7 +156,7 @@ class TestPull:
             "state_code",
             "geo_id"
         )
-        
+
         pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
         wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
         tot_pop = pa_pop + wv_pop

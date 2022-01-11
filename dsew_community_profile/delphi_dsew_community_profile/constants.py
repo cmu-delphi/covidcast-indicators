@@ -46,14 +46,27 @@ TRANSFORMS = {
         )
     ]}
 
-# signal id : is_rate
+# signal id : is_rate, name to report in API
 SIGNALS = {
-    "total": False,
-    "positivity": True
+    "total": {
+        "is_rate" : False,
+        "api_name": "naats_total_7dav"
+    },
+    "positivity": {
+        "is_rate" : True,
+        "api_name": "naats_positivity_7dav"
+    },
+    "confirmed covid-19 admissions": {
+        "is_rate" : False,
+        "api_name": "confirmed_admissions_covid_1d_7dav",
+        "date_key": "hosp"
+    }
 }
+
+TOTAL_7D_SIGNALS = ("total", "confirmed covid-19 admissions")
 
 def make_signal_name(key):
     """Convert a signal key to the corresponding signal name for the API."""
-    return f"naats_{key}_7dav"
+    return SIGNALS[key]["api_name"]
 
 NEWLINE="\n"

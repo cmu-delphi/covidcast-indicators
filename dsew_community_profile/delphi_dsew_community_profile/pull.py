@@ -11,7 +11,7 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import TRANSFORMS, SIGNALS, NEWLINE
+from .constants import TRANSFORMS, SIGNALS, TOTAL_7D_SIGNALS, NEWLINE
 from .constants import DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING
 
 # YYYYMMDD
@@ -22,8 +22,13 @@ RE_DATE_FROM_FILENAME = re.compile(r'.*([0-9]{4})([0-9]{2})([0-9]{2}).*xlsx')
 # example: "TESTING: PREVIOUS WEEK (October 17-23, Test Volume October 13-19)"
 DATE_EXP = r'(?:([A-Za-z]*) )?([0-9]{1,2})'
 DATE_RANGE_EXP = f"{DATE_EXP}-{DATE_EXP}"
-RE_DATE_FROM_HEADER = re.compile(
+RE_DATE_FROM_TEST_HEADER = re.compile(
     rf'.*TESTING: (.*) WEEK \({DATE_RANGE_EXP}(?:, Test Volume ({DATE_RANGE_EXP}))? *\)'
+)
+
+# example: "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
+RE_DATE_FROM_HOSP_HEADER = re.compile(
+    rf'HOSPITAL UTILIZATION: (.*) WEEK \({DATE_RANGE_EXP}\)'
 )
 
 # example: "NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)"
@@ -37,13 +42,11 @@ class DatasetTimes:
     column: str
     positivity_reference_date: datetime.date
     total_reference_date: datetime.date
+    hosp_reference_date: datetime.date
 
     @staticmethod
     def from_header(header, publish_date):
         """Convert reference dates in overheader to DatasetTimes."""
-        assert RE_DATE_FROM_HEADER.match(header), \
-            f"Couldn't find reference date in header '{header}'"
-        findall_result = RE_DATE_FROM_HEADER.findall(header)[0]
         def as_date(sub_result):
             month = sub_result[2] if sub_result[2] else sub_result[0]
             assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
@@ -55,23 +58,39 @@ class DatasetTimes:
                 year -= 1
             return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
 
-        column = findall_result[0].lower()
-        positivity_reference_date = as_date(findall_result[1:5])
-        if findall_result[6]:
-            # Reports published starting 2021-03-17 specify different reference
-            # dates for positivity and total test volume
-            total_reference_date = as_date(findall_result[6:10])
+        if RE_DATE_FROM_TEST_HEADER.match(header):
+            findall_result = RE_DATE_FROM_TEST_HEADER.findall(header)[0]
+            column = findall_result[0].lower()
+            positivity_reference_date = as_date(findall_result[1:5])
+            if findall_result[6]:
+                # Reports published starting 2021-03-17 specify different reference
+                # dates for positivity and total test volume
+                total_reference_date = as_date(findall_result[6:10])
+            else:
+                total_reference_date = positivity_reference_date
+
+            hosp_reference_date = None
+        elif RE_DATE_FROM_HOSP_HEADER.match(header):
+            findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
+            column = SIGNALS["confirmed covid-19 admissions"]["date_key"]
+            hosp_reference_date = as_date(findall_result[1:5])
+
+            total_reference_date = None
+            positivity_reference_date = None
         else:
-            total_reference_date = positivity_reference_date
-        return DatasetTimes(column, positivity_reference_date, total_reference_date)
+            raise ValueError(f"Couldn't find reference date in header '{header}'")
+
+        return DatasetTimes(column, positivity_reference_date, total_reference_date, hosp_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
         if key.lower()=="positivity":
             return self.positivity_reference_date
         if key.lower()=="total":
             return self.total_reference_date
+        if key.lower()=="confirmed covid-19 admissions":
+            return self.hosp_reference_date
         raise ValueError(
-            f"Bad reference date type request '{key}'; need 'total' or 'positivity'"
+            f"Bad reference date type request '{key}'; need 'total', 'positivity', or 'confirmed covid-19 admissions'"
         )
     def __eq__(self, other):
         """Check equality by value."""
@@ -127,11 +146,15 @@ class Dataset:
         """Ignore irrelevant overheaders."""
         # include "TESTING: [LAST|PREVIOUS] WEEK (October 24-30, Test Volume October 20-26)"
         # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
+        # include "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
         return not (isinstance(header, str) and \
                     (header.startswith("TESTING:") or \
-                     header.startswith("VIRAL (RT-PCR) LAB TESTING:")) and \
+                     header.startswith("VIRAL (RT-PCR) LAB TESTING:") or \
+                     header.startswith("HOSPITAL UTILIZATION:")) and \
                     # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
+                    # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
+                    # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
                     header.find("WEEK (") > 0)
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
@@ -152,7 +175,7 @@ class Dataset:
                     f"vs previous {self.times[dt.column]}"
             else:
                 self.times[dt.column] = dt
-        assert len(self.times) == 2, \
+        assert len(self.times) == 3, \
             f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
@@ -171,6 +194,16 @@ class Dataset:
             header.find("7 days") > 0,
             # exclude "NAAT positivity rate - last 7 days - ages <5"
             header.find(" ages") < 0,
+        ]) or all([
+            # include "Confirmed COVID-19 admissions - last 7 days"
+            header.startswith("Confirmed COVID-19 admissions"),
+            # exclude "Confirmed COVID-19 admissions - percent change"
+            header.find("7 days") > 0,
+            # exclude "Confirmed COVID-19 admissions - last 7 days - ages <18"
+            # exclude "Confirmed COVID-19 admissions - last 7 days - age unknown"
+            header.find(" age") < 0,
+            # exclude "Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days"
+            header.find(" beds") < 0,
         ])
     def _parse_sheet(self, sheet):
         """Extract data frame for this sheet."""
@@ -192,17 +225,24 @@ class Dataset:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
+
+            date_keys = {
+                si:( SIGNALS[sig]["date_key"] if "date_key" in SIGNALS[sig] else si[0] )
+                for si in sig_select
+            }
             self.dfs[(sheet.level, sig)] = pd.concat([
                 pd.DataFrame({
                     "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
-                    "timestamp": pd.to_datetime(self.times[si[0]][sig]),
+                    "timestamp": pd.to_datetime(self.times[date_keys[si]][sig]),
                     "val": df[si[-2]],
                     "se": None,
                     "sample_size": None
                 })
                 for si in sig_select
             ])
-        self.dfs[(sheet.level, "total")]["val"] /= 7 # 7-day total -> 7-day average
+
+        for sig in TOTAL_7D_SIGNALS:
+            self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
 
 
 def as_cached_filename(params, config):

@@ -163,21 +163,21 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     overall_pos = df[df["OverallResult"] == "positive"].groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_pos["positiveTest"] = overall_pos["OverallResult"]
+    overall_pos["positiveTest_total"] = overall_pos["OverallResult"]
     overall_pos.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute overallTotal
     overall_total = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_total["totalTest"] = overall_total["OverallResult"]
+    overall_total["totalTest_total"] = overall_total["OverallResult"]
     overall_total.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute numUniqueDevices
     numUniqueDevices = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
-            columns={"SofiaSerNum": "numUniqueDevices"}
+            columns={"SofiaSerNum": "numUniqueDevices_total"}
         )
 
     df_merged = overall_total.merge(
@@ -185,7 +185,55 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
         ).merge(
         overall_pos, on=["timestamp", "zip"], how="left"
         ).fillna(0).drop_duplicates()
+            
+    # Compute Summary info for age groups
+    df["PatientAge"]= df["PatientAge"].fillna(-1)
+    df.loc[df["PatientAge"] == "<1", "PatientAge"] = 0.5
+    df.loc[df["PatientAge"] == ">85", "PatientAge"] = 100
+    df["PatientAge"] = df["PatientAge"] .astype(float)
 
+    df["label"] = None
+    df.loc[df["PatientAge"] < 5, "label"] = "age_0to5"
+    df.loc[((df["PatientAge"] >= 5)) & (df["PatientAge"] < 14), "label"] = "age_5to13"
+    df.loc[((df["PatientAge"] >= 14)) & (df["PatientAge"] < 18), "label"] = "age_14to17"
+    df.loc[((df["PatientAge"] >= 18)) & (df["PatientAge"] < 50), "label"] = "age_18to49"
+    df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50to64"
+    df.loc[((df["PatientAge"] >= 65)) & (df["PatientAge"] < 75), "label"] = "age_65to74"
+    df.loc[df["PatientAge"] >= 75, "label"] = "age_75toOlder"
+    df.loc[df["PatientAge"] == -1, "label"] = "NA"
+    
+    for agegroup in df["label"].unique():
+        if agegroup == "NA":
+            continue
+        # Compute overallPositive
+        group_pos = df.loc[(df["OverallResult"] == "positive")
+                             & (df["label"] == agegroup)].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_pos["positiveTest_%s"%agegroup] = group_pos["OverallResult"]
+        group_pos.drop(labels="OverallResult", axis="columns", inplace=True)
+    
+        # Compute overallTotal
+        group_total = df.loc[df["label"] == agegroup].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_total["totalTest_%s"%agegroup] = group_total["OverallResult"]
+        group_total.drop(labels="OverallResult", axis="columns", inplace=True)
+    
+        # Compute numUniqueDevices
+        group_numUniqueDevices = df.loc[df["label"] == agegroup].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
+                columns={"SofiaSerNum": "numUniqueDevices_%s"%agegroup}
+            )
+    
+        df_merged = df_merged.merge(
+            group_numUniqueDevices, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_pos, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_total, on=["timestamp", "zip"], how="left"
+            ).fillna(0).drop_duplicates()
 
     return df_merged, time_flag
 

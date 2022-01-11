@@ -39,3 +39,13 @@ SMOOTHERS = {
 #    SMOOTHED_TEST_PER_DEVICE: (True, True),
 #    RAW_TEST_PER_DEVICE: (True, False)
 }
+AGE_GROUPS = [
+    "total",
+    "age_0to5", 
+    "age_5to13", 
+    "age_14to17", 
+    "age_18to49", 
+    "age_50to64", 
+    "age_65to74", 
+    "age_75toOlder"
+]

@@ -13,14 +13,22 @@ GEO_KEY_DICT = {
 }
 
 
-def geo_map(geo_res, df):
+def geo_map(geo_res, df, agegroup):
     """Map a geocode to a new value."""
     data = df.copy()
     geo_key = GEO_KEY_DICT[geo_res]
     # Add population for each zipcode
     data = GMPR.add_population_column(data, "zip")
     # zip -> geo_res
-    data = GMPR.replace_geocode(data, "zip", geo_key, data_cols=DATA_COLS)
+    data_cols = []
+    for data_col in DATA_COLS:
+        if data_col != "population":
+            data_cols.append("_".join([data_col, agegroup]))
+        else:
+            data_cols.append(data_col)
+    data = GMPR.replace_geocode(
+        data, from_code="zip", new_code=geo_key, date_col = "timestamp",
+        data_cols=data_cols)
     if geo_res in ["state", "hhs", "nation"]:
         return data, geo_key
     # Add parent state

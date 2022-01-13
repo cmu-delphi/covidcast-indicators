@@ -80,7 +80,8 @@ class DatasetTimes:
         else:
             raise ValueError(f"Couldn't find reference date in header '{header}'")
 
-        return DatasetTimes(column, positivity_reference_date, total_reference_date, hosp_reference_date)
+        return DatasetTimes(column, positivity_reference_date,
+            total_reference_date, hosp_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
         if key.lower()=="positivity":
@@ -90,7 +91,8 @@ class DatasetTimes:
         if key.lower()=="confirmed covid-19 admissions":
             return self.hosp_reference_date
         raise ValueError(
-            f"Bad reference date type request '{key}'; need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+            f"Bad reference date type request '{key}'; " + \
+            "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
         )
     def __setitem__(self, key, newvalue):
         """Use DatasetTimes like a dictionary."""
@@ -102,7 +104,8 @@ class DatasetTimes:
             self.hosp_reference_date = newvalue
         else:
             raise ValueError(
-                f"Bad reference date type request '{key}'; need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+                f"Bad reference date type request '{key}'; " + \
+                "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
             )
     def __eq__(self, other):
         """Check equality by value."""

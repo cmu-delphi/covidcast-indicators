@@ -16,30 +16,35 @@ example = namedtuple("example", "given expected")
 class TestPull:
     def test_DatasetTimes(self):
         examples = [
-            example(DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20)),
-                    DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20))),
+            example(DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22)),
+                    DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22))),
         ]
         for ex in examples:
             assert ex.given == ex.expected, "Equality"
 
-        dt = DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20))        
+        dt = DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22))
         assert dt["positivity"] == date(2021, 10, 30), "positivity"
         assert dt["total"] == date(2021, 10, 20), "total"
+        assert dt["confirmed covid-19 admissions"] == date(2021, 10, 22), "confirmed covid-19 admissions"
         with pytest.raises(ValueError):
             dt["xyzzy"]
 
     def test_DatasetTimes_from_header(self):
         examples = [
             example("TESTING: LAST WEEK (October 24-30, Test Volume October 20-26)",
-                    DatasetTimes("last", date(2021, 10, 30), date(2021, 10, 26))),
+                    DatasetTimes("last", date(2021, 10, 30), date(2021, 10, 26), None)),
             example("TESTING: PREVIOUS WEEK (October 24-30, Test Volume October 20-26)",
-                    DatasetTimes("previous", date(2021, 10, 30), date(2021, 10, 26))),
+                    DatasetTimes("previous", date(2021, 10, 30), date(2021, 10, 26), None)),
             example("TESTING: LAST WEEK (October 24-November 30, Test Volume October 20-26)",
-                    DatasetTimes("last", date(2021, 11, 30), date(2021, 10, 26))),
+                    DatasetTimes("last", date(2021, 11, 30), date(2021, 10, 26), None)),
             example("VIRAL (RT-PCR) LAB TESTING: LAST WEEK (June 7-13, Test Volume June 3-9 )",
-                    DatasetTimes("last", date(2021, 6, 13), date(2021, 6, 9))),
+                    DatasetTimes("last", date(2021, 6, 13), date(2021, 6, 9), None)),
             example("VIRAL (RT-PCR) LAB TESTING: LAST WEEK (March 7-13)",
-                    DatasetTimes("last", date(2021, 3, 13), date(2021, 3, 13)))
+                    DatasetTimes("last", date(2021, 3, 13), date(2021, 3, 13), None)),
+            example("HOSPITAL UTILIZATION: LAST WEEK (June 2-8)",
+                    DatasetTimes("last", None, None, date(2021, 6, 8))),
+            example("HOSPITAL UTILIZATION: LAST WEEK (June 28-July 8)",
+                    DatasetTimes("last", None, None, date(2021, 7, 8)))
         ]
         for ex in examples:
             assert DatasetTimes.from_header(ex.given, date(2021, 12, 31)) == ex.expected, ex.given
@@ -47,7 +52,7 @@ class TestPull:
         # test year boundary
         examples = [
             example("TESTING: LAST WEEK (October 24-30, Test Volume October 20-26)",
-                    DatasetTimes("last", date(2020, 10, 30), date(2020, 10, 26))),
+                    DatasetTimes("last", date(2020, 10, 30), date(2020, 10, 26), None)),
         ]
         for ex in examples:
             assert DatasetTimes.from_header(ex.given, date(2021, 1, 1)) == ex.expected, ex.given
@@ -67,6 +72,12 @@ class TestPull:
             example("VIRAL (RT-PCR) LAB TESTING: % CHANGE FROM PREVIOUS WEEK",
                     True),
             example("TESTING: DEMOGRAPHIC DATA",
+                    True),
+            example("HOSPITAL UTILIZATION: LAST WEEK (January 2-8)",
+                    False),
+            example("HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK",
+                    True),
+            example("HOSPITAL UTILIZATION: DEMOGRAPHIC DATA",
                     True)
         ]
         for ex in examples:
@@ -90,6 +101,16 @@ class TestPull:
             example("Viral (RT-PCR) lab test positivity rate - last 7 days (may be an underestimate due to delayed reporting)",
                     True),
             example("RT-PCR tests per 100k - last 7 days (may be an underestimate due to delayed reporting)",
+                    False),
+            example("Confirmed COVID-19 admissions - last 7 days",
+                    True),
+            example("Confirmed COVID-19 admissions - percent change",
+                    False),
+            example("Confirmed COVID-19 admissions - last 7 days - ages <18",
+                    False),
+            example("Confirmed COVID-19 admissions - last 7 days - age unknown",
+                    False),
+            example("Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days",
                     False)
         ]
         for ex in examples:
@@ -147,15 +168,10 @@ class TestPull:
         geomapper = GeoMapper()
         state_pop = geomapper.get_crosswalk("state_id", "pop")
 
-        test_df = geomapper.replace_geocode(
-            pd.DataFrame({
-                'geo_id': ['pa', 'wv'],
+        test_df = pd.DataFrame({
+                'state_id': ['pa', 'wv'],
                 'timestamp': [datetime(year=2020, month=1, day=1)]*2,
-                'val': [15., 150.],}),
-            "state_id",
-            "state_code",
-            "geo_id"
-        )
+                'val': [15., 150.],})
 
         pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
         wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])

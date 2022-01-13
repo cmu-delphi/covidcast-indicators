@@ -58,12 +58,11 @@ SIGNALS = {
     },
     "confirmed covid-19 admissions": {
         "is_rate" : False,
-        "api_name": "confirmed_admissions_covid_1d_7dav",
-        "date_key": "hosp"
+        "api_name": "confirmed_admissions_covid_1d_7dav"
     }
 }
 
-TOTAL_7D_SIGNALS = ("total", "confirmed covid-19 admissions")
+COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate"]}
 
 def make_signal_name(key):
     """Convert a signal key to the corresponding signal name for the API."""

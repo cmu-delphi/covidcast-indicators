@@ -11,7 +11,7 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import TRANSFORMS, SIGNALS, TOTAL_7D_SIGNALS, NEWLINE
+from .constants import TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE
 from .constants import DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING
 
 # YYYYMMDD
@@ -72,7 +72,7 @@ class DatasetTimes:
             hosp_reference_date = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
-            column = SIGNALS["confirmed covid-19 admissions"]["date_key"]
+            column = findall_result[0].lower()
             hosp_reference_date = as_date(findall_result[1:5])
 
             total_reference_date = None
@@ -92,6 +92,18 @@ class DatasetTimes:
         raise ValueError(
             f"Bad reference date type request '{key}'; need 'total', 'positivity', or 'confirmed covid-19 admissions'"
         )
+    def __setitem__(self, key, newvalue):
+        """Use DatasetTimes like a dictionary."""
+        if key.lower()=="positivity":
+            self.positivity_reference_date = newvalue
+        if key.lower()=="total":
+            self.total_reference_date = newvalue
+        if key.lower()=="confirmed covid-19 admissions":
+            self.hosp_reference_date = newvalue
+        else:
+            raise ValueError(
+                f"Bad reference date type request '{key}'; need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+            )
     def __eq__(self, other):
         """Check equality by value."""
         return isinstance(other, DatasetTimes) and \
@@ -170,12 +182,19 @@ class Dataset:
 
             dt = DatasetTimes.from_header(h, self.publish_date)
             if dt.column in self.times:
-                assert self.times[dt.column] == dt, \
-                    f"Conflicting reference date from {sheet.name} {dt}" + \
-                    f"vs previous {self.times[dt.column]}"
+                # Items that are not None should be the same between sheets.
+                # Fill None items with the newly calculated version of the
+                # field from dt.
+                for sig in SIGNALS:
+                    if self.times[dt.column][sig] is not None and dt[sig] is not None:
+                        assert self.times[dt.column][sig] == dt[sig], \
+                            f"Conflicting reference date from {sheet.name} {dt[sig]}" + \
+                            f"vs previous {self.times[dt.column][sig]}"
+                    elif self.times[dt.column][sig] is None:
+                        self.times[dt.column][sig] = dt[sig]
             else:
                 self.times[dt.column] = dt
-        assert len(self.times) == 3, \
+        assert len(self.times) == 2, \
             f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
@@ -226,14 +245,10 @@ class Dataset:
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
-            date_keys = {
-                si:( SIGNALS[sig]["date_key"] if "date_key" in SIGNALS[sig] else si[0] )
-                for si in sig_select
-            }
             self.dfs[(sheet.level, sig)] = pd.concat([
                 pd.DataFrame({
                     "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
-                    "timestamp": pd.to_datetime(self.times[date_keys[si]][sig]),
+                    "timestamp": pd.to_datetime(self.times[si[0]][sig]),
                     "val": df[si[-2]],
                     "se": None,
                     "sample_size": None
@@ -241,7 +256,7 @@ class Dataset:
                 for si in sig_select
             ])
 
-        for sig in TOTAL_7D_SIGNALS:
+        for sig in COUNTS_7D_SIGNALS:
             self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
 
 

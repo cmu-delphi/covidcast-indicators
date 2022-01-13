@@ -316,13 +316,13 @@ def download_and_parse(listing, logger):
 
 def nation_from_state(df, sig, geomapper):
     """Compute nation level from state df."""
-    if SIGNALS[sig]: # true if sig is a rate
-        df = geomapper.add_population_column(df, "state_code") \
+    if SIGNALS[sig]["is_rate"]: # true if sig is a rate
+        df = geomapper.add_population_column(df, "state_id") \
                       .rename(columns={"population":"weight"})
         df.weight = df.weight / df.weight.sum()
     return geomapper.replace_geocode(
         df,
-        'state_code',
+        'state_id',
         'nation',
         new_col="geo_id"
     )
@@ -343,7 +343,7 @@ def fetch_new_reports(params, logger=None):
     geomapper = GeoMapper()
     for sig in SIGNALS:
         ret[("nation", sig)] = nation_from_state(
-            ret[("state", sig)].rename(columns={"geo_id": "state_code"}),
+            ret[("state", sig)].rename(columns={"geo_id": "state_id"}),
             sig,
             geomapper
         )

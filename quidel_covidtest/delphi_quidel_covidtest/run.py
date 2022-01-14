@@ -40,16 +40,16 @@ def log_exit(start_time, stats, logger):
                 csv_export_count = csv_export_count,
                 max_lag_in_days = max_lag_in_days,
                 oldest_final_export_date = formatted_min_max_date)
-    
-def get_smooth_info(sensors, SMOOTHERS):
+
+def get_smooth_info(sensors, _SMOOTHERS):
     """Get smooth info from SMOOTHERS. """
-    smoothers = SMOOTHERS.copy()
+    smoothers = _SMOOTHERS.copy()
     for sensor in sensors:
-        if sensor.endswith(SMOOTHED_POSITIVE):
-            smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
+        if sensor.endswith(_SMOOTHED_POSITIVE):
+            smoothers[sensor] = smoothers.pop(_SMOOTHED_POSITIVE)
         elif sensor.endswith(RAW_POSITIVE):
             smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
-        elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
+        elif sensor.endswith(_SMOOTHED_TEST_PER_DEVICE):
             smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
         else:
             smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
@@ -106,7 +106,7 @@ def run_module(params: Dict[str, Any]):
     # Add prefix, if required
     sensors = add_prefix(SENSORS,
                          wip_signal=params["indicator"]["wip_signal"],
-                         prefix="wip_")  
+                         prefix="wip_")
     smoothers = get_smooth_info(sensors, SMOOTHERS)
     for geo_res in NONPARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)

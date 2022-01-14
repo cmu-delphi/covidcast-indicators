@@ -254,7 +254,8 @@ class Dataset:
                     "timestamp": pd.to_datetime(self.times[si[0]][sig]),
                     "val": df[si[-2]],
                     "se": None,
-                    "sample_size": None
+                    "sample_size": None,
+                    "publish_date": self.publish_date
                 })
                 for si in sig_select
             ])
@@ -337,10 +338,21 @@ def fetch_new_reports(params, logger=None):
     # download and parse individual reports
     datasets = download_and_parse(listing, logger)
 
-    # collect like signals together
+    # collect like signals together, keeping most recent publish date
     ret = {}
     for sig, lst in datasets.items():
-        ret[sig] = pd.concat(lst)
+        ret[sig] = pd.concat(
+            lst
+        ).groupby(
+            "timestamp"
+        ).apply(
+            lambda x: x[x["publish_date"] == x["publish_date"].max()]
+        ).drop(
+            "publish_date", axis=1
+        )
+
+        if ret[sig].index.names and ret[sig].index.names[0] == "timestamp":
+            ret[sig] = ret[sig].droplevel("timestamp")
 
     # add nation from state
     geomapper = GeoMapper()

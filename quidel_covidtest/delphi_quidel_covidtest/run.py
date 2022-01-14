@@ -94,43 +94,10 @@ def run_module(params: Dict[str, Any]):
                          wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
     smoothers = SMOOTHERS.copy()
-    for agegroup in AGE_GROUPS:
-        for geo_res in ["state"]:#NONPARENT_GEO_RESOLUTIONS:
-            geo_data, res_key = geo_map(geo_res, data, agegroup)
-            geo_groups = geo_data.groupby(res_key)
-            # for sensor in sensors:
-            #     if agegroup == "total":
-            #         sensor_name = sensor
-            #     else:
-            #         sensor_name = "_".join([sensor, agegroup])
-            #     logger.info("Generating signal and exporting to CSV",
-            #                 geo_res=geo_res,
-            #                 sensor=sensor)
-            #     if sensor.endswith(SMOOTHED_POSITIVE):
-            #         smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
-            #     elif sensor.endswith(RAW_POSITIVE):
-            #         smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
-            #     elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
-            #         smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
-            #     else:
-            #         smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
-            #     state_df = generate_sensor_for_nonparent_geo(
-            #         geo_groups, res_key, smooth=smoothers[sensor][1],
-            #         device=smoothers[sensor][0], first_date=first_date,
-            #         last_date=last_date, suffix=agegroup)
-            #     dates = create_export_csv(
-            #         state_df,
-            #         geo_res=geo_res,
-            #         sensor=sensor_name,
-            #         export_dir=export_dir,
-            #         start_date=export_start_date,
-            #         end_date=export_end_date)
-            #     if len(dates) > 0:
-            #         stats.append((max(dates), len(dates)))
-    
-        # County/HRR/MSA level
-        for geo_res in ["county"]:#PARENT_GEO_RESOLUTIONS:
-            geo_data, res_key = geo_map(geo_res, data, agegroup)
+    for geo_res in NONPARENT_GEO_RESOLUTIONS:
+        geo_data, res_key = geo_map(geo_res, data)
+        geo_groups = geo_data.groupby(res_key)
+        for agegroup in AGE_GROUPS:
             for sensor in sensors:
                 if agegroup == "total":
                     sensor_name = sensor
@@ -138,14 +105,48 @@ def run_module(params: Dict[str, Any]):
                     sensor_name = "_".join([sensor, agegroup])
                 logger.info("Generating signal and exporting to CSV",
                             geo_res=geo_res,
-                            sensor=sensor)
+                            sensor=sensor_name)
+                if sensor.endswith(SMOOTHED_POSITIVE):
+                    smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
+                elif sensor.endswith(RAW_POSITIVE):
+                    smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
+                elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
+                    smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
+                else:
+                    smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
+                state_df = generate_sensor_for_nonparent_geo(
+                    geo_groups, res_key, smooth=smoothers[sensor][1],
+                    device=smoothers[sensor][0], first_date=first_date,
+                    last_date=last_date, suffix=agegroup)
+                dates = create_export_csv(
+                    state_df,
+                    geo_res=geo_res,
+                    sensor=sensor_name,
+                    export_dir=export_dir,
+                    start_date=export_start_date,
+                    end_date=export_end_date)
+                if len(dates) > 0:
+                    stats.append((max(dates), len(dates)))
+
+    # County/HRR/MSA level
+    for geo_res in PARENT_GEO_RESOLUTIONS:
+        geo_data, res_key = geo_map(geo_res, data)
+        for agegroup in AGE_GROUPS:
+            for sensor in sensors:
+                if agegroup == "total":
+                    sensor_name = sensor
+                else:
+                    sensor_name = "_".join([sensor, agegroup])
+                logger.info("Generating signal and exporting to CSV",
+                            geo_res=geo_res,
+                            sensor=sensor_name)
                 res_df = generate_sensor_for_parent_geo(
                     geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
                     device=smoothers[sensor][0], first_date=first_date,
                     last_date=last_date, suffix=agegroup)
-                dates = create_export_csv(res_df, geo_res=geo_res, 
+                dates = create_export_csv(res_df, geo_res=geo_res,
                                           sensor=sensor_name, export_dir=export_dir,
-                                          start_date=export_start_date, 
+                                          start_date=export_start_date,
                                           end_date=export_end_date,
                                           remove_null_samples=True)
                 if len(dates) > 0:

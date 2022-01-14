@@ -3,7 +3,7 @@
 MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
 POOL_DAYS = 7  # number of days in the past (including today) to pool over
 END_FROM_TODAY_MINUS = 5 # report data until - X days
-# Signal names
+# Signal Types
 SMOOTHED_POSITIVE = "covid_ag_smoothed_pct_positive"
 RAW_POSITIVE = "covid_ag_raw_pct_positive"
 SMOOTHED_TEST_PER_DEVICE = "covid_ag_smoothed_test_per_device"
@@ -22,6 +22,7 @@ PARENT_GEO_RESOLUTIONS = [
     HRR,
 ]
 
+# state should be last one
 NONPARENT_GEO_RESOLUTIONS = [
     HHS,
     NATION,
@@ -41,11 +42,9 @@ SMOOTHERS = {
 }
 AGE_GROUPS = [
     "total",
-    "age_0to5", 
-    "age_5to13", 
-    "age_14to17", 
-    "age_18to49", 
-    "age_50to64", 
-    "age_65to74", 
-    "age_75toOlder"
+    "age_0to4",
+    "age_5to17",
+    "age_18to49",
+    "age_50to64",
+    "age_65toOlder"
 ]

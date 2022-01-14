@@ -112,8 +112,7 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
         # Can't borrow more than total no. observations.
         # Relies on the fact that np.inf > 1
         borrow_prop[borrow_prop > 1] = 1
-        #TODO
-    return [0 for i in range(len(borrow_prop))]
+    return borrow_prop
 
 
 def raw_positive_prop(positives, tests, min_obs):

@@ -145,13 +145,14 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
                     "cumulative_counts_part_vaccine_12P",
                     "cumulative_counts_part_vaccine_18P",
                     "cumulative_counts_part_vaccine_65P",
-                    ]] = 0
+                    ]] = np.nan
 
-    df =pd.concat([df_dummy, df])
+    df = pd.concat([df_dummy, df])
     df = df.set_index(["fips", "timestamp"])
     for to, from_d in DIFFERENCE_MAPPING.items():
         df[to] = df.groupby(level=0)[from_d].diff()
-   df.reset_index(inplace=True)
+    df.reset_index(inplace=True)
+
     # Final sanity checks
     unique_days = df["timestamp"].unique()
     n_days = (max(unique_days) - min(unique_days)) / np.timedelta64(1, "D") + 1

@@ -148,16 +148,10 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
                     ]] = 0
 
     df =pd.concat([df_dummy, df])
-    # Obtain new_counts
-    df.sort_values(["fips", "timestamp"], inplace=True)
+    df = df.set_index(["fips", "timestamp"])
     for to, from_d in DIFFERENCE_MAPPING.items():
-        df[to] = df[from_d].diff()
-
-    rem_list = [ x for x in list(df.columns) if x not in ['timestamp', 'fips'] ]
-    # Handle edge cases where we diffed across fips
-    mask = df["fips"] != df["fips"].shift(1)
-    df.loc[mask, rem_list] = np.nan
-    df.reset_index(inplace=True, drop=True)
+        df[to] = df.groupby(level=0)[from_d].diff()
+   df.reset_index(inplace=True)
     # Final sanity checks
     unique_days = df["timestamp"].unique()
     n_days = (max(unique_days) - min(unique_days)) / np.timedelta64(1, "D") + 1

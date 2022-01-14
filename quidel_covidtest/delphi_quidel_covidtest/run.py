@@ -42,7 +42,7 @@ def log_exit(start_time, stats, logger):
                 oldest_final_export_date = formatted_min_max_date)
 
 def get_smooth_info(sensors, _SMOOTHERS):
-    """Get smooth info from SMOOTHERS. """
+    """Get smooth info from SMOOTHERS."""
     smoothers = _SMOOTHERS.copy()
     for sensor in sensors:
         if sensor.endswith(SMOOTHED_POSITIVE):

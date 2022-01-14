@@ -45,11 +45,11 @@ def get_smooth_info(sensors, _SMOOTHERS):
     """Get smooth info from SMOOTHERS. """
     smoothers = _SMOOTHERS.copy()
     for sensor in sensors:
-        if sensor.endswith(_SMOOTHED_POSITIVE):
+        if sensor.endswith(SMOOTHED_POSITIVE):
             smoothers[sensor] = smoothers.pop(_SMOOTHED_POSITIVE)
         elif sensor.endswith(RAW_POSITIVE):
             smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
-        elif sensor.endswith(_SMOOTHED_TEST_PER_DEVICE):
+        elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
             smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
         else:
             smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)

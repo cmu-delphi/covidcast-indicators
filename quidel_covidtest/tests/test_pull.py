@@ -11,6 +11,7 @@ from delphi_quidel_covidtest.pull import (
     check_export_end_date,
     check_export_start_date
 )
+from delphi_quidel_covidtest.constants import AGE_GROUPS
 
 END_FROM_TODAY_MINUS = 5
 EXPORT_DAY_RANGE = 40
@@ -60,8 +61,10 @@ class TestingPullData:
 
         assert [first_date.month, first_date.day] == [7, 18]
         assert [last_date.month, last_date.day] == [7, 23]
-        assert (df.columns ==\
-            ['timestamp', 'zip', 'totalTest', 'numUniqueDevices', 'positiveTest']).all()
+        assert set(['timestamp', 'zip']).issubset(set(df.columns))
+        for agegroup in AGE_GROUPS:
+            set([f'totalTest_{agegroup}', f'numUniqueDevices_{agegroup}',
+             f'positiveTest_{agegroup}']).issubset(set(df.columns))
 
 
     def test_check_intermediate_file(self):

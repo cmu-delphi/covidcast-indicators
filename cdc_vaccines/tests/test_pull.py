@@ -48,11 +48,11 @@ class TestPullCDCVaccines:
             "cumulative_counts_part_vaccine_12P": [np.nan,1119203.0,np.nan,6290.0,np.nan,0.0],
             "cumulative_counts_part_vaccine_18P": [np.nan,1035082.0,np.nan,6014.0,np.nan,0.0],
             "cumulative_counts_part_vaccine_65P": [np.nan,75596.0,np.nan,1877.0,np.nan,0.0]},
-            
+
             index=[0, 1, 2, 3, 4, 5])
+
         # sort since rows order doesn't matter
-        print(df.sort_index().to_string())
-        pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())
+        pd.testing.assert_frame_equal(df.set_index(["fips", "timestamp"]).sort_index(), expected_df.set_index(["fips", "timestamp"]).sort_index())
 
     def test_missing_days(self):
         """Test if error is raised when there are missing days."""

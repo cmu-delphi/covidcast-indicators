@@ -135,8 +135,9 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
             "amend drop_columns."
         ) from e
 
-    df_dummy = df.loc[(df["timestamp"] == min(df["timestamp"]))].copy()
-    df_dummy.loc[:, "timestamp"] = df_dummy.loc[:, "timestamp"] - pd.Timedelta(days=1)
+    min_time = min(df["timestamp"])
+    df_dummy = df.loc[(df["timestamp"] == min_time)].copy()
+    df_dummy.loc[:, "timestamp"] = min_time - pd.Timedelta(days=1)
     df_dummy.loc[:, ["cumulative_counts_tot_vaccine",
                     "cumulative_counts_tot_vaccine_12P",
                     "cumulative_counts_tot_vaccine_18P",
@@ -145,12 +146,22 @@ def pull_cdcvacc_data(base_url: str, export_start_date: str,
                     "cumulative_counts_part_vaccine_12P",
                     "cumulative_counts_part_vaccine_18P",
                     "cumulative_counts_part_vaccine_65P",
-                    ]] = np.nan
+                    ]] = 0
 
     df = pd.concat([df_dummy, df])
     df = df.set_index(["fips", "timestamp"])
     for to, from_d in DIFFERENCE_MAPPING.items():
         df[to] = df.groupby(level=0)[from_d].diff()
+    idx = pd.IndexSlice
+    df.loc[idx[:, min_time - pd.Timedelta(days=1)], ["cumulative_counts_tot_vaccine",
+                    "cumulative_counts_tot_vaccine_12P",
+                    "cumulative_counts_tot_vaccine_18P",
+                    "cumulative_counts_tot_vaccine_65P",
+                    "cumulative_counts_part_vaccine",
+                    "cumulative_counts_part_vaccine_12P",
+                    "cumulative_counts_part_vaccine_18P",
+                    "cumulative_counts_part_vaccine_65P",
+                    ]] = np.nan
     df.reset_index(inplace=True)
 
     # Final sanity checks

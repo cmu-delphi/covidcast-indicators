@@ -42,9 +42,11 @@ SMOOTHERS = {
 }
 AGE_GROUPS = [
     "total",
-    "age_0to4",
-    "age_5to17",
-    "age_18to49",
-    "age_50to64",
-    "age_65toOlder"
+    "age_0_4",
+    "age_5_17",
+    "age_18_49",
+    "age_50_64",
+    "age_65plus",
+    "age_0_17",
+    "age_18_64",
 ]

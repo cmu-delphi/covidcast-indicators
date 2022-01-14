@@ -34,8 +34,8 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values)  == set([26, 10, 15, 20, 950])
         assert set(new_df["positiveTest_total"].values) == set([14, 6, 8, 5, 75])
 
-        assert set(new_df["totalTest_age_0to4"].values)  == set([5, 2, 2, 85, 4])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([2, 1, 1, 12, 1])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([5, 2, 2, 85, 4])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([2, 1, 1, 12, 1])
         
         # Test Megacounties
         new_df["timestamp"] = [datetime.strptime(x, "%Y-%m-%d") for x in new_df["timestamp"]]
@@ -44,8 +44,8 @@ class TestGeoMap:
         assert set(mega_df["totalTest_total"].values)  == set([26, 10, 15, 20, 950, 25, 20])
         assert set(mega_df["positiveTest_total"].values) == set([14, 6, 8, 5, 75, 14, 5])
 
-        assert set(mega_df["totalTest_age_0to4"].values)  == set([5, 2, 2, 85, 4, 4, 9, 4])
-        assert set(mega_df["positiveTest_age_0to4"].values) == set([2, 1, 1, 12, 1, 4, 1])
+        assert set(mega_df["totalTest_age_0_4"].values)  == set([5, 2, 2, 85, 4, 4, 9, 4])
+        assert set(mega_df["positiveTest_age_0_4"].values) == set([2, 1, 1, 12, 1, 4, 1])
         
 
     def test_state(self):
@@ -72,8 +72,8 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values)  == set([150, 200, 950])
         assert set(new_df["positiveTest_total"].values) == set([18, 15, 75])
         
-        assert set(new_df["totalTest_age_0to4"].values)  == set([30, 85, 20])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([3, 12, 3])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([30, 85, 20])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([3, 12, 3])
 
     def test_hrr(self):
 
@@ -99,8 +99,8 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values)  == set([500, 100, 250, 50, 400])
         assert set(new_df["positiveTest_total"].values) == set([50, 10, 20, 8, 20])
         
-        assert set(new_df["totalTest_age_0to4"].values)  == set([25, 20 ,20, 10, 60])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([8, 2, 3, 1, 4])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([25, 20 ,20, 10, 60])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([8, 2, 3, 1, 4])
 
     def test_msa(self):
 
@@ -126,8 +126,8 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values)  == set([200, 750, 100])
         assert set(new_df["positiveTest_total"].values) == set([5, 70, 10])
         
-        assert set(new_df["totalTest_age_0to4"].values)  == set([40, 45, 20])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([1, 11, 2])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([40, 45, 20])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([1, 11, 2])
 
     def test_nation(self):
         df = pd.DataFrame(
@@ -152,8 +152,8 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values) == set([1300])
         assert set(new_df["positiveTest_total"].values) == set([108])
         
-        assert set(new_df["totalTest_age_0to4"].values)  == set([135])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([18])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([135])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([18])
 
     def test_hhs(self):
         df = pd.DataFrame(
@@ -178,5 +178,5 @@ class TestGeoMap:
         assert set(new_df["totalTest_total"].values)  == set([150, 200, 950])
         assert set(new_df["positiveTest_total"].values) == set([18, 15, 75])
         
-        assert set(new_df["totalTest_age_0to4"].values)  == set([30, 20, 85])
-        assert set(new_df["positiveTest_age_0to4"].values) == set([3, 3, 12])
+        assert set(new_df["totalTest_age_0_4"].values)  == set([30, 20, 85])
+        assert set(new_df["positiveTest_age_0_4"].values) == set([3, 3, 12])

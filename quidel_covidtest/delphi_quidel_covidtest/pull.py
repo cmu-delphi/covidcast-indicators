@@ -8,6 +8,8 @@ import boto3
 import pandas as pd
 import numpy as np
 
+from .constants import AGE_GROUPS
+
 def get_from_s3(start_date, end_date, bucket, logger):
     """
     Get raw data from aws s3 bucket.
@@ -194,36 +196,40 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
 
     # Should match the suffixes of signal names
     df["label"] = None
-    df.loc[df["PatientAge"] < 5, "label"] = "age_0to4"
-    df.loc[((df["PatientAge"] >= 5)) & (df["PatientAge"] < 18), "label"] = "age_5to17"
-    df.loc[((df["PatientAge"] >= 18)) & (df["PatientAge"] < 50), "label"] = "age_18to49"
-    df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50to64"
-    df.loc[(df["PatientAge"] >= 65), "label"] = "age_65toOlder"
+    df.loc[df["PatientAge"] < 5, "label"] = "age_0_4"
+    df.loc[((df["PatientAge"] >= 5)) & (df["PatientAge"] < 18), "label"] = "age_5_17"
+    df.loc[((df["PatientAge"] >= 18)) & (df["PatientAge"] < 50), "label"] = "age_18_49"
+    df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50_64"
+    df.loc[(df["PatientAge"] >= 65), "label"] = "age_65plus"
     df.loc[df["PatientAge"] == -1, "label"] = "NA"
-
-    for agegroup in df["label"].unique():
-        if agegroup == "NA":
-            continue
+    
+    for agegroup in AGE_GROUPS[1:]:
+        if agegroup == "age_0_17":
+            ages = ["age_0_4", "age_5_17"]
+        elif agegroup == "age_18_64":
+            ages = ["age_18_49", "age_50_64"]
+        else:
+            ages = [agegroup]
         # Compute overallPositive
         group_pos = df.loc[(df["OverallResult"] == "positive")
-                             & (df["label"] == agegroup)].groupby(
+                             & (df["label"].isin(ages))].groupby(
             by=["timestamp", "zip"],
             as_index=False)['OverallResult'].count()
-        group_pos["positiveTest_%s"%agegroup] = group_pos["OverallResult"]
+        group_pos[f"positiveTest_{agegroup}"] = group_pos["OverallResult"]
         group_pos.drop(labels="OverallResult", axis="columns", inplace=True)
 
         # Compute overallTotal
-        group_total = df.loc[df["label"] == agegroup].groupby(
+        group_total = df.loc[df["label"].isin(ages)].groupby(
             by=["timestamp", "zip"],
             as_index=False)['OverallResult'].count()
-        group_total["totalTest_%s"%agegroup] = group_total["OverallResult"]
+        group_total[f"totalTest_{agegroup}"] = group_total["OverallResult"]
         group_total.drop(labels="OverallResult", axis="columns", inplace=True)
 
         # Compute numUniqueDevices
-        group_numUniqueDevices = df.loc[df["label"] == agegroup].groupby(
+        group_numUniqueDevices = df.loc[df["label"].isin(ages)].groupby(
             by=["timestamp", "zip"],
             as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
-                columns={"SofiaSerNum": "numUniqueDevices_%s"%agegroup}
+                columns={"SofiaSerNum": f"numUniqueDevices_{agegroup}"}
             )
 
         df_merged = df_merged.merge(

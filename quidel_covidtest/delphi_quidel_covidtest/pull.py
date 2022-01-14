@@ -202,7 +202,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50_64"
     df.loc[(df["PatientAge"] >= 65), "label"] = "age_65plus"
     df.loc[df["PatientAge"] == -1, "label"] = "NA"
-    
+
     for agegroup in AGE_GROUPS[1:]:
         if agegroup == "age_0_17":
             ages = ["age_0_4", "age_5_17"]

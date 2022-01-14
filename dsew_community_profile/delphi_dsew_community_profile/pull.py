@@ -323,7 +323,15 @@ def nation_from_state(df, sig, geomapper):
     if SIGNALS[sig]["is_rate"]: # true if sig is a rate
         df = geomapper.add_population_column(df, "state_id") \
                       .rename(columns={"population":"weight"})
-        df.weight = df.weight / df.weight.sum() * len(df.timestamp.unique())
+
+        norm_denom = df.groupby("timestamp").agg(norm_denom=("weight", "sum"))
+        df = df.join(
+            norm_denom, on="timestamp", how="left"
+        ).assign(
+            weight=lambda x: x.weight / x.norm_denom
+        ).drop(
+            "norm_denom", axis=1
+        )
     return geomapper.replace_geocode(
         df,
         'state_id',

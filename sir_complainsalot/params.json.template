@@ -67,6 +67,10 @@
         "smoothed_felt_isolated_7d", "smoothed_wfelt_isolated_7d",
         "smoothed_worried_become_ill", "smoothed_wworried_become_ill",
         "smoothed_received_2_vaccine_doses", "smoothed_wreceived_2_vaccine_doses",
+        "smoothed_hesitancy_reason_dislike_vaccines", "smoothed_whesitancy_reason_dislike_vaccines",
+        "smoothed_inperson_school_fulltime", "smoothed_winperson_school_fulltime",
+        "smoothed_inperson_school_parttime", "smoothed_winperson_school_parttime",
+        "smoothed_vaccinate_children", "smoothed_wvaccinate_children",
         ["smoothed_vaccine_barrier_appointment_time_tried", "msa"], ["smoothed_wvaccine_barrier_appointment_time_tried", "msa"],
         ["smoothed_vaccine_barrier_childcare_tried", "msa"], ["smoothed_wvaccine_barrier_childcare_tried", "msa"],
         ["smoothed_vaccine_barrier_document_tried", "msa"], ["smoothed_wvaccine_barrier_document_tried", "msa"],
@@ -95,10 +99,6 @@
     },
     "nchs-mortality": {
       "max_age":16,
-      "maintainers": []
-    },
-    "covid-act-now": {
-      "max_age":9,
       "maintainers": []
     },
     "hhs": {

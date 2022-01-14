@@ -74,7 +74,7 @@ def deconvolve_double_smooth_ntf(
     x_k = None
     alpha_0 = np.zeros(n - k - 1)
     u_0 = np.zeros(n - k - 1)
-    for t in range(n_iters):
+    for _ in range(n_iters):
         x_k = x_update_1 @ (Cty + rho * D.T @ (alpha_0 + u_0))
         Dx = D @ x_k
         alpha_k = _soft_thresh(Dx - u_0, lam / rho)

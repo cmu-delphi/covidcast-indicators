@@ -16,7 +16,8 @@ from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 # first party
 from .config import Config
 from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
-                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
+                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, SMOOTHED_FLU_INPATIENT,\
+                       SMOOTHED_ADJ_FLU_INPATIENT, NA
 from .sensor import CHCSensor
 
 
@@ -117,6 +118,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
         elif self.numtype == "flu":
             signal_name = SMOOTHED_ADJ_FLU if self.weekday else SMOOTHED_FLU
+        elif self.numtype == 'flu_inpatient':
+            signal_name = SMOOTHED_ADJ_FLU_INPATIENT if self.weekday else SMOOTHED_FLU_INPATIENT
         else:
             raise ValueError(f'Unsupported numtype received "{numtype}",'
                              f' must be one of ["covid", "cli", "flu"]')
@@ -154,6 +157,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
+            assert data.index.names[0] == "fips", "can only convert fits to county, not %s"%(data.index.names[0])
             data_frame = gmpr.fips_to_megacounty(data,
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
@@ -161,10 +165,12 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  mega_col=geo,
                                                  date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
+            data_frame = gmpr.replace_geocode(data, data.index.names[0], "state_id", new_col="state",
                                               date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", geo, date_col=Config.DATE_COL)
+            data_frame = gmpr.replace_geocode(data, data.index.names[0], geo, date_col=Config.DATE_COL)
+            
+        
 
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)

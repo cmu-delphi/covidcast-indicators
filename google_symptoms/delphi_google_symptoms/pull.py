@@ -49,10 +49,8 @@ def preprocess(df, level):
         df[cb_metric] = 0
         for metric in SYMPTOM_SETS[cb_metric]:
             df[cb_metric] += df[metric].fillna(0)
-        if cb_metric != "sum_anosmia_ageusia":
-            df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
-        df.loc[
-            df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
+        df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
+        df.loc[df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
 
     # Delete rows with missing FIPS
     null_mask = (df["geo_id"].isnull())

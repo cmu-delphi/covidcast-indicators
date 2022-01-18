@@ -95,8 +95,8 @@ GEO_RESOLUTIONS = [
 ]
 
 SMOOTHERS_MAP = {
-    "raw":               (Smoother("identity", impute_method=None).smooth, lambda d: d - timedelta(days=7)),
-    "smoothed":          (Smoother("moving_average", window_length=7).smooth, lambda d: d)
+    "raw":               (Smoother("identity", impute_method=None), lambda d: d - timedelta(days=7)),
+    "smoothed":          (Smoother("moving_average", window_length=7, impute_method='zeros'), lambda d: d)
 }
 
 

@@ -75,7 +75,7 @@ def geo_map(df, geo_res):
     for _date in df["timestamp"].unique():
         val_lists = df[df["timestamp"] == _date].merge(
                 map_df["geo_id"], how="right"
-                )[METRICS + [COMBINED_METRIC]].fillna(0)
+                )[METRICS + COMBINED_METRIC].fillna(0)
         newdf = pd.DataFrame(
                 np.matmul(map_df.values[:, 1:].T, val_lists.values),
                 columns = list(val_lists.keys())

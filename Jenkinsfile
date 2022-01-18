@@ -9,7 +9,7 @@
    - Keep in sync with '.github/workflows/python-ci.yml'.
    - TODO: #527 Get this list automatically from python-ci.yml at runtime.
  */
-def indicator_list = ["cdc_covidnet", "changehc", "claims_hosp", "combo_cases_and_deaths", "covid_act_now", "facebook", "google_symptoms", "hhs_hosp", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph_patterns", "sir_complainsalot", "usafacts"]
+def indicator_list = ["changehc", "claims_hosp", "facebook", "google_symptoms", "hhs_hosp", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph_patterns", "sir_complainsalot", "usafacts"]
 def build_package = [:]
 def deploy_staging = [:]
 def deploy_production = [:]

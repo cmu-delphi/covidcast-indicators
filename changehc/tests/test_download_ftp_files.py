@@ -6,6 +6,7 @@ from datetime import timedelta
 
 # first party
 from delphi_changehc.download_ftp_files import *
+from delphi_changehc.constants import EXPECTED_FILES_PER_DROP
 
 class TestDownloadFTPFiles:
 
@@ -51,22 +52,18 @@ class TestDownloadFTPFiles:
         get_files_from_dir(one_new_one_old, "00005566", "")
         assert one_new_one_old.num_gets == 1
 
-        # When seven new files are present, AssertionError
-        new_file1 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo1")
-        new_file2 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo2")
-        new_file3 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo3")
-        new_file4 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo4")
-        new_file5 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo5")
-        new_file6 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo6")
-        new_file7 = self.FileAttr(dt.timestamp(dt.now()), "00001122_foo7")
-        seven_new = self.MockSFTP([new_file1, new_file2, new_file3, new_file4,
-                                    new_file5, new_file6, new_file7])
+        # When too many new files are present, AssertionError
+        file_batch = [
+            self.FileAttr(dt.timestamp(dt.now()), f"00001122_foo{i}")
+            for i in range(EXPECTED_FILES_PER_DROP + 1)
+        ]
+        too_many_new = self.MockSFTP(file_batch)
         with pytest.raises(AssertionError):
-            get_files_from_dir(seven_new, "00001122", "")
+            get_files_from_dir(too_many_new, "00001122", "")
 
         # When the file already exists, no files are downloaded
         mock_path.exists.return_value = True
-        one_exists = self.MockSFTP([new_file1])
+        one_exists = self.MockSFTP([file_batch[0]])
         get_files_from_dir(one_new, "00001122", "")
         assert one_exists.num_gets == 0
         

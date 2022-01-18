@@ -13,7 +13,6 @@ import numpy as np
 from pandas import to_datetime
 from delphi_utils import (
     create_export_csv,
-    geomap,
     get_structured_logger
 )
 from delphi_utils.validator.utils import lag_converter
@@ -84,14 +83,12 @@ def run_module(params):
                        export_start_date,
                        export_end_date,
                        num_export_days)
-    gmpr = geomap.GeoMapper()
 
     for geo_res in GEO_RESOLUTIONS:
         if geo_res == "state":
             df_pull = dfs["state"]
         elif geo_res in ["hhs", "nation"]:
-            df_pull = gmpr.replace_geocode(dfs["county"], "fips", geo_res, from_col="geo_id")
-            df_pull.rename(columns={geo_res: "geo_id"}, inplace=True)
+            df_pull = geo_map(dfs["state"], geo_res)
         else:
             df_pull = geo_map(dfs["county"], geo_res)
 

@@ -73,13 +73,17 @@ get_aggs <- function() {
     ## Mask wearing and distancing
     "pct_wearing_mask_5d", "c_mask_often", compute_binary, jeffreys_binary,
     "pct_wearing_mask_7d", "c_mask_often_7d", compute_binary, jeffreys_binary,
+    "pct_others_masked", "c_others_masked", compute_binary, jeffreys_binary,
     "pct_others_masked_public", "c_others_masked_public", compute_binary, jeffreys_binary,
     "pct_others_distanced_public", "c_others_distanced_public", compute_binary, jeffreys_binary,
     
     "pct_cli", "hh_p_cli", compute_household_binary, jeffreys_count,
     "pct_ili", "hh_p_ili", compute_household_binary, jeffreys_count,
     "pct_hh_cmnty_cli", "hh_community_yes", compute_binary, jeffreys_binary,
+    "pct_nohh_cmnty_cli", "community_yes", compute_binary, jeffreys_binary,
     "pct_direct_contact", "c_direct_contact", compute_binary, jeffreys_binary,
+    "pct_avoid_contact", "c_avoid_contact", compute_binary, jeffreys_binary,
+    "pct_avoid_contact_7d", "c_avoid_contact_7d", compute_binary, jeffreys_binary,
     
     # symptoms
     "pct_symp_fever", "symp_fever", compute_binary, jeffreys_binary,
@@ -135,6 +139,7 @@ get_aggs <- function() {
     "pct_covid_vaccinated_friends", "v_covid_vaccinated_friends", compute_binary, jeffreys_binary,
     
     "pct_vaccinate_children", "v_vaccinate_children", compute_binary, jeffreys_binary,
+    "pct_vaccinate_child_oldest", "v_vaccinate_child_oldest", compute_binary, jeffreys_binary,
     
     "pct_accept_vaccine_defyes", "v_accept_vaccine_defyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_probyes", "v_accept_vaccine_probyes", compute_binary, jeffreys_multinomial_factory(4),
@@ -203,6 +208,7 @@ get_aggs <- function() {
     "pct_hesitant_barrier_health_condition", "v_hesitant_barrier_health_condition", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_pregnant", "v_hesitant_barrier_pregnant", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_other", "v_hesitant_barrier_other", compute_binary, jeffreys_binary,
+    "pct_hesitant_barrier_dislike_vaccines_generally", "v_hesitant_barrier_dislike_vaccines_generally", compute_binary, jeffreys_binary,
     
     "pct_hesitant_dontneed_reason_had_covid", "v_hesitant_dontneed_reason_had_covid", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_dont_spend_time", "v_hesitant_dontneed_reason_dont_spend_time", compute_binary, jeffreys_binary,
@@ -227,6 +233,7 @@ get_aggs <- function() {
     "pct_barrier_health_condition", "v_hesitancy_reason_health_condition", compute_binary, jeffreys_binary,
     "pct_barrier_pregnant", "v_hesitancy_reason_pregnant", compute_binary, jeffreys_binary,
     "pct_barrier_other", "v_hesitancy_reason_other", compute_binary, jeffreys_binary,
+    "pct_barrier_dislike_vaccines_generally", "v_hesitancy_reason_dislike_vaccines_generally", compute_binary, jeffreys_binary,
     
     # vaccine "don't need" reasons
     "pct_dontneed_reason_had_covid", "v_dontneed_reason_had_covid_5abc_6", compute_binary, jeffreys_binary,
@@ -252,6 +259,7 @@ get_aggs <- function() {
     "pct_defno_barrier_health_condition", "v_defno_barrier_health_condition", compute_binary, jeffreys_binary,
     "pct_defno_barrier_pregnant", "v_defno_barrier_pregnant", compute_binary, jeffreys_binary,
     "pct_defno_barrier_other", "v_defno_barrier_other", compute_binary, jeffreys_binary,
+    "pct_defno_barrier_dislike_vaccines_generally", "v_defno_barrier_dislike_vaccines_generally", compute_binary, jeffreys_binary,
     
     "pct_defno_dontneed_reason_had_covid", "v_defno_dontneed_reason_had_covid", compute_binary, jeffreys_binary,
     "pct_defno_dontneed_reason_dont_spend_time", "v_defno_dontneed_reason_dont_spend_time", compute_binary, jeffreys_binary,
@@ -284,6 +292,8 @@ get_aggs <- function() {
     "pct_vaccine_barrier_time", "v_vaccine_barrier_time", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_type", "v_vaccine_barrier_type", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_none", "v_vaccine_barrier_none", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_location", "v_vaccine_barrier_appointment_location", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_other", "v_vaccine_barrier_other", compute_binary, jeffreys_binary,
     
     # beliefs
     "pct_belief_masking_effective", "b_belief_masking_effective", compute_binary, jeffreys_binary,
@@ -296,8 +306,6 @@ get_aggs <- function() {
     # medical care beliefs and experiences
     "pct_race_treated_fairly_healthcare", "b_race_treated_fairly_healthcare", compute_binary, jeffreys_binary,
     "pct_delayed_care_cost", "b_delayed_care_cost", compute_binary, jeffreys_binary,
-    
-    "pct_worried_catch_covid", "mh_worried_catch_covid", compute_binary, jeffreys_binary,
     
     # topics want to learn about
     "pct_want_info_covid_treatment", "i_want_info_covid_treatment", compute_binary, jeffreys_binary,
@@ -349,6 +357,8 @@ get_aggs <- function() {
     "pct_anxious_7d", "mh_anxious_7d", compute_binary, jeffreys_binary,
     "pct_depressed_7d", "mh_depressed_7d", compute_binary, jeffreys_binary,
     "pct_felt_isolated_7d", "mh_isolated_7d", compute_binary, jeffreys_binary,
+    # wave 11
+    "pct_worried_catch_covid", "mh_worried_catch_covid", compute_binary, jeffreys_binary,
     
     # travel outside state
     # pre-wave 10
@@ -397,6 +407,8 @@ get_aggs <- function() {
     "pct_vaccine_barrier_time_has", "v_vaccine_barrier_time_has", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_type_has", "v_vaccine_barrier_type_has", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_none_has", "v_vaccine_barrier_none_has", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_location_has", "v_vaccine_barrier_appointment_location_has", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_other_has", "v_vaccine_barrier_other_has", compute_binary, jeffreys_binary,
     
     # vaccine barriers for tried vaccinated
     "pct_vaccine_barrier_eligible_tried", "v_vaccine_barrier_eligible_tried", compute_binary, jeffreys_binary,
@@ -410,7 +422,13 @@ get_aggs <- function() {
     "pct_vaccine_barrier_childcare_tried", "v_vaccine_barrier_childcare_tried", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_time_tried", "v_vaccine_barrier_time_tried", compute_binary, jeffreys_binary,
     "pct_vaccine_barrier_type_tried", "v_vaccine_barrier_type_tried", compute_binary, jeffreys_binary,
-    "pct_vaccine_barrier_none_tried", "v_vaccine_barrier_none_tried", compute_binary, jeffreys_binary
+    "pct_vaccine_barrier_none_tried", "v_vaccine_barrier_none_tried", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_appointment_location_tried", "v_vaccine_barrier_appointment_location_tried", compute_binary, jeffreys_binary,
+    "pct_vaccine_barrier_other_tried", "v_vaccine_barrier_other_tried", compute_binary, jeffreys_binary,
+
+    # schooling
+    "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
+    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

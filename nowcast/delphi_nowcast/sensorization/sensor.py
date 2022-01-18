@@ -1,5 +1,4 @@
 """Functions to run sensorization."""
-import os
 from collections import defaultdict
 from typing import List, DefaultDict
 from datetime import timedelta, date
@@ -54,7 +53,7 @@ def compute_sensors(as_of_date: date,
                 (sensor.source, sensor.signal, loc.geo_type, loc.geo_value)
             )
             if not covariates:
-                # TODO convert to log statements #689
+                # TODO convert to log statements #689 # pylint: disable=fixme
                 print(f"No data: {(sensor.source, sensor.signal, loc.geo_type, loc.geo_value)}")
                 continue
             reg_sensor = compute_regression_sensor(sensor_pred_date, covariates, loc, REG_INTERCEPT)
@@ -95,7 +94,7 @@ def historical_sensors(start_date: date,
     output = defaultdict(list)
     for location in ground_truths:
         for sensor in sensors:
-            sensor_vals, missing_dates = get_historical_sensor_data(
+            sensor_vals, _ = get_historical_sensor_data(
                 sensor, location, start_date, end_date
             )
             if sensor_vals.data:

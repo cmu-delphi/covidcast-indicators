@@ -12,6 +12,7 @@
   "produce_individual_raceeth": false,
   "weights_in_dir": "./delphiFacebook/integration-tests/testthat/weights_full",
   "weights_out_dir": "./weights_out",
+  "experimental_weights_out_dir": "./exp_weights_out",
   "input_dir": "./delphiFacebook/integration-tests/testthat/input",
   "input": [
     "full_synthetic.csv"

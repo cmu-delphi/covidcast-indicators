@@ -165,10 +165,10 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  mega_col=geo,
                                                  date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, data.index.names[0], "state_id", new_col="state",
+            data_frame = gmpr.replace_geocode(data, data.columns[0], "state_id", new_col="state",
                                               date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, data.index.names[0], geo, date_col=Config.DATE_COL)
+            data_frame = gmpr.replace_geocode(data, data.columns[0], geo, date_col=Config.DATE_COL)
             
         
 

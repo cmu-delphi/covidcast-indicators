@@ -27,7 +27,7 @@ def load_chng_data(filepath, dropdate, base_geo,
     Returns:
         cleaned dataframe
     """
-    assert base_geo == "fips" or (counts_col == Config.FLU_INPATIENT_COL and
+    assert base_geo == "fips" or ((counts_col == Config.FLU_INPATIENT_COL or counts_col == Config.DENOM_INPATIENT_STATE_COL) and
                      base_geo == "state_code"), "base unit must be 'fips', or state_code for Flu-Inpatient"
     count_flag = False
     date_flag = False
@@ -205,7 +205,7 @@ def load_flu_inpatient_data(denom_filepath, flu_filepath, dropdate, base_geo):
 
     # load each data stream
     denom_data = load_chng_data(denom_filepath, dropdate, base_geo,
-                     Config.DENOM_COLS_STATE, Config.DENOM_DTYPES_STATE, Config.DENOM_COL)
+                     Config.DENOM_COLS_STATE, Config.DENOM_DTYPES_STATE, Config.DENOM_INPATIENT_STATE_COL)
     flu_data = load_chng_data(flu_filepath, dropdate, base_geo,
                      Config.FLU_INPATIENT_COLS, Config.FLU_INPATIENT_DTYPES, Config.FLU_INPATIENT_COL)
 
@@ -216,7 +216,7 @@ def load_flu_inpatient_data(denom_filepath, flu_filepath, dropdate, base_geo):
     # calculate combined numerator and denominator
     data.fillna(0, inplace=True)
     data["num"] = data[Config.FLU_INPATIENT_COL]
-    data["den"] = data[Config.DENOM_COL]
+    data["den"] = data[Config.DENOM_INPATIENT_STATE_COL]
     data = data[["num", "den"]]
 
     return data

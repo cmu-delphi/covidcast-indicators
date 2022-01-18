@@ -199,8 +199,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
                              dropdate_dt,"fips")
                 elif numtype == "flu_inpatient":
-                    data = load_flu_inpatient_data(file_dict["denom"],file_dict["flu_inpatient"],
-                             dropdate_dt,"fips")
+                    data = load_flu_inpatient_data(file_dict["denom_inpatient_state"],file_dict["flu_inpatient"],
+                             dropdate_dt,"state_code")
                     
                 more_stats = su_inst.update_sensor(
                     data,

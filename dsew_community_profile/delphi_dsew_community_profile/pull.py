@@ -244,6 +244,16 @@ class Dataset:
         ]
 
         for sig in SIGNALS:
+            # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
+            if (sheet.level == "msa" or sheet.level == "county") \
+                and self.publish_date < datetime.date(2021, 1, 8) \
+                and sig == "confirmed covid-19 admissions":
+                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                        columns = ["geo_id", "timestamp", "val", \
+                            "se", "sample_size", "publish_date"]
+                    )
+                continue
+
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
@@ -349,7 +359,7 @@ def fetch_new_reports(params, logger=None):
     # collect like signals together, keeping most recent publish date
     ret = {}
     for sig, lst in datasets.items():
-        ret[sig] = pd.concat(
+        latest_sig_df = pd.concat(
             lst
         ).groupby(
             "timestamp"
@@ -359,8 +369,8 @@ def fetch_new_reports(params, logger=None):
             "publish_date", axis=1
         )
 
-        if ret[sig].index.names and ret[sig].index.names[0] == "timestamp":
-            ret[sig] = ret[sig].droplevel("timestamp")
+        if len(latest_sig_df.index) > 0:
+            ret[sig] = latest_sig_df.reset_index(drop=True)
 
     # add nation from state
     geomapper = GeoMapper()

@@ -4,11 +4,6 @@ from datetime import timedelta
 
 from delphi_utils import Smoother
 
-from .smooth import (
-    identity_OLD,
-    kday_moving_average_OLD
-)
-
 # global constants
 METRICS = ["Abdominal pain",
            "Anosmia",
@@ -66,7 +61,7 @@ METRICS = ["Abdominal pain",
            "Candidiasis",
            "Weight gain"]
 
-COMBINED_METRIC = ["sum_anosmia_ageusia", "S01", "S02", "S03",
+COMBINED_METRIC = ["S01", "S02", "S03",
                    #"S04",
                    "S05", "S06",
                    #"S07",
@@ -75,7 +70,6 @@ COMBINED_METRIC = ["sum_anosmia_ageusia", "S01", "S02", "S03",
                    "SControl"]
 
 SYMPTOM_SETS = {
-    "sum_anosmia_ageusia": ["Anosmia", "Ageusia"],
     "S01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
     "S02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis", "Rhinitis", "Common cold"],
     "S03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
@@ -90,7 +84,7 @@ SYMPTOM_SETS = {
 }
 
 
-SMOOTHERS = ["raw_OLD", "smoothed_OLD", "raw", "smoothed"]
+SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [
     "state",
     "county",
@@ -100,12 +94,9 @@ GEO_RESOLUTIONS = [
     "nation"
 ]
 
-seven_day_moving_average = partial(kday_moving_average_OLD, k=7)
 SMOOTHERS_MAP = {
-    "raw_OLD":           (identity_OLD, lambda d: d - timedelta(days=7)),
-    "smoothed_OLD":      (seven_day_moving_average, lambda d: d),
-    "raw":               (Smoother("identity", impute_method=None), ""),
-    "smoothed":          (Smoother("moving_average", window_length=7), "_7dav")
+    "raw":               (Smoother("identity", impute_method=None).smooth, lambda d: d - timedelta(days=7)),
+    "smoothed":          (Smoother("moving_average", window_length=7).smooth, lambda d: d)
 }
 
 

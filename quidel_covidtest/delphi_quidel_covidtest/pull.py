@@ -206,8 +206,6 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     for agegroup in AGE_GROUPS[1:]:
         if agegroup == "age_0_17":
             ages = ["age_0_4", "age_5_17"]
-        elif agegroup == "age_18_64":
-            ages = ["age_18_49", "age_50_64"]
         else:
             ages = [agegroup]
         # Compute overallPositive

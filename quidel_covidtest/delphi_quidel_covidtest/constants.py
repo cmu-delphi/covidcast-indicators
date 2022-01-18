@@ -48,5 +48,4 @@ AGE_GROUPS = [
     "age_50_64",
     "age_65plus",
     "age_0_17",
-    "age_18_64",
 ]

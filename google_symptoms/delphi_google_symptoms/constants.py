@@ -105,7 +105,7 @@ SMOOTHERS_MAP = {
     "raw_OLD":           (identity_OLD, lambda d: d - timedelta(days=7)),
     "smoothed_OLD":      (seven_day_moving_average, lambda d: d),
     "raw":               (Smoother("identity", impute_method=None), ""),
-    "smoothed":          (Smoother("moving_average", window_length=7,impute='zeros'), "_7dav")
+    "smoothed":          (Smoother("moving_average", window_length=7), "_7dav")
 }
 
 

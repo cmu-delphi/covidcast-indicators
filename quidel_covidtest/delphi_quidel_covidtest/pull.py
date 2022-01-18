@@ -189,7 +189,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
         ).fillna(0).drop_duplicates()
 
     # Compute Summary info for age groups
-    df["PatientAge"]= df["PatientAge"].fillna(-1)
+    df["PatientAge"] = df["PatientAge"].fillna(-1)
     df.loc[df["PatientAge"] == "<1", "PatientAge"] = 0.5
     df.loc[df["PatientAge"] == ">85", "PatientAge"] = 100
     df["PatientAge"] = df["PatientAge"] .astype(float)
@@ -203,7 +203,7 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     df.loc[(df["PatientAge"] >= 65), "label"] = "age_65plus"
     df.loc[df["PatientAge"] == -1, "label"] = "NA"
 
-    for agegroup in AGE_GROUPS[1:]:
+    for agegroup in AGE_GROUPS[1:]: # Exclude total
         if agegroup == "age_0_17":
             ages = ["age_0_4", "age_5_17"]
         else:

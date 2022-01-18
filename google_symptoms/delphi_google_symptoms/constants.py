@@ -2,9 +2,11 @@
 from functools import partial
 from datetime import timedelta
 
+from delphi_utils import Smoother
+
 from .smooth import (
-    identity,
-    kday_moving_average,
+    identity_OLD,
+    kday_moving_average_OLD
 )
 
 # global constants
@@ -12,36 +14,21 @@ METRICS = ["Abdominal pain",
            "Anosmia",
            "Ageusia",
            "Acute bronchitis",
-           "Allergy",
-           "Amnesia",
-           "Anaphylaxis",
-           "Arthralgia",
            "Asthma",
-           "Back pain",
-           "Breast pain",
            "Bronchitis",
-           "Burning chest pain",
            "Chest pain",
            "Chills",
            "Cluster headache",
            "Common cold",
            "Cough",
            "Crackles",
-           "Crepitus",
            "Croup",
            "Diarrhea",
            "Dizziness",
            "Dysgeusia",
-           "Dysphagia",
-           "Encephalitis",
-           "Excessive daytime sleepiness",
            "Fatigue",
            "Fever",
-           "Globus pharyngis",
-           "Goitre",
            "Headache",
-           "Hives",
-           "Hypercapnia",
            "Hyperthermia",
            "Indigestion",
            "Laryngitis",
@@ -53,30 +40,22 @@ METRICS = ["Abdominal pain",
            "Nausea",
            "Nasal congestion",
            "Night sweats",
-           "Orthostatic hypotension",
            "Pain",
-           "Palpitations",
            "Perspiration",
            "Phlegm",
            "Pneumonia",
            "Post nasal drip",
-           "Pulmonary edema",
            "Rheum",
            "Rhinitis",
            "Rhinorrhea",
-           "Shallow breathing",
            "Sharp pain",
            "Shivering",
            "Shortness of breath",
            "Sinusitis",
-           "Sleep deprivation",
-           "Sleep disorder",
            "Sore throat",
            "Sputum",
            "Throat irritation",
-           "Tonsillitis",
            "Upper respiratory tract infection",
-           "Viral pneumonia",
            "Vomiting",
            "Weakness",
            "Wheeze",
@@ -87,25 +66,31 @@ METRICS = ["Abdominal pain",
            "Candidiasis",
            "Weight gain"]
 
-COMBINED_METRIC = ["sum_anosmia_ageusia", "S01", "S02", "S03", "S04", "S05", "S06", "S07", "S08", "S09", "S10", "SControl"]
+COMBINED_METRIC = ["sum_anosmia_ageusia", "S01", "S02", "S03",
+                   #"S04",
+                   "S05", "S06",
+                   #"S07",
+                   "S08",
+                   #"S09", "S10",
+                   "SControl"]
 
 SYMPTOM_SETS = {
     "sum_anosmia_ageusia": ["Anosmia", "Ageusia"],
     "S01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
     "S02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis", "Rhinitis", "Common cold"],
-    "S03": ["symptom_Fever", "symptom_Hyperthermia", "symptom_Chills", "symptom_Shivering", "symptom_Low_grade_fever"],
-    "S04": ["symptom_Fatigue", "symptom_Weakness", "symptom_Muscle_weakness", "symptom_Myalgia", "symptom_Pain"],
-    "S05": ["symptom_Shortness_of_breath", "symptom_Wheeze", "symptom_Croup", "symptom_Pneumonia", "symptom_Asthma", "symptom_Crackles", "symptom_Acute_bronchitis", "symptom_Bronchitis"],
-    "S06": ["symptom_Anosmia", "symptom_Dysgeusia", "symptom_Ageusia"],
-    "S07": ["symptom_Nausea", "symptom_Vomiting", "symptom_Diarrhea", "symptom_Indigestion", "symptom_Abdominal_pain"],
-    "S08": ["symptom_Laryngitis", "symptom_Sore_throat", "symptom_Throat_irritation"],
-    "S09": ["symptom_Headache", "symptom_Migraine", "symptom_Cluster_headache", "symptom_Dizziness", "symptom_Lightheadedness"],
-    "S10": ["symptom_Night_sweats","symptom_Perspiration", "symptom_hyperhidrosis"],
-    "SControl": ["symptom_Type_2_diabetes", "symptom_Urinary_tract_infection", "symptom_Hair_loss", "symptom_Candidiasis", "symptom_Weight_gain"]
+    "S03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
+    #"S04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
+    "S05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma", "Crackles", "Acute bronchitis", "Bronchitis"],
+    "S06": ["Anosmia", "Dysgeusia", "Ageusia"],
+    #"S07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
+    "S08": ["Laryngitis", "Sore throat", "Throat irritation"],
+    #"S09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
+    #"S10": ["Night sweats","Perspiration", "hyperhidrosis"],
+    "SControl": ["Type 2 diabetes", "Urinary tract infection", "Hair loss", "Candidiasis", "Weight gain"]
 }
 
 
-SMOOTHERS = ["raw", "smoothed"]
+SMOOTHERS = ["raw_OLD", "smoothed_OLD", "raw", "smoothed"]
 GEO_RESOLUTIONS = [
     "state",
     "county",
@@ -115,11 +100,15 @@ GEO_RESOLUTIONS = [
     "nation"
 ]
 
-seven_day_moving_average = partial(kday_moving_average, k=7)
+seven_day_moving_average = partial(kday_moving_average_OLD, k=7)
 SMOOTHERS_MAP = {
-    "raw":           (identity, lambda d: d - timedelta(days=7)),
-    "smoothed":      (seven_day_moving_average, lambda d: d),
+    "raw_OLD":           (identity_OLD, lambda d: d - timedelta(days=7)),
+    "smoothed_OLD":      (seven_day_moving_average, lambda d: d),
+    "raw":               (Smoother("identity", impute_method=None), ""),
+    "smoothed":          (Smoother("moving_average", window_length=7,impute='zeros'), "_7dav")
 }
+
+
 
 STATE_TO_ABBREV = {'Alabama': 'al',
                    'Alaska': 'ak',

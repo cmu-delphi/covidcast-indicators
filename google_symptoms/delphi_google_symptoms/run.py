@@ -6,7 +6,7 @@ when the module is run with `python -m delphi_google_symptoms`.
 """
 import time
 from datetime import datetime, date
-from itertools import product
+from itertools import product, chain
 import covidcast
 
 import numpy as np
@@ -94,8 +94,8 @@ def run_module(params):
 
         if len(df_pull) == 0:
             continue
-        for metric, smoother in product(
-                METRICS+[COMBINED_METRIC], SMOOTHERS):
+        for metric, smoother in chain(product(METRICS[1:3]+[COMBINED_METRIC[0]], SMOOTHERS[0:2]),
+                                      product(COMBINED_METRIC[1:], SMOOTHERS[2:4])):
             logger.info("generating signal and exporting to CSV",
                         geo_res=geo_res,
                         metric=metric,
@@ -108,7 +108,7 @@ def run_module(params):
             # Drop early entries where data insufficient for smoothing
             df = df.loc[~df["val"].isnull(), :]
             df = df.reset_index()
-            sensor_name = "_".join([smoother, "search"])
+            sensor_name = "_".join([smoother.split("_")[0], "search"])
 
             if len(df) == 0:
                 continue

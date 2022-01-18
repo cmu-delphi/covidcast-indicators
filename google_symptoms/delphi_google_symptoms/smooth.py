@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 
-def identity(x):
+def identity_OLD(x):
     """Trivial "smoother" that does no smoothing.
 
     Parameters
@@ -17,7 +17,7 @@ def identity(x):
     """
     return x
 
-def kday_moving_average(x, k):
+def kday_moving_average_OLD(x, k):
     """Compute k-day moving average on x.
 
     Parameters

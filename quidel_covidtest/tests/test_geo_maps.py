@@ -21,10 +21,14 @@ class TestGeoMap:
             }
         )
         
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [2, 3, 2, 2, 4, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [1, 1, 1, 1, 1, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 2, 1, 1, 1, 1, 1]
+        
+        df[f"totalTest_age_0_17"] = [4, 6, 4, 4, 8, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [2, 2, 2, 2, 2, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 2, 1, 1, 1, 1, 1]
 
         new_df, res_key = geo_map("county", df)
 
@@ -37,6 +41,9 @@ class TestGeoMap:
         assert set(new_df["totalTest_age_0_4"].values)  == set([5, 2, 2, 85, 4])
         assert set(new_df["positiveTest_age_0_4"].values) == set([2, 1, 1, 12, 1])
         
+        assert set(new_df["totalTest_age_0_17"].values)  == set([10, 4, 4, 170, 8])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([4, 2, 2, 24, 2])
+        
         # Test Megacounties
         new_df["timestamp"] = [datetime.strptime(x, "%Y-%m-%d") for x in new_df["timestamp"]]
         mega_df = add_megacounties(new_df, True)
@@ -46,6 +53,9 @@ class TestGeoMap:
 
         assert set(mega_df["totalTest_age_0_4"].values)  == set([5, 2, 2, 85, 4, 4, 9, 4])
         assert set(mega_df["positiveTest_age_0_4"].values) == set([2, 1, 1, 12, 1, 4, 1])
+        
+        assert set(mega_df["totalTest_age_0_17"].values)  == set([10, 4, 4, 170, 8, 8, 18, 8])
+        assert set(mega_df["positiveTest_age_0_17"].values) == set([4, 2, 2, 24, 2, 8, 2])
         
 
     def test_state(self):
@@ -60,10 +70,15 @@ class TestGeoMap:
                 "numUniqueDevices_total": [2, 1, 1, 1, 1, 1]
             }
         )  
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [20, 10, 20, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [2, 1, 3, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 1, 1, 1, 1]
+            
+        df[f"totalTest_age_0_17"] = [40, 20, 40, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [4, 2, 6, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 1, 1, 1, 1]
+            
         new_df, res_key = geo_map("state", df)
 
 
@@ -74,6 +89,9 @@ class TestGeoMap:
         
         assert set(new_df["totalTest_age_0_4"].values)  == set([30, 85, 20])
         assert set(new_df["positiveTest_age_0_4"].values) == set([3, 12, 3])
+        
+        assert set(new_df["totalTest_age_0_17"].values)  == set([60, 170, 40])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([6, 24, 6])
 
     def test_hrr(self):
 
@@ -87,10 +105,14 @@ class TestGeoMap:
                 "numUniqueDevices_total": [2, 1, 1, 1, 1, 1]
             }
         )
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [20, 10, 20, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [2, 1, 3, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 1, 1, 1, 1]
+        
+        df[f"totalTest_age_0_17"] = [40, 20, 40, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [4, 2, 6, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 1, 1, 1, 1]
 
         new_df, _ = geo_map("hrr", df)
 
@@ -101,6 +123,9 @@ class TestGeoMap:
         
         assert set(new_df["totalTest_age_0_4"].values)  == set([25, 20 ,20, 10, 60])
         assert set(new_df["positiveTest_age_0_4"].values) == set([8, 2, 3, 1, 4])
+        
+        assert set(new_df["totalTest_age_0_17"].values)  == set([50, 40, 40, 20, 120])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([16, 4, 6, 2, 8])
 
     def test_msa(self):
 
@@ -114,10 +139,14 @@ class TestGeoMap:
                 "numUniqueDevices_total": [2, 1, 1, 1, 1, 1]
             }
         )
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [20, 10, 20, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [2, 1, 3, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 1, 1, 1, 1]
+        
+        df[f"totalTest_age_0_17"] = [40, 20, 40, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [4, 2, 6, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 1, 1, 1, 1]
 
         new_df, res_key = geo_map("msa", df)
 
@@ -128,6 +157,9 @@ class TestGeoMap:
         
         assert set(new_df["totalTest_age_0_4"].values)  == set([40, 45, 20])
         assert set(new_df["positiveTest_age_0_4"].values) == set([1, 11, 2])
+        
+        assert set(new_df["totalTest_age_0_17"].values)  == set([80, 90, 40])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([2, 22, 4])
 
     def test_nation(self):
         df = pd.DataFrame(
@@ -140,10 +172,14 @@ class TestGeoMap:
                 "numUniqueDevices_total": [2, 1, 1, 1, 1, 1]
             }
         )
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [20, 10, 20, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [2, 1, 3, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 1, 1, 1, 1]
+            
+        df[f"totalTest_age_0_17"] = [40, 20, 40, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [4, 2, 6, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 1, 1, 1, 1]
 
         new_df, res_key = geo_map("nation", df)
 
@@ -154,6 +190,9 @@ class TestGeoMap:
         
         assert set(new_df["totalTest_age_0_4"].values)  == set([135])
         assert set(new_df["positiveTest_age_0_4"].values) == set([18])
+        
+        assert set(new_df["totalTest_age_0_17"].values)  == set([270])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([36])
 
     def test_hhs(self):
         df = pd.DataFrame(
@@ -166,10 +205,14 @@ class TestGeoMap:
                 "numUniqueDevices_total": [2, 1, 1, 1, 1, 1]
             }
         )
-        for agegroup in AGE_GROUPS[1:]:
+        for agegroup in AGE_GROUPS[1:-1]:
             df[f"totalTest_{agegroup}"] = [20, 10, 20, 40, 20, 25]
             df[f"positiveTest_{agegroup}"] = [2, 1, 3, 1, 3, 8]
             df[f"numUniqueDevices_{agegroup}"] = [2, 1, 1, 1, 1, 1]
+        
+        df[f"totalTest_age_0_17"] = [40, 20, 40, 80, 40, 50]
+        df[f"positiveTest_age_0_17"] = [4, 2, 6, 2, 6, 16]
+        df[f"numUniqueDevices_age_0_17"] = [2, 1, 1, 1, 1, 1]
 
         new_df, res_key = geo_map("hhs", df)
 
@@ -180,3 +223,7 @@ class TestGeoMap:
         
         assert set(new_df["totalTest_age_0_4"].values)  == set([30, 20, 85])
         assert set(new_df["positiveTest_age_0_4"].values) == set([3, 3, 12])
+        
+        assert set(new_df["totalTest_age_0_17"].values)  == set([60, 40, 170])
+        assert set(new_df["positiveTest_age_0_17"].values) == set([6, 6, 24])
+

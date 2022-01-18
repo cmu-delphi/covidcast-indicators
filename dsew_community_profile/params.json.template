@@ -5,7 +5,9 @@
   },
   "indicator": {
     "input_cache": "./input_cache",
-    "reports": "new"
+    "reports": "new",
+    "export_start_date": null,
+    "export_end_date": null
   },
   "validation": {
     "common": {

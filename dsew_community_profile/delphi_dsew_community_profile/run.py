@@ -18,6 +18,7 @@ import time
 
 from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
+import pandas as pd
 
 from .constants import make_signal_name
 from .pull import fetch_new_reports
@@ -37,7 +38,7 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     def replace_date_param(p):
-        if p in params["indicator"]:
+        if p in params["indicator"] and params["indicator"][p] is not None:
             date_param = datetime.strptime(params["indicator"][p], "%Y-%m-%d").date()
             params["indicator"][p] = date_param
     replace_date_param("export_start_date")
@@ -45,6 +46,10 @@ def run_module(params):
     export_params = {
         'start_date': params["indicator"].get("export_start_date", None),
         'end_date': params["indicator"].get("export_end_date", None)
+    }
+    export_params = {
+        k: pd.to_datetime(v) if v is not None else v
+        for k, v in export_params.items()
     }
 
     run_stats = []

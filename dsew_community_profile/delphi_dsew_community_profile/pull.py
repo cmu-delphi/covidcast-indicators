@@ -375,8 +375,11 @@ def fetch_new_reports(params, logger=None):
     # add nation from state
     geomapper = GeoMapper()
     for sig in SIGNALS:
+        state_key = ("state", sig)
+        if state_key not in ret:
+            continue
         ret[("nation", sig)] = nation_from_state(
-            ret[("state", sig)].rename(columns={"geo_id": "state_id"}),
+            ret[state_key].rename(columns={"geo_id": "state_id"}),
             sig,
             geomapper
         )

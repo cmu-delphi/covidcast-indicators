@@ -25,13 +25,13 @@ def geo_map(geo_res, df):
     # Add population for each zipcode
     data = GMPR.add_population_column(data, "zip")
     # zip -> geo_res
-    data_cols = []
+    data_cols = ["population"]
     for col, agegroup in product(DATA_COLS, AGE_GROUPS):
         data_cols.append("_".join([col, agegroup]))
 
     data = GMPR.replace_geocode(
         data, from_code="zip", new_code=geo_key, date_col = "timestamp",
-        data_cols=data_cols+["population"])
+        data_cols=data_cols)
     if geo_res in ["state", "hhs", "nation"]:
         return data, geo_key
     # Add parent state
@@ -43,7 +43,7 @@ def add_megacounties(data, smooth=False):
     assert "fips" in data.columns # Make sure the data is at county level
 
     # For raw signals, the threshold is MIN_OBS
-    # For raw signals, the threshold is MIN_OBS/2
+    # For smoothed signals, the threshold is MIN_OBS/2
     if smooth:
         threshold_visits = MIN_OBS/2
     else:

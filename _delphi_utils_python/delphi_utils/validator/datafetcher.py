@@ -111,14 +111,9 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    # pylint: disable=fixme
-    # TODO: Extract this mapping from meta response instead of hard-coding
-    # https://github.com/cmu-delphi/covidcast-indicators/issues/1457
-    source_signal_mappings = {
-        'indicator-combination': ['indicator-combination-cases-deaths'],
-        'quidel': ['quidel-covid-ag'],
-        'safegraph': ['safegraph-weekly']
-    }
+
+    source_signal_mappings = {i['db_source']:i['source'] for i in 
+        requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta").json()}
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.

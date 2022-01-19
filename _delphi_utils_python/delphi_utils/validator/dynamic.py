@@ -195,10 +195,11 @@ class DynamicValidator:
         if not error_df.empty:
             for index, value in error_df.iteritems():
                 report.add_raised_error(
-                    ValidationFailure(f"check_val_missing (geo_id {index[0]})",
+                    ValidationFailure("check_val_missing",
                                       geo_type=geo_type,
                                       signal=signal_type,
-                                      date=value
+                                      date=value,
+                                      message=f"geo_id {index[0]}"
                                       )
                 )
 

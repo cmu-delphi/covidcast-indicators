@@ -112,7 +112,7 @@ def get_geo_signal_combos(data_source):
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
 
-    source_signal_mappings = {i['db_source']:i['source'] for i in 
+    source_signal_mappings = {i['db_source']:i['source'] for i in
         requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta").json()}
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]

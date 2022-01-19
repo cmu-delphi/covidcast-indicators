@@ -57,7 +57,7 @@ class Validator:
         report = ValidationReport(self.suppressed_errors, self.data_source, self.dry_run)
         frames_list = load_all_files(self.export_dir, self.time_window.start_date,
                                      self.time_window.end_date)
-        self.static_validation.validate(frames_list, report)
+        #self.static_validation.validate(frames_list, report)
         all_frames = aggregate_frames(frames_list)
         self.dynamic_validation.validate(all_frames, report)
         return report

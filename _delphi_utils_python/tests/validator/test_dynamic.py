@@ -122,6 +122,8 @@ class TestCheckNaVals:
         df = pd.DataFrame(data)
         #df.set_index(range(7), inplace=True)
         validator.check_na_vals(df, "geo", "signal", report)
+        import pdb
+        pdb.set_trace()
 
         assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_val_missing"

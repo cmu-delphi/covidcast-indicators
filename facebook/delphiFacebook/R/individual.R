@@ -11,7 +11,7 @@
 #' @importFrom dplyr select rename
 #' @importFrom rlang .data
 #' @export
-write_individual <- function(data_full_w, params)
+write_individual <- function(data_full_w, params, suffix = "")
 {
   data_to_write <- select(data_full_w, -.data$token)
   data_to_write <- rename(data_to_write, fips = .data$geo_id)
@@ -34,7 +34,7 @@ write_individual <- function(data_full_w, params)
  
   create_dir_not_exist(params$individual_dir) 
   for (ii in seq_along(dates)) {
-    write_individual_day(data_to_write, params, dates[ii], params$individual_dir)
+    write_individual_day(data_to_write, params, dates[ii], params$individual_dir, suffix)
   }
 }
 
@@ -50,11 +50,12 @@ write_individual <- function(data_full_w, params)
 #' @importFrom readr write_csv
 #' @importFrom dplyr select
 #' @importFrom rlang .data
-write_individual_day <- function(data_to_write, params, date, out_dir) {
+write_individual_day <- function(data_to_write, params, date, out_dir, suffix = "") {
   fname_out <- sprintf(
-    "cvid_responses_%s_recordedby_%s.csv",
+    "cvid_responses_%s_recordedby_%s_%s.csv",
     format(date, "%Y_%m_%d"),
-    format(as.Date(params$end_date), "%Y_%m_%d")
+    format(as.Date(params$end_date), "%Y_%m_%d"),
+    suffix
   )
   
   day_data <- dplyr::filter(data_to_write, .data$Date == date)

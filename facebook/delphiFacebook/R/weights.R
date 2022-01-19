@@ -93,35 +93,57 @@ generate_cid_list_filename <- function(type_name, params, module_type) {
 #' @importFrom utils tail
 #' 
 #' @export
-join_weights <- function(data, params, weights = c("step1", "full"))
+join_weights <- function(data, params, weights = c("weekly part a", "weekly partial", "weekly full"))
 {
   weights <- match.arg(weights)
 
-  if (weights == "step1") {
-    pattern <- "step_1_weights.csv$"
-  } else if (weights == "full") {
-    pattern <- "finish_full_survey_weights.csv$"
+  if (weights == "weekly part a") {
+    weekly_pattern <- "part_a_weekly_weights.csv$"
+    daily_pattern <- "step_1_weights.csv$"
+  }
+  if (weights == "weekly partial") {
+    weekly_pattern <- "partial_weekly_weights.csv$"
+    daily_pattern <- "finish_full_survey_weights.csv$"
+  }
+  if (weights == "weekly full") {
+    weekly_pattern <- "full_weekly_weights.csv$"
+    daily_pattern <- "finish_full_survey_weights.csv$"
   }
 
-  weights_files <- dir(params$weights_in_dir, pattern = pattern, full.names = TRUE)
-  weights_files <- sort(weights_files)
+  daily_weights_files <- dir(params$weights_in_dir, pattern = daily_pattern, full.names = TRUE)
+  daily_weights_files <- sort(daily_weights_files)
 
-  latest_weight <- tail(weights_files, n = 1)
+  weekly_weights_files <- dir(params$weights_in_dir, pattern = weekly_pattern, full.names = TRUE)
+  weekly_weights_files <- sort(weekly_weights_files)
+
+  latest_weight <- tail(daily_weights_files, n = 1)
   latest_weight_date <- as.Date(
     stri_extract_first(basename(latest_weight), regex = "^[0-9]{4}-[0-9]{2}-[0-9]{2}")
   )
   
   col_types <- c("character", "double")
   col_names <- c("cid", "weight")
-  agg_weights <- bind_rows(lapply(
-    weights_files,
+  agg_daily_weights <- bind_rows(lapply(
+    daily_weights_files,
     fread,
     colClasses = col_types,
     col.names = col_names
     )
   )
-  agg_weights <- agg_weights[!duplicated(cid),]
-  data <- left_join(data, agg_weights, by = c("token" = "cid"))
+  agg_weekly_weights <- bind_rows(lapply(
+    weekly_weights_files,
+    fread,
+    colClasses = col_types,
+    col.names = col_names
+    )
+  )
+  agg_daily_weights <- agg_daily_weights[!duplicated(cid),] %>% rename(daily_weight = weight)
+  agg_weekly_weights <- agg_weekly_weights[!duplicated(cid),]
+
+  # Want to end up with normal "weight" column, plus weekly and daily weights
+  data <- left_join(data, agg_weekly_weights, by = c("token" = "cid")) %>%
+      left_join(data, agg_weekly_weights %>% rename(weekly_weight = weight), by = c("token" = "cid")) %>%
+      left_join(data, agg_daily_weights, by = c("token" = "cid"))
 
   return( list(df = data, weight_date = latest_weight_date) )
 }

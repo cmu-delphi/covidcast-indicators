@@ -48,7 +48,7 @@ def generate_transition_matrix(geo_res):
               ).fillna(0).reset_index().rename({mapping_flag: "geo_id"}, axis = 1)
     return map_df
 
-def geo_map(df, geo_res):
+def geo_map(df, geo_res, namescols =  METRICS+COMBINED_METRIC):
     """
     Compute derived HRR and MSA counts as a weighted sum of the county dataset.
 
@@ -75,7 +75,7 @@ def geo_map(df, geo_res):
     for _date in df["timestamp"].unique():
         val_lists = df[df["timestamp"] == _date].merge(
                 map_df["geo_id"], how="right"
-                )[METRICS + COMBINED_METRIC].fillna(0)
+                )[namescols].fillna(0)
         newdf = pd.DataFrame(
                 np.matmul(map_df.values[:, 1:].T, val_lists.values),
                 columns = list(val_lists.keys())

@@ -112,7 +112,7 @@ def get_geo_signal_combos(data_source):
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
 
-    source_signal_mappings = {i['db_source']:i['source'] for i in
+    source_signal_mappings = {i['source']:i['db_source'] for i in
         requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta").json()}
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
@@ -125,8 +125,9 @@ def get_geo_signal_combos(data_source):
     # True/False indicate if status is active, "unknown" means we should check
     sig_combo_seen = dict()
     for combo in geo_signal_combos:
-        if source_signal_mappings.get(data_source):
-            src_list = source_signal_mappings.get(data_source)
+        if data_source in source_signal_mappings.values():
+            src_list = [key for (key, value) in source_signal_mappings.items()
+                if value == data_source]
         else:
             src_list = [data_source]
         for src in src_list:

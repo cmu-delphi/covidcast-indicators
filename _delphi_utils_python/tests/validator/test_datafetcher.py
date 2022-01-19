@@ -21,25 +21,41 @@ class TestDataFetcher:
         assert not date_filter(FILENAME_REGEX.match("20200620_a_b.csv"))
         assert not date_filter(FILENAME_REGEX.match("202006_a_b.csv"))
 
-    # pylint: disable=fixme
-    # TODO: mock out the advanced meta endpoint /covidcast/meta as well
-    # https://github.com/cmu-delphi/covidcast-indicators/issues/1456
+    # Solution from https://stackoverflow.com/questions/15753390/
+    #how-can-i-mock-requests-and-the-response
+    def mocked_requests_get(*args, **kwargs):
+        class MockResponse:
+            def __init__(self, json_data, status_code):
+                self.json_data = json_data
+                self.status_code = status_code
+
+            def json(self):
+                return self.json_data
+        if kwargs["params"] == {'signal':'chng:inactive'}:
+            return MockResponse([{"signals": [{"active": False}]}], 200)
+        else:
+            return MockResponse([{"signals": [{"active": True}]}], 200)
+    @mock.patch('requests.get', side_effect=mocked_requests_get)
     @mock.patch("covidcast.metadata")
-    def test_get_geo_signal_combos(self, mock_metadata):
+    def test_get_geo_signal_combos(self, mock_metadata, mock_get):
         """Test that the geo signal combos are correctly pulled from the covidcast metadata."""
         # Need to use actual data_source and signal names since we reference the API
+        # We let the chng signal "inactive" be an inactive signal
         mock_metadata.return_value = pd.DataFrame({"data_source": ["chng", "chng", "chng",
                                                                    "covid-act-now",
                                                                    "covid-act-now",
-                                                                   "covid-act-now"],
+                                                                   "covid-act-now",
+                                                                   "chng"],
                                                    "signal": ["smoothed_outpatient_cli",
                                                               "smoothed_outpatient_covid",
                                                               "smoothed_outpatient_covid",
                                                               "pcr_specimen_positivity_rate",
                                                               "pcr_specimen_positivity_rate",
-                                                              "pcr_specimen_total_tests"],
+                                                              "pcr_specimen_total_tests",
+                                                              "inactive"],
                                                    "geo_type": ["state", "state", "county",
-                                                                "hrr", "msa", "msa"]
+                                                                "hrr", "msa", "msa",
+                                                                "state"]
                                                   })
 
         assert set(get_geo_signal_combos("chng")) == set(

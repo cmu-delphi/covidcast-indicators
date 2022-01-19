@@ -1,7 +1,7 @@
 {
   "common": {
-    "export_dir": "./receiving",
-    "log_filename": "dsew_cpr.log"
+    "export_dir": "/common/covidcast/receiving/dsew-cpr",
+    "log_filename": "/var/log/indicators/dsew_cpr.log"
   },
   "indicator": {
     "input_cache": "./input_cache",
@@ -9,7 +9,7 @@
   },
   "validation": {
     "common": {
-      "data_source": "dsew_cpr",
+      "data_source": "dsew-cpr",
       "span_length": 14,
       "min_expected_lag": {"all": "5"},
       "max_expected_lag": {"all": "9"},

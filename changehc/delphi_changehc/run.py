@@ -172,6 +172,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     stats = []
     for geo in params["indicator"]["geos"]:
         for numtype in params["indicator"]["types"]:
+            if numtype == "flu_inpatient" and geo not in ("state", "nation", "hhs"):
+                logger.info("Skipping because flu_inpatient is not available at this geo", geo = geo)
+                continue
             for weekday in params["indicator"]["weekday"]:
                 if weekday:
                     logger.info("starting weekday adj", geo = geo, numtype = numtype)
@@ -190,21 +193,26 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     logger
                 )
                 if numtype == "covid":
+                    base_geo = "fips"
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"],dropdate_dt,"fips")
+                             file_dict["covid"],dropdate_dt, base_geo)
                 elif numtype == "cli":
+                    base_geo = "fips"
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
+                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,base_geo)
                 elif numtype == "flu":
+                    base_geo = "fips"
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             dropdate_dt,"fips")
+                             dropdate_dt,base_geo)
                 elif numtype == "flu_inpatient":
+                    base_geo = "state_code"
                     data = load_flu_inpatient_data(file_dict["denom_inpatient_state"],file_dict["flu_inpatient"],
-                             dropdate_dt,"state_code")
+                             dropdate_dt,base_geo)
                     
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],
+                    base_geo
                 )
                 stats.extend(more_stats)
 

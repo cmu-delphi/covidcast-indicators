@@ -141,7 +141,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
 
-    def geo_reindex(self, data):
+    def geo_reindex(self, data, base_geo):
         """Reindex based on geography, include all date, geo pairs.
 
         Args:
@@ -157,7 +157,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
-            assert data.index.names[0] == "fips", "can only convert fits to county, not %s"%(data.index.names[0])
+            assert base_geo == "fips", "can only convert fips to county, not %s"%(base_geo)
             data_frame = gmpr.fips_to_megacounty(data,
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
@@ -165,10 +165,10 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  mega_col=geo,
                                                  date_col=Config.DATE_COL)
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, data.columns[0], "state_id", new_col="state",
+            data_frame = gmpr.replace_geocode(data, base_geo, "state_id", new_col="state",
                                               date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, data.columns[0], geo, date_col=Config.DATE_COL)
+            data_frame = gmpr.replace_geocode(data, base_geo, geo, date_col=Config.DATE_COL)
             
         
 
@@ -187,12 +187,14 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
 
     def update_sensor(self,
         data,
-        output_path):
+        output_path,
+        base_geo):
         """Generate sensor values, and write to csv format.
 
         Args:
             data: pd.DataFrame with columns num and den
             output_path: output path for the csv results
+            base_geo: base geographic unit of data before aggregation
         """
         self.shift_dates()
         final_sensor_idxs = (self.burn_in_dates >= self.startdate) &\
@@ -200,7 +202,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
 
         # load data
         data.reset_index(inplace=True)
-        data_frame = self.geo_reindex(data)
+        data_frame = self.geo_reindex(data, base_geo)
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(
             data_frame,

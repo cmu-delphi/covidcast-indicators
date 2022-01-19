@@ -19,15 +19,16 @@ for i in range((end_date - start_date).days):
     date = start_date + datetime.timedelta(days=i)
     try:
         data_date = pd.read_csv("../receiving/%s%s%s_state_smoothed_inpatient_flu.csv"%(date.year, str(date.month).zfill(2), str(date.day).zfill(2)))
+        data_date['date'] = pd.to_datetime(date)
+        dfs.append(data_date)
+
     except:
         print('missing: {}'.format(date))
-    data_date['date'] = pd.to_datetime(date)
-    dfs.append(data_date)
 
 data = pd.concat(dfs)
 data = data.reset_index()
 
-plt.plot(data.date[data.geo_id == 'vt'], data.val[data.geo_id == 'vt']/100)
+plt.plot(data.date[data.geo_id == 'ny'], data.val[data.geo_id == 'ny']/100)
 
 
 raw_flu = pd.read_csv('../cache/20220116_Counts_Products_Flu_Inpatient.dat.gz', header=None)
@@ -54,3 +55,55 @@ merged = merged.sort_values('date')
 
 subset = merged[merged.state == '50']
 plt.plot(subset.date, subset.total/subset.denom)
+
+
+
+geo = 'county'
+signal = 'smoothed_adj_outpatient_covid'
+start_date = datetime.date(2020, 1, 8)
+end_date = datetime.date(2022, 1, 8)
+dfs = []
+for i in range((end_date - start_date).days):
+    print(i)
+    date = start_date + datetime.timedelta(days=i)
+    try:
+        data_date = pd.read_csv("../receiving/%s%s%s_%s_%s.csv"%(date.year, str(date.month).zfill(2), str(date.day).zfill(2), geo, signal))
+        data_date['date'] = pd.to_datetime(date)
+        dfs.append(data_date)
+
+    except:
+        print('missing: {}'.format(date))
+
+data = pd.concat(dfs)
+data = data.reset_index()
+
+dfs = []
+for i in range((end_date - start_date).days):
+    print(i)
+    date = start_date + datetime.timedelta(days=i)
+    try:
+        data_date = pd.read_csv("../../../test_chc/covidcast-indicators/changehc/receiving/%s%s%s_%s_%s.csv"%(date.year, str(date.month).zfill(2), str(date.day).zfill(2), geo, signal))
+        data_date['date'] = pd.to_datetime(date)
+        dfs.append(data_date)
+
+    except:
+        print('missing: {}'.format(date))
+
+data_old = pd.concat(dfs)
+data_old = data_old.reset_index()
+
+
+place = 72127
+plt.plot(data.date[data.geo_id == place], data.val[data.geo_id == place]/100)
+
+plt.plot(data_old.date[data_old.geo_id == place], data_old.val[data_old.geo_id == place]/100)
+
+
+
+raw_flu = pd.read_csv('../cache/20220116_Counts_Products_Flu_Inpatient.dat.gz', header=None)
+raw_denom = pd.read_csv('../cache/20220116_Counts_Products_Denom_Inpatient_By_State.dat.gz', header=None)
+
+filtered_flu = raw_flu[(raw_flu[1] > 20200501) & (raw_flu[1] < 20200601)]
+filtered_flu.to_csv('test_data_flu.dat.gz', header=False)
+filtered_denom = raw_denom[(raw_denom[0] > 20200501) & (raw_denom[0] < 20200601)]
+filtered_denom.to_csv('test_data_denom.dat.gz', header=False)

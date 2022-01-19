@@ -89,7 +89,7 @@ class TestCHCSensorUpdater:
                 "fips": ['01001'] * 7 + ['04007'] * 6,
                 "den": [1000] * 7 + [2000] * 6,
                 "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
-            data_frame = su_inst.geo_reindex(test_data)
+            data_frame = su_inst.geo_reindex(test_data, "fips")
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum() == (4200,19000)).all()
 
@@ -120,7 +120,7 @@ class TestCHCSensorUpdater:
                 "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
                 "timestamp": list(pd.date_range("20200301", "20200313")) * 2
             }).set_index(["fips", "timestamp"])
-            su_inst.update_sensor(small_test_data,  td.name)
+            su_inst.update_sensor(small_test_data,  td.name, "fips")
             for f in os.listdir(td.name):
                 outputs[f] = pd.read_csv(os.path.join(td.name, f))
 
@@ -157,7 +157,7 @@ class TestCHCSensorUpdater:
                     "",
                     TEST_LOGGER
                 )
-                su_inst.update_sensor(small_test_data.copy(), td.name)
+                su_inst.update_sensor(small_test_data.copy(), td.name, "fips")
                 for f in os.listdir(td.name):
                     outputs[startdate][f] = pd.read_csv(os.path.join(td.name, f))
             assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\

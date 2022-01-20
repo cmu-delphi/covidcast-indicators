@@ -57,28 +57,28 @@ METRICS = [#"Abdominal pain",
            "Candidiasis",
            "Weight gain"]
 
-COMBINED_METRIC = ["S01", "S02", "S03",
-                   #"S04",
-                   "S05", "S06",
-                   #"S07",
-                   "S08",
-                   #"S09", "S10",
-                   "SControl"]
+COMBINED_METRIC = ["s01", "s02", "s03",
+                   #"s04",
+                   "s05", "s06",
+                   #"s07",
+                   "s08",
+                   #"s09", "s10",
+                   "scontrol"]
 
 SYMPTOM_SETS = {
-    "S01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
-    "S02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis",
+    "s01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
+    "s02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis",
             "Rhinitis", "Common cold"],
-    "S03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
-    #"S04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
-    "S05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
+    "s03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
+    #"s04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
+    "s05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
             "Crackles", "Acute bronchitis", "Bronchitis"],
-    "S06": ["Anosmia", "Dysgeusia", "Ageusia"],
-    #"S07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
-    "S08": ["Laryngitis", "Sore throat", "Throat irritation"],
-    #"S09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
-    #"S10": ["Night sweats","Perspiration", "hyperhidrosis"],
-    "SControl": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
+    "s06": ["Anosmia", "Dysgeusia", "Ageusia"],
+    #"s07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
+    "s08": ["Laryngitis", "Sore throat", "Throat irritation"],
+    #"s09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
+    #"s10": ["Night sweats","Perspiration", "hyperhidrosis"],
+    "scontrol": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
                  "Candidiasis", "Weight gain"]
 }
 

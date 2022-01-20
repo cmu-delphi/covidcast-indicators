@@ -10,13 +10,13 @@ class TestSmooth:
 
         smoothed = pd.read_csv(
             join("receiving",
-                 f"{dates[-1]}_state_S01_smoothed_search.csv")
+                 f"{dates[-1]}_state_s01_smoothed_search.csv")
         )
 
         raw = pd.concat([
             pd.read_csv(
                 join("receiving",
-                     f"{date}_state_S01_raw_search.csv")
+                     f"{date}_state_s01_raw_search.csv")
             ) for date in dates
         ])
 

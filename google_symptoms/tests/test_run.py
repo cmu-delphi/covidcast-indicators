@@ -23,13 +23,13 @@ class TestRun:
             "20200811"
         ]
         geos = ["county", "state", "hhs", "nation"]
-        metrics = ["S01", "S02", "S03",
-                   #"S04",
-                   "S05", "S06",
-                   #"S07",
-                   "S08",
-                   #"S09", "S10",
-                   "SControl"]
+        metrics = ["s01", "s02", "s03",
+                   #"s04",
+                   "s05", "s06",
+                   #"s07",
+                   "s08",
+                   #"s09", "s10",
+                   "scontrol"]
         smoother = ["raw", "smoothed"]
 
         expected_files = []
@@ -41,7 +41,7 @@ class TestRun:
 
     def test_output_file_format(self, run_as_module):
         df = pd.read_csv(
-            join("receiving", "20200810_state_S03_smoothed_search.csv")
+            join("receiving", "20200810_state_s03_smoothed_search.csv")
         )
         assert (df.columns.values == [
                 "geo_id", "val", "se", "sample_size"]).all()

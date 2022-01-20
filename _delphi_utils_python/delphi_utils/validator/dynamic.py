@@ -191,9 +191,10 @@ class DynamicValidator:
 
         grouped_df = geo_sig_df.groupby('geo_id')
         error_df = grouped_df.apply(replace_first_six)
-        error_df = error_df[error_df.time_value >= self.params.time_window.start_date]
 
         if not error_df.empty:
+            error_df = error_df[error_df.time_value >= 
+                self.params.time_window.start_date]
             for index, value in error_df.iteritems():
                 report.add_raised_error(
                     ValidationFailure("check_val_missing",

@@ -12,7 +12,8 @@ from typing import Dict, Any
 from delphi_utils import (
     add_prefix,
     create_export_csv,
-    get_structured_logger
+    get_structured_logger,
+    Nans
 )
 
 from .constants import (END_FROM_TODAY_MINUS,
@@ -39,6 +40,22 @@ def log_exit(start_time, stats, logger):
                 csv_export_count = csv_export_count,
                 max_lag_in_days = max_lag_in_days,
                 oldest_final_export_date = formatted_min_max_date)
+
+def add_nancodes(df):
+    """Add nancodes to the dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_MISSING
+    df["missing_sample_size"] = Nans.NOT_MISSING
+
+    # Mark any remaining nans with unknown
+    remaining_nans_mask = df["val"].isnull()
+    df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+    remaining_nans_mask = df["se"].isnull()
+    df.loc[remaining_nans_mask, "missing_se"] = Nans.OTHER
+    remaining_nans_mask = df["sample_size"].isnull()
+    df.loc[remaining_nans_mask, "missing_sample_size"] = Nans.OTHER
+    return df
 
 def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
@@ -113,6 +130,7 @@ def run_module(params: Dict[str, Any]):
                 geo_groups, res_key, smooth=smoothers[sensor][1],
                 device=smoothers[sensor][0], first_date=first_date,
                 last_date=last_date)
+            state_df = add_nancodes(state_df)
             dates = create_export_csv(
                 state_df,
                 geo_res=geo_res,
@@ -134,6 +152,7 @@ def run_module(params: Dict[str, Any]):
                 geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
                 device=smoothers[sensor][0], first_date=first_date,
                 last_date=last_date)
+            res_df = add_nancodes(res_df)
             dates = create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
                               start_date=export_start_date, end_date=export_end_date,
                               remove_null_samples=True)

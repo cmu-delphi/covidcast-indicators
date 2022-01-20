@@ -43,7 +43,7 @@ run_facebook <- function(params)
   data_full <- create_complete_responses(input_data, cw_list$county, params)
   data_full <- filter_complete_responses(data_full, params)
   data_full <- join_weights(data_full, params, weights = "weekly partial")$df
-  msg_df("partial data", data_agg)
+  msg_df("partial data", data_full)
 
 
   # Create "full" data (AKA "module complete" data)
@@ -53,7 +53,7 @@ run_facebook <- function(params)
   data_module_complete_b <- data_module_complete[["b"]]
   data_module_complete <- bind_rows(data_module_complete_a, data_module_complete_b)
   data_module_complete <- join_weights(data_module_complete, params, weights = "weekly full")$df
-  msg_df("full data", data_agg)
+  msg_df("full data", data_module_complete)
 
   
   ## Set default number of cores for mclapply to the total available number,

@@ -31,7 +31,10 @@ class TestDataFetcher:
 
             def json(self):
                 return self.json_data
-        if kwargs["params"] == {'signal':'chng:inactive'}:
+        if len(kwargs) == 0:
+            return MockResponse([{'source': 'chng', 'db_source': 'chng'},
+                {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
+        elif kwargs["params"] == {'signal': 'chng:inactive'}:
             return MockResponse([{"signals": [{"active": False}]}], 200)
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)

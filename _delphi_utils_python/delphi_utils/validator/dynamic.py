@@ -193,7 +193,7 @@ class DynamicValidator:
         error_df = grouped_df.apply(replace_first_six)
 
         if not error_df.empty:
-            error_df = error_df[error_df.time_value >= 
+            error_df = error_df[error_df.time_value >=
                 self.params.time_window.start_date]
             for index, value in error_df.iteritems():
                 report.add_raised_error(

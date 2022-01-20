@@ -1,0 +1,34 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "dsew_cpr.log"
+  },
+  "indicator": {
+    "input_cache": "./input_cache",
+    "reports": "new",
+    "export_start_date": null,
+    "export_end_date": null
+  },
+  "validation": {
+    "common": {
+      "data_source": "dsew_cpr",
+      "span_length": 14,
+      "min_expected_lag": {"all": "5"},
+      "max_expected_lag": {"all": "9"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 0,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+        "naats_total_7dav",
+        "naats_positivity_7dav"
+      ]
+    }
+  }
+}

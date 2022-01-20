@@ -32,7 +32,7 @@ run_facebook <- function(params)
   weight_result <- join_weights(data_agg, params, weights = "weekly part a")
   data_agg <- weight_result$df
   latest_weight_date_step1 <- weight_result$weight_date
-  msg_df("response data to aggregate", data_agg)
+  msg_df("part a data", data_agg)
 
 
   params$latest_weight_date <- ifelse(
@@ -43,15 +43,17 @@ run_facebook <- function(params)
   data_full <- create_complete_responses(input_data, cw_list$county, params)
   data_full <- filter_complete_responses(data_full, params)
   data_full <- join_weights(data_full, params, weights = "weekly partial")$df
+  msg_df("partial data", data_agg)
 
 
   # Create "full" data (AKA "module complete" data)
-  data_module_complete <- create_complete_responses(input_data, cw_list$county, params)
+  data_module_complete <- create_complete_responses(input_data, cw_list$county, params, "module complete")
   data_module_complete <- filter_module_complete_responses(data_module_complete, params)
   data_module_complete_a <- data_module_complete[["a"]]
   data_module_complete_b <- data_module_complete[["b"]]
   data_module_complete <- bind_rows(data_module_complete_a, data_module_complete_b)
   data_module_complete <- join_weights(data_module_complete, params, weights = "weekly full")$df
+  msg_df("full data", data_agg)
 
   
   ## Set default number of cores for mclapply to the total available number,

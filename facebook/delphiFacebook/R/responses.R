@@ -589,7 +589,7 @@ experimental_arm_assignment <- function(input_data, wave) {
 #' @importFrom dplyr left_join group_by filter ungroup select rename
 #'
 #' @export
-create_complete_responses <- function(input_data, county_crosswalk, params)
+create_complete_responses <- function(input_data, county_crosswalk, params, out_type = "normal")
 {
   cols_to_report <- c(
     "start_dt", "end_dt", "date",
@@ -621,6 +621,10 @@ create_complete_responses <- function(input_data, county_crosswalk, params)
     "raceethnicity", "token", "wave", "w12_treatment", "module", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
   )
+
+  if (out_type == "module complete") {
+    cols_to_report <- c(cols_to_report, c("age", "gender", "Finished"))
+  }
 
   # Remove "raceethnicity" from cols_to_report if not producing race-ethnicity
   # microdata so we don't get an error that the field doesn't exist.
@@ -786,13 +790,13 @@ filter_complete_responses <- function(data_full, params)
 filter_module_complete_responses <- function(data_full, params)
 {
   date_col <- if ("day" %in% names(data_full)) { "day" } else { "Date" }
-  data_full <- rename(data_full, Date = .data$date) %>% 
+  data_full <- mutate(data_full, Date = .data$date) %>%
     filter_complete_responses(params) %>% 
     filter(!is.na(.data$age),
            !is.na(.data$gender),
-           .data$Finished == 1) %>% 
-    select(date_col, .data$token, .data$module)
-  
+           .data$Finished == 1) %>%
+    select(-.data$age, -.data$gender, -.data$Finished)
+
   data_a <- filter(data_full, .data$module == "A")
   data_b <- filter(data_full, .data$module == "B")
   

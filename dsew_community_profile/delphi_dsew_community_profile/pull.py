@@ -371,6 +371,7 @@ def fetch_new_reports(params, logger=None):
             lambda x: x[x["publish_date"] == x["publish_date"].max()]
         ).drop(
             "publish_date", axis=1
+        ).drop_duplicates(
         )
 
         if len(latest_sig_df.index) > 0:

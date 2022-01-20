@@ -33,7 +33,7 @@ test_that("testing join_weights command", {
   fake_data <- tibble(
     token = c("DSFIJBjAexoQjDStr", "mGDsqbweUYzFnmZUH", "zocUNXYISDyYcVIQn")
   )
-  fake_data_w <- join_weights(fake_data, list(weights_in_dir = "weights_in"))
+  fake_data_w <- join_weights(fake_data, list(weights_in_dir = "weights_in"))$df
 
   expect_true(max(abs(expected_weights - fake_data_w$weight)) < 1e-7)
 

@@ -132,6 +132,47 @@ class TestCHCSensorUpdater:
         assert outputs["20200319_hhs_smoothed_outpatient_covid.csv"].empty
         assert outputs["20200319_nation_smoothed_outpatient_covid.csv"].empty
 
+    def test_update_sensor_output_daterange(self):
+        """Tests that output does not change when data range changes"""
+        small_test_data = pd.DataFrame({
+            "num": [0, 100, 200, 300, 400, 500, 600, 100, 200, 300, 400, 500, 600] * 2,
+            "fips": ["01001"] * 13 + ["42003"] * 13,
+            "den": [30, 50, 50, 10, 1, 5, 5, 50, 50, 50, 0, 0, 0] * 2,
+            "timestamp": list(pd.date_range("20200301", "20200313")) * 2
+        }).set_index(["fips", "timestamp"])
+        startdates = ["2020-03-01", "2020-03-05"]
+        outputs = {s:{} for s in startdates}
+        for startdate in startdates:
+            for geo in ["county", "state", "hhs", "nation"]:
+                td = TemporaryDirectory()
+                su_inst = CHCSensorUpdater(
+                    startdate,
+                    "03-22-2020",
+                    "03-27-2020",
+                    geo,
+                    self.parallel,
+                    self.weekday,
+                    self.numtype,
+                    self.se,
+                    "",
+                    TEST_LOGGER
+                )
+                su_inst.update_sensor(small_test_data.copy(), td.name)
+                for f in os.listdir(td.name):
+                    outputs[startdate][f] = pd.read_csv(os.path.join(td.name, f))
+            assert len(os.listdir(td.name)) == len(su_inst.sensor_dates),\
+                f"failed {geo} update sensor test"
+            td.cleanup()
+
+        def pretty(key):
+            return "\n".join(f"{s}[{key}]: {len(outputs[s][key])}" for s in startdates)
+        for f in outputs[startdates[-1]]:
+            assert len(outputs[startdates[0]][f]) == len(outputs[startdates[1]][f]), \
+                f"\n{pretty(f)}"
+            assert np.array_equal(
+                outputs[startdates[0]][f].val.values,
+                outputs[startdates[1]][f].val.values
+            ), f
 
 class TestWriteToCsv:
     """Tests for writing output files to CSV."""
@@ -141,7 +182,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, np.nan, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         })
@@ -197,7 +238,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, np.nan, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         })
@@ -231,7 +272,7 @@ class TestWriteToCsv:
             "val": [0.1, 0.5, 1.5] + [1, 2, 3],
             "se": [0.1, 1, 1.1] + [0.5, 0.5, 0.5],
             "sample_size": [np.nan] * 6,
-            "timestamp": pd.to_datetime(["2020-05-01", "2020-05-02", "2020-05-04"] * 2),
+            "timestamp": pd.to_datetime(["2020-05-02", "2020-05-03", "2020-05-05"] * 2),
             "include": [True, True, True] + [True, False, True],
             "geo_id": ["a"] * 3 + ["b"] * 3,
         }).set_index(["timestamp", "geo_id"]).sort_index()
@@ -241,7 +282,7 @@ class TestWriteToCsv:
         # nan value for included loc-date
         res1 = res0.copy()
         res1 = res1[res1['include']]
-        res1.loc[("2020-05-01", "a"), "val"] = np.nan
+        res1.loc[("2020-05-02", "a"), "val"] = np.nan
         res1.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(
@@ -257,7 +298,7 @@ class TestWriteToCsv:
         # nan se for included loc-date
         res2 = res0.copy()
         res2 = res2[res2['include']]
-        res2.loc[("2020-05-01", "a"), "se"] = np.nan
+        res2.loc[("2020-05-02", "a"), "se"] = np.nan
         res2.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(
@@ -273,7 +314,7 @@ class TestWriteToCsv:
         # large se value
         res3 = res0.copy()
         res3 = res3[res3['include']]
-        res3.loc[("2020-05-01", "a"), "se"] = 10
+        res3.loc[("2020-05-02", "a"), "se"] = 10
         res3.reset_index(inplace=True)
         with pytest.raises(AssertionError):
             write_to_csv(

@@ -109,14 +109,8 @@ def run_module(params):
                     geo_res = geo,
                     sensor = sensor,
                     smoother = smoother)
-        df = geo_mapper.add_geocode(make_signal(all_columns, sensor),
-                                    "state_id",
-                                    "state_code",
-                                    from_col="state")
-        if sensor.endswith("_prop"):
-            df=pop_proportion(df, geo_mapper)
-        df = make_geo(df, geo, geo_mapper)
-        df = smooth_values(df, smoother[0])
+        df = make_signal(all_columns, sensor)
+        df = transform_signal(sensor, smoother, geo, df, geo_mapper)
         if df.empty:
             continue
         sensor_name = sensor + smoother[1]
@@ -150,17 +144,32 @@ def smooth_values(df, smoother):
     )
     return df
 
-def pop_proportion(df,geo_mapper):
-    """Get the population-proportionate variants as the dataframe val."""
-    pop_val=geo_mapper.add_population_column(df, "state_code")
-    df["val"]=round(df["val"]/pop_val["population"]*100000, 7)
-    pop_val.drop("population", axis=1, inplace=True)
+def transform_signal(sensor, smoother, geo, df, geo_mapper):
+    """Transform base df into specified geo/smoothing/prop configuration."""
+    df = geo_mapper.add_geocode(df, "state_id", "state_code", from_col="state")
+    # handling population:
+    #   add population column
+    #   sum admission counts *and* population counts during make_geo
+    #   *then* divide counts by population to get the proportion
+    if sensor.endswith("_prop"):
+        df=geo_mapper.add_population_column(df, "state_code")
+    df = make_geo(df, geo, geo_mapper)
+    if sensor.endswith("_prop"):
+        df["val"]=round(df["val"]/df["population"]*100000, 7)
+        df.drop("population", axis=1, inplace=True)
+    df = smooth_values(df, smoother[0])
+    # Fix N/A MA values, see issue #1360
+    if geo == "state" and sensor.startswith(CONFIRMED_FLU):
+        ma_filter = df.val.isna() & (df.geo_id == "ma") & (df.timestamp > "08-01-2021") & \
+            (df.timestamp.dt.day_name() == "Tuesday")
+        df = df[~ma_filter]
     return df
 
 def make_geo(state, geo, geo_mapper):
     """Transform incoming geo (state) to another geo."""
     if geo == "state":
         exported = state.rename(columns={"state": "geo_id"})
+        exported = exported.drop(columns="state_code")
     else:
         exported = geo_mapper.replace_geocode(state, "state_code", geo, new_col="geo_id")
     exported["se"] = np.nan

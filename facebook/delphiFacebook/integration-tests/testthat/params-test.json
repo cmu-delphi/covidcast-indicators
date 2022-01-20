@@ -10,6 +10,7 @@
   "individual_dir": "./individual",
   "weights_in_dir": "./weights_in",
   "weights_out_dir": "./weights_out",
+  "experimental_weights_out_dir": "./exp_weights_out",
   "input_dir": "./input",
   "input": [
     "responses.csv"

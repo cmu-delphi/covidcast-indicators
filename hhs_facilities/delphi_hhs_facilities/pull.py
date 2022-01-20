@@ -3,7 +3,6 @@
 from datetime import date
 
 import pandas as pd
-import numpy as np
 from delphi_utils.geomap import GeoMapper
 from delphi_epidata import Epidata
 
@@ -54,6 +53,6 @@ def pull_data() -> pd.DataFrame:
     past_reference_day = int(date(2020, 1, 1).strftime("%Y%m%d"))  # first available date in DB
     all_states = GeoMapper().get_geo_values("state_id")
     responses = pull_data_iteratively(all_states, Epidata.range(past_reference_day, today))
-    all_columns = pd.DataFrame(responses).replace(NAN_VALUES, np.nan)
+    all_columns = pd.DataFrame(responses).replace(NAN_VALUES)
     all_columns["timestamp"] = pd.to_datetime(all_columns["collection_week"], format="%Y%m%d")
     return all_columns

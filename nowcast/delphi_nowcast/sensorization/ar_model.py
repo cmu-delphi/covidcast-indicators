@@ -1,4 +1,6 @@
-from datetime import datetime, timedelta, date
+"""Fit autoregression models."""
+
+from datetime import timedelta, date
 from typing import Tuple
 
 import numpy as np

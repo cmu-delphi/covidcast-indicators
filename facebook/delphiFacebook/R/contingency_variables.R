@@ -4,70 +4,6 @@
 ## input data is always from only one wave of the survey -- they do not deal
 ## with inputs that have multiple waves mingled in one data frame.
 
-#' Gender
-#'
-#' @param input_data input data frame of raw survey data
-#' @param wave integer indicating survey version
-#' 
-#' @return augmented data frame
-code_gender <- function(input_data, wave) {
-  if ("D1" %in% names(input_data)) {
-    input_data$gender <- case_when(
-      input_data$D1 == 1 ~ "Male",
-      input_data$D1 == 2 ~ "Female",
-      input_data$D1 == 3 ~ "Other",
-      input_data$D1 == 4 ~ "Other",
-      input_data$D1 == 5 ~ NA_character_,
-      TRUE ~ NA_character_
-    )
-  } else {
-    input_data$gender <- NA_character_
-  }
-  
-  return(input_data)
-}
-
-#' Age-related fields
-#'
-#' @param input_data input data frame of raw survey data
-#' @param wave integer indicating survey version
-#' 
-#' @return augmented data frame
-code_age <- function(input_data, wave) {
-  if ("D2" %in% names(input_data)) {
-    input_data$agefull <- case_when(
-      input_data$D2 == 1 ~ "18-24",
-      input_data$D2 == 2 ~ "25-34",
-      input_data$D2 == 3 ~ "35-44",
-      input_data$D2 == 4 ~ "45-54",
-      input_data$D2 == 5 ~ "55-64",
-      input_data$D2 == 6 ~ "65-74",
-      input_data$D2 == 7 ~ "75plus",
-      TRUE ~ NA_character_
-    )
-    
-    # Condensed age categories
-    input_data$age <- case_when(
-      input_data$D2 == 1 ~ "18-24",
-      input_data$D2 == 2 ~ "25-44",
-      input_data$D2 == 3 ~ "25-44",
-      input_data$D2 == 4 ~ "45-64",
-      input_data$D2 == 5 ~ "45-64",
-      input_data$D2 == 6 ~ "65plus",
-      input_data$D2 == 7 ~ "65plus",
-      TRUE ~ NA_character_
-    )
-    
-    input_data$age65plus <- input_data$age == "65plus"
-  } else {
-    input_data$agefull <- NA_character_
-    input_data$age <- NA_character_
-    input_data$age65plus <- NA
-  }
-  
-  return(input_data)
-}
-
 #' Occupation
 #'
 #' @param input_data input data frame of raw survey data
@@ -567,16 +503,27 @@ code_vaccine_barriers <- function(input_data, wave) {
     input_data$v_hesitant_barrier_other <- is_selected(hesitancy_reasons, "13")
     input_data$v_hesitant_barrier_pregnant <- is_selected(hesitancy_reasons, "14")
     input_data$v_hesitant_barrier_religious <- is_selected(hesitancy_reasons, "15")
+    input_data$v_hesitant_barrier_dislike_vaccines_generally <- is_selected(hesitancy_reasons, "16") # replacing choice 5 as of Wave 12
     
-    # These response choices were removed starting in Wave 11. They are explicitly set to missing
-    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
-    # them if the respondent selected at least once answer choice.
-    input_data$v_hesitant_barrier_allergic[input_data$wave >= 11] <- NA
-    input_data$v_hesitant_barrier_not_recommended[input_data$wave >= 11] <- NA
-    input_data$v_hesitant_barrier_distrust_vaccines[input_data$wave >= 11] <- NA
-    input_data$v_hesitant_barrier_health_condition[input_data$wave >= 11] <- NA
-    input_data$v_hesitant_barrier_pregnant[input_data$wave >= 11] <- NA
-    
+    # For waves before a given response choice existed, explicitly set the
+    # derived field to missing since `is_selected` will return FALSE (meaning
+    # "not selected") for them if the respondent selected at least once answer
+    # choice.
+    if (wave >= 11) {
+      input_data$v_hesitant_barrier_allergic <- NA
+      input_data$v_hesitant_barrier_not_recommended <- NA
+      input_data$v_hesitant_barrier_health_condition <- NA
+      input_data$v_hesitant_barrier_pregnant <- NA
+    }
+    if (wave == 11) {
+      input_data$v_hesitant_barrier_distrust_vaccines <- NA
+    }
+    if (wave < 12) {
+      input_data$v_hesitant_barrier_dislike_vaccines_generally <- NA
+    }
+    if (wave >= 12) {
+      input_data$v_hesitant_barrier_dislike_vaccines <- NA
+    }
   } else {
     input_data$v_hesitant_barrier_sideeffects <- NA
     input_data$v_hesitant_barrier_allergic <- NA
@@ -593,6 +540,7 @@ code_vaccine_barriers <- function(input_data, wave) {
     input_data$v_hesitant_barrier_other <- NA
     input_data$v_hesitant_barrier_pregnant <- NA
     input_data$v_hesitant_barrier_religious <- NA
+    input_data$v_hesitant_barrier_dislike_vaccines_generally <- NA
   }
 
   # defno_barrier_<reason>
@@ -618,16 +566,27 @@ code_vaccine_barriers <- function(input_data, wave) {
     input_data$v_defno_barrier_other <- is_selected(defno_reasons, "13")
     input_data$v_defno_barrier_pregnant <- is_selected(defno_reasons, "14")
     input_data$v_defno_barrier_religious <- is_selected(defno_reasons, "15")
-
-    # These response choices were removed starting in Wave 11. They are explicitly set to missing
-    # for waves 11 and later since `is_selected` will return FALSE (meaning "not selected") for
-    # them if the respondent selected at least once answer choice.
-    input_data$v_defno_barrier_allergic[input_data$wave >= 11] <- NA
-    input_data$v_defno_barrier_not_recommended[input_data$wave >= 11] <- NA
-    input_data$v_defno_barrier_distrust_vaccines[input_data$wave >= 11] <- NA
-    input_data$v_defno_barrier_health_condition[input_data$wave >= 11] <- NA
-    input_data$v_defno_barrier_pregnant[input_data$wave >= 11] <- NA
-
+    input_data$v_defno_barrier_dislike_vaccines_generally <- is_selected(defno_reasons, "16") # replacing choice 5 as of Wave 12
+    
+    # For waves before a given response choice existed, explicitly set the
+    # derived field to missing since `is_selected` will return FALSE (meaning
+    # "not selected") for them if the respondent selected at least once answer
+    # choice.
+    if (wave >= 11) {
+      input_data$v_defno_barrier_allergic <- NA
+      input_data$v_defno_barrier_not_recommended <- NA
+      input_data$v_defno_barrier_health_condition <- NA
+      input_data$v_defno_barrier_pregnant <- NA
+    }
+    if (wave == 11) {
+      input_data$v_defno_barrier_distrust_vaccines <- NA
+    }
+    if (wave < 12) {
+      input_data$v_defno_barrier_dislike_vaccines_generally <- NA
+    }
+    if (wave >= 12) {
+      input_data$v_defno_barrier_dislike_vaccines <- NA
+    }
   } else {
     input_data$v_defno_barrier_sideeffects <- NA
     input_data$v_defno_barrier_allergic <- NA
@@ -644,6 +603,7 @@ code_vaccine_barriers <- function(input_data, wave) {
     input_data$v_defno_barrier_other <- NA
     input_data$v_defno_barrier_pregnant <- NA
     input_data$v_defno_barrier_religious <- NA
+    input_data$v_defno_barrier_dislike_vaccines_generally <- NA
   }
 
 # dontneed_reason_<reason>

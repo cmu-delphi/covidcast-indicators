@@ -790,7 +790,7 @@ filter_complete_responses <- function(data_full, params)
 filter_module_complete_responses <- function(data_full, params)
 {
   date_col <- if ("day" %in% names(data_full)) { "day" } else { "Date" }
-  data_full <- mutate(data_full, Date = .data$date) %>%
+  data_full <- data_full %>%
     filter_complete_responses(params) %>% 
     filter(!is.na(.data$age),
            !is.na(.data$gender),

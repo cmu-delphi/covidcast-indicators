@@ -17,7 +17,7 @@ from delphi_utils import (
 )
 from delphi_utils.validator.utils import lag_converter
 
-from .constants import (METRICS, COMBINED_METRIC,
+from .constants import (COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
 from .geo import geo_map
 from .pull import pull_gs_data
@@ -101,7 +101,9 @@ def run_module(params):
                         smoother=smoother)
             df = df_pull#.set_index(["timestamp", "geo_id"])
             df["val"] = df[metric].astype(float)
-            df["val"] = df[["geo_id", "val"]].groupby("geo_id")["val"].transform(SMOOTHERS_MAP[smoother][0].smooth)
+            df["val"] = df[["geo_id", "val"]].groupby(
+                "geo_id")["val"].transform(
+                SMOOTHERS_MAP[smoother][0].smooth)
             #df["val"] = df[metric].groupby(level=1
             #                               ).transform(SMOOTHERS_MAP[smoother][0].smooth)
             df["se"] = np.nan

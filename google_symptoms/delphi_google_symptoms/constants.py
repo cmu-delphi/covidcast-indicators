@@ -1,5 +1,4 @@
 """Registry for constants."""
-from functools import partial
 from datetime import timedelta
 
 from delphi_utils import Smoother
@@ -68,16 +67,19 @@ COMBINED_METRIC = ["S01", "S02", "S03",
 
 SYMPTOM_SETS = {
     "S01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
-    "S02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis", "Rhinitis", "Common cold"],
+    "S02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis",
+            "Rhinitis", "Common cold"],
     "S03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
     #"S04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
-    "S05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma", "Crackles", "Acute bronchitis", "Bronchitis"],
+    "S05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
+            "Crackles", "Acute bronchitis", "Bronchitis"],
     "S06": ["Anosmia", "Dysgeusia", "Ageusia"],
     #"S07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
     "S08": ["Laryngitis", "Sore throat", "Throat irritation"],
     #"S09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
     #"S10": ["Night sweats","Perspiration", "hyperhidrosis"],
-    "SControl": ["Type 2 diabetes", "Urinary tract infection", "Hair loss", "Candidiasis", "Weight gain"]
+    "SControl": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
+                 "Candidiasis", "Weight gain"]
 }
 
 
@@ -92,8 +94,10 @@ GEO_RESOLUTIONS = [
 ]
 
 SMOOTHERS_MAP = {
-    "raw":               (Smoother("identity", impute_method=None), lambda d: d - timedelta(days=7)),
-    "smoothed":          (Smoother("moving_average", window_length=7, impute_method='zeros'), lambda d: d)
+    "raw":               (Smoother("identity", impute_method=None),
+                          lambda d: d - timedelta(days=7)),
+    "smoothed":          (Smoother("moving_average", window_length=7,
+                                   impute_method='zeros'), lambda d: d)
 }
 
 

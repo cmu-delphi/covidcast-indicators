@@ -48,7 +48,7 @@ def generate_transition_matrix(geo_res):
               ).fillna(0).reset_index().rename({mapping_flag: "geo_id"}, axis = 1)
     return map_df
 
-def geo_map(df, geo_res, namescols =  METRICS+COMBINED_METRIC):
+def geo_map(df, geo_res, namescols =  None):
     """
     Compute derived HRR and MSA counts as a weighted sum of the county dataset.
 
@@ -62,7 +62,8 @@ def geo_map(df, geo_res, namescols =  METRICS+COMBINED_METRIC):
     namescols: list of strings
         names of columns of df but geo_id and timestamp
         when running the pipeline, this will always be METRICS+COMBINED_METRIC
-        this parameter was added to allow us to run unit tests in subsets of metrics and combined_metric's
+        this parameter was added to allow us to run unit tests in subsets of
+        metrics and combined_metric's
 
     Returns
     -------
@@ -71,6 +72,9 @@ def geo_map(df, geo_res, namescols =  METRICS+COMBINED_METRIC):
         and columns for signal vals.
         The geo_id has been converted from fips to HRRs/MSAs
     """
+    if namescols is None:
+        namescols = METRICS + COMBINED_METRIC
+
     if geo_res == "county":
         return df
 

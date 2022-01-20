@@ -28,6 +28,7 @@ run_facebook <- function(params)
   # Create "part a" data
   data_agg <- create_data_for_aggregation(input_data)
   data_agg <- filter_data_for_aggregation(data_agg, params, lead_days = 12)
+  data_agg <- create_complete_responses(data_agg, cw_list$county, params)
   weight_result <- join_weights(data_agg, params, weights = "weekly part a")
   data_agg <- weight_result$df
   latest_weight_date_step1 <- weight_result$weight_date
@@ -45,7 +46,8 @@ run_facebook <- function(params)
 
 
   # Create "full" data (AKA "module complete" data)
-  data_module_complete <- filter_module_complete_responses(data_full, params)
+  data_module_complete <- create_complete_responses(input_data, cw_list$county, params)
+  data_module_complete <- filter_module_complete_responses(data_module_complete, params)
   data_module_complete_a <- data_module_complete[["a"]]
   data_module_complete_b <- data_module_complete[["b"]]
   data_module_complete <- bind_rows(data_module_complete_a, data_module_complete_b)

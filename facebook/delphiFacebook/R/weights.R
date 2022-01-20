@@ -142,8 +142,8 @@ join_weights <- function(data, params, weights = c("weekly part a", "weekly part
 
   # Want to end up with normal "weight" column, plus weekly and daily weights
   data <- left_join(data, agg_weekly_weights, by = c("token" = "cid")) %>%
-      left_join(data, agg_weekly_weights %>% rename(weekly_weight = weight), by = c("token" = "cid")) %>%
-      left_join(data, agg_daily_weights, by = c("token" = "cid"))
+      left_join(agg_weekly_weights %>% rename(weekly_weight = weight), by = c("token" = "cid")) %>%
+      left_join(agg_daily_weights, by = c("token" = "cid"))
 
   return( list(df = data, weight_date = latest_weight_date) )
 }

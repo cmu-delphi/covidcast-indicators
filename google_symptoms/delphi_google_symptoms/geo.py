@@ -59,6 +59,10 @@ def geo_map(df, geo_res, namescols =  METRICS+COMBINED_METRIC):
         and columns for signal vals
     geo_res: str
         "msa", "hrr", "hhs" or "nation"
+    namescols: list of strings
+        names of columns of df but geo_id and timestamp
+        when running the pipeline, this will always be METRICS+COMBINED_METRIC
+        this parameter was added to allow us to run unit tests in subsets of metrics and combined_metric's
 
     Returns
     -------

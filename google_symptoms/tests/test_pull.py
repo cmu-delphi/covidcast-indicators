@@ -49,12 +49,12 @@ class TestPullGoogleSymptoms:
                 == ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
             ).all()
 
-            # combined_symptoms is nan when both Anosmia and Ageusia are nan
+            # combined_symptoms is nan when both Anosmia, Ageusia, and Dysgeusia are nan
             assert sum(~df.loc[
                 (df[METRICS[1]].isnull())
                 & (df[METRICS[2]].isnull())
                 & (df[METRICS[15]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
-            # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
+            # combined_symptoms is not nan when at least one of them isn't nan
             assert sum(df.loc[
                 (~df[METRICS[1]].isnull())
                 & (df[METRICS[2]].isnull())

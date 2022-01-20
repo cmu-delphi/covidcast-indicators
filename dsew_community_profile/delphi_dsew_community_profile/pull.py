@@ -375,7 +375,17 @@ def fetch_new_reports(params, logger=None):
         )
 
         if len(latest_sig_df.index) > 0:
-            ret[sig] = latest_sig_df.reset_index(drop=True)
+            latest_sig_df = latest_sig_df.reset_index(drop=True)
+
+        assert all(latest_sig_df.groupby(
+                ["timestamp", "geo_id"]
+            ).size(
+            ).reset_index(
+                drop=True
+            ) == 1), f"Duplicate rows in {sig} indicate that one or" \
+            + " more reports was published multiple times and the copies differ"
+
+        ret[sig] = latest_sig_df
 
     # add nation from state
     geomapper = GeoMapper()

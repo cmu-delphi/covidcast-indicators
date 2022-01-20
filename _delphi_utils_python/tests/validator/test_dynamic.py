@@ -120,10 +120,8 @@ class TestCheckNaVals:
         data = {"val": [np.nan] * 15, "geo_id": [0,1] * 7 + [2], 
             "time_value": ["2021-08-30"] * 14 + ["2021-05-01"]}
         df = pd.DataFrame(data)
-        #df.set_index(range(7), inplace=True)
+        df.time_value = (pd.to_datetime(df.time_value)).dt.date
         validator.check_na_vals(df, "geo", "signal", report)
-        import pdb
-        pdb.set_trace()
 
         assert len(report.raised_errors) == 2
         assert report.raised_errors[0].check_name == "check_val_missing"

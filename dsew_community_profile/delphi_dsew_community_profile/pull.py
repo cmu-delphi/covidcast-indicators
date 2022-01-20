@@ -342,12 +342,16 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
-    return geomapper.replace_geocode(
+    df = geomapper.replace_geocode(
         df,
         'state_id',
         'nation',
         new_col="geo_id"
     )
+    df["se"] = None
+    df["sample_size"] = None
+
+    return df
 
 def fetch_new_reports(params, logger=None):
     """Retrieve, compute, and collate all data we haven't seen yet."""

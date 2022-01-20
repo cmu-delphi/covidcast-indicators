@@ -183,22 +183,25 @@ class DynamicValidator:
         Returns:
             - None
         """
-        def replace_first_six(df):
+        def replace_first_six(df, start_date):
             x = df.val.isnull()
             # First 6 days have to be null
             x.iloc[:6] = False
-            return df.time_value[x]
+            df = df[x]
+            return df.time_value[df.time_value >= start_date]
 
         grouped_df = geo_sig_df.groupby('geo_id')
-        error_df = grouped_df.apply(replace_first_six)
+        error_df = grouped_df.apply(replace_first_six,
+            start_date = self.params.time_window.start_date)
 
         if not error_df.empty:
             for index, value in error_df.iteritems():
                 report.add_raised_error(
-                    ValidationFailure(f"check_val_missing (geo_id {index[0]})",
+                    ValidationFailure("check_val_missing",
                                       geo_type=geo_type,
                                       signal=signal_type,
-                                      date=value
+                                      date=value,
+                                      message=f"geo_id {index[0]}"
                                       )
                 )
 

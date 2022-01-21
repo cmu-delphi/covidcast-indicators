@@ -108,8 +108,8 @@ class TestGeoMapper:
         {
             "fips": [1123, 1125, 1126, 1128, 1129, 18181],
             "timestamp": [pd.Timestamp("2018-01-01")] * 6,
-            "count": [2, 1, 5, 7, 3, 10021],
             "visits": [4, 1, 2, 5, 10, 100001],
+            "count": [2, 1, 5, 7, 3, 10021],
         }
     )
     jhu_uid_data = pd.DataFrame(

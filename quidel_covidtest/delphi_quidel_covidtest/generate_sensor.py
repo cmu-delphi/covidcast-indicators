@@ -91,10 +91,7 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
     res_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size"])
     if res_key == "fips": # Add rest-of-state report for county level
         data = add_megacounties(data, smooth)
-    res_groups = data.groupby(res_key)
-    loc_list = list(res_groups.groups.keys())
-    for loc in loc_list:
-        res_group = res_groups.get_group(loc)
+    for loc, res_group in data.groupby(res_key):
         parent_state = res_group['state_id'].values[0]
         try:
             parent_group = state_groups.get_group(parent_state)

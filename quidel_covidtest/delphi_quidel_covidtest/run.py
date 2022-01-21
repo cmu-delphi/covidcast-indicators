@@ -133,7 +133,7 @@ def run_module(params: Dict[str, Any]):
                     end_date=export_end_date)
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
-
+    assert geo_res == "state" # Make sure geo_groups is for state level
     # County/HRR/MSA level
     for geo_res in PARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)

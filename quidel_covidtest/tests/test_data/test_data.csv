@@ -1,4 +1,8 @@
 SofiaSerNum,TestDate,Facility,City,State,Zip,PatientAge,Result1,Result2,OverallResult,County,FacilityType,Assay,SCO1,SCO2,CLN,CSN,InstrType,StorageDate,ResultId,SarsTestNumber
+1,7/18/20,,TestCity,TestState,24526,3,negative,,negative,,,,,,,,,8/17/20,,
+1,7/18/20,,TestCity,TestState,24526,21,positive,,positive,,,,,,,,,8/17/20,,
+1,7/18/20,,TestCity,TestState,24527,3,negative,,negative,,,,,,,,,8/17/20,,
+1,7/18/20,,TestCity,TestState,24527,150,positive,,positive,,,,,,,,,8/17/20,,
 1,7/18/20,,Lorton,VA,22079,21,negative,,negative,,,,,,,,,8/17/20,,
 1,7/18/20,,Lorton,VA,22079,23,negative,,negative,,,,,,,,,8/17/20,,
 1,7/18/20,,Lorton,VA,22079,27,negative,,negative,,,,,,,,,8/17/20,,

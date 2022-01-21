@@ -342,12 +342,16 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
-    return geomapper.replace_geocode(
+    df = geomapper.replace_geocode(
         df,
         'state_id',
         'nation',
         new_col="geo_id"
     )
+    df["se"] = None
+    df["sample_size"] = None
+
+    return df
 
 def fetch_new_reports(params, logger=None):
     """Retrieve, compute, and collate all data we haven't seen yet."""
@@ -367,10 +371,21 @@ def fetch_new_reports(params, logger=None):
             lambda x: x[x["publish_date"] == x["publish_date"].max()]
         ).drop(
             "publish_date", axis=1
+        ).drop_duplicates(
         )
 
         if len(latest_sig_df.index) > 0:
-            ret[sig] = latest_sig_df.reset_index(drop=True)
+            latest_sig_df = latest_sig_df.reset_index(drop=True)
+
+            assert all(latest_sig_df.groupby(
+                    ["timestamp", "geo_id"]
+                ).size(
+                ).reset_index(
+                    drop=True
+                ) == 1), f"Duplicate rows in {sig} indicate that one or" \
+                + " more reports was published multiple times and the copies differ"
+
+            ret[sig] = latest_sig_df
 
     # add nation from state
     geomapper = GeoMapper()

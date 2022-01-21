@@ -60,6 +60,8 @@ def add_megacounties(data, smooth=False):
         pdList.append(megacounties)
     mega_df = reduce(lambda x, y: pd.merge(
         x, y, on = ["timestamp", "fips"]), pdList)
+    mega_df = GMPR.add_geocode(mega_df, from_code="fips", new_code="state_id",
+                               from_col="fips", new_col="state_id")
 
     return pd.concat([data, mega_df])
 

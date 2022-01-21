@@ -38,9 +38,12 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     def replace_date_param(p):
-        if p in params["indicator"] and params["indicator"][p] is not None:
-            date_param = datetime.strptime(params["indicator"][p], "%Y-%m-%d").date()
-            params["indicator"][p] = date_param
+        if p in params["indicator"]:
+            if params["indicator"][p] is None:
+                del params["indicator"][p]
+            else:
+                date_param = datetime.strptime(params["indicator"][p], "%Y-%m-%d").date()
+                params["indicator"][p] = date_param
     replace_date_param("export_start_date")
     replace_date_param("export_end_date")
     export_params = {

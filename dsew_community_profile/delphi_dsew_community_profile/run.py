@@ -59,6 +59,8 @@ def run_module(params):
     dfs = fetch_new_reports(params, logger)
     for key, df in dfs.items():
         (geo, sig) = key
+        if sig not in params["indicator"]["export_signals"]:
+            continue
         dates = create_export_csv(
             df,
             params['common']['export_dir'],

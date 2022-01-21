@@ -104,6 +104,14 @@ class TestGeoMapper:
             ),
         )
     )
+    mega_data_3 = pd.DataFrame(
+        {
+            "fips": [1123, 1125, 1126, 1128, 1129, 18181],
+            "timestamp": [pd.Timestamp("2018-01-01")] * 6,
+            "count": [2, 1, 5, 7, 3, 10021],
+            "visits": [4, 1, 2, 5, 10, 100001],
+        }
+    )
     jhu_uid_data = pd.DataFrame(
         {
             "jhu_uid": [
@@ -207,6 +215,27 @@ class TestGeoMapper:
         assert (
             new_data[["count"]].sum() - self.mega_data[["count"]].sum()
         ).sum() < 1e-3
+
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
+        expected_df = pd.DataFrame(
+            {
+                "megafips": ["01000", "01128", "01129", "18181"],
+                "timestamp": [pd.Timestamp("2018-01-01")] * 4,
+                "visits": [7, 5, 10, 100001],
+                "count": [8, 7, 3, 10021],
+            }
+        )
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
+        expected_df = pd.DataFrame(
+            {
+                "megafips": ["01000", "01126", "01128", "18181"],
+                "timestamp": [pd.Timestamp("2018-01-01")] * 4,
+                "visits": [15, 2, 5, 100001],
+                "count": [6, 5, 7, 10021],
+            }
+        )
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
 
     def test_add_population_column(self, geomapper):
         new_data = geomapper.add_population_column(self.fips_data_3, "fips")

@@ -57,6 +57,8 @@ class TestGeoMap:
         assert set(mega_df["totalTest_age_0_17"].values)  == set([10, 4, 4, 170, 8, 8, 18, 8])
         assert set(mega_df["positiveTest_age_0_17"].values) == set([4, 2, 2, 24, 2, 8, 2])
         
+        assert set(mega_df["state_id"].values) == set(["ma", "tx", "wa"])
+        
 
     def test_state(self):
 

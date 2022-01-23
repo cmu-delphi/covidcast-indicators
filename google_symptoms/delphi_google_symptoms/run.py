@@ -99,13 +99,11 @@ def run_module(params):
                         geo_res=geo_res,
                         metric=metric,
                         smoother=smoother)
-            df = df_pull#.set_index(["timestamp", "geo_id"])
+            df = df_pull
             df["val"] = df[metric].astype(float)
             df["val"] = df[["geo_id", "val"]].groupby(
                 "geo_id")["val"].transform(
                 SMOOTHERS_MAP[smoother][0].smooth)
-            #df["val"] = df[metric].groupby(level=1
-            #                               ).transform(SMOOTHERS_MAP[smoother][0].smooth)
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing

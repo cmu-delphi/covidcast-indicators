@@ -69,7 +69,7 @@ class TestRun:
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 
         df = pd.read_csv(join("./receiving", "20200718_county_covid_ag_smoothed_pct_positive.csv"))
-        assert set(df.geo_id) == set(["51000", "51059", "51143", "51019"])
+        assert set(df.geo_id) == set([51000, 51059, 51143, 51019])
 
         # test_intermediate_file
         flag = None

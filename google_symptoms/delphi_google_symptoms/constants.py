@@ -4,66 +4,6 @@ from datetime import timedelta
 from delphi_utils import Smoother
 
 # global constants
-METRICS = [#"Abdominal pain",
-           "Anosmia",
-           "Ageusia",
-           "Acute bronchitis",
-           "Asthma",
-           "Bronchitis",
-           "Chills",
-           #"Cluster headache",
-           "Common cold",
-           "Cough",
-           "Crackles",
-           "Croup",
-           #"Diarrhea",
-           #"Dizziness",
-           "Dysgeusia",
-           #"Fatigue",
-           "Fever",
-           #"Headache",
-           "Hyperthermia",
-           #"Indigestion",
-           "Laryngitis",
-           #"Lightheadedness",
-           "Low grade fever",
-           #"Migraine",
-           #"Muscle weakness",
-           #"Myalgia",
-           #"Nausea",
-           "Nasal congestion",
-           #"Night sweats",
-           #"Pain",
-           #"Perspiration",
-           "Phlegm",
-           "Pneumonia",
-           "Post nasal drip",
-           "Rhinitis",
-           "Rhinorrhea",
-           "Shivering",
-           "Shortness of breath",
-           "Sinusitis",
-           "Sore throat",
-           "Sputum",
-           "Throat irritation",
-           "Upper respiratory tract infection",
-           #"Vomiting",
-           #"Weakness",
-           "Wheeze",
-           #"hyperhidrosis",
-           "Type 2 diabetes",
-           "Urinary tract infection",
-           "Hair loss",
-           "Candidiasis",
-           "Weight gain"]
-
-COMBINED_METRIC = ["s01", "s02", "s03",
-                   #"s04",
-                   "s05", "s06",
-                   #"s07",
-                   "s08",
-                   #"s09", "s10",
-                   "scontrol"]
 
 SYMPTOM_SETS = {
     "s01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
@@ -82,6 +22,11 @@ SYMPTOM_SETS = {
                  "Candidiasis", "Weight gain"]
 }
 
+COMBINED_METRIC = list(SYMPTOM_SETS.keys())
+
+METRICS = list()
+for combmetric in COMBINED_METRIC:
+    METRICS = METRICS + SYMPTOM_SETS[combmetric]
 
 SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [

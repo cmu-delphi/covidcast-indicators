@@ -68,17 +68,8 @@ class TestRun:
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 
-        # 7/18/20 in test_data/test_data.csv has:
-        # - zip 24526 -> fips 51019 with 21 positive counts and 3 negative counts
-        # - zip 22079 -> fips 51059 with many positive and negative counts
-        # - zip 24527 -> fips 51143 with 150 positive counts and 3 negative counts
-        # I think that the following output file should then have
-        # - fips 51059 for the many counts
-        # - fips 51000 for the censored 24526 counts
-        # - fips 51143 for the above-threshold 24527 counts
-        # But instead, 51019 shows up with the same value as 51143. Is this right or am I missing something?
         df = pd.read_csv(join("./receiving", "20200718_county_covid_ag_smoothed_pct_positive.csv"))
-        assert set(df.geo) == set(["51000", "51059", "51143"])
+        assert set(df.geo_id) == set(["51000", "51059", "51143", "51019"])
 
         # test_intermediate_file
         flag = None

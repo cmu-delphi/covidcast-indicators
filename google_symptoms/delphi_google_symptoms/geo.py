@@ -3,7 +3,7 @@
 import numpy as np
 import pandas as pd
 from delphi_utils import GeoMapper
-from .constants import SYMPTOM_SETS, METRICS, COMBINED_METRIC
+from .constants import METRICS, COMBINED_METRIC
 
 gmpr = GeoMapper()
 

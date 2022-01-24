@@ -62,8 +62,8 @@ class TestPull:
         # verify nans cast properly and timestamp added
         pd.testing.assert_frame_equal(
             output,
-            pd.DataFrame({"collection_week": [20201204.],
-                          "total_beds_7_day_sum": [2360.0],
+            pd.DataFrame({"collection_week": [20201204],
+                          "total_beds_7_day_sum": [2360],
                           "all_adult_hospital_beds_7_day_sum": [NAN_VALUES[-999999]],
                           "inpatient_beds_7_day_avg": [NAN_VALUES[-999999]],
                           "total_icu_beds_7_day_avg": [np.nan],

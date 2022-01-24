@@ -23,6 +23,8 @@ Indicator-specific parameters:
   and exported.
 * `export_start_date`: a YYYY-mm-dd string indicating the first date to export.
 * `export_end_date`: a YYYY-mm-dd string indicating the final date to export.
+* `export_signals`: list of string keys from constants.SIGNALS indicating which
+  signals to export
 
 ## Running the Indicator
 

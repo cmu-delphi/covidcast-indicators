@@ -9,6 +9,8 @@
 ## Writes the lists of new and changed items to STDOUT, so redirect STDOUT to
 ## your desired location.
 
+options(warn = 1)
+
 suppressPackageStartupMessages({
   library(jsonlite)
   library(stringr)
@@ -31,8 +33,8 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
 #' Fetch and format a single .qsf file, keeping block and question info
 #'
 #' @param path path to Qualtrics survey file in .qsf format
-#' @param keep_items string or character vector of survey item fields to keep.
-#'   Setting to "all" keeps all fields.
+#' @param keep_items character vector of survey item fields to keep.
+#'   Setting to c("all") keeps all fields.
 #'
 #' @return A named list
 get_qsf_file <- function(path,
@@ -59,7 +61,7 @@ get_qsf_file <- function(path,
       next
     }
     
-    if (keep_items != "all") {
+    if (!identical(keep_items, c("all"))) {
       question <- question[names(question) %in% c("QuestionID", keep_items)]
     }
     

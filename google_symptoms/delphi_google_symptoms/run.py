@@ -17,7 +17,7 @@ from delphi_utils import (
 )
 from delphi_utils.validator.utils import lag_converter
 
-from .constants import (METRICS, COMBINED_METRIC,
+from .constants import (COMBINED_METRIC,
                         GEO_RESOLUTIONS, SMOOTHERS, SMOOTHERS_MAP)
 from .geo import geo_map
 from .pull import pull_gs_data
@@ -94,15 +94,16 @@ def run_module(params):
 
         if len(df_pull) == 0:
             continue
-        for metric, smoother in product(
-                METRICS+[COMBINED_METRIC], SMOOTHERS):
+        for metric, smoother in product(COMBINED_METRIC, SMOOTHERS):
             logger.info("generating signal and exporting to CSV",
                         geo_res=geo_res,
                         metric=metric,
                         smoother=smoother)
-            df = df_pull.set_index(["timestamp", "geo_id"])
-            df["val"] = df[metric].groupby(level=1
-                                           ).transform(SMOOTHERS_MAP[smoother][0])
+            df = df_pull
+            df["val"] = df[metric].astype(float)
+            df["val"] = df[["geo_id", "val"]].groupby(
+                "geo_id")["val"].transform(
+                SMOOTHERS_MAP[smoother][0].smooth)
             df["se"] = np.nan
             df["sample_size"] = np.nan
             # Drop early entries where data insufficient for smoothing

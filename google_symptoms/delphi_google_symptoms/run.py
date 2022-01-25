@@ -73,6 +73,8 @@ def run_module(params):
             (datetime.today() - to_datetime(min(gs_metadata.max_time))).days + 1,
             params["validation"]["common"].get("span_length", 14) + global_max_expected_lag
             )
+    elif num_export_days == "all":
+        num_export_days = (export_end_date - export_start_date).days + 1
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

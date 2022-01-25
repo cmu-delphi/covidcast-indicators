@@ -346,7 +346,7 @@ def check_export_start_date(export_start_date, export_end_date,
         export_start_date = datetime(2020, 5, 26)
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
-     # Only export data from -45 days to -5 days
+     # Only export data from -50 days to -5 days
     if (export_end_date - export_start_date).days > export_day_range:
         export_start_date = export_end_date - timedelta(days=export_day_range)
 

@@ -6,7 +6,7 @@
   },
   "indicator": {
     "export_start_date": "2020-02-20",
-    "num_export_days": "all",
+    "num_export_days": null,
     "bigquery_credentials": {}
   },
   "validation": {

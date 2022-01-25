@@ -212,6 +212,7 @@ class Dataset:
             # include "Total RT-PCR diagnostic tests - [last|previous] 7 days ..."
             # include "NAAT positivity rate - [last|previous] 7 days ..."
             # include "Viral (RT-PCR) lab test positivity rate - [last|previous] 7 days ..."
+            # include "Booster doses administerd - [last|previous] 7 days ..."
             (header.startswith("Total NAATs") or
              header.startswith("NAAT positivity rate") or
              header.startswith("Total RT-PCR") or
@@ -305,6 +306,7 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
+    print(requests.get(DOWNLOAD_LISTING).json())
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
 
     # drop the pdf files

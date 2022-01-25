@@ -16,12 +16,12 @@
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
       "suppressed_errors": [
-        {"check_name": "check_missing_geo_sig_combo", "signal": "ageusia_raw_search"},
-        {"check_name": "check_missing_geo_sig_combo", "signal": "ageusia_smoothed_search"},
-        {"check_name": "check_missing_geo_sig_combo", "signal": "anosmia_raw_search"},
-        {"check_name": "check_missing_geo_sig_combo", "signal": "anosmia_smoothed_search"},
-        {"check_name": "check_missing_geo_sig_combo", "signal": "sum_anosmia_ageusia_raw_search"},
-        {"check_name": "check_missing_geo_sig_combo", "signal": "sum_anosmia_ageusia_smoothed_search"}
+        {"signal": "ageusia_raw_search"},
+        {"signal": "ageusia_smoothed_search"},
+        {"signal": "anosmia_raw_search"},
+        {"signal": "anosmia_smoothed_search"},
+        {"signal": "sum_anosmia_ageusia_raw_search"},
+        {"signal": "sum_anosmia_ageusia_smoothed_search"}
       ]
     },
     "static": {

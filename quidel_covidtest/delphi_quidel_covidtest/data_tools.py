@@ -71,7 +71,7 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
     Determine how many samples from the parent geography must be borrowed.
 
-    If there are no samples available in the parent, the borrow_prop is 0. 
+    If there are no samples available in the parent, the borrow_prop is 0.
     If the parent does not have enough samples, we return a borrow_prop of 1.
     No more samples borrowed from the parent compared to the number of samples
     we currently have.

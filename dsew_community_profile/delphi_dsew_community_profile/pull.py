@@ -90,9 +90,11 @@ class DatasetTimes:
             return self.total_reference_date
         if key.lower()=="confirmed covid-19 admissions":
             return self.hosp_reference_date
+        if key.lower()=="booster":
+            return self.hosp_reference_date
         raise ValueError(
             f"Bad reference date type request '{key}'; " + \
-            "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+            "need 'total', 'positivity', 'booster', or 'confirmed covid-19 admissions'"
         )
     def __setitem__(self, key, newvalue):
         """Use DatasetTimes like a dictionary."""
@@ -102,10 +104,12 @@ class DatasetTimes:
             self.total_reference_date = newvalue
         if key.lower()=="confirmed covid-19 admissions":
             self.hosp_reference_date = newvalue
+        elif key.lower()=="booster":
+            self.hosp_reference_date = newvalue
         else:
             raise ValueError(
                 f"Bad reference date type request '{key}'; " + \
-                "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+                "need 'total', 'positivity', 'booster', or 'confirmed covid-19 admissions'"
             )
     def __eq__(self, other):
         """Check equality by value."""
@@ -211,7 +215,9 @@ class Dataset:
             (header.startswith("Total NAATs") or
              header.startswith("NAAT positivity rate") or
              header.startswith("Total RT-PCR") or
-             header.startswith("Viral (RT-PCR)")),
+             header.startswith("Viral (RT-PCR)") or
+             header.startswith("Booster")
+             ),
             # exclude "NAAT positivity rate - absolute change ..."
             header.find("7 days") > 0,
             # exclude "NAAT positivity rate - last 7 days - ages <5"
@@ -242,7 +248,7 @@ class Dataset:
             for h in list(df.columns)
             if self.retain_header(h)
         ]
-
+        
         for sig in SIGNALS:
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
             if (sheet.level == "msa" or sheet.level == "county") \
@@ -254,7 +260,22 @@ class Dataset:
                     )
                 continue
 
+
+            if ((sheet.level != "hhs" and sheet.level != "state") \
+                and sig == "booster"):
+                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                        columns = ["geo_id", "timestamp", "val", \
+                            "se", "sample_size", "publish_date"]
+                    )
+                continue
+
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
+            
+            
+
+                
+
+
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
@@ -269,9 +290,10 @@ class Dataset:
                 })
                 for si in sig_select
             ])
-
+            
         for sig in COUNTS_7D_SIGNALS:
             self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
+
 
 
 def as_cached_filename(params, config):

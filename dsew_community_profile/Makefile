@@ -27,4 +27,3 @@ test:
 
 clean:
 	rm -rf env
-	rm -f params.json

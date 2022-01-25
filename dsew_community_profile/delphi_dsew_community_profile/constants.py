@@ -59,7 +59,12 @@ SIGNALS = {
     "confirmed covid-19 admissions": {
         "is_rate" : False,
         "api_name": "confirmed_admissions_covid_1d_7dav"
+    },
+    "booster": {
+        "is_rate" : False,
+        "api_name": "booster_7dav"
     }
+
 }
 
 COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate"]}

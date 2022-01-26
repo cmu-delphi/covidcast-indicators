@@ -296,7 +296,7 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
         df_dc_county = dfs["state"][dfs["state"]["geo_id"] == "dc"].drop(
             "geo_id", axis=1)
         df_dc_county["geo_id"] = DC_FIPS
-        dfs["county"] = dfs["county"].append(df_dc_county)
+        dfs["county"] = pd.concat([dfs["county"], df_dc_county])
     except KeyError:
         pass
 

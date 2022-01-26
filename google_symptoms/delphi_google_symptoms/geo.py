@@ -92,5 +92,5 @@ def geo_map(df, geo_res, namescols =  None):
         newdf["geo_id"] = list(map_df.keys())[1:]
         mask = (newdf == 0)
         newdf[mask] = np.nan
-        converted_df = converted_df.append(newdf)
+        converted_df = pd.concat([converted_df, newdf])
     return converted_df

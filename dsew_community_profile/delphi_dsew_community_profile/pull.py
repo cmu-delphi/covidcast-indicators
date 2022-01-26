@@ -249,7 +249,6 @@ class Dataset:
             for h in list(df.columns)
             if self.retain_header(h)
         ]
-        
         for sig in SIGNALS:
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
             if (sheet.level == "msa" or sheet.level == "county") \
@@ -271,12 +270,6 @@ class Dataset:
                 continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
-            
-            
-
-                
-
-
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
@@ -291,11 +284,8 @@ class Dataset:
                 })
                 for si in sig_select
             ])
-            
         for sig in COUNTS_7D_SIGNALS:
             self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
-
-
 
 def as_cached_filename(params, config):
     """Formulate a filename to uniquely identify this report in the input cache."""
@@ -306,7 +296,6 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
-    print(requests.get(DOWNLOAD_LISTING).json())
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
 
     # drop the pdf files
@@ -383,7 +372,7 @@ def fetch_new_reports(params, logger=None):
 
     # download and parse individual reports
     datasets = download_and_parse(listing, logger)
-
+    print(datasets, datasets.items())
     # collect like signals together, keeping most recent publish date
     ret = {}
     for sig, lst in datasets.items():

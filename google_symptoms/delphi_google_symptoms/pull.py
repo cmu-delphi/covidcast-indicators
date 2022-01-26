@@ -41,6 +41,7 @@ def preprocess(df, level):
     # Constants
     KEEP_COLUMNS = ["geo_id", "date"] + METRICS + COMBINED_METRIC
 
+    # another comment
     df.rename(colname_map, axis=1, inplace=True)
     df["geo_id"] = df["open_covid_region_code"].apply(
         lambda x: x.split("-")[-1].lower())

@@ -17,7 +17,6 @@ from delphi_utils import get_structured_logger
 
 from .process import process
 
-mp.set_start_method("spawn")
 
 METRICS = [
         # signal_name, naics_code, wip
@@ -106,7 +105,7 @@ def run_module(params):
                                logger=logger,
                                )
 
-        with mp.get_context("spawn").Pool(n_core) as pool:
+        with mp.Pool(n_core) as pool:
             pool.map(process_file, files)
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

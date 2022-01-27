@@ -69,7 +69,6 @@ class TestRun:
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()
 
         df = pd.read_csv(join("./receiving", "20200718_county_covid_ag_raw_pct_positive.csv"))
-        # TODO: should megacounty 51000 be here (it currently is)?
         assert set(df.geo_id) == set([51143, 51059, 51000])
 
         df = pd.read_csv(join("./receiving", "20200718_county_covid_ag_smoothed_pct_positive.csv"))

@@ -73,7 +73,6 @@ class TestRun:
         assert set(df.geo_id) == set([51143, 51059, 51000])
 
         df = pd.read_csv(join("./receiving", "20200718_county_covid_ag_smoothed_pct_positive.csv"))
-        # TODO: should megacounty 51000 be here (it currently isn't)?
         assert set(df.geo_id) == set([51000, 51019, 51143, 51059])
 
         # test_intermediate_file

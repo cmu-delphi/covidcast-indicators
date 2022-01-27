@@ -82,6 +82,7 @@ def preprocess(df, level):
         index_df = pd.MultiIndex.from_product(
             [geo_list, date_list], names=['geo_id', 'date']
         )
+        df.date = pd.to_datetime(df.date)
         df = df.set_index(
             ["geo_id", "date"]
         ).reindex(

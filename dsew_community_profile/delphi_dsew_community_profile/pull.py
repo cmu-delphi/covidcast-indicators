@@ -372,7 +372,6 @@ def fetch_new_reports(params, logger=None):
 
     # download and parse individual reports
     datasets = download_and_parse(listing, logger)
-    print(datasets, datasets.items())
     # collect like signals together, keeping most recent publish date
     ret = {}
     for sig, lst in datasets.items():

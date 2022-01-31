@@ -20,7 +20,7 @@ from delphi_utils import get_structured_logger
 from delphi_utils.export import create_export_csv
 import pandas as pd
 
-from .constants import make_signal_name
+from .constants import make_signal_name, IS_PROP
 from .pull import fetch_new_reports
 
 
@@ -58,14 +58,15 @@ def run_module(params):
     run_stats = []
     dfs = fetch_new_reports(params, logger)
     for key, df in dfs.items():
-        (geo, sig) = key
+        (geo, sig, prop_flag) = key
         if sig not in params["indicator"]["export_signals"]:
             continue
+        is_prop = prop_flag == IS_PROP
         dates = create_export_csv(
             df,
             params['common']['export_dir'],
             geo,
-            make_signal_name(sig),
+            make_signal_name(sig, is_prop),
             **export_params
         )
         if len(dates)>0:

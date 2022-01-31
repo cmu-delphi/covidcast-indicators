@@ -50,22 +50,30 @@ TRANSFORMS = {
 SIGNALS = {
     "total": {
         "is_rate" : False,
-        "api_name": "naats_total_7dav"
+        "api_name": "naats_total_7dav",
+        "make_prop": False
     },
     "positivity": {
         "is_rate" : True,
-        "api_name": "naats_positivity_7dav"
+        "api_name": "naats_positivity_7dav",
+        "make_prop": False
     },
     "confirmed covid-19 admissions": {
         "is_rate" : False,
-        "api_name": "confirmed_admissions_covid_1d_7dav"
+        "api_name": "confirmed_admissions_covid_1d_7dav",
+        "make_prop": True,
+        "api_prop_name": "confirmed_admissions_covid_1d_prop_7dav"
     }
 }
 
 COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate"]}
 
-def make_signal_name(key):
+def make_signal_name(key, is_prop=False):
     """Convert a signal key to the corresponding signal name for the API."""
+    if is_prop:
+        return SIGNALS[key]["api_prop_name"]
     return SIGNALS[key]["api_name"]
 
-NEWLINE="\n"
+NEWLINE = "\n"
+NOT_PROP = "not prop"
+IS_PROP = "prop"

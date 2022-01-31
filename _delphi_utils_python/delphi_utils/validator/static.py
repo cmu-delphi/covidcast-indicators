@@ -295,14 +295,6 @@ class StaticValidator:
 
             report.increment_total_checks()
 
-        if df_to_test['val'].isnull().values.any():
-            report.add_raised_error(
-                ValidationFailure("check_val_missing",
-                                  filename=nameformat,
-                                  message="val column can't have any cell that is NA"))
-
-        report.increment_total_checks()
-
         if not df_to_test[(df_to_test['val'] < 0)].empty:
             report.add_raised_error(
                 ValidationFailure("check_val_lt_0",

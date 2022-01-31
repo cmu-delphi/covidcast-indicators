@@ -276,9 +276,13 @@ class Dataset:
 
 def as_cached_filename(params, config):
     """Formulate a filename to uniquely identify this report in the input cache."""
+    # eg "Community Profile Report 20220128.xlsx"
+    # but delimiters vary; don't get tripped up if they do something wacky like
+    # Community.Profile.Report.20220128.xlsx
+    name, _, ext = config['filename'].rpartition(".")
     return os.path.join(
         params['indicator']['input_cache'],
-        f"{config['assetId']}--{config['filename']}"
+        f"{name}--{config['assetId']}.{ext}"
     )
 
 def fetch_listing(params):

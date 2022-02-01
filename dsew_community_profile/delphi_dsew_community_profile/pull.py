@@ -430,7 +430,7 @@ def generate_prop_signal(df, geo, geo_mapper):
     else:
         df = geo_mapper.add_population_column(df, geo, geocode_col="geo_id")
 
-    df["val"] = round(df["val"]/df["population"]*100000, 7)
+    df["val"] = df["val"] / df["population"] * 100000
     df.drop(["population", geo], axis=1, inplace=True)
 
     return df

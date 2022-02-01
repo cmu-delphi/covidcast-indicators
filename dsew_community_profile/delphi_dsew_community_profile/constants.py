@@ -70,8 +70,8 @@ COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate
 
 def make_signal_name(key, is_prop=False):
     """Convert a signal key to the corresponding signal name for the API.
-    
-    Note, this function gets called twice with the same `key` for signals that support 
+
+    Note, this function gets called twice with the same `key` for signals that support
     population-proportion ("prop") variants.
     """
     if is_prop:
@@ -79,5 +79,5 @@ def make_signal_name(key, is_prop=False):
     return SIGNALS[key]["api_name"]
 
 NEWLINE = "\n"
-NOT_PROP = "not prop"
-IS_PROP = "prop"
+IS_PROP = True
+NOT_PROP = False

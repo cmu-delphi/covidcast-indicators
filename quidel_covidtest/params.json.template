@@ -28,7 +28,7 @@
     "bucket_name": "delphi-covidcast-indicator-output",
     "cache_dir": "./archivediffer_cache",
     "indicator_prefix": "quidel"
-  }
+  },
   "validation": {
     "common": {
       "data_source": "quidel",

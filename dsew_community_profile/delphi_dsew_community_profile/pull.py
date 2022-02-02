@@ -84,32 +84,32 @@ class DatasetTimes:
             total_reference_date, hosp_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
+        ref_list = list(SIGNALS.keys())
+        _ = [ref_list.remove(x) for x in ["positivity", "total"]]
         if key.lower()=="positivity":
             return self.positivity_reference_date
         if key.lower()=="total":
             return self.total_reference_date
-        if key.lower()=="confirmed covid-19 admissions":
-            return self.hosp_reference_date
-        if key.lower()=="booster":
+        if key.lower() in ref_list:
             return self.hosp_reference_date
         raise ValueError(
             f"Bad reference date type request '{key}'; " + \
-            "need 'total', 'positivity', 'booster', or 'confirmed covid-19 admissions'"
+            "need one of: " + " ,".join(ref_list)
         )
     def __setitem__(self, key, newvalue):
         """Use DatasetTimes like a dictionary."""
+        ref_list = list(SIGNALS.keys())
+        _ = [ref_list.remove(x) for x in ["positivity", "total"]]
         if key.lower()=="positivity":
             self.positivity_reference_date = newvalue
         if key.lower()=="total":
             self.total_reference_date = newvalue
-        if key.lower()=="confirmed covid-19 admissions":
-            self.hosp_reference_date = newvalue
-        elif key.lower()=="booster":
+        if key.lower() in ref_list:
             self.hosp_reference_date = newvalue
         else:
             raise ValueError(
                 f"Bad reference date type request '{key}'; " + \
-                "need 'total', 'positivity', 'booster', or 'confirmed covid-19 admissions'"
+                "need one of: " + " ,".join(ref_list)
             )
     def __eq__(self, other):
         """Check equality by value."""
@@ -207,17 +207,19 @@ class Dataset:
     @staticmethod
     def retain_header(header):
         """Ignore irrelevant headers."""
-        return all([
+        return ((all([
             # include "Total NAATs - [last|previous] 7 days ..."
             # include "Total RT-PCR diagnostic tests - [last|previous] 7 days ..."
             # include "NAAT positivity rate - [last|previous] 7 days ..."
             # include "Viral (RT-PCR) lab test positivity rate - [last|previous] 7 days ..."
             # include "Booster doses administerd - [last|previous] 7 days ..."
+            # include "Doses administered - [last|previous] 7 days ..."
             (header.startswith("Total NAATs") or
              header.startswith("NAAT positivity rate") or
              header.startswith("Total RT-PCR") or
              header.startswith("Viral (RT-PCR)") or
-             header.startswith("Booster")
+             header.startswith("Booster") or
+             header.startswith("Doses administered -")
              ),
             # exclude "NAAT positivity rate - absolute change ..."
             header.find("7 days") > 0,
@@ -233,7 +235,17 @@ class Dataset:
             header.find(" age") < 0,
             # exclude "Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days"
             header.find(" beds") < 0,
-        ])
+        ])) or all([
+            # include "People who are fully vaccinated"
+            # include "People who have received a booster dose since August 13, 2021"
+            header.startswith("People who"),
+            # exclude "People who are fully vaccinated as % of total population"
+            # exclude "People who have received a booster dose as % of fully vaccinated population"
+            header.find("%") < 0,
+            # exclude "People who are fully vaccinated - ages 5-11" ...
+            # exclude "People who have received a booster dose - ages 65+" ...
+            header.find(" age") < 0,
+        ]))
     def _parse_sheet(self, sheet):
         """Extract data frame for this sheet."""
         df = pd.read_excel(
@@ -244,11 +256,21 @@ class Dataset:
         )
         if sheet.row_filter:
             df = df.loc[sheet.row_filter(df)]
+
+
+        def select_fn(h):
+            """Allow for default to the 7-day in the name of the dataframe column."""
+            try:
+                return (RE_COLUMN_FROM_HEADER.findall(h)[0], h, h.lower())
+            except IndexError:
+                return ("last", h, h.lower())
+
         select = [
-            (RE_COLUMN_FROM_HEADER.findall(h)[0], h, h.lower())
+            select_fn(h)
             for h in list(df.columns)
             if self.retain_header(h)
         ]
+
         for sig in SIGNALS:
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
             if (sheet.level == "msa" or sheet.level == "county") \
@@ -261,8 +283,20 @@ class Dataset:
                 continue
 
 
+
+            # Booster data not available before November 2021.
+            if  self.publish_date < datetime.date(2021, 11, 1) \
+                and (sig in ["booster dose since", "booster doses administered"]) :
+                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                        columns = ["geo_id", "timestamp", "val", \
+                            "se", "sample_size", "publish_date"]
+                    )
+                continue
+
+            # Booster and weekly doses administered not available below the state level.
             if ((sheet.level != "hhs" and sheet.level != "state") \
-                and sig == "booster"):
+                and (sig in ["doses administered", \
+                 "booster doses administered", "booster dose since"])):
                 self.dfs[(sheet.level, sig)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \
                             "se", "sample_size", "publish_date"]
@@ -270,6 +304,9 @@ class Dataset:
                 continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
+
+            if sig == "doses administered":
+                sig_select = [s for s in select if s[-1].startswith(sig)]
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
@@ -388,7 +425,6 @@ def fetch_new_reports(params, logger=None):
 
         if len(latest_sig_df.index) > 0:
             latest_sig_df = latest_sig_df.reset_index(drop=True)
-
             assert all(latest_sig_df.groupby(
                     ["timestamp", "geo_id"]
                 ).size(

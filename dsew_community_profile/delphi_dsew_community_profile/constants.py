@@ -60,11 +60,22 @@ SIGNALS = {
         "is_rate" : False,
         "api_name": "confirmed_admissions_covid_1d_7dav"
     },
-    "booster": {
+    "fully vaccinated": {
         "is_rate" : False,
-        "api_name": "booster_7dav"
+        "api_name": "full_vaccinated_7dav"
+    },
+    "booster dose since": {
+        "is_rate" : False,
+        "api_name": "booster_doses_7dav"
+    },
+    "booster doses administered": {
+        "is_rate" : False,
+        "api_name": "total_booster_7dav"
+    },
+    "doses administered": {
+        "is_rate" : False,
+        "api_name": "total_doses_7dav"
     }
-
 }
 
 COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate"]}

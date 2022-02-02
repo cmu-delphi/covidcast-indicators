@@ -11,7 +11,9 @@
     "export_signals": [
       "confirmed covid-19 admissions",
       "total",
-      "positivity"
+      "positivity",
+      "doses",
+      "people"
     ]
   },
   "validation": {

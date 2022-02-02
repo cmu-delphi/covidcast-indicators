@@ -11,8 +11,9 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE
-from .constants import DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING
+from .constants import (TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
+    IS_PROP, NOT_PROP,
+    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING)
 
 # YYYYMMDD
 # example: "Community Profile Report 20211104.xlsx"
@@ -248,7 +249,7 @@ class Dataset:
             if (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date < datetime.date(2021, 1, 8) \
                 and sig == "confirmed covid-19 admissions":
-                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \
                             "se", "sample_size", "publish_date"]
                     )
@@ -258,7 +259,7 @@ class Dataset:
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
-            self.dfs[(sheet.level, sig)] = pd.concat([
+            self.dfs[(sheet.level, sig, NOT_PROP)] = pd.concat([
                 pd.DataFrame({
                     "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
                     "timestamp": pd.to_datetime(self.times[si[0]][sig]),
@@ -271,7 +272,7 @@ class Dataset:
             ])
 
         for sig in COUNTS_7D_SIGNALS:
-            self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
+            self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
 
 
 def as_cached_filename(params, config):
@@ -390,13 +391,46 @@ def fetch_new_reports(params, logger=None):
     # add nation from state
     geomapper = GeoMapper()
     for sig in SIGNALS:
-        state_key = ("state", sig)
+        state_key = ("state", sig, NOT_PROP)
         if state_key not in ret:
             continue
-        ret[("nation", sig)] = nation_from_state(
+        ret[("nation", sig, NOT_PROP)] = nation_from_state(
             ret[state_key].rename(columns={"geo_id": "state_id"}),
             sig,
             geomapper
         )
 
+    for key, df in ret.copy().items():
+        (geo, sig, _) = key
+        if SIGNALS[sig]["make_prop"]:
+            ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
+
     return ret
+
+def generate_prop_signal(df, geo, geo_mapper):
+    """Transform base df into a proportion (per 100k population)."""
+    if geo == "state":
+        geo = "state_id"
+    if geo == "county":
+        geo = "fips"
+
+    # Add population data
+    if geo == "msa":
+        map_df = geo_mapper.get_crosswalk("fips", geo)
+        map_df = geo_mapper.add_population_column(
+            map_df, "fips"
+        ).drop(
+            "fips", axis=1
+        ).groupby(
+            geo
+        ).sum(
+        ).reset_index(
+        )
+        df = pd.merge(df, map_df, left_on="geo_id", right_on=geo, how="inner")
+    else:
+        df = geo_mapper.add_population_column(df, geo, geocode_col="geo_id")
+
+    df["val"] = df["val"] / df["population"] * 100000
+    df.drop(["population", geo], axis=1, inplace=True)
+
+    return df

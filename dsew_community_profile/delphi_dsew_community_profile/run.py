@@ -58,14 +58,14 @@ def run_module(params):
     run_stats = []
     dfs = fetch_new_reports(params, logger)
     for key, df in dfs.items():
-        (geo, sig) = key
+        (geo, sig, is_prop) = key
         if sig not in params["indicator"]["export_signals"]:
             continue
         dates = create_export_csv(
             df,
             params['common']['export_dir'],
             geo,
-            make_signal_name(sig),
+            make_signal_name(sig, is_prop),
             **export_params
         )
         if len(dates)>0:

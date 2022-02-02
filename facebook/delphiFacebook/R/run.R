@@ -72,7 +72,7 @@ run_facebook <- function(params)
   # write files for each specific output
   if ( "individual" %in% params$output )
   {
-    write_individual(data_agg, params, "weely_part_a")
+    write_individual(data_agg, params, "weekly_part_a")
     write_individual(data_full, params, "weekly_partial")
     write_individual(data_module_complete, params, "weekly_full")
   }

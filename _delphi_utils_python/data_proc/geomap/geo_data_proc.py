@@ -381,7 +381,8 @@ def derive_zip_population_table():
 
     for x_zip in zip_pop_missing['zip']:
         if x_zip not in df['zip']:
-            df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]])
+            df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]],
+                          ignore_index=True)
 
     df["pop"] = df["pop"].astype(int)
     df.sort_values("zip").to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)

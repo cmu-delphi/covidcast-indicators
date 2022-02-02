@@ -23,7 +23,7 @@ write_individual <- function(data_full_w, params, suffix = "")
   if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
     create_dir_not_exist(params$individual_raceeth_dir)
     for (ii in seq_along(dates)) {
-      write_individual_day(data_to_write, params, dates[ii], params$individual_raceeth_dir)
+      write_individual_day(data_to_write, params, dates[ii], params$individual_raceeth_dir, suffix)
     }
     
     data_to_write <- data_to_write %>% select(-raceethnicity)

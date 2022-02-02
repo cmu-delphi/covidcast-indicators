@@ -181,6 +181,7 @@ def create_jhu_uid_fips_crosswalk():
         ]
     )
 
+
     jhu_df = pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str}).query("Country_Region == 'US'")
     jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])
 
@@ -336,6 +337,7 @@ def create_hhs_population_table():
     state_pop = pd.read_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), dtype={"state_code": str, "hhs": int}, usecols=["state_code", "pop"])
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str)
     hhs_pop = state_pop.merge(state_hhs, on="state_code").groupby("hhs", as_index=False).sum()
+
     hhs_pop.sort_values("hhs").to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
 
 
@@ -363,6 +365,24 @@ def derive_zip_population_table():
     df = census_pop.merge(fz_df, on="fips", how="left")
     df["pop"] = df["pop"].multiply(df["weight"], axis=0)
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
+    ## filling population NAs for specific zips on zip_pop_missing Issue #0648
+    ## cheking if each zip still missing, and concatenating if True
+
+    zip_pop_missing = pd.DataFrame(
+        {
+            "zip": ['57756', '57764', '57770', '57772', '57794', '99554', '99563', '99566',
+                    '99573', '99574', '99581', '99585', '99586', '99604', '99620', '99632',
+                    '99650', '99657', '99658', '99662', '99666', '99677', '99686', '99693'],
+            "pop": [1126, 1923, 5271, 2048, 644, 677, 938, 192,
+                    1115, 2348, 762, 417, 605, 1093, 577, 813,
+                    568, 329, 329, 480, 189, 88, 4005, 248]
+        }
+    )
+
+    for x_zip in zip_pop_missing['zip']:
+        if x_zip not in df['zip']:
+            df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]])
+
     df["pop"] = df["pop"].astype(int)
     df.sort_values("zip").to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)
 

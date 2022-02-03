@@ -38,7 +38,7 @@ RE_DATE_FROM_VAC_HEADER_WEEK= re.compile(
 
 
 RE_BAD_DATE_FROM_VAC_HEADER_WEEK= re.compile(
-    rf'COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK'
+    r'COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK'
 )
 
 # example: 'COVID-19 VACCINATION DATA: CUMULATIVE (January 11)'
@@ -66,8 +66,6 @@ class DatasetTimes:
         """Convert reference dates in overheader to DatasetTimes."""
         def as_day(sub_result):
             month = sub_result[0]
-            assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
-            month_numeric = datetime.datetime.strptime(month, "%B").month
             day = sub_result[1]
             year = publish_date.year
             return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
@@ -94,7 +92,7 @@ class DatasetTimes:
             else:
                 total_reference_date = positivity_reference_date
             hosp_reference_date = None
-            vac_reference_date = None 
+            vac_reference_date = None
             vac_reference_day = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
@@ -103,7 +101,7 @@ class DatasetTimes:
             hosp_reference_date = as_date(findall_result[1:5])
             total_reference_date = None
             positivity_reference_date = None
-            vac_reference_date = None 
+            vac_reference_date = None
             vac_reference_day = None
         elif RE_DATE_FROM_VAC_HEADER_WEEK.match(header):
             findall_result = RE_DATE_FROM_VAC_HEADER_WEEK.findall(header)[0]
@@ -160,7 +158,7 @@ class DatasetTimes:
             self.vac_reference_day = newvalue
         if key.lower() in ["fully vaccinated","booster dose since"]:
             self.vac_reference_date = newvalue
-        if key.lower() not in ref_list: 
+        if key.lower() not in ref_list:
             raise ValueError(
                 f"Bad reference date type request '{key}'; " + \
                 "need one of: " + " ,".join(ref_list)
@@ -220,7 +218,6 @@ class Dataset:
         # include "TESTING: [LAST|PREVIOUS] WEEK (October 24-30, Test Volume October 20-26)"
         # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
         # include "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
-        
         return not (isinstance(header, str) and \
                     (((header.startswith("TESTING:") or \
                      header.startswith("VIRAL (RT-PCR) LAB TESTING:") or \
@@ -229,18 +226,16 @@ class Dataset:
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
                     # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
                     # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
-                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA % CHANGE FROM PREVIOUS WEEK"  \
-                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA CUMULATIVE"                                                                          
+                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA %"\
+                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA CUMULATIVE"
                     header.find("WEEK (") > 0) or \
                     # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
                     # include "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK"
-                    (header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE") or 
+                    (header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE") or
                     header.startswith("COVID-19 VACCINATION DATA: LAST WEEK") \
                         )))
 
 
-        
-                     
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
         # grab reference dates from overheaders

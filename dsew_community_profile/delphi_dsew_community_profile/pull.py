@@ -380,7 +380,8 @@ class Dataset:
                 for si in sig_select
             ])
         for sig in COUNTS_7D_SIGNALS:
-            self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
+            if (sheet.level, sig, NOT_PROP) in self.dfs.keys():
+                self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
 
 def as_cached_filename(params, config):
     """Formulate a filename to uniquely identify this report in the input cache."""

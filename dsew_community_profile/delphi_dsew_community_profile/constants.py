@@ -66,23 +66,28 @@ SIGNALS = {
     },
     "fully vaccinated": {
         "is_rate" : False,
-        "api_name": "full_vaccinated_7dav"
+        "api_name": "total_full_vaccinated",
+        "make_prop": False
     },
     "booster dose since": {
         "is_rate" : False,
-        "api_name": "booster_doses_7dav"
+        "api_name": "total_booster_doses",
+        "make_prop": False
     },
     "booster doses administered": {
         "is_rate" : False,
-        "api_name": "total_booster_7dav"
+        "api_name": "booster_doses_admin_7dav",
+        "make_prop": False
     },
     "doses administered": {
         "is_rate" : False,
-        "api_name": "total_doses_7dav"
+        "api_name": "doses_admin_7dav",
+        "make_prop": False
     }
 }
 
-COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() if not value["is_rate"]}
+COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() \
+                        if not((value["is_rate"]) or ("total" in value["api_name"]))}
 
 def make_signal_name(key, is_prop=False):
     """Convert a signal key to the corresponding signal name for the API.

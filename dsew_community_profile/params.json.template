@@ -18,7 +18,7 @@
     "common": {
       "data_source": "dsew_cpr",
       "span_length": 14,
-      "min_expected_lag": {"all": "5"},
+      "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "9"},
       "dry_run": true,
       "suppressed_errors": []
@@ -32,7 +32,9 @@
       "ref_window_size": 7,
       "smoothed_signals": [
         "naats_total_7dav",
-        "naats_positivity_7dav"
+        "naats_positivity_7dav",
+        "confirmed_admissions_covid_1d_prop_7dav",
+        "confirmed_admissions_covid_1d_7dav"
       ]
     }
   }

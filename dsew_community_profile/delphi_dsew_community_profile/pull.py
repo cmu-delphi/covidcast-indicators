@@ -263,11 +263,6 @@ class Dataset:
                         self.times[dt.column][sig] = dt[sig]
             else:
                 self.times[dt.column] = dt
-        print(self.times)
-        print("these are self.times")
-        for key, value in self.times.items():
-            print(key, value)
-        print("done")
         assert len(self.times) == 3, \
             f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 

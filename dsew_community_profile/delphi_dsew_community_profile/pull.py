@@ -97,7 +97,6 @@ class DatasetTimes:
             vac_reference_day = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
-            print(findall_result)
             column = findall_result[0].lower()
             hosp_reference_date = as_date(findall_result[1:5])
             total_reference_date = None
@@ -122,9 +121,6 @@ class DatasetTimes:
             vac_reference_date = None
         else:
             raise ValueError(f"Couldn't find reference date in header '{header}'")
-
-        print("ret vals: ", column, positivity_reference_date,
-            total_reference_date, hosp_reference_date, vac_reference_day, vac_reference_date)
         return DatasetTimes(column, positivity_reference_date,
             total_reference_date, hosp_reference_date, vac_reference_day, vac_reference_date)
     def __getitem__(self, key):

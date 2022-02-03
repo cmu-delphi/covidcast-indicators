@@ -18,9 +18,9 @@ You can see consistency checks and diffs with old sources in ./consistency_check
 We support the following geocodes.
 
 - The ZIP code and the FIPS code are the most granular geocodes we support.
-  - The [ZIP code](https://en.wikipedia.org/wiki/ZIP_Code) is a US postal code used by the USPS and the [FIPS code](https://en.wikipedia.org/wiki/FIPS_county_code) is an identifier for US counties and other associated territories. The ZIP code is five digit code (with leading zeros).
+  - The [ZIP code](https://en.wikipedia.org/wiki/ZIP_Code) is a US postal code used by the USPS and the [FIPS code](https://en.wikipedia.org/wiki/FIPS_county_code) is an identifier for US counties and other associated territories. The ZIP code is five digit code (with leading zeros). 
   - The FIPS code is a five digit code (with leading zeros), where the first two digits are a two-digit state code and the last three are a three-digit county code (see this [US Census Bureau page](https://www.census.gov/library/reference/code-lists/ansi.html) for detailed information).
-- The Metropolitan Statistical Area (MSA) code refers to regions around cities (these are sometimes referred to as CBSA codes). More information on these can be found at the [US Census Bureau](https://www.cen_sus.gov/programs-surveys/metro-micro/about.html).
+- The Metropolitan Statistical Area (MSA) code refers to regions around cities (these are sometimes referred to as CBSA codes). More information on these can be found at the [US Census Bureau](https://www.census.gov/programs-surveys/metro-micro/about.html).
   - We are reserving 10001-10099 for states codes of the form 100XX where XX is the FIPS code for the state (the current smallest CBSA is 10100). In the case that the CBSA codes change then it should be verified that these are not used.
 - State codes are a series of equivalent identifiers for US state. They include the state name, the state number (state_id), and the state two-letter abbreviation (state_code). The state number is the state FIPS code. See [here](https://en.wikipedia.org/wiki/List_of_U.S._state_and_territory_abbreviations) for more.
 - The Hospital Referral Region (HRR) and the Hospital Service Area (HSA). More information [here](https://www.dartmouthatlas.org/covid-19/hrr-mapping/).

@@ -18,7 +18,7 @@
     "common": {
       "data_source": "dsew_cpr",
       "span_length": 14,
-      "min_expected_lag": {"all": "5"},
+      "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "9"},
       "dry_run": true,
       "suppressed_errors": []

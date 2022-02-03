@@ -9,7 +9,7 @@ from delphi_utils.geomap import GeoMapper
 
 from delphi_dsew_community_profile.pull import DatasetTimes
 from delphi_dsew_community_profile.pull import Dataset
-from delphi_dsew_community_profile.pull import fetch_listing, nation_from_state
+from delphi_dsew_community_profile.pull import fetch_listing, nation_from_state, generate_prop_signal
 
 example = namedtuple("example", "given expected")
         
@@ -215,3 +215,84 @@ class TestPull:
                 'sample_size': [None],}),
             check_like=True
         )
+
+    def test_generate_prop_signal_msa(self):
+        geomapper = GeoMapper()
+        county_pop = geomapper.get_crosswalk("fips", "pop")
+        county_msa = geomapper.get_crosswalk("fips", "msa")
+        msa_pop = county_pop.merge(county_msa, on="fips", how="inner").groupby("msa").sum().reset_index()
+
+        test_df = pd.DataFrame({
+                'geo_id': ['35620', '31080'],
+                'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+                'val': [15., 150.],
+                'se': [None, None],
+                'sample_size': [None, None],})
+
+        nyc_pop = int(msa_pop.loc[msa_pop.msa == "35620", "pop"])
+        la_pop = int(msa_pop.loc[msa_pop.msa == "31080", "pop"])
+
+        expected_df = pd.DataFrame({
+                'geo_id': ['35620', '31080'],
+                'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+                'val': [15. / nyc_pop * 100000, 150. / la_pop * 100000],
+                'se': [None, None],
+                'sample_size': [None, None],})
+
+        pd.testing.assert_frame_equal(
+            generate_prop_signal(
+                test_df.copy(),
+                "msa",
+                geomapper
+            ),
+            expected_df,
+            check_like=True
+        )
+    def test_generate_prop_signal_non_msa(self):
+        geomapper = GeoMapper()
+
+        geos = {
+            "state": {
+                "code_name": "state_id",
+                "geo_names": ['pa', 'wv']
+            },
+            "county": {
+                "code_name": "fips",
+                "geo_names": ['36061', '06037']
+            },
+            # nation uses the same logic path so no need to test separately
+            "hhs": {
+                "code_name": "hhs",
+                "geo_names": ["1", "4"]
+            }
+        }
+
+        for geo, settings in geos.items():
+            geo_pop = geomapper.get_crosswalk(settings["code_name"], "pop")
+
+            test_df = pd.DataFrame({
+                    'geo_id': settings["geo_names"],
+                    'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+                    'val': [15., 150.],
+                    'se': [None, None],
+                    'sample_size': [None, None],})
+
+            pop1 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][0], "pop"])
+            pop2 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][1], "pop"])
+
+            expected_df = pd.DataFrame({
+                    'geo_id': settings["geo_names"],
+                    'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+                    'val': [15. / pop1 * 100000, 150. / pop2 * 100000],
+                    'se': [None, None],
+                    'sample_size': [None, None],})
+
+            pd.testing.assert_frame_equal(
+                generate_prop_signal(
+                    test_df.copy(),
+                    geo,
+                    geomapper
+                ),
+                expected_df,
+                check_like=True
+            )

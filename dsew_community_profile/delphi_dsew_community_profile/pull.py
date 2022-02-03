@@ -31,6 +31,21 @@ RE_DATE_FROM_HOSP_HEADER = re.compile(
     rf'HOSPITAL UTILIZATION: (.*) WEEK \({DATE_RANGE_EXP}\)'
 )
 
+# example: "COVID-19 VACCINATION DATA: LAST WEEK (January 5-11)"
+RE_DATE_FROM_VAC_HEADER_WEEK= re.compile(
+    rf'COVID-19 VACCINATION DATA: (.*) WEEK \({DATE_RANGE_EXP}\)'
+)
+
+
+RE_BAD_DATE_FROM_VAC_HEADER_WEEK= re.compile(
+    rf'COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK'
+)
+
+# example: 'COVID-19 VACCINATION DATA: CUMULATIVE (January 11)'
+RE_DATE_FROM_VAC_HEADER_DAY= re.compile(
+    rf'COVID-19 VACCINATION DATA: CUMULATIVE (.*)\({DATE_EXP}\)'
+)
+
 # example: "NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)"
 # example: "Total NAATs - last 7 days (may be an underestimate due to delayed reporting)"
 RE_COLUMN_FROM_HEADER = re.compile('- (.*) 7 days')
@@ -43,10 +58,20 @@ class DatasetTimes:
     positivity_reference_date: datetime.date
     total_reference_date: datetime.date
     hosp_reference_date: datetime.date
+    vac_reference_date: datetime.date
+    vac_reference_day: datetime.date
 
     @staticmethod
     def from_header(header, publish_date):
         """Convert reference dates in overheader to DatasetTimes."""
+        def as_day(sub_result):
+            month = sub_result[0]
+            assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
+            month_numeric = datetime.datetime.strptime(month, "%B").month
+            day = sub_result[1]
+            year = publish_date.year
+            return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
+
         def as_date(sub_result):
             month = sub_result[2] if sub_result[2] else sub_result[0]
             assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
@@ -68,30 +93,54 @@ class DatasetTimes:
                 total_reference_date = as_date(findall_result[6:10])
             else:
                 total_reference_date = positivity_reference_date
-
             hosp_reference_date = None
+            vac_reference_date = None 
+            vac_reference_day = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
+            print(findall_result)
             column = findall_result[0].lower()
             hosp_reference_date = as_date(findall_result[1:5])
-
             total_reference_date = None
             positivity_reference_date = None
+            vac_reference_date = None 
+            vac_reference_day = None
+        elif RE_DATE_FROM_VAC_HEADER_WEEK.match(header):
+            findall_result = RE_DATE_FROM_VAC_HEADER_WEEK.findall(header)[0]
+            column = findall_result[0].lower()
+            vac_reference_date = as_date(findall_result[1:5])
+            total_reference_date = None
+            positivity_reference_date = None
+            hosp_reference_date = None
+            vac_reference_day = None
+        elif RE_DATE_FROM_VAC_HEADER_DAY.match(header):
+            findall_result = RE_DATE_FROM_VAC_HEADER_DAY.findall(header)[0]
+            column = findall_result[0].lower()
+            vac_reference_day = as_day(findall_result[1:])
+            total_reference_date = None
+            positivity_reference_date = None
+            hosp_reference_date = None
+            vac_reference_date = None
         else:
             raise ValueError(f"Couldn't find reference date in header '{header}'")
 
+        print("ret vals: ", column, positivity_reference_date,
+            total_reference_date, hosp_reference_date, vac_reference_day, vac_reference_date)
         return DatasetTimes(column, positivity_reference_date,
-            total_reference_date, hosp_reference_date)
+            total_reference_date, hosp_reference_date, vac_reference_day, vac_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
         ref_list = list(SIGNALS.keys())
-        _ = [ref_list.remove(x) for x in ["positivity", "total"]]
         if key.lower()=="positivity":
             return self.positivity_reference_date
         if key.lower()=="total":
             return self.total_reference_date
-        if key.lower() in ref_list:
+        if key.lower()=="confirmed covid-19 admissions":
             return self.hosp_reference_date
+        if key.lower() in ["doses administered","booster doses administered"]:
+            return self.vac_reference_day
+        if key.lower() in ["fully vaccinated","booster dose since"]:
+            return self.vac_reference_date
         raise ValueError(
             f"Bad reference date type request '{key}'; " + \
             "need one of: " + " ,".join(ref_list)
@@ -99,14 +148,19 @@ class DatasetTimes:
     def __setitem__(self, key, newvalue):
         """Use DatasetTimes like a dictionary."""
         ref_list = list(SIGNALS.keys())
-        _ = [ref_list.remove(x) for x in ["positivity", "total"]]
         if key.lower()=="positivity":
             self.positivity_reference_date = newvalue
         if key.lower()=="total":
             self.total_reference_date = newvalue
         if key.lower() in ref_list:
             self.hosp_reference_date = newvalue
-        else:
+        if key.lower()=="confirmed covid-19 admissions":
+            self.hosp_reference_date = newvalue
+        if key.lower() in ["doses administered","booster doses administered"]:
+            self.vac_reference_day = newvalue
+        if key.lower() in ["fully vaccinated","booster dose since"]:
+            self.vac_reference_date = newvalue
+        if key.lower() not in ref_list: 
             raise ValueError(
                 f"Bad reference date type request '{key}'; " + \
                 "need one of: " + " ,".join(ref_list)
@@ -166,15 +220,27 @@ class Dataset:
         # include "TESTING: [LAST|PREVIOUS] WEEK (October 24-30, Test Volume October 20-26)"
         # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
         # include "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
+        
         return not (isinstance(header, str) and \
-                    (header.startswith("TESTING:") or \
+                    (((header.startswith("TESTING:") or \
                      header.startswith("VIRAL (RT-PCR) LAB TESTING:") or \
-                     header.startswith("HOSPITAL UTILIZATION:")) and \
+                     header.startswith("HOSPITAL UTILIZATION: ")) and \
                     # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
                     # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
                     # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
-                    header.find("WEEK (") > 0)
+                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA % CHANGE FROM PREVIOUS WEEK"  \
+                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA CUMULATIVE"                                                                          
+                    header.find("WEEK (") > 0) or \
+                    # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
+                    # include "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK"
+                    (header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE") or 
+                    header.startswith("COVID-19 VACCINATION DATA: LAST WEEK") \
+                        )))
+
+
+        
+                     
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
         # grab reference dates from overheaders
@@ -201,7 +267,12 @@ class Dataset:
                         self.times[dt.column][sig] = dt[sig]
             else:
                 self.times[dt.column] = dt
-        assert len(self.times) == 2, \
+        print(self.times)
+        print("these are self.times")
+        for key, value in self.times.items():
+            print(key, value)
+        print("done")
+        assert len(self.times) == 3, \
             f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
@@ -263,7 +334,7 @@ class Dataset:
             try:
                 return (RE_COLUMN_FROM_HEADER.findall(h)[0], h, h.lower())
             except IndexError:
-                return ("last", h, h.lower())
+                return ("", h, h.lower())
 
         select = [
             select_fn(h)

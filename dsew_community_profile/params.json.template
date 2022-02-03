@@ -12,8 +12,10 @@
       "confirmed covid-19 admissions",
       "total",
       "positivity",
-      "doses",
-      "people"
+      "doses administered",
+      "booster doses administered",
+      "fully vaccinated",
+      "booster dose since",
     ]
   },
   "validation": {

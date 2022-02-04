@@ -12,6 +12,7 @@ relativize_params <- function(params) {
     params$individual_in_dir <- test_path(params$individual_in_dir)
     params$weights_in_dir <- test_path(params$weights_in_dir)
     params$weights_out_dir <- test_path(params$weights_out_dir)
+    params$experimental_weights_out_dir <- test_path(params$experimental_weights_out_dir)
     params$input_dir <- test_path(params$input_dir)
 
     return(params)

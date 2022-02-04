@@ -362,15 +362,6 @@ class TestCheckBadVal:
 
         assert len(report.raised_errors) == 0
 
-    def test_missing(self):
-        validator = StaticValidator(self.params)
-        report = ValidationReport([])
-        df = pd.DataFrame([np.nan], columns=["val"])
-        validator.check_bad_val(df, FILENAME, "signal", report)
-
-        assert len(report.raised_errors) == 1
-        assert report.raised_errors[0].check_name == "check_val_missing"
-
     def test_lt_0(self):
         validator = StaticValidator(self.params)
         report = ValidationReport([])

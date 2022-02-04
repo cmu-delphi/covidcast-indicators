@@ -7,6 +7,7 @@ required = [
     "pydocstyle",
     "pytest",
     "pytest-cov",
+    "coverage==6.2.0",
     "pylint==2.8.3",
     "delphi-utils"
 ]

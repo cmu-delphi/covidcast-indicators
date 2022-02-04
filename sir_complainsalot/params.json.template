@@ -18,7 +18,15 @@
     },
     "google-symptoms": {
       "max_age": 6,
-      "maintainers": ["U01AP8GSWG3","U01069KCRS7"]
+      "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
+      "retired-signals": [
+        "ageusia_raw_search",
+        "ageusia_smoothed_search",
+        "anosmia_raw_search",
+        "anosmia_smoothed_search",
+        "sum_anosmia_ageusia_raw_search",
+        "sum_anosmia_ageusia_smoothed_search"
+      ]
     },
     "usa-facts": {
       "max_age": 5,
@@ -67,6 +75,10 @@
         "smoothed_felt_isolated_7d", "smoothed_wfelt_isolated_7d",
         "smoothed_worried_become_ill", "smoothed_wworried_become_ill",
         "smoothed_received_2_vaccine_doses", "smoothed_wreceived_2_vaccine_doses",
+        "smoothed_hesitancy_reason_dislike_vaccines", "smoothed_whesitancy_reason_dislike_vaccines",
+        "smoothed_inperson_school_fulltime", "smoothed_winperson_school_fulltime",
+        "smoothed_inperson_school_parttime", "smoothed_winperson_school_parttime",
+        "smoothed_vaccinate_children", "smoothed_wvaccinate_children",
         ["smoothed_vaccine_barrier_appointment_time_tried", "msa"], ["smoothed_wvaccine_barrier_appointment_time_tried", "msa"],
         ["smoothed_vaccine_barrier_childcare_tried", "msa"], ["smoothed_wvaccine_barrier_childcare_tried", "msa"],
         ["smoothed_vaccine_barrier_document_tried", "msa"], ["smoothed_wvaccine_barrier_document_tried", "msa"],
@@ -85,7 +97,40 @@
         ["smoothed_dontneed_reason_not_high_risk", "hrr"], ["smoothed_wdontneed_reason_not_high_risk", "hrr"],
         ["smoothed_dontneed_reason_not_serious", "hrr"], ["smoothed_wdontneed_reason_not_serious", "hrr"],
         ["smoothed_dontneed_reason_other", "hrr"], ["smoothed_wdontneed_reason_other", "hrr"],
-        ["smoothed_dontneed_reason_precautions", "hrr"], ["smoothed_wdontneed_reason_precautions", "hrr"]
+        ["smoothed_dontneed_reason_precautions", "hrr"], ["smoothed_wdontneed_reason_precautions", "hrr"],
+        "smoothed_screening_tested_positive_14d", "smoothed_wscreening_tested_positive_14d",
+        "smoothed_travel_outside_state_7d", "smoothed_wtravel_outside_state_7d",
+        "smoothed_belief_vaccinated_mask_unnecessary", "smoothed_wbelief_vaccinated_mask_unnecessary",
+        "smoothed_belief_children_immune", "smoothed_wbelief_children_immune",
+        "smoothed_received_2_vaccine_doses", "smoothed_wreceived_2_vaccine_doses",
+        "smoothed_vaccine_barrier_eligible", "smoothed_wvaccine_barrier_eligible",
+        "smoothed_vaccine_barrier_no_appointments", "smoothed_wvaccine_barrier_no_appointments",
+        "smoothed_vaccine_barrier_appointment_time", "smoothed_wvaccine_barrier_appointment_time",
+        "smoothed_vaccine_barrier_technical_difficulties", "smoothed_wvaccine_barrier_technical_difficulties",
+        "smoothed_vaccine_barrier_document", "smoothed_wvaccine_barrier_document",
+        "smoothed_vaccine_barrier_technology_access", "smoothed_wvaccine_barrier_technology_access",
+        "smoothed_vaccine_barrier_travel", "smoothed_wvaccine_barrier_travel",
+        "smoothed_vaccine_barrier_language", "smoothed_wvaccine_barrier_language",
+        "smoothed_vaccine_barrier_childcare", "smoothed_wvaccine_barrier_childcare",
+        "smoothed_vaccine_barrier_time", "smoothed_wvaccine_barrier_time",
+        "smoothed_vaccine_barrier_type", "smoothed_wvaccine_barrier_type",
+        "smoothed_vaccine_barrier_none", "smoothed_wvaccine_barrier_none",
+        "smoothed_vaccine_barrier_appointment_location", "smoothed_wvaccine_barrier_appointment_location",
+        "smoothed_vaccine_barrier_other", "smoothed_wvaccine_barrier_other",
+        "smoothed_vaccine_barrier_eligible_has", "smoothed_wvaccine_barrier_eligible_has",
+        "smoothed_vaccine_barrier_no_appointments_has", "smoothed_wvaccine_barrier_no_appointments_has",
+        "smoothed_vaccine_barrier_appointment_time_has", "smoothed_wvaccine_barrier_appointment_time_has",
+        "smoothed_vaccine_barrier_technical_difficulties_has", "smoothed_wvaccine_barrier_technical_difficulties_has",
+        "smoothed_vaccine_barrier_document_has", "smoothed_wvaccine_barrier_document_has",
+        "smoothed_vaccine_barrier_technology_access_has", "smoothed_wvaccine_barrier_technology_access_has",
+        "smoothed_vaccine_barrier_travel_has", "smoothed_wvaccine_barrier_travel_has",
+        "smoothed_vaccine_barrier_language_has", "smoothed_wvaccine_barrier_language_has",
+        "smoothed_vaccine_barrier_childcare_has", "smoothed_wvaccine_barrier_childcare_has",
+        "smoothed_vaccine_barrier_time_has", "smoothed_wvaccine_barrier_time_has",
+        "smoothed_vaccine_barrier_type_has", "smoothed_wvaccine_barrier_type_has",
+        "smoothed_vaccine_barrier_none_has", "smoothed_wvaccine_barrier_none_has",
+        "smoothed_vaccine_barrier_appointment_location_has", "smoothed_wvaccine_barrier_appointment_location_has",
+        "smoothed_vaccine_barrier_other_has", "smoothed_wvaccine_barrier_other_has"
       ]
     },
     "quidel": {
@@ -95,10 +140,6 @@
     },
     "nchs-mortality": {
       "max_age":16,
-      "maintainers": []
-    },
-    "covid-act-now": {
-      "max_age":9,
       "maintainers": []
     },
     "hhs": {

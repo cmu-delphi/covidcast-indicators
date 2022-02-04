@@ -21,7 +21,7 @@ bad_input = {
 symptom_names = ["symptom_" +
                  metric.replace(" ", "_") for metric in METRICS]
 keep_cols = ["open_covid_region_code", "date"] + symptom_names
-new_keep_cols = ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
+new_keep_cols = ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
 
 
 class TestPullGoogleSymptoms:
@@ -46,20 +46,39 @@ class TestPullGoogleSymptoms:
             df = dfs[level]
             assert (
                 df.columns.values
-                == ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
+                == ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
             ).all()
 
-            # combined_symptoms is nan when both Anosmia and Ageusia are nan
+            # combined_symptoms is nan when both Anosmia, Ageusia, and Dysgeusia are nan
             assert sum(~df.loc[
-                (df[METRICS[0]].isnull())
-                & (df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
-            # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
+                (df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            # combined_symptoms is not nan when at least one of them isn't nan
             assert sum(df.loc[
-                (~df[METRICS[0]].isnull())
-                & (df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
+                (~df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
             assert sum(df.loc[
-                (df[METRICS[0]].isnull())
-                & (~df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
+                (df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (~df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (~df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
 
     def test_missing_cols(self):
         df = pd.read_csv(bad_input["missing_cols"])

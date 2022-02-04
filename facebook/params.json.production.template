@@ -27,13 +27,16 @@
       "active": {
         "Survey of COVID-Like Illness - TODEPLOY ...... - US Expansion": "fb-survey",
         "Survey of COVID-Like Illness - TODEPLOY- US Expansion - With Translations": "fb-survey",
+        "Survey of COVID-Like Illness - Wave 10": "fb-survey",
+        "Survey of COVID-Like Illness - Wave 11": "fb-survey",
+        "Survey of COVID-Like Illness - Wave 12": "fb-survey",
+        "Survey of COVID-Like Illness - Wave 12 - Full Launch": "fb-survey",
+        "Survey of COVID-Like Illness - Wave 13": "fb-survey",
         "Survey of COVID-Like Illness - Wave 4": "fb-survey",
         "Survey of COVID-Like Illness - Wave 5": "fb-survey",
         "Survey of COVID-Like Illness - Wave 6": "fb-survey",
         "Survey of COVID-Like Illness - Wave 7": "fb-survey",
-        "Survey of COVID-Like Illness - Wave 8": "fb-survey",
-        "Survey of COVID-Like Illness - Wave 10": "fb-survey",
-        "Survey of COVID-Like Illness - Wave 11": "fb-survey"
+        "Survey of COVID-Like Illness - Wave 8": "fb-survey"
       },
       "dormant": {
         "COVID-Like Illness 4-question survey - Amazon - DEPLOY": "",
@@ -48,5 +51,6 @@
   "start_date": "2020-08-28",
   "static_dir": "./static",
   "weights_in_dir": "./fb-incoming",
-  "weights_out_dir": "./fb-outgoing"
+  "weights_out_dir": "./fb-outgoing",
+  "experimental_weights_out_dir": "./exp-fb-outgoing"
 }

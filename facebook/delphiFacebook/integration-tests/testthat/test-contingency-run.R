@@ -163,7 +163,7 @@ rand_weights <- rand_weights / sum(rand_weights)
 
 mock_join_weights <- function(data, params, weights = c("step1", "full")) {
   data <- cbind(as.data.table(data), weight=rand_weights)
-  return(data)
+  return( list(df = data, weight_date = NA) )
 }
 
 mock_mix_weights <- function(weights, s_mix_coef, s_weight) {

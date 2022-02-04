@@ -97,3 +97,25 @@ def transfer_files():
     for file_name in files_to_export:
         if file_name.endswith(".csv") or file_name.endswith(".CSV"):
             move(os.path.join(export_dir, file_name), os.path.join(delivery_dir, file_name))
+
+def delete_move_files():
+    """Delete csv files in export-dir if:
+    1. Delivery-dir is specified (aka we are only deleting files produced by the run
+    2. If validation-failures-dir is specified, move failures there instead
+    """
+    params = read_params()
+    export_dir = params["common"].get("export_dir", None)
+    delivery_dir = params["delivery"].get("delivery_dir", None)
+    validation_failure_dir = params["validation"]["common"].get("validation_failure_dir", None)
+
+    # Create validation_failure_dir if it doesn't exist
+    if (validation_failure_dir is not None) and (not os.path.exists(validation_failure_dir)):
+        os.mkdir(validation_failure_dir)
+    files_to_delete = os.listdir(export_dir)
+    if delivery_dir is not None:
+        for file_name in files_to_delete:
+            if file_name.endswith(".csv") or file_name.endswith(".CSV"):
+                if validation_failure_dir is not None:
+                    move(os.path.join(export_dir, file_name), os.path.join(validation_failure_dir, file_name))
+                else:
+                    os.remove(os.path.join(export_dir, file_name))

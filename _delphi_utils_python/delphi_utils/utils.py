@@ -111,6 +111,8 @@ def delete_move_files():
     # Create validation_failure_dir if it doesn't exist
     if (validation_failure_dir is not None) and (not os.path.exists(validation_failure_dir)):
         os.mkdir(validation_failure_dir)
+    # Double-checking that export-dir is not delivery-dir
+    assert(export_dir is not None and export_dir != delivery_dir)
     files_to_delete = os.listdir(export_dir)
     if delivery_dir is not None:
         for file_name in files_to_delete:

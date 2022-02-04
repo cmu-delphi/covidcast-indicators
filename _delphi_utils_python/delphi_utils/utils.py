@@ -99,7 +99,7 @@ def transfer_files():
             move(os.path.join(export_dir, file_name), os.path.join(delivery_dir, file_name))
 
 def delete_move_files():
-    """Delete csv files in export-dir if:
+    """Delete csv files in export-dir under certain conditions.
     1. Delivery-dir is specified (aka we are only deleting files produced by the run
     2. If validation-failures-dir is specified, move failures there instead
     """

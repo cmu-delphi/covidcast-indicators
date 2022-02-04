@@ -116,6 +116,7 @@ def delete_move_files():
         for file_name in files_to_delete:
             if file_name.endswith(".csv") or file_name.endswith(".CSV"):
                 if validation_failure_dir is not None:
-                    move(os.path.join(export_dir, file_name), os.path.join(validation_failure_dir, file_name))
+                    move(os.path.join(export_dir, file_name),
+                        os.path.join(validation_failure_dir, file_name))
                 else:
                     os.remove(os.path.join(export_dir, file_name))

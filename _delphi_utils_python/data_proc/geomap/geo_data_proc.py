@@ -32,7 +32,7 @@ STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
-ZIP_POP_MISSING_FILE = "zip_pop_filling.txt"
+ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -368,7 +368,7 @@ def derive_zip_population_table():
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
 
     ## loading populatoin of some zips- #Issue 0648
-    zip_pop_missing = pd.read_table(
+    zip_pop_missing = pd.read_csv(
         ZIP_POP_MISSING_FILE,sep=",",
         dtype={"zip":str,"pop":np.int32}
         )

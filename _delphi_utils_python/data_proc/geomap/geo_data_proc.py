@@ -32,6 +32,7 @@ STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
+ZIP_POP_MISSING_FILE = "zip_pop_filling.txt"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -365,20 +366,13 @@ def derive_zip_population_table():
     df = census_pop.merge(fz_df, on="fips", how="left")
     df["pop"] = df["pop"].multiply(df["weight"], axis=0)
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
-    ## filling population NAs for specific zips on zip_pop_missing Issue #0648
+
+    ## loading populatoin of some zips- #Issue 0648
+    zip_pop_missing = pd.read_table(
+        ZIP_POP_MISSING_FILE,sep=",",
+        dtype={"zip":str,"pop":np.int32}
+        )
     ## cheking if each zip still missing, and concatenating if True
-
-    zip_pop_missing = pd.DataFrame(
-        {
-            "zip": ['57756', '57764', '57770', '57772', '57794', '99554', '99563', '99566',
-                    '99573', '99574', '99581', '99585', '99586', '99604', '99620', '99632',
-                    '99650', '99657', '99658', '99662', '99666', '99677', '99686', '99693'],
-            "pop": [1126, 1923, 5271, 2048, 644, 677, 938, 192,
-                    1115, 2348, 762, 417, 605, 1093, 577, 813,
-                    568, 329, 329, 480, 189, 88, 4005, 248]
-        }
-    )
-
     for x_zip in zip_pop_missing['zip']:
         if x_zip not in df['zip']:
             df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]],

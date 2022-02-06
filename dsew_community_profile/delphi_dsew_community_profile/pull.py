@@ -38,7 +38,7 @@ RE_DATE_FROM_VAC_HEADER_WEEK= re.compile(
 )
 
 # example: 'COVID-19 VACCINATION DATA: CUMULATIVE (January 11)'
-RE_DATE_FROM_VAC_HEADER_DAY= re.compile(
+RE_DATE_FROM_VAC_HEADER_CUMULATIVE= re.compile(
     rf'COVID-19 VACCINATION DATA: CUMULATIVE (.*)\({DATE_EXP}\)'
 )
 
@@ -106,8 +106,8 @@ class DatasetTimes:
             positivity_reference_date = None
             hosp_reference_date = None
             vac_reference_day = None
-        elif RE_DATE_FROM_VAC_HEADER_DAY.match(header):
-            findall_result = RE_DATE_FROM_VAC_HEADER_DAY.findall(header)[0]
+        elif RE_DATE_FROM_VAC_HEADER_CUMULATIVE.match(header):
+            findall_result = RE_DATE_FROM_VAC_HEADER_CUMULATIVE.findall(header)[0]
             column = findall_result[0].lower()
             vac_reference_day = as_day(findall_result[1:])
             total_reference_date = None
@@ -338,7 +338,7 @@ class Dataset:
             # Booster data not available before November 2021.
             if  self.publish_date < datetime.date(2021, 11, 1) \
                 and (sig in ["booster dose since", "booster doses administered"]) :
-                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \
                             "se", "sample_size", "publish_date"]
                     )
@@ -348,7 +348,7 @@ class Dataset:
             if ((sheet.level != "hhs" and sheet.level != "state") \
                 and (sig in ["doses administered", \
                  "booster doses administered", "booster dose since"])):
-                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \
                             "se", "sample_size", "publish_date"]
                     )
@@ -373,8 +373,8 @@ class Dataset:
                 for si in sig_select
             ])
         for sig in COUNTS_7D_SIGNALS:
-            if (sheet.level, sig, NOT_PROP) in self.dfs.keys():
-                self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
+            assert((sheet.level, sig, NOT_PROP) in self.dfs.keys())
+            self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
 
 def as_cached_filename(params, config):
     """Formulate a filename to uniquely identify this report in the input cache."""

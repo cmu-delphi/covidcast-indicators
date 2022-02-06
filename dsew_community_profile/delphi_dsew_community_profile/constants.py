@@ -51,43 +51,50 @@ SIGNALS = {
     "total": {
         "is_rate" : False,
         "api_name": "naats_total_7dav",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : False
     },
     "positivity": {
         "is_rate" : True,
         "api_name": "naats_positivity_7dav",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : False
     },
     "confirmed covid-19 admissions": {
         "is_rate" : False,
         "api_name": "confirmed_admissions_covid_1d_7dav",
         "make_prop": True,
-        "api_prop_name": "confirmed_admissions_covid_1d_prop_7dav"
+        "api_prop_name": "confirmed_admissions_covid_1d_prop_7dav",
+        "cumulative" : False
     },
     "fully vaccinated": {
         "is_rate" : False,
         "api_name": "total_full_vaccinated",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : True
     },
     "booster dose since": {
         "is_rate" : False,
         "api_name": "total_booster_doses",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : True
     },
     "booster doses administered": {
         "is_rate" : False,
         "api_name": "booster_doses_admin_7dav",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : False
     },
     "doses administered": {
         "is_rate" : False,
         "api_name": "doses_admin_7dav",
-        "make_prop": False
+        "make_prop": False,
+        "cumulative" : False
     }
 }
 
 COUNTS_7D_SIGNALS = {key for key, value in SIGNALS.items() \
-                        if not((value["is_rate"]) or ("total" in value["api_name"]))}
+                        if not((value["is_rate"]) or (value["cumulative"]))}
 
 def make_signal_name(key, is_prop=False):
     """Convert a signal key to the corresponding signal name for the API.

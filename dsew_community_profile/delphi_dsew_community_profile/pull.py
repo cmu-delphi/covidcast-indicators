@@ -62,8 +62,8 @@ class DatasetTimes:
         """Convert reference dates in overheader to DatasetTimes."""
         positivity_reference_date = None
         total_reference_date = None
-        positivity_reference_date = None
         hosp_reference_date = None
+        vac_reference_date = None
         cumulative_vac_reference_date= None
         def as_date(sub_result, is_single_date):
             if is_single_date:

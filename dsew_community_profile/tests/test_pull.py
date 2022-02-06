@@ -80,6 +80,12 @@ class TestPull:
             example("HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK",
                     True),
             example("HOSPITAL UTILIZATION: DEMOGRAPHIC DATA",
+                    True),
+            example("COVID-19 VACCINATION DATA: CUMULATIVE (January 25)",
+                    False),
+            example("COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)",
+                    False),
+            example("COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA",
                     True)
         ]
         for ex in examples:

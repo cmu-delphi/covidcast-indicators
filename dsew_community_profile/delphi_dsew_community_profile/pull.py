@@ -55,11 +55,16 @@ class DatasetTimes:
     total_reference_date: datetime.date
     hosp_reference_date: datetime.date
     vac_reference_date: datetime.date
-    vac_reference_day: datetime.date
+    cumulative_vac_reference_date: datetime.date
 
     @staticmethod
     def from_header(header, publish_date):
         """Convert reference dates in overheader to DatasetTimes."""
+        positivity_reference_date = None
+        total_reference_date = None
+        positivity_reference_date = None
+        hosp_reference_date = None
+        cumulative_vac_reference_date= None
         def as_date(sub_result, is_single_date):
             if is_single_date:
                 month = sub_result[0]
@@ -79,44 +84,30 @@ class DatasetTimes:
         if RE_DATE_FROM_TEST_HEADER.match(header):
             findall_result = RE_DATE_FROM_TEST_HEADER.findall(header)[0]
             column = findall_result[0].lower()
-            positivity_reference_date = as_date(findall_result[1:5])
+            positivity_reference_date = as_date(findall_result[1:5], False)
             if findall_result[6]:
                 # Reports published starting 2021-03-17 specify different reference
                 # dates for positivity and total test volume
-                total_reference_date = as_date(findall_result[6:10])
+                total_reference_date = as_date(findall_result[6:10], False)
             else:
                 total_reference_date = positivity_reference_date
-            hosp_reference_date = None
-            vac_reference_date = None
-            vac_reference_day = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
             column = findall_result[0].lower()
-            hosp_reference_date = as_date(findall_result[1:5])
-            total_reference_date = None
-            positivity_reference_date = None
-            vac_reference_date = None
-            vac_reference_day = None
+            hosp_reference_date = as_date(findall_result[1:5], False)
         elif RE_DATE_FROM_VAC_HEADER_WEEK.match(header):
             findall_result = RE_DATE_FROM_VAC_HEADER_WEEK.findall(header)[0]
             column = findall_result[0].lower()
-            vac_reference_date = as_date(findall_result[1:5])
-            total_reference_date = None
-            positivity_reference_date = None
-            hosp_reference_date = None
-            vac_reference_day = None
+            vac_reference_date = as_date(findall_result[1:5], False)
         elif RE_DATE_FROM_VAC_HEADER_CUMULATIVE.match(header):
             findall_result = RE_DATE_FROM_VAC_HEADER_CUMULATIVE.findall(header)[0]
             column = findall_result[0].lower()
-            vac_reference_day = as_date(findall_result[1:], True)
-            total_reference_date = None
-            positivity_reference_date = None
-            hosp_reference_date = None
-            vac_reference_date = None
+            cumulative_vac_reference_date = as_date(findall_result[1:], True)
         else:
             raise ValueError(f"Couldn't find reference date in header '{header}'")
         return DatasetTimes(column, positivity_reference_date,
-            total_reference_date, hosp_reference_date, vac_reference_day, vac_reference_date)
+            total_reference_date, hosp_reference_date,
+            cumulative_vac_reference_date, vac_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
         ref_list = list(SIGNALS.keys())
@@ -127,7 +118,7 @@ class DatasetTimes:
         if key.lower()=="confirmed covid-19 admissions":
             return self.hosp_reference_date
         if key.lower() in ["doses administered","booster doses administered"]:
-            return self.vac_reference_day
+            return self.cumulative_vac_reference_date
         if key.lower() in ["fully vaccinated","booster dose since"]:
             return self.vac_reference_date
         raise ValueError(
@@ -146,7 +137,7 @@ class DatasetTimes:
         if key.lower()=="confirmed covid-19 admissions":
             self.hosp_reference_date = newvalue
         if key.lower() in ["doses administered","booster doses administered"]:
-            self.vac_reference_day = newvalue
+            self.cumulative_vac_reference_date = newvalue
         if key.lower() in ["fully vaccinated","booster dose since"]:
             self.vac_reference_date = newvalue
         if key.lower() not in ref_list:
@@ -372,7 +363,7 @@ class Dataset:
                 for si in sig_select
             ])
         for sig in COUNTS_7D_SIGNALS:
-            assert((sheet.level, sig, NOT_PROP) in self.dfs.keys())
+            assert (sheet.level, sig, NOT_PROP) in self.dfs.keys()
             self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
 
 def as_cached_filename(params, config):

@@ -218,11 +218,9 @@ class Dataset:
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
                     # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
                     # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
-                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA %"\
-                    # exclude "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA CUMULATIVE"
                     header.find("WEEK (") > 0) or \
                     # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
-                    # include "COVID-19 VACCINATION DATA: DEMOGRAPHIC DATA LAST WEEK"
+                    # include "COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)"
                     (header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE") or
                     header.startswith("COVID-19 VACCINATION DATA: LAST WEEK") \
                         )))

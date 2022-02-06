@@ -60,17 +60,16 @@ class DatasetTimes:
     @staticmethod
     def from_header(header, publish_date):
         """Convert reference dates in overheader to DatasetTimes."""
-        def as_day(sub_result):
-            month = sub_result[0]
-            day = sub_result[1]
-            year = publish_date.year
-            return datetime.datetime.strptime(f"{year}-{month}-{day}", "%Y-%B-%d").date()
-
-        def as_date(sub_result):
-            month = sub_result[2] if sub_result[2] else sub_result[0]
-            assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
-            month_numeric = datetime.datetime.strptime(month, "%B").month
-            day = sub_result[3]
+        def as_date(sub_result, is_single_date):
+            if is_single_date:
+                month = sub_result[0]
+                day = sub_result[1]
+                month_numeric = datetime.datetime.strptime(month, "%B").month
+            else:
+                month = sub_result[2] if sub_result[2] else sub_result[0]
+                assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
+                month_numeric = datetime.datetime.strptime(month, "%B").month
+                day = sub_result[3]
             year = publish_date.year
             # year boundary
             if month_numeric > publish_date.month:
@@ -109,7 +108,7 @@ class DatasetTimes:
         elif RE_DATE_FROM_VAC_HEADER_CUMULATIVE.match(header):
             findall_result = RE_DATE_FROM_VAC_HEADER_CUMULATIVE.findall(header)[0]
             column = findall_result[0].lower()
-            vac_reference_day = as_day(findall_result[1:])
+            vac_reference_day = as_date(findall_result[1:], True)
             total_reference_date = None
             positivity_reference_date = None
             hosp_reference_date = None

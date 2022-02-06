@@ -6,11 +6,12 @@ from .data_tools import (fill_dates, raw_positive_prop,
                          smoothed_tests_per_device,
                          raw_tests_per_device,
                          remove_null_samples)
+from .geo_maps import add_megacounties
 
-MIN_OBS = 50  # minimum number of observations in order to compute a proportion.
-POOL_DAYS = 7
+from .constants import (MIN_OBS, POOL_DAYS)
 
-def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, first_date, last_date):
+def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
+                                      first_date, last_date, suffix):
     """
     Fit over geo resolutions that don't use a parent state (nation/hhs/state).
 
@@ -21,6 +22,8 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, fir
             Consider raw or smooth
         device: bool
             Consider test_per_device or pct_positive
+        suffix: str
+            Indicate the age group
     Returns:
         df: pd.DataFrame
     """
@@ -35,27 +38,27 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, fir
         # smoothed test per device
         if device & smooth:
             stat, se, sample_size = smoothed_tests_per_device(
-                devices=state_group["numUniqueDevices"].values,
-                tests=state_group['totalTest'].values,
+                devices=state_group[f"numUniqueDevices_{suffix}"].values,
+                tests=state_group[f'totalTest_{suffix}'].values,
                 min_obs=MIN_OBS, pool_days=POOL_DAYS)
         # raw test per device
         elif device & (not smooth):
             stat, se, sample_size = raw_tests_per_device(
-                devices=state_group["numUniqueDevices"].values,
-                tests=state_group['totalTest'].values,
+                devices=state_group[f"numUniqueDevices_{suffix}"].values,
+                tests=state_group[f'totalTest_{suffix}'].values,
                 min_obs=MIN_OBS)
         # smoothed pct positive
         elif (not device) & smooth:
             stat, se, sample_size = smoothed_positive_prop(
-                tests=state_group['totalTest'].values,
-                positives=state_group['positiveTest'].values,
+                tests=state_group[f'totalTest_{suffix}'].values,
+                positives=state_group[f'positiveTest_{suffix}'].values,
                 min_obs=MIN_OBS, pool_days=POOL_DAYS)
             stat = stat * 100
         # raw pct positive
         else:
             stat, se, sample_size = raw_positive_prop(
-                tests=state_group['totalTest'].values,
-                positives=state_group['positiveTest'].values,
+                tests=state_group[f'totalTest_{suffix}'].values,
+                positives=state_group[f'positiveTest_{suffix}'].values,
                 min_obs=MIN_OBS)
             stat = stat * 100
 
@@ -68,7 +71,7 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device, fir
     return remove_null_samples(state_df)
 
 def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
-                                   device, first_date, last_date):
+                                   device, first_date, last_date, suffix):
     """
     Fit over geo resolutions that use a parent state (county/hrr/msa).
 
@@ -79,15 +82,16 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
             Consider raw or smooth
         device: bool
             Consider test_per_device or pct_positive
+        suffix: str
+            Indicate the age group
     Returns:
         df: pd.DataFrame
     """
     has_parent = True
     res_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size"])
-    res_groups = data.groupby(res_key)
-    loc_list = list(res_groups.groups.keys())
-    for loc in loc_list:
-        res_group = res_groups.get_group(loc)
+    # if res_key == "fips": # Add rest-of-state report for county level
+    #     data = add_megacounties(data, smooth)
+    for loc, res_group in data.groupby(res_key):
         parent_state = res_group['state_id'].values[0]
         try:
             parent_group = state_groups.get_group(parent_state)
@@ -104,41 +108,41 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
             if has_parent:
                 if device:
                     stat, se, sample_size = smoothed_tests_per_device(
-                        devices=res_group["numUniqueDevices"].values,
-                        tests=res_group['totalTest'].values,
+                        devices=res_group[f"numUniqueDevices_{suffix}"].values,
+                        tests=res_group[f'totalTest_{suffix}'].values,
                         min_obs=MIN_OBS, pool_days=POOL_DAYS,
-                        parent_devices=res_group["numUniqueDevices_parent"].values,
-                        parent_tests=res_group["totalTest_parent"].values)
+                        parent_devices=res_group[f"numUniqueDevices_{suffix}_parent"].values,
+                        parent_tests=res_group[f"totalTest_{suffix}_parent"].values)
                 else:
                     stat, se, sample_size = smoothed_positive_prop(
-                        tests=res_group['totalTest'].values,
-                        positives=res_group['positiveTest'].values,
+                        tests=res_group[f'totalTest_{suffix}'].values,
+                        positives=res_group[f'positiveTest_{suffix}'].values,
                         min_obs=MIN_OBS, pool_days=POOL_DAYS,
-                        parent_tests=res_group["totalTest_parent"].values,
-                        parent_positives=res_group['positiveTest_parent'].values)
+                        parent_tests=res_group[f"totalTest_{suffix}_parent"].values,
+                        parent_positives=res_group[f'positiveTest_{suffix}_parent'].values)
                     stat = stat * 100
             else:
                 if device:
                     stat, se, sample_size = smoothed_tests_per_device(
-                        devices=res_group["numUniqueDevices"].values,
-                        tests=res_group['totalTest'].values,
+                        devices=res_group[f"numUniqueDevices_{suffix}"].values,
+                        tests=res_group[f'totalTest_{suffix}'].values,
                         min_obs=MIN_OBS, pool_days=POOL_DAYS)
                 else:
                     stat, se, sample_size = smoothed_positive_prop(
-                        tests=res_group['totalTest'].values,
-                        positives=res_group['positiveTest'].values,
+                        tests=res_group[f'totalTest_{suffix}'].values,
+                        positives=res_group[f'positiveTest_{suffix}'].values,
                         min_obs=MIN_OBS, pool_days=POOL_DAYS)
                     stat = stat * 100
         else:
             if device:
                 stat, se, sample_size = raw_tests_per_device(
-                    devices=res_group["numUniqueDevices"].values,
-                    tests=res_group['totalTest'].values,
+                    devices=res_group[f"numUniqueDevices_{suffix}"].values,
+                    tests=res_group[f'totalTest_{suffix}'].values,
                     min_obs=MIN_OBS)
             else:
                 stat, se, sample_size = raw_positive_prop(
-                    tests=res_group['totalTest'].values,
-                    positives=res_group['positiveTest'].values,
+                    tests=res_group[f'totalTest_{suffix}'].values,
+                    positives=res_group[f'positiveTest_{suffix}'].values,
                     min_obs=MIN_OBS)
                 stat = stat * 100
 

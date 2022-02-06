@@ -67,15 +67,14 @@ def _slide_window_sum(arr, k):
     sarr = np.convolve(temp, np.ones(k, dtype=int), 'valid')
     return sarr
 
-
 def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
     Determine how many samples from the parent geography must be borrowed.
 
-    If there are no samples available in the parent, the borrow_prop is 0.  If
-    the parent does not have enough samples, we return a borrow_prop of 1, and
-    the fact that the pooled samples are insufficient are handled in the
-    statistic fitting step.
+    If there are no samples available in the parent, the borrow_prop is 0.
+    If the parent does not have enough samples, we return a borrow_prop of 1.
+    No more samples borrowed from the parent compared to the number of samples
+    we currently have.
 
     Args:
         tpooled_tests: np.ndarray[float]
@@ -93,10 +92,12 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
     if (np.any(np.isnan(tpooled_tests)) or np.any(np.isnan(tpooled_ptests))):
         raise ValueError('[parent] tests should be non-negative '
-                         'with no np.nan')
+                          'with no np.nan')
     # STEP 1: "TOP UP" USING PARENT LOCATION
     # Number of observations we need to borrow to "top up"
+    # Can't borrow more than total no. observations.
     borrow_tests = np.maximum(min_obs - tpooled_tests, 0)
+    # borrow_tests = np.minimum(borrow_tests, tpooled_tests)
     # There are many cases (a, b > 0):
     # Case 1: a / b => no problem
     # Case 2: a / 0 => np.inf => borrow_prop becomes 1
@@ -108,14 +109,15 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     with np.errstate(divide='ignore', invalid='ignore'):
         borrow_prop = borrow_tests / tpooled_ptests
         # If there's nothing to borrow, then ya can't borrow
-        borrow_prop[np.isnan(borrow_prop)] = 0
-        # Can't borrow more than total no. observations.
+        borrow_prop[(np.isnan(borrow_prop))
+                    | (tpooled_tests == 0)
+                    | (tpooled_ptests == 0)] = 0
+        # Can't borrow more than total no. observations in the parent state
         # Relies on the fact that np.inf > 1
         borrow_prop[borrow_prop > 1] = 1
     return borrow_prop
 
-
-def raw_positive_prop(positives, tests, min_obs):
+def raw_positive_prop(positives, tests, min_obs, idx):
     """
     Calculate the proportion of positive tests without any temporal smoothing.
 
@@ -163,6 +165,8 @@ def raw_positive_prop(positives, tests, min_obs):
     # nan out any days where there are insufficient observations
     # this also elegantly sidesteps 0/0 division.
     tests[tests < min_obs] = np.nan
+    tests[idx] = np.nan
+    
     # Jeffreys Correction for estimates
     positive_prop = (positives + 0.5) / (tests + 1)
     se = np.sqrt(_prop_var(positive_prop, tests))
@@ -247,6 +251,9 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
     # STEP 0: DO THE TEMPORAL POOLING
     tpooled_positives = _slide_window_sum(positives, pool_days)
     tpooled_tests = _slide_window_sum(tests, pool_days)
+    
+    drop_idx = (tpooled_tests >= 25)
+    
     if has_parent:
         tpooled_ppositives = _slide_window_sum(parent_positives, pool_days)
         tpooled_ptests = _slide_window_sum(parent_tests, pool_days)
@@ -259,7 +266,7 @@ def smoothed_positive_prop(positives, tests, min_obs, pool_days,
         pooled_positives = tpooled_positives
         pooled_tests = tpooled_tests
     ## STEP 2: CALCULATE AS THOUGH THEY'RE RAW
-    return raw_positive_prop(pooled_positives, pooled_tests, min_obs)
+    return raw_positive_prop(pooled_positives, pooled_tests, min_obs, drop_idx)
 
 
 def raw_tests_per_device(devices, tests, min_obs):

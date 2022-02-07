@@ -132,8 +132,6 @@ class DatasetTimes:
             self.positivity_reference_date = newvalue
         if key.lower()=="total":
             self.total_reference_date = newvalue
-        if key.lower() in ref_list:
-            self.hosp_reference_date = newvalue
         if key.lower()=="confirmed covid-19 admissions":
             self.hosp_reference_date = newvalue
         if key.lower() in ["doses administered","booster doses administered"]:

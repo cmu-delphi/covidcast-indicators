@@ -46,7 +46,11 @@ class TestPull:
             example("HOSPITAL UTILIZATION: LAST WEEK (June 2-8)",
                     DatasetTimes("last", None, None, date(2021, 6, 8), None, None)),
             example("HOSPITAL UTILIZATION: LAST WEEK (June 28-July 8)",
-                    DatasetTimes("last", None, None, date(2021, 7, 8), None, None))
+                    DatasetTimes("last", None, None, date(2021, 7, 8), None, None)),
+            example("COVID-19 VACCINATION DATA: CUMULATIVE (January 25)",
+                    DatasetTimes("", None, None, None, date(2021, 1, 25), None)),
+            example("COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)",
+                    DatasetTimes("last", None, None,  None, None, date(2021, 1, 25)))
         ]
         for ex in examples:
             assert DatasetTimes.from_header(ex.given, date(2021, 12, 31)) == ex.expected, ex.given

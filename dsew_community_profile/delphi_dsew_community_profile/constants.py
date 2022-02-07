@@ -69,13 +69,13 @@ SIGNALS = {
     },
     "fully vaccinated": {
         "is_rate" : False,
-        "api_name": "total_full_vaccinated",
+        "api_name": "people_full_vaccinated",
         "make_prop": False,
         "cumulative" : True
     },
     "booster dose since": {
         "is_rate" : False,
-        "api_name": "total_booster_doses",
+        "api_name": "people_booster_doses",
         "make_prop": False,
         "cumulative" : True
     },

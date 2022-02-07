@@ -346,6 +346,9 @@ class Dataset:
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
 
+            # Since "doses administered" is a substring of another desired header,
+            # "booster doses administered", we need to more strictly check if "doses administered"
+            # occurs at the beginning of a header to find the correct match.
             if sig == "doses administered":
                 sig_select = [s for s in select if s[-1].startswith(sig)]
             assert len(sig_select) > 0, \

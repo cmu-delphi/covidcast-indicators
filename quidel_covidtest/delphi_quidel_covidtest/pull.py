@@ -8,6 +8,8 @@ import boto3
 import pandas as pd
 import numpy as np
 
+from .constants import AGE_GROUPS
+
 def get_from_s3(start_date, end_date, bucket, logger):
     """
     Get raw data from aws s3 bucket.
@@ -163,21 +165,21 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     overall_pos = df[df["OverallResult"] == "positive"].groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_pos["positiveTest"] = overall_pos["OverallResult"]
+    overall_pos["positiveTest_total"] = overall_pos["OverallResult"]
     overall_pos.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute overallTotal
     overall_total = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_total["totalTest"] = overall_total["OverallResult"]
+    overall_total["totalTest_total"] = overall_total["OverallResult"]
     overall_total.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute numUniqueDevices
     numUniqueDevices = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
-            columns={"SofiaSerNum": "numUniqueDevices"}
+            columns={"SofiaSerNum": "numUniqueDevices_total"}
         )
 
     df_merged = overall_total.merge(
@@ -186,6 +188,55 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
         overall_pos, on=["timestamp", "zip"], how="left"
         ).fillna(0).drop_duplicates()
 
+    # Compute Summary info for age groups
+    df["PatientAge"] = df["PatientAge"].fillna(-1)
+    df.loc[df["PatientAge"] == "<1", "PatientAge"] = 0.5
+    df.loc[df["PatientAge"] == ">85", "PatientAge"] = 100
+    df["PatientAge"] = df["PatientAge"] .astype(float)
+
+    # Should match the suffixes of signal names
+    df["label"] = None
+    df.loc[df["PatientAge"] < 5, "label"] = "age_0_4"
+    df.loc[((df["PatientAge"] >= 5)) & (df["PatientAge"] < 18), "label"] = "age_5_17"
+    df.loc[((df["PatientAge"] >= 18)) & (df["PatientAge"] < 50), "label"] = "age_18_49"
+    df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50_64"
+    df.loc[(df["PatientAge"] >= 65), "label"] = "age_65plus"
+    df.loc[df["PatientAge"] == -1, "label"] = "NA"
+
+    for agegroup in AGE_GROUPS[1:]: # Exclude total
+        if agegroup == "age_0_17":
+            ages = ["age_0_4", "age_5_17"]
+        else:
+            ages = [agegroup]
+        # Compute overallPositive
+        group_pos = df.loc[(df["OverallResult"] == "positive")
+                             & (df["label"].isin(ages))].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_pos[f"positiveTest_{agegroup}"] = group_pos["OverallResult"]
+        group_pos.drop(labels="OverallResult", axis="columns", inplace=True)
+
+        # Compute overallTotal
+        group_total = df.loc[df["label"].isin(ages)].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_total[f"totalTest_{agegroup}"] = group_total["OverallResult"]
+        group_total.drop(labels="OverallResult", axis="columns", inplace=True)
+
+        # Compute numUniqueDevices
+        group_numUniqueDevices = df.loc[df["label"].isin(ages)].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
+                columns={"SofiaSerNum": f"numUniqueDevices_{agegroup}"}
+            )
+
+        df_merged = df_merged.merge(
+            group_numUniqueDevices, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_pos, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_total, on=["timestamp", "zip"], how="left"
+            ).fillna(0).drop_duplicates()
 
     return df_merged, time_flag
 
@@ -295,7 +346,7 @@ def check_export_start_date(export_start_date, export_end_date,
         export_start_date = datetime(2020, 5, 26)
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
-     # Only export data from -45 days to -5 days
+     # Only export data from -50 days to -5 days
     if (export_end_date - export_start_date).days > export_day_range:
         export_start_date = export_end_date - timedelta(days=export_day_range)
 

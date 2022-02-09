@@ -521,7 +521,7 @@ bodge_V2a <- function(input_data, wave) {
     return(input_data)
   }
 
-  if ( "V2a" in names(input_data) ) {
+  if ( "V2a" %in% names(input_data) ) {
     input_data <- rename(input_data,
                          V2d = .data$V2a
     )

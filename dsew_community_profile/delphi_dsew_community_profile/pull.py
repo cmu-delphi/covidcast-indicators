@@ -322,6 +322,15 @@ class Dataset:
                 continue
 
 
+            # Vaccine data not available before May 2021.
+            if  self.publish_date < datetime.date(2021, 5, 1) \
+                and (sig in ["fully vaccinated", "doses administered"]) :
+                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
+                        columns = ["geo_id", "timestamp", "val", \
+                            "se", "sample_size", "publish_date"]
+                    )
+                continue
+
 
             # Booster data not available before November 2021.
             if  self.publish_date < datetime.date(2021, 11, 1) \

@@ -107,6 +107,17 @@ def diff_export_csv(
     deleted_df[["val", "se", "sample_size"]] = np.nan
     if "missing_val" in after_df_cmn.columns:
         deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
+    
+    # Remove deleted entries that were already present
+    if deleted_idx.size > 0:
+        deleted_same_mask = deleted_df == before_df.loc[deleted_idx, :]
+        deleted_same_mask |= pd.isna(deleted_df) & pd.isna(before_df.loc[deleted_idx, :])
+        deleted_df = deleted_df.loc[~(deleted_same_mask.all(axis=1)), :]
+
+    # If the new file has no missing columns, then we should remove them from
+    # the deletions too
+    if "missing_val" not in after_df_cmn.columns:
+        deleted_df = deleted_df[["val", "se", "sample_size"]]
 
     return (
         deleted_df,

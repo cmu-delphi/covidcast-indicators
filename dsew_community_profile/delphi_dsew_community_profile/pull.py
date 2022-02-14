@@ -240,8 +240,14 @@ class Dataset:
                         self.times[dt.column][sig] = dt[sig]
             else:
                 self.times[dt.column] = dt
-        assert len(self.times) == 3, \
-            f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
+
+        if self.publish_date <= datetime.date(2021, 1, 11):
+            # No vaccination data available, so we only have hospitalization and testing overheaders
+            assert len(self.times) == 2, \
+                f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
+        else:
+            assert len(self.times) == 3, \
+                f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
     def retain_header(header):

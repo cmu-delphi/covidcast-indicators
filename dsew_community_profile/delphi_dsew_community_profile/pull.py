@@ -317,6 +317,7 @@ class Dataset:
         ]
 
         for sig in SIGNALS:
+            ## Check if field is known to be missing
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
             is_hosp_adm_before_jan8 = (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date < datetime.date(2021, 1, 8) \

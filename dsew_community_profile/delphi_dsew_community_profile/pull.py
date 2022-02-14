@@ -311,35 +311,31 @@ class Dataset:
         ]
 
         for sig in SIGNALS:
+            empty_formatted_df = pd.DataFrame(
+                        columns = ["geo_id", "timestamp", "val", \
+                            "se", "sample_size", "publish_date"]
+                    )
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
             if (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date < datetime.date(2021, 1, 8) \
                 and sig == "confirmed covid-19 admissions":
-                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
-                        columns = ["geo_id", "timestamp", "val", \
-                            "se", "sample_size", "publish_date"]
-                    )
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
                 continue
-
-
-
             # Booster data not available before November 2021.
             if  self.publish_date < datetime.date(2021, 11, 1) \
                 and (sig in ["booster dose since", "booster doses administered"]) :
-                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
-                        columns = ["geo_id", "timestamp", "val", \
-                            "se", "sample_size", "publish_date"]
-                    )
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
                 continue
-
             # Booster and weekly doses administered not available below the state level.
             if ((sheet.level != "hhs" and sheet.level != "state") \
                 and (sig in ["doses administered", \
                  "booster doses administered", "booster dose since"])):
-                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
-                        columns = ["geo_id", "timestamp", "val", \
-                            "se", "sample_size", "publish_date"]
-                    )
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
+                continue
+            # Weekly doses administered not available before Apr 29, 2021.
+            if  self.publish_date <= datetime.date(2021, 4, 29) \
+                and sig == "doses administered":
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
                 continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]

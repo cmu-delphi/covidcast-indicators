@@ -337,6 +337,17 @@ class Dataset:
                 and sig == "doses administered":
                 self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
                 continue
+            # People fully vaccinated not available before Apr 11, 2021 at the CBSA level.
+            if  (sheet.level == "msa" or sheet.level == "county") \
+                and self.publish_date <= datetime.date(2021, 4, 11) \
+                and sig == "fully vaccinated":
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
+                continue
+            # People fully vaccinated not available before March 08, 2021 at any geo level.
+            if  self.publish_date <= datetime.date(2021, 3, 8) \
+                and sig == "fully vaccinated":
+                self.dfs[(sheet.level, sig, NOT_PROP)] = empty_formatted_df
+                continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
 

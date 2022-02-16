@@ -280,7 +280,7 @@ class Dataset:
             header.find(" age") < 0,
             # exclude "Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days"
             header.find(" beds") < 0,
-        ])) or all([
+        ])) or (all([
             # include "People who are fully vaccinated"
             # include "People who have received a booster dose since August 13, 2021"
             header.startswith("People who"),
@@ -292,7 +292,13 @@ class Dataset:
             header.find(" age") < 0,
             # exclude "People who are fully vaccinated - 12-17" ...
             header.find("-") < 0,
-        ]))
+
+        ]) or all([
+        # include "People with full course administered"
+        header.startswith("People with full course"),
+        # exclude "People with full course administered as % of adult population"
+        header.find("%") < 0,
+        ])))
     def _parse_sheet(self, sheet):
         """Extract data frame for this sheet."""
         df = pd.read_excel(
@@ -338,8 +344,8 @@ class Dataset:
             is_fully_vax_msa_before_apr11 = (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date <= datetime.date(2021, 4, 11) \
                 and sig == "fully vaccinated"
-            # People fully vaccinated not available before March 08, 2021 at any geo level.
-            is_fully_vax_before_mar8 = self.publish_date <= datetime.date(2021, 3, 8) \
+            # People fully vaccinated not available before Jan 15, 2021 at any geo level.
+            is_fully_vax_before_mar8 = self.publish_date <= datetime.date(2021, 1, 14) \
                 and sig == "fully vaccinated"
 
             if any([is_hosp_adm_before_jan8,
@@ -356,7 +362,10 @@ class Dataset:
                 continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
-
+            # The name of the cumulative vaccination was changed after 03/09/2021
+            # when J&J vaccines were added.
+            if (sig == "fully vaccinated") and (len(sig_select)==0):
+                sig_select = [s for s in select if s[-1].find("people with full course") >= 0]
             # Since "doses administered" is a substring of another desired header,
             # "booster doses administered", we need to more strictly check if "doses administered"
             # occurs at the beginning of a header to find the correct match.
@@ -404,7 +413,6 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
-
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
         listing = [el for el in listing if not os.path.exists(el['cached_filename'])]
@@ -485,6 +493,7 @@ def fetch_new_reports(params, logger=None):
 
         if len(latest_sig_df.index) > 0:
             latest_sig_df = latest_sig_df.reset_index(drop=True)
+            latest_sig_df.to_csv("problem.csv")
             assert all(latest_sig_df.groupby(
                     ["timestamp", "geo_id"]
                 ).size(

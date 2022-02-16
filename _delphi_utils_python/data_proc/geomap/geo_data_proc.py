@@ -32,6 +32,7 @@ STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
+ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -180,6 +181,7 @@ def create_jhu_uid_fips_crosswalk():
             {"jhu_uid": "84099999", "fips": "99999", "weight": 1.0},
         ]
     )
+
 
     jhu_df = pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str}).query("Country_Region == 'US'")
     jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])
@@ -336,6 +338,7 @@ def create_hhs_population_table():
     state_pop = pd.read_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), dtype={"state_code": str, "hhs": int}, usecols=["state_code", "pop"])
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str)
     hhs_pop = state_pop.merge(state_hhs, on="state_code").groupby("hhs", as_index=False).sum()
+
     hhs_pop.sort_values("hhs").to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
 
 
@@ -363,6 +366,18 @@ def derive_zip_population_table():
     df = census_pop.merge(fz_df, on="fips", how="left")
     df["pop"] = df["pop"].multiply(df["weight"], axis=0)
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
+
+    ## loading populatoin of some zips- #Issue 0648
+    zip_pop_missing = pd.read_csv(
+        ZIP_POP_MISSING_FILE,sep=",",
+        dtype={"zip":str,"pop":np.int32}
+        )
+    ## cheking if each zip still missing, and concatenating if True
+    for x_zip in zip_pop_missing['zip']:
+        if x_zip not in df['zip']:
+            df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]],
+                          ignore_index=True)
+
     df["pop"] = df["pop"].astype(int)
     df.sort_values("zip").to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)
 

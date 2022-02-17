@@ -5,6 +5,7 @@ import datetime
 import os
 import re
 from urllib.parse import quote_plus as quote_as_url
+import covidcast
 
 import pandas as pd
 import requests
@@ -312,12 +313,12 @@ def fetch_listing(params):
             el for el in listing
             if start_date <= el['publish_date'] <= end_date
         ]
-    # reference date is guaranteed to be before publish date, so we can trim
+    # reference date is guaranteed to be on or before publish date, so we can trim
     # reports that are too early
     if 'export_start_date' in params['indicator']:
         listing = [
             el for el in listing
-            if params['indicator']['export_start_date'] < el['publish_date']
+            if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
     return listing
@@ -360,6 +361,23 @@ def nation_from_state(df, sig, geomapper):
 
 def fetch_new_reports(params, logger=None):
     """Retrieve, compute, and collate all data we haven't seen yet."""
+    # Fetch metadata to check how recent each signal is
+    metadata = covidcast.metadata()
+    sensor_names = {
+        SIGNALS[key][name_field]
+        for key in params["indicator"]["export_signals"]
+        for name_field in ["api_name", "api_prop_name"]
+        if name_field in SIGNALS[key]
+    }
+
+    # Filter to only those we currently want to produce, ignore any old or deprecated signals
+    cpr_metadata = metadata[(metadata.data_source == "dsew-cpr") &
+        (metadata.signal.isin(sensor_names))]
+
+    if sensor_names.difference(set(cpr_metadata.signal)):
+        # If any signal not in metadata yet, we need to backfill its full history.
+        params['indicator']['reports'] = 'all'
+
     listing = fetch_listing(params)
 
     # download and parse individual reports

@@ -330,22 +330,22 @@ class Dataset:
             is_hosp_adm_before_jan8 = (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date < datetime.date(2021, 1, 8) \
                 and sig == "confirmed covid-19 admissions"
-            # Booster data not available before November 2021.
+            # Booster data not available before November 1 2021.
             is_booster_before_nov1 = self.publish_date < datetime.date(2021, 11, 1) \
                 and (sig in ["booster dose since", "booster doses administered"])
             # Booster and weekly doses administered not available below the state level.
             is_booster_below_state = ((sheet.level != "hhs" and sheet.level != "state") \
                 and (sig in ["doses administered", \
                  "booster doses administered", "booster dose since"]))
-            # Weekly doses administered not available before Apr 29, 2021.
+            # Weekly doses administered not available on or before Apr 29, 2021.
             is_dose_admin_apr29 = self.publish_date <= datetime.date(2021, 4, 29) \
                 and sig == "doses administered"
-            # People fully vaccinated not available before Apr 11, 2021 at the CBSA level.
+            # People fully vaccinated not available on or before Apr 11, 2021 at the CBSA level.
             is_fully_vax_msa_before_apr11 = (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date <= datetime.date(2021, 4, 11) \
                 and sig == "fully vaccinated"
             # People fully vaccinated not available before Jan 15, 2021 at any geo level.
-            is_fully_vax_before_mar8 = self.publish_date <= datetime.date(2021, 1, 14) \
+            is_fully_vax_before_jan14 = self.publish_date <= datetime.date(2021, 1, 14) \
                 and sig == "fully vaccinated"
 
             if any([is_hosp_adm_before_jan8,
@@ -353,7 +353,7 @@ class Dataset:
                 is_booster_below_state,
                 is_dose_admin_apr29,
                 is_fully_vax_msa_before_apr11,
-                is_fully_vax_before_mar8
+                is_fully_vax_before_jan14
             ]):
                 self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \

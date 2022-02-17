@@ -493,7 +493,6 @@ def fetch_new_reports(params, logger=None):
 
         if len(latest_sig_df.index) > 0:
             latest_sig_df = latest_sig_df.reset_index(drop=True)
-            latest_sig_df.to_csv("problem.csv")
             assert all(latest_sig_df.groupby(
                     ["timestamp", "geo_id"]
                 ).size(

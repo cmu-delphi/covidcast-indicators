@@ -99,10 +99,10 @@ def transfer_files():
             move(os.path.join(export_dir, file_name), os.path.join(delivery_dir, file_name))
 
 def delete_move_files():
-    """Delete csv files in export-dir under certain conditions.
+    """Delete or move output files depending on dir settings provided in params.
 
-    1. Delivery-dir is specified (aka we are only deleting files produced by the run
-    2. If validation-failures-dir is specified, move failures there instead
+    1. Delete files in export-dir if delivery-dir is specified and is different from export_dir (aka only delete files produced by the most recent run)
+    2. If validation-failures-dir is specified, move failed files there instead
     """
     params = read_params()
     export_dir = params["common"].get("export_dir", None)

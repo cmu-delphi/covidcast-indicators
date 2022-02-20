@@ -101,7 +101,8 @@ def transfer_files():
 def delete_move_files():
     """Delete or move output files depending on dir settings provided in params.
 
-    1. Delete files in export-dir if delivery-dir is specified and is different from export_dir (aka only delete files produced by the most recent run)
+    1. Delete files in export-dir if delivery-dir is specified and is different
+       from export_dir (aka only delete files produced by the most recent run)
     2. If validation-failures-dir is specified, move failed files there instead
     """
     params = read_params()

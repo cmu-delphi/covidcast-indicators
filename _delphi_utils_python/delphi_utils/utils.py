@@ -95,7 +95,7 @@ def transfer_files():
     delivery_dir = params["delivery"].get("delivery_dir", None)
     files_to_export = os.listdir(export_dir)
     for file_name in files_to_export:
-        if file_name.endswith(".csv") or file_name.endswith(".CSV"):
+        if file_name.lower().endswith(".csv"):
             move(os.path.join(export_dir, file_name), os.path.join(delivery_dir, file_name))
 
 def delete_move_files():

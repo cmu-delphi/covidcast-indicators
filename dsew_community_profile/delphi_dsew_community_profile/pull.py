@@ -312,12 +312,12 @@ def fetch_listing(params):
             el for el in listing
             if start_date <= el['publish_date'] <= end_date
         ]
-    # reference date is guaranteed to be before publish date, so we can trim
+    # reference date is guaranteed to be on or before publish date, so we can trim
     # reports that are too early
     if 'export_start_date' in params['indicator']:
         listing = [
             el for el in listing
-            if params['indicator']['export_start_date'] < el['publish_date']
+            if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
     return listing

@@ -405,8 +405,17 @@ def fetch_new_reports(params, logger=None):
         )
 
     for key, df in ret.copy().items():
-        (geo, sig, _) = key
+        (geo, sig, prop) = key
+        total_key = (geo, "total", prop)
+
+        if sig == "positivity":
+            ret[key] = combine_testing_sigs(df, ret[total_key])
+
+            # No longer need "total" signal.
+            del ret[total_key]
+
         if SIGNALS[sig]["make_prop"]:
+            assert sig not in ("total", "positivity"), f"{sig} should not be converted to a proportion"
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
 
     return ret
@@ -438,3 +447,35 @@ def generate_prop_signal(df, geo, geo_mapper):
     df.drop(["population", geo], axis=1, inplace=True)
 
     return df
+
+def combine_testing_sigs(positivity_df, volume_df):
+    """Drop any observations with a sample size less than 6. Generate standard errors."""
+    # Combine test positivity and test volume.
+    assert len(positivity_df.index) == len(volume_df.index), "Test positivity and volume data have different numbers of observations."
+    df = combine(positivity_df, volume_df)
+
+    # Drop everything with 5 or fewer total tests.
+    df = df.loc[df.sample_size > 5]
+
+    # Generate stderr.
+    df.se = std_err(df)
+
+    return df
+
+def std_err(df):
+    """
+    Find Standard Error of a binomial proportion.
+    Assumes input sample_size are all > 0.
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Columns: val, sample_size, ...
+    Returns
+    -------
+    pd.Series
+        Standard error of the positivity rate of PCR-specimen tests.
+    """
+    assert all(df.sample_size > 0), "Sample sizes must be greater than 0"
+    p = df.val
+    n = df.sample_size
+    return np.sqrt(p * (1 - p) / n)

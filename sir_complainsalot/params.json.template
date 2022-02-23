@@ -137,7 +137,13 @@
     "quidel": {
       "max_age":6,
       "maintainers": ["U01AP8GSWG3","U01069KCRS7"],
-      "retired-signals": ["raw_pct_negative","smoothed_pct_negative","raw_tests_per_device","smoothed_tests_per_device"]
+      "retired-signals": [
+        "raw_pct_negative","smoothed_pct_negative","raw_tests_per_device","smoothed_tests_per_device",
+        ["covid_ag_raw_pct_positive_age_0_4", "hrr"], ["covid_ag_raw_pct_positive_age_0_4", "msa"],
+        ["covid_ag_raw_pct_positive_age_5_17", "msa"],
+        ["covid_ag_raw_pct_positive_age_50_64", "hrr"], ["covid_ag_raw_pct_positive_age_50_64", "msa"],
+        ["covid_ag_raw_pct_positive_age_65plus", "hrr"], ["covid_ag_raw_pct_positive_age_65plus", "msa"]
+      ]
     },
     "nchs-mortality": {
       "max_age":16,

@@ -108,6 +108,8 @@ def delete_move_files():
     params = read_params()
     export_dir = params["common"].get("export_dir", None)
     delivery_dir = params["delivery"].get("delivery_dir", None)
+    if delivery_dir is None:
+        return
     validation_failure_dir = params["validation"]["common"].get("validation_failure_dir", None)
 
     # Create validation_failure_dir if it doesn't exist
@@ -116,11 +118,10 @@ def delete_move_files():
     # Double-checking that export-dir is not delivery-dir
     assert(export_dir is not None and export_dir != delivery_dir)
     files_to_delete = os.listdir(export_dir)
-    if delivery_dir is not None:
-        for file_name in files_to_delete:
-            if file_name.endswith(".csv") or file_name.endswith(".CSV"):
-                if validation_failure_dir is not None:
-                    move(os.path.join(export_dir, file_name),
-                        os.path.join(validation_failure_dir, file_name))
-                else:
-                    os.remove(os.path.join(export_dir, file_name))
+    for file_name in files_to_delete:
+        if file_name.endswith(".csv") or file_name.endswith(".CSV"):
+            if validation_failure_dir is not None:
+                move(os.path.join(export_dir, file_name),
+                    os.path.join(validation_failure_dir, file_name))
+            else:
+                os.remove(os.path.join(export_dir, file_name))

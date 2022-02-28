@@ -904,10 +904,16 @@ code_schooling <- function(input_data, wave) {
       input_data$P5 != 3 ~ 0,
       TRUE ~ NA_real_
     )
+    input_data$s_remote_school_fulltime_oldest <- case_when(
+      input_data$P5 == 2 ~ 1,
+      input_data$P5 != 2 ~ 0,
+      TRUE ~ NA_real_
+    )
     
   } else {
     input_data$s_inperson_school_fulltime_oldest <- NA_real_
     input_data$s_inperson_school_parttime_oldest <- NA_real_
+    input_data$s_remote_school_fulltime_oldest <- NA_real_
   }
 
   if ("P4" %in% names(input_data)) {

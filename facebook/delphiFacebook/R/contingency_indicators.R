@@ -429,6 +429,9 @@ get_aggs <- function() {
     # schooling
     "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
     "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary,
+    "pct_remote_school_fulltime_oldest", "s_remote_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_inperson_school_fulltime_oldest", "s_inperson_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_inperson_school_parttime_oldest", "s_inperson_school_parttime_oldest", compute_binary, jeffreys_multinomial_factory(3),
 
     "pct_child_school_public", "s_child_school_public", compute_binary, jeffreys_multinomial_factory(5),
     "pct_child_school_private", "s_child_school_private", compute_binary, jeffreys_multinomial_factory(5),

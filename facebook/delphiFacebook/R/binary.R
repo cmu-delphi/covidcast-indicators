@@ -312,10 +312,11 @@ get_binary_indicators <- function() {
     "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     
-    "smoothed_inperson_school_fulltime_oldest", "weight_unif", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_inperson_school_fulltime_oldest", "weight_unif", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_wremote_school_fulltime_oldest", "weight", "s_remote_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
 
     "smoothed_wchild_school_public", "weight", "s_child_school_public", 6, compute_binary_response, jeffreys_multinomial_factory(5),
     "smoothed_wchild_school_private", "weight", "s_child_school_private", 6, compute_binary_response, jeffreys_multinomial_factory(5),

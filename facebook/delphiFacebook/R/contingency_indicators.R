@@ -429,6 +429,7 @@ get_aggs <- function() {
     # schooling
     "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
     "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary,
+
     "pct_remote_school_fulltime_oldest", "s_remote_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
     "pct_inperson_school_fulltime_oldest", "s_inperson_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
     "pct_inperson_school_parttime_oldest", "s_inperson_school_parttime_oldest", compute_binary, jeffreys_multinomial_factory(3),
@@ -439,7 +440,19 @@ get_aggs <- function() {
     "pct_child_school_not", "s_child_school_not", compute_binary, jeffreys_multinomial_factory(5),
     "pct_child_school_other", "s_child_school_other", compute_binary, jeffreys_multinomial_factory(5),
 
-
+    "pct_school_safety_measures_mask_students", "s_school_safety_measures_mask_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_mask_teachers", "s_school_safety_measures_mask_teachers", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_restricted_entry", "s_school_safety_measures_restricted_entry", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_separators", "s_school_safety_measures_separators", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_extracurricular", "s_school_safety_measures_extracurricular", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_symptom_screen", "s_school_safety_measures_symptom_screen", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_ventilation", "s_school_safety_measures_ventilation", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_testing_staff", "s_school_safety_measures_testing_staff", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_testing_students", "s_school_safety_measures_testing_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_vaccine_staff", "s_school_safety_measures_vaccine_staff", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_vaccine_students", "s_school_safety_measures_vaccine_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_cafeteria", "s_school_safety_measures_cafeteria", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_dont_know", "s_school_safety_measures_dont_know", compute_binary, jeffreys_binary,
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

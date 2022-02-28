@@ -929,6 +929,40 @@ code_schooling <- function(input_data, wave) {
     input_data$s_child_school_not <- NA
     input_data$s_child_school_other <- NA
   }
+
+
+  if ("P6" %in% names(input_data)) {
+    safety_measures <- split_options(input_data$P6)
+
+    input_data$s_school_safety_measures_mask_students <- is_selected(safety_measures, "1")
+    input_data$s_school_safety_measures_mask_teachers <- is_selected(safety_measures, "2")
+    input_data$s_school_safety_measures_restricted_entry <- is_selected(safety_measures, "6")
+    input_data$s_school_safety_measures_separators <- is_selected(safety_measures, "10")
+    input_data$s_school_safety_measures_extracurricular <- is_selected(safety_measures, "12")
+    input_data$s_school_safety_measures_symptom_screen <- is_selected(safety_measures, "15")
+    input_data$s_school_safety_measures_ventilation <- is_selected(safety_measures, "17")
+    input_data$s_school_safety_measures_testing_staff <- is_selected(safety_measures, "18")
+    input_data$s_school_safety_measures_testing_students <- is_selected(safety_measures, "19")
+    input_data$s_school_safety_measures_vaccine_staff <- is_selected(safety_measures, "20")
+    input_data$s_school_safety_measures_vaccine_students <- is_selected(safety_measures, "21")
+    input_data$s_school_safety_measures_cafeteria <- is_selected(safety_measures, "22")
+    input_data$s_school_safety_measures_dont_know <- is_selected(safety_measures, "16")
+  } else {
+    input_data$s_school_safety_measures_mask_students <- NA
+    input_data$s_school_safety_measures_mask_teachers <- NA
+    input_data$s_school_safety_measures_restricted_entry <- NA
+    input_data$s_school_safety_measures_separators <- NA
+    input_data$s_school_safety_measures_extracurricular <- NA
+    input_data$s_school_safety_measures_symptom_screen <- NA
+    input_data$s_school_safety_measures_ventilation <- NA
+    input_data$s_school_safety_measures_testing_staff <- NA
+    input_data$s_school_safety_measures_testing_students <- NA
+    input_data$s_school_safety_measures_vaccine_staff <- NA
+    input_data$s_school_safety_measures_vaccine_students <- NA
+    input_data$s_school_safety_measures_cafeteria <- NA
+    input_data$s_school_safety_measures_dont_know <- NA
+  }
+
   
   return(input_data)
 }

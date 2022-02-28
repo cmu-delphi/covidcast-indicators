@@ -909,6 +909,20 @@ code_schooling <- function(input_data, wave) {
     input_data$s_inperson_school_fulltime_oldest <- NA_real_
     input_data$s_inperson_school_parttime_oldest <- NA_real_
   }
+
+  if ("P4" %in% names(input_data)) {
+    input_data$s_child_school_public <- input_data$P4 == 1
+    input_data$s_child_school_private <- input_data$P4 == 2
+    input_data$s_child_school_homeschool <- input_data$P4 == 3
+    input_data$s_child_school_not <- input_data$P4 == 4
+    input_data$s_child_school_other <- input_data$P4 == 5
+  } else {
+    input_data$s_child_school_public <- NA
+    input_data$s_child_school_private <- NA
+    input_data$s_child_school_homeschool <- NA
+    input_data$s_child_school_not <- NA
+    input_data$s_child_school_other <- NA
+  }
   
   return(input_data)
 }

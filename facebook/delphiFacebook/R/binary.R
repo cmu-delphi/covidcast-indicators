@@ -316,7 +316,15 @@ get_binary_indicators <- function() {
     "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_binary,
     "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
-    
+
+    "smoothed_wchild_school_public", "weight", "s_child_school_public", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_school_private", "weight", "s_child_school_private", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_school_homeschool", "weight", "s_child_school_homeschool", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_school_not", "weight", "s_child_school_not", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_school_other", "weight", "s_child_school_other", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+
+
+
     # beliefs
     "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,

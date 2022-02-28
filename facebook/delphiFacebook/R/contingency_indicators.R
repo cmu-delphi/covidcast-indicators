@@ -428,7 +428,15 @@ get_aggs <- function() {
 
     # schooling
     "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
-    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary
+    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary,
+
+    "pct_child_school_public", "s_child_school_public", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_private", "s_child_school_private", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_homeschool", "s_child_school_homeschool", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_not", "s_child_school_not", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_other", "s_child_school_other", compute_binary, jeffreys_multinomial_factory(5),
+
+
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

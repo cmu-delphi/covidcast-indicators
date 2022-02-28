@@ -405,7 +405,13 @@ get_binary_indicators <- function() {
     "smoothed_want_info_none", "weight_unif", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
    
-    
+    # misc children
+    "smoothed_whas_child_under_18", "weight", "ch_has_child_under_18", 6, compute_binary_response, jeffreys_binary,
+
+    "smoothed_woldest_child_under_5", "weight", "ch_oldest_child_under_5", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_woldest_child_5_to_11", "weight", "ch_oldest_child_5_to_11", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_woldest_child_12_to_15", "weight", "ch_oldest_child_12_to_15", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_woldest_child_16_to_17", "weight", "ch_oldest_child_16_to_17", 6, compute_binary_response, jeffreys_multinomial_factory(4)
   )
 
 

@@ -874,6 +874,34 @@ code_vaccines <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Misc children
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_children <- function(input_data, wave) {
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_has_child_under_18 <- input_data$P1 == 1
+  } else {
+    input_data$ch_has_child_under_18 <- NA
+  }
+
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_oldest_child_under_5 <- input_data$P2 == 1
+    input_data$ch_oldest_child_5_to_11 <- input_data$P2 == 2
+    input_data$ch_oldest_child_12_to_15 <- input_data$P2 == 3
+    input_data$ch_oldest_child_16_to_17 <- input_data$P2 == 4
+  } else {
+    input_data$ch_oldest_child_under_5 <- NA
+    input_data$ch_oldest_child_5_to_11 <- NA
+    input_data$ch_oldest_child_12_to_15 <- NA
+    input_data$ch_oldest_child_16_to_17 <- NA
+  }
+
+  return(input_data)
+}
+
 #' Schooling
 #'
 #' @param input_data input data frame of raw survey data

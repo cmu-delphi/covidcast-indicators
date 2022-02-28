@@ -459,6 +459,15 @@ get_aggs <- function() {
     "pct_school_safety_measures_vaccine_students", "s_school_safety_measures_vaccine_students", compute_binary, jeffreys_binary,
     "pct_school_safety_measures_cafeteria", "s_school_safety_measures_cafeteria", compute_binary, jeffreys_binary,
     "pct_school_safety_measures_dont_know", "s_school_safety_measures_dont_know", compute_binary, jeffreys_binary,
+
+    # misc children
+    "pct_has_child_under_18", "ch_has_child_under_18", compute_binary, jeffreys_binary,
+
+    "pct_oldest_child_under_5", "ch_oldest_child_under_5", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_oldest_child_5_to_11", "ch_oldest_child_5_to_11", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_oldest_child_12_to_15", "ch_oldest_child_12_to_15", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_oldest_child_16_to_17", "ch_oldest_child_16_to_17", compute_binary, jeffreys_multinomial_factory(4)
+
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

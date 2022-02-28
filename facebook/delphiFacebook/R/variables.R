@@ -833,8 +833,20 @@ code_vaccines <- function(input_data, wave) {
       input_data$P3 == 5 ~ 1,
       TRUE ~ NA_real_
     )
+
+    input_data$v_child_vaccine_already <- input_data$P3 == 5
+    input_data$v_child_vaccine_yes_def <- input_data$P3 == 1
+    input_data$v_child_vaccine_yes_prob <- input_data$P3 == 2
+    input_data$v_child_vaccine_no_prob <- input_data$P3 == 3
+    input_data$v_child_vaccine_no_def <- input_data$P3 == 4
+
   } else {
     input_data$v_vaccinate_child_oldest <- NA_real_
+    input_data$v_child_vaccine_already <- NA
+    input_data$v_child_vaccine_yes_def <- NA
+    input_data$v_child_vaccine_yes_prob <- NA
+    input_data$v_child_vaccine_no_prob <- NA
+    input_data$v_child_vaccine_no_def <- NA
   }
 
   if ( "V16" %in% names(input_data) ) {

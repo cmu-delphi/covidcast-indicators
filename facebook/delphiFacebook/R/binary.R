@@ -131,7 +131,13 @@ get_binary_indicators <- function() {
     "smoothed_wvaccinate_children", "weight", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccinate_child_oldest", "weight_unif", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccinate_child_oldest", "weight", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
-    
+
+    "smoothed_wchild_vaccine_already", "weight", "v_child_vaccine_already", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_def", "weight", "v_child_vaccine_yes_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_prob", "weight", "v_child_vaccine_yes_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_prob", "weight", "v_child_vaccine_no_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_def", "weight", "v_child_vaccine_no_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+
     "smoothed_try_vaccinate_1m", "weight_unif", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtry_vaccinate_1m", "weight", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     

@@ -141,6 +141,12 @@ get_aggs <- function() {
     "pct_vaccinate_children", "v_vaccinate_children", compute_binary, jeffreys_binary,
     "pct_vaccinate_child_oldest", "v_vaccinate_child_oldest", compute_binary, jeffreys_binary,
     
+    "pct_child_vaccine_already", "v_child_vaccine_already", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_yes_def", "v_child_vaccine_yes_def", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_yes_prob", "v_child_vaccine_yes_prob", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_no_prob", "v_child_vaccine_no_prob", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_no_def", "v_child_vaccine_no_def", compute_binary, jeffreys_multinomial_factory(5),
+
     "pct_accept_vaccine_defyes", "v_accept_vaccine_defyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_probyes", "v_accept_vaccine_probyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_probno", "v_accept_vaccine_probno", compute_binary, jeffreys_multinomial_factory(4),

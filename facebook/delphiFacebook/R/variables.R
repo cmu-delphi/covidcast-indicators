@@ -859,6 +859,50 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_covid_vaccinated_friends <- NA
   }
   
+  if ("V2d" %in% names(input_data)) {
+    input_data$v_initial_dose_one_of_one <- input_data$V2d == 1
+    input_data$v_initial_dose_one_of_two <- input_data$V2d == 2
+    input_data$v_initial_dose_two_of_two <- input_data$V2d == 3
+  } else {
+    input_data$v_initial_dose_one_of_one <- NA
+    input_data$v_initial_dose_one_of_two <- NA
+    input_data$v_initial_dose_two_of_two <- NA
+  }
+  
+  if ("V2b" %in% names(input_data)) {
+    input_data$v_vaccinated_one_booster <- input_data$V2b == 1
+    input_data$v_vaccinated_two_or_more_boosters <- input_data$V2b == 2
+    input_data$v_vaccinated_at_least_one_booster <- input_data$V2b == 1 | input_data$V2b == 2
+    input_data$v_vaccinated_no_booster <- input_data$V2b == 3
+  } else {
+    input_data$v_vaccinated_one_booster <- NA
+    input_data$v_vaccinated_two_or_more_boosters <- NA
+    input_data$v_vaccinated_at_least_one_booster <- NA
+    input_data$v_vaccinated_no_booster <- NA
+  }
+  
+  if ("V2c" %in% names(input_data)) {
+    input_data$v_vaccinated_booster_accept <- input_data$V2c == 1 | input_data$V2c == 2
+    input_data$v_vaccinated_booster_hesitant <- input_data$V2c == 3 | input_data$V2c == 4
+    input_data$v_vaccinated_booster_defyes <- input_data$V2c == 1
+    input_data$v_vaccinated_booster_probyes <- input_data$V2c == 2
+    input_data$v_vaccinated_booster_probno <- input_data$V2c == 3
+    input_data$v_vaccinated_booster_defno   <- input_data$V2c == 4
+  } else {
+    input_data$v_vaccinated_booster_accept <- NA
+    input_data$v_vaccinated_booster_hesitant <- NA
+    input_data$v_vaccinated_booster_defyes <- NA
+    input_data$v_vaccinated_booster_probyes <- NA
+    input_data$v_vaccinated_booster_probno <- NA
+    input_data$v_vaccinated_booster_defno   <- NA
+  }
+  
+  if ("C17b" %in% names(input_data)) {
+    input_data$v_flu_vaccine_2021 <- input_data$C17b == 1
+  } else {
+    input_data$v_flu_vaccine_2021 <- NA
+  }
+  
   return(input_data)
 }
 

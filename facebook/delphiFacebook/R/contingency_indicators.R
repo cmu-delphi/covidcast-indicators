@@ -150,6 +150,26 @@ get_aggs <- function() {
     "pct_accept_vaccine_no_appointment_probno", "v_accept_vaccine_no_appointment_probno", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_no_appointment_defno", "v_accept_vaccine_no_appointment_defno", compute_binary, jeffreys_multinomial_factory(4),
     
+    "pct_initial_dose_one_of_one", "v_initial_dose_one_of_one", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_initial_dose_one_of_two", "v_initial_dose_one_of_two", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_initial_dose_two_of_two", "v_initial_dose_two_of_two", compute_binary, jeffreys_multinomial_factory(3),
+    
+    "pct_vaccinated_one_booster", "v_vaccinated_one_booster", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_vaccinated_two_or_more_boosters", "v_vaccinated_two_or_more_boosters", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_vaccinated_no_booster", "v_vaccinated_no_booster", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_vaccinated_at_least_one_booster", "v_vaccinated_at_least_one_booster", compute_binary, jeffreys_binary,
+    
+    "pct_vaccinated_booster_accept", "v_vaccinated_booster_accept", compute_binary, jeffreys_binary,
+    "pct_vaccinated_booster_hesitant", "v_vaccinated_booster_hesitant", compute_binary, jeffreys_binary,
+    
+    "pct_vaccinated_booster_defyes", "v_vaccinated_booster_defyes", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_vaccinated_booster_probyes", "v_vaccinated_booster_probyes", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_vaccinated_booster_probno", "v_vaccinated_booster_probno", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_vaccinated_booster_defno", "v_vaccinated_booster_defno", compute_binary, jeffreys_multinomial_factory(4),
+    
+    "pct_flu_vaccine_2021", "v_flu_vaccine_2021", compute_binary, jeffreys_binary,
+    
+    
     # vaccine timing
     "pct_vaccine_timing_weeks", "v_vaccine_timing_weeks", compute_binary, jeffreys_multinomial_factory(7),
     "pct_vaccine_timing_onemonth", "v_vaccine_timing_onemonth", compute_binary, jeffreys_multinomial_factory(7),

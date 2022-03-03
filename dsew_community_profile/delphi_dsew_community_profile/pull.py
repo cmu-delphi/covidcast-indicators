@@ -591,7 +591,7 @@ def unify_testing_sigs(positivity_df, volume_df):
     positivity_df = positivity_df.loc[positivity_df.sample_size > 5]
 
     # Generate stderr.
-    positivity_df.se = std_err(positivity_df)
+    positivity_df = positivity_df.assign(se=std_err(positivity_df))
 
     return positivity_df
 

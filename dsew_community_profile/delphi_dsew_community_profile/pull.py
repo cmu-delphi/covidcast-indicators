@@ -7,6 +7,7 @@ import re
 from urllib.parse import quote_plus as quote_as_url
 
 import pandas as pd
+import numpy as np
 import requests
 
 from delphi_utils.geomap import GeoMapper
@@ -513,7 +514,15 @@ def fetch_new_reports(params, logger=None):
         )
 
     for key, df in ret.copy().items():
-        (geo, sig, _) = key
+        (geo, sig, prop) = key
+
+        if sig == "positivity":
+            total_key = (geo, "total", prop)
+            ret[key] = unify_testing_sigs(df, ret[total_key])
+
+            # No longer need "total" signal.
+            del ret[total_key]
+
         if SIGNALS[sig]["make_prop"]:
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
 
@@ -546,3 +555,62 @@ def generate_prop_signal(df, geo, geo_mapper):
     df.drop(["population", geo], axis=1, inplace=True)
 
     return df
+
+def unify_testing_sigs(positivity_df, volume_df):
+    """
+    Drop any observations with a sample size less than 6. Generate standard errors.
+
+    This combines test positivity and testing volume into a single signal,
+    where testing volume *from the same spreadsheet/publish date* (NOT the
+    same reported date) is used as the sample size for test positivity.
+
+    Total testing volume is typically provided for a 7-day period about 4 days
+    before the test positivity period. Since the CPR is only published on
+    weekdays, test positivity and test volume are only available for the same
+    reported dates 3 times a week. We have chosen to censor 7dav test
+    positivity based on the 7dav test volume provided in the same originating
+    spreadsheet, corresponding to a period ~4 days earlier.
+
+    This approach makes the signals maximally available (5 days per week) with
+    low latency. It avoids complications of having to process multiple
+    spreadsheets each day, and the fact that test positivity and test volume
+    are not available for all the same reported dates.
+
+    Discussion of decision and alternatives:
+    https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
+
+    """
+    # Combine test positivity and test volume.
+    assert len(positivity_df.index) == len(volume_df.index), \
+        "Test positivity and volume data have different numbers of observations."
+    positivity_df.sort_values(["geo_id", "timestamp"], inplace=True)
+    volume_df.sort_values(["geo_id", "timestamp"], inplace=True)
+    positivity_df.sample_size = volume_df.val
+
+    # Drop everything with 5 or fewer total tests.
+    positivity_df = positivity_df.loc[positivity_df.sample_size > 5]
+
+    # Generate stderr.
+    positivity_df.se = std_err(positivity_df)
+
+    return positivity_df
+
+def std_err(df):
+    """
+    Find Standard Error of a binomial proportion.
+
+    Assumes input sample_size are all > 0.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Columns: val, sample_size, ...
+    Returns
+    -------
+    pd.Series
+        Standard error of the positivity rate of PCR-specimen tests.
+    """
+    assert all(df.sample_size > 0), "Sample sizes must be greater than 0"
+    p = df.val
+    n = df.sample_size
+    return np.sqrt(p * (1 - p) / n)

@@ -49,6 +49,10 @@ from .nancodes import Nans
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]
 
+EXPORT_CSV_DTYPES = {
+    "geo_id": str, "val": float, "se": float, "sample_size": float,
+    "missing_val": "Int64", "missing_se": "Int64", "missing_sample_size": "Int64"
+}
 
 def diff_export_csv(
     before_csv: str,
@@ -75,15 +79,10 @@ def diff_export_csv(
         changed_df is the pd.DataFrame of common rows from after_csv with changed values.
         added_df is the pd.DataFrame of added rows from after_csv.
     """
-    export_csv_dtypes = {
-        "geo_id": str, "val": float, "se": float, "sample_size": float,
-        "missing_val": int, "missing_se": int, "missing_sample_size": int
-    }
-
-    before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
+    before_df = pd.read_csv(before_csv, dtype=EXPORT_CSV_DTYPES)
     before_df.set_index("geo_id", inplace=True)
     before_df = before_df.round({"val": 7, "se": 7})
-    after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
+    after_df = pd.read_csv(after_csv, dtype=EXPORT_CSV_DTYPES)
     after_df.set_index("geo_id", inplace=True)
     after_df = after_df.round({"val": 7, "se": 7})
     deleted_idx = before_df.index.difference(after_df.index)
@@ -93,8 +92,8 @@ def diff_export_csv(
     before_df_cmn = before_df.reindex(common_idx)
     after_df_cmn = after_df.reindex(common_idx)
 
-    # If CSVs have different columns (no missingness), mark all values as new
-    if ("missing_val" in before_df_cmn.columns) ^ ("missing_val" in after_df_cmn.columns):
+    # If new CSV has missingness columns, but old doesn't, mark all values as new
+    if ("missing_val" not in before_df_cmn.columns) & ("missing_val" in after_df_cmn.columns):
         same_mask = after_df_cmn.copy()
         same_mask.loc[:] = False
     else:
@@ -102,11 +101,12 @@ def diff_export_csv(
         same_mask = before_df_cmn == after_df_cmn
         same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
 
-    # Code deleted entries as nans with the deleted missing code
+    # Any deleted entries become rows with nans and the deleted missing code
     deleted_df = before_df.loc[deleted_idx, :].copy()
     deleted_df[["val", "se", "sample_size"]] = np.nan
-    if "missing_val" in after_df_cmn.columns:
-        deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
+    # If the new file doesn't have missing columsn, then when the deleted, changed, and added
+    # rows are concatenated (in diff_exports), they will default to NA
+    deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
 
     return (
         deleted_df,

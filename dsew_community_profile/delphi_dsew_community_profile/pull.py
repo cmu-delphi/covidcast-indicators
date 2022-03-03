@@ -252,7 +252,7 @@ class Dataset:
     @staticmethod
     def retain_header(header):
         """Ignore irrelevant headers."""
-        return ((all([
+        return all([
             # include "Total NAATs - [last|previous] 7 days ..."
             # include "Total RT-PCR diagnostic tests - [last|previous] 7 days ..."
             # include "NAAT positivity rate - [last|previous] 7 days ..."
@@ -270,17 +270,15 @@ class Dataset:
             header.find("7 days") > 0,
             # exclude "NAAT positivity rate - last 7 days - ages <5"
             header.find(" ages") < 0,
-        ]) or all([
+        ]) or (
             # include "Confirmed COVID-19 admissions - last 7 days"
-            header.startswith("Confirmed COVID-19 admissions"),
             # exclude "Confirmed COVID-19 admissions - percent change"
-            header.find("7 days") > 0,
             # exclude "Confirmed COVID-19 admissions - last 7 days - ages <18"
             # exclude "Confirmed COVID-19 admissions - last 7 days - age unknown"
-            header.find(" age") < 0,
             # exclude "Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days"
-            header.find(" beds") < 0,
-        ])) or (all([
+            # exclude "Confirmed COVID-19 admissions per 100k - last 7 days"
+            header == "Confirmed COVID-19 admissions - last 7 days"
+        ) or all([
             # include "People who are fully vaccinated"
             # include "People who have received a booster dose since August 13, 2021"
             header.startswith("People who"),
@@ -292,13 +290,12 @@ class Dataset:
             header.find(" age") < 0,
             # exclude "People who are fully vaccinated - 12-17" ...
             header.find("-") < 0,
-
         ]) or all([
-        # include "People with full course administered"
-        header.startswith("People with full course"),
-        # exclude "People with full course administered as % of adult population"
-        header.find("%") < 0,
-        ])))
+            # include "People with full course administered"
+            header.startswith("People with full course"),
+            # exclude "People with full course administered as % of adult population"
+            header.find("%") < 0,
+        ])
     def _parse_sheet(self, sheet):
         """Extract data frame for this sheet."""
         df = pd.read_excel(

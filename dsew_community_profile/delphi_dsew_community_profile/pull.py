@@ -458,14 +458,23 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
+    # The filter in `fetch_new_reports` to keep most recent publish date gurantees
+    # that we'll only see one unique publish date per timestamp here.
+    publish_date_by_ts = df.groupby(
+        ["timestamp"]
+    )["publish_date"].apply(
+        lambda x: np.unique(x)[0]
+    ).reset_index(
+    )
     df = geomapper.replace_geocode(
-        df,
+        df.drop("publish_date", axis=1),
         'state_id',
         'nation',
         new_col="geo_id"
     )
     df["se"] = None
     df["sample_size"] = None
+    df =  pd.merge(df, publish_date_by_ts, on="timestamp", how="left")
 
     return df
 
@@ -484,8 +493,6 @@ def fetch_new_reports(params, logger=None):
             "timestamp"
         ).apply(
             lambda x: x[x["publish_date"] == x["publish_date"].max()]
-        ).drop(
-            "publish_date", axis=1
         ).drop_duplicates(
         )
 
@@ -497,7 +504,7 @@ def fetch_new_reports(params, logger=None):
                 ).reset_index(
                     drop=True
                 ) == 1), f"Duplicate rows in {sig} indicate that one or" \
-                + " more reports was published multiple times and the copies differ"
+                + " more reports were published multiple times and the copies differ"
 
             ret[sig] = latest_sig_df
 
@@ -517,11 +524,25 @@ def fetch_new_reports(params, logger=None):
         (geo, sig, prop) = key
 
         if sig == "positivity":
+            # Combine with test volume using publish date.
             total_key = (geo, "total", prop)
-            ret[key] = unify_testing_sigs(df, ret[total_key])
+            ret[key] = unify_testing_sigs(
+                df, ret[total_key]
+            ).drop(
+                "publish_date", axis=1
+            )
 
             # No longer need "total" signal.
             del ret[total_key]
+        elif sig == "total":
+            # If the signal is test volume, keep publish date to be used when
+            # combining with test positivity.
+            continue
+        else:
+            # If signal is not test volume or test positivity, we don't need
+            # publish date.
+            df = df.drop("publish_date", axis=1)
+            ret[key] = df
 
         if SIGNALS[sig]["make_prop"]:
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
@@ -558,7 +579,7 @@ def generate_prop_signal(df, geo, geo_mapper):
 
 def unify_testing_sigs(positivity_df, volume_df):
     """
-    Drop any observations with a sample size less than 6. Generate standard errors.
+    Drop any observations with a sample size of 5 or less. Generate standard errors.
 
     This combines test positivity and testing volume into a single signal,
     where testing volume *from the same spreadsheet/publish date* (NOT the
@@ -583,17 +604,64 @@ def unify_testing_sigs(positivity_df, volume_df):
     # Combine test positivity and test volume.
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
-    positivity_df.sort_values(["geo_id", "timestamp"], inplace=True)
-    volume_df.sort_values(["geo_id", "timestamp"], inplace=True)
-    positivity_df.sample_size = volume_df.val
+    volume_df = differentiate_obs_by_ts(volume_df)[
+        ["geo_id", "publish_date", "val", "is_max_group_ts"]
+    ].rename(
+        columns={"val":"sample_size"}
+    )
+    positivity_df = differentiate_obs_by_ts(positivity_df).drop(["sample_size"], axis=1)
+
+    df = pd.merge(
+        positivity_df, volume_df,
+        on=["publish_date", "geo_id", "is_max_group_ts"],
+        how="left"
+    ).drop(
+        ["is_max_group_ts"], axis=1
+    )
 
     # Drop everything with 5 or fewer total tests.
-    positivity_df = positivity_df.loc[positivity_df.sample_size > 5]
+    df = df.loc[df.sample_size > 5]
 
     # Generate stderr.
-    positivity_df = positivity_df.assign(se=std_err(positivity_df))
+    df = df.assign(se=std_err(df))
 
-    return positivity_df
+    return df
+
+def differentiate_obs_by_ts(df):
+    """
+    Add column to uniquely identify timestamps for a given publish date-geo combo.
+
+    Each publish date is associated with two timestamps for test volume and
+    test positivity. The older timestamp corresponds to data from the
+    "previous week"; the newer timestamp corresponds to the "last week".
+
+    Since test volume and test positivity timestamps don't match exactly, we
+    can't use them to merge the two signals together, but we still need a way
+    to uniquely identify observations to avoid duplicating observations during
+    the join. This new column, which is analagous to last/previous
+    classification, is used to merge on.
+    """
+    assert all(
+        df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
+    ), "Test positivity and volume data have different numbers of observations."
+
+    max_ts_by_group = df.groupby(
+        ["publish_date", "geo_id"], as_index=False
+    )["timestamp"].max(
+    ).rename(
+        columns={"timestamp":"max_timestamp"}
+    )
+    df = pd.merge(
+        df, max_ts_by_group,
+        on=["publish_date", "geo_id"],
+        how="outer"
+    ).assign(
+        is_max_group_ts=lambda df: df["timestamp"] == df["max_timestamp"]
+    ).drop(
+        ["max_timestamp"], axis=1
+    )
+
+    return df
 
 def std_err(df):
     """

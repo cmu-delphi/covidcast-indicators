@@ -185,7 +185,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)]*2,
                 'val': [15., 150.],
                 'se': [None, None],
-                'sample_size': [None, None],})
+                'sample_size': [None, None],
+                'publish_date': [datetime(year=2020, month=1, day=1)]*2,})
 
         pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
         wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
@@ -207,7 +208,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)],
                 'val': [15. + 150.],
                 'se': [None],
-                'sample_size': [None],}),
+                'sample_size': [None],
+                'publish_date': [datetime(year=2020, month=1, day=1)],}),
             check_like=True
         )
 
@@ -222,7 +224,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)],
                 'val': [15*pa_pop/tot_pop + 150*wv_pop/tot_pop],
                 'se': [None],
-                'sample_size': [None],}),
+                'sample_size': [None],
+                'publish_date': [datetime(year=2020, month=1, day=1)],}),
             check_like=True
         )
 

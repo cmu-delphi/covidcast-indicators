@@ -135,13 +135,13 @@ get_binary_indicators <- function() {
     "smoothed_try_vaccinate_1m", "weight_unif", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtry_vaccinate_1m", "weight", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     
-    "smoothed_winitial_dose_one_of_one", "weight", "v_initial_dose_one_of_one", 6, compute_binary_response, jeffreys_multinomial_factory(3),
-    "smoothed_winitial_dose_one_of_two", "weight", "v_initial_dose_one_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(3),
-    "smoothed_winitial_dose_two_of_two", "weight", "v_initial_dose_two_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winitial_dose_one_of_one", "weight", "v_initial_dose_one_of_one", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_winitial_dose_one_of_two", "weight", "v_initial_dose_one_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_winitial_dose_two_of_two", "weight", "v_initial_dose_two_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(4),
     
-    "smoothed_wvaccinated_one_booster", "weight", "v_vaccinated_one_booster", 6, compute_binary_response, jeffreys_multinomial_factory(3),
-    "smoothed_wvaccinated_two_or_more_boosters", "weight", "v_vaccinated_two_or_more_boosters", 6, compute_binary_response, jeffreys_multinomial_factory(3),
-    "smoothed_wvaccinated_no_booster", "weight", "v_vaccinated_no_booster", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_wvaccinated_one_booster", "weight", "v_vaccinated_one_booster", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_two_or_more_boosters", "weight", "v_vaccinated_two_or_more_boosters", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_no_booster", "weight", "v_vaccinated_no_booster", 6, compute_binary_response, jeffreys_multinomial_factory(4),
     "smoothed_wvaccinated_at_least_one_booster", "weight", "v_vaccinated_at_least_one_booster", 6, compute_binary_response, jeffreys_binary,
     
     "smoothed_wvaccinated_booster_accept", "weight", "v_vaccinated_booster_accept", 6, compute_binary_response, jeffreys_binary,

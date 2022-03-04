@@ -191,7 +191,7 @@ EXPECTEDS.raw_exports = list(EXPECTEDS.common_diffs.keys()) + \
     EXPECTEDS.new
 EXPECTEDS.diffed_exports = EXPECTEDS.raw_exports + \
     [diff_name for diff_name in EXPECTEDS.common_diffs.values() if diff_name is not None]
-EXPECTEDS.filtered_exports = [f[:-5] for f in EXPECTEDS.diffed_exports if f.endswith(".diff")] + \
+EXPECTEDS.filtered_exports = [f.replace(".diff", "") for f in EXPECTEDS.diffed_exports if f.endswith(".diff")] + \
     EXPECTEDS.new
 
 def _assert_frames_equal_ignore_row_order(df1, df2, index_cols: List[str] = None):
@@ -207,7 +207,7 @@ class ArchiveDifferTestlike:
     def check_filtered_exports(self, export_dir):
         assert set(listdir(export_dir)) == set(EXPECTEDS.filtered_exports)
         for f in EXPECTEDS.filtered_exports:
-            example = CSVS[f[:-4]]
+            example = CSVS[f.replace(".csv", "")]
             _assert_frames_equal_ignore_row_order(
                 pd.read_csv(join(export_dir, f), dtype=CSV_DTYPES),
                 example.after if example.diff is None else example.diff,
@@ -247,11 +247,12 @@ class TestArchiveDiffer(ArchiveDifferTestlike):
 
         deleted_files, common_diffs, new_files = arch_diff.diff_exports()
 
-        # Check return values
+        # Check deleted, common, diffed, and new file names match expected
         assert set(deleted_files) == {join(cache_dir, f) for f in EXPECTEDS.deleted}
         assert set(common_diffs.keys()) == {
             join(export_dir, csv_name) for csv_name in EXPECTEDS.common_diffs}
         assert set(new_files) == {join(export_dir, f) for f in EXPECTEDS.new}
+        # Check that diffed file names are identical
         assert all(
             (common_diffs[join(export_dir, csv_name)] ==
              None if diff_name is None else join(export_dir, diff_name))
@@ -266,7 +267,7 @@ class TestArchiveDiffer(ArchiveDifferTestlike):
             if diff_name is None: continue
             _assert_frames_equal_ignore_row_order(
                 pd.read_csv(join(export_dir, diff_name), dtype=CSV_DTYPES),
-                CSVS[key[:-4]].diff,
+                CSVS[key.replace(".csv", "")].diff,
                 index_cols=["geo_id"]
             )
 

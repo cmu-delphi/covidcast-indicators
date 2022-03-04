@@ -604,12 +604,12 @@ def unify_testing_sigs(positivity_df, volume_df):
     # Combine test positivity and test volume.
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
-    volume_df = differentiate_obs_by_ts(volume_df)[
+    volume_df = add_max_ts_col(volume_df)[
         ["geo_id", "publish_date", "val", "is_max_group_ts"]
     ].rename(
         columns={"val":"sample_size"}
     )
-    positivity_df = differentiate_obs_by_ts(positivity_df).drop(["sample_size"], axis=1)
+    positivity_df = add_max_ts_col(positivity_df).drop(["sample_size"], axis=1)
 
     df = pd.merge(
         positivity_df, volume_df,
@@ -627,9 +627,9 @@ def unify_testing_sigs(positivity_df, volume_df):
 
     return df
 
-def differentiate_obs_by_ts(df):
+def add_max_ts_col(df):
     """
-    Add column to uniquely identify timestamps for a given publish date-geo combo.
+    Add column to differentiate timestamps for a given publish date-geo combo.
 
     Each publish date is associated with two timestamps for test volume and
     test positivity. The older timestamp corresponds to data from the
@@ -638,12 +638,12 @@ def differentiate_obs_by_ts(df):
     Since test volume and test positivity timestamps don't match exactly, we
     can't use them to merge the two signals together, but we still need a way
     to uniquely identify observations to avoid duplicating observations during
-    the join. This new column, which is analagous to last/previous
+    the join. This new column, which is analagous to the "last/previous week"
     classification, is used to merge on.
     """
     assert all(
         df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
-    ), "Test positivity and volume data have different numbers of observations."
+    ), "Testing signals should have two timestamps per publish date-region combination."
 
     max_ts_by_group = df.groupby(
         ["publish_date", "geo_id"], as_index=False

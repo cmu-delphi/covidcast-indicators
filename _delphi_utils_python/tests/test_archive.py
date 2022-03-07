@@ -290,18 +290,13 @@ AWS_CREDENTIALS = {
     "aws_secret_access_key": "FAKE_TEST_SECRET_ACCESS_KEY",
 }
 
-@pytest.fixture(scope="function")
-def s3_client():
-    with mock_s3():
-        yield Session(**AWS_CREDENTIALS).client("s3")
-
-
 class TestS3ArchiveDiffer(ArchiveDifferTestlike):
     bucket_name = "test-bucket"
     indicator_prefix = "test"
 
     @mock_s3
-    def test_update_cache(self, tmp_path, s3_client):
+    def test_update_cache(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir, export_dir = self.set_up(tmp_path)
 
         csv1 = CSVS["mod_2_del_3_add_4"].before
@@ -336,7 +331,8 @@ class TestS3ArchiveDiffer(ArchiveDifferTestlike):
         assert set(listdir(cache_dir)) == {"csv1.csv", "csv2.csv"}
 
     @mock_s3
-    def test_archive_exports(self, tmp_path, s3_client):
+    def test_archive_exports(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir, export_dir = self.set_up(tmp_path)
 
         csv1 = CSVS["mod_2_del_3_add_4"].before
@@ -364,7 +360,8 @@ class TestS3ArchiveDiffer(ArchiveDifferTestlike):
         assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
 
     @mock_s3
-    def test_run(self, tmp_path, s3_client):
+    def test_run(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir, export_dir = self.set_up(tmp_path)
 
         s3_client.create_bucket(Bucket=self.bucket_name)

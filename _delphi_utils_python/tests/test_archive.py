@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from io import StringIO, BytesIO
 from os import listdir, mkdir
 from os.path import join
@@ -41,13 +41,17 @@ class Example:
 
 @dataclass
 class Expecteds:
-    deleted: Any
-    common_diffs: Any
-    new: Any
-    raw_exports: Any = None
-    diffed_exports: Any = None
-    filtered_exports: Any = None
+    deleted: List[str]
+    common_diffs: Dict[str, str]
+    new: List[str]
+    raw_exports: List[str] = field(init=False)
+    diffed_exports: List[str] = field(init=False)
+    filtered_exports: List[str] = field(init=False)
 
+    def __post_init__(self):
+        self.raw_exports = list(self.common_diffs.keys()) + self.new
+        self.diffed_exports = self.raw_exports + [diff_name for diff_name in self.common_diffs.values() if diff_name is not None]
+        self.filtered_exports = [f.replace(".diff", "") for f in self.diffed_exports if f.endswith(".diff")] + self.new
 EMPTY = "empty"
 CSVS = {
     "unchanged": Example( # was: csv0
@@ -187,12 +191,6 @@ EXPECTEDS = Expecteds(
 # check for incomplete modifications to tests
 assert set(EXPECTEDS.new) == set(f"{csv_name}.csv" for csv_name, dfs in CSVS.items() if dfs.before is None), \
     "Bad programmer: added more new files to CSVS.after without updating EXPECTEDS.new"
-EXPECTEDS.raw_exports = list(EXPECTEDS.common_diffs.keys()) + \
-    EXPECTEDS.new
-EXPECTEDS.diffed_exports = EXPECTEDS.raw_exports + \
-    [diff_name for diff_name in EXPECTEDS.common_diffs.values() if diff_name is not None]
-EXPECTEDS.filtered_exports = [f.replace(".diff", "") for f in EXPECTEDS.diffed_exports if f.endswith(".diff")] + \
-    EXPECTEDS.new
 
 def _assert_frames_equal_ignore_row_order(df1, df2, index_cols: List[str] = None):
     return assert_frame_equal(df1.set_index(index_cols).sort_index(), df2.set_index(index_cols).sort_index())

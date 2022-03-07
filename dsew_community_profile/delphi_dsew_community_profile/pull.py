@@ -605,6 +605,7 @@ def unify_testing_sigs(positivity_df, volume_df):
     ].rename(
         columns={"val":"sample_size"}
     )
+    col_order = list(positivity_df.columns)
     positivity_df = add_max_ts_col(positivity_df).drop(["sample_size"], axis=1)
 
     df = pd.merge(
@@ -621,7 +622,7 @@ def unify_testing_sigs(positivity_df, volume_df):
     # Generate stderr.
     df = df.assign(se=std_err(df))
 
-    return df
+    return df[col_order]
 
 def add_max_ts_col(df):
     """
@@ -639,7 +640,9 @@ def add_max_ts_col(df):
     """
     assert all(
         df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
-    ), "Testing signals should have two timestamps per publish date-region combination."
+    ) and all(
+        df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2
+    ), "Testing signals should have two unique timestamps per publish date-region combination."
 
     max_ts_by_group = df.groupby(
         ["publish_date", "geo_id"], as_index=False
@@ -669,6 +672,7 @@ def std_err(df):
     ----------
     df: pd.DataFrame
         Columns: val, sample_size, ...
+
     Returns
     -------
     pd.Series

@@ -152,7 +152,7 @@ get_binary_indicators <- function() {
     "smoothed_wvaccinated_booster_probno", "weight", "v_vaccinated_booster_probno", 6, compute_binary_response, jeffreys_multinomial_factory(4),
     "smoothed_wvaccinated_booster_defno", "weight", "v_vaccinated_booster_defno", 6, compute_binary_response, jeffreys_multinomial_factory(4),
     
-    "smoothed_wflu_vaccine_2021", "weight", "v_flu_vaccine_2021", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wflu_vaccinated_2021", "weight", "v_flu_vaccinated_2021", 6, compute_binary_response, jeffreys_binary,
 
     
     # who would make more likely to accept vaccine

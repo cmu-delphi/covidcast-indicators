@@ -167,7 +167,7 @@ get_aggs <- function() {
     "pct_vaccinated_booster_probno", "v_vaccinated_booster_probno", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_booster_defno", "v_vaccinated_booster_defno", compute_binary, jeffreys_multinomial_factory(4),
     
-    "pct_flu_vaccine_2021", "v_flu_vaccine_2021", compute_binary, jeffreys_binary,
+    "pct_flu_vaccinated_2021", "v_flu_vaccinated_2021", compute_binary, jeffreys_binary,
     
     
     # vaccine timing

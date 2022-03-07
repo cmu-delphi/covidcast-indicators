@@ -898,9 +898,9 @@ code_vaccines <- function(input_data, wave) {
   }
   
   if ("C17b" %in% names(input_data)) {
-    input_data$v_flu_vaccine_2021 <- input_data$C17b == 1
+    input_data$v_flu_vaccinated_2021 <- input_data$C17b == 1
   } else {
-    input_data$v_flu_vaccine_2021 <- NA
+    input_data$v_flu_vaccinated_2021 <- NA
   }
   
   return(input_data)

@@ -267,18 +267,13 @@ AWS_CREDENTIALS = {
 }
 
 
-@pytest.fixture(scope="function")
-def s3_client():
-    with mock_s3():
-        yield Session(**AWS_CREDENTIALS).client("s3")
-
-
 class TestS3ArchiveDiffer:
     bucket_name = "test-bucket"
     indicator_prefix = "test"
 
     @mock_s3
-    def test_update_cache(self, tmp_path, s3_client):
+    def test_update_cache(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir = join(str(tmp_path), "cache")
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)
@@ -316,7 +311,8 @@ class TestS3ArchiveDiffer:
         assert set(listdir(cache_dir)) == {"csv1.csv", "csv2.csv"}
 
     @mock_s3
-    def test_archive_exports(self, tmp_path, s3_client):
+    def test_archive_exports(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir = join(str(tmp_path), "cache")
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)
@@ -347,7 +343,8 @@ class TestS3ArchiveDiffer:
         assert_frame_equal(pd.read_csv(body, dtype=CSV_DTYPES), csv1)
 
     @mock_s3
-    def test_run(self, tmp_path, s3_client):
+    def test_run(self, tmp_path):
+        s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir = join(str(tmp_path), "cache")
         export_dir = join(str(tmp_path), "export")
         mkdir(cache_dir)

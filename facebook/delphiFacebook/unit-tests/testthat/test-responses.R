@@ -317,6 +317,31 @@ test_that("C6/8 bodge works correctly", {
                expected)
 })
 
+test_that("Wave 13 V2a bodge works correctly", {
+  ## Not-Wave 13
+  input <- tibble(
+    V2a = c(1, 2, 3, 4)
+  )
+
+  expect_equal(bodge_V2a(input, wave = 1),
+               input)
+
+  # Wave 13 with V2a
+  expected <- tibble(
+    V2d = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_V2a(input, wave = 13),
+               expected)
+
+  ## Wave 13 without V3a
+  input <- tibble(
+    V2d = c(1, 2, 3, 4)
+  )
+  expect_equal(bodge_V2a(input, wave = 13),
+               input)
+})
+
+
 test_that("B13 bodge works correctly", {
   input <- tibble(
     C6 = c(1, 2, 3, 4),

@@ -21,7 +21,9 @@ class TestGenerateSensor:
         # raw pct_positive
         state_pct_positive = generate_sensor_for_nonparent_geo(
             state_groups, "state_id", smooth = False, device = False,
-            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+            first_date = datetime(2020, 6, 14), 
+            last_date = datetime(2020, 6, 20),
+            suffix="total")
 
         assert (state_pct_positive.dropna()["val"] < 100).all()
         assert set(state_pct_positive.columns) ==\
@@ -31,7 +33,9 @@ class TestGenerateSensor:
         # raw test_per_device
         state_test_per_device = generate_sensor_for_nonparent_geo(
             state_groups, "state_id", smooth = False, device = True,
-            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+            first_date = datetime(2020, 6, 14), 
+            last_date = datetime(2020, 6, 20),
+            suffix="total")
 
         assert state_test_per_device["se"].isnull().all()
         assert set(state_test_per_device.columns) ==\
@@ -45,7 +49,9 @@ class TestGenerateSensor:
                                  parse_dates=['timestamp'])
         msa_pct_positive = generate_sensor_for_parent_geo(
             state_groups, msa_data, "cbsa_id", smooth = True, device = False,
-            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+            first_date = datetime(2020, 6, 14), 
+            last_date = datetime(2020, 6, 20),
+            suffix="total")
 
         assert (msa_pct_positive.dropna()["val"] < 100).all()
         assert set(msa_pct_positive.columns) ==\
@@ -55,7 +61,9 @@ class TestGenerateSensor:
         # smoothed test_per_device
         msa_test_per_device = generate_sensor_for_parent_geo(
             state_groups, msa_data, "cbsa_id", smooth = True, device = True,
-            first_date = datetime(2020, 6, 14), last_date = datetime(2020, 6, 20))
+            first_date = datetime(2020, 6, 14), 
+            last_date = datetime(2020, 6, 20),
+            suffix="total")
 
         assert msa_test_per_device["se"].isnull().all()
         assert set(msa_test_per_device.columns) ==\

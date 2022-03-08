@@ -11,8 +11,9 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE
-from .constants import DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING
+from .constants import (TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
+    IS_PROP, NOT_PROP,
+    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING)
 
 # YYYYMMDD
 # example: "Community Profile Report 20211104.xlsx"
@@ -31,6 +32,16 @@ RE_DATE_FROM_HOSP_HEADER = re.compile(
     rf'HOSPITAL UTILIZATION: (.*) WEEK \({DATE_RANGE_EXP}\)'
 )
 
+# example: "COVID-19 VACCINATION DATA: LAST WEEK (January 5-11)"
+RE_DATE_FROM_VAC_HEADER_WEEK= re.compile(
+    rf'COVID-19 VACCINATION DATA: (.*) WEEK \({DATE_RANGE_EXP}\)'
+)
+
+# example: 'COVID-19 VACCINATION DATA: CUMULATIVE (January 11)'
+RE_DATE_FROM_VAC_HEADER_CUMULATIVE= re.compile(
+    rf'COVID-19 VACCINATION DATA: CUMULATIVE (.*)\({DATE_EXP}\)'
+)
+
 # example: "NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)"
 # example: "Total NAATs - last 7 days (may be an underestimate due to delayed reporting)"
 RE_COLUMN_FROM_HEADER = re.compile('- (.*) 7 days')
@@ -43,15 +54,27 @@ class DatasetTimes:
     positivity_reference_date: datetime.date
     total_reference_date: datetime.date
     hosp_reference_date: datetime.date
+    vac_reference_date: datetime.date
+    cumulative_vac_reference_date: datetime.date
 
     @staticmethod
     def from_header(header, publish_date):
         """Convert reference dates in overheader to DatasetTimes."""
-        def as_date(sub_result):
-            month = sub_result[2] if sub_result[2] else sub_result[0]
-            assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
-            month_numeric = datetime.datetime.strptime(month, "%B").month
-            day = sub_result[3]
+        positivity_reference_date = None
+        total_reference_date = None
+        hosp_reference_date = None
+        vac_reference_date = None
+        cumulative_vac_reference_date= None
+        def as_date(sub_result, is_single_date):
+            if is_single_date:
+                month = sub_result[0]
+                day = sub_result[1]
+                month_numeric = datetime.datetime.strptime(month, "%B").month
+            else:
+                month = sub_result[2] if sub_result[2] else sub_result[0]
+                assert month, f"Bad month in header: {header}\nsub_result: {sub_result}"
+                month_numeric = datetime.datetime.strptime(month, "%B").month
+                day = sub_result[3]
             year = publish_date.year
             # year boundary
             if month_numeric > publish_date.month:
@@ -61,51 +84,64 @@ class DatasetTimes:
         if RE_DATE_FROM_TEST_HEADER.match(header):
             findall_result = RE_DATE_FROM_TEST_HEADER.findall(header)[0]
             column = findall_result[0].lower()
-            positivity_reference_date = as_date(findall_result[1:5])
+            positivity_reference_date = as_date(findall_result[1:5], False)
             if findall_result[6]:
                 # Reports published starting 2021-03-17 specify different reference
                 # dates for positivity and total test volume
-                total_reference_date = as_date(findall_result[6:10])
+                total_reference_date = as_date(findall_result[6:10], False)
             else:
                 total_reference_date = positivity_reference_date
-
-            hosp_reference_date = None
         elif RE_DATE_FROM_HOSP_HEADER.match(header):
             findall_result = RE_DATE_FROM_HOSP_HEADER.findall(header)[0]
             column = findall_result[0].lower()
-            hosp_reference_date = as_date(findall_result[1:5])
-
-            total_reference_date = None
-            positivity_reference_date = None
+            hosp_reference_date = as_date(findall_result[1:5], False)
+        elif RE_DATE_FROM_VAC_HEADER_WEEK.match(header):
+            findall_result = RE_DATE_FROM_VAC_HEADER_WEEK.findall(header)[0]
+            column = findall_result[0].lower()
+            vac_reference_date = as_date(findall_result[1:5], False)
+        elif RE_DATE_FROM_VAC_HEADER_CUMULATIVE.match(header):
+            findall_result = RE_DATE_FROM_VAC_HEADER_CUMULATIVE.findall(header)[0]
+            column = findall_result[0].lower()
+            cumulative_vac_reference_date = as_date(findall_result[1:], True)
         else:
             raise ValueError(f"Couldn't find reference date in header '{header}'")
-
         return DatasetTimes(column, positivity_reference_date,
-            total_reference_date, hosp_reference_date)
+            total_reference_date, hosp_reference_date,
+            cumulative_vac_reference_date, vac_reference_date)
     def __getitem__(self, key):
         """Use DatasetTimes like a dictionary."""
+        ref_list = list(SIGNALS.keys())
         if key.lower()=="positivity":
             return self.positivity_reference_date
         if key.lower()=="total":
             return self.total_reference_date
         if key.lower()=="confirmed covid-19 admissions":
             return self.hosp_reference_date
+        if key.lower() in ["doses administered","booster doses administered"]:
+            return self.cumulative_vac_reference_date
+        if key.lower() in ["fully vaccinated","booster dose since"]:
+            return self.vac_reference_date
         raise ValueError(
             f"Bad reference date type request '{key}'; " + \
-            "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+            "need one of: " + " ,".join(ref_list)
         )
     def __setitem__(self, key, newvalue):
         """Use DatasetTimes like a dictionary."""
+        ref_list = list(SIGNALS.keys())
         if key.lower()=="positivity":
             self.positivity_reference_date = newvalue
         if key.lower()=="total":
             self.total_reference_date = newvalue
         if key.lower()=="confirmed covid-19 admissions":
             self.hosp_reference_date = newvalue
-        else:
+        if key.lower() in ["doses administered","booster doses administered"]:
+            self.cumulative_vac_reference_date = newvalue
+        if key.lower() in ["fully vaccinated","booster dose since"]:
+            self.vac_reference_date = newvalue
+        if key.lower() not in ref_list:
             raise ValueError(
                 f"Bad reference date type request '{key}'; " + \
-                "need 'total', 'positivity', or 'confirmed covid-19 admissions'"
+                "need one of: " + " ,".join(ref_list)
             )
     def __eq__(self, other):
         """Check equality by value."""
@@ -163,14 +199,21 @@ class Dataset:
         # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
         # include "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
         return not (isinstance(header, str) and \
-                    (header.startswith("TESTING:") or \
+                    (((header.startswith("TESTING:") or \
                      header.startswith("VIRAL (RT-PCR) LAB TESTING:") or \
-                     header.startswith("HOSPITAL UTILIZATION:")) and \
+                     header.startswith("HOSPITAL UTILIZATION: ")) and \
                     # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
                     # exclude "TESTING: DEMOGRAPHIC DATA" \
                     # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
                     # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
-                    header.find("WEEK (") > 0)
+                    header.find("WEEK (") > 0) or \
+                    # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
+                    # include "COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)"
+                    (header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE") or
+                    header.startswith("COVID-19 VACCINATION DATA: LAST WEEK") \
+                        )))
+
+
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
         # grab reference dates from overheaders
@@ -197,8 +240,14 @@ class Dataset:
                         self.times[dt.column][sig] = dt[sig]
             else:
                 self.times[dt.column] = dt
-        assert len(self.times) == 2, \
-            f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
+
+        if self.publish_date <= datetime.date(2021, 1, 11):
+            # No vaccination data available, so we only have hospitalization and testing overheaders
+            assert len(self.times) == 2, \
+                f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
+        else:
+            assert len(self.times) == 3, \
+                f"No times extracted from overheaders:\n{NEWLINE.join(str(s) for s in overheaders)}"
 
     @staticmethod
     def retain_header(header):
@@ -208,24 +257,44 @@ class Dataset:
             # include "Total RT-PCR diagnostic tests - [last|previous] 7 days ..."
             # include "NAAT positivity rate - [last|previous] 7 days ..."
             # include "Viral (RT-PCR) lab test positivity rate - [last|previous] 7 days ..."
+            # include "Booster doses administered - [last|previous] 7 days ..."
+            # include "Doses administered - [last|previous] 7 days ..."
             (header.startswith("Total NAATs") or
              header.startswith("NAAT positivity rate") or
              header.startswith("Total RT-PCR") or
-             header.startswith("Viral (RT-PCR)")),
+             header.startswith("Viral (RT-PCR)") or
+             header.startswith("Booster") or
+             header.startswith("Doses administered -")
+             ),
             # exclude "NAAT positivity rate - absolute change ..."
             header.find("7 days") > 0,
             # exclude "NAAT positivity rate - last 7 days - ages <5"
             header.find(" ages") < 0,
-        ]) or all([
+        ]) or (
             # include "Confirmed COVID-19 admissions - last 7 days"
-            header.startswith("Confirmed COVID-19 admissions"),
             # exclude "Confirmed COVID-19 admissions - percent change"
-            header.find("7 days") > 0,
             # exclude "Confirmed COVID-19 admissions - last 7 days - ages <18"
             # exclude "Confirmed COVID-19 admissions - last 7 days - age unknown"
-            header.find(" age") < 0,
             # exclude "Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days"
-            header.find(" beds") < 0,
+            # exclude "Confirmed COVID-19 admissions per 100k - last 7 days"
+            header == "Confirmed COVID-19 admissions - last 7 days"
+        ) or all([
+            # include "People who are fully vaccinated"
+            # include "People who have received a booster dose since August 13, 2021"
+            header.startswith("People who"),
+            # exclude "People who are fully vaccinated as % of total population"
+            # exclude "People who have received a booster dose as % of fully vaccinated population"
+            header.find("%") < 0,
+            # exclude "People who are fully vaccinated - ages 5-11" ...
+            # exclude "People who have received a booster dose - ages 65+" ...
+            header.find(" age") < 0,
+            # exclude "People who are fully vaccinated - 12-17" ...
+            header.find("-") < 0,
+        ]) or all([
+            # include "People with full course administered"
+            header.startswith("People with full course"),
+            # exclude "People with full course administered as % of adult population"
+            header.find("%") < 0,
         ])
     def _parse_sheet(self, sheet):
         """Extract data frame for this sheet."""
@@ -237,28 +306,72 @@ class Dataset:
         )
         if sheet.row_filter:
             df = df.loc[sheet.row_filter(df)]
+
+
+        def select_fn(h):
+            """Allow for default to the 7-day in the name of the dataframe column."""
+            try:
+                return (RE_COLUMN_FROM_HEADER.findall(h)[0], h, h.lower())
+            except IndexError:
+                return ("", h, h.lower())
+
         select = [
-            (RE_COLUMN_FROM_HEADER.findall(h)[0], h, h.lower())
+            select_fn(h)
             for h in list(df.columns)
             if self.retain_header(h)
         ]
 
         for sig in SIGNALS:
+            ## Check if field is known to be missing
             # Hospital admissions not available at the county or CBSA level prior to Jan 8, 2021.
-            if (sheet.level == "msa" or sheet.level == "county") \
+            is_hosp_adm_before_jan8 = (sheet.level == "msa" or sheet.level == "county") \
                 and self.publish_date < datetime.date(2021, 1, 8) \
-                and sig == "confirmed covid-19 admissions":
-                self.dfs[(sheet.level, sig)] = pd.DataFrame(
+                and sig == "confirmed covid-19 admissions"
+            # Booster data not available before November 1 2021.
+            is_booster_before_nov1 = self.publish_date < datetime.date(2021, 11, 1) \
+                and (sig in ["booster dose since", "booster doses administered"])
+            # Booster and weekly doses administered not available below the state level.
+            is_booster_below_state = ((sheet.level != "hhs" and sheet.level != "state") \
+                and (sig in ["doses administered", \
+                 "booster doses administered", "booster dose since"]))
+            # Weekly doses administered not available on or before Apr 29, 2021.
+            is_dose_admin_apr29 = self.publish_date <= datetime.date(2021, 4, 29) \
+                and sig == "doses administered"
+            # People fully vaccinated not available on or before Apr 11, 2021 at the CBSA level.
+            is_fully_vax_msa_before_apr11 = (sheet.level == "msa" or sheet.level == "county") \
+                and self.publish_date <= datetime.date(2021, 4, 11) \
+                and sig == "fully vaccinated"
+            # People fully vaccinated not available before Jan 15, 2021 at any geo level.
+            is_fully_vax_before_jan14 = self.publish_date <= datetime.date(2021, 1, 14) \
+                and sig == "fully vaccinated"
+
+            if any([is_hosp_adm_before_jan8,
+                is_booster_before_nov1,
+                is_booster_below_state,
+                is_dose_admin_apr29,
+                is_fully_vax_msa_before_apr11,
+                is_fully_vax_before_jan14
+            ]):
+                self.dfs[(sheet.level, sig, NOT_PROP)] = pd.DataFrame(
                         columns = ["geo_id", "timestamp", "val", \
                             "se", "sample_size", "publish_date"]
                     )
                 continue
 
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
+            # The name of the cumulative vaccination was changed after 03/09/2021
+            # when J&J vaccines were added.
+            if (sig == "fully vaccinated") and (len(sig_select)==0):
+                sig_select = [s for s in select if s[-1].find("people with full course") >= 0]
+            # Since "doses administered" is a substring of another desired header,
+            # "booster doses administered", we need to more strictly check if "doses administered"
+            # occurs at the beginning of a header to find the correct match.
+            if sig == "doses administered":
+                sig_select = [s for s in select if s[-1].startswith(sig)]
             assert len(sig_select) > 0, \
                 f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
-            self.dfs[(sheet.level, sig)] = pd.concat([
+            self.dfs[(sheet.level, sig, NOT_PROP)] = pd.concat([
                 pd.DataFrame({
                     "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
                     "timestamp": pd.to_datetime(self.times[si[0]][sig]),
@@ -269,16 +382,19 @@ class Dataset:
                 })
                 for si in sig_select
             ])
-
         for sig in COUNTS_7D_SIGNALS:
-            self.dfs[(sheet.level, sig)]["val"] /= 7 # 7-day total -> 7-day average
-
+            assert (sheet.level, sig, NOT_PROP) in self.dfs.keys()
+            self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
 
 def as_cached_filename(params, config):
     """Formulate a filename to uniquely identify this report in the input cache."""
+    # eg "Community Profile Report 20220128.xlsx"
+    # but delimiters vary; don't get tripped up if they do something wacky like
+    # Community.Profile.Report.20220128.xlsx
+    name, _, ext = config['filename'].rpartition(".")
     return os.path.join(
         params['indicator']['input_cache'],
-        f"{config['assetId']}--{config['filename']}"
+        f"{name}--{config['assetId']}.{ext}"
     )
 
 def fetch_listing(params):
@@ -294,7 +410,6 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
-
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
         listing = [el for el in listing if not os.path.exists(el['cached_filename'])]
@@ -307,12 +422,12 @@ def fetch_listing(params):
             el for el in listing
             if start_date <= el['publish_date'] <= end_date
         ]
-    # reference date is guaranteed to be before publish date, so we can trim
+    # reference date is guaranteed to be on or before publish date, so we can trim
     # reports that are too early
     if 'export_start_date' in params['indicator']:
         listing = [
             el for el in listing
-            if params['indicator']['export_start_date'] < el['publish_date']
+            if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
     return listing
@@ -359,7 +474,6 @@ def fetch_new_reports(params, logger=None):
 
     # download and parse individual reports
     datasets = download_and_parse(listing, logger)
-
     # collect like signals together, keeping most recent publish date
     ret = {}
     for sig, lst in datasets.items():
@@ -376,7 +490,6 @@ def fetch_new_reports(params, logger=None):
 
         if len(latest_sig_df.index) > 0:
             latest_sig_df = latest_sig_df.reset_index(drop=True)
-
             assert all(latest_sig_df.groupby(
                     ["timestamp", "geo_id"]
                 ).size(
@@ -390,13 +503,46 @@ def fetch_new_reports(params, logger=None):
     # add nation from state
     geomapper = GeoMapper()
     for sig in SIGNALS:
-        state_key = ("state", sig)
+        state_key = ("state", sig, NOT_PROP)
         if state_key not in ret:
             continue
-        ret[("nation", sig)] = nation_from_state(
+        ret[("nation", sig, NOT_PROP)] = nation_from_state(
             ret[state_key].rename(columns={"geo_id": "state_id"}),
             sig,
             geomapper
         )
 
+    for key, df in ret.copy().items():
+        (geo, sig, _) = key
+        if SIGNALS[sig]["make_prop"]:
+            ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
+
     return ret
+
+def generate_prop_signal(df, geo, geo_mapper):
+    """Transform base df into a proportion (per 100k population)."""
+    if geo == "state":
+        geo = "state_id"
+    if geo == "county":
+        geo = "fips"
+
+    # Add population data
+    if geo == "msa":
+        map_df = geo_mapper.get_crosswalk("fips", geo)
+        map_df = geo_mapper.add_population_column(
+            map_df, "fips"
+        ).drop(
+            "fips", axis=1
+        ).groupby(
+            geo
+        ).sum(
+        ).reset_index(
+        )
+        df = pd.merge(df, map_df, left_on="geo_id", right_on=geo, how="inner")
+    else:
+        df = geo_mapper.add_population_column(df, geo, geocode_col="geo_id")
+
+    df["val"] = df["val"] / df["population"] * 100000
+    df.drop(["population", geo], axis=1, inplace=True)
+
+    return df

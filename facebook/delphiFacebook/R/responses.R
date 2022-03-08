@@ -183,6 +183,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- bodge_C6_C8(input_data, wave)
   input_data <- bodge_B13(input_data, wave)
   input_data <- bodge_E1(input_data, wave)
+  input_data <- bodge_V2a(input_data, wave)
 
   input_data <- code_symptoms(input_data, wave)
   input_data <- code_hh_size(input_data, wave)
@@ -500,6 +501,36 @@ bodge_B13 <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Fix column names in Wave 13.
+#'
+#' In Wave 13, a new item ("How many initial doses or shots did you receive of a
+#' COVID-19 vaccine?") was added under the name V2a. However, a different item
+#' ("Did you receive (or do you plan to receive) all recommended doses?") was
+#' asked under the name V2a in Waves 8-10. To differentiate, use the name V2d
+#' for the newer item.
+#'
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_V2a <- function(input_data, wave) {
+  if ( wave != 13 ) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+
+  if ( "V2a" %in% names(input_data) ) {
+    input_data <- rename(input_data,
+                         V2d = .data$V2a
+    )
+  }
+
+  return(input_data)
+}
+
+
 #' Fix E1_* names in Wave 11 data after ~June 16, 2021.
 #' 
 #' Items E1_1 through E1_4 are part of a matrix. Qualtrics, for unknown reasons,
@@ -617,7 +648,7 @@ create_complete_responses <- function(input_data, county_crosswalk, params)
     "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
     "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", # added in Wave 11
     "V1alt", "B13a", "V15c", "P1", "P2", "P3", "P4", "P5", "P6", # added in experimental Wave 12
-    "C17b", "V17_1", "V17_2", "V2b", "V2c", # added in Wave 13
+    "C17b", "V17_month", "V17_year", "V2b", "V2c", "V2d", # added in Wave 13
     
     "raceethnicity", "token", "wave", "w12_treatment", "module", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing

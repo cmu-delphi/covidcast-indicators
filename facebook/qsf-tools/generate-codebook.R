@@ -20,6 +20,7 @@ process_qsf <- function(path_to_qsf,
                         path_to_shortname_map="./static/item_shortquestion_map.csv",
                         path_to_replacement_map="./static/item_replacement_map.csv") {
   q <- read_json(path_to_qsf)
+  wave <- get_wave(path_to_qsf)
   
   # get the survey elements with flow logic (should be one per block randomization branch)
   ii_flow <- q$SurveyElements %>%
@@ -68,12 +69,14 @@ process_qsf <- function(path_to_qsf,
   
   # B13 was originally named incorrectly. Rename manually as needed
   items[items == "B13 "] <- "B13"
+  # V2a in Wave 13 was originally named incorrectly. Rename manually as needed
+  if (wave == 13) {
+    items[items == "V2a"] <- "V2d"
+  }
   
   # get the text of the question:
   questions <- displayed_questions %>% 
-    map_chr(~ .x$Payload$QuestionText) %>% 
-    str_remove_all("<[^<>]+>") %>% 
-    str_replace_all("&nbsp;", " ")
+    map_chr(~ .x$Payload$QuestionText)
   
   # get the type of question:
   type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix")
@@ -289,7 +292,7 @@ process_qsf <- function(path_to_qsf,
     mutate(replaces = ifelse(variable %in% rownames(replaces_map), 
                              replaces_map[variable, "old_item"], 
                              NA_character_),
-           wave = get_wave(path_to_qsf)
+           wave = wave
     ) %>% 
     select(wave,
            variable,

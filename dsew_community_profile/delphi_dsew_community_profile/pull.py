@@ -534,11 +534,7 @@ def fetch_new_reports(params, logger=None):
 
             # No longer need "total" signal.
             del ret[total_key]
-        elif sig == "total":
-            # If the signal is test volume, keep publish date to be used when
-            # combining with test positivity.
-            continue
-        else:
+        elif sig != "total":
             # If signal is not test volume or test positivity, we don't need
             # publish date.
             df = df.drop("publish_date", axis=1)
@@ -583,7 +579,7 @@ def unify_testing_sigs(positivity_df, volume_df):
 
     This combines test positivity and testing volume into a single signal,
     where testing volume *from the same spreadsheet/publish date* (NOT the
-    same reported date) is used as the sample size for test positivity.
+    same reference date) is used as the sample size for test positivity.
 
     Total testing volume is typically provided for a 7-day period about 4 days
     before the test positivity period. Since the CPR is only published on
@@ -595,13 +591,13 @@ def unify_testing_sigs(positivity_df, volume_df):
     This approach makes the signals maximally available (5 days per week) with
     low latency. It avoids complications of having to process multiple
     spreadsheets each day, and the fact that test positivity and test volume
-    are not available for all the same reported dates.
+    are not available for all the same reference dates.
 
-    Discussion of decision and alternatives:
+    Discussion of decision and alternatives (Delphi-internal share drive):
     https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
 
     """
-    # Combine test positivity and test volume.
+    # Combine test positivity and test volume, maintaining "this week" and "previous week" status.
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
     volume_df = add_max_ts_col(volume_df)[

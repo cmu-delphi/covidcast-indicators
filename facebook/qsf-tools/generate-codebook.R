@@ -76,9 +76,7 @@ process_qsf <- function(path_to_qsf,
   
   # get the text of the question:
   questions <- displayed_questions %>% 
-    map_chr(~ .x$Payload$QuestionText) %>% 
-    str_remove_all("<[^<>]+>") %>% 
-    str_replace_all("&nbsp;", " ")
+    map_chr(~ .x$Payload$QuestionText)
   
   # get the type of question:
   type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix")

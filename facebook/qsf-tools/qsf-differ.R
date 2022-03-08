@@ -14,6 +14,8 @@ options(warn = 1)
 suppressPackageStartupMessages({
   library(jsonlite)
   library(stringr)
+  library(dplyr)
+  library(readr)
   source("qsf-utils.R")
 })
 
@@ -25,7 +27,18 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
   old_qsf <- get_qsf_file(old_qsf_path)
   new_qsf <- get_qsf_file(new_qsf_path)
   
-  diff_surveys(old_qsf, new_qsf)
+  old_wave <- get_wave(old_qsf_path)
+  new_wave <- get_wave(new_qsf_path)
+  
+  out <- diff_surveys(old_qsf, new_qsf) %>%
+    mutate(
+      old_wave = old_wave, new_wave = new_wave
+    ) %>% 
+    select(new_wave, old_wave, everything())
+  write_csv(
+    out,
+    paste0("diff_", old_wave, "-", new_wave, ".csv", collapse="")
+  )
   
   return(NULL)
 }
@@ -126,19 +139,22 @@ diff_surveys <- function(old_qsf, new_qsf) {
   added <- setdiff(new_shown_items, old_shown_items)
   removed <- setdiff(old_shown_items, new_shown_items)
   
-  print_questions(added, "Added", new_questions)
-  print_questions(removed, "Removed", old_questions)
+  added_df <- create_diff_df(added, "Added", new_questions)
+  removed_df <- create_diff_df(removed, "Removed", old_questions)
   
   ## For questions that appear in both surveys, check for changes in wording,
   ## display logic, and answer options.
   shared <- intersect(old_shown_items, new_shown_items)
   
-  diff_question(shared, "QuestionText", old_questions, new_questions)
-  diff_question(shared, "DisplayLogic", old_questions, new_questions)
-  diff_question(shared, "Choices", old_questions, new_questions)
-  diff_question(shared, "Subquestions", old_questions, new_questions)
+  text_df <- diff_question(shared, "QuestionText", old_questions, new_questions)
+  logic_df <- diff_question(shared, "DisplayLogic", old_questions, new_questions)
+  choice_df <- diff_question(shared, "Choices", old_questions, new_questions)
+  subq_df <- diff_question(shared, "Subquestions", old_questions, new_questions)
   
-  return(NULL)
+  out <- bind_rows(
+    added_df, removed_df, text_df, logic_df, choice_df, subq_df
+  )
+  return(out)
 }
 
 #' Compare a single question field in the two surveys.
@@ -159,9 +175,9 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText", "Displ
       changed <- append(changed, question)
     }
   }
-  print_questions(changed, change_type, new_qsf)
+  out <- create_diff_df(changed, change_type, new_qsf)
   
-  return(NULL)
+  return(out)
 }
 
 #' Print results with custom message for each possible change type.
@@ -172,26 +188,27 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText", "Displ
 #' @param reference_qsf named list of trimmed output from `get_qsf_file` for survey that
 #'   contains descriptive info about a particular type of change. For "removed"
 #'   questions, should be older survey, else newer survey.
-print_questions <- function(questions, change_type=c("Added", "Removed", "Choices", "QuestionText", "DisplayLogic", "Subquestions"), reference_qsf) {
+create_diff_df <- function(questions, change_type=c("Added", "Removed", "Choices", "QuestionText", "DisplayLogic", "Subquestions"), reference_qsf) {
+  out <- data.frame()
+  
   if ( length(questions) > 0 ) {
     change_type <- match.arg(change_type)
     
-    text_options <- list(
-      Added = "Added: item %s (%s)\n",
-      Removed = "Removed: item %s (%s)\n",
-      QuestionText = "Question wording changed: item %s (%s)\n",
-      DisplayLogic = "Display logic changed: item %s (%s)\n",
-      Choices = "Answer choices changed: item %s (%s)\n",
-      Subquestions = "Matrix subquestions changed: item %s (%s)\n"
-    )
-    
+    change_descriptions <- list(
+      Added = "Item added",
+      Removed = "Item removed",
+      QuestionText = "Question wording changed",
+      DisplayLogic = "Display logic changed",
+      Choices = "Answer choices changed",
+      Subquestions = "Matrix subquestions changed"
+    )    
     questions <- sort(questions)
     qids <- sapply(questions, function(question) { reference_qsf[[question]]$QuestionID })
     
-    cat("\n ")
-    cat(sprintf(text_options[[change_type]], questions, qids))
+    out <- data.frame(change_type=change_descriptions[[change_type]], item=questions, qid=qids)
   }
-  return(NULL)
+  
+  return(out)
 }
 
 

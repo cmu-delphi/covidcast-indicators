@@ -139,8 +139,8 @@ diff_surveys <- function(old_qsf, new_qsf) {
   added <- setdiff(new_shown_items, old_shown_items)
   removed <- setdiff(old_shown_items, new_shown_items)
   
-  added_df <- create_diff_df(added, "Added", new_questions)
-  removed_df <- create_diff_df(removed, "Removed", old_questions)
+  added_df <- create_diff_df(added, "Added", NULL, new_questions)
+  removed_df <- create_diff_df(removed, "Removed", old_questions, NULL)
   
   ## For questions that appear in both surveys, check for changes in wording,
   ## display logic, and answer options.
@@ -177,7 +177,7 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
       changed <- append(changed, question)
     }
   }
-  out <- create_diff_df(changed, change_type, new_qsf)
+  out <- create_diff_df(changed, change_type, old_qsf, new_qsf)
   
   return(out)
 }
@@ -193,7 +193,7 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
 create_diff_df <- function(questions, change_type=c("Added", "Removed",
                                                     "Choices", "QuestionText",
                                                     "DisplayLogic", "Subquestions"),
-                           reference_qsf) {
+                           old_reference_qsf, new_reference_qsf) {
   out <- data.frame()
   
   if ( length(questions) > 0 ) {
@@ -208,9 +208,24 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
       Subquestions = "Matrix subquestions changed"
     )    
     questions <- sort(questions)
-    qids <- sapply(questions, function(question) { reference_qsf[[question]]$QuestionID })
+
+    if (!is.null(old_reference_qsf)) {
+      old_qids <- sapply(questions, function(question) { old_reference_qsf[[question]]$QuestionID })
+    } else {
+      old_qids <- NA
+    }
+    if (!is.null(new_reference_qsf)) {
+      new_qids <- sapply(questions, function(question) { new_reference_qsf[[question]]$QuestionID })
+    } else {
+      new_qids <- NA
+    }
     
-    out <- data.frame(change_type=change_descriptions[[change_type]], item=questions, qid=qids)
+    out <- data.frame(
+      change_type=change_descriptions[[change_type]],
+      item=questions,
+      old_qid=old_qids,
+      new_qid=new_qids
+    )
   }
   
   return(out)

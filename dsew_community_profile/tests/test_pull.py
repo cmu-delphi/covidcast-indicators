@@ -2,14 +2,16 @@ from collections import namedtuple
 from datetime import date, datetime
 from itertools import chain
 import pandas as pd
+import numpy as np
 import pytest
 from unittest.mock import patch, Mock
 
 from delphi_utils.geomap import GeoMapper
 
-from delphi_dsew_community_profile.pull import DatasetTimes
-from delphi_dsew_community_profile.pull import Dataset
-from delphi_dsew_community_profile.pull import fetch_listing, nation_from_state, generate_prop_signal
+from delphi_dsew_community_profile.pull import (DatasetTimes, Dataset,
+    fetch_listing, nation_from_state, generate_prop_signal,
+    std_err, add_max_ts_col, unify_testing_sigs)
+
 
 example = namedtuple("example", "given expected")
         
@@ -185,7 +187,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)]*2,
                 'val': [15., 150.],
                 'se': [None, None],
-                'sample_size': [None, None],})
+                'sample_size': [None, None],
+                'publish_date': [datetime(year=2020, month=1, day=1)]*2,})
 
         pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
         wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
@@ -207,7 +210,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)],
                 'val': [15. + 150.],
                 'se': [None],
-                'sample_size': [None],}),
+                'sample_size': [None],
+                'publish_date': [datetime(year=2020, month=1, day=1)],}),
             check_like=True
         )
 
@@ -222,7 +226,8 @@ class TestPull:
                 'timestamp': [datetime(year=2020, month=1, day=1)],
                 'val': [15*pa_pop/tot_pop + 150*wv_pop/tot_pop],
                 'se': [None],
-                'sample_size': [None],}),
+                'sample_size': [None],
+                'publish_date': [datetime(year=2020, month=1, day=1)],}),
             check_like=True
         )
 
@@ -305,4 +310,114 @@ class TestPull:
                 ),
                 expected_df,
                 check_like=True
+            )
+
+    def test_unify_testing_sigs(self):
+        positivity_df = pd.DataFrame({
+            'geo_id': ["ca", "ca", "fl", "fl"],
+            'timestamp': [datetime(2021, 10, 27), datetime(2021, 10, 20)]*2,
+            'val': [0.2, 0.34, 0.7, 0.01],
+            'se': [None] * 4,
+            'sample_size': [None] * 4,
+            'publish_date': [datetime(2021, 10, 30)]*4,
+        })
+        base_volume_df = pd.DataFrame({
+            'geo_id': ["ca", "ca", "fl", "fl"],
+            'timestamp': [datetime(2021, 10, 23), datetime(2021, 10, 16)]*2,
+            'val': [None] * 4,
+            'se': [None] * 4,
+            'sample_size': [None] * 4,
+            'publish_date': [datetime(2021, 10, 30)]*4,
+        })
+
+        examples = [
+            example(
+                [positivity_df, base_volume_df.assign(val = [101, 102, 103, 104])],
+                positivity_df.assign(
+                    sample_size = [101, 102, 103, 104],
+                    se = lambda df: np.sqrt(df.val * (1 - df.val) / df.sample_size)
+                )
+            ), # No filtering
+            example(
+                [positivity_df, base_volume_df.assign(val = [110, 111, 112, 113]).iloc[::-1]],
+                positivity_df.assign(
+                    sample_size = [110, 111, 112, 113],
+                    se = lambda df: np.sqrt(df.val * (1 - df.val) / df.sample_size)
+                )
+            ), # No filtering, volume df in reversed order
+            example(
+                [positivity_df, base_volume_df.assign(val = [100, 5, 1, 6])],
+                positivity_df.assign(
+                    sample_size = [100, 5, 1, 6]
+                ).iloc[[0, 3]].assign(
+                    se = lambda df: np.sqrt(df.val * (1 - df.val) / df.sample_size)
+                )
+            )
+        ]
+        for ex in examples:
+            pd.testing.assert_frame_equal(unify_testing_sigs(ex.given[0], ex.given[1]), ex.expected)
+
+        with pytest.raises(AssertionError):
+            # Inputs have different numbers of rows.
+            unify_testing_sigs(positivity_df, positivity_df.iloc[0])
+
+    def test_add_max_ts_col(self):
+        input_df = pd.DataFrame({
+            'geo_id': ["ca", "ca", "fl", "fl"],
+            'timestamp': [datetime(2021, 10, 27), datetime(2021, 10, 20)]*2,
+            'val': [1, 2, 3, 4],
+            'se': [None] * 4,
+            'sample_size': [None] * 4,
+            'publish_date': [datetime(2021, 10, 30)]*4,
+        })
+        examples = [
+            example(input_df, input_df.assign(is_max_group_ts = [True, False, True, False])),
+        ]
+        for ex in examples:
+            pd.testing.assert_frame_equal(add_max_ts_col(ex.given), ex.expected)
+
+        with pytest.raises(AssertionError):
+            # Input df has 2 timestamps per geo id-publish date combination, but not 2 unique timestamps.
+            add_max_ts_col(
+                pd.DataFrame({
+                    'geo_id': ["ca", "ca", "fl", "fl"],
+                    'timestamp': [datetime(2021, 10, 27)]*4,
+                    'val': [1, 2, 3, 4],
+                    'se': [None] * 4,
+                    'sample_size': [None] * 4,
+                    'publish_date': [datetime(2021, 10, 30)]*4,
+                })
+            )
+        with pytest.raises(AssertionError):
+            # Input df has fewer than 2 timestamps per geo id-publish date combination.
+            add_max_ts_col(
+                pd.DataFrame({
+                    'geo_id': ["ca", "fl"],
+                    'timestamp': [datetime(2021, 10, 27)]*2,
+                    'val': [1, 2],
+                    'se': [None] * 2,
+                    'sample_size': [None] * 2,
+                    'publish_date': [datetime(2021, 10, 30)]*2,
+                })
+            )
+
+    def test_std_err(self):
+        df = pd.DataFrame({
+            "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1],
+            "sample_size": [2, 2, 5, 10, 20, 50]
+        })
+
+        expected_se = np.sqrt(df.val * (1 - df.val) / df.sample_size)
+        se = std_err(df)
+
+        assert (se >= 0).all()
+        assert not np.isnan(se).any()
+        assert not np.isinf(se).any()
+        assert np.allclose(se, expected_se, equal_nan=True)
+        with pytest.raises(AssertionError):
+            std_err(
+                pd.DataFrame({
+                    "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1],
+                    "sample_size": [2, 2, 5, 10, 20, 0]
+                })
             )

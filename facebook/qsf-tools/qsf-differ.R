@@ -166,7 +166,9 @@ diff_surveys <- function(old_qsf, new_qsf) {
 #'   survey
 #' @param new_qsf named list of trimmed output from `get_qsf_file` for newer
 #'   survey
-diff_question <- function(names, change_type=c("Choices", "QuestionText", "DisplayLogic", "Subquestions"), old_qsf, new_qsf) {
+diff_question <- function(names, change_type=c("Choices", "QuestionText",
+                                               "DisplayLogic", "Subquestions"),
+                          old_qsf, new_qsf) {
   change_type <- match.arg(change_type)
   
   changed <- c()
@@ -188,7 +190,10 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText", "Displ
 #' @param reference_qsf named list of trimmed output from `get_qsf_file` for survey that
 #'   contains descriptive info about a particular type of change. For "removed"
 #'   questions, should be older survey, else newer survey.
-create_diff_df <- function(questions, change_type=c("Added", "Removed", "Choices", "QuestionText", "DisplayLogic", "Subquestions"), reference_qsf) {
+create_diff_df <- function(questions, change_type=c("Added", "Removed",
+                                                    "Choices", "QuestionText",
+                                                    "DisplayLogic", "Subquestions"),
+                           reference_qsf) {
   out <- data.frame()
   
   if ( length(questions) > 0 ) {

@@ -115,10 +115,10 @@ get_qsf_file <- function(path,
 #' @return The modified questions_list object
 safe_insert_question <- function(questions_list, question) {
   if ( !is.null(questions_list[[question$DataExportTag]]) ) {
-    old_qid <- questions_list[[question$DataExportTag]]$QuestionID
+    already_seen_qid <- questions_list[[question$DataExportTag]]$QuestionID
     new_qid <- question$QuestionID
     
-    stop(paste0("Multiple copies of item ", question$DataExportTag, " exist, ", old_qid, " and ", new_qid))
+    stop(paste0("Multiple copies of item ", question$DataExportTag, " exist, ", already_seen_qid, " and ", new_qid))
   }
   
   questions_list[[question$DataExportTag]] <- question

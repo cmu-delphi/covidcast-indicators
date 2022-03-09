@@ -187,13 +187,14 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
 #' @param questions character vector of Qualtrics question IDs for items that
 #'   changed between survey versions
 #' @param change_type character; type of change to look for
-#' @param reference_qsf named list of trimmed output from `get_qsf_file` for survey that
-#'   contains descriptive info about a particular type of change. For "removed"
-#'   questions, should be older survey, else newer survey.
+#' @param old_qsf named list of trimmed output from `get_qsf_file` for older
+#'   survey
+#' @param new_qsf named list of trimmed output from `get_qsf_file` for newer
+#'   survey
 create_diff_df <- function(questions, change_type=c("Added", "Removed",
                                                     "Choices", "QuestionText",
                                                     "DisplayLogic", "Subquestions"),
-                           old_reference_qsf, new_reference_qsf) {
+                           old_qsf, new_qsf) {
   out <- data.frame()
   
   if ( length(questions) > 0 ) {
@@ -209,13 +210,13 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
     )    
     questions <- sort(questions)
 
-    if (!is.null(old_reference_qsf)) {
-      old_qids <- sapply(questions, function(question) { old_reference_qsf[[question]]$QuestionID })
+    if (!is.null(old_qsf, new_qsf {
+      old_qids <- sapply(questions, function(question) { old_qsf, new_qsfquestion]]$QuestionID })
     } else {
       old_qids <- NA
     }
-    if (!is.null(new_reference_qsf)) {
-      new_qids <- sapply(questions, function(question) { new_reference_qsf[[question]]$QuestionID })
+    if (!is.null(new_qsf)) {
+      new_qids <- sapply(questions, function(question) { new_qsf[[question]]$QuestionID })
     } else {
       new_qids <- NA
     }

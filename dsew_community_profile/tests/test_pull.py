@@ -1,7 +1,10 @@
 from collections import namedtuple
+from dataclasses import dataclass
 from datetime import date, datetime
 from itertools import chain
+from typing import Any, Dict, List, Union
 import pandas as pd
+from pandas.util.testing import assert_frame_equal
 import numpy as np
 import pytest
 from unittest.mock import patch, Mock
@@ -10,11 +13,21 @@ from delphi_utils.geomap import GeoMapper
 
 from delphi_dsew_community_profile.pull import (DatasetTimes, Dataset,
     fetch_listing, nation_from_state, generate_prop_signal,
-    std_err, add_max_ts_col, unify_testing_sigs)
+    std_err, add_max_ts_col, unify_testing_sigs, interpolate_missing_values)
 
 
 example = namedtuple("example", "given expected")
-        
+
+def _assert_frames_equal_ignore_row_order(df1, df2, index_cols: List[str] = None):
+    return assert_frame_equal(df1.set_index(index_cols).sort_index(), df2.set_index(index_cols).sort_index())
+
+def _set_df_datatypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
+        df = df.copy()
+        for k, v in dtypes.items():
+            if k in df.columns:
+                df[k] = df[k].astype(v)
+        return df
+
 class TestPull:
     def test_DatasetTimes(self):
         examples = [
@@ -453,3 +466,37 @@ class TestPull:
                     "sample_size": [2, 2, 5, 10, 20, 0]
                 })
             )
+
+    def test_interpolation(self):
+        ex1 = Example(
+            geo_id = ["1"] * 8 + ["2"] * 6,
+            timestamp = list(pd.date_range("2022-01-01", "2022-01-05")) + list(pd.date_range("2022-01-08", "2022-01-10")) + list(pd.date_range("2022-01-01", "2022-01-03")) + list(pd.date_range("2022-01-08", "2022-01-10")),
+            val = [i ** 2 - i + 5 for i in range(2, 12) if i % 7 >= 2] + [3 * i ** 2 + 4 * i - 10 for i in range(4, 14) if i % 7 >= 4]
+        )
+        dfs1 = dict({
+            ("src", "sig", False): ex1.df
+        })
+        interpolated_dfs1 = interpolate_missing_values(dfs1)
+        expected_ex1 = Example(
+            geo_id = ["1"] * 10 + ["2"] * 10,
+            timestamp = list(pd.date_range("2022-01-01", "2022-01-10")) * 2,
+            val = [i ** 2 - i + 5 for i in range(2, 12)] + [3 * i ** 2 + 4 * i - 10 for i in range(4, 14)]
+        )
+        expected_dfs1 = dict({
+            ("src", "sig", False): expected_ex1.df
+        })
+        _assert_frames_equal_ignore_row_order(interpolated_dfs1[("src", "sig", False)], expected_dfs1[("src", "sig", False)], index_cols=["geo_id", "timestamp"])
+
+@dataclass
+class Example:
+    geo_id: List[str]
+    timestamp: List[Union[str, date]]
+    val: List[float]
+
+    @property
+    def df(self):
+        return _set_df_datatypes(pd.DataFrame({
+            "geo_id": self.geo_id,
+            "timestamp": self.timestamp,
+            "val": self.val,
+        }), {"geo_id": str, "timestamp": "datetime64[ns]", "val": float})

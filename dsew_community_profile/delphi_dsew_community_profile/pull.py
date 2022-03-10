@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import datetime
 import os
 import re
+from typing import Dict, Tuple
 from urllib.parse import quote_plus as quote_as_url
 
 import pandas as pd
@@ -15,6 +16,8 @@ from delphi_utils.geomap import GeoMapper
 from .constants import (TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
     IS_PROP, NOT_PROP,
     DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING)
+
+DataDict = Dict[Tuple[str, str, bool], pd.DataFrame]
 
 # YYYYMMDD
 # example: "Community Profile Report 20211104.xlsx"
@@ -543,7 +546,28 @@ def fetch_new_reports(params, logger=None):
         if SIGNALS[sig]["make_prop"]:
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
 
+    ret = interpolate_missing_values(ret)
+
     return ret
+
+def interpolate_missing_values(dfs: DataDict) -> DataDict:
+    interpolate_df = dict()
+    for key, df in dfs.items():
+        geo_dfs = []
+        for geo, group_df in df.groupby("geo_id"):
+            reindexed_group_df = group_df.set_index("timestamp").reindex(pd.date_range(df.timestamp.min(), df.timestamp.max()))
+            reindexed_group_df["geo_id"] = geo
+            if "val" in reindexed_group_df.columns:
+                reindexed_group_df["val"] = reindexed_group_df["val"].interpolate(method="cubic")
+            if "se" in reindexed_group_df.columns:
+                reindexed_group_df["se"] = None
+            if "sample_size" in reindexed_group_df.columns:
+                reindexed_group_df["sample_size"] = reindexed_group_df["sample_size"].interpolate(method="cubic")
+            if "publish_date" in reindexed_group_df.columns:
+                reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(method="bfill")
+            geo_dfs.append(reindexed_group_df)
+        interpolate_df[key] = pd.concat(geo_dfs).reset_index().rename(columns={"index": "timestamp"})
+    return interpolate_df
 
 def generate_prop_signal(df, geo, geo_mapper):
     """Transform base df into a proportion (per 100k population)."""

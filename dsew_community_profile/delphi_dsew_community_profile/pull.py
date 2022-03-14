@@ -597,9 +597,29 @@ def unify_testing_sigs(positivity_df, volume_df):
     https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
 
     """
-    # Combine test positivity and test volume, maintaining "this week" and "previous week" status.
+    pos_groups_df = positivity_df.drop(
+        ["val", "se", "sample_size", "timestamp"],
+        axis=1
+    ).drop_duplicates(
+    )
+    vol_groups_df = volume_df.drop(
+        ["val", "se", "sample_size", "timestamp"],
+        axis=1
+    ).drop_duplicates(
+    )
+    merged = pos_groups_df.merge(
+        vol_groups_df,
+        on=["geo_id", "publish_date"],
+        how="outer",
+        indicator=True
+    )
+    assert all(merged["_merge"] == "both"), \
+        "Each publish date-geo value combination should be available for both " + \
+        "test positivity and test volume."
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
+    expected_rows = len(positivity_df.index)
+
     volume_df = add_max_ts_col(volume_df)[
         ["geo_id", "publish_date", "val", "is_max_group_ts"]
     ].rename(
@@ -608,13 +628,20 @@ def unify_testing_sigs(positivity_df, volume_df):
     col_order = list(positivity_df.columns)
     positivity_df = add_max_ts_col(positivity_df).drop(["sample_size"], axis=1)
 
+    # Combine test positivity and test volume, maintaining "this week" and
+    # "previous week" status. Perform outer join here so that we can later
+    # check if any observations did not have a match.
     df = pd.merge(
         positivity_df, volume_df,
         on=["publish_date", "geo_id", "is_max_group_ts"],
-        how="left"
+        how="outer"
     ).drop(
         ["is_max_group_ts"], axis=1
     )
+
+    # Check that every volume observation was matched with a positivity observation.
+    assert len(df.index) == expected_rows, \
+        "Data should have the same number of rows after merging total tests on."
 
     # Drop everything with 5 or fewer total tests.
     df = df.loc[df.sample_size > 5]
@@ -628,8 +655,8 @@ def add_max_ts_col(df):
     """
     Add column to differentiate timestamps for a given publish date-geo combo.
 
-    Each publish date is associated with two timestamps for test volume and
-    test positivity. The older timestamp corresponds to data from the
+    Each publish date is associated with up to two timestamps for test volume
+    and test positivity. The older timestamp corresponds to data from the
     "previous week"; the newer timestamp corresponds to the "last week".
 
     Since test volume and test positivity timestamps don't match exactly, we
@@ -638,11 +665,18 @@ def add_max_ts_col(df):
     the join. This new column, which is analagous to the "last/previous week"
     classification, is used to merge on.
     """
+    assert_df = df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
+    )
     assert all(
-        df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
+        assert_df.num_obs <= 2
     ) and all(
-        df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2
-    ), "Testing signals should have two unique timestamps per publish date-region combination."
+        assert_df[assert_df.num_obs == 2].num_unique_obs == 2
+    ), "Testing signals should have up to two timestamps per publish date-geo level " + \
+        "combination. Each timestamp should be unique."
 
     max_ts_by_group = df.groupby(
         ["publish_date", "geo_id"], as_index=False

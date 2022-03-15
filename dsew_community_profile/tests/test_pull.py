@@ -381,25 +381,57 @@ class TestPull:
             add_max_ts_col(
                 pd.DataFrame({
                     'geo_id': ["ca", "ca", "fl", "fl"],
-                    'timestamp': [datetime(2021, 10, 27)]*4,
+                    'timestamp': [datetime(2021, 10, 27)] * 4,
                     'val': [1, 2, 3, 4],
                     'se': [None] * 4,
                     'sample_size': [None] * 4,
-                    'publish_date': [datetime(2021, 10, 30)]*4,
+                    'publish_date': [datetime(2021, 10, 30)] * 4,
                 })
             )
         with pytest.raises(AssertionError):
-            # Input df has fewer than 2 timestamps per geo id-publish date combination.
+            # Input df has more than 2 timestamps per geo id-publish date combination.
+            add_max_ts_col(
+                pd.DataFrame({
+                    'geo_id': ["ca", "ca", "ca", "fl", "fl", "fl"],
+                    'timestamp': [datetime(2021, 10, 27)] * 6,
+                    'val': [1, 2, 3, 4, 5, 6],
+                    'se': [None] * 6,
+                    'sample_size': [None] * 6,
+                    'publish_date': [datetime(2021, 10, 30)] * 6,
+                })
+            )
+
+        try:
+            # Input df has fewer than 2 timestamps per geo id-publish date
+            # combination. This should not raise an exception.
             add_max_ts_col(
                 pd.DataFrame({
                     'geo_id': ["ca", "fl"],
-                    'timestamp': [datetime(2021, 10, 27)]*2,
+                    'timestamp': [datetime(2021, 10, 27)] * 2,
                     'val': [1, 2],
                     'se': [None] * 2,
                     'sample_size': [None] * 2,
-                    'publish_date': [datetime(2021, 10, 30)]*2,
+                    'publish_date': [datetime(2021, 10, 30)] * 2,
                 })
             )
+        except AssertionError as e:
+            assert False, f"'add_max_ts_col' raised exception: {e}"
+
+        try:
+            # Input df has 2 unique timestamps per geo id-publish date
+            # combination. This should not raise an exception.
+            add_max_ts_col(
+                pd.DataFrame({
+                    'geo_id': ["ca", "ca", "fl", "fl"],
+                    'timestamp': [datetime(2021, 10, 27), datetime(2021, 10, 20)] * 2,
+                    'val': [1, 2, 3, 4],
+                    'se': [None] * 4,
+                    'sample_size': [None] * 4,
+                    'publish_date': [datetime(2021, 10, 30)] * 4,
+                })
+            )
+        except AssertionError as e:
+            assert False, f"'add_max_ts_col' raised exception: {e}"
 
     def test_std_err(self):
         df = pd.DataFrame({

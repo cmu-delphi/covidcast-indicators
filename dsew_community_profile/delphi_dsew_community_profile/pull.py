@@ -383,6 +383,7 @@ class Dataset:
                 })
                 for si in sig_select
             ])
+
         for sig in COUNTS_7D_SIGNALS:
             assert (sheet.level, sig, NOT_PROP) in self.dfs.keys()
             self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
@@ -474,8 +475,18 @@ def nation_from_state(df, sig, geomapper):
     )
     df["se"] = None
     df["sample_size"] = None
+    # Recreate publish_date column
     df =  pd.merge(df, publish_date_by_ts, on="timestamp", how="left")
 
+    return df
+
+def keep_latest_report(df):
+    df = df.groupby(
+            "timestamp"
+        ).apply(
+            lambda x: x[x["publish_date"] == x["publish_date"].max()]
+        ).drop_duplicates(
+        )
     return df
 
 def fetch_new_reports(params, logger=None):
@@ -486,27 +497,33 @@ def fetch_new_reports(params, logger=None):
     datasets = download_and_parse(listing, logger)
     # collect like signals together, keeping most recent publish date
     ret = {}
-    for sig, lst in datasets.items():
-        latest_sig_df = pd.concat(
-            lst
-        ).groupby(
-            "timestamp"
-        ).apply(
-            lambda x: x[x["publish_date"] == x["publish_date"].max()]
-        ).drop_duplicates(
-        )
 
-        if len(latest_sig_df.index) > 0:
-            latest_sig_df = latest_sig_df.reset_index(drop=True)
-            assert all(latest_sig_df.groupby(
+    def generate_assert_check_value(df):
+        return all(df.groupby(
                     ["timestamp", "geo_id"]
                 ).size(
                 ).reset_index(
                     drop=True
-                ) == 1), f"Duplicate rows in {sig} indicate that one or" \
+                ) == 1)
+
+    for key, lst in datasets.items():
+        (_, sig, _) = key
+        latest_key_df = pd.concat(lst)
+        if sig == "total":
+            latest_key_df = pd.concat(apply_thres_change_date(keep_latest_report, latest_key_df))
+        else:
+            latest_key_df = keep_latest_report(latest_key_df)
+
+        if len(latest_key_df.index) > 0:
+            latest_key_df = latest_key_df.reset_index(drop=True)
+            if sig == "total":
+                assert_check_value = all(apply_thres_change_date(generate_assert_check_value, latest_key_df))
+            else:
+                assert_check_value = generate_assert_check_value(latest_key_df)
+            assert assert_check_value, f"Duplicate rows in {key} indicate that one or" \
                 + " more reports were published multiple times and the copies differ"
 
-            ret[sig] = latest_sig_df
+            ret[key] = latest_key_df
 
     # add nation from state
     geomapper = GeoMapper()
@@ -514,11 +531,20 @@ def fetch_new_reports(params, logger=None):
         state_key = ("state", sig, NOT_PROP)
         if state_key not in ret:
             continue
-        ret[("nation", sig, NOT_PROP)] = nation_from_state(
-            ret[state_key].rename(columns={"geo_id": "state_id"}),
-            sig,
-            geomapper
-        )
+
+        def nation_from_state_wrapper(df):
+            """Call nation_from_state with sig and geomapper info already set."""
+            return nation_from_state(
+                    df.rename(columns={"geo_id": "state_id"}),
+                    sig,
+                    geomapper
+                )
+
+        if sig == "total":
+            nation_df = pd.concat(apply_thres_change_date(nation_from_state_wrapper, ret[state_key]))
+        else:
+            nation_df = nation_from_state_wrapper(ret[state_key])
+        ret[("nation", sig, NOT_PROP)] = nation_df
 
     for key, df in ret.copy().items():
         (geo, sig, prop) = key
@@ -535,6 +561,8 @@ def fetch_new_reports(params, logger=None):
             # No longer need "total" signal.
             del ret[total_key]
         elif sig != "total":
+            # TODO: pretty sure this is duplicate code. Should be able to take
+            # the `ret[key]` assignment out of the conditional.
             # If signal is not test volume or test positivity, we don't need
             # publish date.
             df = df.drop("publish_date", axis=1)
@@ -716,3 +744,22 @@ def std_err(df):
     p = df.val
     n = df.sample_size
     return np.sqrt(p * (1 - p) / n)
+
+def apply_thres_change_date(apply_fn, df):
+    """
+    Apply a function separately to data before and after the test volume change date.
+
+    The test volume change date is when test volume and test positivity started being
+    repported for different reference dates within the same report.
+
+    Returns
+    -------
+    map object
+        Iterator with two entries, one for the "before" data and one for the "after" data.
+    """
+    change_date = datetime.date(2021, 3, 17)
+    list_of_dfs = [df[df.publish_date < change_date], df[df.publish_date >= change_date]]
+
+    return map(apply_fn, list_of_dfs)
+    # return pd.concat(map(apply_fn, list_of_dfs))
+    # return pd.concat([apply_fn(df) for df in list_of_dfs if len(df.index) > 0])

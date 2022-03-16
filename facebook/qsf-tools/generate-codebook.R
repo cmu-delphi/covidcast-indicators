@@ -24,7 +24,6 @@ process_qsf <- function(path_to_qsf,
   q <- read_json(path_to_qsf)
   wave <- get_wave(path_to_qsf)
   
-  block_id_item_map <- map_qids_to_module(q)
   displayed_questions <- subset_qsf_to_displayed(q)
   
   # get Qualtrics auto-assigned question IDs
@@ -164,6 +163,7 @@ process_qsf <- function(path_to_qsf,
                 response_option_randomization = response_option_randomization)
   
   # Add on module randomization
+  block_id_item_map <- map_qids_to_module(q)
   block_id_item_map <- block_id_item_map %>%
     left_join(data.frame(qid=qids, item=item_names), by=c("Questions"="qid"))
   qdf <- qdf %>% left_join(block_id_item_map, by=c(variable="item")) %>%
@@ -238,7 +238,7 @@ process_qsf <- function(path_to_qsf,
   
   qdf <- bind_rows(nonmatrix_items, matrix_items)
   
-  # indicate which items have replaced old items.
+  # indicate which new items have replaced old items.
   replaces_map <- read_csv(path_to_replacement_map,
                            col_types = cols(new_item = col_character(),
                                             old_item = col_character()

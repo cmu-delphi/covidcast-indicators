@@ -23,7 +23,7 @@ print_matrix_items <- function(path_to_qsf, survey_version=c("CMU", "UMD")) {
   # Get survey item names
   item_names <- displayed_questions %>% 
     map_chr(~ .x$Payload$DataExportTag) %>%
-    patch_item_names(item_names, survey_version, wave)
+    patch_item_names(survey_version, wave)
   
   # Get survey item formats
   qtype <- get_question_formats(displayed_questions, item_names, survey_version)
@@ -31,7 +31,8 @@ print_matrix_items <- function(path_to_qsf, survey_version=c("CMU", "UMD")) {
   qdf <- tibble(variable = item_names,
                 type = qtype)
   
-  print(qdf %>% filter(type == "Matrix") %>% pull(variable))
+  matrix_items <- qdf %>% filter(type == "Matrix") %>% pull(variable)
+  message("Wave ", wave, " has ", length(matrix_items), " matrix items: ", paste(matrix_items, collapse=", "))
   
   return(NULL)
 }

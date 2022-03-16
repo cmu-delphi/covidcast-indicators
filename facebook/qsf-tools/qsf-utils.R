@@ -124,20 +124,22 @@ subset_qsf_to_displayed <- function(qsf) {
 #' Replace erroneous question names
 #'
 #' @param item_names character vector of survey question names
-#' @param survey_version either "UMD" or "CMU"
 #' @param wave integer or float survey version
 #'
 #' @return character vector of repaired survey question names
-patch_item_names <- function(item_names, survey_version, wave) {
-  if (survey_version == "CMU") {
-    # B13 was originally named incorrectly.
-    item_names[item_names == "B13 "] <- "B13"
-    # V2a in Wave 13 was originally named incorrectly.
-    if (wave == 13) {
-      item_names[item_names == "V2a"] <- "V2d"
-    }
-  } else if (survey_version == "UMD") {
-    # pass
+patch_item_names <- function(item_names, path_to_rename_map, wave) {
+  if (file.exists(path_to_rename_map)){
+    rename_map <- read_csv(path_to_rename_map, trim_ws = FALSE,
+                           col_types = cols(old_item = col_character(),
+                                            new_item = col_character(),
+                                            in_wave = col_number() # integer or float
+                           ))	%>%
+      filter(is.na(in_wave) | in_wave == wave)
+    replacement_names <- rename_map$new_item
+    names(replacement_names) <- rename_map$old_item
+    
+    ii_to_replace <- item_names %in% names(replacement_names) %>% which()
+    item_names[ii_to_replace] <- replacement_names[item_names[ii_to_replace]]
   }
   
   return(item_names)
@@ -170,4 +172,14 @@ get_question_formats <- function(qsf, item_names, survey_version){
   }
   
   return(qtype)
+}
+
+#' Construct filepath for UMD or CMU survey version
+#'
+#' @param filename name of file that can be found in the `static` dir
+#' @param survey_version either "UMD" or "CMU"
+#'
+#' @return character vector of repaired survey question names
+localize_static_filepath <- function(filename, survey_version){
+  file.path(".", "static", survey_version, filename)
 }

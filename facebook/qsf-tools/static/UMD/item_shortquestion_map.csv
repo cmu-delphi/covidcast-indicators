@@ -1,0 +1,334 @@
+﻿item,description
+intro1_eu,participation EU
+intro2_eu,data share EU
+intro1_noneu,participation nonEU
+intro2_noneu,data share nonEU
+A1,18yrs+
+A2,country/region
+A2_2_1,country/region
+A2_2_2,administrative region
+B0a,ever had covid
+B1,symptoms 24h
+B1b,symptoms unusual
+B2,how many days
+B3,community sick 
+B4,community num sick
+B5,spent time with sick
+B6,tested ever
+B7,tested since symptoms
+B8,positive test
+B8a,most recent test positive
+B9,pay for test
+B10,reduce spendings for test payment
+B11,wanted test
+B12,reasons not tested
+B12_1,not tested: not able
+B12_2,not tested: dont know where
+B12_3,not tested: cant afford
+B12_4,not tested: no time
+B12_5,not tested: unable to travel
+B12_6,not tested: worry negative consequences
+B13,med services needed but denied 30d
+B13_1,needed but denied: emergency transportation 30d
+B13_2,needed but denied: medical care overnight 30d
+B13_3,needed but denied: medical care not overnight 30d
+B13_4,needed but denied: preventive health services 30d
+B13_5,needed but denied: medication 30d
+B13_6,needed but denied: protective equipment 30d
+B13_7,needed but denied: health product 30d
+B14,reasons test denied
+B14_1,denied: dont know where
+B14_2,denied: couldnt afford
+B14_3,denied: unable to travel
+B14_4,denied: afraid of infection
+B14_5,denied: not available 
+B15,test reasons 14d
+B15_1,test reason 14d: felt sick
+B15_2,test reason 14d: contact 
+B15_3,test reason 14d: while receving med. care
+B15_4,test reason 14d: employer/school requirement
+B15_5,test reason 14d: travel requirement
+B15_6,test reason 14d: private visit caution
+B15_7,test reason 14d: none of above
+C0a,activities 24h
+C0a_1,gone to work 24h
+C0a_2,gone to market 24h
+C0a_3,gone to restaurant 24h
+C0a_4,spent time outsider 24h
+C0a_5,attend public event 24h
+C0a_6,public transit 24h
+C0a_7,none of above 24h
+C0,activities 24h
+C0_1,gone to work 24h
+C0_2,gone to market 24h
+C0_3,gone to restaurant 24h
+C0_4,spent time outsider 24h
+C0_5,attend public event 24h
+C0_6,public transit 24h
+C1_m,direct contact outsider 24h
+C2,num outsider contact 
+C3,health clinic/hospital 7d
+C4,washing hands after public 7d
+C5,wear mask in public 7d
+C6,days spent with outsider 7d 
+C7,num washed hands 24d
+C8,soap  + water access
+C9,flu vaccine june2020
+C9a,flu vaccine
+C10,intend flu vaccine jan2021
+C11_no,reasons no flu vaccine
+C11_no_1,not intend: cost
+C11_no_2,not intend: inconvenience
+C11_no_3,not intend: unsure where
+C11_no_4,not intend: not important
+C11_no_5,not intend: havent in past
+C11_no_6,not intend: unsure why
+C11_no_7,not intend: other
+C11_unsure,reasons flu vaccine unsure
+C11_unsure_1,unsure:cost
+C11_unsure_2,unsure:inconvenience
+C11_unsure_3,unsure:unsure where
+C11_unsure_4,unsure:not important
+C11_unsure_5,unsure:havent in past
+C11_unsure_6,unsure:unsure why
+C11_unsure_7,unsure:other
+C12,flu vaccine june2019 to feb2020
+C13a,situations mask worn 24h
+C13a_1,wear mask: none of above 24h
+C13a_2,wear mask: gone to work 24h
+C13a_3,wear mask: gone to market 24h
+C13a_4,wear mask: gone to restaurant 24h
+C13a_5,wear mask: spent time outsider 24h
+C13a_6,wear mask: attend public event 24h
+C13a_7,wear mask: public transit 24h
+C13a_8,wear mask: none of above 24h
+C13,situations mask worn
+C13_1,mask: work
+C13_2,mask: market
+C13_3,mask: restaurant
+C13_4,mask: seen outsider
+C13_5,mask: public event
+C13_6,mask: public transit
+C14,avoid contact
+C14a,avoid contact 7d
+D1,nervousness 7d
+D2,depression 7d
+D3,worried illness 
+D4,food worries 
+D5,financial worries
+D6,reasons hh finance worries
+D6_1,hh finance worries: income
+D6_2,hh finance worries: healthcare costs covid
+D6_3,hh finance worries: healthcare costs non covid
+D7,paid work 7d
+D7a,paid work 4w
+D8,paid work pre feb 2020
+D9,why stopped working
+D10,main acitivity occupation
+D10a,main acitivity occupation
+E2,area type
+E3,gender
+E4,age
+E5,num ppl slept hh
+E6,num yrs education
+E7,rooms for sleep
+E7a,rooms used for sleep
+E8,education
+F1,own smartphone
+F2_1,contact tracing app
+F2_2,symptom tracking app
+F3_au,COVIDSafe app
+F3_de,Corona-Warn-App
+V1,had covid vaccination
+V2,num vaccinations
+V2a,num inital doses
+V2a_2,
+V2b,booster received
+V2c,plan booster reception
+V3,accept vaccination offer
+V3a,accept vaccination offer
+V4,vaccination more likely if recommended by
+V4_1,more likely recommended by: friends/family
+V4_2,more likely recommended by: local health workers
+V4_3,more likely recommended by: WHO
+V4_4,more likely recommended by: government
+V4_5,more likely recommended by: politicians
+V9,concern side effect
+V5a,reasons wont get vaccination
+V5a_1,wont get vax: side effects
+V5a_2,wont get vax: dk if it works
+V5a_3,wont get vax: dont believe in
+V5a_4,wont get vax: dont like
+V5a_5,wont get vax: wait and see if safe
+V5a_6,wont get vax: other ppl need more
+V5a_7,wont get vax: cost
+V5a_8,wont get vax: religion
+V5a_9,wont get vax: other 
+V5b,reasons prob wont get vaccination
+V5b_1,prob wont get vax: side effects
+V5b_2,prob wont get vax: dk if it works
+V5b_3,prob wont get vax: dont believe in
+V5b_4,prob wont get vax: dont like
+V5b_5,prob wont get vax: wait and see if safe
+V5b_6,prob wont get vax: other ppl need more
+V5b_7,prob wont get vax: cost
+V5b_8,prob wont get vax: religion
+V5b_9,prob wont get vax: other 
+V5c,reasons prob will get vaccination
+V5c_1,prob will get vax: side effects
+V5c_2,prob will get vax: dk if it works
+V5c_3,prob will get vax: dont believe in
+V5c_4,prob will get vax: dont like
+V5c_5,prob will get vax: wait and see if safe
+V5c_6,prob will get vax: other ppl need more
+V5c_7,prob will get vax: cost
+V5c_8,prob will get vax: religion
+V5c_9,prob will get vax: other 
+V5d,reasons not receiving required doses
+V5d_1,dont receive req doses: side effects
+V5d_2,dont receive req doses: dk if it works
+V5d_3,dont receive req doses: dont believe in
+V5d_4,dont receive req doses: dont like
+V5d_5,dont receive req doses: wait and see if safe
+V5d_6,dont receive req doses: other ppl need more
+V5d_7,dont receive req doses: cost
+V5d_8,dont receive req doses: religion
+V5d_9,dont receive req doses: other 
+V6,reasons vaccination not needed
+V6_1,dont need vax: already had COVID-19
+V6_2,dont need vax: no contact high-risk ppl
+V6_3,dont need vax: not high-risk group
+V6_4,dont need vax: other precautions instead
+V6_5,dont need vax: COVID-19 not serious
+V6_6,dont need vax: vaccines not beneficial
+V6_7,dont need vax: other precautions instead
+V10,medical conditions
+V10_1,med. conditions: asthma
+V10_2,med conditions: lung disease
+V10_3,med conditions: cancer
+V10_4,med conditions: diabetes
+V10_5,med conditions: high blood pressure
+V10_6,med conditions: kidney disease
+V10_7,med conditions: weakende immune sys. 
+V10_8,med conditions: heart condition
+V10_9,med condition: obesity
+V10_10,med condition: other
+V11,pregnant
+V12,smoke
+V13,how informed
+V15,have vax appointment
+V15a,have vax appointment
+V16,tried get appointment
+V16a,tried get vaccine
+V18a,vaccination barriers
+V18a_1,barriers: eligibility
+V18a_2,barriers: appointment availability
+V18a_3,barriers: appointment times
+V18a_4,barriers: technical difficulties
+V18a_5,barriers: documents
+V18a_6,barriers: internet access
+V18a_7,barriers: traveling
+V18a_8,barriers: language unavailable
+V18a_9,barriers: childcare 
+V18a_10,barriers: time off work
+V18a_11,barriers: vaccination type
+V18a_12,barriers: none of the above
+V18b,vaccination barriers
+V18b_1,barriers: eligibility
+V18b_2,barriers: appointment availability
+V18b_3,barriers: appointment times
+V18b_4,barriers: technical difficulties
+V18b_5,barriers: documents
+V18b_6,barriers: internet access
+V18b_7,barriers: traveling
+V18b_8,barriers: language unavailable
+V18b_9,barriers: childcare 
+V18b_10,barriers: time off work
+V18b_11,barriers: vaccination type
+V18b_12,barriers: none of the above
+V18b_13,not tried to get vaccination
+V18c,vaccination barriers
+V18c_1,barriers: eligibility
+V18c_2,barriers: appointment availability
+V18c_3,barriers: appointment times
+V18c_14,barriers: appointment locations
+V18c_4,barriers: technical difficulties
+V18c_5,barriers: documents
+V18c_6,barriers: internet access
+V18c_7,barriers: traveling
+V18c_8,barriers: language unavailable
+V18c_9,barriers: childcare 
+V18c_10,barriers: time off work
+V18c_11,barriers: vaccination type
+V18c_15,barriers: other
+V18c_12,barriers: none of the above
+V19,estimated vaccination timepoint
+V20_month,recent vaccination month
+V20_year,recent vaccination year
+G1,worry catching covid
+G2,effectiveness social distancing
+G3,effectiveness wearing mask
+H1,ppl maintained distance 7d
+H2,ppl wear masks 7d
+H3,friends family vaccination
+I1,covid means stop wearing mask
+I2,children cannot get covid
+I5,covid news sources 
+I5_1,covid news 7d: health workerks
+I5_2,covid news 7d: scientists
+I5_3,covid news 7d:WHO
+I5_4,covid news 7d: government
+I5_5,covid news 7d: politicians
+I5_6,covid news 7d: journalists
+I5_7,covid news 7d: friends + family
+I5_8,covid news 7d:religious leaders
+I5_9,covid news 7d: none of above
+I6,covid news sources trust
+I6_1,trust source: health workerks
+I6_2,trust source: scientists
+I6_3,trust source:WHO
+I6_4,trust source: government
+I6_5,trust source: politicians
+I6_6,trust source: journalists
+I6_7,trust source: friends + family
+I6_8,trust source:religious leaders
+I7,additional covid news
+I7_1,covid news 7d: none of above
+I7_2,covid more info: get vaccine
+I7_3,covid more info: vaccine type
+I7_4,covid more info: variants
+I7_5,covid more info: childrens ed
+I7_6,covid more info: economic impact
+I7_7,covid more info: mental health
+I7_8,covid more info: maintain social relation
+I7_9,covid more info: employment issues
+I7_10,covid more info: none of above
+I8,covid cant spread hot climate
+I9_noneu,info channels
+I9_noneu_1,info channel: online sources
+I9_noneu_2,info channel: messagers
+I9_noneu_3,info channel: newspapers
+I9_noneu_4,info channel: television
+I9_noneu_5,info channel: radio
+I9_noneu_6,info channel: none of above
+I10_noneu,info channels trust
+I10_noneu_1,trust channel: online sources
+I10_noneu_2,trust channel: messagers
+I10_noneu_3,trust channel: newspapers
+I10_noneu_4,trust channel: television
+I10_noneu_5,trust channel: radio
+J1,children <18 household
+J2,children vaccination choice
+J3,parent
+J4,age oldest child
+J5,oldest child vaccination
+J6,oldest child schooling
+J7,remote schooling
+J7_1,remote school: computer/tablet
+J7_2,remote school: cellphone
+J7_3,remote school: paper materials
+J7_4,remote school: television
+J7_5,remote school: radio
+J7_6,remote school: other
+J8,oldest child gender
+K1,delayed medical care cost reason

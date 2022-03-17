@@ -9,7 +9,35 @@ A2_2_1,country/region
 A2_2_2,administrative region
 B0a,ever had covid
 B1,symptoms 24h
+B1_1,fever 24h
+B1_2,cough 24h
+B1_3,difficulty breathing 24h
+B1_4,fatigue 24h
+B1_5,stuff runny nose 24h
+B1_6,aches muscle pain 24h
+B1_7,sore throat 24h
+B1_8,chest pain 24h
+B1_9,nausea 24h
+B1_10,loss of smell taste 24h
+B1_11,eye pain 24h
+B1_12,headache 24h
+B1_13,chills 24h
+B1_14,changes to sleep 24h
 B1b,symptoms unusual
+B1b_x1,fever unusual
+B1b_x2,cough unusual
+B1b_x3,difficulty breathing unusual
+B1b_x4,fatigue unusual
+B1b_x5,stuff runny nose unusual
+B1b_x6,aches muscle pain unusual
+B1b_x7,sore throat unusual
+B1b_x8,chest pain unusual
+B1b_x9,nausea unusual
+B1b_x10,loss of smell taste unusual
+B1b_x11,eye pain unusual
+B1b_x12,headache unusual
+B1b_x13,chills unusual
+B1b_x14,changes to sleep unusual
 B2,how many days
 B3,community sick 
 B4,community num sick

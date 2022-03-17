@@ -232,12 +232,16 @@ process_qsf <- function(path_to_qsf,
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
   # Add short description mapped to variable name
+  if (file.exists(path_to_shortname_map)) {
   description_map <- read_csv(path_to_shortname_map,
                            col_types = cols(item = col_character(),
                                             description = col_character()
                            )) %>%
     remove_rownames() %>%
     column_to_rownames(var="item")
+  } else {
+    error("path_to_shortname_map ", path_to_shortname_map, " not found")
+  }
   qdf <- qdf %>% 
     mutate(description = description_map[variable, "description"])
   
@@ -328,6 +332,8 @@ process_qsf <- function(path_to_qsf,
                           col_types = cols(item = col_character()
                           ))
     qdf <- filter(qdf, !(variable %in% drop_cols$item))
+  } else {
+    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
   }
   
   # Quality checks
@@ -357,6 +363,7 @@ add_qdf_to_codebook <- function(qdf,
   qdf_wave <- unique(qdf$wave)
   
   if (!file.exists(path_to_codebook)) {
+    # Create an empty df with the right column names and order
     codebook <- qdf[FALSE, ]
   } else {
     codebook <- read_csv(path_to_codebook, col_types = cols(
@@ -382,7 +389,7 @@ add_qdf_to_codebook <- function(qdf,
   # codebook and the new wave data.
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   codebook <- rbind(codebook, qdf) %>%
-    add_static_fields(qdf_wave, path_to_static_fields) %>% 
+    add_static_fields(qdf_wave, survey_version, path_to_static_fields) %>% 
     arrange(!is.na(.data$type), variable, wave)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) )

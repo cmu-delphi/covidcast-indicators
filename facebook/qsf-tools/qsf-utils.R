@@ -140,6 +140,8 @@ patch_item_names <- function(item_names, path_to_rename_map, wave) {
     
     ii_to_replace <- item_names %in% names(replacement_names) %>% which()
     item_names[ii_to_replace] <- replacement_names[item_names[ii_to_replace]]
+  } else {
+    warning("path_to_rename_map ", path_to_rename_map, " not found")
   }
   
   return(item_names)

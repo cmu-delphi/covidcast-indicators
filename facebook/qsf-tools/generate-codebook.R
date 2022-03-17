@@ -404,16 +404,27 @@ add_qdf_to_codebook <- function(qdf,
 #' @return codebook dataframe augmented with non-Qualtrics fields included in microdata
 add_static_fields <- function(codebook,
                               wave,
+                              survey_version,
                               path_to_static_fields="static_microdata_fields.csv") {
   static_fields <- get_static_fields(wave, path_to_static_fields)
   
-  codebook <- bind_rows(codebook, static_fields) %>% 
-    filter(!(variable == "module" & wave < 11), # module field is only available for wave >= 11
-           !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
-           !(variable == "w12_treatment" & wave != 12.5), # experimental arm field is only available for wave == 12.5
-           variable != "Random_Number"
+  codebook <- bind_rows(codebook, static_fields)
+  
+  if (survey_version == "CMU") {
+    codebook <- filter(
+      codebook,
+      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
+      !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
+      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
     )
-
+  } else if (survey_version == "UMD") {
+    codebook <- filter(
+      codebook,
+      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
+      !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
+      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
+    )
+  }
   return(codebook)
 }
 

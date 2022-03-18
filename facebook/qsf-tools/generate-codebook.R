@@ -131,6 +131,13 @@ process_qsf <- function(path_to_qsf,
       sep = "_"	
     ) %>% list()
   })
+
+  if (survey_version == "CMU") {
+    # Bodge E1_* names for Wave 11
+    if (wave == 11) {
+      matrix_subquestion_field_names[item_names == "E1"] <- list(c("E1_1", "E1_2", "E1_3", "E1_4"))
+    }
+  }
   
   # deduce if randomizing or reversing order of responses
   raw_random_type <- displayed_questions %>% 

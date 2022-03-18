@@ -88,7 +88,6 @@ process_qsf <- function(path_to_qsf,
       # Get choices that are new for this question	
       old_choices <- choices[qids == qids[ii_carryforward[ind]]] %>% unlist(recursive = FALSE)	
       carryforward_choices <- choices[qids == carryforward_choices_qid[ind]] %>% unlist(recursive = FALSE)	
-      names(carryforward_choices) <- paste0("x", names(carryforward_choices))	
       # Combine new choices and carried-forward choices	
       c(old_choices, carryforward_choices)	
     }	

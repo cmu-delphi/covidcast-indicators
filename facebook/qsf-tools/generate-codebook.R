@@ -82,13 +82,28 @@ process_qsf <- function(path_to_qsf,
     map_chr(~ .x$Payload$DynamicChoices$Locator) %>% 
     str_split(., "/") %>% 
     map(~ .x[3]) %>% unlist()
+  # create recode map for reference and later use
+  recode_map <- displayed_questions %>% 	
+    map(~ .x$Payload$RecodeValues)
+  
   choices[ii_carryforward] <- lapply(	
     seq_along(carryforward_choices_qid),	
     function(ind) {	
       # Get choices that are new for this question	
       old_choices <- choices[qids == qids[ii_carryforward[ind]]] %>% unlist(recursive = FALSE)	
-      carryforward_choices <- choices[qids == carryforward_choices_qid[ind]] %>% unlist(recursive = FALSE)	
-      # Combine new choices and carried-forward choices	
+      carryforward_choices <- choices[qids == carryforward_choices_qid[ind]] %>% unlist(recursive = FALSE)
+      
+      # By default, carried forward choices are coded during the carry as
+      # "x<original code>". They are then recoded as pure numeric codes using
+      # the `RecodeValues` field. Some carried forward choices do not have
+      # `RecodeValues` defined and so in that case we don't want to prepend the
+      # codes with "x".
+      recode_values <- recode_map[qids == qids[ii_carryforward[ind]]] %>% unlist(recursive = FALSE)	
+      
+      if (!is.null(recode_values)) {
+        names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
+      }
+      # Combine new choices and carried-forward choices
       c(old_choices, carryforward_choices)	
     }	
   )	
@@ -105,8 +120,6 @@ process_qsf <- function(path_to_qsf,
   choices[ii_matrix] <- matrix_answers[ii_matrix]	
   
   # Recode response options if overriding Qualtrics auto-assigned coding.	
-  recode_map <- displayed_questions %>% 	
-    map(~ .x$Payload$RecodeValues)	
   ii_recode <- recode_map %>%	
     map(~ !is.null(.x)) %>% 	
     unlist() %>% 	

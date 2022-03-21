@@ -7,6 +7,7 @@ import re
 from urllib.parse import quote_plus as quote_as_url
 
 import pandas as pd
+import numpy as np
 import requests
 
 from delphi_utils.geomap import GeoMapper
@@ -457,14 +458,23 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
+    # The filter in `fetch_new_reports` to keep most recent publish date gurantees
+    # that we'll only see one unique publish date per timestamp here.
+    publish_date_by_ts = df.groupby(
+        ["timestamp"]
+    )["publish_date"].apply(
+        lambda x: np.unique(x)[0]
+    ).reset_index(
+    )
     df = geomapper.replace_geocode(
-        df,
+        df.drop("publish_date", axis=1),
         'state_id',
         'nation',
         new_col="geo_id"
     )
     df["se"] = None
     df["sample_size"] = None
+    df =  pd.merge(df, publish_date_by_ts, on="timestamp", how="left")
 
     return df
 
@@ -483,8 +493,6 @@ def fetch_new_reports(params, logger=None):
             "timestamp"
         ).apply(
             lambda x: x[x["publish_date"] == x["publish_date"].max()]
-        ).drop(
-            "publish_date", axis=1
         ).drop_duplicates(
         )
 
@@ -496,7 +504,7 @@ def fetch_new_reports(params, logger=None):
                 ).reset_index(
                     drop=True
                 ) == 1), f"Duplicate rows in {sig} indicate that one or" \
-                + " more reports was published multiple times and the copies differ"
+                + " more reports were published multiple times and the copies differ"
 
             ret[sig] = latest_sig_df
 
@@ -513,7 +521,25 @@ def fetch_new_reports(params, logger=None):
         )
 
     for key, df in ret.copy().items():
-        (geo, sig, _) = key
+        (geo, sig, prop) = key
+
+        if sig == "positivity":
+            # Combine with test volume using publish date.
+            total_key = (geo, "total", prop)
+            ret[key] = unify_testing_sigs(
+                df, ret[total_key]
+            ).drop(
+                "publish_date", axis=1
+            )
+
+            # No longer need "total" signal.
+            del ret[total_key]
+        elif sig != "total":
+            # If signal is not test volume or test positivity, we don't need
+            # publish date.
+            df = df.drop("publish_date", axis=1)
+            ret[key] = df
+
         if SIGNALS[sig]["make_prop"]:
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
 
@@ -546,3 +572,113 @@ def generate_prop_signal(df, geo, geo_mapper):
     df.drop(["population", geo], axis=1, inplace=True)
 
     return df
+
+def unify_testing_sigs(positivity_df, volume_df):
+    """
+    Drop any observations with a sample size of 5 or less. Generate standard errors.
+
+    This combines test positivity and testing volume into a single signal,
+    where testing volume *from the same spreadsheet/publish date* (NOT the
+    same reference date) is used as the sample size for test positivity.
+
+    Total testing volume is typically provided for a 7-day period about 4 days
+    before the test positivity period. Since the CPR is only published on
+    weekdays, test positivity and test volume are only available for the same
+    reported dates 3 times a week. We have chosen to censor 7dav test
+    positivity based on the 7dav test volume provided in the same originating
+    spreadsheet, corresponding to a period ~4 days earlier.
+
+    This approach makes the signals maximally available (5 days per week) with
+    low latency. It avoids complications of having to process multiple
+    spreadsheets each day, and the fact that test positivity and test volume
+    are not available for all the same reference dates.
+
+    Discussion of decision and alternatives (Delphi-internal share drive):
+    https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
+
+    """
+    # Combine test positivity and test volume, maintaining "this week" and "previous week" status.
+    assert len(positivity_df.index) == len(volume_df.index), \
+        "Test positivity and volume data have different numbers of observations."
+    volume_df = add_max_ts_col(volume_df)[
+        ["geo_id", "publish_date", "val", "is_max_group_ts"]
+    ].rename(
+        columns={"val":"sample_size"}
+    )
+    col_order = list(positivity_df.columns)
+    positivity_df = add_max_ts_col(positivity_df).drop(["sample_size"], axis=1)
+
+    df = pd.merge(
+        positivity_df, volume_df,
+        on=["publish_date", "geo_id", "is_max_group_ts"],
+        how="left"
+    ).drop(
+        ["is_max_group_ts"], axis=1
+    )
+
+    # Drop everything with 5 or fewer total tests.
+    df = df.loc[df.sample_size > 5]
+
+    # Generate stderr.
+    df = df.assign(se=std_err(df))
+
+    return df[col_order]
+
+def add_max_ts_col(df):
+    """
+    Add column to differentiate timestamps for a given publish date-geo combo.
+
+    Each publish date is associated with two timestamps for test volume and
+    test positivity. The older timestamp corresponds to data from the
+    "previous week"; the newer timestamp corresponds to the "last week".
+
+    Since test volume and test positivity timestamps don't match exactly, we
+    can't use them to merge the two signals together, but we still need a way
+    to uniquely identify observations to avoid duplicating observations during
+    the join. This new column, which is analagous to the "last/previous week"
+    classification, is used to merge on.
+    """
+    assert all(
+        df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
+    ) and all(
+        df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2
+    ), "Testing signals should have two unique timestamps per publish date-region combination."
+
+    max_ts_by_group = df.groupby(
+        ["publish_date", "geo_id"], as_index=False
+    )["timestamp"].max(
+    ).rename(
+        columns={"timestamp":"max_timestamp"}
+    )
+    df = pd.merge(
+        df, max_ts_by_group,
+        on=["publish_date", "geo_id"],
+        how="outer"
+    ).assign(
+        is_max_group_ts=lambda df: df["timestamp"] == df["max_timestamp"]
+    ).drop(
+        ["max_timestamp"], axis=1
+    )
+
+    return df
+
+def std_err(df):
+    """
+    Find Standard Error of a binomial proportion.
+
+    Assumes input sample_size are all > 0.
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        Columns: val, sample_size, ...
+
+    Returns
+    -------
+    pd.Series
+        Standard error of the positivity rate of PCR-specimen tests.
+    """
+    assert all(df.sample_size > 0), "Sample sizes must be greater than 0"
+    p = df.val
+    n = df.sample_size
+    return np.sqrt(p * (1 - p) / n)

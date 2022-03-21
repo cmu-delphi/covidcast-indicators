@@ -359,7 +359,7 @@ class TestPull:
 
         with pytest.raises(AssertionError):
             # Inputs have different numbers of rows.
-            unify_testing_sigs(positivity_df, positivity_df.iloc[0])
+            unify_testing_sigs(positivity_df, positivity_df.head(n=1))
 
     def test_add_max_ts_col(self):
         input_df = pd.DataFrame({

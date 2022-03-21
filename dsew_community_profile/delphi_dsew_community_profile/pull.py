@@ -447,6 +447,8 @@ def download_and_parse(listing, logger):
 
 def nation_from_state(df, sig, geomapper):
     """Compute nation level from state df."""
+    if df.empty:
+        return df
     if SIGNALS[sig]["is_rate"]: # true if sig is a rate
         df = geomapper.add_population_column(df, "state_id") \
                       .rename(columns={"population":"weight"})
@@ -480,13 +482,25 @@ def nation_from_state(df, sig, geomapper):
 
     return df
 
-def keep_latest_report(df):
+def keep_latest_report(df, sig):
+    """Keep data associated with most recent report for each timestamp."""
     df = df.groupby(
             "timestamp"
         ).apply(
             lambda x: x[x["publish_date"] == x["publish_date"].max()]
         ).drop_duplicates(
         )
+
+    if len(df.index) > 0:
+        df = df.reset_index(drop=True)
+        assert all(df.groupby(
+                ["timestamp", "geo_id"]
+            ).size(
+            ).reset_index(
+                drop=True
+            ) == 1), f"Duplicate rows in {sig} indicate that one or" \
+            + " more reports were published multiple times and the copies differ"
+
     return df
 
 def fetch_new_reports(params, logger=None):
@@ -498,31 +512,19 @@ def fetch_new_reports(params, logger=None):
     # collect like signals together, keeping most recent publish date
     ret = {}
 
-    def generate_assert_check_value(df):
-        return all(df.groupby(
-                    ["timestamp", "geo_id"]
-                ).size(
-                ).reset_index(
-                    drop=True
-                ) == 1)
-
     for key, lst in datasets.items():
         (_, sig, _) = key
         latest_key_df = pd.concat(lst)
         if sig == "total":
-            latest_key_df = pd.concat(apply_thres_change_date(keep_latest_report, latest_key_df))
+            latest_key_df = pd.concat(apply_thres_change_date(
+                keep_latest_report,
+                latest_key_df,
+                [sig] * 2
+            ))
         else:
-            latest_key_df = keep_latest_report(latest_key_df)
+            latest_key_df = keep_latest_report(latest_key_df, sig)
 
         if len(latest_key_df.index) > 0:
-            latest_key_df = latest_key_df.reset_index(drop=True)
-            if sig == "total":
-                assert_check_value = all(apply_thres_change_date(generate_assert_check_value, latest_key_df))
-            else:
-                assert_check_value = generate_assert_check_value(latest_key_df)
-            assert assert_check_value, f"Duplicate rows in {key} indicate that one or" \
-                + " more reports were published multiple times and the copies differ"
-
             ret[key] = latest_key_df
 
     # add nation from state
@@ -532,18 +534,19 @@ def fetch_new_reports(params, logger=None):
         if state_key not in ret:
             continue
 
-        def nation_from_state_wrapper(df):
-            """Call nation_from_state with sig and geomapper info already set."""
-            return nation_from_state(
-                    df.rename(columns={"geo_id": "state_id"}),
-                    sig,
-                    geomapper
-                )
-
         if sig == "total":
-            nation_df = pd.concat(apply_thres_change_date(nation_from_state_wrapper, ret[state_key]))
+            nation_df = pd.concat(apply_thres_change_date(
+                nation_from_state,
+                ret[state_key].rename(columns={"geo_id": "state_id"}),
+                [sig] * 2,
+                [geomapper] * 2
+            ))
         else:
-            nation_df = nation_from_state_wrapper(ret[state_key])
+            nation_df = nation_from_state(
+                ret[state_key].rename(columns={"geo_id": "state_id"}),
+                sig,
+                geomapper
+            )
         ret[("nation", sig, NOT_PROP)] = nation_df
 
     for key, df in ret.copy().items():
@@ -561,8 +564,6 @@ def fetch_new_reports(params, logger=None):
             # No longer need "total" signal.
             del ret[total_key]
         elif sig != "total":
-            # TODO: pretty sure this is duplicate code. Should be able to take
-            # the `ret[key]` assignment out of the conditional.
             # If signal is not test volume or test positivity, we don't need
             # publish date.
             df = df.drop("publish_date", axis=1)
@@ -745,7 +746,7 @@ def std_err(df):
     n = df.sample_size
     return np.sqrt(p * (1 - p) / n)
 
-def apply_thres_change_date(apply_fn, df):
+def apply_thres_change_date(apply_fn, df, *apply_fn_args):
     """
     Apply a function separately to data before and after the test volume change date.
 
@@ -760,6 +761,8 @@ def apply_thres_change_date(apply_fn, df):
     change_date = datetime.date(2021, 3, 17)
     list_of_dfs = [df[df.publish_date < change_date], df[df.publish_date >= change_date]]
 
-    return map(apply_fn, list_of_dfs)
-    # return pd.concat(map(apply_fn, list_of_dfs))
-    # return pd.concat([apply_fn(df) for df in list_of_dfs if len(df.index) > 0])
+    for arg_field in apply_fn_args:
+        assert len(list_of_dfs) == len(arg_field), "Extra arguments must be iterables with " + \
+            f"length {len(list_of_dfs)}, the same as the number of dfs to process"
+
+    return map(apply_fn, list_of_dfs, *apply_fn_args)

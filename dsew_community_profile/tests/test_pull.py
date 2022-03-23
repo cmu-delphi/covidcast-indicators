@@ -18,10 +18,18 @@ from delphi_dsew_community_profile.pull import (DatasetTimes, Dataset,
 
 example = namedtuple("example", "given expected")
 
-def _assert_frames_equal_ignore_row_order(df1, df2, index_cols: List[str] = None):
-    return assert_frame_equal(df1.set_index(index_cols).sort_index(), df2.set_index(index_cols).sort_index())
+def _assert_frame_equal(df1, df2, index_cols: List[str] = None):
+    # Ensure same columns present.
+    assert set(df1.columns) == set(df2.columns)
+    # Ensure same column order.
+    df1 = df1[df1.columns]
+    df2 = df2[df1.columns]
+    # Ensure same row order by using a common index and sorting.
+    df1 = df1.set_index(index_cols).sort_index()
+    df2 = df2.set_index(index_cols).sort_index()
+    return assert_frame_equal(df1, df2)
 
-def _set_df_datatypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
+def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
         df = df.copy()
         for k, v in dtypes.items():
             if k in df.columns:
@@ -468,35 +476,48 @@ class TestPull:
             )
 
     def test_interpolation(self):
-        ex1 = Example(
-            geo_id = ["1"] * 8 + ["2"] * 6,
-            timestamp = list(pd.date_range("2022-01-01", "2022-01-05")) + list(pd.date_range("2022-01-08", "2022-01-10")) + list(pd.date_range("2022-01-01", "2022-01-03")) + list(pd.date_range("2022-01-08", "2022-01-10")),
-            val = [i ** 2 - i + 5 for i in range(2, 12) if i % 7 >= 2] + [3 * i ** 2 + 4 * i - 10 for i in range(4, 14) if i % 7 >= 4]
-        )
-        dfs1 = dict({
-            ("src", "sig", False): ex1.df
-        })
-        interpolated_dfs1 = interpolate_missing_values(dfs1)
-        expected_ex1 = Example(
-            geo_id = ["1"] * 10 + ["2"] * 10,
-            timestamp = list(pd.date_range("2022-01-01", "2022-01-10")) * 2,
-            val = [i ** 2 - i + 5 for i in range(2, 12)] + [3 * i ** 2 + 4 * i - 10 for i in range(4, 14)]
-        )
-        expected_dfs1 = dict({
-            ("src", "sig", False): expected_ex1.df
-        })
-        _assert_frames_equal_ignore_row_order(interpolated_dfs1[("src", "sig", False)], expected_dfs1[("src", "sig", False)], index_cols=["geo_id", "timestamp"])
+        DTYPES = {"geo_id": str, "timestamp": "datetime64[ns]", "val": float, "se": float, "sample_size": float, "publish_date": "datetime64[ns]"}
+        line = lambda x: 3 * x + 5
 
-@dataclass
-class Example:
-    geo_id: List[str]
-    timestamp: List[Union[str, date]]
-    val: List[float]
+        sig1 = _set_df_dtypes(pd.DataFrame({
+            "geo_id": "1",
+            "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+            "val": [line(i) for i in range(2, 12)],
+            "se": None,
+            "sample_size": [line(i) for i in range(0, 10)],
+            "publish_date": pd.to_datetime("2022-01-10")
+        }), dtypes=DTYPES)
+        # A linear signal missing two days which should be filled exactly by the linear interpolation.
+        missing_sig1 = sig1[(sig1.timestamp <= "2022-01-05") | (sig1.timestamp >= "2022-01-08")]
 
-    @property
-    def df(self):
-        return _set_df_datatypes(pd.DataFrame({
-            "geo_id": self.geo_id,
-            "timestamp": self.timestamp,
-            "val": self.val,
-        }), {"geo_id": str, "timestamp": "datetime64[ns]", "val": float})
+        sig2 = sig1.copy()
+        sig2["geo_id"] = "2"
+        # A linear signal missing everything but the end points, should be filled exactly by linear interpolation.
+        missing_sig2 = sig2[(sig2.timestamp == "2022-01-01") | (sig2.timestamp == "2022-01-10")]
+
+        sig3 = _set_df_dtypes(pd.DataFrame({
+            "geo_id": "3",
+            "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+            "val": None,
+            "se": None,
+            "sample_size": [line(i) for i in range(0, 10)],
+            "publish_date": pd.to_datetime("2022-01-10")
+        }), dtypes=DTYPES)
+        # A signal missing everything, should be left alone.
+        missing_sig3 = sig3[(sig3.timestamp <= "2022-01-05") | (sig3.timestamp >= "2022-01-08")]
+
+        sig4 = _set_df_dtypes(pd.DataFrame({
+            "geo_id": "4",
+            "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+            "val": [None] * 9 + [10.0],
+            "se": None,
+            "sample_size": [line(i) for i in range(0, 10)],
+            "publish_date": pd.to_datetime("2022-01-10")
+        }), dtypes=DTYPES)
+        # A signal missing everything except for one point, should be left alone.
+        missing_sig4 = sig4[(sig4.timestamp <= "2022-01-05") | (sig4.timestamp >= "2022-01-08")]
+
+        missing_dfs = [missing_sig1, missing_sig2, missing_sig3, missing_sig4]
+        interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): pd.concat(missing_dfs)})
+        expected_dfs = pd.concat([sig1, sig2, sig3, sig4])
+        _assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs, index_cols=["geo_id", "timestamp"])

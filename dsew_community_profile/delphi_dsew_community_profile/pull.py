@@ -515,7 +515,7 @@ def fetch_new_reports(params, logger=None):
     for key, lst in datasets.items():
         (_, sig, _) = key
         latest_key_df = pd.concat(lst)
-        if sig == "total":
+        if sig in ("total", "positivity"):
             latest_key_df = pd.concat(apply_thres_change_date(
                 keep_latest_report,
                 latest_key_df,
@@ -534,7 +534,7 @@ def fetch_new_reports(params, logger=None):
         if state_key not in ret:
             continue
 
-        if sig == "total":
+        if sig in ("total", "positivity"):
             nation_df = pd.concat(apply_thres_change_date(
                 nation_from_state,
                 ret[state_key].rename(columns={"geo_id": "state_id"}),

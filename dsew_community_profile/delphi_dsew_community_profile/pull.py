@@ -558,11 +558,11 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             reindexed_group_df = group_df.set_index("timestamp").reindex(pd.date_range(group_df.timestamp.min(), group_df.timestamp.max()))
             reindexed_group_df["geo_id"] = geo
             if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
-                reindexed_group_df["val"] = reindexed_group_df["val"].interpolate(method="linear", limit_area="inside")
+                reindexed_group_df["val"] = reindexed_group_df["val"].interpolate(method="linear", limit_area="inside").astype(float)
             if "se" in reindexed_group_df.columns:
                 reindexed_group_df["se"] = np.nan
             if "sample_size" in reindexed_group_df.columns and not reindexed_group_df["sample_size"].isna().all():
-                reindexed_group_df["sample_size"] = reindexed_group_df["sample_size"].interpolate(method="linear", limit_area="inside")
+                reindexed_group_df["sample_size"] = reindexed_group_df["sample_size"].interpolate(method="linear", limit_area="inside").astype(float)
             if "publish_date" in reindexed_group_df.columns:
                 reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(method="bfill")
             geo_dfs.append(reindexed_group_df)

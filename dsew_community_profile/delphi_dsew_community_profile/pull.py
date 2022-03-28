@@ -362,7 +362,7 @@ class Dataset:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             # The name of the cumulative vaccination was changed after 03/09/2021
             # when J&J vaccines were added.
-            if (sig == "fully vaccinated") and (len(sig_select)==0):
+            if (sig == "fully vaccinated") and (len(sig_select) == 0):
                 sig_select = [s for s in select if s[-1].find("people with full course") >= 0]
             # Since "doses administered" is a substring of another desired header,
             # "booster doses administered", we need to more strictly check if "doses administered"
@@ -491,7 +491,7 @@ def keep_latest_report(df, sig):
         ).drop_duplicates(
         )
 
-    if len(df.index) > 0:
+    if not df.empty:
         df = df.reset_index(drop=True)
         assert all(df.groupby(
                 ["timestamp", "geo_id"]
@@ -524,7 +524,7 @@ def fetch_new_reports(params, logger=None):
         else:
             latest_key_df = keep_latest_report(latest_key_df, sig)
 
-        if len(latest_key_df.index) > 0:
+        if not latest_key_df.empty:
             ret[key] = latest_key_df
 
     # add nation from state
@@ -753,6 +753,19 @@ def apply_thres_change_date(apply_fn, df, *apply_fn_args):
 
     The test volume change date is when test volume and test positivity started being
     repported for different reference dates within the same report.
+
+    Parameters
+    ----------
+    apply_fn: function
+        function to apply to data before and after the test volume change date
+    df: pd.DataFrame
+        Columns: val, sample_size, ...
+    apply_fn_args: tuple of lists
+        variable number of additional arguments to pass to the `apply_fn`.
+        Each additional argument should be a list of length 2. The first
+        element of each list will be passed to the `apply_fn` when processing
+        pre-change date data; the second element will be used for the
+        post-change date data.
 
     Returns
     -------

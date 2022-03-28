@@ -626,6 +626,7 @@ def unify_testing_sigs(positivity_df, volume_df):
     https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
 
     """
+    # check that we have positivity *and* volume for each publishdate+geo
     pos_groups_df = positivity_df.drop(
         ["val", "se", "sample_size", "timestamp"],
         axis=1

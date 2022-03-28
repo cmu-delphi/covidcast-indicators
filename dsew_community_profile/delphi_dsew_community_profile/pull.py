@@ -626,26 +626,35 @@ def unify_testing_sigs(positivity_df, volume_df):
     https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
 
     """
-    # check that we have positivity *and* volume for each publishdate+geo
-    pos_groups_df = positivity_df.drop(
-        ["val", "se", "sample_size", "timestamp"],
-        axis=1
-    ).drop_duplicates(
+    # Check that we have positivity *and* volume for each publishdate+geo, and
+    # that they have the same number of timestamps.
+    pos_count_ts = positivity_df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
     )
-    vol_groups_df = volume_df.drop(
-        ["val", "se", "sample_size", "timestamp"],
-        axis=1
-    ).drop_duplicates(
+    vol_count_ts = volume_df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
     )
-    merged = pos_groups_df.merge(
-        vol_groups_df,
+    merged = pos_count_ts.merge(
+        vol_count_ts,
         on=["geo_id", "publish_date"],
         how="outer",
         indicator=True
     )
-    assert all(merged["_merge"] == "both"), \
+    assert all(
+        merged["_merge"] == "both"
+    ) and all(
+        merged.num_obs_x == merged.num_obs_y
+    ) and all(
+        merged.num_unique_obs_x == merged.num_unique_obs_y
+    ), \
         "Each publish date-geo value combination should be available for both " + \
-        "test positivity and test volume."
+        "test positivity and test volume, and have the same number of timestamps available."
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
     expected_rows = len(positivity_df.index)
@@ -664,20 +673,26 @@ def unify_testing_sigs(positivity_df, volume_df):
     df = pd.merge(
         positivity_df, volume_df,
         on=["publish_date", "geo_id", "is_max_group_ts"],
-        how="outer"
+        how="outer",
+        indicator=True
     ).drop(
         ["is_max_group_ts"], axis=1
     )
 
     # Check that every volume observation was matched with a positivity observation.
-    assert len(df.index) == expected_rows, \
-        "Data should have the same number of rows after merging total tests on."
+    assert (len(df.index) == expected_rows) and all(df["_merge"] == "both"), \
+        "Some observations in the test positivity data were not matched with test volume data."
 
     # Drop everything with 5 or fewer total tests.
     df = df.loc[df.sample_size > 5]
 
     # Generate stderr.
-    df = df.assign(se=std_err(df))
+    df = df.assign(
+        se=std_err(df)
+    ).drop(
+        ["_merge"],
+        axis=1
+    )
 
     return df[col_order]
 

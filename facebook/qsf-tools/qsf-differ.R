@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
   library(jsonlite)
   library(stringr)
   library(dplyr)
+  library(purrr)
   library(readr)
   source("qsf-utils.R")
 })
@@ -63,27 +64,68 @@ get_qsf_file <- function(path,
   ## Questions
   questions <- Filter(function(elem) { elem[["Element"]] == "SQ" }, qsf$SurveyElements)
   
+  qids <- questions %>% 
+    map_chr(~ .x$Payload$QuestionID)
+  
   qid_item_map <- list()
   questions_out <- list()
-  for (question in questions) {
-    question <- question$Payload
+  for (question_raw in questions) {
+    question_raw <- question_raw$Payload
     
     # Skip items not shown to respondents.
-    if ( !(question$QuestionID %in% shown_items) ) {
+    if ( !(question_raw$QuestionID %in% shown_items) ) {
       next
     }
     
-    if (!identical(keep_items, c("all"))) {
-      question <- question[names(question) %in% c("QuestionID", keep_items)]
+    question <- question_raw[names(question_raw) %in% c("QuestionID", keep_items)]
+    
+    recode_values <- question_raw$RecodeValues # If doesn't exist, will be NULL
+    carryforward_choices <- question_raw$DynamicChoices$Locator # If doesn't exist, will be NULL
+    
+    if (!is.null(carryforward_choices)) {
+      # Get choices that are programmed specifically for this question	
+      old_choices <- question$Choices
+      
+      # Get carried-forward choices
+      carryforward_choices_qid <- carryforward_choices %>% 
+        str_split(., "/") %>% 
+        map(~ .x[3]) %>% unlist()
+      carryforward_question <- questions[qids == carryforward_choices_qid][[1]]$Payload
+      carryforward_choices <- carryforward_question$Choices
+      
+      # By default, carried forward choices are coded during the carry as
+      # "x<original code>". They are then recoded as pure numeric codes using
+      # the `RecodeValues` field. Some carried forward choices do not have
+      # `RecodeValues` defined and so in that case we don't want to prepend the
+      # codes with "x".
+      if (!is.null(recode_values)) {
+        names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
+      }
+      # Combine new choices and carried-forward choices
+      question$Choices <- c(old_choices, carryforward_choices)
     }
     
-    # Rearrange Answers/Choices elements to be consistent between matrix and
-    # other items.
     if ("QuestionType" %in% names(question)) {
       if (question$QuestionType == "Matrix") {
+        # Rearrange Answers/Choices elements to be consistent between matrix and
+        # other items.
         question$Subquestions <- question$Choices
         question$Choices <- question$Answers
         question$Answers <- NULL
+        
+        # Recode subquestion names to match exported data.
+        # FALSE if not set, otherwise a list
+        matrix_subquestion_field_names <- question_raw$ChoiceDataExportTags
+        if (!inherits(matrix_subquestion_field_names, "list")) {
+          # When subquestion field names are not set, generate incrementing names
+          names(question$Subquestions) <- paste(
+            question$DataExportTag,	
+            1:length(question$Subquestions),	
+            sep = "_"	
+          )
+        } else {
+          names(question$Subquestions) <- matrix_subquestion_field_names[names(question$Subquestions)] %>% unlist()
+        }
       }
     }
     

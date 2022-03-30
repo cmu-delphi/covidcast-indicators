@@ -202,6 +202,23 @@ process_qsf <- function(path_to_qsf,
     map(~ gsubfn("(QID[0-9]+)", function(qid) {item_names[qids == qid]}, .x)) %>% 
     # Collapse logic into a single string.
     map(~ paste(.x, collapse=" "))
+  
+  # Handle questions that use a fixed condition ("If False", "If True")
+  ii_boolean_displaylogic <- (displayed_questions %>% 
+                                map(~ .x$Payload$DisplayLogic) %>% 
+                                map(~ .x$`0`) %>% 
+                                map(~ map(.x, "LogicType") %>% unlist()) == "BooleanValue") %>% 
+    which()
+  
+  display_logic[ii_boolean_displaylogic] <- displayed_questions[ii_boolean_displaylogic] %>% 
+    map(~ .x$Payload$DisplayLogic) %>% 
+    map(~ .x$`0`) %>% 
+    map(~ paste(
+      map(.x, "Value")
+    )) %>%
+    map(~ gsub(" ?NULL ?", "", .x)) %>% 
+    # Collapse logic into a single string.
+    map(~ paste(.x, collapse=""))
     
   logic_type <- displayed_questions %>% 
     map(~ .x$Payload$DisplayLogic) %>% 

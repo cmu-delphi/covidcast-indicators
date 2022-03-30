@@ -57,7 +57,6 @@ get_qsf_file <- function(path,
 ) {
   # Read file as json.
   qsf <- read_json(path)
-  
   ## Block
   shown_items <- get_shown_items(qsf)
   
@@ -136,8 +135,13 @@ diff_surveys <- function(old_qsf, new_qsf) {
   old_questions <- old_qsf$questions
   new_questions <- new_qsf$questions
   
-  added <- setdiff(new_shown_items, old_shown_items)
-  removed <- setdiff(old_shown_items, new_shown_items)
+  added_qs <- setdiff(new_shown_items, old_shown_items)
+  added <- rep(NA, length(added_qs))
+  names(added) <- added_qs
+  
+  removed_qs <- setdiff(old_shown_items, new_shown_items)
+  removed <- rep(NA, length(removed_qs))
+  names(removed) <- removed_qs
   
   added_df <- create_diff_df(added, "Added", NULL, new_questions)
   removed_df <- create_diff_df(removed, "Removed", old_questions, NULL)
@@ -171,13 +175,33 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
                           old_qsf, new_qsf) {
   change_type <- match.arg(change_type)
   
-  changed <- c()
+  changed <- list()
   for (question in names) {
     if ( !identical(old_qsf[[question]][[change_type]], new_qsf[[question]][[change_type]]) ) {
-      changed <- append(changed, question)
+      changed_subquestions <- c()
+      if (change_type == "Subquestions") {
+        subquestion_codes <- unique(
+          c(
+            names(old_qsf[[question]][[change_type]]),
+            names(new_qsf[[question]][[change_type]])
+          )
+        )
+        
+        for (code in subquestion_codes) {
+          if ( !identical(old_qsf[[question]][[change_type]][[code]], new_qsf[[question]][[change_type]][[code]]) ) {
+            changed_subquestions <- append(changed_subquestions, code)
+          }
+        }
+        changed_subquestions <- paste(changed_subquestions, collapse=", ")
+      }
+      
+      if (length(changed_subquestions) == 0) {
+        changed_subquestions <- NA
+      }
+      changed[[question]] <- changed_subquestions
     }
   }
-  out <- create_diff_df(changed, change_type, old_qsf, new_qsf)
+  out <- create_diff_df(unlist(changed), change_type, old_qsf, new_qsf)
   
   return(out)
 }
@@ -208,25 +232,26 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
       Choices = "Answer choices changed",
       Subquestions = "Matrix subquestions changed"
     )    
-    questions <- sort(questions)
 
     if (!is.null(old_qsf)) {
-      old_qids <- sapply(questions, function(question) { old_qsf[[question]]$QuestionID })
+      old_qids <- sapply(names(questions), function(question) { old_qsf[[question]]$QuestionID })
     } else {
       old_qids <- NA
     }
     if (!is.null(new_qsf)) {
-      new_qids <- sapply(questions, function(question) { new_qsf[[question]]$QuestionID })
+      new_qids <- sapply(names(questions), function(question) { new_qsf[[question]]$QuestionID })
     } else {
       new_qids <- NA
     }
     
     out <- data.frame(
       change_type=change_descriptions[[change_type]],
-      item=questions,
+      item=names(questions),
       old_qid=old_qids,
-      new_qid=new_qids
-    )
+      new_qid=new_qids,
+      impacted_subquestions=questions
+    ) %>%
+    arrange(item)
   }
   
   return(out)

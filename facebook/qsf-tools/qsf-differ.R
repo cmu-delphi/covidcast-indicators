@@ -210,7 +210,7 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
     )    
     questions <- sort(questions)
 
-    if (!is.null(old_qsf) {
+    if (!is.null(old_qsf)) {
       old_qids <- sapply(questions, function(question) { old_qsf[[question]]$QuestionID })
     } else {
       old_qids <- NA

@@ -262,7 +262,14 @@ process_qsf <- function(path_to_qsf,
     replace_na(list(group_of_respondents_item_was_shown_to = "all"))  
   
 
-  stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
+  if (length(qdf$variable) != length(unique(qdf$variable))) {
+    duplicate_items <- qdf$variable[duplicated(qdf$variable)]
+    stop(
+      "Item names should be unique, but ",
+      paste(duplicate_items, collapse=", "),
+      " each appears multiple times"
+    )
+  }
   
   # Remove blank questions (rare).
   qdf <- qdf %>% filter(question != "Click to write the question text")

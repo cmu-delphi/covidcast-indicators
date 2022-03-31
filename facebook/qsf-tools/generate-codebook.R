@@ -238,7 +238,14 @@ process_qsf <- function(path_to_qsf,
                 display_logic = display_logic,	
                 response_option_randomization = response_option_randomization,	
                 matrix_subquestion_field_names = matrix_subquestion_field_names)	
-  
+    if (file.exists(path_to_drop_columns)){	
+    drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
+                          col_types = cols(item = col_character()
+                          ))
+    qdf <- filter(qdf, !(variable %in% drop_cols$item))
+  } else {
+    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
+  }
   # Add on module randomization
   block_id_item_map <- map_qids_to_module(q)
   block_id_item_map <- block_id_item_map %>%
@@ -370,14 +377,7 @@ process_qsf <- function(path_to_qsf,
   qdf <- rbind(qdf, other_text_items)
   qdf$response_options[qdf$question_type == "Text"] <- NA
   
-  if (file.exists(path_to_drop_columns)){	
-    drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
-                          col_types = cols(item = col_character()
-                          ))
-    qdf <- filter(qdf, !(variable %in% drop_cols$item))
-  } else {
-    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
-  }
+
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))

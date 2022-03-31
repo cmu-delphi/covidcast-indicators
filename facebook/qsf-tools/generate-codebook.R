@@ -232,8 +232,8 @@ process_qsf <- function(path_to_qsf,
   # format all qsf content lists into a single tibble
   qdf <- tibble(variable = item_names,
                 question = questions,
-                type = qtype,
-                choices = choices,
+                question_type = qtype,
+                response_options = choices,
                 matrix_subquestions = matrix_subquestions,	
                 display_logic = display_logic,	
                 response_option_randomization = response_option_randomization,	
@@ -244,7 +244,7 @@ process_qsf <- function(path_to_qsf,
   block_id_item_map <- block_id_item_map %>%
     left_join(data.frame(qid=qids, item=item_names), by=c("Questions"="qid"))
   qdf <- qdf %>% left_join(block_id_item_map, by=c(variable="item")) %>%
-    rename(group_of_respondents_item_was_shown_to = BlockName)
+    rename(respondent_group = BlockName)
   
   # If a question's display logic depends on a question from a randomized
   # module, consider it randomized too
@@ -258,8 +258,8 @@ process_qsf <- function(path_to_qsf,
     map(unique) %>%
     map(~ if (length(.x) > 1) { .x[!is.na(.x)] } else {NA}) %>% 
     unlist()
-  qdf <- qdf %>% mutate(group_of_respondents_item_was_shown_to=coalesce(group_of_respondents_item_was_shown_to, module_assignment_from_display_logic)) %>%
-    replace_na(list(group_of_respondents_item_was_shown_to = "all"))  
+  qdf <- qdf %>% mutate(respondent_group=coalesce(respondent_group, module_assignment_from_display_logic)) %>%
+    replace_na(list(respondent_group = "all"))  
   
 
   if (length(qdf$variable) != length(unique(qdf$variable))) {
@@ -293,22 +293,22 @@ process_qsf <- function(path_to_qsf,
   
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
-    filter(type != "Matrix") %>%	
+    filter(question_type != "Matrix") %>%	
     select(-matrix_subquestion_field_names)
   matrix_items <- qdf %>%	
-    filter(type == "Matrix") %>% 	
+    filter(question_type == "Matrix") %>% 	
     rowwise() %>% 	
     mutate(new = list(	
       tibble(variable = unlist(matrix_subquestion_field_names),	
              question = question,	
              matrix_subquestion = unlist(matrix_subquestions),	
-             type = type,	
+             question_type = question_type,	
              response_option_randomization = ifelse(	
                response_option_randomization == "randomized", "none", response_option_randomization),	
              description = description,	
-             choices = list(choices),
+             response_options = list(response_options),
              display_logic = display_logic,
-             group_of_respondents_item_was_shown_to = group_of_respondents_item_was_shown_to)
+             respondent_group = respondent_group)
       )) %>% 
     select(new) %>% 
     unnest(new)
@@ -319,8 +319,8 @@ process_qsf <- function(path_to_qsf,
     # also C10 needs an extra _1.
     matrix_items <- matrix_items %>% 
       mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
-             type = if_else(str_starts(variable, "A5|C10"), "Text", type),
-             choices = if_else(str_starts(variable, "A5|C10"), list(list()), choices))
+             question_type = if_else(str_starts(variable, "A5|C10"), "Text", question_type),
+             response_options = if_else(str_starts(variable, "A5|C10"), list(list()), response_options))
   } else if (survey_version == "UMD") {
     # pass
   }
@@ -346,14 +346,14 @@ process_qsf <- function(path_to_qsf,
            description,
            question,
            matrix_subquestion,
-           choices,
-           type,
+           response_options,
+           question_type,
            display_logic,
            response_option_randomization,
-           group_of_respondents_item_was_shown_to)
+           respondent_group)
   
   # Format choices as json string
-  qdf$choices <- map(qdf$choices, function(x) {
+  qdf$response_options <- map(qdf$response_options, function(x) {
     if (is_empty(x)) { NA }
     else { toJSON(x) }
   }) %>%
@@ -363,12 +363,12 @@ process_qsf <- function(path_to_qsf,
   other_text_items <- qdf %>%
     filter(variable %in% names(other_text_items)) %>%
     mutate(variable = other_text_items[variable],
-           type = "Text",
+           question_type = "Text",
            response_option_randomization = NA,
            description = paste0(description, " other text")
     )
   qdf <- rbind(qdf, other_text_items)
-  qdf$choices[qdf$type == "Text"] <- NA
+  qdf$response_options[qdf$question_type == "Text"] <- NA
   
   if (file.exists(path_to_drop_columns)){	
     drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
@@ -417,7 +417,7 @@ add_qdf_to_codebook <- function(qdf,
       description = col_character(),
       question = col_character(),
       matrix_subquestion = col_character(),
-      type = col_character(),
+      question_type = col_character(),
       display_logic = col_character(),
       response_option_randomization = col_character()
     ))
@@ -430,10 +430,10 @@ add_qdf_to_codebook <- function(qdf,
   
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
-  # Sort so that items with missing type (non-Qualtrics fields) are at the top.
+  # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.
   codebook <- rbind(codebook, qdf) %>%
     add_static_fields(qdf_wave, survey_version, path_to_static_fields) %>% 
-    arrange(!is.na(.data$type), variable, wave)
+    arrange(!is.na(.data$question_type), variable, wave)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) )
   if ( length(ii_replacing_DNE) > 0 ) {
@@ -492,7 +492,7 @@ get_static_fields <- function(wave,
                                              description = col_character(),
                                              question = col_character(),
                                              matrix_subquestion = col_character(),
-                                             type = col_character(),
+                                             question_type = col_character(),
                                              response_option_randomization = col_character()
                             )) %>%
     mutate(wave = wave) %>% 

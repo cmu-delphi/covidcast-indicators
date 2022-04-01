@@ -4,7 +4,7 @@
 ##
 ## Usage:
 ##
-## Rscript qsf-differ.R path/to/old/qsf path/to/new/qsf
+## Rscript qsf-differ.R [UMD/CMU] path/to/old/qsf path/to/new/qsf
 ##
 ## Writes the lists of new and changed items to STDOUT, so redirect STDOUT to
 ## your desired location.
@@ -23,9 +23,12 @@ suppressPackageStartupMessages({
 #'
 #' @param old_qsf_path path to older Qualtrics survey file in .qsf format
 #' @param new_qsf_path path to newer Qualtrics survey file in .qsf format
-diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
-  old_qsf <- get_qsf_file(old_qsf_path)
-  new_qsf <- get_qsf_file(new_qsf_path)
+diff_qsf_files <- function(old_qsf_path, new_qsf_path,
+                           survey_version=c("CMU", "UMD")) {
+  survey_version <- match.arg(survey_version)
+  
+  old_qsf <- get_qsf_file(old_qsf_path, survey_version)
+  new_qsf <- get_qsf_file(new_qsf_path, survey_version)
   
   old_wave <- get_wave(old_qsf_path)
   new_wave <- get_wave(new_qsf_path)
@@ -50,7 +53,7 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path) {
 #'   Setting to c("all") keeps all fields.
 #'
 #' @return A named list
-get_qsf_file <- function(path,
+get_qsf_file <- function(path, survey_version,
                          keep_items = c("QuestionID", "DataExportTag",
                                         "QuestionText", "QuestionType",
                                         "Choices", "Answers", "DisplayLogic")
@@ -95,6 +98,24 @@ get_qsf_file <- function(path,
     if ("DisplayLogic" %in% names(question)) {
       display_logic <- unlist(question$DisplayLogic)
       question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
+    }
+    
+    
+    # Deduplicate some UMD items.
+    if (survey_version == "UMD") {
+      question$DataExportTag <- case_when(
+        question$DataExportTag == "D2_30" & question$QuestionID == "QID294" ~ "D2_30_cheer",
+        question$DataExportTag == "D2_30" & question$QuestionID == "QID293" ~ "D2_30_calm",
+        question$DataExportTag == "B13" & question$QuestionID == "QID253" ~ "B13_likert",
+        question$DataExportTag == "B13" & question$QuestionID == "QID255" ~ "B13_profile",
+        question$DataExportTag == "B14" & question$QuestionID == "QID254" ~ "B14_likert",
+        question$DataExportTag == "B14" & question$QuestionID == "QID259" ~ "B14_profile",
+        question$DataExportTag == "B12a" & question$QuestionID == "QID250" ~ "B12a_likert",
+        question$DataExportTag == "B12a" & question$QuestionID == "QID258" ~ "B12a_profile",
+        question$DataExportTag == "B12b" & question$QuestionID == "QID251" ~ "B12b_likert",
+        question$DataExportTag == "B12b" & question$QuestionID == "QID257" ~ "B12b_profile",
+        TRUE ~ question$DataExportTag
+      )
     }
     
     questions_out <- safe_insert_question(questions_out, question)
@@ -236,11 +257,13 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
 
 args <- commandArgs(TRUE)
 
-if (length(args) != 2) {
-  stop("Usage: Rscript qsf-differ.R path/to/old/qsf path/to/new/qsf")
+if (length(args) != 3) {
+  stop("Usage: Rscript qsf-differ.R [UMD/CMU] path/to/old/qsf path/to/new/qsf")
 }
 
-old_qsf <- args[1]
-new_qsf <- args[2]
+survey_version <- args[1]
+old_qsf <- args[2]
+new_qsf <- args[3]
 
-invisible(diff_qsf_files(old_qsf, new_qsf))
+
+invisible(diff_qsf_files(old_qsf, new_qsf, survey_version))

@@ -483,7 +483,7 @@ class TestPull:
             "geo_id": "1",
             "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
             "val": [line(i) for i in range(2, 12)],
-            "se": None,
+            "se": [line(i) for i in range(1, 11)],
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
@@ -499,7 +499,7 @@ class TestPull:
             "geo_id": "3",
             "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
             "val": None,
-            "se": None,
+            "se": [line(i) for i in range(1, 11)],
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
@@ -510,7 +510,7 @@ class TestPull:
             "geo_id": "4",
             "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
             "val": [None] * 9 + [10.0],
-            "se": None,
+            "se": [line(i) for i in range(1, 11)],
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)

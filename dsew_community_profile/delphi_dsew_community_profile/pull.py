@@ -589,7 +589,7 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
                 reindexed_group_df["val"] = reindexed_group_df["val"].interpolate(method="linear", limit_area="inside").astype(float)
             if "se" in reindexed_group_df.columns:
-                reindexed_group_df["se"] = np.nan
+                reindexed_group_df["se"] = reindexed_group_df["se"].interpolate(method="linear", limit_area="inside").astype(float)
             if "sample_size" in reindexed_group_df.columns and not reindexed_group_df["sample_size"].isna().all():
                 reindexed_group_df["sample_size"] = reindexed_group_df["sample_size"].interpolate(method="linear", limit_area="inside").astype(float)
             if "publish_date" in reindexed_group_df.columns:

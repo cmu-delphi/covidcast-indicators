@@ -40,3 +40,4 @@ params.json
 post-*
 *.done
 *.messages
+qsf-tools/diff*.csv

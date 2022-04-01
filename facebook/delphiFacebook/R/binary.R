@@ -324,12 +324,6 @@ get_binary_indicators <- function() {
     "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
     "smoothed_wremote_school_fulltime_oldest", "weight", "s_remote_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
 
-    "smoothed_wchild_school_public", "weight", "s_child_school_public", 6, compute_binary_response, jeffreys_multinomial_factory(5),
-    "smoothed_wchild_school_private", "weight", "s_child_school_private", 6, compute_binary_response, jeffreys_multinomial_factory(5),
-    "smoothed_wchild_school_homeschool", "weight", "s_child_school_homeschool", 6, compute_binary_response, jeffreys_multinomial_factory(5),
-    "smoothed_wchild_school_not", "weight", "s_child_school_not", 6, compute_binary_response, jeffreys_multinomial_factory(5),
-    "smoothed_wchild_school_other", "weight", "s_child_school_other", 6, compute_binary_response, jeffreys_multinomial_factory(5),
-
     "smoothed_wschool_safety_measures_mask_students", "weight", "s_school_safety_measures_mask_students", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wschool_safety_measures_mask_teachers", "weight", "s_school_safety_measures_mask_teachers", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wschool_safety_measures_restricted_entry", "weight", "s_school_safety_measures_restricted_entry", 6, compute_binary_response, jeffreys_binary,
@@ -403,15 +397,7 @@ get_binary_indicators <- function() {
     "smoothed_want_info_employment", "weight_unif", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwant_info_employment", "weight", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_want_info_none", "weight_unif", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-   
-    # misc children
-    "smoothed_whas_child_under_18", "weight", "ch_has_child_under_18", 6, compute_binary_response, jeffreys_binary,
-
-    "smoothed_woldest_child_under_5", "weight", "ch_oldest_child_under_5", 6, compute_binary_response, jeffreys_multinomial_factory(4),
-    "smoothed_woldest_child_5_to_11", "weight", "ch_oldest_child_5_to_11", 6, compute_binary_response, jeffreys_multinomial_factory(4),
-    "smoothed_woldest_child_12_to_15", "weight", "ch_oldest_child_12_to_15", 6, compute_binary_response, jeffreys_multinomial_factory(4),
-    "smoothed_woldest_child_16_to_17", "weight", "ch_oldest_child_16_to_17", 6, compute_binary_response, jeffreys_multinomial_factory(4)
+    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary
   )
 
 

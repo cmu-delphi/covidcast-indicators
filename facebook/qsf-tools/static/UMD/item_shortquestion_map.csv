@@ -47,8 +47,16 @@ B12,reason not tested 14d
 B12b,reason not tested 14d
 B12c,TODO
 B12c_matrix,TODO
+B12a_likert,TODO
+B12a_profile,TODO
+B12b_likert,TODO
+B12b_profile,TODO
 B13,needed med services 30d
+B13_likert,TODO
+B13_profile,TODO
 B14,reason no med services 30d
+B14_likert,TODO
+B14_profile,TODO
 B15,reason tested 14d
 C0,activities 24h
 C0a,activities 24h
@@ -87,6 +95,8 @@ D1,nervousness 7d
 D1_14,TODO
 D2,depressed 7d
 D2_14,TODO
+D2_30_cheer,TODO
+D2_30_calm,TODO
 D3,worried ill
 D4,worried food next week
 D5,worried finances next month

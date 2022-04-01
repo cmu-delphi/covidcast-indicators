@@ -42,6 +42,19 @@ process_qsf <- function(path_to_qsf,
     map_chr(~ .x$Payload$DataExportTag) %>%
     patch_item_names(path_to_rename_map, wave)
   
+
+  item_names[item_names == "D2_30" & qids == "QID294"] <- "D2_30_cheer"
+  item_names[item_names == "D2_30" & qids == "QID293"] <- "D2_30_calm"
+  item_names[item_names == "B13" & qids == "QID253"] <- "B13_likert"
+  item_names[item_names == "B13" & qids == "QID255"] <- "B13_profile"
+  item_names[item_names == "B14" & qids == "QID254"] <- "B14_likert"
+  item_names[item_names == "B14" & qids == "QID259"] <- "B14_profile"
+  item_names[item_names == "B12a" & qids == "QID250"] <- "B12a_likert"
+  item_names[item_names == "B12a" & qids == "QID258"] <- "B12a_profile"
+  item_names[item_names == "B12b" & qids == "QID251"] <- "B12b_likert"
+  item_names[item_names == "B12b" & qids == "QID257"] <- "B12b_profile"
+  
+
   # get question text:
   questions <- displayed_questions %>% 
     map_chr(~ .x$Payload$QuestionText)
@@ -238,7 +251,14 @@ process_qsf <- function(path_to_qsf,
                 display_logic = display_logic,	
                 response_option_randomization = response_option_randomization,	
                 matrix_subquestion_field_names = matrix_subquestion_field_names)	
-  
+    if (file.exists(path_to_drop_columns)){	
+    drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
+                          col_types = cols(item = col_character()
+                          ))
+    qdf <- filter(qdf, !(variable %in% drop_cols$item))
+  } else {
+    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
+  }
   # Add on module randomization
   block_id_item_map <- map_qids_to_module(q)
   block_id_item_map <- block_id_item_map %>%
@@ -370,14 +390,7 @@ process_qsf <- function(path_to_qsf,
   qdf <- rbind(qdf, other_text_items)
   qdf$response_options[qdf$question_type == "Text"] <- NA
   
-  if (file.exists(path_to_drop_columns)){	
-    drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
-                          col_types = cols(item = col_character()
-                          ))
-    qdf <- filter(qdf, !(variable %in% drop_cols$item))
-  } else {
-    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
-  }
+
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))

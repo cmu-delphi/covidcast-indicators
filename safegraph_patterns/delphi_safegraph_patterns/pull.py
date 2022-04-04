@@ -32,8 +32,10 @@ query search($last_cursor: String, $bar_res: Int, $start_date: DateTime!, $end_d
 """
 BATCH = 500
 
-def pull_one(query, headers, brand_ids):
-    while True:
+def pull_one(query, headers):
+    """Perform single query attemp, with light cleaning."""
+    for attempt_number in range(5):
+        success = True
         req = requests.post(
             URL,
             headers=headers,
@@ -44,7 +46,7 @@ def pull_one(query, headers, brand_ids):
                 json.dumps(response["data"]["bulk_weekly_patterns"])
             )
             first_placekey = df.placekey[0]
-            n = response["extensions"]["row_count"] 
+            n = response["extensions"]["row_count"]
             last_placekey = df.placekey[n-1]
             df = df[df["safegraph_brand_ids"].isin(brand_ids)]
             break
@@ -52,14 +54,20 @@ def pull_one(query, headers, brand_ids):
             req.raise_for_status()
             print(f"Expected JSON; got:\n'''{req.text}'''")
             time.sleep(1)
+            success = not success
         except (KeyError,AttributeError) as e:
             print(df)
             print(req.text)
             raise
     print(f"{query['variables']['last_seen_placekey']}: [{len(df)} of {n}] {first_placekey} -- {last_placekey}")
     return response, df, (last_placekey if n == BATCH else None)
+            success = not success
+            success = not success
+    if not success:
+        raise RuntimeError
 
-def make_request(params, day):
+def make_request(params, day, naics_code):
+    """Make a request in Places API."""
     query = {
         "query": QUERY,
         "variables": {
@@ -90,9 +98,11 @@ CURSOR_SIGNPOSTS = {
              None]
 }
 
+def pull(params, day, naics_code):
+    """Make queries in Places API, using multiprocessing."""
     job_args = list(zip(
-        PLACEKEY_SIGNPOSTS[:-1],
-        PLACEKEY_SIGNPOSTS[1:]
+        CURSOR_SIGNPOSTS[naics_code][:-1],
+        CURSOR_SIGNPOSTS[naics_code][1:]
     ))
     print(f"{len(job_args)}: {job_args}")
     with mp.Pool(len(job_args)) as pool:
@@ -105,28 +115,26 @@ CURSOR_SIGNPOSTS = {
         dfs[-1] = pd.concat([dfs[-1], out_dict[job_args[i]][0]]).drop_duplicates()
         dfs.extend(out_dict[job_args[i]][1:])
     return pd.concat(dfs)
-    
 
-
-def pull_until(placekey_bookends, query, headers, brand_ids):
-    start_placekey, end_placekey = placekey_bookends
+def pull_until(cursor_bookends, query, headers):
+    """Make queries in Places API in sets of 500, until finish."""
+    start_cursor, end_cursor = cursor_bookends
     query = json.loads(json.dumps(query)) # make a copy before editing
-    query["variables"]["last_seen_placekey"] = start_placekey
+    query["variables"]["last_cursor"] = start_cursor
     dfs = []
     while True:
-        response, df, last_placekey = pull_one(query, headers, brand_ids)
+        _, df, last_cursor, _ = pull_one(query, headers)
         dfs.append(df)
-        if last_placekey is None:
-            print(f"{placekey_bookends}: last_placekey {last_placekey}")
+        if last_cursor is None:
+            print(f"{cursor_bookends}: last_cursor {last_cursor}")
             break
-        if (end_placekey is not None) and (last_placekey > end_placekey):
-            print(f"{placekey_bookends}: last_placekey {last_placekey}")
+        if (end_cursor is not None) and (num_first_comp(end_cursor, last_cursor)):
+            print(f"{cursor_bookends}: last_cursor {last_cursor}")
             break
-        if query["variables"]["last_seen_placekey"] is last_placekey:
-            print(f"Bad repeat: {last_placekey}")
+        if query["variables"]["last_cursor"] is last_cursor:
+            print(f"Bad repeat: {last_cursor}")
             break
-        query["variables"]["last_seen_placekey"] = last_placekey
+        query["variables"]["last_cursor"] = last_cursor
         time.sleep(0.1)
-    return placekey_bookends, dfs
-
+    return cursor_bookends, dfs
 

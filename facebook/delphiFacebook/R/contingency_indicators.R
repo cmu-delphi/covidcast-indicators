@@ -141,6 +141,12 @@ get_aggs <- function() {
     "pct_vaccinate_children", "v_vaccinate_children", compute_binary, jeffreys_binary,
     "pct_vaccinate_child_oldest", "v_vaccinate_child_oldest", compute_binary, jeffreys_binary,
     
+    "pct_child_vaccine_already", "v_child_vaccine_already", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_yes_def", "v_child_vaccine_yes_def", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_yes_prob", "v_child_vaccine_yes_prob", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_no_prob", "v_child_vaccine_no_prob", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_vaccine_no_def", "v_child_vaccine_no_def", compute_binary, jeffreys_multinomial_factory(5),
+
     "pct_accept_vaccine_defyes", "v_accept_vaccine_defyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_probyes", "v_accept_vaccine_probyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_probno", "v_accept_vaccine_probno", compute_binary, jeffreys_multinomial_factory(4),
@@ -448,11 +454,39 @@ get_aggs <- function() {
 
     # schooling
     "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
-    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary
+    "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary,
+
+    "pct_remote_school_fulltime_oldest", "s_remote_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_inperson_school_fulltime_oldest", "s_inperson_school_fulltime_oldest", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_inperson_school_parttime_oldest", "s_inperson_school_parttime_oldest", compute_binary, jeffreys_multinomial_factory(3),
+
+    "pct_school_safety_measures_mask_students", "s_school_safety_measures_mask_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_mask_teachers", "s_school_safety_measures_mask_teachers", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_restricted_entry", "s_school_safety_measures_restricted_entry", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_separators", "s_school_safety_measures_separators", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_extracurricular", "s_school_safety_measures_extracurricular", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_symptom_screen", "s_school_safety_measures_symptom_screen", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_ventilation", "s_school_safety_measures_ventilation", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_testing_staff", "s_school_safety_measures_testing_staff", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_testing_students", "s_school_safety_measures_testing_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_vaccine_staff", "s_school_safety_measures_vaccine_staff", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_vaccine_students", "s_school_safety_measures_vaccine_students", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_cafeteria", "s_school_safety_measures_cafeteria", compute_binary, jeffreys_binary,
+    "pct_school_safety_measures_dont_know", "s_school_safety_measures_dont_know", compute_binary, jeffreys_binary
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)
-  
+
+
+  monthly_indicators <- tribble(
+    ~name, ~metric, ~compute_fn, ~post_fn,
+    "pct_child_school_public", "s_child_school_public", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_private", "s_child_school_private", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_homeschool", "s_child_school_homeschool", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_not", "s_child_school_not", compute_binary, jeffreys_multinomial_factory(5),
+    "pct_child_school_other", "s_child_school_other", compute_binary, jeffreys_multinomial_factory(5)
+  )
+  monthly_aggs <- create_aggs_product(regions, groups, monthly_indicators)
 
   ### Include handful of original public tables not already covered by set above
   common_group <- c("agefull", "gender", "race", "hispanic")
@@ -509,7 +543,7 @@ get_aggs <- function() {
   aggs <- rbind(aggs, cut1_aggs, cut2_aggs, cut3_aggs, cut456_aggs, cut456_marginal_aggs)
   
   weekly_aggs <- aggs
-  monthly_aggs <- aggs
+  monthly_aggs <- rbind(aggs, monthly_aggs)
   
   return(list("week"=weekly_aggs, "month"=monthly_aggs))
 }

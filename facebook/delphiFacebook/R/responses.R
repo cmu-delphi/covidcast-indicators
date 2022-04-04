@@ -193,6 +193,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_activities(input_data, wave)
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
+  input_data <- code_children(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
   input_data <- code_news_and_info(input_data, wave)
   input_data <- code_gender(input_data, wave)

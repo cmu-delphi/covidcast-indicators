@@ -833,8 +833,20 @@ code_vaccines <- function(input_data, wave) {
       input_data$P3 == 5 ~ 1,
       TRUE ~ NA_real_
     )
+
+    input_data$v_child_vaccine_already <- input_data$P3 == 5
+    input_data$v_child_vaccine_yes_def <- input_data$P3 == 1
+    input_data$v_child_vaccine_yes_prob <- input_data$P3 == 2
+    input_data$v_child_vaccine_no_prob <- input_data$P3 == 3
+    input_data$v_child_vaccine_no_def <- input_data$P3 == 4
+
   } else {
     input_data$v_vaccinate_child_oldest <- NA_real_
+    input_data$v_child_vaccine_already <- NA
+    input_data$v_child_vaccine_yes_def <- NA
+    input_data$v_child_vaccine_yes_prob <- NA
+    input_data$v_child_vaccine_no_prob <- NA
+    input_data$v_child_vaccine_no_def <- NA
   }
 
   if ( "V16" %in% names(input_data) ) {
@@ -906,6 +918,34 @@ code_vaccines <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Misc children
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_children <- function(input_data, wave) {
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_has_child_under_18 <- input_data$P1 == 1
+  } else {
+    input_data$ch_has_child_under_18 <- NA
+  }
+
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_oldest_child_under_5 <- input_data$P2 == 1
+    input_data$ch_oldest_child_5_to_11 <- input_data$P2 == 2
+    input_data$ch_oldest_child_12_to_15 <- input_data$P2 == 3
+    input_data$ch_oldest_child_16_to_17 <- input_data$P2 == 4
+  } else {
+    input_data$ch_oldest_child_under_5 <- NA
+    input_data$ch_oldest_child_5_to_11 <- NA
+    input_data$ch_oldest_child_12_to_15 <- NA
+    input_data$ch_oldest_child_16_to_17 <- NA
+  }
+
+  return(input_data)
+}
+
 #' Schooling
 #'
 #' @param input_data input data frame of raw survey data
@@ -948,11 +988,65 @@ code_schooling <- function(input_data, wave) {
       input_data$P5 != 3 ~ 0,
       TRUE ~ NA_real_
     )
+    input_data$s_remote_school_fulltime_oldest <- case_when(
+      input_data$P5 == 2 ~ 1,
+      input_data$P5 != 2 ~ 0,
+      TRUE ~ NA_real_
+    )
     
   } else {
     input_data$s_inperson_school_fulltime_oldest <- NA_real_
     input_data$s_inperson_school_parttime_oldest <- NA_real_
+    input_data$s_remote_school_fulltime_oldest <- NA_real_
   }
+
+  if ("P4" %in% names(input_data)) {
+    input_data$s_child_school_public <- input_data$P4 == 1
+    input_data$s_child_school_private <- input_data$P4 == 2
+    input_data$s_child_school_homeschool <- input_data$P4 == 3
+    input_data$s_child_school_not <- input_data$P4 == 4
+    input_data$s_child_school_other <- input_data$P4 == 5
+  } else {
+    input_data$s_child_school_public <- NA
+    input_data$s_child_school_private <- NA
+    input_data$s_child_school_homeschool <- NA
+    input_data$s_child_school_not <- NA
+    input_data$s_child_school_other <- NA
+  }
+
+
+  if ("P6" %in% names(input_data)) {
+    safety_measures <- split_options(input_data$P6)
+
+    input_data$s_school_safety_measures_mask_students <- is_selected(safety_measures, "1")
+    input_data$s_school_safety_measures_mask_teachers <- is_selected(safety_measures, "2")
+    input_data$s_school_safety_measures_restricted_entry <- is_selected(safety_measures, "6")
+    input_data$s_school_safety_measures_separators <- is_selected(safety_measures, "10")
+    input_data$s_school_safety_measures_extracurricular <- is_selected(safety_measures, "12")
+    input_data$s_school_safety_measures_symptom_screen <- is_selected(safety_measures, "15")
+    input_data$s_school_safety_measures_ventilation <- is_selected(safety_measures, "17")
+    input_data$s_school_safety_measures_testing_staff <- is_selected(safety_measures, "18")
+    input_data$s_school_safety_measures_testing_students <- is_selected(safety_measures, "19")
+    input_data$s_school_safety_measures_vaccine_staff <- is_selected(safety_measures, "20")
+    input_data$s_school_safety_measures_vaccine_students <- is_selected(safety_measures, "21")
+    input_data$s_school_safety_measures_cafeteria <- is_selected(safety_measures, "22")
+    input_data$s_school_safety_measures_dont_know <- is_selected(safety_measures, "16")
+  } else {
+    input_data$s_school_safety_measures_mask_students <- NA
+    input_data$s_school_safety_measures_mask_teachers <- NA
+    input_data$s_school_safety_measures_restricted_entry <- NA
+    input_data$s_school_safety_measures_separators <- NA
+    input_data$s_school_safety_measures_extracurricular <- NA
+    input_data$s_school_safety_measures_symptom_screen <- NA
+    input_data$s_school_safety_measures_ventilation <- NA
+    input_data$s_school_safety_measures_testing_staff <- NA
+    input_data$s_school_safety_measures_testing_students <- NA
+    input_data$s_school_safety_measures_vaccine_staff <- NA
+    input_data$s_school_safety_measures_vaccine_students <- NA
+    input_data$s_school_safety_measures_cafeteria <- NA
+    input_data$s_school_safety_measures_dont_know <- NA
+  }
+
   
   return(input_data)
 }

@@ -4,7 +4,7 @@
 ##
 ## Usage:
 ##
-## Rscript generate-codebook.R path/to/qsf path/to/codebook
+## Rscript generate-codebook.R [UMD/CMU] path/to/qsf path/to/codebook
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -17,81 +17,32 @@ suppressPackageStartupMessages({
 
 
 process_qsf <- function(path_to_qsf,
+                        survey_version=c("CMU", "UMD"),
                         path_to_shortname_map="./static/item_shortquestion_map.csv",
                         path_to_replacement_map="./static/item_replacement_map.csv") {
+  survey_version <- match.arg(survey_version)
   q <- read_json(path_to_qsf)
   wave <- get_wave(path_to_qsf)
   
-  # get the survey elements with flow logic (should be one per block randomization branch)
-  ii_flow <- q$SurveyElements %>%
-    map_chr("Element") %>%
-    {. == "FL"} %>%
-    which()
-  ii_block_randomizer <- q$SurveyElements[ii_flow] %>%
-    map(~ .x$Payload$Flow) %>%
-    map(~ map(.x,~ .x$Type == "BlockRandomizer")) %>%
-    unlist() %>% 
-    which()
-  random_block_ids <- q$SurveyElements[ii_flow] %>%
-    map(~ .x$Payload$Flow) %>%
-    map(~ .x[ii_block_randomizer]) %>% 
-    map(~ map(.x,~ .x$Flow)) %>% 
-    map(~ map(.x,~ map(.x,~ .x$ID))) %>%
-    unlist()
+  displayed_questions <- subset_qsf_to_displayed(q)
   
-  block_id_item_map <- get_block_item_map(q)
-  block_id_item_map <- block_id_item_map %>% filter(BlockID %in% random_block_ids) %>%
-    select(-BlockID)
-  
-  # get the survey elements that are questions:
-  ii_questions <- q$SurveyElements %>% 
-    map_chr("Element") %>%
-    {. == "SQ"} %>% 
-    which()
-  
-  # get the questions that were shown to respondents
-  shown_items <- get_shown_items(q)
-  ii_shown <- q$SurveyElements[ii_questions] %>% 
-    map_chr(~ .x$Payload$QuestionID) %>%
-    {. %in% shown_items} %>% 
-    which()
-  
-  # subset qsf to valid elements
-  displayed_questions <- q$SurveyElements[ii_questions][ii_shown]
-  
-  # Qualtrics auto-assigned question IDs
+  # get Qualtrics auto-assigned question IDs
   qids <- displayed_questions %>% 
     map_chr(~ .x$Payload$QuestionID)
   
-  # the items are how we will match these to the survey data:
-  items <- displayed_questions %>% 
-    map_chr(~ .x$Payload$DataExportTag)
+  # get item names
+  item_names <- displayed_questions %>% 
+    map_chr(~ .x$Payload$DataExportTag) %>%
+    patch_item_names(survey_version, wave)
   
-  # B13 was originally named incorrectly. Rename manually as needed
-  items[items == "B13 "] <- "B13"
-  # V2a in Wave 13 was originally named incorrectly. Rename manually as needed
-  if (wave == 13) {
-    items[items == "V2a"] <- "V2d"
-  }
-  
-  # get the text of the question:
+  # get question text:
   questions <- displayed_questions %>% 
     map_chr(~ .x$Payload$QuestionText)
   
-  # get the type of question:
-  type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix")
-  qtype <- displayed_questions %>%
-    map_chr(~ .x$Payload$QuestionType) %>% 
-    {type_map[.]}
-  
-  ii_multiselect <- displayed_questions %>%
-    map_chr(~ .x$Payload$Selector) %>%
-    {. == "MAVR"} %>% 
-    which()
-  qtype[ii_multiselect] <- "Multiselect"
-  qtype[items == "A5"] <- "Matrix" # this will be treated like C10
-  
-  # get the choices (for MC and Matrix):
+  # get question types
+  qtype <- get_question_formats(displayed_questions, item_names, survey_version)
+
+  # get choices for multiple choice (MC) and Matrix items:
   choices <- displayed_questions %>% 
     map(~ .x$Payload$Choices) %>% 
     map(~ map(.x, "Display"))
@@ -122,8 +73,8 @@ process_qsf <- function(path_to_qsf,
     map(which) %>%
     map(names) %>%
     unlist()
-  other_text_items <- paste(items[ii_other_text_option], text_elem, "TEXT", sep="_") %>%
-    setNames(items[ii_other_text_option])
+  other_text_items <- paste(item_names[ii_other_text_option], text_elem, "TEXT", sep="_") %>%
+    setNames(item_names[ii_other_text_option])
   
   # some questions port the choices from other questions
   ii_carryforward <- displayed_questions %>%
@@ -189,9 +140,26 @@ process_qsf <- function(path_to_qsf,
       paste(c(qid, selectable_text, option_code), collapse="")
     }, .x)) %>% 
     # Replace QID with question number (A2, etc)
-    map(~ gsubfn("(QID[0-9]+)", function(qid) {items[qids == qid]}, .x)) %>% 
+    map(~ gsubfn("(QID[0-9]+)", function(qid) {item_names[qids == qid]}, .x)) %>% 
     # Collapse logic into a single string.
     map(~ paste(.x, collapse=" "))
+  
+  # Handle questions that use a fixed condition ("If False", "If True")
+  ii_boolean_displaylogic <- (displayed_questions %>% 
+                                map(~ .x$Payload$DisplayLogic) %>% 
+                                map(~ .x$`0`) %>% 
+                                map(~ map(.x, "LogicType") %>% unlist()) == "BooleanValue") %>% 
+    which()
+  
+  display_logic[ii_boolean_displaylogic] <- displayed_questions[ii_boolean_displaylogic] %>% 
+    map(~ .x$Payload$DisplayLogic) %>% 
+    map(~ .x$`0`) %>% 
+    map(~ paste(
+      map(.x, "Value")
+    )) %>%
+    map(~ gsub(" ?NULL ?", "", .x)) %>% 
+    # Collapse logic into a single string.
+    map(~ paste(.x, collapse=""))
     
   logic_type <- displayed_questions %>% 
     map(~ .x$Payload$DisplayLogic) %>% 
@@ -203,7 +171,7 @@ process_qsf <- function(path_to_qsf,
     unlist()
   
   # format all qsf content lists into a single tibble
-  qdf <- tibble(variable = items,
+  qdf <- tibble(variable = item_names,
                 question = questions,
                 type = qtype,
                 choices = choices,
@@ -212,8 +180,9 @@ process_qsf <- function(path_to_qsf,
                 response_option_randomization = response_option_randomization)
   
   # Add on module randomization
+  block_id_item_map <- map_qids_to_module(q)
   block_id_item_map <- block_id_item_map %>%
-    left_join(data.frame(qid=qids, item=items), by=c("Questions"="qid"))
+    left_join(data.frame(qid=qids, item=item_names), by=c("Questions"="qid"))
   qdf <- qdf %>% left_join(block_id_item_map, by=c(variable="item")) %>%
     rename(group_of_respondents_item_was_shown_to = BlockName)
   
@@ -272,16 +241,21 @@ process_qsf <- function(path_to_qsf,
     select(new) %>% 
     unnest(new)
   
-  # A5 and C10 are special cases b/c of they are matrix of text entry questions:
-  # also C10 needs an extra _1.
-  matrix_items <- matrix_items %>% 
-    mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
-           type = if_else(str_starts(variable, "A5|C10"), "Text", type),
-           choices = if_else(str_starts(variable, "A5|C10"), list(list()), choices))
+  # Custom matrix formatting
+  if (survey_version == "CMU") {
+    # A5 and C10 are special cases b/c they are matrices of text entry questions:
+    # also C10 needs an extra _1.
+    matrix_items <- matrix_items %>% 
+      mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
+             type = if_else(str_starts(variable, "A5|C10"), "Text", type),
+             choices = if_else(str_starts(variable, "A5|C10"), list(list()), choices))
+  } else if (survey_version == "UMD") {
+    # pass
+  }
   
   qdf <- bind_rows(nonmatrix_items, matrix_items)
   
-  # indicate which items have replaced old items.
+  # indicate which new items have replaced old items.
   replaces_map <- read_csv(path_to_replacement_map,
                            col_types = cols(new_item = col_character(),
                                             old_item = col_character()
@@ -448,11 +422,12 @@ add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook) {
 
 args <- commandArgs(TRUE)
 
-if (length(args) != 2) {
-  stop("Usage: Rscript generate-codebook.R path/to/qsf path/to/codebook")
+if (length(args) != 3) {
+  stop("Usage: Rscript generate-codebook.R [UMD/CMU] path/to/qsf path/to/codebook")
 }
 
-path_to_qsf <- args[1]
-path_to_codebook <- args[2]
+survey_version <- args[1]
+path_to_qsf <- args[2]
+path_to_codebook <- args[3]
 
 invisible(add_qsf_to_codebook(path_to_qsf, path_to_codebook))

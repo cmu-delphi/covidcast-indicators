@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Process and export Safegraph patterns signal."""
 import glob
+import os
 from itertools import product
 
+from datetime import date
 import numpy as np
 import pandas as pd
-
 from delphi_utils import create_export_csv, GeoMapper
-
 from .pull import pull
 
 INCIDENCE_BASE = 100000

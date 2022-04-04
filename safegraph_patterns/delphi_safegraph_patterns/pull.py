@@ -1,29 +1,32 @@
-import requests
-from datetime import date
-import pandas as pd
+"""Pulls data from places API."""
 import json
 import time
 from functools import partial
 import multiprocessing as mp
+from datetime import timedelta
+import requests
+import pandas as pd
 
-URL = "https://placesapi.safegraph.com/v1/graphql/bulk"
+URL = "https://api.safegraph.com/v2/graphql"
 QUERY = """
-query AcademicBulkWeeklyPatterns(
-  $date: DateTime!
-  $iso_country_code: String
-  $last_seen_placekey: String
-) {
-  bulk_weekly_patterns(
-    date: $date
-    iso_country_code: $iso_country_code
-    last_seen_placekey: $last_seen_placekey
-  ) {
-    placekey
-    safegraph_brand_ids
-    visits_by_day
-    date_range_start
-    date_range_end
-    postal_code
+query search($last_cursor: String, $bar_res: Int, $start_date: DateTime!, $end_date: DateTime!){
+  search(filter: {naics_code: $bar_res, address: {iso_country_code: "US"} }) {
+    weekly_patterns(start_date: $start_date end_date: $end_date) {
+      results (first: 500 after: $last_cursor){
+        edges {
+          cursor
+          node {
+          placekey
+          visits_by_day{visits}
+          location_name
+          brands{brand_id}
+          date_range_start
+          date_range_end
+          postal_code
+          }
+        }
+      }
+    }
   }
 }
 """
@@ -60,9 +63,10 @@ def make_request(params, day):
     query = {
         "query": QUERY,
         "variables": {
-            "date": day.strftime("%Y-%m-%d"),
-            "iso_country_code": "US",
-            "last_seen_placekey": ""
+            "start_date": (day - timedelta(days=1)).strftime("%Y-%m-%d"),
+            "end_date": day.strftime("%Y-%m-%d"),
+            "last_cursor": "",
+            "bar_res": naics_code
         }
     }
     headers = {
@@ -71,10 +75,21 @@ def make_request(params, day):
     }
     return query, headers
 
-PLACEKEY_SIGNPOSTS = ["", None]#["", "222-226", "225-223", "22s-223", "zzw-223", None]
-def pull(params, day, brand_ids):
-    query, headers = make_request(params, day)
-    job_pull = partial(pull_until, query=query, headers=headers, brand_ids=brand_ids)
+CURSOR_SIGNPOSTS = {
+    722410: ["",
+             "V2Vla2x5UGF0dGVybnM6MjIzLTIyMkA4Z2cteHlrLWZzNSw=",
+             "V2Vla2x5UGF0dGVybnM6MjI3LTIyMkA2M3YtZDI2LThuNSw=",
+             "V2Vla2x5UGF0dGVybnM6MjJuLTIyMkA1cHctYzU5LXl5OSw=",
+             "V2Vla2x5UGF0dGVybnM6enp3LTIyM0A1cGotbmRzLXl2eiw=",
+             None],
+    722511: ["",
+             "V2Vla2x5UGF0dGVybnM6MjIzLTIyMkA1emItdm5mLXZwdiw=",
+             "V2Vla2x5UGF0dGVybnM6MjI2LTIyMkA2Mjctd2RtLXgzcSw=",
+             "V2Vla2x5UGF0dGVybnM6MjJqLTIyM0A2MjctdGtiLXZqOSw=",
+             "V2Vla2x5UGF0dGVybnM6enp3LTIyM0A1cHctNmZrLXdwOSw=",
+             None]
+}
+
     job_args = list(zip(
         PLACEKEY_SIGNPOSTS[:-1],
         PLACEKEY_SIGNPOSTS[1:]

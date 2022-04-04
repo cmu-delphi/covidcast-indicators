@@ -27,7 +27,8 @@ class TestRun:
             "aws_secret_access_key": "",
             "aws_default_region": "",
             "aws_endpoint": "",
-            "sync": False
+            "sync": False,
+            "apikey":None,
         }
     }
 

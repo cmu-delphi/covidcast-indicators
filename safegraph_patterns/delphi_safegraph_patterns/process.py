@@ -183,9 +183,32 @@ def aggregate(df, metric, geo_res):
     return df.rename({geo_key: "geo_id"}, axis=1)
 
 
-def handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats):
+def handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, stats, wips):
+    """
+    Handle dataframes via create_export_csv.
+
+    Parameters
+    ----------
+    dfs: dict{key(str): value(pd.DataFrame)}
+        Keys are metrics
+        Values are Dataframes with columns: timestamp, Zip Codes, {metric}_num.
+    sensors: List[str]
+        List of (sensor)
+    metrics: List[Tuple[str, bool]]
+        List of (metric_name, wip).
+    geo_resolutions: List[str]
+        List of geo resolutions to export the data.
+    export_dir: str
+        The directory to export files to.
+    stats: List[Tuple[datetime, int]]
+        List to which we will add (max export date, number of export dates)
+
+    Returns
+    -------
+    None
+    """
     for geo_res, sensor in product(geo_resolutions, sensors):
-        for metric, wip in zip(metric_names, wips):
+        for metric, wip in zip(metrics, wips):
             df_export = aggregate(dfs[metric], metric, geo_res)
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
@@ -225,16 +248,47 @@ def data(params, day, naics_code, filter_brand = False):
         day.strftime("%Y%m%d"),
         "download_date",
     )
-    os.makedirs(output_dir)
-    df.to_csv(os.path.join(output_dir, f"{date.today()}.csv"))
-    return df
-                
-def process(day, sensors, metrics, geo_resolutions, export_dir, brand_df, stats, params, logger):
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    filtered_df.to_csv(os.path.join(output_dir, f"{date.today()}_{naics_code}.csv"))
+    return filtered_df
+
+def process(day, sensors, metrics, geo_resolutions, export_dir, stats, params, logger):
+    """
+    Process an input census block group-level CSV and export it.
+
+    Parameters
+    ----------
+    day: Datetime
+        Day of query
+    sensors: List[str]
+        List of (sensor)
+    metrics: List[Tuple[str, bool]]
+        List of (metric_name, wip).
+    geo_resolutions: List[str]
+        List of geo resolutions to export the data.
+    export_dir: str
+        The directory to export files to.
+    stats: List[Tuple[datetime, int]]
+        List to which we will add (max export date, number of export dates)
+    params:
+        Params stored in json file.
+    logger: logging.Logger
+        The structured logger.
+
+    Returns
+    -------
+    None
+    """
     metric_names, naics_codes, wips = (list(x) for x in zip(*metrics))
-    df = data(params, day, brand_df)
-    dfs = construct_signals(df, metric_names, naics_codes, brand_df)
-    print(f"Finished pulling data for {day}")
-    handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats)
+    result_dfs = {}
+    for i, naics_code in enumerate(naics_codes):
+        metric_name = metric_names[i]
+        df = data(params, day, naics_code)
+        dfs = construct_signals(df, metric_names[i])
+        result_dfs[metric_name] = dfs
+        logger.info(f"Finished pulling data for {day}, {metric_names[i]}")
+    handle_dfs(result_dfs, sensors, metric_names, geo_resolutions, export_dir, stats, wips)
 
 def process_s3(fname, sensors, metrics, geo_resolutions,
                export_dir, brand_df, stats, logger):
@@ -298,13 +352,11 @@ def process_s3(fname, sensors, metrics, geo_resolutions,
             ).groupby(["timestamp", "zip"]).sum().reset_index()
     logger.info("Finished pulling data.", filename=fname)
     for geo_res, sensor in product(geo_resolutions, sensors):
-        for metric, wip in zip(metric_names, wips):
+        for metric, _ in zip(metric_names, wips):
             logger.info("Generating signal and exporting to CSV",
                         geo_res=geo_res, metric=metric, sensor=sensor)
             df_export = aggregate(dfs[metric], metric, geo_res)
             df_export["val"] = df_export["_".join([metric, sensor])]
             df_export["se"] = np.nan
             df_export["sample_size"] = np.nan
-    handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, stats)
-
-
+    handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, stats, wips)

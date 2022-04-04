@@ -131,7 +131,13 @@ get_binary_indicators <- function() {
     "smoothed_wvaccinate_children", "weight", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccinate_child_oldest", "weight_unif", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccinate_child_oldest", "weight", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
-    
+
+    "smoothed_wchild_vaccine_already", "weight", "v_child_vaccine_already", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_def", "weight", "v_child_vaccine_yes_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_prob", "weight", "v_child_vaccine_yes_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_prob", "weight", "v_child_vaccine_no_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_def", "weight", "v_child_vaccine_no_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+
     "smoothed_try_vaccinate_1m", "weight_unif", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtry_vaccinate_1m", "weight", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     
@@ -332,11 +338,26 @@ get_binary_indicators <- function() {
     "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     
-    "smoothed_inperson_school_fulltime_oldest", "weight_unif", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_binary,
-    
+    "smoothed_inperson_school_fulltime_oldest", "weight_unif", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_wremote_school_fulltime_oldest", "weight", "s_remote_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+
+    "smoothed_wschool_safety_measures_mask_students", "weight", "s_school_safety_measures_mask_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_mask_teachers", "weight", "s_school_safety_measures_mask_teachers", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_restricted_entry", "weight", "s_school_safety_measures_restricted_entry", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_separators", "weight", "s_school_safety_measures_separators", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_extracurricular", "weight", "s_school_safety_measures_extracurricular", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_symptom_screen", "weight", "s_school_safety_measures_symptom_screen", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_ventilation", "weight", "s_school_safety_measures_ventilation", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_testing_staff", "weight", "s_school_safety_measures_testing_staff", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_testing_students", "weight", "s_school_safety_measures_testing_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_vaccine_staff", "weight", "s_school_safety_measures_vaccine_staff", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_vaccine_students", "weight", "s_school_safety_measures_vaccine_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_cafeteria", "weight", "s_school_safety_measures_cafeteria", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_dont_know", "weight", "s_school_safety_measures_dont_know", 6, compute_binary_response, jeffreys_binary,
+
     # beliefs
     "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
@@ -396,9 +417,7 @@ get_binary_indicators <- function() {
     "smoothed_want_info_employment", "weight_unif", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwant_info_employment", "weight", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_want_info_none", "weight_unif", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-   
-    
+    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary
   )
 
 

@@ -45,14 +45,7 @@ def run_module(params):
         for weeks_before in range(n_weeks)
     ]
     stats = []
-    brand_df = pd.read_csv(
-        join(static_file_dir, f"brand_info/brand_info_202106.csv")
-    )
-    brand_ids_all = brand_df.loc[
-        brand_df["naics_code"].isin([m[1] for m in METRICS]),
-        ["safegraph_brand_id", "naics_code"]
-    ]
-    process_day = partial(process, params=params, brand_df=brand_ids_all,
+    process_day = partial(process, params=params,
                           metrics=METRICS,
                           sensors=SENSORS,
                           geo_resolutions=GEO_RESOLUTIONS,

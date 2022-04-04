@@ -144,8 +144,20 @@ def handle_dfs(dfs, sensors, metrics, geo_resolutions, export_dir, brand_df, sta
             if len(dates) > 0:
                 stats.append((max(dates), len(dates)))
 
-def data(params, day, brand_df):
-    df = pull(params, day, brand_df)
+def data(params, day, naics_code, filter_brand = False):
+    """Create Dataframe from pull, with optional filter parameter."""
+    df = pull(params, day, naics_code)
+    if filter_brand:
+        brand_url = f'{params["indicator"]["static_file_dir"]} \
+            /brand_info/brand_info_202106.csv'
+        brand_df = pd.read_csv(brand_url)
+        selected_brand_id = brand_df.loc[
+            brand_df["naics_code"] == naics_code, "safegraph_brand_id"]
+        df = df[df.brands.notna()]
+        df['brands'] = df['brands'].apply(lambda x: x[0]['brand_id'])
+        filtered_df = df[df["brands"].isin(selected_brand_id)]
+    else:
+        filtered_df = df
     output_dir = os.path.join(
         params["indicator"]["raw_data_dir"],
         "api",

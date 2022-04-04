@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
   library(jsonlite)
   library(stringr)
   library(dplyr)
+  library(purrr)
   library(readr)
   source("qsf-utils.R")
 })
@@ -57,34 +58,74 @@ get_qsf_file <- function(path,
 ) {
   # Read file as json.
   qsf <- read_json(path)
-  
   ## Block
   shown_items <- get_shown_items(qsf)
   
   ## Questions
   questions <- Filter(function(elem) { elem[["Element"]] == "SQ" }, qsf$SurveyElements)
   
+  qids <- questions %>% 
+    map_chr(~ .x$Payload$QuestionID)
+  
   qid_item_map <- list()
   questions_out <- list()
-  for (question in questions) {
-    question <- question$Payload
+  for (question_raw in questions) {
+    question_raw <- question_raw$Payload
     
     # Skip items not shown to respondents.
-    if ( !(question$QuestionID %in% shown_items) ) {
+    if ( !(question_raw$QuestionID %in% shown_items) ) {
       next
     }
     
-    if (!identical(keep_items, c("all"))) {
-      question <- question[names(question) %in% c("QuestionID", keep_items)]
+    question <- question_raw[names(question_raw) %in% c("QuestionID", keep_items)]
+    
+    recode_values <- question_raw$RecodeValues # If doesn't exist, will be NULL
+    carryforward_choices <- question_raw$DynamicChoices$Locator # If doesn't exist, will be NULL
+    
+    if (!is.null(carryforward_choices)) {
+      # Get choices that are programmed specifically for this question	
+      old_choices <- question$Choices
+      
+      # Get carried-forward choices
+      carryforward_choices_qid <- carryforward_choices %>% 
+        str_split(., "/") %>% 
+        map(~ .x[3]) %>% unlist()
+      carryforward_question <- questions[qids == carryforward_choices_qid][[1]]$Payload
+      carryforward_choices <- carryforward_question$Choices
+      
+      # By default, carried forward choices are coded during the carry as
+      # "x<original code>". They are then recoded as pure numeric codes using
+      # the `RecodeValues` field. Some carried forward choices do not have
+      # `RecodeValues` defined and so in that case we don't want to prepend the
+      # codes with "x".
+      if (!is.null(recode_values)) {
+        names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
+      }
+      # Combine new choices and carried-forward choices
+      question$Choices <- c(old_choices, carryforward_choices)
     }
     
-    # Rearrange Answers/Choices elements to be consistent between matrix and
-    # other items.
     if ("QuestionType" %in% names(question)) {
       if (question$QuestionType == "Matrix") {
+        # Rearrange Answers/Choices elements to be consistent between matrix and
+        # other items.
         question$Subquestions <- question$Choices
         question$Choices <- question$Answers
         question$Answers <- NULL
+        
+        # Recode subquestion names to match exported data.
+        # FALSE if not set, otherwise a list
+        matrix_subquestion_field_names <- question_raw$ChoiceDataExportTags
+        if (!inherits(matrix_subquestion_field_names, "list")) {
+          # When subquestion field names are not set, generate incrementing names
+          names(question$Subquestions) <- paste(
+            question$DataExportTag,	
+            1:length(question$Subquestions),	
+            sep = "_"	
+          )
+        } else {
+          names(question$Subquestions) <- matrix_subquestion_field_names[names(question$Subquestions)] %>% unlist()
+        }
       }
     }
     
@@ -136,8 +177,13 @@ diff_surveys <- function(old_qsf, new_qsf) {
   old_questions <- old_qsf$questions
   new_questions <- new_qsf$questions
   
-  added <- setdiff(new_shown_items, old_shown_items)
-  removed <- setdiff(old_shown_items, new_shown_items)
+  added_qs <- setdiff(new_shown_items, old_shown_items)
+  added <- rep(NA, length(added_qs))
+  names(added) <- added_qs
+  
+  removed_qs <- setdiff(old_shown_items, new_shown_items)
+  removed <- rep(NA, length(removed_qs))
+  names(removed) <- removed_qs
   
   added_df <- create_diff_df(added, "Added", NULL, new_questions)
   removed_df <- create_diff_df(removed, "Removed", old_questions, NULL)
@@ -171,13 +217,33 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
                           old_qsf, new_qsf) {
   change_type <- match.arg(change_type)
   
-  changed <- c()
+  changed <- list()
   for (question in names) {
     if ( !identical(old_qsf[[question]][[change_type]], new_qsf[[question]][[change_type]]) ) {
-      changed <- append(changed, question)
+      changed_subquestions <- c()
+      if (change_type == "Subquestions") {
+        subquestion_codes <- unique(
+          c(
+            names(old_qsf[[question]][[change_type]]),
+            names(new_qsf[[question]][[change_type]])
+          )
+        )
+        
+        for (code in subquestion_codes) {
+          if ( !identical(old_qsf[[question]][[change_type]][[code]], new_qsf[[question]][[change_type]][[code]]) ) {
+            changed_subquestions <- append(changed_subquestions, code)
+          }
+        }
+        changed_subquestions <- paste(changed_subquestions, collapse=", ")
+      }
+      
+      if (length(changed_subquestions) == 0) {
+        changed_subquestions <- NA
+      }
+      changed[[question]] <- changed_subquestions
     }
   }
-  out <- create_diff_df(changed, change_type, old_qsf, new_qsf)
+  out <- create_diff_df(unlist(changed), change_type, old_qsf, new_qsf)
   
   return(out)
 }
@@ -208,25 +274,26 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
       Choices = "Answer choices changed",
       Subquestions = "Matrix subquestions changed"
     )    
-    questions <- sort(questions)
 
-    if (!is.null(old_qsf, new_qsf {
-      old_qids <- sapply(questions, function(question) { old_qsf, new_qsfquestion]]$QuestionID })
+    if (!is.null(old_qsf)) {
+      old_qids <- sapply(names(questions), function(question) { old_qsf[[question]]$QuestionID })
     } else {
       old_qids <- NA
     }
     if (!is.null(new_qsf)) {
-      new_qids <- sapply(questions, function(question) { new_qsf[[question]]$QuestionID })
+      new_qids <- sapply(names(questions), function(question) { new_qsf[[question]]$QuestionID })
     } else {
       new_qids <- NA
     }
     
     out <- data.frame(
       change_type=change_descriptions[[change_type]],
-      item=questions,
+      item=names(questions),
       old_qid=old_qids,
-      new_qid=new_qids
-    )
+      new_qid=new_qids,
+      impacted_subquestions=questions
+    ) %>%
+    arrange(item)
   }
   
   return(out)

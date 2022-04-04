@@ -17,10 +17,17 @@ suppressPackageStartupMessages({
 
 
 process_qsf <- function(path_to_qsf,
-                        survey_version=c("CMU", "UMD"),
-                        path_to_shortname_map="./static/item_shortquestion_map.csv",
-                        path_to_replacement_map="./static/item_replacement_map.csv") {
-  survey_version <- match.arg(survey_version)
+                        survey_version,
+                        shortname_map_file="item_shortquestion_map.csv",
+                        replacement_map_file="item_replacement_map.csv",
+                        rename_map_file="item_rename_map.csv", 
+                        drop_columns_file="item_drop.csv") {
+  # update paths based on survey version
+  path_to_shortname_map <- localize_static_filepath(shortname_map_file, survey_version)
+  path_to_replacement_map <- localize_static_filepath(replacement_map_file, survey_version)
+  path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
+  path_to_drop_columns <- localize_static_filepath(drop_columns_file, survey_version)
+  
   q <- read_json(path_to_qsf)
   wave <- get_wave(path_to_qsf)
   
@@ -33,8 +40,21 @@ process_qsf <- function(path_to_qsf,
   # get item names
   item_names <- displayed_questions %>% 
     map_chr(~ .x$Payload$DataExportTag) %>%
-    patch_item_names(survey_version, wave)
+    patch_item_names(path_to_rename_map, wave)
   
+  if (survey_version == "UMD") {
+    item_names[item_names == "D2_30" & qids == "QID294"] <- "D2_30_cheer"
+    item_names[item_names == "D2_30" & qids == "QID293"] <- "D2_30_calm"
+    item_names[item_names == "B13" & qids == "QID253"] <- "B13_likert"
+    item_names[item_names == "B13" & qids == "QID255"] <- "B13_profile"
+    item_names[item_names == "B14" & qids == "QID254"] <- "B14_likert"
+    item_names[item_names == "B14" & qids == "QID259"] <- "B14_profile"
+    item_names[item_names == "B12a" & qids == "QID250"] <- "B12a_likert"
+    item_names[item_names == "B12a" & qids == "QID258"] <- "B12a_profile"
+    item_names[item_names == "B12b" & qids == "QID251"] <- "B12b_likert"
+    item_names[item_names == "B12b" & qids == "QID257"] <- "B12b_profile"
+  }
+
   # get question text:
   questions <- displayed_questions %>% 
     map_chr(~ .x$Payload$QuestionText)
@@ -42,21 +62,10 @@ process_qsf <- function(path_to_qsf,
   # get question types
   qtype <- get_question_formats(displayed_questions, item_names, survey_version)
 
-  # get choices for multiple choice (MC) and Matrix items:
+  # get the choices (vertical components); subquestions for matrix items and answer choices for non-matrix items.
   choices <- displayed_questions %>% 
     map(~ .x$Payload$Choices) %>% 
     map(~ map(.x, "Display"))
-  recode_map <- displayed_questions %>% 
-    map(~ .x$Payload$RecodeValues)
-  
-  # Recode response options if overriding Qualtrics auto-assigned coding.
-  ii_recode <- recode_map %>%
-    map(~ !is.null(.x)) %>% 
-    unlist() %>% 
-    which()
-  choices[ii_recode] <- map2(.x=choices[ii_recode], .y=recode_map[ii_recode],
-                             ~ setNames(.x, .y[names(.x)])
-  )
   
   # derive from choices where users can fill in "Other" response with free text
   other_text_option <- displayed_questions %>% 
@@ -86,12 +95,75 @@ process_qsf <- function(path_to_qsf,
     map_chr(~ .x$Payload$DynamicChoices$Locator) %>% 
     str_split(., "/") %>% 
     map(~ .x[3]) %>% unlist()
-  choices[ii_carryforward] <- choices[qids %in% carryforward_choices_qid]
+  # create recode map for reference and later use
+  recode_map <- displayed_questions %>% 	
+    map(~ .x$Payload$RecodeValues)
   
-  # get the answers (for Matrix):
-  answers <- displayed_questions %>% 
-    map(~ .x$Payload$Answers) %>% 
-    map(~ map(.x, "Display"))
+  choices[ii_carryforward] <- lapply(	
+    seq_along(carryforward_choices_qid),	
+    function(ind) {	
+      # Get choices that are new for this question	
+      old_choices <- choices[qids == qids[ii_carryforward[ind]]] %>% unlist(recursive = FALSE)	
+      carryforward_choices <- choices[qids == carryforward_choices_qid[ind]] %>% unlist(recursive = FALSE)
+      
+      # By default, carried forward choices are coded during the carry as
+      # "x<original code>". They are then recoded as pure numeric codes using
+      # the `RecodeValues` field. Some carried forward choices do not have
+      # `RecodeValues` defined and so in that case we don't want to prepend the
+      # codes with "x".
+      recode_values <- recode_map[qids == qids[ii_carryforward[ind]]] %>% unlist(recursive = FALSE)	
+      
+      if (!is.null(recode_values)) {
+        names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
+      }
+      # Combine new choices and carried-forward choices
+      c(old_choices, carryforward_choices)	
+    }	
+  )	
+  
+  # get the "answers". These are answer choices for matrix items, and missing for non-matrix items.	
+  matrix_answers <- displayed_questions %>%	
+    map(~ .x$Payload$Answers) %>%	
+    map(~ map(.x, "Display"))	
+  
+  # Swap matrix answer choices into `choices` and matrix subquestion text into another variable	
+  ii_matrix <- which(qtype == "Matrix")	
+  matrix_subquestions <- rep(list(list()), length(choices))	
+  matrix_subquestions[ii_matrix] <- choices[ii_matrix]	
+  choices[ii_matrix] <- matrix_answers[ii_matrix]	
+  
+  # Recode response options if overriding Qualtrics auto-assigned coding.	
+  ii_recode <- recode_map %>%	
+    map(~ !is.null(.x)) %>% 	
+    unlist() %>% 	
+    which()	
+  choices[ii_recode] <- map2(.x=choices[ii_recode], .y=recode_map[ii_recode],	
+                             ~ setNames(.x, .y[names(.x)])	
+  )	
+  
+  # Get matrix subquestion field names as reported in microdata. NULL if not	
+  # defined (not a Matrix question); FALSE if not set; otherwise a list	
+  matrix_subquestion_field_names <- displayed_questions %>%	
+    map(~ .x$Payload$ChoiceDataExportTags)
+  # When subquestion field names are not set, generate incrementing names
+  ii_unset_matrix_subq_names <- (matrix_subquestion_field_names %>%	
+    map(~ !inherits(.x, "list")) %>% 	
+    unlist() & qtype == "Matrix") %>% 	
+    which()
+  matrix_subquestion_field_names[ii_unset_matrix_subq_names] <- lapply(ii_unset_matrix_subq_names, function(ind){
+    paste(
+      item_names[ind],	
+      1:length(matrix_subquestions[ind] %>% unlist()),	
+      sep = "_"	
+    ) %>% list()
+  })
+
+  if (survey_version == "CMU") {
+    # Bodge E1_* names for Wave 11
+    if (wave == 11) {
+      matrix_subquestion_field_names[item_names == "E1"] <- list(c("E1_1", "E1_2", "E1_3", "E1_4"))
+    }
+  }
   
   # deduce if randomizing or reversing order of responses
   raw_random_type <- displayed_questions %>% 
@@ -173,18 +245,26 @@ process_qsf <- function(path_to_qsf,
   # format all qsf content lists into a single tibble
   qdf <- tibble(variable = item_names,
                 question = questions,
-                type = qtype,
-                choices = choices,
-                answers = answers,
-                display_logic = display_logic,
-                response_option_randomization = response_option_randomization)
-  
+                question_type = qtype,
+                response_options = choices,
+                matrix_subquestions = matrix_subquestions,	
+                display_logic = display_logic,	
+                response_option_randomization = response_option_randomization,	
+                matrix_subquestion_field_names = matrix_subquestion_field_names)	
+    if (file.exists(path_to_drop_columns)){	
+    drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
+                          col_types = cols(item = col_character()
+                          ))
+    qdf <- filter(qdf, !(variable %in% drop_cols$item))
+  } else {
+    warning("path_to_drop_columns ", path_to_drop_columns, " not found")
+  }
   # Add on module randomization
   block_id_item_map <- map_qids_to_module(q)
   block_id_item_map <- block_id_item_map %>%
     left_join(data.frame(qid=qids, item=item_names), by=c("Questions"="qid"))
   qdf <- qdf %>% left_join(block_id_item_map, by=c(variable="item")) %>%
-    rename(group_of_respondents_item_was_shown_to = BlockName)
+    rename(respondent_group = BlockName)
   
   # If a question's display logic depends on a question from a randomized
   # module, consider it randomized too
@@ -198,45 +278,57 @@ process_qsf <- function(path_to_qsf,
     map(unique) %>%
     map(~ if (length(.x) > 1) { .x[!is.na(.x)] } else {NA}) %>% 
     unlist()
-  qdf <- qdf %>% mutate(group_of_respondents_item_was_shown_to=coalesce(group_of_respondents_item_was_shown_to, module_assignment_from_display_logic)) %>%
-    replace_na(list(group_of_respondents_item_was_shown_to = "all"))  
+  qdf <- qdf %>% mutate(respondent_group=coalesce(respondent_group, module_assignment_from_display_logic)) %>%
+    replace_na(list(respondent_group = "all"))  
   
 
-  stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
+  if (length(qdf$variable) != length(unique(qdf$variable))) {
+    duplicate_items <- qdf$variable[duplicated(qdf$variable)]
+    stop(
+      "Item names should be unique, but ",
+      paste(duplicate_items, collapse=", "),
+      " each appears multiple times"
+    )
+  }
   
   # Remove blank questions (rare).
   qdf <- qdf %>% filter(question != "Click to write the question text")
   
   # Add short description mapped to variable name
+  if (file.exists(path_to_shortname_map)) {
   description_map <- read_csv(path_to_shortname_map,
                            col_types = cols(item = col_character(),
                                             description = col_character()
                            )) %>%
     remove_rownames() %>%
     column_to_rownames(var="item")
+  } else {
+    error("path_to_shortname_map ", path_to_shortname_map, " not found")
+  }
   qdf <- qdf %>% 
     mutate(description = description_map[variable, "description"])
   
   # set blank display logic to "none"
   qdf$display_logic <- ifelse(qdf$display_logic == "", "none", qdf$display_logic)
   
-  # matrix to separate items (to match exported data)
-  nonmatrix_items <- qdf %>% filter(type != "Matrix")
-  matrix_items <- qdf %>%
-    filter(type == "Matrix") %>% 
-    rowwise() %>% 
-    mutate(new = list(
-      tibble(variable = paste(variable, 1:length(choices), sep = "_"),
-             question = question,
-             matrix_subquestion = unlist(choices),
-             type = type,
-             response_option_randomization = ifelse(
-               response_option_randomization == "randomized", "none", response_option_randomization),
-             description = description,
-             choices = list(answers),
-             answers = list(list()),
+  # separate matrix subquestions into separate fields (to match exported data)	
+  nonmatrix_items <- qdf %>%	
+    filter(question_type != "Matrix") %>%	
+    select(-matrix_subquestion_field_names)
+  matrix_items <- qdf %>%	
+    filter(question_type == "Matrix") %>% 	
+    rowwise() %>% 	
+    mutate(new = list(	
+      tibble(variable = unlist(matrix_subquestion_field_names),	
+             question = question,	
+             matrix_subquestion = unlist(matrix_subquestions),	
+             question_type = question_type,	
+             response_option_randomization = ifelse(	
+               response_option_randomization == "randomized", "none", response_option_randomization),	
+             description = description,	
+             response_options = list(response_options),
              display_logic = display_logic,
-             group_of_respondents_item_was_shown_to = group_of_respondents_item_was_shown_to)
+             respondent_group = respondent_group)
       )) %>% 
     select(new) %>% 
     unnest(new)
@@ -247,8 +339,8 @@ process_qsf <- function(path_to_qsf,
     # also C10 needs an extra _1.
     matrix_items <- matrix_items %>% 
       mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
-             type = if_else(str_starts(variable, "A5|C10"), "Text", type),
-             choices = if_else(str_starts(variable, "A5|C10"), list(list()), choices))
+             question_type = if_else(str_starts(variable, "A5|C10"), "Text", question_type),
+             response_options = if_else(str_starts(variable, "A5|C10"), list(list()), response_options))
   } else if (survey_version == "UMD") {
     # pass
   }
@@ -274,14 +366,14 @@ process_qsf <- function(path_to_qsf,
            description,
            question,
            matrix_subquestion,
-           choices,
-           type,
+           response_options,
+           question_type,
            display_logic,
            response_option_randomization,
-           group_of_respondents_item_was_shown_to)
+           respondent_group)
   
   # Format choices as json string
-  qdf$choices <- map(qdf$choices, function(x) {
+  qdf$response_options <- map(qdf$response_options, function(x) {
     if (is_empty(x)) { NA }
     else { toJSON(x) }
   }) %>%
@@ -291,12 +383,14 @@ process_qsf <- function(path_to_qsf,
   other_text_items <- qdf %>%
     filter(variable %in% names(other_text_items)) %>%
     mutate(variable = other_text_items[variable],
-           type = "Text",
+           question_type = "Text",
            response_option_randomization = NA,
            description = paste0(description, " other text")
     )
   qdf <- rbind(qdf, other_text_items)
-  qdf$choices[qdf$type == "Text"] <- NA
+  qdf$response_options[qdf$question_type == "Text"] <- NA
+  
+
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
@@ -319,10 +413,13 @@ process_qsf <- function(path_to_qsf,
 #' @return dataframe of existing codebook augmented with new wave QSF data
 add_qdf_to_codebook <- function(qdf,
                                 path_to_codebook,
-                                path_to_static_fields="./static/static_microdata_fields.csv") {
+                                survey_version,
+                                static_fields_file="static_microdata_fields.csv") {
+  path_to_static_fields <- localize_static_filepath(static_fields_file, survey_version)
   qdf_wave <- unique(qdf$wave)
   
   if (!file.exists(path_to_codebook)) {
+    # Create an empty df with the right column names and order
     codebook <- qdf[FALSE, ]
   } else {
     codebook <- read_csv(path_to_codebook, col_types = cols(
@@ -333,7 +430,7 @@ add_qdf_to_codebook <- function(qdf,
       description = col_character(),
       question = col_character(),
       matrix_subquestion = col_character(),
-      type = col_character(),
+      question_type = col_character(),
       display_logic = col_character(),
       response_option_randomization = col_character()
     ))
@@ -346,10 +443,10 @@ add_qdf_to_codebook <- function(qdf,
   
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
-  # Sort so that items with missing type (non-Qualtrics fields) are at the top.
+  # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.
   codebook <- rbind(codebook, qdf) %>%
-    add_static_fields(qdf_wave, path_to_static_fields) %>% 
-    arrange(!is.na(.data$type), variable, wave)
+    add_static_fields(qdf_wave, survey_version, path_to_static_fields) %>% 
+    arrange(!is.na(.data$question_type), variable, wave)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) )
   if ( length(ii_replacing_DNE) > 0 ) {
@@ -370,16 +467,26 @@ add_qdf_to_codebook <- function(qdf,
 #' @return codebook dataframe augmented with non-Qualtrics fields included in microdata
 add_static_fields <- function(codebook,
                               wave,
-                              path_to_static_fields="./static/static_microdata_fields.csv") {
+                              survey_version,
+                              path_to_static_fields="static_microdata_fields.csv") {
   static_fields <- get_static_fields(wave, path_to_static_fields)
   
-  codebook <- bind_rows(codebook, static_fields) %>% 
-    filter(!(variable == "module" & wave < 11), # module field is only available for wave >= 11
-           !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
-           !(variable == "w12_treatment" & wave != 12.5), # experimental arm field is only available for wave == 12.5
-           variable != "Random_Number"
+  codebook <- bind_rows(codebook, static_fields)
+  
+  if (survey_version == "CMU") {
+    codebook <- filter(
+      codebook,
+      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
+      !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
+      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
     )
-
+  } else if (survey_version == "UMD") {
+    codebook <- filter(
+      codebook,
+      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
+      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
+    )
+  }
   return(codebook)
 }
 
@@ -390,14 +497,14 @@ add_static_fields <- function(codebook,
 #'
 #' @return dataframe of non-Qualtrics fields included in microdata
 get_static_fields <- function(wave,
-                              path_to_static_fields="./static/static_microdata_fields.csv") {
+                              path_to_static_fields="static_microdata_fields.csv") {
   static_fields <- read_csv(path_to_static_fields,
                             col_types = cols(variable = col_character(),
                                              replaces = col_character(),
                                              description = col_character(),
                                              question = col_character(),
                                              matrix_subquestion = col_character(),
-                                             type = col_character(),
+                                             question_type = col_character(),
                                              response_option_randomization = col_character()
                             )) %>%
     mutate(wave = wave) %>% 
@@ -412,9 +519,11 @@ get_static_fields <- function(wave,
 #' @param path_to_codebook
 #'
 #' @return none
-add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook) {
-  qdf <- process_qsf(path_to_qsf)
-  codebook <- add_qdf_to_codebook(qdf, path_to_codebook)
+add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook,
+                                survey_version=c("CMU", "UMD")) {
+  survey_version <- match.arg(survey_version)
+  qdf <- process_qsf(path_to_qsf, survey_version)
+  codebook <- add_qdf_to_codebook(qdf, path_to_codebook, survey_version)
   write_excel_csv(codebook, path_to_codebook, quote="needed")
 }
 
@@ -430,4 +539,4 @@ survey_version <- args[1]
 path_to_qsf <- args[2]
 path_to_codebook <- args[3]
 
-invisible(add_qsf_to_codebook(path_to_qsf, path_to_codebook))
+invisible(add_qsf_to_codebook(path_to_qsf, path_to_codebook, survey_version))

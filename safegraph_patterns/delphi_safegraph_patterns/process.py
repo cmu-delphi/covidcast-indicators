@@ -21,7 +21,7 @@ GEO_KEY_DICT = {
         "nation": "nation"
 }
 
-def construct_signals(df, metric_names, naics_codes, brand_df):
+def old_construct_signals(df, metric_names, naics_codes, brand_df):
     """
     Construct Zip Code level signals.
 
@@ -88,6 +88,66 @@ def construct_signals(df, metric_names, naics_codes, brand_df):
     # Can have ~30k visits in restaurants missed in those zips in one week.
     # only ~200 visits missed for bars.
     return result_dfs
+
+def construct_signals(df, metric_name):
+    """
+    Construct Zip Code level signals for some particular metric.
+
+    In its current form, we prepare the following signals
+
+    - bars_visit_num defined as:
+        number of visits by day in bars (naics_code = 722410)
+    - restaurants_visit_num defined as:
+        number of visits by day in restaurants (naics_code = 722511)
+
+    Documentation for the weekly patterns metrics:
+    https://docs.safegraph.com/docs/weekly-patterns
+
+    Parameters
+    ----------
+    df: pd.DataFrame
+        dataframe with raw visit number for different places with unique
+        safegraph_place_id
+    metric_names: List[str]
+        Names of metrics to be exported.
+    naics_codes: List[int]
+        naics codes for bars and restaurants
+    brand_df: pd.DataFrame
+        mapping info from naics_code to safegraph_brand_id
+
+    Returns
+    -------
+    pd.DataFrame
+        columns: timestamp, Zip Codes, {metric}_num.
+    """
+    metric_count_name = "_".join([metric_name, "num"])
+    # Create wide df of visit counts for each day of week, along with zip and date info
+    # The counts end up as object by default, so explicitly cast as ints
+    df['visits_cleaned'] = df['visits_by_day'] \
+        .map(lambda x: str(x).replace("{'visits': ", "").replace("}", ""))
+    visits_df = pd.DataFrame(
+            df["visits_cleaned"].str[1:-1].str.split(",").tolist(),
+            index=df.index).astype('int')
+    visits_df["zip"] = df["postal_code"]
+    # Just keep date only
+    visits_df["start_date"] = pd.to_datetime(df["date_range_start"], utc=True)
+    visits_df["start_date"] = visits_df["start_date"].dt.normalize().dt.tz_localize(None)
+
+    # Turn df into long format and calculate actual dates from start_date and day of week
+    visits_long = visits_df.melt(
+            id_vars=["zip", "start_date"],
+            var_name="day_of_week",
+            value_name=metric_count_name)
+    visits_long[metric_count_name] = visits_long[metric_count_name].astype("int")
+    day_offsets = pd.to_timedelta(visits_long["day_of_week"], "d")
+    visits_long["timestamp"] = visits_long["start_date"] + day_offsets
+    visits_long.drop(["start_date", "day_of_week"], axis=1, inplace=True)
+
+    # Aggregate sum across same timestamps and zips
+    result_df = visits_long.groupby(
+            ["timestamp", "zip"]).sum().reset_index()
+
+    return result_df
 
 def aggregate(df, metric, geo_res):
     """
@@ -219,7 +279,7 @@ def process_s3(fname, sensors, metrics, geo_resolutions,
         df = pd.read_csv(fname,
                          usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
-        dfs = construct_signals(df, metric_names, naics_codes, brand_df)
+        dfs = old_construct_signals(df, metric_names, naics_codes, brand_df)
         logger.info("Finished pulling data.", filename=fname)
     else:
         files = glob.glob(f'{fname}/**/*.csv.gz', recursive=True)
@@ -228,7 +288,7 @@ def process_s3(fname, sensors, metrics, geo_resolutions,
             df = pd.read_csv(fn,
                          usecols=used_cols,
                          parse_dates=["date_range_start", "date_range_end"])
-            dfs = construct_signals(df, metric_names, naics_codes, brand_df)
+            dfs = old_construct_signals(df, metric_names, naics_codes, brand_df)
             dfs_dict["bars_visit"].append(dfs["bars_visit"])
             dfs_dict["restaurants_visit"].append(dfs["restaurants_visit"])
         dfs = {}

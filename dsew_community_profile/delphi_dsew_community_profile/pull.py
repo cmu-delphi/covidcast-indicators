@@ -461,12 +461,12 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
-    # The filter in `fetch_new_reports` to keep most recent publish date gurantees
-    # that we'll only see one unique publish date per timestamp here.
+    # The filter in `fetch_new_reports` to keep most recent publish date
+    # gurantees that we'll only see one unique publish date per timestamp
+    # here, so just keep the first obs of each group.
     publish_date_by_ts = df.groupby(
         ["timestamp"]
-    )["publish_date"].apply(
-        lambda x: np.unique(x)[0]
+    )["publish_date"].first(
     ).reset_index(
     )
     df = geomapper.replace_geocode(
@@ -719,7 +719,7 @@ def add_max_ts_col(df):
     assert all(
         assert_df.num_obs <= 2
     ) and all(
-        assert_df[assert_df.num_obs == 2].num_unique_obs == 2
+        assert_df.num_obs == assert_df.num_unique_obs
     ), "Testing signals should have up to two timestamps per publish date-geo level " + \
         "combination. Each timestamp should be unique."
 
@@ -766,8 +766,9 @@ def apply_thres_change_date(apply_fn, df, *apply_fn_args):
     """
     Apply a function separately to data before and after the test volume change date.
 
-    The test volume change date is when test volume and test positivity started being
-    repported for different reference dates within the same report.
+    The test volume change date is when test volume and test positivity
+    started being reported for different reference dates within the same
+    report. This first occurred on 2021-03-17.
 
     Parameters
     ----------
@@ -791,7 +792,7 @@ def apply_thres_change_date(apply_fn, df, *apply_fn_args):
     list_of_dfs = [df[df.publish_date < change_date], df[df.publish_date >= change_date]]
 
     for arg_field in apply_fn_args:
-        assert len(list_of_dfs) == len(arg_field), "Extra arguments must be iterables with " + \
-            f"length {len(list_of_dfs)}, the same as the number of dfs to process"
+        assert len(arg_field) == 2, "Extra arguments must be iterables with " + \
+            "length 2, the same as the number of dfs to process"
 
     return map(apply_fn, list_of_dfs, *apply_fn_args)

@@ -315,6 +315,7 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
       impacted_subquestions=questions
     ) %>%
     arrange(item)
+    out['notes'] <- ""
   }
   
   return(out)

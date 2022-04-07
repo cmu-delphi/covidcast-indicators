@@ -5,12 +5,16 @@ TODAY:=$(shell date +"%Y-%m-%d")
 YESTERDAY:=$(shell date --date "$(TODAY) -1 day" +"%Y-%m-%d")
 ONEWEEK:=$(shell date --date "$(TODAY) -7 day" +"%Y-%m-%d")
 THREEWEEK:=$(shell date --date "$(TODAY) -21 day" +"%Y-%m-%d")
+LAST_SATURDAY:=$(shell date -d "last Saturday" +"%Y-%m-%d")
+LAST_SUNDAY:=$(shell date -d "$(LAST_SATURDAY) -6 day" +"%Y-%m-%d")
 
 MESSAGES:="messages/$(TODAY).messages"
+WEEKLY_WEIGHTS_MESSAGES:="messages/$(TODAY)-weekly-weights.messages"
 
 PYTHON:=env/bin/python
 QUALTRICS=$(shell $(PYTHON) -m delphi_utils get input_dir)
 WEIGHTS=$(shell $(PYTHON) -m delphi_utils get weights_in_dir)
+WEEKLY_WEIGHTS=$(shell $(PYTHON) -m delphi_utils get weekly_weights_in_dir)
 CIDS=$(shell $(PYTHON) -m delphi_utils get weights_out_dir)
 CIDS_EXP=$(shell $(PYTHON) -m delphi_utils get experimental_weights_out_dir)
 INDIVIDUAL=$(shell $(PYTHON) -m delphi_utils get individual_dir)
@@ -49,17 +53,17 @@ scratch:
 	mkdir scratch
 	rm -rf scratch/*
 
-tidy: receiving
-	rm -rf tidy/$(RECEIVING)
-	rm -rf tidy/$(INDIVIDUAL)
-	rm -f tidy/params.json
-	mkdir -p tidy tidy/$(RECEIVING) tidy/$(INDIVIDUAL)
-	cp params.json tidy/
-	mv $(RECEIVING)/*.csv tidy/$(RECEIVING)
-	mv $(INDIVIDUAL)/*.csv* tidy/$(INDIVIDUAL)
-	mv $(INDIVIDUAL_RACEETH)/*.csv* tidy/$(INDIVIDUAL_RACEETH)
-	tar -czf scratch/tidy-`date +"%Y-%m-%d-%H%M%S"`.tgz --exclude='tidy-*.tgz' tidy
-	mv scratch/*.tgz tidy/
+tidy%: receiving
+	rm -rf tidy$*/$(RECEIVING)
+	rm -rf tidy$*/$(INDIVIDUAL)
+	rm -f tidy$*/params.json
+	mkdir -p tidy$* tidy$*/$(RECEIVING) tidy$*/$(INDIVIDUAL)
+	cp params.json tidy$*/
+	mv $(RECEIVING)/*.csv tidy$*/$(RECEIVING)
+	mv $(INDIVIDUAL)/*.csv* tidy$*/$(INDIVIDUAL)
+	mv $(INDIVIDUAL_RACEETH)/*.csv* tidy$*/$(INDIVIDUAL_RACEETH)
+	tar -czf scratch/tidy$*-`date +"%Y-%m-%d-%H%M%S"`.tgz --exclude='tidy*-*.tgz' tidy$*
+	mv scratch/*.tgz tidy$*/
 
 clean:
 	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(INDIVIDUAL_RACEETH)/*.csv $(CIDS)/*.csv $(CIDS_EXP)/*.csv
@@ -114,6 +118,17 @@ params.json: $(TODAY)
 		output cids,individual,covidalert,archive,community \
 		start_date $(YESTERDAY)
 
+params.weekly-weights.json: $(TODAY)
+	PAT=`grep fb-survey params.json | awk 'BEGIN{FS="\""}{print $$2}' | sed 's/ /_/g;s/^/-e /'`; \
+	$(PYTHON) -m delphi_utils set \
+		debug false \
+		produce_individual_raceeth true \
+		end_date $(LAST_SATURDAY) \
+		input <(find $(QUALTRICS) -maxdepth 1 -newer $(LAST_SUNDAY) -not -newer $(shell date -d "$(LAST_SATURDAY) +2 day" +"%Y-%m-%d") -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		parallel true \
+		output individual \
+		start_date $(LAST_SUNDAY)
+
 $(WEIGHTS): $(TODAY)
 	[ -f $(WEIGHTS) ] || mkdir -p $(WEIGHTS)
 	cd "$(WEIGHTS)"; \
@@ -132,6 +147,23 @@ $(WEIGHTS): $(TODAY)
 	  MSG="Expected most recent file: $$EXPECTED_MAX_WEIGHTED; Actual most recent file: $$MAX_WEIGHTED"; \
 	  echo "WARNING: $${MSG}" >> $(MESSAGES); \
 	fi
+
+$(WEEKLY_WEIGHTS): $(TODAY)
+	[ -f $(WEEKLY_WEIGHTS) ] || mkdir -p $(WEEKLY_WEIGHTS)
+	cd "$(WEEKLY_WEIGHTS)"; \
+	BATCH="cd fb-interchange/cmu_respondent_ww_weights\nls -1"; \
+	NEW=`LC_ALL=C comm -23 <(sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) | grep "^202" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
+	echo "New weekly weights files:"; \
+	echo $${NEW}; \
+	if [[ $$ncids == "0" ]]; then \
+		echo "ERROR: 0 CIDs reported for $$f"; \
+		exit 73; \
+	    fi; \
+	for f in $${NEW}; do \
+	  BATCH="$${BATCH}\nget $$f"; \
+	done; \
+	sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) || exit 90; \
+	cd -; \
 
 dev: delphiFacebook_1.0.tar.gz
 	R CMD INSTALL delphiFacebook_1.0.tar.gz
@@ -152,6 +184,12 @@ pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-exp
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
 	chmod o+w $(MESSAGES)
+
+weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json $(WEEKLY_WEIGHTS) run-R post-individual post-individual-raceeth tidy-weekly-weights
+	# Want to schedule on Wednesday or Thursday to be very likely to have received weekly weights.
+	touch $@
+	echo "SUCCESS: $(DRY_MESSAGE)weekly weights pipeline complete" >> $(WEEKLY_WEIGHTS_MESSAGES)
+	chmod o+w $(WEEKLY_WEIGHTS_MESSAGES)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'

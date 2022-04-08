@@ -779,10 +779,10 @@ filter_complete_responses <- function(data_full, params)
   data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions (ignore raceethnicity, module, and
-  # w12_assignment fields which may or may not exist, depending on params and
+  # UserLanguage + two questions (ignore raceethnicity, module,
+  # w12_assignment, and weekly weights fields which may or may not exist, depending on params and
   # survey version)
-  ignore_cols <- c("raceethnicity", "w12_assignment", "module")
+  ignore_cols <- c("raceethnicity", "w12_assignment", "module", "weight_wf", "weight_wp")
   valid_row_filter <- rowSums( !is.na(data_full[, !(names(data_full) %in% ignore_cols)]) ) >= 9
   data_full <- data_full[valid_row_filter, ]
 

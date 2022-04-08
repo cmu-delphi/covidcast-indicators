@@ -51,6 +51,7 @@
   "start_date": "2020-08-28",
   "static_dir": "./static",
   "weights_in_dir": "./fb-incoming",
+  "weekly_weights_in_dir": "./fb-incoming-weekly",
   "weights_out_dir": "./fb-outgoing",
   "experimental_weights_out_dir": "./exp-fb-outgoing"
 }

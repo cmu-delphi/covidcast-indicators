@@ -197,7 +197,7 @@ pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-exp
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
 	chmod o+w $(MESSAGES)
 
-weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json $(WEEKLY_WEIGHTS) run-R post-individual post-individual-raceeth tidy-weekly-weights
+weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json run-R post-individual post-individual-raceeth tidy-weekly-weights
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)weekly weights pipeline complete" >> $(WEEKLY_WEIGHTS_MESSAGES)
 	chmod o+w $(WEEKLY_WEIGHTS_MESSAGES)

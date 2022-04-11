@@ -28,6 +28,7 @@ DELPHI_SURVEY_EMAIL_USER=$(shell $(PYTHON) -m delphi_utils get delphi_survey_ema
 SFTP_OPTIONS=$(shell $(PYTHON) -m delphi_utils get sftp_options)
 
 MAX_WEIGHTED=ls -1 $(WEIGHTS) | grep dap | tail -1 | sed 's/_.*//;s/-//g;'
+MAX_WEEKLY_WEIGHTED=ls -1 $(WEEKLY_WEIGHTS) | grep map | tail -1 | sed 's/_.*//;s/-//g;'
 
 ANTIJOIN:="antijoin.cids.sorted.txt"
 ANTIJOIN_EXP:="antijoin.experimental.cids.sorted.txt"
@@ -124,7 +125,7 @@ params.weekly-weights.json: $(TODAY)
 		debug false \
 		produce_individual_raceeth true \
 		end_date $(LAST_SATURDAY) \
-		input <(find $(QUALTRICS) -maxdepth 1 -newer $(LAST_SUNDAY) -not -newer $(shell date -d "$(LAST_SATURDAY) +2 day" +"%Y-%m-%d") -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
+		input <(find $(QUALTRICS) -maxdepth 1 -newer $< -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		parallel true \
 		output individual \
 		start_date $(LAST_SUNDAY)
@@ -149,21 +150,32 @@ $(WEIGHTS): $(TODAY)
 	fi
 
 $(WEEKLY_WEIGHTS): $(TODAY)
+	# Want to schedule this to run every day. A pipeline run is triggered when new weekly weights files are available.
 	[ -f $(WEEKLY_WEIGHTS) ] || mkdir -p $(WEEKLY_WEIGHTS)
 	cd "$(WEEKLY_WEIGHTS)"; \
 	BATCH="cd fb-interchange/cmu_respondent_ww_weights\nls -1"; \
 	NEW=`LC_ALL=C comm -23 <(sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) | grep "^202" | LC_ALL=C sort) <(ls -1 | LC_ALL=C sort)`; \
 	echo "New weekly weights files:"; \
 	echo $${NEW}; \
-	if [[ $$ncids == "0" ]]; then \
-		echo "ERROR: 0 CIDs reported for $$f"; \
-		exit 73; \
-	    fi; \
 	for f in $${NEW}; do \
 	  BATCH="$${BATCH}\nget $$f"; \
 	done; \
 	sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) || exit 90; \
 	cd -; \
+	# If more than 3 days after the end of the last week and files for last week have not yet been created, expect weights for that week to be available.
+	if [[ $(TODAY) -gt (shell date -d "$(LAST_SATURDAY) +3 day" +"%Y-%m-%d") && -f $(LAST_SUNDAY)-weekly-weights.done ]]; then \
+	  # Get list of start dates (Sunday) of weekly weights.
+	  MAX_WEEKLY_WEIGHTED=`$(MAX_WEEKLY_WEIGHTED)`; \
+	  EXPECTED_MAX_WEEKLY_WEIGHTED=$(LAST_SUNDAY)`; \
+	  if [[ $$EXPECTED_MAX_WEEKLY_WEIGHTED -gt $$MAX_WEEKLY_WEIGHTED ]]; then \
+	    MSG="Expected most recent weekly weights file to start on: $$EXPECTED_MAX_WEEKLY_WEIGHTED; Actual most recent file starts on: $$MAX_WEEKLY_WEIGHTED"; \
+	    echo "WARNING: $${MSG}" >> $(WEEKLY_WEIGHTS_MESSAGES); \
+	  fi
+	fi
+	# If any new files are downloaded, run weekly weights pipeline for last week.
+	if [[ (wc -w <<< $${NEW}) -gt 0 ]]; then \
+	  make weekly-weights-pipeline
+	fi
 
 dev: delphiFacebook_1.0.tar.gz
 	R CMD INSTALL delphiFacebook_1.0.tar.gz
@@ -186,10 +198,10 @@ pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-exp
 	chmod o+w $(MESSAGES)
 
 weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json $(WEEKLY_WEIGHTS) run-R post-individual post-individual-raceeth tidy-weekly-weights
-	# Want to schedule on Wednesday or Thursday to be very likely to have received weekly weights.
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)weekly weights pipeline complete" >> $(WEEKLY_WEIGHTS_MESSAGES)
 	chmod o+w $(WEEKLY_WEIGHTS_MESSAGES)
+	touch $(LAST_SUNDAY)-weekly-weights.done
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'

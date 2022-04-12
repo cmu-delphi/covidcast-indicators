@@ -174,7 +174,7 @@ $(WEEKLY_WEIGHTS): $(TODAY)
 	fi
 	# If any new files are downloaded, run weekly weights pipeline for last week.
 	if [[ (wc -w <<< $${NEW}) -gt 0 ]]; then \
-	  make weekly-weights-pipeline
+	  $(MAKE) weekly-weights-pipeline
 	fi
 
 dev: delphiFacebook_1.0.tar.gz

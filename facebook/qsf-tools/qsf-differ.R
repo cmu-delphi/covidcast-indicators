@@ -59,6 +59,7 @@ get_qsf_file <- function(path, survey_version,
                                         "QuestionText", "QuestionType",
                                         "Choices", "Answers", "DisplayLogic")
 ) {
+  wave <- get_wave(path)
   # Read file as json.
   qsf <- read_json(path)
   ## Block
@@ -157,6 +158,14 @@ get_qsf_file <- function(path, survey_version,
         question$DataExportTag == "B12b" & question$QuestionID == "QID257" ~ "B12b_profile",
         TRUE ~ question$DataExportTag
       )
+    } else if (survey_version == "CMU") {
+      if (wave == 10) {
+        question$DataExportTag <- case_when(
+          question$DataExportTag == "C6" ~ "C6a",
+          question$DataExportTag == "C8" ~ "C8a",
+          TRUE ~ question$DataExportTag
+        )
+      }
     }
     
     questions_out <- safe_insert_question(questions_out, question)

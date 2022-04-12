@@ -57,8 +57,9 @@ scratch:
 tidy%: receiving
 	rm -rf tidy$*/$(RECEIVING)
 	rm -rf tidy$*/$(INDIVIDUAL)
+	rm -rf tidy$*/$(INDIVIDUAL_RACEETH)
 	rm -f tidy$*/params.json
-	mkdir -p tidy$* tidy$*/$(RECEIVING) tidy$*/$(INDIVIDUAL)
+	mkdir -p tidy$* tidy$*/$(RECEIVING) tidy$*/$(INDIVIDUAL) tidy$*/$(INDIVIDUAL_RACEETH)
 	cp params.json tidy$*/
 	mv $(RECEIVING)/*.csv tidy$*/$(RECEIVING)
 	mv $(INDIVIDUAL)/*.csv* tidy$*/$(INDIVIDUAL)

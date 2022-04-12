@@ -182,7 +182,7 @@ process_qsf <- function(path_to_qsf,
       raw_scale_reversal == TRUE ~ "scale reversal",
       TRUE ~ "none"
     )
-  
+
   # format display logic
   # Not all questions have display logic; if NULL, shown to all respondents within section.
   display_logic <- displayed_questions %>% 
@@ -357,7 +357,7 @@ process_qsf <- function(path_to_qsf,
   qdf <- qdf %>%
     mutate(replaces = ifelse(variable %in% rownames(replaces_map), 
                              replaces_map[variable, "old_item"], 
-                             NA_character_),
+                             "none"),
            wave = wave
     ) %>% 
     select(wave,
@@ -382,9 +382,9 @@ process_qsf <- function(path_to_qsf,
   # add free text response options
   other_text_items <- qdf %>%
     filter(variable %in% names(other_text_items)) %>%
+    # "Other text" items should borrow most fields from base question.
     mutate(variable = other_text_items[variable],
            question_type = "Text",
-           response_option_randomization = NA,
            description = paste0(description, " other text")
     )
   qdf <- rbind(qdf, other_text_items)

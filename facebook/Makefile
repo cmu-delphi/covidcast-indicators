@@ -9,7 +9,6 @@ LAST_SATURDAY:=$(shell date -d "last Saturday" +"%Y-%m-%d")
 LAST_SUNDAY:=$(shell date -d "$(LAST_SATURDAY) -6 day" +"%Y-%m-%d")
 
 MESSAGES:="messages/$(TODAY).messages"
-WEEKLY_WEIGHTS_MESSAGES:="messages/$(TODAY)-weekly-weights.messages"
 
 PYTHON:=env/bin/python
 QUALTRICS=$(shell $(PYTHON) -m delphi_utils get input_dir)
@@ -151,7 +150,7 @@ $(WEIGHTS): $(TODAY)
 	fi
 
 $(WEEKLY_WEIGHTS): $(TODAY)
-	# Want to schedule this to run every day. A pipeline run is triggered when new weekly weights files are available.
+	# This runs every day as a dependency of `pipeline`. A pipeline run is triggered when new weekly weights files are available.
 	[ -f $(WEEKLY_WEIGHTS) ] || mkdir -p $(WEEKLY_WEIGHTS)
 	cd "$(WEEKLY_WEIGHTS)"; \
 	BATCH="cd fb-interchange/cmu_respondent_ww_weights\nls -1"; \
@@ -170,7 +169,7 @@ $(WEEKLY_WEIGHTS): $(TODAY)
 	  EXPECTED_MAX_WEEKLY_WEIGHTED=$(LAST_SUNDAY)`; \
 	  if [[ $$EXPECTED_MAX_WEEKLY_WEIGHTED -gt $$MAX_WEEKLY_WEIGHTED ]]; then \
 	    MSG="Expected most recent weekly weights file to start on: $$EXPECTED_MAX_WEEKLY_WEIGHTED; Actual most recent file starts on: $$MAX_WEEKLY_WEIGHTED"; \
-	    echo "WARNING: $${MSG}" >> $(WEEKLY_WEIGHTS_MESSAGES); \
+	    echo "WARNING: $${MSG}" >> $(MESSAGES); \
 	  fi
 	fi
 	# If any new files are downloaded, run weekly weights pipeline for last week.
@@ -191,7 +190,7 @@ run-R: $(CIDS) $(CIDS_EXP)
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-experimental-cids post-individual post-individual-raceeth post-done tidy
+pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-experimental-cids post-individual post-individual-raceeth post-done tidy $(WEEKLY_WEIGHTS)
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
@@ -200,8 +199,8 @@ pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-exp
 
 weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json run-R post-individual post-individual-raceeth tidy-weekly-weights
 	touch $@
-	echo "SUCCESS: $(DRY_MESSAGE)weekly weights pipeline complete" >> $(WEEKLY_WEIGHTS_MESSAGES)
-	chmod o+w $(WEEKLY_WEIGHTS_MESSAGES)
+	echo "SUCCESS: $(DRY_MESSAGE)weekly weights pipeline complete" >> $(MESSAGES)
+	chmod o+w $(MESSAGES)
 	touch $(LAST_SUNDAY)-weekly-weights.done
 
 coverage:

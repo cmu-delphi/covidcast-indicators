@@ -30,11 +30,11 @@ def _assert_frame_equal(df1, df2, index_cols: List[str] = None):
     return assert_frame_equal(df1, df2)
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
-        df = df.copy()
-        for k, v in dtypes.items():
-            if k in df.columns:
-                df[k] = df[k].astype(v)
-        return df
+    df = df.copy()
+    for k, v in dtypes.items():
+        if k in df.columns:
+            df[k] = df[k].astype(v)
+    return df
 
 class TestPull:
     def test_DatasetTimes(self):

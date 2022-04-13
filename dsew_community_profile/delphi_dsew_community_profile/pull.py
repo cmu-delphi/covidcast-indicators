@@ -582,6 +582,11 @@ def fetch_new_reports(params, logger=None):
 def interpolate_missing_values(dfs: DataDict) -> DataDict:
     interpolate_df = dict()
     for key, df in dfs.items():
+        # TODO: Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
+        _, sig, _ = key
+        if sig == "positivity":
+            continue
+
         geo_dfs = []
         for geo, group_df in df.groupby("geo_id"):
             reindexed_group_df = group_df.set_index("timestamp").reindex(pd.date_range(group_df.timestamp.min(), group_df.timestamp.max()))

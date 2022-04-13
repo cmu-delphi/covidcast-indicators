@@ -83,20 +83,78 @@ generate_changelog <- function(path_to_codebook,
       variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
     )
   
+  # If variable_name from the annotated_diff is not also listed as a variable in
+  # the codebook, try adding an underscore to the end and looking for a variable
+  # in the codebook that starts with that string. The matrix_subquestion_text
+  # field of the match should be populated, although we want to ignore it and
+  # fill with NA instead.
+  vars_not_in_codebook <- setdiff(
+    annotated_diff %>% distinct(variable_name) %>% pull(),
+    codebook %>% distinct(variable) %>% pull()
+  )
+  # Add an underscore to the unmatched variable names to create a regex pattern
+  matrix_prefixes <- paste0(vars_not_in_codebook, "_")
+  names(matrix_prefixes) <- vars_not_in_codebook
+  
+  # First matrix item match by wave and matrix base question.
+  map_matrix_prefix_to_first_match <- codebook %>% 
+    mutate(
+      join_variable = case_when(
+        # Create the basename for matrix items.
+        grepl("_", variable) ~ strsplit(variable, "_") %>% purrr::map_chr(~ .x[1]) %>% paste0("_"),
+        TRUE ~ variable
+      )
+    ) %>%
+    filter(join_variable %in% matrix_prefixes) %>%
+    group_by(wave, join_variable) %>%
+    slice_head() %>%
+    select(wave, variable, join_variable)
+  
+  # Add the regex patterns onto the diff.
+  annotated_diff <- annotated_diff %>%
+    mutate(
+      join_variable = case_when(
+        variable_name %in% vars_not_in_codebook ~ matrix_prefixes[variable_name],
+        TRUE ~ variable_name
+      )
+    ) %>%
+    left_join(
+      map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
+        paste("new", column_names, sep = "_")
+      }),
+      by=c("new_wave" = "new_wave", "join_variable"="new_join_variable")
+    ) %>%
+    left_join(
+      map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
+        paste("old", column_names, sep = "_")
+      }),
+      by=c("old_wave" = "old_wave", "join_variable"="old_join_variable")
+    ) %>%
+    rename(
+      join_variable_new_wave = new_variable,
+      join_variable_old_wave = old_variable
+    ) %>% 
+    mutate(
+      join_variable_new_wave = coalesce(join_variable_new_wave, variable_name),
+      join_variable_old_wave = coalesce(join_variable_old_wave, variable_name)
+    ) %>%
+    select(-join_variable)
+
+  # Create changelog by joining codebook onto annotated diff.
   changelog <- annotated_diff %>%
     # Add info about new version of question
     left_join(
       codebook %>% rename_with(function(column_names) {
         paste("new", column_names, sep = "_")
       }),
-      by=c("new_wave" = "new_wave", "variable_name" = "new_variable")
+      by=c("new_wave" = "new_wave", "join_variable_new_wave" = "new_variable")
     ) %>%
     # Add info about previous version of question
     left_join(
       codebook %>% rename_with(function(column_names) {
         paste("old", column_names, sep = "_")
       }),
-      by=c("old_wave" = "old_wave", "variable_name" = "old_variable")
+      by=c("old_wave" = "old_wave", "join_variable_old_wave" = "old_variable")
     ) %>%
     select(
       new_wave,
@@ -112,21 +170,38 @@ generate_changelog <- function(path_to_codebook,
       old_response_options,
       old_display_logic,
       notes
+    ) %>%
+    # If item is a matrix question where something other than the matrix
+    # subquestions changed between waves, drop matrix_subquestion_text fields,
+    # which are relevant for only a single subquestion.
+    mutate(
+      new_matrix_subquestion_text = case_when(
+        variable_name %in% vars_not_in_codebook ~ NA_character_,
+        TRUE ~ new_matrix_subquestion_text
+      ),
+      old_matrix_subquestion_text = case_when(
+        variable_name %in% vars_not_in_codebook ~ NA_character_,
+        TRUE ~ old_matrix_subquestion_text
+      )
     )
-
+  
   write_excel_csv(changelog, path_to_changelog, quote="needed")
 }
 
 
-args <- commandArgs(TRUE)
-
-if (length(args) != 4) {
-  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/changelog")
-}
-
-survey_version <- args[1]
-path_to_codebook <- args[2]
-path_to_diff <- args[3]
-path_to_changelog <- args[4]
+# args <- commandArgs(TRUE)
+# 
+# if (length(args) != 4) {
+#   stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/changelog")
+# }
+# 
+# survey_version <- args[1]
+# path_to_codebook <- args[2]
+# path_to_diff <- args[3]
+# path_to_changelog <- args[4]
+path_to_codebook <- "codebook.csv"
+path_to_diff <- "diff_10-11.csv"
+path_to_changelog <- "changelog_test_10v11.csv"
+survey_version <- "CMU"
 
 invisible(generate_changelog(path_to_codebook, path_to_diff, path_to_changelog, survey_version))

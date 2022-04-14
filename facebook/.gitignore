@@ -23,6 +23,9 @@ params.json
 # Output files from R CMD check
 /*.Rcheck/
 
+# Output files from qsf tools
+qsf-tools/diff*.csv
+
 # RStudio files
 .Rproj.user/
 

@@ -1,4 +1,4 @@
-variable,replaces,description,question,matrix_subquestion,type,response_option_randomization
+variable,replaces,description,question,matrix_subquestion,question_type,response_option_randomization
 StartDatetime,NA,"survey start timestamp in Pacific time (UTC-7)",NA,NA,NA,NA
 EndDatetime,NA,"survey end timestamp in Pacific time (UTC-7)",NA,NA,NA,NA
 wave,NA,"survey version",NA,NA,NA,NA

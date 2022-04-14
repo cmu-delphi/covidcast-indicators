@@ -441,6 +441,18 @@ def fetch_listing(params):
     return extend_listing_for_interp(keep, listing)
 
 def extend_listing_for_interp(keep, listing):
+    """Grab additional files from the full listing for interpolation if needed.
+
+    Selects files based purely on publish_date, so may include duplicates where
+    multiple reports for a single publish_date are available.
+
+    Parameters:
+     - keep: list of reports desired in the final output
+     - listing: complete list of reports available from healthdata.gov
+
+    Returns: list of reports including keep and additional files needed for
+    interpolation.
+    """
     publish_date_keeplist = set()
     for el in keep:
         # starts at 0 so includes keep publish_dates

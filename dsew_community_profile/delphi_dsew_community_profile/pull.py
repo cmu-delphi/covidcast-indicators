@@ -13,9 +13,12 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import (TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
+from .constants import (
+    TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
     IS_PROP, NOT_PROP,
-    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING)
+    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING,
+    INTERP_LENGTH
+)
 
 DataDict = Dict[Tuple[str, str, bool], pd.DataFrame]
 
@@ -417,25 +420,35 @@ def fetch_listing(params):
     ]
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
-        listing = [el for el in listing if not os.path.exists(el['cached_filename'])]
+        keep = [el for el in listing if not os.path.exists(el['cached_filename'])]
     elif params['indicator']['reports'].find("--") > 0:
         # drop files outside the specified publish-date range
         start_str, _, end_str = params['indicator']['reports'].partition("--")
         start_date = datetime.datetime.strptime(start_str, "%Y-%m-%d").date()
         end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
-        listing = [
+        keep = [
             el for el in listing
             if start_date <= el['publish_date'] <= end_date
         ]
+
     # reference date is guaranteed to be on or before publish date, so we can trim
     # reports that are too early
     if 'export_start_date' in params['indicator']:
-        listing = [
-            el for el in listing
+        keep = [
+            el for el in keep
             if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
-    return listing
+    return extend_listing_for_interp(keep, listing)
+
+def extend_listing_for_interp(keep, listing):
+    publish_date_keeplist = set()
+    for el in keep:
+        # starts at 0 so includes keep publish_dates
+        for i in range(INTERP_LENGTH):
+            publish_date_keeplist.add(el['publish_date'] - datetime.timedelta(days=i))
+    keep = [el for el in listing if el['publish_date'] in publish_date_keeplist]
+    return keep
 
 def download_and_parse(listing, logger):
     """Convert a list of report files into Dataset instances."""

@@ -6,6 +6,8 @@ URL_PREFIX = "https://healthdata.gov/api/views/gqxm-d9w9"
 DOWNLOAD_ATTACHMENT = URL_PREFIX + "/files/{assetId}?download=true&filename={filename}"
 DOWNLOAD_LISTING = URL_PREFIX + ".json"
 
+INTERP_LENGTH = 5
+
 @dataclass
 class Transform:
     """Transformation filters for interpreting a particular sheet in the workbook."""

@@ -582,7 +582,8 @@ def fetch_new_reports(params, logger=None):
 def interpolate_missing_values(dfs: DataDict) -> DataDict:
     interpolate_df = dict()
     for key, df in dfs.items():
-        # TODO: Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
+        # Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
+        # https://github.com/cmu-delphi/covidcast-indicators/issues/1576
         _, sig, _ = key
         if sig == "positivity":
             continue

@@ -1,6 +1,6 @@
 from collections import namedtuple
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Union
 import pandas as pd
@@ -11,9 +11,12 @@ from unittest.mock import patch, Mock
 
 from delphi_utils.geomap import GeoMapper
 
-from delphi_dsew_community_profile.pull import (DatasetTimes, Dataset,
+from delphi_dsew_community_profile.pull import (
+    DatasetTimes, Dataset,
     fetch_listing, nation_from_state, generate_prop_signal,
-    std_err, add_max_ts_col, unify_testing_sigs, interpolate_missing_values)
+    std_err, add_max_ts_col, unify_testing_sigs, interpolate_missing_values,
+    extend_listing_for_interp
+)
 
 
 example = namedtuple("example", "given expected")
@@ -489,3 +492,30 @@ class TestPull:
         interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): pd.concat(missing_dfs)})
         expected_dfs = pd.concat([sig1, sig2, sig3, sig4])
         _assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs, index_cols=["geo_id", "timestamp"])
+
+    @patch("delphi_dsew_community_profile.pull.INTERP_LENGTH", 2)
+    def test_extend_listing(self):
+        listing = [
+            {"publish_date": date(2020, 1, 20) - timedelta(days=i)}
+            for i in range(20)
+        ]
+        examples = [
+            # single range
+            example(
+                [{"publish_date": date(2020, 1, 20)}],
+                [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}]
+            ),
+            # disjoint ranges
+            example(
+                [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 10)}],
+                [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)},
+                 {"publish_date": date(2020, 1, 10)}, {"publish_date": date(2020, 1, 9)}]
+            ),
+            # conjoined ranges
+            example(
+                [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}],
+                [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}, {"publish_date": date(2020, 1, 18)}]
+            ),
+        ]
+        for ex in examples:
+            assert extend_listing_for_interp(ex.given, listing) == ex.expected, ex.given

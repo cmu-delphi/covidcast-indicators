@@ -368,7 +368,7 @@ class Dataset:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             # The name of the cumulative vaccination was changed after 03/09/2021
             # when J&J vaccines were added.
-            if (sig == "fully vaccinated") and (len(sig_select)==0):
+            if (sig == "fully vaccinated") and (len(sig_select) == 0):
                 sig_select = [s for s in select if s[-1].find("people with full course") >= 0]
             # Since "doses administered" is a substring of another desired header,
             # "booster doses administered", we need to more strictly check if "doses administered"
@@ -389,6 +389,7 @@ class Dataset:
                 })
                 for si in sig_select
             ])
+
         for sig in COUNTS_7D_SIGNALS:
             assert (sheet.level, sig, NOT_PROP) in self.dfs.keys()
             self.dfs[(sheet.level, sig, NOT_PROP)]["val"] /= 7 # 7-day total -> 7-day average
@@ -474,6 +475,8 @@ def download_and_parse(listing, logger):
 
 def nation_from_state(df, sig, geomapper):
     """Compute nation level from state df."""
+    if df.empty:
+        return df
     if SIGNALS[sig]["is_rate"]: # true if sig is a rate
         df = geomapper.add_population_column(df, "state_id") \
                       .rename(columns={"population":"weight"})
@@ -486,12 +489,12 @@ def nation_from_state(df, sig, geomapper):
         ).drop(
             "norm_denom", axis=1
         )
-    # The filter in `fetch_new_reports` to keep most recent publish date gurantees
-    # that we'll only see one unique publish date per timestamp here.
+    # The filter in `fetch_new_reports` to keep most recent publish date
+    # gurantees that we'll only see one unique publish date per timestamp
+    # here, so just keep the first obs of each group.
     publish_date_by_ts = df.groupby(
         ["timestamp"]
-    )["publish_date"].apply(
-        lambda x: np.unique(x)[0]
+    )["publish_date"].first(
     ).reset_index(
     )
     df = geomapper.replace_geocode(
@@ -502,7 +505,29 @@ def nation_from_state(df, sig, geomapper):
     )
     df["se"] = None
     df["sample_size"] = None
+    # Recreate publish_date column
     df =  pd.merge(df, publish_date_by_ts, on="timestamp", how="left")
+
+    return df
+
+def keep_latest_report(df, sig):
+    """Keep data associated with most recent report for each timestamp."""
+    df = df.groupby(
+            "timestamp"
+        ).apply(
+            lambda x: x[x["publish_date"] == x["publish_date"].max()]
+        ).drop_duplicates(
+        )
+
+    if not df.empty:
+        df = df.reset_index(drop=True)
+        assert all(df.groupby(
+                ["timestamp", "geo_id"]
+            ).size(
+            ).reset_index(
+                drop=True
+            ) == 1), f"Duplicate rows in {sig} indicate that one or" \
+            + " more reports were published multiple times and the copies differ"
 
     return df
 
@@ -514,27 +539,21 @@ def fetch_new_reports(params, logger=None):
     datasets = download_and_parse(listing, logger)
     # collect like signals together, keeping most recent publish date
     ret = {}
-    for sig, lst in datasets.items():
-        latest_sig_df = pd.concat(
-            lst
-        ).groupby(
-            "timestamp"
-        ).apply(
-            lambda x: x[x["publish_date"] == x["publish_date"].max()]
-        ).drop_duplicates(
-        )
 
-        if len(latest_sig_df.index) > 0:
-            latest_sig_df = latest_sig_df.reset_index(drop=True)
-            assert all(latest_sig_df.groupby(
-                    ["timestamp", "geo_id"]
-                ).size(
-                ).reset_index(
-                    drop=True
-                ) == 1), f"Duplicate rows in {sig} indicate that one or" \
-                + " more reports were published multiple times and the copies differ"
+    for key, lst in datasets.items():
+        (_, sig, _) = key
+        latest_key_df = pd.concat(lst)
+        if sig in ("total", "positivity"):
+            latest_key_df = pd.concat(apply_thres_change_date(
+                keep_latest_report,
+                latest_key_df,
+                [sig] * 2
+            ))
+        else:
+            latest_key_df = keep_latest_report(latest_key_df, sig)
 
-            ret[sig] = latest_sig_df
+        if not latest_key_df.empty:
+            ret[key] = latest_key_df
 
     # add nation from state
     geomapper = GeoMapper()
@@ -542,11 +561,21 @@ def fetch_new_reports(params, logger=None):
         state_key = ("state", sig, NOT_PROP)
         if state_key not in ret:
             continue
-        ret[("nation", sig, NOT_PROP)] = nation_from_state(
-            ret[state_key].rename(columns={"geo_id": "state_id"}),
-            sig,
-            geomapper
-        )
+
+        if sig in ("total", "positivity"):
+            nation_df = pd.concat(apply_thres_change_date(
+                nation_from_state,
+                ret[state_key].rename(columns={"geo_id": "state_id"}),
+                [sig] * 2,
+                [geomapper] * 2
+            ))
+        else:
+            nation_df = nation_from_state(
+                ret[state_key].rename(columns={"geo_id": "state_id"}),
+                sig,
+                geomapper
+            )
+        ret[("nation", sig, NOT_PROP)] = nation_df
 
     for key, df in ret.copy().items():
         (geo, sig, prop) = key
@@ -674,9 +703,39 @@ def unify_testing_sigs(positivity_df, volume_df):
     https://docs.google.com/document/d/1MoIimdM_8OwG4SygoeQ9QEVZzIuDl339_a0xoYa6vuA/edit#
 
     """
-    # Combine test positivity and test volume, maintaining "this week" and "previous week" status.
+    # Check that we have positivity *and* volume for each publishdate+geo, and
+    # that they have the same number of timestamps.
+    pos_count_ts = positivity_df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
+    )
+    vol_count_ts = volume_df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
+    )
+    merged = pos_count_ts.merge(
+        vol_count_ts,
+        on=["geo_id", "publish_date"],
+        how="outer",
+        indicator=True
+    )
+    assert all(
+        merged["_merge"] == "both"
+    ) and all(
+        merged.num_obs_x == merged.num_obs_y
+    ) and all(
+        merged.num_unique_obs_x == merged.num_unique_obs_y
+    ), \
+        "Each publish date-geo value combination should be available for both " + \
+        "test positivity and test volume, and have the same number of timestamps available."
     assert len(positivity_df.index) == len(volume_df.index), \
         "Test positivity and volume data have different numbers of observations."
+    expected_rows = len(positivity_df.index)
+
     volume_df = add_max_ts_col(volume_df)[
         ["geo_id", "publish_date", "val", "is_max_group_ts"]
     ].rename(
@@ -685,19 +744,32 @@ def unify_testing_sigs(positivity_df, volume_df):
     col_order = list(positivity_df.columns)
     positivity_df = add_max_ts_col(positivity_df).drop(["sample_size"], axis=1)
 
+    # Combine test positivity and test volume, maintaining "this week" and
+    # "previous week" status. Perform outer join here so that we can later
+    # check if any observations did not have a match.
     df = pd.merge(
         positivity_df, volume_df,
         on=["publish_date", "geo_id", "is_max_group_ts"],
-        how="left"
+        how="outer",
+        indicator=True
     ).drop(
         ["is_max_group_ts"], axis=1
     )
+
+    # Check that every volume observation was matched with a positivity observation.
+    assert (len(df.index) == expected_rows) and all(df["_merge"] == "both"), \
+        "Some observations in the test positivity data were not matched with test volume data."
 
     # Drop everything with 5 or fewer total tests.
     df = df.loc[df.sample_size > 5]
 
     # Generate stderr.
-    df = df.assign(se=std_err(df))
+    df = df.assign(
+        se=std_err(df)
+    ).drop(
+        ["_merge"],
+        axis=1
+    )
 
     return df[col_order]
 
@@ -705,8 +777,8 @@ def add_max_ts_col(df):
     """
     Add column to differentiate timestamps for a given publish date-geo combo.
 
-    Each publish date is associated with two timestamps for test volume and
-    test positivity. The older timestamp corresponds to data from the
+    Each publish date is associated with up to two timestamps for test volume
+    and test positivity. The older timestamp corresponds to data from the
     "previous week"; the newer timestamp corresponds to the "last week".
 
     Since test volume and test positivity timestamps don't match exactly, we
@@ -715,11 +787,18 @@ def add_max_ts_col(df):
     the join. This new column, which is analagous to the "last/previous week"
     classification, is used to merge on.
     """
+    assert_df = df.groupby(
+        ["publish_date", "geo_id"]
+    ).agg(
+        num_obs=("timestamp", "count"),
+        num_unique_obs=("timestamp", "nunique")
+    )
     assert all(
-        df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2
+        assert_df.num_obs <= 2
     ) and all(
-        df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2
-    ), "Testing signals should have two unique timestamps per publish date-region combination."
+        assert_df.num_obs == assert_df.num_unique_obs
+    ), "Testing signals should have up to two timestamps per publish date-geo level " + \
+        "combination. Each timestamp should be unique."
 
     max_ts_by_group = df.groupby(
         ["publish_date", "geo_id"], as_index=False
@@ -759,3 +838,38 @@ def std_err(df):
     p = df.val
     n = df.sample_size
     return np.sqrt(p * (1 - p) / n)
+
+def apply_thres_change_date(apply_fn, df, *apply_fn_args):
+    """
+    Apply a function separately to data before and after the test volume change date.
+
+    The test volume change date is when test volume and test positivity
+    started being reported for different reference dates within the same
+    report. This first occurred on 2021-03-17.
+
+    Parameters
+    ----------
+    apply_fn: function
+        function to apply to data before and after the test volume change date
+    df: pd.DataFrame
+        Columns: val, sample_size, ...
+    apply_fn_args: tuple of lists
+        variable number of additional arguments to pass to the `apply_fn`.
+        Each additional argument should be a list of length 2. The first
+        element of each list will be passed to the `apply_fn` when processing
+        pre-change date data; the second element will be used for the
+        post-change date data.
+
+    Returns
+    -------
+    map object
+        Iterator with two entries, one for the "before" data and one for the "after" data.
+    """
+    change_date = datetime.date(2021, 3, 17)
+    list_of_dfs = [df[df.publish_date < change_date], df[df.publish_date >= change_date]]
+
+    for arg_field in apply_fn_args:
+        assert len(arg_field) == 2, "Extra arguments must be iterables with " + \
+            "length 2, the same as the number of dfs to process"
+
+    return map(apply_fn, list_of_dfs, *apply_fn_args)

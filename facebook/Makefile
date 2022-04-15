@@ -181,7 +181,12 @@ $(WEEKLY_WEIGHTS): $(TODAY)
 		   MSG="Expected new weekly weights file to start on: $$EXPECTED_NEW_WEEKLY_WEIGHTED; Actual new file starts on: $$MIN_NEW_WEEKLY_WEIGHTED"; \
 		   echo "WARNING: $${MSG}" >> $(MESSAGES); \
 	  fi
+	  # Save existing params file from normal daily run.
+	  if [ -f params.json ]; then cp params.json params.daily.json; fi
 	  $(MAKE) weekly-weights-pipeline
+	  rm -f params.json
+	  # Restore params file from normal daily run.
+	  mv params.daily.json params.json
 	fi
 
 dev: delphiFacebook_1.0.tar.gz

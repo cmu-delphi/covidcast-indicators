@@ -189,19 +189,15 @@ generate_changelog <- function(path_to_codebook,
 }
 
 
-# args <- commandArgs(TRUE)
-# 
-# if (length(args) != 4) {
-#   stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/changelog")
-# }
-# 
-# survey_version <- args[1]
-# path_to_codebook <- args[2]
-# path_to_diff <- args[3]
-# path_to_changelog <- args[4]
-path_to_codebook <- "codebook.csv"
-path_to_diff <- "diff_10-11.csv"
-path_to_changelog <- "changelog_test_10v11.csv"
-survey_version <- "CMU"
+args <- commandArgs(TRUE)
+
+if (length(args) != 4) {
+  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/changelog")
+}
+
+survey_version <- args[1]
+path_to_codebook <- args[2]
+path_to_diff <- args[3]
+path_to_changelog <- args[4]
 
 invisible(generate_changelog(path_to_codebook, path_to_diff, path_to_changelog, survey_version))

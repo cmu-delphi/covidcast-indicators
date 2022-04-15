@@ -23,6 +23,42 @@ generate_changelog <- function(path_to_codebook,
                                rename_map_file="item_rename_map.csv") {
   # Get the codebook. Contains details about each question (text, answer
   # choices, display logic) by wave.
+  codebook <- get_codebook(path_to_codebook)
+  
+  # Get the diffs + rationale. Contains info about which items changed between
+  # waves, plus a description of what changed and why.
+  annotated_diff <- get_diff(path_to_diff)
+  
+  if (!("notes" %in% names(annotated_diff))) {
+    if (is.null(path_to_old_changelog)) {
+      stop("rationales must be provided either in the diff or via an old version of the changelog")
+    }
+    annotated_diff$notes <- NA_character_
+  }
+  
+  annotated_diff <- expand_out_matrix_subquestions(annotated_diff)
+  
+  # Rename items as necessary
+  path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
+  annotated_diff <- annotated_diff %>%
+    rowwise() %>% 
+    mutate(
+      variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
+    )
+  
+  result <- prepare_matrix_base_questions_for_join(annotated_diff, codebook)
+  annotated_diff <- result$diff
+  vars_not_in_codebook <- result$vars_not_in_codebook
+
+  changelog <- make_changelog_from_codebook_and_diff(annotated_diff, codebook, vars_not_in_codebook)
+  changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
+  check_missing_rationales(changelog)
+  
+  write_excel_csv(changelog, path_to_changelog, quote="needed")
+}
+
+# Read codebook from path. Drop fields we don't use in the changelog.
+get_codebook <- function(path_to_codebook) {
   codebook <- read_csv(path_to_codebook, col_types = cols(
     .default = col_character(),
     wave = col_double()
@@ -33,17 +69,46 @@ generate_changelog <- function(path_to_codebook,
       -response_option_randomization, -respondent_group
     )
   
-  # Get the diffs + rationale. Contains info about which items changed between
-  # waves, plus a description of what changed and why.
-  annotated_diff <- read_diff(path_to_diff)
+  return(codebook)
+}
   
-  if (!("notes" %in% names(annotated_diff))) {
-    if (is.null(path_to_old_changelog)) {
-      stop("rationales must be provided either in the diff or via an old version of the changelog")
+# Try to load `path_to_diff`. Check if it is a single CSV or a directory
+# containing a set of CSVs.
+get_diff <- function(path_to_diff) {
+  if (file.exists(path_to_diff)) {
+    # Load a single file
+    annotated_diff <- read_csv(path_to_diff, col_types = cols(
+      .default = col_character(),
+      new_wave = col_double(),
+      old_wave = col_double()
+    )) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else if (dir.exists(path_to_diff)) {
+    # Load all CSVs from a directory
+    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
+    annotated_diff <- list()
+    for (csv in csvs) {
+      annotated_diff[csv] <- read_csv(path_to_diff, col_types = cols(
+        .default = col_character(),
+        new_wave = col_double(),
+        old_wave = col_double()
+      ))
     }
-    annotated_diff$notes <- NA_character_
+    annotated_diff <- rbind(annotated_diff) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else {
+    stop(path_to_diff, " is not a valid file or directory")
   }
   
+  return(annotated_diff)
+}
+
+# Turn any item listed as an `impacted_subquestion` into its own observation.
+# Other fields are set to be the same as the base question (e.g. the base
+# question is E1 for matrix subquestion E1_1).
+expand_out_matrix_subquestions <- function(annotated_diff) {
   # The diff only lists base name for matrix questions that changed. For
   # example, `variable_name` is "Z1" if any matrix subquestion ("Z1_1", "Z1_2",
   # etc) changed. The modified subquestions are listed in column
@@ -76,15 +141,19 @@ generate_changelog <- function(path_to_codebook,
   # differ.
   annotated_diff <- rbind(nonmatrix_changes, matrix_changes) %>%
     arrange(new_wave, old_wave)
-  
-  # Rename items as necessary
-  path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
-  annotated_diff <- annotated_diff %>%
-    rowwise() %>% 
-    mutate(
-      variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
-    )
-  
+
+  return(annotated_diff)
+}
+
+# Matrix base questions (e.g. the base question is E1 for matrix subquestion
+# E1_1) exist in diffs but not in the codebook. To be able to join them between
+# the two dfs, create a variable name mapping specifically for use in the join
+# operation.
+#
+# A matrix base question is mapped to the first associated subquestion instance
+# for a particular wave. The first subquestion is used for convenience and
+# reproducibility; subquestion-specific fields are set to `NA`.
+prepare_matrix_base_questions_for_join <- function(annotated_diff, codebook) {
   # If variable_name from the annotated_diff is not also listed as a variable in
   # the codebook, try adding an underscore to the end and looking for a variable
   # in the codebook that starts with that string. The matrix_subquestion_text
@@ -141,7 +210,12 @@ generate_changelog <- function(path_to_codebook,
       join_variable_old_wave = coalesce(join_variable_old_wave, variable_name)
     ) %>%
     select(-join_variable)
+  
+  return(list("diff" = annotated_diff, "vars_not_in_codebook" = vars_not_in_codebook))
+}
 
+# Join codebook onto diff and modify columns to make the changelog.
+make_changelog_from_codebook_and_diff <- function(annotated_diff, codebook, vars_not_in_codebook) {
   # Create changelog by joining codebook onto annotated diff.
   changelog <- annotated_diff %>%
     # Add info about new version of question
@@ -187,43 +261,7 @@ generate_changelog <- function(path_to_codebook,
       )
     )
   
-  changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
-  check_missing_rationales(changelog)
-  
-  write_excel_csv(changelog, path_to_changelog, quote="needed")
-}
-
-# Try to load `path_to_diff`. Check if it is a single CSV or a directory
-# containing a set of CSVs.
-read_diff <- function(path_to_diff) {
-  if (file.exists(path_to_diff)) {
-    # Load a single file
-    annotated_diff <- read_csv(path_to_diff, col_types = cols(
-      .default = col_character(),
-      new_wave = col_double(),
-      old_wave = col_double()
-    )) %>%
-      rename(variable_name = item) %>%
-      select(-contains("qid"))
-  } else if (dir.exists(path_to_diff)) {
-    # Load all CSVs from a directory
-    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
-    annotated_diff <- list()
-    for (csv in csvs) {
-      annotated_diff[csv] <- read_csv(path_to_diff, col_types = cols(
-        .default = col_character(),
-        new_wave = col_double(),
-        old_wave = col_double()
-      ))
-    }
-    annotated_diff <- rbind(annotated_diff) %>%
-      rename(variable_name = item) %>%
-      select(-contains("qid"))
-  } else {
-    stop(path_to_diff, " is not a valid file or directory")
-  }
-  
-  return(annotated_diff)
+  return(changelog)
 }
 
 # Add old rationales, if available, to new changelog

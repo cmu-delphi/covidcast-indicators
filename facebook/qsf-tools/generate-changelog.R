@@ -5,7 +5,7 @@
 ##
 ## Usage:
 ##
-## Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff
+## Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/diff/or/diff/directory path/to/output/changelog [path/to/old/changelog]"
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -35,13 +35,7 @@ generate_changelog <- function(path_to_codebook,
   
   # Get the diffs + rationale. Contains info about which items changed between
   # waves, plus a description of what changed and why.
-  annotated_diff <- read_csv(path_to_diff, col_types = cols(
-    .default = col_character(),
-    new_wave = col_double(),
-    old_wave = col_double()
-  )) %>%
-    rename(variable_name = item) %>%
-    select(-contains("qid"))
+  annotated_diff <- read_diff(path_to_diff)
   
   if (!("notes" %in% names(annotated_diff))) {
     if (is.null(path_to_old_changelog)) {
@@ -52,7 +46,7 @@ generate_changelog <- function(path_to_codebook,
   
   # The diff only lists base name for matrix questions that changed. For
   # example, `variable_name` is "Z1" if any matrix subquestion ("Z1_1", "Z1_2",
-  # etc) changed. The subquestions that changed is noted in another column,
+  # etc) changed. The modified subquestions are listed in column
   # `impacted_subquestions`.
   #
   # Since the codebook lists matrix subquestions separately, we need to split up
@@ -193,6 +187,47 @@ generate_changelog <- function(path_to_codebook,
       )
     )
   
+  changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
+  check_missing_rationales(changelog)
+  
+  write_excel_csv(changelog, path_to_changelog, quote="needed")
+}
+
+# Try to load `path_to_diff`. Check if it is a single CSV or a directory
+# containing a set of CSVs.
+read_diff <- function(path_to_diff) {
+  if (file.exists(path_to_diff)) {
+    # Load a single file
+    annotated_diff <- read_csv(path_to_diff, col_types = cols(
+      .default = col_character(),
+      new_wave = col_double(),
+      old_wave = col_double()
+    )) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else if (dir.exists(path_to_diff)) {
+    # Load all CSVs from a directory
+    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
+    annotated_diff <- list()
+    for (csv in csvs) {
+      annotated_diff[csv] <- read_csv(path_to_diff, col_types = cols(
+        .default = col_character(),
+        new_wave = col_double(),
+        old_wave = col_double()
+      ))
+    }
+    annotated_diff <- rbind(annotated_diff) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else {
+    stop(path_to_diff, " is not a valid file or directory")
+  }
+  
+  return(annotated_diff)
+}
+
+# Add old rationales, if available, to new changelog
+add_rationales_from_old_changelog <- function(changelog, path_to_old_changelog) {
   # If path_to_old_changelog is provided, prefer it over existing notes column.
   if (!is.null(path_to_old_changelog)) {
     old_changelog <- read_csv(path_to_old_changelog, col_types = cols(
@@ -206,6 +241,10 @@ generate_changelog <- function(path_to_codebook,
       left_join(old_changelog, by=c("new_wave", "old_wave", "variable_name", "change_type"))
   }
   
+  return(changelog)
+}
+
+check_missing_rationales <- function(changelog) {
   if (any(is.na(changelog$notes))) {
     vars_missing_rationales <- changelog %>%
       filter(is.na(notes) | notes == "") %>%
@@ -216,14 +255,13 @@ generate_changelog <- function(path_to_codebook,
     )
   }
   
-  write_excel_csv(changelog, path_to_changelog, quote="needed")
+  return(NULL)
 }
-
 
 args <- commandArgs(TRUE)
 
 if (!(length(args) %in% c(4, 5))) {
-  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/output/changelog [path/to/old/changelog]")
+  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/diff/directory path/to/output/changelog [path/to/old/changelog]")
 }
 
 survey_version <- args[1]

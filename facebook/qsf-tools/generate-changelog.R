@@ -18,6 +18,7 @@ suppressPackageStartupMessages({
 generate_changelog <- function(path_to_codebook,
                                path_to_diff,
                                path_to_changelog,
+                               path_to_old_changelog,
                                survey_version,
                                rename_map_file="item_rename_map.csv") {
   # Get the codebook. Contains details about each question (text, answer
@@ -42,9 +43,16 @@ generate_changelog <- function(path_to_codebook,
     rename(variable_name = item) %>%
     select(-contains("qid"))
   
+  if (!("notes" %in% names(annotated_diff))) {
+    if (is.null(path_to_old_changelog)) {
+      stop("rationales must be provided either in the diff or via an old version of the changelog")
+    }
+    annotated_diff$notes <- NA_character_
+  }
+  
   # The diff only lists base name for matrix questions that changed. For
   # example, `variable_name` is "Z1" if any matrix subquestion ("Z1_1", "Z1_2",
-  # etc) changed. Which subquestions changed is noted in another column,
+  # etc) changed. The subquestions that changed is noted in another column,
   # `impacted_subquestions`.
   #
   # Since the codebook lists matrix subquestions separately, we need to split up
@@ -185,14 +193,37 @@ generate_changelog <- function(path_to_codebook,
       )
     )
   
+  # If path_to_old_changelog is provided, prefer it over existing notes column.
+  if (!is.null(path_to_old_changelog)) {
+    old_changelog <- read_csv(path_to_old_changelog, col_types = cols(
+      .default = col_character(),
+      new_wave = col_double(),
+      old_wave = col_double()
+    )) %>% 
+      select(new_wave, old_wave, variable_name, change_type, notes)
+    changelog <- changelog %>%
+      select(-notes) %>%
+      left_join(old_changelog, by=c("new_wave", "old_wave", "variable_name", "change_type"))
+  }
+  
+  if (any(is.na(changelog$notes))) {
+    vars_missing_rationales <- changelog %>%
+      filter(is.na(notes) | notes == "") %>%
+      pull(variable_name)
+    warning(
+      "variables ", paste(vars_missing_rationales, collapse = ", "),
+      " are missing rationales in the `notes` column"
+    )
+  }
+  
   write_excel_csv(changelog, path_to_changelog, quote="needed")
 }
 
 
 args <- commandArgs(TRUE)
 
-if (length(args) != 4) {
-  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/changelog")
+if (!(length(args) %in% c(4, 5))) {
+  stop("Usage: Rscript generate-changelog.R [UMD/CMU] path/to/codebook path/to/annotated/diff path/to/output/changelog [path/to/old/changelog]")
 }
 
 survey_version <- args[1]
@@ -200,4 +231,10 @@ path_to_codebook <- args[2]
 path_to_diff <- args[3]
 path_to_changelog <- args[4]
 
-invisible(generate_changelog(path_to_codebook, path_to_diff, path_to_changelog, survey_version))
+if (length(args) == 5) {
+  path_to_old_changelog <- args[5]
+} else {
+  path_to_old_changelog <- NULL
+}
+
+invisible(generate_changelog(path_to_codebook, path_to_diff, path_to_changelog, path_to_old_changelog, survey_version))

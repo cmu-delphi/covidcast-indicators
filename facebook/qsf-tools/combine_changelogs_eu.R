@@ -6,17 +6,17 @@
 ##
 ## Usage:
 ##
-## Rscript combine_codebooks_eu.R.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
+## Rscript combine_changelogs_eu.R.R path/to/eu/changelog path/to/noneu/changelog path/to/combined/changelog
 
 suppressPackageStartupMessages({
   library(tidyverse)
 })
 
 
-combine_codebooks <- function(path_to_codebook_eu,
-                              path_to_codebook_noneu) {
+combine_changelogs <- function(path_to_changelog_eu,
+                              path_to_changelog_noneu) {
   
-  codebook_eu <- read_csv(path_to_codebook_eu, col_types = cols(
+  changelog_eu <- read_csv(path_to_changelog_eu, col_types = cols(
     .default = col_character(),
     new_wave = col_double(),
     old_wave = col_double()
@@ -25,7 +25,7 @@ combine_codebooks <- function(path_to_codebook_eu,
     eu_version = "EU"
   )
   
-  codebook_noneu <- read_csv(path_to_codebook_noneu, col_types = cols(
+  changelog_noneu <- read_csv(path_to_changelog_noneu, col_types = cols(
     .default = col_character(),
     new_wave = col_double(),
     old_wave = col_double()
@@ -35,37 +35,37 @@ combine_codebooks <- function(path_to_codebook_eu,
     )
 
   # Using rbind here to raise an error if columns differ between the existing
-  # codebook and the new wave data.
-  codebook_with_duplicates <- rbind(codebook_eu, codebook_noneu)
+  # changelog and the new wave data.
+  changelog_with_duplicates <- rbind(changelog_eu, changelog_noneu)
   
-  count_duplicated_rows <- codebook_with_duplicates %>% group_by(across(c(-eu_version))) %>% summarize(count = n())
-  codebook <- codebook_with_duplicates %>% left_join(count_duplicated_rows)
-  codebook$eu_version[codebook$count == 2] <- "Both"
+  count_duplicated_rows <- changelog_with_duplicates %>% group_by(across(c(-eu_version))) %>% summarize(count = n())
+  changelog <- changelog_with_duplicates %>% left_join(count_duplicated_rows)
+  changelog$eu_version[changelog$count == 2] <- "Both"
 
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   # Drop duplicates.
-  codebook <- codebook %>%
+  changelog <- changelog %>%
     arrange(variable_name, eu_version) %>% 
     select(-count) %>% 
     distinct()
 
-  return(codebook)
+  return(changelog)
 }
 
-combine_codebook_main <- function(path_to_codebook_eu, path_to_codebook_noneu,path_to_combined) {
-  codebook <- combine_codebooks(path_to_codebook_eu, path_to_codebook_noneu)
-  write_excel_csv(codebook, path_to_combined, quote="needed")
+combine_changelog_main <- function(path_to_changelog_eu, path_to_changelog_noneu,path_to_combined) {
+  changelog <- combine_changelogs(path_to_changelog_eu, path_to_changelog_noneu)
+  write_excel_csv(changelog, path_to_combined, quote="needed")
 }
 
 
 args <- commandArgs(TRUE)
 
 if (length(args) != 3) {
-  stop("Usage: Rscript combine_changelogs_eu.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook")
+  stop("Usage: Rscript combine_changelogs_eu.R path/to/eu/changelog path/to/noneu/changelog path/to/combined/changelog")
 }
 
-path_to_codebook_eu <- args[1]
-path_to_codebook_noneu <- args[2]
+path_to_changelog_eu <- args[1]
+path_to_changelog_noneu <- args[2]
 path_to_combined <- args[3]
 
-invisible(combine_codebook_main(path_to_codebook_eu, path_to_codebook_noneu, path_to_combined))
+invisible(combine_changelog_main(path_to_changelog_eu, path_to_changelog_noneu, path_to_combined))

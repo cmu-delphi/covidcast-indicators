@@ -418,6 +418,7 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
+    keep = []
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
         keep = [el for el in listing if not os.path.exists(el['cached_filename'])]
@@ -439,7 +440,11 @@ def fetch_listing(params):
             if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
-    return extend_listing_for_interp(keep, listing)
+    
+    # if we're only running on a subset, make sure we have enough data for interp
+    if keep:
+        keep = extend_listing_for_interp(keep, listing)
+    return keep if keep else listing
 
 def extend_listing_for_interp(keep, listing):
     """Grab additional files from the full listing for interpolation if needed.

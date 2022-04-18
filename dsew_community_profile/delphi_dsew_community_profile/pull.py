@@ -440,7 +440,7 @@ def fetch_listing(params):
             if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
-    
+
     # if we're only running on a subset, make sure we have enough data for interp
     if keep:
         keep = extend_listing_for_interp(keep, listing)

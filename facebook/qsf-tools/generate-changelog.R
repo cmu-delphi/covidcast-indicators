@@ -289,8 +289,14 @@ check_missing_rationales <- function(changelog) {
     vars_missing_rationales <- changelog %>%
       filter(is.na(notes) | notes == "") %>%
       pull(variable_name)
+    waves <- changelog %>%
+      filter(is.na(notes) | notes == "") %>%
+      pull(new_wave)
+    change_types <- changelog %>%
+      filter(is.na(notes) | notes == "") %>%
+      pull(change_type)
     warning(
-      "variables ", paste(vars_missing_rationales, collapse = ", "),
+      "variables ", paste0(vars_missing_rationales, " (new_wave ", waves, ", ", change_types, ")", collapse = ", "),
       " are missing rationales"
     )
   }

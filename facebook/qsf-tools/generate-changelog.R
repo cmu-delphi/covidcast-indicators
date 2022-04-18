@@ -77,27 +77,27 @@ get_codebook <- function(path_to_codebook) {
 # Try to load `path_to_diff`. Check if it is a single CSV or a directory
 # containing a set of CSVs.
 get_diff <- function(path_to_diff) {
-  if (file.exists(path_to_diff)) {
+  if (dir.exists(path_to_diff)) {
+    # Load all CSVs from a directory
+    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
+    qsf_diff <- list()
+    for (csv in csvs) {
+      qsf_diff[[csv]] <- read_csv(csv, col_types = cols(
+        .default = col_character(),
+        new_wave = col_double(),
+        old_wave = col_double()
+      ))
+    }
+    qsf_diff <- purrr::reduce(qsf_diff, rbind) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else if (file.exists(path_to_diff)) {
     # Load a single file
     qsf_diff <- read_csv(path_to_diff, col_types = cols(
       .default = col_character(),
       new_wave = col_double(),
       old_wave = col_double()
     )) %>%
-      rename(variable_name = item) %>%
-      select(-contains("qid"))
-  } else if (dir.exists(path_to_diff)) {
-    # Load all CSVs from a directory
-    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
-    qsf_diff <- list()
-    for (csv in csvs) {
-      qsf_diff[csv] <- read_csv(path_to_diff, col_types = cols(
-        .default = col_character(),
-        new_wave = col_double(),
-        old_wave = col_double()
-      ))
-    }
-    qsf_diff <- rbind(qsf_diff) %>%
       rename(variable_name = item) %>%
       select(-contains("qid"))
   } else {
@@ -291,7 +291,7 @@ check_missing_rationales <- function(changelog) {
       pull(variable_name)
     warning(
       "variables ", paste(vars_missing_rationales, collapse = ", "),
-      " are missing rationales in the `notes` column"
+      " are missing rationales"
     )
   }
   

@@ -6,7 +6,7 @@
 ##
 ## Usage:
 ##
-## Rscript combine_changelogs_eu.R.R path/to/eu/changelog path/to/noneu/changelog path/to/combined/changelog
+## Rscript combine_changelogs_eu.R path/to/eu/changelog path/to/noneu/changelog path/to/combined/changelog
 
 suppressPackageStartupMessages({
   library(tidyverse)

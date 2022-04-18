@@ -4,10 +4,7 @@
 ##
 ## Usage:
 ##
-## Rscript qsf-differ.R [UMD/CMU] path/to/old/qsf path/to/new/qsf
-##
-## Writes the lists of new and changed items to STDOUT, so redirect STDOUT to
-## your desired location.
+## Rscript qsf-differ.R UMD|CMU path/to/old/qsf path/to/new/qsf [path/to/desired/output-dir]
 
 options(warn = 1)
 
@@ -24,7 +21,10 @@ suppressPackageStartupMessages({
 #'
 #' @param old_qsf_path path to older Qualtrics survey file in .qsf format
 #' @param new_qsf_path path to newer Qualtrics survey file in .qsf format
-diff_qsf_files <- function(old_qsf_path, new_qsf_path,
+#' @param output_dir path to desired output directory. It doesn't already exist, the
+#'     directory will be created
+#' @param survey_version "CMU" or "UMD"
+diff_qsf_files <- function(old_qsf_path, new_qsf_path, output_dir,
                            survey_version=c("CMU", "UMD")) {
   survey_version <- match.arg(survey_version)
   
@@ -39,9 +39,11 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path,
       old_wave = old_wave, new_wave = new_wave
     ) %>% 
     select(new_wave, old_wave, everything())
+
+  if (!dir.exists(output_dir)) { dir.create(output_dir) }
   write_csv(
     out,
-    paste0("diff_", old_wave, "-", new_wave, ".csv", collapse="")
+    file.path(output_dir, paste0("diff_", old_wave, "-", new_wave, ".csv", collapse=""))
   )
   
   return(NULL)
@@ -338,13 +340,19 @@ create_diff_df <- function(questions, change_type=c("Added", "Removed",
 
 args <- commandArgs(TRUE)
 
-if (length(args) != 3) {
-  stop("Usage: Rscript qsf-differ.R [UMD/CMU] path/to/old/qsf path/to/new/qsf")
+if (!(length(args) %in% c(3, 4))) {
+  stop("Usage: Rscript qsf-differ.R UMD|CMU path/to/old/qsf path/to/new/qsf [path/to/desired/output-dir]")
 }
 
 survey_version <- args[1]
 old_qsf <- args[2]
 new_qsf <- args[3]
 
+if (length(args) == 4) {
+  output_dir <- args[4]
+} else {
+  output_dir <- "."
+}
 
-invisible(diff_qsf_files(old_qsf, new_qsf, survey_version))
+
+invisible(diff_qsf_files(old_qsf, new_qsf, output_dir, survey_version))

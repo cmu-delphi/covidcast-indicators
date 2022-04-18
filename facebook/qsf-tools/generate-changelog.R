@@ -29,30 +29,30 @@ generate_changelog <- function(path_to_codebook,
   
   # Get the diffs + rationale. Contains info about which items changed between
   # waves, plus a description of what changed and why.
-  qsf_dff <- get_diff(path_to_diff)
+  qsf_diff <- get_diff(path_to_diff)
   
-  if (!("notes" %in% names(qsf_dff))) {
+  if (!("notes" %in% names(qsf_diff))) {
     if (is.null(path_to_old_changelog)) {
       stop("rationales must be provided either in the diff or via an old version of the changelog")
     }
-    qsf_dff$notes <- NA_character_
+    qsf_diff$notes <- NA_character_
   }
   
-  qsf_dff <- expand_out_matrix_subquestions(qsf_dff)
+  qsf_diff <- expand_out_matrix_subquestions(qsf_diff)
   
   # Rename items as necessary
   path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
-  qsf_dff <- qsf_dff %>%
+  qsf_diff <- qsf_diff %>%
     rowwise() %>% 
     mutate(
       variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
     )
   
-  result <- prepare_matrix_base_questions_for_join(qsf_dff, codebook)
-  qsf_dff <- result$diff
+  result <- prepare_matrix_base_questions_for_join(qsf_diff, codebook)
+  qsf_diff <- result$diff
   vars_not_in_codebook <- result$vars_not_in_codebook
 
-  changelog <- make_changelog_from_codebook_and_diff(qsf_dff, codebook, vars_not_in_codebook)
+  changelog <- make_changelog_from_codebook_and_diff(qsf_diff, codebook, vars_not_in_codebook)
   changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
   check_missing_rationales(changelog)
   
@@ -77,40 +77,40 @@ get_codebook <- function(path_to_codebook) {
 # Try to load `path_to_diff`. Check if it is a single CSV or a directory
 # containing a set of CSVs.
 get_diff <- function(path_to_diff) {
-  if (file.exists(path_to_diff)) {
+  if (dir.exists(path_to_diff)) {
+    # Load all CSVs from a directory
+    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
+    qsf_diff <- list()
+    for (csv in csvs) {
+      qsf_diff[[csv]] <- read_csv(csv, col_types = cols(
+        .default = col_character(),
+        new_wave = col_double(),
+        old_wave = col_double()
+      ))
+    }
+    qsf_diff <- purrr::reduce(qsf_diff, rbind) %>%
+      rename(variable_name = item) %>%
+      select(-contains("qid"))
+  } else if (file.exists(path_to_diff)) {
     # Load a single file
-    qsf_dff <- read_csv(path_to_diff, col_types = cols(
+    qsf_diff <- read_csv(path_to_diff, col_types = cols(
       .default = col_character(),
       new_wave = col_double(),
       old_wave = col_double()
     )) %>%
       rename(variable_name = item) %>%
       select(-contains("qid"))
-  } else if (dir.exists(path_to_diff)) {
-    # Load all CSVs from a directory
-    csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
-    qsf_dff <- list()
-    for (csv in csvs) {
-      qsf_dff[csv] <- read_csv(path_to_diff, col_types = cols(
-        .default = col_character(),
-        new_wave = col_double(),
-        old_wave = col_double()
-      ))
-    }
-    qsf_dff <- rbind(qsf_dff) %>%
-      rename(variable_name = item) %>%
-      select(-contains("qid"))
   } else {
     stop(path_to_diff, " is not a valid file or directory")
   }
   
-  return(qsf_dff)
+  return(qsf_diff)
 }
 
 # Turn any item listed as an `impacted_subquestion` into its own observation.
 # Other fields are set to be the same as the base question (e.g. the base
 # question is E1 for matrix subquestion E1_1).
-expand_out_matrix_subquestions <- function(qsf_dff) {
+expand_out_matrix_subquestions <- function(qsf_diff) {
   # The diff only lists base name for matrix questions that changed. For
   # example, `variable_name` is "Z1" if any matrix subquestion ("Z1_1", "Z1_2",
   # etc) changed. The modified subquestions are listed in column
@@ -119,11 +119,11 @@ expand_out_matrix_subquestions <- function(qsf_dff) {
   # Since the codebook lists matrix subquestions separately, we need to split up
   # the `impacted_subquestions` such that each subquestion is its own
   # observation. This will allow us to join the codebook onto the diff.
-  nonmatrix_changes <- qsf_dff %>%
+  nonmatrix_changes <- qsf_diff %>%
     filter(is.na(impacted_subquestions)) %>%
     select(-impacted_subquestions)
   # Separately process any obs with non-missing `impacted_subquestions.`
-  matrix_changes <- qsf_dff %>%
+  matrix_changes <- qsf_diff %>%
     filter(!is.na(impacted_subquestions)) %>%
     # If multiple matrix subquestions changed, list each separately.
     rowwise() %>%
@@ -141,10 +141,10 @@ expand_out_matrix_subquestions <- function(qsf_dff) {
   
   # Combine matrix and non-matrix subquestions. Use rbind to warn if our columns
   # differ.
-  qsf_dff <- rbind(nonmatrix_changes, matrix_changes) %>%
+  qsf_diff <- rbind(nonmatrix_changes, matrix_changes) %>%
     arrange(new_wave, old_wave)
 
-  return(qsf_dff)
+  return(qsf_diff)
 }
 
 # Matrix base questions (e.g. the base question is E1 for matrix subquestion
@@ -155,14 +155,14 @@ expand_out_matrix_subquestions <- function(qsf_dff) {
 # A matrix base question is mapped to the first associated subquestion instance
 # for a particular wave. The first subquestion is used for convenience and
 # reproducibility; subquestion-specific fields are set to `NA`.
-prepare_matrix_base_questions_for_join <- function(qsf_dff, codebook) {
-  # If variable_name from the qsf_dff is not also listed as a variable in
+prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
+  # If variable_name from the qsf_diff is not also listed as a variable in
   # the codebook, try adding an underscore to the end and looking for a variable
   # in the codebook that starts with that string. The matrix_subquestion_text
   # field of the match should be populated, although we want to ignore it and
   # fill with NA instead.
   vars_not_in_codebook <- setdiff(
-    qsf_dff %>% distinct(variable_name) %>% pull(),
+    qsf_diff %>% distinct(variable_name) %>% pull(),
     codebook %>% distinct(variable) %>% pull()
   )
   # Add an underscore to the unmatched variable names to create a regex pattern
@@ -184,7 +184,7 @@ prepare_matrix_base_questions_for_join <- function(qsf_dff, codebook) {
     select(wave, variable, join_variable)
   
   # Add the regex patterns onto the diff.
-  qsf_dff <- qsf_dff %>%
+  qsf_diff <- qsf_diff %>%
     mutate(
       join_variable = case_when(
         variable_name %in% vars_not_in_codebook ~ matrix_prefixes[variable_name],
@@ -213,13 +213,13 @@ prepare_matrix_base_questions_for_join <- function(qsf_dff, codebook) {
     ) %>%
     select(-join_variable)
   
-  return(list("diff" = qsf_dff, "vars_not_in_codebook" = vars_not_in_codebook))
+  return(list("diff" = qsf_diff, "vars_not_in_codebook" = vars_not_in_codebook))
 }
 
 # Join codebook onto diff and modify columns to make the changelog.
-make_changelog_from_codebook_and_diff <- function(qsf_dff, codebook, vars_not_in_codebook) {
+make_changelog_from_codebook_and_diff <- function(qsf_diff, codebook, vars_not_in_codebook) {
   # Create changelog by joining codebook onto annotated diff.
-  changelog <- qsf_dff %>%
+  changelog <- qsf_diff %>%
     # Add info about new version of question
     left_join(
       codebook %>% rename_with(function(column_names) {
@@ -289,9 +289,15 @@ check_missing_rationales <- function(changelog) {
     vars_missing_rationales <- changelog %>%
       filter(is.na(notes) | notes == "") %>%
       pull(variable_name)
+    waves <- changelog %>%
+      filter(is.na(notes) | notes == "") %>%
+      pull(new_wave)
+    change_types <- changelog %>%
+      filter(is.na(notes) | notes == "") %>%
+      pull(change_type)
     warning(
-      "variables ", paste(vars_missing_rationales, collapse = ", "),
-      " are missing rationales in the `notes` column"
+      "variables ", paste0(vars_missing_rationales, " (new_wave ", waves, ", ", change_types, ")", collapse = ", "),
+      " are missing rationales"
     )
   }
   

@@ -54,11 +54,16 @@ get_block_item_map <- function(qsf) {
 #'
 #' @return (mostly) integer wave number
 get_wave <- function(path_to_qsf) {
-  qsf_name_pattern <- "(.*Wave_)([0-9]*([.][0-9])?)([.]qsf)$"
+  qsf_name_pattern <- "(.*[Ww]ave_?)([0-9]*([.][0-9])?)(.*qsf.*)"
   if (!grepl(qsf_name_pattern, path_to_qsf)) {
-    stop("qsf filename should be of the format '<survey prefix>Wave_XX.qsf' where 'XX' is an integer or float")
+    stop(
+      "The qsf filename must include the string 'qsf', and the wave number in ",
+      "the format 'Wave_XX', 'WaveXX', 'wave_XX', or 'waveXX' where 'XX' is an ",
+      "integer or float. The wave specification can occur anywhere in the ",
+      "filename but must precede the string 'qsf'."
+    )
   }
-  
+
   wave <- as.numeric(
     sub(qsf_name_pattern, "\\2", path_to_qsf)
   ) 

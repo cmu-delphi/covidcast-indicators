@@ -4,6 +4,7 @@ from dataclasses import dataclass
 import datetime
 import os
 import re
+from typing import Dict, Tuple
 from urllib.parse import quote_plus as quote_as_url
 
 import pandas as pd
@@ -12,9 +13,14 @@ import requests
 
 from delphi_utils.geomap import GeoMapper
 
-from .constants import (TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
+from .constants import (
+    TRANSFORMS, SIGNALS, COUNTS_7D_SIGNALS, NEWLINE,
     IS_PROP, NOT_PROP,
-    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING)
+    DOWNLOAD_ATTACHMENT, DOWNLOAD_LISTING,
+    INTERP_LENGTH
+)
+
+DataDict = Dict[Tuple[str, str, bool], pd.DataFrame]
 
 # YYYYMMDD
 # example: "Community Profile Report 20211104.xlsx"
@@ -412,27 +418,54 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
+    keep = []
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
-        listing = [el for el in listing if not os.path.exists(el['cached_filename'])]
+        keep = [el for el in listing if not os.path.exists(el['cached_filename'])]
     elif params['indicator']['reports'].find("--") > 0:
         # drop files outside the specified publish-date range
         start_str, _, end_str = params['indicator']['reports'].partition("--")
         start_date = datetime.datetime.strptime(start_str, "%Y-%m-%d").date()
         end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
-        listing = [
+        keep = [
             el for el in listing
             if start_date <= el['publish_date'] <= end_date
         ]
+
     # reference date is guaranteed to be on or before publish date, so we can trim
     # reports that are too early
     if 'export_start_date' in params['indicator']:
-        listing = [
-            el for el in listing
+        keep = [
+            el for el in keep
             if params['indicator']['export_start_date'] <= el['publish_date']
         ]
     # can't do the same for export_end_date
-    return listing
+
+    # if we're only running on a subset, make sure we have enough data for interp
+    if keep:
+        keep = extend_listing_for_interp(keep, listing)
+    return keep if keep else listing
+
+def extend_listing_for_interp(keep, listing):
+    """Grab additional files from the full listing for interpolation if needed.
+
+    Selects files based purely on publish_date, so may include duplicates where
+    multiple reports for a single publish_date are available.
+
+    Parameters:
+     - keep: list of reports desired in the final output
+     - listing: complete list of reports available from healthdata.gov
+
+    Returns: list of reports including keep and additional files needed for
+    interpolation.
+    """
+    publish_date_keeplist = set()
+    for el in keep:
+        # starts at 0 so includes keep publish_dates
+        for i in range(INTERP_LENGTH):
+            publish_date_keeplist.add(el['publish_date'] - datetime.timedelta(days=i))
+    keep = [el for el in listing if el['publish_date'] in publish_date_keeplist]
+    return keep
 
 def download_and_parse(listing, logger):
     """Convert a list of report files into Dataset instances."""
@@ -572,7 +605,56 @@ def fetch_new_reports(params, logger=None):
         if SIGNALS[sig]["make_prop"]:
             ret[(geo, sig, IS_PROP)] = generate_prop_signal(df, geo, geomapper)
 
+    ret = interpolate_missing_values(ret)
+
     return ret
+
+def interpolate_missing_values(dfs: DataDict) -> DataDict:
+    """Interpolates each signal in the dictionary of dfs."""
+    interpolate_df = dict()
+    for key, df in dfs.items():
+        # Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
+        # https://github.com/cmu-delphi/covidcast-indicators/issues/1576
+        _, sig, _ = key
+        if sig == "positivity":
+            continue
+
+        geo_dfs = []
+        for geo, group_df in df.groupby("geo_id"):
+            reindexed_group_df = group_df.set_index("timestamp").reindex(
+                pd.date_range(group_df.timestamp.min(), group_df.timestamp.max())
+            )
+            reindexed_group_df["geo_id"] = geo
+            if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
+                reindexed_group_df["val"] = (
+                    reindexed_group_df["val"]
+                    .interpolate(method="linear", limit_area="inside")
+                    .astype(float)
+                )
+            if "se" in reindexed_group_df.columns:
+                reindexed_group_df["se"] = (
+                    reindexed_group_df["se"]
+                    .interpolate(method="linear", limit_area="inside")
+                    .astype(float)
+                )
+            if (
+                "sample_size" in reindexed_group_df.columns
+                and not reindexed_group_df["sample_size"].isna().all()
+            ):
+                reindexed_group_df["sample_size"] = (
+                    reindexed_group_df["sample_size"]
+                    .interpolate(method="linear", limit_area="inside")
+                    .astype(float)
+                )
+            if "publish_date" in reindexed_group_df.columns:
+                reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(
+                    method="bfill"
+                )
+            geo_dfs.append(reindexed_group_df)
+        interpolate_df[key] = (
+            pd.concat(geo_dfs).reset_index().rename(columns={"index": "timestamp"})
+        )
+    return interpolate_df
 
 def generate_prop_signal(df, geo, geo_mapper):
     """Transform base df into a proportion (per 100k population)."""

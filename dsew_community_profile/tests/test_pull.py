@@ -52,40 +52,17 @@ class TestPull:
     def test_DatasetTimes(self):
         examples = [
             example(
-                DatasetTimes(
-                    "xyzzy",
-                    date(2021, 10, 30),
-                    date(2021, 10, 20),
-                    date(2021, 10, 22),
-                    date(2021, 10, 23),
-                    date(2021, 10, 24),
-                ),
-                DatasetTimes(
-                    "xyzzy",
-                    date(2021, 10, 30),
-                    date(2021, 10, 20),
-                    date(2021, 10, 22),
-                    date(2021, 10, 23),
-                    date(2021, 10, 24),
-                ),
-            ),
+                DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22), date(2021, 10, 23), date(2021, 10, 24)),
+                DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22), date(2021, 10, 23), date(2021, 10, 24)),
+            )
         ]
         for ex in examples:
             assert ex.given == ex.expected, "Equality"
 
-        dt = DatasetTimes(
-            "xyzzy",
-            date(2021, 10, 30),
-            date(2021, 10, 20),
-            date(2021, 10, 22),
-            date(2021, 10, 23),
-            date(2021, 10, 24),
-        )
+        dt = DatasetTimes("xyzzy", date(2021, 10, 30), date(2021, 10, 20), date(2021, 10, 22), date(2021, 10, 23), date(2021, 10, 24))
         assert dt["positivity"] == date(2021, 10, 30), "positivity"
         assert dt["total"] == date(2021, 10, 20), "total"
-        assert dt["confirmed covid-19 admissions"] == date(
-            2021, 10, 22
-        ), "confirmed covid-19 admissions"
+        assert dt["confirmed covid-19 admissions"] == date(2021, 10, 22), "confirmed covid-19 admissions"
         assert dt["doses administered"] == date(2021, 10, 24), "doses administered"
         assert dt["fully vaccinated"] == date(2021, 10, 23), "fully vaccinated"
         with pytest.raises(ValueError):
@@ -147,14 +124,8 @@ class TestPull:
         examples = [
             example("TESTING: LAST WEEK (October 24-30, Test Volume October 20-26)", False),
             example("TESTING: PREVIOUS WEEK (October 17-23, Test Volume October 13-19)", False),
-            example(
-                "VIRAL (RT-PCR) LAB TESTING: LAST WEEK (August 24-30, Test Volume August 20-26)",
-                False,
-            ),
-            example(
-                "VIRAL (RT-PCR) LAB TESTING: PREVIOUS WEEK (August 17-23, Test Volume August 13-19)",
-                False,
-            ),
+            example("VIRAL (RT-PCR) LAB TESTING: LAST WEEK (August 24-30, Test Volume August 20-26)", False),
+            example("VIRAL (RT-PCR) LAB TESTING: PREVIOUS WEEK (August 17-23, Test Volume August 13-19)", False),
             example("TESTING: % CHANGE FROM PREVIOUS WEEK", True),
             example("VIRAL (RT-PCR) LAB TESTING: % CHANGE FROM PREVIOUS WEEK", True),
             example("TESTING: DEMOGRAPHIC DATA", True),
@@ -170,38 +141,15 @@ class TestPull:
 
     def test_Dataset_retain_header(self):
         examples = [
-            example(
-                "Total NAATs - last 7 days (may be an underestimate due to delayed reporting)", True
-            ),
-            example(
-                "Total NAATs - previous 7 days (may be an underestimate due to delayed reporting)",
-                True,
-            ),
-            example(
-                "NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)",
-                True,
-            ),
-            example(
-                "NAAT positivity rate - previous 7 days (may be an underestimate due to delayed reporting)",
-                True,
-            ),
-            example(
-                "NAAT positivity rate - absolute change (may be an underestimate due to delayed reporting)",
-                False,
-            ),
+            example("Total NAATs - last 7 days (may be an underestimate due to delayed reporting)", True),
+            example("Total NAATs - previous 7 days (may be an underestimate due to delayed reporting)", True),
+            example("NAAT positivity rate - last 7 days (may be an underestimate due to delayed reporting)", True),
+            example("NAAT positivity rate - previous 7 days (may be an underestimate due to delayed reporting)", True),
+            example("NAAT positivity rate - absolute change (may be an underestimate due to delayed reporting)", False),
             example("NAAT positivity rate - last 7 days - ages <5", False),
-            example(
-                "Total RT-PCR diagnostic tests - last 7 days (may be an underestimate due to delayed reporting)",
-                True,
-            ),
-            example(
-                "Viral (RT-PCR) lab test positivity rate - last 7 days (may be an underestimate due to delayed reporting)",
-                True,
-            ),
-            example(
-                "RT-PCR tests per 100k - last 7 days (may be an underestimate due to delayed reporting)",
-                False,
-            ),
+            example("Total RT-PCR diagnostic tests - last 7 days (may be an underestimate due to delayed reporting)", True),
+            example("Viral (RT-PCR) lab test positivity rate - last 7 days (may be an underestimate due to delayed reporting)", True),
+            example("RT-PCR tests per 100k - last 7 days (may be an underestimate due to delayed reporting)", False),
             example("Confirmed COVID-19 admissions - last 7 days", True),
             example("Confirmed COVID-19 admissions - percent change", False),
             example("Confirmed COVID-19 admissions - last 7 days - ages <18", False),
@@ -219,21 +167,11 @@ class TestPull:
     @patch("os.path.exists")
     def test_fetch_listing(self, mock_listing, mock_exists):
         inst = namedtuple("attachment", "assetId filename publish cache")
-        instances = list(
-            chain(
-                *[
-                    [
-                        inst(
-                            f"{i}", f"2021010{i}.xlsx", date(2021, 1, i), f"{i}---2021010{i}.xlsx"
-                        ),
-                        inst(
-                            f"p{i}", f"2021010{i}.pdf", date(2021, 1, i), f"p{i}---2021010{i}.pdf"
-                        ),
-                    ]
-                    for i in [1, 2, 3, 4, 5]
-                ]
-            )
-        )
+        instances = list(chain(*[[
+                inst(f"{i}", f"2021010{i}.xlsx", date(2021, 1, i), f"{i}---2021010{i}.xlsx"),
+                inst(f"p{i}", f"2021010{i}.pdf", date(2021, 1, i), f"p{i}---2021010{i}.pdf"),
+            ] for i in [1, 2, 3, 4, 5]
+        ]))
 
         mock_listing.return_value = Mock()
         mock_listing.return_value.json = Mock(
@@ -271,16 +209,14 @@ class TestPull:
         geomapper = GeoMapper()
         state_pop = geomapper.get_crosswalk("state_id", "pop")
 
-        test_df = pd.DataFrame(
-            {
-                "state_id": ["pa", "wv"],
-                "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
-                "val": [15.0, 150.0],
-                "se": [None, None],
-                "sample_size": [None, None],
-                "publish_date": [datetime(year=2020, month=1, day=1)] * 2,
-            }
-        )
+        test_df = pd.DataFrame({
+            "state_id": ["pa", "wv"],
+            "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
+            "val": [15.0, 150.0],
+            "se": [None, None],
+            "sample_size": [None, None],
+            "publish_date": [datetime(year=2020, month=1, day=1)] * 2,
+        })
 
         pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
         wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
@@ -289,31 +225,27 @@ class TestPull:
         assert True, nation_from_state(test_df.copy(), "total", geomapper)
         pd.testing.assert_frame_equal(
             nation_from_state(test_df.copy(), "total", geomapper),
-            pd.DataFrame(
-                {
-                    "geo_id": ["us"],
-                    "timestamp": [datetime(year=2020, month=1, day=1)],
-                    "val": [15.0 + 150.0],
-                    "se": [None],
-                    "sample_size": [None],
-                    "publish_date": [datetime(year=2020, month=1, day=1)],
-                }
-            ),
+            pd.DataFrame({
+                "geo_id": ["us"],
+                "timestamp": [datetime(year=2020, month=1, day=1)],
+                "val": [15.0 + 150.0],
+                "se": [None],
+                "sample_size": [None],
+                "publish_date": [datetime(year=2020, month=1, day=1)],
+            }),
             check_like=True,
         )
 
         pd.testing.assert_frame_equal(
             nation_from_state(test_df.copy(), "positivity", geomapper),
-            pd.DataFrame(
-                {
-                    "geo_id": ["us"],
-                    "timestamp": [datetime(year=2020, month=1, day=1)],
-                    "val": [15 * pa_pop / tot_pop + 150 * wv_pop / tot_pop],
-                    "se": [None],
-                    "sample_size": [None],
-                    "publish_date": [datetime(year=2020, month=1, day=1)],
-                }
-            ),
+            pd.DataFrame({
+                "geo_id": ["us"],
+                "timestamp": [datetime(year=2020, month=1, day=1)],
+                "val": [15 * pa_pop / tot_pop + 150 * wv_pop / tot_pop],
+                "se": [None],
+                "sample_size": [None],
+                "publish_date": [datetime(year=2020, month=1, day=1)],
+            }),
             check_like=True,
         )
 
@@ -325,28 +257,24 @@ class TestPull:
             county_pop.merge(county_msa, on="fips", how="inner").groupby("msa").sum().reset_index()
         )
 
-        test_df = pd.DataFrame(
-            {
-                "geo_id": ["35620", "31080"],
-                "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
-                "val": [15.0, 150.0],
-                "se": [None, None],
-                "sample_size": [None, None],
-            }
-        )
+        test_df = pd.DataFrame({
+            "geo_id": ["35620", "31080"],
+            "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
+            "val": [15.0, 150.0],
+            "se": [None, None],
+            "sample_size": [None, None],
+        })
 
         nyc_pop = int(msa_pop.loc[msa_pop.msa == "35620", "pop"])
         la_pop = int(msa_pop.loc[msa_pop.msa == "31080", "pop"])
 
-        expected_df = pd.DataFrame(
-            {
-                "geo_id": ["35620", "31080"],
-                "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
-                "val": [15.0 / nyc_pop * 100000, 150.0 / la_pop * 100000],
-                "se": [None, None],
-                "sample_size": [None, None],
-            }
-        )
+        expected_df = pd.DataFrame({
+            "geo_id": ["35620", "31080"],
+            "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
+            "val": [15.0 / nyc_pop * 100000, 150.0 / la_pop * 100000],
+            "se": [None, None],
+            "sample_size": [None, None],
+        })
 
         pd.testing.assert_frame_equal(
             generate_prop_signal(test_df.copy(), "msa", geomapper), expected_df, check_like=True
@@ -365,15 +293,13 @@ class TestPull:
         for geo, settings in geos.items():
             geo_pop = geomapper.get_crosswalk(settings["code_name"], "pop")
 
-            test_df = pd.DataFrame(
-                {
-                    "geo_id": settings["geo_names"],
-                    "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
-                    "val": [15.0, 150.0],
-                    "se": [None, None],
-                    "sample_size": [None, None],
-                }
-            )
+            test_df = pd.DataFrame({
+                "geo_id": settings["geo_names"],
+                "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
+                "val": [15.0, 150.0],
+                "se": [None, None],
+                "sample_size": [None, None],
+            })
 
             pop1 = int(
                 geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][0], "pop"]
@@ -382,41 +308,35 @@ class TestPull:
                 geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][1], "pop"]
             )
 
-            expected_df = pd.DataFrame(
-                {
-                    "geo_id": settings["geo_names"],
-                    "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
-                    "val": [15.0 / pop1 * 100000, 150.0 / pop2 * 100000],
-                    "se": [None, None],
-                    "sample_size": [None, None],
-                }
-            )
+            expected_df = pd.DataFrame({
+                "geo_id": settings["geo_names"],
+                "timestamp": [datetime(year=2020, month=1, day=1)] * 2,
+                "val": [15.0 / pop1 * 100000, 150.0 / pop2 * 100000],
+                "se": [None, None],
+                "sample_size": [None, None],
+            })
 
             pd.testing.assert_frame_equal(
                 generate_prop_signal(test_df.copy(), geo, geomapper), expected_df, check_like=True
             )
 
     def test_unify_testing_sigs(self):
-        positivity_df = pd.DataFrame(
-            {
-                "geo_id": ["ca", "ca", "fl", "fl"],
-                "timestamp": [datetime(2021, 10, 27), datetime(2021, 10, 20)] * 2,
-                "val": [0.2, 0.34, 0.7, 0.01],
-                "se": [None] * 4,
-                "sample_size": [None] * 4,
-                "publish_date": [datetime(2021, 10, 30)] * 4,
-            }
-        )
-        base_volume_df = pd.DataFrame(
-            {
-                "geo_id": ["ca", "ca", "fl", "fl"],
-                "timestamp": [datetime(2021, 10, 23), datetime(2021, 10, 16)] * 2,
-                "val": [None] * 4,
-                "se": [None] * 4,
-                "sample_size": [None] * 4,
-                "publish_date": [datetime(2021, 10, 30)] * 4,
-            }
-        )
+        positivity_df = pd.DataFrame({
+            "geo_id": ["ca", "ca", "fl", "fl"],
+            "timestamp": [datetime(2021, 10, 27), datetime(2021, 10, 20)] * 2,
+            "val": [0.2, 0.34, 0.7, 0.01],
+            "se": [None] * 4,
+            "sample_size": [None] * 4,
+            "publish_date": [datetime(2021, 10, 30)] * 4,
+        })
+        base_volume_df = pd.DataFrame({
+            "geo_id": ["ca", "ca", "fl", "fl"],
+            "timestamp": [datetime(2021, 10, 23), datetime(2021, 10, 16)] * 2,
+            "val": [None] * 4,
+            "se": [None] * 4,
+            "sample_size": [None] * 4,
+            "publish_date": [datetime(2021, 10, 30)] * 4,
+        })
 
         examples = [
             example(
@@ -448,16 +368,14 @@ class TestPull:
             unify_testing_sigs(positivity_df, positivity_df.iloc[0])
 
     def test_add_max_ts_col(self):
-        input_df = pd.DataFrame(
-            {
-                "geo_id": ["ca", "ca", "fl", "fl"],
-                "timestamp": [datetime(2021, 10, 27), datetime(2021, 10, 20)] * 2,
-                "val": [1, 2, 3, 4],
-                "se": [None] * 4,
-                "sample_size": [None] * 4,
-                "publish_date": [datetime(2021, 10, 30)] * 4,
-            }
-        )
+        input_df = pd.DataFrame({
+            "geo_id": ["ca", "ca", "fl", "fl"],
+            "timestamp": [datetime(2021, 10, 27), datetime(2021, 10, 20)] * 2,
+            "val": [1, 2, 3, 4],
+            "se": [None] * 4,
+            "sample_size": [None] * 4,
+            "publish_date": [datetime(2021, 10, 30)] * 4,
+        })
         examples = [
             example(input_df, input_df.assign(is_max_group_ts=[True, False, True, False])),
         ]
@@ -467,36 +385,33 @@ class TestPull:
         with pytest.raises(AssertionError):
             # Input df has 2 timestamps per geo id-publish date combination, but not 2 unique timestamps.
             add_max_ts_col(
-                pd.DataFrame(
-                    {
-                        "geo_id": ["ca", "ca", "fl", "fl"],
-                        "timestamp": [datetime(2021, 10, 27)] * 4,
-                        "val": [1, 2, 3, 4],
-                        "se": [None] * 4,
-                        "sample_size": [None] * 4,
-                        "publish_date": [datetime(2021, 10, 30)] * 4,
-                    }
-                )
+                pd.DataFrame({
+                    "geo_id": ["ca", "ca", "fl", "fl"],
+                    "timestamp": [datetime(2021, 10, 27)] * 4,
+                    "val": [1, 2, 3, 4],
+                    "se": [None] * 4,
+                    "sample_size": [None] * 4,
+                    "publish_date": [datetime(2021, 10, 30)] * 4,
+                })
             )
         with pytest.raises(AssertionError):
             # Input df has fewer than 2 timestamps per geo id-publish date combination.
             add_max_ts_col(
-                pd.DataFrame(
-                    {
-                        "geo_id": ["ca", "fl"],
-                        "timestamp": [datetime(2021, 10, 27)] * 2,
-                        "val": [1, 2],
-                        "se": [None] * 2,
-                        "sample_size": [None] * 2,
-                        "publish_date": [datetime(2021, 10, 30)] * 2,
-                    }
-                )
+                pd.DataFrame({
+                    "geo_id": ["ca", "fl"],
+                    "timestamp": [datetime(2021, 10, 27)] * 2,
+                    "val": [1, 2],
+                    "se": [None] * 2,
+                    "sample_size": [None] * 2,
+                    "publish_date": [datetime(2021, 10, 30)] * 2,
+                })
             )
 
     def test_std_err(self):
-        df = pd.DataFrame(
-            {"val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], "sample_size": [2, 2, 5, 10, 20, 50]}
-        )
+        df = pd.DataFrame({
+            "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], 
+            "sample_size": [2, 2, 5, 10, 20, 50]
+        })
 
         expected_se = np.sqrt(df.val * (1 - df.val) / df.sample_size)
         se = std_err(df)
@@ -506,11 +421,10 @@ class TestPull:
         assert not np.isinf(se).any()
         assert np.allclose(se, expected_se, equal_nan=True)
         with pytest.raises(AssertionError):
-            std_err(
-                pd.DataFrame(
-                    {"val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], "sample_size": [2, 2, 5, 10, 20, 0]}
-                )
-            )
+            std_err(pd.DataFrame({
+                "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], 
+                "sample_size": [2, 2, 5, 10, 20, 0]
+            }))
 
     def test_interpolation(self):
         DTYPES = {
@@ -524,16 +438,14 @@ class TestPull:
         line = lambda x: 3 * x + 5
 
         sig1 = _set_df_dtypes(
-            pd.DataFrame(
-                {
-                    "geo_id": "1",
-                    "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
-                    "val": [line(i) for i in range(2, 12)],
-                    "se": [line(i) for i in range(1, 11)],
-                    "sample_size": [line(i) for i in range(0, 10)],
-                    "publish_date": pd.to_datetime("2022-01-10"),
-                }
-            ),
+            pd.DataFrame({
+                "geo_id": "1",
+                "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+                "val": [line(i) for i in range(2, 12)],
+                "se": [line(i) for i in range(1, 11)],
+                "sample_size": [line(i) for i in range(0, 10)],
+                "publish_date": pd.to_datetime("2022-01-10"),
+            }),
             dtypes=DTYPES,
         )
         # A linear signal missing two days which should be filled exactly by the linear interpolation.
@@ -545,32 +457,28 @@ class TestPull:
         missing_sig2 = sig2[(sig2.timestamp == "2022-01-01") | (sig2.timestamp == "2022-01-10")]
 
         sig3 = _set_df_dtypes(
-            pd.DataFrame(
-                {
-                    "geo_id": "3",
-                    "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
-                    "val": None,
-                    "se": [line(i) for i in range(1, 11)],
-                    "sample_size": [line(i) for i in range(0, 10)],
-                    "publish_date": pd.to_datetime("2022-01-10"),
-                }
-            ),
+            pd.DataFrame({
+                "geo_id": "3",
+                "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+                "val": None,
+                "se": [line(i) for i in range(1, 11)],
+                "sample_size": [line(i) for i in range(0, 10)],
+                "publish_date": pd.to_datetime("2022-01-10"),
+            }),
             dtypes=DTYPES,
         )
         # A signal missing everything, should be left alone.
         missing_sig3 = sig3[(sig3.timestamp <= "2022-01-05") | (sig3.timestamp >= "2022-01-08")]
 
         sig4 = _set_df_dtypes(
-            pd.DataFrame(
-                {
-                    "geo_id": "4",
-                    "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
-                    "val": [None] * 9 + [10.0],
-                    "se": [line(i) for i in range(1, 11)],
-                    "sample_size": [line(i) for i in range(0, 10)],
-                    "publish_date": pd.to_datetime("2022-01-10"),
-                }
-            ),
+            pd.DataFrame({
+                "geo_id": "4",
+                "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+                "val": [None] * 9 + [10.0],
+                "se": [line(i) for i in range(1, 11)],
+                "sample_size": [line(i) for i in range(0, 10)],
+                "publish_date": pd.to_datetime("2022-01-10"),
+            }),
             dtypes=DTYPES,
         )
         # A signal missing everything except for one point, should be left alone.

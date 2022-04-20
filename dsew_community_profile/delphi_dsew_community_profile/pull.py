@@ -219,29 +219,23 @@ class Dataset:
         # include "TESTING: [LAST|PREVIOUS] WEEK (October 24-30, Test Volume October 20-26)"
         # include "VIRAL (RT-PCR) LAB TESTING: [LAST|PREVIOUS] WEEK (August 24-30, ..."
         # include "HOSPITAL UTILIZATION: LAST WEEK (January 2-8)"
-        return not (
-            isinstance(header, str)
-            and (
-                (
-                    (
-                        header.startswith("TESTING:")
-                        or header.startswith("VIRAL (RT-PCR) LAB TESTING:")
-                        or header.startswith("HOSPITAL UTILIZATION: ")
-                    )
-                    and  # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
-                    # exclude "TESTING: DEMOGRAPHIC DATA" \
-                    # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
-                    # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
-                    header.find("WEEK (") > 0
-                )
-                or  # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
-                # include "COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)"
-                (
-                    header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE")
-                    or header.startswith("COVID-19 VACCINATION DATA: LAST WEEK")
-                )
-            )
+        _includes1 = (
+            header.startswith("TESTING:") or
+            header.startswith("VIRAL (RT-PCR) LAB TESTING:") or
+            header.startswith("HOSPITAL UTILIZATION: ")
+        # exclude "TESTING: % CHANGE FROM PREVIOUS WEEK" \
+        # exclude "TESTING: DEMOGRAPHIC DATA" \
+        # exclude "HOSPITAL UTILIZATION: CHANGE FROM PREVIOUS WEEK" \
+        # exclude "HOSPITAL UTILIZATION: DEMOGRAPHIC DATA" \
+        ) and header.find("WEEK (") > 0
+
+        # include "COVID-19 VACCINATION DATA: CUMULATIVE (January 25)"
+        # include "COVID-19 VACCINATION DATA: LAST WEEK (January 25-31)"
+        _includes2 = (
+            header.startswith("COVID-19 VACCINATION DATA: CUMULATIVE")
+            or header.startswith("COVID-19 VACCINATION DATA: LAST WEEK")
         )
+        return not (isinstance(header, str) and (_includes1 or _includes2))
 
     def _parse_times_for_sheet(self, sheet):
         """Record reference dates for this sheet."""
@@ -428,16 +422,14 @@ class Dataset:
             ), f"No {sig} in any of {select}\n\nAll headers:\n{NEWLINE.join(list(df.columns))}"
 
             self.dfs[(sheet.level, sig, NOT_PROP)] = pd.concat([
-                pd.DataFrame(
-                    {
-                        "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
-                        "timestamp": pd.to_datetime(self.times[si[0]][sig]),
-                        "val": df[si[-2]],
-                        "se": None,
-                        "sample_size": None,
-                        "publish_date": self.publish_date,
-                    }
-                )
+                pd.DataFrame({
+                    "geo_id": sheet.geo_id_select(df).apply(sheet.geo_id_apply),
+                    "timestamp": pd.to_datetime(self.times[si[0]][sig]),
+                    "val": df[si[-2]],
+                    "se": None,
+                    "sample_size": None,
+                    "publish_date": self.publish_date,
+                })
                 for si in sig_select
             ])
         for sig in COUNTS_7D_SIGNALS:
@@ -451,7 +443,10 @@ def as_cached_filename(params, config):
     # but delimiters vary; don't get tripped up if they do something wacky like
     # Community.Profile.Report.20220128.xlsx
     name, _, ext = config["filename"].rpartition(".")
-    return os.path.join(params["indicator"]["input_cache"], f"{name}--{config['assetId']}.{ext}")
+    return os.path.join(
+        params["indicator"]["input_cache"], 
+        f"{name}--{config['assetId']}.{ext}"
+    )
 
 
 def fetch_listing(params):
@@ -540,7 +535,10 @@ def nation_from_state(df, sig, geomapper):
         df.groupby(["timestamp"])["publish_date"].apply(lambda x: np.unique(x)[0]).reset_index()
     )
     df = geomapper.replace_geocode(
-        df.drop("publish_date", axis=1), "state_id", "nation", new_col="geo_id"
+        df.drop("publish_date", axis=1), 
+        "state_id", 
+        "nation", 
+        new_col="geo_id"
     )
     df["se"] = None
     df["sample_size"] = None
@@ -570,9 +568,8 @@ def fetch_new_reports(params, logger=None):
             assert all(
                 latest_sig_df.groupby(["timestamp", "geo_id"]).size().reset_index(drop=True) == 1
             ), (
-                "Duplicate"
-                + f" rows in {sig} indicate that one or more reports were"
-                + " published multiple times and the copies differ."
+                f"Duplicate rows in {sig} indicate that one or more reports were published "
+                + " multiple times and the copies differ."
             )
 
             ret[sig] = latest_sig_df
@@ -614,6 +611,8 @@ def fetch_new_reports(params, logger=None):
 
 
 def interpolate_missing_values(dfs: DataDict) -> DataDict:
+    _interp_fn = lambda df: df.interpolate(method="linear", limit_area="inside").astype(float)
+
     interpolate_df = dict()
     for key, df in dfs.items():
         # Here we exclude the 'positivity' signal from interpolation. This is a temporary fix.
@@ -628,27 +627,12 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
                 pd.date_range(group_df.timestamp.min(), group_df.timestamp.max())
             )
             reindexed_group_df["geo_id"] = geo
-            if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
-                reindexed_group_df["val"] = (
-                    reindexed_group_df["val"]
-                    .interpolate(method="linear", limit_area="inside")
-                    .astype(float)
-                )
+            if "val" in reindexed_group_df.columns:
+                reindexed_group_df["val"] = _interp_fn(reindexed_group_df["val"])
             if "se" in reindexed_group_df.columns:
-                reindexed_group_df["se"] = (
-                    reindexed_group_df["se"]
-                    .interpolate(method="linear", limit_area="inside")
-                    .astype(float)
-                )
-            if (
-                "sample_size" in reindexed_group_df.columns
-                and not reindexed_group_df["sample_size"].isna().all()
-            ):
-                reindexed_group_df["sample_size"] = (
-                    reindexed_group_df["sample_size"]
-                    .interpolate(method="linear", limit_area="inside")
-                    .astype(float)
-                )
+                reindexed_group_df["se"] = _interp_fn(reindexed_group_df["se"])
+            if "sample_size" in reindexed_group_df.columns:
+                reindexed_group_df["sample_size"] = _interp_fn(reindexed_group_df["sample_size"])
             if "publish_date" in reindexed_group_df.columns:
                 reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(
                     method="bfill"
@@ -712,8 +696,8 @@ def unify_testing_sigs(positivity_df, volume_df):
 
     """
     # Combine test positivity and test volume, maintaining "this week" and "previous week" status.
-    assert len(positivity_df.index) == len(
-        volume_df.index
+    assert (
+        len(positivity_df.index) == len(volume_df.index)
     ), "Test positivity and volume data have different numbers of observations."
     volume_df = add_max_ts_col(volume_df)[
         ["geo_id", "publish_date", "val", "is_max_group_ts"]
@@ -751,8 +735,9 @@ def add_max_ts_col(df):
     the join. This new column, which is analagous to the "last/previous week"
     classification, is used to merge on.
     """
-    assert all(df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2) and all(
-        df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2
+    assert (
+        all(df.groupby(["publish_date", "geo_id"])["timestamp"].count() == 2) and 
+        all(df.groupby(["publish_date", "geo_id"])["timestamp"].nunique() == 2)
     ), "Testing signals should have two unique timestamps per publish date-region combination."
 
     max_ts_by_group = (

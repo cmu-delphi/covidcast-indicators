@@ -2,10 +2,12 @@
 from datetime import datetime
 from os import listdir, remove
 from os.path import join
+from typing import Any, Dict, List
 
 import mock
 import numpy as np
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from delphi_utils import create_export_csv, Nans
 
@@ -26,6 +28,13 @@ def _non_ignored_files_set(directory):
             continue
         out.add(fname)
     return out
+
+def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
+    df = df.copy()
+    for k, v in dtypes.items():
+        if k in df.columns:
+            df[k] = df[k].astype(v)
+    return df
 
 
 class TestExport:
@@ -136,7 +145,7 @@ class TestExport:
             geo_res="county",
             sensor="test",
         )
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             pd.read_csv(join(self.TEST_DIR, "20200215_county_deaths_test.csv")),
             pd.DataFrame(
                 {
@@ -316,7 +325,7 @@ class TestExport:
                 "sample_size": [100, 100],
             }
         ).astype({"geo_id": str, "sample_size": int})
-        pd.testing.assert_frame_equal(df, expected_df)
+        assert_frame_equal(df, expected_df)
 
     def test_export_df_with_missingness(self):
         _clean_directory(self.TEST_DIR)
@@ -348,7 +357,7 @@ class TestExport:
                 "missing_sample_size": [Nans.NOT_MISSING] * 2,
             }
         ).astype({"geo_id": str, "sample_size": int})
-        pd.testing.assert_frame_equal(df, expected_df)
+        assert_frame_equal(df, expected_df)
 
     @mock.patch("delphi_utils.logger")
     def test_export_df_with_contradictory_missingness(self, mock_logger):
@@ -371,4 +380,41 @@ class TestExport:
         assert pd.read_csv(join(self.TEST_DIR, "20200315_state_test.csv")).size > 0
         mock_logger.info.assert_called_once_with(
             "Filtering contradictory missing code in test_None_2020-02-15."
+        )
+
+    def test_export_sort(self):
+        _clean_directory(self.TEST_DIR)
+
+        unsorted_df = pd.DataFrame({
+            "geo_id": ["51175", "51093", "51175", "51620"],
+            "timestamp": [
+                datetime.strptime(x, "%Y-%m-%d")
+                for x in ["2020-02-15", "2020-02-15", "2020-03-01", "2020-03-15"]
+            ],
+            "val": [3.12345678910, 2.1, 2.2, 2.6],
+            "se": [0.15, 0.22, 0.20, 0.34],
+            "sample_size": [100, 100, 101, 100],
+        })
+        create_export_csv(
+            unsorted_df,
+            export_dir=self.TEST_DIR,
+            geo_res="county",
+            sensor="test"
+        )
+        assert_frame_equal(
+            _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
+            unsorted_df.query("timestamp == '2020-02-15'").drop(columns="timestamp").reset_index(drop=True)
+        )
+
+        _clean_directory(self.TEST_DIR)
+        create_export_csv(
+            unsorted_df,
+            export_dir=self.TEST_DIR,
+            geo_res="county",
+            sensor="test",
+            sort_geos=True
+        )
+        assert_frame_equal(
+            _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
+            unsorted_df.query("timestamp == '2020-02-15'").sort_values(by="geo_id").drop(columns="timestamp").reset_index(drop=True)
         )

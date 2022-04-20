@@ -31,7 +31,10 @@ TRANSFORMS = {
             geo_id_apply=lambda x: x.replace("Region ", ""),
         ),
         Transform(
-            name="States", level="state", geo_id_select=T_FIRST, geo_id_apply=lambda x: x.lower()
+            name="States", 
+            level="state", 
+            geo_id_select=T_FIRST, 
+            geo_id_apply=lambda x: x.lower()
         ),
         Transform(
             name="CBSAs",
@@ -41,7 +44,10 @@ TRANSFORMS = {
             geo_id_apply=lambda x: f"{x}",
         ),
         Transform(
-            name="Counties", level="county", geo_id_select=T_FIRST, geo_id_apply=lambda x: f"{x:05}"
+            name="Counties", 
+            level="county",
+            geo_id_select=T_FIRST, 
+            geo_id_apply=lambda x: f"{x:05}"
         ),
     ]
 }

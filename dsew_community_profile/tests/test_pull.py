@@ -1,13 +1,13 @@
 from collections import namedtuple
-from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from itertools import chain
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
+from unittest.mock import patch, Mock
+
 import pandas as pd
 from pandas.util.testing import assert_frame_equal
 import numpy as np
 import pytest
-from unittest.mock import patch, Mock
 
 from delphi_utils.geomap import GeoMapper
 
@@ -365,7 +365,7 @@ class TestPull:
 
         with pytest.raises(AssertionError):
             # Inputs have different numbers of rows.
-            unify_testing_sigs(positivity_df, positivity_df.iloc[0])
+            unify_testing_sigs(positivity_df, positivity_df.head(n=1))
 
     def test_add_max_ts_col(self):
         input_df = pd.DataFrame({
@@ -395,7 +395,21 @@ class TestPull:
                 })
             )
         with pytest.raises(AssertionError):
-            # Input df has fewer than 2 timestamps per geo id-publish date combination.
+            # Input df has more than 2 timestamps per geo id-publish date combination.
+            add_max_ts_col(
+                pd.DataFrame({
+                    'geo_id': ["ca", "ca", "ca", "fl", "fl", "fl"],
+                    'timestamp': [datetime(2021, 10, 27)] * 6,
+                    'val': [1, 2, 3, 4, 5, 6],
+                    'se': [None] * 6,
+                    'sample_size': [None] * 6,
+                    'publish_date': [datetime(2021, 10, 30)] * 6,
+                })
+            )
+
+        try:
+            # Input df has fewer than 2 timestamps per geo id-publish date
+            # combination. This should not raise an exception.
             add_max_ts_col(
                 pd.DataFrame({
                     "geo_id": ["ca", "fl"],
@@ -406,10 +420,12 @@ class TestPull:
                     "publish_date": [datetime(2021, 10, 30)] * 2,
                 })
             )
+        except AssertionError as e:
+            assert False, f"'add_max_ts_col' raised exception: {e}"
 
     def test_std_err(self):
         df = pd.DataFrame({
-            "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], 
+            "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1],
             "sample_size": [2, 2, 5, 10, 20, 50]
         })
 
@@ -422,7 +438,7 @@ class TestPull:
         assert np.allclose(se, expected_se, equal_nan=True)
         with pytest.raises(AssertionError):
             std_err(pd.DataFrame({
-                "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1], 
+                "val": [0, 0.5, 0.4, 0.3, 0.2, 0.1],
                 "sample_size": [2, 2, 5, 10, 20, 0]
             }))
 

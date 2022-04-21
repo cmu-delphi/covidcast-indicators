@@ -539,6 +539,7 @@ class TestPull:
         }), dtypes=DTYPES)
         # A linear signal missing two days which should be filled exactly by the linear interpolation.
         missing_sig1 = sig1[(sig1.timestamp <= "2022-01-05") | (sig1.timestamp >= "2022-01-08")]
+        # set all columns to object type to simulate the miscast we sometimes see when combining dfs
         missing_sig1 = _set_df_dtypes(missing_sig1, {key: object for key in DTYPES.keys()})
 
         interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): missing_sig1})

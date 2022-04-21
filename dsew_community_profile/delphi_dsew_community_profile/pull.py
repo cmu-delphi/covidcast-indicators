@@ -617,6 +617,7 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
         # https://github.com/cmu-delphi/covidcast-indicators/issues/1576
         _, sig, _ = key
         if sig == "positivity":
+            interpolate_df[key] = df.set_index(["geo_id", "timestamp"]).sort_index().reset_index()
             continue
 
         geo_dfs = []
@@ -652,7 +653,12 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
                 )
             geo_dfs.append(reindexed_group_df)
         interpolate_df[key] = (
-            pd.concat(geo_dfs).reset_index().rename(columns={"index": "timestamp"})
+            pd.concat(geo_dfs)
+            .reset_index()
+            .rename(columns={"index": "timestamp"})
+            .set_index(["geo_id", "timestamp"])
+            .sort_index()
+            .reset_index()
         )
     return interpolate_df
 

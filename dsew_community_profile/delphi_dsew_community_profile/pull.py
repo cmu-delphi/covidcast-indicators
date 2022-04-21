@@ -628,12 +628,14 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
                 reindexed_group_df["val"] = (
                     reindexed_group_df["val"]
+                    .astype(float)
                     .interpolate(method="linear", limit_area="inside")
                     .astype(float)
                 )
             if "se" in reindexed_group_df.columns:
                 reindexed_group_df["se"] = (
                     reindexed_group_df["se"]
+                    .astype(float)
                     .interpolate(method="linear", limit_area="inside")
                     .astype(float)
                 )
@@ -643,6 +645,7 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             ):
                 reindexed_group_df["sample_size"] = (
                     reindexed_group_df["sample_size"]
+                    .astype(float)
                     .interpolate(method="linear", limit_area="inside")
                     .astype(float)
                 )

@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Union
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 import numpy as np
 import pytest
 from unittest.mock import patch, Mock
@@ -506,7 +506,7 @@ class TestPull:
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
-        # A signal missing everything, should be left alone.
+        # A signal missing everything, should be dropped since it's all NAs.
         missing_sig3 = sig3[(sig3.timestamp <= "2022-01-05") | (sig3.timestamp >= "2022-01-08")]
 
         sig4 = _set_df_dtypes(pd.DataFrame({
@@ -517,12 +517,12 @@ class TestPull:
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
-        # A signal missing everything except for one point, should be left alone.
+        # A signal missing everything except for one point, should output a reduced range without NAs.
         missing_sig4 = sig4[(sig4.timestamp <= "2022-01-05") | (sig4.timestamp >= "2022-01-08")]
 
         missing_dfs = [missing_sig1, missing_sig2, missing_sig3, missing_sig4]
         interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): pd.concat(missing_dfs)})
-        expected_dfs = pd.concat([sig1, sig2, sig3, sig4])
+        expected_dfs = pd.concat([sig1, sig2, sig4.loc[9:]])
         _assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs, index_cols=["geo_id", "timestamp"])
 
     def test_interpolation_object_type(self):

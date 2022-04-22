@@ -650,6 +650,7 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
                 reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(
                     method="bfill"
                 )
+            reindexed_group_df = reindexed_group_df[~reindexed_group_df.val.isna()]
             geo_dfs.append(reindexed_group_df)
         interpolate_df[key] = (
             pd.concat(geo_dfs).reset_index().rename(columns={"index": "timestamp"})

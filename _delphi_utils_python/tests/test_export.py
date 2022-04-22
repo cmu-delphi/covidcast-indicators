@@ -30,6 +30,8 @@ def _non_ignored_files_set(directory):
     return out
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
+    assert all(isinstance(e, type) for e in dtypes.values()), "Values must be types."
+
     df = df.copy()
     for k, v in dtypes.items():
         if k in df.columns:
@@ -407,10 +409,8 @@ class TestExport:
             "se": [0.15, 0.22],
             "sample_size": [100, 100],
         })
-        assert_frame_equal(
-            _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
-            expected_df
-        )
+        unsorted_csv = _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str})
+        assert_frame_equal(unsorted_csv, expected_df)
 
         _clean_directory(self.TEST_DIR)
         create_export_csv(
@@ -426,7 +426,5 @@ class TestExport:
             "se": [0.22, 0.15],
             "sample_size": [100, 100],
         })
-        assert_frame_equal(
-            _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
-            expected_df
-        )
+        sorted_csv = _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str})
+        assert_frame_equal(sorted_csv,expected_df)

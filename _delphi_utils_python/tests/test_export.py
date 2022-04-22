@@ -30,7 +30,9 @@ def _non_ignored_files_set(directory):
     return out
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
-    assert all(isinstance(e, type) for e in dtypes.values()), "Values must be types."
+    assert all(isinstance(e, type) or isinstance(e, str) for e in dtypes.values()), (
+        "Values must be types or Pandas string aliases for types."
+    )
 
     df = df.copy()
     for k, v in dtypes.items():

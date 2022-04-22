@@ -401,9 +401,15 @@ class TestExport:
             geo_res="county",
             sensor="test"
         )
+        expected_df = pd.DataFrame({
+            "geo_id": ["51175", "51093"],
+            "val": [3.12345678910, 2.1],
+            "se": [0.15, 0.22],
+            "sample_size": [100, 100],
+        })
         assert_frame_equal(
             _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
-            unsorted_df.query("timestamp == '2020-02-15'").drop(columns="timestamp").reset_index(drop=True)
+            expected_df
         )
 
         _clean_directory(self.TEST_DIR)
@@ -414,7 +420,13 @@ class TestExport:
             sensor="test",
             sort_geos=True
         )
+        expected_df = pd.DataFrame({
+            "geo_id": ["51093", "51175"],
+            "val": [2.1, 3.12345678910],
+            "se": [0.22, 0.15],
+            "sample_size": [100, 100],
+        })
         assert_frame_equal(
             _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str}),
-            unsorted_df.query("timestamp == '2020-02-15'").sort_values(by="geo_id").drop(columns="timestamp").reset_index(drop=True)
+            expected_df
         )

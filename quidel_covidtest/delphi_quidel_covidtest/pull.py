@@ -35,7 +35,7 @@ def get_from_s3(start_date, end_date, bucket, logger):
     df = pd.DataFrame(columns=selected_columns)
     s3_files = {}
     for obj in bucket.objects.all():
-        if "-sars" in obj.key:
+        if "-sars" in obj.key and ".csv" in obj.key:
             date_string = obj.key.split("/")[1]
             try:
                 yy = int(date_string.split("_")[0])

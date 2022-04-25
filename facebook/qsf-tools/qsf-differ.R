@@ -59,6 +59,7 @@ get_qsf_file <- function(path, survey_version,
                                         "QuestionText", "QuestionType",
                                         "Choices", "Answers", "DisplayLogic")
 ) {
+  wave <- get_wave(path)
   # Read file as json.
   qsf <- read_json(path)
   ## Block
@@ -157,8 +158,20 @@ get_qsf_file <- function(path, survey_version,
         question$DataExportTag == "B12b" & question$QuestionID == "QID257" ~ "B12b_profile",
         TRUE ~ question$DataExportTag
       )
+    } else if (survey_version == "CMU") {
+      if (wave == 10) {
+        question$DataExportTag <- case_when(
+          question$DataExportTag == "C6" ~ "C6a",
+          question$DataExportTag == "C8" ~ "C8a",
+          TRUE ~ question$DataExportTag
+        )
+      } else if (wave == 11) {
+        if (question$DataExportTag == "E1") {
+          names(question$Subquestions) <- c("E1_1", "E1_2", "E1_3", "E1_4")
+        }
+      }
     }
-    
+      
     questions_out <- safe_insert_question(questions_out, question)
     qid_item_map[[question$QuestionID]] <- question$DataExportTag
   }
@@ -249,7 +262,7 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
             names(new_qsf[[question]][[change_type]])
           )
         )
-        
+
         for (code in subquestion_codes) {
           if ( !identical(old_qsf[[question]][[change_type]][[code]], new_qsf[[question]][[change_type]][[code]]) ) {
             changed_subquestions <- append(changed_subquestions, code)

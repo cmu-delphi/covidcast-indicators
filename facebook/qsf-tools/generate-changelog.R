@@ -80,7 +80,11 @@ generate_changelog <- function(path_to_codebook,
   annotated_diff <- annotated_diff %>%
     rowwise() %>% 
     mutate(
-      variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
+      # Don't rename items that have been removed. Renaming is based on `new_wave`,
+      # but removed items are nota ctually present in `new_wave`, just the `old_wave`.
+      variable_name = patch_item_names(
+        variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
+        )
     )
   
   # If variable_name from the annotated_diff is not also listed as a variable in

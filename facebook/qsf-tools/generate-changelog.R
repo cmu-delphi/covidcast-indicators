@@ -143,20 +143,20 @@ expand_out_matrix_subquestions <- function(qsf_diff) {
   # differ.
   qsf_diff <- rbind(nonmatrix_changes, matrix_changes) %>%
     arrange(new_wave, old_wave)
-
-  return(qsf_diff)
-}
-
-# Matrix base questions (e.g. the base question is E1 for matrix subquestion
-# E1_1) exist in diffs but not in the codebook. To be able to join them between
-# the two dfs, create a variable name mapping specifically for use in the join
-# operation.
-#
-# A matrix base question is mapped to the first associated subquestion instance
-# for a particular wave. The first subquestion is used for convenience and
-# reproducibility; subquestion-specific fields are set to `NA`.
-prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
-  # If variable_name from the qsf_diff is not also listed as a variable in
+  
+  # Rename items as necessary
+  path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
+  annotated_diff <- annotated_diff %>%
+    rowwise() %>% 
+    mutate(
+      # Don't rename items that have been removed. Renaming is based on `new_wave`,
+      # but removed items are nota ctually present in `new_wave`, just the `old_wave`.
+      variable_name = patch_item_names(
+        variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
+        )
+    )
+  
+  # If variable_name from the annotated_diff is not also listed as a variable in
   # the codebook, try adding an underscore to the end and looking for a variable
   # in the codebook that starts with that string. The matrix_subquestion_text
   # field of the match should be populated, although we want to ignore it and

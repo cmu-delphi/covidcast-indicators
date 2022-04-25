@@ -11,7 +11,9 @@ intro1_row_jhsph,consent noneu jhsph
 A1,consent age
 A1_2,consent age
 A2,country/region
-A3,postal code
+A2_2,country/region
+A2_3,administrative region
+A3, postal code
 A2_2_1,country/region
 A2_2_2,administrative region
 B0a,ever had covid

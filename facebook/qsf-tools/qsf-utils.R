@@ -129,10 +129,14 @@ subset_qsf_to_displayed <- function(qsf) {
 #' Replace erroneous question names
 #'
 #' @param item_names character vector of survey question names
+#' @param path_to_rename_map character; path to CSV with fields `old_item`,
+#' `new_item`, and `in_wave` indicating the mapping of item name changes
 #' @param wave integer or float survey version
+#' @param rename_list boolean or logical vector with the same length as
+#' `item_names` indicating items that should be renamed.
 #'
 #' @return character vector of repaired survey question names
-patch_item_names <- function(item_names, path_to_rename_map, wave) {
+patch_item_names <- function(item_names, path_to_rename_map, wave, rename_list=TRUE) {
   if (file.exists(path_to_rename_map)){
     rename_map <- read_csv(path_to_rename_map, trim_ws = FALSE,
                            col_types = cols(old_item = col_character(),
@@ -140,16 +144,25 @@ patch_item_names <- function(item_names, path_to_rename_map, wave) {
                                             in_wave = col_number() # integer or float
                            ))	%>%
       filter(is.na(in_wave) | in_wave == wave)
-    replacement_names <- rename_map$new_item
-    names(replacement_names) <- rename_map$old_item
     
-    ii_to_replace <- item_names %in% names(replacement_names) %>% which()
-    item_names[ii_to_replace] <- replacement_names[item_names[ii_to_replace]]
+    result <- data.frame(item = item_names, rename = rename_list, wave) %>%
+      left_join(rename_map, by=c("item"="old_item")) %>%
+      filter(wave == in_wave | is.na(in_wave)) %>%
+      mutate(item = case_when(
+        # Try to use new item name if we definitely want to rename it (`rename`
+        # flag is turned on for this item) OR if the rename map says this is a
+        # global rename (`in_wave` is missing) and notassociated with only one
+        # wave.
+        rename | is.na(in_wave) ~ coalesce(new_item, item),
+        TRUE ~ item
+      )) %>%
+      pull(item)
+    
+    return(result)
   } else {
     warning("path_to_rename_map ", path_to_rename_map, " not found")
+    return(item_names)
   }
-  
-  return(item_names)
 }
 
 #' Fetch and customize question format types.
@@ -160,7 +173,7 @@ patch_item_names <- function(item_names, path_to_rename_map, wave) {
 #'
 #' @return character vector of repaired survey question names
 get_question_formats <- function(qsf, item_names, survey_version){
-  type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix")
+  type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix", DD = "Dropdown")
   
   qtype <- qsf %>%
     map_chr(~ .x$Payload$QuestionType) %>% 

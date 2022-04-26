@@ -26,28 +26,32 @@ generate_changelog <- function(path_to_codebook,
   # Get the codebook. Contains details about each question (text, answer
   # choices, display logic) by wave.
   codebook <- get_codebook(path_to_codebook)
-  
+
   # Get the diffs + rationale. Contains info about which items changed between
   # waves, plus a description of what changed and why.
   qsf_diff <- get_diff(path_to_diff)
-  
+
   if (!("notes" %in% names(qsf_diff))) {
     if (is.null(path_to_old_changelog)) {
       stop("rationales must be provided either in the diff or via an old version of the changelog")
     }
     qsf_diff$notes <- NA_character_
   }
-  
+
   qsf_diff <- expand_out_matrix_subquestions(qsf_diff)
-  
+
   # Rename items as necessary
   path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
   qsf_diff <- qsf_diff %>%
-    rowwise() %>% 
+    rowwise() %>%
     mutate(
-      variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
+      # Don't rename items that have been removed. Renaming is based on `new_wave`,
+      # but removed items are nota ctually present in `new_wave`, just the `old_wave`.
+      variable_name = patch_item_names(
+        variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
+        )
     )
-  
+
   result <- prepare_matrix_base_questions_for_join(qsf_diff, codebook)
   qsf_diff <- result$diff
   vars_not_in_codebook <- result$vars_not_in_codebook
@@ -55,7 +59,7 @@ generate_changelog <- function(path_to_codebook,
   changelog <- make_changelog_from_codebook_and_diff(qsf_diff, codebook, vars_not_in_codebook)
   changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
   check_missing_rationales(changelog)
-  
+
   write_excel_csv(changelog, path_to_changelog, quote="needed")
 }
 
@@ -73,7 +77,7 @@ get_codebook <- function(path_to_codebook) {
   
   return(codebook)
 }
-  
+
 # Try to load `path_to_diff`. Check if it is a single CSV or a directory
 # containing a set of CSVs.
 get_diff <- function(path_to_diff) {
@@ -143,20 +147,20 @@ expand_out_matrix_subquestions <- function(qsf_diff) {
   # differ.
   qsf_diff <- rbind(nonmatrix_changes, matrix_changes) %>%
     arrange(new_wave, old_wave)
-  
-  # Rename items as necessary
-  path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
-  annotated_diff <- annotated_diff %>%
-    rowwise() %>% 
-    mutate(
-      # Don't rename items that have been removed. Renaming is based on `new_wave`,
-      # but removed items are nota ctually present in `new_wave`, just the `old_wave`.
-      variable_name = patch_item_names(
-        variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
-        )
-    )
-  
-  # If variable_name from the annotated_diff is not also listed as a variable in
+
+  return(qsf_diff)
+}
+
+# Matrix base questions (e.g. the base question is E1 for matrix subquestion
+# E1_1) exist in diffs but not in the codebook. To be able to join them between
+# the two dfs, create a variable name mapping specifically for use in the join
+# operation.
+#
+# A matrix base question is mapped to the first associated subquestion instance
+# for a particular wave. The first subquestion is used for convenience and
+# reproducibility; subquestion-specific fields are set to `NA`.
+prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
+  # If variable_name from the qsf_diff is not also listed as a variable in
   # the codebook, try adding an underscore to the end and looking for a variable
   # in the codebook that starts with that string. The matrix_subquestion_text
   # field of the match should be populated, although we want to ignore it and
@@ -212,7 +216,7 @@ expand_out_matrix_subquestions <- function(qsf_diff) {
       join_variable_old_wave = coalesce(join_variable_old_wave, variable_name)
     ) %>%
     select(-join_variable)
-  
+
   return(list("diff" = qsf_diff, "vars_not_in_codebook" = vars_not_in_codebook))
 }
 
@@ -274,13 +278,13 @@ add_rationales_from_old_changelog <- function(changelog, path_to_old_changelog) 
       .default = col_character(),
       new_wave = col_double(),
       old_wave = col_double()
-    )) %>% 
+    )) %>%
       select(new_wave, old_wave, variable_name, change_type, notes)
     changelog <- changelog %>%
       select(-notes) %>%
       left_join(old_changelog, by=c("new_wave", "old_wave", "variable_name", "change_type"))
   }
-  
+
   return(changelog)
 }
 
@@ -300,7 +304,7 @@ check_missing_rationales <- function(changelog) {
       " are missing rationales"
     )
   }
-  
+
   return(NULL)
 }
 

@@ -629,14 +629,14 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             if "val" in reindexed_group_df.columns and not reindexed_group_df["val"].isna().all():
                 reindexed_group_df["val"] = (
                     reindexed_group_df["val"]
-                    .interpolate(method="linear", limit_area="inside")
                     .astype(float)
+                    .interpolate(method="linear", limit_area="inside")
                 )
             if "se" in reindexed_group_df.columns:
                 reindexed_group_df["se"] = (
                     reindexed_group_df["se"]
-                    .interpolate(method="linear", limit_area="inside")
                     .astype(float)
+                    .interpolate(method="linear", limit_area="inside")
                 )
             if (
                 "sample_size" in reindexed_group_df.columns
@@ -644,13 +644,14 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
             ):
                 reindexed_group_df["sample_size"] = (
                     reindexed_group_df["sample_size"]
-                    .interpolate(method="linear", limit_area="inside")
                     .astype(float)
+                    .interpolate(method="linear", limit_area="inside")
                 )
             if "publish_date" in reindexed_group_df.columns:
                 reindexed_group_df["publish_date"] = reindexed_group_df["publish_date"].fillna(
                     method="bfill"
                 )
+            reindexed_group_df = reindexed_group_df[~reindexed_group_df.val.isna()]
             geo_dfs.append(reindexed_group_df)
         interpolate_df[key] = (
             pd.concat(geo_dfs)

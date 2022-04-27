@@ -76,8 +76,8 @@ class TestDataTools:
 
     @pytest.mark.parametrize("min_obs, expected", [
         (1, np.array([0, 0, 0, 0])),
-        (2, np.array([1/2, 0, 0, 0])),
-        (8, np.array([1, 1, 5/6, 4/8])),
+        (2, np.array([1/2, 0, 0, 0])), #(2, np.array([1/2, 0, 0, 0])),
+        (8, np.array([1/2, 2/4, 3/6, 4/8])), #(8, np.array([1, 1, 5/6, 4/8])),
     ])
     def test__geographical_pooling(self, min_obs, expected):
         tpooled_tests = np.array([1, 2, 3, 4])
@@ -135,9 +135,18 @@ class TestDataTools:
          np.array([3, 7, 9, 11]),
          np.array([5, 10, 15, 20]),
          np.array([(1 + 0.6 + 0.5)/(2 + 1 + 1), 3.5/7, 5.5/11, 7.5/17]),
-         np.array([np.sqrt(2.1*(4-2.1)/4/4/3), np.sqrt(3.5*(7-3.5)/7/7/6),
-                   np.sqrt(5.5*(11-5.5)/11/11/10), np.sqrt(7.5*(17-7.5)/17/17/16)]),
+          np.array([np.sqrt(2.1*(4-2.1)/4/4/3), np.sqrt(3.5*(7-3.5)/7/7/6),
+                    np.sqrt(5.5*(11-5.5)/11/11/10), np.sqrt(7.5*(17-7.5)/17/17/16)]),
          np.array([3, 6, 10, 16]),
+         ),
+        (5,  # parents case, borrow too much
+         2,
+         np.array([3, 7, 9, 11]),
+         np.array([5, 10, 15, 20]),
+         np.array([np.nan, 3.5/7, 5.5/11, 7.5/17]),
+          np.array([np.nan, np.sqrt(3.5*(7-3.5)/7/7/6),
+                    np.sqrt(5.5*(11-5.5)/11/11/10), np.sqrt(7.5*(17-7.5)/17/17/16)]),
+         np.array([np.nan, 6, 10, 16]),
          ),
     ])
     def test_smoothed_positive_prop(self, min_obs, pool_days, parent_positives,

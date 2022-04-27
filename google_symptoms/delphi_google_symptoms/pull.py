@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 import numpy as np
 import pandas as pd
 
-from .constants import DC_FIPS, METRICS, COMBINED_METRIC
+from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS
 
 
 # Create map of BigQuery symptom column names to desired column names.
@@ -39,18 +39,18 @@ def preprocess(df, level):
         Dataframe as described above.
     """
     # Constants
-    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + [COMBINED_METRIC]
+    KEEP_COLUMNS = ["geo_id", "date"] + METRICS + COMBINED_METRIC
 
     df.rename(colname_map, axis=1, inplace=True)
     df["geo_id"] = df["open_covid_region_code"].apply(
         lambda x: x.split("-")[-1].lower())
 
-    df[COMBINED_METRIC] = 0
-    for metric in METRICS:
-        df[COMBINED_METRIC] += df[metric].fillna(0)
-    df.loc[
-        (df["Anosmia"].isnull())
-        & (df["Ageusia"].isnull()), COMBINED_METRIC] = np.nan
+    for cb_metric in COMBINED_METRIC:
+        df[cb_metric] = 0
+        for metric in SYMPTOM_SETS[cb_metric]:
+            df[cb_metric] += df[metric].fillna(0)
+        df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
+        df.loc[df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
 
     # Delete rows with missing FIPS
     null_mask = (df["geo_id"].isnull())
@@ -170,8 +170,8 @@ def produce_query(level, date_range):
     base_query = """
     select
         case
-            when sub_region_2_code is null then sub_region_1_code
-            when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+            when coalesce(sub_region_2_code, "") = "" then sub_region_1_code
+            when coalesce(sub_region_2_code, "") != "" then concat(sub_region_1_code, "-", sub_region_2_code)
         end as open_covid_region_code,
         date,
         {symptom_cols}

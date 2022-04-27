@@ -23,23 +23,32 @@ def generate_transition_matrix(geo_res):
         The first is a data frame for HRR regions and the second are MSA
         regions.
     """
-    map_df = gmpr.get_crosswalk("fips", geo_res)
-    # Add population as weights
-    map_df = gmpr.add_population_column(map_df, "fips")
+    if geo_res in ["hrr", "msa"]:
+        mapping_flag = "fips"
+        map_df = gmpr.get_crosswalk("fips", geo_res)
+        # Add population as weights
+        map_df = gmpr.add_population_column(map_df, "fips")
+    else:
+        mapping_flag = "state_id"
+        map_df = gmpr.get_crosswalk("state", "state")
+        map_df = gmpr.add_geocode(map_df, "state_code", geo_res)
+        map_df = gmpr.add_population_column(map_df, "state_code")
+
     if geo_res == "hrr":
         map_df["population"] = map_df["population"] *  map_df["weight"]
-    msa_pop = map_df.groupby(geo_res).sum().reset_index()
+
+    aggregated_pop = map_df.groupby(geo_res).sum().reset_index()
     map_df = map_df.merge(
-            msa_pop, on=geo_res, how="inner", suffixes=["_raw", "_groupsum"]
+            aggregated_pop, on=geo_res, how="inner", suffixes=["_raw", "_groupsum"]
             )
     map_df["weight"] = map_df["population_raw"] / map_df["population_groupsum"]
 
     map_df = pd.pivot_table(
-                 map_df, values='weight', index=["fips"], columns=[geo_res]
-              ).fillna(0).reset_index().rename({"fips": "geo_id"}, axis = 1)
+                 map_df, values='weight', index=[mapping_flag], columns=[geo_res]
+              ).fillna(0).reset_index().rename({mapping_flag: "geo_id"}, axis = 1)
     return map_df
 
-def geo_map(df, geo_res):
+def geo_map(df, geo_res, namescols =  None):
     """
     Compute derived HRR and MSA counts as a weighted sum of the county dataset.
 
@@ -49,7 +58,12 @@ def geo_map(df, geo_res):
         a data frame with columns "geo_id", "timestamp",
         and columns for signal vals
     geo_res: str
-        "msa" or "hrr"
+        "msa", "hrr", "hhs" or "nation"
+    namescols: list of strings
+        names of columns of df but geo_id and timestamp
+        when running the pipeline, this will always be METRICS+COMBINED_METRIC
+        this parameter was added to allow us to run unit tests in subsets of
+        metrics and combined_metric's
 
     Returns
     -------
@@ -58,7 +72,10 @@ def geo_map(df, geo_res):
         and columns for signal vals.
         The geo_id has been converted from fips to HRRs/MSAs
     """
-    if geo_res in {"county", "state"}:
+    if namescols is None:
+        namescols = METRICS + COMBINED_METRIC
+
+    if geo_res == "county":
         return df
 
     map_df = generate_transition_matrix(geo_res)
@@ -66,7 +83,7 @@ def geo_map(df, geo_res):
     for _date in df["timestamp"].unique():
         val_lists = df[df["timestamp"] == _date].merge(
                 map_df["geo_id"], how="right"
-                )[METRICS + [COMBINED_METRIC]].fillna(0)
+                )[namescols].fillna(0)
         newdf = pd.DataFrame(
                 np.matmul(map_df.values[:, 1:].T, val_lists.values),
                 columns = list(val_lists.keys())

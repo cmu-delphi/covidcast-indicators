@@ -49,6 +49,10 @@ from .nancodes import Nans
 Files = List[str]
 FileDiffMap = Dict[str, Optional[str]]
 
+EXPORT_CSV_DTYPES = {
+    "geo_id": str, "val": float, "se": float, "sample_size": float,
+    "missing_val": "Int64", "missing_se": "Int64", "missing_sample_size": "Int64"
+}
 
 def diff_export_csv(
     before_csv: str,
@@ -75,15 +79,10 @@ def diff_export_csv(
         changed_df is the pd.DataFrame of common rows from after_csv with changed values.
         added_df is the pd.DataFrame of added rows from after_csv.
     """
-    export_csv_dtypes = {
-        "geo_id": str, "val": float, "se": float, "sample_size": float,
-        "missing_val": int, "missing_se": int, "missing_sample_size": int
-    }
-
-    before_df = pd.read_csv(before_csv, dtype=export_csv_dtypes)
+    before_df = pd.read_csv(before_csv, dtype=EXPORT_CSV_DTYPES)
     before_df.set_index("geo_id", inplace=True)
     before_df = before_df.round({"val": 7, "se": 7})
-    after_df = pd.read_csv(after_csv, dtype=export_csv_dtypes)
+    after_df = pd.read_csv(after_csv, dtype=EXPORT_CSV_DTYPES)
     after_df.set_index("geo_id", inplace=True)
     after_df = after_df.round({"val": 7, "se": 7})
     deleted_idx = before_df.index.difference(after_df.index)
@@ -93,8 +92,8 @@ def diff_export_csv(
     before_df_cmn = before_df.reindex(common_idx)
     after_df_cmn = after_df.reindex(common_idx)
 
-    # If CSVs have different columns (no missingness), mark all values as new
-    if ("missing_val" in before_df_cmn.columns) ^ ("missing_val" in after_df_cmn.columns):
+    # If new CSV has missingness columns, but old doesn't, mark all values as new
+    if ("missing_val" not in before_df_cmn.columns) & ("missing_val" in after_df_cmn.columns):
         same_mask = after_df_cmn.copy()
         same_mask.loc[:] = False
     else:
@@ -102,11 +101,12 @@ def diff_export_csv(
         same_mask = before_df_cmn == after_df_cmn
         same_mask |= pd.isna(before_df_cmn) & pd.isna(after_df_cmn)
 
-    # Code deleted entries as nans with the deleted missing code
+    # Any deleted entries become rows with nans and the deleted missing code
     deleted_df = before_df.loc[deleted_idx, :].copy()
     deleted_df[["val", "se", "sample_size"]] = np.nan
-    if "missing_val" in after_df_cmn.columns:
-        deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
+    # If the new file doesn't have missing columsn, then when the deleted, changed, and added
+    # rows are concatenated (in diff_exports), they will default to NA
+    deleted_df[["missing_val", "missing_se", "missing_sample_size"]] = Nans.DELETED
 
     return (
         deleted_df,
@@ -307,8 +307,9 @@ class ArchiveDiffer:
             else:
                 replace(diff_file, exported_file)
 
-    def run(self):
+    def run(self, logger=None):
         """Run the differ and archive the changed and new files."""
+        start_time = time.time()
         self.update_cache()
 
         # Diff exports, and make incremental versions
@@ -317,6 +318,11 @@ class ArchiveDiffer:
         # Archive changed and new files only
         to_archive = [f for f, diff in common_diffs.items()
                       if diff is not None]
+        if logger:
+            logger.debug("Diffed exports",
+                         phase="archiving",
+                         new_files_count=len(new_files),
+                         common_diffs_count=len(to_archive))
         to_archive += new_files
         _, fails = self.archive_exports(to_archive)
 
@@ -328,6 +334,14 @@ class ArchiveDiffer:
         # Report failures: someone should probably look at them
         for exported_file in fails:
             print(f"Failed to archive '{exported_file}'")
+
+        elapsed_time_in_seconds = round(time.time() - start_time, 2)
+        if logger:
+            logger.info("Completed archive run",
+                        phase="archiving",
+                        elapsed_time_in_seconds=elapsed_time_in_seconds,
+                        new_changed_count=len(to_archive),
+                        fail_count=len(fails))
 
 
 class S3ArchiveDiffer(ArchiveDiffer):
@@ -641,8 +655,23 @@ class FilesystemArchiveDiffer(ArchiveDiffer):
             successes: All files from input
             fails: Empty list
         """
+        archive_success, archive_fail = [], []
+        for exported_file in exported_files:
+            archive_file = abspath(
+                join(self.cache_dir, basename(exported_file)))
+
+            # Copy export to cache
+            try:
+                # Archive
+                shutil.copyfile(exported_file, archive_file)
+                archive_success.append(exported_file)
+
+            except FileNotFoundError as ex:
+                print(ex)
+                archive_fail.append(exported_file)
+
         self._exports_archived = True
-        return exported_files, []
+        return archive_success, archive_fail
 
     def update_cache(self):
         """Handle cache updates with a no-op.
@@ -667,13 +696,6 @@ if __name__ == "__main__":
     if "archive" not in _params:
         _params = {"archive": _params, "common": _params}
 
-    logger = get_structured_logger(
+    archiver_from_params(_params).run(get_structured_logger(
         __name__, filename=_params["common"].get("log_filename"),
-        log_exceptions=_params["common"].get("log_exceptions", True))
-    start_time = time.time()
-
-    archiver_from_params(_params).run()
-
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed archive run.",
-                elapsed_time_in_seconds=elapsed_time_in_seconds)
+        log_exceptions=_params["common"].get("log_exceptions", True)))

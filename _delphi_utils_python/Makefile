@@ -8,6 +8,11 @@ install: venv
 	pip install wheel ; \
 	pip install -e .
 
+install-ci: venv
+	. env/bin/activate; \
+	pip install wheel ; \
+	pip install .
+
 lint:
 	. env/bin/activate; pylint delphi_utils
 	. env/bin/activate; pydocstyle delphi_utils

@@ -75,26 +75,29 @@ join_weights <- function(data, params, weights = c("step1", "full"))
   data <- left_join(data, agg_weights, by = c("token" = "cid"))
 
   # Join on experimental weights too
-  path_to_experiment_weights <- "/home/ndefries/fb-experimental-weights/weights/2021-08-01_2021-10-15_covid19_dap_adults_finish_full_survey_weights.csv"
-  col_types <- c(rep("character", 3), rep("double", 8))
-  col_names <- c("row_num", "cid", "date",
-    "weight_test0",
-    "weight_test1",
-    "weight_test2",
-    "weight_test3",
-    "weight_test4",
-    "weight_test5",
-    "weight_test6",
-    "weight_test7"
+  exp_weights_dir <- "./exp_weights_in/"
+  col_types <- c(rep("character", 3), rep("double", 5))
+  col_names <- c(
+    "row_num",
+    "date",
+    "cid",
+    "wght_daily",
+    "wght_glm1",
+    "wght_glm2",
+    "wght_glm3",
+    "wght_bart"
   )
-  exp_weights <- fread(
-    path_to_experiment_weights,
-    colClasses = col_types,
-    col.names = col_names
-  ) %>%
-  mutate(date = as.Date(date)) %>%
-  filter(date == as.Date(params$start_date)) %>%
-  select(-date, -row_num)
+  exp_weights <- list()
+  for (exp_weights_file in list.files(exp_weights_dir, pattern = "[.]csv$", full.names = TRUE)) {
+    exp_weights[[exp_weights_file]] <- fread(
+      exp_weights_file,
+      colClasses = col_types,
+      col.names = col_names
+    ) %>%
+    select(-date, -row_num)
+  }
+  exp_weights <- bind_rows(exp_weights)
+  exp_weights <- exp_weights[!duplicated(cid),]
   data <- left_join(data, exp_weights, by = c("token" = "cid"))
 
   return(data)

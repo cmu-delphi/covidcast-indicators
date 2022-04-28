@@ -26,11 +26,11 @@ suppressPackageStartupMessages({
 #'   create new ones, relative to the current working directory.
 #' @param pattern Regular expression indicating which files in that directory to
 #'   open. By default, selects all `.csv` files with standard table date prefix.
-run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]csv$") {
+run_rollup <- function(input_dir, output_dir, pattern = "^[0-9]{8}_[0-9]{8}.*[.]csv.gz$") {
   if (!dir.exists(output_dir)) { dir.create(output_dir) }
   
   files <- list.files(input_dir, pattern = pattern)
-  if (length(files) == 0) { stop("No matching data files.") }
+  if (length(files) == 0) { stop("No matching contingency files to combine.") }
 
   # Get df of input files and corresponding output files. Reformat as a list
   # such that input files with same grouping variables (and thus same output

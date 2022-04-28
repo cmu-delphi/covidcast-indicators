@@ -67,10 +67,10 @@ test_that("small dataset produces no output", {
 ### This test relies on `setup-run.R` to run the full pipeline and tests basic
 ### properties of the output.
 test_that("full synthetic dataset produces expected output format", {
-  expected_files <- c("20200501_20200531_monthly_nation_gender.csv")
+  expected_files <- c("20200501_20200531_monthly_nation_gender.csv.gz")
   actual_files <- dir(test_path("receiving_contingency_full"))
   
-  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv.gz"))
   
   expect_setequal(expected_files, actual_files)
   expect_equal(dir.exists(test_path("receiving_contingency_full")), TRUE)
@@ -101,7 +101,7 @@ test_that("simple equal-weight dataset produces correct percents", {
   run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
-  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_gender.csv"))
+  expect_setequal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_gender.csv.gz"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -112,7 +112,7 @@ test_that("simple equal-weight dataset produces correct percents", {
     "us", "Female", fever_prop * 100, NA, 2000L, 100 * 2000
   ))
   
-  df <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv"))
+  df <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv.gz"))
   expect_equivalent(df, expected_output)
 })
 
@@ -148,7 +148,7 @@ test_that("testing run with multiple aggregations per group", {
     represented_pct_heartdisease = 100 * 2000,
   )
 
-  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv.gz"))
   expect_equivalent(out, expected)
 })
 
@@ -198,7 +198,7 @@ test_that("simple weighted dataset produces correct percents", {
   run_contingency_tables_many_periods(params, base_aggs[2,])
 
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_gender.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200501_20200531_monthly_nation_gender.csv.gz"))
 
   # Expected file contents
   raw_data <- read.csv(test_path("./input/simple_synthetic.csv"))
@@ -209,7 +209,7 @@ test_that("simple weighted dataset produces correct percents", {
     "us", "Female", fever_prop * 100, NA, 2000L, sum(rand_weights)
   ))
 
-  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv"))
+  out <- read.csv(file.path(params$export_dir, "20200501_20200531_monthly_nation_gender.csv.gz"))
   expect_equivalent(out, expected_output)
 })
 
@@ -228,7 +228,7 @@ test_that("production of historical CSVs for range of dates", {
 
   run_contingency_tables_many_periods(params, base_aggs[2,])
   # Expected files
-  expect_equal(!!dir(params$export_dir), c("20200503_20200509_weekly_nation_gender.csv", "20200510_20200516_weekly_nation_gender.csv"))
+  expect_equal(!!dir(params$export_dir), c("20200503_20200509_weekly_nation_gender.csv.gz", "20200510_20200516_weekly_nation_gender.csv.gz"))
 })
 
 

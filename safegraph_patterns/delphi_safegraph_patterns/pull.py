@@ -34,7 +34,7 @@ BATCH = 500
 
 def pull_one(query, headers):
     """Perform single query attemp, with light cleaning."""
-    for attempt_number in range(5):
+    for _ in range(5):
         success = True
         req = requests.post(
             URL,

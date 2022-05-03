@@ -37,7 +37,6 @@ def get_hosp(edi_file, geo_dir, out_dir, receiving_dir, se):
             "obfuscated_prefix": "wip_henear",
             "parallel": True,
             "geos": ["state", "msa", "hrr", "county", "hhs", "nation"],
-            #"geos": ['hhs', 'nation'],
             "weekday": weekday
         }
     }

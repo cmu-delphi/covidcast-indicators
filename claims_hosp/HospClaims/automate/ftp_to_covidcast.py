@@ -11,8 +11,8 @@ import paramiko
 # first party
 from secrets import covidcast
 
-NUM_FILES = 71*6*2  # expect (71 dates x 6 geos x 2 signals)
-NUM_SE_FILES = 71*6*1  # expect (71 dates x 6 geos x 1 signals)
+NUM_FILES = 70*6*2  # expect (70 dates x 6 geos x 2 signals)
+NUM_SE_FILES = 70*6*1  # expect (70 dates x 6 geos x 1 signals)
 
 
 class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):

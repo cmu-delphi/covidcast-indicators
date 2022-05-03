@@ -273,8 +273,8 @@ class DynamicValidator:
             - report: ValidationReport; report where results are added
 
         Returns:
-            - False if recent_df is empty, else (recent_df, reference_api_df)
-            (after reference_api_df has been padded if necessary)
+            - False if recent_df is empty after padding, else (recent_df, reference_api_df)
+            (reference_api_df will be padded if necessary)
         """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
@@ -323,6 +323,18 @@ class DynamicValidator:
         report.increment_total_checks()
 
         if reference_api_df.empty:
+            report.add_raised_warning(
+                ValidationFailure("empty_reference_data",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
+                                  "reference data is empty; comparative checks could not "
+                                  "be performed"))
+
+        reference_api_df = self.pad_reference_api_df(
+            reference_api_df, geo_sig_df, reference_end_date)
+
+        if reference_api_df.empty:
             report.add_raised_error(
                 ValidationFailure("empty_reference_data",
                                   checking_date,
@@ -331,9 +343,6 @@ class DynamicValidator:
                                   "reference data is empty; comparative checks could not "
                                   "be performed"))
             return False
-
-        reference_api_df = self.pad_reference_api_df(
-            reference_api_df, geo_sig_df, reference_end_date)
 
         return (geo_sig_df, reference_api_df)
 

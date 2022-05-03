@@ -324,18 +324,22 @@ class DynamicValidator:
         reference_api_df = self.pad_reference_api_df(
             reference_api_df, geo_sig_df, reference_end_date)
 
-        empty_reference_data_message = ValidationFailure("empty_reference_data",
+        report.increment_total_checks()
+        if reference_api_df.empty:
+            report.add_raised_error(ValidationFailure("empty_reference_data",
                                   checking_date,
                                   geo_type,
                                   signal_type,
                                   "reference data is empty; comparative checks could not "
-                                  "be performed")
-        report.increment_total_checks()
-        if reference_api_df.empty:
-            report.add_raised_error(empty_reference_data_message)
+                                  "be performed"))
             return False
-        elif pre_pad_empty_flag:
-            report.add_raised_warning(empty_reference_data_message)
+        if pre_pad_empty_flag:
+            report.add_raised_warning(ValidationFailure("empty_reference_data",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
+                                  "pre-padding reference data is empty and indicates data "
+                                  "missing from the API; please verify that this is expected"))
 
         return (geo_sig_df, reference_api_df)
 

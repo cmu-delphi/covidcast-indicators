@@ -1,6 +1,5 @@
 #!/bin/sh
 set -o errexit
-#set -o nounset
 set -o pipefail
 
 BASE="/home/indicators/runtime/claims_hosp/HospClaims"

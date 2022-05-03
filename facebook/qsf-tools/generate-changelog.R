@@ -45,7 +45,11 @@ generate_changelog <- function(path_to_codebook,
   qsf_diff <- qsf_diff %>%
     rowwise() %>% 
     mutate(
-      variable_name = patch_item_names(variable_name, path_to_rename_map, new_wave)
+      # Don't rename items that have been removed. Renaming is based on `new_wave`,
+      # but removed items are not actually present in `new_wave`, just the `old_wave`.
+      variable_name = patch_item_names(
+        variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
+      )
     )
   
   result <- prepare_matrix_base_questions_for_join(qsf_diff, codebook)

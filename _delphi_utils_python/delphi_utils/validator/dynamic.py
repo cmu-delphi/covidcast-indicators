@@ -351,7 +351,7 @@ class DynamicValidator:
         """Check if API data is missing, and supplement from test data.
 
         Arguments:
-            - reference_api_df: API data within lookbehind range with at least one observation
+            - reference_api_df: API data within lookbehind range
             - geo_sig_df: Test data
             - reference_start_date: Desired start date of reference data
             - reference_end_date: Desired end date of reference data

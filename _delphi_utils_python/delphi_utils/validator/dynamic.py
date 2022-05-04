@@ -345,7 +345,7 @@ class DynamicValidator:
 
     # `reference_start_date` is used in the call to `geo_sig_df.query()`
     # below but pylint doesn't recognize that.
-    # pylint: disable=unused-variable
+    # pylint: disable=unused-argument
     def pad_reference_api_df(self, reference_api_df, geo_sig_df,
                              reference_start_date, reference_end_date):
         """Check if API data is missing, and supplement from test data.

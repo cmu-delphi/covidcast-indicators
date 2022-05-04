@@ -7,7 +7,7 @@
 ##
 ## Usage:
 ##
-## Rscript generate-changelog.R UMD|CMU path/to/codebook path/to/diff/or/diff/directory path/to/output/changelog [path/to/old/changelog]"
+## Rscript generate-changelog.R UMD|CMU path/to/codebook path/to/diff/or/diff/directory path/to/output/changelog [path/to/old/changelog]
 
 suppressPackageStartupMessages({
   library(tidyverse)

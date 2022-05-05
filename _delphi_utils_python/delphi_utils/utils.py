@@ -116,7 +116,7 @@ def delete_move_files():
     # Double-checking that export-dir is not delivery-dir
     # Throw assertion error if delivery_dir or export_dir is unspecified
     assert(delivery_dir is not None and export_dir is not None)
-    assert(export_dir != delivery_dir)
+    assert export_dir != delivery_dir
     files_to_delete = os.listdir(export_dir)
     for file_name in files_to_delete:
         if file_name.endswith(".csv") or file_name.endswith(".CSV"):

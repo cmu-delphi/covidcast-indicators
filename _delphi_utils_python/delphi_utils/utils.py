@@ -104,19 +104,19 @@ def delete_move_files():
     1. Delete files in export-dir if delivery-dir is specified and is different
        from export_dir (aka only delete files produced by the most recent run)
     2. If validation-failures-dir is specified, move failed files there instead
+    If dry-run tag is True, then this function should not (and currently does not) get called
     """
     params = read_params()
     export_dir = params["common"].get("export_dir", None)
     delivery_dir = params["delivery"].get("delivery_dir", None)
-    if delivery_dir is None:
-        return
     validation_failure_dir = params["validation"]["common"].get("validation_failure_dir", None)
-
     # Create validation_failure_dir if it doesn't exist
     if (validation_failure_dir is not None) and (not os.path.exists(validation_failure_dir)):
         os.mkdir(validation_failure_dir)
     # Double-checking that export-dir is not delivery-dir
-    assert(export_dir is not None and export_dir != delivery_dir)
+    # Throw assertion error if delivery_dir or export_dir is unspecified
+    assert(delivery_dir is not None and export_dir is not None)
+    assert(export_dir != delivery_dir)
     files_to_delete = os.listdir(export_dir)
     for file_name in files_to_delete:
         if file_name.endswith(".csv") or file_name.endswith(".CSV"):

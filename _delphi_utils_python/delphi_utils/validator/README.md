@@ -43,6 +43,27 @@ deactivate
 rm -r env
 ```
 
+### Using the runner
+
+The validator can also be called using the runner, which performs the entire pipeline:
+
+* Calling the indicator's `run` module
+* Running the validator on newly obtained CSV files, if validator is specified
+* If validation is unsuccessful, remove or transfer current files in the run
+* Archive files if archiver is specified and there are no validation failures
+* Transfer files to delivery directory if specified in params
+
+The following truth table describes behavior of the third bullet point:
+
+| case | dry_run | validation failure | export dir | delivery dir | v failure dir | action |
+| - | - | - | - | - | - | - |
+| 1 | true | never | * | * | * | no effect |
+| 2 | false | no | * | * | * | no effect |
+| 3 | false | yes | X | X | * | throw assertion exception |
+| 4 | false | yes | X | None | * | throw assertion exception |
+| 5 | false | yes | X | Y != X | None | delete CSV from X |
+| 6 | false | yes | X | Y != X | Z | move CSV from X to Z |
+
 ### Customization
 
 All of the user-changable parameters are stored in the `validation` field of the indicator's `params.json` file. If `params.json` does not already include a `validation` field, please copy that provided in this module's `params.json.template`.

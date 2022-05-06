@@ -617,7 +617,8 @@ def interpolate_missing_values(dfs: DataDict) -> DataDict:
         # https://github.com/cmu-delphi/covidcast-indicators/issues/1576
         _, sig, _ = key
         if sig == "positivity":
-            interpolate_df[key] = df.set_index(["geo_id", "timestamp"]).sort_index().reset_index()
+            reindexed_group_df = df.set_index(["geo_id", "timestamp"]).sort_index().reset_index()
+            interpolate_df[key] = reindexed_group_df[~reindexed_group_df.val.isna()]
             continue
 
         geo_dfs = []

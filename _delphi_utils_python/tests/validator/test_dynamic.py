@@ -25,8 +25,9 @@ class TestReferencePadding:
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
 
+        ref_date = datetime.strptime("2021-01-06", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-06", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         assert new_ref_df.equals(ref_df)
 
@@ -42,8 +43,9 @@ class TestReferencePadding:
         ref_df = pd.DataFrame(ref_data)
         test_df = pd.DataFrame(test_data)
 
+        ref_date = datetime.strptime("2021-01-15", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         # Check it only takes missing dates - so the last 5 dates
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
@@ -64,8 +66,9 @@ class TestReferencePadding:
         ref_df = pd.DataFrame(ref_data)
         test_df = pd.DataFrame(test_data)
 
+        ref_date = datetime.strptime("2021-01-15", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         # Check it only takes missing dates up to the day before the reference
         assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",

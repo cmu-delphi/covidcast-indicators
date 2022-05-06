@@ -422,6 +422,9 @@ def fetch_listing(params):
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
         keep = [el for el in listing if not os.path.exists(el['cached_filename'])]
+        if not keep:
+            # No new listings, e.g. on the weekend.
+            return keep
     elif params['indicator']['reports'].find("--") > 0:
         # drop files outside the specified publish-date range
         start_str, _, end_str = params['indicator']['reports'].partition("--")

@@ -39,6 +39,7 @@ def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
             df[k] = df[k].astype(v)
     return df
 
+
 class TestPull:
     def test_DatasetTimes(self):
         examples = [
@@ -158,9 +159,7 @@ class TestPull:
         # TODO
         pass
 
-    @patch('requests.get')
-    @patch('os.path.exists')
-    def test_fetch_listing(self, mock_listing, mock_exists):
+    def test_fetch_listing(self):
         inst = namedtuple("attachment", "assetId filename publish cache")
         instances = list(chain(*[
             [
@@ -170,19 +169,25 @@ class TestPull:
             for i in [1, 2, 3, 4, 5]
         ]))
 
-        mock_listing.return_value = Mock()
-        mock_listing.return_value.json = Mock(
-            return_value = {
-                'metadata': {
-                    'attachments': [
-                        {"assetId": i.assetId, "filename": i.filename}
-                        for i in instances
-                    ]
-                }
-            }
-        )
+        # Solution from https://stackoverflow.com/questions/15753390/
+        #how-can-i-mock-requests-and-the-response
+        def mocked_requests_get(*args, **kwargs):
+            class MockResponse:
+                def __init__(self, json_data):
+                    self.json_data = json_data
 
-        mock_exists.reset_mock(return_value=False)
+                def json(self):
+                    return self.json_data
+
+            return MockResponse({
+                        'metadata': {
+                            'attachments': [
+                                {"assetId": i.assetId, "filename": i.filename}
+                                for i in instances
+                            ]
+                        }
+                    }
+                )
 
         def as_listing(instance):
             return {
@@ -199,8 +204,13 @@ class TestPull:
             ]
         )
 
-        for actual, expected in zip(fetch_listing(ex.given), ex.expected):
-            assert actual == expected
+        with patch('requests.get', side_effect=mocked_requests_get):
+            with patch('os.path.exists', return_value=False):
+                for actual, expected in zip(fetch_listing(ex.given), ex.expected):
+                    assert actual == expected
+
+            with patch('os.path.exists', return_value=True):
+                assert fetch_listing(ex.given) == []
 
     def test_nation_from_state(self):
         geomapper = GeoMapper()

@@ -163,8 +163,8 @@ class TestPull:
         inst = namedtuple("attachment", "assetId filename publish cache")
         instances = list(chain(*[
             [
-                inst(f"{i}", f"2021010{i}.xlsx", date(2021, 1, i), f"{i}---2021010{i}.xlsx"),
-                inst(f"p{i}", f"2021010{i}.pdf", date(2021, 1, i), f"p{i}---2021010{i}.pdf"),
+                inst(f"{i}", f"2021010{i}.xlsx", date(2021, 1, i), f"2021010{i}--{i}.xlsx"),
+                inst(f"p{i}", f"2021010{i}.pdf", date(2021, 1, i), f"2021010{i}--p{i}.pdf"),
             ]
             for i in [1, 2, 3, 4, 5]
         ]))

@@ -569,6 +569,11 @@ class TestPull:
                 [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}],
                 [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}, {"publish_date": date(2020, 1, 18)}]
             ),
+            # empty keep list
+            example(
+                [],
+                []
+            )
         ]
         for ex in examples:
             assert extend_listing_for_interp(ex.given, listing) == ex.expected, ex.given

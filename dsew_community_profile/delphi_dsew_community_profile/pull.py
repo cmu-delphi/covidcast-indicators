@@ -407,7 +407,9 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
-    export_start_date = params['indicator'].get('export_start_date', datetime.datetime.fromtimestamp(0))
+    export_start_date = params['indicator'].get(
+        'export_start_date', datetime.datetime.fromtimestamp(0)
+    )
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
     # drop the pdf files
@@ -425,7 +427,10 @@ def fetch_listing(params):
 
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
-        keep = [el for el in listing if not os.path.exists(el['cached_filename']) and check_valid_publish_date(el)]
+        keep = [
+            el for el in listing
+            if not os.path.exists(el['cached_filename']) and check_valid_publish_date(el)
+        ]
     elif params['indicator']['reports'].find("--") > 0:
         # drop files outside the specified publish-date range
         start_str, _, end_str = params['indicator']['reports'].partition("--")
@@ -440,7 +445,8 @@ def fetch_listing(params):
             el for el in listing if check_valid_publish_date(el)
         ]
     else:
-        raise ValueError(f"params['indicator']['reports'] is set to {params['indicator']['reports']}, which isn't 'new', 'all', or a date range.")
+        raise ValueError("params['indicator']['reports'] is set to" \
+            + f" {params['indicator']['reports']}, which isn't 'new', 'all', or a date range.")
 
     return extend_listing_for_interp(keep, listing)
 

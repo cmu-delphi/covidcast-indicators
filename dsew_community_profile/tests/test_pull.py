@@ -197,7 +197,7 @@ class TestPull:
                 "publish_date": instance.publish
             }
         ex = example(
-            {'indicator':{'reports':'new'}},
+            {'indicator':{'reports':'new', 'input_cache':''}},
             [
                 as_listing(instance)
                 for i, instance in filter(lambda x: x[0]%2 == 0, enumerate(instances))

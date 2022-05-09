@@ -407,8 +407,11 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
-    listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
+    export_start_date = params['indicator'].get(
+        'export_start_date', datetime.datetime.fromtimestamp(0)
+    )
 
+    listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
     # drop the pdf files
     listing = [
         dict(
@@ -418,10 +421,16 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
-    keep = []
+
+    def check_valid_publish_date(x):
+        return x['publish_date'] >= export_start_date
+
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache
-        keep = [el for el in listing if not os.path.exists(el['cached_filename'])]
+        keep = [
+            el for el in listing
+            if not os.path.exists(el['cached_filename']) and check_valid_publish_date(el)
+        ]
     elif params['indicator']['reports'].find("--") > 0:
         # drop files outside the specified publish-date range
         start_str, _, end_str = params['indicator']['reports'].partition("--")
@@ -429,22 +438,17 @@ def fetch_listing(params):
         end_date = datetime.datetime.strptime(end_str, "%Y-%m-%d").date()
         keep = [
             el for el in listing
-            if start_date <= el['publish_date'] <= end_date
+            if (start_date <= el['publish_date'] <= end_date) and check_valid_publish_date(el)
         ]
-
-    # reference date is guaranteed to be on or before publish date, so we can trim
-    # reports that are too early
-    if 'export_start_date' in params['indicator']:
+    elif params['indicator']['reports'] == 'all':
         keep = [
-            el for el in keep
-            if params['indicator']['export_start_date'] <= el['publish_date']
+            el for el in listing if check_valid_publish_date(el)
         ]
-    # can't do the same for export_end_date
+    else:
+        raise ValueError("params['indicator']['reports'] is set to" \
+            + f" {params['indicator']['reports']}, which isn't 'new', 'all', or a date range.")
 
-    # if we're only running on a subset, make sure we have enough data for interp
-    if keep:
-        keep = extend_listing_for_interp(keep, listing)
-    return keep if keep else listing
+    return extend_listing_for_interp(keep, listing)
 
 def extend_listing_for_interp(keep, listing):
     """Grab additional files from the full listing for interpolation if needed.

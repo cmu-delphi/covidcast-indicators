@@ -99,20 +99,20 @@ def run_module(params):
             params['indicator']['reports'] = 'all'
             params['indicator']['export_signals'] = {sensor_names[key] for key in new_signals}
 
-        dfs = fetch_new_reports(params, logger)
-        for key, df in dfs.items():
-            (geo, sig, is_prop) = key
-            if sig not in params["indicator"]["export_signals"]:
-                continue
-            dates = create_export_csv(
-                df,
-                params['common']['export_dir'],
-                geo,
-                make_signal_name(sig, is_prop),
-                **export_params
-            )
-            if len(dates)>0:
-                run_stats.append((max(dates), len(dates)))
+            dfs = fetch_new_reports(params, logger)
+            for key, df in dfs.items():
+                (geo, sig, is_prop) = key
+                if sig not in params["indicator"]["export_signals"]:
+                    continue
+                dates = create_export_csv(
+                    df,
+                    params['common']['export_dir'],
+                    geo,
+                    make_signal_name(sig, is_prop),
+                    **export_params
+                )
+                if len(dates)>0:
+                    run_stats.append((max(dates), len(dates)))
 
     ## log this indicator run
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

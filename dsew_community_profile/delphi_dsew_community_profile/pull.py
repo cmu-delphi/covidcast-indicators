@@ -409,7 +409,7 @@ def fetch_listing(params):
     """Generate the list of report files to process."""
     print(datetime.datetime.fromtimestamp(0))
     export_start_date = params['indicator'].get(
-        'export_start_date', datetime.datetime.fromtimestamp(0)
+        'export_start_date', datetime.datetime.utcfromtimestamp(0)
     )
     print(export_start_date)
     # assert False

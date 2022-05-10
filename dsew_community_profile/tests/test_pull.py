@@ -208,6 +208,7 @@ class TestPull:
             with patch('os.path.exists', return_value=False):
                 for actual, expected in zip(fetch_listing(ex.given), ex.expected):
                     assert actual == expected
+                    assert False
 
             with patch('os.path.exists', return_value=True):
                 assert fetch_listing(ex.given) == []

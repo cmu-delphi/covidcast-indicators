@@ -201,6 +201,7 @@ class TestPull:
 
         for actual, expected in zip(fetch_listing(ex.given), ex.expected):
             assert actual == expected
+            assert False
 
     def test_nation_from_state(self):
         geomapper = GeoMapper()

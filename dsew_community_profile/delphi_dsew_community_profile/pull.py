@@ -407,11 +407,15 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
+    print(datetime.datetime.fromtimestamp(0))
     export_start_date = params['indicator'].get(
         'export_start_date', datetime.datetime.fromtimestamp(0)
     )
+    print(export_start_date)
+    # assert False
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
+    print(listing)
     # drop the pdf files
     listing = [
         dict(
@@ -421,9 +425,12 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
+    print(listing)
 
     def check_valid_publish_date(x):
         return x['publish_date'] >= export_start_date
+
+    print(check_valid_publish_date(listing[0]))
 
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache

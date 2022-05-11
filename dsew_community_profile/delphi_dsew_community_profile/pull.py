@@ -415,17 +415,15 @@ def fetch_listing(params):
     # print("local_tzname", local_tzname)
 
     #print("os TZ", os.environ.get('TZ', "TZ not specified"))
-    print("time.tzname", time.tzname)
+    # print("time.tzname", time.tzname)
     print(datetime.datetime.fromtimestamp(0))
     # print(params['indicator'])
     export_start_date = params['indicator'].get(
         'export_start_date', datetime.datetime.fromtimestamp(0)
     )
     print(export_start_date)
-    # assert False
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']
-    print(listing)
     # drop the pdf files
     listing = [
         dict(
@@ -435,12 +433,12 @@ def fetch_listing(params):
         )
         for el in listing if el['filename'].endswith("xlsx")
     ]
-    print(listing)
 
     def check_valid_publish_date(x):
         return x['publish_date'] >= export_start_date
 
     print(check_valid_publish_date(listing[0]))
+    assert False
 
     if params['indicator']['reports'] == 'new':
         # drop files we already have in the input cache

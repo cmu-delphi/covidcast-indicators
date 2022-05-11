@@ -407,7 +407,15 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
-    print(os.environ['TZ'])
+    now = datetime.datetime.now()
+    local_now = now.astimezone()
+    local_tz = local_now.tzinfo
+    local_tzname = local_tz.tzname(local_now)
+    print("local_tzname", local_tzname)
+
+    import time
+    print("os TZ", os.environ.get('TZ', "TZ not specified"))
+    print("time.tzname", time.tzname)
     print(datetime.datetime.fromtimestamp(0))
     print(type(datetime.datetime.fromtimestamp(0)))
     print(params['indicator'])

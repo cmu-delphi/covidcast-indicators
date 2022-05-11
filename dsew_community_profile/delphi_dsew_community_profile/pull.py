@@ -408,22 +408,20 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
-    now = datetime.datetime.now()
-    local_now = now.astimezone()
-    local_tz = local_now.tzinfo
-    local_tzname = local_tz.tzname(local_now)
-    print("local_tzname", local_tzname)
+    # now = datetime.datetime.now()
+    # local_now = now.astimezone()
+    # local_tz = local_now.tzinfo
+    # local_tzname = local_tz.tzname(local_now)
+    # print("local_tzname", local_tzname)
 
-    print("os TZ", os.environ.get('TZ', "TZ not specified"))
+    #print("os TZ", os.environ.get('TZ', "TZ not specified"))
     print("time.tzname", time.tzname)
     print(datetime.datetime.fromtimestamp(0))
-    print(type(datetime.datetime.fromtimestamp(0)))
-    print(params['indicator'])
+    # print(params['indicator'])
     export_start_date = params['indicator'].get(
         'export_start_date', datetime.datetime.fromtimestamp(0)
     )
     print(export_start_date)
-    print(type(export_start_date))
     # assert False
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']

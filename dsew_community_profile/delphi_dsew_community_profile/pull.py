@@ -407,11 +407,15 @@ def as_cached_filename(params, config):
 
 def fetch_listing(params):
     """Generate the list of report files to process."""
+    print(os.environ['TZ'])
     print(datetime.datetime.fromtimestamp(0))
+    print(type(datetime.datetime.fromtimestamp(0)))
+    print(params['indicator'])
     export_start_date = params['indicator'].get(
-        'export_start_date', datetime.datetime.utcfromtimestamp(0)
+        'export_start_date', datetime.datetime.fromtimestamp(0)
     )
     print(export_start_date)
+    print(type(export_start_date))
     # assert False
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']

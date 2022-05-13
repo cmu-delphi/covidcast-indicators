@@ -1,5 +1,18 @@
-library(tidyverse)
-library(dplyr) 
+#' library(tidyverse)
+#' library(Matrix)
+#' library(stats)
+#' library(lubricate)
+#' library(zoo)
+#' library(dplyr)
+#' library(ggplot2)
+#' library(stringr)
+#' library(plyr)
+#' library(nlm)
+#' library(covidcast)
+#' library(evalcast)
+#' library(quantgen) 
+#' library(gurobi)
+#' lp_solver = "gurobi" # LP solver to use in quantile_lasso(); "gurobi" or "glpk"
 
 #' Tempt usage
 #' params = list()

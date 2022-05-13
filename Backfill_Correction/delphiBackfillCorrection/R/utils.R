@@ -1,0 +1,82 @@
+#' Return params file as an R list
+#'
+#' Reads a parameters file. If the file does not exist, the function will create a copy of
+#' '"params.json.template" and read from that.
+#'
+#' @param path    path to the parameters file; if not present, will try to copy the file
+#'                "params.json.template"
+#' @param template_path    path to the template parameters file
+#'
+#' @return a named list of parameters values
+#'
+#' @importFrom dplyr if_else
+#' @importFrom jsonlite read_json
+#' @importFrom lubridate ymd_hms
+#' @export
+read_params <- function(path = "params.json", template_path = "params.json.template") {
+  if (!file.exists(path)) file.copy(template_path, path)
+  params <- read_json(path, simplifyVector = TRUE)
+  
+  params$num_filter <- if_else(params$debug, 2L, 100L)
+  params$s_weight <- if_else(params$debug, 1.00, 0.01)
+  params$s_mix_coef <- if_else(params$debug, 0.05, 0.05)
+  
+  params$start_time <- ymd_hms(
+    sprintf("%s 00:00:00", params$start_date), tz = tz_to
+  )
+  params$end_time <- ymd_hms(
+    sprintf("%s 23:59:59", params$end_date), tz = tz_to
+  )
+  
+  params$parallel_max_cores <- if_else(
+    is.null(params$parallel_max_cores),
+    .Machine$integer.max,
+    params$parallel_max_cores
+  )
+  
+  return(params)
+}
+
+#' Create directory if not already existing
+#'
+#' @param path character vector giving the directory to create
+#'
+#' @export
+create_dir_not_exist <- function(path)
+{
+  if (!dir.exists(path)) { dir.create(path) }
+}
+
+#' Function to read input data
+#' 
+#' @param path path to the input data
+#' 
+#' @export
+read_data <- function(path){
+  df <- read_csv(path)
+  return (df)
+}
+
+#‘ Export the result to customized directory
+
+#' @param test_data test data with prediction result
+#' @param coef_data data frame with the estimated coefficients
+#' @param export_dir export directory
+#' @param geo_level geographical level, can be county or state
+#' @param geo the geogrpahical location
+#' @param test_lag 
+#' 
+#' @export
+export_test_result <- function(test_data, coef_data, export_dir, 
+                               geo_level, geo, test_lag){
+  pred_output_dir = paste("prediction", geo_level, geo, as.character(test_lag), sep="_")
+  write.csv(test_data, paste(export_dir, pred_output_dir , ".csv", sep=""), row.names = FALSE)
+  
+  coef_output_dir = paste("coefs", geo_level, geo, as.character(test_lag), sep="_")
+  write.csv(test_data, paste(export_dir, coef_output_dir , ".csv", sep=""), row.names = FALSE)
+  
+}
+
+
+
+

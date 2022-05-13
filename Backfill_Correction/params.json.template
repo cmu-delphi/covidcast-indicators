@@ -1,0 +1,6 @@
+{
+  "ref_lag": 60,
+  "data_path":
+  "test_dates":["", ""] ,
+  "export_dir": "./receiving",
+}

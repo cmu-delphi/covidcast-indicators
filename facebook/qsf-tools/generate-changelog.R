@@ -172,7 +172,7 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
   # Add an underscore to the unmatched variable names to create a regex pattern
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
-
+  
   # Remap C0_matrix and C0_likert
   if ("C0_matrix" %in% names(matrix_prefixes) && "C0_likert" %in% names(matrix_prefixes)) {
     stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once")
@@ -226,6 +226,17 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     matrix_prefixes["B12b_profile"] <- "B12b_"
   } else if ("B12b_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12b_likert"] <- "B12b_"
+  }
+  
+  # Remap B1b_matrix and B1b_likert
+  if ("B1b_matrix" %in% names(matrix_prefixes) && "B1b_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once")
+  }
+  
+  if ("B1b_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_matrix"] <- "B1b_"
+  } else if ("B1b_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_likert"] <- "B1b_"
   }
   
   # First matrix item match by wave and matrix base question.

@@ -4,10 +4,14 @@ library(dplyr)
 #' Tempt usage
 #' params = list()
 #' customize 
-#' params$reg_lag: reference lag, after x days, the update is considered to be the response
+#' params$ref_lag: reference lag, after x days, the update is considered to be the response. 60 is a reasonable choice for CHNG outpatient data
 #' params$data_path: link to the input data file
 #' params$testing_window: the testing window used for saving the runtime. Could set it to be 1 if time allows
 #' params$test_dates: list of two elements, the first one is the start date and the second one is the end date
+#' params$training_days: set it to be 270 or larger if you have enough data
+#' params$num_col: the column name for the counts of the numerator, e.g. the number of COVID claims 
+#' params$denom_col: the column name for the counts of the denominator, e.g. the number of total claims
+#' params$geo_level: list("state", "county")
 
 #' Main function for getting backfill corrected estimates
 #' 

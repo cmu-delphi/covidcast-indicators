@@ -46,8 +46,10 @@ else
 	SFTP_POST:=sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER)
 endif
 
+ifneq ("$(wildcard params.json)","")
 ifeq ($(WEIGHTS),$(WEEKLY_WEIGHTS))
 $(error "'weights_in_dir' and 'weekly_weights_in_dir' must be different.")
+endif
 endif
 
 default:

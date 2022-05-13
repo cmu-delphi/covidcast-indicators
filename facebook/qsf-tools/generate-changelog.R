@@ -173,6 +173,16 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
   
+  if ("C0_matrix" %in% names(matrix_prefixes) && "C0_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once")
+  }
+  
+  if ("C0_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_matrix"] <- "C0_"
+  } else if ("C0_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_likert"] <- "C0_"
+  }
+  
   # First matrix item match by wave and matrix base question.
   map_matrix_prefix_to_first_match <- codebook %>% 
     mutate(

@@ -43,7 +43,8 @@ objective <- function(theta, x, prob, ...) {
 #' @param base_pseudo_denum the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
 #' 
-#' @import nlm
+#' @import MASS
+#' @import stats4
 #' @import gurobi
 #' @import Matrix
 #' @import tidyverse

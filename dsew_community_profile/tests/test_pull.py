@@ -4,7 +4,7 @@ from datetime import date, datetime, timedelta
 from itertools import chain
 from typing import Any, Dict, List, Union
 import pandas as pd
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 import numpy as np
 import pytest
 from unittest.mock import patch, Mock
@@ -506,7 +506,7 @@ class TestPull:
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
-        # A signal missing everything, should be left alone.
+        # A signal missing everything, should be dropped since it's all NAs.
         missing_sig3 = sig3[(sig3.timestamp <= "2022-01-05") | (sig3.timestamp >= "2022-01-08")]
 
         sig4 = _set_df_dtypes(pd.DataFrame({
@@ -517,12 +517,33 @@ class TestPull:
             "sample_size": [line(i) for i in range(0, 10)],
             "publish_date": pd.to_datetime("2022-01-10")
         }), dtypes=DTYPES)
-        # A signal missing everything except for one point, should be left alone.
+        # A signal missing everything except for one point, should output a reduced range without NAs.
         missing_sig4 = sig4[(sig4.timestamp <= "2022-01-05") | (sig4.timestamp >= "2022-01-08")]
 
         missing_dfs = [missing_sig1, missing_sig2, missing_sig3, missing_sig4]
         interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): pd.concat(missing_dfs)})
-        expected_dfs = pd.concat([sig1, sig2, sig3, sig4])
+        expected_dfs = pd.concat([sig1, sig2, sig4.loc[9:]])
+        _assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs, index_cols=["geo_id", "timestamp"])
+
+    def test_interpolation_object_type(self):
+        DTYPES = {"geo_id": str, "timestamp": "datetime64[ns]", "val": float, "se": float, "sample_size": float, "publish_date": "datetime64[ns]"}
+        line = lambda x: 3 * x + 5
+
+        sig1 = _set_df_dtypes(pd.DataFrame({
+            "geo_id": "1",
+            "timestamp": pd.date_range("2022-01-01", "2022-01-10"),
+            "val": [line(i) for i in range(2, 12)],
+            "se": [line(i) for i in range(1, 11)],
+            "sample_size": [line(i) for i in range(0, 10)],
+            "publish_date": pd.to_datetime("2022-01-10")
+        }), dtypes=DTYPES)
+        # A linear signal missing two days which should be filled exactly by the linear interpolation.
+        missing_sig1 = sig1[(sig1.timestamp <= "2022-01-05") | (sig1.timestamp >= "2022-01-08")]
+        # set all columns to object type to simulate the miscast we sometimes see when combining dfs
+        missing_sig1 = _set_df_dtypes(missing_sig1, {key: object for key in DTYPES.keys()})
+
+        interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): missing_sig1})
+        expected_dfs = pd.concat([sig1])
         _assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs, index_cols=["geo_id", "timestamp"])
 
     @patch("delphi_dsew_community_profile.pull.INTERP_LENGTH", 2)
@@ -548,6 +569,11 @@ class TestPull:
                 [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}],
                 [{"publish_date": date(2020, 1, 20)}, {"publish_date": date(2020, 1, 19)}, {"publish_date": date(2020, 1, 18)}]
             ),
+            # empty keep list
+            example(
+                [],
+                []
+            )
         ]
         for ex in examples:
             assert extend_listing_for_interp(ex.given, listing) == ex.expected, ex.given

@@ -7,7 +7,7 @@
 ##
 ## Usage:
 ##
-## Rscript generate-changelog.R UMD|CMU path/to/codebook path/to/diff/or/diff/directory path/to/output/changelog [path/to/old/changelog]"
+## Rscript generate-changelog.R UMD|CMU path/to/codebook path/to/diff/or/diff/directory path/to/output/changelog [path/to/old/changelog]
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -46,10 +46,10 @@ generate_changelog <- function(path_to_codebook,
     rowwise() %>%
     mutate(
       # Don't rename items that have been removed. Renaming is based on `new_wave`,
-      # but removed items are nota ctually present in `new_wave`, just the `old_wave`.
+      # but removed items are not actually present in `new_wave`, just the `old_wave`.
       variable_name = patch_item_names(
         variable_name, path_to_rename_map, new_wave, change_type != "Item removed"
-        )
+      )
     )
 
   result <- prepare_matrix_base_questions_for_join(qsf_diff, codebook)
@@ -173,12 +173,83 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
   
+  # Remap C0_matrix and C0_likert
+  if ("C0_matrix" %in% names(matrix_prefixes) && "C0_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once")
+  }
+  
+  if ("C0_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_matrix"] <- "C0_"
+  } else if ("C0_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_likert"] <- "C0_"
+  }
+  
+  # Remap B13_profile and B13_likert
+  if ("B13_profile" %in% names(matrix_prefixes) && "B13_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B13_profile' and 'B13_likert' can be present at once")
+  }
+  
+  if ("B13_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B13_profile"] <- "B13_"
+  } else if ("B13_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B13_likert"] <- "B13_"
+  }
+  
+  # Remap B14_profile and B14_likert
+  if ("B14_profile" %in% names(matrix_prefixes) && "B14_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B14_profile' and 'B14_likert' can be present at once")
+  }
+  
+  if ("B14_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B14_profile"] <- "B14_"
+  } else if ("B14_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B14_likert"] <- "B14_"
+  }
+  
+  # Remap B12a_profile and B12a_likert
+  if ("B12a_profile" %in% names(matrix_prefixes) && "B12a_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B12a_profile' and 'B12a_likert' can be present at once")
+  }
+  
+  if ("B12a_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12a_profile"] <- "B12a_"
+  } else if ("B12a_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12a_likert"] <- "B12a_"
+  }
+  
+  # Remap B12b_profile and B12b_likert
+  if ("B12b_profile" %in% names(matrix_prefixes) && "B12b_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B12b_profile' and 'B12b_likert' can be present at once")
+  }
+  
+  if ("B12b_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12b_profile"] <- "B12b_"
+  } else if ("B12b_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12b_likert"] <- "B12b_"
+  }
+  
+  # Remap B1b_matrix and B1b_likert
+  if ("B1b_matrix" %in% names(matrix_prefixes) && "B1b_likert" %in% names(matrix_prefixes)) {
+    stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once")
+  }
+  
+  if ("B1b_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_matrix"] <- "B1b_"
+  } else if ("B1b_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_likert"] <- "B1b_"
+  }
+  
   # First matrix item match by wave and matrix base question.
   map_matrix_prefix_to_first_match <- codebook %>% 
     mutate(
       join_variable = case_when(
         # Create the basename for matrix items.
-        grepl("_", variable) ~ strsplit(variable, "_") %>% purrr::map_chr(~ .x[1]) %>% paste0("_"),
+        !is.na(matrix_subquestion_text) ~ strsplit(variable, "_") %>%
+          # Get all but last underscore-delimited chunk
+          purrr::map(~ .x[1:(length(.x) - 1)]) %>%
+          # Combine all but the last chunk with underscores.
+          purrr::map(~ paste0(.x, collapse="_") %>% paste0("_")) %>%
+          unlist(),
         TRUE ~ variable
       )
     ) %>%

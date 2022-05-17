@@ -45,6 +45,7 @@ write_contingency_tables <- function(data, params, geo_type, groupby_vars)
     
     file_name <- get_file_name(params, geo_type, groupby_vars)
     msg_df(sprintf("saving contingency table data to %-35s", file_name), data)
+    # Automatically uses gzip compression based on output file name.
     write_csv(data, file.path(params$export_dir, file_name))
 
   } else {
@@ -169,7 +170,8 @@ get_file_name <- function(params, geo_type, groupby_vars) {
   if (!is.null(params$debug) && params$debug) {
     file_name <- paste0("DebugOn-DoNotShare_", file_name)
   }
-  file_name <- paste0(file_name, ".csv")
+  # Always use gzip compression.
+  file_name <- paste0(file_name, ".csv.gz")
   return(file_name)
 }
 

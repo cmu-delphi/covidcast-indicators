@@ -104,7 +104,11 @@ get_qsf_file <- function(path, survey_version,
       # the `RecodeValues` field. Some carried forward choices do not have
       # `RecodeValues` defined and so in that case we don't want to prepend the
       # codes with "x".
-      if (!is.null(recode_values)) {
+      #
+      # This also applies to matrix questions, although they have missing
+      # `RecodeValues`. `RecodeValues` are applied to the answer choices;
+      # subquestions are recoded with `ChoiceDataExportTags`.
+      if (!is.null(recode_values) | question$QuestionType == "Matrix") {
         names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
       }
       # Combine new choices and carried-forward choices
@@ -273,10 +277,10 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
         changed_subquestions <- paste(changed_subquestions, collapse=", ")
       }
       
-      if (length(changed_subquestions) == 0) {
+      if (length(changed_subquestions) == 0 || identical(changed_subquestions, "")) {
         changed_subquestions <- NA
       }
-      changed[[question]] <- changed_subquestions
+      changed[[question]] <- changed_subquestions 
     }
   }
   out <- create_diff_df(unlist(changed), change_type, old_qsf, new_qsf)

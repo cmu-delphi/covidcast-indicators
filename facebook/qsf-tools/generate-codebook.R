@@ -250,8 +250,8 @@ process_qsf <- function(path_to_qsf,
                 matrix_subquestions = matrix_subquestions,	
                 display_logic = display_logic,	
                 response_option_randomization = response_option_randomization,	
-                matrix_subquestion_field_names = matrix_subquestion_field_names)	
-    if (file.exists(path_to_drop_columns)){	
+                matrix_subquestion_field_names = matrix_subquestion_field_names)
+  if (file.exists(path_to_drop_columns)){	
     drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
                           col_types = cols(item = col_character()
                           ))

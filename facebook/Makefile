@@ -172,7 +172,8 @@ $(WEEKLY_WEIGHTS): $(TODAY)
 	sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) || exit 90; \
 	cd -; \
 # Expect weights for last week to be available if more than 3 days after the end of last week and output files for last week have not yet been created.
-	if [[ $(TODAY) -gt (shell date -d "$(LAST_SATURDAY) +3 day" +"%Y-%m-%d") && ! -f $(LAST_SUNDAY)-weekly-weights.done ]]; then \
+	TUESDAY=$(shell date -d "$(LAST_SATURDAY) +3 day" +"%Y-%m-%d"); \
+	if [[ $(TODAY) -gt $$TUESDAY && ! -f $(LAST_SUNDAY)-weekly-weights.done ]]; then \
 	  # Get list of start dates (Sunday) of weekly weights files.
 	  MAX_WEEKLY_WEIGHTED=`$(MAX_WEEKLY_WEIGHTED)`; \
 	  EXPECTED_MAX_WEEKLY_WEIGHTED=$(LAST_SUNDAY); \

@@ -169,73 +169,88 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     qsf_diff %>% distinct(variable_name) %>% pull(),
     codebook %>% distinct(variable) %>% pull()
   )
+  
+  old_wave_vars <- setdiff(
+    qsf_diff %>% filter(change_type != "Item added") %>% distinct(variable_name) %>% pull(),
+    codebook %>% distinct(variable) %>% pull()
+  )
+  new_wave_vars <- setdiff(
+    qsf_diff %>% filter(change_type != "Item removed") %>% distinct(variable_name) %>% pull(),
+    codebook %>% distinct(variable) %>% pull()
+  )
   # Add an underscore to the unmatched variable names to create a regex pattern
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
   
   # Remap C0_matrix and C0_likert
-  if ("C0_matrix" %in% names(matrix_prefixes) && "C0_likert" %in% names(matrix_prefixes)) {
+  if (all(c("C0_matrix", "C0_likert") %in% old_wave_vars) || all(c("C0_matrix", "C0_likert") %in% new_wave_vars)) {
     stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once")
   }
   
   if ("C0_matrix" %in% names(matrix_prefixes)) {
     matrix_prefixes["C0_matrix"] <- "C0_"
-  } else if ("C0_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("C0_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["C0_likert"] <- "C0_"
   }
   
   # Remap B13_profile and B13_likert
-  if ("B13_profile" %in% names(matrix_prefixes) && "B13_likert" %in% names(matrix_prefixes)) {
+  if (all(c("B13_profile", "B13_likert") %in% old_wave_vars) || all(c("B13_profile", "B13_likert") %in% new_wave_vars)) {
     stop("Only one of 'B13_profile' and 'B13_likert' can be present at once")
   }
   
   if ("B13_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B13_profile"] <- "B13_"
-  } else if ("B13_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("B13_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B13_likert"] <- "B13_"
   }
   
   # Remap B14_profile and B14_likert
-  if ("B14_profile" %in% names(matrix_prefixes) && "B14_likert" %in% names(matrix_prefixes)) {
+  if (all(c("B14_profile", "B14_likert") %in% old_wave_vars) || all(c("B14_profile", "B14_likert") %in% new_wave_vars)) {
     stop("Only one of 'B14_profile' and 'B14_likert' can be present at once")
   }
   
   if ("B14_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B14_profile"] <- "B14_"
-  } else if ("B14_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("B14_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B14_likert"] <- "B14_"
   }
   
   # Remap B12a_profile and B12a_likert
-  if ("B12a_profile" %in% names(matrix_prefixes) && "B12a_likert" %in% names(matrix_prefixes)) {
+  if (all(c("B12a_profile", "B12a_likert") %in% old_wave_vars) || all(c("B12a_profile", "B12a_likert") %in% new_wave_vars)) {
     stop("Only one of 'B12a_profile' and 'B12a_likert' can be present at once")
   }
   
   if ("B12a_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12a_profile"] <- "B12a_"
-  } else if ("B12a_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("B12a_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12a_likert"] <- "B12a_"
   }
   
   # Remap B12b_profile and B12b_likert
-  if ("B12b_profile" %in% names(matrix_prefixes) && "B12b_likert" %in% names(matrix_prefixes)) {
+  if (all(c("B12b_profile", "B12b_likert") %in% old_wave_vars) || all(c("B12b_profile", "B12b_likert") %in% new_wave_vars)) {
     stop("Only one of 'B12b_profile' and 'B12b_likert' can be present at once")
   }
   
   if ("B12b_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12b_profile"] <- "B12b_"
-  } else if ("B12b_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("B12b_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12b_likert"] <- "B12b_"
   }
   
   # Remap B1b_matrix and B1b_likert
-  if ("B1b_matrix" %in% names(matrix_prefixes) && "B1b_likert" %in% names(matrix_prefixes)) {
+  if (all(c("B1b_matrix", "B1b_likert") %in% old_wave_vars) || all(c("B1b_matrix", "B1b_likert") %in% new_wave_vars)) {
     stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once")
   }
   
   if ("B1b_matrix" %in% names(matrix_prefixes)) {
     matrix_prefixes["B1b_matrix"] <- "B1b_"
-  } else if ("B1b_likert" %in% names(matrix_prefixes)) {
+  }
+  if ("B1b_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B1b_likert"] <- "B1b_"
   }
   
@@ -335,6 +350,42 @@ make_changelog_from_codebook_and_diff <- function(qsf_diff, codebook, vars_not_i
       old_matrix_subquestion_text = case_when(
         variable_name %in% vars_not_in_codebook ~ NA_character_,
         TRUE ~ old_matrix_subquestion_text
+      )
+    ) %>%
+    # When an item was added, all `old_` fields should be empty; when an item
+    # was removed, all `new_` fields should be empty.
+    mutate(
+      old_question_text = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_question_text
+      ),
+      old_matrix_subquestion_text = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_matrix_subquestion_text
+      ),
+      old_response_options = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_response_options
+      ),
+      old_display_logic = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_display_logic
+      ),
+      new_question_text = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_question_text
+      ),
+      new_matrix_subquestion_text = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_matrix_subquestion_text
+      ),
+      new_response_options = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_response_options
+      ),
+      new_display_logic = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_display_logic
       )
     )
   

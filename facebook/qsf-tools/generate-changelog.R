@@ -67,7 +67,7 @@ generate_changelog <- function(path_to_codebook,
 get_codebook <- function(path_to_codebook) {
   codebook <- read_csv(path_to_codebook, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
     rename(question_text = question, matrix_subquestion_text = matrix_subquestion) %>%
     select(
@@ -269,9 +269,9 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
       )
     ) %>%
     filter(join_variable %in% matrix_prefixes) %>%
-    group_by(wave, join_variable) %>%
+    group_by(version, join_variable) %>%
     slice_head() %>%
-    select(wave, variable, join_variable)
+    select(version, variable, join_variable)
   
   # Add the regex patterns onto the diff.
   qsf_diff <- qsf_diff %>%
@@ -285,13 +285,13 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
       map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
         paste("new", column_names, sep = "_")
       }),
-      by=c("new_wave" = "new_wave", "join_variable"="new_join_variable")
+      by=c("new_wave" = "new_version", "join_variable"="new_join_variable")
     ) %>%
     left_join(
       map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
         paste("old", column_names, sep = "_")
       }),
-      by=c("old_wave" = "old_wave", "join_variable"="old_join_variable")
+      by=c("old_wave" = "old_version", "join_variable"="old_join_variable")
     ) %>%
     rename(
       join_variable_new_wave = new_variable,
@@ -315,14 +315,14 @@ make_changelog_from_codebook_and_diff <- function(qsf_diff, codebook, vars_not_i
       codebook %>% rename_with(function(column_names) {
         paste("new", column_names, sep = "_")
       }),
-      by=c("new_wave" = "new_wave", "join_variable_new_wave" = "new_variable")
+      by=c("new_wave" = "new_version", "join_variable_new_wave" = "new_variable")
     ) %>%
     # Add info about previous version of question
     left_join(
       codebook %>% rename_with(function(column_names) {
         paste("old", column_names, sep = "_")
       }),
-      by=c("old_wave" = "old_wave", "join_variable_old_wave" = "old_variable")
+      by=c("old_wave" = "old_version", "join_variable_old_wave" = "old_variable")
     ) %>%
     select(
       new_wave,

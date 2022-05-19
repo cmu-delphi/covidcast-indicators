@@ -60,7 +60,7 @@ generate_changelog <- function(path_to_codebook,
   changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
   check_missing_rationales(changelog)
   
-  write_excel_csv(changelog, path_to_changelog, quote="needed")
+  write_excel_csv(changelog %>% rename(new_version=new_wave, old_version=old_wave), path_to_changelog, quote="needed")
 }
 
 # Read codebook from path. Drop fields we don't use in the changelog.

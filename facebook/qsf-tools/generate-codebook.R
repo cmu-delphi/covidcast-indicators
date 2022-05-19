@@ -402,7 +402,7 @@ process_qsf <- function(path_to_qsf,
     )
   }
   
-  return(qdf)
+  return(qdf %>% rename(version = wave))
 }
 
 #' Append the parsed and formatted info from the QSF to the existing codebook
@@ -416,7 +416,7 @@ add_qdf_to_codebook <- function(qdf,
                                 survey_version,
                                 static_fields_file="static_microdata_fields.csv") {
   path_to_static_fields <- localize_static_filepath(static_fields_file, survey_version)
-  qdf_wave <- unique(qdf$wave)
+  qdf_wave <- unique(qdf$version)
   
   if (!file.exists(path_to_codebook)) {
     # Create an empty df with the right column names and order
@@ -424,7 +424,7 @@ add_qdf_to_codebook <- function(qdf,
   } else {
     codebook <- read_csv(path_to_codebook, col_types = cols(
       .default = col_character(),
-      wave = col_double(),
+      version = col_double(),
       variable = col_character(),
       replaces = col_character(),
       description = col_character(),
@@ -436,9 +436,9 @@ add_qdf_to_codebook <- function(qdf,
     ))
   }
   
-  if (qdf_wave %in% codebook$wave) {
+  if (qdf_wave %in% codebook$version) {
     warning(sprintf("wave %s already added to codebook. removing existing rows and replacing with newer data", qdf_wave))
-    codebook <- codebook %>% filter(wave != qdf_wave)
+    codebook <- codebook %>% filter(version != qdf_wave)
   }
   
   # Using rbind here to raise an error if columns differ between the existing
@@ -446,7 +446,7 @@ add_qdf_to_codebook <- function(qdf,
   # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.
   codebook <- rbind(codebook, qdf) %>%
     add_static_fields(qdf_wave, survey_version, path_to_static_fields) %>% 
-    arrange(!is.na(.data$question_type), variable, wave)
+    arrange(!is.na(.data$question_type), variable, version)
   
   ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) & codebook$replaces != "none")
   if ( length(ii_replacing_DNE) > 0 ) {
@@ -476,15 +476,15 @@ add_static_fields <- function(codebook,
   if (survey_version == "CMU") {
     codebook <- filter(
       codebook,
-      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
-      !(variable %in% c("wave", "UserLanguage", "fips") & wave < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
-      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
+      !(variable == "module" & version < 11), # module field is only available for wave >= 11
+      !(variable %in% c("wave", "UserLanguage", "fips") & version < 4), # wave, UserLangauge, and fips fields are only available for wave >= 4
+      !(variable == "w12_treatment" & version != 12.5) # experimental arm field is only available for wave == 12.5
     )
   } else if (survey_version == "UMD") {
     codebook <- filter(
       codebook,
-      !(variable == "module" & wave < 11), # module field is only available for wave >= 11
-      !(variable == "w12_treatment" & wave != 12.5) # experimental arm field is only available for wave == 12.5
+      !(variable == "module" & version < 11), # module field is only available for wave >= 11
+      !(variable == "w12_treatment" & version != 12.5) # experimental arm field is only available for wave == 12.5
     )
   }
   return(codebook)
@@ -507,8 +507,8 @@ get_static_fields <- function(wave,
                                              question_type = col_character(),
                                              response_option_randomization = col_character()
                             )) %>%
-    mutate(wave = wave) %>% 
-    select(wave, everything())
+    mutate(version = wave) %>%
+    select(version, everything())
   
   return(static_fields)
 }

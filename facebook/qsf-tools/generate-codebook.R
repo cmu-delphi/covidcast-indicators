@@ -441,6 +441,15 @@ add_qdf_to_codebook <- function(qdf,
     codebook <- codebook %>% filter(version != qdf_wave)
   }
   
+  if (survey_version == "UMD") {
+    if ("replaces" %in% names(codebook)) {
+      codebook <- codebook %>% select(-replaces)
+    }
+    if ("replaces" %in% names(qdf)) {
+      qdf <- qdf %>% select(-replaces)
+    }
+  }
+
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
   # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.

@@ -408,7 +408,7 @@ def as_cached_filename(params, config):
 def fetch_listing(params):
     """Generate the list of report files to process."""
     export_start_date = params['indicator'].get(
-        'export_start_date', datetime.datetime.fromtimestamp(0).date()
+        'export_start_date', datetime.datetime.utcfromtimestamp(0).date()
     )
 
     listing = requests.get(DOWNLOAD_LISTING).json()['metadata']['attachments']

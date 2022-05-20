@@ -121,17 +121,26 @@ process_qsf <- function(path_to_qsf,
     }	
   )	
   
-  # get the "answers". These are answer choices for matrix items, and missing for non-matrix items.	
+  # get the "answers". These are answer choices for matrix items, and missing for non-matrix items.
   matrix_answers <- displayed_questions %>%	
     map(~ .x$Payload$Answers) %>%	
-    map(~ map(.x, "Display"))	
+    map(~ map(.x, "Display"))
+  # Get index to reattempt any containing only NULLs with a different format.
+  ii_nulls <- matrix_answers %>%
+    map(function(.x) {
+      if (length(.x) == 0) {
+        return(FALSE)
+      } else {
+        all(map_lgl(.x, ~ is.null(.x)))
+      }
+    }) %>% unlist() %>% which()
   
   # Swap matrix answer choices into `choices` and matrix subquestion text into another variable	
   ii_matrix <- which(qtype == "Matrix")	
   matrix_subquestions <- rep(list(list()), length(choices))	
   matrix_subquestions[ii_matrix] <- choices[ii_matrix]	
-  choices[ii_matrix] <- matrix_answers[ii_matrix]	
-  
+  choices[ii_matrix] <- matrix_answers[ii_matrix]
+
   # Recode response options if overriding Qualtrics auto-assigned coding.	
   ii_recode <- recode_map %>%	
     map(~ !is.null(.x)) %>% 	
@@ -140,6 +149,11 @@ process_qsf <- function(path_to_qsf,
   choices[ii_recode] <- map2(.x=choices[ii_recode], .y=recode_map[ii_recode],	
                              ~ setNames(.x, .y[names(.x)])	
   )	
+  
+  # Reattempt matrix choices containing only NULLs with a different format _after_ recoding.
+  choices[ii_nulls] <- displayed_questions[ii_nulls] %>%	
+    map(~ .x$Payload$Answers) %>%	
+    map(~ map(.x, ~ map(.x, "Display")))
   
   # Get matrix subquestion field names as reported in microdata. NULL if not	
   # defined (not a Matrix question); FALSE if not set; otherwise a list	
@@ -315,8 +329,16 @@ process_qsf <- function(path_to_qsf,
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix") %>%	
     select(-matrix_subquestion_field_names)
+  
+  has_resp_by_subq <- qdf %>%	
+    filter(question_type == "Matrix") %>%
+    pull(response_options) %>%
+    map_lgl(~ all(map_lgl(.x, ~ inherits(.x, "list"))) &&
+              !identical(.x, list()))
+  
   matrix_items <- qdf %>%	
-    filter(question_type == "Matrix") %>% 	
+    filter(question_type == "Matrix") %>%
+    filter(!has_resp_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
       tibble(variable = unlist(matrix_subquestion_field_names),	
@@ -332,6 +354,27 @@ process_qsf <- function(path_to_qsf,
       )) %>% 
     select(new) %>% 
     unnest(new)
+  
+  matrix_items_resp_by_subq <- qdf %>%	
+    filter(question_type == "Matrix") %>%
+    filter(has_resp_by_subq) %>%
+    rowwise() %>% 	
+    mutate(new = list(	
+      tibble(variable = unlist(matrix_subquestion_field_names),	
+             question = question,	
+             matrix_subquestion = unlist(matrix_subquestions),	
+             question_type = question_type,	
+             response_option_randomization = ifelse(	
+               response_option_randomization == "randomized", "none", response_option_randomization),	
+             description = description,	
+             response_options = map(response_options, ~ list(.x)),
+             display_logic = display_logic,
+             respondent_group = respondent_group)
+    )) %>% 
+    select(new) %>% 
+    unnest(new)
+  
+  matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq)
   
   # Custom matrix formatting
   if (survey_version == "CMU") {

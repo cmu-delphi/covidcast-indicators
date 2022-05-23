@@ -31,10 +31,8 @@ generate_changelog <- function(path_to_codebook,
   # waves, plus a description of what changed and why.
   qsf_diff <- get_diff(path_to_diff)
   
-  if (!("notes" %in% names(qsf_diff))) {
-    if (is.null(path_to_old_changelog)) {
-      stop("rationales must be provided either in the diff or via an old version of the changelog")
-    }
+  if (!("notes" %in% names(qsf_diff)) && is.null(path_to_old_changelog)) {
+    warning("rationales must be provided either in the diff or via an old version of the changelog")
     qsf_diff$notes <- NA_character_
   }
   
@@ -86,11 +84,40 @@ get_diff <- function(path_to_diff) {
     csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
     qsf_diff <- list()
     for (csv in csvs) {
-      qsf_diff[[csv]] <- read_csv(csv, col_types = cols(
+      curr_diff <- read_csv(csv, col_types = cols(
         .default = col_character(),
         new_wave = col_double(),
         old_wave = col_double()
       ))
+
+      old_wave_vars <- curr_diff %>%
+        filter(change_type != "Item added") %>%
+        distinct(item) %>%
+        pull()
+      new_wave_vars <- curr_diff %>%
+        filter(change_type != "Item removed") %>%
+        distinct(item) %>%
+        pull()
+      if (all(c("C0_matrix", "C0_likert") %in% old_wave_vars) || all(c("C0_matrix", "C0_likert") %in% new_wave_vars)) {
+        stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B13_profile", "B13_likert") %in% old_wave_vars) || all(c("B13_profile", "B13_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B13_profile' and 'B13_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B14_profile", "B14_likert") %in% old_wave_vars) || all(c("B14_profile", "B14_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B14_profile' and 'B14_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B12a_profile", "B12a_likert") %in% old_wave_vars) || all(c("B12a_profile", "B12a_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B12a_profile' and 'B12a_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B12b_profile", "B12b_likert") %in% old_wave_vars) || all(c("B12b_profile", "B12b_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B12b_profile' and 'B12b_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B1b_matrix", "B1b_likert") %in% old_wave_vars) || all(c("B1b_matrix", "B1b_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once in file ", csv)
+      }
+
+      qsf_diff[[csv]] <- curr_diff
     }
     qsf_diff <- purrr::reduce(qsf_diff, rbind) %>%
       rename(variable_name = item) %>%
@@ -170,33 +197,16 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     codebook %>% distinct(variable) %>% pull()
   )
   
-  old_wave_vars <- setdiff(
-    qsf_diff %>% filter(change_type != "Item added") %>% distinct(variable_name) %>% pull(),
-    codebook %>% distinct(variable) %>% pull()
-  )
-  new_wave_vars <- setdiff(
-    qsf_diff %>% filter(change_type != "Item removed") %>% distinct(variable_name) %>% pull(),
-    codebook %>% distinct(variable) %>% pull()
-  )
   # Add an underscore to the unmatched variable names to create a regex pattern
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
-  
-  # Remap C0_matrix and C0_likert
-  if (all(c("C0_matrix", "C0_likert") %in% old_wave_vars) || all(c("C0_matrix", "C0_likert") %in% new_wave_vars)) {
-    stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once")
-  }
-  
+
+  # A subset of UMD variables need manual mapping.
   if ("C0_matrix" %in% names(matrix_prefixes)) {
     matrix_prefixes["C0_matrix"] <- "C0_"
   }
   if ("C0_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["C0_likert"] <- "C0_"
-  }
-  
-  # Remap B13_profile and B13_likert
-  if (all(c("B13_profile", "B13_likert") %in% old_wave_vars) || all(c("B13_profile", "B13_likert") %in% new_wave_vars)) {
-    stop("Only one of 'B13_profile' and 'B13_likert' can be present at once")
   }
   
   if ("B13_profile" %in% names(matrix_prefixes)) {
@@ -206,21 +216,11 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     matrix_prefixes["B13_likert"] <- "B13_"
   }
   
-  # Remap B14_profile and B14_likert
-  if (all(c("B14_profile", "B14_likert") %in% old_wave_vars) || all(c("B14_profile", "B14_likert") %in% new_wave_vars)) {
-    stop("Only one of 'B14_profile' and 'B14_likert' can be present at once")
-  }
-  
   if ("B14_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B14_profile"] <- "B14_"
   }
   if ("B14_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B14_likert"] <- "B14_"
-  }
-  
-  # Remap B12a_profile and B12a_likert
-  if (all(c("B12a_profile", "B12a_likert") %in% old_wave_vars) || all(c("B12a_profile", "B12a_likert") %in% new_wave_vars)) {
-    stop("Only one of 'B12a_profile' and 'B12a_likert' can be present at once")
   }
   
   if ("B12a_profile" %in% names(matrix_prefixes)) {
@@ -230,21 +230,11 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     matrix_prefixes["B12a_likert"] <- "B12a_"
   }
   
-  # Remap B12b_profile and B12b_likert
-  if (all(c("B12b_profile", "B12b_likert") %in% old_wave_vars) || all(c("B12b_profile", "B12b_likert") %in% new_wave_vars)) {
-    stop("Only one of 'B12b_profile' and 'B12b_likert' can be present at once")
-  }
-  
   if ("B12b_profile" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12b_profile"] <- "B12b_"
   }
   if ("B12b_likert" %in% names(matrix_prefixes)) {
     matrix_prefixes["B12b_likert"] <- "B12b_"
-  }
-  
-  # Remap B1b_matrix and B1b_likert
-  if (all(c("B1b_matrix", "B1b_likert") %in% old_wave_vars) || all(c("B1b_matrix", "B1b_likert") %in% new_wave_vars)) {
-    stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once")
   }
   
   if ("B1b_matrix" %in% names(matrix_prefixes)) {

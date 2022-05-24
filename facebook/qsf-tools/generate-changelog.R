@@ -75,7 +75,7 @@ get_codebook <- function(path_to_codebook) {
   
   return(codebook)
 }
-  
+
 # Try to load `path_to_diff`. Check if it is a single CSV or a directory
 # containing a set of CSVs.
 get_diff <- function(path_to_diff) {
@@ -196,7 +196,7 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     qsf_diff %>% distinct(variable_name) %>% pull(),
     codebook %>% distinct(variable) %>% pull()
   )
-  
+
   # Add an underscore to the unmatched variable names to create a regex pattern
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
@@ -292,7 +292,7 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
       join_variable_old_wave = coalesce(join_variable_old_wave, variable_name)
     ) %>%
     select(-join_variable)
-  
+
   return(list("diff" = qsf_diff, "vars_not_in_codebook" = vars_not_in_codebook))
 }
 

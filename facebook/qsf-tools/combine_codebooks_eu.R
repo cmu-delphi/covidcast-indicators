@@ -6,7 +6,7 @@
 ##
 ## Usage:
 ##
-## Rscript combine_codebooks_eu.R.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
+## Rscript combine_codebooks_eu.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
 
 suppressPackageStartupMessages({
   library(tidyverse)

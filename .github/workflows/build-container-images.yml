@@ -2,7 +2,7 @@ name: Build indicator container images and upload to registry
 
 on:
   push:
-    branches: [ main, prod, krivard/ctis-ww-makefile ] # TODO Remove 'krivard...' branch after testing.
+    branches: [ main, prod, krivard/ctis-ww-makefile ]
 
 jobs:
   build:

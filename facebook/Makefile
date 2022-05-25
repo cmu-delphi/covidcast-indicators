@@ -7,6 +7,7 @@ ONEWEEK:=$(shell date --date "$(TODAY) -7 day" +"%Y-%m-%d")
 THREEWEEK:=$(shell date --date "$(TODAY) -21 day" +"%Y-%m-%d")
 LAST_SATURDAY:=$(shell date -d "last Saturday" +"%Y-%m-%d")
 LAST_SUNDAY:=$(shell date -d "$(LAST_SATURDAY) -6 day" +"%Y-%m-%d")
+TUESDAY:=$(shell date -d "$(LAST_SATURDAY) +3 day" +"%Y-%m-%d")
 
 MESSAGES:="messages/$(TODAY).messages"
 
@@ -46,6 +47,12 @@ else
 	SFTP_POST:=sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER)
 endif
 
+ifneq ("$(wildcard params.json)","")
+ifeq ($(WEIGHTS),$(WEEKLY_WEIGHTS))
+$(error "'weights_in_dir' and 'weekly_weights_in_dir' must be different.")
+endif
+endif
+
 default:
 	@echo No default implemented yet
 
@@ -53,18 +60,22 @@ scratch:
 	mkdir scratch
 	rm -rf scratch/*
 
-tidy%: receiving
-	rm -rf tidy$*/$(RECEIVING)
-	rm -rf tidy$*/$(INDIVIDUAL)
-	rm -rf tidy$*/$(INDIVIDUAL_RACEETH)
-	rm -f tidy$*/params.json
-	mkdir -p tidy$* tidy$*/$(RECEIVING) tidy$*/$(INDIVIDUAL) tidy$*/$(INDIVIDUAL_RACEETH)
-	cp params.json tidy$*/
-	mv $(RECEIVING)/*.csv tidy$*/$(RECEIVING)
-	mv $(INDIVIDUAL)/*.csv* tidy$*/$(INDIVIDUAL)
-	mv $(INDIVIDUAL_RACEETH)/*.csv* tidy$*/$(INDIVIDUAL_RACEETH)
-	tar -czf scratch/tidy$*-`date +"%Y-%m-%d-%H%M%S"`.tgz --exclude='tidy*-*.tgz' tidy$*
-	mv scratch/*.tgz tidy$*/
+$(INDIVIDUAL) $(INDIVIDUAL_RACEETH):
+	mkdir $@
+
+tidy_%: receiving
+	rm -rf $@/$(RECEIVING)
+	rm -rf $@/$(INDIVIDUAL)
+	rm -rf $@/$(INDIVIDUAL_RACEETH)
+	rm -f $@/params.json
+	mkdir -p $@ $@/$(RECEIVING) $@/$(INDIVIDUAL) $@/$(INDIVIDUAL_RACEETH)
+	cp params.json $@/
+	# Check for _any_ matching files using https://stackoverflow.com/a/6364244/14401472
+	if compgen -G "$(RECEIVING)/*.csv" > /dev/null; then mv $(RECEIVING)/*.csv $@/$(RECEIVING); fi
+	mv $(INDIVIDUAL)/*.csv* $@/$(INDIVIDUAL)
+	mv $(INDIVIDUAL_RACEETH)/*.csv* $@/$(INDIVIDUAL_RACEETH)
+	tar -czf scratch/$@-`date +"%Y-%m-%d-%H%M%S"`.tgz --exclude='tidy*-*.tgz' --exclude='*.done' $@
+	mv scratch/*.tgz $@/
 
 clean:
 	rm -f $(RECEIVING)/*.csv $(INDIVIDUAL)/*.csv $(INDIVIDUAL_RACEETH)/*.csv $(CIDS)/*.csv $(CIDS_EXP)/*.csv
@@ -150,7 +161,7 @@ $(WEIGHTS): $(TODAY)
 	fi
 
 $(WEEKLY_WEIGHTS): $(TODAY)
-	# This runs every day as a dependency of `pipeline`. A pipeline run is triggered when new weekly weights files are available.
+# This runs every day as a dependency of `pipeline`. A pipeline run is triggered when new weekly weights files are available.
 	[ -f $(WEEKLY_WEIGHTS) ] || mkdir -p $(WEEKLY_WEIGHTS)
 	cd "$(WEEKLY_WEIGHTS)"; \
 	BATCH="cd fb-interchange/cmu_respondent_ww_weights\nls -1"; \
@@ -162,31 +173,25 @@ $(WEEKLY_WEIGHTS): $(TODAY)
 	done; \
 	sshpass -p $(DELPHI_SURVEY_SFTP_PASSWORD) sftp $(SFTP_OPTIONS) -b <(echo -e "$${BATCH}") -P 2222 $(DELPHI_SURVEY_SFTP_USER) || exit 90; \
 	cd -; \
-	# Expect weights for last week to be available if more than 3 days after the end of last week and output files for last week have not yet been created.
-	if [[ $(TODAY) -gt (shell date -d "$(LAST_SATURDAY) +3 day" +"%Y-%m-%d") && -f $(LAST_SUNDAY)-weekly-weights.done ]]; then \
-	  # Get list of start dates (Sunday) of weekly weights files.
-	  MAX_WEEKLY_WEIGHTED=`$(MAX_WEEKLY_WEIGHTED)`; \
-	  EXPECTED_MAX_WEEKLY_WEIGHTED=$(LAST_SUNDAY); \
-	  if [[ $$EXPECTED_MAX_WEEKLY_WEIGHTED -gt $$MAX_WEEKLY_WEIGHTED ]]; then \
-	    MSG="Expected most recent weekly weights file to start on: $$EXPECTED_MAX_WEEKLY_WEIGHTED; Actual most recent file starts on: $$MAX_WEEKLY_WEIGHTED"; \
-	    echo "WARNING: $${MSG}" >> $(MESSAGES); \
-	  fi
-	fi
-	# If any new files are downloaded, run weekly weights pipeline for last week.
-	if [[ (wc -w <<< $${NEW}) -gt 0 ]]; then \
-	  # The earliest new weekly weights file should be for last week.
-	  MIN_NEW_WEEKLY_WEIGHTED=grep map <<< $${NEW} | head -1 | sed 's/_.*//;s/-//g;'
-	  EXPECTED_NEW_WEEKLY_WEIGHTED=$(LAST_SUNDAY); \
-	  if [[ $$EXPECTED_NEW_WEEKLY_WEIGHTED -ne $$MIN_NEW_WEEKLY_WEIGHTED ]]; then \
-		   MSG="Expected new weekly weights file to start on: $$EXPECTED_NEW_WEEKLY_WEIGHTED; Actual new file starts on: $$MIN_NEW_WEEKLY_WEIGHTED"; \
-		   echo "WARNING: $${MSG}" >> $(MESSAGES); \
-	  fi
-	  # Save existing params file from normal daily run.
-	  if [ -f params.json ]; then cp params.json params.daily.json; fi
-	  $(MAKE) weekly-weights-pipeline
-	  rm -f params.json
-	  # Restore params file from normal daily run.
-	  mv params.daily.json params.json
+	touch -d $(YESTERDAY) $(WEEKLY_WEIGHTS); \
+	EXPECTED_WEEKLY_WEIGHTED=`date --date='$(LAST_SUNDAY)' +'%Y%m%d'`; \
+	MIN_NEW_WEEKLY_WEIGHTED=`grep map <<< $${NEW} | head -1 | sed 's/_.*//;s/-//g;'`; \
+	if [[ `wc -w <<< $${NEW}` -gt 0 ]] && [[ $$MIN_NEW_WEEKLY_WEIGHTED -ne $$EXPECTED_WEEKLY_WEIGHTED ]]; then \
+	  MSG="Expected new weekly weights files to start on: $$EXPECTED_WEEKLY_WEIGHTED; Actual new files starts on: $$MIN_NEW_WEEKLY_WEIGHTED"; \
+	  echo "WARNING: $${MSG}" >> $(MESSAGES); \
+	fi; \
+	MAX_WEEKLY_WEIGHTED=`$(MAX_WEEKLY_WEIGHTED)`; \
+	if [[ `date --date='$(TODAY)' +'%Y%m%d'` -gt `date --date='$(TUESDAY)' +'%Y%m%d'` ]] && [[ $$MAX_WEEKLY_WEIGHTED -lt $$EXPECTED_WEEKLY_WEIGHTED ]]; then \
+	  MSG="Weekly weights are old; Expected most recent weekly weights file to start on: $$EXPECTED_WEEKLY_WEIGHTED; Actual most recent file starts on: $$MAX_WEEKLY_WEIGHTED"; \
+	  echo "WARNING: $${MSG}" >> $(MESSAGES); \
+	fi; \
+	if [[ ! -f tidy_weekly/$(LAST_SUNDAY)-weekly-weights.done ]] && [[ $$MAX_WEEKLY_WEIGHTED -eq $$EXPECTED_WEEKLY_WEIGHTED ]]; then \
+	  if [ -f params.json ]; then cp params.json params.daily.json; fi; \
+	  $(MAKE) weekly-weights-pipeline; \
+	  if [ -f params.daily.json ]; then \
+		cp params.daily.json params.json; \
+		rm -f params.daily.json; \
+	  fi; \
 	fi
 
 dev: delphiFacebook_1.0.tar.gz
@@ -202,17 +207,17 @@ run-R: $(CIDS) $(CIDS_EXP)
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 
-pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-experimental-cids post-individual post-individual-raceeth post-done tidy $(WEEKLY_WEIGHTS)
+pipeline: scratch init-qualtrics params.json $(WEIGHTS) run-R post-cids post-experimental-cids post-individual post-individual-raceeth post-done tidy_daily $(WEEKLY_WEIGHTS)
 	grep $(TODAY) params.json
 	[ -f $(YESTERDAY) ] && rm $(YESTERDAY) || true
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)pipeline complete" >> $(MESSAGES)
 	chmod o+w $(MESSAGES)
 
-weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json run-R post-individual post-individual-raceeth tidy-weekly-weights
+weekly-weights-pipeline: scratch init-qualtrics params.weekly-weights.json run-R post-individual post-individual-raceeth tidy_weekly
 	touch $@
 	echo "SUCCESS: $(DRY_MESSAGE)completed weekly weights pipeline" >> $(MESSAGES)
-	touch $(LAST_SUNDAY)-weekly-weights.done
+	touch tidy_weekly/$(LAST_SUNDAY)-weekly-weights.done
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiFacebook")'

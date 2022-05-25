@@ -19,7 +19,7 @@ pipeline {
     stages {
         stage('Build and Package') {
             when {
-                branch "krivard/ctis-ww-makefile"; // TODO Switch back to 'main' after testing.
+                branch "main";
             }
             steps {
                 script {
@@ -34,7 +34,7 @@ pipeline {
         }
         stage('Deploy staging') {
             when {
-                branch "krivard/ctis-ww-makefile"; // TODO Switch back to 'main' after testing.
+                branch "main";
             }
             steps {
                 script {

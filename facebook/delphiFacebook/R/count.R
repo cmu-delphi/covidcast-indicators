@@ -3,10 +3,16 @@
 #' @importFrom tibble tribble
 get_hh_count_indicators <- function() {
   ind <- tribble(
-    # TODO: add back all counts indicators after testing
     ~name, ~var_weight, ~metric, ~smooth_days, ~compute_fn, ~post_fn,
     "raw_cli", "weight_unif", "hh_p_cli", 0, compute_count_response, jeffreys_count,
-    "smoothed_cli", "weight_unif", "hh_p_cli", 6, compute_count_response, jeffreys_count
+    "raw_ili", "weight_unif", "hh_p_ili", 0, compute_count_response, jeffreys_count,
+    "raw_wcli", "weight", "hh_p_cli", 0, compute_count_response, jeffreys_count,
+    "raw_wili", "weight", "hh_p_ili", 0, compute_count_response, jeffreys_count,
+
+    "smoothed_cli", "weight_unif", "hh_p_cli", 6, compute_count_response, jeffreys_count,
+    "smoothed_ili", "weight_unif", "hh_p_ili", 6, compute_count_response, jeffreys_count,
+    "smoothed_wcli", "weight", "hh_p_cli", 6, compute_count_response, jeffreys_count,
+    "smoothed_wili", "weight", "hh_p_ili", 6, compute_count_response, jeffreys_count
   )
 
   ind$skip_mixing <- FALSE

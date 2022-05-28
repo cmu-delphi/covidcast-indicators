@@ -12,7 +12,7 @@ class Weekday:
     """Class to handle weekday effects."""
 
     @staticmethod
-    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger):
+    def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, lm=10):
         r"""Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
@@ -35,7 +35,7 @@ class Weekday:
 
         # Loop over the available numerator columns and smooth each separately.
         for i in range(nums.shape[1]):
-            result = Weekday._fit(X, scales, npnums[:, i], npdenoms)
+            result = Weekday._fit(X, scales, npnums[:, i], npdenoms, lm)
             if result is None:
                 logger.error("Unable to calculate weekday correction")
             else:
@@ -44,7 +44,7 @@ class Weekday:
         return params
 
     @staticmethod
-    def _fit(X, scales, npnums, npdenoms):
+    def _fit(X, scales, npnums, npdenoms, lm):
         r"""Correct a signal estimated as numerator/denominator for weekday effects.
 
         The ordinary estimate would be numerator_t/denominator_t for each time point
@@ -82,7 +82,7 @@ class Weekday:
         b = cp.Variable((X.shape[1]))
 
         lmbda = cp.Parameter(nonneg=True)
-        lmbda.value = 10  # Hard-coded for now, seems robust to changes
+        lmbda.value = lm  # Hard-coded for now, seems robust to changes
 
         ll = (
             cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms)) -

@@ -1,8 +1,8 @@
-# Quidel Test Indicators
+# Change Flagging System
 
-## Running the Indicator
+## Running the System 
 
-The indicator is run by directly executing the Python module contained in this
+The system is run by directly executing the Python module contained in this
 directory. The safest way to do this is to create a virtual environment,
 installed the common DELPHI tools, and then install the module and its
 dependencies. To do this, run the following code from this directory:
@@ -15,7 +15,10 @@ This command will install the package in editable mode, so you can make changes 
 will automatically propagate to the installed package. 
 
 All of the user-changable parameters are stored in `params.json`. A template is
-included as `params.json.template`. At a minimum, you will need to include a
+included as `params.json.template`. 
+
+
+At a minimum, you will need to include a
 password for the datadrop email account and the email address of the data sender. 
 Note that setting `export_end_date` to an empty string will export data through 
 today (GMT) minus 5 days for COVID Antigen Tests. (It has not been settled for 

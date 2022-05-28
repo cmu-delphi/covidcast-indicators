@@ -4,17 +4,11 @@
     "log_exceptions": false
   },
   "indicator": {
-    "static_file_dir": "./static",
     "input_cache_dir": "./cache",
-    "export_start_date": {"covid_ag": "2020-05-26", "flu_ag": "2020-02-02"},
-    "export_end_date": {"covid_ag": "", "flu_ag": ""},
-    "pull_start_date": {"covid_ag": "2020-05-26", "flu_ag": "2020-05-08"},
-    "pull_end_date": {"covid_ag": "", "flu_ag": ""},
-    "mail_server": "imap.exchange.andrew.cmu.edu",
-    "account": "delphi-datadrop@andrew.cmu.edu",
-    "password": "",
-    "sender": "",
-    "wip_signal": [""],
-    "mode": ""
+    "lags":7,
+    "train":300,
+    "test":100,
+    "valid":1,
+    "windows": [1, 3, 8, 20, 50, 60]
   }
 }

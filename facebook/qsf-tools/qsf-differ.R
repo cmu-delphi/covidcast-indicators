@@ -59,7 +59,8 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path, output_dir,
 get_qsf_file <- function(path, survey_version,
                          keep_items = c("QuestionID", "DataExportTag",
                                         "QuestionText", "QuestionType",
-                                        "Choices", "Answers", "DisplayLogic")
+                                        "Choices", "Answers", "DisplayLogic",
+                                        "InPageDisplayLogic")
 ) {
   wave <- get_wave(path)
   # Read file as json.
@@ -145,6 +146,10 @@ get_qsf_file <- function(path, survey_version,
     # "Description".
     if ("DisplayLogic" %in% names(question)) {
       display_logic <- unlist(question$DisplayLogic)
+      question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
+    }
+    if ("InPageDisplayLogic" %in% names(question)) {
+      display_logic <- unlist(question$InPageDisplayLogic)
       question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
     }
     

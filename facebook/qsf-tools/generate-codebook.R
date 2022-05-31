@@ -199,8 +199,21 @@ process_qsf <- function(path_to_qsf,
 
   # format display logic
   # Not all questions have display logic; if NULL, shown to all respondents within section.
+  # Also check "InPageDisplayLogic". If not null, combine with normal "DisplayLogic".
+  inpage_ii <- displayed_questions %>% 
+    map(~ .x$Payload$InPageDisplayLogic) %>% map_lgl(~ !is.null(.x)) %>% which()
+  inpage_logic <- displayed_questions %>% 
+    map(~ .x$Payload$InPageDisplayLogic)
+  
   display_logic <- displayed_questions %>% 
-    map(~ .x$Payload$DisplayLogic) %>% 
+    map(~ .x$Payload$DisplayLogic)
+  if (display_logic[inpage_ii] %>% map_lgl(~ !is.null(.x)) %>% any()) {
+    stop("At least one question has both 'DisplayLogic' and 'InPageDisplayLogic'.",
+         " 'DisplayLogic' would be overwritten.")
+  }
+  display_logic[inpage_ii] <- inpage_logic[inpage_ii]
+  
+  display_logic <- display_logic %>% 
     map(~ .x$`0`) %>% 
     map(~ paste(
       map(.x, "Conjuction"),

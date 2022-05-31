@@ -264,7 +264,19 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
   
   changed <- list()
   for (question in names) {
-    if ( !identical(old_qsf[[question]][[change_type]], new_qsf[[question]][[change_type]]) ) {
+    old_contents <- old_qsf[[question]][[change_type]]
+    new_contents <- new_qsf[[question]][[change_type]]
+    
+    if (change_type == "DisplayLogic") {
+      # Ignore in-page status.
+      old_contents[["inPage"]] <- "FALSE"
+      new_contents[["inPage"]] <- "FALSE" 
+      
+      # Sort items by name for more robust comparison.
+      old_contents <- old_contents[names(old_contents) %>% sort()]
+      new_contents <- new_contents[names(new_contents) %>% sort()]
+    }
+    if ( !identical(old_contents, new_contents) ) {
       changed_subquestions <- c()
       if (change_type == "Subquestions") {
         subquestion_codes <- unique(

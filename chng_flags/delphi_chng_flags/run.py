@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 
 import random
-
+import time
 import datetime
 import glob
 import pandas as pd
@@ -25,7 +25,6 @@ from .data_transform import (
     weekend_corr,
     ar_method)
 
-from delphi_utils.export import create_export_csv
 
 from .pull import (pull_ar_data,
                    pull_lags_data)
@@ -58,17 +57,17 @@ def run_module(params: Dict[str, Any]):
     n_test = params["indicator"]["n_test"]
     n_valid = params["indicator"]["n_valid"]
 
-    df_num, df_den = pull_lags_data(cache_dir, windows)
-    resid_df, flags_1_df, flags_2_df = pull_csvs(cache_dir, num_lags, num_train)
+    df_num, df_den = pull_lags_data(cache_dir, lags)
+    resid_df, flags_1_df, flags_2_df = pull_csvs(cache_dir, num_lags, n_train)
 
-    export_files = {'resid_list':[],
-                    'flags1_list':[flags_1_df],
-                    'flags2_list':[flags_2_df]}
-    for window in windows:
-        wname = f"{window} days"
+    export_files = {'resid_list': resid_df,
+                    'flags1_list': flags_1_df,
+                    'flags2_list': flags_2_df}
+    for lags in lags:
+        wname = f"{lags} days"
         df_dict = {}
-        df_dict['w_num'] = df_num.query("date==@wname").drop(columns=['date']).set_index('state').T
-        df_dict['w_den'] = df_den.query("date==@wname").drop(columns=['date']).set_index('state').T
+        df_dict['w_num'] = df_num.reset_index().query("lags==@wname").drop(columns=['lags']).set_index('state').T
+        df_dict['w_den'] = df_den.reset_index().query("lags==@wname").drop(columns=['lags']).set_index('state').T
         df_dict['ratio'] = df_dict['w_num'] / df_dict['w_den']
         for key, df in df_dict.items():
             df.columns = df.columns.astype(str)
@@ -78,23 +77,26 @@ def run_module(params: Dict[str, Any]):
             df['end'] = [x.weekday() in [5, 6] for x in list(df.index)]
             states = df.drop(columns=['end', 'day']).columns
             spikes_df, flags = identify_correct_spikes(df.copy())
+            flags = flags.reset_index()
+            flags.columns = ['state', 'date', 'val']
             weekend_df = weekend_corr(spikes_df.copy(), states)
-            weekday_corr = Weekday.calc_adjustment(
-                Weekday.get_params(weekend_df.copy(), None, states, 'date',
-                                   [1, 1e5, 1e10, 1e15], logger, 10), weekend_df.copy(),
-                states, 'date')
-            resid, flags2 = ar_method(weekday_corr.copy(), num_lags, n_train,
-                                     n_test, n_valid, resid_df.query('window==@window and key==@key'))
-            for df in [resid, flags, flags2]:
-                df['window'] = window
+            params = Weekday.get_params(weekend_df.copy(), None, states, 'date',
+                                        [1, 1e5, 1e10, 1e15], 10)
+            weekday_corr = Weekday.calc_adjustment(params
+                                                   , weekend_df.copy(),
+                                                   states, 'date').fillna(0)
+            resid, flags2 = ar_method(weekday_corr.copy(), list(states), num_lags, n_train,
+                                      n_test, n_valid, resid_df.query('lags==@lags and key==@key'))
+            for df, ct in zip([resid, flags, flags2], ['resid_list', 'flags1_list', 'flags2_list']):
+                df['lags'] = lags
                 df['key'] = key
-            export_files['resid_list'] = pd.concat([export_files['resid_list'], resid])
-            export_files['flags1_list'] = pd.concat([export_files['flags1_list'], flags)])
-            export_files['flags2_list'] = pd.concat([export_files['flags2_list'], flags2)])
+                df = df.set_index(['lags', 'key', 'date', 'state'])
+                export_files[ct] = pd.concat([export_files[ct], df])
 
-    export_files['resid_list'].to_csv(f'{cache_dir}/fresid_{n_train}_{num_lags}.csv')
-    export_files['flags1_list'].to_csv(f'{cache_dir}/flag_spike_{n_train}_{num_lags}.csv', 'a')
-    export_files['flags2_list'].to_csv(f'{cache_dir}/flag_ar_{n_train}_{num_lags}.csv', 'a')
+    export_files['flags2_list'] = export_files['flags2_list'].sort_values(by=['sort_prio'])
+    export_files['resid_list'].to_csv(f'{cache_dir}/resid_{n_train}_{num_lags}.csv')
+    export_files['flags1_list'].to_csv(f'{cache_dir}/flag_spike_{n_train}_{num_lags}.csv')
+    export_files['flags2_list'].to_csv(f'{cache_dir}/flag_ar_{n_train}_{num_lags}.csv')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",

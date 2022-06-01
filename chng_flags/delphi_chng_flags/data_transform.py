@@ -83,7 +83,7 @@ def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
     last_sun = 0
     for grp, df2 in df.groupby(['weeknum']):
         if df2.shape[0] == 7:
-            total_counts = df2[state][~df2.day.isin([5, 6])].sum()
+            total_counts = df2[states][~df2.day.isin([5, 6])].sum()
             df.loc[df2.index[df2.day == 5], states] += sat_vcorr * total_counts
             last_sat = sat_vcorr * total_counts
             df.loc[df2.index[df2.day == 6], states] += sun_vcorr * total_counts
@@ -94,7 +94,8 @@ def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
     return df.reset_index().rename(columns={'index': 'date'})
 
 
-def ar_method(df:pd.DataFrame, states:list, num_lags:int, n_train:int, n_test:int, n_valid:int, replace_df:pd.DataFrame) \
+def ar_method(df: pd.DataFrame, states: list, num_lags: int, n_train: int, n_test: int, n_valid: int,
+              replace_df: pd.DataFrame) \
         -> (pd.DataFrame, pd.DataFrame):
     '''This method uses an AR forecaster to predict the values of the current day.
         The parameters to the AR method is num_lags: the number of lags.
@@ -120,21 +121,22 @@ def ar_method(df:pd.DataFrame, states:list, num_lags:int, n_train:int, n_test:in
 
     '''
     dates_covered = []
-    if not replace_df.empty():
-        replace_df = pd.read_csv(files_list[0], index_col=0)
+    valid_day_list = list(df.date[-n_valid:])
+    test_day_list = list(df.date[-n_test - n_valid:-n_valid])
+    curr_day_list = df.date[-n_test - n_valid:][~df.date.isin(dates_covered)]
+
+    if not replace_df.empty:
         replace_df['date'] = pd.to_datetime(replace_df['date'])
         dates_covered = pd.date_range(replace_df.date.min(), replace_df.date.max())
     else:
         replace_df = df.query('date in @curr_day_list')[states + ['date']].set_index('date').stack().reset_index()
         replace_df.columns = ['date', 'state', 'y']
         replace_df['y_pred'] = replace_df['y']
-    valid_day_list = list(df.date[-n_valid:])
-    test_day_list = list(df.date[-n_test - n_valid:-n_valid])
-    curr_day_list = df.date[-n_test - n_valid:][~df.date.isin(dates_covered)]
+
     lags_names = [f'lags_{i}' for i in range(1, num_lags + 1)]
     model_str = f'model ~ ' + '+'.join(lags_names)
 
-    for curr_day in enumerate(curr_day_list):
+    for curr_day in curr_day_list:
         start_train = curr_day - pd.Timedelta(days=n_train)
         all_tmp = df.query("@start_train<=date<=@curr_day")[states]
 
@@ -157,7 +159,6 @@ def ar_method(df:pd.DataFrame, states:list, num_lags:int, n_train:int, n_test:in
 
     resid_valid['cdf'] = resid_valid['resid'].apply(lambda x: (len(resid_all[resid_all < x]) / len(resid_all)))
     resid_valid['sort_prio'] = resid_valid['cdf'].apply(lambda x: x if x < 0.5 else 1 - x)
-    replace_df.to_csv(f'residuals_{n_train}_{num_lags}.csv')  # provides ALL the residuals in current days
     resid_valid.sort_values(by=['sort_prio']).reset_index(drop=True)
 
     return replace_df, resid_valid

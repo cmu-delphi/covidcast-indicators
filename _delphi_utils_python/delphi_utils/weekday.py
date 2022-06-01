@@ -13,13 +13,14 @@ class Weekday:
 
     @staticmethod
     def get_params(data, denominator_col, numerator_cols, date_col, scales, logger, lm=10):
-        r"""Fit weekday correction for each col in numerator_cols.
+        """Fit weekday correction for each col in numerator_cols.
 
         Return a matrix of parameters: the entire vector of betas, for each time
         series column in the data.
+
+        If you want to weekday correction on counts (and not ratios), set denominator_col to None
         """
         tmp = data.reset_index()
-        denoms = tmp.groupby(date_col).sum()[denominator_col]
         nums = tmp.groupby(date_col).sum()[numerator_cols]
 
         # Construct design matrix to have weekday indicator columns and then day
@@ -30,14 +31,20 @@ class Weekday:
         X[np.where(nums.index.dayofweek == 6)[0], :6] = -1
         X[:, 6:] = np.eye(X.shape[0])
 
-        npnums, npdenoms = np.array(nums), np.array(denoms)
+        npnums = np.array(nums)
         params = np.zeros((nums.shape[1], X.shape[1]))
+
+        npdenoms = None
+        if denominator_col != None:
+            denoms = tmp.groupby(date_col).sum()[denominator_col]
+            npdenoms = np.array(denoms)
 
         # Loop over the available numerator columns and smooth each separately.
         for i in range(nums.shape[1]):
             result = Weekday._fit(X, scales, npnums[:, i], npdenoms, lm)
             if result is None:
                 logger.error("Unable to calculate weekday correction")
+                params[i, :] = result
             else:
                 params[i,:] = result
 
@@ -78,6 +85,9 @@ class Weekday:
 
         ll = (numerator * (X*b + log(denominator)) - sum(exp(X*b) + log(denominator)))
                 / num_days
+
+        If you want to weekday correction on counts (and not ratios), remove the denom terms
+        from ll and set npdenoms to None.
         """
         b = cp.Variable((X.shape[1]))
 
@@ -85,9 +95,15 @@ class Weekday:
         lmbda.value = lm  # Hard-coded for now, seems robust to changes
 
         ll = (
-            cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms)) -
-            cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
-        ) / X.shape[0]
+                     cp.matmul(npnums, cp.matmul(X, b)) -
+                     cp.sum(cp.exp(cp.matmul(X, b)))
+             ) / X.shape[0]
+
+        if npdenoms is not None:
+            ll = (
+                         cp.matmul(npnums, cp.matmul(X, b) + np.log(npdenoms)) -
+                         cp.sum(cp.exp(cp.matmul(X, b) + np.log(npdenoms)))
+                 ) / X.shape[0]
         # L-1 Norm of third differences, rewards smoothness
         penalty = lmbda * cp.norm(cp.diff(b[6:], 3), 1) / (X.shape[0] - 2)
         for scale in scales:

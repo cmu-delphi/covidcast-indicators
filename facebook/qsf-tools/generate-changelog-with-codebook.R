@@ -59,7 +59,7 @@ CHANGE_TYPE_MAP <- c(
   question = "Question wording changed",
   display_logic = "Display logic changed",
   response_options = "Answer choices changed",
-  matrix_subquestion = "Matrix subquestions changed",
+  matrix_subquestion = "Matrix subquestion text changed",
   response_option_randomization = "Answer choice order changed",
   respondent_group = "Respondent group changed"
 )
@@ -75,7 +75,7 @@ generate_changelog <- function(path_to_codebook,
     .default = col_character(),
     version = col_double()
   ))
-  browser()
+  
   local_compare_map <- WAVE_COMPARE_MAP[[survey_version]]
   # Add new-old wave mapping columns. Drop unused rows.
   codebook <- codebook_raw %>%
@@ -135,7 +135,7 @@ generate_changelog <- function(path_to_codebook,
   
   ## Find differences.
   result <- list()
-  browser()
+  
   # Any item where x (old fields) does not exist but y does has been "added"
   added_items <- codebook %>%
     filter(
@@ -146,25 +146,16 @@ generate_changelog <- function(path_to_codebook,
   # Process added items
   added_items <- added_items %>%
     mutate(
-      change_type = CHANGE_TYPE_MAP["added"],
-      old_version = map_chr(
-        new_version,
-        ~ ifelse(
-          length(names(local_compare_map[local_compare_map == .x])) == 0,
-          NA_character_,
-          names(local_compare_map[local_compare_map == .x])
-        )
-      ) %>% as.integer()
+      change_type = CHANGE_TYPE_MAP["added"]
     ) %>% 
     select(-x_exists, -y_exists)
-  
   
   combos <- added_items %>%
     filter(question_type == "Matrix") %>%
     distinct(old_version, new_matrix_base_name)
   
   for (i in seq_len(nrow(combos))) {
-    browser()
+
     wave = combos[i,] %>% pull(old_version)
     base_name = combos[i,] %>% pull(new_matrix_base_name)
     tmp <- added_items %>%
@@ -196,36 +187,24 @@ generate_changelog <- function(path_to_codebook,
     }
     added_items <- rbind(added_items, tmp)
   }
-  browser()
+
   result[["added"]] <- added_items
   
   
-  # Any item with missing "new_*" fields has been removed.
+  # Any item where x (old fields) exists but y does not has been "removed"
   removed_items <- codebook %>%
     filter(
-      !is.na(old_question),
-      !is.na(old_display_logic),
-      !is.na(old_response_option_randomization),
-      !is.na(old_respondent_group),
-      is.na(new_question),
-      is.na(new_display_logic),
-      is.na(new_response_option_randomization),
-      is.na(new_respondent_group)
-    ) %>%
+      x_exists & is.na(y_exists)
+    )
+  codebook <- anti_join(codebook, removed_items) %>% 
+    select(-x_exists, -y_exists)
+  
+  # Process removed items.
+  removed_items <- removed_items %>%
     mutate(
       change_type = CHANGE_TYPE_MAP["removed"]
-    )
-  codebook <- codebook %>%
-    filter(
-      !(!is.na(old_question) & 
-          !is.na(old_display_logic) & 
-          !is.na(old_response_option_randomization) & 
-          !is.na(old_respondent_group) & 
-          is.na(new_question) & 
-          is.na(new_display_logic) & 
-          is.na(new_response_option_randomization) & 
-          is.na(new_respondent_group))
-    )
+    ) %>% 
+    select(-x_exists, -y_exists)
   
   combos <- removed_items %>%
     filter(question_type == "Matrix") %>%
@@ -265,8 +244,6 @@ generate_changelog <- function(path_to_codebook,
   }
   
   result[["removed"]] <- removed_items
-  
-  
   
   
   # Do all other comparisons

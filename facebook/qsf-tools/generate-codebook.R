@@ -341,10 +341,10 @@ process_qsf <- function(path_to_qsf,
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix") %>%	
-    mutate(variable_base_name = NA_character_) %>% 
+    mutate(matrix_base_name = NA_character_) %>% 
     select(-matrix_subquestion_field_names)
   
-  has_resp_by_subq <- qdf %>%	
+  has_response_by_subq <- qdf %>%	
     filter(question_type == "Matrix") %>%
     pull(response_options) %>%
     map_lgl(~ all(map_lgl(.x, ~ inherits(.x, "list"))) &&
@@ -352,10 +352,10 @@ process_qsf <- function(path_to_qsf,
   
   matrix_items <- qdf %>%	
     filter(question_type == "Matrix") %>%
-    filter(!has_resp_by_subq) %>%
+    filter(!has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(variable_base_name = variable,
+      tibble(matrix_base_name = variable,
              variable = unlist(matrix_subquestion_field_names),
              question = question,	
              matrix_subquestion = unlist(matrix_subquestions),	
@@ -373,10 +373,10 @@ process_qsf <- function(path_to_qsf,
   
   matrix_items_resp_by_subq <- qdf %>%	
     filter(question_type == "Matrix") %>%
-    filter(has_resp_by_subq) %>%
+    filter(has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(variable_base_name = variable,
+      tibble(matrix_base_name = variable,
              variable = unlist(matrix_subquestion_field_names),	
              question = question,	
              matrix_subquestion = unlist(matrix_subquestions),	
@@ -392,7 +392,7 @@ process_qsf <- function(path_to_qsf,
     unnest(new)
   
   matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq) %>%
-    select(variable, variable_base_name, everything())
+    select(variable, matrix_base_name, everything())
   
   # Custom matrix formatting
   if (survey_version == "CMU") {
@@ -423,7 +423,7 @@ process_qsf <- function(path_to_qsf,
     ) %>% 
     select(wave,
            variable,
-           variable_base_name,
+           matrix_base_name,
            replaces,
            description,
            question,

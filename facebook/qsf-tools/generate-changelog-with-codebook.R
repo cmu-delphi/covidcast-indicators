@@ -71,22 +71,17 @@ generate_changelog <- function(path_to_codebook,
                                survey_version) {
   # Get the codebook. Contains details about each question (text, answer
   # choices, display logic) by wave.
-  codebook <- codebook <- read_csv(path_to_codebook, col_types = cols(
+  codebook_raw <- read_csv(path_to_codebook, col_types = cols(
     .default = col_character(),
     version = col_double()
   ))
-  
+  browser()
   local_compare_map <- WAVE_COMPARE_MAP[[survey_version]]
   # Add new-old wave mapping columns. Drop unused rows.
-  codebook <- codebook %>%
+  codebook <- codebook_raw %>%
     mutate(
       old_version = version,
       new_version = local_compare_map[as.character(version)]
-    ) %>%
-    # If new_version is missing, the survey wavey of that obs doesn't have an
-    # new wave to compare against.
-    filter(
-      !is.na(new_version)
     )
   
   codebook <- full_join(
@@ -95,20 +90,23 @@ generate_changelog <- function(path_to_codebook,
       rename_with(function(cols) {
         map_chr(cols, ~ rename_col(.x, "old"))
       }) %>%
-      select(-replaces),
+      select(-replaces) %>% 
+      mutate(x_exists = TRUE),
     # with new columns
     codebook %>%
       rename_with(function(cols) {
         map_chr(cols, ~ rename_col(.x, "new"))
       }) %>%
-      select(-description, -question_type, -replaces, -old_version, -new_version),
+      select(-replaces, -old_version, -new_version) %>% 
+      mutate(y_exists = TRUE),
     by = c("new_version" = "version", "variable" = "variable")
   ) %>%
-    select(-version) %>%
+    mutate(
+      description = coalesce(description.x, description.y),
+      question_type = coalesce(question_type.x, question_type.y),
+    ) %>% 
+    select(-version, -description.x, -description.y, -question_type.x, -question_type.y) %>%
     rename(variable_name = variable)
-  
-  ## Find differences.
-  result <- list()
   
   # Drop obs where both old and new info is missing -- these are metavariables
   # that we report in the microdata, like "weight" and "StartDate"
@@ -124,18 +122,29 @@ generate_changelog <- function(path_to_codebook,
           is.na(new_respondent_group))
     )
   
-  # Any item with missing "old_*" fields has been added.
-  result[["added"]] <- codebook %>%
+  # Fill in version where missing
+  codebook$new_version <- coalesce(codebook$new_version, map_dbl(codebook$old_version, ~ local_compare_map[as.character(.x)]))
+  codebook$old_version <- coalesce(codebook$old_version, map_dbl(codebook$new_version, ~ get_old_version(.x, local_compare_map) %>% as.double()))
+  
+  # Drop obs where version is not in names or values of the wave mapping (i.e. 12.5)
+  codebook <- codebook %>%
     filter(
-      is.na(old_question),
-      is.na(old_display_logic),
-      is.na(old_response_option_randomization),
-      is.na(old_respondent_group),
-      !is.na(new_question),
-      !is.na(new_display_logic),
-      !is.na(new_response_option_randomization),
-      !is.na(new_respondent_group)
-    ) %>%
+      new_version %in% c(local_compare_map, names(local_compare_map)),
+      old_version %in% c(local_compare_map, names(local_compare_map))
+    )
+  
+  ## Find differences.
+  result <- list()
+  browser()
+  # Any item where x (old fields) does not exist but y does has been "added"
+  added_items <- codebook %>%
+    filter(
+      is.na(x_exists) & y_exists
+    )
+  codebook <- anti_join(codebook, added_items)
+  
+  # Process added items
+  added_items <- added_items %>%
     mutate(
       change_type = CHANGE_TYPE_MAP["added"],
       old_version = map_chr(
@@ -147,21 +156,52 @@ generate_changelog <- function(path_to_codebook,
         )
       ) %>% as.integer()
     ) %>% 
-    filter(!is.na(old_version))
-  codebook <- codebook %>%
-    filter(
-      !(is.na(old_question) & 
-          is.na(old_display_logic) & 
-          is.na(old_response_option_randomization) & 
-          is.na(old_respondent_group) & 
-          !is.na(new_question) & 
-          !is.na(new_display_logic) & 
-          !is.na(new_response_option_randomization) & 
-          !is.na(new_respondent_group))
-    )
-
+    select(-x_exists, -y_exists)
+  
+  
+  combos <- added_items %>%
+    filter(question_type == "Matrix") %>%
+    distinct(old_version, new_matrix_base_name)
+  
+  for (i in seq_len(nrow(combos))) {
+    browser()
+    wave = combos[i,] %>% pull(old_version)
+    base_name = combos[i,] %>% pull(new_matrix_base_name)
+    tmp <- added_items %>%
+      filter(
+        old_version == wave, new_matrix_base_name == base_name
+      )
+    added_items <- anti_join(added_items, tmp)
+    if (nrow(filter(codebook_raw, version == wave, matrix_base_name == base_name)) == 0) {
+      # Dedup subqs so only report base question once
+      tmp <- tmp %>%
+        group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
+        mutate(
+          variable_name = new_matrix_base_name,
+          old_matrix_subquestion = NA,
+          new_matrix_subquestion = "Differ by subquestion",
+          old_response_options = case_when(
+            length(unique(old_response_options)) == 1 ~ old_response_options,
+            TRUE ~ "Differ by subquestion"
+          ),
+          new_response_options = case_when(
+            length(unique(new_response_options)) == 1 ~ new_response_options,
+            TRUE ~ "Differ by subquestion"
+          )
+        ) %>%
+        slice_head() %>%
+        ungroup()
+    } else {
+      tmp <- mutate(tmp, change_type = "Matrix subquestion added to existing item")
+    }
+    added_items <- rbind(added_items, tmp)
+  }
+  browser()
+  result[["added"]] <- added_items
+  
+  
   # Any item with missing "new_*" fields has been removed.
-  result[["removed"]] <- codebook %>%
+  removed_items <- codebook %>%
     filter(
       !is.na(old_question),
       !is.na(old_display_logic),
@@ -186,6 +226,48 @@ generate_changelog <- function(path_to_codebook,
           is.na(new_response_option_randomization) & 
           is.na(new_respondent_group))
     )
+  
+  combos <- removed_items %>%
+    filter(question_type == "Matrix") %>%
+    distinct(new_version, old_matrix_base_name)
+  
+  for (i in seq_len(nrow(combos))) {
+    wave = combos[i,] %>% pull(new_version)
+    base_name = combos[i,] %>% pull(old_matrix_base_name)
+    tmp <- removed_items %>%
+      filter(
+        new_version == wave, old_matrix_base_name == base_name
+      )
+    removed_items <- anti_join(removed_items, tmp)
+    if (nrow(filter(codebook_raw, version == wave, matrix_base_name == base_name)) == 0) {
+      # Dedup subqs so only report base question once
+      tmp <- tmp %>%
+        group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
+        mutate(
+          variable_name = old_matrix_base_name,
+          old_matrix_subquestion = "Differ by subquestion",
+          new_matrix_subquestion = NA,
+          old_response_options = case_when(
+            length(unique(old_response_options)) == 1 ~ old_response_options,
+            TRUE ~ "Differ by subquestion"
+          ),
+          new_response_options = case_when(
+            length(unique(new_response_options)) == 1 ~ new_response_options,
+            TRUE ~ "Differ by subquestion"
+          )
+        ) %>%
+        slice_head() %>%
+        ungroup()
+    } else {
+      tmp <- mutate(tmp, change_type = "Matrix subquestion removed from existing item")
+    }
+    removed_items <- rbind(removed_items, tmp)
+  }
+  
+  result[["removed"]] <- removed_items
+  
+  
+  
   
   # Do all other comparisons
   for (col in DIFF_COLS) {
@@ -213,17 +295,49 @@ generate_changelog <- function(path_to_codebook,
   
   ## Don't report all matrix subquestions when the change is shared between all
   ## of them, just report the base item.
-  
-  # Group by variable_base_name and change_type, as long as change is not "Matrix subquestion changed" and variable_base_name is not NA.
+  # Group by matrix_base_name, change_type, and wave, as long as the change_type is relevant and matrix_base_name is not NA.
   # Keep only one obs for each group.
-  # Set var name in kept obs to variable_base_name for generality and to be able to join rationales on.
+  # Set var name in kept obs to matrix_base_name for generality and to be able to join rationales on.
+  dedup_matrix_changes <- changelog %>%
+    filter(
+      (!is.na(old_matrix_base_name) | ! is.na(new_matrix_base_name)) & 
+      change_type %in% c(
+        "Question wording changed",
+        "Display logic changed",
+        # "Answer choices changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
+        # "Answer choice order changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
+        "Respondent group changed"
+      )
+    ) %>%
+    group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version, change_type) %>% 
+    slice_head() %>% 
+    ungroup() %>% 
+    mutate(
+      variable_name = case_when(
+      old_matrix_base_name != new_matrix_base_name ~ paste(old_matrix_base_name, new_matrix_base_name, sep="/"),
+      TRUE ~ old_matrix_base_name
+    ),
+    old_matrix_subquestion = NA,
+    new_matrix_subquestion = NA
+  )
+  changelog <- changelog %>%
+    filter( !(
+      (!is.na(old_matrix_base_name) | ! is.na(new_matrix_base_name)) & 
+        change_type %in% c(
+          "Question wording changed",
+          "Display logic changed",
+          "Respondent group changed"
+        )
+    )
+  )
+  changelog <- rbind(changelog, dedup_matrix_changes)
   
   ## Join old rationales on.
   # TODO: The first time this happens using this new script, need to manually map
   # some rationales for "Matrix subquestions changed", since previously this tag
   # would include added and removed subquestions.
   if (is.null(path_to_old_changelog)) {
-    warning("rationales will be empty unless an old version of the changelog is provided")
+    warning("rationales will be empty; an old version of the changelog was not provided")
     changelog$notes <- NA_character_
   } else {
     old_changelog <- read_csv(path_to_old_changelog, col_types = cols(
@@ -250,12 +364,14 @@ generate_changelog <- function(path_to_codebook,
         variable_name,
         description,
         change_type,
+        new_matrix_base_name,
         new_question_text,
         new_matrix_subquestion_text,
         new_response_options,
         new_display_logic,
         new_response_option_randomization,
         new_respondent_group,
+        old_matrix_base_name,
         old_question_text,
         old_matrix_subquestion_text,
         old_response_options,
@@ -270,7 +386,7 @@ generate_changelog <- function(path_to_codebook,
 }
 
 rename_col <- function(col, prefix) {
-  if (col %in% DIFF_COLS) {
+  if (col %in% c(DIFF_COLS, "matrix_base_name")) {
     paste(prefix, col, sep = "_") 
   } else {
     col
@@ -280,6 +396,11 @@ rename_col <- function(col, prefix) {
 find_col_differences <- function(codebook, new_col, old_col) {
   codebook[[old_col]] != codebook[[new_col]]
 }
+
+get_old_version <- function(new_version, compare_map) {
+  ifelse(new_version %in% compare_map, compare_map[compare_map == new_version] %>% names(), NA_character_)
+}
+
 
 args <- commandArgs(TRUE)
 

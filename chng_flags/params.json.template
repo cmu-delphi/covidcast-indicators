@@ -4,11 +4,11 @@
     "log_exceptions": false
   },
   "indicator": {
-    "input_cache_dir": "./cache",
-    "lags":7,
-    "train":300,
-    "test":100,
-    "valid":1,
-    "windows": [1, 3, 8, 20, 50, 60]
+    "input_cache_dir":  "./cache",
+    "num_lags":7,
+    "n_train":300,
+    "n_test":100,
+    "n_valid":1,
+    "lags": [1, 3, 8, 20, 50, 60]
   }
 }

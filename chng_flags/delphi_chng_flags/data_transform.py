@@ -7,6 +7,7 @@ import statsmodels.formula.api as smf
 
 def identify_correct_spikes(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
     """We want to find large spikes in data and then correct them.
+
     We do this by considering the difference between weekdays ex: Sun-Mon
     and identifying points that have a z-score > 3 for each of the weekday diffs (6 categories).
 
@@ -15,8 +16,8 @@ def identify_correct_spikes(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
     Input: A raw dataframe
 
-    Return: A dataframe with spikes corrected, flagged points list"""
-
+    Return: A dataframe with spikes corrected, flagged points list
+    """
     diff_df = df.drop(columns=['end', 'day']).diff(1).dropna()
     diff_df['day'] = df['day']
     medians = []
@@ -38,7 +39,9 @@ def identify_correct_spikes(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
 
 def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
-    ''' This method correct the weekend volume so that we can use the
+    """Use to correct the weekend volume.
+
+    We correct the volume so that we can use the
     weekday effect correction which is a multiplicative method
     and performs poorly when the values for weekday counts are low.
 
@@ -46,16 +49,17 @@ def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
             List of states
 
     Returns: Dataframe with the weekends corrected
-    '''
+    """
 
     def create_wknum(df: pd.DataFrame) -> pd.DataFrame:
-        '''This method adds a weeknumber to the dataframe.
+        """Add a weeknumber to the dataframe.
 
         Input: A dataframe where the index is the dates.
 
         Returns: A dataframe with a weeknum column.
 
-        We want each week to start with Saturday and Sunday.'''
+        We want each week to start with Saturday and Sunday.
+        """
         wk = 0
         wknum = []
         prev_val = 0
@@ -99,30 +103,26 @@ def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
 def ar_method(df: pd.DataFrame, states: list, num_lags: int, n_train: int,
               n_test: int, n_valid: int,  replace_df: pd.DataFrame) \
         -> (pd.DataFrame, pd.DataFrame):
-    """This method uses an AR forecaster to predict the values of the current day.
-        The parameters to the AR method is num_lags: the number of lags.
+    """Use an AR forecaster to predict the values of the current day.
 
-        For each of the n_test days, we create an AR model using n_train number
-        of data points per state.
-        Each model is tested for the n_test day and we save the residual.
-        This gives us #states * n_train number of residuals,
-        which we create a residual distribution from.
+    The parameters to the AR method is num_lags: the number of lags.
 
-        We use this residual distribution to rank the residuals from the days in n_valid.
-
-        Inputs:
-        df: Dataframe for the forecaster
-        states: The names of the states
-        num_lags: The number of lags for the AR model
-        n_train: Number of data points to train each AR model
-        n_test: Number of AR models per state to create residual distribution
-        n_valid: Using the residual distribution to rank the points in n_valid.
-        file_resid: Caching from any residual with compatible parameters
-        Output:
-        replace_df: A dataframe of residuals
-        resid_valid: A dataframe of points and their rank as flags
-
-
+    For each of the n_test days, we create an AR model using n_train number
+    of data points per state.
+    Each model is tested for the n_test day and we save the residual.
+    We create a residual distribution from #states * n_train number of residuals,
+    which is used to rank the residuals from the days in n_valid.
+    Inputs:
+    df: Dataframe for the forecaster
+    states: The names of the states
+    num_lags: The number of lags for the AR model
+    n_train: Number of data points to train each AR model
+    n_test: Number of AR models per state to create residual distribution
+    n_valid: Using the residual distribution to rank the points in n_valid.
+    file_resid: Caching from any residual with compatible parameters
+    Output:
+    replace_df: A dataframe of residuals
+    resid_valid: A dataframe of points and their rank as flags
     """
     dates_covered = []
     valid_day_list = list(df.date[-n_valid:])

@@ -17,27 +17,11 @@ will automatically propagate to the installed package.
 All of the user-changable parameters are stored in `params.json`. A template is
 included as `params.json.template`. 
 
-
-At a minimum, you will need to include a
-password for the datadrop email account and the email address of the data sender. 
-Note that setting `export_end_date` to an empty string will export data through 
-today (GMT) minus 5 days for COVID Antigen Tests. (It has not been settled for 
-Flu Antigen Tests) Setting `pull_end_date` to an empty string will pull data 
-through today (GMT).
-
-Quidel COVID test datasets are received by email from the first available date.
-However, the earliest part of Quidel Flu test datasets are stored in MIDAS. The 
-default of `pull_start_date` for Quidel Flu test is set to be `2020-05-08`, which 
-is the first valid date to pull the data from email. When officially running 
-this pipeline to get all the historical data for Quidel Flu test, this pipeline 
-needs to be run on MIDAS whith `pull_start_date` for Quidel Flu test set to be 
-an arbitrary date earlier than `2020-05-08`.
-
-To execute the module and produce the output datasets (by default, in
-`receiving`), run the following:
+Uniquely to this project, ensure all your parameters are sensibe and input/output
+folders exist with the desired files in them. 
 
 ```
-env/bin/python -m delphi_quidel
+env/bin/python -m delphi_chng_flags
 ```
 
 If you want to enter the virtual environment in your shell, 
@@ -68,7 +52,7 @@ make test
 To run individual tests, run the following:
 
 ```
-(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_quidel --cov-report=term-missing)
+(cd tests && ../env/bin/pytest <your_test>.py --cov=delphi_chng_flags --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along

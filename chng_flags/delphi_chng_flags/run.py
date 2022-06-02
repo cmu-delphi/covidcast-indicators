@@ -45,8 +45,12 @@ def run_module(params):
     n_train = params["indicator"]["n_train"]
     n_test = params["indicator"]["n_test"]
     n_valid = params["indicator"]["n_valid"]
-    assert num_lags <  n_train
-    df_num, df_den = pull_lags_data(cache_dir, lags)
+
+    start_date = pd.to_datetime(params["indicator"]["start_date"])
+    end_date = pd.to_datetime(params["indicator"]["end_date"])
+    assert num_lags < n_train
+    assert start_date < end_date
+    df_num, df_den = pull_lags_data(cache_dir, lags,  start_date, end_date)
     df_num.reset_index(inplace=True)
     df_den.reset_index(inplace=True)
     resid_df, flags_1_df, flags_2_df = pull_csvs(cache_dir, num_lags, n_train)

@@ -12,11 +12,12 @@ required = [
     "imap-tools",
     "xlrd==1.2.0",
     "covidcast",
-    "openpyxl"
+    "openpyxl",
+    "statsmodels"
 ]
 
 setup(
-    name="quidel",
+    name="delphi_changehc",
     version="0.1.0",
     description="Indicators Pulled from datadrop email account",
     author="",

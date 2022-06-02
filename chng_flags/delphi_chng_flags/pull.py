@@ -1,22 +1,26 @@
 # -*- coding: utf-8 -*-\
-"""Pull relevant input data from the input cache (defined in params.json)"""
+"""Pull relevant input data from the input cache (defined in params.json)."""
 import glob
 from datetime import date
 import pandas as pd
 import numpy as np
 
 
-def pull_lags_data(cache_dir, lags):
-    """Import the numerator and the denominator counts files and update them
-      as needed using data from the SFTP. """
-
-    def make_df(file_df, lags):
+def pull_lags_data(cache_dir, lags, start_date, end_date):
+    """Import num & den counts files and update as needed using data from the SFTP."""
+    def make_df(file_names, lags):
+        """Create the lags from each input filename."""
         df_list = []
-        for file_date, df in zip(file_df.index, file_df):
-            new_df = pd.read_csv(df, header=None)
+        for file_date in file_names.index:
+            print(file_date, lags)
+            df = file_names.loc[file_date, :]
+            new_df = pd.read_csv(df.fname, header=None)
             new_df.columns = ['date', 'state', 'counts']
             new_df['date'] = pd.to_datetime(new_df['date'], format='%Y%m%d', errors='coerce')
-            dates_list = [file_date - pd.Timedelta(days=x) for x in lags]
+            const_day = 10 # a threshold we never want to go below for the adjusted lags
+            # threshold is at least lag size
+            int_dates_list = [max(df.win_sub -x, min(const_day, x)) for x in lags]
+            dates_list = [file_date - pd.Timedelta(days=x) for x in int_dates_list]
             new_df = new_df[new_df.isin(dates_list)]
             new_df['lags'] = (file_date - new_df['date'])
             new_df = new_df[pd.to_numeric(new_df['state'], errors='coerce').notnull()]
@@ -32,22 +36,20 @@ def pull_lags_data(cache_dir, lags):
         tmp = pd.concat(df_list, axis=1)
         return tmp
 
-    def file_update(cache_dir, str_file, lags):
-        #future TO DO: Address the lags situation when files are unavailable
-        # To Do: add parameters for start/end date exports 
-        dates_range = pd.date_range(pd.to_datetime('20210301', format="%Y%m%d"),
-                                    pd.to_datetime('20220301', format="%Y%m%d"))#date.today())
+    def file_update(cache_dir, str_file, lags, start_date, end_date):
+        """Determine data needed and place preprocessed data nicely into an output dataframe."""
+        if end_date is None:
+            end_date = date.today()
+        dates_range = pd.date_range(start_date, end_date)
         df = pd.DataFrame(columns=['lags', 'state'])
         list_fname = glob.glob(f'{cache_dir}/{str_file}.csv')
         if len(list_fname) == 1:
-            num_fname = list_fname[0]
-            df = pd.read_csv(num_fname, header=0).fillna(0)
+            df = pd.read_csv(list_fname[0], header=0).fillna(0)
         existing_lags = [int(x.split()[0]) for x in np.unique(df['lags'])]
         df.lags = pd.to_timedelta(df.lags)
         df = df.set_index(['lags', 'state'])
         df.columns = pd.to_datetime(df.columns)
         existing_dates = list(filter(lambda x: x in dates_range, df.columns))
-        df = df[existing_dates]
         missing_lags = list(filter(lambda x: x not in existing_lags, lags))
         missing_dates = list(filter(lambda x: pd.to_datetime(x,
                                 format="%Y%m%d") not in existing_dates, dates_range))
@@ -60,29 +62,26 @@ def pull_lags_data(cache_dir, lags):
             format='%Y%m%d', errors='coerce')
         rel_files = rel_files.set_index('fdate')
         merge_files = pd.DataFrame(index=dates_range)
-
         rel_files = merge_files.merge(rel_files, how='outer', left_index=True,
                                       right_index=True).fillna(method='ffill')
-        #rel_files['win_sub'] = rel_files['fname'].groupby(['fname']).cumcount()
+        rel_files['win_sub'] = list(rel_files.reset_index(drop=True).groupby(['fname']).cumcount())
         if (len(missing_lags) > 0) and len(existing_dates) > 0:
-            sel_rel_files = rel_files.query('index in @existing_dates').fname.sort_index()
+            sel_rel_files = rel_files.query('index in @existing_dates').sort_index()
             df = pd.concat([df, make_df(sel_rel_files, missing_lags)])
 
-        sel_rel_files = rel_files[rel_files.index.isin(missing_dates)].fname.sort_index()
+        sel_rel_files = rel_files[rel_files.index.isin(missing_dates)].sort_index()
         if sel_rel_files.shape[0] > 0:
             df = pd.concat([df, make_df(sel_rel_files, lags)], axis=1)
         df.to_csv(f'{cache_dir}/{str_file}.csv')
-        return df
+        return df[dates_range]
 
-    df_num = file_update(cache_dir, 'Covid', lags)
-    df_den = file_update(cache_dir, 'Denom', lags)
+    df_num = file_update(cache_dir, 'Covid', lags, start_date, end_date)
+    df_den = file_update(cache_dir, 'Denom', lags, start_date, end_date)
     return df_num, df_den
 
 
 def pull_csvs(cache_dir, num_lags, n_train):
-    """ Pull additional files from the input cache folder. If they exist given the
-    parameters for the AR Forecaster.
-    """
+    """Pull additional files from input cache folder if they exist given params."""
     df_resid = pd.DataFrame(columns=['date', 'state', 'lags', 'key'])
     flags_1_df = pd.DataFrame(columns=['date', 'state', 'lags', 'key'])
     flags_2_df = pd.DataFrame(columns=['date', 'state', 'lags', 'key'])

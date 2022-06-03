@@ -189,7 +189,6 @@ generate_changelog <- function(path_to_codebook,
 
   result[["added"]] <- added_items
   
-  browser()
   # Any item where x (old fields) exists but y does not has been "removed"
   removed_items <- codebook %>%
     filter(
@@ -274,39 +273,74 @@ generate_changelog <- function(path_to_codebook,
   # Group by matrix_base_name, change_type, and wave, as long as the change_type is relevant and matrix_base_name is not NA.
   # Keep only one obs for each group.
   # Set var name in kept obs to matrix_base_name for generality and to be able to join rationales on.
-  dedup_matrix_changes <- changelog %>%
-    filter(
-      (!is.na(old_matrix_base_name) | ! is.na(new_matrix_base_name)) & 
-      change_type %in% c(
-        "Question wording changed",
-        "Display logic changed",
-        # "Answer choices changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
-        # "Answer choice order changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
-        "Respondent group changed"
-      )
+  combos <- changelog %>%
+    filter((question_type == "Matrix" | !is.na(old_matrix_base_name) | !is.na(old_matrix_subquestion)) & 
+             change_type %in% c(
+               "Question wording changed",
+               "Display logic changed",
+               "Answer choices changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
+               "Answer choice order changed", ## TODO: needs special logic, because Matrix subquestions can actually have different answer choices. Not needed for UMD
+               "Respondent group changed"
+             )
     ) %>%
-    group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version, change_type) %>% 
-    slice_head() %>% 
-    ungroup() %>% 
-    mutate(
-      variable_name = case_when(
-      old_matrix_base_name != new_matrix_base_name ~ paste(old_matrix_base_name, new_matrix_base_name, sep="/"),
-      TRUE ~ old_matrix_base_name
-    ),
-    old_matrix_subquestion = NA,
-    new_matrix_subquestion = NA
-    )
-  changelog <- changelog %>%
-    filter( !(
-      (!is.na(old_matrix_base_name) | ! is.na(new_matrix_base_name)) & 
-        change_type %in% c(
-          "Question wording changed",
-          "Display logic changed",
-          "Respondent group changed"
-        )
-    )
+    distinct(new_version, old_version, new_matrix_base_name, old_matrix_base_name, change_type)
+  
+  SPECIAL_HANDLING <- list(
+    "Answer choices changed" = list("new_response_options", "old_response_options"),
+    "Answer choices order changed" = list("new_response_option_randomization", "old_response_option_randomization")
   )
-  changelog <- rbind(changelog, dedup_matrix_changes)
+  for (i in seq_len(nrow(combos))) {
+    new_v <- combos[i,] %>% pull(new_version)
+    old_v <- combos[i,] %>% pull(old_version)
+    new_base <- combos[i,] %>% pull(new_matrix_base_name)
+    old_base <- combos[i,] %>% pull(old_matrix_base_name)
+    change <- combos[i,] %>% pull(change_type)
+    
+    tmp <- changelog %>%
+      filter(
+        new_version == new_v,
+        old_version == old_v,
+        new_matrix_base_name == new_base,
+        old_matrix_base_name == old_base,
+        change_type == change
+      )
+    changelog <- anti_join(changelog, tmp)
+    
+    combine_flag <- FALSE
+    if (change %in% names(SPECIAL_HANDLING)) {
+      # See if the changed column is the same for all obs. Check if all matrix
+      # subquestions are listed.
+      new_col <- SPECIAL_HANDLING[[change]][[1]]
+      old_col <- SPECIAL_HANDLING[[change]][[2]]
+      if (
+        length(unique(tmp[[new_col]])) == 1 &&
+        length(unique(tmp[[old_col]])) == 1 &&
+        (
+          nrow(tmp) == codebook_raw %>% filter(version == old_v, matrix_base_name == old_base) %>% nrow() ||
+          nrow(tmp) == codebook_raw %>% filter(version == new_v, matrix_base_name == new_base) %>% nrow()
+        )
+      ) {
+        combine_flag <- TRUE   
+      }
+    } else {
+      combine_flag <- TRUE  
+    }
+    
+    if (combine_flag) {
+      tmp <- tmp %>% 
+        slice_head() %>% 
+        mutate(
+          variable_name = case_when(
+            old_matrix_base_name != new_matrix_base_name ~ paste(old_matrix_base_name, new_matrix_base_name, sep="/"),
+            TRUE ~ old_matrix_base_name
+          ),
+          old_matrix_subquestion = NA,
+          new_matrix_subquestion = NA
+        )
+    }
+    
+    changelog <- rbind(changelog, tmp)
+  }
   
   ## Join old rationales on.
   # TODO: The first time this happens using this new script, need to manually map

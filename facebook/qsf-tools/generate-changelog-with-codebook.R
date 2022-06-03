@@ -151,11 +151,10 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- added_items %>%
-    filter(question_type == "Matrix") %>%
+    filter(question_type == "Matrix" | !is.na(new_matrix_base_name) | !is.na(new_matrix_subquestion)) %>%
     distinct(old_version, new_matrix_base_name)
   
   for (i in seq_len(nrow(combos))) {
-
     wave = combos[i,] %>% pull(old_version)
     base_name = combos[i,] %>% pull(new_matrix_base_name)
     tmp <- added_items %>%
@@ -190,7 +189,7 @@ generate_changelog <- function(path_to_codebook,
 
   result[["added"]] <- added_items
   
-  
+  browser()
   # Any item where x (old fields) exists but y does not has been "removed"
   removed_items <- codebook %>%
     filter(
@@ -207,7 +206,7 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- removed_items %>%
-    filter(question_type == "Matrix") %>%
+    filter(question_type == "Matrix" | !is.na(old_matrix_base_name) | !is.na(old_matrix_subquestion)) %>%
     distinct(new_version, old_matrix_base_name)
   
   for (i in seq_len(nrow(combos))) {
@@ -296,7 +295,7 @@ generate_changelog <- function(path_to_codebook,
     ),
     old_matrix_subquestion = NA,
     new_matrix_subquestion = NA
-  )
+    )
   changelog <- changelog %>%
     filter( !(
       (!is.na(old_matrix_base_name) | ! is.na(new_matrix_base_name)) & 

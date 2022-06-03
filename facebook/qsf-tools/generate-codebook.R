@@ -452,7 +452,11 @@ process_qsf <- function(path_to_qsf,
   qdf <- rbind(qdf, other_text_items)
   qdf$response_options[qdf$question_type == "Text"] <- NA
   
-
+  # Drop occasional start and end square brackets from matrix response options.
+  qdf <- qdf %>%
+    mutate(
+      response_options = map_chr(response_options, ~ remove_brackets(.x))
+    )
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
@@ -465,6 +469,14 @@ process_qsf <- function(path_to_qsf,
   }
   
   return(qdf %>% rename(version = wave))
+}
+
+remove_brackets <- function(response_set) {
+  if ( !is.na(response_set) && startsWith(response_set, "[") && endsWith(response_set, "]") ) {
+    str_sub(response_set, 2, -2)
+  } else {
+    response_set
+  }
 }
 
 #' Append the parsed and formatted info from the QSF to the existing codebook
@@ -511,7 +523,7 @@ add_qdf_to_codebook <- function(qdf,
       qdf <- qdf %>% select(-replaces)
     }
   }
-
+  
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
   # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.

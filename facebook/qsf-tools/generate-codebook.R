@@ -155,6 +155,10 @@ process_qsf <- function(path_to_qsf,
     map(~ .x$Payload$Answers) %>%	
     map(~ map(.x, ~ map(.x, "Display")))
   
+  # Sort choices by name for repeatability.
+  ii_not_matrix <- which(qtype != "Matrix")	
+  choices[ii_not_matrix] <- map(choices[ii_not_matrix], ~ order_list_by_name(.x))
+  
   # Get matrix subquestion field names as reported in microdata. NULL if not	
   # defined (not a Matrix question); FALSE if not set; otherwise a list	
   matrix_subquestion_field_names <- displayed_questions %>%	
@@ -476,6 +480,17 @@ remove_brackets <- function(response_set) {
     str_sub(response_set, 2, -2)
   } else {
     response_set
+  }
+}
+
+order_list_by_name <- function(list_obj) {
+  if (is.null(list_obj)) {
+    NULL
+  } else if (identical(list(), list_obj)) {
+    list()
+  } else {
+    # Sort by name
+    list_obj[order(names(list_obj))] 
   }
 }
 

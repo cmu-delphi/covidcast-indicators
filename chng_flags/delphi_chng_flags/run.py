@@ -34,6 +34,9 @@ def run_module(params):
         - "lags": list of ints, the windows (lags) to run the flagging program on.
                     A lag of 1 means the data that was received 1 day after the service.
     """
+
+    #TODO Remove all prints
+    #TODO Check all fn defns
     start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -48,8 +51,15 @@ def run_module(params):
 
     start_date = pd.to_datetime(params["indicator"]["start_date"])
     end_date = pd.to_datetime(params["indicator"]["end_date"])
-    assert num_lags < n_train
-    assert start_date < end_date
+    assert num_lags < n_train, \
+        "The number of lags you use for the AR model has to be less than the number of samples you train on."
+    assert start_date <= end_date, \
+        "Start date cannot exceed end_date"
+    #TODO, change assert statements per signal!
+    #TODO: Other validation statements. The valid + test + train has to be <= than the total date range
+    assert start_date > pd.to_datetime("03/01/2020"), \
+        "Start date must be after March 1st, 2020"
+
     df_num, df_den = pull_lags_data(cache_dir, lags,  start_date, end_date)
     df_num.reset_index(inplace=True)
     df_den.reset_index(inplace=True)
@@ -58,12 +68,11 @@ def run_module(params):
     export_files = {'resid_list': resid_df,
                     'flags1_list': flags_1_df,
                     'flags2_list': flags_2_df}
-    for lags in lags:
+    for lag in lags:
         df_dict = {}
-        wname = f"{lags} days"
-        df_dict['w_num'] = df_num[df_num.lags == wname].\
+        df_dict['w_num'] = df_num[df_num.lags == lag].\
             drop(columns=['lags']).set_index('state').T.fillna(0)
-        df_dict['w_den'] = df_den[df_den.lags == wname].\
+        df_dict['w_den'] = df_den[df_den.lags == lag].\
             drop(columns=['lags']).set_index('state').T.fillna(0)
         df_dict['ratio'] = df_dict['w_num'] / df_dict['w_den']
         for key, df in df_dict.items():
@@ -82,16 +91,20 @@ def run_module(params):
             weekday_corr = Weekday.calc_adjustment(params
                                                    , weekend_df.copy(),
                                                    states, 'date').fillna(0)
+
             resid, flags2 = ar_method(weekday_corr.copy(), list(states), num_lags, n_train,
-                                      n_test, n_valid, resid_df.query('lags==@lags and key==@key'))
+                                      n_test, n_valid, resid_df)
+
             for tmp_df, ct in zip([resid, flags, flags2],
                                   ['resid_list', 'flags1_list', 'flags2_list']):
-                tmp_df['lags'] = lags
+                tmp_df['lags'] = lag
                 tmp_df['key'] = key
                 tmp_df = tmp_df.set_index(['lags', 'key', 'date', 'state'])
-                export_files[ct] = pd.concat([export_files[ct], tmp_df])
+                tmp_append = pd.concat([export_files[ct], tmp_df])
+                tmp_append = tmp_append.reset_index().drop_duplicates()
+                export_files[ct] = tmp_append.set_index(['lags', 'key', 'date', 'state'])
 
-    export_files['flags2_list'] = export_files['flags2_list'].sort_values(by=['sort_prio'])
+    export_files['flags2_list'] = export_files['flags2_list'].sort_values(by=['sort_prio', 'lags', 'key', 'date'])
     export_files['resid_list'].to_csv(f'{cache_dir}/resid_{n_train}_{num_lags}.csv')
     export_files['flags1_list'].to_csv(f'{cache_dir}/flag_spike_{n_train}_{num_lags}.csv')
     export_files['flags2_list'].to_csv(f'{cache_dir}/flag_ar_{n_train}_{num_lags}.csv')

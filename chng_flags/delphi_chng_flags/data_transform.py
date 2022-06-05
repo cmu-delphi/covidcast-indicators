@@ -18,6 +18,7 @@ def identify_correct_spikes(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
     Return: A dataframe with spikes corrected, flagged points list
     """
+    #TODO: Add in the header of this dataframe
     diff_df = df.drop(columns=['end', 'day']).diff(1).dropna()
     diff_df['day'] = df['day']
     medians = []
@@ -127,16 +128,17 @@ def ar_method(df: pd.DataFrame, states: list, num_lags: int, n_train: int,
     dates_covered = []
     valid_day_list = list(df.date[-n_valid:])
     test_day_list = list(df.date[-n_test - n_valid:-n_valid])
-    curr_day_list = df.date[-n_test - n_valid:][~df.date.isin(dates_covered)]
 
     if not replace_df.empty:
-        replace_df['date'] = pd.to_datetime(replace_df['date'])
-        dates_covered = pd.date_range(replace_df.date.min(), replace_df.date.max())
-    else:
-        replace_df = df.query('date in @curr_day_list')[states +
-                    ['date']].set_index('date').stack().reset_index()
-        replace_df.columns = ['date', 'state', 'y']
-        replace_df['y_pred'] = replace_df['y']
+        replace_df_orig = replace_df.reset_index().drop(columns=['lags','key'])
+        replace_df_orig['date'] = pd.to_datetime(replace_df_orig['date'])
+        dates_covered = np.unique(replace_df_orig.date)
+    curr_day_list = df.date[-n_test - n_valid:][~df.date.isin(dates_covered)]
+    replace_df = df.query('date in @curr_day_list')[states +
+                ['date']].set_index('date').stack().reset_index()
+    replace_df.columns = ['date', 'state', 'y']
+    replace_df['y_pred'] = replace_df['y']
+
 
     lags_names = [f'lags_{i}' for i in range(1, num_lags + 1)]
     model_str = 'model ~ ' + '+'.join(lags_names)
@@ -169,6 +171,7 @@ def ar_method(df: pd.DataFrame, states: list, num_lags: int, n_train: int,
     resid_valid['cdf'] = resid_valid['resid'].apply(lambda x:
                                         (len(resid_all[resid_all < x]) / len(resid_all)))
     resid_valid['sort_prio'] = resid_valid['cdf'].apply(lambda x: x if x < 0.5 else 1 - x)
-    resid_valid.sort_values(by=['sort_prio']).reset_index(drop=True)
+    resid_valid = resid_valid.reset_index(drop=True)
+    resid_valid['state'] = resid_valid['state'].astype(int)
 
-    return replace_df, resid_valid
+    return replace_df, resid_valid.drop_duplicates()

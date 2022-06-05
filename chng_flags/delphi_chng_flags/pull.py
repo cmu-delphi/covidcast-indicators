@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-\
 """Pull relevant input data from the input cache (defined in params.json)."""
 import glob
-import os
 from datetime import date
 import pandas as pd
 import numpy as np
@@ -10,7 +9,7 @@ import numpy as np
 def pull_lags_data(cache_dir, lags, start_date, end_date, reset=False):
     """Import num & den counts files and update as needed using data from the SFTP."""
     def make_df(file_names, lags):
-        #TODO: Make clear that this is only for CHC data
+        #TO DO: Make clear that this is only for CHC data
         """Create the lags from each input filename."""
         df_list = []
         for file_date in file_names.index:
@@ -26,7 +25,8 @@ def pull_lags_data(cache_dir, lags, start_date, end_date, reset=False):
             # threshold is at least lag size
             dates_dict = {}
             for x in lags:
-                tmp_date = file_date - pd.Timedelta(days=df.win_sub + max(x-df.win_sub, min(const_day, x)))
+                tmp_date = file_date - pd.Timedelta(days=df.win_sub +
+                                                         max(x-df.win_sub, min(const_day, x)))
                 dates_dict[tmp_date] = x
             new_df = new_df[new_df.date.isin(dates_dict.keys())]
             new_df['lags'] = new_df['date'].map(dates_dict)
@@ -62,8 +62,6 @@ def pull_lags_data(cache_dir, lags, start_date, end_date, reset=False):
 
         rel_files = pd.DataFrame()
         rel_files['fname'] = glob.glob(f'{cache_dir}/*{str_file}.dat.gz')
-        if len(rel_files['fname']) == 0:
-            return df
         rel_files['fdate'] = pd.to_datetime(
             rel_files['fname'].str.rsplit('/', n=1, expand=True)[1].
                 str.split('_', n=1, expand=True)[0],
@@ -75,11 +73,10 @@ def pull_lags_data(cache_dir, lags, start_date, end_date, reset=False):
         rel_files['win_sub'] = list(rel_files.reset_index(drop=True).groupby(['fname']).cumcount())
         if (len(missing_lags) > 0) and len(existing_dates) > 0:
             sel_rel_files = rel_files.query('index in @existing_dates').sort_index()
-            df = pd.concat([df, make_df(sel_rel_files, missing_lags)])
+            df = pd.concat([df, make_df(sel_rel_files, missing_lags)]).fillna(0)
         sel_rel_files = rel_files[rel_files.index.isin(missing_dates)].sort_index()
         if sel_rel_files.shape[0] > 0:
-            df = pd.concat([df, make_df(sel_rel_files, lags)], axis=1)
-        df = df.fillna(0)
+            df = pd.concat([df, make_df(sel_rel_files, lags)], axis=1).fillna(0)
         df.to_csv(f'{cache_dir}/{str_file}.csv')
         return df[dates_range]
 

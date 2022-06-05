@@ -34,9 +34,8 @@ def run_module(params):
         - "lags": list of ints, the windows (lags) to run the flagging program on.
                     A lag of 1 means the data that was received 1 day after the service.
     """
-
-    #TODO Remove all prints
-    #TODO Check all fn defns
+    #TO DO Remove all prints
+    #TO DO Check all fn defns
     start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -52,11 +51,13 @@ def run_module(params):
     start_date = pd.to_datetime(params["indicator"]["start_date"])
     end_date = pd.to_datetime(params["indicator"]["end_date"])
     assert num_lags < n_train, \
-        "The number of lags you use for the AR model has to be less than the number of samples you train on."
+        "The number of lags you use for the AR model has to \
+        be less than the number of samples you train on."
     assert start_date <= end_date, \
         "Start date cannot exceed end_date"
-    #TODO, change assert statements per signal!
-    #TODO: Other validation statements. The valid + test + train has to be <= than the total date range
+    # TO DO: change assert statements per signal!
+    # TO DO: Other validation statements.
+    # The valid + test + train has to be <= than the total date range
     assert start_date > pd.to_datetime("03/01/2020"), \
         "Start date must be after March 1st, 2020"
 
@@ -74,11 +75,10 @@ def run_module(params):
             drop(columns=['lags']).set_index('state').T.fillna(0)
         df_dict['w_den'] = df_den[df_den.lags == lag].\
             drop(columns=['lags']).set_index('state').T.fillna(0)
-        df_dict['ratio'] = df_dict['w_num'] / df_dict['w_den']
+        df_dict['ratio'] = df_dict['w_num'] / df_dict['w_den'].fillna(0)
         for key, df in df_dict.items():
             df.columns = df.columns.astype(str)
             df.index = pd.to_datetime(df.index)
-            df = df.fillna(0)
             df['day'] = [x.weekday() for x in list(df.index)]
             df['end'] = [x.weekday() in [5, 6] for x in list(df.index)]
             states = df.drop(columns=['end', 'day']).columns
@@ -104,7 +104,8 @@ def run_module(params):
                 tmp_append = tmp_append.reset_index().drop_duplicates()
                 export_files[ct] = tmp_append.set_index(['lags', 'key', 'date', 'state'])
 
-    export_files['flags2_list'] = export_files['flags2_list'].sort_values(by=['sort_prio', 'lags', 'key', 'date'])
+    export_files['flags2_list'] = export_files['flags2_list'].sort_values(
+                                        by=['sort_prio', 'lags', 'key', 'date'])
     export_files['resid_list'].to_csv(f'{cache_dir}/resid_{n_train}_{num_lags}.csv')
     export_files['flags1_list'].to_csv(f'{cache_dir}/flag_spike_{n_train}_{num_lags}.csv')
     export_files['flags2_list'].to_csv(f'{cache_dir}/flag_ar_{n_train}_{num_lags}.csv')

@@ -18,7 +18,7 @@ def identify_correct_spikes(df: pd.DataFrame) -> (pd.DataFrame, pd.DataFrame):
 
     Return: A dataframe with spikes corrected, flagged points list
     """
-    #TODO: Add in the header of this dataframe
+    #TO DO: Add in the header of this dataframe
     diff_df = df.drop(columns=['end', 'day']).diff(1).dropna()
     diff_df['day'] = df['day']
     medians = []

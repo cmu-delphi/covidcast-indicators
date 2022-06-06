@@ -35,7 +35,7 @@ class Weekday:
         params = np.zeros((nums.shape[1], X.shape[1]))
 
         npdenoms = None
-        if denominator_col != None:
+        if denominator_col is not None:
             denoms = tmp.groupby(date_col).sum()[denominator_col]
             npdenoms = np.array(denoms)
 

@@ -152,7 +152,7 @@ test_that("testing weighted community values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)$df
+  input_data <- add_weights(input_data, params)$df
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[input_data$date == "2020-05-11" & input_data$zip5 == "15106",]
@@ -194,7 +194,7 @@ test_that("testing weighted smoothed community values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)$df
+  input_data <- add_weights(input_data, params)$df
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[
@@ -328,7 +328,7 @@ test_that("testing weighted ili/cli values files", {
   params <- relativize_params(read_params(test_path("params-test.json")))
 
   input_data <- load_responses_all(params)
-  input_data <- join_weights(input_data, params)$df
+  input_data <- add_weights(input_data, params)$df
   data_agg <- create_data_for_aggregation(input_data)
 
   ## There are 4 households in PA on 2020-05-11, one with ILI.

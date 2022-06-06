@@ -1,10 +1,11 @@
 #!/usr/bin/env Rscript
 
-## Add information from one .qsf translation file at a time to the survey codebook
+## Add information to the survey codebook from one .qsf translation file or all
+## .qsf files contained in the indicated directory.
 ##
 ## Usage:
 ##
-## Rscript generate-codebook.R [UMD/CMU] path/to/qsf path/to/codebook
+## Rscript generate-codebook.R [UMD/CMU] path/to/qsf/file/or/dir path/to/codebook
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -14,7 +15,6 @@ suppressPackageStartupMessages({
   library(gsubfn)
   source("qsf-utils.R")
 })
-
 
 process_qsf <- function(path_to_qsf,
                         survey_version,
@@ -182,7 +182,7 @@ process_qsf <- function(path_to_qsf,
       raw_scale_reversal == TRUE ~ "scale reversal",
       TRUE ~ "none"
     )
-  
+
   # format display logic
   # Not all questions have display logic; if NULL, shown to all respondents within section.
   display_logic <- displayed_questions %>% 
@@ -357,7 +357,7 @@ process_qsf <- function(path_to_qsf,
   qdf <- qdf %>%
     mutate(replaces = ifelse(variable %in% rownames(replaces_map), 
                              replaces_map[variable, "old_item"], 
-                             NA_character_),
+                             "none"),
            wave = wave
     ) %>% 
     select(wave,
@@ -382,9 +382,9 @@ process_qsf <- function(path_to_qsf,
   # add free text response options
   other_text_items <- qdf %>%
     filter(variable %in% names(other_text_items)) %>%
+    # "Other text" items should borrow most fields from base question.
     mutate(variable = other_text_items[variable],
            question_type = "Text",
-           response_option_randomization = NA,
            description = paste0(description, " other text")
     )
   qdf <- rbind(qdf, other_text_items)
@@ -448,7 +448,7 @@ add_qdf_to_codebook <- function(qdf,
     add_static_fields(qdf_wave, survey_version, path_to_static_fields) %>% 
     arrange(!is.na(.data$question_type), variable, wave)
   
-  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) )
+  ii_replacing_DNE <- which( !(codebook$replaces %in% codebook$variable) & !is.na(codebook$replaces) & codebook$replaces != "none")
   if ( length(ii_replacing_DNE) > 0 ) {
     replacing_variables <- unique( codebook$variable[ii_replacing_DNE] )
     warning(sprintf("the items that %s report replacing do not exist in the codebook",
@@ -532,11 +532,27 @@ add_qsf_to_codebook <- function(path_to_qsf, path_to_codebook,
 args <- commandArgs(TRUE)
 
 if (length(args) != 3) {
-  stop("Usage: Rscript generate-codebook.R [UMD/CMU] path/to/qsf path/to/codebook")
+  stop("Usage: Rscript generate-codebook.R [UMD/CMU] path/to/qsf/file/or/dir path/to/codebook")
 }
 
 survey_version <- args[1]
 path_to_qsf <- args[2]
 path_to_codebook <- args[3]
 
-invisible(add_qsf_to_codebook(path_to_qsf, path_to_codebook, survey_version))
+if (dir.exists(path_to_qsf)) {
+  # Iteratively process .qsf files contained in the directory
+  qsfs <- list.files(path_to_qsf, pattern = "*.qsf$", full.names = TRUE)
+  
+  if (length(qsfs) == 0) {
+    stop(path_to_qsf, " does not contain any .qsf files")
+  }
+  
+  options(warn = 1)
+  for (path_to_one_qsf in qsfs) {
+    invisible(add_qsf_to_codebook(path_to_one_qsf, path_to_codebook, survey_version))
+  }
+} else if (file.exists(path_to_qsf)) {
+  invisible(add_qsf_to_codebook(path_to_qsf, path_to_codebook, survey_version)) 
+} else {
+  stop(path_to_qsf, " is not a directory or a file, and cannot be processed")
+}

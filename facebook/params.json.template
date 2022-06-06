@@ -11,6 +11,7 @@
   "individual_raceeth_dir": "./individual_raceeth",
   "produce_individual_raceeth": false,
   "weights_in_dir": "./delphiFacebook/integration-tests/testthat/weights_full",
+  "weekly_weights_in_dir": "./delphiFacebook/integration-tests/testthat/weights_full_weekly",
   "weights_out_dir": "./weights_out",
   "experimental_weights_out_dir": "./exp_weights_out",
   "input_dir": "./delphiFacebook/integration-tests/testthat/input",
@@ -33,5 +34,13 @@
       "full_synthetic.csv"
     ],
     "aggregate_range": "month"
+  },
+  "sftp_options": "",
+  "delphi_survey_email_user": "",
+  "delphi_survey_sftp_user": "",
+  "delphi_survey_sftp_password": "",
+  "parallel_max_cores": 1,
+  "qualtrics": {
+    "notify-bad-weights": ""
   }
 }

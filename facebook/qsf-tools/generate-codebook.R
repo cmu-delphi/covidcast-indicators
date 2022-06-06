@@ -267,6 +267,11 @@ process_qsf <- function(path_to_qsf,
     map(~ gsub(" $", "", .x)) %>%
     unlist()
   
+  # Hard-code display logic for UMD V15a.
+  if (survey_version == "UMD" && wave == 12) {
+    display_logic[which(item_names == "V15a")] <- "If V1/SelectableChoice/1 Is NotSelected"
+  }
+  
   # format all qsf content lists into a single tibble
   qdf <- tibble(variable = item_names,
                 question = questions,

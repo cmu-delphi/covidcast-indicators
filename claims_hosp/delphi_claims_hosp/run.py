@@ -7,6 +7,7 @@ when the module is run with `python -m delphi_claims_hosp`.
 
 # standard packages
 import time
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -132,6 +133,8 @@ def run_module(params):
                 logger,
             )
         logger.info("finished updating", geo = geo)
+
+    os.system(f'rm -rf {params["indicator"]["input_dir"]}')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",

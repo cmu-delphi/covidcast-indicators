@@ -233,7 +233,7 @@ process_qsf <- function(path_to_qsf,
       curr_map <- recode_map[qids == qid][[1]]
       
       if ( !is.null(curr_map) ) {
-        option_code <- curr_map[names(curr_map) == option_code]
+        option_code <- ifelse(option_code %in% names(curr_map), curr_map[[which(names(curr_map) == option_code)]], option_code)
       }
       
       paste(c(qid, selectable_text, option_code), collapse="")

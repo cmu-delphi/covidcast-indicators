@@ -144,7 +144,7 @@ run_contingency_tables_one_period <- function(params, aggregations)
       return()
     }
 
-    data_agg <- join_weights(data_agg, params, weights = "full")$df
+    data_agg <- add_weights(data_agg, params, weights = "full")$df
     msg_df("response data to aggregate", data_agg)
 
     produce_aggregates(data_agg, aggregations, cw_list, params)

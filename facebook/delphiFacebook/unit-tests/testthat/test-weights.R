@@ -27,13 +27,13 @@ test_that("testing write_cid command", {
   expect_setequal(df$token, fake_data$token)
 })
 
-test_that("testing join_weights command", {
+test_that("testing add_weights command", {
 
   expected_weights <- c(547.261991770938, 741.556362016127, 392.85944076255)
   fake_data <- tibble(
     token = c("DSFIJBjAexoQjDStr", "mGDsqbweUYzFnmZUH", "zocUNXYISDyYcVIQn")
   )
-  fake_data_w <- join_weights(fake_data, list(weights_in_dir = "weights_in"))$df
+  fake_data_w <- add_weights(fake_data, list(weights_in_dir = "weights_in"))$df
 
   expect_true(max(abs(expected_weights - fake_data_w$weight)) < 1e-7)
 

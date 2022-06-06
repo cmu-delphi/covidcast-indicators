@@ -31,10 +31,8 @@ generate_changelog <- function(path_to_codebook,
   # waves, plus a description of what changed and why.
   qsf_diff <- get_diff(path_to_diff)
   
-  if (!("notes" %in% names(qsf_diff))) {
-    if (is.null(path_to_old_changelog)) {
-      stop("rationales must be provided either in the diff or via an old version of the changelog")
-    }
+  if (!("notes" %in% names(qsf_diff)) && is.null(path_to_old_changelog)) {
+    warning("rationales must be provided either in the diff or via an old version of the changelog")
     qsf_diff$notes <- NA_character_
   }
   
@@ -60,14 +58,14 @@ generate_changelog <- function(path_to_codebook,
   changelog <- add_rationales_from_old_changelog(changelog, path_to_old_changelog)
   check_missing_rationales(changelog)
   
-  write_excel_csv(changelog, path_to_changelog, quote="needed")
+  write_excel_csv(changelog %>% rename(new_version=new_wave, old_version=old_wave), path_to_changelog, quote="needed")
 }
 
 # Read codebook from path. Drop fields we don't use in the changelog.
 get_codebook <- function(path_to_codebook) {
   codebook <- read_csv(path_to_codebook, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
     rename(question_text = question, matrix_subquestion_text = matrix_subquestion) %>%
     select(
@@ -77,7 +75,7 @@ get_codebook <- function(path_to_codebook) {
   
   return(codebook)
 }
-  
+
 # Try to load `path_to_diff`. Check if it is a single CSV or a directory
 # containing a set of CSVs.
 get_diff <- function(path_to_diff) {
@@ -86,11 +84,40 @@ get_diff <- function(path_to_diff) {
     csvs <- list.files(path_to_diff, pattern = "*.csv$", full.names = TRUE)
     qsf_diff <- list()
     for (csv in csvs) {
-      qsf_diff[[csv]] <- read_csv(csv, col_types = cols(
+      curr_diff <- read_csv(csv, col_types = cols(
         .default = col_character(),
         new_wave = col_double(),
         old_wave = col_double()
       ))
+
+      old_wave_vars <- curr_diff %>%
+        filter(change_type != "Item added") %>%
+        distinct(item) %>%
+        pull()
+      new_wave_vars <- curr_diff %>%
+        filter(change_type != "Item removed") %>%
+        distinct(item) %>%
+        pull()
+      if (all(c("C0_matrix", "C0_likert") %in% old_wave_vars) || all(c("C0_matrix", "C0_likert") %in% new_wave_vars)) {
+        stop("Only one of 'C0_matrix' and 'C0_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B13_profile", "B13_likert") %in% old_wave_vars) || all(c("B13_profile", "B13_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B13_profile' and 'B13_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B14_profile", "B14_likert") %in% old_wave_vars) || all(c("B14_profile", "B14_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B14_profile' and 'B14_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B12a_profile", "B12a_likert") %in% old_wave_vars) || all(c("B12a_profile", "B12a_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B12a_profile' and 'B12a_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B12b_profile", "B12b_likert") %in% old_wave_vars) || all(c("B12b_profile", "B12b_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B12b_profile' and 'B12b_likert' can be present at once in file ", csv)
+      }
+      if (all(c("B1b_matrix", "B1b_likert") %in% old_wave_vars) || all(c("B1b_matrix", "B1b_likert") %in% new_wave_vars)) {
+        stop("Only one of 'B1b_matrix' and 'B1b_likert' can be present at once in file ", csv)
+      }
+
+      qsf_diff[[csv]] <- curr_diff
     }
     qsf_diff <- purrr::reduce(qsf_diff, rbind) %>%
       rename(variable_name = item) %>%
@@ -169,23 +196,72 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
     qsf_diff %>% distinct(variable_name) %>% pull(),
     codebook %>% distinct(variable) %>% pull()
   )
+
   # Add an underscore to the unmatched variable names to create a regex pattern
   matrix_prefixes <- paste0(vars_not_in_codebook, "_")
   names(matrix_prefixes) <- vars_not_in_codebook
+
+  # A subset of UMD variables need manual mapping.
+  if ("C0_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_matrix"] <- "C0_"
+  }
+  if ("C0_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["C0_likert"] <- "C0_"
+  }
+  
+  if ("B13_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B13_profile"] <- "B13_"
+  }
+  if ("B13_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B13_likert"] <- "B13_"
+  }
+  
+  if ("B14_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B14_profile"] <- "B14_"
+  }
+  if ("B14_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B14_likert"] <- "B14_"
+  }
+  
+  if ("B12a_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12a_profile"] <- "B12a_"
+  }
+  if ("B12a_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12a_likert"] <- "B12a_"
+  }
+  
+  if ("B12b_profile" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12b_profile"] <- "B12b_"
+  }
+  if ("B12b_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B12b_likert"] <- "B12b_"
+  }
+  
+  if ("B1b_matrix" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_matrix"] <- "B1b_"
+  }
+  if ("B1b_likert" %in% names(matrix_prefixes)) {
+    matrix_prefixes["B1b_likert"] <- "B1b_"
+  }
   
   # First matrix item match by wave and matrix base question.
   map_matrix_prefix_to_first_match <- codebook %>% 
     mutate(
       join_variable = case_when(
         # Create the basename for matrix items.
-        grepl("_", variable) ~ strsplit(variable, "_") %>% purrr::map_chr(~ .x[1]) %>% paste0("_"),
+        !is.na(matrix_subquestion_text) ~ strsplit(variable, "_") %>%
+          # Get all but last underscore-delimited chunk
+          purrr::map(~ .x[1:(length(.x) - 1)]) %>%
+          # Combine all but the last chunk with underscores.
+          purrr::map(~ paste0(.x, collapse="_") %>% paste0("_")) %>%
+          unlist(),
         TRUE ~ variable
       )
     ) %>%
     filter(join_variable %in% matrix_prefixes) %>%
-    group_by(wave, join_variable) %>%
+    group_by(version, join_variable) %>%
     slice_head() %>%
-    select(wave, variable, join_variable)
+    select(version, variable, join_variable)
   
   # Add the regex patterns onto the diff.
   qsf_diff <- qsf_diff %>%
@@ -199,13 +275,13 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
       map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
         paste("new", column_names, sep = "_")
       }),
-      by=c("new_wave" = "new_wave", "join_variable"="new_join_variable")
+      by=c("new_wave" = "new_version", "join_variable"="new_join_variable")
     ) %>%
     left_join(
       map_matrix_prefix_to_first_match %>% rename_with(function(column_names) {
         paste("old", column_names, sep = "_")
       }),
-      by=c("old_wave" = "old_wave", "join_variable"="old_join_variable")
+      by=c("old_wave" = "old_version", "join_variable"="old_join_variable")
     ) %>%
     rename(
       join_variable_new_wave = new_variable,
@@ -216,7 +292,7 @@ prepare_matrix_base_questions_for_join <- function(qsf_diff, codebook) {
       join_variable_old_wave = coalesce(join_variable_old_wave, variable_name)
     ) %>%
     select(-join_variable)
-  
+
   return(list("diff" = qsf_diff, "vars_not_in_codebook" = vars_not_in_codebook))
 }
 
@@ -229,14 +305,14 @@ make_changelog_from_codebook_and_diff <- function(qsf_diff, codebook, vars_not_i
       codebook %>% rename_with(function(column_names) {
         paste("new", column_names, sep = "_")
       }),
-      by=c("new_wave" = "new_wave", "join_variable_new_wave" = "new_variable")
+      by=c("new_wave" = "new_version", "join_variable_new_wave" = "new_variable")
     ) %>%
     # Add info about previous version of question
     left_join(
       codebook %>% rename_with(function(column_names) {
         paste("old", column_names, sep = "_")
       }),
-      by=c("old_wave" = "old_wave", "join_variable_old_wave" = "old_variable")
+      by=c("old_wave" = "old_version", "join_variable_old_wave" = "old_variable")
     ) %>%
     select(
       new_wave,
@@ -264,6 +340,42 @@ make_changelog_from_codebook_and_diff <- function(qsf_diff, codebook, vars_not_i
       old_matrix_subquestion_text = case_when(
         variable_name %in% vars_not_in_codebook ~ NA_character_,
         TRUE ~ old_matrix_subquestion_text
+      )
+    ) %>%
+    # When an item was added, all `old_` fields should be empty; when an item
+    # was removed, all `new_` fields should be empty.
+    mutate(
+      old_question_text = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_question_text
+      ),
+      old_matrix_subquestion_text = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_matrix_subquestion_text
+      ),
+      old_response_options = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_response_options
+      ),
+      old_display_logic = case_when(
+        change_type == "Item added" ~ NA_character_,
+        TRUE ~ old_display_logic
+      ),
+      new_question_text = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_question_text
+      ),
+      new_matrix_subquestion_text = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_matrix_subquestion_text
+      ),
+      new_response_options = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_response_options
+      ),
+      new_display_logic = case_when(
+        change_type == "Item removed" ~ NA_character_,
+        TRUE ~ new_display_logic
       )
     )
   

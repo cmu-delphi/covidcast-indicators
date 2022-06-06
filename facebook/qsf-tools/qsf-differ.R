@@ -59,7 +59,8 @@ diff_qsf_files <- function(old_qsf_path, new_qsf_path, output_dir,
 get_qsf_file <- function(path, survey_version,
                          keep_items = c("QuestionID", "DataExportTag",
                                         "QuestionText", "QuestionType",
-                                        "Choices", "Answers", "DisplayLogic")
+                                        "Choices", "Answers", "DisplayLogic",
+                                        "InPageDisplayLogic")
 ) {
   wave <- get_wave(path)
   # Read file as json.
@@ -104,7 +105,11 @@ get_qsf_file <- function(path, survey_version,
       # the `RecodeValues` field. Some carried forward choices do not have
       # `RecodeValues` defined and so in that case we don't want to prepend the
       # codes with "x".
-      if (!is.null(recode_values)) {
+      #
+      # This also applies to matrix questions, although they have missing
+      # `RecodeValues`. `RecodeValues` are applied to the answer choices;
+      # subquestions are recoded with `ChoiceDataExportTags`.
+      if (!is.null(recode_values) | question$QuestionType == "Matrix") {
         names(carryforward_choices) <- paste0("x", names(carryforward_choices))  
       }
       # Combine new choices and carried-forward choices
@@ -141,6 +146,10 @@ get_qsf_file <- function(path, survey_version,
     # "Description".
     if ("DisplayLogic" %in% names(question)) {
       display_logic <- unlist(question$DisplayLogic)
+      question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
+    }
+    if ("InPageDisplayLogic" %in% names(question)) {
+      display_logic <- unlist(question$InPageDisplayLogic)
       question$DisplayLogic <- sort(display_logic[!str_detect(names(display_logic), "Description")])
     }
     
@@ -255,7 +264,19 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
   
   changed <- list()
   for (question in names) {
-    if ( !identical(old_qsf[[question]][[change_type]], new_qsf[[question]][[change_type]]) ) {
+    old_contents <- old_qsf[[question]][[change_type]]
+    new_contents <- new_qsf[[question]][[change_type]]
+    
+    if (change_type == "DisplayLogic") {
+      # Ignore in-page status.
+      old_contents[["inPage"]] <- "FALSE"
+      new_contents[["inPage"]] <- "FALSE" 
+      
+      # Sort items by name for more robust comparison.
+      old_contents <- old_contents[names(old_contents) %>% sort()]
+      new_contents <- new_contents[names(new_contents) %>% sort()]
+    }
+    if ( !identical(old_contents, new_contents) ) {
       changed_subquestions <- c()
       if (change_type == "Subquestions") {
         subquestion_codes <- unique(
@@ -273,10 +294,10 @@ diff_question <- function(names, change_type=c("Choices", "QuestionText",
         changed_subquestions <- paste(changed_subquestions, collapse=", ")
       }
       
-      if (length(changed_subquestions) == 0) {
+      if (length(changed_subquestions) == 0 || identical(changed_subquestions, "")) {
         changed_subquestions <- NA
       }
-      changed[[question]] <- changed_subquestions
+      changed[[question]] <- changed_subquestions 
     }
   }
   out <- create_diff_df(unlist(changed), change_type, old_qsf, new_qsf)

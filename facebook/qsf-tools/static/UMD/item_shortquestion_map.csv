@@ -156,6 +156,7 @@ V18a,vaccination barriers vaccinated ever 1
 V18b,vaccination barriers unvaccinated
 V18c,vaccination barriers vaccinated 2
 V19,when try to get vaccine
+V20,"recent vaccination date intro"
 V20_month,recent vaccination month
 V20_year,recent vaccination year
 G1,worry catch covid
@@ -181,3 +182,7 @@ J6,oldest child schooling
 J7,remote schooling
 J8,oldest child gender
 K1,delayed medical care cost 1y
+Vaccine Text,vaccine dose explanation
+Q75,reference oldest child
+A2_1120,country + region
+A2_1220,country + region

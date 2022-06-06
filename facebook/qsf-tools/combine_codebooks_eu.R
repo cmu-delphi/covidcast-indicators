@@ -6,7 +6,7 @@
 ##
 ## Usage:
 ##
-## Rscript combine_codebooks_eu.R.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
+## Rscript combine_codebooks_eu.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -18,7 +18,7 @@ combine_codebooks <- function(path_to_codebook_eu,
   
   codebook_eu <- read_csv(path_to_codebook_eu, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
   mutate(
     eu_version = "EU"
@@ -26,7 +26,7 @@ combine_codebooks <- function(path_to_codebook_eu,
   
   codebook_noneu <- read_csv(path_to_codebook_noneu, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
     mutate(
       eu_version = "Non-EU"
@@ -43,7 +43,7 @@ combine_codebooks <- function(path_to_codebook_eu,
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   # Drop duplicates.
   codebook <- codebook %>%
-    arrange(!is.na(.data$question_type), variable, wave, eu_version) %>% 
+    arrange(!is.na(.data$question_type), variable, version, eu_version) %>%
     select(-count) %>% 
     distinct()
 

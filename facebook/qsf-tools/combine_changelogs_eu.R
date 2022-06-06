@@ -18,8 +18,8 @@ combine_changelogs <- function(path_to_changelog_eu,
   
   changelog_eu <- read_csv(path_to_changelog_eu, col_types = cols(
     .default = col_character(),
-    new_wave = col_double(),
-    old_wave = col_double()
+    new_version = col_double(),
+    old_version = col_double()
   )) %>%
   mutate(
     eu_version = "EU"
@@ -27,8 +27,8 @@ combine_changelogs <- function(path_to_changelog_eu,
   
   changelog_noneu <- read_csv(path_to_changelog_noneu, col_types = cols(
     .default = col_character(),
-    new_wave = col_double(),
-    old_wave = col_double()
+    new_version = col_double(),
+    old_version = col_double()
   )) %>%
     mutate(
       eu_version = "Non-EU"

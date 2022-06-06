@@ -212,6 +212,7 @@ process_qsf <- function(path_to_qsf,
          " 'DisplayLogic' would be overwritten.")
   }
   display_logic[inpage_ii] <- inpage_logic[inpage_ii]
+  display_logic_raw <- display_logic
   
   display_logic <- display_logic %>% 
     map(~ .x$`0`) %>% 
@@ -244,14 +245,12 @@ process_qsf <- function(path_to_qsf,
     map(~ paste(.x, collapse=" "))
   
   # Handle questions that use a fixed condition ("If False", "If True")
-  ii_boolean_displaylogic <- (displayed_questions %>% 
-                                map(~ .x$Payload$DisplayLogic) %>% 
+  ii_boolean_displaylogic <- (display_logic_raw %>% 
                                 map(~ .x$`0`) %>% 
                                 map(~ map(.x, "LogicType") %>% unlist()) == "BooleanValue") %>% 
     which()
   
-  display_logic[ii_boolean_displaylogic] <- displayed_questions[ii_boolean_displaylogic] %>% 
-    map(~ .x$Payload$DisplayLogic) %>% 
+  display_logic[ii_boolean_displaylogic] <- display_logic_raw[ii_boolean_displaylogic] %>% 
     map(~ .x$`0`) %>% 
     map(~ paste(
       map(.x, "Value")
@@ -260,8 +259,7 @@ process_qsf <- function(path_to_qsf,
     # Collapse logic into a single string.
     map(~ paste(.x, collapse=""))
     
-  logic_type <- displayed_questions %>% 
-    map(~ .x$Payload$DisplayLogic) %>% 
+  logic_type <- display_logic_raw %>% 
     map(~ .x$`0`$Type)
   
   display_logic <- paste(logic_type, display_logic) %>%

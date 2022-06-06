@@ -37,6 +37,8 @@ def agg_and_write(data_path, logger):
     files = np.array(list(Path(data_path).glob("*")))
 
     for f in files:
+        if ".csv.gz" not in str(f):
+            continue
         out_path = f.parents[0] / f.name
         dfs = pd.read_csv(f, dtype={"PatCountyFIPS": str,
                                     "patCountyFIPS": str})

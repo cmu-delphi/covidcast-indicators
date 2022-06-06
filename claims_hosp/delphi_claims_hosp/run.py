@@ -58,14 +58,14 @@ def run_module(params):
         log_exceptions=params["common"].get("log_exceptions", True))
 
     # pull latest data
-    download(params["indicator"]["input_dir"], logger)
+    download(params["indicator"]["ftp_credentials"],
+             params["indicator"]["input_dir"], logger)
 
     # aggregate data
     agg_and_write(params["indicator"]["input_dir"], logger)
 
     # find the latest files (these have timestamps)
-    claims_file = get_latest_filename(params["indicator"]["input_dir"], 
-                                      params["indicator"]["write_se"], logger)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
 
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
@@ -133,7 +133,7 @@ def run_module(params):
                 logger,
             )
         logger.info("finished updating", geo = geo)
-    
+
     # Remove all the raw files
     os.system(f'rm -rf {params["indicator"]["input_dir"]}')
     logger.info('Remove all the raw files.')

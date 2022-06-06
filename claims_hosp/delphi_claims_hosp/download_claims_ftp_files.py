@@ -7,7 +7,6 @@ import functools
 from os import path
 
 # third party
-from secrets import claims
 import paramiko
 
 
@@ -22,7 +21,7 @@ class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):
         return
 
 
-def print_callback(filename, bytes_so_far, bytes_total, logger):
+def print_callback(filename, logger, bytes_so_far, bytes_total):
     """
     Print the callback information.
     """
@@ -46,23 +45,9 @@ def get_timestamp(name):
 
     return timestamp
 
-
-def flip_MMDDYYYY_to_DDMMYYYY(name):
-    """
-    Flip date from MMDDYYYY to DDMMYYYY.
-    """
-    # flip date from MMDDYYYY to DDMMYYYY
-    split_name = name.split("_")
-    date = split_name[4]
-    flip_date = date[2:4] + date[:2] + date[4:]
-    split_name[4] = flip_date
-    name = '_'.join(split_name)
-    return name
-
-
 def flip_YYYYMMDD_to_DDMMYYYY(name):
     """
-    Flip date from DDMMYYYY to MMDDYYYY.
+    Flip date from YYYYMMDD to MMDDYYYY.
     """
     split_name = name.split("_")
     date = split_name[3]
@@ -72,7 +57,7 @@ def flip_YYYYMMDD_to_DDMMYYYY(name):
     return name
 
 
-def download(out_path, logger):
+def download(ftp_credentials, out_path, logger):
     """
     The main function to pull the latest raw files.
     """
@@ -84,8 +69,10 @@ def download(out_path, logger):
     client = paramiko.SSHClient()
     client.set_missing_host_key_policy(AllowAnythingPolicy())
 
-    client.connect(claims.HOST,
-                   username=claims.USER, password=claims.PASS, port=claims.PORT)
+    client.connect(ftp_credentials["host"],
+                   username=ftp_credentials["user"],
+                   password=ftp_credentials["pass"],
+                   port=ftp_credentials["port"])
     sftp = client.open_sftp()
     sftp.chdir('/hosp/receiving')
 

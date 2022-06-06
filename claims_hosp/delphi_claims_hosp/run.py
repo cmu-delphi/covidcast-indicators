@@ -15,6 +15,9 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .config import Config
+from .download_claims_ftp_files import download
+from .agg_claims_drops import agg_and_write
+from .get_latest_claims_name import get_latest_filename
 from .update_indicator import ClaimsHospIndicatorUpdater
 
 
@@ -31,7 +34,7 @@ def run_module(params):
             - "log_exceptions" (optional): bool, whether to log exceptions to file.
             - "log_filename" (optional): str, name of file to write logs
         - "indicator":
-            - "input_file": str, optional filenames to download. If null,
+            - "input_dir": str, directory to downloaded raw files. If null,
                 defaults are set in retrieve_files().
             - "start_date": str, YYYY-MM-DD format, first day to generate data for.
             - "end_date": str or null, YYYY-MM-DD format, last day to generate data for.
@@ -53,11 +56,21 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
+    # pull latest data
+    download(params["indicator"]["input_dir"], logger)
+
+    # aggregate data
+    agg_and_write(params["indicator"]["input_dir"], logger)
+
+    # find the latest files (these have timestamps)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], 
+                                      params["indicator"]["write_se"], logger)
+
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
     if params["indicator"]["drop_date"] is None:
         dropdate_dt = datetime.strptime(
-            Path(params["indicator"]["input_file"]).name.split("_")[3], "%d%m%Y")
+            Path(claims_file).name.split("_")[3], "%d%m%Y")
     else:
         dropdate_dt = datetime.strptime(params["indicator"]["drop_date"], "%Y-%m-%d")
 
@@ -114,7 +127,7 @@ def run_module(params):
                 signal_name
             )
             updater.update_indicator(
-                params["indicator"]["input_file"],
+                claims_file,
                 params["common"]["export_dir"],
                 logger,
             )

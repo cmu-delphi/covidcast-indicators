@@ -133,8 +133,10 @@ def run_module(params):
                 logger,
             )
         logger.info("finished updating", geo = geo)
-
+    
+    # Remove all the raw files
     os.system(f'rm -rf {params["indicator"]["input_dir"]}')
+    logger.info('Remove all the raw files.')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed indicator run",

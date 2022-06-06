@@ -44,7 +44,7 @@ combine_codebooks <- function(path_to_codebook_eu,
   # Drop duplicates.
   codebook <- codebook %>%
     arrange(!is.na(.data$question_type), variable, version, eu_noneu) %>%
-    select(-count) %>% 
+    select(-count, -replaces) %>% 
     distinct()
 
   return(codebook)

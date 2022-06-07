@@ -135,7 +135,9 @@ def run_module(params):
         logger.info("finished updating", geo = geo)
 
     # Remove all the raw files
-    os.system(f'rm -rf {params["indicator"]["input_dir"]}')
+    for fn in os.listdir(params["indicator"]["input_dir"]):
+        if ".csv.gz" in fn:
+            os.system(f'rm {params["indicator"]["input_dir"]}/{fn}')
     logger.info('Remove all the raw files.')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

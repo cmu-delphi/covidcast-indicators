@@ -47,13 +47,13 @@ rm -r env
 
 The validator can also be called using the runner, which performs the entire pipeline:
 
-* Calling the indicator's `run` module
-* Running the validator on newly obtained CSV files, if validator is specified
-* If validation is unsuccessful, remove or transfer current files in the run
-* Archive files if archiver is specified and there are no validation failures
-* Transfer files to delivery directory if specified in params
+1. Calling the indicator's `run` module
+2. Running the validator on newly obtained CSV files, if validator is specified
+3. If validation is unsuccessful, remove or transfer current files in the run
+4. Archive files if archiver is specified and there are no validation failures
+5. Transfer files to delivery directory if specified in params
 
-The following truth table describes behavior of the third bullet point:
+The following truth table describes behavior of item (3):
 
 | case | dry_run | validation failure | export dir | delivery dir | v failure dir | action |
 | - | - | - | - | - | - | - |

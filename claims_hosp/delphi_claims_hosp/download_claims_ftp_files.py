@@ -11,29 +11,22 @@ import paramiko
 
 
 class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):
-    """
-    Class for missing host key policy.
-    """
+    """Class for missing host key policy."""
+
     def missing_host_key(self, client, hostname, key):
-        """
-        Function for the missing host key.
-        """
+        """Check missing host key."""
         return
 
 
 def print_callback(filename, logger, bytes_so_far, bytes_total):
-    """
-    Print the callback information.
-    """
+    """Print the callback information."""
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
     if (rough_percent_transferred % 25) == 0:
         logger.info(f'{filename} transfer: {rough_percent_transferred}%')
 
 
 def get_timestamp(name):
-    """
-    Get the reference date in datetime format.
-    """
+    """Get the reference date in datetime format."""
     try:
         split_name = name.split("_")
         yyyymmdd = split_name[3]
@@ -45,10 +38,8 @@ def get_timestamp(name):
 
     return timestamp
 
-def flip_YYYYMMDD_to_DDMMYYYY(name):
-    """
-    Flip date from YYYYMMDD to MMDDYYYY.
-    """
+def change_date_format(name):
+    """Flip date from YYYYMMDD to MMDDYYYY."""
     split_name = name.split("_")
     date = split_name[3]
     flip_date = date[6:] + date[4:6] + date[:4]
@@ -58,9 +49,7 @@ def flip_YYYYMMDD_to_DDMMYYYY(name):
 
 
 def download(ftp_credentials, out_path, logger):
-    """
-    The main function to pull the latest raw files.
-    """
+    """Pull the latest raw files."""
     current_time = datetime.datetime.now()
     seconds_in_day = 24 * 60 * 60
     logger.info(f"current time is {current_time}")
@@ -92,7 +81,7 @@ def download(ftp_credentials, out_path, logger):
 
     filepaths_to_download = {}
     for file in files_to_download:
-        flipped_file = flip_YYYYMMDD_to_DDMMYYYY(file)
+        flipped_file = change_date_format(file)
         if "INPATIENT" in file:
             full_path = path.join(out_path, flipped_file)
             if path.exists(full_path):

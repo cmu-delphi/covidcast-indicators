@@ -19,8 +19,9 @@ import pandas as pd
 
 def agg_and_write(data_path, logger):
     """
-    Aggregate drops given a folder path. Will output an aggregated version in the
-    same folder. Example below.
+    Aggregate drops given a folder path.
+
+    Will output an aggregated version in the same folder. Example below.
 
     Input files in folder:
       ../EDI_AGG_INPATIENT/EDI_AGG_INPATIENT_1_07052020_1456.csv.gz
@@ -32,8 +33,8 @@ def agg_and_write(data_path, logger):
     Args:
       data_path: path to the folder with duplicated drops.
       force: if aggregated file exists, whether to overwrite or not
-    """
 
+    """
     files = np.array(list(Path(data_path).glob("*")))
 
     for f in files:

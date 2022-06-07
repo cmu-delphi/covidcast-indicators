@@ -6,9 +6,7 @@ import datetime
 from pathlib import Path
 
 def get_latest_filename(dir_path, logger):
-    """
-    Get the latest filename from the list of downloaded raw files.
-    """
+    """Get the latest filename from the list of downloaded raw files."""
     current_date = datetime.datetime.now()
     files = list(Path(dir_path).glob("*"))
 

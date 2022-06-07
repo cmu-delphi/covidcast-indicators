@@ -149,7 +149,7 @@ class ClaimsHospIndicatorUpdater:
         # load data
         base_geo = Config.HRR_COL if self.geo == Config.HRR_COL else Config.FIPS_COL
         data = load_data(input_filepath, self.dropdate, base_geo)
-        data_frame = self.geo_reindex(data)            
+        data_frame = self.geo_reindex(data)
 
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(

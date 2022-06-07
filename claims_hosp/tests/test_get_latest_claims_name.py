@@ -12,7 +12,7 @@ class TestGetLatestFileName:
     
     start_time = time.time()
     logger = get_structured_logger(
-        __name__, filename="./tests/test.log",
+        __name__, filename="./test.log",
         log_exceptions=True)
     
     def test_get_latest_claims_name(self):

@@ -113,7 +113,6 @@ class ClaimsHospIndicatorUpdater:
                                                  new_code=self.geo)
         elif self.geo == "hrr":
             data_frame = data  # data is already adjusted in aggregation step above
-            data_frame[self.geo] = data_frame[self.geo].astype(str).str.zfill(3)
         else:
             logging.error(
                 "%s is invalid, pick one of 'county', 'state', 'msa', 'hrr', 'hhs', nation'",

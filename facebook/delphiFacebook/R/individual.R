@@ -15,7 +15,7 @@
 write_individual <- function(data_full_w, params)
 {
   # Has columns "cid", "date", and "test_group"
-  experimental_groups <- read_csv("cmu_cid_qp_user_group_mapping_20220408.csv", col_types = cols(.default = col_character()))
+  experimental_groups <- read_csv("cmu_cid_qp_user_group_mapping_20220408.csv", col_types = cols(.default = col_character())) %>% distinct()
   data_full_w <- data_full_w %>% left_join(experimental_groups, by=c("token"="cid", "Date"="date"))
 
   data_to_write <- select(data_full_w, -.data$token)

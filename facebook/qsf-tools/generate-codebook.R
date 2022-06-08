@@ -212,6 +212,7 @@ process_qsf <- function(path_to_qsf,
          " 'DisplayLogic' would be overwritten.")
   }
   display_logic[inpage_ii] <- inpage_logic[inpage_ii]
+  display_logic_raw <- display_logic
   
   display_logic <- display_logic %>% 
     map(~ .x$`0`) %>% 
@@ -233,7 +234,7 @@ process_qsf <- function(path_to_qsf,
       curr_map <- recode_map[qids == qid][[1]]
       
       if ( !is.null(curr_map) ) {
-        option_code <- curr_map[names(curr_map) == option_code]
+        option_code <- ifelse(option_code %in% names(curr_map), curr_map[[which(names(curr_map) == option_code)]], option_code)
       }
       
       paste(c(qid, selectable_text, option_code), collapse="")
@@ -244,14 +245,12 @@ process_qsf <- function(path_to_qsf,
     map(~ paste(.x, collapse=" "))
   
   # Handle questions that use a fixed condition ("If False", "If True")
-  ii_boolean_displaylogic <- (displayed_questions %>% 
-                                map(~ .x$Payload$DisplayLogic) %>% 
+  ii_boolean_displaylogic <- (display_logic_raw %>% 
                                 map(~ .x$`0`) %>% 
                                 map(~ map(.x, "LogicType") %>% unlist()) == "BooleanValue") %>% 
     which()
   
-  display_logic[ii_boolean_displaylogic] <- displayed_questions[ii_boolean_displaylogic] %>% 
-    map(~ .x$Payload$DisplayLogic) %>% 
+  display_logic[ii_boolean_displaylogic] <- display_logic_raw[ii_boolean_displaylogic] %>% 
     map(~ .x$`0`) %>% 
     map(~ paste(
       map(.x, "Value")
@@ -260,14 +259,18 @@ process_qsf <- function(path_to_qsf,
     # Collapse logic into a single string.
     map(~ paste(.x, collapse=""))
     
-  logic_type <- displayed_questions %>% 
-    map(~ .x$Payload$DisplayLogic) %>% 
+  logic_type <- display_logic_raw %>% 
     map(~ .x$`0`$Type)
   
   display_logic <- paste(logic_type, display_logic) %>%
     map(~ gsub(" ?NULL ?", "", .x)) %>% 
     map(~ gsub(" $", "", .x)) %>%
     unlist()
+  
+  # Hard-code display logic for UMD V15a.
+  if (survey_version == "UMD" && wave == 12) {
+    display_logic[which(item_names == "V15a")] <- "If V1/SelectableChoice/1 Is NotSelected"
+  }
   
   # format all qsf content lists into a single tibble
   qdf <- tibble(variable = item_names,
@@ -341,9 +344,10 @@ process_qsf <- function(path_to_qsf,
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix") %>%	
+    mutate(matrix_base_name = NA_character_) %>% 
     select(-matrix_subquestion_field_names)
   
-  has_resp_by_subq <- qdf %>%	
+  has_response_by_subq <- qdf %>%	
     filter(question_type == "Matrix") %>%
     pull(response_options) %>%
     map_lgl(~ all(map_lgl(.x, ~ inherits(.x, "list"))) &&
@@ -351,10 +355,11 @@ process_qsf <- function(path_to_qsf,
   
   matrix_items <- qdf %>%	
     filter(question_type == "Matrix") %>%
-    filter(!has_resp_by_subq) %>%
+    filter(!has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(variable = unlist(matrix_subquestion_field_names),	
+      tibble(matrix_base_name = variable,
+             variable = unlist(matrix_subquestion_field_names),
              question = question,	
              matrix_subquestion = unlist(matrix_subquestions),	
              question_type = question_type,	
@@ -367,13 +372,15 @@ process_qsf <- function(path_to_qsf,
       )) %>% 
     select(new) %>% 
     unnest(new)
+    
   
   matrix_items_resp_by_subq <- qdf %>%	
     filter(question_type == "Matrix") %>%
-    filter(has_resp_by_subq) %>%
+    filter(has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(variable = unlist(matrix_subquestion_field_names),	
+      tibble(matrix_base_name = variable,
+             variable = unlist(matrix_subquestion_field_names),	
              question = question,	
              matrix_subquestion = unlist(matrix_subquestions),	
              question_type = question_type,	
@@ -387,7 +394,8 @@ process_qsf <- function(path_to_qsf,
     select(new) %>% 
     unnest(new)
   
-  matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq)
+  matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq) %>%
+    select(variable, matrix_base_name, everything())
   
   # Custom matrix formatting
   if (survey_version == "CMU") {
@@ -418,6 +426,7 @@ process_qsf <- function(path_to_qsf,
     ) %>% 
     select(wave,
            variable,
+           matrix_base_name,
            replaces,
            description,
            question,
@@ -446,7 +455,11 @@ process_qsf <- function(path_to_qsf,
   qdf <- rbind(qdf, other_text_items)
   qdf$response_options[qdf$question_type == "Text"] <- NA
   
-
+  # Drop occasional start and end square brackets from matrix response options.
+  qdf <- qdf %>%
+    mutate(
+      response_options = map_chr(response_options, ~ remove_brackets(.x))
+    )
   
   # Quality checks
   stopifnot(length(qdf$variable) == length(unique(qdf$variable)))
@@ -459,6 +472,14 @@ process_qsf <- function(path_to_qsf,
   }
   
   return(qdf %>% rename(version = wave))
+}
+
+remove_brackets <- function(response_set) {
+  if ( !is.na(response_set) && startsWith(response_set, "[") && endsWith(response_set, "]") ) {
+    str_sub(response_set, 2, -2)
+  } else {
+    response_set
+  }
 }
 
 #' Append the parsed and formatted info from the QSF to the existing codebook
@@ -505,7 +526,7 @@ add_qdf_to_codebook <- function(qdf,
       qdf <- qdf %>% select(-replaces)
     }
   }
-
+  
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
   # Sort so that items with missing question_type (non-Qualtrics fields) are at the top.

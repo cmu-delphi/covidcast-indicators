@@ -4,7 +4,13 @@
 \alias{write_individual_day}
 \title{Save individual response data for a single date}
 \usage{
-write_individual_day(data_to_write, params, date, out_dir)
+write_individual_day(
+  data_to_write,
+  params,
+  date,
+  out_dir,
+  raceeth_version = ""
+)
 }
 \arguments{
 \item{data_to_write}{data frame of response values}

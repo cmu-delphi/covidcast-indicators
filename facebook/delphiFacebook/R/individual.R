@@ -8,7 +8,7 @@
 #'     indicating where the output file will be written, and values "start_time"
 #'     and "end_time" used in naming the output file
 #'
-#' @importFrom dplyr select rename
+#' @importFrom dplyr select rename distinct
 #' @importFrom readr read_csv cols col_character
 #' @importFrom rlang .data
 #' @export

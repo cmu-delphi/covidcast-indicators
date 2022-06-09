@@ -40,7 +40,9 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     filter(!is.na(qid), version == wave)
 
   # Load translation file
-  translation <- read_csv(path_to_translation_file)
+  translation <- read_csv(path_to_translation_file) %>% 
+    # Drop survey ID line
+    filter(!startsWith(PhraseID, "SV_"))  
 
   # Use codebook to make a mapping of QID -> item name.
   var_qid_pairs <- codebook %>% mutate(variable = coalesce(matrix_base_name, variable)) %>% distinct(qid, variable)

@@ -135,7 +135,7 @@ params.weekly-weights.json: $(TODAY)
 	$(PYTHON) -m delphi_utils set \
 		debug false \
 		produce_individual_raceeth true \
-		end_date $(LAST_SATURDAY) \
+		end_date $(YESTERDAY) \
 		input <(find $(QUALTRICS) -maxdepth 1 -newer $< -type f -name "*.csv" | sort | grep $${PAT}  | tr '\n' ',' | sed 's_$(QUALTRICS)/__g;s/,$$//' ) \
 		parallel true \
 		output individual \

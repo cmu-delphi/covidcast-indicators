@@ -27,7 +27,7 @@ run_facebook <- function(params)
   # create data that will be aggregated for covidcast
   data_agg <- create_data_for_aggregation(input_data)
   data_agg <- filter_data_for_aggregation(data_agg, params, lead_days = 12)
-  weight_result <- join_weights(data_agg, params, weights = "step1")
+  weight_result <- add_weights(data_agg, params, weights = "step1")
   data_agg <- weight_result$df
   latest_weight_date_step1 <- weight_result$weight_date
   msg_df("response data to aggregate", data_agg)
@@ -36,10 +36,10 @@ run_facebook <- function(params)
     is.na(latest_weight_date_step1), as.Date(params$end_date), latest_weight_date_step1
   )
 
-  # create "complete" data that will be shared with research partners
+  # create "complete" data (microdata) that will be shared with research partners
   data_full <- create_complete_responses(input_data, cw_list$county, params)
   data_full <- filter_complete_responses(data_full, params)
-  data_full <- join_weights(data_full, params, weights = "full")$df
+  data_full <- add_weights(data_full, params, weights = "full", add_weekly_weights = TRUE)$df
   msg_df("full data to share with research partners", data_full)
 
   # create module-complete data used to create CID lists separately for each module

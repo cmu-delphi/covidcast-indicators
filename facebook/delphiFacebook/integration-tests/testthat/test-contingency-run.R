@@ -161,7 +161,7 @@ set.seed(0)
 rand_weights <- runif(2000)
 rand_weights <- rand_weights / sum(rand_weights)
 
-mock_join_weights <- function(data, params, weights = c("step1", "full")) {
+mock_add_weights <- function(data, params, weights = c("step1", "full")) {
   data <- cbind(as.data.table(data), weight=rand_weights)
   return( list(df = data, weight_date = NA) )
 }
@@ -190,7 +190,7 @@ test_that("simple weighted dataset produces correct percents", {
   params <- get_params(tdir)
   create_dir_not_exist(params$export_dir)
 
-  local_mock("delphiFacebook::join_weights" = mock_join_weights)
+  local_mock("delphiFacebook::add_weights" = mock_add_weights)
   local_mock("delphiFacebook::mix_weights" = mock_mix_weights)
   local_mock("delphiFacebook::load_archive" = mock_load_archive)
   local_mock("delphiFacebook::add_geo_vars" = mock_geo_vars)

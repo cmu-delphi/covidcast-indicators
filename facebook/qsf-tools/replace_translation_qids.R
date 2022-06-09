@@ -55,10 +55,10 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     PhraseID = str_replace(PhraseID, "(^QID[0-9]*)_", function(match) {
       paste0(qid_item_map[str_sub(match, 1, -2)], "_")
     })
-  )
+  ) 
   
   # Save processed file back to CSV under the same name.
-  write_csv(translation, path_to_translation_file)
+  write_excel_csv(translation, path_to_translation_file)
 }
 
 args <- commandArgs(TRUE)

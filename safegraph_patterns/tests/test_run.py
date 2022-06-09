@@ -10,7 +10,7 @@ from delphi_safegraph_patterns.run import (run_module, METRICS,
 class TestRun:
     PARAMS = {
         "common": {
-            "export_dir": "./test_data/receiving"
+            "export_dir": "./receiving"
         },
         "indicator": {
             "static_file_dir": "../static",
@@ -36,7 +36,7 @@ class TestRun:
     def test_output_files(self, mock_construct_signals, mock_data):
         mock_data.return_value = None
         run_module(self.PARAMS)
-        test_filepath = "./test_data/receiving"
+        test_filepath = "./receiving"
         csv_files = listdir(test_filepath)
 
         dates = [

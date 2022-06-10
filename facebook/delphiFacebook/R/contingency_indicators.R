@@ -390,17 +390,25 @@ get_aggs <- function() {
     "pct_financial_threat", "mh_financial_threat", compute_binary, jeffreys_binary,
 
     "pct_worried_become_ill", "mh_worried_ill", compute_binary, jeffreys_binary,
-    "pct_finance", "mh_worried_finances", compute_binary, jeffreys_binary,
-    # pre-wave 10
-    "pct_anxious_5d", "mh_anxious", compute_binary, jeffreys_binary,
-    "pct_depressed_5d", "mh_depressed", compute_binary, jeffreys_binary,
-    "pct_felt_isolated_5d", "mh_isolated", compute_binary, jeffreys_binary,
-    # wave 10+
-    "pct_anxious_7d", "mh_anxious_7d", compute_binary, jeffreys_binary,
-    "pct_depressed_7d", "mh_depressed_7d", compute_binary, jeffreys_binary,
-    "pct_felt_isolated_7d", "mh_isolated_7d", compute_binary, jeffreys_binary,
-    # wave 11
     "pct_worried_catch_covid", "mh_worried_catch_covid", compute_binary, jeffreys_binary,
+
+    "pct_finance", "mh_worried_finances", compute_binary, jeffreys_binary,
+    "pct_finance_alt", "mh_very_worried_finances", compute_binary, jeffreys_binary,
+
+    "pct_anxious_5d", "mh_anxious", compute_binary, jeffreys_binary,
+    "pct_anxious_5d_alt", "mh_some_anxious", compute_binary, jeffreys_binary,
+    "pct_anxious_7d", "mh_anxious_7d", compute_binary, jeffreys_binary,
+    "pct_anxious_7d_alt", "mh_some_anxious_7d", compute_binary, jeffreys_binary,
+
+    "pct_depressed_5d", "mh_depressed", compute_binary, jeffreys_binary,
+    "pct_depressed_5d_alt", "mh_some_depressed", compute_binary, jeffreys_binary,
+    "pct_depressed_7d", "mh_depressed_7d", compute_binary, jeffreys_binary,
+    "pct_depressed_7d_alt", "mh_some_depressed_7d", compute_binary, jeffreys_binary,
+
+    "pct_felt_isolated_5d", "mh_isolated", compute_binary, jeffreys_binary,
+    "pct_isolated_5d_alt", "mh_some_isolated", compute_binary, jeffreys_binary,
+    "pct_felt_isolated_7d", "mh_isolated_7d", compute_binary, jeffreys_binary,
+    "pct_isolated_7d_alt", "mh_some_isolated_7d", compute_binary, jeffreys_binary,
     
     # travel outside state
     # pre-wave 10

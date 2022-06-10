@@ -40,7 +40,7 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     filter(!is.na(qid), version == wave)
 
   # Load translation file
-  translation <- read_csv(path_to_translation_file) %>% 
+  translation <- read_csv(path_to_translation_file, show_col_types = FALSE) %>% 
     # Drop survey ID line
     filter(!startsWith(PhraseID, "SV_"))  
 
@@ -58,7 +58,7 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
   ) 
   
   # Save processed file back to CSV under the same name.
-  write_excel_csv(translation, path_to_translation_file)
+  write_excel_csv(translation, path_to_translation_file, quote = "needed")
 }
 
 args <- commandArgs(TRUE)

@@ -14,20 +14,17 @@ suppressPackageStartupMessages({
 })
 
 
-combine_translation_pair <- function(path_to_eu_translations,
-                                     path_to_noneu_translations) {
-  
-  translation <- translation %>% 
-    # Drop response options for the country + region question, they take up way too much space.
-    filter(!startsWith(PhraseID, "A2_3_Answer")) %>%
+combine_translation_pair <- function(eu_translation,
+                                     noneu_translation) {
+  translation <- bind_rows(eu_translation, noneu_translation) %>%
     mutate(eu_noneu = case_when(
       startsWith(PhraseID, "intro1_eu") ~ "EU",
       startsWith(PhraseID, "intro2_eu") ~ "EU",
       startsWith(PhraseID, "intro1_noneu") ~ "nonEU",
       startsWith(PhraseID, "intro2_noneu") ~ "nonEU",
       TRUE ~ "Both"
-    )
-    )
+    ))
+  return(translation)
 }
 
 combine_translations <- function(path_to_eu_translations,
@@ -42,32 +39,43 @@ combine_translations <- function(path_to_eu_translations,
     stop(path_to_noneu_translations, "does not specify that it is for the non-EU")
   }
   
-  eu_files <- list.files(path_to_eu_translations, pattern = "*.csv$")
+  eu_files <- list.files(path_to_eu_translations, pattern = "*.csv$", full.names = TRUE)
   eu_translations <- list()
   for (filename in eu_files) {
-    eu_translations[[get_wave_csv(filename)]] <- read_csv(filename) %>% 
-      filter(!startsWith(PhraseID, "intro"))
+    eu_translations[[as.character(get_wave_from_csv(filename))]] <- read_csv(filename, show_col_types = FALSE) %>% 
+      filter(startsWith(PhraseID, "intro"))
   }
   
-  noneu_files <- list.files(path_to_noneu_translations, pattern = "*.csv$")
+  noneu_files <- list.files(path_to_noneu_translations, pattern = "*.csv$", full.names = TRUE)
   noneu_translations <- list()
   for (filename in noneu_files) {
-    noneu_translations[[get_wave_csv(filename)]] <- read_csv(filename)
+    noneu_translations[[as.character(get_wave_from_csv(filename))]] <- read_csv(filename, show_col_types = FALSE) %>% 
+      # Drop response options for the country + region question, they take up way too much space.
+      filter(
+        !startsWith(PhraseID, "A2_3_Answer"),
+        !startsWith(PhraseID, "A2_2_Answer"),
+        !startsWith(PhraseID, "NA_")
+      )
   }
   
   if (!identical(sort(names(eu_translations)), sort(names(noneu_translations)))) {
     stop("not all waves are available for both EU and non-EU")
   }
   
+  dir.create(path_to_combined, showWarnings = FALSE)
   for (wave in names(eu_translations)) {
     combined <- combine_translation_pair(
       eu_translations[[wave]],
       noneu_translations[[wave]]
     )
-    write_excel_csv(combined, file.path(
-      path_to_combined,
-      sprintf("umd_ctis_combined_wave%02d_translations.csv", wave)
-    ))
+
+    write_excel_csv(
+      combined,
+      file.path(
+        path_to_combined,
+        sprintf("umd_ctis_combined_wave%02g_translations.csv", as.numeric(wave))
+      ),
+      quote = "needed")
   }
 }
 

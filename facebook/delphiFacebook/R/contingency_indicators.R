@@ -375,6 +375,8 @@ get_aggs <- function() {
     "pct_test_reason_travel", "t_tested_reason_travel", compute_binary, jeffreys_binary,
 
     # mental health
+    "pct_financial_threat", "mh_financial_threat", compute_binary, jeffreys_binary,
+
     "pct_worried_become_ill", "mh_worried_ill", compute_binary, jeffreys_binary,
     "pct_finance", "mh_worried_finances", compute_binary, jeffreys_binary,
     # pre-wave 10

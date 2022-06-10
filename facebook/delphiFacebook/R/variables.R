@@ -224,6 +224,17 @@ code_mental_health <- function(input_data, wave) {
   } else {
     input_data$mh_worried_catch_covid <- NA
   }
+
+  if ("Q36" %in% names(input_data)) {
+    # Included in waves 1, 2, 3. Coded as 1 = substantial threat,
+    # 2 = moderate threat, 3 = not much of a threat, 4 = not a threat at all
+    input_data$mh_financial_threat <- case_when(
+      is.na(input_data$Q36) ~ NA,
+      input_data$Q36 == 1 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$mh_financial_threat <- NA
+  }
   
   return(input_data)
 }

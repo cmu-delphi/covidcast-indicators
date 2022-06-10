@@ -253,7 +253,7 @@ code_mask_contact <- function(input_data, wave) {
     case_when(
       is.na(item) ~ NA,
       item == 6 ~ NA,
-      item == 1 | item ==  2 ~ TRUE,
+      item == 1 | item == 2 ~ TRUE,
       TRUE ~ FALSE)
   }
   
@@ -281,8 +281,16 @@ code_mask_contact <- function(input_data, wave) {
     # added in wave 8. wearing mask most or all of the time (last 7 days);
     # exclude respondents who have not been in public
     input_data$c_mask_often_7d <- most_always(input_data$C14a)
+    # Same indicator but include "sometimes" wear mask in public
+    input_data$c_mask_some_often_7d <- case_when(
+      is.na(input_data$C14a) ~ NA,
+      input_data$C14a == 6 ~ NA,
+      input_data$C14a == 1 | input_data$C14a == 2 | input_data$C14a == 3 ~ TRUE,
+      TRUE ~ FALSE)
+
   } else {
     input_data$c_mask_often_7d <- NA
+    input_data$c_mask_some_often_7d <- NA
   }
 
   if ("C16" %in% names(input_data)) {

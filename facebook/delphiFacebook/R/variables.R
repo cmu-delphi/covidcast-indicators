@@ -960,6 +960,13 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccinated_booster_defno   <- NA
   }
   
+  if ("C2" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No"
+    input_data$v_flu_vaccinated_1y <- input_data$C2 == 1
+  } else {
+    input_data$v_flu_vaccinated_1y <- NA
+  }
+
   if ("C17" %in% names(input_data)) {
     # Coded as 1 = "Yes", 4 = "No", 2 = "I don't know"
     input_data$v_flu_vaccinated_june_2020 <- input_data$C17 == 1

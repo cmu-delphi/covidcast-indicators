@@ -316,13 +316,22 @@ code_mask_contact <- function(input_data, wave) {
   if ("H1" %in% names(input_data)) {
     # added in wave 11. most/all *others* in public in the last 7 days; exclude
     # respondents who have not been in public.
+    # Coded as 1 = no people in public are distancing, 2 = a few people are,
+    # 3 = some people are, 4 = most people are, 5 = all people are, 6 = I have not been in public
     input_data$c_others_distanced_public <- case_when(
       is.na(input_data$H1) ~ NA,
       input_data$H1 == 6 ~ NA,
       input_data$H1 == 4 | input_data$H1 == 5 ~ TRUE,
       TRUE ~ FALSE)
+    # include others in public are distanced "sometimes"
+    input_data$c_others_distanced_some_public <- case_when(
+      is.na(input_data$H1) ~ NA,
+      input_data$H1 == 6 ~ NA,
+      input_data$H1 == 4 | input_data$H1 == 5 | input_data$H1 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_distanced_public <- NA
+    input_data$c_others_distanced_some_public <- NA
   }
 
   if ("C3" %in% names(input_data)) {

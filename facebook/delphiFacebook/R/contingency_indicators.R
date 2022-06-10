@@ -77,6 +77,7 @@ get_aggs <- function() {
     "pct_others_masked", "c_others_masked", compute_binary, jeffreys_binary,
     "pct_others_masked_public", "c_others_masked_public", compute_binary, jeffreys_binary,
     "pct_others_distanced_public", "c_others_distanced_public", compute_binary, jeffreys_binary,
+    "pct_others_distanced_public_alt", "c_others_distanced_some_public", compute_binary, jeffreys_binary,
     
     "pct_cli", "hh_p_cli", compute_household_binary, jeffreys_count,
     "pct_ili", "hh_p_ili", compute_household_binary, jeffreys_count,

@@ -74,8 +74,13 @@ get_aggs <- function() {
     "pct_wearing_mask_5d", "c_mask_often", compute_binary, jeffreys_binary,
     "pct_wearing_mask_7d", "c_mask_often_7d", compute_binary, jeffreys_binary,
     "pct_wearing_mask_7d_alt", "c_mask_some_often_7d", compute_binary, jeffreys_binary,
+
     "pct_others_masked", "c_others_masked", compute_binary, jeffreys_binary,
+    "pct_others_masked_alt", "c_others_some_masked", compute_binary, jeffreys_binary,
+
     "pct_others_masked_public", "c_others_masked_public", compute_binary, jeffreys_binary,
+    "pct_others_masked_public_alt", "c_others_masked_some_public", compute_binary, jeffreys_binary,
+
     "pct_others_distanced_public", "c_others_distanced_public", compute_binary, jeffreys_binary,
     "pct_others_distanced_public_alt", "c_others_distanced_some_public", compute_binary, jeffreys_binary,
     

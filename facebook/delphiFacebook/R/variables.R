@@ -296,21 +296,38 @@ code_mask_contact <- function(input_data, wave) {
   if ("C16" %in% names(input_data)) {
     # added in wave 5. most/all *others* seen in public wearing masks; exclude
     # respondents who have not been in public.
+    # Coded as 5 = no people in public are wearing masks, 4 = a few people are,
+    # 3 = some people are, 2 = most people are, 1 = all people are, 6 = I have not been in public
     input_data$c_others_masked <- most_always(input_data$C16)
+    # include others in public are masked "sometimes"
+    input_data$c_others_some_masked <- case_when(
+      is.na(input_data$C16) ~ NA,
+      input_data$C16 == 6 ~ NA,
+      input_data$C16 == 1 | input_data$C16 == 2 | input_data$C16 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_masked <- NA
+    input_data$c_others_some_masked <- NA
   }
   
   if ("H2" %in% names(input_data)) {
     # added in wave 11, replaces C16. most/all *others* seen in public wearing
     # masks; exclude respondents who have not been in public. Coding is reversed.
+    # Coded as 1 = no people in public are wearing masks, 2 = a few people are,
+    # 3 = some people are, 4 = most people are, 5 = all people are, 6 = I have not been in public
     input_data$c_others_masked_public <- case_when(
       is.na(input_data$H2) ~ NA,
       input_data$H2 == 6 ~ NA,
       input_data$H2 == 4 | input_data$H2 == 5 ~ TRUE,
       TRUE ~ FALSE)
+    input_data$c_others_masked_some_public <- case_when(
+      is.na(input_data$H2) ~ NA,
+      input_data$H2 == 6 ~ NA,
+      input_data$H2 == 4 | input_data$H2 == 5 | input_data$H2 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_masked_public <- NA
+    input_data$c_others_masked_some_public <- NA
   }
   
   if ("H1" %in% names(input_data)) {

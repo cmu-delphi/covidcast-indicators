@@ -184,6 +184,8 @@ get_aggs <- function() {
 
     "pct_vaccine_all_doses", "v_received_all_doses", compute_binary, jeffreys_binary,
 
+    "pct_flu_vaccine_june_2020", "v_flu_vaccinated_june_2020", compute_binary, jeffreys_binary,
+    "pct_flu_vaccine_july_2020", "v_flu_vaccinated_july_2020", compute_binary, jeffreys_binary,
     "pct_flu_vaccinated_2021", "v_flu_vaccinated_2021", compute_binary, jeffreys_binary,
     
     

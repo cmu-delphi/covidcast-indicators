@@ -143,7 +143,9 @@ get_aggs <- function() {
     "pct_hesitant_vaccine", "v_hesitant_vaccine", compute_binary, jeffreys_binary,
     "pct_vaccinated_or_accept", "v_covid_vaccinated_or_accept", compute_binary, jeffreys_binary,
     "pct_vaccinated_appointment_or_accept", "v_covid_vaccinated_appointment_or_accept", compute_binary, jeffreys_binary,
+
     "pct_covid_vaccinated_friends", "v_covid_vaccinated_friends", compute_binary, jeffreys_binary,
+    "pct_covid_vaccinated_friends_alt", "v_covid_vaccinated_some_friends", compute_binary, jeffreys_binary,
     
     "pct_vaccinate_children", "v_vaccinate_children", compute_binary, jeffreys_binary,
     "pct_vaccinate_child_oldest", "v_vaccinate_child_oldest", compute_binary, jeffreys_binary,

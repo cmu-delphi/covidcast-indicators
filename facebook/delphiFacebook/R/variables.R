@@ -912,8 +912,14 @@ code_vaccines <- function(input_data, wave) {
       is.na(input_data$H3) ~ NA,
       input_data$H3 == 4 | input_data$H3 == 6 ~ TRUE,
       TRUE ~ FALSE)
+    # Add "some" people
+    input_data$v_covid_vaccinated_some_friends <- case_when(
+      is.na(input_data$H3) ~ NA,
+      input_data$H3 == 4 | input_data$H3 == 6 | input_data$H3 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$v_covid_vaccinated_friends <- NA
+    input_data$v_covid_vaccinated_some_friends <- NA
   }
   
   if ("V2d" %in% names(input_data)) {

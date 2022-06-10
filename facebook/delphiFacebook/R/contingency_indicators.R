@@ -172,7 +172,9 @@ get_aggs <- function() {
     "pct_vaccinated_booster_probyes", "v_vaccinated_booster_probyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_booster_probno", "v_vaccinated_booster_probno", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_booster_defno", "v_vaccinated_booster_defno", compute_binary, jeffreys_multinomial_factory(4),
-    
+
+    "pct_vaccine_all_doses", "v_received_all_doses", compute_binary, jeffreys_binary,
+
     "pct_flu_vaccinated_2021", "v_flu_vaccinated_2021", compute_binary, jeffreys_binary,
     
     

@@ -212,6 +212,19 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$v_accept_covid_vaccine[input_data$start_dt < wave6_mod_date] <- NA
   }
 
+  if ("V2a" %in% names(input_data)) {
+    # coded as 1 = Yes, received all recommended doses, 2 = Plan to receive all recommended doses,
+    # 3 = Don't plan to receive all recommended doses.
+    input_data$v_received_all_doses <- case_when(
+      input_data$V2a == 1 ~ 1,
+      input_data$V2a == 2 ~ 0,
+      input_data$V2a == 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$v_received_all_doses <- NA_real_
+  }
+
   # hesitant_vaccine
   # Percentage who would definitely or probably NOT choose to get vaccinated
   input_data$v_hesitant_vaccine <- NA

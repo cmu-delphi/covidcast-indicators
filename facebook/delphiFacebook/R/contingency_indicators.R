@@ -88,7 +88,11 @@ get_aggs <- function() {
     "pct_ili", "hh_p_ili", compute_household_binary, jeffreys_count,
     "pct_hh_cmnty_cli", "hh_community_yes", compute_binary, jeffreys_binary,
     "pct_nohh_cmnty_cli", "community_yes", compute_binary, jeffreys_binary,
+
     "pct_direct_contact", "c_direct_contact", compute_binary, jeffreys_binary,
+    "pct_direct_contact_covid", "c_direct_contact_covid", compute_binary, jeffreys_binary,
+    "pct_direct_contact_covid_hh", "c_direct_contact_covid_hh", compute_binary, jeffreys_binary,
+
     "pct_avoid_contact", "c_avoid_contact", compute_binary, jeffreys_binary,
     "pct_avoid_contact_7d", "c_avoid_contact_7d", compute_binary, jeffreys_binary,
     

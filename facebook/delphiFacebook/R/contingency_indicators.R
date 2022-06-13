@@ -279,6 +279,23 @@ get_aggs <- function() {
     "pct_barrier_other", "v_hesitancy_reason_other", compute_binary, jeffreys_binary,
     "pct_barrier_dislike_vaccines_generally", "v_hesitancy_reason_dislike_vaccines_generally", compute_binary, jeffreys_binary,
     
+    # vaccine incomplete reasons
+    "pct_vaccine_incomplete_sideeffect", "v_vaccine_incomplete_sideeffect", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_allergic", "v_vaccine_incomplete_allergic", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_wontwork", "v_vaccine_incomplete_wontwork", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_dontbelieve", "v_vaccine_incomplete_dontbelieve", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_dontlike", "v_vaccine_incomplete_dontlike", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_not_recommended", "v_vaccine_incomplete_not_recommended", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_wait", "v_vaccine_incomplete_wait", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_otherpeople", "v_vaccine_incomplete_otherpeople", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_cost", "v_vaccine_incomplete_cost", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_distrust_vaccine", "v_vaccine_incomplete_distrust_vaccine", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_distrust_gov", "v_vaccine_incomplete_distrust_gov", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_health", "v_vaccine_incomplete_health", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_other", "v_vaccine_incomplete_other", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_pregnant", "v_vaccine_incomplete_pregnant", compute_binary, jeffreys_binary,
+    "pct_vaccine_incomplete_religion", "v_vaccine_incomplete_religion", compute_binary, jeffreys_binary,
+
     # vaccine "don't need" reasons
     "pct_dontneed_reason_had_covid", "v_dontneed_reason_had_covid_5abc_6", compute_binary, jeffreys_binary,
     "pct_dontneed_reason_dont_spend_time", "v_dontneed_reason_dont_spend_time_5abc_6", compute_binary, jeffreys_binary,

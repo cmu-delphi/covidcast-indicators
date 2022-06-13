@@ -1078,6 +1078,22 @@ code_behaviors <- function(input_data, wave) {
     input_data$c_direct_contact_covid_hh <- NA_real_
   }
 
+  # Work outside the home
+  if (all(c("D9", "D10") %in% names(input_data))) {
+    # D9: in the past 4 weeks, did you work
+    # Coded as 1 = Yes, 2 = No
+    # D10: if answered yes to D9, was your work in the last 4w outisde your home
+    # Coded as 1 = Yes, 2 = No
+    input_data$c_direct_contact_covid_hh <- case_when(
+      input_data$D9 == 1 & input_data$D10 == 1 ~ 1,
+      input_data$D9 == 2 | input_data$D10 == 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$c_direct_contact_covid_hh <- NA_real_
+  }
+
+
   # avoid_contact
   # Percentage of respondents that have reported having intentionally avoided
   # contact with other people all or most of the time

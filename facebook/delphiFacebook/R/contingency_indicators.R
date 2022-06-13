@@ -421,14 +421,17 @@ get_aggs <- function() {
     "pct_travel_outside_state_7d", "c_travel_state_7d", compute_binary, jeffreys_binary,
     
     # activities outside the home
+    "pct_work_outside_home_5d", "c_work_outside_5d", compute_binary, jeffreys_binary,
     "pct_work_outside_home_1d", "a_work_outside_home_1d", compute_binary, jeffreys_binary,
+    "pct_work_outside_home_4w", "c_work_outside_home_4w", compute_binary, jeffreys_binary,
+    "pct_work_outside_home_indoors_1d", "a_work_outside_home_indoors_1d", compute_binary, jeffreys_binary,
+
     "pct_shop_1d", "a_shop_1d", compute_binary, jeffreys_binary,
     "pct_restaurant_1d", "a_restaurant_1d", compute_binary, jeffreys_binary,
     "pct_spent_time_1d", "a_spent_time_1d", compute_binary, jeffreys_binary,
     "pct_large_event_1d", "a_large_event_1d", compute_binary, jeffreys_binary,
     "pct_public_transit_1d", "a_public_transit_1d", compute_binary, jeffreys_binary,
-    
-    "pct_work_outside_home_indoors_1d", "a_work_outside_home_indoors_1d", compute_binary, jeffreys_binary,
+
     "pct_shop_indoors_1d", "a_shop_indoors_1d", compute_binary, jeffreys_binary,
     "pct_restaurant_indoors_1d", "a_restaurant_indoors_1d", compute_binary, jeffreys_binary,
     "pct_spent_time_indoors_1d", "a_spent_time_indoors_1d", compute_binary, jeffreys_binary,

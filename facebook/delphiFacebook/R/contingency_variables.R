@@ -1078,22 +1078,6 @@ code_behaviors <- function(input_data, wave) {
     input_data$c_direct_contact_covid_hh <- NA_real_
   }
 
-  # Work outside the home
-  if (all(c("D9", "D10") %in% names(input_data))) {
-    # D9: in the past 4 weeks, did you work
-    # Coded as 1 = Yes, 2 = No
-    # D10: if answered yes to D9, was your work in the last 4w outisde your home
-    # Coded as 1 = Yes, 2 = No
-    input_data$c_direct_contact_covid_hh <- case_when(
-      input_data$D9 == 1 & input_data$D10 == 1 ~ 1,
-      input_data$D9 == 2 | input_data$D10 == 2 ~ 0,
-      TRUE ~ NA_real_
-    )
-  } else {
-    input_data$c_direct_contact_covid_hh <- NA_real_
-  }
-
-
   # avoid_contact
   # Percentage of respondents that have reported having intentionally avoided
   # contact with other people all or most of the time
@@ -1134,6 +1118,21 @@ code_behaviors <- function(input_data, wave) {
 #' 
 #' @return augmented data frame
 code_addl_activities <- function(input_data, wave) {
+  # Work outside the home
+  if (all(c("D9", "D10") %in% names(input_data))) {
+    # D9: in the past 4 weeks, did you work
+    # Coded as 1 = Yes, 2 = No
+    # D10: if answered yes to D9, was your work in the last 4w outisde your home
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_outside_home_4w <- case_when(
+      input_data$D9 == 1 & input_data$D10 == 1 ~ 1,
+      input_data$D9 == 2 | input_data$D10 == 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$a_work_outside_home_4w <- NA_real_
+  }
+
   calc_masking_given_activity <- function(activity, masked_during_activity) {
     case_when(
       activity & masked_during_activity ~ TRUE,
@@ -1204,6 +1203,22 @@ code_addl_activities <- function(input_data, wave) {
     input_data$a_mask_public_transit_1d <- NA
   }
   
+  if ("C4" %in% names(input_data)) {
+    # Worked/volunteered in healthcare (hospital, medical office, etc) in last 5 days
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_healthcare_5d <- input_data$C4 == 1
+  } else {
+    input_data$a_work_healthcare_5d <- NA
+  }
+
+  if ("C5" %in% names(input_data)) {
+    # Worked/visited nursing home, etc, in last 5 days
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_nursing_home_5d <- input_data$C5 == 1
+  } else {
+    input_data$a_work_nursing_home_5d <- NA
+  }
+
   return(input_data)
 }
 

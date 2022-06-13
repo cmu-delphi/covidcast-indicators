@@ -423,7 +423,7 @@ get_aggs <- function() {
     # activities outside the home
     "pct_work_outside_home_5d", "c_work_outside_5d", compute_binary, jeffreys_binary,
     "pct_work_outside_home_1d", "a_work_outside_home_1d", compute_binary, jeffreys_binary,
-    "pct_work_outside_home_4w", "c_work_outside_home_4w", compute_binary, jeffreys_binary,
+    "pct_work_outside_home_4w", "a_work_outside_home_4w", compute_binary, jeffreys_binary,
     "pct_work_outside_home_indoors_1d", "a_work_outside_home_indoors_1d", compute_binary, jeffreys_binary,
 
     "pct_shop_1d", "a_shop_1d", compute_binary, jeffreys_binary,
@@ -436,6 +436,9 @@ get_aggs <- function() {
     "pct_restaurant_indoors_1d", "a_restaurant_indoors_1d", compute_binary, jeffreys_binary,
     "pct_spent_time_indoors_1d", "a_spent_time_indoors_1d", compute_binary, jeffreys_binary,
     "pct_large_event_indoors_1d", "a_large_event_indoors_1d", compute_binary, jeffreys_binary,
+
+    "pct_work_healthcare_5d", "a_work_healthcare_5d", compute_binary, jeffreys_binary,
+    "pct_work_nursing_home_5d", "a_work_nursing_home_5d", compute_binary, jeffreys_binary,
     
     # masked activities outside the home
     "pct_mask_work_outside_home_1d", "a_mask_work_outside_home_1d", compute_binary, jeffreys_binary,

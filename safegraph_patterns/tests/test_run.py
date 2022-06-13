@@ -7,13 +7,6 @@ import pandas as pd
 from delphi_safegraph_patterns.run import (run_module, METRICS,
                                            SENSORS, GEO_RESOLUTIONS)
 
-OLD_VERSIONS = [
-            # release version, access dir
-            ("202004", "weekly-patterns/v2", "main-file/*.csv.gz"),
-            ("202006", "weekly-patterns-delivery/weekly", "patterns/*/*/*"),
-            ("20210408", "weekly-patterns-delivery-2020-12/weekly", "patterns/*/*/*")
-    ]
-
 class TestRun:
     PARAMS = {
         "common": {
@@ -27,22 +20,28 @@ class TestRun:
             "aws_secret_access_key": "",
             "aws_default_region": "",
             "aws_endpoint": "",
-            "sync": False
+            "sync": False,
+            "apikey":None,
         }
     }
 
-    @patch("delphi_safegraph_patterns.run.VERSIONS", OLD_VERSIONS)
-    def test_output_files(self, clean_receiving_dir):
+    def mocked_construct_signals(*args, **kwargs):
+        if args[1] == 'bars_visit_v2':
+            return pd.read_csv('./test_data/df0.csv')
+        if args[1] == 'restaurants_visit_v2':
+            return pd.read_csv('./test_data/df1.csv')
+
+    @patch("delphi_safegraph_patterns.process.data")
+    @patch("delphi_safegraph_patterns.process.construct_signals", side_effect = mocked_construct_signals)
+    def test_output_files(self, mock_construct_signals, mock_data):
+        mock_data.return_value = None
         run_module(self.PARAMS)
-        csv_files = listdir("receiving")
+        test_filepath = "./receiving"
+        csv_files = listdir(test_filepath)
 
         dates = [
-            "20190722", "20190723", "20190724", "20190725", "20190726",
-            "20190727", "20190728", "20190729", "20190730", "20190731",
-            "20190801", "20190802", "20190803", "20190804",
-            "20200727", "20200728", "20200729", "20200730", "20200731",
-            "20200801", "20200802", "20200803", "20200804", "20200805",
-            "20200806", "20200807", "20200808", "20200809"
+            "20210503", "20210504", "20210505", "20210506", "20210507",
+            "20210508", "20210509",
         ]
 
         expected_files = []
@@ -57,6 +56,6 @@ class TestRun:
 
         # Test output format
         df = pd.read_csv(
-            join("./receiving", "20200729_state_bars_visit_num.csv")
+            join(test_filepath, "20210507_state_bars_visit_v2_num.csv")
         )
         assert (df.columns.values == ["geo_id", "val", "se", "sample_size"]).all()

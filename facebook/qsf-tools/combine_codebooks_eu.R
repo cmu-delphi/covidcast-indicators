@@ -6,7 +6,7 @@
 ##
 ## Usage:
 ##
-## Rscript combine_codebooks_eu.R.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
+## Rscript combine_codebooks_eu.R path/to/eu/codebook path/to/noneu/codebook path/to/combined/codebook
 
 suppressPackageStartupMessages({
   library(tidyverse)
@@ -18,33 +18,33 @@ combine_codebooks <- function(path_to_codebook_eu,
   
   codebook_eu <- read_csv(path_to_codebook_eu, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
   mutate(
-    eu_version = "EU"
+    eu_noneu = "EU"
   )
   
   codebook_noneu <- read_csv(path_to_codebook_noneu, col_types = cols(
     .default = col_character(),
-    wave = col_double()
+    version = col_double()
   )) %>%
     mutate(
-      eu_version = "Non-EU"
+      eu_noneu = "Non-EU"
     )
 
   # Using rbind here to raise an error if columns differ between the existing
   # codebook and the new wave data.
   codebook_with_duplicates <- rbind(codebook_eu, codebook_noneu)
   
-  count_duplicated_rows <- codebook_with_duplicates %>% group_by(across(c(-eu_version))) %>% summarize(count = n())
+  count_duplicated_rows <- codebook_with_duplicates %>% group_by(across(c(-eu_noneu))) %>% summarize(count = n())
   codebook <- codebook_with_duplicates %>% left_join(count_duplicated_rows)
-  codebook$eu_version[codebook$count == 2] <- "Both"
+  codebook$eu_noneu[codebook$count == 2] <- "Both"
 
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   # Drop duplicates.
   codebook <- codebook %>%
-    arrange(!is.na(.data$question_type), variable, wave, eu_version) %>% 
-    select(-count) %>% 
+    arrange(!is.na(.data$question_type), variable, version, eu_noneu) %>%
+    select(-count, -replaces) %>% 
     distinct()
 
   return(codebook)

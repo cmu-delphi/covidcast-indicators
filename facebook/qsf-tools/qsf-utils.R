@@ -173,7 +173,7 @@ patch_item_names <- function(item_names, path_to_rename_map, wave, rename_list=T
 #'
 #' @return character vector of repaired survey question names
 get_question_formats <- function(qsf, item_names, survey_version){
-  type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix", DD = "Dropdown")
+  type_map <- c(MC = "Multiple choice", TE = "Text", Matrix = "Matrix", DD = "Dropdown", DB = "Descriptive block")
   
   qtype <- qsf %>%
     map_chr(~ .x$Payload$QuestionType) %>% 

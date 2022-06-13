@@ -6,8 +6,9 @@
   },
   "indicator": {
     "static_file_dir": "./static",
-    "raw_data_dir": "/mnt/data/safegraph/",
+    "raw_data_dir": "./data",
     "n_core": 12,
+    "apikey": "",
     "aws_access_key_id": "",
     "aws_secret_access_key": "",
     "aws_default_region": "",

@@ -18,34 +18,34 @@ combine_changelogs <- function(path_to_changelog_eu,
   
   changelog_eu <- read_csv(path_to_changelog_eu, col_types = cols(
     .default = col_character(),
-    new_wave = col_double(),
-    old_wave = col_double()
+    new_version = col_double(),
+    old_version = col_double()
   )) %>%
   mutate(
-    eu_version = "EU"
+    eu_noneu = "EU"
   )
   
   changelog_noneu <- read_csv(path_to_changelog_noneu, col_types = cols(
     .default = col_character(),
-    new_wave = col_double(),
-    old_wave = col_double()
+    new_version = col_double(),
+    old_version = col_double()
   )) %>%
     mutate(
-      eu_version = "Non-EU"
+      eu_noneu = "Non-EU"
     )
 
   # Using rbind here to raise an error if columns differ between the existing
   # changelog and the new wave data.
   changelog_with_duplicates <- rbind(changelog_eu, changelog_noneu)
   
-  count_duplicated_rows <- changelog_with_duplicates %>% group_by(across(c(-eu_version))) %>% summarize(count = n())
+  count_duplicated_rows <- changelog_with_duplicates %>% group_by(across(c(-eu_noneu))) %>% summarize(count = n())
   changelog <- changelog_with_duplicates %>% left_join(count_duplicated_rows)
-  changelog$eu_version[changelog$count == 2] <- "Both"
+  changelog$eu_noneu[changelog$count == 2] <- "Both"
 
   # Sort so that items with missing type (non-Qualtrics fields) are at the top.
   # Drop duplicates.
   changelog <- changelog %>%
-    arrange(variable_name, eu_version) %>% 
+    arrange(variable_name, eu_noneu) %>% 
     select(-count) %>% 
     distinct()
 

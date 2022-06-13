@@ -290,6 +290,28 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$t_ever_tested <- NA
   }
   
+  if ( "B12a" %in% names(input_data) ) {
+    not_tested_reasons <- split_options(input_data$B12a)
+
+    input_data$t_reason_not_tested_tried <- is_selected(not_tested_reasons, "1")
+    input_data$t_reason_not_tested_appointment <- is_selected(not_tested_reasons, "2")
+    input_data$t_reason_not_tested_location <- is_selected(not_tested_reasons, "3")
+    input_data$t_reason_not_tested_cost <- is_selected(not_tested_reasons, "4")
+    input_data$t_reason_not_tested_time <- is_selected(not_tested_reasons, "5")
+    input_data$t_reason_not_tested_travel <- is_selected(not_tested_reasons, "6")
+    input_data$t_reason_not_tested_stigma <- is_selected(not_tested_reasons, "7")
+    input_data$t_reason_not_tested_none <- is_selected(not_tested_reasons, "8")
+  } else {
+    input_data$t_reason_not_tested_tried <- NA
+    input_data$t_reason_not_tested_appointment <- NA
+    input_data$t_reason_not_tested_location <- NA
+    input_data$t_reason_not_tested_cost <- NA
+    input_data$t_reason_not_tested_time <- NA
+    input_data$t_reason_not_tested_travel <- NA
+    input_data$t_reason_not_tested_stigma <- NA
+    input_data$t_reason_not_tested_none <- NA
+  }
+
   return(input_data)
 }
 

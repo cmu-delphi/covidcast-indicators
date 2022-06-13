@@ -395,6 +395,15 @@ get_aggs <- function() {
     "pct_tested_positive_14d", "t_tested_positive_14d", compute_binary, jeffreys_binary,
     "pct_wanted_test_14d", "t_wanted_test_14d", compute_binary, jeffreys_binary,
     "pct_ever_tested", "t_ever_tested", compute_binary, jeffreys_binary,
+
+    "pct_reason_not_tested_tried", "t_reason_not_tested_tried", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_appointment", "t_reason_not_tested_appointment", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_location", "t_reason_not_tested_location", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_cost", "t_reason_not_tested_cost", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_time", "t_reason_not_tested_time", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_travel", "t_reason_not_tested_travel", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_stigma", "t_reason_not_tested_stigma", compute_binary, jeffreys_binary,
+    "pct_reason_not_tested_none", "t_reason_not_tested_none", compute_binary, jeffreys_binary,
     
     ## testing reasons
     "pct_test_reason_sick", "t_tested_reason_sick", compute_binary, jeffreys_binary,

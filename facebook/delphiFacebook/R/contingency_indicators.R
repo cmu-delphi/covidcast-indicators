@@ -542,7 +542,12 @@ get_aggs <- function() {
     "pct_school_safety_measures_vaccine_staff", "s_school_safety_measures_vaccine_staff", compute_binary, jeffreys_binary,
     "pct_school_safety_measures_vaccine_students", "s_school_safety_measures_vaccine_students", compute_binary, jeffreys_binary,
     "pct_school_safety_measures_cafeteria", "s_school_safety_measures_cafeteria", compute_binary, jeffreys_binary,
-    "pct_school_safety_measures_dont_know", "s_school_safety_measures_dont_know", compute_binary, jeffreys_binary
+    "pct_school_safety_measures_dont_know", "s_school_safety_measures_dont_know", compute_binary, jeffreys_binary,
+
+    # Means
+    "mean_days_symptoms", "symp_n_days", compute_mean, I,
+    "mean_ppl_symptoms_household", "hh_number_sick", compute_mean, I,
+    "mean_ppl_symptoms_community", "community_number_sick", compute_mean, I
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

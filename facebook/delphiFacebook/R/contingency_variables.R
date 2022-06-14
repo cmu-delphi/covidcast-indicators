@@ -951,6 +951,32 @@ code_attempt_vaccine <- function(input_data, wave) {
 #' 
 #' @return data frame augmented with demographic grouping variables
 code_addl_symptoms <- function(input_data, wave) {
+  if ("B2b" %in% names(input_data)) {
+    # How many days have you had one or more new or unusual symptom?
+    # Free response
+    input_data$symp_n_days <- case_when(
+      input_data$B2b < 0 ~ NA_real_,
+      input_data$B2b > 1000 ~ NA_real_,
+      is.na(input_data$B2b) ~ NA_real_,
+      TRUE ~ as.integer(input_data$B2b)
+      )
+  } else {
+    input_data$symp_n_days <- NA_real_
+  }
+
+  if ("A4" %in% names(input_data)) {
+    # How many additional people in your community do you know who are sick with fever + another symptom?
+    # Free response
+    input_data$community_number_sick <- case_when(
+      input_data$A4 < 0 ~ NA_real_,
+      input_data$A4 > 100 ~ NA_real_,
+      is.na(input_data$A4) ~ NA_real_,
+      TRUE ~ as.integer(input_data$A4)
+      )
+  } else {
+    input_data$community_number_sick <- NA_real_
+  }
+
   # anosmia
   # Percentage of respondents experiencing anosmia
   # loss of taste or smell / # any B2 response

@@ -10,8 +10,6 @@ from delphi_claims_hosp.get_latest_claims_name import get_latest_filename
 
 
 class TestGetLatestFileName:
-    
-    start_time = time.time()
     logger = Mock()
     
     def test_get_latest_claims_name(self):

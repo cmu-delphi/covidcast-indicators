@@ -38,7 +38,8 @@ def agg_and_write(data_path, logger):
     files = np.array(list(Path(data_path).glob("*")))
 
     for f in files:
-        if ".csv.gz" not in str(f):
+        filename = str(f)
+        if ".csv.gz" not in filename:
             continue
         out_path = f.parents[0] / f.name
         dfs = pd.read_csv(f, dtype={"PatCountyFIPS": str,
@@ -57,8 +58,8 @@ def agg_and_write(data_path, logger):
         assert np.sum(
             dfs.duplicated(subset=["ServiceDate", "PatCountyFIPS",
                                    "Pat HRR Name", "PatAgeGroup"])) == 0, \
-            "Duplication across drops!"
-        assert dfs.shape[1] == 10, "Wrong number of columns"
+            f'Duplication across drops in {filename}!'
+        assert dfs.shape[1] == 10, f'Wrong number of columns in {filename}'
 
         dfs.to_csv(out_path, index=False)
         logger.info(f"Wrote {out_path}")

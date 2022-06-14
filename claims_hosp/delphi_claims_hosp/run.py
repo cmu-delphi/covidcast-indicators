@@ -137,7 +137,7 @@ def run_module(params):
     # Remove all the raw files
     for fn in os.listdir(params["indicator"]["input_dir"]):
         if ".csv.gz" in fn:
-            os.system(f'rm {params["indicator"]["input_dir"]}/{fn}')
+            os.remove(f'{params["indicator"]["input_dir"]}/{fn}')
     logger.info('Remove all the raw files.')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)

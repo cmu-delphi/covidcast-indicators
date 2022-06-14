@@ -284,12 +284,50 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_timing_dontknow <- NA
   }
   
+  if ("B3" %in% names(input_data)) {
+    input_data$t_taken_temp <- input_data$B3 == 1
+  } else {
+    input_data$t_taken_temp <- NA
+  }
+
   if ("B8" %in% names(input_data)) {
     input_data$t_ever_tested <- input_data$B8 == 1
   } else {
     input_data$t_ever_tested <- NA
   }
   
+  if ("B5" %in% names(input_data)) {
+    input_data$t_unusual_symptom_tested <- case_when(
+      input_data$B5 %in% c(1, 2, 3) ~ 1,
+      input_data$B5 %in% c(4, 5) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_unusual_symptom_tested <- NA
+  }
+
+  if ("B6" %in% names(input_data)) {
+    input_data$t_unusual_symptom_hospital <- case_when(
+      input_data$B6 %in% c(1, 3) ~ 1,
+      input_data$B6 %in% c(2) ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_unusual_symptom_hospital <- NA
+  }
+
+  if ("B7" %in% names(input_data)) {
+    # Coded as 8 = no medical care sought, 1-6 = various types of medical care sought,
+    # 7 = care sought but not received
+    input_data$t_unusual_symptom_medical_care <- case_when(
+      input_data$B7 == "8" ~ 0,
+      !is.na(input_data$B7) ~ 1,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$t_unusual_symptom_medical_care <- NA
+  }
+
   if ( "B12a" %in% names(input_data) ) {
     not_tested_reasons <- split_options(input_data$B12a)
 
@@ -1046,6 +1084,13 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_headache_unusual <- NA
     input_data$symp_sleep_changes_unusual <- NA
     input_data$symp_stuffy_nose_unusual <- NA
+  }
+
+  if ("B4" %in% names(input_data)) {
+    # Cough with mucus given have cough in last 1 day
+    input_data$symp_cough_mucus <- input_data$B4 == 1
+  } else {
+    input_data$symp_cough_mucus <- NA
   }
   
   return(input_data)

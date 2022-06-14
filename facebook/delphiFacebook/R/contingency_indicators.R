@@ -97,6 +97,10 @@ get_aggs <- function() {
     "pct_avoid_contact_7d", "c_avoid_contact_7d", compute_binary, jeffreys_binary,
     
     # symptoms
+    "pct_taken_temp", "t_taken_temp", compute_binary, jeffreys_binary,
+
+    "pct_cough_mucus", "symp_cough_mucus", compute_binary, jeffreys_binary,
+
     "pct_symp_fever", "symp_fever", compute_binary, jeffreys_binary,
     "pct_symp_cough", "symp_cough", compute_binary, jeffreys_binary,
     "pct_symp_shortness_breath", "symp_shortness_breath", compute_binary, jeffreys_binary,
@@ -395,6 +399,10 @@ get_aggs <- function() {
     "pct_tested_positive_14d", "t_tested_positive_14d", compute_binary, jeffreys_binary,
     "pct_wanted_test_14d", "t_wanted_test_14d", compute_binary, jeffreys_binary,
     "pct_ever_tested", "t_ever_tested", compute_binary, jeffreys_binary,
+
+    "pct_unusual_symptom_tested", "t_unusual_symptom_tested", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_hospital", "t_unusual_symptom_hospital", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care", "t_unusual_symptom_medical_care", compute_binary, jeffreys_binary,
 
     "pct_reason_not_tested_tried", "t_reason_not_tested_tried", compute_binary, jeffreys_binary,
     "pct_reason_not_tested_appointment", "t_reason_not_tested_appointment", compute_binary, jeffreys_binary,

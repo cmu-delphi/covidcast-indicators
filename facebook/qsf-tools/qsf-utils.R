@@ -71,6 +71,32 @@ get_wave <- function(path_to_qsf) {
   return(wave)
 }
 
+#' Get wave number from qsf filename
+#' 
+#' Wave number as provided in the qsf name should be an integer or a float with
+#' one decimal place.
+#'
+#' @param path_to_file
+#'
+#' @return (mostly) integer wave number
+get_wave_from_csv <- function(path_to_file) {
+  name_pattern <- "(.*[Ww]ave_?)([0-9]*([.][0-9])?)(.*csv.*)"
+  if (!grepl(name_pattern, path_to_file)) {
+    stop(
+      "The CSV filename must include the string 'csv', and the wave number in ",
+      "the format 'Wave_XX', 'WaveXX', 'wave_XX', or 'waveXX' where 'XX' is an ",
+      "integer or float. The wave specification can occur anywhere in the ",
+      "filename but must precede the string 'csv'."
+    )
+  }
+  
+  wave <- as.numeric(
+    sub(name_pattern, "\\2", path_to_file)
+  ) 
+  
+  return(wave)
+}
+
 #' Create mapping of QIDs to module name
 #'
 #' @param qsf contents of QSF file in JSON format

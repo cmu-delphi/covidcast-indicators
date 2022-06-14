@@ -1,19 +1,18 @@
 # standard
 import time
+from unittest.mock import Mock
 
 # third party
 import pytest
 
-from delphi_utils import get_structured_logger
+
 from delphi_claims_hosp.get_latest_claims_name import get_latest_filename
 
 
 class TestGetLatestFileName:
     
     start_time = time.time()
-    logger = unittest.mock.Mock()
-        __name__, filename="./test.log",
-        log_exceptions=True)
+    logger = Mock()
     
     def test_get_latest_claims_name(self):
         dir_path = "./test_data/"

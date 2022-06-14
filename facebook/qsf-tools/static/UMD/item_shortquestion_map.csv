@@ -1,32 +1,45 @@
 item,description
-intro1_eu,participation EU
-intro2_eu,data share EU
-intro1_noneu,participation nonEU
-intro2_noneu,data share nonEU
-intro1_noneu_jhu,TODO
-intro1_eu_jhu, TODO
-intro1_eu_jhsph, TODO
-intro1_row_jhu, TODO
-intro1_row_jhsph, TODO
 A1,18yrs+
 A1_2,agecheckV2 TODO
 A2,country/region
+A2_1120,country + region
+A2_1220,country + region
 A2_2,country/region
-A2_3,administrative region
-A3, TODO
 A2_2_1,country/region
 A2_2_2,administrative region
+A2_3,administrative region
+A3, TODO
 B0a,ever had covid
 B1,symptoms
+B10,reduce spendings pay for test
+B11,wanted test 14d
+B11a,TODO
+B11b,TODO
+B11c,TODO
+B12,reason not tested 14d
+B12a_likert,TODO
+B12a_profile,TODO
+B12b,reason not tested 14d
+B12b_likert,TODO
+B12b_profile,TODO
+B12c,TODO
+B12c_matrix,TODO
+B13,needed med services 30d
+B13_likert,TODO
+B13_profile,TODO
+B14,reason no med services 30d
+B14_likert,TODO
+B14_profile,TODO
+B15,reason tested 14d
+B1_matrix, TODO
 B1b,unusual symptoms
 B1b_likert,unusual symptoms
-B1_matrix, TODO
 B1b_matrix, TODO
 B2,unusual symptoms num days
 B2a,unusual symptoms num days TODO
 B2b,unusual symptoms num days TODO
 B2c,unusual symptoms num days TODO
-B3,community sick 
+B3,community sick
 B4,community num sick
 B5,spent time with sick
 B6,tested ever
@@ -40,34 +53,22 @@ B9,pay for test
 B9_alt1,TODO
 B9_alt2,TODO
 B9_alt3,TODO
-B10,reduce spendings pay for test
-B11,wanted test 14d
-B11a,TODO
-B11b,TODO
-B11c,TODO
-B12,reason not tested 14d
-B12b,reason not tested 14d
-B12c,TODO
-B12c_matrix,TODO
-B12a_likert,TODO
-B12a_profile,TODO
-B12b_likert,TODO
-B12b_profile,TODO
-B13,needed med services 30d
-B13_likert,TODO
-B13_profile,TODO
-B14,reason no med services 30d
-B14_likert,TODO
-B14_profile,TODO
-B15,reason tested 14d
 C0,activities 24h
-C0a,activities 24h
 C0_likert,activities 24h
 C0_matrix,TODO
-C1_m,direct contact outsider 24h
-C1_5,TODO
+C0a,activities 24h
+C10,flu vaccine intend by Jan 2020
+C11_no,reasons no flu vaccine
+C11_unsure,reasons unsure flu vaccine
+C12,flu vaccine june2019 to feb2020
+C13,mask worn 24h
+C13a,mask worn 24h indoors
+C14,avoid contact
+C14a,avoid contact 7d
 C1_10,TODO
 C1_15,TODO
+C1_5,TODO
+C1_m,direct contact outsider 24h
 C2,num contact outsider 24h
 C2_2a, TODO
 C2_2b, TODO
@@ -78,27 +79,22 @@ C4,washing hands after public 7d
 C4_2,TODO
 C5,wear mask in public 7d
 C5_2,TODO
-C6,days spent with outsider 7d 
+C6,days spent with outsider 7d
 C6_2,TODO
 C7,num washed hands 24d
 C7_oe,TODO
-C8,access soap water 
+C8,access soap water
 C9,flu vaccine since June 2020
 C9a,flu vaccine since July 2020
-C10,flu vaccine intend by Jan 2020
-C11_no,reasons no flu vaccine
-C11_unsure,reasons unsure flu vaccine
-C12,flu vaccine june2019 to feb2020
-C13a,mask worn 24h indoors
-C13,mask worn 24h
-C14,avoid contact
-C14a,avoid contact 7d
 D1,nervousness 7d
+D10,main activity occupation
+D10a,main activity occupation
+D10b,TODO
 D1_14,TODO
 D2,depressed 7d
 D2_14,TODO
-D2_30_cheer,TODO
 D2_30_calm,TODO
+D2_30_cheer,TODO
 D3,worried ill
 D4,worried food next week
 D5,worried finances next month
@@ -109,9 +105,6 @@ D7a,paid work 4w
 D8,paid work before feb 2020
 D9,reason stopped working
 D9_alt,TODO
-D10,main activity occupation
-D10a,main activity occupation
-D10b,TODO
 E2,area type
 E3,gender
 E4,age
@@ -128,22 +121,40 @@ F3,tracking app
 F3_au,COVIDSafe app
 F3_de,Corona-Warn-App
 F3_uk,NHS app TODO
+G1,worry catch covid
+G2,belief social distancing
+G3,belief wearing mask
+H1,others maintained distance 7d
+H2,others wear masks 7d
+H3,friends family vaccination
+I1,belief vaccinated stop masking
+I10_noneu,info channels trust
+I2,belief children no covid
+I5,covid news sources 7d
+I6,covid news sources trust
+I7,additional covid topics
+I8,belief no covid hot climate
+I9_noneu,info channels 7d
+intro1_eu,participation EU
+intro1_eu_jhsph, TODO
+intro1_eu_jhu, TODO
+intro1_noneu,participation nonEU
+intro1_noneu_jhu,TODO
+intro1_row_jhsph, TODO
+intro1_row_jhu, TODO
+intro2_eu,data share EU
+intro2_noneu,data share nonEU
+J1,children <18 household
+J2,vaccinate children
+J3,parent or guardian
+J4,oldest child age
+J5,oldest child vaccine
+J6,oldest child schooling
+J7,remote schooling
+J8,oldest child gender
+K1,delayed medical care cost 1y
+Q75,reference oldest child
 V1,vaccinated
-V1alt_A,know anyone vaccinated
-V2,vaccine doses
-V2a,inital doses
-V2b,booster doses
-V2c,booster intend
-V3,vaccine accepting likert
-V3a,vaccine accepting likert 2
-V4,trust vaccine recommend source
-V4_fixed,trust vaccine recommend source
-V9,concern side effect
-V5a,vaccine hesitancy reasons prob yes
-V5b,vaccine hesitancy reasons prob no
-V5c,vaccine hesitancy reasons def no
-V5d,vaccine hesitancy reasons not all doses
-V6,reasons vaccination not needed
 V10,chronic conditions
 V11,pregnant
 V12,smoke
@@ -156,33 +167,22 @@ V18a,vaccination barriers vaccinated ever 1
 V18b,vaccination barriers unvaccinated
 V18c,vaccination barriers vaccinated 2
 V19,when try to get vaccine
+V1alt_A,know anyone vaccinated
+V2,vaccine doses
 V20,"recent vaccination date intro"
 V20_month,recent vaccination month
 V20_year,recent vaccination year
-G1,worry catch covid
-G2,belief social distancing
-G3,belief wearing mask
-H1,others maintained distance 7d
-H2,others wear masks 7d
-H3,friends family vaccination
-I1,belief vaccinated stop masking
-I2,belief children no covid
-I5,covid news sources 7d
-I6,covid news sources trust
-I7,additional covid topics
-I8,belief no covid hot climate
-I9_noneu,info channels 7d
-I10_noneu,info channels trust
-J1,children <18 household
-J2,vaccinate children
-J3,parent or guardian
-J4,oldest child age
-J5,oldest child vaccine
-J6,oldest child schooling
-J7,remote schooling
-J8,oldest child gender
-K1,delayed medical care cost 1y
+V2a,inital doses
+V2b,booster doses
+V2c,booster intend
+V3,vaccine accepting likert
+V3a,vaccine accepting likert 2
+V4,trust vaccine recommend source
+V4_fixed,trust vaccine recommend source
+V5a,vaccine hesitancy reasons prob yes
+V5b,vaccine hesitancy reasons prob no
+V5c,vaccine hesitancy reasons def no
+V5d,vaccine hesitancy reasons not all doses
+V6,reasons vaccination not needed
+V9,concern side effect
 Vaccine Text,vaccine dose explanation
-Q75,reference oldest child
-A2_1120,country + region
-A2_1220,country + region

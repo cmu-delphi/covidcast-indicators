@@ -69,7 +69,6 @@ def download(ftp_credentials, out_path, logger):
     # go through files in recieving dir
     files_to_download = []
     for fileattr in sftp.listdir_attr():
-        # file_time = datetime.datetime.fromtimestamp(fileattr.st_mtime)
         file_time = get_timestamp(fileattr.filename)
         time_diff_to_current_time = current_time - file_time
         if 0 < time_diff_to_current_time.total_seconds() <= seconds_in_day:

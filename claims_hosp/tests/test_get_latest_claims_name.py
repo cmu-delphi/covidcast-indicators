@@ -11,7 +11,7 @@ from delphi_claims_hosp.get_latest_claims_name import get_latest_filename
 class TestGetLatestFileName:
     
     start_time = time.time()
-    logger = get_structured_logger(
+    logger = unittest.mock.Mock()
         __name__, filename="./test.log",
         log_exceptions=True)
     

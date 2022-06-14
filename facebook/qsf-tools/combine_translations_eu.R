@@ -73,7 +73,7 @@ combine_translations <- function(path_to_eu_translations,
       combined,
       file.path(
         path_to_combined,
-        sprintf("umd_ctis_combined_wave%02g_translations.csv", as.numeric(wave))
+        sprintf("umd_ctis_combined_v%02g_translations.csv", as.numeric(wave))
       ),
       quote = "needed")
   }

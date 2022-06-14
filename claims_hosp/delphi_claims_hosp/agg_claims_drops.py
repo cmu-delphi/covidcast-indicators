@@ -35,12 +35,10 @@ def agg_and_write(data_path, logger):
       force: if aggregated file exists, whether to overwrite or not
 
     """
-    files = np.array(list(Path(data_path).glob("*")))
+    files = np.array(list(Path(data_path).glob("*.csv.gz")))
 
     for f in files:
         filename = str(f)
-        if ".csv.gz" not in filename:
-            continue
         out_path = f.parents[0] / f.name
         dfs = pd.read_csv(f, dtype={"PatCountyFIPS": str,
                                     "patCountyFIPS": str})

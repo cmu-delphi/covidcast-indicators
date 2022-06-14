@@ -104,3 +104,37 @@ post_convert_count_to_pct <- function(df) {
   return(mutate(df,
                 val = 100 * .data$val / sum(.data$val, na.rm=TRUE)))
 }
+
+#' Return numeric response estimates. Val is the mean of a numeric vector.
+#'
+#' This function takes vectors as input and computes the response values
+#' (a point estimate named "val" and 25, 50, and 75th percentiles).
+#'
+#' @param response a vector of multiple choice responses
+#' @param weight a vector of sample weights for inverse probability weighting;
+#'   invariant up to a scaling factor
+#' @param sample_size The sample size to use, which may be a non-integer (as
+#'   responses from ZIPs that span geographical boundaries are weighted
+#'   proportionately, and survey weights may also be applied)
+#' @param total_represented Number of people represented in sample, which may
+#'   be a non-integer
+#'
+#' @return a list of named mean and other descriptive statistics
+#'
+#' @importFrom survey svydesign svymean svyvar oldsvyquantile
+compute_numeric_mean <- function(response, weight, sample_size, total_represented)
+{
+  assert(length(response) == length(weight))
+  
+  design <- svydesign(id = ~1, weight = ~weight, data = data.frame(response, weight))
+  return(list(val = as.data.frame(svymean(~response, na.rm = TRUE, design = design))[,"mean"],
+              se = NA_real_,
+              sd = as.data.frame(sqrt(svyvar(~response, na.rm = TRUE, design = design)))[,"variance"],
+              p25 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.25))[,"0.25"],
+              p50 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.5))[,"0.5"],
+              p75 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.75))[,"0.75"],
+              sample_size = sample_size,
+              effective_sample_size = sample_size,
+              represented = total_represented
+  ))
+}

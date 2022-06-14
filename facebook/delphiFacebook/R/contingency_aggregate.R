@@ -78,19 +78,18 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     ## "effective_sample_size", "represented"), add here.
     # If these names change (e.g. `sample_size` to `n`), update
     # `contingency-combine.R`.
-    keep_vars <- c("val", "se", "sample_size", "represented")
-
+    keep_vars <- c("val", "se", "sd", "p25", "p50", "p75", "sample_size", "represented")
     for (agg_id in names(dfs_out)) {
       if (nrow(dfs_out[[agg_id]]) == 0) {
         dfs_out[[agg_id]] <- NULL
         next
       }
       agg_metric <- aggregations$name[aggregations$id == agg_id]
-      map_old_new_names <- keep_vars
-      names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
-
+      
+      tmp_keep_vars <- intersect(keep_vars, names(dfs_out[[agg_id]]))
+      names(tmp_keep_vars) <- paste(tmp_keep_vars, agg_metric, sep="_")
       dfs_out[[agg_id]] <- rename(
-        dfs_out[[agg_id]][, c(agg_group, keep_vars)], all_of(map_old_new_names))
+        dfs_out[[agg_id]][, c(agg_group, tmp_keep_vars)], all_of(tmp_keep_vars))
     }
 
     if ( length(dfs_out) != 0 ) {
@@ -366,6 +365,13 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       dfs_out[[aggregation]]$sample_size <- sample_size
       dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
       dfs_out[[aggregation]]$represented <- new_row$represented
+
+      if (all(c("sd", "p25", "p50", "p75") %in% names(new_row))) {
+        dfs_out[[aggregation]]$sd <- new_row$sd
+        dfs_out[[aggregation]]$p25 <- new_row$p25
+        dfs_out[[aggregation]]$p50 <- new_row$p50
+        dfs_out[[aggregation]]$p75 <- new_row$p75
+      }
     }
   }
 

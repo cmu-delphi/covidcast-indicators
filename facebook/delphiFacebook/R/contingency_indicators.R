@@ -460,6 +460,8 @@ get_aggs <- function() {
     "pct_work_outside_home_4w", "a_work_outside_home_4w", compute_binary, jeffreys_binary,
     "pct_work_outside_home_indoors_1d", "a_work_outside_home_indoors_1d", compute_binary, jeffreys_binary,
 
+    "pct_work_for_pay_outside_home_4w", "a_work_for_pay_outside_home_4w", compute_binary, jeffreys_binary,
+
     "pct_shop_1d", "a_shop_1d", compute_binary, jeffreys_binary,
     "pct_restaurant_1d", "a_restaurant_1d", compute_binary, jeffreys_binary,
     "pct_spent_time_1d", "a_spent_time_1d", compute_binary, jeffreys_binary,

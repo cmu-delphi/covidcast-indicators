@@ -1200,6 +1200,14 @@ code_addl_activities <- function(input_data, wave) {
     input_data$a_work_outside_home_4w <- NA_real_
   }
 
+  if ("D10" %in% names(input_data)) {
+    # D10: if answered yes to D9, was your work in the last 4w outisde your home
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_for_pay_outside_home_4w <- input_data$D10 == 1
+  } else {
+    input_data$a_work_for_pay_outside_home_4w <- NA_real_
+  }
+
   calc_masking_given_activity <- function(activity, masked_during_activity) {
     case_when(
       activity & masked_during_activity ~ TRUE,

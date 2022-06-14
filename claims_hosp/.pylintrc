@@ -7,7 +7,6 @@ disable=logging-format-interpolation,
     # Allow pytest functions to be part of a class.
     no-self-use,
     # Allow pytest classes to have one test.
-    too-few-public-methods,
     broad-except
 
 

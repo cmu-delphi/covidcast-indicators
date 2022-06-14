@@ -22,7 +22,7 @@ def print_callback(filename, logger, bytes_so_far, bytes_total):
     """Print the callback information."""
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
     if (rough_percent_transferred % 25) == 0:
-        logger.info(f'{filename} transfer: {rough_percent_transferred}%')
+        logger.info("Transfer in progress", filename=filename, percent=rough_percent_transferred)
 
 
 def get_timestamp(name):

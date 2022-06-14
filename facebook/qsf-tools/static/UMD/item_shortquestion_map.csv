@@ -14,39 +14,28 @@ B0,ever had covid
 B0a,ever had covid
 B1,symptoms
 B10,reduce spendings pay for test
-B10,reduce spendings pay for test
 B11,wanted test 14d
 B11a,wanted test 24h
-B11a,wanted to test past day
-B11b,wanted to test sympdays
 B11b,wanted to test sympdays
 B11c,wanted test 14d
-B11c,wanted to test 14 days
-B12,reason not tested 14d  (renamed)
-B12a_likert,reason not tested 14d  (renamed)
-B12a_profile,havent test reasons past day
-B12a_profile,reason not tested 14d  (renamed)
+B12,reason not tested 14d
+B12a_likert,reason not tested 14d
+B12a_profile,reason not tested 14d
 B12b,reason not tested 14d
 B12b_likert,reason not tested 14d
-B12b_profile,havent test reasons sympdays
 B12b_profile,reason not tested 14d
-B12c,havent test reasons 14days
 B12c,reason not tested 14d
 B12c_matrix,reason not tested 14d matrix
 B13,needed med services 30d
-B13_likert,health needs
 B13_likert,needed med services 30d
 B13_profile,needed med services 30d
 B14,reason no med services 30d
 B14_likert,reason no med services 30d
 B14_profile,reason no med services 30d
-B14_profile,unmet health needs reason
-B15,reason tested 14d
 B15,reason tested 14d
 B1_matrix,symptoms
 B1b,unusual symptoms
 B1b_likert,unusual symptoms
-B1b_likert,unusual symptoms likert
 B1b_matrix,unusual symptoms
 B2,unusual symptoms num days
 B2a,unusual symptoms num days
@@ -59,7 +48,7 @@ B6,tested ever
 B7,tested 14d
 B7a,tested past day
 B7b,tested sympdays
-B7c,tested 14d (renamed)
+B7c,tested 14d
 B8,positive test 14d
 B8a,most recent test positive
 B9,pay for test
@@ -71,22 +60,14 @@ C0_likert,activities 24h
 C0_matrix,activities 24h
 C0a,activities 24h
 C10,flu vaccine intend by Jan 2020
-C10,flu vaccine intend by Jan 2020
-C11_no,reasons no flu vaccine
 C11_no,reasons no flu vaccine
 C11_no_8_TEXT,reasons no flu vaccine other text
 C11_unsure,reasons unsure flu vaccine
-C11_unsure,reasons unsure flu vaccine
 C11_unsure_7_TEXT,reasons unsure flu vaccine other text
 C12,flu vaccine june2019 to feb2020
-C12,flu vaccine june2019 to feb2020
-C13,mask worn 24h
 C13,mask worn 24h
 C13a,mask worn 24h indoors
-C13a,mask worn 24h indoors
 C14,avoid contact
-C14,avoid contact
-C14a,avoid contact 7d
 C14a,avoid contact 7d
 C1_10,direct contact 10min outsider 24h
 C1_15,direct contact 15min outsider 24h

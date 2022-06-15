@@ -14,7 +14,7 @@ def arch_diffs(params, daily_arch_diff, logger):
 
     We check for updates for NCHS mortality data every weekday as how it is
     reported by NCHS and stash these daily updates on S3, but not our API.
-    On a weekly level (on Mondays and Thursdays), we additionally upload the 
+    On a weekly level (on Mondays and Thursdays), we additionally upload the
     changes to the data made over the past week (due to backfill) to our API.
 
     Parameters:

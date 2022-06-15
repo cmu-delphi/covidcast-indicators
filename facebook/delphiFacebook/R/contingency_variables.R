@@ -1206,6 +1206,57 @@ code_behaviors <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Additional mental health indicators
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_addl_mental_health <- function(input_data, wave) {
+  input_data$mh_some_anxious <- NA
+  input_data$mh_some_anxious_7d <- NA
+  input_data$mh_some_depressed <- NA
+  input_data$mh_some_depressed_7d <- NA
+  input_data$mh_some_isolated <- NA
+  input_data$mh_some_isolated_7d <- NA
+  input_data$mh_very_worried_finances <- NA
+
+  if (wave >= 4 && wave < 10) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4 | input_data$C8_1 == 2
+    input_data$mh_some_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4 | input_data$C8_2 == 2
+    input_data$mh_some_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4 | input_data$C8_3 == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  } else if (wave == 10) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4 | input_data$C8a_1 == 2
+    input_data$mh_some_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4 | input_data$C8a_2 == 2
+    input_data$mh_some_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4 | input_data$C8a_3 == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  } else if (wave >= 11) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4 | input_data$C18a == 2
+    input_data$mh_some_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4 | input_data$C18b == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  }
+
+  if ("Q36" %in% names(input_data)) {
+    # Included in waves 1, 2, 3. Coded as 1 = substantial threat,
+    # 2 = moderate threat, 3 = not much of a threat, 4 = not a threat at all
+    input_data$mh_financial_threat <- case_when(
+      is.na(input_data$Q36) ~ NA,
+      input_data$Q36 == 1 ~ TRUE,
+      TRUE ~ FALSE)
+  } else {
+    input_data$mh_financial_threat <- NA
+  }
+
+  return(input_data)
+}
+
 #' Activities
 #'
 #' @param input_data input data frame of raw survey data

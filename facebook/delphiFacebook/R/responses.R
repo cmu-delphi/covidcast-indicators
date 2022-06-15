@@ -245,6 +245,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_vaccine_barriers(input_data, wave)
     input_data <- code_behaviors(input_data, wave)
     input_data <- code_addl_activities(input_data, wave)
+    input_data <- code_addl_mental_health(input_data, wave)
   }
 
   return(input_data)

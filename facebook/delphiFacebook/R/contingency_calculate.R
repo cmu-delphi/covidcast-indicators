@@ -122,8 +122,7 @@ post_convert_count_to_pct <- function(df) {
 #' @return a list of named mean and other descriptive statistics
 #'
 #' @importFrom survey svydesign svymean svyvar oldsvyquantile
-compute_numeric_mean <- function(response, weight, sample_size, total_represented)
-{
+compute_numeric_mean <- function(response, weight, sample_size, total_represented) {
   assert(length(response) == length(weight))
   
   design <- svydesign(id = ~1, weight = ~weight, data = data.frame(response, weight))

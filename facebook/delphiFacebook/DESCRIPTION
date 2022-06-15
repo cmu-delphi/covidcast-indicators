@@ -21,7 +21,8 @@ Imports:
     data.table,
     tibble,
     purrr,
-    Rcpp
+    Rcpp,
+    survey
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

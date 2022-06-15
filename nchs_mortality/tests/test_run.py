@@ -9,7 +9,7 @@ import pandas as pd
 class TestRun:
     @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-18"])
     def test_output_files_exist(self, run_as_module, date):
-        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == 0 or 3
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
 
         folders = ["daily_cache"]
         if is_mon_or_thurs:
@@ -50,7 +50,7 @@ class TestRun:
 
     @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-18"])
     def test_output_file_format(self, run_as_module, date):
-        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == 0 or 3
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
 
         folders = ["daily_cache"]
         if is_mon_or_thurs:

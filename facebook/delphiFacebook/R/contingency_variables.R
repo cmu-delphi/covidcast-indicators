@@ -350,6 +350,27 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$t_reason_not_tested_none <- NA
   }
 
+if ("C2" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No"
+    input_data$v_flu_vaccinated_1y <- input_data$C2 == 1
+  } else {
+    input_data$v_flu_vaccinated_1y <- NA
+  }
+
+  if ("C17" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 4 = "No", 2 = "I don't know"
+    input_data$v_flu_vaccinated_june_2020 <- input_data$C17 == 1
+  } else {
+    input_data$v_flu_vaccinated_june_2020 <- NA
+  }
+
+  if ("C17a" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No", 3 = "I don't know"
+    input_data$v_flu_vaccinated_july_2020 <- input_data$C17a == 1
+  } else {
+    input_data$v_flu_vaccinated_july_2020 <- NA
+  }
+
   return(input_data)
 }
 

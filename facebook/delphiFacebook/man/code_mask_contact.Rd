@@ -12,8 +12,7 @@ code_mask_contact(input_data, wave)
 \item{wave}{integer indicating survey version}
 }
 \value{
-data frame augmented with `c_travel_state`, `c_work_outside_5d`,
-  `c_mask_often`, `c_others_masked`
+augmented data frame
 }
 \description{
 Mask and contact variables

@@ -72,6 +72,7 @@ get_aggs <- function() {
     # behavior
     ## Mask wearing and distancing
     "pct_wearing_mask_5d", "c_mask_often", compute_binary, jeffreys_binary,
+    "pct_wearing_mask_5d_alt", "c_mask_some_often", compute_binary, jeffreys_binary,
     "pct_wearing_mask_7d", "c_mask_often_7d", compute_binary, jeffreys_binary,
     "pct_wearing_mask_7d_alt", "c_mask_some_often_7d", compute_binary, jeffreys_binary,
 

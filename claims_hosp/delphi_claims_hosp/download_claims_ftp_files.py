@@ -73,6 +73,7 @@ def download(ftp_credentials, out_path, logger):
         time_diff_to_current_time = current_time - file_time
         if 0 < time_diff_to_current_time.total_seconds() <= seconds_in_day:
             files_to_download.append(fileattr.filename)
+            logger.info("File to download", filename=fileattr.filename)
 
     # make sure we don't download more that the 3 chunked drops (2x a day) for OP
     # and the 1 chunk (2x a day) for IP - 01/07/21, *2 for multiple day drops
@@ -84,7 +85,7 @@ def download(ftp_credentials, out_path, logger):
         if "INPATIENT" in file:
             full_path = path.join(out_path, flipped_file)
             if path.exists(full_path):
-                logger.info(f"{flipped_file} exists, skipping")
+                logger.info("Skip the existing file", filename=flipped_file)
             else:
                 filepaths_to_download[file] = full_path
 

@@ -1,4 +1,4 @@
-timestamp,cbsa_id,state_id,totalTest,numUniqueDevices,positiveTest
+timestamp,cbsa_id,state_id,totalTest_total,numUniqueDevices_total,positiveTest_total
 2020-06-14,10580,ny,1,1,0.0
 2020-06-14,11100,tx,5,2,0.0
 2020-06-14,12020,ga,8,1,0.0

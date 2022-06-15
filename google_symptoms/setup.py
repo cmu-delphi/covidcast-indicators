@@ -4,7 +4,7 @@ from setuptools import find_packages
 required = [
     "mock",
     "numpy",
-    "pandas",
+    "pandas==1.3.5",
     "pydocstyle",
     "pytest",
     "pytest-cov",

@@ -14,7 +14,11 @@
 #' @return list of same length, each entry of which is a vector of selected
 #'   options
 split_options <- function(column) {
-  return(strsplit(column, ",", fixed = TRUE))
+  if ( any(!is.na(column)) ) {
+    return(strsplit(column, ",", fixed = TRUE))
+  } else {
+    return(rep(list(NA_character_), length(column)))
+  }
 }
 
 #' Test if a specific selection is selected
@@ -419,6 +423,9 @@ code_testing <- function(input_data, wave) {
   
   if ("B13" %in% names(input_data)) {
     input_data$t_had_covid_ever <- input_data$B13 == 1
+  } else if ("B13a" %in% names(input_data)) {
+    # B13a, replacing B13 as of Wave 12, removes "As far as you know" wording.
+    input_data$t_had_covid_ever <- input_data$B13a == 1
   } else {
     input_data$t_had_covid_ever <- NA
   }
@@ -551,27 +558,40 @@ code_vaccines <- function(input_data, wave) {
     hesitancy_reasons <- split_options(hesitancy_reasons)
 
     input_data$v_hesitancy_reason_sideeffects <- is_selected(hesitancy_reasons, "1")
-    input_data$v_hesitancy_reason_allergic <- is_selected(hesitancy_reasons, "2")
+    input_data$v_hesitancy_reason_allergic <- is_selected(hesitancy_reasons, "2") # removed as of Wave 11
     input_data$v_hesitancy_reason_ineffective <- is_selected(hesitancy_reasons, "3")
     input_data$v_hesitancy_reason_unnecessary <- is_selected(hesitancy_reasons, "4")
-    input_data$v_hesitancy_reason_dislike_vaccines <- is_selected(hesitancy_reasons, "5")
-    input_data$v_hesitancy_reason_not_recommended <- is_selected(hesitancy_reasons, "6")
+    input_data$v_hesitancy_reason_dislike_vaccines <- is_selected(hesitancy_reasons, "5") # removed as of Wave 12
+    input_data$v_hesitancy_reason_not_recommended <- is_selected(hesitancy_reasons, "6") # removed as of Wave 11
     input_data$v_hesitancy_reason_wait_safety <- is_selected(hesitancy_reasons, "7")
     input_data$v_hesitancy_reason_low_priority <- is_selected(hesitancy_reasons, "8")
     input_data$v_hesitancy_reason_cost <- is_selected(hesitancy_reasons, "9")
-    input_data$v_hesitancy_reason_distrust_vaccines <- is_selected(hesitancy_reasons, "10")
+    input_data$v_hesitancy_reason_distrust_vaccines <- is_selected(hesitancy_reasons, "10") # removed in Wave 11, reintroduced as of Wave 12
     input_data$v_hesitancy_reason_distrust_gov <- is_selected(hesitancy_reasons, "11")
-    input_data$v_hesitancy_reason_health_condition <- is_selected(hesitancy_reasons, "12")
+    input_data$v_hesitancy_reason_health_condition <- is_selected(hesitancy_reasons, "12") # removed as of Wave 11
     input_data$v_hesitancy_reason_other <- is_selected(hesitancy_reasons, "13")
-    input_data$v_hesitancy_reason_pregnant <- is_selected(hesitancy_reasons, "14")
+    input_data$v_hesitancy_reason_pregnant <- is_selected(hesitancy_reasons, "14") # removed as of Wave 11
     input_data$v_hesitancy_reason_religious <- is_selected(hesitancy_reasons, "15")
+    input_data$v_hesitancy_reason_dislike_vaccines_generally <- is_selected(hesitancy_reasons, "16") # replacing choice 5 as of Wave 12
 
+    # For waves before a given response choice existed, explicitly set the
+    # derived field to missing since `is_selected` will return FALSE (meaning
+    # "not selected") for them if the respondent selected at least once answer
+    # choice.
     if (wave >= 11) {
       input_data$v_hesitancy_reason_allergic <- NA
       input_data$v_hesitancy_reason_not_recommended <- NA
-      input_data$v_hesitancy_reason_distrust_vaccines <- NA
       input_data$v_hesitancy_reason_health_condition <- NA
       input_data$v_hesitancy_reason_pregnant <- NA
+    }
+    if (wave == 11) {
+      input_data$v_hesitancy_reason_distrust_vaccines <- NA
+    }
+    if (wave < 12) {
+      input_data$v_hesitancy_reason_dislike_vaccines_generally <- NA
+    }
+    if (wave >= 12) {
+      input_data$v_hesitancy_reason_dislike_vaccines <- NA
     }
     
   } else {
@@ -590,6 +610,7 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_hesitancy_reason_other <- NA_real_
     input_data$v_hesitancy_reason_pregnant <- NA_real_
     input_data$v_hesitancy_reason_religious <- NA_real_
+    input_data$v_hesitancy_reason_dislike_vaccines_generally <- NA_real_
   }
   
   if ( "V6" %in% names(input_data) ) {
@@ -622,17 +643,17 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_worried_vaccine_side_effects <- NA_real_
   }
 
+  
+  # Wave  V15a  V15b  V15c
+  # 11    Yes   Yes   No
+  # 12    No    Yes   Yes
+  #
+  # V15c replaces V15a as of Wave 12
   if ( all(c("V15a", "V15b") %in% names(input_data)) ) {
     # introduced in Wave 11
     vaccine_barriers <- coalesce(input_data$V15a, input_data$V15b)
-
-    # If the entire column is NA, ifelse() results in a logical vector, not a
-    # character vector, which confuses split_options; since the result should be
-    # NA anyway
-    if (any(!is.na(vaccine_barriers))) {
-      vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
-      vaccine_barriers <- split_options(vaccine_barriers)
-    }
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
+    vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
@@ -646,6 +667,29 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time <- is_selected(vaccine_barriers, "10")
     input_data$v_vaccine_barrier_type <- is_selected(vaccine_barriers, "12")
     input_data$v_vaccine_barrier_none <- is_selected(vaccine_barriers, "11")
+
+    input_data$v_vaccine_barrier_appointment_location <- NA
+    input_data$v_vaccine_barrier_other <- NA
+  } else if ( all(c("V15c", "V15b") %in% names(input_data)) ) {
+    # V15c introduced in Wave 12, replacing V15a with clarified wording.
+    vaccine_barriers <- coalesce(input_data$V15c, input_data$V15b)
+    vaccine_barriers <- ifelse(vaccine_barriers == "13", NA_character_, vaccine_barriers)
+    vaccine_barriers <- split_options(vaccine_barriers)
+    
+    input_data$v_vaccine_barrier_eligible <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none <- is_selected(vaccine_barriers, "11")
+    input_data$v_vaccine_barrier_appointment_location <- is_selected(vaccine_barriers, "14")
+    input_data$v_vaccine_barrier_other <- is_selected(vaccine_barriers, "15")
   } else {
     input_data$v_vaccine_barrier_eligible <- NA
     input_data$v_vaccine_barrier_no_appointments <- NA
@@ -659,6 +703,9 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time <- NA
     input_data$v_vaccine_barrier_type <- NA
     input_data$v_vaccine_barrier_none <- NA
+
+    input_data$v_vaccine_barrier_appointment_location <- NA
+    input_data$v_vaccine_barrier_other <- NA
   }
   
   if ( "V15a" %in% names(input_data) ) {
@@ -677,6 +724,27 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time_has <- is_selected(vaccine_barriers, "10")
     input_data$v_vaccine_barrier_type_has <- is_selected(vaccine_barriers, "12")
     input_data$v_vaccine_barrier_none_has <- is_selected(vaccine_barriers, "11")
+
+    input_data$v_vaccine_barrier_appointment_location_has <- NA
+    input_data$v_vaccine_barrier_other_has <- NA
+  } else if ( "V15c" %in% names(input_data) ) {
+    # V15c introduced in Wave 12, replacing V15a with clarified wording.
+    vaccine_barriers <- split_options(input_data$V15c)
+    
+    input_data$v_vaccine_barrier_eligible_has <- is_selected(vaccine_barriers, "1")
+    input_data$v_vaccine_barrier_no_appointments_has <- is_selected(vaccine_barriers, "2")
+    input_data$v_vaccine_barrier_appointment_time_has <- is_selected(vaccine_barriers, "3")
+    input_data$v_vaccine_barrier_technical_difficulties_has <- is_selected(vaccine_barriers, "4")
+    input_data$v_vaccine_barrier_document_has <- is_selected(vaccine_barriers, "5")
+    input_data$v_vaccine_barrier_technology_access_has <- is_selected(vaccine_barriers, "6")
+    input_data$v_vaccine_barrier_travel_has <- is_selected(vaccine_barriers, "7")
+    input_data$v_vaccine_barrier_language_has <- is_selected(vaccine_barriers, "8")
+    input_data$v_vaccine_barrier_childcare_has <- is_selected(vaccine_barriers, "9")
+    input_data$v_vaccine_barrier_time_has <- is_selected(vaccine_barriers, "10")
+    input_data$v_vaccine_barrier_type_has <- is_selected(vaccine_barriers, "12")
+    input_data$v_vaccine_barrier_none_has <- is_selected(vaccine_barriers, "11")
+    input_data$v_vaccine_barrier_appointment_location_has <- is_selected(vaccine_barriers, "14")
+    input_data$v_vaccine_barrier_other_has <- is_selected(vaccine_barriers, "15")
   } else {
     input_data$v_vaccine_barrier_eligible_has <- NA
     input_data$v_vaccine_barrier_no_appointments_has <- NA
@@ -690,19 +758,15 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time_has <- NA
     input_data$v_vaccine_barrier_type_has <- NA
     input_data$v_vaccine_barrier_none_has <- NA
-  }
 
+    input_data$v_vaccine_barrier_appointment_location_has <- NA
+    input_data$v_vaccine_barrier_other_has <- NA
+  }
+  
   if ( "V15b" %in% names(input_data) ) {
     # introduced in Wave 11
-    # If the entire column is NA, ifelse() results in a logical vector, not a
-    # character vector, which confuses split_options; since the result should be
-    # NA anyway
-    if (any(!is.na(input_data$V15b))) {
-      vaccine_barriers <- ifelse(input_data$V15b == "13", NA, input_data$V15b)
-      vaccine_barriers <- split_options(vaccine_barriers)
-    } else {
-      vaccine_barriers <- input_data$V15b
-    }
+    vaccine_barriers <- ifelse(input_data$V15b == "13", NA_character_, input_data$V15b)
+    vaccine_barriers <- split_options(vaccine_barriers)
 
     input_data$v_vaccine_barrier_eligible_tried <- is_selected(vaccine_barriers, "1")
     input_data$v_vaccine_barrier_no_appointments_tried <- is_selected(vaccine_barriers, "2")
@@ -716,6 +780,17 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time_tried <- is_selected(vaccine_barriers, "10")
     input_data$v_vaccine_barrier_type_tried <- is_selected(vaccine_barriers, "12")
     input_data$v_vaccine_barrier_none_tried <- is_selected(vaccine_barriers, "11")
+    input_data$v_vaccine_barrier_appointment_location_tried <- is_selected(vaccine_barriers, "14")
+    input_data$v_vaccine_barrier_other_tried <- is_selected(vaccine_barriers, "15")
+    
+    if (wave < 12) {
+      # For waves before a given response choice existed, explicitly set the
+      # derived field to missing since `is_selected` will return FALSE (meaning
+      # "not selected") for them if the respondent selected at least once answer
+      # choice.
+      input_data$v_vaccine_barrier_appointment_location_tried <- NA
+      input_data$v_vaccine_barrier_other_tried <- NA
+    }
   } else {
     input_data$v_vaccine_barrier_eligible_tried <- NA
     input_data$v_vaccine_barrier_no_appointments_tried <- NA
@@ -729,6 +804,8 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_barrier_time_tried <- NA
     input_data$v_vaccine_barrier_type_tried <- NA
     input_data$v_vaccine_barrier_none_tried <- NA
+    input_data$v_vaccine_barrier_appointment_location_tried <- NA
+    input_data$v_vaccine_barrier_other_tried <- NA
   }
   
   if ( "E4" %in% names(input_data) ) {
@@ -744,6 +821,34 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_vaccinate_children <- NA_real_
   }
   
+  if ( "P3" %in% names(input_data) ) {
+    # introduced in Wave 12, replacing E4
+    # Yes definitely, Yes probably, Already vaccinated -> 1
+    # No definitely not, No probably not -> 0
+    input_data$v_vaccinate_child_oldest <- case_when(
+      input_data$P3 == 1 ~ 1,
+      input_data$P3 == 2 ~ 1,
+      input_data$P3 == 3 ~ 0,
+      input_data$P3 == 4 ~ 0,
+      input_data$P3 == 5 ~ 1,
+      TRUE ~ NA_real_
+    )
+
+    input_data$v_child_vaccine_already <- input_data$P3 == 5
+    input_data$v_child_vaccine_yes_def <- input_data$P3 == 1
+    input_data$v_child_vaccine_yes_prob <- input_data$P3 == 2
+    input_data$v_child_vaccine_no_prob <- input_data$P3 == 3
+    input_data$v_child_vaccine_no_def <- input_data$P3 == 4
+
+  } else {
+    input_data$v_vaccinate_child_oldest <- NA_real_
+    input_data$v_child_vaccine_already <- NA
+    input_data$v_child_vaccine_yes_def <- NA
+    input_data$v_child_vaccine_yes_prob <- NA
+    input_data$v_child_vaccine_no_prob <- NA
+    input_data$v_child_vaccine_no_def <- NA
+  }
+
   if ( "V16" %in% names(input_data) ) {
     # introduced in Wave 11
     input_data$v_try_vaccinate_1m <- case_when(
@@ -766,6 +871,78 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_covid_vaccinated_friends <- NA
   }
   
+  if ("V2d" %in% names(input_data)) {
+    input_data$v_initial_dose_one_of_one <- input_data$V2d == 1
+    input_data$v_initial_dose_one_of_two <- input_data$V2d == 2
+    input_data$v_initial_dose_two_of_two <- input_data$V2d == 3
+  } else {
+    input_data$v_initial_dose_one_of_one <- NA
+    input_data$v_initial_dose_one_of_two <- NA
+    input_data$v_initial_dose_two_of_two <- NA
+  }
+  
+  if ("V2b" %in% names(input_data)) {
+    input_data$v_vaccinated_one_booster <- input_data$V2b == 1
+    input_data$v_vaccinated_two_or_more_boosters <- input_data$V2b == 2
+    input_data$v_vaccinated_at_least_one_booster <- input_data$V2b == 1 | input_data$V2b == 2
+    input_data$v_vaccinated_no_booster <- input_data$V2b == 3
+  } else {
+    input_data$v_vaccinated_one_booster <- NA
+    input_data$v_vaccinated_two_or_more_boosters <- NA
+    input_data$v_vaccinated_at_least_one_booster <- NA
+    input_data$v_vaccinated_no_booster <- NA
+  }
+  
+  if ("V2c" %in% names(input_data)) {
+    input_data$v_vaccinated_booster_accept <- input_data$V2c == 1 | input_data$V2c == 2
+    input_data$v_vaccinated_booster_hesitant <- input_data$V2c == 3 | input_data$V2c == 4
+    input_data$v_vaccinated_booster_defyes <- input_data$V2c == 1
+    input_data$v_vaccinated_booster_probyes <- input_data$V2c == 2
+    input_data$v_vaccinated_booster_probno <- input_data$V2c == 3
+    input_data$v_vaccinated_booster_defno   <- input_data$V2c == 4
+  } else {
+    input_data$v_vaccinated_booster_accept <- NA
+    input_data$v_vaccinated_booster_hesitant <- NA
+    input_data$v_vaccinated_booster_defyes <- NA
+    input_data$v_vaccinated_booster_probyes <- NA
+    input_data$v_vaccinated_booster_probno <- NA
+    input_data$v_vaccinated_booster_defno   <- NA
+  }
+  
+  if ("C17b" %in% names(input_data)) {
+    input_data$v_flu_vaccinated_2021 <- input_data$C17b == 1
+  } else {
+    input_data$v_flu_vaccinated_2021 <- NA
+  }
+  
+  return(input_data)
+}
+
+#' Misc children
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_children <- function(input_data, wave) {
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_has_child_under_18 <- input_data$P1 == 1
+  } else {
+    input_data$ch_has_child_under_18 <- NA
+  }
+
+  if ("P2" %in% names(input_data)) {
+    input_data$ch_oldest_child_under_5 <- input_data$P2 == 1
+    input_data$ch_oldest_child_5_to_11 <- input_data$P2 == 2
+    input_data$ch_oldest_child_12_to_15 <- input_data$P2 == 3
+    input_data$ch_oldest_child_16_to_17 <- input_data$P2 == 4
+  } else {
+    input_data$ch_oldest_child_under_5 <- NA
+    input_data$ch_oldest_child_5_to_11 <- NA
+    input_data$ch_oldest_child_12_to_15 <- NA
+    input_data$ch_oldest_child_16_to_17 <- NA
+  }
+
   return(input_data)
 }
 
@@ -797,6 +974,79 @@ code_schooling <- function(input_data, wave) {
   } else {
     input_data$s_inperson_school_parttime <- NA_real_
   }
+
+  if ("P5" %in% names(input_data)) {
+    # Coded as 1 = in person classes, 2 = online/remote/distance, 3 = both/mix,
+    # 4 = not in school
+    input_data$s_inperson_school_fulltime_oldest <- case_when(
+      input_data$P5 == 1 ~ 1,
+      input_data$P5 != 1 ~ 0,
+      TRUE ~ NA_real_
+    )
+    input_data$s_inperson_school_parttime_oldest <- case_when(
+      input_data$P5 == 3 ~ 1,
+      input_data$P5 != 3 ~ 0,
+      TRUE ~ NA_real_
+    )
+    input_data$s_remote_school_fulltime_oldest <- case_when(
+      input_data$P5 == 2 ~ 1,
+      input_data$P5 != 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+    
+  } else {
+    input_data$s_inperson_school_fulltime_oldest <- NA_real_
+    input_data$s_inperson_school_parttime_oldest <- NA_real_
+    input_data$s_remote_school_fulltime_oldest <- NA_real_
+  }
+
+  if ("P4" %in% names(input_data)) {
+    input_data$s_child_school_public <- input_data$P4 == 1
+    input_data$s_child_school_private <- input_data$P4 == 2
+    input_data$s_child_school_homeschool <- input_data$P4 == 3
+    input_data$s_child_school_not <- input_data$P4 == 4
+    input_data$s_child_school_other <- input_data$P4 == 5
+  } else {
+    input_data$s_child_school_public <- NA
+    input_data$s_child_school_private <- NA
+    input_data$s_child_school_homeschool <- NA
+    input_data$s_child_school_not <- NA
+    input_data$s_child_school_other <- NA
+  }
+
+
+  if ("P6" %in% names(input_data)) {
+    safety_measures <- split_options(input_data$P6)
+
+    input_data$s_school_safety_measures_mask_students <- is_selected(safety_measures, "1")
+    input_data$s_school_safety_measures_mask_teachers <- is_selected(safety_measures, "2")
+    input_data$s_school_safety_measures_restricted_entry <- is_selected(safety_measures, "6")
+    input_data$s_school_safety_measures_separators <- is_selected(safety_measures, "10")
+    input_data$s_school_safety_measures_extracurricular <- is_selected(safety_measures, "12")
+    input_data$s_school_safety_measures_symptom_screen <- is_selected(safety_measures, "15")
+    input_data$s_school_safety_measures_ventilation <- is_selected(safety_measures, "17")
+    input_data$s_school_safety_measures_testing_staff <- is_selected(safety_measures, "18")
+    input_data$s_school_safety_measures_testing_students <- is_selected(safety_measures, "19")
+    input_data$s_school_safety_measures_vaccine_staff <- is_selected(safety_measures, "20")
+    input_data$s_school_safety_measures_vaccine_students <- is_selected(safety_measures, "21")
+    input_data$s_school_safety_measures_cafeteria <- is_selected(safety_measures, "22")
+    input_data$s_school_safety_measures_dont_know <- is_selected(safety_measures, "16")
+  } else {
+    input_data$s_school_safety_measures_mask_students <- NA
+    input_data$s_school_safety_measures_mask_teachers <- NA
+    input_data$s_school_safety_measures_restricted_entry <- NA
+    input_data$s_school_safety_measures_separators <- NA
+    input_data$s_school_safety_measures_extracurricular <- NA
+    input_data$s_school_safety_measures_symptom_screen <- NA
+    input_data$s_school_safety_measures_ventilation <- NA
+    input_data$s_school_safety_measures_testing_staff <- NA
+    input_data$s_school_safety_measures_testing_students <- NA
+    input_data$s_school_safety_measures_vaccine_staff <- NA
+    input_data$s_school_safety_measures_vaccine_students <- NA
+    input_data$s_school_safety_measures_cafeteria <- NA
+    input_data$s_school_safety_measures_dont_know <- NA
+  }
+
   
   return(input_data)
 }
@@ -1032,3 +1282,68 @@ code_race_ethnicity <- function(input_data, wave) {
   
   return(input_data)
 }
+
+#' Gender
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_gender <- function(input_data, wave) {
+  if ("D1" %in% names(input_data)) {
+    input_data$gender <- case_when(
+      input_data$D1 == 1 ~ "Male",
+      input_data$D1 == 2 ~ "Female",
+      input_data$D1 == 3 ~ "Other",
+      input_data$D1 == 4 ~ "Other",
+      input_data$D1 == 5 ~ NA_character_,
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$gender <- NA_character_
+  }
+  
+  return(input_data)
+}
+
+#' Age-related fields
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#' 
+#' @return augmented data frame
+code_age <- function(input_data, wave) {
+  if ("D2" %in% names(input_data)) {
+    input_data$agefull <- case_when(
+      input_data$D2 == 1 ~ "18-24",
+      input_data$D2 == 2 ~ "25-34",
+      input_data$D2 == 3 ~ "35-44",
+      input_data$D2 == 4 ~ "45-54",
+      input_data$D2 == 5 ~ "55-64",
+      input_data$D2 == 6 ~ "65-74",
+      input_data$D2 == 7 ~ "75plus",
+      TRUE ~ NA_character_
+    )
+    
+    # Condensed age categories
+    input_data$age <- case_when(
+      input_data$D2 == 1 ~ "18-24",
+      input_data$D2 == 2 ~ "25-44",
+      input_data$D2 == 3 ~ "25-44",
+      input_data$D2 == 4 ~ "45-64",
+      input_data$D2 == 5 ~ "45-64",
+      input_data$D2 == 6 ~ "65plus",
+      input_data$D2 == 7 ~ "65plus",
+      TRUE ~ NA_character_
+    )
+    
+    input_data$age65plus <- input_data$age == "65plus"
+  } else {
+    input_data$agefull <- NA_character_
+    input_data$age <- NA_character_
+    input_data$age65plus <- NA
+  }
+  
+  return(input_data)
+}
+

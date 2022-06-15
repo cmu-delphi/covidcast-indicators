@@ -17,16 +17,19 @@ brand_df = pd.read_csv(
 
 class TestProcess:
     def test_construct_signals_present(self):
-
-        df = pd.read_csv('test_data/sample_raw_data.csv',
-                         parse_dates=["date_range_start", "date_range_end"])
-        dfs = construct_signals(df, metric_names, naics_codes, brand_df)
+        result_dfs = {}
+        for i, naics_code in enumerate(naics_codes):
+            metric_name = metric_names[i]
+            df = pd.read_csv(f'test_data/sample_raw_data_{naics_code}.csv',
+                             parse_dates=["date_range_start", "date_range_end"])
+            dfs = construct_signals(df, metric_names[i])
+            result_dfs[metric_name] = dfs
         assert set(["timestamp", "zip",
-                    "bars_visit_num"]) == set(dfs["bars_visit"].columns)
-        assert set(["timestamp", "zip", "restaurants_visit_num"]) == \
-                  set(dfs["restaurants_visit"].columns)
-        assert dfs["bars_visit"]["timestamp"].unique().shape[0] == 7
-        assert dfs["restaurants_visit"]["timestamp"].unique().shape[0] == 7
+                    "bars_visit_v2_num"]) == set(result_dfs["bars_visit_v2"].columns)
+        assert set(["timestamp", "zip", "restaurants_visit_v2_num"]) == \
+                  set(result_dfs["restaurants_visit_v2"].columns)
+        assert result_dfs["bars_visit_v2"]["timestamp"].unique().shape[0] == 7
+        assert result_dfs["restaurants_visit_v2"]["timestamp"].unique().shape[0] == 7
 
     def test_aggregate_county(self):
 

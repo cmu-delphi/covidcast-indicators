@@ -22,10 +22,17 @@
   "validation": {
     "common": {
       "data_source": "google-symptoms",
+      "validation_failure_dir": "./validation_failures",
       "span_length": 14,
       "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "4"},
       "suppressed_errors": [
+        {"signal": "ageusia_raw_search"},
+        {"signal": "ageusia_smoothed_search"},
+        {"signal": "anosmia_raw_search"},
+        {"signal": "anosmia_smoothed_search"},
+        {"signal": "sum_anosmia_ageusia_raw_search"},
+        {"signal": "sum_anosmia_ageusia_smoothed_search"}
       ]
     },
     "static": {
@@ -36,9 +43,13 @@
     "dynamic": {
       "ref_window_size": 7,
       "smoothed_signals": [
-        "ageusia_smoothed_search",
-        "sum_anosmia_ageusia_smoothed_search",
-        "anosmia_smoothed_search"
+        "s01_smoothed_search",
+        "s02_smoothed_search",
+        "s03_smoothed_search",
+        "s04_smoothed_search",
+        "s05_smoothed_search",
+        "s06_smoothed_search",
+        "scontrol_smoothed_search"
       ]
     }
   },

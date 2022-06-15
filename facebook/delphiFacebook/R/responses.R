@@ -183,6 +183,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- bodge_C6_C8(input_data, wave)
   input_data <- bodge_B13(input_data, wave)
   input_data <- bodge_E1(input_data, wave)
+  input_data <- bodge_V2a(input_data, wave)
 
   input_data <- code_symptoms(input_data, wave)
   input_data <- code_hh_size(input_data, wave)
@@ -192,8 +193,11 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_activities(input_data, wave)
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
+  input_data <- code_children(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
   input_data <- code_news_and_info(input_data, wave)
+  input_data <- code_gender(input_data, wave)
+  input_data <- code_age(input_data, wave)
   
   if (!is.null(params$produce_individual_raceeth) && params$produce_individual_raceeth) {
     input_data <- code_race_ethnicity(input_data, wave)
@@ -227,8 +231,6 @@ load_response_one <- function(input_filename, params, contingency_run) {
   if (contingency_run) {
     ## Create additional fields for aggregations.
     # Demographic grouping variables
-    input_data <- code_gender(input_data, wave)
-    input_data <- code_age(input_data, wave)
     input_data <- code_race_ethnicity(input_data, wave)
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
@@ -500,6 +502,36 @@ bodge_B13 <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Fix column names in Wave 13.
+#'
+#' In Wave 13, a new item ("How many initial doses or shots did you receive of a
+#' COVID-19 vaccine?") was added under the name V2a. However, a different item
+#' ("Did you receive (or do you plan to receive) all recommended doses?") was
+#' asked under the name V2a in Waves 8-10. To differentiate, use the name V2d
+#' for the newer item.
+#'
+#' @param input_data data frame of responses, before subsetting to select
+#'   variables
+#' @param wave integer indicating survey version
+#'
+#' @return corrected data frame
+#' @importFrom dplyr rename
+bodge_V2a <- function(input_data, wave) {
+  if ( wave != 13 ) {
+    # Data unaffected; skip.
+    return(input_data)
+  }
+
+  if ( "V2a" %in% names(input_data) ) {
+    input_data <- rename(input_data,
+                         V2d = .data$V2a
+    )
+  }
+
+  return(input_data)
+}
+
+
 #' Fix E1_* names in Wave 11 data after ~June 16, 2021.
 #' 
 #' Items E1_1 through E1_4 are part of a matrix. Qualtrics, for unknown reasons,
@@ -546,6 +578,8 @@ module_assignment <- function(input_data, wave) {
       input_data$FL_23_DO == "ModuleB" ~ "B",
       TRUE ~ NA_character_
     )
+  } else {
+    input_data$module <- NA_character_
   }
   
   return(input_data)
@@ -615,6 +649,7 @@ create_complete_responses <- function(input_data, county_crosswalk, params)
     "I6_1", "I6_2", "I6_3", "I6_4", "I6_5", "I6_6", "I6_7", "I6_8",
     "I7", "K1", "K2", "V11a", "V12a", "V15a", "V15b", "V16", "V3a", # added in Wave 11
     "V1alt", "B13a", "V15c", "P1", "P2", "P3", "P4", "P5", "P6", # added in experimental Wave 12
+    "C17b", "V17_month", "V17_year", "V2b", "V2c", "V2d", # added in Wave 13
     
     "raceethnicity", "token", "wave", "w12_treatment", "module", "UserLanguage",
     "zip5" # temporarily; we'll filter by this column later and then drop it before writing
@@ -692,7 +727,8 @@ surveyID_to_wave <- Vectorize(function(surveyID) {
                 "SV_6PADB8DyF9SIyXk" = 10,
                 "SV_4VEaeffqQtDo33M" = 11,
                 "SV_3TL0r243mLkDzCK" = 12.5, # experimental version of Wave 12
-                "TBD finalized version" = 12 # finalized version of Wave 12
+                "SV_eDISRi5wQcNU70G" = 12, # finalized version of Wave 12
+                "SV_2iv3tPKlYKqnalM" = 13
   )
 
   if ( any(names(waves) == surveyID) ) {
@@ -743,12 +779,57 @@ filter_complete_responses <- function(data_full, params)
   data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions (ignore raceethnicity, module, and
-  # w12_assignment fields which may or may not exist, depending on params and
+  # UserLanguage + two questions (ignore raceethnicity, module,
+  # w12_assignment, and weekly weights fields which may or may not exist, depending on params and
   # survey version)
-  ignore_cols <- c("raceethnicity", "w12_assignment", "module")
+  ignore_cols <- c("raceethnicity", "w12_assignment", "module", "weight_wf", "weight_wp")
   valid_row_filter <- rowSums( !is.na(data_full[, !(names(data_full) %in% ignore_cols)]) ) >= 9
   data_full <- data_full[valid_row_filter, ]
 
   return(data_full)
 }
+
+#' Filter responses to those that are "module-complete". Splits by module assignment
+#'
+#' Inclusion criteria:
+#'
+#' * answered age consent
+#' * CID/token IS NOT missing
+#' * distribution source (ie previews) IS NOT irregular
+#' * start date IS IN range, pacific time
+#' * Date is in [`params$start_date - params$backfill_days`, `end_date`],
+#' inclusive.
+#' * answered minimum of 2 additional questions, where to "answer" a numeric
+#' open-ended question (A2, A2b, B2b, Q40, C10_1_1, C10_2_1, C10_3_1, C10_4_1,
+#' D3, D4, D5) means to provide any number (floats okay) and to "answer" a radio
+#' button question is to provide a selection.
+#' * reached the end of the survey (i.e. sees the "Thank you" message)
+#' * answered age and gender questions
+#'
+#' Most of these criteria are handled by `filter_responses()` and
+#' `filter_complete_responses()` above; this function need only handle the last
+#' two criteria.
+#'
+#' @param data_full data frame of responses
+#' @param params named list of configuration options from `read_params()`,
+#'   containing `start_date`, `backfill_days`, and `end_date`
+#'
+#' @importFrom dplyr filter
+#' @importFrom rlang .data
+#' @export
+filter_module_complete_responses <- function(data_full, params)
+{
+  date_col <- if ("day" %in% names(data_full)) { "day" } else { "Date" }
+  data_full <- rename(data_full, Date = .data$date) %>% 
+    filter_complete_responses(params) %>% 
+    filter(!is.na(.data$age),
+           !is.na(.data$gender),
+           .data$Finished == 1) %>% 
+    select(date_col, .data$token, .data$module)
+  
+  data_a <- filter(data_full, .data$module == "A")
+  data_b <- filter(data_full, .data$module == "B")
+  
+  return(list(a = data_a, b = data_b))
+}
+

@@ -3,7 +3,7 @@ This file contains configuration variables used to generate the claims-based Hos
 
 Author: Maria Jahja
 Created: 2020-06-01
-Modified: 2020-09-27
+Modified: 2021-12-11
 
 """
 
@@ -26,8 +26,8 @@ class Config:
     # (one day needed for smoother to produce values)
     BURN_IN_PERIOD = timedelta(days=1)
 
-    # shift dates forward for labeling purposes
-    DAY_SHIFT = timedelta(days=1)
+    # if desired, shift dates forward for labeling purposes
+    DAY_SHIFT = timedelta(days=0)
 
     # data columns
     CLAIMS_COUNT_COLS = ["Denominator", "Covid_like"]

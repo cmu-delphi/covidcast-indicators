@@ -129,8 +129,37 @@ get_binary_indicators <- function() {
     
     "smoothed_vaccinate_children", "weight_unif", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccinate_children", "weight", "v_vaccinate_children", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccinate_child_oldest", "weight_unif", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccinate_child_oldest", "weight", "v_vaccinate_child_oldest", 6, compute_binary_response, jeffreys_binary,
+
+    "smoothed_wchild_vaccine_already", "weight", "v_child_vaccine_already", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_def", "weight", "v_child_vaccine_yes_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_yes_prob", "weight", "v_child_vaccine_yes_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_prob", "weight", "v_child_vaccine_no_prob", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+    "smoothed_wchild_vaccine_no_def", "weight", "v_child_vaccine_no_def", 6, compute_binary_response, jeffreys_multinomial_factory(5),
+
     "smoothed_try_vaccinate_1m", "weight_unif", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wtry_vaccinate_1m", "weight", "v_try_vaccinate_1m", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_winitial_dose_one_of_one", "weight", "v_initial_dose_one_of_one", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_winitial_dose_one_of_two", "weight", "v_initial_dose_one_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_winitial_dose_two_of_two", "weight", "v_initial_dose_two_of_two", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    
+    "smoothed_wvaccinated_one_booster", "weight", "v_vaccinated_one_booster", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_two_or_more_boosters", "weight", "v_vaccinated_two_or_more_boosters", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_no_booster", "weight", "v_vaccinated_no_booster", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_at_least_one_booster", "weight", "v_vaccinated_at_least_one_booster", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_wvaccinated_booster_accept", "weight", "v_vaccinated_booster_accept", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccinated_booster_hesitant", "weight", "v_vaccinated_booster_hesitant", 6, compute_binary_response, jeffreys_binary,
+    
+    "smoothed_wvaccinated_booster_defyes", "weight", "v_vaccinated_booster_defyes", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_booster_probyes", "weight", "v_vaccinated_booster_probyes", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_booster_probno", "weight", "v_vaccinated_booster_probno", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    "smoothed_wvaccinated_booster_defno", "weight", "v_vaccinated_booster_defno", 6, compute_binary_response, jeffreys_multinomial_factory(4),
+    
+    "smoothed_wflu_vaccinated_2021", "weight", "v_flu_vaccinated_2021", 6, compute_binary_response, jeffreys_binary,
+
     
     # who would make more likely to accept vaccine
     "smoothed_vaccine_likely_friends", "weight_unif", "v_vaccine_likely_friends", 6, compute_binary_response, jeffreys_binary,
@@ -193,7 +222,9 @@ get_binary_indicators <- function() {
     "smoothed_whesitancy_reason_pregnant", "weight", "v_hesitancy_reason_pregnant", 6, compute_binary_response, jeffreys_binary,
     "smoothed_hesitancy_reason_religious", "weight_unif", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
     "smoothed_whesitancy_reason_religious", "weight", "v_hesitancy_reason_religious", 6, compute_binary_response, jeffreys_binary,
-    
+    "smoothed_hesitancy_reason_dislike_vaccines_generally", "weight_unif", "v_hesitancy_reason_dislike_vaccines_generally", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_whesitancy_reason_dislike_vaccines_generally", "weight", "v_hesitancy_reason_dislike_vaccines_generally", 6, compute_binary_response, jeffreys_binary,
+
     # vaccine barriers
     "smoothed_vaccine_barrier_eligible", "weight_unif", "v_vaccine_barrier_eligible", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_barrier_eligible", "weight", "v_vaccine_barrier_eligible", 6, compute_binary_response, jeffreys_binary,
@@ -219,6 +250,10 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_barrier_type", "weight", "v_vaccine_barrier_type", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_barrier_none", "weight_unif", "v_vaccine_barrier_none", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_barrier_none", "weight", "v_vaccine_barrier_none", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_appointment_location", "weight_unif", "v_vaccine_barrier_appointment_location", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_appointment_location", "weight", "v_vaccine_barrier_appointment_location", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_other", "weight_unif", "v_vaccine_barrier_other", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_other", "weight", "v_vaccine_barrier_other", 6, compute_binary_response, jeffreys_binary,
     
     # vaccine barriers for vaccinated
     "smoothed_vaccine_barrier_eligible_has", "weight_unif", "v_vaccine_barrier_eligible_has", 6, compute_binary_response, jeffreys_binary,
@@ -245,6 +280,10 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_barrier_type_has", "weight", "v_vaccine_barrier_type_has", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_barrier_none_has", "weight_unif", "v_vaccine_barrier_none_has", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_barrier_none_has", "weight", "v_vaccine_barrier_none_has", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_appointment_location_has", "weight_unif", "v_vaccine_barrier_appointment_location_has", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_appointment_location_has", "weight", "v_vaccine_barrier_appointment_location_has", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_other_has", "weight_unif", "v_vaccine_barrier_other_has", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_other_has", "weight", "v_vaccine_barrier_other_has", 6, compute_binary_response, jeffreys_binary,
     
     # vaccine barriers for attempted vaccinated
     "smoothed_vaccine_barrier_eligible_tried", "weight_unif", "v_vaccine_barrier_eligible_tried", 6, compute_binary_response, jeffreys_binary,
@@ -271,6 +310,11 @@ get_binary_indicators <- function() {
     "smoothed_wvaccine_barrier_type_tried", "weight", "v_vaccine_barrier_type_tried", 6, compute_binary_response, jeffreys_binary,
     "smoothed_vaccine_barrier_none_tried", "weight_unif", "v_vaccine_barrier_none_tried", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wvaccine_barrier_none_tried", "weight", "v_vaccine_barrier_none_tried", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_appointment_location_tried", "weight_unif", "v_vaccine_barrier_appointment_location_tried", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_appointment_location_tried", "weight", "v_vaccine_barrier_appointment_location_tried", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_vaccine_barrier_other_tried", "weight_unif", "v_vaccine_barrier_other_tried", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wvaccine_barrier_other_tried", "weight", "v_vaccine_barrier_other_tried", 6, compute_binary_response, jeffreys_binary,
+    
     
     # reasons for belief that vaccine is unnecessary
     "smoothed_dontneed_reason_had_covid", "weight_unif", "v_dontneed_reason_had_covid", 6, compute_binary_response, jeffreys_binary,
@@ -294,6 +338,26 @@ get_binary_indicators <- function() {
     "smoothed_inperson_school_parttime", "weight_unif", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     "smoothed_winperson_school_parttime", "weight", "s_inperson_school_parttime", 6, compute_binary_response, jeffreys_binary,
     
+    "smoothed_inperson_school_fulltime_oldest", "weight_unif", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_fulltime_oldest", "weight", "s_inperson_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_inperson_school_parttime_oldest", "weight_unif", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_winperson_school_parttime_oldest", "weight", "s_inperson_school_parttime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+    "smoothed_wremote_school_fulltime_oldest", "weight", "s_remote_school_fulltime_oldest", 6, compute_binary_response, jeffreys_multinomial_factory(3),
+
+    "smoothed_wschool_safety_measures_mask_students", "weight", "s_school_safety_measures_mask_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_mask_teachers", "weight", "s_school_safety_measures_mask_teachers", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_restricted_entry", "weight", "s_school_safety_measures_restricted_entry", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_separators", "weight", "s_school_safety_measures_separators", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_extracurricular", "weight", "s_school_safety_measures_extracurricular", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_symptom_screen", "weight", "s_school_safety_measures_symptom_screen", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_ventilation", "weight", "s_school_safety_measures_ventilation", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_testing_staff", "weight", "s_school_safety_measures_testing_staff", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_testing_students", "weight", "s_school_safety_measures_testing_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_vaccine_staff", "weight", "s_school_safety_measures_vaccine_staff", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_vaccine_students", "weight", "s_school_safety_measures_vaccine_students", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_cafeteria", "weight", "s_school_safety_measures_cafeteria", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wschool_safety_measures_dont_know", "weight", "s_school_safety_measures_dont_know", 6, compute_binary_response, jeffreys_binary,
+
     # beliefs
     "smoothed_belief_masking_effective", "weight_unif", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wbelief_masking_effective", "weight", "b_belief_masking_effective", 6, compute_binary_response, jeffreys_binary,
@@ -353,9 +417,7 @@ get_binary_indicators <- function() {
     "smoothed_want_info_employment", "weight_unif", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwant_info_employment", "weight", "i_want_info_employment", 6, compute_binary_response, jeffreys_binary,
     "smoothed_want_info_none", "weight_unif", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary,
-   
-    
+    "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary
   )
 
 

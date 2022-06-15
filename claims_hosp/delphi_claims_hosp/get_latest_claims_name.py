@@ -26,8 +26,7 @@ def get_latest_filename(dir_path, logger):
 
     assert current_date.date() == latest_timestamp.date(), "no drop for today"
 
-    # write to stdout for shell script to use
-    logger.info(latest_filename)
+    logger.info("Latest claims file", filename=latest_filename)
 
     # return for other uses
     return latest_filename

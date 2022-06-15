@@ -17,7 +17,7 @@ from delphi_utils import get_structured_logger
 # first party
 from .config import Config
 from .download_claims_ftp_files import download
-from .agg_claims_drops import agg_and_write
+from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 from .update_indicator import ClaimsHospIndicatorUpdater
 
@@ -62,7 +62,7 @@ def run_module(params):
              params["indicator"]["input_dir"], logger)
 
     # aggregate data
-    agg_and_write(params["indicator"]["input_dir"], logger)
+    modify_and_write(params["indicator"]["input_dir"], logger)
 
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)

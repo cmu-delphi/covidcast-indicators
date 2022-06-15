@@ -350,6 +350,43 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$t_reason_not_tested_none <- NA
   }
 
+if ("V5d" %in% names(input_data)) {
+    # introduced in Wave 8, removed in Wave 11
+    vaccine_incomplete_reasons <- split_options(input_data$V5d)
+
+    input_data$v_vaccine_incomplete_sideeffect <- is_selected(vaccine_incomplete_reasons, "1")
+    input_data$v_vaccine_incomplete_allergic <- is_selected(vaccine_incomplete_reasons, "2")
+    input_data$v_vaccine_incomplete_wontwork <- is_selected(vaccine_incomplete_reasons, "3")
+    input_data$v_vaccine_incomplete_dontbelieve <- is_selected(vaccine_incomplete_reasons, "4")
+    input_data$v_vaccine_incomplete_dontlike <- is_selected(vaccine_incomplete_reasons, "5")
+    input_data$v_vaccine_incomplete_not_recommended <- is_selected(vaccine_incomplete_reasons, "6")
+    input_data$v_vaccine_incomplete_wait <- is_selected(vaccine_incomplete_reasons, "7")
+    input_data$v_vaccine_incomplete_otherpeople <- is_selected(vaccine_incomplete_reasons, "8")
+    input_data$v_vaccine_incomplete_cost <- is_selected(vaccine_incomplete_reasons, "9")
+    input_data$v_vaccine_incomplete_distrust_vaccine <- is_selected(vaccine_incomplete_reasons, "10")
+    input_data$v_vaccine_incomplete_distrust_gov <- is_selected(vaccine_incomplete_reasons, "11")
+    input_data$v_vaccine_incomplete_health <- is_selected(vaccine_incomplete_reasons, "12")
+    input_data$v_vaccine_incomplete_other <- is_selected(vaccine_incomplete_reasons, "13")
+    input_data$v_vaccine_incomplete_pregnant <- is_selected(vaccine_incomplete_reasons, "14")
+    input_data$v_vaccine_incomplete_religion <- is_selected(vaccine_incomplete_reasons, "15")
+  } else {
+    input_data$v_vaccine_incomplete_sideeffect <- NA_real_
+    input_data$v_vaccine_incomplete_allergic <- NA_real_
+    input_data$v_vaccine_incomplete_wontwork <- NA_real_
+    input_data$v_vaccine_incomplete_dontbelieve <- NA_real_
+    input_data$v_vaccine_incomplete_dontlike <- NA_real_
+    input_data$v_vaccine_incomplete_not_recommended <- NA_real_
+    input_data$v_vaccine_incomplete_wait <- NA_real_
+    input_data$v_vaccine_incomplete_otherpeople <- NA_real_
+    input_data$v_vaccine_incomplete_cost <- NA_real_
+    input_data$v_vaccine_incomplete_distrust_vaccine <- NA_real_
+    input_data$v_vaccine_incomplete_distrust_gov <- NA_real_
+    input_data$v_vaccine_incomplete_health <- NA_real_
+    input_data$v_vaccine_incomplete_other <- NA_real_
+    input_data$v_vaccine_incomplete_pregnant <- NA_real_
+    input_data$v_vaccine_incomplete_religion <- NA_real_
+  }
+
 if ("C2" %in% names(input_data)) {
     # Coded as 1 = "Yes", 2 = "No"
     input_data$v_flu_vaccinated_1y <- input_data$C2 == 1

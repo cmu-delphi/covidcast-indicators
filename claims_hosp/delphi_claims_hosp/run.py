@@ -102,6 +102,8 @@ def run_module(params):
                 weekday = params["indicator"]["weekday"],
                 write_se = params["indicator"]["write_se"])
 
+    max_dates = []
+    n_csv_export = []
     # generate indicator csvs
     for geo in params["indicator"]["geos"]:
         for weekday in params["indicator"]["weekday"]:
@@ -132,6 +134,8 @@ def run_module(params):
                 params["common"]["export_dir"],
                 logger,
             )
+            max_dates.append(updater.output_dates[-1])
+            n_csv_export.append(len(updater.output_dates))
         logger.info("finished updating", geo = geo)
 
     # Remove all the raw files
@@ -141,5 +145,12 @@ def run_module(params):
     logger.info('Remove all the raw files.')
 
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = min(max_dates)
+    max_lag_in_days = (datetime.now() - min_max_date).days
+    csv_export_count = sum(n_csv_export)
+    formatted_min_max_date = min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

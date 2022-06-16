@@ -1512,28 +1512,19 @@ code_addl_activities <- function(input_data, wave) {
 code_addl_demographic <- function(input_data, wave) {
   if ("D1" %in% names(input_data)) {
     # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = no answer
-    input_data$gender_male <- case_when(
-      input_data$D1 == 1 ~ 1,
-      input_data$D1 %in% c(2, 3, 4) ~ 0,
-      input_data$D1 == 5 ~ NA_real_,
-      TRUE ~ NA_real_
-    )
-    input_data$gender_female <- case_when(
-      input_data$D1 == 2 ~ 1,
-      input_data$D1 %in% c(1, 3, 4) ~ 0,
-      input_data$D1 == 5 ~ NA_real_,
-      TRUE ~ NA_real_
-    )
+    input_data$gender_male <- input_data$D1 == 1
+    input_data$gender_female <- input_data$D1 == 2
     input_data$gender_nonbinary_other <- case_when(
       input_data$D1 %in% c(3, 4) ~ 1,
-      input_data$D1 %in% c(1, 2) ~ 0,
-      input_data$D1 == 5 ~ NA_real_,
+      input_data$D1 %in% c(1, 2, 5) ~ 0,
       TRUE ~ NA_real_
     )
+    input_data$gender_unknown <- input_data$D1 == 5
   } else {
     input_data$gender_male <- NA_real_
     input_data$gender_female <- NA_real_
     input_data$gender_nonbinary_other <- NA_real_
+    input_data$gender_unknown <- NA_real_
   }
 
   if ("D2" %in% names(input_data)) {
@@ -1657,6 +1648,18 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$children_school_measure_extracurricular <- NA
     input_data$children_school_measure_supplies <- NA
     input_data$children_school_measure_screening <- NA
+  }
+
+  if ("P2" %in% names(input_data)) {
+    input_data$child_age <- case_when(
+      input_data$P2 == 1 ~ "less than 5 years",
+      input_data$P2 == 2 ~ "5-11 years",
+      input_data$P2 == 3 ~ "12-15 years",
+      input_data$P2 == 4 ~ "16-17 years",
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$child_age <- NA_character_
   }
 
   if ("A5_1" %in% names(input_data)) {

@@ -84,7 +84,7 @@ get_aggs <- function() {
 
     "pct_others_distanced_public", "c_others_distanced_public", compute_binary, jeffreys_binary,
     "pct_others_distanced_public_alt", "c_others_distanced_some_public", compute_binary, jeffreys_binary,
-    
+
     "pct_cli", "hh_p_cli", compute_household_binary, jeffreys_count,
     "pct_ili", "hh_p_ili", compute_household_binary, jeffreys_count,
     "pct_hh_cmnty_cli", "hh_community_yes", compute_binary, jeffreys_binary,
@@ -96,7 +96,7 @@ get_aggs <- function() {
 
     "pct_avoid_contact", "c_avoid_contact", compute_binary, jeffreys_binary,
     "pct_avoid_contact_7d", "c_avoid_contact_7d", compute_binary, jeffreys_binary,
-    
+
     # symptoms
     "pct_taken_temp", "t_taken_temp", compute_binary, jeffreys_binary,
 
@@ -122,7 +122,7 @@ get_aggs <- function() {
     "pct_symp_headache", "symp_headache", compute_binary, jeffreys_binary,
     "pct_symp_sleep_changes", "symp_sleep_changes", compute_binary, jeffreys_binary,
     "pct_symp_stuffy_nose", "symp_stuffy_nose", compute_binary, jeffreys_binary,
-    
+
     # unusual symptoms
     "pct_symp_fever_unusual", "symp_fever_unusual", compute_binary, jeffreys_binary,
     "pct_symp_cough_unusual", "symp_cough_unusual", compute_binary, jeffreys_binary,
@@ -142,7 +142,7 @@ get_aggs <- function() {
     "pct_symp_headache_unusual", "symp_headache_unusual", compute_binary, jeffreys_binary,
     "pct_symp_sleep_changes_unusual", "symp_sleep_changes_unusual", compute_binary, jeffreys_binary,
     "pct_symp_stuffy_nose_unusual", "symp_stuffy_nose_unusual", compute_binary, jeffreys_binary,
-    
+
     # vaccines
     "pct_vaccinated", "v_covid_vaccinated", compute_binary, jeffreys_binary,
     "pct_received_2_vaccine_doses", "v_received_2_vaccine_doses", compute_binary, jeffreys_binary,
@@ -156,10 +156,10 @@ get_aggs <- function() {
 
     "pct_covid_vaccinated_friends", "v_covid_vaccinated_friends", compute_binary, jeffreys_binary,
     "pct_covid_vaccinated_friends_alt", "v_covid_vaccinated_some_friends", compute_binary, jeffreys_binary,
-    
+
     "pct_vaccinate_children", "v_vaccinate_children", compute_binary, jeffreys_binary,
     "pct_vaccinate_child_oldest", "v_vaccinate_child_oldest", compute_binary, jeffreys_binary,
-    
+
     "pct_child_vaccine_already", "v_child_vaccine_already", compute_binary, jeffreys_multinomial_factory(5),
     "pct_child_vaccine_yes_def", "v_child_vaccine_yes_def", compute_binary, jeffreys_multinomial_factory(5),
     "pct_child_vaccine_yes_prob", "v_child_vaccine_yes_prob", compute_binary, jeffreys_multinomial_factory(5),
@@ -174,19 +174,19 @@ get_aggs <- function() {
     "pct_accept_vaccine_no_appointment_probyes", "v_accept_vaccine_no_appointment_probyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_no_appointment_probno", "v_accept_vaccine_no_appointment_probno", compute_binary, jeffreys_multinomial_factory(4),
     "pct_accept_vaccine_no_appointment_defno", "v_accept_vaccine_no_appointment_defno", compute_binary, jeffreys_multinomial_factory(4),
-    
+
     "pct_initial_dose_one_of_one", "v_initial_dose_one_of_one", compute_binary, jeffreys_multinomial_factory(4),
     "pct_initial_dose_one_of_two", "v_initial_dose_one_of_two", compute_binary, jeffreys_multinomial_factory(4),
     "pct_initial_dose_two_of_two", "v_initial_dose_two_of_two", compute_binary, jeffreys_multinomial_factory(4),
-    
+
     "pct_vaccinated_one_booster", "v_vaccinated_one_booster", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_two_or_more_boosters", "v_vaccinated_two_or_more_boosters", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_no_booster", "v_vaccinated_no_booster", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_at_least_one_booster", "v_vaccinated_at_least_one_booster", compute_binary, jeffreys_binary,
-    
+
     "pct_vaccinated_booster_accept", "v_vaccinated_booster_accept", compute_binary, jeffreys_binary,
     "pct_vaccinated_booster_hesitant", "v_vaccinated_booster_hesitant", compute_binary, jeffreys_binary,
-    
+
     "pct_vaccinated_booster_defyes", "v_vaccinated_booster_defyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_booster_probyes", "v_vaccinated_booster_probyes", compute_binary, jeffreys_multinomial_factory(4),
     "pct_vaccinated_booster_probno", "v_vaccinated_booster_probno", compute_binary, jeffreys_multinomial_factory(4),
@@ -198,8 +198,8 @@ get_aggs <- function() {
     "pct_flu_vaccine_june_2020", "v_flu_vaccinated_june_2020", compute_binary, jeffreys_binary,
     "pct_flu_vaccine_july_2020", "v_flu_vaccinated_july_2020", compute_binary, jeffreys_binary,
     "pct_flu_vaccinated_2021", "v_flu_vaccinated_2021", compute_binary, jeffreys_binary,
-    
-    
+
+
     # vaccine timing
     "pct_vaccine_timing_weeks", "v_vaccine_timing_weeks", compute_binary, jeffreys_multinomial_factory(7),
     "pct_vaccine_timing_onemonth", "v_vaccine_timing_onemonth", compute_binary, jeffreys_multinomial_factory(7),
@@ -207,7 +207,7 @@ get_aggs <- function() {
     "pct_vaccine_timing_sixmonths", "v_vaccine_timing_sixmonths", compute_binary, jeffreys_multinomial_factory(7),
     "pct_vaccine_timing_morethansix", "v_vaccine_timing_morethansix", compute_binary, jeffreys_multinomial_factory(7),
     "pct_vaccine_timing_dontknow", "v_vaccine_timing_dontknow", compute_binary, jeffreys_multinomial_factory(7),
-    
+
     # vaccine influences
     "pct_vaccine_likely_friends", "v_vaccine_likely_friends", compute_binary, jeffreys_binary,
     "pct_vaccine_likely_local_health", "v_vaccine_likely_local_health", compute_binary, jeffreys_binary,
@@ -223,7 +223,7 @@ get_aggs <- function() {
     "pct_trust_covid_info_journalists", "i_trust_covid_info_journalists", compute_binary, jeffreys_binary,
     "pct_trust_covid_info_friends", "i_trust_covid_info_friends", compute_binary, jeffreys_binary,
     "pct_trust_covid_info_religious", "i_trust_covid_info_religious", compute_binary, jeffreys_binary,
-    
+
     "pct_worried_vaccine_sideeffects", "v_worried_vaccine_side_effects", compute_binary, jeffreys_binary,
     "pct_hesitant_worried_vaccine_sideeffects", "v_hesitant_worried_vaccine_sideeffects", compute_binary, jeffreys_binary,
 
@@ -241,7 +241,7 @@ get_aggs <- function() {
     "pct_hesitant_trust_covid_info_journalists", "i_hesitant_trust_covid_info_journalists", compute_binary, jeffreys_binary,
     "pct_hesitant_trust_covid_info_friends", "i_hesitant_trust_covid_info_friends", compute_binary, jeffreys_binary,
     "pct_hesitant_trust_covid_info_religious", "i_hesitant_trust_covid_info_religious", compute_binary, jeffreys_binary,
-    
+
     # vaccine worries
     "pct_hesitant_barrier_sideeffects", "v_hesitant_barrier_sideeffects", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_allergic", "v_hesitant_barrier_allergic", compute_binary, jeffreys_binary,
@@ -259,7 +259,7 @@ get_aggs <- function() {
     "pct_hesitant_barrier_pregnant", "v_hesitant_barrier_pregnant", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_other", "v_hesitant_barrier_other", compute_binary, jeffreys_binary,
     "pct_hesitant_barrier_dislike_vaccines_generally", "v_hesitant_barrier_dislike_vaccines_generally", compute_binary, jeffreys_binary,
-    
+
     "pct_hesitant_dontneed_reason_had_covid", "v_hesitant_dontneed_reason_had_covid", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_dont_spend_time", "v_hesitant_dontneed_reason_dont_spend_time", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_not_high_risk", "v_hesitant_dontneed_reason_not_high_risk", compute_binary, jeffreys_binary,
@@ -267,7 +267,7 @@ get_aggs <- function() {
     "pct_hesitant_dontneed_reason_not_serious", "v_hesitant_dontneed_reason_not_serious", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_not_beneficial", "v_hesitant_dontneed_reason_not_beneficial", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_other", "v_hesitant_dontneed_reason_other", compute_binary, jeffreys_binary,
-    
+
     "pct_barrier_sideeffects", "v_hesitancy_reason_sideeffects", compute_binary, jeffreys_binary,
     "pct_barrier_allergic", "v_hesitancy_reason_allergic", compute_binary, jeffreys_binary,
     "pct_barrier_ineffective", "v_hesitancy_reason_ineffective", compute_binary, jeffreys_binary,
@@ -284,7 +284,7 @@ get_aggs <- function() {
     "pct_barrier_pregnant", "v_hesitancy_reason_pregnant", compute_binary, jeffreys_binary,
     "pct_barrier_other", "v_hesitancy_reason_other", compute_binary, jeffreys_binary,
     "pct_barrier_dislike_vaccines_generally", "v_hesitancy_reason_dislike_vaccines_generally", compute_binary, jeffreys_binary,
-    
+
     # vaccine incomplete reasons
     "pct_vaccine_incomplete_sideeffect", "v_vaccine_incomplete_sideeffect", compute_binary, jeffreys_binary,
     "pct_vaccine_incomplete_allergic", "v_vaccine_incomplete_allergic", compute_binary, jeffreys_binary,
@@ -310,7 +310,7 @@ get_aggs <- function() {
     "pct_dontneed_reason_not_serious", "v_dontneed_reason_not_serious_5abc_6", compute_binary, jeffreys_binary,
     "pct_dontneed_reason_not_beneficial", "v_dontneed_reason_not_beneficial_5abc_6", compute_binary, jeffreys_binary,
     "pct_dontneed_reason_other", "v_dontneed_reason_other_5abc_6", compute_binary, jeffreys_binary,
-    
+
     "pct_defno_barrier_sideeffects", "v_defno_barrier_sideeffects", compute_binary, jeffreys_binary,
     "pct_defno_barrier_allergic", "v_defno_barrier_allergic", compute_binary, jeffreys_binary,
     "pct_defno_barrier_ineffective", "v_defno_barrier_ineffective", compute_binary, jeffreys_binary,
@@ -327,7 +327,7 @@ get_aggs <- function() {
     "pct_defno_barrier_pregnant", "v_defno_barrier_pregnant", compute_binary, jeffreys_binary,
     "pct_defno_barrier_other", "v_defno_barrier_other", compute_binary, jeffreys_binary,
     "pct_defno_barrier_dislike_vaccines_generally", "v_defno_barrier_dislike_vaccines_generally", compute_binary, jeffreys_binary,
-    
+
     "pct_defno_dontneed_reason_had_covid", "v_defno_dontneed_reason_had_covid", compute_binary, jeffreys_binary,
     "pct_defno_dontneed_reason_dont_spend_time", "v_defno_dontneed_reason_dont_spend_time", compute_binary, jeffreys_binary,
     "pct_defno_dontneed_reason_not_high_risk", "v_defno_dontneed_reason_not_high_risk", compute_binary, jeffreys_binary,
@@ -335,7 +335,7 @@ get_aggs <- function() {
     "pct_defno_dontneed_reason_not_serious", "v_defno_dontneed_reason_not_serious", compute_binary, jeffreys_binary,
     "pct_defno_dontneed_reason_not_beneficial", "v_defno_dontneed_reason_not_beneficial", compute_binary, jeffreys_binary,
     "pct_defno_dontneed_reason_other", "v_defno_dontneed_reason_other", compute_binary, jeffreys_binary,
-    
+
     "pct_informed_access", "v_informed_access", compute_binary, jeffreys_binary,
     
     # appointments
@@ -571,7 +571,6 @@ get_aggs <- function() {
 
   aggs <- create_aggs_product(regions, groups, indicators)
 
-
   monthly_indicators <- tribble(
     ~name, ~metric, ~compute_fn, ~post_fn,
     "pct_child_school_public", "s_child_school_public", compute_binary, jeffreys_multinomial_factory(5),
@@ -641,9 +640,10 @@ get_aggs <- function() {
   demo_groups <- list(c())
   demo_indicators <- tribble(
     ~name, ~metric, ~compute_fn, ~post_fn,
-    "pct_gender_male", "gender_male", compute_binary, jeffreys_multinomial_factory(3),
-    "pct_gender_female", "gender_female", compute_binary, jeffreys_multinomial_factory(3),
-    "pct_gender_nonbinary_other", "gender_nonbinary_other", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_gender_male", "gender_male", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_gender_female", "gender_female", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_gender_nonbinary_other", "gender_nonbinary_other", compute_binary, jeffreys_multinomial_factory(4),
+    "pct_gender_unknown", "gender_unknown", compute_binary, jeffreys_multinomial_factory(4),
 
     "pct_age_18_24", "age_18_24", compute_binary, jeffreys_multinomial_factory(7),
     "pct_age_25_34", "age_25_34", compute_binary, jeffreys_multinomial_factory(7),
@@ -748,9 +748,15 @@ get_aggs <- function() {
     demo_indicators
   )
 
+
+  ## Parenting cuts
+  parent_groups <- list(c("child_age"))
+  parent_indicators <- tribble()
+  parent_aggs <- create_aggs_product(regions, parent_groups, parent_indicators)
+
   weekly_aggs <- rbind(aggs, demo_aggs)
   monthly_aggs <- rbind(aggs, monthly_aggs, demo_aggs)
-  
+
   return(list("week"=weekly_aggs, "month"=monthly_aggs))
 }
 

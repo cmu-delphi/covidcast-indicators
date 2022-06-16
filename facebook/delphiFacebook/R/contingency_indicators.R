@@ -626,9 +626,121 @@ get_aggs <- function() {
   
   ### Combine full set and additional original tables.
   aggs <- rbind(aggs, cut1_aggs, cut2_aggs, cut3_aggs, cut456_aggs, cut456_marginal_aggs)
-  
-  weekly_aggs <- aggs
-  monthly_aggs <- rbind(aggs, monthly_aggs)
+
+
+  ### Demographic variables. Include in "overall" cuts only.
+  demo_groups <- list(c())
+  demo_indicators <- tribble(
+    ~name, ~metric, ~compute_fn, ~post_fn,
+    "pct_gender_male", "gender_male", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_gender_female", "gender_female", compute_binary, jeffreys_multinomial_factory(3),
+    "pct_gender_nonbinary_other", "gender_nonbinary_other", compute_binary, jeffreys_multinomial_factory(3),
+
+    "pct_age_18_24", "age_18_24", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_25_34", "age_25_34", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_35_44", "age_35_44", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_45_54", "age_45_54", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_55_64", "age_55_64", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_65_74", "age_65_74", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_age_75_older", "age_75_older", compute_binary, jeffreys_multinomial_factory(7),
+
+    "pct_hispanic_latino", "hispanic", compute_binary, jeffreys_binary,
+
+    "pct_race_american_indian_alaska_native", "race_american_indian_alaska_native", compute_binary, jeffreys_multinomial_factory(6),
+    "pct_race_asian", "race_asian", compute_binary, jeffreys_multinomial_factory(6),
+    "pct_race_black_african_american", "race_black_african_american", compute_binary, jeffreys_multinomial_factory(6),
+    "pct_race_native_hawaiian_pacific_islander", "race_native_hawaiian_pacific_islander", compute_binary, jeffreys_multinomial_factory(6),
+    "pct_race_white", "race_white", compute_binary, jeffreys_multinomial_factory(6),
+    "pct_race_multiple_other", "race_multiple_other", compute_binary, jeffreys_multinomial_factory(6),
+
+    "pct_education_less_than_highschool", "education_less_than_highschool", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_highschool_or_equivalent", "education_highschool_or_equivalent", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_some_college", "education_some_college", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_2yr_degree", "education_2yr_degree", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_4yr_degree", "education_4yr_degree", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_masters", "education_masters", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_professional_degree", "education_professional_degree", compute_binary, jeffreys_multinomial_factory(9),
+    "pct_education_doctorate", "education_doctorate", compute_binary, jeffreys_multinomial_factory(9),
+
+    "pct_language_home_english", "language_home_english", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_spanish", "language_home_spanish", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_chinese", "language_home_chinese", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_vietnamese", "language_home_vietnamese", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_french", "language_home_french", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_portuguese", "language_home_portuguese", compute_binary, jeffreys_multinomial_factory(7),
+    "pct_language_home_other", "language_home_other", compute_binary, jeffreys_multinomial_factory(7),
+
+    "pct_work_for_pay_4w", "a_work_for_pay_4w", compute_binary, jeffreys_binary,
+
+    "pct_condition_asthma", "comorbid_asthma", compute_binary, jeffreys_binary,
+    "pct_condition_lung", "comorbidlungdisease", compute_binary, jeffreys_binary,
+    "pct_condition_cancer", "comorbidcancer", compute_binary, jeffreys_binary,
+    "pct_condition_diabetes", "comorbiddiabetes", compute_binary, jeffreys_binary,
+    "pct_condition_hbp", "comorbid_high_blood_pressure", compute_binary, jeffreys_binary,
+    "pct_condition_kidney", "comorbidkidneydisease", compute_binary, jeffreys_binary,
+    "pct_condition_immune", "comorbid_autoimmune", compute_binary, jeffreys_binary,
+    "pct_condition_cvd", "comorbidheartdisease", compute_binary, jeffreys_binary,
+    "pct_condition_obesity", "comorbidobese", compute_binary, jeffreys_binary,
+    "pct_condition_none", "comorbid_none", compute_binary, jeffreys_binary,
+
+    "pct_pregnant", "pregnant", compute_binary, jeffreys_binary,
+
+    "pct_smoke", "smoker", compute_binary, jeffreys_binary,
+
+    "pct_children_prek", "children_prek", compute_binary, jeffreys_binary,
+    "pct_children_gr1_5", "children_gr1_5", compute_binary, jeffreys_binary,
+    "pct_children_gr6_8", "children_gr6_8", compute_binary, jeffreys_binary,
+    "pct_children_gr9_12", "children_gr9_12", compute_binary, jeffreys_binary,
+
+    # Already in main grouping, including "overall". Just need to make sure to include in demo/parenting tables.
+    # "pct_inperson_school_fulltime", "s_inperson_school_fulltime", compute_binary, jeffreys_binary,
+    # "pct_inperson_school_parttime", "s_inperson_school_parttime", compute_binary, jeffreys_binary,
+    # "pct_inperson_school_fulltime_oldest", "s_inperson_school_fulltime_oldest", compute_binary, jeffreys_binary,
+    # "pct_remote_school_fulltime_oldest", "s_remote_school_fulltime_oldest", compute_binary, jeffreys_binary,
+    # "pct_inperson_school_parttime_oldest", "s_inperson_school_parttime_oldest", compute_binary, jeffreys_binary,
+
+    "pct_children_school_measure_mask_students", "children_school_measure_mask_students", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_mask_teachers", "children_school_measure_mask_teachers", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_same_teacher", "children_school_measure_same_teacher", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_same_students", "children_school_measure_same_students", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_outdoor", "children_school_measure_outdoor", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_entry", "children_school_measure_entry", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_class_size", "children_school_measure_class_size", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_cafeteria", "children_school_measure_cafeteria", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_playground", "children_school_measure_playground", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_desk_shield", "children_school_measure_desk_shield", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_desk_space", "children_school_measure_desk_space", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_extracurricular", "children_school_measure_extracurricular", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_supplies", "children_school_measure_supplies", compute_binary, jeffreys_binary,
+    "pct_children_school_measure_screening", "children_school_measure_screening", compute_binary, jeffreys_binary,
+
+    "pct_occ_4w_social", "occ_4w_social", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_education", "occ_4w_education", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_arts", "occ_4w_arts", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_health_prac", "occ_4w_health_prac", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_health_support", "occ_4w_health_support", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_protective", "occ_4w_protective", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_food", "occ_4w_food", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_building", "occ_4w_building", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_personal", "occ_4w_personal", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_sales", "occ_4w_sales", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_admin", "occ_4w_admin", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_construction", "occ_4w_construction", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_maintenance", "occ_4w_maintenance", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_production", "occ_4w_production", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_transportation", "occ_4w_transportation", compute_binary, jeffreys_multinomial_factory(16),
+    "pct_occ_4w_other", "occ_4w_other", compute_binary, jeffreys_multinomial_factory(16),
+
+    "pct_", "", compute_binary, jeffreys_binary,
+  )
+  demo_aggs <- create_aggs_product(
+    regsions,
+    demo_groups,
+    demo_indicators
+  )
+
+  weekly_aggs <- rbind(aggs, demo_aggs)
+  monthly_aggs <- rbind(aggs, monthly_aggs, demo_aggs)
   
   return(list("week"=weekly_aggs, "month"=monthly_aggs))
 }

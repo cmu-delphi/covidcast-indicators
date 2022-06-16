@@ -238,6 +238,11 @@ code_addl_vaccines <- function(input_data, wave) {
     )
   }
 
+  input_data$overall_vaccine_hesitancy <- coalesce(
+    !input_data$v_covid_vaccinated_or_accept,
+    !input_data$v_covid_vaccinated_appointment_or_accept
+  )
+
   # accept_vaccine_defyes
   # accept_vaccine_probyes
   # accept_vaccine_probno

@@ -43,6 +43,7 @@ test_that("testing NA filling for missing udpates", {
   
   # Assuming the input data is already prepared 
   df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  n_refds <- as.numeric(max_refd - min_refd)+1
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
 
   expect_equal(dim(backfill_df)[1], n_refds*(ref_lag+1))

@@ -108,7 +108,17 @@ test_that("testing adding 7 day avg and target", {
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
   df_new <- add_7davs_and_target(backfill_df, "value_raw", refd_col, lag_col)
   
-  expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1)
+  # Existing columns:
+  #     time_value: reference date
+  #     value_raw: raw counts
+  #     lag: number of days between issue date and reference date
+  # Added columns
+  #     issue_date: report/issue date
+  #     value_7dav: 7day avg of the raw counts
+  #     value_prev_7dav: 7day avg of the counts from -14 days to -8 days
+  #     value_target: updated counts on the target date
+  #     target_date: the date ref_lag days after the reference date
+  expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1 + 1)
   expect_equal(dim(df_new)[1], 7 * 8)
 })
 

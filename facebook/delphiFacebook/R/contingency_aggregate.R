@@ -26,6 +26,7 @@
 #' @import data.table
 #' @importFrom dplyr full_join %>% select all_of
 #' @importFrom purrr reduce
+#' @importFrom tidyr drop_na
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
@@ -95,6 +96,17 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     if ( length(dfs_out) != 0 ) {
       df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
       write_contingency_tables(df_out, params, geo_level, agg_group)
+      
+      for (theme in names(THEME_GROUPS)) {
+        theme_out <- select(df_out, agg_group, contains(THEME_GROUPS[[theme]]))
+        # Drop any rows that are completely `NA`. Grouping variables are always
+        # defined, so need to ignore those.
+        theme_out <- drop_na(theme_out, !!setdiff(names(theme_out), agg_group))
+        
+        if ( nrow(theme_out) != 0 && ncol(theme_out) != 0 ) {
+          write_contingency_tables(theme_out, params, geo_level, agg_group, theme)  
+        }
+      }
     }
   }
 }

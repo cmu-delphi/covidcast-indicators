@@ -257,14 +257,13 @@ code_addl_vaccines <- function(input_data, wave) {
   if ("V2a" %in% names(input_data)) {
     # coded as 1 = Yes, received all recommended doses, 2 = Plan to receive all recommended doses,
     # 3 = Don't plan to receive all recommended doses.
-    input_data$v_received_all_doses <- case_when(
-      input_data$V2a == 1 ~ 1,
-      input_data$V2a == 2 ~ 0,
-      input_data$V2a == 3 ~ 0,
-      TRUE ~ NA_real_
-    )
+    input_data$v_receive_all_doses_yes <- input_data$V2a == 1
+    input_data$v_receive_all_doses_plan <- input_data$V2a == 2
+    input_data$v_receive_all_doses_noplan <- input_data$V2a == 3
   } else {
-    input_data$v_received_all_doses <- NA_real_
+    input_data$v_receive_all_doses_yes <- NA_real_
+    input_data$v_receive_all_doses_plan <- NA_real_
+    input_data$v_receive_all_doses_noplan <- NA_real_
   }
 
   # hesitant_vaccine
@@ -342,6 +341,13 @@ code_addl_vaccines <- function(input_data, wave) {
   } else {
     input_data$t_ever_tested <- NA
   }
+
+  if ("B11" %in% names(input_data)) {
+    # Coded as 1 = Yes, 2 = No, 3 = don't know.
+    input_data$t_ever_tested_positive <- input_data$B11 == 1
+  } else {
+    input_data$t_ever_tested_positive <- NA
+  }
   
   if ("B5" %in% names(input_data)) {
     # Coded as 1 = "tested and COVID+", 2 = "tested and COVID-",
@@ -362,8 +368,10 @@ code_addl_vaccines <- function(input_data, wave) {
 
   if ("B6" %in% names(input_data)) {
     input_data$t_unusual_symptom_hospital <- input_data$B6 == 1
+    input_data$t_unusual_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
   } else {
     input_data$t_unusual_symptom_hospital <- NA
+    input_data$t_unusual_symptom_hospital_tried <- NA
   }
 
   if ("B7" %in% names(input_data)) {
@@ -447,7 +455,24 @@ if ("V5d" %in% names(input_data)) {
     input_data$v_vaccine_incomplete_religion <- NA_real_
   }
 
-if ("C2" %in% names(input_data)) {
+  # Overall barriers to vaccination from V5abcd.
+  input_data$v_overall_barrier_reason_sideeffect <- input_data$v_hesitancy_reason_sideeffects | input_data$v_vaccine_incomplete_sideeffect
+  input_data$v_overall_barrier_reason_allergic <- input_data$v_hesitancy_reason_allergic | input_data$v_vaccine_incomplete_allergic
+  input_data$v_overall_barrier_reason_wontwork <- input_data$v_hesitancy_reason_ineffective | input_data$v_vaccine_incomplete_wontwork
+  input_data$v_overall_barrier_reason_dontbelieve <- input_data$v_hesitancy_reason_unnecessary | input_data$v_vaccine_incomplete_dontbelieve
+  input_data$v_overall_barrier_reason_dontlike <- input_data$v_hesitancy_reason_dislike_vaccines | input_data$v_vaccine_incomplete_dontlike
+  input_data$v_overall_barrier_reason_not_recommended <- input_data$v_hesitancy_reason_not_recommended | input_data$v_vaccine_incomplete_not_recommended
+  input_data$v_overall_barrier_reason_wait <- input_data$v_hesitancy_reason_wait_safety | input_data$v_vaccine_incomplete_wait
+  input_data$v_overall_barrier_reason_otherpeople <- input_data$v_hesitancy_reason_low_priority | input_data$v_vaccine_incomplete_otherpeople
+  input_data$v_overall_barrier_reason_cost <- input_data$v_hesitancy_reason_cost | input_data$v_vaccine_incomplete_cost
+  input_data$v_overall_barrier_reason_distrust_vaccine <- input_data$v_hesitancy_reason_distrust_vaccines | input_data$v_vaccine_incomplete_distrust_vaccine
+  input_data$v_overall_barrier_reason_distrust_gov <- input_data$v_hesitancy_reason_distrust_gov | input_data$v_vaccine_incomplete_distrust_gov
+  input_data$v_overall_barrier_reason_health <- input_data$v_hesitancy_reason_health_condition | input_data$v_vaccine_incomplete_health
+  input_data$v_overall_barrier_reason_other <- input_data$v_hesitancy_reason_other | input_data$v_vaccine_incomplete_other
+  input_data$v_overall_barrier_reason_pregnant <- input_data$v_hesitancy_reason_pregnant | input_data$v_vaccine_incomplete_pregnant
+  input_data$v_overall_barrier_reason_religion <- input_data$v_hesitancy_reason_religious | input_data$v_vaccine_incomplete_religion
+
+  if ("C2" %in% names(input_data)) {
     # Coded as 1 = "Yes", 2 = "No"
     input_data$v_flu_vaccinated_1y <- input_data$C2 == 1
   } else {
@@ -1156,62 +1181,105 @@ code_addl_symptoms <- function(input_data, wave) {
   
   if ("B2c" %in% names(input_data)) {
     symptoms <- split_options(input_data$B2c)
+
+    input_data$symp_fever_unusual <- is_selected(symptoms, "1")
+    input_data$symp_cough_unusual <- is_selected(symptoms, "2")
+    input_data$symp_shortness_breath_unusual <- is_selected(symptoms, "3")
+    input_data$symp_diff_breathing_unusual <- is_selected(symptoms, "4")
+    input_data$symp_fatigue_unusual <- is_selected(symptoms, "5")
+    input_data$symp_nasal_congestion_unusual <- is_selected(symptoms, "6")
+    input_data$symp_runny_nose_unusual <- is_selected(symptoms, "7")
+    input_data$symp_aches_unusual <- is_selected(symptoms, "8")
+    input_data$symp_sore_throat_unusual <- is_selected(symptoms, "9")
+    input_data$symp_chest_pain_unusual <- is_selected(symptoms, "10")
+    input_data$symp_nausea_unusual <- is_selected(symptoms, "11")
+    input_data$symp_diarrhea_unusual <- is_selected(symptoms, "12")
+    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "13")
+    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "14")
+    input_data$symp_eye_pain_unusual <- is_selected(symptoms, "16")
+    input_data$symp_chills_unusual <- is_selected(symptoms, "17")
+    input_data$symp_headache_unusual <- is_selected(symptoms, "18")
+    input_data$symp_sleep_changes_unusual <- is_selected(symptoms, "19")
+    input_data$symp_stuffy_nose_unusual <- is_selected(symptoms, "20")
     
-    input_data$symp_fever_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_fever <- calc_unusual_given_symptom(
       input_data$symp_fever, is_selected(symptoms, "1")
     )
-    input_data$symp_cough_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_cough <- calc_unusual_given_symptom(
       input_data$symp_cough, is_selected(symptoms, "2")
     )
-    input_data$symp_shortness_breath_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_shortness_breath <- calc_unusual_given_symptom(
       input_data$symp_shortness_breath, is_selected(symptoms, "3")
     )
-    input_data$symp_diff_breathing_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_diff_breathing <- calc_unusual_given_symptom(
       input_data$symp_diff_breathing, is_selected(symptoms, "4")
     )
-    input_data$symp_fatigue_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_fatigue <- calc_unusual_given_symptom(
       input_data$symp_fatigue, is_selected(symptoms, "5")
     )
-    input_data$symp_nasal_congestion_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_nasal_congestion <- calc_unusual_given_symptom(
       input_data$symp_nasal_congestion, is_selected(symptoms, "6")
     )
-    input_data$symp_runny_nose_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_runny_nose <- calc_unusual_given_symptom(
       input_data$symp_runny_nose, is_selected(symptoms, "7")
     )
-    input_data$symp_aches_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_aches <- calc_unusual_given_symptom(
       input_data$symp_aches, is_selected(symptoms, "8")
     )
-    input_data$symp_sore_throat_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_sore_throat <- calc_unusual_given_symptom(
       input_data$symp_sore_throat, is_selected(symptoms, "9")
     )
-    input_data$symp_chest_pain_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_chest_pain <- calc_unusual_given_symptom(
       input_data$symp_chest_pain, is_selected(symptoms, "10")
     )
-    input_data$symp_nausea_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_nausea <- calc_unusual_given_symptom(
       input_data$symp_nausea, is_selected(symptoms, "11")
     )
-    input_data$symp_diarrhea_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_diarrhea <- calc_unusual_given_symptom(
       input_data$symp_diarrhea, is_selected(symptoms, "12")
     )
-    input_data$symp_loss_smell_taste_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_loss_smell_taste <- calc_unusual_given_symptom(
       input_data$symp_loss_smell_taste, is_selected(symptoms, "13")
     )
-    input_data$symp_eye_pain_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_other <- calc_unusual_given_symptom(
+      input_data$symp_other, is_selected(symptoms, "14")
+    )
+    input_data$symp_unusual_given_eye_pain <- calc_unusual_given_symptom(
       input_data$symp_eye_pain, is_selected(symptoms, "16")
     )
-    input_data$symp_chills_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_chills <- calc_unusual_given_symptom(
       input_data$symp_chills, is_selected(symptoms, "17")
     )
-    input_data$symp_headache_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_headache <- calc_unusual_given_symptom(
       input_data$symp_headache, is_selected(symptoms, "18")
     )
-    input_data$symp_sleep_changes_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_sleep_changes <- calc_unusual_given_symptom(
       input_data$symp_sleep_changes, is_selected(symptoms, "19")
     )
-    input_data$symp_stuffy_nose_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_stuffy_nose <- calc_unusual_given_symptom(
       input_data$symp_stuffy_nose, is_selected(symptoms, "20")
     )
   } else {
+    input_data$symp_unusual_given_fever <- NA
+    input_data$symp_unusual_given_cough <- NA
+    input_data$symp_unusual_given_shortness_breath <- NA
+    input_data$symp_unusual_given_diff_breathing <- NA
+    input_data$symp_unusual_given_fatigue <- NA
+    input_data$symp_unusual_given_nasal_congestion <- NA
+    input_data$symp_unusual_given_runny_nose <- NA
+    input_data$symp_unusual_given_aches <- NA
+    input_data$symp_unusual_given_sore_throat <- NA
+    input_data$symp_unusual_given_chest_pain <- NA
+    input_data$symp_unusual_given_nausea <- NA
+    input_data$symp_unusual_given_diarrhea <- NA
+    input_data$symp_unusual_given_loss_smell_taste <- NA
+    input_data$symp_unusual_given_other <- NA
+    input_data$symp_unusual_given_eye_pain <- NA
+    input_data$symp_unusual_given_chills <- NA
+    input_data$symp_unusual_given_headache <- NA
+    input_data$symp_unusual_given_sleep_changes <- NA
+    input_data$symp_unusual_given_stuffy_nose <- NA
+
     input_data$symp_fever_unusual <- NA
     input_data$symp_cough_unusual <- NA
     input_data$symp_shortness_breath_unusual <- NA
@@ -1229,6 +1297,7 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_chills_unusual <- NA
     input_data$symp_headache_unusual <- NA
     input_data$symp_sleep_changes_unusual <- NA
+    input_data$symp_stuffy_nose_unusual <- NA
     input_data$symp_stuffy_nose_unusual <- NA
   }
 
@@ -1270,23 +1339,15 @@ code_behaviors <- function(input_data, wave) {
   if ("C11" %in% names(input_data)) {
     # Had "direct contact" with someone COVID-positive in the last 24 hours
     # Coded as 1 = Yes, 2 = No
-    input_data$c_direct_contact_covid <- case_when(
-      input_data$C11 == 1 ~ 1,
-      input_data$C11 == 2 ~ 0,
-      TRUE ~ NA_real_
-    )
+    input_data$c_direct_contact_covid <- input_data$C11 == 1
   } else {
     input_data$c_direct_contact_covid <- NA_real_
   }
 
-  if (all(c("C11", "C12") %in% names(input_data))) {
+  if ("C12" %in% names(input_data)) {
     # C12: was the person in C11 a member of your household
     # Coded as 1 = Yes, 2 = No
-    input_data$c_direct_contact_covid_hh <- case_when(
-      input_data$C11 == 1 & input_data$C12 == 1 ~ 1,
-      input_data$C11 == 2 | input_data$C12 == 2 ~ 0,
-      TRUE ~ NA_real_
-    )
+    input_data$c_direct_contact_covid_hh <- input_data$C12 == 1
   } else {
     input_data$c_direct_contact_covid_hh <- NA_real_
   }
@@ -1364,10 +1425,7 @@ code_addl_mental_health <- function(input_data, wave) {
   if ("Q36" %in% names(input_data)) {
     # Included in waves 1, 2, 3. Coded as 1 = substantial threat,
     # 2 = moderate threat, 3 = not much of a threat, 4 = not a threat at all
-    input_data$mh_financial_threat <- case_when(
-      is.na(input_data$Q36) ~ NA,
-      input_data$Q36 == 1 ~ TRUE,
-      TRUE ~ FALSE)
+    input_data$mh_financial_threat <- input_data$Q36 == 1
   } else {
     input_data$mh_financial_threat <- NA
   }
@@ -1511,7 +1569,7 @@ code_addl_activities <- function(input_data, wave) {
 #' @return augmented data frame
 code_addl_demographic <- function(input_data, wave) {
   if ("D1" %in% names(input_data)) {
-    # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = no answer
+    # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = prefer not to answer
     input_data$gender_male <- input_data$D1 == 1
     input_data$gender_female <- input_data$D1 == 2
     input_data$gender_nonbinary_other <- case_when(

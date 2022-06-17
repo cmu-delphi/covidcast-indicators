@@ -1669,25 +1669,67 @@ code_addl_demographic <- function(input_data, wave) {
       age1864 <- as.integer(input_data$A5_2)
       age65 <- as.integer(input_data$A5_3)
     })
-    input_data$hh_number_children <- ifelse(
+    input_data$ppl_in_household_children <- ifelse(
       is.na(age18) + is.na(age1864) + is.na(age65) < 3,
       ifelse(is.na(age18), 0, age18),
       NA_integer_
     )
-    input_data$hh_number_adults <- ifelse(
+    input_data$ppl_in_household_adults <- ifelse(
       is.na(age18) + is.na(age1864) + is.na(age65) < 3,
       ifelse(is.na(age1864), 0, age1864),
       NA_integer_
     )
-    input_data$hh_number_older <- ifelse(
+    input_data$ppl_in_household_older <- ifelse(
       is.na(age18) + is.na(age1864) + is.na(age65) < 3,
       ifelse(is.na(age65), 0, age65),
       NA_integer_
     )
   } else {
-    input_data$hh_number_children <- NA_integer_
-    input_data$hh_number_adults <- NA_integer_
-    input_data$hh_number_older <- NA_integer_
+    input_data$ppl_in_household_children <- NA_integer_
+    input_data$ppl_in_household_adults <- NA_integer_
+    input_data$ppl_in_household_older <- NA_integer_
+  }
+
+  if ("D3" %in% names(input_data)) {
+    # How many children younger than 18 currently stay in your household
+    # Free response
+    suppressWarnings({ D3_int <- as.integer(input_data$D3) })
+    input_data$children_in_household <- case_when(
+      D3_int < 0 ~ NA_integer_,
+      D3_int > 20 ~ NA_integer_,
+      is.na(D3_int) ~ NA_integer_,
+      TRUE ~ D3_int
+    )
+  } else {
+    input_data$children_in_household <- NA_integer_
+  }
+
+  if ("D4" %in% names(input_data)) {
+    # How many adults 18-65 currently stay in your household
+    # Free response
+    suppressWarnings({ D4_int <- as.integer(input_data$D4) })
+    input_data$adults_in_household <- case_when(
+      D4_int < 0 ~ NA_integer_,
+      D4_int > 20 ~ NA_integer_,
+      is.na(D4_int) ~ NA_integer_,
+      TRUE ~ D4_int
+    )
+  } else {
+    input_data$adults_in_household <- NA_integer_
+  }
+
+  if ("D5" %in% names(input_data)) {
+    # How many adults 65 or older currently stay in your household
+    # Free response
+    suppressWarnings({ D5_int <- as.integer(input_data$D5) })
+    input_data$older_in_household <- case_when(
+      D5_int < 0 ~ NA_integer_,
+      D5_int > 20 ~ NA_integer_,
+      is.na(D5_int) ~ NA_integer_,
+      TRUE ~ D5_int
+    )
+  } else {
+    input_data$older_in_household <- NA_integer_
   }
 
   return(input_data)

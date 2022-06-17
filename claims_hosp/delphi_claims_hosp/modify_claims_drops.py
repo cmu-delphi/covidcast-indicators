@@ -30,7 +30,7 @@ def modify_and_write(data_path, logger, force=True):
 
     """
     files = np.array(list(Path(data_path).glob("*.csv.gz")))
-
+    dfs_list = []
     for f in files:
         filename = str(f)
         out_path = f.parents[0] / f.name
@@ -56,3 +56,6 @@ def modify_and_write(data_path, logger, force=True):
         if force:
             dfs.to_csv(out_path, index=False)
             logger.info(f"Wrote {out_path}")
+        else:
+            dfs_list.append(dfs)
+    return files, dfs_list

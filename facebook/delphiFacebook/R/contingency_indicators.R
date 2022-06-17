@@ -403,8 +403,16 @@ get_aggs <- function() {
     "pct_ever_tested", "t_ever_tested", compute_binary, jeffreys_binary,
 
     "pct_unusual_symptom_tested", "t_unusual_symptom_tested", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_tested_positive", "t_unusual_symptom_tested_positive", compute_binary, jeffreys_binary,
     "pct_unusual_symptom_hospital", "t_unusual_symptom_hospital", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care", "t_unusual_symptom_medical_care", compute_binary, jeffreys_binary,
+
+    "pct_unusual_symptom_medical_care_called_doctor", "unusual_symptom_medical_care_called_doctor", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_telemedicine", "unusual_symptom_medical_care_telemedicine", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_visited_doctor", "unusual_symptom_medical_care_visited_doctor", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_urgent_care", "unusual_symptom_medical_care_urgent_care", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_er", "unusual_symptom_medical_care_er", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_hospital", "unusual_symptom_medical_care_hospital", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_tried", "unusual_symptom_medical_care_tried", compute_binary, jeffreys_binary,
 
     "pct_reason_not_tested_tried", "t_reason_not_tested_tried", compute_binary, jeffreys_binary,
     "pct_reason_not_tested_appointment", "t_reason_not_tested_appointment", compute_binary, jeffreys_binary,

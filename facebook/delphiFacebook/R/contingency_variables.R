@@ -302,21 +302,24 @@ code_addl_vaccines <- function(input_data, wave) {
   }
   
   if ("B5" %in% names(input_data)) {
+    # Coded as 1 = "tested and COVID+", 2 = "tested and COVID-",
+    # 3 = "tested, but no result yet", 4 = "tried to get tested but couldn't",
+    # 5 = "didn't try to get tested"
+    # Regardless of test result
     input_data$t_unusual_symptom_tested <- case_when(
       input_data$B5 %in% c(1, 2, 3) ~ 1,
       input_data$B5 %in% c(4, 5) ~ 0,
       TRUE ~ NA_real_
     )
+    # Tested with positive result
+    input_data$t_unusual_symptom_tested_positive <- input_data$B5 == 1
   } else {
     input_data$t_unusual_symptom_tested <- NA
+    input_data$t_unusual_symptom_tested_positive <- NA
   }
 
   if ("B6" %in% names(input_data)) {
-    input_data$t_unusual_symptom_hospital <- case_when(
-      input_data$B6 %in% c(1, 3) ~ 1,
-      input_data$B6 %in% c(2) ~ 0,
-      TRUE ~ NA_real_
-    )
+    input_data$t_unusual_symptom_hospital <- input_data$B6 == 1
   } else {
     input_data$t_unusual_symptom_hospital <- NA
   }
@@ -324,13 +327,23 @@ code_addl_vaccines <- function(input_data, wave) {
   if ("B7" %in% names(input_data)) {
     # Coded as 8 = no medical care sought, 1-6 = various types of medical care sought,
     # 7 = care sought but not received
-    input_data$t_unusual_symptom_medical_care <- case_when(
-      input_data$B7 == "8" ~ 0,
-      !is.na(input_data$B7) ~ 1,
-      TRUE ~ NA_real_
-    )
+    unusual_symptoms_care <- split_options(input_data$B7)
+
+    input_data$unusual_symptom_medical_care_called_doctor <- is_selected(unusual_symptoms_care, "1")
+    input_data$unusual_symptom_medical_care_telemedicine <- is_selected(unusual_symptoms_care, "2")
+    input_data$unusual_symptom_medical_care_visited_doctor <- is_selected(unusual_symptoms_care, "3")
+    input_data$unusual_symptom_medical_care_urgent_care <- is_selected(unusual_symptoms_care, "4")
+    input_data$unusual_symptom_medical_care_er <- is_selected(unusual_symptoms_care, "5")
+    input_data$unusual_symptom_medical_care_hospital <- is_selected(unusual_symptoms_care, "6")
+    input_data$unusual_symptom_medical_care_tried <- is_selected(unusual_symptoms_care, "7")
   } else {
-    input_data$t_unusual_symptom_medical_care <- NA
+    input_data$unusual_symptom_medical_care_called_doctor <- NA
+    input_data$unusual_symptom_medical_care_telemedicine <- NA
+    input_data$unusual_symptom_medical_care_visited_doctor <- NA
+    input_data$unusual_symptom_medical_care_urgent_care <- NA
+    input_data$unusual_symptom_medical_care_er <- NA
+    input_data$unusual_symptom_medical_care_hospital <- NA
+    input_data$unusual_symptom_medical_care_tried <- NA
   }
 
   if ( "B12a" %in% names(input_data) ) {

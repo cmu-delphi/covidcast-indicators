@@ -11,7 +11,7 @@ class TestDropsModification:
     def test_modify_and_write(self):
         data_path = "./test_data/"
         logger = Mock()
-        files, dfs_list = modify_and_write(data_path, logger, force=False)
+        files, dfs_list = modify_and_write(data_path, logger, test_mode=True)
         expected_colnames = ['PatCountyFIPS', 'Pat HRR Name', 'Pat HRR ID', 'PatAgeGroup']
         assert len(files) == 1
         assert len(dfs_list) == 1

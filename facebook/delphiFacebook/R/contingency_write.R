@@ -21,8 +21,7 @@
 #' @importFrom stringi stri_trim
 #'
 #' @export
-write_contingency_tables <- function(data, params, geo_type, groupby_vars)
-{
+write_contingency_tables <- function(data, params, geo_type, groupby_vars, theme = NULL) {
   if (!is.null(data) && nrow(data) != 0) {
     
     # Reorder the group-by columns and sort the dataset by them.
@@ -43,7 +42,7 @@ write_contingency_tables <- function(data, params, geo_type, groupby_vars)
     
     create_dir_not_exist(params$export_dir)
     
-    file_name <- get_file_name(params, geo_type, groupby_vars)
+    file_name <- get_file_name(params, geo_type, groupby_vars, theme)
     msg_df(sprintf("saving contingency table data to %-35s", file_name), data)
     # Automatically uses gzip compression based on output file name.
     write_csv(data, file.path(params$export_dir, file_name))
@@ -109,6 +108,8 @@ add_geo_vars <- function(data, params, geo_type) {
         .data$county,
         .data$county_fips
       )
+  } else if (geo_type == "county") {
+    warning("county metadata not supported")
   }
   
   geo_vars <- bind_cols(first, rest)
@@ -154,8 +155,7 @@ add_metadata_vars <- function(data, params, geo_type, groupby_vars) {
 
 #' Get the file name for the given parameters, geography, and set of group-by variables.
 #' @noRd
-get_file_name <- function(params, geo_type, groupby_vars) {
-  
+get_file_name <- function(params, geo_type, groupby_vars, theme = NULL) {
   aggregation_type <- sort(setdiff(groupby_vars, "geo_id"))
   if (length(aggregation_type) == 0) aggregation_type <- "overall"
   
@@ -164,6 +164,7 @@ get_file_name <- function(params, geo_type, groupby_vars) {
     format(params$end_date, "%Y%m%d"),
     get_period_type(params$aggregate_range),
     geo_type,
+    ifelse(is.null(theme), "all_indicators", paste("theme", theme, sep = "_")),
     paste(aggregation_type, collapse = "_"),
     sep = "_"
   )

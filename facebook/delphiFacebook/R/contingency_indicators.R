@@ -569,17 +569,10 @@ get_aggs <- function() {
     "mean_olderadults_in_household", "older_in_household", compute_numeric_mean, I
   )
 
-  aggs <- create_aggs_product(regions, groups, indicators)
-
-  monthly_indicators <- tribble(
-    ~name, ~metric, ~compute_fn, ~post_fn,
-    "pct_child_school_public", "s_child_school_public", compute_binary, jeffreys_multinomial_factory(5),
-    "pct_child_school_private", "s_child_school_private", compute_binary, jeffreys_multinomial_factory(5),
-    "pct_child_school_homeschool", "s_child_school_homeschool", compute_binary, jeffreys_multinomial_factory(5),
-    "pct_child_school_not", "s_child_school_not", compute_binary, jeffreys_multinomial_factory(5),
-    "pct_child_school_other", "s_child_school_other", compute_binary, jeffreys_multinomial_factory(5)
+  aggs <- rbind(
+    create_aggs_product(regions, groups, indicators),
+    create_aggs_product(list("county"), list(c()), indicators)
   )
-  monthly_aggs <- create_aggs_product(regions, groups, monthly_indicators)
 
   ### Include handful of original public tables not already covered by set above
   common_group <- c("agefull", "gender", "race", "hispanic")
@@ -755,7 +748,7 @@ get_aggs <- function() {
   parent_aggs <- create_aggs_product(regions, parent_groups, parent_indicators)
 
   weekly_aggs <- rbind(aggs, demo_aggs)
-  monthly_aggs <- rbind(aggs, monthly_aggs, demo_aggs)
+  monthly_aggs <- rbind(aggs, demo_aggs)
 
   return(list("week"=weekly_aggs, "month"=monthly_aggs))
 }

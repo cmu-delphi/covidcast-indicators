@@ -4,7 +4,7 @@
 \alias{write_contingency_tables}
 \title{Write csv file for sharing with researchers.}
 \usage{
-write_contingency_tables(data, params, geo_type, groupby_vars)
+write_contingency_tables(data, params, geo_type, groupby_vars, theme = NULL)
 }
 \arguments{
 \item{data}{a data frame to save; must contain the columns in

@@ -1659,5 +1659,36 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$children_school_measure_screening <- NA
   }
 
+  if ("A5_1" %in% names(input_data)) {
+    # This is Wave 4, where item A2b was replaced with 3 items asking about
+    # separate ages. Many respondents leave blank the categories that do not
+    # apply to their household, rather than entering 0, so if at least one of
+    # the three items has a response, we impute 0 for the remaining items.
+    suppressWarnings({
+      age18 <- as.integer(input_data$A5_1)
+      age1864 <- as.integer(input_data$A5_2)
+      age65 <- as.integer(input_data$A5_3)
+    })
+    input_data$hh_number_children <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age18), 0, age18),
+      NA_integer_
+    )
+    input_data$hh_number_adults <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age1864), 0, age1864),
+      NA_integer_
+    )
+    input_data$hh_number_older <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age65), 0, age65),
+      NA_integer_
+    )
+  } else {
+    input_data$hh_number_children <- NA_integer_
+    input_data$hh_number_adults <- NA_integer_
+    input_data$hh_number_older <- NA_integer_
+  }
+
   return(input_data)
 }

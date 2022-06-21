@@ -557,7 +557,16 @@ get_aggs <- function() {
     # Means. No post-processing required.
     "mean_days_symptoms", "symp_n_days", compute_numeric_mean, I,
     "mean_ppl_symptoms_household", "hh_number_sick", compute_numeric_mean, I,
-    "mean_ppl_symptoms_community", "community_number_sick", compute_numeric_mean, I
+    "mean_ppl_symptoms_community", "community_number_sick", compute_numeric_mean, I,
+
+    "mean_hh_number_children", "hh_number_children", compute_numeric_mean, I,
+    "mean_hh_number_adults", "hh_number_adults", compute_numeric_mean, I,
+    "mean_hh_number_older", "hh_number_older", compute_numeric_mean, I,
+    "mean_hh_number_total", "hh_number_total", compute_numeric_mean, I,
+
+    "mean_children_in_household", "children_in_household", compute_numeric_mean, I,
+    "mean_adults_in_household", "adults_in_household", compute_numeric_mean, I,
+    "mean_olderadults_in_household", "older_in_household", compute_numeric_mean, I
   )
 
   aggs <- create_aggs_product(regions, groups, indicators)

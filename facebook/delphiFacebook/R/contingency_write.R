@@ -15,6 +15,8 @@
 #' @param geo_type       name of the geographic level; used for naming the output file
 #' @param groupby_vars   character vector of column names used for grouping to
 #'                       calculate aggregations; used for naming the output file
+#' @param theme          string indicating theme group (topic) indicators
+#                        belong to according to THEME_GROUPS, or NULL
 #'
 #' @importFrom readr write_csv
 #' @importFrom dplyr arrange across everything

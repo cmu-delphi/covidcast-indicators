@@ -21,6 +21,8 @@ write_contingency_tables(data, params, geo_type, groupby_vars, theme = NULL)
 
 \item{groupby_vars}{character vector of column names used for grouping to
 calculate aggregations; used for naming the output file}
+
+\item{theme}{string indicating theme group (topic) indicators}
 }
 \description{
 CSV name includes date specifying start of time period aggregated, geo level,

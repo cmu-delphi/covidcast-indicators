@@ -5,6 +5,7 @@
 import datetime
 import functools
 from os import path
+import re
 
 # third party
 import paramiko
@@ -24,19 +25,13 @@ def print_callback(filename, logger, bytes_so_far, bytes_total):
     if (rough_percent_transferred % 25) == 0:
         logger.info("Transfer in progress", filename=filename, percent=rough_percent_transferred)
 
-
+FILENAME_TIMESTAMP = re.compile(r".*EDI_AGG_INPATIENT_(?P<ymd>[0-9]*)_(?P<hm>[0-9]*)[^0-9]*")
 def get_timestamp(name):
     """Get the reference date in datetime format."""
-    try:
-        split_name = name.split("_")
-        yyyymmdd = split_name[3]
-        hhmm = ''.join(filter(str.isdigit, split_name[4]))
-        timestamp = datetime.datetime.strptime(''.join([yyyymmdd, hhmm]),
-                                               "%Y%m%d%H%M")
-    except Exception:
-        timestamp = datetime.datetime(1900, 1, 1)
-
-    return timestamp
+    m = FILENAME_TIMESTAMP.match(name)
+    if not m:
+        return datetime.datetime(1900, 1, 1)
+    return datetime.datetime.strptime(''.join(m.groups()), "%Y%m%d%H%M")
 
 def change_date_format(name):
     """Flip date from YYYYMMDD to MMDDYYYY."""

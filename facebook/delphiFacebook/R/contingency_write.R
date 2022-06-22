@@ -62,7 +62,7 @@ write_contingency_tables <- function(data, params, geo_type, groupby_vars, theme
 #' 
 #' @importFrom dplyr bind_cols left_join select distinct mutate
 #' @importFrom readr read_csv cols
-#' @importFrom stringr str_pad
+#' @importFrom stringi stri_pad
 #' @noRd
 add_geo_vars <- function(data, params, geo_type) {
   
@@ -112,7 +112,7 @@ add_geo_vars <- function(data, params, geo_type) {
       col_types = cols(.default = "c")
     ) %>% 
       mutate(
-        fips = str_pad(.data$fips, 5, pad="0")
+        fips = stri_pad(.data$fips, 5, pad="0")
       ) %>%
       select(fips, county_name, state_id, state_name) %>% 
       distinct()

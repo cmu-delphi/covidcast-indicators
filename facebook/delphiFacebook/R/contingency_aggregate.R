@@ -66,6 +66,12 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     geo_level <- agg_groups$geo_level[group_ind]
     geo_crosswalk <- cw_list[[geo_level]]
 
+    if (geo_level == "county") {
+      # Raise sample size threshold to 100.
+      old_thresh <- params$num_filter
+      params$num_filter <- 100L
+    }
+
     # Subset aggregations to keep only those grouping by the current agg_group
     # and with the current geo_level. `setequal` ignores differences in
     # ordering and only looks at unique elements.
@@ -107,6 +113,11 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
           write_contingency_tables(theme_out, params, geo_level, agg_group, theme)  
         }
       }
+    }
+
+    if (geo_level == "county") {
+      # Restore old sample size threshold
+      params$num_filter <- old_thresh
     }
   }
 }

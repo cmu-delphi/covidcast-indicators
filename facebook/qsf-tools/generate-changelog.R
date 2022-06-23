@@ -169,14 +169,14 @@ generate_changelog <- function(path_to_codebook,
         mutate(
           variable_name = new_matrix_base_name,
           old_matrix_subquestion = NA,
-          new_matrix_subquestion = "Differ by subquestion",
+          new_matrix_subquestion = NA,
           old_response_options = case_when(
             length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ "Differ by subquestion"
+            TRUE ~ NA
           ),
           new_response_options = case_when(
             length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ "Differ by subquestion"
+            TRUE ~ NA
           )
         ) %>%
         slice_head() %>%
@@ -222,15 +222,15 @@ generate_changelog <- function(path_to_codebook,
         group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
         mutate(
           variable_name = old_matrix_base_name,
-          old_matrix_subquestion = "Differ by subquestion",
+          old_matrix_subquestion = NA,
           new_matrix_subquestion = NA,
           old_response_options = case_when(
             length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ "Differ by subquestion"
+            TRUE ~ NA
           ),
           new_response_options = case_when(
             length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ "Differ by subquestion"
+            TRUE ~ NA
           )
         ) %>%
         slice_head() %>%

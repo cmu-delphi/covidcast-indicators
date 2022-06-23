@@ -318,10 +318,14 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size")])) == 0,
     ]
 
+    # Censor rows with low sample size
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 
-    ## Apply the post-function
+    # Apply the post-function
     dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
+
+    # Round sample sizes
+    dfs_out[[aggregation]] <- round_n(dfs_out[[aggregation]], params)
   }
 
   return(dfs_out)

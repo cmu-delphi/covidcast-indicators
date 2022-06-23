@@ -15,6 +15,7 @@ Imports:
     rlang,
     readr,
     dplyr,
+    plyr,
     tidyr,
     stringi,
     jsonlite,

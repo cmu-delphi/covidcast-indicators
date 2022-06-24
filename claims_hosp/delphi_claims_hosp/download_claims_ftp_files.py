@@ -70,9 +70,10 @@ def download(ftp_credentials, out_path, logger):
             files_to_download.append(fileattr.filename)
             logger.info("File to download", filename=fileattr.filename)
 
-    # make sure we don't download more that the 3 chunked drops (2x a day) for OP
-    # and the 1 chunk (2x a day) for IP - 01/07/21, *2 for multiple day drops
-    assert len(files_to_download) <= 2 * ((3 * 2) + 2), "more files dropped than expected"
+    # make sure we don't download more than the 1 chunk (2x a day) drops for IP - 01/07/21,
+    # *2 for multiple day drops
+    assert len(files_to_download) <= 2 * (2), \
+        f"more files dropped ({len(files_to_download)}) than expected (4)"
 
     filepaths_to_download = {}
     for file in files_to_download:

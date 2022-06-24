@@ -125,15 +125,32 @@ post_convert_count_to_pct <- function(df) {
 compute_numeric_mean <- function(response, weight, sample_size, total_represented) {
   assert(length(response) == length(weight))
   
+  if (length(response) == 1) {
+    # svydesign complains if given only one response, so return an empty df
+    # instead. This group will be dropped anyway.
+    return(list(
+      val = NA_real_,
+      se = NA_real_,
+      sd = NA_real_,
+      p25 = NA_real_,
+      p50 = NA_real_,
+      p75 = NA_real_,
+      sample_size = NA_real_,
+      effective_sample_size = NA_real_,
+      represented = NA_real_
+    ))
+  }
+  
   design <- svydesign(id = ~1, weight = ~weight, data = data.frame(response, weight))
-  return(list(val = as.data.frame(svymean(~response, na.rm = TRUE, design = design))[,"mean"],
-              se = NA_real_,
-              sd = as.data.frame(sqrt(svyvar(~response, na.rm = TRUE, design = design)))[,"variance"],
-              p25 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.25))[,"0.25"],
-              p50 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.5))[,"0.5"],
-              p75 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.75))[,"0.75"],
-              sample_size = sample_size,
-              effective_sample_size = sample_size,
-              represented = total_represented
+  return(list(
+    val = as.data.frame(svymean(~response, na.rm = TRUE, design = design))[,"mean"],
+    se = NA_real_,
+    sd = as.data.frame(sqrt(svyvar(~response, na.rm = TRUE, design = design)))[,"variance"],
+    p25 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.25))[,"0.25"],
+    p50 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.5))[,"0.5"],
+    p75 = as.data.frame(oldsvyquantile(~response, na.rm = TRUE, design = design, quantiles = 0.75))[,"0.75"],
+    sample_size = sample_size,
+    effective_sample_size = sample_size,
+    represented = total_represented
   ))
 }

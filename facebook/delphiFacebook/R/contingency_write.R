@@ -122,17 +122,11 @@ add_geo_vars <- function(data, params, geo_type) {
     )
 
     rest <- left_join(rest, counties, by = c("county_fips" = "fips")) %>%
-      mutate(
+      select(
         region = .data$state_id,
         state = .data$state_id,
         county = .data$county_name,
         county_fips = .data$county_fips
-      ) %>% 
-      select(
-        .data$region,
-        .data$state,
-        .data$county,
-        .data$county_fips
       )
     
     # Fill in state fips and GID_1

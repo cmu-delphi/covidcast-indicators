@@ -405,7 +405,7 @@ filter_data_for_contingency <- function(df)
     # What is your gender?
     # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = prefer not to answer
     # Self-describe responses are usually bad faith responses, so drop them.
-    df <- filter(df, .data$D1 != 4)
+    df <- filter(df, is.na(.data$D1) | .data$D1 != 4)
   }
   return(df)
 }

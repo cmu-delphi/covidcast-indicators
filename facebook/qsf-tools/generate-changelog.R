@@ -11,6 +11,8 @@
 
 suppressPackageStartupMessages({
   library(tidyverse)
+  library(jsonlite)
+  library(stringr)
 })
 
 # "old" = new

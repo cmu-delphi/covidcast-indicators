@@ -167,17 +167,14 @@ generate_changelog <- function(path_to_codebook,
       tmp <- tmp %>%
         group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
         mutate(
-          variable_name = new_matrix_base_name,
           old_matrix_subquestion = NA,
-          new_matrix_subquestion = NA,
-          old_response_options = case_when(
-            length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ NA
-          ),
+          new_matrix_subquestion = collapse_subq_elements(variable_name, new_matrix_subquestion, base_name),
+          old_response_options = NA,
           new_response_options = case_when(
             length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ NA
-          )
+            TRUE ~ rep(collapse_subq_elements(variable_name, new_response_options, base_name), length(new_response_options))
+          ),
+          variable_name = new_matrix_base_name
         ) %>%
         slice_head() %>%
         ungroup()
@@ -221,17 +218,14 @@ generate_changelog <- function(path_to_codebook,
       tmp <- tmp %>%
         group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
         mutate(
-          variable_name = old_matrix_base_name,
-          old_matrix_subquestion = NA,
+          old_matrix_subquestion = collapse_subq_elements(variable_name, old_matrix_subquestion, base_name),
           new_matrix_subquestion = NA,
           old_response_options = case_when(
             length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ NA
+            TRUE ~ rep(collapse_subq_elements(variable_name, old_response_options, base_name), length(old_response_options))
           ),
-          new_response_options = case_when(
-            length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ NA
-          )
+          new_response_options = NA,
+          variable_name = old_matrix_base_name
         ) %>%
         slice_head() %>%
         ungroup()
@@ -411,6 +405,16 @@ get_old_version <- function(new_version, compare_map) {
   ifelse(new_version %in% compare_map, compare_map[compare_map == new_version] %>% names(), NA_character_)
 }
 
+collapse_subq_elements <- function(variable_name, matrix_field, base_name) {
+  subq_codes <- str_replace(variable_name, paste0(base_name, "_"), "") %>%
+    strsplit("_") %>%
+    # Get the first underscore-delimited chunk. Handles the C10 case, where
+    # matrix subqs are called C10_<code>_1.
+    purrr::map(~ .x[1])
+  matrix_field <- as.list(matrix_field)
+  names(matrix_field) <- subq_codes
+  toJSON(matrix_field, auto_unbox = TRUE)
+}
 
 args <- commandArgs(TRUE)
 

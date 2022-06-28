@@ -64,6 +64,6 @@ if (length(args) == 3) {
 
 # Specifies monthly microdata rollup naming scheme like "YYYY-MM.csv.gz" and the
 # race-ethnicity version "YYYY-MM-race-ethnicity.csv.gz"
-pattern <- "^202[0-9]-[0-9]{2}-(race-ethnicity)?[.]csv[.]gz$"
+pattern <- "^202[0-9]-[0-9]{2}(-race-ethnicity)?[.]csv[.]gz$"
 
 amend_microdata(input_dir, output_dir, static_dir, pattern = pattern)

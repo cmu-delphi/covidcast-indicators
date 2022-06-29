@@ -44,6 +44,9 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
 
     assert(is.na(data$fips) == is.na(data$state))
 
+    # Drop any territories.
+    data <- filter(data, !(state %in% c("AS", "GU", "PR", "VI", "MP")))
+
     # Save file under original name but in output directory.
     message("writing data for ", fname)
     write_csv(data, file.path(output_dir, fname))

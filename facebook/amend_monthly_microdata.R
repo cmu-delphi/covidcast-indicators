@@ -18,25 +18,31 @@ suppressPackageStartupMessages({
 
 amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]csv[.]gz$") {
   # Create mapping of county FIPS codes to state postal codes.
-  state_county_map <- read_csv(
+  zips <- read_csv(
     file.path(static_dir, "02_20_uszips.csv"),
-    col_types = cols(.default = "c")
+    col_types = cols(.default = "c", population = "i")
   ) %>%
     mutate(
-      fips = stri_pad(.data$fips, 5, pad="0")
-    ) %>%
+      fips = stri_pad(.data$fips, 5, pad="0"),
+      zip = stri_pad(.data$zip, 5, pad="0")
+    )
+  state_county_map <- zips %>%
     select(fips, state = .data$state_id) %>%
     distinct()
+  valid_zips <- zips %>%
+    select(zip, population) %>%
+    filter(population > 100)
 
   # Read in each monthly file from the microdata directory.
   for (fname in list.files(input_dir, pattern = pattern)) {
-    # Read in file and rename `wave` field.
+    # Read in file.
     # stop readr from thinking commas = thousand separators,
     # and from inferring column types incorrectly
     message("reading data in")
     data <- read_csv(file.path(input_dir, fname), locale = locale(grouping_mark = ""),
              col_types = cols(
                .default = col_character())) %>%
+      # Rename `wave` field.
       rename(version = .data$wave)
 
     # Add state column based on county FIPS code.
@@ -47,10 +53,41 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
     # Drop any territories.
     data <- filter(data, !(state %in% c("AS", "GU", "PR", "VI", "MP")))
 
+    # what zip5 values have a large enough population (>100) to include in micro
+    # output. Those with too small of a population are blanked to NA
+    data <- blank_zips(data, valid_zips)
+
     # Save file under original name but in output directory.
     message("writing data for ", fname)
     write_csv(data, file.path(output_dir, fname))
   }
+}
+
+create_zip5 <- function(data) {
+  data$zip5 <- data$A3
+
+  # clean the ZIP data
+  data$zip5 <- stri_replace_all(data$zip5, "", regex = " *")
+  data$zip5 <- stri_replace(data$zip5, "", regex ="-.*")
+
+  # some people enter 9-digit ZIPs, which could make them easily identifiable in
+  # the individual output files. rather than truncating to 5 digits -- which may
+  # turn nonsense entered by some respondents into a valid ZIP5 -- we simply
+  # replace these ZIPs with NA.
+  data$zip5 <- ifelse(nchar(data$zip5) > 5, NA_character_,
+                            data$zip5)
+
+  return(data)
+}
+
+blank_zips <- function(data, valid_zips) {
+  data <- create_zip5(data)
+  change_zip <- !(data$zip5 %in% valid_zips$zip)
+  data$A3[change_zip] <- NA
+
+  data <- select(data, -zip5)
+
+  return(data)
 }
 
 args <- commandArgs(TRUE)

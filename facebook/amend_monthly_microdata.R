@@ -13,6 +13,7 @@ suppressPackageStartupMessages({
   library(readr)
   library(rlang)
   library(stringi)
+  library(delphiFacebook)
 })
 
 amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]csv[.]gz$") {
@@ -40,6 +41,8 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
 
     # Add state column based on county FIPS code.
     data <- left_join(data, state_county_map, by="fips")
+
+    assert(is.na(data$fips) == is.na(data$state))
 
     # Save file under original name but in output directory.
     message("writing data for ", fname)

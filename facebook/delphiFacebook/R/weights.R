@@ -125,16 +125,15 @@ join_weights <- function(data, params, weights = c("step1", "full"))
 
   # Join on experimental weights too
   exp_weights_dir <- "./exp_weights_in/"
-  col_types <- c(rep("character", 3), rep("double", 5))
+  col_types <- c(rep("character", 2), rep("double", 5))
   col_names <- c(
     "row_num",
-    "date",
     "cid",
-    "wght_daily",
-    "wght_glm1",
-    "wght_glm2",
-    "wght_glm3",
-    "wght_bart"
+    "wght_daily_glm",
+    "wght_weekly_glm0",
+    "wght_weekly_glm1",
+    "wght_weekly_bart0",
+    "wght_weekly_bart1"
   )
   exp_weights <- list()
   for (exp_weights_file in list.files(exp_weights_dir, pattern = "[.]csv$", full.names = TRUE)) {
@@ -143,7 +142,7 @@ join_weights <- function(data, params, weights = c("step1", "full"))
       colClasses = col_types,
       col.names = col_names
     ) %>%
-    select(-date, -row_num)
+    select(-row_num)
   }
   exp_weights <- bind_rows(exp_weights)
   exp_weights <- exp_weights[!duplicated(cid),]

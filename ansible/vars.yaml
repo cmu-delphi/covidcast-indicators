@@ -26,6 +26,11 @@ changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
+# claims_hosp
+claims_hosp_ftp_user: "{{ vault_claims_hosp_ftp_user }}"
+claims_hosp_ftp_password: "{{ vault_claims_hosp_ftp_password }}"
+claims_hosp_midas_user: "{{ vault_claims_hosp_midas_user }}"
+claims_hosp_midas_password: "{{ vault_claims_hosp_midas_password }}"
 # NCHS
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 # SirCAL

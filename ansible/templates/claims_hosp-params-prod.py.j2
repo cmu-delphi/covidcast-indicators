@@ -16,9 +16,9 @@
     "geos": ["state", "msa", "hrr", "county"],
     "weekday": [true, false],
     "ftp_credentials": {
-      "host": "",
-      "user": "",
-      "pass": "",
+      "host": "{{ claims_hosp_ftp_host }}",
+      "user": "{{ claims_hosp_ftp_user }}",
+      "pass": "{{ claims_hosp_ftp_password }}",
       "port": 2222
     }
   },

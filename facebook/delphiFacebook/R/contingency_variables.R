@@ -151,7 +151,7 @@ code_health <- function(input_data, wave) {
     comorbidities <- split_options(input_data$C1)
     
     input_data$comorbidheartdisease <- is_selected(comorbidities, "3")
-    input_data$comorbid_high_blood_pressure <- is_selected(comorbidities, "5")
+    input_data$comorbid_high_blood_pressure <- is_selected(comorbidities, "4")
     input_data$comorbid_asthma <- is_selected(comorbidities, "5")
     input_data$comorbidcancer <- is_selected(comorbidities, "2")
     input_data$comorbidkidneydisease <- is_selected(comorbidities, "7")

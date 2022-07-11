@@ -1344,10 +1344,14 @@ code_behaviors <- function(input_data, wave) {
     input_data$c_direct_contact_covid <- NA_real_
   }
 
-  if ("C12" %in% names(input_data)) {
+  if (all(c("C11", "C12") %in% names(input_data))) {
     # C12: was the person in C11 a member of your household
     # Coded as 1 = Yes, 2 = No
-    input_data$c_direct_contact_covid_hh <- input_data$C12 == 1
+    input_data$c_direct_contact_covid_hh <- case_when(
+      input_data$C11 == 1 & input_data$C12 == 1 ~ 1,
+      input_data$C11 == 2 | input_data$C12 == 2 ~ 0,
+      TRUE ~ NA_real_
+    )
   } else {
     input_data$c_direct_contact_covid_hh <- NA_real_
   }

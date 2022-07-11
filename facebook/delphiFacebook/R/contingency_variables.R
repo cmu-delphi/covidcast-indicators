@@ -1679,7 +1679,10 @@ code_addl_demographic <- function(input_data, wave) {
   }
 
   if ("E3" %in% names(input_data)) {
-    school_measures <- split_options(input_data$E3)
+    school_measures <- input_data$E3
+    # Remove "I don't know" responses.
+    school_measures  <- ifelse(school_measures == "16", NA_character_, school_measures)
+    school_measures <- split_options(school_measures)
 
     input_data$children_school_measure_mask_students <- is_selected(school_measures, "1")
     input_data$children_school_measure_mask_teachers <- is_selected(school_measures, "2")

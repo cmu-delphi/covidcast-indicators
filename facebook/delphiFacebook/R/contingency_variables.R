@@ -1195,7 +1195,7 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_nausea_unusual <- is_selected(symptoms, "11")
     input_data$symp_diarrhea_unusual <- is_selected(symptoms, "12")
     input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "13")
-    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "14")
+    input_data$symp_other_unusual <- is_selected(symptoms, "14")
     input_data$symp_eye_pain_unusual <- is_selected(symptoms, "16")
     input_data$symp_chills_unusual <- is_selected(symptoms, "17")
     input_data$symp_headache_unusual <- is_selected(symptoms, "18")
@@ -1293,11 +1293,11 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_nausea_unusual <- NA
     input_data$symp_diarrhea_unusual <- NA
     input_data$symp_loss_smell_taste_unusual <- NA
+    input_data$symp_other_unusual <- NA
     input_data$symp_eye_pain_unusual <- NA
     input_data$symp_chills_unusual <- NA
     input_data$symp_headache_unusual <- NA
     input_data$symp_sleep_changes_unusual <- NA
-    input_data$symp_stuffy_nose_unusual <- NA
     input_data$symp_stuffy_nose_unusual <- NA
   }
 

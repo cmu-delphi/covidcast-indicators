@@ -63,7 +63,7 @@ CHANGE_TYPE_MAP <- c(
   response_options = "Answer choices changed",
   matrix_subquestion = "Matrix subquestion text changed",
   response_option_randomization = "Answer choice order changed",
-  respondent_group = "Respondent group changed"
+  respondent_group = "Display logic changed"
 )
 
 

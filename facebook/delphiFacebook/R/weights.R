@@ -135,18 +135,33 @@ join_weights <- function(data, params, weights = c("step1", "full"))
     "wght_weekly_bart0",
     "wght_weekly_bart1"
   )
-  exp_weights <- list()
-  for (exp_weights_file in list.files(exp_weights_dir, pattern = "[.]csv$", full.names = TRUE)) {
-    exp_weights[[exp_weights_file]] <- fread(
-      exp_weights_file,
-      colClasses = col_types,
-      col.names = col_names
-    ) %>%
-    select(-row_num)
+  weights_types <- c("full", "part_a", "partial")
+  for (wtype in weights_types) {
+    exp_weights <- list()
+    for (exp_weights_file in list.files(exp_weights_dir, pattern = sprintf("%s_test_weights[.]csv$", wtype), full.names = TRUE)) {
+      exp_weights[[exp_weights_file]] <- fread(
+        exp_weights_file,
+        colClasses = col_types,
+        col.names = col_names
+      ) %>%
+      select(-row_num) %>%
+      rename_with(function(cols) {
+        map_chr(cols, ~ rename_col(.x, wtype))
+      })
+    }
+    exp_weights <- bind_rows(exp_weights)
+    exp_weights <- exp_weights[!duplicated(cid),]
+    data <- left_join(data, exp_weights, by = c("token" = "cid"))
   }
-  exp_weights <- bind_rows(exp_weights)
-  exp_weights <- exp_weights[!duplicated(cid),]
-  data <- left_join(data, exp_weights, by = c("token" = "cid"))
 
   return( list(df = data, weight_date = latest_weight_date) )
 }
+
+rename_col <- function(col, prefix) {
+  if (startsWith(col, "wght_")) {
+    paste(prefix, col, sep = "_")
+  } else {
+    col
+  }
+}
+

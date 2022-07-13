@@ -324,7 +324,13 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$t_unusual_symptom_hospital <- NA
   }
 
-  if ("B7" %in% names(input_data)) {
+  if ("B7" %in% names(input_data) && wave != 10) {
+    # Before Wave 10, B7 was asked of respondents who selected > 0 items for B2c ("are 
+    # any of your symptoms unusual?"). In Wave 10, the display logic changed so that B7 
+    # is only shown when exactly 0 items (not even "none of the above") are selected on 
+    # B2 ("do you have any of these symptoms?"), meaning the respondent left the question 
+    # entirely blank. Discard these responses.
+    # 
     # Coded as 8 = no medical care sought, 1-6 = various types of medical care sought,
     # 7 = care sought but not received
     unusual_symptoms_care <- split_options(input_data$B7)

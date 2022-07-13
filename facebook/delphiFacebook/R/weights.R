@@ -87,7 +87,7 @@ generate_cid_list_filename <- function(type_name, params, module_type) {
 #'                weights files are stored
 #' @param weights Which weights to use -- step1 or full?
 #'
-#' @importFrom dplyr bind_rows left_join
+#' @importFrom dplyr bind_rows left_join rename_with
 #' @importFrom data.table fread
 #' @importFrom stringi stri_extract_first
 #' @importFrom utils tail

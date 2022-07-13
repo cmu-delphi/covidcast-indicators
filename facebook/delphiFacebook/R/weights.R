@@ -91,6 +91,7 @@ generate_cid_list_filename <- function(type_name, params, module_type) {
 #' @importFrom data.table fread
 #' @importFrom stringi stri_extract_first
 #' @importFrom utils tail
+#' @importFrom purrr map_chr
 #' 
 #' @export
 join_weights <- function(data, params, weights = c("step1", "full"))

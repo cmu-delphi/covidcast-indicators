@@ -13,6 +13,7 @@ suppressPackageStartupMessages({
   library(readr)
   library(rlang)
   library(stringi)
+  library(covidcast)
   library(delphiFacebook)
 })
 
@@ -26,9 +27,6 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
       fips = stri_pad(.data$fips, 5, pad="0"),
       zip = stri_pad(.data$zip, 5, pad="0")
     )
-  state_county_map <- zips %>%
-    select(fips, state = .data$state_id) %>%
-    distinct()
   valid_zips <- zips %>%
     select(zip, population) %>%
     filter(population > 100)
@@ -46,9 +44,9 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
       rename(version = .data$wave)
 
     # Add state column based on county FIPS code.
-    data <- left_join(data, state_county_map, by="fips")
+    data <- mutate(data, state = state_fips_to_name(substr(fips, 1, 2)) %>% name_to_abbr())
 
-    assert(is.na(data$fips) == is.na(data$state))
+    assert(all(is.na(data$fips) == is.na(data$state)))
 
     # Drop any territories.
     data <- filter(data, !(state %in% c("AS", "GU", "PR", "VI", "MP")))

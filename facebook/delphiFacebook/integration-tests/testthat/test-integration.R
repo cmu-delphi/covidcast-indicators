@@ -92,7 +92,7 @@ test_that("testing raw community values files", {
   expect_equal(x$geo_id, "pa")
   expect_equal(x$sample_size, 4L)
   eval <-  100 * (2 + 0.5) / ( 4 + 1 )
-  ese <- sqrt( eval * (100 - eval) ) / sqrt( 4 )
+  ese <- sqrt( eval * (100 - eval)  / (4 + 1))
   expect_equal(x$val, eval)
   expect_equal(x$se, ese)
 
@@ -103,7 +103,7 @@ test_that("testing raw community values files", {
   expect_equal(x$geo_id, c("pa", "va"))
   expect_equal(x$sample_size, c(4L, 4L))
   eval <-  100 * (c(4, 3) + 0.5) / ( c(4, 4) + 1 )
-  ese <- sqrt( eval * (100 - eval) ) / sqrt( c(4, 4) )
+  ese <- sqrt( eval * (100 - eval) / ( c(4, 4) + 1 ))
   expect_equal(x$val, eval)
   expect_equal(x$se, ese)
 
@@ -128,7 +128,7 @@ test_that("testing smoothed community values files", {
   # there are 2 / 4 households in PA on 2020-05-11 for community
   #    after pooling => 2 / 8
   eval <-  100 * (2 + 0.5) / ( 8 + 1 )
-  ese <- sqrt( eval * (100 - eval) / 8 )
+  ese <- sqrt( eval * (100 - eval) / ( 8 + 1) )
   x_smooth <- read_csv(test_path("receiving", "20200511_state_smoothed_nohh_cmnty_cli.csv"))
   expect_equal(eval, x_smooth$val)
   expect_equal(8L, x_smooth$sample_size)
@@ -139,7 +139,7 @@ test_that("testing smoothed community values files", {
   # there are 4 / 4 households in PA on 2020-05-12 for community
   #    after pooling => 6 / 12
   eval <-  100 * (6 + 0.5) / ( 12 + 1 )
-  ese <- sqrt( eval * (100 - eval) / 12 )
+  ese <- sqrt( eval * (100 - eval) / (12 + 1) )
   x_smooth <- read_csv(test_path("receiving", "20200512_state_smoothed_nohh_cmnty_cli.csv"))
   expect_equal(eval, x_smooth$val[x_smooth$geo_id == "pa"])
   expect_equal(12L, x_smooth$sample_size[x_smooth$geo_id == "pa"])
@@ -156,14 +156,16 @@ test_that("testing weighted community values files", {
 
   # there are 2 / 4 households in PA on 2020-05-11 for community
   these <- input_data[input_data$date == "2020-05-11" & input_data$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
+  
+  n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))
+  these_ss <- length(these_yes)
 
   these_val <- sum(these_yes * these_weight)
-  these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
-  these_ss <- length(these_yes)
-  these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  these_val <-  weighted.mean(these_yes, these_weight)
+  these_val <- 100 * (n_eff * these_val + 0.5) / (n_eff + 1)
+  these_se <- sqrt(these_val * (100 - these_val) / (n_eff + 1) )
 
   x <- read_csv(test_path("receiving", "20200511_state_raw_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "pa")
@@ -173,14 +175,16 @@ test_that("testing weighted community values files", {
 
   # there are 2 / 4 households in VA on 2020-05-13 for community
   these <- input_data[input_data$date == "2020-05-13" & input_data$zip5 == "23220",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
 
-  these_val <- sum(these_yes * these_weight)
-  these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
+  n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))
   these_ss <- length(these_yes)
-  these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  
+  these_val <- sum(these_yes * these_weight)
+  these_val <-  weighted.mean(these_yes, these_weight)
+  these_val <- 100 * (n_eff * these_val + 0.5) / (n_eff + 1)
+  these_se <- sqrt(these_val * (100 - these_val) / (n_eff + 1) )
 
   x <- read_csv(test_path("receiving", "20200513_state_raw_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "va")
@@ -200,14 +204,16 @@ test_that("testing weighted smoothed community values files", {
   these <- input_data[
      ((input_data$date == "2020-05-10") | (input_data$date == "2020-05-11")) &
      input_data$zip5 == "15106",]
-  these_weight <- these$weight
+  these_weight <- mix_weights(these$weight, params$s_mix_coef, params$s_weight)$weights
   these_yes <- as.numeric(these$A4 > 1)
 
-  these_val <- sum(these_yes * these_weight)
-  these_val <-  weighted.mean(these_yes, these_weight) * length(these_yes)
+  n_eff <- (sum(these_weight) ^ 2 / sum(these_weight ^ 2))
   these_ss <- length(these_yes)
-  these_val <- 100 * (these_val + 0.5) / (these_ss + 1)
-  these_se <- sqrt(these_val * (100 - these_val) ) / sqrt( these_ss )
+  
+  these_val <- sum(these_yes * these_weight)
+  these_val <-  weighted.mean(these_yes, these_weight)
+  these_val <- 100 * (n_eff * these_val + 0.5) / (n_eff + 1)
+  these_se <- sqrt(these_val * (100 - these_val) / (n_eff + 1) )
 
   x <- read_csv(test_path("receiving", "20200511_state_smoothed_wnohh_cmnty_cli.csv"))
   expect_equal(x$geo_id, "pa")

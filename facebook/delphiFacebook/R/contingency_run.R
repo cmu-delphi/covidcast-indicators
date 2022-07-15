@@ -137,6 +137,7 @@ run_contingency_tables_one_period <- function(params, aggregations)
     data_agg <- create_data_for_aggregation(input_data)
     data_agg <- filter_data_for_aggregation(data_agg, params,
                                               lead_days = params$backfill_days)
+    data_agg <- filter_data_for_contingency(data_agg)
 
     if (nrow(data_agg) == 0) {
       msg_plain(sprintf("no data available in the desired date range %s- to %s",

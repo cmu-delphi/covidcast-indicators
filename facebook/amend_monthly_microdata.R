@@ -30,6 +30,9 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
   invalid_zips <- zips %>%
     filter(population <= 100) %>%
     pull(zip)
+  territory_zips <- zips %>%
+    filter(state_id %in% c("AS", "GU", "PR", "VI", "MP")) %>%
+    pull(zip)
 
   # Read in each monthly file from the microdata directory.
   for (fname in list.files(input_dir, pattern = pattern)) {
@@ -41,7 +44,8 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
              col_types = cols(
                .default = col_character())) %>%
       # Rename `wave` field.
-      rename(version = .data$wave)
+      rename(version = .data$wave) %>%
+      create_zip5()
 
     # Add state column based on county FIPS code.
     data <- mutate(data, state = state_fips_to_name(substr(fips, 1, 2)) %>% name_to_abbr())
@@ -52,7 +56,11 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
     )
 
     # Drop any territories.
-    data <- filter(data, !(.data$state %in% c("AS", "GU", "PR", "VI", "MP")))
+    data <- filter(data,
+      !(.data$state %in% c("AS", "GU", "PR", "VI", "MP")),
+      # If fips not available and state didn't get filled in.
+      !(.data$zip5 %in% territory_zips)
+    )
 
     # what zip5 values have a large enough population (>100) to include in micro
     # output. Those with too small of a population are blanked to NA
@@ -82,7 +90,6 @@ create_zip5 <- function(data) {
 }
 
 blank_zips <- function(data, invalid_zips, fname) {
-  data <- create_zip5(data)
   change_zip <- (data$zip5 %in% invalid_zips)
   # Population-based blanking of zip codes was implemented in late May 2020. For
   # later files, we shouldn't be blanking any new obs.

@@ -13,6 +13,7 @@ suppressPackageStartupMessages({
   library(readr)
   library(rlang)
   library(stringi)
+  library(covidcast)
   library(delphiFacebook)
 })
 
@@ -26,12 +27,12 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
       fips = stri_pad(.data$fips, 5, pad="0"),
       zip = stri_pad(.data$zip, 5, pad="0")
     )
-  state_county_map <- zips %>%
-    select(fips, state = .data$state_id) %>%
-    distinct()
-  valid_zips <- zips %>%
-    select(zip, population) %>%
-    filter(population > 100)
+  invalid_zips <- zips %>%
+    filter(population <= 100) %>%
+    pull(zip)
+  territory_zips <- zips %>%
+    filter(state_id %in% c("AS", "GU", "PR", "VI", "MP")) %>%
+    pull(zip)
 
   # Read in each monthly file from the microdata directory.
   for (fname in list.files(input_dir, pattern = pattern)) {
@@ -43,19 +44,27 @@ amend_microdata <- function(input_dir, output_dir, static_dir, pattern = ".*[.]c
              col_types = cols(
                .default = col_character())) %>%
       # Rename `wave` field.
-      rename(version = .data$wave)
+      rename(version = .data$wave) %>%
+      create_zip5()
 
     # Add state column based on county FIPS code.
-    data <- left_join(data, state_county_map, by="fips")
+    data <- mutate(data, state = state_fips_to_name(substr(fips, 1, 2)) %>% name_to_abbr())
 
-    assert(is.na(data$fips) == is.na(data$state))
+    assert(
+      all(is.na(data$fips) == is.na(data$state)),
+      "fips and state fields are not missing in the same places"
+    )
 
     # Drop any territories.
-    data <- filter(data, !(state %in% c("AS", "GU", "PR", "VI", "MP")))
+    data <- filter(data,
+      !(.data$state %in% c("AS", "GU", "PR", "VI", "MP")),
+      # If fips not available and state didn't get filled in.
+      !(.data$zip5 %in% territory_zips)
+    )
 
     # what zip5 values have a large enough population (>100) to include in micro
     # output. Those with too small of a population are blanked to NA
-    data <- blank_zips(data, valid_zips)
+    data <- blank_zips(data, invalid_zips, fname)
 
     # Save file under original name but in output directory.
     message("writing data for ", fname)
@@ -80,9 +89,15 @@ create_zip5 <- function(data) {
   return(data)
 }
 
-blank_zips <- function(data, valid_zips) {
-  data <- create_zip5(data)
-  change_zip <- !(data$zip5 %in% valid_zips$zip)
+blank_zips <- function(data, invalid_zips, fname) {
+  change_zip <- (data$zip5 %in% invalid_zips)
+  # Population-based blanking of zip codes was implemented in late May 2020. For
+  # later files, we shouldn't be blanking any new obs.
+  if (sum(change_zip) > 0) {
+    warning("trying to remove obs with invalid zip via population")
+    print(fname)
+    print(head(data[change_zip,] %>% select(zip5, fips, state)))
+  }
   data$A3[change_zip] <- NA
 
   data <- select(data, -zip5)
@@ -110,3 +125,4 @@ if (length(args) == 3) {
 pattern <- "^202[0-9]-[0-9]{2}(-race-ethnicity)?[.]csv[.]gz$"
 
 amend_microdata(input_dir, output_dir, static_dir, pattern = pattern)
+

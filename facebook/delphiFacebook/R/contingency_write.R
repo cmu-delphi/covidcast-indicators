@@ -25,7 +25,6 @@
 #' @export
 write_contingency_tables <- function(data, params, geo_type, groupby_vars, theme = NULL) {
   if (!is.null(data) && nrow(data) != 0) {
-    
     # Reorder the group-by columns and sort the dataset by them.
     groupby_vars <- c("geo_id", sort(setdiff(groupby_vars, "geo_id")))
     data <- data %>%
@@ -63,8 +62,9 @@ write_contingency_tables <- function(data, params, geo_type, groupby_vars, theme
 #' @param params A parameters object with the `static_dir` resources folder.
 #' @param geo_type "nation", "state".
 #' 
-#' @importFrom dplyr bind_cols left_join select
+#' @importFrom dplyr bind_cols left_join select distinct mutate
 #' @importFrom readr read_csv cols
+#' @importFrom stringi stri_pad
 #' @noRd
 add_geo_vars <- function(data, params, geo_type) {
   
@@ -77,7 +77,6 @@ add_geo_vars <- function(data, params, geo_type) {
   )
   
   if (geo_type == "nation") {
-    
     rest <- data.frame(
       region = overall,
       GID_1 = NA_character_,
@@ -88,7 +87,6 @@ add_geo_vars <- function(data, params, geo_type) {
     )
     
   } else if (geo_type == "state") {
-    
     states <- read_csv(
       file.path(params$static_dir, "state_list.csv"),
       col_types = cols(.default = "c")
@@ -111,7 +109,43 @@ add_geo_vars <- function(data, params, geo_type) {
         .data$county_fips
       )
   } else if (geo_type == "county") {
-    warning("county metadata not supported")
+    counties <- read_csv(
+      file.path(params$static_dir, "02_20_uszips.csv"),
+      col_types = cols(.default = "c")
+    ) %>% 
+      mutate(
+        fips = stri_pad(.data$fips, 5, pad="0")
+      ) %>%
+      select(fips, county_name, state_id, state_name) %>% 
+      distinct()
+
+    rest <- data.frame(
+      county_fips = data$geo_id
+    )
+
+    rest <- left_join(rest, counties, by = c("county_fips" = "fips")) %>%
+      select(
+        region = .data$state_id,
+        state = .data$state_id,
+        county = .data$county_name,
+        county_fips = .data$county_fips
+      )
+    
+    # Fill in state fips and GID_1
+    states <- read_csv(
+      file.path(params$static_dir, "state_list.csv"),
+      col_types = cols(.default = "c")
+    )
+    
+    rest <- left_join(rest, states, by = "state") %>%
+      select(
+        .data$region,
+        .data$GID_1,
+        .data$state,
+        .data$state_fips,
+        .data$county,
+        .data$county_fips
+      )
   }
   
   geo_vars <- bind_cols(first, rest)
@@ -119,7 +153,12 @@ add_geo_vars <- function(data, params, geo_type) {
   # Insert the geographic variables in place of the "geo_id" variable.
   index <- which(names(data) == "geo_id")
   before <- if (index > 1) data[, 1:(index-1)] else NULL
-  after <- data[, (index+1):ncol(data)]
+  
+  if (ncol(data) == 1) {
+    after <- NULL
+  } else {
+    after <- select(data, (index+1):ncol(data))
+  }
   result <- bind_cols(before, geo_vars, after)
   
   return(result)

@@ -66,6 +66,12 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     geo_level <- agg_groups$geo_level[group_ind]
     geo_crosswalk <- cw_list[[geo_level]]
 
+    if (geo_level == "county") {
+      # Raise sample size threshold to 100.
+      old_thresh <- params$num_filter
+      params$num_filter <- 100L
+    }
+
     # Subset aggregations to keep only those grouping by the current agg_group
     # and with the current geo_level. `setequal` ignores differences in
     # ordering and only looks at unique elements.
@@ -107,6 +113,11 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
           write_contingency_tables(theme_out, params, geo_level, agg_group, theme)  
         }
       }
+    }
+
+    if (geo_level == "county") {
+      # Restore old sample size threshold
+      params$num_filter <- old_thresh
     }
   }
 }
@@ -307,10 +318,14 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size")])) == 0,
     ]
 
+    # Censor rows with low sample size
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 
-    ## Apply the post-function
+    # Apply the post-function
     dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
+
+    # Round sample sizes
+    dfs_out[[aggregation]] <- round_n(dfs_out[[aggregation]], params)
   }
 
   return(dfs_out)

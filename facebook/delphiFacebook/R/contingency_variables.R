@@ -39,8 +39,42 @@ code_occupation <- function(input_data, wave) {
       input_data$Q64 == 16 ~ "Other",
       TRUE ~ NA_character_
     )
+
+    input_data$occ_4w_social <- input_data$Q64 == 1
+    input_data$occ_4w_education <- input_data$Q64 == 2
+    input_data$occ_4w_arts <- input_data$Q64 == 3
+    input_data$occ_4w_health_prac <- input_data$Q64 == 4
+    input_data$occ_4w_health_support <- input_data$Q64 == 5
+    input_data$occ_4w_protective <- input_data$Q64 == 6
+    input_data$occ_4w_food <- input_data$Q64 == 7
+    input_data$occ_4w_building <- input_data$Q64 == 8
+    input_data$occ_4w_personal <- input_data$Q64 == 9
+    input_data$occ_4w_sales <- input_data$Q64 == 10
+    input_data$occ_4w_admin <- input_data$Q64 == 11
+    input_data$occ_4w_construction <- input_data$Q64 == 12
+    input_data$occ_4w_maintenance <- input_data$Q64 == 13
+    input_data$occ_4w_production <- input_data$Q64 == 14
+    input_data$occ_4w_transportation <- input_data$Q64 == 15
+    input_data$occ_4w_other <- input_data$Q64 == 16
   } else {
     input_data$occupation <- NA_character_
+
+    input_data$occ_4w_social <- NA
+    input_data$occ_4w_education <- NA
+    input_data$occ_4w_arts <- NA
+    input_data$occ_4w_health_prac <- NA
+    input_data$occ_4w_health_support <- NA
+    input_data$occ_4w_protective <- NA
+    input_data$occ_4w_food <- NA
+    input_data$occ_4w_building <- NA
+    input_data$occ_4w_personal <- NA
+    input_data$occ_4w_sales <- NA
+    input_data$occ_4w_admin <- NA
+    input_data$occ_4w_construction <- NA
+    input_data$occ_4w_maintenance <- NA
+    input_data$occ_4w_production <- NA
+    input_data$occ_4w_transportation <- NA
+    input_data$occ_4w_other <- NA
   }
   
   return(input_data)
@@ -117,6 +151,8 @@ code_health <- function(input_data, wave) {
     comorbidities <- split_options(input_data$C1)
     
     input_data$comorbidheartdisease <- is_selected(comorbidities, "3")
+    input_data$comorbid_high_blood_pressure <- is_selected(comorbidities, "4")
+    input_data$comorbid_asthma <- is_selected(comorbidities, "5")
     input_data$comorbidcancer <- is_selected(comorbidities, "2")
     input_data$comorbidkidneydisease <- is_selected(comorbidities, "7")
     input_data$comorbidlungdisease <- is_selected(comorbidities, "6")
@@ -125,7 +161,9 @@ code_health <- function(input_data, wave) {
       is_selected(comorbidities, "12") |
       is_selected(comorbidities, "10")
     input_data$comorbidimmuno <- is_selected(comorbidities, "11")
+    input_data$comorbid_autoimmune <- is_selected(comorbidities, "8")
     input_data$comorbidobese <- is_selected(comorbidities, "13")
+    input_data$comorbid_none <- is_selected(comorbidities, "9")
 
     # Combo vaccine-eligibility
     input_data$eligible <- 
@@ -145,6 +183,10 @@ code_health <- function(input_data, wave) {
     input_data$comorbidimmuno <- NA
     input_data$comorbidobese <- NA
     input_data$eligible <- NA
+    input_data$comorbid_high_blood_pressure <- NA
+    input_data$comorbid_asthma <- NA
+    input_data$comorbid_none <- NA
+    input_data$comorbid_autoimmune <- NA
   }
   
   # Combo vaccine-eligibility updated to include smoking, pregnant, and obesity
@@ -202,7 +244,7 @@ code_vaccinated_breakdown <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_addl_vaccines <- function(input_data, wave) {
   ## Items V3 and V4 display logic was changed mid-wave 6 to be shown only to
   ## respondents indicated that they had not been vaccinated. For the purposes
@@ -210,6 +252,18 @@ code_addl_vaccines <- function(input_data, wave) {
   ## before the change.
   if ("v_accept_covid_vaccine" %in% names(input_data)) {	
     input_data$v_accept_covid_vaccine[input_data$start_dt < wave6_mod_date] <- NA
+  }
+
+  if ("V2a" %in% names(input_data)) {
+    # coded as 1 = Yes, received all recommended doses, 2 = Plan to receive all recommended doses,
+    # 3 = Don't plan to receive all recommended doses.
+    input_data$v_receive_all_doses_yes <- input_data$V2a == 1
+    input_data$v_receive_all_doses_plan <- input_data$V2a == 2
+    input_data$v_receive_all_doses_noplan <- input_data$V2a == 3
+  } else {
+    input_data$v_receive_all_doses_yes <- NA_real_
+    input_data$v_receive_all_doses_plan <- NA_real_
+    input_data$v_receive_all_doses_noplan <- NA_real_
   }
 
   # hesitant_vaccine
@@ -224,6 +278,11 @@ code_addl_vaccines <- function(input_data, wave) {
       input_data$v_hesitant_vaccine, input_data$V3a == 3 | input_data$V3a == 4
     )
   }
+
+  input_data$overall_vaccine_hesitancy <- coalesce(
+    !input_data$v_covid_vaccinated_or_accept,
+    !input_data$v_covid_vaccinated_appointment_or_accept
+  )
 
   # accept_vaccine_defyes
   # accept_vaccine_probyes
@@ -271,12 +330,175 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$v_vaccine_timing_dontknow <- NA
   }
   
+  if ("B3" %in% names(input_data)) {
+    input_data$t_taken_temp <- input_data$B3 == 1
+  } else {
+    input_data$t_taken_temp <- NA
+  }
+
   if ("B8" %in% names(input_data)) {
     input_data$t_ever_tested <- input_data$B8 == 1
   } else {
     input_data$t_ever_tested <- NA
   }
+
+  if ("B11" %in% names(input_data)) {
+    # Coded as 1 = Yes, 2 = No, 3 = don't know.
+    input_data$t_ever_tested_positive <- input_data$B11 == 1
+  } else {
+    input_data$t_ever_tested_positive <- NA
+  }
   
+  if ("B5" %in% names(input_data)) {
+    # Coded as 1 = "tested and COVID+", 2 = "tested and COVID-",
+    # 3 = "tested, but no result yet", 4 = "tried to get tested but couldn't",
+    # 5 = "didn't try to get tested"
+    # Regardless of test result
+    input_data$t_unusual_symptom_tested <- case_when(
+      input_data$B5 %in% c(1, 2, 3) ~ 1,
+      input_data$B5 %in% c(4, 5) ~ 0,
+      TRUE ~ NA_real_
+    )
+    # Tested with positive result
+    input_data$t_unusual_symptom_tested_positive <- input_data$B5 == 1
+  } else {
+    input_data$t_unusual_symptom_tested <- NA
+    input_data$t_unusual_symptom_tested_positive <- NA
+  }
+
+  if ("B6" %in% names(input_data)) {
+    input_data$t_unusual_symptom_hospital <- input_data$B6 == 1
+    input_data$t_unusual_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
+  } else {
+    input_data$t_unusual_symptom_hospital <- NA
+    input_data$t_unusual_symptom_hospital_tried <- NA
+  }
+
+  if ("B7" %in% names(input_data) && wave != 10) {
+    # Before Wave 10, B7 was asked of respondents who selected > 0 items for B2c ("are 
+    # any of your symptoms unusual?"). In Wave 10, the display logic changed so that B7 
+    # is only shown when exactly 0 items (not even "none of the above") are selected on 
+    # B2 ("do you have any of these symptoms?"), meaning the respondent left the question 
+    # entirely blank. Discard these responses.
+    # 
+    # Coded as 8 = no medical care sought, 1-6 = various types of medical care sought,
+    # 7 = care sought but not received
+    unusual_symptoms_care <- split_options(input_data$B7)
+
+    input_data$unusual_symptom_medical_care_called_doctor <- is_selected(unusual_symptoms_care, "1")
+    input_data$unusual_symptom_medical_care_telemedicine <- is_selected(unusual_symptoms_care, "2")
+    input_data$unusual_symptom_medical_care_visited_doctor <- is_selected(unusual_symptoms_care, "3")
+    input_data$unusual_symptom_medical_care_urgent_care <- is_selected(unusual_symptoms_care, "4")
+    input_data$unusual_symptom_medical_care_er <- is_selected(unusual_symptoms_care, "5")
+    input_data$unusual_symptom_medical_care_hospital <- is_selected(unusual_symptoms_care, "6")
+    input_data$unusual_symptom_medical_care_tried <- is_selected(unusual_symptoms_care, "7")
+  } else {
+    input_data$unusual_symptom_medical_care_called_doctor <- NA
+    input_data$unusual_symptom_medical_care_telemedicine <- NA
+    input_data$unusual_symptom_medical_care_visited_doctor <- NA
+    input_data$unusual_symptom_medical_care_urgent_care <- NA
+    input_data$unusual_symptom_medical_care_er <- NA
+    input_data$unusual_symptom_medical_care_hospital <- NA
+    input_data$unusual_symptom_medical_care_tried <- NA
+  }
+
+  if ( "B12a" %in% names(input_data) ) {
+    not_tested_reasons <- split_options(input_data$B12a)
+
+    input_data$t_reason_not_tested_tried <- is_selected(not_tested_reasons, "1")
+    input_data$t_reason_not_tested_appointment <- is_selected(not_tested_reasons, "2")
+    input_data$t_reason_not_tested_location <- is_selected(not_tested_reasons, "3")
+    input_data$t_reason_not_tested_cost <- is_selected(not_tested_reasons, "4")
+    input_data$t_reason_not_tested_time <- is_selected(not_tested_reasons, "5")
+    input_data$t_reason_not_tested_travel <- is_selected(not_tested_reasons, "6")
+    input_data$t_reason_not_tested_stigma <- is_selected(not_tested_reasons, "7")
+    input_data$t_reason_not_tested_none <- is_selected(not_tested_reasons, "8")
+  } else {
+    input_data$t_reason_not_tested_tried <- NA
+    input_data$t_reason_not_tested_appointment <- NA
+    input_data$t_reason_not_tested_location <- NA
+    input_data$t_reason_not_tested_cost <- NA
+    input_data$t_reason_not_tested_time <- NA
+    input_data$t_reason_not_tested_travel <- NA
+    input_data$t_reason_not_tested_stigma <- NA
+    input_data$t_reason_not_tested_none <- NA
+  }
+
+if ("V5d" %in% names(input_data)) {
+    # introduced in Wave 8, removed in Wave 11
+    vaccine_incomplete_reasons <- split_options(input_data$V5d)
+
+    input_data$v_vaccine_incomplete_sideeffect <- is_selected(vaccine_incomplete_reasons, "1")
+    input_data$v_vaccine_incomplete_allergic <- is_selected(vaccine_incomplete_reasons, "2")
+    input_data$v_vaccine_incomplete_wontwork <- is_selected(vaccine_incomplete_reasons, "3")
+    input_data$v_vaccine_incomplete_dontbelieve <- is_selected(vaccine_incomplete_reasons, "4")
+    input_data$v_vaccine_incomplete_dontlike <- is_selected(vaccine_incomplete_reasons, "5")
+    input_data$v_vaccine_incomplete_not_recommended <- is_selected(vaccine_incomplete_reasons, "6")
+    input_data$v_vaccine_incomplete_wait <- is_selected(vaccine_incomplete_reasons, "7")
+    input_data$v_vaccine_incomplete_otherpeople <- is_selected(vaccine_incomplete_reasons, "8")
+    input_data$v_vaccine_incomplete_cost <- is_selected(vaccine_incomplete_reasons, "9")
+    input_data$v_vaccine_incomplete_distrust_vaccine <- is_selected(vaccine_incomplete_reasons, "10")
+    input_data$v_vaccine_incomplete_distrust_gov <- is_selected(vaccine_incomplete_reasons, "11")
+    input_data$v_vaccine_incomplete_health <- is_selected(vaccine_incomplete_reasons, "12")
+    input_data$v_vaccine_incomplete_other <- is_selected(vaccine_incomplete_reasons, "13")
+    input_data$v_vaccine_incomplete_pregnant <- is_selected(vaccine_incomplete_reasons, "14")
+    input_data$v_vaccine_incomplete_religion <- is_selected(vaccine_incomplete_reasons, "15")
+  } else {
+    input_data$v_vaccine_incomplete_sideeffect <- NA_real_
+    input_data$v_vaccine_incomplete_allergic <- NA_real_
+    input_data$v_vaccine_incomplete_wontwork <- NA_real_
+    input_data$v_vaccine_incomplete_dontbelieve <- NA_real_
+    input_data$v_vaccine_incomplete_dontlike <- NA_real_
+    input_data$v_vaccine_incomplete_not_recommended <- NA_real_
+    input_data$v_vaccine_incomplete_wait <- NA_real_
+    input_data$v_vaccine_incomplete_otherpeople <- NA_real_
+    input_data$v_vaccine_incomplete_cost <- NA_real_
+    input_data$v_vaccine_incomplete_distrust_vaccine <- NA_real_
+    input_data$v_vaccine_incomplete_distrust_gov <- NA_real_
+    input_data$v_vaccine_incomplete_health <- NA_real_
+    input_data$v_vaccine_incomplete_other <- NA_real_
+    input_data$v_vaccine_incomplete_pregnant <- NA_real_
+    input_data$v_vaccine_incomplete_religion <- NA_real_
+  }
+
+  # Overall barriers to vaccination from V5abcd.
+  input_data$v_overall_barrier_reason_sideeffect <- input_data$v_hesitancy_reason_sideeffects | input_data$v_vaccine_incomplete_sideeffect
+  input_data$v_overall_barrier_reason_allergic <- input_data$v_hesitancy_reason_allergic | input_data$v_vaccine_incomplete_allergic
+  input_data$v_overall_barrier_reason_wontwork <- input_data$v_hesitancy_reason_ineffective | input_data$v_vaccine_incomplete_wontwork
+  input_data$v_overall_barrier_reason_dontbelieve <- input_data$v_hesitancy_reason_unnecessary | input_data$v_vaccine_incomplete_dontbelieve
+  input_data$v_overall_barrier_reason_dontlike <- input_data$v_hesitancy_reason_dislike_vaccines | input_data$v_vaccine_incomplete_dontlike
+  input_data$v_overall_barrier_reason_not_recommended <- input_data$v_hesitancy_reason_not_recommended | input_data$v_vaccine_incomplete_not_recommended
+  input_data$v_overall_barrier_reason_wait <- input_data$v_hesitancy_reason_wait_safety | input_data$v_vaccine_incomplete_wait
+  input_data$v_overall_barrier_reason_otherpeople <- input_data$v_hesitancy_reason_low_priority | input_data$v_vaccine_incomplete_otherpeople
+  input_data$v_overall_barrier_reason_cost <- input_data$v_hesitancy_reason_cost | input_data$v_vaccine_incomplete_cost
+  input_data$v_overall_barrier_reason_distrust_vaccine <- input_data$v_hesitancy_reason_distrust_vaccines | input_data$v_vaccine_incomplete_distrust_vaccine
+  input_data$v_overall_barrier_reason_distrust_gov <- input_data$v_hesitancy_reason_distrust_gov | input_data$v_vaccine_incomplete_distrust_gov
+  input_data$v_overall_barrier_reason_health <- input_data$v_hesitancy_reason_health_condition | input_data$v_vaccine_incomplete_health
+  input_data$v_overall_barrier_reason_other <- input_data$v_hesitancy_reason_other | input_data$v_vaccine_incomplete_other
+  input_data$v_overall_barrier_reason_pregnant <- input_data$v_hesitancy_reason_pregnant | input_data$v_vaccine_incomplete_pregnant
+  input_data$v_overall_barrier_reason_religion <- input_data$v_hesitancy_reason_religious | input_data$v_vaccine_incomplete_religion
+
+  if ("C2" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No"
+    input_data$v_flu_vaccinated_1y <- input_data$C2 == 1
+  } else {
+    input_data$v_flu_vaccinated_1y <- NA
+  }
+
+  if ("C17" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 4 = "No", 2 = "I don't know"
+    input_data$v_flu_vaccinated_june_2020 <- input_data$C17 == 1
+  } else {
+    input_data$v_flu_vaccinated_june_2020 <- NA
+  }
+
+  if ("C17a" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No", 3 = "I don't know"
+    input_data$v_flu_vaccinated_july_2020 <- input_data$C17a == 1
+  } else {
+    input_data$v_flu_vaccinated_july_2020 <- NA
+  }
+
   return(input_data)
 }
 
@@ -285,7 +507,7 @@ code_addl_vaccines <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_trust <- function(input_data, wave) {
   # Drop values in vaccine_likely_<source> prior to item change date in Wave 6
   # Percentage more likely to get vaccinated if recommended by <source>
@@ -457,7 +679,7 @@ code_trust <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_vaccine_barriers <- function(input_data, wave) {
   # hesitant_worried_vaccine_sideeffects
   # Percentage very or moderately concerned about side effects among those who
@@ -821,7 +1043,7 @@ code_vaccine_barriers <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_attempt_vaccine <- function(input_data, wave) {
   # informed_access
   # Percentage of respondents who are very or moderately informed about how to
@@ -876,8 +1098,36 @@ code_attempt_vaccine <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with demographic grouping variables
+#' @return augmented data frame
 code_addl_symptoms <- function(input_data, wave) {
+  if ("B2b" %in% names(input_data)) {
+    # How many days have you had one or more new or unusual symptom?
+    # Free response
+    suppressWarnings({ B2b_int <- as.integer(input_data$B2b) })
+    input_data$symp_n_days <- case_when(
+      B2b_int < 0 ~ NA_integer_,
+      B2b_int > 1000 ~ NA_integer_,
+      is.na(B2b_int) ~ NA_integer_,
+      TRUE ~ B2b_int
+    )
+  } else {
+    input_data$symp_n_days <- NA_integer_
+  }
+
+  if ("A4" %in% names(input_data)) {
+    # How many additional people in your community do you know who are sick with fever + another symptom?
+    # Free response
+    suppressWarnings({ A4_int <- as.integer(input_data$A4) })
+    input_data$community_number_sick <- case_when(
+      A4_int < 0 ~ NA_integer_,
+      A4_int > 100 ~ NA_integer_,
+      is.na(A4_int) ~ NA_integer_,
+      TRUE ~ A4_int
+    )
+  } else {
+    input_data$community_number_sick <- NA_integer_
+  }
+
   # anosmia
   # Percentage of respondents experiencing anosmia
   # loss of taste or smell / # any B2 response
@@ -937,62 +1187,105 @@ code_addl_symptoms <- function(input_data, wave) {
   
   if ("B2c" %in% names(input_data)) {
     symptoms <- split_options(input_data$B2c)
+
+    input_data$symp_fever_unusual <- is_selected(symptoms, "1")
+    input_data$symp_cough_unusual <- is_selected(symptoms, "2")
+    input_data$symp_shortness_breath_unusual <- is_selected(symptoms, "3")
+    input_data$symp_diff_breathing_unusual <- is_selected(symptoms, "4")
+    input_data$symp_fatigue_unusual <- is_selected(symptoms, "5")
+    input_data$symp_nasal_congestion_unusual <- is_selected(symptoms, "6")
+    input_data$symp_runny_nose_unusual <- is_selected(symptoms, "7")
+    input_data$symp_aches_unusual <- is_selected(symptoms, "8")
+    input_data$symp_sore_throat_unusual <- is_selected(symptoms, "9")
+    input_data$symp_chest_pain_unusual <- is_selected(symptoms, "10")
+    input_data$symp_nausea_unusual <- is_selected(symptoms, "11")
+    input_data$symp_diarrhea_unusual <- is_selected(symptoms, "12")
+    input_data$symp_loss_smell_taste_unusual <- is_selected(symptoms, "13")
+    input_data$symp_other_unusual <- is_selected(symptoms, "14")
+    input_data$symp_eye_pain_unusual <- is_selected(symptoms, "16")
+    input_data$symp_chills_unusual <- is_selected(symptoms, "17")
+    input_data$symp_headache_unusual <- is_selected(symptoms, "18")
+    input_data$symp_sleep_changes_unusual <- is_selected(symptoms, "19")
+    input_data$symp_stuffy_nose_unusual <- is_selected(symptoms, "20")
     
-    input_data$symp_fever_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_fever <- calc_unusual_given_symptom(
       input_data$symp_fever, is_selected(symptoms, "1")
     )
-    input_data$symp_cough_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_cough <- calc_unusual_given_symptom(
       input_data$symp_cough, is_selected(symptoms, "2")
     )
-    input_data$symp_shortness_breath_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_shortness_breath <- calc_unusual_given_symptom(
       input_data$symp_shortness_breath, is_selected(symptoms, "3")
     )
-    input_data$symp_diff_breathing_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_diff_breathing <- calc_unusual_given_symptom(
       input_data$symp_diff_breathing, is_selected(symptoms, "4")
     )
-    input_data$symp_fatigue_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_fatigue <- calc_unusual_given_symptom(
       input_data$symp_fatigue, is_selected(symptoms, "5")
     )
-    input_data$symp_nasal_congestion_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_nasal_congestion <- calc_unusual_given_symptom(
       input_data$symp_nasal_congestion, is_selected(symptoms, "6")
     )
-    input_data$symp_runny_nose_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_runny_nose <- calc_unusual_given_symptom(
       input_data$symp_runny_nose, is_selected(symptoms, "7")
     )
-    input_data$symp_aches_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_aches <- calc_unusual_given_symptom(
       input_data$symp_aches, is_selected(symptoms, "8")
     )
-    input_data$symp_sore_throat_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_sore_throat <- calc_unusual_given_symptom(
       input_data$symp_sore_throat, is_selected(symptoms, "9")
     )
-    input_data$symp_chest_pain_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_chest_pain <- calc_unusual_given_symptom(
       input_data$symp_chest_pain, is_selected(symptoms, "10")
     )
-    input_data$symp_nausea_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_nausea <- calc_unusual_given_symptom(
       input_data$symp_nausea, is_selected(symptoms, "11")
     )
-    input_data$symp_diarrhea_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_diarrhea <- calc_unusual_given_symptom(
       input_data$symp_diarrhea, is_selected(symptoms, "12")
     )
-    input_data$symp_loss_smell_taste_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_loss_smell_taste <- calc_unusual_given_symptom(
       input_data$symp_loss_smell_taste, is_selected(symptoms, "13")
     )
-    input_data$symp_eye_pain_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_other <- calc_unusual_given_symptom(
+      input_data$symp_other, is_selected(symptoms, "14")
+    )
+    input_data$symp_unusual_given_eye_pain <- calc_unusual_given_symptom(
       input_data$symp_eye_pain, is_selected(symptoms, "16")
     )
-    input_data$symp_chills_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_chills <- calc_unusual_given_symptom(
       input_data$symp_chills, is_selected(symptoms, "17")
     )
-    input_data$symp_headache_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_headache <- calc_unusual_given_symptom(
       input_data$symp_headache, is_selected(symptoms, "18")
     )
-    input_data$symp_sleep_changes_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_sleep_changes <- calc_unusual_given_symptom(
       input_data$symp_sleep_changes, is_selected(symptoms, "19")
     )
-    input_data$symp_stuffy_nose_unusual <- calc_unusual_given_symptom(
+    input_data$symp_unusual_given_stuffy_nose <- calc_unusual_given_symptom(
       input_data$symp_stuffy_nose, is_selected(symptoms, "20")
     )
   } else {
+    input_data$symp_unusual_given_fever <- NA
+    input_data$symp_unusual_given_cough <- NA
+    input_data$symp_unusual_given_shortness_breath <- NA
+    input_data$symp_unusual_given_diff_breathing <- NA
+    input_data$symp_unusual_given_fatigue <- NA
+    input_data$symp_unusual_given_nasal_congestion <- NA
+    input_data$symp_unusual_given_runny_nose <- NA
+    input_data$symp_unusual_given_aches <- NA
+    input_data$symp_unusual_given_sore_throat <- NA
+    input_data$symp_unusual_given_chest_pain <- NA
+    input_data$symp_unusual_given_nausea <- NA
+    input_data$symp_unusual_given_diarrhea <- NA
+    input_data$symp_unusual_given_loss_smell_taste <- NA
+    input_data$symp_unusual_given_other <- NA
+    input_data$symp_unusual_given_eye_pain <- NA
+    input_data$symp_unusual_given_chills <- NA
+    input_data$symp_unusual_given_headache <- NA
+    input_data$symp_unusual_given_sleep_changes <- NA
+    input_data$symp_unusual_given_stuffy_nose <- NA
+
     input_data$symp_fever_unusual <- NA
     input_data$symp_cough_unusual <- NA
     input_data$symp_shortness_breath_unusual <- NA
@@ -1006,11 +1299,19 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_nausea_unusual <- NA
     input_data$symp_diarrhea_unusual <- NA
     input_data$symp_loss_smell_taste_unusual <- NA
+    input_data$symp_other_unusual <- NA
     input_data$symp_eye_pain_unusual <- NA
     input_data$symp_chills_unusual <- NA
     input_data$symp_headache_unusual <- NA
     input_data$symp_sleep_changes_unusual <- NA
     input_data$symp_stuffy_nose_unusual <- NA
+  }
+
+  if ("B4" %in% names(input_data)) {
+    # Cough with mucus given have cough in last 1 day
+    input_data$symp_cough_mucus <- input_data$B4 == 1
+  } else {
+    input_data$symp_cough_mucus <- NA
   }
   
   return(input_data)
@@ -1039,6 +1340,26 @@ code_behaviors <- function(input_data, wave) {
     )
   } else {
     input_data$c_direct_contact <- NA
+  }
+
+  if ("C11" %in% names(input_data)) {
+    # Had "direct contact" with someone COVID-positive in the last 24 hours
+    # Coded as 1 = Yes, 2 = No
+    input_data$c_direct_contact_covid <- input_data$C11 == 1
+  } else {
+    input_data$c_direct_contact_covid <- NA_real_
+  }
+
+  if (all(c("C11", "C12") %in% names(input_data))) {
+    # C12: was the person in C11 a member of your household
+    # Coded as 1 = Yes, 2 = No
+    input_data$c_direct_contact_covid_hh <- case_when(
+      input_data$C11 == 1 & input_data$C12 == 1 ~ 1,
+      input_data$C11 == 2 | input_data$C12 == 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$c_direct_contact_covid_hh <- NA_real_
   }
 
   # avoid_contact
@@ -1074,6 +1395,54 @@ code_behaviors <- function(input_data, wave) {
   return(input_data)
 }
 
+#' Additional mental health indicators
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_addl_mental_health <- function(input_data, wave) {
+  input_data$mh_some_anxious <- NA
+  input_data$mh_some_anxious_7d <- NA
+  input_data$mh_some_depressed <- NA
+  input_data$mh_some_depressed_7d <- NA
+  input_data$mh_some_isolated <- NA
+  input_data$mh_some_isolated_7d <- NA
+  input_data$mh_very_worried_finances <- NA
+
+  if (wave >= 4 && wave < 10) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4 | input_data$C8_1 == 2
+    input_data$mh_some_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4 | input_data$C8_2 == 2
+    input_data$mh_some_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4 | input_data$C8_3 == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  } else if (wave == 10) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4 | input_data$C8a_1 == 2
+    input_data$mh_some_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4 | input_data$C8a_2 == 2
+    input_data$mh_some_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4 | input_data$C8a_3 == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  } else if (wave >= 11) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
+    input_data$mh_some_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4 | input_data$C18a == 2
+    input_data$mh_some_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4 | input_data$C18b == 2
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
+    input_data$mh_very_worried_finances <- input_data$C15 == 1
+  }
+
+  if ("Q36" %in% names(input_data)) {
+    # Included in waves 1, 2, 3. Coded as 1 = substantial threat,
+    # 2 = moderate threat, 3 = not much of a threat, 4 = not a threat at all
+    input_data$mh_financial_threat <- input_data$Q36 == 1
+  } else {
+    input_data$mh_financial_threat <- NA
+  }
+
+  return(input_data)
+}
+
 #' Activities
 #'
 #' @param input_data input data frame of raw survey data
@@ -1081,6 +1450,38 @@ code_behaviors <- function(input_data, wave) {
 #' 
 #' @return augmented data frame
 code_addl_activities <- function(input_data, wave) {
+  # Work outside the home
+  if (all(c("D9", "D10") %in% names(input_data))) {
+    # D9: in the past 4 weeks, did you work
+    # Coded as 1 = Yes, 2 = No
+    # D10: if answered yes to D9, was your work in the last 4w outisde your home
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_outside_home_4w <- case_when(
+      input_data$D9 == 1 & input_data$D10 == 1 ~ 1,
+      input_data$D9 == 2 | input_data$D10 == 2 ~ 0,
+      TRUE ~ NA_real_
+    )
+  } else {
+    input_data$a_work_outside_home_4w <- NA_real_
+  }
+
+  if ("D10" %in% names(input_data)) {
+    # D10: if answered yes to D9, was your work in the last 4w outisde your home
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_for_pay_outside_home_4w <- input_data$D10 == 1
+  } else {
+    input_data$a_work_for_pay_outside_home_4w <- NA_real_
+  }
+
+  if ("D9" %in% names(input_data)) {
+    # D9: in the past 4 weeks, did you work
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_for_pay_4w <- input_data$D9 == 1
+  } else {
+    input_data$a_work_for_pay_4w <- NA_real_
+  }
+
+
   calc_masking_given_activity <- function(activity, masked_during_activity) {
     case_when(
       activity & masked_during_activity ~ TRUE,
@@ -1151,6 +1552,259 @@ code_addl_activities <- function(input_data, wave) {
     input_data$a_mask_public_transit_1d <- NA
   }
   
+  if ("C4" %in% names(input_data)) {
+    # Worked/volunteered in healthcare (hospital, medical office, etc) in last 5 days
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_healthcare_5d <- input_data$C4 == 1
+  } else {
+    input_data$a_work_healthcare_5d <- NA
+  }
+
+  if ("C5" %in% names(input_data)) {
+    # Worked/visited nursing home, etc, in last 5 days
+    # Coded as 1 = Yes, 2 = No
+    input_data$a_work_nursing_home_5d <- input_data$C5 == 1
+  } else {
+    input_data$a_work_nursing_home_5d <- NA
+  }
+
   return(input_data)
 }
 
+#' Demographics
+#'
+#' @param input_data input data frame of raw survey data
+#' @param wave integer indicating survey version
+#'
+#' @return augmented data frame
+code_addl_demographic <- function(input_data, wave) {
+  if ("D1" %in% names(input_data)) {
+    # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = prefer not to answer
+    input_data$gender_male <- input_data$D1 == 1
+    input_data$gender_female <- input_data$D1 == 2
+    input_data$gender_nonbinary_other <- case_when(
+      input_data$D1 %in% c(3, 4) ~ 1,
+      input_data$D1 %in% c(1, 2, 5) ~ 0,
+      TRUE ~ NA_real_
+    )
+    input_data$gender_unknown <- input_data$D1 == 5
+  } else {
+    input_data$gender_male <- NA_real_
+    input_data$gender_female <- NA_real_
+    input_data$gender_nonbinary_other <- NA_real_
+    input_data$gender_unknown <- NA_real_
+  }
+
+  if ("D2" %in% names(input_data)) {
+    # Coded as 1 = 18-24, 2 = 25-34, 3 = 35-44, 4 = 45-54,
+    # 5 = 55-64, 6 = 65-74, 7 = 75+
+    input_data$age_18_24 <- input_data$D2 == 1
+    input_data$age_25_34 <- input_data$D2 == 2
+    input_data$age_35_44 <- input_data$D2 == 3
+    input_data$age_45_54 <- input_data$D2 == 4
+    input_data$age_55_64 <- input_data$D2 == 5
+    input_data$age_65_74 <- input_data$D2 == 6
+    input_data$age_75_older <- input_data$D2 == 7
+  } else {
+    input_data$age_18_24 <- NA
+    input_data$age_25_34 <- NA
+    input_data$age_35_44 <- NA
+    input_data$age_45_54 <- NA
+    input_data$age_55_64 <- NA
+    input_data$age_65_74 <- NA
+    input_data$age_75_older <- NA
+  }
+
+  # race
+  if ("D7" %in% names(input_data)) {
+    input_data$race_american_indian_alaska_native <- input_data$D7 == 1
+    input_data$race_asian <- input_data$D7 == 2
+    input_data$race_black_african_american <- input_data$D7 == 3
+    input_data$race_native_hawaiian_pacific_islander <- input_data$D7 == 4
+    input_data$race_white <- input_data$D7 == 5
+    input_data$race_multiple_other <- (input_data$D7 == 6 | grepl(",", input_data$D7))
+  } else {
+    input_data$race_american_indian_alaska_native <- NA
+    input_data$race_asian <- NA
+    input_data$race_black_african_american <- NA
+    input_data$race_native_hawaiian_pacific_islander <- NA
+    input_data$race_white <- NA
+    input_data$race_multiple_other <- NA
+  }
+
+  if ("D8" %in% names(input_data)) {
+    input_data$education_less_than_highschool <- input_data$D8 == 1
+    input_data$education_highschool_or_equivalent <- input_data$D8 == 2
+    input_data$education_some_college <- input_data$D8 == 3
+    input_data$education_2yr_degree <- input_data$D8 == 4
+    input_data$education_4yr_degree <- input_data$D8 == 5
+    input_data$education_masters <- input_data$D8 == 8
+    input_data$education_professional_degree <- input_data$D8 == 6
+    input_data$education_doctorate <- input_data$D8 == 7
+  } else {
+    input_data$education_less_than_highschool <- NA
+    input_data$education_highschool_or_equivalent <- NA
+    input_data$education_some_college <- NA
+    input_data$education_2yr_degree <- NA
+    input_data$education_4yr_degree <- NA
+    input_data$education_masters <- NA
+    input_data$education_professional_degree <- NA
+    input_data$education_doctorate <- NA
+  }
+
+  if ("D12" %in% names(input_data)) {
+    input_data$language_home_english <- input_data$D12 == 1
+    input_data$language_home_spanish <- input_data$D12 == 2
+    input_data$language_home_chinese <- input_data$D12 == 3
+    input_data$language_home_vietnamese <- input_data$D12 == 4
+    input_data$language_home_french <- input_data$D12 == 5
+    input_data$language_home_portugese <- input_data$D12 == 6
+    input_data$language_home_other <- input_data$D12 == 7
+  } else {
+    input_data$language_home_english <- NA
+    input_data$language_home_spanish <- NA
+    input_data$language_home_chinese <- NA
+    input_data$language_home_vietnamese <- NA
+    input_data$language_home_french <- NA
+    input_data$language_home_portugese <- NA
+    input_data$language_home_other <- NA
+  }
+
+  # Children by age
+  if (all(c("E1_1", "E1_2", "E1_3", "E1_4") %in% names(input_data))) {
+    # All subquestions coded as 1 = Yes, 2 = No, 5 = don't know
+    input_data$children_prek <- input_data$E1_1 == 1
+    input_data$children_gr1_5 <- input_data$E1_2 == 1
+    input_data$children_gr6_8 <- input_data$E1_3 == 1
+    input_data$children_gr9_12 <- input_data$E1_4 == 1
+  } else {
+    input_data$children_prek <- NA
+    input_data$children_gr1_5 <- NA
+    input_data$children_gr6_8 <- NA
+    input_data$children_gr9_12 <- NA
+  }
+
+  if ("E3" %in% names(input_data)) {
+    school_measures <- input_data$E3
+    # Remove "I don't know" responses.
+    school_measures  <- ifelse(school_measures == "16", NA_character_, school_measures)
+    school_measures <- split_options(school_measures)
+
+    input_data$children_school_measure_mask_students <- is_selected(school_measures, "1")
+    input_data$children_school_measure_mask_teachers <- is_selected(school_measures, "2")
+    input_data$children_school_measure_same_teacher <- is_selected(school_measures, "3")
+    input_data$children_school_measure_same_students <- is_selected(school_measures, "4")
+    input_data$children_school_measure_outdoor <- is_selected(school_measures, "5")
+    input_data$children_school_measure_entry <- is_selected(school_measures, "6")
+    input_data$children_school_measure_class_size <- is_selected(school_measures, "7")
+    input_data$children_school_measure_cafeteria <- is_selected(school_measures, "8")
+    input_data$children_school_measure_playground <- is_selected(school_measures, "9")
+    input_data$children_school_measure_desk_shield <- is_selected(school_measures, "10")
+    input_data$children_school_measure_desk_space <- is_selected(school_measures, "11")
+    input_data$children_school_measure_extracurricular <- is_selected(school_measures, "12")
+    input_data$children_school_measure_supplies <- is_selected(school_measures, "14")
+    input_data$children_school_measure_screening <- is_selected(school_measures, "15")
+  } else {
+    input_data$children_school_measure_mask_students <- NA
+    input_data$children_school_measure_mask_teachers <- NA
+    input_data$children_school_measure_same_teacher <- NA
+    input_data$children_school_measure_same_students <- NA
+    input_data$children_school_measure_outdoor <- NA
+    input_data$children_school_measure_entry <- NA
+    input_data$children_school_measure_class_size <- NA
+    input_data$children_school_measure_cafeteria <- NA
+    input_data$children_school_measure_playground <- NA
+    input_data$children_school_measure_desk_shield <- NA
+    input_data$children_school_measure_desk_space <- NA
+    input_data$children_school_measure_extracurricular <- NA
+    input_data$children_school_measure_supplies <- NA
+    input_data$children_school_measure_screening <- NA
+  }
+
+  if ("P2" %in% names(input_data)) {
+    input_data$child_age <- case_when(
+      input_data$P2 == 1 ~ "less than 5 years",
+      input_data$P2 == 2 ~ "5-11 years",
+      input_data$P2 == 3 ~ "12-15 years",
+      input_data$P2 == 4 ~ "16-17 years",
+      TRUE ~ NA_character_
+    )
+  } else {
+    input_data$child_age <- NA_character_
+  }
+
+  if ("A5_1" %in% names(input_data)) {
+    # This is Wave 4, where item A2b was replaced with 3 items asking about
+    # separate ages. Many respondents leave blank the categories that do not
+    # apply to their household, rather than entering 0, so if at least one of
+    # the three items has a response, we impute 0 for the remaining items.
+    suppressWarnings({
+      age18 <- as.integer(input_data$A5_1)
+      age1864 <- as.integer(input_data$A5_2)
+      age65 <- as.integer(input_data$A5_3)
+    })
+    input_data$ppl_in_household_children <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age18), 0, age18),
+      NA_integer_
+    )
+    input_data$ppl_in_household_adults <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age1864), 0, age1864),
+      NA_integer_
+    )
+    input_data$ppl_in_household_older <- ifelse(
+      is.na(age18) + is.na(age1864) + is.na(age65) < 3,
+      ifelse(is.na(age65), 0, age65),
+      NA_integer_
+    )
+  } else {
+    input_data$ppl_in_household_children <- NA_integer_
+    input_data$ppl_in_household_adults <- NA_integer_
+    input_data$ppl_in_household_older <- NA_integer_
+  }
+
+  if ("D3" %in% names(input_data)) {
+    # How many children younger than 18 currently stay in your household
+    # Free response
+    suppressWarnings({ D3_int <- as.integer(input_data$D3) })
+    input_data$children_in_household <- case_when(
+      D3_int < 0 ~ NA_integer_,
+      D3_int > 20 ~ NA_integer_,
+      is.na(D3_int) ~ NA_integer_,
+      TRUE ~ D3_int
+    )
+  } else {
+    input_data$children_in_household <- NA_integer_
+  }
+
+  if ("D4" %in% names(input_data)) {
+    # How many adults 18-65 currently stay in your household
+    # Free response
+    suppressWarnings({ D4_int <- as.integer(input_data$D4) })
+    input_data$adults_in_household <- case_when(
+      D4_int < 0 ~ NA_integer_,
+      D4_int > 20 ~ NA_integer_,
+      is.na(D4_int) ~ NA_integer_,
+      TRUE ~ D4_int
+    )
+  } else {
+    input_data$adults_in_household <- NA_integer_
+  }
+
+  if ("D5" %in% names(input_data)) {
+    # How many adults 65 or older currently stay in your household
+    # Free response
+    suppressWarnings({ D5_int <- as.integer(input_data$D5) })
+    input_data$older_in_household <- case_when(
+      D5_int < 0 ~ NA_integer_,
+      D5_int > 20 ~ NA_integer_,
+      is.na(D5_int) ~ NA_integer_,
+      TRUE ~ D5_int
+    )
+  } else {
+    input_data$older_in_household <- NA_integer_
+  }
+
+  return(input_data)
+}

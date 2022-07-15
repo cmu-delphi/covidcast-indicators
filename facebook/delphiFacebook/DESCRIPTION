@@ -15,18 +15,21 @@ Imports:
     rlang,
     readr,
     dplyr,
+    plyr,
+    tidyr,
     stringi,
     jsonlite,
     lubridate,
     data.table,
     tibble,
     purrr,
-    Rcpp
+    Rcpp,
+    survey
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),
     testthat (>= 1.0.1),
     covr (>= 2.2.2)
 LinkingTo: Rcpp
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.0
 Encoding: UTF-8

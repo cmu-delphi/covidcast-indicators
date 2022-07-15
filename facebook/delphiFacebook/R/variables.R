@@ -197,19 +197,25 @@ code_mental_health <- function(input_data, wave) {
   
   if (wave >= 4 && wave < 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
     input_data$mh_anxious <- input_data$C8_1 == 3 | input_data$C8_1 == 4
     input_data$mh_depressed <- input_data$C8_2 == 3 | input_data$C8_2 == 4
     input_data$mh_isolated <- input_data$C8_3 == 3 | input_data$C8_3 == 4
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   } else if (wave == 10) {
     input_data$mh_worried_ill <- input_data$C9 == 1 | input_data$C9 == 2
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
     input_data$mh_anxious_7d <- input_data$C8a_1 == 3 | input_data$C8a_1 == 4
     input_data$mh_depressed_7d <- input_data$C8a_2 == 3 | input_data$C8a_2 == 4
     input_data$mh_isolated_7d <- input_data$C8a_3 == 3 | input_data$C8a_3 == 4
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   } else if (wave >= 11) {
+    # All coded as 1 = none of the time, 2 = some of the time, 3 = most of the time, 4 = all of the time
     input_data$mh_anxious_7d <- input_data$C18a == 3 | input_data$C18a == 4
     input_data$mh_depressed_7d <- input_data$C18b == 3 | input_data$C18b == 4
+    # Coded as 1 = very worried, 2 = somewhat worried, 3 = not too worried, 4 = not worried at all
     input_data$mh_worried_finances <- input_data$C15 == 1 | input_data$C15 == 2
   }
 
@@ -233,8 +239,7 @@ code_mental_health <- function(input_data, wave) {
 #' @param input_data input data frame of raw survey data
 #' @param wave integer indicating survey version
 #' 
-#' @return data frame augmented with `c_travel_state`, `c_work_outside_5d`,
-#'   `c_mask_often`, `c_others_masked`
+#' @return augmented data frame
 code_mask_contact <- function(input_data, wave) {
   # private helper for both mask items, which are identically coded: 6 means the
   # respondent was not in public, 1 & 2 mean always/most, 3-5 mean some to none
@@ -242,7 +247,7 @@ code_mask_contact <- function(input_data, wave) {
     case_when(
       is.na(item) ~ NA,
       item == 6 ~ NA,
-      item == 1 | item ==  2 ~ TRUE,
+      item == 1 | item == 2 ~ TRUE,
       TRUE ~ FALSE)
   }
   
@@ -262,48 +267,88 @@ code_mask_contact <- function(input_data, wave) {
     # added in wave 4. wearing mask most or all of the time; exclude respondents
     # who have not been in public
     input_data$c_mask_often <- most_always(input_data$C14)
+    # Same indicator but include "sometimes" wear mask in public
+    input_data$c_mask_some_often <- case_when(
+      is.na(input_data$C14) ~ NA,
+      input_data$C14 == 6 ~ NA,
+      input_data$C14 == 1 | input_data$C14 == 2 | input_data$C14 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_mask_often <- NA
+    input_data$c_mask_some_often <- NA
   }
 
   if ("C14a" %in% names(input_data)) {
     # added in wave 8. wearing mask most or all of the time (last 7 days);
     # exclude respondents who have not been in public
     input_data$c_mask_often_7d <- most_always(input_data$C14a)
+    # Same indicator but include "sometimes" wear mask in public
+    input_data$c_mask_some_often_7d <- case_when(
+      is.na(input_data$C14a) ~ NA,
+      input_data$C14a == 6 ~ NA,
+      input_data$C14a == 1 | input_data$C14a == 2 | input_data$C14a == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_mask_often_7d <- NA
+    input_data$c_mask_some_often_7d <- NA
   }
 
   if ("C16" %in% names(input_data)) {
     # added in wave 5. most/all *others* seen in public wearing masks; exclude
     # respondents who have not been in public.
+    # Coded as 5 = no people in public are wearing masks, 4 = a few people are,
+    # 3 = some people are, 2 = most people are, 1 = all people are, 6 = I have not been in public
     input_data$c_others_masked <- most_always(input_data$C16)
+    # include others in public are masked "sometimes"
+    input_data$c_others_some_masked <- case_when(
+      is.na(input_data$C16) ~ NA,
+      input_data$C16 == 6 ~ NA,
+      input_data$C16 == 1 | input_data$C16 == 2 | input_data$C16 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_masked <- NA
+    input_data$c_others_some_masked <- NA
   }
   
   if ("H2" %in% names(input_data)) {
     # added in wave 11, replaces C16. most/all *others* seen in public wearing
     # masks; exclude respondents who have not been in public. Coding is reversed.
+    # Coded as 1 = no people in public are wearing masks, 2 = a few people are,
+    # 3 = some people are, 4 = most people are, 5 = all people are, 6 = I have not been in public
     input_data$c_others_masked_public <- case_when(
       is.na(input_data$H2) ~ NA,
       input_data$H2 == 6 ~ NA,
       input_data$H2 == 4 | input_data$H2 == 5 ~ TRUE,
       TRUE ~ FALSE)
+    input_data$c_others_masked_some_public <- case_when(
+      is.na(input_data$H2) ~ NA,
+      input_data$H2 == 6 ~ NA,
+      input_data$H2 == 4 | input_data$H2 == 5 | input_data$H2 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_masked_public <- NA
+    input_data$c_others_masked_some_public <- NA
   }
   
   if ("H1" %in% names(input_data)) {
     # added in wave 11. most/all *others* in public in the last 7 days; exclude
     # respondents who have not been in public.
+    # Coded as 1 = no people in public are distancing, 2 = a few people are,
+    # 3 = some people are, 4 = most people are, 5 = all people are, 6 = I have not been in public
     input_data$c_others_distanced_public <- case_when(
       is.na(input_data$H1) ~ NA,
       input_data$H1 == 6 ~ NA,
       input_data$H1 == 4 | input_data$H1 == 5 ~ TRUE,
       TRUE ~ FALSE)
+    # include others in public are distanced "sometimes"
+    input_data$c_others_distanced_some_public <- case_when(
+      is.na(input_data$H1) ~ NA,
+      input_data$H1 == 6 ~ NA,
+      input_data$H1 == 4 | input_data$H1 == 5 | input_data$H1 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$c_others_distanced_public <- NA
+    input_data$c_others_distanced_some_public <- NA
   }
 
   if ("C3" %in% names(input_data)) {
@@ -612,7 +657,7 @@ code_vaccines <- function(input_data, wave) {
     input_data$v_hesitancy_reason_religious <- NA_real_
     input_data$v_hesitancy_reason_dislike_vaccines_generally <- NA_real_
   }
-  
+
   if ( "V6" %in% names(input_data) ) {
     # introduced in Wave 8
     dontneed_reasons <- split_options(input_data$V6)
@@ -867,8 +912,14 @@ code_vaccines <- function(input_data, wave) {
       is.na(input_data$H3) ~ NA,
       input_data$H3 == 4 | input_data$H3 == 6 ~ TRUE,
       TRUE ~ FALSE)
+    # Add "some" people
+    input_data$v_covid_vaccinated_some_friends <- case_when(
+      is.na(input_data$H3) ~ NA,
+      input_data$H3 == 4 | input_data$H3 == 6 | input_data$H3 == 3 ~ TRUE,
+      TRUE ~ FALSE)
   } else {
     input_data$v_covid_vaccinated_friends <- NA
+    input_data$v_covid_vaccinated_some_friends <- NA
   }
   
   if ("V2d" %in% names(input_data)) {
@@ -910,6 +961,7 @@ code_vaccines <- function(input_data, wave) {
   }
   
   if ("C17b" %in% names(input_data)) {
+    # Coded as 1 = "Yes", 2 = "No", 3 = "I don't know"
     input_data$v_flu_vaccinated_2021 <- input_data$C17b == 1
   } else {
     input_data$v_flu_vaccinated_2021 <- NA

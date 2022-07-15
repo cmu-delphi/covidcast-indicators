@@ -36,7 +36,7 @@ read_contingency_params <- function(path = "params.json", template_path = "param
     }
   }
   
-  contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 100L)
+  contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 40L)
   contingency_params$s_weight <- if_else(contingency_params$debug, 1.00, 0.01)
   contingency_params$s_mix_coef <- if_else(contingency_params$debug, 0.05, 0.05)
   contingency_params$use_input_asis <- if_else(

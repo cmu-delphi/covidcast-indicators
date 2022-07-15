@@ -24,8 +24,8 @@ metrics <- c("raw_cli", "raw_ili", "raw_hh_cmnty_cli", "raw_nohh_cmnty_cli",
 
              # work outside home
              # pre-wave-4
-             "wip_smoothed_work_outside_home_5d",
-             "wip_smoothed_wwork_outside_home_5d"
+             "smoothed_work_outside_home_5d",
+             "smoothed_wwork_outside_home_5d"
              )
 
 test_that("testing existence of csv files", {
@@ -70,7 +70,7 @@ test_that("testing geo files contain correct number of lines", {
 
   dt <- lapply(fnames, read_csv)
   dt_nrow <- sapply(dt, nrow)
-
+  
   expect_true(all(dt_nrow[grid$dates == "20200510"] == 1L))
   expect_true(all(dt_nrow[grid$dates == "20200511"] == 1L))
   expect_true(all(dt_nrow[grid$dates == "20200512" & grid$geo_levels != "nation"] == 2L))

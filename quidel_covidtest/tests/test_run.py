@@ -21,6 +21,7 @@ class TestRun:
         "indicator": {
             "static_file_dir": "../static",
             "input_cache_dir": "./cache",
+            "backfill_dir": "./backfill",
             "export_start_date": "2020-06-30",
             "export_end_date": "",
             "pull_start_date": "2020-07-09",

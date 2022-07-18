@@ -8,7 +8,11 @@ import boto3
 import pandas as pd
 import numpy as np
 
+from delphi_utils import GeoMapper
+
 from .constants import AGE_GROUPS
+
+gmpr = GeoMapper()
 
 def get_from_s3(start_date, end_date, bucket, logger):
     """
@@ -57,6 +61,8 @@ def get_from_s3(start_date, end_date, bucket, logger):
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
+                if ".csv" not in fn:
+                    continue  #Add to avoid that the folder name was readed as a fn.
                 if fn in set(df["fname"].values):
                     continue
                 obj = bucket.Object(key=fn)
@@ -370,3 +376,35 @@ def update_cache_file(df, _end_date, cache_dir):
         if ".csv" in fn:
             os.remove(join(cache_dir, fn))
     df.to_csv(join(cache_dir, "pulled_until_%s.csv") % _end_date.strftime("%Y%m%d"), index=False)
+
+def store_backfill_file(df, _end_date, backfill_dir):
+    """
+    Store county level backfill data into backfill_dir.
+
+    Parameter:
+        df: pd.DataFrame
+            Pre-process file at ZipCode level
+        _end_date:
+            The most recent date when the raw data is received
+        backfill_dir:
+            specified path to store backfill files.
+    """
+    backfilldata = df.copy()
+    backfilldata = gmpr.replace_geocode(backfilldata, from_code="zip", new_code="fips",
+                          from_col="zip", new_col="fips", date_col="timestamp")
+    backfilldata.rename({"timestamp": "time_value"}, axis=1, inplace=True)
+    _start_date = _end_date.replace(year=_end_date.year-1)
+    selected_columns = ['time_value', 'fips', 
+                        'totalTest_total', 'positiveTest_total', 
+                        'positiveTest_age_0_4', 'totalTest_age_0_4',
+                        'positiveTest_age_5_17', 'totalTest_age_5_17',
+                        'positiveTest_age_18_49', 'totalTest_age_18_49',
+                        'positiveTest_age_50_64', 'totalTest_age_50_64',
+                        'positiveTest_age_65plus', 'totalTest_age_65plus',
+                        'positiveTest_age_0_17', 'totalTest_age_0_17']
+    backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date, 
+                                    selected_columns]
+    path = backfill_dir + \
+        "/quidel_covidtest_as_of_%s"%datetime.strftime(_end_date, "%Y%m%d") + ".parquet"
+    # Store intermediate file into the backfill folder
+    backfilldata.to_parquet(path)    

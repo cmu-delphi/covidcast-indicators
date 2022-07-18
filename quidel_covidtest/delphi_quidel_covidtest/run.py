@@ -25,7 +25,8 @@ from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
-                   update_cache_file)
+                   update_cache_file,
+                   store_backfill_file)
 
 
 def log_exit(start_time, stats, logger):
@@ -85,6 +86,7 @@ def run_module(params: Dict[str, Any]):
     stats = []
     atexit.register(log_exit, start_time, stats, logger)
     cache_dir = params["indicator"]["input_cache_dir"]
+    backfill_dir = params["indicator"]["backfill_dir"]
     export_dir = params["common"]["export_dir"]
     export_start_date = params["indicator"]["export_start_date"]
     export_end_date = params["indicator"]["export_end_date"]
@@ -95,6 +97,9 @@ def run_module(params: Dict[str, Any]):
     if _end_date is None:
         logger.info("The data is up-to-date. Currently, no new data to be ingested.")
         return
+    else:
+        # Store the backfill intermediate file
+        store_backfill_file(df, _end_date, backfill_dir)
     export_end_date = check_export_end_date(
         export_end_date, _end_date, END_FROM_TODAY_MINUS)
     export_start_date = check_export_start_date(

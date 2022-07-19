@@ -394,17 +394,17 @@ def store_backfill_file(df, _end_date, backfill_dir):
                           from_col="zip", new_col="fips", date_col="timestamp")
     backfilldata.rename({"timestamp": "time_value"}, axis=1, inplace=True)
     _start_date = _end_date.replace(year=_end_date.year-1)
-    selected_columns = ['time_value', 'fips', 
-                        'totalTest_total', 'positiveTest_total', 
+    selected_columns = ['time_value', 'fips',
+                        'totalTest_total', 'positiveTest_total',
                         'positiveTest_age_0_4', 'totalTest_age_0_4',
                         'positiveTest_age_5_17', 'totalTest_age_5_17',
                         'positiveTest_age_18_49', 'totalTest_age_18_49',
                         'positiveTest_age_50_64', 'totalTest_age_50_64',
                         'positiveTest_age_65plus', 'totalTest_age_65plus',
                         'positiveTest_age_0_17', 'totalTest_age_0_17']
-    backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date, 
+    backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date,
                                     selected_columns]
     path = backfill_dir + \
         "/quidel_covidtest_as_of_%s"%datetime.strftime(_end_date, "%Y%m%d") + ".parquet"
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path)    
+    backfilldata.to_parquet(path)

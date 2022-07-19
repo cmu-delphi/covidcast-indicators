@@ -97,9 +97,8 @@ def run_module(params: Dict[str, Any]):
     if _end_date is None:
         logger.info("The data is up-to-date. Currently, no new data to be ingested.")
         return
-    else:
-        # Store the backfill intermediate file
-        store_backfill_file(df, _end_date, backfill_dir)
+    # Store the backfill intermediate file
+    store_backfill_file(df, _end_date, backfill_dir)
     export_end_date = check_export_end_date(
         export_end_date, _end_date, END_FROM_TODAY_MINUS)
     export_start_date = check_export_start_date(

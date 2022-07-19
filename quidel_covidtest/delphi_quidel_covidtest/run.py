@@ -67,6 +67,7 @@ def run_module(params: Dict[str, Any]):
     - indicator":
         - "static_file_dir": str, directory name with population information
         - "input_cache_dir": str, directory in which to cache input data
+        - "backfill_dir": str, directory in which to store the backfill files
         - "export_start_date": str, YYYY-MM-DD format of earliest date to create output
         - "export_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
                              through the present

@@ -40,7 +40,7 @@ def arch_diffs(params, daily_arch_diff, logger):
                 join(daily_export_dir, output_file),
                 join(weekly_export_dir, output_file))
             n += 1
-        logger.info("Number of filed published:", num_files=count)
+        logger.info("Number of filed published:", num_files=n)
 
         weekly_arch_diff = S3ArchiveDiffer(
             params["archive"]["weekly_cache_dir"], weekly_export_dir,

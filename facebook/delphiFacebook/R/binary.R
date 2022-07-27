@@ -59,8 +59,8 @@ get_binary_indicators <- function() {
     
     # work outside home
     # pre-wave 4
-    "wip_smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
-    "wip_smoothed_wwork_outside_home_5d", "weight", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_work_outside_home_5d", "weight_unif", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
+    "smoothed_wwork_outside_home_5d", "weight", "c_work_outside_5d", 6, compute_binary_response, jeffreys_binary,
     # wave 4+, pre-wave 10
     "smoothed_work_outside_home_1d", "weight_unif", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
     "smoothed_wwork_outside_home_1d", "weight", "a_work_outside_home_1d", 6, compute_binary_response, jeffreys_binary,
@@ -420,9 +420,6 @@ get_binary_indicators <- function() {
     "smoothed_wwant_info_none", "weight", "i_want_info_none", 6, compute_binary_response, jeffreys_binary
   )
 
-
-  ind$skip_mixing <- TRUE
-
   return(ind)
 }
 
@@ -449,10 +446,12 @@ compute_binary_response <- function(response, weight, sample_size)
   response_prop <- weighted.mean(response, weight)
 
   val <- 100 * response_prop
+  
+  effective_sample_size <- length(weight) * mean(weight)^2 / mean(weight^2)
 
   return(list(val = val,
               se = NA_real_,
-              effective_sample_size = sample_size)) # TODO effective sample size
+              effective_sample_size = effective_sample_size))
 }
 
 #' Apply a Jeffreys correction to estimates and their standard errors.
@@ -477,8 +476,8 @@ jeffreys_multinomial_factory <- function(k) {
   # Returns: Updated data frame.
   jeffreys_multinomial <- function(df) {
     return(mutate(df,
-                  val = jeffreys_percentage(.data$val, .data$sample_size, k),
-                  se = binary_se(.data$val, .data$sample_size)))
+                  val = jeffreys_percentage(.data$val, .data$effective_sample_size, k),
+                  se = binary_se(.data$val, .data$effective_sample_size)))
   }
   
   return(jeffreys_multinomial)
@@ -506,6 +505,6 @@ jeffreys_percentage <- function(percentage, sample_size, k) {
 #' @return Vector of standard errors; NA when a sample size is 0.
 binary_se <- function(val, sample_size) {
   return(ifelse(sample_size > 0,
-                sqrt( (val * (100 - val) / sample_size) ),
+                sqrt( val * (100 - val) / (sample_size + 1) ),
                 NA))
 }

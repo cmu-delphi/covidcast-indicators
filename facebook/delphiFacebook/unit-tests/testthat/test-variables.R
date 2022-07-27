@@ -111,10 +111,15 @@ test_that("mask items correctly coded", {
   input_data$c_travel_state <- TRUE
   input_data$c_travel_state_7d <- NA
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_some_often <- c(NA, TRUE, TRUE, NA, TRUE, FALSE)
   input_data$c_mask_often_7d <- NA
+  input_data$c_mask_some_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_some_masked <- c(TRUE, NA, NA, TRUE, TRUE, FALSE)
   input_data$c_others_masked_public <- NA
+  input_data$c_others_masked_some_public <- NA
   input_data$c_others_distanced_public <- NA
+  input_data$c_others_distanced_some_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
@@ -131,10 +136,15 @@ test_that("mask items correctly coded", {
   input_data$c_travel_state <- TRUE
   input_data$c_travel_state_7d <- NA
   input_data$c_mask_often <- NA
+  input_data$c_mask_some_often <- NA
   input_data$c_mask_often_7d <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_some_often_7d <- c(NA, TRUE, TRUE, NA, TRUE, FALSE)
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_some_masked <- c(TRUE, NA, NA, TRUE, TRUE, FALSE)
   input_data$c_others_masked_public <- NA
+  input_data$c_others_masked_some_public <- NA
   input_data$c_others_distanced_public <- NA
+  input_data$c_others_distanced_some_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
@@ -152,10 +162,15 @@ test_that("mask items correctly coded", {
   input_data$c_travel_state <- NA
   input_data$c_travel_state_7d <- TRUE
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_some_often <- c(NA, TRUE, TRUE, NA, TRUE, FALSE)
   input_data$c_mask_often_7d <- NA
+  input_data$c_mask_some_often_7d <- NA
   input_data$c_others_masked <- c(TRUE, NA, NA, FALSE, TRUE, FALSE)
+  input_data$c_others_some_masked <- c(TRUE, NA, NA, TRUE, TRUE, FALSE)
   input_data$c_others_masked_public <- NA
+  input_data$c_others_masked_some_public <- NA
   input_data$c_others_distanced_public <- NA
+  input_data$c_others_distanced_some_public <- NA
   input_data$c_work_outside_5d <- NA
 
   expect_equal(out, input_data)
@@ -174,10 +189,15 @@ test_that("mask items correctly coded", {
   input_data$c_travel_state <- NA
   input_data$c_travel_state_7d <- TRUE
   input_data$c_mask_often <- c(NA, TRUE, FALSE, NA, TRUE, FALSE)
+  input_data$c_mask_some_often <- c(NA, TRUE, TRUE, NA, TRUE, FALSE)
   input_data$c_mask_often_7d <- NA
+  input_data$c_mask_some_often_7d <- NA
   input_data$c_others_masked <- NA
+  input_data$c_others_some_masked <- NA
   input_data$c_others_masked_public <- c(FALSE, NA, NA, FALSE, FALSE, TRUE)
+  input_data$c_others_masked_some_public <- c(FALSE, NA, NA, TRUE, FALSE, TRUE)
   input_data$c_others_distanced_public <- c(FALSE, NA, NA, FALSE, FALSE, TRUE)
+  input_data$c_others_distanced_some_public <- c(FALSE, NA, NA, TRUE, FALSE, TRUE)
   input_data$c_work_outside_5d <- NA
   
   expect_equal(out, input_data)

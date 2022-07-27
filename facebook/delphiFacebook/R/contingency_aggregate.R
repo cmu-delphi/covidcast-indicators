@@ -26,6 +26,7 @@
 #' @import data.table
 #' @importFrom dplyr full_join %>% select all_of
 #' @importFrom purrr reduce
+#' @importFrom tidyr drop_na
 #'
 #' @export
 produce_aggregates <- function(df, aggregations, cw_list, params) {
@@ -65,6 +66,12 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     geo_level <- agg_groups$geo_level[group_ind]
     geo_crosswalk <- cw_list[[geo_level]]
 
+    if (geo_level == "county") {
+      # Raise sample size threshold to 100.
+      old_thresh <- params$num_filter
+      params$num_filter <- 100L
+    }
+
     # Subset aggregations to keep only those grouping by the current agg_group
     # and with the current geo_level. `setequal` ignores differences in
     # ordering and only looks at unique elements.
@@ -78,24 +85,39 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
     ## "effective_sample_size", "represented"), add here.
     # If these names change (e.g. `sample_size` to `n`), update
     # `contingency-combine.R`.
-    keep_vars <- c("val", "se", "sample_size", "represented")
-
+    keep_vars <- c("val", "se", "sd", "p25", "p50", "p75", "sample_size", "represented")
     for (agg_id in names(dfs_out)) {
       if (nrow(dfs_out[[agg_id]]) == 0) {
         dfs_out[[agg_id]] <- NULL
         next
       }
       agg_metric <- aggregations$name[aggregations$id == agg_id]
-      map_old_new_names <- keep_vars
-      names(map_old_new_names) <- paste(keep_vars, agg_metric, sep="_")
-
+      
+      tmp_keep_vars <- intersect(keep_vars, names(dfs_out[[agg_id]]))
+      names(tmp_keep_vars) <- paste(tmp_keep_vars, agg_metric, sep="_")
       dfs_out[[agg_id]] <- rename(
-        dfs_out[[agg_id]][, c(agg_group, keep_vars)], all_of(map_old_new_names))
+        dfs_out[[agg_id]][, c(agg_group, tmp_keep_vars)], all_of(tmp_keep_vars))
     }
 
     if ( length(dfs_out) != 0 ) {
       df_out <- dfs_out %>% reduce(full_join, by=agg_group, suff=c("", ""))
       write_contingency_tables(df_out, params, geo_level, agg_group)
+      
+      for (theme in names(THEME_GROUPS)) {
+        theme_out <- select(df_out, agg_group, contains(THEME_GROUPS[[theme]]))
+        # Drop any rows that are completely `NA`. Grouping variables are always
+        # defined, so need to ignore those.
+        theme_out <- drop_na(theme_out, !!setdiff(names(theme_out), agg_group))
+        
+        if ( nrow(theme_out) != 0 && ncol(theme_out) != 0 ) {
+          write_contingency_tables(theme_out, params, geo_level, agg_group, theme)  
+        }
+      }
+    }
+
+    if (geo_level == "county") {
+      # Restore old sample size threshold
+      params$num_filter <- old_thresh
     }
   }
 }
@@ -296,10 +318,14 @@ summarize_aggs <- function(df, crosswalk_data, aggregations, geo_level, params) 
       rowSums(is.na(dfs_out[[aggregation]][, c("val", "sample_size")])) == 0,
     ]
 
+    # Censor rows with low sample size
     dfs_out[[aggregation]] <- apply_privacy_censoring(dfs_out[[aggregation]], params)
 
-    ## Apply the post-function
+    # Apply the post-function
     dfs_out[[aggregation]] <- post_fn(dfs_out[[aggregation]])
+
+    # Round sample sizes
+    dfs_out[[aggregation]] <- round_n(dfs_out[[aggregation]], params)
   }
 
   return(dfs_out)
@@ -354,10 +380,9 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       sample_size <- sum(agg_df$weight_in_location)
       total_represented <- sum(agg_df[[var_weight]] * agg_df$weight_in_location)
 
-      ## TODO: See issue #764
       new_row <- compute_fn(
         response = agg_df[[metric]],
-        weight = if (aggregations$skip_mixing[row]) { mixing$normalized_preweights } else { mixing$weights },
+        weight = mixing$weights,
         sample_size = sample_size,
         total_represented = total_represented)
 
@@ -366,6 +391,13 @@ summarize_aggregations_group <- function(group_df, aggregations, target_group, g
       dfs_out[[aggregation]]$sample_size <- sample_size
       dfs_out[[aggregation]]$effective_sample_size <- new_row$effective_sample_size
       dfs_out[[aggregation]]$represented <- new_row$represented
+
+      if (all(c("sd", "p25", "p50", "p75") %in% names(new_row))) {
+        dfs_out[[aggregation]]$sd <- new_row$sd
+        dfs_out[[aggregation]]$p25 <- new_row$p25
+        dfs_out[[aggregation]]$p50 <- new_row$p50
+        dfs_out[[aggregation]]$p75 <- new_row$p75
+      }
     }
   }
 

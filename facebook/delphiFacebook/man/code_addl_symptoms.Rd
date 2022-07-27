@@ -12,7 +12,7 @@ code_addl_symptoms(input_data, wave)
 \item{wave}{integer indicating survey version}
 }
 \value{
-data frame augmented with demographic grouping variables
+augmented data frame
 }
 \description{
 COVID symptoms with modifications for contingency tables

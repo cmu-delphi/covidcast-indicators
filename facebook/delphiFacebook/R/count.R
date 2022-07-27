@@ -15,8 +15,6 @@ get_hh_count_indicators <- function() {
     "smoothed_wili", "weight", "hh_p_ili", 6, compute_count_response, jeffreys_count
   )
 
-  ind$skip_mixing <- FALSE
-
   return(ind)
 }
 

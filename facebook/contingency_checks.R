@@ -2,6 +2,9 @@ library(dplyr)
 library(stringr)
 library(readr)
 
+# Print warnings as they occur.
+options(warn=1)
+
 THEME_GROUPS <- list(
   "sociodemographics" = c(
     "pct_age_18_24",
@@ -559,14 +562,14 @@ THEME_GROUPS <- list(
 )
 
 receiving_dir <- "contingency_receiving"
-old_comparison_dir <- ""
-filepaths <- list.files(receiving_dir, full_path = TRUE)
-filenames <- list.files(receiving_dir, full_path = FALSE)
+old_comparison_dir <- "old_contingency_files"
+filepaths <- list.files(receiving_dir, full.names = TRUE)
+filenames <- list.files(receiving_dir, full.names = FALSE)
 names(filepaths) <- filenames
 
 for (file in names(filepaths)) {
   path <- filepaths[file]
-  data <- read_csv(path)
+  data <- suppressMessages({read_csv(path)})
 
   # Sample size columns reflect the new reporting threshold of 40 with rounding to the nearest 5.
   ss_df <- select(data, contains("sample_size_"))
@@ -592,14 +595,14 @@ for (file in names(filepaths)) {
   } else {
     old_file <- file.path(old_comparison_dir, str_replace(file, "_all_indicators", ""))
     if (file.exists(old_file)) {
-      old_data <- read_csv(old_file)
+      suppressMessages({old_data <- read_csv(old_file)})
 
       # Subset data to shared columns.
       shared_fields <- intersect(names(data), names(old_data))
-      new_subset <- select(data, shared_fields)
-      old_subset <- select(old_data, shared_fields)
+      new_subset <- select(data, !!!shared_fields)
+      old_subset <- select(old_data, !!!shared_fields)
 
-      if (dim(new_subset) != dim(old_subset)) {
+      if (any(dim(new_subset) != dim(old_subset))) {
       	warning("file ", path, " has different dimensions than old version ", old_file)
       	print("new dimensions")
       	print(dim(new_subset))
@@ -655,3 +658,5 @@ for (file in names(filepaths)) {
   }
 
 }
+
+print("done")

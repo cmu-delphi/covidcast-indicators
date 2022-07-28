@@ -107,7 +107,7 @@ produce_aggregates <- function(df, aggregations, cw_list, params) {
         # Drop any rows that are completely `NA`. Grouping variables are always
         # defined, so need to ignore those.
         cols_check_na <- setdiff(names(theme_out), agg_group)
-        theme_out <- theme_out[rowSums(is.na(theme_out[, cols_check_na])) != length(cols_check_na),]
+        theme_out <- theme_out[rowSums(is.na(theme_out[, cols_check_na])) != length(cols_check_na),, drop=FALSE]
         
         if ( nrow(theme_out) != 0 && ncol(theme_out) != 0 ) {
           write_contingency_tables(theme_out, params, geo_level, agg_group, theme)  

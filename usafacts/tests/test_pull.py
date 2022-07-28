@@ -34,14 +34,6 @@ class TestPullUSAFacts:
         # sort since rows order doesn't matter
         pd.testing.assert_frame_equal(df.sort_index(), expected_df.sort_index())
 
-    def test_missing_days(self):
-
-        metric = "confirmed"
-        with pytest.raises(ValueError):
-            pull_usafacts_data(
-                BASE_URL_BAD["missing_days"], metric, TEST_LOGGER
-            )
-
     def test_missing_cols(self):
 
         metric = "confirmed"

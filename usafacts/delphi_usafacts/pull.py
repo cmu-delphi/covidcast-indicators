@@ -166,14 +166,6 @@ def pull_usafacts_data(base_url: str, metric: str, logger: Logger, cache: str=No
     # each FIPS has same number of rows
     if (len(days_by_fips) > 1) or (days_by_fips[0] != len(unique_days)):
         raise ValueError("Differing number of days by fips")
-    min_timestamp = min(unique_days)
-    max_timestamp = max(unique_days)
-    n_days = (max_timestamp - min_timestamp) / np.timedelta64(1, "D") + 1
-    if n_days != len(unique_days):
-        raise ValueError(
-            f"Not every day between {min_timestamp} and "
-            "{max_timestamp} is represented."
-        )
     return df.loc[
         df["timestamp"] >= min_ts,
         [  # Reorder

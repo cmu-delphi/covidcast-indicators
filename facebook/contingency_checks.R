@@ -611,7 +611,7 @@ for (file in names(filepaths)) {
         filter(in_old_df) %>%
         select(-in_old_df) %>%
         arrange(across(group_names))
-      old_subset <- arrange(old_subset, group_names)
+      old_subset <- arrange(old_subset, across(group_names))
 
       if (any(dim(new_subset) != dim(old_subset))) {
         warning("file ", path, " has different dimensions than old version ", old_file)

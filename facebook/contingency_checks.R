@@ -607,10 +607,10 @@ for (file in names(filepaths)) {
       group_names <- setdiff(names(old_subset), c(value_names, "issue_date"))
       in_old_df <- select(old_subset, !!!group_names) %>% mutate(in_old_df = TRUE)
 
-      new_subset <- left_join(new_subset, in_old_df, on = group_names) %>%
+      new_subset <- left_join(new_subset, in_old_df, on = all_of(group_names)) %>%
         filter(in_old_df) %>%
         select(-in_old_df) %>%
-        arrange(group_names)
+        arrange(across(group_names))
       old_subset <- arrange(old_subset, group_names)
 
       if (any(dim(new_subset) != dim(old_subset))) {

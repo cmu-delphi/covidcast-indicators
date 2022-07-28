@@ -602,12 +602,23 @@ for (file in names(filepaths)) {
       new_subset <- select(data, !!!shared_fields)
       old_subset <- select(old_data, !!!shared_fields)
 
+      # Subset data to shared groups and sort by grouping vars.
+      value_names <- select(data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
+      group_names <- setdiff(names(old_subset), c(value_names, "issue_date"))
+      in_old_df <- select(old_subset, !!!group_names) %>% mutate(in_old_df = TRUE)
+
+      new_subset <- left_join(new_subset, in_old_df, on = group_names) %>%
+        filter(in_old_df) %>%
+        select(-in_old_df) %>%
+        arrange(group_names)
+      old_subset <- arrange(old_subset, group_names)
+
       if (any(dim(new_subset) != dim(old_subset))) {
-      	warning("file ", path, " has different dimensions than old version ", old_file)
-      	print("new dimensions")
-      	print(dim(new_subset))
-      	print("old dimensions")
-      	print(dim(old_subset))
+        warning("file ", path, " has different dimensions than old version ", old_file)
+        print("new dimensions")
+        print(dim(new_subset))
+        print("old dimensions")
+        print(dim(old_subset))
       } else {
         # The proportion of “NA” cells should be lower (or equal to) in the newer version than in
         # the older version, given the lower reporting threshold.
@@ -625,7 +636,7 @@ for (file in names(filepaths)) {
         #  - not associated with a mean (so no sd, p25, p50, p75 fields)
         #  - column is also in old version
         new_subset <- select(new_subset,
-		  -contains("sample_size_"),
+          -contains("sample_size_"),
           -contains("se_"),
           -contains("sd_"),
           -contains("p25_"),
@@ -646,12 +657,12 @@ for (file in names(filepaths)) {
 
         diff_elem <- which(new_subset != old_subset)
         if (length(diff_elem) != 0) {
-        	warning(
-        	  "file ", path, " and old version ", old_file,
-        	  " have different values for some cells that shouldn't have changed"
-        	)
-        	print("locations of differing values")
-        	print(head(diff_elem))
+          warning(
+            "file ", path, " and old version ", old_file,
+            " have different values for some cells that shouldn't have changed"
+          )
+          print("locations of differing values")
+          print(head(diff_elem))
         }
       }
     }

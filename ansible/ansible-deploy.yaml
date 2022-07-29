@@ -27,10 +27,6 @@
       local_action: stat path="templates/{{ indicator }}-params-prod.json.j2"
       register: template
 
-    - name: Check to see if we have a secrets template to send.
-      local_action: stat path="templates/{{ indicator }}-secrets-prod.py.j2"
-      register: template_secrets
-
     - name: Set production params file.
       copy:
         src: files/{{ indicator }}-params-prod.json
@@ -46,11 +42,3 @@
         owner: "{{ runtime_user }}"
         group: "{{ runtime_user }}"
       when: template.stat.exists
-
-    - name: Set production secrets template.
-      template:
-        src: templates/{{ indicator }}-secrets-prod.py.j2
-        dest: "{{ indicators_runtime_dir }}/{{ indicator }}/secrets.py"
-        owner: "{{ runtime_user }}"
-        group: "{{ runtime_user }}"
-      when: template_secrets.stat.exists

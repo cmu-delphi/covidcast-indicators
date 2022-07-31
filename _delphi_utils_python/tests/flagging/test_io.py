@@ -101,7 +101,7 @@ def test_rel_files_table():
   global params
   start_date = '05/01/2022'
   end_date = '05/04/2022'
-  input_dir = './flagging/receiving'
+  input_dir = './flagging/receiving2'
   sig = "state_doses_admin_7dav"
   rel_files = fio.rel_files_table(input_dir, start_date, end_date, sig)
   assert len(rel_files)==4

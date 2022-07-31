@@ -276,7 +276,9 @@ def rel_files_table(input_dir, start_date, end_date, sig_str):
     dates_range = pd.date_range(start_date, end_date)
     rel_files = pd.DataFrame()
     rel_files['fname'] = glob.glob(f'{input_dir}/*{sig_str}*')
+    print(glob.glob(f'{input_dir}/*{sig_str}*'))
     rel_files['fname'] = rel_files['fname'].astype(str)
+    print(rel_files)
     rel_files['fdate'] = pd.to_datetime(
         rel_files['fname'].str.rsplit('/', n=1, expand=True)[1].
             str.split('_', n=1, expand=True)[0],

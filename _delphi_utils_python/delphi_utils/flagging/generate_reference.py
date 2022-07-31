@@ -105,10 +105,11 @@ def weekend_corr(df: pd.DataFrame, states: list) -> pd.DataFrame:
 
 
 def gen_ref_dfs(df: pd.DataFrame, logger) -> pd.DataFrame:
-    """ Method to generate all the reference files given the raw datafile.
-     Outputs a dictionary of reference files.
     """
+    Generate all the reference files given the raw datafile.
 
+    Outputs a dictionary of reference files.
+    """
     #Extrapolate between missing dates
     df = df.fillna(method='ffill', axis=0).fillna(method='bfill', axis=0)
     df = df.sort_index().reset_index().drop_duplicates().set_index("index")

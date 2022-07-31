@@ -4,7 +4,7 @@ import pandas as pd
 import statsmodels.formula.api as smf
 
 def ar_results(df: pd.DataFrame, ar_lag, n_train, resid_dist_dates, eval_dates):
-    """ We want to create the results from using an AR forecaster given params.
+    """We want to create the results from using an AR forecaster given params.
 
     The input is the final adjusted dataframe and the number of lags the AR forecaster
     considers/the number of samples to train on.
@@ -54,7 +54,7 @@ def ar_results(df: pd.DataFrame, ar_lag, n_train, resid_dist_dates, eval_dates):
 
 
 def calculate_report_flags(dist_df, dist_range, eval_range, thresh=0.025):
-    """ Creates residual distribution to flagging points in evaluation set that are > threshold.
+    """Create residual distribution to flagging points in evaluation set that are > threshold.
 
     The input is the residual dataframe, ranges for determining the residual distribution & eval set
     and the threshold to flagging values.
@@ -69,7 +69,7 @@ def calculate_report_flags(dist_df, dist_range, eval_range, thresh=0.025):
 
 
 def gen_ar_files(key, input_df, ar_lag, n_train, resid_dist_dates, eval_dates):
-    """ Method for creating AR files given relevant parameters."""
+    """Create AR files given relevant parameters."""
     ar_df = ar_results(input_df, ar_lag, n_train, resid_dist_dates, eval_dates)
     ar_flags = calculate_report_flags(input_df-ar_df, resid_dist_dates, eval_dates)
     return {f'{key}/ar_output.csv': ar_df,

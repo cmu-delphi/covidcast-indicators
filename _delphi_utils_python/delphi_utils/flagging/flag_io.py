@@ -1,4 +1,4 @@
-"Functions related to determining which files to generate with which parameters"
+"""Functions related to determining which files to generate with which parameters."""
 import os
 import glob
 import json
@@ -13,12 +13,13 @@ from .. import (
 
 
 def gen_files(gen_ref_dict:dict, gen_ar_dict:dict, logger) -> dict:
-    """ Method generates necessary files.
+    """
+    Generate necessary files.
 
-        This method takes in dictionaries that correspond to the files needed to
-        be generated that are either reference files or the autoregression files.
+    This method takes in dictionaries that correspond to the files needed to
+    be generated that are either reference files or the autoregression files.
 
-        The output is a complete dictionary of all the file names and their respective dataframes.
+    The output is a complete dictionary of all the file names and their respective dataframes.
     """
     files_dict = {}
     for key, params in gen_ref_dict.items():
@@ -38,13 +39,15 @@ def gen_files(gen_ref_dict:dict, gen_ar_dict:dict, logger) -> dict:
 
 
 def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
-    """ This method finds files that are missing when this method is running on a local filesystem.
+    """
+    Find files that are missing when this method is running on a local filesystem.
+
     Note that there are different methods for local and remote because the s3 filestructure is flat.
     Output are two dictionaries that correspond to the missing files that are
     either reference files or AR files.
-     """
+    """
     def files_exist(flag_p:dict, lag:int) -> dict:
-        "Create file prefix (to save file in correct location) & find missing ref/ar files."
+        """Create file prefix (to save file in correct location) & find missing ref/ar files."""
         pfold = f"train_{flag_p['n_train']}_lags_{flag_p['ar_lags']}"
         dates_dict = {'raw.csv': [],
                       'ar_output.csv': []}
@@ -86,7 +89,7 @@ def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
 
 
 def missing_remote_files(df, flag_p):
-    """ Same functionality as missing_local_files except for remote files """
+    """Find missing remote files."""
     list_acc= aws_creds()
     conn = boto3.client('s3',
                         aws_access_key_id=list_acc[0],
@@ -142,12 +145,12 @@ def missing_remote_files(df, flag_p):
 
 
 def aws_creds():
-    """ Use to create a s3 session - modify as needed."""
+    """Create a s3 session - modify as needed."""
     aws_d = json.load(open("../../../../creds.json"))
     return aws_d['access'],aws_d['secret']
 
 def log_flag(files, loc_list, logger):
-    """ Logging method important for visualization and Slack integration. """
+    """Log method important for visualization and Slack integration."""
     html_link = "<https://ananya-joshi-visapp-vis-523f3g.streamlitapp.com/?params="
     for name, flags in files.items():
         if "flagging" in name and not flags.empty:
@@ -176,14 +179,13 @@ def log_flag(files, loc_list, logger):
 
 def save_files(loc_list, files_dict, logger, offline):
     """
-    Method used to save files in the proper location.
+    Save files in the proper location.
 
     Loc list is a list of parameters useful for creating output dictionaries.
     Files dict is a dictionary of file name and their corresponding dataframe.
 
     Offline parameter shows where to save the data.
     """
-
     log_flag(files_dict, loc_list, logger)
     loc = loc_list[0]
     if len(loc_list) > 1:
@@ -265,7 +267,7 @@ def flagger_io(df, flag_p, logger):
 #Functions for Calling Code
 
 def rel_files_table(input_dir, start_date, end_date, sig_str):
-    """ Determines which files we need to process & missing files.
+    """Determine which files we need to process & missing files.
 
     This format helps
 
@@ -291,7 +293,6 @@ def rel_files_table(input_dir, start_date, end_date, sig_str):
 
 def flagging(params):
     """Organization method for different flagging options."""
-
     flag_p = params['flagging']
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

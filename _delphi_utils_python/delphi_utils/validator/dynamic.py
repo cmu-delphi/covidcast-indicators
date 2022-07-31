@@ -11,7 +11,7 @@ from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
 
 class DynamicValidator:
-    """Class for validation of static properties of individual datasets."""
+    """Class for validation of dynamic properties of individual datasets."""
 
     @dataclass
     class Parameters:

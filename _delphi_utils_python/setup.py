@@ -19,6 +19,7 @@ required = [
     "pylint==2.8.3",
     "pytest",
     "pytest-cov",
+    "statsmodels",
     "slackclient",
     "structlog",
     "xlrd"

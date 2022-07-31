@@ -17,6 +17,25 @@
       "booster dose since"
     ]
   },
+  "flagging": {
+    "n_train": 7,
+    "ar_lags": 3,
+    "df_start_date":"05/01/2022",
+    "df_end_date":"06/15/2022",
+    "resid_start_date":"05/08/2022",
+    "resid_end_date":"06/01/2022",
+    "eval_start_date":"06/10/2022",
+    "eval_end_date":"06/12/2022",
+    "sig_str": "state_doses_admin_7dav" ,
+    "output_dir": "./flagging_output",
+    "input_dir": "./receiving",
+    "lags": [0],
+    "raw_df": "./flagging_output/raw.csv",
+    "sig_fold": "dsew",
+    "sig_type": "raw",
+    "remote": false,
+    "flagger_type": "flagger_io"
+  },
   "validation": {
     "common": {
       "data_source": "dsew_cpr",

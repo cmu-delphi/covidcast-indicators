@@ -613,7 +613,12 @@ for (file in names(filepaths)) {
       old_subset <- select(old_data, !!!shared_fields)
 
       # Subset data to shared groups and sort by grouping vars.
-      new_subset <- left_join(new_subset, in_old_df, on = all_of(group_names)) %>%
+      #
+      # Generally, the new version has more groups because the lower sample size threshold allows rarer
+      # grouping variable combinations to be reported. However, the new version sometimes loses
+      # groups when gender is one of the grouping variables. This is because the new gender QC filter
+      # (removing responses supplying write-in genders) reduces the sample size of the "Other" gender group.
+      new_subset <- full_join(new_subset, in_old_df, on = all_of(group_names)) %>%
         filter(in_old_df) %>%
         select(-in_old_df) %>%
         arrange(across(all_of(group_names)))

@@ -561,6 +561,32 @@ THEME_GROUPS <- list(
   )
 )
 
+# Fields that kept the same definition, but changed name slightly.
+field_rename <- c(
+  "pct_anosmia" = "pct_symp_anosmia",
+  "pct_symp_fever_unusual" = "pct_symp_unusual_given_fever",
+  "pct_symp_cough_unusual" = "pct_symp_unusual_given_cough",
+  "pct_symp_shortness_breath_unusual" = "pct_symp_unusual_given_shortness_breath",
+  "pct_symp_diff_breathing_unusual" = "pct_symp_unusual_given_diff_breathing",
+  "pct_symp_fatigue_unusual" = "pct_symp_unusual_given_fatigue",
+  "pct_symp_nasal_congestion_unusual" = "pct_symp_unusual_given_nasal_congestion",
+  "pct_symp_runny_nose_unusual" = "pct_symp_unusual_given_runny_nose",
+  "pct_symp_aches_unusual" = "pct_symp_unusual_given_aches",
+  "pct_symp_sore_throat_unusual" = "pct_symp_unusual_given_sore_throat",
+  "pct_symp_chest_pain_unusual" = "pct_symp_unusual_given_chest_pain",
+  "pct_symp_nausea_unusual" = "pct_symp_unusual_given_nausea",
+  "pct_symp_diarrhea_unusual" = "pct_symp_unusual_given_diarrhea",
+  "pct_anosmia_unusual" = "pct_symp_unusual_given_anosmia",
+  "pct_symp_eye_pain_unusual" = "pct_symp_unusual_given_eye_pain",
+  "pct_symp_chills_unusual" = "pct_symp_unusual_given_chills",
+  "pct_symp_headache_unusual" = "pct_symp_unusual_given_headache",
+  "pct_symp_sleep_changes_unusual" = "pct_symp_unusual_given_sleep_changes",
+  "pct_symp_stuffy_nose_unusual" = "pct_symp_unusual_given_stuffy_nose",
+  "pct_vaccinate_child_oldest" = "pct_child_vaccine_vaccinated_or_accept",
+  "pct_isolated_5d_alt" = "pct_felt_isolated_5d_alt",
+  "pct_isolated_7d_alt" = "pct_felt_isolated_7d_alt"
+)
+
 receiving_dir <- "contingency_receiving"
 old_comparison_dir <- "old_contingency_files"
 filepaths <- list.files(receiving_dir, full.names = TRUE)
@@ -601,7 +627,10 @@ for (file in names(filepaths)) {
       value_names <- select(old_data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
       group_names <- setdiff(names(old_data), c(value_names, "issue_date"))
 
-      if (!all(names(old_data) %in% names(data))) {
+      old_names <- names(old_data)
+      old_names <- lapply(old_names, function(item) {if (item %in% names(field_rename)) {field_rename[item]} else {item} }) %>% unlist()
+
+      if (!all(old_names %in% names(data))) {
         warning("file ", path, " does not contain all fields appearing in the old version ", old_file)
       }
 

@@ -12,11 +12,17 @@ def basic_struct(ref_csv, output_folder, mock_logger):
     for loc, file in ret_files.items():
         if not file.empty:
             if 'flag' not in loc:
-                assert_frame_equal(file, pd.read_csv(f'{start_file}/{output_folder}/{loc}', index_col=0, parse_dates=[0]))
+                assert_frame_equal(file,
+                    pd.read_csv(f'{start_file}/{output_folder}/{loc}',
+                    index_col=0, parse_dates=[0]), check_less_precise= True)
             else:
-                assert_frame_equal(file, pd.read_csv(f'{start_file}/{output_folder}/{loc}', index_col=0, parse_dates=[2]))
+                assert_frame_equal(file,
+                    pd.read_csv(f'{start_file}/{output_folder}/{loc}',
+                    index_col=0, parse_dates=[2]), check_less_precise= True)
         else:
-            assert_frame_equal(file, pd.read_csv(f'{start_file}/{output_folder}/{loc}', index_col=0))
+            assert_frame_equal(file,
+                    pd.read_csv(f'{start_file}/{output_folder}/{loc}',
+                    index_col=0), check_less_precise= True)
 
 def test_basic_test():
     """See if the method returns the proper csv files given basic df case"""

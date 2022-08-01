@@ -628,7 +628,21 @@ for (file in names(filepaths)) {
       group_names <- setdiff(names(old_data), c(value_names, "issue_date"))
 
       old_names <- names(old_data)
-      old_names <- lapply(old_names, function(item) {if (item %in% names(field_rename)) {field_rename[item]} else {item} }) %>% unlist()
+      old_names <- lapply(old_names, function(item) {
+        rename_match <- lapply(names(field_rename), function(n) { grepl(n, item) }) %>%
+          unlist()
+        if (any(rename_match)) {
+          gsub(
+            pattern = names(field_rename)[rename_match],
+            replacement = field_rename[names(field_rename)[rename_match]],
+            x = item,
+            fixed = TRUE
+          )
+        } else {
+          item
+        }
+      }) %>%
+      unlist()
 
       if (!all(old_names %in% names(data))) {
         warning("file ", path, " does not contain all fields appearing in the old version ", old_file)

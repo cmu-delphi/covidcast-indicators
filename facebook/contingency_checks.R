@@ -597,15 +597,15 @@ for (file in names(filepaths)) {
     if (file.exists(old_file)) {
       suppressMessages({old_data <- read_csv(old_file)})
 
-      # Get grouping and metadata variables
-      value_names <- select(data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
+      # Get grouping and metadata variable names
+      value_names <- select(old_data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
       group_names <- setdiff(names(old_data), c(value_names, "issue_date"))
       in_old_df <- select(old_data, !!!group_names) %>% mutate(in_old_df = TRUE)
 
       # Subset data to shared columns.
       shared_fields <- intersect(names(data), names(old_data))
 
-      if (length(c(group_names, shared_fields, "issue_date")) != ncol(old_data)) {
+      if (all(names(old_data) %in% names(data))) {
         warning("file ", path, " does not contain all fields appearing in the old version ", old_file)
       }
 

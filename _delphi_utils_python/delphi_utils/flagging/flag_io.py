@@ -2,9 +2,11 @@
 import os
 import glob
 import json
+from datetime import  timedelta
 import numpy as np
 import pandas as pd
 import boto3
+import covidcast
 from .generate_reference import gen_ref_dfs
 from .generate_ar import gen_ar_files
 from .. import (
@@ -291,19 +293,49 @@ def rel_files_table(input_dir, start_date, end_date, sig_str):
     return rel_files
 
 
+def raw_df_from_api(flag_p):
+    """Make raw dataframe from covidcast api given parameters."""
+    start_d = pd.to_datetime(flag_p['df_start_date'])
+    end_d = pd.to_datetime(flag_p['df_end_date'])
+    sig = flag_p['sig_str']
+    source = flag_p['sig_fold']
+    all_lags = pd.DataFrame()
+    for lag in flag_p['lags']:
+        tot_df = pd.DataFrame()
+        data_sample = covidcast.signal(source, sig,
+                            start_d, start_d, "state")
+        for date_s in pd.date_range(start_d, end_d):
+            data = covidcast.signal(source, sig,date_s, date_s,
+                                    "state",as_of=date_s-timedelta(lag))
+            if data is not None:
+                data = data[['geo_value', 'value', 'time_value']]
+                data.columns=['state', 'value', 'index']
+            else:
+                data = pd.DataFrame()
+                data['state'] = data_sample.columns
+                data['index'] = date_s
+                data['value'] = None
+            tot_df = pd.concat([tot_df, data])
+        if not tot_df.empty:
+            tot_df = tot_df.set_index(["index", 'state'])
+            tot_df = tot_df.unstack(level=0)
+            tot_df.columns = tot_df.columns.droplevel()
+            tot_df = tot_df.T
+            tot_df['lag'] = lag
+        all_lags = pd.concat([tot_df, all_lags], axis=0)
+    all_lags.to_csv(flag_p['raw_df'])
 
 
 def flagging(params):
     """Organization method for different flagging options."""
-    flag_p = params['flagging']
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
-    df = pd.read_csv(flag_p['raw_df'], index_col=0, parse_dates=[0], header=[0])
-
-
-    if params['flagging']['flagger_type'] == 'flagger_io':
-        flagger_io(df, flag_p, logger)
-    else:
-        flagger_df(df, flag_p, logger)
-        
+    for flag_p in params['flagging']:
+        logger = get_structured_logger(
+            __name__, filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True))
+        if flag_p['sig_type'] == "api":
+            raw_df_from_api(flag_p)
+        df = pd.read_csv(flag_p['raw_df'], index_col=0, parse_dates=[0], header=[0])
+        if flag_p['flagger_type'] == 'flagger_io':
+            flagger_io(df, flag_p, logger)
+        else:
+            flagger_df(df, flag_p, logger)

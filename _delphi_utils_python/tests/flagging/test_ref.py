@@ -10,6 +10,7 @@ start_file = "./flagging"
 def basic_struct(ref_csv, output_folder, mock_logger):
     ret_files = gen_ref_dfs(ref_csv, mock_logger)
     for loc, file in ret_files.items():
+        print(loc, file.head())
         if not file.empty:
             if 'flag' not in loc:
                 assert_frame_equal(file,

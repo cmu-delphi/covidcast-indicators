@@ -563,28 +563,28 @@ THEME_GROUPS <- list(
 
 # Fields that kept the same definition, but changed name slightly.
 field_rename <- c(
-  "pct_anosmia" = "pct_symp_anosmia",
-  "pct_symp_fever_unusual" = "pct_symp_unusual_given_fever",
-  "pct_symp_cough_unusual" = "pct_symp_unusual_given_cough",
-  "pct_symp_shortness_breath_unusual" = "pct_symp_unusual_given_shortness_breath",
-  "pct_symp_diff_breathing_unusual" = "pct_symp_unusual_given_diff_breathing",
-  "pct_symp_fatigue_unusual" = "pct_symp_unusual_given_fatigue",
-  "pct_symp_nasal_congestion_unusual" = "pct_symp_unusual_given_nasal_congestion",
-  "pct_symp_runny_nose_unusual" = "pct_symp_unusual_given_runny_nose",
-  "pct_symp_aches_unusual" = "pct_symp_unusual_given_aches",
-  "pct_symp_sore_throat_unusual" = "pct_symp_unusual_given_sore_throat",
-  "pct_symp_chest_pain_unusual" = "pct_symp_unusual_given_chest_pain",
-  "pct_symp_nausea_unusual" = "pct_symp_unusual_given_nausea",
-  "pct_symp_diarrhea_unusual" = "pct_symp_unusual_given_diarrhea",
-  "pct_anosmia_unusual" = "pct_symp_unusual_given_anosmia",
-  "pct_symp_eye_pain_unusual" = "pct_symp_unusual_given_eye_pain",
-  "pct_symp_chills_unusual" = "pct_symp_unusual_given_chills",
-  "pct_symp_headache_unusual" = "pct_symp_unusual_given_headache",
-  "pct_symp_sleep_changes_unusual" = "pct_symp_unusual_given_sleep_changes",
-  "pct_symp_stuffy_nose_unusual" = "pct_symp_unusual_given_stuffy_nose",
-  "pct_vaccinate_child_oldest" = "pct_child_vaccine_vaccinated_or_accept",
-  "pct_isolated_5d_alt" = "pct_felt_isolated_5d_alt",
-  "pct_isolated_7d_alt" = "pct_felt_isolated_7d_alt"
+  "pct_anosmia$" = "pct_symp_anosmia",
+  "pct_symp_fever_unusual$" = "pct_symp_unusual_given_fever",
+  "pct_symp_cough_unusual$" = "pct_symp_unusual_given_cough",
+  "pct_symp_shortness_breath_unusual$" = "pct_symp_unusual_given_shortness_breath",
+  "pct_symp_diff_breathing_unusual$" = "pct_symp_unusual_given_diff_breathing",
+  "pct_symp_fatigue_unusual$" = "pct_symp_unusual_given_fatigue",
+  "pct_symp_nasal_congestion_unusual$" = "pct_symp_unusual_given_nasal_congestion",
+  "pct_symp_runny_nose_unusual$" = "pct_symp_unusual_given_runny_nose",
+  "pct_symp_aches_unusual$" = "pct_symp_unusual_given_aches",
+  "pct_symp_sore_throat_unusual$" = "pct_symp_unusual_given_sore_throat",
+  "pct_symp_chest_pain_unusual$" = "pct_symp_unusual_given_chest_pain",
+  "pct_symp_nausea_unusual$" = "pct_symp_unusual_given_nausea",
+  "pct_symp_diarrhea_unusual$" = "pct_symp_unusual_given_diarrhea",
+  "pct_anosmia_unusual$" = "pct_symp_unusual_given_anosmia",
+  "pct_symp_eye_pain_unusual$" = "pct_symp_unusual_given_eye_pain",
+  "pct_symp_chills_unusual$" = "pct_symp_unusual_given_chills",
+  "pct_symp_headache_unusual$" = "pct_symp_unusual_given_headache",
+  "pct_symp_sleep_changes_unusual$" = "pct_symp_unusual_given_sleep_changes",
+  "pct_symp_stuffy_nose_unusual$" = "pct_symp_unusual_given_stuffy_nose",
+  "pct_vaccinate_child_oldest$" = "pct_child_vaccine_vaccinated_or_accept",
+  "pct_isolated_5d_alt$" = "pct_felt_isolated_5d_alt",
+  "pct_isolated_7d_alt$" = "pct_felt_isolated_7d_alt"
 )
 
 receiving_dir <- "contingency_receiving"
@@ -635,8 +635,7 @@ for (file in names(filepaths)) {
           gsub(
             pattern = names(field_rename)[rename_match],
             replacement = field_rename[names(field_rename)[rename_match]],
-            x = item,
-            fixed = TRUE
+            x = item
           )
         } else {
           item

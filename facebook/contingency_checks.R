@@ -600,24 +600,23 @@ for (file in names(filepaths)) {
       # Get grouping and metadata variable names
       value_names <- select(old_data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
       group_names <- setdiff(names(old_data), c(value_names, "issue_date"))
-      in_old_df <- select(old_data, !!!group_names) %>% mutate(in_old_df = TRUE)
 
-      # Subset data to shared columns.
-      shared_fields <- intersect(names(data), names(old_data))
-
-      if (all(names(old_data) %in% names(data))) {
+      if (!all(names(old_data) %in% names(data))) {
         warning("file ", path, " does not contain all fields appearing in the old version ", old_file)
       }
 
+      # Subset data to shared columns.
+      shared_fields <- intersect(names(data), names(old_data))
       new_subset <- select(data, !!!shared_fields)
       old_subset <- select(old_data, !!!shared_fields)
 
       # Subset data to shared groups and sort by grouping vars.
       #
       # Generally, the new version has more groups because the lower sample size threshold allows rarer
-      # grouping variable combinations to be reported. However, the new version sometimes loses
+      # grouping variable combinations to be reported. However, the new version sometimes losse
       # groups when gender is one of the grouping variables. This is because the new gender QC filter
       # (removing responses supplying write-in genders) reduces the sample size of the "Other" gender group.
+      in_old_df <- select(old_data, !!!group_names) %>% mutate(in_old_df = TRUE)
       new_subset <- full_join(new_subset, in_old_df, on = all_of(group_names)) %>%
         filter(in_old_df) %>%
         select(-in_old_df) %>%

@@ -610,8 +610,8 @@ for (file in names(filepaths)) {
       new_subset <- left_join(new_subset, in_old_df, on = all_of(group_names)) %>%
         filter(in_old_df) %>%
         select(-in_old_df) %>%
-        arrange(across(group_names))
-      old_subset <- arrange(old_subset, across(group_names))
+        arrange(across(all_of(group_names)))
+      old_subset <- arrange(old_subset, across(all_of(group_names)))
 
       if (any(dim(new_subset) != dim(old_subset))) {
         warning("file ", path, " has different dimensions than old version ", old_file)

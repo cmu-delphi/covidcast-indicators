@@ -597,16 +597,22 @@ for (file in names(filepaths)) {
     if (file.exists(old_file)) {
       suppressMessages({old_data <- read_csv(old_file)})
 
+      # Get grouping and metadata variables
+      value_names <- select(data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
+      group_names <- setdiff(names(old_data), c(value_names, "issue_date"))
+      in_old_df <- select(old_data, !!!group_names) %>% mutate(in_old_df = TRUE)
+
       # Subset data to shared columns.
       shared_fields <- intersect(names(data), names(old_data))
+
+      if (length(c(group_names, shared_fields, "issue_date")) != ncol(old_data)) {
+        warning("file ", path, " does not contain all fields appearing in the old version ", old_file)
+      }
+
       new_subset <- select(data, !!!shared_fields)
       old_subset <- select(old_data, !!!shared_fields)
 
       # Subset data to shared groups and sort by grouping vars.
-      value_names <- select(data[1,], contains("val_"), contains("sample_size_"), contains("se_"), contains("represented_"), contains("sd_"),   contains("p25_"), contains("p50_"), contains("p75_")) %>% names()
-      group_names <- setdiff(names(old_subset), c(value_names, "issue_date"))
-      in_old_df <- select(old_subset, !!!group_names) %>% mutate(in_old_df = TRUE)
-
       new_subset <- left_join(new_subset, in_old_df, on = all_of(group_names)) %>%
         filter(in_old_df) %>%
         select(-in_old_df) %>%
@@ -626,44 +632,45 @@ for (file in names(filepaths)) {
           warning("file ", path, " has higher missingness than old version ", old_file)
         }
 
-        # For indicator cells/values that wouldn’t have changed, make sure that the indicator
-        # cell values are the same across the old version and new version.
-        #
-        # Cells aren't expected to change if:
-        #  - sample size in old data is not missing (>= 100), regardless of what value new version has in the corresponding cell
-        #  - not sample size field
-        #  - not se field
-        #  - not associated with a mean (so no sd, p25, p50, p75 fields)
-        #  - column is also in old version
-        new_subset <- select(new_subset,
-          -contains("sample_size_"),
-          -contains("se_"),
-          -contains("sd_"),
-          -contains("p25_"),
-          -contains("p50_"),
-          -contains("p75_")
-        )
-        old_subset <- select(old_subset,
-          -contains("sample_size_"),
-          -contains("se_"),
-          -contains("sd_"),
-          -contains("p25_"),
-          -contains("p50_"),
-          -contains("p75_")
-        )
-        #
-        new_subset <- replace(new_subset, is.na(old_subset), NA)
-        old_subset <- replace(old_subset, is.na(old_subset), NA)
+        ## We expect all values to have changed due to the new gender-based quality filter.
+        # # For indicator cells/values that wouldn’t have changed, make sure that the indicator
+        # # cell values are the same across the old version and new version.
+        # #
+        # # Cells aren't expected to change if:
+        # #  - sample size in old data is not missing (>= 100), regardless of what value new version has in the corresponding cell
+        # #  - not sample size field
+        # #  - not se field
+        # #  - not associated with a mean (so no sd, p25, p50, p75 fields)
+        # #  - column is also in old version
+        # new_subset <- select(new_subset,
+        #   -contains("sample_size_"),
+        #   -contains("se_"),
+        #   -contains("sd_"),
+        #   -contains("p25_"),
+        #   -contains("p50_"),
+        #   -contains("p75_")
+        # )
+        # old_subset <- select(old_subset,
+        #   -contains("sample_size_"),
+        #   -contains("se_"),
+        #   -contains("sd_"),
+        #   -contains("p25_"),
+        #   -contains("p50_"),
+        #   -contains("p75_")
+        # )
+        # #
+        # new_subset <- replace(new_subset, is.na(old_subset), NA)
+        # old_subset <- replace(old_subset, is.na(old_subset), NA)
 
-        diff_elem <- which(new_subset != old_subset)
-        if (length(diff_elem) != 0) {
-          warning(
-            "file ", path, " and old version ", old_file,
-            " have different values for some cells that shouldn't have changed"
-          )
-          print("locations of differing values")
-          print(head(diff_elem))
-        }
+        # diff_elem <- which(new_subset != old_subset, arr.ind = TRUE)
+        # if (length(diff_elem) != 0) {
+        #   warning(
+        #     "file ", path, " and old version ", old_file,
+        #     " have different values for some cells that shouldn't have changed"
+        #   )
+        #   print("locations of differing values")
+        #   print(head(diff_elem))
+        # }
       }
     }
   }

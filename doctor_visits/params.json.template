@@ -4,7 +4,7 @@
     "log_filename": "./doctor-visits.log"
   },
   "indicator": {
-    "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
+    "input_dir": "./retrieve_files",
     "drop_date": "",
     "n_backfill_days": 70,
     "n_waiting_days": 3,

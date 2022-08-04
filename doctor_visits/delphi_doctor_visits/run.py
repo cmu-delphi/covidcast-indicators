@@ -13,6 +13,9 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .update_sensor import update_sensor, write_to_csv
+from .download_claims_ftp_files import download
+from .agg_claims_drops import agg_and_write
+from .get_latest_claims_name import get_latest_filename
 
 
 def run_module(params):
@@ -26,7 +29,7 @@ def run_module(params):
         - "common":
             - "export_dir": str, directory to write output.
         - "indicator":
-            - "input_file": str, path to aggregated doctor-visits data.
+            - "input_dir": str, path to aggregated doctor-visits data.
             - "drop_date": str, YYYY-MM-DD format, date data is dropped. If set to
                empty string, current day minus 40 hours is used.
             - "n_backfill_days": int, number of past days to generate estimates for.
@@ -41,13 +44,23 @@ def run_module(params):
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
+ 
+    # pull latest data
+     download(params["indicator"]["ftp_credentials"],
+              params["indicator"]["input_dir"], logger)
+
+     # aggregate data
+     agg_and_write(params["indicator"]["input_dir"], logger)
+
+     # find the latest files (these have timestamps)
+     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
 
     ## get end date from input file
     # the filename is expected to be in the format:
     # "EDI_AGG_OUTPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz"
     if params["indicator"]["drop_date"] == "":
         dropdate_dt = datetime.strptime(
-            Path(params["indicator"]["input_file"]).name.split("_")[3], "%d%m%Y"
+            Path(claims_file).name.split("_")[3], "%d%m%Y"
         )
     else:
         dropdate_dt = datetime.strptime(params["indicator"]["drop_date"], "%Y-%m-%d")
@@ -89,7 +102,7 @@ def run_module(params):
             else:
                 logger.info("starting %s, no adj", geo)
             sensor = update_sensor(
-                filepath=params["indicator"]["input_file"],
+                filepath=claims_file,
                 startdate=startdate,
                 enddate=enddate,
                 dropdate=dropdate,
@@ -110,6 +123,21 @@ def run_module(params):
 
             write_to_csv(sensor, geo, se, out_name, logger, export_dir)
             logger.debug(f"wrote files to {export_dir}")
-        logger.info("finished %s", geo)
+        logger.info("finished updating", geo = geo)
 
-    logger.info("finished all")
+    # Remove all the raw files
+    for fn in os.listdir(params["indicator"]["input_dir"]):
+        if ".csv.gz" in fn:
+            os.system(f'rm {params["indicator"]["input_dir"]}/{fn}')
+    logger.info('Remove all the raw files.')
+
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = min(max_dates)
+    max_lag_in_days = (datetime.now() - min_max_date).days
+    csv_export_count = sum(n_csv_export)
+    formatted_min_max_date = min_max_date.strftime("%Y-%m-%d")
+    logger.info("Completed indicator run",
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

@@ -110,9 +110,9 @@ def load_combined_data(denom_filepath, covid_filepath, dropdate, base_geo,
     data = data[["num", "den"]]
 
     # Store for backfill
-    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
                         dropdate, test_mode=False, check_nd=25)
+    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     return data
 
 
@@ -163,10 +163,9 @@ def load_cli_data(denom_filepath, flu_filepath, mixed_filepath, flu_like_filepat
     data = data[["num", "den"]]
 
     # Store for backfill
-    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
                         dropdate, test_mode=False, check_nd=25)
-
+    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     return data
 
 
@@ -202,9 +201,9 @@ def load_flu_data(denom_filepath, flu_filepath, dropdate, base_geo,
     data = data[["num", "den"]]
 
     # Store for backfill
-    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
                         dropdate, test_mode=False, check_nd=25)
+    store_backfill_file(data, dropdate, backfill_dir, numtype, geo, weekday)
     return data
 
 

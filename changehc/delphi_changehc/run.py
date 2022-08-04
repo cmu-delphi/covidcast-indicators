@@ -15,7 +15,8 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .download_ftp_files import download_counts
-from .load_data import load_combined_data, load_cli_data, load_flu_data
+from .load_data import (load_combined_data, load_cli_data, load_flu_data,
+                        store_backfill_file, merge_backfill_file)
 from .update_sensor import CHCSensorUpdater
 
 
@@ -133,6 +134,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     # range of estimates to produce
     n_backfill_days = params["indicator"]["n_backfill_days"]  # produce estimates for n_backfill_days
     n_waiting_days = params["indicator"]["n_waiting_days"]  # most recent n_waiting_days won't be est
+    backfill_dir = params["indicator"]["backfill_dir"]
+    backfill_merge_day = params["indicator"]["backfill_merge_day"]
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     enddate = str(enddate_dt.date())
@@ -180,13 +183,17 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 )
                 if numtype == "covid":
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"],dropdate_dt,"fips")
+                             file_dict["covid"],dropdate_dt,"fips",
+                             backfill_dir, geo, weekday, numtype,
+                             backfill_merge_day)
                 elif numtype == "cli":
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
+                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips",
+                             backfill_dir, geo, weekday, numtype, backfill_merge_day)
                 elif numtype == "flu":
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             dropdate_dt,"fips")
+                             dropdate_dt,"fips",backfill_dir, geo, weekday,
+                             numtype, backfill_merge_day)
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],

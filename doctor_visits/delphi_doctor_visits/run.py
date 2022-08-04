@@ -6,6 +6,8 @@ when the module is run with `python -m delphi_doctor_visits`.
 """
 
 # standard packages
+import os
+import time
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -14,7 +16,7 @@ from delphi_utils import get_structured_logger
 # first party
 from .update_sensor import update_sensor, write_to_csv
 from .download_claims_ftp_files import download
-from .agg_claims_drops import agg_and_write
+from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 
 
@@ -41,16 +43,17 @@ def run_module(params):
             - "obfuscated_prefix": str, prefix for signal name if write_se is True.
             - "parallel": bool, whether to update sensor in parallel.
     """
+    start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
- 
+
     # pull latest data
     download(params["indicator"]["ftp_credentials"],
              params["indicator"]["input_dir"], logger)
 
-    # aggregate data
-    agg_and_write(params["indicator"]["input_dir"], logger)
+    # modify data
+    modify_and_write(params["indicator"]["input_dir"], logger)
 
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
@@ -94,6 +97,8 @@ def run_module(params):
     logger.info("write se:\t\t%s", se)
     logger.info("obfuscated prefix:\t%s", prefix)
 
+    max_dates = []
+    n_csv_export = []
     ## start generating
     for geo in geos:
         for weekday in params["indicator"]["weekday"]:
@@ -122,6 +127,8 @@ def run_module(params):
                 out_name = prefix + "_" + out_name
 
             write_to_csv(sensor, geo, se, out_name, logger, export_dir)
+            max_dates.append(sensor.output_dates[-1])
+            n_csv_export.append(len(sensor.output_dates))
             logger.debug(f"wrote files to {export_dir}")
         logger.info("finished updating", geo = geo)
 

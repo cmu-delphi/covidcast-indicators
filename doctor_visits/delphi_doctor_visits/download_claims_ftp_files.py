@@ -8,16 +8,19 @@ import functools
 from os import path
 
 # third party
-import click
 import paramiko
 
 
 class AllowAnythingPolicy(paramiko.MissingHostKeyPolicy):
+    """Class for missing host key policy."""
+
     def missing_host_key(self, client, hostname, key):
+        """Check missing host key."""
         return
 
 
 def print_callback(filename, logger, bytes_so_far, bytes_total):
+    """Print the callback information."""
     rough_percent_transferred = int(100 * (bytes_so_far / bytes_total))
     if (rough_percent_transferred % 25) == 0:
         logger.info("Transfer in progress", filename=filename, percent=rough_percent_transferred)
@@ -48,9 +51,6 @@ def change_date_format(name):
     name = '_'.join(split_name)
     return name
 
-
-@click.command()
-@click.argument("out_path")
 def download(ftp_credentials, out_path, logger):
     """Pull the latest raw files."""
     current_time = datetime.datetime.now()
@@ -80,8 +80,10 @@ def download(ftp_credentials, out_path, logger):
             logger.info("File to download", filename=fileattr.filename)
 
     # make sure we don't download more that the 3 chunked drops (2x a day) for OP
-    # and the 1 chunk (2x a day) for IP - 01/07/21, multiplied by 2 since missing days are often added
-    assert len(files_to_download) <= 2 * (3 * 2), "more files dropped than expected"
+    # and the 1 chunk (2x a day) for IP - 01/07/21, multiplied by 2 since missing
+    # days are often added
+    assert len(files_to_download) <= 2 * (3 * 2), \
+        "more files dropped than expected"
 
     filepaths_to_download = {}
     for file in files_to_download:
@@ -92,7 +94,7 @@ def download(ftp_credentials, out_path, logger):
                 logger.info("Skip the existing file", filename=flipped_file)
             else:
                 filepaths_to_download[file] = full_path
-        
+
     # download!
     for infile, outfile in filepaths_to_download.items():
         callback_for_filename = functools.partial(print_callback, infile, logger)

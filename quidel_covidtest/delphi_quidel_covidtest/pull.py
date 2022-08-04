@@ -393,17 +393,32 @@ def store_backfill_file(df, _end_date, backfill_dir):
     backfilldata = df.copy()
     backfilldata = gmpr.replace_geocode(backfilldata, from_code="zip", new_code="fips",
                           from_col="zip", new_col="fips", date_col="timestamp")
-    backfilldata.rename({"timestamp": "time_value"}, axis=1, inplace=True)
+    backfilldata.rename({"timestamp": "time_value",
+                         "totalTest_total": "den_total",
+                         "positiveTest_total": "num_total",
+                        "positiveTest_age_0_4": "num_age_0_4",
+                        "totalTest_age_0_4": "den_age_0_4",
+                        "positiveTest_age_5_17": "num_age_5_17",
+                        "totalTest_age_5_17": "den_age_5_17",
+                        "positiveTest_age_18_49": "num_age_18_49",
+                        "totalTest_age_18_49": "den_age_18_49",
+                        "positiveTest_age_50_64": "num_age_50_64",
+                        "totalTest_age_50_64": "den_age_50_64",
+                        "positiveTest_age_65plus": "num_age_65plus",
+                        "totalTest_age_65plus": "den_age_65plus",
+                        "positiveTest_age_0_17": "num_age_0_17",
+                        "totalTest_age_0_17": "den_age_0_17"},
+                        axis=1, inplace=True)
     #Store one year's backfill data
     _start_date = _end_date.replace(year=_end_date.year-1)
     selected_columns = ['time_value', 'fips',
-                        'totalTest_total', 'positiveTest_total',
-                        'positiveTest_age_0_4', 'totalTest_age_0_4',
-                        'positiveTest_age_5_17', 'totalTest_age_5_17',
-                        'positiveTest_age_18_49', 'totalTest_age_18_49',
-                        'positiveTest_age_50_64', 'totalTest_age_50_64',
-                        'positiveTest_age_65plus', 'totalTest_age_65plus',
-                        'positiveTest_age_0_17', 'totalTest_age_0_17']
+                        'den_total', 'num_total',
+                        'num_age_0_4', 'den_age_0_4',
+                        'num_age_5_17', 'den_age_5_17',
+                        'num_age_18_49', 'den_age_18_49',
+                        'num_age_50_64', 'den_age_50_64',
+                        'num_age_65plus', 'den_age_65plus',
+                        'num_age_0_17', 'den_age_0_17']
     backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date,
                                     selected_columns]
     path = backfill_dir + \
@@ -421,7 +436,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
 
     Parameters
     ----------
-    _end_date : datetime
+    today : datetime
         The most recent date when the raw data is received
     backfill_dir : str
         specified path to store backfill files.

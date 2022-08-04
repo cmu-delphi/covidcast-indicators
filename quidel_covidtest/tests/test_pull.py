@@ -126,19 +126,24 @@ class TestingPullData:
             "test_mode": True
         }, TEST_LOGGER)
         
-        store_backfill_file(df, _end_date, backfill_dir)
-        fn = "quidel_covidtest_as_of_20200817.parquet"
+        store_backfill_file(df, datetime(2020, 1, 1), backfill_dir)
+        fn = "quidel_covidtest_as_of_20200101.parquet"
+        assert fn in os.listdir(backfill_dir)
+        
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         
         selected_columns = ['time_value', 'fips',
-                        'totalTest_total', 'positiveTest_total',
-                        'positiveTest_age_0_4', 'totalTest_age_0_4',
-                        'positiveTest_age_5_17', 'totalTest_age_5_17',
-                        'positiveTest_age_18_49', 'totalTest_age_18_49',
-                        'positiveTest_age_50_64', 'totalTest_age_50_64',
-                        'positiveTest_age_65plus', 'totalTest_age_65plus',
-                        'positiveTest_age_0_17', 'totalTest_age_0_17']
-        assert set(selected_columns) == set(backfill_df.columns)       
+                        'den_total', 'num_total',
+                        'num_age_0_4', 'den_age_0_4',
+                        'num_age_5_17', 'den_age_5_17',
+                        'num_age_18_49', 'den_age_18_49',
+                        'num_age_50_64', 'den_age_50_64',
+                        'num_age_65plus', 'den_age_65plus',
+                        'num_age_0_17', 'den_age_0_17']
+        assert set(selected_columns) == set(backfill_df.columns)  
+        
+        os.remove(backfill_dir + "/" + fn)
+        assert fn not in os.listdir(backfill_dir)
         
     def test_merge_backfill_file(self):
         

@@ -25,10 +25,8 @@ from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
-                   update_cache_file,
-                   store_backfill_file,
-                   merge_backfill_file)
-
+                   update_cache_file)
+from .backfill import (store_backfill_file, merge_backfill_file)
 
 def log_exit(start_time, stats, logger):
     """Log at program exit."""

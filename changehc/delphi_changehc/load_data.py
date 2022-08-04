@@ -213,7 +213,7 @@ def store_backfill_file(df, _end_date, backfill_dir, numtype, geo, weekday):
 
     Parameter:
         df: pd.DataFrame
-            Pre-process file at ZipCode level
+            Store the county level raw file for backfill
         _end_date: datetime
             The most recent date when the raw data is received
         backfill_dir: str

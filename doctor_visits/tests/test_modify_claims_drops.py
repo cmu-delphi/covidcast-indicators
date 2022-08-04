@@ -15,5 +15,5 @@ class TestDropsModification:
         expected_colnames = ['PatCountyFIPS', 'Pat HRR Name', 'Pat HRR ID', 'PatAgeGroup']
         assert len(files) == 1
         assert len(dfs_list) == 1
-        assert files[0] == Path('./test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz')
+        assert files[0] == Path('./test_data/SYNEDI_AGG_OUTPATIENT_07022020_1455CDT.csv.gz')
         assert set(expected_colnames).issubset(set(dfs_list[0].columns))

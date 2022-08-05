@@ -8,9 +8,17 @@ params = {
   "common": {
     "log_filename": "dfs.log"
   },
-  "flagging": [{
+  "flagging_meta": {
+    "generate_dates": False,
+    "aws_access_key_id": "{{ safegraph_aws_access_key_id }}",
+    "aws_secret_access_key": "{{ safegraph_aws_secret_access_key }}",
     "n_train": 2,
     "ar_lags": 1,
+    "remote": False,
+    "output_dir": tempdir,
+    "flagger_type": ""
+  },
+  "flagging": [{
     "df_start_date":"05/01/2022",
     "df_end_date":"05/30/2022",
 
@@ -20,17 +28,12 @@ params = {
     "eval_end_date":"05/14/2022",
 
     "input_dir": "./receiving",
-
-    "output_dir": tempdir,
     "lags": ['0', '1','var'],
 
     "raw_df": "./flagging/ref_files/basic_lags.csv",
     "sig_fold": "test",
     "sig_str": "basic_sig",
-
-    "flagger_type": "",
-    "sig_type": "local",
-    "remote": False,
+    "sig_type": "local"
 
   }]
 }
@@ -82,13 +85,13 @@ def test_local_reuse_already_exists2():
 # def test_local_regen():
 #   """ Test flagger_df method with clean folder, you need to check these individually """
 #   global params
-#   params['flagging']["remote"] = True
+#   params['flagging_meta']["remote"] = True
 #   fio.flagging(params)
 #
 # def test_local_reuse():
 #   global params
-#   params['flagging']["remote"] = True
-#   params['flagging']["flagger_type"] = "flagger_io"
+#   params['flagging_meta']["remote"] = True
+#   params['flagging_meta']["flagger_type"] = "flagger_io"
 #   fio.flagging(params)
 
 
@@ -110,19 +113,26 @@ def test_multi_sig():
       #              "confirmed_7dav_incidence_num"],
       # "fb-survey": ["smoothed_wwearing_mask_7d", "smoothed_wcli",
       #               "raw_wcli"],
-      # "doctor-visits": ["smoothed_adj_cli"],
+      "doctor-visits": ["smoothed_adj_cli"],
       # "quidel": ["covid_ag_smoothed_pct_positive"]
     }
     pjson = {"common": {
       "export_dir": "./receiving",
-      "log_filename": "dfs.log"
+      "log_filename": "dfs.log"},
+
+      "flagging_meta": {"generate_dates": False,
+      "aws_access_key_id": "{{ safegraph_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ safegraph_aws_secret_access_key }}",
+      "n_train": 2,
+      "ar_lags": 2,
+      "remote": False,
+      "output_dir": "./flagging/multitest",
+      "flagger_type": "flagger_df"
     }}
     fl_list = []
     for key, value_list in source_sig.items():
       for value in value_list:
         fl_val = {
-          "n_train": 2,
-          "ar_lags": 2,
           "df_start_date": "05/12/2022",
           "df_end_date": "05/30/2022",
 
@@ -132,23 +142,16 @@ def test_multi_sig():
           "eval_end_date": "05/30/2022",
 
           "input_dir": "./receiving",
-
-          "output_dir": "./flagging/multitest",
-          "lags": [30, 60],
-
-          "raw_df": f'./flagging/raw_dfs/all_lags_{key}-{value}.csv',
+          "lags": ['var'],
           "sig_fold": key,
+          "raw_df": f'./flagging/raw_dfs/all_lags_{key}-{value}.csv',
           "sig_str": value,
-
-          "sig_type": "api",
-          "remote": False,
-          "flagger_type": "flagger_df"
+          "sig_type": "api"
         }
         fl_list.append(fl_val)
 
     pjson['flagging'] = fl_list
     fio.flagging(pjson)
 
-    fl_value = fl_list[0]
-    filecmp.cmp(fl_value['output_dir'], './flagging/test_multioutput', shallow=True)
-    shutil.rmtree(fl_value['output_dir'])
+    filecmp.cmp(pjson['flagging_meta']['output_dir'], './flagging/test_multioutput', shallow=True)
+    shutil.rmtree(pjson['flagging_meta']['output_dir'])

@@ -27,8 +27,10 @@ def ar_results(df: pd.DataFrame, ar_lag, n_train, resid_dist_dates, eval_dates):
         df = df.reset_index()
         for curr_day in curr_day_list:
             start_train = curr_day - pd.Timedelta(days=n_train+ar_lag)
-            assert start_train > df.date.min(),\
-                "Necessary start date for AR parameters is before that provided in the dataframe."
+            assert start_train >= df.date.min(),\
+                "Necessary start date for AR parameters is before  \
+                that provided in the dataframe. \
+                Needed {start_train}, but min date is {df.date.min()}"
             all_tmp = df[start_train <= df.date]
             all_tmp = all_tmp[all_tmp.date <= curr_day]
             all_tmp = all_tmp.set_index(['date'])
@@ -41,7 +43,6 @@ def ar_results(df: pd.DataFrame, ar_lag, n_train, resid_dist_dates, eval_dates):
                 res_ols = smf.ols(model_str, state_df.iloc[:-2, :]).fit()
                 y_t_pred = np.array(res_ols.predict(state_df.iloc[-2, :]))
                 return y_t_pred[0]
-
             y_t_state = all_tmp.apply(pred_val, axis=0, result_type='reduce')
             all_days_pred.append(y_t_state)
         ret_df = pd.concat(all_days_pred, axis=1)

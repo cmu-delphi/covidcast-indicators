@@ -1,8 +1,7 @@
 """Functions related to determining which files to generate with which parameters."""
 import os
 import glob
-import json
-from datetime import  timedelta
+from datetime import timedelta, date
 import numpy as np
 import pandas as pd
 import boto3
@@ -40,7 +39,7 @@ def gen_files(gen_ref_dict:dict, gen_ar_dict:dict, logger) -> dict:
     return files_dict
 
 
-def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
+def missing_local_files(df: pd.DataFrame, flag_p: dict, flag_meta: dict) -> (dict, dict):
     """
     Find files that are missing when this method is running on a local filesystem.
 
@@ -50,10 +49,10 @@ def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
     """
     def files_exist(flag_p:dict, lag:int) -> dict:
         """Create file prefix (to save file in correct location) & find missing ref/ar files."""
-        pfold = f"train_{flag_p['n_train']}_lags_{flag_p['ar_lags']}"
+        pfold = f"train_{flag_meta['n_train']}_lags_{flag_meta['ar_lags']}"
         dates_dict = {'raw.csv': [],
                       'ar_output.csv': []}
-        prefix = f'{flag_p["output_dir"]}/{flag_p["sig_str"]}/window_{lag}'
+        prefix = f'{flag_meta["output_dir"]}/{flag_p["sig_str"]}/window_{lag}'
         file_list = [f'{prefix}/ref_dfs/raw.csv',
                      f'{prefix}/{pfold}/ar_output.csv']
         _ = [dates_dict.update({x.split('/')[-1]:
@@ -62,8 +61,8 @@ def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
         return dates_dict, prefix
 
     gen_dict, gen_ar_dict = {}, {}
-    base_dict = {'ar_lag': flag_p['ar_lags'],
-                 'n_train': flag_p['n_train'],
+    base_dict = {'ar_lag': flag_meta['ar_lags'],
+                 'n_train': flag_meta['n_train'],
                  'resid_dist_dates': pd.date_range(pd.to_datetime(flag_p["resid_start_date"]),
                                                    pd.to_datetime(flag_p["resid_end_date"])),
                  'eval_dates': pd.date_range(pd.to_datetime(flag_p["eval_start_date"]),
@@ -90,12 +89,11 @@ def missing_local_files(df: pd.DataFrame, flag_p: dict) -> (dict, dict):
     return gen_dict, gen_ar_dict
 
 
-def missing_remote_files(df, flag_p):
+def missing_remote_files(df, flag_p, flag_meta):
     """Find missing remote files."""
-    list_acc= aws_creds()
     conn = boto3.client('s3',
-                        aws_access_key_id=list_acc[0],
-                        aws_secret_access_key=list_acc[1])
+                        aws_access_key_id=flag_meta["aws_access_key_id"],
+                        aws_secret_access_key=flag_meta["aws_secret_access_key"])
     remote_files = conn.list_objects(Bucket='delphi-covidcast-public',
                                      Prefix="flags-dev", Delimiter='')['Contents']
     gen_dict, gen_ar_dict = {}, {}
@@ -103,8 +101,8 @@ def missing_remote_files(df, flag_p):
     g = g.query("@g[1]==@flag_p['sig_fold'] and  \
                 @g[2]==@flag_p['sig_str'] and  \
                 @g[3]==@flag_p['sig_type']")
-    base_dict = {'ar_lag': flag_p['ar_lags'],
-                 'n_train': flag_p['n_train'],
+    base_dict = {'ar_lag': flag_meta['ar_lags'],
+                 'n_train': flag_meta['n_train'],
                  'resid_dist_dates': pd.date_range(pd.to_datetime(flag_p["resid_start_date"]),
                                                    pd.to_datetime(flag_p["resid_end_date"])),
                  'eval_dates': pd.date_range(pd.to_datetime(flag_p["eval_start_date"]),
@@ -113,7 +111,7 @@ def missing_remote_files(df, flag_p):
         proc_df = df.query('lag==@lag')#.drop(columns=['lag'])
         if not proc_df.empty:
             lag_name = f'window_{lag}'
-            pfold = f"train_{flag_p['n_train']}_lags_{flag_p['ar_lags']}"
+            pfold = f"train_{flag_meta['n_train']}_lags_{flag_meta['ar_lags']}"
             rel_files = g[g[4] == lag_name]
             base_dict.update({'raw_df': proc_df,
                               'lag': lag,
@@ -145,12 +143,6 @@ def missing_remote_files(df, flag_p):
                         gen_ar_dict[f'{lag_name}/{pfold}'] = base_dict
     return gen_dict, gen_ar_dict
 
-
-def aws_creds():
-    """Create a s3 session - modify as needed."""
-    aws_d = json.load(open("../../../../creds.json"))
-    return aws_d['access'],aws_d['secret']
-
 def log_flag(files, loc_list, logger):
     """Log method important for visualization and Slack integration."""
     html_link = "<https://ananya-joshi-visapp-vis-523f3g.streamlitapp.com/?params="
@@ -178,8 +170,7 @@ def log_flag(files, loc_list, logger):
                                     hits=flags.shape[0])
                         p_text = ""
 
-
-def save_files(loc_list, files_dict, logger, offline):
+def save_files(loc_list, files_dict, flag_meta, logger):
     """
     Save files in the proper location.
 
@@ -192,24 +183,23 @@ def save_files(loc_list, files_dict, logger, offline):
     loc = loc_list[0]
     if len(loc_list) > 1:
         loc = '/'.join(loc_list[:-1])
-    if offline:
+    if not flag_meta['remote']:
         _ = [os.makedirs(loc + '/' + '/'.join(x.split('/')[:-1]), exist_ok=True) for x
-        in list(files_dict.keys()) if
-        not os.path.exists(x)]
+            in list(files_dict.keys()) if
+            not os.path.exists(x)]
         for (x, y) in files_dict.items():
             y.to_csv(f'{loc}/{x}')
     else:
-        list_acc = aws_creds()
         session = boto3.Session(
-            aws_access_key_id=list_acc[0],
-            aws_secret_access_key=list_acc[1])
+            aws_access_key_id=flag_meta["aws_access_key_id"],
+            aws_secret_access_key=flag_meta["aws_secret_access_key"])
         s3 = session.resource('s3')
         for key, df in files_dict.items():
             s3.Object('delphi-covidcast-public',
                       f"flags-dev/{loc}/{key}").put(
                 Body=df.to_csv(), ACL='public-read')
 
-def flagger_df(raw_df, flag_p, logger):
+def flagger_df(raw_df, flag_p, flag_meta, logger):
     """
     Run the flagger on an already existing raw dataframe.
 
@@ -230,20 +220,20 @@ def flagger_df(raw_df, flag_p, logger):
                       f"{flag_p['sig_str']}",
                       f"{flag_p['sig_type']}",
                       f'window_{lag}',
-                      f'train_{flag_p["n_train"]}_lags_{flag_p["ar_lags"]}']
+                      f'train_{flag_meta["n_train"]}_lags_{flag_meta["ar_lags"]}']
             files_dict.update(df_dict)
             files_dict.update(gen_ar_files('/'.join(f_list[-1:]),
                    df_dict['ref_dfs/wkdy_corr.csv'],
-                   flag_p["ar_lags"], flag_p["n_train"],
+                   flag_meta["ar_lags"], flag_meta["n_train"],
                    pd.date_range(pd.to_datetime(flag_p["resid_start_date"]),
                                  pd.to_datetime(flag_p["resid_end_date"])),
                    pd.date_range(pd.to_datetime(flag_p["eval_start_date"]),
                                  pd.to_datetime(flag_p["eval_end_date"]))))
-            if not flag_p['remote']:
-                f_list[0] = f"{flag_p['output_dir']}/{f_list[0]}"
-            save_files(f_list, files_dict, logger, not flag_p['remote'])
+            if not flag_meta['remote']:
+                f_list[0] = f"{flag_meta['output_dir']}/{f_list[0]}"
+            save_files(f_list, files_dict, flag_meta, logger)
 
-def flagger_io(df, flag_p, logger):
+def flagger_io(df, flag_p, flag_meta, logger):
     """
     Run the flagger on an already existing raw dataframe.
 
@@ -254,17 +244,17 @@ def flagger_io(df, flag_p, logger):
     f_list = [f"{flag_p['sig_fold']}",
               f"{flag_p['sig_str']}",
               f"{flag_p['sig_type']}",
-              f'train_{flag_p["n_train"]}_lags_{flag_p["ar_lags"]}']
+              f'train_{flag_meta["n_train"]}_lags_{flag_meta["ar_lags"]}']
 
-    if flag_p['remote']:
-        gen_dict, gen_ar_dict = missing_remote_files(df, flag_p)
+    if flag_meta['remote']:
+        gen_dict, gen_ar_dict = missing_remote_files(df, flag_p, flag_meta)
         files_dict = gen_files(gen_dict, gen_ar_dict, logger)
-        save_files(f_list, files_dict, logger,  False)
+        save_files(f_list, files_dict, flag_meta, logger)
     else:
-        gen_dict, gen_ar_dict = missing_local_files(df, flag_p)
+        gen_dict, gen_ar_dict = missing_local_files(df, flag_p, flag_meta)
         files_dict = gen_files(gen_dict, gen_ar_dict, logger)
-        f_list[0] = f"{flag_p['output_dir']}/{f_list[0]}"
-        save_files(f_list, files_dict, logger, not flag_p['remote'])
+        f_list[0] = f"{flag_meta['output_dir']}/{f_list[0]}"
+        save_files(f_list, files_dict, flag_meta, logger)
 
 #Functions for Calling Code
 
@@ -278,20 +268,40 @@ def rel_files_table(input_dir, start_date, end_date, sig_str):
     dates_range = pd.date_range(start_date, end_date)
     rel_files = pd.DataFrame()
     rel_files['fname'] = glob.glob(f'{input_dir}/*{sig_str}*')
-    print(glob.glob(f'{input_dir}/*{sig_str}*'))
     rel_files['fname'] = rel_files['fname'].astype(str)
-    print(rel_files)
     rel_files['fdate'] = pd.to_datetime(
         rel_files['fname'].str.rsplit('/', n=1, expand=True)[1].
             str.split('_', n=1, expand=True)[0],
         format='%Y%m%d', errors='coerce')
     rel_files = rel_files.set_index('fdate')
     merge_files = pd.DataFrame(index=dates_range)
-    rel_files = merge_files.merge(rel_files.sort_index(), how='outer', left_index=True,
+    rel_files = merge_files.merge(rel_files.sort_index(), how='left', left_index=True,
                                   right_index=True).fillna(method='ffill')
     rel_files['win_sub'] = list(rel_files.reset_index(drop=True).groupby(['fname']).cumcount())
     return rel_files
 
+def params_meta(params):
+    """Create updated parameters for continuous use."""
+    today = date.today()
+    lags = [x if x != 'var' else 60 for x in params['lags']]
+    ar_train = params['n_train']
+    ar_lags = params['ar_lags']
+    resid_dist = 100
+    eval_dist = 1
+    e_date = today-timedelta(min(lags))
+    s_date = today - timedelta(resid_dist+eval_dist+ar_train-ar_lags) - timedelta(max(lags))
+    params["df_start_date"] = s_date.strftime("%m/%d/%Y")
+    params["df_end_date"] = e_date.strftime("%m/%d/%Y")
+
+    r1_date = s_date + timedelta(ar_train+ar_lags)
+    params["resid_start_date"] = r1_date.strftime("%m/%d/%Y")
+    r2_date = s_date + timedelta(ar_train+ar_lags+resid_dist)
+    params["resid_end_date"] = r2_date.strftime("%m/%d/%Y")
+
+    es_date = e_date -timedelta(eval_dist)
+    params["eval_start_date"] = es_date.strftime("%m/%d/%Y")
+    params["eval_end_date"] = e_date.strftime("%m/%d/%Y")
+    return params
 
 def raw_df_from_api(flag_p):
     """Make raw dataframe from covidcast api given parameters."""
@@ -300,19 +310,28 @@ def raw_df_from_api(flag_p):
     sig = flag_p['sig_str']
     source = flag_p['sig_fold']
     all_lags = pd.DataFrame()
+    cols = ['ak', 'al', 'ar', 'as', 'az', 'ca', 'co', 'ct', 'dc', 'de', 'fl', 'ga',
+            'gu', 'hi', 'ia', 'id', 'il', 'in', 'ks', 'ky', 'la',
+            'ma', 'md', 'me', 'mi', 'mn', 'mo', 'mp', 'ms', 'mt', 'nc',
+            'nd', 'ne', 'nh', 'nj', 'nm', 'nv', 'ny', 'oh', 'ok',
+            'or', 'pa', 'pr', 'ri', 'sc', 'sd', 'tn', 'tx', 'ut', 'va', 'vi', 'vt',
+            'wa', 'wi', 'wv', 'wy'
+            ]
     for lag in flag_p['lags']:
         tot_df = pd.DataFrame()
-        data_sample = covidcast.signal(source, sig,
-                            start_d, start_d, "state")
         for date_s in pd.date_range(start_d, end_d):
-            data = covidcast.signal(source, sig,date_s, date_s,
-                                    "state",as_of=date_s-timedelta(lag))
+            if lag == 'var':
+                data = covidcast.signal(source, sig, date_s, date_s,
+                                        "state")
+            else:
+                data = covidcast.signal(source, sig, date_s, date_s,
+                                    "state", as_of=date_s-timedelta(lag))
             if data is not None:
                 data = data[['geo_value', 'value', 'time_value']]
                 data.columns=['state', 'value', 'index']
             else:
                 data = pd.DataFrame()
-                data['state'] = data_sample.columns
+                data['state'] = cols
                 data['index'] = date_s
                 data['value'] = None
             tot_df = pd.concat([tot_df, data])
@@ -323,19 +342,26 @@ def raw_df_from_api(flag_p):
             tot_df = tot_df.T
             tot_df['lag'] = lag
         all_lags = pd.concat([tot_df, all_lags], axis=0)
-    all_lags.to_csv(flag_p['raw_df'])
+    if flag_p.get('raw_df', None) is None:
+        all_lags.to_csv(flag_p['raw_df'])
+    return all_lags
 
-
-def flagging(params):
+def flagging(params, df_list=None):
     """Organization method for different flagging options."""
-    for flag_p in params['flagging']:
-        logger = get_structured_logger(
-            __name__, filename=params["common"].get("log_filename"),
-            log_exceptions=params["common"].get("log_exceptions", True))
-        if flag_p['sig_type'] == "api":
-            raw_df_from_api(flag_p)
-        df = pd.read_csv(flag_p['raw_df'], index_col=0, parse_dates=[0], header=[0])
-        if flag_p['flagger_type'] == 'flagger_io':
-            flagger_io(df, flag_p, logger)
+    logger = get_structured_logger(
+        __name__, filename=params["common"].get("log_filename"),
+        log_exceptions=params["common"].get("log_exceptions", True))
+    flag_meta = params['flagging_meta']
+    for i, flag_p in enumerate(params['flagging']):
+        df = None
+        if df_list is not None:
+            df = df_list[i]
+        if df is None:
+            try:
+                df = pd.read_csv(flag_p['raw_df'], index_col=0, parse_dates=[0], header=[0])
+            except FileNotFoundError:
+                df = raw_df_from_api(flag_p)
+        if flag_meta['flagger_type'] == 'flagger_io':
+            flagger_io(df, flag_p, flag_meta, logger)
         else:
-            flagger_df(df, flag_p, logger)
+            flagger_df(df, flag_p, flag_meta, logger)

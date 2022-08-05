@@ -17,7 +17,8 @@ NULL_FN = lambda x: None
 def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                            validator_fn:  Callable[[Params], Optional[Validator]] = NULL_FN,
                            archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN,
-                           flagging_fn: Callable[[Params], None] = NULL_FN):
+                           flagging_fn: Callable[[Params], None] = NULL_FN,
+                           flag_df_fn: Callable[[Params], None] = NULL_FN):
     """Run an indicator with its optional validation and archiving.
 
     Each argument to this function should itself be a function that will be passed a common set of
@@ -47,7 +48,11 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     indicator_fn(params)
     validator = validator_fn(params)
     archiver = archiver_fn(params)
-    flagging_fn(params)
+    ret_df = None
+    if flag_df_fn:
+        params, ret_df = flag_df_fn(params)
+    if params.get('flagging', None) is not None:
+        flagging_fn(params, ret_df)
     if validator:
         validation_report = validator.validate()
         validation_report.log(logger)
@@ -67,9 +72,16 @@ if __name__ == "__main__":
                         type=str,
                         help="Name of the Python package containing the indicator.  This package "
                              "must export a `run.run_module(params)` function.")
+
     args = parser.parse_args()
     indicator_module = importlib.import_module(args.indicator_name)
+    FLAG_FN = None
+    try:
+        FLAG_FN = indicator_module.flag_data.flag_dfs
+    except AttributeError:
+        pass
     run_indicator_pipeline(indicator_module.run.run_module,
                            validator_from_params,
                            archiver_from_params,
-                           flagger_from_params)
+                           flagger_from_params,
+                           FLAG_FN)

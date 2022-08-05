@@ -13,5 +13,6 @@ from . import load_data
 from . import run
 from . import sensor
 from . import update_sensor
+from . import flag_data
 
 __version__ = "0.0.0"

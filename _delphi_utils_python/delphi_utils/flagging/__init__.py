@@ -10,3 +10,4 @@ from __future__ import absolute_import
 from .generate_ar import ar_results, calculate_report_flags
 from .generate_reference import identify_correct_spikes, weekend_corr
 from .flag_io import flagger_df, flagger_io, rel_files_table
+from . import flag_io

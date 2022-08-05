@@ -112,7 +112,8 @@ def gen_ref_dfs(df: pd.DataFrame, logger) -> pd.DataFrame:
     """
     #Extrapolate between missing dates
     df = df.fillna(method='ffill', axis=0).fillna(method='bfill', axis=0)
-    df = df.sort_index().reset_index().drop_duplicates().set_index("index")
+    df = df.sort_index().reset_index().drop_duplicates()
+    df = df.set_index(df.columns[0])
     assert True not in df.index.duplicated(), \
         'Unable to proceed, multiple dates with conflicting values'
     if not df.empty:

@@ -280,12 +280,12 @@ def rel_files_table(input_dir, start_date, end_date, sig_str):
     rel_files['win_sub'] = list(rel_files.reset_index(drop=True).groupby(['fname']).cumcount())
     return rel_files
 
-def params_meta(params):
+def params_meta(params, meta_p):
     """Create updated parameters for continuous use."""
     today = date.today()
     lags = [x if x != 'var' else 60 for x in params['lags']]
-    ar_train = params['n_train']
-    ar_lags = params['ar_lags']
+    ar_train = meta_p['n_train']
+    ar_lags = meta_p['ar_lags']
     resid_dist = 100
     eval_dist = 1
     e_date = today-timedelta(min(lags))
@@ -342,7 +342,8 @@ def raw_df_from_api(flag_p):
             tot_df = tot_df.T
             tot_df['lag'] = lag
         all_lags = pd.concat([tot_df, all_lags], axis=0)
-    if flag_p.get('raw_df', None) is None:
+
+    if flag_p.get('raw_df', None) is not None:
         all_lags.to_csv(flag_p['raw_df'])
     return all_lags
 

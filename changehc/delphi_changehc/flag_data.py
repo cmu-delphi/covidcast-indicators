@@ -79,9 +79,10 @@ def create_df(fl_val, rel_str, params):
 def flag_dfs(params):
     """Create the raw dataframes for the flagging module."""
     df_list = []
+    fl_meta = params['flagging_meta']
     for i, fl_val in enumerate(params['flagging']):
         if params['flagging_meta']['generate_dates']:
-            fl_val = params_meta(fl_val)
+            fl_val = params_meta(fl_val, fl_meta)
             params['flagging'][i] = fl_val
         if fl_val['sig_type'] == 'raw':
             df_list.append(create_df(fl_val, fl_val['sig_str'], params))

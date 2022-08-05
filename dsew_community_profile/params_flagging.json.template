@@ -9,11 +9,6 @@
     "export_start_date": null,
     "export_end_date": null,
     "export_signals": [
-      "confirmed covid-19 admissions",
-      "positivity",
-      "doses administered",
-      "booster doses administered",
-      "fully vaccinated",
       "booster dose since"
     ]
   },
@@ -34,12 +29,35 @@
     "dynamic": {
       "ref_window_size": 7,
       "smoothed_signals": [
-        "naats_positivity_7dav",
-        "confirmed_admissions_covid_1d_prop_7dav",
-        "confirmed_admissions_covid_1d_7dav",
-        "doses_admin_7dav",
         "booster_doses_admin_7dav"
       ]
     }
-  }
+  },
+  "flagging_meta": {
+    "generate_dates": false,
+    "aws_access_key_id": "",
+    "aws_secret_access_key": "",
+    "n_train": 2,
+    "ar_lags": 1,
+    "remote": false,
+    "output_dir": "./flagging_output",
+    "flagger_type": ""
+  },
+  "flagging": [{
+    "df_start_date":"05/01/2022",
+    "df_end_date":"05/30/2022",
+
+    "resid_start_date":"05/10/2022",
+    "resid_end_date":"05/12/2022",
+    "eval_start_date":"05/12/2022",
+    "eval_end_date":"05/14/2022",
+
+    "input_dir": "./receiving",
+    "lags": ["var"],
+    "raw_df": "./local_df.csv",
+    "sig_fold": "dsew-cpr",
+    "sig_str": "booster_doses_admin_7dav",
+    "sig_type": "api"
+
+  }]
 }

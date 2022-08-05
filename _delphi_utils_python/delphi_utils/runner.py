@@ -39,6 +39,8 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         None if no archiving should be performed.
     flagging_fn: Callable[[Params], None]
         function that takes a dictionary of parameters and produces flagging output
+    flag_df_fn: Callable[[Params], None]
+        function that takes a dictionary of parameters and produces input dfs
     """
     params = read_params()
     logger = get_structured_logger(
@@ -49,8 +51,9 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     validator = validator_fn(params)
     archiver = archiver_fn(params)
     ret_df = None
-    if flag_df_fn:
-        params, ret_df = flag_df_fn(params)
+    if flag_df_fn is not None :
+        if flag_df_fn(params) is not None:
+            params, ret_df = flag_df_fn(params)
     if params.get('flagging', None) is not None:
         flagging_fn(params, ret_df)
     if validator:

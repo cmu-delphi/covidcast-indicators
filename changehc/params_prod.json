@@ -13,7 +13,7 @@
   "flagging": [
       {"lags": ["var"],
         "sig_str": "smoothed_outpatient_cli",
-        "sig_type": "api",
+        "sig_type": "api"
       }
     ]
 }

@@ -1,24 +1,20 @@
 {
-  "common": {
-    "export_dir": "./receiving",
-    "log_filename": "dfs.log"
-  },
-  "flagging":
-    [{"n_train": 200,
+  "flagging_meta": {
+    "generate_dates": true,
+    "aws_access_key_id": "{{ safegraph_aws_access_key_id }}",
+    "aws_secret_access_key": "{{ safegraph_aws_secret_access_key }}",
+    "n_train": 200,
     "ar_lags": 7,
-    "df_start_date":"05/12/2021",
-    "df_end_date":"05/12/2022",
-    "resid_start_date":"01/12/2022",
-    "resid_end_date":"04/12/2022",
-    "eval_start_date":"04/12/2022",
-    "eval_end_date":"05/12/2022",
-    "input_dir": "./receiving",
-    "output_dir": "./",
-    "lags": [0, 1, 2, 4],
-    "raw_df": "./jhu-csse_confirmed_incidence_num2.csv",
-    "sig_fold": " jhu-csse ",
-    "sig_str": "confirmed_incidence_num",
-    "sig_type": "api",
-    "remote": true,
-    "flagger_type": "flagger_df"}]
+    "flagger_type": "",
+    "remote": false,
+    "output_dir": "./flag_output"
+  },
+  "flagging": [
+      {"lags": ["var"],
+        "sig_fold": "chng"
+        "sig_str": "smoothed_outpatient_cli",
+        "sig_type": "api"
+      }
+    ]
 }
+

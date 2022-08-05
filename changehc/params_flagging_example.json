@@ -53,10 +53,11 @@
         "smoothed_adj_outpatient_covid"
       ]
     }},
-  "flagging_meta": true
-  "flagging": [
-      {"n_train": 2,
-        "ar_lags": 1,
+  "flagging_meta": {"generate_dates": true,
+                    "n_train": 2,
+                    "ar_lags": 1
+  },
+  "flagging": [{
         "output_dir": "./flag_output",
         "lags": ["var"],
         "sig_fold": "chng",

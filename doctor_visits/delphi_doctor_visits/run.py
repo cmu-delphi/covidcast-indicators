@@ -52,11 +52,11 @@ def run_module(params):
     download(params["indicator"]["ftp_credentials"],
              params["indicator"]["input_dir"], logger)
 
-    # modify data
-    modify_and_write(params["indicator"]["input_dir"], logger)
-
     # find the latest files (these have timestamps)
     claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+
+    # modify data
+    modify_and_write(claims_file, logger)
 
     ## get end date from input file
     # the filename is expected to be in the format:
@@ -127,8 +127,8 @@ def run_module(params):
                 out_name = prefix + "_" + out_name
 
             write_to_csv(sensor, geo, se, out_name, logger, export_dir)
-            max_dates.append(sensor.output_dates[-1])
-            n_csv_export.append(len(sensor.output_dates))
+            max_dates.append(sensor.date.max())
+            n_csv_export.append(sensor.date.unique().shape[0])
             logger.debug(f"wrote files to {export_dir}")
         logger.info("finished updating", geo = geo)
 

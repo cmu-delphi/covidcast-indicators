@@ -53,3 +53,6 @@ google_symptoms_auth_uri: "{{ vault_google_symptoms_auth_uri }}"
 google_symptoms_token_uri: "{{ vault_google_symptoms_token_uri }}"
 google_symptoms_auth_provider_x509_cert_url: "{{ vault_google_symptoms_auth_provider_x509_cert_url }}"
 google_symptoms_client_x509_cert_url: "{{ vault_google_symptoms_client_x509_cert_url }}"
+# flagger
+flagger_aws_access_key_id: "{{ vault_flagger_aws_access_key_id }}"
+flagger_aws_secret_access_key: "{{ vault_flagger_aws_secret_access_key }}"

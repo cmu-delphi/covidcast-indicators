@@ -2,7 +2,6 @@
 Tests for the smoothing utility.
 Authors: Dmitry Shemetov, Addison Hu, Maria Jahja
 """
-
 from numpy.lib.polynomial import poly
 import pytest
 

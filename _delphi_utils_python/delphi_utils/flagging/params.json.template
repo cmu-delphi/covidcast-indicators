@@ -11,7 +11,7 @@
   },
   "flagging": [
       {"lags": ["var"],
-        "sig_fold": "chng"
+        "sig_fold": "chng",
         "sig_str": "smoothed_outpatient_cli",
         "sig_type": "api"
       }

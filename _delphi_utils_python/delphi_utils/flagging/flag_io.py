@@ -347,11 +347,12 @@ def raw_df_from_api(flag_p):
         all_lags.to_csv(flag_p['raw_df'])
     return all_lags
 
-def flagging(params, df_list=None):
+def flagging(params, df_list=None, logger=None):
     """Organization method for different flagging options."""
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+    if logger is None:
+        logger = get_structured_logger(
+            __name__, filename=params["common"].get("log_filename"),
+            log_exceptions=params["common"].get("log_exceptions", True))
     flag_meta = params['flagging_meta']
     for i, flag_p in enumerate(params['flagging']):
         df = None

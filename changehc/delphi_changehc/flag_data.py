@@ -52,7 +52,7 @@ def chc_make_df(ref_files, lags):
     tmp.columns = ['date'] + cols + ['lag']
     return tmp
 
-def create_df(fl_val, rel_str, params):
+def create_df(fl_val, rel_str, params, logger=None):
     """Create dfs CHC specific for raw or ratio."""
     s_date = pd.to_datetime(fl_val['df_start_date'])
     e_date = pd.to_datetime(fl_val['df_end_date'])
@@ -62,21 +62,22 @@ def create_df(fl_val, rel_str, params):
     min_date = e_date + timedelta(max_lag)
     # Future: Reuse raw.dfs by pulling remote file per lag and return relevant dates + missing dates
     # creates the table
+
     for date in pd.date_range(max_date, min_date):
-        if len(glob.glob(f"./cache/{date.strftime('%Y%m%d')}*{rel_str}*")) == 0:
-            # Future: figure this out (logger)
-            logger = get_structured_logger(
-                __name__, filename=params["common"].get("log_filename"),
-                log_exceptions=params["common"].get("log_exceptions", True))
+        if len(glob.glob(f"./{fl_val['input_dir']}/{date.strftime('%Y%m%d')}*{rel_str}*")) == 0:
+            if logger is None:
+                logger = get_structured_logger(
+                    __name__, filename=params["common"].get("log_filename"),
+                    log_exceptions=params["common"].get("log_exceptions", True))
             retrieve_files(params, date.strftime("%Y%m%d"), logger)
-    rel_files = rel_files_table("./cache", max_date, min_date, rel_str)
+    rel_files = rel_files_table(fl_val['input_dir'], max_date, min_date, rel_str)
     base_df = chc_make_df(rel_files, fl_val['lags'])
     dr = [x.to_pydatetime() for x in list(pd.date_range(s_date, e_date))]
-    base_df = base_df[base_df['date'] in dr]
+    base_df = base_df[base_df['date'].isin(dr)]
     base_df = base_df.set_index('date')
     return base_df
 
-def flag_dfs(params):
+def flag_dfs(params, logger=None):
     """Create the raw dataframes for the flagging module."""
     df_list = []
     fl_meta = params['flagging_meta']
@@ -85,10 +86,10 @@ def flag_dfs(params):
             fl_val = params_meta(fl_val, fl_meta)
             params['flagging'][i] = fl_val
         if fl_val['sig_type'] == 'raw':
-            df_list.append(create_df(fl_val, fl_val['sig_str'], params))
+            df_list.append(create_df(fl_val, fl_val['sig_str'], params, logger))
         elif fl_val['sig_type'] == 'ratio':
-            num = create_df(fl_val, fl_val['sig_str'], params).fillna(0)
-            den = create_df(fl_val, fl_val['sig_den'], params).fillna(0)
+            num = create_df(fl_val, fl_val['sig_str'], params, logger).fillna(0)
+            den = create_df(fl_val, fl_val['sig_den'], params, logger).fillna(0)
             ratio_df = num/den
             ratio_df['lag'] = den['lag']
             df_list.append(ratio_df)

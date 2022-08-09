@@ -16,7 +16,6 @@ The system determines if any new data points warrants further inspection.
 In params.json, there are two parameters: flagging_meta which is a dictionary and flagging, which is a list of dictionaries. 
 Two key parameters in flagging_meta are:
 1. **remote**: True/False
-2. 
 Are you running this system so that it's checking against the s3 filesystem or a local one? 
 
 True = S3, False = Local 

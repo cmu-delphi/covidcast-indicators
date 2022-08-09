@@ -65,6 +65,9 @@ def arch_diffs(params, daily_arch_diff, logger):
         # Report failures: someone should probably look at them
         for exported_file in fails:
             logger.info("Failed to archive (weekly)", filename={exported_file})
+            
+    else: 
+        logger.info("No files were published today")
 
     # Daily run of archiving utility
     # - Uploads changed files to S3

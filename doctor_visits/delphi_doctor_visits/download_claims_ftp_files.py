@@ -67,7 +67,6 @@ def download(ftp_credentials, out_path, logger):
                    port=ftp_credentials["port"])
     sftp = client.open_sftp()
     sftp.chdir('/optum/receiving')
-    #sftp.chdir('/mjahja/optum/receiving_aggregated_20200602_20200819')
 
     # go through files in recieving dir
     files_to_download = []

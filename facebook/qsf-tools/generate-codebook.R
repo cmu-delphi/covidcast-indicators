@@ -41,19 +41,6 @@ process_qsf <- function(path_to_qsf,
   item_names <- displayed_questions %>% 
     map_chr(~ .x$Payload$DataExportTag) %>%
     patch_item_names(path_to_rename_map, wave)
-  
-  if (survey_version == "UMD") {
-    item_names[item_names == "D2_30" & qids == "QID294"] <- "D2_30_cheer"
-    item_names[item_names == "D2_30" & qids == "QID293"] <- "D2_30_calm"
-    item_names[item_names == "B13" & qids == "QID253"] <- "B13_likert"
-    item_names[item_names == "B13" & qids == "QID255"] <- "B13_profile"
-    item_names[item_names == "B14" & qids == "QID254"] <- "B14_likert"
-    item_names[item_names == "B14" & qids == "QID259"] <- "B14_profile"
-    item_names[item_names == "B12a" & qids == "QID250"] <- "B12a_likert"
-    item_names[item_names == "B12a" & qids == "QID258"] <- "B12a_profile"
-    item_names[item_names == "B12b" & qids == "QID251"] <- "B12b_likert"
-    item_names[item_names == "B12b" & qids == "QID257"] <- "B12b_profile"
-  }
 
   # get question text:
   questions <- displayed_questions %>% 

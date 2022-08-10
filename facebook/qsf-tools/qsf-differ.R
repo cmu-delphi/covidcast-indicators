@@ -155,21 +155,7 @@ get_qsf_file <- function(path, survey_version,
     
     
     # Deduplicate some UMD items.
-    if (survey_version == "UMD") {
-      question$DataExportTag <- case_when(
-        question$DataExportTag == "D2_30" & question$QuestionID == "QID294" ~ "D2_30_cheer",
-        question$DataExportTag == "D2_30" & question$QuestionID == "QID293" ~ "D2_30_calm",
-        question$DataExportTag == "B13" & question$QuestionID == "QID253" ~ "B13_likert",
-        question$DataExportTag == "B13" & question$QuestionID == "QID255" ~ "B13_profile",
-        question$DataExportTag == "B14" & question$QuestionID == "QID254" ~ "B14_likert",
-        question$DataExportTag == "B14" & question$QuestionID == "QID259" ~ "B14_profile",
-        question$DataExportTag == "B12a" & question$QuestionID == "QID250" ~ "B12a_likert",
-        question$DataExportTag == "B12a" & question$QuestionID == "QID258" ~ "B12a_profile",
-        question$DataExportTag == "B12b" & question$QuestionID == "QID251" ~ "B12b_likert",
-        question$DataExportTag == "B12b" & question$QuestionID == "QID257" ~ "B12b_profile",
-        TRUE ~ question$DataExportTag
-      )
-    } else if (survey_version == "CMU") {
+    if (survey_version == "CMU") {
       if (wave == 10) {
         question$DataExportTag <- case_when(
           question$DataExportTag == "C6" ~ "C6a",

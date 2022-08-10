@@ -19,19 +19,12 @@ B11a,wanted test 24h
 B11b,wanted to test sympdays
 B11c,wanted test 14d
 B12,reason not tested 14d
-B12a_likert,reason not tested 14d
-B12a_profile,reason not tested 14d
+B12a,reason not tested 14d
 B12b,reason not tested 14d
-B12b_likert,reason not tested 14d
-B12b_profile,reason not tested 14d
 B12c,reason not tested 14d
 B12c_matrix,reason not tested 14d matrix
 B13,needed med services 30d
-B13_likert,needed med services 30d
-B13_profile,needed med services 30d
 B14,reason no med services 30d
-B14_likert,reason no med services 30d
-B14_profile,reason no med services 30d
 B15,reason tested 14d
 B1_matrix,symptoms
 B1b,unusual symptoms

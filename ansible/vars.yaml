@@ -37,7 +37,7 @@ claims_hosp_ftp_user: "{{ vault_doctor_visits_ftp_user }}"
 claims_hosp_ftp_password: "{{ vault_doctor_visits_ftp_password }}"
 claims_hosp_ftp_host: "{{ vault_doctor_visits_ftp_host }}"
 claims_hosp_midas_user: "{{ vault_doctor_visits_midas_user }}"
-claims_hosp_midas_password: "{{ vault_doctor_visits_midas_password }}"
+doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 # NCHS
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 # SirCAL

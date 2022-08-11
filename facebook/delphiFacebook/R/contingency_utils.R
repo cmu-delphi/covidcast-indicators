@@ -29,7 +29,7 @@ read_contingency_params <- function(path = "params.json", template_path = "param
   
   global_params <- c("archive_days", "backfill_days", "static_dir", "cache_dir", 
                      "archive_dir", "weights_in_dir", "input_dir", "debug", 
-                     "parallel", "qualtrics")
+                     "parallel", "qualtrics", "parallel_max_cores")
   for (param in global_params) {
     if ( is.null(contingency_params[[param]]) & !is.null(params[[param]]) ) {
       contingency_params[[param]] <- params[[param]]

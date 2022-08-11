@@ -126,8 +126,8 @@ get_qsf_file <- function(path, survey_version,
         
         # Recode subquestion names to match exported data.
         # FALSE if not set, otherwise a list
-        matrix_subquestion_field_names <- question_raw$ChoiceDataExportTags
-        if (!inherits(matrix_subquestion_field_names, "list")) {
+        subquestion_field_names <- question_raw$ChoiceDataExportTags
+        if (!inherits(subquestion_field_names, "list")) {
           # When subquestion field names are not set, generate incrementing names
           names(question$Subquestions) <- paste(
             question$DataExportTag,	
@@ -135,7 +135,7 @@ get_qsf_file <- function(path, survey_version,
             sep = "_"	
           )
         } else {
-          names(question$Subquestions) <- matrix_subquestion_field_names[names(question$Subquestions)] %>% unlist()
+          names(question$Subquestions) <- subquestion_field_names[names(question$Subquestions)] %>% unlist()
         }
       }
     }

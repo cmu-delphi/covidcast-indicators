@@ -124,8 +124,8 @@ process_qsf <- function(path_to_qsf,
   
   # Swap matrix answer choices into `choices` and matrix subquestion text into another variable	
   ii_matrix <- which(qtype == "Matrix" | qtype == "Dropdown")
-  matrix_subquestions <- rep(list(list()), length(choices))	
-  matrix_subquestions[ii_matrix] <- choices[ii_matrix]	
+  subquestions <- rep(list(list()), length(choices))
+  subquestions[ii_matrix] <- choices[ii_matrix]
   choices[ii_matrix] <- matrix_answers[ii_matrix]
 
   # Recode response options if overriding Qualtrics auto-assigned coding.	
@@ -148,17 +148,17 @@ process_qsf <- function(path_to_qsf,
 
   # Get matrix subquestion field names as reported in microdata. NULL if not	
   # defined (not a Matrix question); FALSE if not set; otherwise a list	
-  matrix_subquestion_field_names <- displayed_questions %>%	
+  subquestion_field_names <- displayed_questions %>%
     map(~ .x$Payload$ChoiceDataExportTags)
   # When subquestion field names are not set, generate incrementing names
-  ii_unset_matrix_subq_names <- (matrix_subquestion_field_names %>%	
+  ii_unset_matrix_subq_names <- (subquestion_field_names %>%
     map(~ !inherits(.x, "list")) %>% 	
     unlist() & (qtype == "Matrix" | qtype == "Dropdown")) %>%
     which()
-  matrix_subquestion_field_names[ii_unset_matrix_subq_names] <- lapply(ii_unset_matrix_subq_names, function(ind){
+  subquestion_field_names[ii_unset_matrix_subq_names] <- lapply(ii_unset_matrix_subq_names, function(ind){
     paste(
       item_names[ind],	
-      1:length(matrix_subquestions[ind] %>% unlist()),	
+      1:length(subquestions[ind] %>% unlist()),
       sep = "_"	
     ) %>% list()
   })
@@ -166,7 +166,7 @@ process_qsf <- function(path_to_qsf,
   if (survey_version == "CMU") {
     # Bodge E1_* names for Wave 11
     if (wave == 11) {
-      matrix_subquestion_field_names[item_names == "E1"] <- list(c("E1_1", "E1_2", "E1_3", "E1_4"))
+      subquestion_field_names[item_names == "E1"] <- list(c("E1_1", "E1_2", "E1_3", "E1_4"))
     }
   }
   
@@ -269,10 +269,10 @@ process_qsf <- function(path_to_qsf,
                 question = questions,
                 question_type = qtype,
                 response_options = choices,
-                matrix_subquestions = matrix_subquestions,	
+                subquestions = subquestions,
                 display_logic = display_logic,	
                 response_option_randomization = response_option_randomization,	
-                matrix_subquestion_field_names = matrix_subquestion_field_names)
+                subquestion_field_names = subquestion_field_names)
   if (file.exists(path_to_drop_columns)){	
     drop_cols <- read_csv(path_to_drop_columns, trim_ws = FALSE,
                           col_types = cols(item = col_character()
@@ -337,7 +337,7 @@ process_qsf <- function(path_to_qsf,
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix" & question_type != "Dropdown") %>%
     mutate(originating_item_name = NA_character_) %>%
-    select(-matrix_subquestion_field_names)
+    select(-subquestion_field_names)
   
   has_response_by_subq <- qdf %>%	
     filter(question_type == "Matrix" | question_type == "Dropdown") %>%
@@ -351,10 +351,10 @@ process_qsf <- function(path_to_qsf,
     rowwise() %>% 	
     mutate(new = list(	
       tibble(originating_item_name = variable,
-             variable = unlist(matrix_subquestion_field_names),
+             variable = unlist(subquestion_field_names),
              qid = qid,
              question = question,	
-             matrix_subquestion = unlist(matrix_subquestions),	
+             subquestion = unlist(subquestions),
              question_type = question_type,	
              response_option_randomization = ifelse(	
                response_option_randomization == "randomized", "none", response_option_randomization),	
@@ -373,10 +373,10 @@ process_qsf <- function(path_to_qsf,
     rowwise() %>% 	
     mutate(new = list(	
       tibble(originating_item_name = variable,
-             variable = unlist(matrix_subquestion_field_names),	
+             variable = unlist(subquestion_field_names),
              qid = qid,
              question = question,	
-             matrix_subquestion = unlist(matrix_subquestions),	
+             subquestion = unlist(subquestions),
              question_type = question_type,	
              response_option_randomization = ifelse(	
                response_option_randomization == "randomized", "none", response_option_randomization),	
@@ -423,7 +423,7 @@ process_qsf <- function(path_to_qsf,
            replaces,
            description,
            question,
-           matrix_subquestion,
+           subquestion,
            response_options,
            question_type,
            display_logic,
@@ -499,7 +499,7 @@ add_qdf_to_codebook <- function(qdf,
       replaces = col_character(),
       description = col_character(),
       question = col_character(),
-      matrix_subquestion = col_character(),
+      subquestion = col_character(),
       question_type = col_character(),
       display_logic = col_character(),
       response_option_randomization = col_character()
@@ -582,7 +582,7 @@ get_static_fields <- function(wave,
                                              replaces = col_character(),
                                              description = col_character(),
                                              question = col_character(),
-                                             matrix_subquestion = col_character(),
+                                             subquestion = col_character(),
                                              question_type = col_character(),
                                              response_option_randomization = col_character()
                             )) %>%

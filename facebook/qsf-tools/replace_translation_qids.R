@@ -45,7 +45,7 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     filter(!startsWith(PhraseID, "SV_"))  
 
   # Use codebook to make a mapping of QID -> item name.
-  var_qid_pairs <- codebook %>% mutate(variable = coalesce(matrix_base_name, variable)) %>% distinct(qid, variable)
+  var_qid_pairs <- codebook %>% mutate(variable = coalesce(originating_item_name, variable)) %>% distinct(qid, variable)
   qid_item_map <- var_qid_pairs %>% pull(variable)
   names(qid_item_map) <- var_qid_pairs %>% pull(qid)
   

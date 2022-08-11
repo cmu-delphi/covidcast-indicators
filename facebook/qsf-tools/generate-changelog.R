@@ -48,7 +48,7 @@ WAVE_COMPARE_MAP <- list(
 
 DIFF_COLS <- c(
   "question",
-  "matrix_subquestion",
+  "subquestion",
   "response_options",
   "display_logic",
   "response_option_randomization",
@@ -61,7 +61,7 @@ CHANGE_TYPE_MAP <- c(
   question = "Question wording changed",
   display_logic = "Display logic changed",
   response_options = "Answer choices changed",
-  matrix_subquestion = "Matrix subquestion text changed",
+  subquestion = "Matrix subquestion text changed",
   response_option_randomization = "Answer choice order changed",
   respondent_group = "Display logic changed"
 )
@@ -153,7 +153,7 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- added_items %>%
-    filter(question_type == "Matrix" | !is.na(new_originating_item_name) | !is.na(new_matrix_subquestion)) %>%
+    filter(question_type == "Matrix" | !is.na(new_originating_item_name) | !is.na(new_subquestion)) %>%
     distinct(old_version, new_originating_item_name)
   
   for (i in seq_len(nrow(combos))) {
@@ -169,8 +169,8 @@ generate_changelog <- function(path_to_codebook,
       tmp <- tmp %>%
         group_by(old_originating_item_name, new_originating_item_name, new_version, old_version) %>%
         mutate(
-          old_matrix_subquestion = NA,
-          new_matrix_subquestion = collapse_subq_elements(variable_name, new_matrix_subquestion, base_name),
+          old_subquestion = NA,
+          new_subquestion = collapse_subq_elements(variable_name, new_subquestion, base_name),
           old_response_options = NA,
           new_response_options = case_when(
             length(unique(new_response_options)) == 1 ~ new_response_options,
@@ -204,7 +204,7 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- removed_items %>%
-    filter(question_type == "Matrix" | !is.na(old_originating_item_name) | !is.na(old_matrix_subquestion)) %>%
+    filter(question_type == "Matrix" | !is.na(old_originating_item_name) | !is.na(old_subquestion)) %>%
     distinct(new_version, old_originating_item_name)
   
   for (i in seq_len(nrow(combos))) {
@@ -220,8 +220,8 @@ generate_changelog <- function(path_to_codebook,
       tmp <- tmp %>%
         group_by(old_originating_item_name, new_originating_item_name, new_version, old_version) %>%
         mutate(
-          old_matrix_subquestion = collapse_subq_elements(variable_name, old_matrix_subquestion, base_name),
-          new_matrix_subquestion = NA,
+          old_subquestion = collapse_subq_elements(variable_name, old_subquestion, base_name),
+          new_subquestion = NA,
           old_response_options = case_when(
             length(unique(old_response_options)) == 1 ~ old_response_options,
             TRUE ~ rep(collapse_subq_elements(variable_name, old_response_options, base_name), length(old_response_options))
@@ -270,7 +270,7 @@ generate_changelog <- function(path_to_codebook,
   # Keep only one obs for each group.
   # Set var name in kept obs to originating_item_name for generality and to be able to join rationales on.
   combos <- changelog %>%
-    filter((question_type == "Matrix" | !is.na(old_originating_item_name) | !is.na(old_matrix_subquestion)) &
+    filter((question_type == "Matrix" | !is.na(old_originating_item_name) | !is.na(old_subquestion)) &
              change_type %in% c(
                "Question wording changed",
                "Display logic changed",
@@ -330,8 +330,8 @@ generate_changelog <- function(path_to_codebook,
             old_originating_item_name != new_originating_item_name ~ paste(old_originating_item_name, new_originating_item_name, sep="/"),
             TRUE ~ old_originating_item_name
           ),
-          old_matrix_subquestion = NA,
-          new_matrix_subquestion = NA
+          old_subquestion = NA,
+          new_subquestion = NA
         )
     }
     
@@ -361,8 +361,8 @@ generate_changelog <- function(path_to_codebook,
       rename(
         new_question_text = new_question,
         old_question_text = old_question,
-        new_matrix_subquestion_text = new_matrix_subquestion,
-        old_matrix_subquestion_text = old_matrix_subquestion
+        new_subquestion_text = new_subquestion,
+        old_subquestion_text = old_subquestion
       ) %>% 
       select(
         new_version,
@@ -372,14 +372,14 @@ generate_changelog <- function(path_to_codebook,
         change_type,
         new_originating_item_name,
         new_question_text,
-        new_matrix_subquestion_text,
+        new_subquestion_text,
         new_response_options,
         new_display_logic,
         new_response_option_randomization,
         new_respondent_group,
         old_originating_item_name,
         old_question_text,
-        old_matrix_subquestion_text,
+        old_subquestion_text,
         old_response_options,
         old_display_logic,
         old_response_option_randomization,

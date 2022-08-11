@@ -28,7 +28,7 @@ process_qsf <- function(path_to_qsf,
   path_to_rename_map <- localize_static_filepath(rename_map_file, survey_version)
   path_to_drop_columns <- localize_static_filepath(drop_columns_file, survey_version)
   
-  q <- read_json(path_to_qsf)
+  q <- read_json(path_to_qsf, encoding = "UTF-8")
   wave <- get_wave(path_to_qsf)
   
   displayed_questions <- subset_qsf_to_displayed(q)
@@ -108,7 +108,7 @@ process_qsf <- function(path_to_qsf,
     }	
   )	
   
-  # get the "answers". These are answer choices for matrix items, and missing for non-matrix items.
+  # get the "answers". These are answer choices for matrix and dropdown items, and missing for other questions.
   matrix_answers <- displayed_questions %>%	
     map(~ .x$Payload$Answers) %>%	
     map(~ map(.x, "Display"))
@@ -123,7 +123,7 @@ process_qsf <- function(path_to_qsf,
     }) %>% unlist() %>% which()
   
   # Swap matrix answer choices into `choices` and matrix subquestion text into another variable	
-  ii_matrix <- which(qtype == "Matrix")	
+  ii_matrix <- which(qtype == "Matrix" | qtype == "Dropdown")
   matrix_subquestions <- rep(list(list()), length(choices))	
   matrix_subquestions[ii_matrix] <- choices[ii_matrix]	
   choices[ii_matrix] <- matrix_answers[ii_matrix]
@@ -142,6 +142,10 @@ process_qsf <- function(path_to_qsf,
     map(~ .x$Payload$Answers) %>%	
     map(~ map(.x, ~ map(.x, "Display")))
   
+  # Null out dropdown choices to avoid including super long list.
+  ii_dropdown <- which(qtype == "Dropdown")
+  choices[ii_dropdown] <- rep(list("Response options not listed due to length. Please see additional documentation"), length(ii_dropdown))
+
   # Get matrix subquestion field names as reported in microdata. NULL if not	
   # defined (not a Matrix question); FALSE if not set; otherwise a list	
   matrix_subquestion_field_names <- displayed_questions %>%	
@@ -149,7 +153,7 @@ process_qsf <- function(path_to_qsf,
   # When subquestion field names are not set, generate incrementing names
   ii_unset_matrix_subq_names <- (matrix_subquestion_field_names %>%	
     map(~ !inherits(.x, "list")) %>% 	
-    unlist() & qtype == "Matrix") %>% 	
+    unlist() & (qtype == "Matrix" | qtype == "Dropdown")) %>%
     which()
   matrix_subquestion_field_names[ii_unset_matrix_subq_names] <- lapply(ii_unset_matrix_subq_names, function(ind){
     paste(
@@ -331,18 +335,18 @@ process_qsf <- function(path_to_qsf,
   
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
-    filter(question_type != "Matrix") %>%	
+    filter(question_type != "Matrix" & question_type != "Dropdown") %>%
     mutate(matrix_base_name = NA_character_) %>% 
     select(-matrix_subquestion_field_names)
   
   has_response_by_subq <- qdf %>%	
-    filter(question_type == "Matrix") %>%
+    filter(question_type == "Matrix" | question_type == "Dropdown") %>%
     pull(response_options) %>%
     map_lgl(~ all(map_lgl(.x, ~ inherits(.x, "list"))) &&
               !identical(.x, list()))
   
   matrix_items <- qdf %>%	
-    filter(question_type == "Matrix") %>%
+    filter(question_type == "Matrix" | question_type == "Dropdown") %>%
     filter(!has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
@@ -364,7 +368,7 @@ process_qsf <- function(path_to_qsf,
     
   
   matrix_items_resp_by_subq <- qdf %>%	
-    filter(question_type == "Matrix") %>%
+    filter(question_type == "Matrix" | question_type == "Dropdown") %>%
     filter(has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
@@ -395,8 +399,6 @@ process_qsf <- function(path_to_qsf,
       mutate(variable = if_else(str_starts(variable, "C10"), paste0(variable, "_1"), variable),
              question_type = if_else(str_starts(variable, "A5|C10"), "Text", question_type),
              response_options = if_else(str_starts(variable, "A5|C10"), list(list()), response_options))
-  } else if (survey_version == "UMD") {
-    # pass
   }
   
   qdf <- bind_rows(nonmatrix_items, matrix_items)

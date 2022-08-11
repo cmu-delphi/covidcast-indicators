@@ -144,7 +144,7 @@ process_qsf <- function(path_to_qsf,
   
   # Null out dropdown choices to avoid including super long list.
   ii_dropdown <- which(qtype == "Dropdown")
-  choices[ii_dropdown] <- rep(list("Response options not listed due to length. Please see additional documentation"), length(ii_dropdown))
+  choices[ii_dropdown] <- rep(list("Not listed due to length, see notes"), length(ii_dropdown))
 
   # Get matrix subquestion field names as reported in microdata. NULL if not	
   # defined (not a Matrix question); FALSE if not set; otherwise a list	
@@ -336,7 +336,7 @@ process_qsf <- function(path_to_qsf,
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix" & question_type != "Dropdown") %>%
-    mutate(matrix_base_name = NA_character_) %>% 
+    mutate(originating_item_name = NA_character_) %>%
     select(-matrix_subquestion_field_names)
   
   has_response_by_subq <- qdf %>%	
@@ -350,7 +350,7 @@ process_qsf <- function(path_to_qsf,
     filter(!has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(matrix_base_name = variable,
+      tibble(originating_item_name = variable,
              variable = unlist(matrix_subquestion_field_names),
              qid = qid,
              question = question,	
@@ -372,7 +372,7 @@ process_qsf <- function(path_to_qsf,
     filter(has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(matrix_base_name = variable,
+      tibble(originating_item_name = variable,
              variable = unlist(matrix_subquestion_field_names),	
              qid = qid,
              question = question,	
@@ -389,7 +389,7 @@ process_qsf <- function(path_to_qsf,
     unnest(new)
   
   matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq) %>%
-    select(variable, matrix_base_name, everything())
+    select(variable, originating_item_name, everything())
   
   # Custom matrix formatting
   if (survey_version == "CMU") {
@@ -419,7 +419,7 @@ process_qsf <- function(path_to_qsf,
     select(wave,
            variable,
            qid,
-           matrix_base_name,
+           originating_item_name,
            replaces,
            description,
            question,

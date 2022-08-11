@@ -336,7 +336,7 @@ process_qsf <- function(path_to_qsf,
   # separate matrix subquestions into separate fields (to match exported data)	
   nonmatrix_items <- qdf %>%	
     filter(question_type != "Matrix" & question_type != "Dropdown") %>%
-    mutate(originating_item_name = NA_character_) %>%
+    mutate(originating_question = NA_character_) %>%
     select(-subquestion_field_names)
   
   has_response_by_subq <- qdf %>%	
@@ -350,7 +350,7 @@ process_qsf <- function(path_to_qsf,
     filter(!has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(originating_item_name = variable,
+      tibble(originating_question = variable,
              variable = unlist(subquestion_field_names),
              qid = qid,
              question = question,	
@@ -372,7 +372,7 @@ process_qsf <- function(path_to_qsf,
     filter(has_response_by_subq) %>%
     rowwise() %>% 	
     mutate(new = list(	
-      tibble(originating_item_name = variable,
+      tibble(originating_question = variable,
              variable = unlist(subquestion_field_names),
              qid = qid,
              question = question,	
@@ -389,7 +389,7 @@ process_qsf <- function(path_to_qsf,
     unnest(new)
   
   matrix_items <- rbind(matrix_items, matrix_items_resp_by_subq) %>%
-    select(variable, originating_item_name, everything())
+    select(variable, originating_question, everything())
   
   # Custom matrix formatting
   if (survey_version == "CMU") {
@@ -419,7 +419,7 @@ process_qsf <- function(path_to_qsf,
     select(wave,
            variable,
            qid,
-           originating_item_name,
+           originating_question,
            replaces,
            description,
            question,

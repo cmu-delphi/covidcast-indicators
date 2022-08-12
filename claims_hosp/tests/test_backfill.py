@@ -66,12 +66,16 @@ class TestBackfill:
         pdList = []        
         for file in new_files:
             df = pd.read_parquet(file, engine='pyarrow')
+            issue_date = datetime.strptime(file[-16:-8], "%Y%m%d")
+            df["issue_date"] = issue_date
+            df["lag"] = [(issue_date - x).days for x in df["time_value"]]
             pdList.append(df)
         expected = pd.concat(pdList).sort_values(["time_value", "fips"])
         
         # Read the merged file
         merged = pd.read_parquet(backfill_dir + "/" + fn, engine='pyarrow')
         
+        assert set(expected.columns) == set(merged.columns)
         assert expected.shape[0] == merged.shape[0]
         assert expected.shape[1] == merged.shape[1]
         

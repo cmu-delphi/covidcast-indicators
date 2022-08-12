@@ -101,6 +101,9 @@ def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')
+        issue_date = datetime.strptime(fn[-16:-8], "%Y%m%d")
+        df["issue_date"] = issue_date
+        df["lag"] = [(issue_date - x).days for x in df["time_value"]]
         pdList.append(df)
     merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
     path = backfill_dir + "/changehc_%s_from_%s_to_%s.parquet"%(

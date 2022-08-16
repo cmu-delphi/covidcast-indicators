@@ -116,7 +116,7 @@ class DynamicValidator:
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
             report.increment_total_checks()
-            if isinstance(api_df_or_error, APIDataFetchError):
+            if not isinstance(api_df_or_error, pd.DataFrame):
                 report.add_raised_error(api_df_or_error)
                 continue
 

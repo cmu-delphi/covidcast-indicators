@@ -14,7 +14,7 @@ def arch_diffs(params, daily_arch_diff, logger):
 
     We check for updates for NCHS mortality data every weekday as how it is
     reported by NCHS and stash these daily updates on S3, but not our API.
-    On a weekly level (on Mondays and Thursdays), we additionally 
+    On a weekly level (on Mondays and Thursdays), we additionally
     upload the changes to the data made over the past week (due to backfill) to our API.
 
     Parameters:
@@ -32,8 +32,7 @@ def arch_diffs(params, daily_arch_diff, logger):
     # Weekly run of archive utility on Monday and Thursday
     # - Does not upload to S3, that is handled by daily run of archive utility
     # - Exports issues into receiving for the API
-    n = 0 
-    num_files = len(os.listdir(weekly_export_dir))
+    n = 0
     if datetime.today().weekday() == (0 or 3):
         # Copy todays raw output to receiving and log the number of published files
         for output_file in listdir(daily_export_dir):
@@ -67,9 +66,9 @@ def arch_diffs(params, daily_arch_diff, logger):
         # Report failures: someone should probably look at them
         for exported_file in fails:
             logger.info("Failed to archive (weekly)", filename={exported_file})
-    
+
     # Report when no files are published
-    else: 
+    else:
         logger.info("No files were published today")
 
     # Daily run of archiving utility

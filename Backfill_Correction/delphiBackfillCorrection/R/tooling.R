@@ -1,19 +1,15 @@
 library(tidyverse)
-#' library(Matrix)
-#' library(stats)
 library(dplyr) 
 library(lubridate)
 library(zoo)
-#' library(ggplot2)
 #' library(stringr)
 #' library(plyr)
 library(MASS)
 library(stats4)
-#' 
-#' library(covidcast)
 library(evalcast)
 library(quantgen) 
 library(gurobi)
+library(argparser)
 
 #' Main function for getting backfill corrected estimates
 #' 
@@ -43,7 +39,7 @@ run_backfill <- function(df, export_dir, taus,
     if (value_type == "count") { # For counts data only
       combined_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_df <- add_7davs_and_target(combined_df, "value_raw", "time_value", "lag", ref_lag)
-    } else if (value_type == "ratio"){
+    } else if (value_type == "fraction"){
       combined_num_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", "time_value", "lag", ref_lag)
           
@@ -68,7 +64,7 @@ run_backfill <- function(df, export_dir, taus,
         drop_na()
       if (dim(geo_test_data)[1] == 0) next
       if (dim(geo_train_data)[1] <= 200) next
-      if (value_type == "ratio"){
+      if (value_type == "fraction"){
         geo_prior_test_data = combined_df %>% 
           filter(issue_date > test_date-7) %>%               
           filter(issue_date <= test_date)
@@ -119,6 +115,7 @@ run_backfill <- function(df, export_dir, taus,
 #' Main function
 #' Check the parameters and the input
 #' 
+#' @import tidyverse
 #' @import utils
 #' @import constants
 #' @import preprocessing
@@ -126,15 +123,60 @@ run_backfill <- function(df, export_dir, taus,
 #' @import model
 #' 
 #' @export
-main <- function(){
+main <- function(data_path, export_dir, 
+                 test_start_date, test_end_date, traning_days, testing_window, 
+                 value_type, num_col, denom_col, 
+                 lambda, ref_lag){
   
   
   # Check input data
+  df = read_csv(data_path)
+
   # Check data type and required columns
+  if (value_type == "count"){
+    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
+    else if (denom_col %in% colnames(df)) {value_cols=c(denom_col)}
+    else {
+      stop("No valid column name detected for the count values!")
+    }
+  } else if (value_type == "fraction"){
+    value_cols = c(num_col, denom_col)
+    if ( any(!value_cols %in% colnames(df)) ){
+      stop("No valid column name detected for the fraction values!")
+    }
+  }
+  
+  # time_value must exists in the dataset
+  if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
+  
+  # issue date of lag should exist in the dataset
+  if ( !"lag" %in% colnames(df) ){
+    if ( "issue_date" %in% colnames(df) ){
+      df$lag = as.integer(df$issue_date - df$time_value)
+    }
+    else {stop("No issue_date or lag exists!")}
+  }
   
   # Get test date list according to the test start date
+  if (is.null(test_start_date)){
+    test_start_date = max(df$issue_date)
+  } else {
+    test_start_date = as.Date(test_start_date)
+  }
+  
+  if (is.null(test_end_date)){
+    test_end_date = max(df$issue_date)
+  } else {
+    test_end_date = as.Date(test_end_date)
+  }
+
+  test_date_list = seq(test_start_date, test_end_date, by="days")
   
   # Check available training days
+  valid_training_days = as.integer(test_start_date - min(df$issue_date))
+  if (training_days > valid_training_days){
+    warning(sprintf("Only %d days are available at most for training.", valid_training_days))
+  }
   
   run_backfill(df, export_dir, taus,
                test_date_list, test_lags, 
@@ -144,4 +186,21 @@ main <- function(){
 }
 
 ####### Run Main Function
-main()
+parser <- arg_parser(description='Process commandline arguments')
+parser <- add_argument(parser, arg="--data_path", type="character", help = "Path to the input file")
+parser <- add_argument(parser, arg="--export_dir", type="character", default = "../export_dir", help = "Pth to the export directory")
+parser <- add_argument(parser, arg="--test_start_date", type="character", help = "Should be in the format as '2020-01-01'")
+parser <- add_argument(parser, arg="--test_end_date", type="character", help = "Should be in the format as '2020-01-01'")
+parser <- add_argument(parser, arg="--testing_window", type="integer", default = 1, help = "The number of issue dates for testing per trained model")
+parser <- add_argument(parser, arg="--value_type", type="character", default = "fraction", help = "Can be 'count' or 'fraction'")
+parser <- add_argument(parser, arg="--num_col", type="character", default = "num", help = "The column name for the numerator")
+parser <- add_argument(parser, arg="--denum_col", type="character", default = "den", help = "The column name for the denominator")
+parser <- add_argument(parser, arg="--lambda", type="character", default = 0.1, help = "The parameter lambda for the lasso regression")
+parser <- add_argument(parser, arg="--training_days", type="integer", default = 270, help = "The number of issue dates used for model training")
+parser <- add_argument(parser, arg="--ref_lag", type="integer", default = 60, help = "The lag that is set to be the reference")
+args = parse_args(parser)
+
+main(args.data_path, args.export_dir, 
+     args.test_start_date, args.test_end_date, args.traning_days, args.testing_window, 
+     args.value_type, args.num_col, args.denom_col, 
+     args.lambda, args.ref_lag)

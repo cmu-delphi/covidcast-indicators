@@ -51,12 +51,12 @@ objective <- function(theta, x, prob, ...) {
 #' @import dplyr
 #' @importFrom quantgen quantile_lasso
 #' @importFrom constants lp_solver
-est_priors <- function(train_data, prior_test_data, dw, taus, 
+est_priors <- function(train_data, prior_test_data, cov, taus, 
                        params_list, response, lp_solver, lambda, 
                        start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10){
-  sub_train_data <- train_data %>% filter(train_data[dw] == 1)
-  sub_test_data <- prior_test_data %>% filter(prior_test_data[dw] == 1)
+  sub_train_data <- train_data %>% filter(train_data[[cov]] == 1)
+  sub_test_data <- prior_test_data %>% filter(prior_test_data[[cov]] == 1)
   if (dim(sub_test_data)[1] == 0) {
     pseudo_denom <- base_pseudo_denom
     pseudo_num <- base_pseudo_num
@@ -93,13 +93,13 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
 #' @param denom_col the column name for the denominator
 #' 
 #' @export
-ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col){
-  if (is.null(dw)){
+ratio_adj_with_pseudo <- function(data, cov, pseudo_num, pseudo_denom, num_col, denom_col){
+  if (is.null(cov)){
     num_adj <- data[[num_col]]  + pseudo_num
     denom_adj <- data[[denom_col]]  + pseudo_denom
   } else {
-    num_adj <- data[data[dw] == 1, num_col]  + pseudo_num
-    denom_adj <- data[data[dw] == 1, denom_col]  + pseudo_denom
+    num_adj <- data[[num_col]][data[[cov]] == 1]  + pseudo_num
+    denom_adj <- data[data[[cov]] == 1, denom_col]  + pseudo_denom
   }
   return (num_adj / denom_adj)
 }
@@ -140,28 +140,28 @@ ratio_adj <- function(train_data, test_data, prior_test_data){
   
   for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")){
     pseudo_counts <- est_priors(train_data, prior_test_data, cov, taus, 
-                        pre_params_list, "value_target", lp_solver, lambda=0.1)
+                        pre_params_list, "log_value_target", lp_solver, lambda=0.1)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
     pseudo_num = pseudo_counts[1]
     # update current data
     # For training
-    train_data$value_raw[train_data[cov] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_raw[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_raw_num", "value_raw_denom")
-    train_data$value_7dav[train_data[cov] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_7dav[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_7dav_num", "value_7dav_denom")
-    train_data$value_prev_7dav[train_data[cov] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_prev_7dav[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_prev_7dav_num", "value_prev_7dav_denom")
     
     #For testing
-    test_data$value_raw[test_data[cov] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_raw[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_raw_num", "value_raw_denom")
-    test_data$value_7dav[test_data[cov] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_7dav[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_7dav_num", "value_7dav_denom")
-    test_data$value_prev_7dav[test_data[cov] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_prev_7dav[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_prev_7dav_num", "value_prev_7dav_denom")
     
-    test_data$pseudo_num[test_data[cov] == 1] = pseudo_num
-    test_data$pseudo_denum[test_data[cov] == 1] = pseudo_denum
+    test_data$pseudo_num[test_data[[cov]] == 1] = pseudo_num
+    test_data$pseudo_denum[test_data[[cov]] == 1] = pseudo_denum
   }
   
   train_data$log_value_raw = log(train_data$value_raw)

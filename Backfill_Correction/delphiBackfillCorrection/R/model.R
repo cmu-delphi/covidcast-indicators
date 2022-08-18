@@ -59,12 +59,13 @@ model_training_and_testing <- function(train_data, test_data, taus, params_list,
         test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
         
         coefs_result[[success+1]] = coef(obj)
+        coefs_result[[success+1]]$tau = tau
         success = success + 1
       },
-      error=function(e) {print(paste(geo, test_date, model_name, as.character(tau), sep="_"))}
+      error=function(e) {print(paste(geo, test_date, as.character(tau), sep="_"))}
     )
   }
-  if (success < 9) next
+  if (success < 9){ return (NULL)}
   coef_combined_result = data.frame(tau=taus,
                            issue_date=test_date)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))

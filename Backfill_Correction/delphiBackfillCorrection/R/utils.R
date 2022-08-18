@@ -57,6 +57,7 @@ read_data <- function(path){
   return (df)
 }
 
+
 #‘ Export the result to customized directory
 
 #' @param test_data test data with prediction result
@@ -67,12 +68,11 @@ read_data <- function(path){
 #' @param test_lag 
 #' 
 #' @export
-export_test_result <- function(test_data, coef_data, export_dir, 
-                               geo_level, geo, test_lag){
-  pred_output_dir = paste("prediction", geo_level, geo, as.character(test_lag), sep="_")
+export_test_result <- function(test_data, coef_data, export_dir, geo){
+  pred_output_dir = paste("prediction", geo, sep="_")
   write.csv(test_data, paste(export_dir, pred_output_dir , ".csv", sep=""), row.names = FALSE)
   
-  coef_output_dir = paste("coefs", geo_level, geo, as.character(test_lag), sep="_")
+  coef_output_dir = paste("coefs", geo, sep="_")
   write.csv(test_data, paste(export_dir, coef_output_dir , ".csv", sep=""), row.names = FALSE)
   
 }

@@ -168,7 +168,7 @@ add_weekofmonth <- function(df, wm, time_col){
 #' @param lag_col column name for the column of lag
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col){
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
@@ -186,11 +186,18 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col){
                         list(df, avg_df, avg_df_prev7))
   
   # Add target
-  target_df <- df[df$lag==ref_lag, ] %>% select(c(refd_col, "value_raw", "issue_date"))
+  target_df <- df[df$lag==ref_lag, c(refd_col, "value_raw", "issue_date")]
   names(target_df)[names(target_df) == 'value_raw'] <- 'value_target'
   names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
   
   backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
+  
+  # Add log values
+  backfill_df$log_value_raw = log(backfill_df$value_raw + 1)
+  backfill_df$log_value_7dav = log(backfill_df$value_7dav + 1)
+  backfill_df$log_value_target = log(backfill_df$value_target + 1)
+  backfill_df$log_value_prev_7dav = log(backfill_df$value_prev_7dav + 1)
+  backfill_df$log_7dav_slope = backfill_df$log_value_7dav - backfill_df$log_value_prev_7dav
   
   # Remove invalid rows
   backfill_df <- backfill_df %>% drop_na(c(lag_col))

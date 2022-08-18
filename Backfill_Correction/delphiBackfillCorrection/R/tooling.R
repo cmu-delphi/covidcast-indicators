@@ -149,7 +149,7 @@ main <- function(data_path, export_dir,
   # time_value must exists in the dataset
   if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
   
-  # issue date of lag should exist in the dataset
+  # issue_date or lag should exist in the dataset
   if ( !"lag" %in% colnames(df) ){
     if ( "issue_date" %in% colnames(df) ){
       df$lag = as.integer(df$issue_date - df$time_value)

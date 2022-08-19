@@ -47,13 +47,17 @@ create_dir_not_exist <- function(path)
   if (!dir.exists(path)) { dir.create(path) }
 }
 
-#' Function to read input data
+#' Read a parquet file into a dataframe
 #' 
 #' @param path path to the input data
-#' 
+#'
+#' @importFrom arrow read_parquet
+#' @importFrom dplyr select %>%
+#'
 #' @export
 read_data <- function(path){
-  df <- read_csv(path)
+  df <- read_parquet(path, as_data_frame = TRUE) %>% 
+    select(-`__index_level_0__`)
   return (df)
 }
 

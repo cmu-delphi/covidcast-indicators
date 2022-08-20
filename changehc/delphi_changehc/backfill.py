@@ -53,7 +53,8 @@ def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
     Merge ~4 weeks' backfill data into one file.
 
     Usually this function should merge 28 days' data into a new file so as to
-    save the reading time when running the backfill pipelines. We
+    save the reading time when running the backfill pipelines. We set a softer
+    threshold to allow flexibility in data delivery.
     Parameters
     ----------
     today : datetime

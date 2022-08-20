@@ -101,7 +101,7 @@ def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')
-        issue_date = datetime.strptime(fn[-16:-8], "%Y%m%d")
+        issue_date = get_date(fn)
         df["issue_date"] = issue_date
         df["lag"] = [(issue_date - x).days for x in df["time_value"]]
         pdList.append(df)

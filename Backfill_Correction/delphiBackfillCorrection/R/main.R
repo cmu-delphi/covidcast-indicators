@@ -192,6 +192,9 @@ main <- function(params, ...){
     value_type <- get_value_type(input_group$indicator, input_group$signal)
     validity_checks(input_data, value_type)
     
+    # Check available training days
+    training_days_check(input_data$issue_date, params$training_days)
+    
     # Perform backfill corrections and save result
     run_backfill(input_data, value_type, input_group$geo_level, params)
   }

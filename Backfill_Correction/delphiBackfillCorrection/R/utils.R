@@ -110,3 +110,10 @@ validity_checks <- function(df, value_type) {
   }
 }
 
+#' Check available training days
+training_days_check <- function(issue_date, training_days) {
+  valid_training_days = as.integer(max(issue_date) - min(issue_date))
+  if (training_days > valid_training_days){
+    warning(sprintf("Only %d days are available at most for training.", valid_training_days))
+  }
+}

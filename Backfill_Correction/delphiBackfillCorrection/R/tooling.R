@@ -154,10 +154,7 @@ main_local <- function(data_path, export_dir,
   test_date_list = seq(test_start_date, test_end_date, by="days")
   
   # Check available training days
-  valid_training_days = as.integer(test_start_date - min(df$issue_date))
-  if (training_days > valid_training_days){
-    warning(sprintf("Only %d days are available at most for training.", valid_training_days))
-  }
+  training_days_check(df$issue_date, training_days)
   
   run_backfill_local(df, export_dir, taus,
                test_date_list, test_lags, 

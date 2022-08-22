@@ -20,7 +20,7 @@ library(argparser)
 #' @import model
 #' 
 #' @export
-run_backfill <- function(df, export_dir, taus,
+run_backfill_local <- function(df, export_dir, taus,
                          test_date_list, test_lags, 
                          value_cols, training_days, testing_window,
                          ref_lag, value_type, lambda){
@@ -51,6 +51,9 @@ run_backfill <- function(df, export_dir, taus,
                            suffixes=c("_num", "_denom"))
     }
     combined_df <- add_params_for_dates(combined_df, "time_value", "lag")
+    if (missing(test_date_list) || is.null(test_date_list)) {
+      test_date_list <- get_test_dates(combined_df, params$test_dates)
+    }
     
     for (test_date in test_date_list){
       geo_train_data = combined_df %>% 
@@ -123,7 +126,7 @@ run_backfill <- function(df, export_dir, taus,
 #' @import model
 #' 
 #' @export
-main <- function(data_path, export_dir, 
+main_local <- function(data_path, export_dir, 
                  test_start_date, test_end_date, traning_days, testing_window, 
                  value_type, num_col, denom_col, 
                  lambda, ref_lag){
@@ -133,29 +136,7 @@ main <- function(data_path, export_dir,
   df = read_csv(data_path)
 
   # Check data type and required columns
-  if (value_type == "count"){
-    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
-    else if (denom_col %in% colnames(df)) {value_cols=c(denom_col)}
-    else {
-      stop("No valid column name detected for the count values!")
-    }
-  } else if (value_type == "fraction"){
-    value_cols = c(num_col, denom_col)
-    if ( any(!value_cols %in% colnames(df)) ){
-      stop("No valid column name detected for the fraction values!")
-    }
-  }
-  
-  # time_value must exists in the dataset
-  if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
-  
-  # issue_date or lag should exist in the dataset
-  if ( !"lag" %in% colnames(df) ){
-    if ( "issue_date" %in% colnames(df) ){
-      df$lag = as.integer(df$issue_date - df$time_value)
-    }
-    else {stop("No issue_date or lag exists!")}
-  }
+  validity_checks(df, value_type)
   
   # Get test date list according to the test start date
   if (is.null(test_start_date)){
@@ -178,7 +159,7 @@ main <- function(data_path, export_dir,
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
   
-  run_backfill(df, export_dir, taus,
+  run_backfill_local(df, export_dir, taus,
                test_date_list, test_lags, 
                value_cols, training_days, testing_window,
                ref_lag, value_type, lambda)
@@ -200,7 +181,7 @@ parser <- add_argument(parser, arg="--training_days", type="integer", default = 
 parser <- add_argument(parser, arg="--ref_lag", type="integer", default = 60, help = "The lag that is set to be the reference")
 args = parse_args(parser)
 
-main(args.data_path, args.export_dir, 
+main_local(args.data_path, args.export_dir, 
      args.test_start_date, args.test_end_date, args.traning_days, args.testing_window, 
      args.value_type, args.num_col, args.denom_col, 
      args.lambda, args.ref_lag)

@@ -82,5 +82,31 @@ export_test_result <- function(test_data, coef_data, export_dir, geo){
 }
 
 
-
+#' Check input data for validity
+validity_checks <- function(df, value_type) {
+  # Check data type and required columns
+  if (value_type == "count"){
+    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
+    else if (denom_col %in% colnames(df)) {value_cols=c(denom_col)}
+    else {
+      stop("No valid column name detected for the count values!")
+    }
+  } else if (value_type == "fraction"){
+    value_cols = c(num_col, denom_col)
+    if ( any(!value_cols %in% colnames(df)) ){
+      stop("No valid column name detected for the fraction values!")
+    }
+  }
+  
+  # time_value must exists in the dataset
+  if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
+  
+  # issue_date or lag should exist in the dataset
+  if ( !"lag" %in% colnames(df) ){
+    if ( "issue_date" %in% colnames(df) ){
+      df$lag = as.integer(df$issue_date - df$time_value)
+    }
+    else {stop("No issue_date or lag exists!")}
+  }
+}
 

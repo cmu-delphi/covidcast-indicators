@@ -62,6 +62,11 @@ run_backfill <- function(df, value_type, geo_level, params,
                          refd_col = "time_value", lag_col = "lag") {
   # Get full list of interested locations
   geo_list <- unique(df$geo_value)
+  if (geo_level == "county") {
+    # Keep only 200 most populous (within the US) counties
+    geo_list <- filter_counties(geo_list)
+  }
+  
   # Build model for each location
   for (geo in geo_list) {
     subdf <- df %>% filter(geo_value == geo) %>% filter(lag < params$ref_lag)
@@ -81,9 +86,11 @@ run_backfill <- function(df, value_type, geo_level, params,
       combined_denom_df <- fill_missing_updates(subdf, params$denom_col, refd_col, lag_col)
       combined_denom_df <- add_7davs_and_target(combined_denom_df, "value_raw", refd_col, lag_col)
       
-      combined_df <- merge(combined_num_df, combined_denom_df,
-                           by=c(refd_col, "issue_date", lag_col, "target_date"), all.y=TRUE,
-                           suffixes=c("_num", "_denom"))
+      combined_df <- merge(
+        combined_num_df, combined_denom_df,
+        by=c(refd_col, "issue_date", lag_col, "target_date"), all.y=TRUE,
+        suffixes=c("_num", "_denom")
+      )
     }
     combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
     test_date_list <- get_test_dates(combined_df, params$test_dates)
@@ -126,7 +133,9 @@ run_backfill <- function(df, value_type, geo_level, params,
         
         # Model training and testing
         prediction_results <- model_training_and_testing(
-          train_data, test_data, params$taus, params_list, lp_solver, params$lambda, test_date)
+          train_data, test_data, params$taus, params_list,
+          lp_solver, params$lambda, test_date
+        )
         test_data <- prediction_results[[1]]
         coefs <- prediction_results[[2]]
         test_data <- evl(test_data, params$taus)
@@ -158,8 +167,12 @@ main <- function(params, ...){
   # Loop over every indicator + signal + geo type combination.
   for (input_group in groups) {
     # Convert input_group into file names.
-    daily_pattern <- create_daily_name(input_group$indicator, input_group$signal, input_group$geo_level)
-    rollup_pattern <- create_rollup_name(input_group$indicator, input_group$signal, input_group$geo_level)
+    daily_pattern <- create_daily_name(
+      input_group$indicator, input_group$signal, input_group$geo_level
+    )
+    rollup_pattern <- create_rollup_name(
+      input_group$indicator, input_group$signal, input_group$geo_level
+    )
     
     # Make sure we're reading in both 4-week rollup and daily files.
     daily_input_files <- list.files(params$data_path, pattern = daily_pattern)
@@ -168,9 +181,11 @@ main <- function(params, ...){
     ## TODO: what filtering do we need to do on dates?
     
     # Read in all listed files and combine
-    input_data <- lapply(c(daily_input_files, rollup_input_files), function(file) {
-      input_data[[file]] <- read_data(file)
-    }
+    input_data <- lapply(
+      c(daily_input_files, rollup_input_files),
+      function(file) {
+        input_data[[file]] <- read_data(file)
+      }
     ) %>% bind_rows
     
     # Check data type and required columns

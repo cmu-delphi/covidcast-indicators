@@ -117,3 +117,53 @@ training_days_check <- function(issue_date, training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
 }
+
+#' List valid input files.
+get_files_list(indicator, signal, geo_level, params) {
+  # Convert input_group into file names.
+  daily_pattern <- create_name_pattern(
+    indicator, signal, geo_level, "daily"
+  )
+  rollup_pattern <- create_name_pattern(
+    indicator, signal, geo_level, "rollup"
+  )
+  
+  # Make sure we're reading in both 4-week rollup and daily files.
+  daily_input_files <- list.files(params$data_path, pattern = daily_pattern)
+  rollup_input_files <- list.files(params$data_path, pattern = rollup_pattern)
+  
+  # Filter files lists to only include those containing dates we need for training
+  daily_input_files <- subset_valid_files(daily_input_files, "daily", params)
+  rollup_input_files <- subset_valid_files(rollup_input_files, "rollup", params)
+  
+  return(c(daily_input_files, rollup_input_files))
+}
+
+#' Return file names only if they contain data to be used in training
+#' 
+#' Parse filenames to find included dates. Use different patterns if file
+#' includes daily or rollup (multiple days) data.
+subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
+  file_type <- match.arg(file_type)
+  switch(file_type,
+         daily = {
+           ...
+         },
+         rollup = {
+           ...
+         }
+  )
+}
+
+#' Create pattern to match input files of a given type, signal, and geo level
+#' 
+#' @importFrom stringr str_interp
+create_name_pattern <- function(indicator, signal, geo_level,
+                                file_type = c("daily", "rollup")) {
+  file_type <- match.arg(file_type)
+  switch(file_type,
+         daily = str_interp("{indicator}_{signal}_as_of_[0-9]{8}.parquet"),
+         rollup = str_interp("{indicator}_{signal}_from_[0-9]{8}_to_[0-9]{8}.parquet")
+  )
+}
+

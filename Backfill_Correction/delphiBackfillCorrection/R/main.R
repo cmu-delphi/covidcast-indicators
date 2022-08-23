@@ -166,23 +166,13 @@ main <- function(params, ...){
   
   # Loop over every indicator + signal + geo type combination.
   for (input_group in groups) {
-    # Convert input_group into file names.
-    daily_pattern <- create_daily_name(
-      input_group$indicator, input_group$signal, input_group$geo_level
+    files_list <- get_files_list(
+      input_group$indicator, input_group$signal, input_group$geo_level, params
     )
-    rollup_pattern <- create_rollup_name(
-      input_group$indicator, input_group$signal, input_group$geo_level
-    )
-    
-    # Make sure we're reading in both 4-week rollup and daily files.
-    daily_input_files <- list.files(params$data_path, pattern = daily_pattern)
-    rollup_input_files <- list.files(params$data_path, pattern = rollup_pattern)
-    
-    ## TODO: what filtering do we need to do on dates?
     
     # Read in all listed files and combine
     input_data <- lapply(
-      c(daily_input_files, rollup_input_files),
+      files_list,
       function(file) {
         input_data[[file]] <- read_data(file)
       }

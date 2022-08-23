@@ -1,3 +1,5 @@
+import(tibble)
+
 # Constants for the backfill correction model
 taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
 ref_lag <- 60
@@ -21,3 +23,12 @@ sqrtscale = c('sqrty0', 'sqrty1', "sqrty2")
 log_lag = "inv_log_lag"
 
 today = Sys.Date()
+
+indicators_and_signals <- tribble(
+  ~indicator, ~signal, ~name_suffix, ~value_type, ~sub_dir,
+  "changehc", "covid", "", "count", "chng",
+  "changehc", "flu", "", "count", "chng",
+  "claims_hosp", "", "", "count", "claims_hosp",
+  # "dv",,,
+  "quidel", "covidtest", c("total", "age_0_4", "age_5_17", "age_18_49", "age_50_64", "age_65plus", "age_0_17"), "count", "quidel_covidtest"
+)

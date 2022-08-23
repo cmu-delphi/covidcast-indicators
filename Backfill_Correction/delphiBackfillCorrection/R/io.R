@@ -32,7 +32,7 @@ export_test_result <- function(test_data, coef_data, export_dir, geo){
 }
 
 #' List valid input files.
-get_files_list(indicator, signal, geo_level, params) {
+get_files_list(indicator, signal, geo_level, params, sub_dir = "") {
   # Convert input_group into file names.
   daily_pattern <- create_name_pattern(
     indicator, signal, geo_level, "daily"
@@ -42,8 +42,14 @@ get_files_list(indicator, signal, geo_level, params) {
   )
   
   # Make sure we're reading in both 4-week rollup and daily files.
-  daily_input_files <- list.files(params$data_path, pattern = daily_pattern)
-  rollup_input_files <- list.files(params$data_path, pattern = rollup_pattern)
+  if (!is.null(sub_dir) && sub_dir != "") {
+    data_path <- paste(params$data_path, sub_dir, sep="_")
+  } else {
+    data_path <- params$data_path
+  }
+  
+  daily_input_files <- list.files(data_path, pattern = daily_pattern)
+  rollup_input_files <- list.files(data_path, pattern = rollup_pattern)
   
   # Filter files lists to only include those containing dates we need for training
   daily_input_files <- subset_valid_files(daily_input_files, "daily", params)

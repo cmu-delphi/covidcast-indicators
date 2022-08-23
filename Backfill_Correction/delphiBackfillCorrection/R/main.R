@@ -199,6 +199,11 @@ main <- function(params, ...){
       }
     ) %>% bind_rows
     
+    if (nrow(input_data) == 0) {
+      warning(str_interp("No data available for {input_group$indicator} {input_group$signal}, skipping"))
+      next
+    }
+    
     # Check data type and required columns
     validity_checks(input_data, input_group$value_type)
     

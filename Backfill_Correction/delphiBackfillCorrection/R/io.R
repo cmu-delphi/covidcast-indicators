@@ -58,14 +58,39 @@ get_files_list(indicator, signal, geo_level, params) {
 #' includes daily or rollup (multiple days) data.
 subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
   file_type <- match.arg(file_type)
+  date_format = "%Y%m%d"
   switch(file_type,
          daily = {
-           ...
+           start_dates <- as.Date(
+             sub("^.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
+             format = date_format
+           )
+           end_dates <- start_dates
          },
          rollup = {
-           ...
+           rollup_pattern <- "^.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
+           start_dates <- as.Date(
+             sub(rollup_pattern, "\\1", files_list),
+             format = date_format
+           )
+           end_dates <- as.Date(
+             sub(rollup_pattern, "\\2", files_list),
+             format = date_format
+           )
          }
   )
+  
+  ## TODO: start_date depends on if we're doing model training or just corrections.
+  start_date <- today - params$training_days - params$ref_lag
+  end_date <- today - 1
+  
+  # Only keep files with data that falls at least somewhat between the desired
+  # start and end range dates.
+  files_list <- files_list[
+    !(( start_dates < start_date & end_dates < start_date ) | 
+        ( start_dates > end_date & end_dates > end_date ))]
+  
+  return(files_list)
 }
 
 #' Create pattern to match input files of a given type, signal, and geo level

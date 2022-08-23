@@ -19,3 +19,5 @@ sqrtscale_covid = c('sqrty0_covid', 'sqrty1_covid', 'sqrty2_covid')
 sqrtscale_total = c('sqrty0_total', 'sqrty1_total', 'sqrty2_total')
 sqrtscale = c('sqrty0', 'sqrty1', "sqrty2")
 log_lag = "inv_log_lag"
+
+today = Sys.Date()

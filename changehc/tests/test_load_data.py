@@ -1,5 +1,8 @@
 # standard
 import pytest
+import os
+import glob
+from datetime import datetime
 
 # third party
 from delphi_utils import GeoMapper
@@ -15,6 +18,7 @@ PARAMS = {
         "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
         "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
         "input_flu_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "backfill_dir": "./backfill",
         "drop_date": "2020-06-01"
     }
 }
@@ -22,7 +26,11 @@ COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 FLU_FILEPATH = PARAMS["indicator"]["input_flu_file"]
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
+backfill_dir = PARAMS["indicator"]["backfill_dir"]
 
+geo = "county"
+weekday = True
+backfill_merge_day = 0
 
 class TestLoadData:
     denom_data = load_chng_data(DENOM_FILEPATH, DROP_DATE, "fips",
@@ -30,9 +38,10 @@ class TestLoadData:
     covid_data = load_chng_data(COVID_FILEPATH, DROP_DATE, "fips",
                     Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
-                                            "fips")
-    flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE,
-                                            "fips")
+                                       "fips", backfill_dir, geo, weekday, "covid",
+                                       backfill_merge_day)
+    flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE,"fips",
+                             backfill_dir, geo, weekday, "flu", backfill_merge_day)
     gmpr = GeoMapper()
 
     def test_base_unit(self):
@@ -45,10 +54,12 @@ class TestLoadData:
                     Config.DENOM_COLS, Config.DENOM_DTYPES, Config.COVID_COL)
 
         with pytest.raises(AssertionError):
-            load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo")
+            load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo", 
+                               backfill_dir, geo, weekday, "covid", backfill_merge_day)
 
         with pytest.raises(AssertionError):
-            load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE, "foo")
+            load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE, "foo", 
+                          backfill_dir, geo, weekday, "covid", backfill_merge_day)
 
     def test_denom_columns(self):
         assert "fips" in self.denom_data.index.names

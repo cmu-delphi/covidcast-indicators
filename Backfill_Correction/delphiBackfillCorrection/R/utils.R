@@ -12,7 +12,6 @@
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
 #' @importFrom lubridate ymd_hms
-#' @export
 read_params <- function(path = "params.json", template_path = "params.json.template") {
   if (!file.exists(path)) file.copy(template_path, path)
   params <- read_json(path, simplifyVector = TRUE)
@@ -81,4 +80,26 @@ training_days_check <- function(issue_date, training_days) {
   if (training_days > valid_training_days){
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
+}
+
+#' Subset list of counties to those included in the 200 most populous in the US
+filter_counties <- function(geos) {
+  top_200_geos <- get_populous_counties()
+  return(intersect(geos, top_200_geos))
+}
+
+#' Subset list of counties to those included in the 200 most populous in the US
+#' 
+#' @importFrom covidcast county_census
+#' @importFrom dplyr select %>% arrange desc
+get_populous_counties <- function() {
+  return(
+    county_census %>%
+      select(pop = POPESTIMATE2019, fips = FIPS) %>%
+      # Drop megacounties (states)
+      filter(!endsWith(fips, "000")) %>% 
+      arrange(desc(pop)) %>%
+      pull(fips) %>%
+      head(n=200)
+  )
 }

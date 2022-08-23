@@ -16,7 +16,7 @@
 #' library(evalcast)
 #' library(quantgen) 
 #' library(gurobi)
-#' lp_solver = "gurobi" # LP solver to use in quantile_lasso(); "gurobi" or "glpk"
+
 
 #' Tempt usage
 #' params = list()
@@ -37,6 +37,7 @@
 #' params$taus: ??
 #' params$lambda: ??
 #' params$export_dir: ??
+#' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
 
 #' Get backfill-corrected estimates for a single signal + geo combination
 #' 
@@ -48,7 +49,8 @@
 #'     counties in the US (*not* the dataset) will be used.
 #' @param params named list containing modeling and data settings. Must include
 #'     the following elements: `ref_lag`, `testing_window`, `test_dates`,
-#'     `training_days`, `num_col`, `taus`, `lambda`, and `export_dir`.
+#'     `training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
+#'     and `data_path` (input dir).
 #' @param refd_col string containing name of reference date field within `df`.
 #' @param lag_col string containing name of lag field within `df`.
 #' 
@@ -134,7 +136,7 @@ run_backfill <- function(df, value_type, geo_level, params,
         # Model training and testing
         prediction_results <- model_training_and_testing(
           train_data, test_data, params$taus, params_list,
-          lp_solver, params$lambda, test_date
+          params$lp_solver, params$lambda, test_date
         )
         test_data <- prediction_results[[1]]
         coefs <- prediction_results[[2]]
@@ -189,4 +191,3 @@ main <- function(params, ...){
     run_backfill(input_data, value_type, input_group$geo_level, params)
   }
 }
-

@@ -1,25 +1,6 @@
-library(tidyverse)
-library(dplyr) 
-library(lubridate)
-library(zoo)
-#' library(stringr)
-#' library(plyr)
-library(MASS)
-library(stats4)
-library(evalcast)
-library(quantgen) 
-library(gurobi)
-library(argparser)
-
-#' Main function for getting backfill corrected estimates
+#' Corrected estimates from a single local signal
 #' 
-#' @import utils
-#' @import constants
-#' @import preprocessing
-#' @import beta_prior_estimation
-#' @import model
-#' 
-#' @export
+#' @importFrom dplyr %>% filter
 run_backfill_local <- function(df, export_dir, taus,
                          test_date_list, test_lags, 
                          value_cols, training_days, testing_window,
@@ -112,26 +93,18 @@ run_backfill_local <- function(df, export_dir, taus,
     result_df = do.call(rbind, res_list)
     coefs_df = do.call(rbind.fill, coef_df_list)
     export_test_result(result_df, coefs_df, export_dir, geo)
-  }# End for geo lsit
+  }# End for geo list
 }
 
-#' Main function
-#' Check the parameters and the input
+#' Main function to correct a single local signal
 #' 
-#' @import tidyverse
-#' @import utils
-#' @import constants
-#' @import preprocessing
-#' @import beta_prior_estimation
-#' @import model
+#' @importFrom readr read_csv
 #' 
 #' @export
 main_local <- function(data_path, export_dir, 
                  test_start_date, test_end_date, traning_days, testing_window, 
                  value_type, num_col, denom_col, 
                  lambda, ref_lag){
-  
-  
   # Check input data
   df = read_csv(data_path)
 
@@ -160,5 +133,4 @@ main_local <- function(data_path, export_dir,
                test_date_list, test_lags, 
                value_cols, training_days, testing_window,
                ref_lag, value_type, lambda)
-  
 }

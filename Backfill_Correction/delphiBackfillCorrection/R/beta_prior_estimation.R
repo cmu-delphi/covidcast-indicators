@@ -4,14 +4,11 @@
 #' that is day-of-week dependent. A quantile regression model is used first with lasso
 #' penalty for supporting quantile estimation and then a non-linear minimization is used
 #' for prior estimation. 
-lp_solver <- "gurobi"
 
 #' Sum of squared error
 #' 
 #' @param fit estimated values
 #' @param actual actual values
-#' 
-#' @export
 delta <- function(fit, actual) sum((fit-actual)^2)
 
 #' Generate objection function
@@ -43,14 +40,9 @@ objective <- function(theta, x, prob, ...) {
 #' @param base_pseudo_denum the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
 #' 
-#' @import MASS
-#' @import stats4
-#' @import gurobi
-#' @import Matrix
-#' @import tidyverse
-#' @import dplyr
+#' @importFrom stats nlm
+#' @importFrom dplyr %>% filter
 #' @importFrom quantgen quantile_lasso
-#' @importFrom constants lp_solver
 est_priors <- function(train_data, prior_test_data, cov, taus, 
                        params_list, response, lp_solver, lambda, 
                        start=c(0, log(10)),
@@ -110,7 +102,6 @@ ratio_adj_with_pseudo <- function(data, cov, pseudo_num, pseudo_denom, num_col, 
 #' @param test_data testing data
 #' @param prior_test_data testing data for the lag -1 model
 #' 
-#' @importFrom constants taus, dw, lp_solver
 #' @export
 ratio_adj <- function(train_data, test_data, prior_test_data){
   train_data$value_target <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")

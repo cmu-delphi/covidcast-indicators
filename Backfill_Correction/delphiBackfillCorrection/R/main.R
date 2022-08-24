@@ -1,44 +1,3 @@
-#' library(tidyverse)
-#' library(Matrix)
-#' library(stats)
-#' library(tidyverse)
-#' library(dplyr) 
-#' library(lubridate)
-#' library(zoo)
-#' library(dplyr)
-#' library(ggplot2)
-#' library(stringr)
-#' library(plyr)
-#' library(MASS)
-#' library(stats4)
-#' 
-#' library(covidcast)
-#' library(evalcast)
-#' library(quantgen) 
-#' library(gurobi)
-
-
-#' Tempt usage
-#' params = list()
-#' customize 
-#' params$ref_lag: reference lag, after x days, the update is considered to be
-#'     the response. 60 is a reasonable choice for CHNG outpatient data
-#' params$data_path: link to the input data file
-#' params$testing_window: the testing window used for saving the runtime. Could 
-#'     set it to be 1 if time allows
-#' params$test_dates: list of two elements, the first one is the start date and 
-#'     the second one is the end date
-#' params$training_days: set it to be 270 or larger if you have enough data
-#' params$num_col: the column name for the counts of the numerator, e.g. the 
-#'     number of COVID claims 
-#' params$denom_col: the column name for the counts of the denominator, e.g. the
-#'     number of total claims
-#' params$geo_level: list("state", "county")
-#' params$taus: ??
-#' params$lambda: ??
-#' params$export_dir: ??
-#' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
-
 #' Get backfill-corrected estimates for a single signal + geo combination
 #' 
 #' @param df dataframe of input data containing a single indicator + signal +
@@ -54,10 +13,7 @@
 #' @param refd_col string containing name of reference date field within `df`.
 #' @param lag_col string containing name of lag field within `df`.
 #' 
-#' @import constants
-#' @import preprocessing
-#' @import beta_prior_estimation
-#' @import model
+#' @importFrom dplyr %>% filter
 #' 
 #' @export
 run_backfill <- function(df, value_type, geo_level, params,
@@ -161,16 +117,12 @@ run_backfill <- function(df, value_type, geo_level, params,
       }# End for test date list
     }# End for signal suffixes
   }# End for geo list
+
+  return(NULL)
 }
 
 #' Perform backfill correction on all desired signals and geo levels
 #' 
-#' @import tidyverse
-#' @import utils
-#' @import constants
-#' @import preprocessing
-#' @import beta_prior_estimation
-#' @import model
 #' @importFrom dplyr bind_rows
 #' 
 #' @export

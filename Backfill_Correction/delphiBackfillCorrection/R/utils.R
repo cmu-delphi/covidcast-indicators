@@ -3,6 +3,27 @@
 #' Reads a parameters file. If the file does not exist, the function will create a copy of
 #' '"params.json.template" and read from that.
 #'
+#' A params list should contain the following fields. If not included,
+#' they will be filled with default values when possible.
+#'
+#' params$ref_lag: reference lag, after x days, the update is considered to be
+#'     the response. 60 is a reasonable choice for CHNG outpatient data
+#' params$data_path: link to the input data file
+#' params$testing_window: the testing window used for saving the runtime. Could
+#'     set it to be 1 if time allows
+#' params$test_dates: list of two elements, the first one is the start date and
+#'     the second one is the end date
+#' params$training_days: set it to be 270 or larger if you have enough data
+#' params$num_col: the column name for the counts of the numerator, e.g. the
+#'     number of COVID claims
+#' params$denom_col: the column name for the counts of the denominator, e.g. the
+#'     number of total claims
+#' params$geo_level: list("state", "county")
+#' params$taus: ??
+#' params$lambda: ??
+#' params$export_dir: ??
+#' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
+#'
 #' @param path    path to the parameters file; if not present, will try to copy the file
 #'                "params.json.template"
 #' @param template_path    path to the template parameters file
@@ -90,11 +111,10 @@ filter_counties <- function(geos) {
 
 #' Subset list of counties to those included in the 200 most populous in the US
 #' 
-#' @importFrom covidcast county_census
 #' @importFrom dplyr select %>% arrange desc
 get_populous_counties <- function() {
   return(
-    county_census %>%
+    covidcast::county_census %>%
       select(pop = POPESTIMATE2019, fips = FIPS) %>%
       # Drop megacounties (states)
       filter(!endsWith(fips, "000")) %>% 

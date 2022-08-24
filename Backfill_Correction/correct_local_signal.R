@@ -8,6 +8,7 @@
 
 suppressPackageStartupMessages({
   library(delphiBackfillCorrection)
+  library(argparser)
 })
 
 

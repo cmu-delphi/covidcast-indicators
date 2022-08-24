@@ -1,15 +1,11 @@
-### Data Preprocessing
-### The raw input data should have 4/5 basic columns: 
-### time_value: reference date
-### issue_date: issue date/date of reporting
-### geo_value: location
-### lag: the number of days between issue date and the reference date
-### counts: the number of counts used for estimation
-### library(lubridate)
-### library(stats)
-### library(stats)
-### library(dyplr)
-### library(tidyverse)
+## Data Preprocessing
+## 
+## The raw input data should have 4/5 basic columns:
+## time_value: reference date
+## issue_date: issue date/date of reporting
+## geo_value: location
+## lag: the number of days between issue date and the reference date
+## counts: the number of counts used for estimation
 
 
 #' Re-index, fill na, make sure all reference date have enough rows for updates
@@ -19,8 +15,6 @@
 #' @param lag_col column name for the column of lag
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
-#' 
-#' @importFrom constants ref_lag
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #' 
@@ -45,20 +39,26 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd){
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
 #' 
-#' @importFrom constants ref_lag
-#' @importFrom tidyr fill
-#' @importFrom dplyr everything, select
+#' @importFrom tidyr fill pivot_wider pivot_longer
+#' @importFrom dplyr %>% everything select
 #' 
 #' @export
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   pivot_df <- df[order(df[[lag_col]], decreasing=FALSE), ] %>%
     pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
-  if (any(diff(pivot_df[[lag_col]])!=1)){stop("Risk exists in forward fill")}
+  
+  if (any(diff(pivot_df[[lag_col]]) != 1)) {
+    stop("Risk exists in forward fill")
+  }
   pivot_df <- pivot_df %>% fill(everything(), .direction="down")
-  pivot_df[is.na(pivot_df)] <- 0 # fill NAs with 0s
+  
+  # Fill NAs with 0s
+  pivot_df[is.na(pivot_df)] <- 0
+  
   backfill_df <- pivot_df %>%
     pivot_longer(-lag_col, values_to="value_raw", names_to=refd_col)
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
+  
   return (as.data.frame(backfill_df))
 }
 
@@ -96,7 +96,6 @@ add_shift <- function(df, n_day, refd_col){
   return (df)
 }
 
-wd <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
 #' Add one hot encoding for day of a week info in terms of reference
 #' and issue date
 #' 
@@ -107,10 +106,8 @@ wd <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
 #'    issue date
 #' @param suffix suffix added to indicate which kind of date is used
 #' 
-#' @importFrom constants wd
-#' 
 #' @export
-add_dayofweek <- function(df, wd, time_col, suffix){
+add_dayofweek <- function(df, wd = weekdays_abbr, time_col, suffix){
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
   for (i in 1:6){
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
@@ -130,9 +127,9 @@ add_dayofweek <- function(df, wd, time_col, suffix){
 #' 
 #' @param date as.Date
 #' 
-#' @importFrom lubridate make_date, year, month, day
+#' @importFrom lubridate make_date year month day
+#' 
 #' @return a integer indicating which week it is in a month
-#' @export
 get_weekofmonth <- function(date){
   year <- year(date)
   month <- month(date)
@@ -141,7 +138,6 @@ get_weekofmonth <- function(date){
   return (((day + firstdayofmonth - 1) %/% 7) %% 5 + 1)
 }
 
-wm <- c("W1_issue", "W2_issue", "W3_issue")
 #' Add one hot encoding for week of a month info in terms of issue date
 #' 
 #' @param df Data Frame of aggregated counts within a single location 
@@ -151,7 +147,7 @@ wm <- c("W1_issue", "W2_issue", "W3_issue")
 #'    issue date
 #' 
 #' @export
-add_weekofmonth <- function(df, wm, time_col){
+add_weekofmonth <- function(df, wm = week_issues, time_col){
   weekofmonth <- get_weekofmonth(df[[time_col]])
   for (i in 1:3){
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
@@ -166,6 +162,9 @@ add_weekofmonth <- function(df, wm, time_col){
 #' @param value_col column name for the column of raw value
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
+#' 
+#' @importFrom dplyr %>%
+#' @importFrom tidyr pivot_wider
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
@@ -211,8 +210,6 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
 #'    reported for each reference date and issue date.
 #' @param refd_col column name for the column of reference date
 #' @param lag_col column name for the column of lag
-#' 
-#' @export
 add_params_for_dates <- function(backfill_df, refd_col, lag_col){
   # Add columns for day-of-week effect
   backfill_df <- add_dayofweek(backfill_df, wd, refd_col, "_ref")
@@ -230,7 +227,6 @@ add_params_for_dates <- function(backfill_df, refd_col, lag_col){
 #' @param test_data Data Frame for testing
 #' @param value_col the column name of the considered value
 #' @param the maximum value in the training data at square root level
-#' @export
 add_sqrtscale <- function(train_data, test_data, max_raw, value_col){
   sqrtscale = c()
   sub_max_raw = sqrt(max(train_data$value_raw)) / 2
@@ -248,6 +244,7 @@ add_sqrtscale <- function(train_data, test_data, max_raw, value_col){
               & (test_data$value_raw > (qv_pre)^2), paste0("sqrty", as.character(split))] = 1
     sqrtscale[split+1] = paste0("sqrty", as.character(split))
   }
+  
   return (list(train_data, test_data, sqrtscale))
 }
 

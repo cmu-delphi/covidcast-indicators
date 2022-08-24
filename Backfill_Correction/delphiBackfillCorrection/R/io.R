@@ -12,8 +12,8 @@ read_data <- function(path){
   return (df)
 }
 
-#‘ Export the result to customized directory
-
+#' Export the result to customized directory
+#'
 #' @param test_data test data with prediction result
 #' @param coef_data data frame with the estimated coefficients
 #' @param export_dir export directory

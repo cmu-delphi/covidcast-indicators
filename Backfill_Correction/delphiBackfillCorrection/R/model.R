@@ -4,7 +4,7 @@
 #' @param geo_train_data training data for a certain location
 #' @param geo_test_data testing data for a certain location
 #' 
-#' @expert
+#' @export
 data_filteration <- function(test_lag, geo_train_data, geo_test_data){
   if (test_lag <= 14){
     test_lag_pad=2
@@ -40,7 +40,7 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
 #' @param lambda the level of lasso penalty
 #' @param test_date as.Date
 #'
-#' @expert
+#' @export
 model_training_and_testing <- function(train_data, test_data, taus, params_list,  
                                        lp_solver, lambda, test_date){
   success = 0
@@ -74,16 +74,15 @@ model_training_and_testing <- function(train_data, test_data, taus, params_list,
 }
 
 #' Evaluation of the test results based on WIS score
-#' The WIS score calculation is based on hte weighted_interval_score function 
-#' from the evalcast package from Delphi
+#' The WIS score calculation is based on the weighted_interval_score function 
+#' from the `evalcast` package from Delphi
 #' 
-#' @param test_data multiple columns for the prediction results of difference 
+#' @param test_data multiple columns for the prediction results of different 
 #'    quantiles. Each row represents an update with certain (reference_date, 
-#'    issue_date, location)
+#'    issue_date, location) combination.
 #' @param taus vector of quantiles interested
 #' 
-#' @import covidcast
-#' @importFrom evalcast import weighted_interval_score
+#' @importFrom evalcast weighted_interval_score
 #' 
 #' @export
 evl <- function(test_data, taus){
@@ -99,8 +98,8 @@ evl <- function(test_data, taus){
   predicted_all_exp = exp(predicted_all)
   predicted_trans = as.list(data.frame(t(predicted_all - test_data$log_value_target)))
   predicted_trans_exp = as.list(data.frame(t(predicted_all_exp - test_data$value_target)))
-  test_data$wis =mapply(weighted_interval_score, taus_list, predicted_trans, 0)
-  test_data$wis_exp =mapply(weighted_interval_score, taus_list, predicted_trans_exp, 0)
+  test_data$wis = mapply(weighted_interval_score, taus_list, predicted_trans, 0)
+  test_data$wis_exp = mapply(weighted_interval_score, taus_list, predicted_trans_exp, 0)
   
   return (test_data)
 }

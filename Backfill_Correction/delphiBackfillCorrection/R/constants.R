@@ -22,6 +22,9 @@ sqrtscale_total = c('sqrty0_total', 'sqrty1_total', 'sqrty2_total')
 sqrtscale = c('sqrty0', 'sqrty1', "sqrty2")
 log_lag = "inv_log_lag"
 
+# Dates
+weekdays_abbr <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
+week_issues <- c("W1_issue", "W2_issue", "W3_issue")
 today = Sys.Date()
 
 indicators_and_signals <- tribble(

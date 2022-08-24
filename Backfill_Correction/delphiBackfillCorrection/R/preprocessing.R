@@ -180,7 +180,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   # Add 7dav avg
   avg_df <- get_7dav(pivot_df, refd_col)
   avg_df <- add_shift(avg_df, 1, refd_col) # 7dav until yesterday
-  names(avg_df)[names(avg_df) == 'value_raw'] <- 'value_7dav'
+  names(avg_df)[names(avg_df) == value_col] <- 'value_7dav'
   avg_df_prev7 <- add_shift(avg_df, 7, refd_col)
   names(avg_df_prev7)[names(avg_df_prev7) == 'value_7dav'] <- 'value_prev_7dav'
   
@@ -189,7 +189,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
   
   # Add target
   target_df <- df[df$lag==ref_lag, c(refd_col, "value_raw", "issue_date")]
-  names(target_df)[names(target_df) == 'value_raw'] <- 'value_target'
+  names(target_df)[names(target_df) == value_col] <- 'value_target'
   names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
   
   backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)

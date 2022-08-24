@@ -22,7 +22,7 @@ read_data <- function(path){
 #' @param test_lag 
 #' 
 #' @export
-export_test_result <- function(test_data, coef_data, export_dir, geo){
+export_test_result <- function(test_data, coef_data, export_dir, geo) {
   pred_output_dir = paste("prediction", geo, sep="_")
   write.csv(test_data, paste(export_dir, pred_output_dir , ".csv", sep=""), row.names = FALSE)
   
@@ -32,7 +32,7 @@ export_test_result <- function(test_data, coef_data, export_dir, geo){
 }
 
 #' List valid input files.
-get_files_list(indicator, signal, geo_level, params, sub_dir = "") {
+get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
   # Convert input_group into file names.
   daily_pattern <- create_name_pattern(
     indicator, signal, geo_level, "daily"

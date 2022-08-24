@@ -17,9 +17,12 @@
 #' @param max_refd the latest reference date considered in the data
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
-#' 
+#'
+#' @importFrom tidyr crossing
+#' @importFrom stats setNames
+#'
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd){
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG){
   lags <- min(df[[lag_col]]): ref_lag # Full list of lags
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
   row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
@@ -164,7 +167,7 @@ add_weekofmonth <- function(df, wm = week_issues, time_col){
 #' @param lag_col column name for the column of lag
 #' 
 #' @importFrom dplyr %>%
-#' @importFrom tidyr pivot_wider
+#' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){

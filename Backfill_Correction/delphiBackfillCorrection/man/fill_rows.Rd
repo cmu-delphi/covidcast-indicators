@@ -4,7 +4,7 @@
 \alias{fill_rows}
 \title{Re-index, fill na, make sure all reference date have enough rows for updates}
 \usage{
-fill_rows(df, refd_col, lag_col, min_refd, max_refd)
+fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location 

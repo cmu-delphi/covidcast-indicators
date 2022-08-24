@@ -53,7 +53,7 @@ model_training_and_testing <- function(train_data, test_data, taus, params_list,
         # Quantile regression
         obj = quantile_lasso(as.matrix(train_data[params_list]), 
                              train_data$log_value_target, tau = tau,
-                             lambda = lambda, stand = FALSE, lp_solver = lp_solver)
+                             lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
         
         y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[params_list])))
         test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
@@ -86,7 +86,7 @@ model_training_and_testing <- function(train_data, test_data, taus, params_list,
 #' 
 #' @export
 evl <- function(test_data, taus){
-  n_row = dim(test_data)[1]
+  n_row = nrow(test_data)
   taus_list = as.list(data.frame(matrix(replicate(n_row, taus), ncol=n_row)))
   
   # Calculate WIS

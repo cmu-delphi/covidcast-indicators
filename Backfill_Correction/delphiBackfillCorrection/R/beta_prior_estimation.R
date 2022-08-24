@@ -49,7 +49,7 @@ est_priors <- function(train_data, prior_test_data, cov, taus,
                        base_pseudo_denom=1000, base_pseudo_num=10){
   sub_train_data <- train_data %>% filter(train_data[[cov]] == 1)
   sub_test_data <- prior_test_data %>% filter(prior_test_data[[cov]] == 1)
-  if (dim(sub_test_data)[1] == 0) {
+  if (nrow(sub_test_data) == 0) {
     pseudo_denom <- base_pseudo_denom
     pseudo_num <- base_pseudo_num
   } else {
@@ -59,7 +59,7 @@ est_priors <- function(train_data, prior_test_data, cov, taus,
       tau <- taus[idx]
       obj <- quantile_lasso(as.matrix(sub_train_data[params_list]), 
                            sub_train_data[response], tau = tau,
-                           lambda = lambda, stand = FALSE, lp_solver = lp_solver)
+                           lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
       y_hat_all <- as.numeric(predict(obj, newx = as.matrix(sub_test_data[params_list])))
       quantiles[idx] <- exp(mean(y_hat_all, na.rm=TRUE)) # back to the actual scale
     }

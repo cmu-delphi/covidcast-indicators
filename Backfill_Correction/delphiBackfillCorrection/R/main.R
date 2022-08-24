@@ -14,6 +14,7 @@
 #' @param lag_col string containing name of lag field within `df`.
 #' 
 #' @importFrom dplyr %>% filter
+#' @importFrom tidyr drop_na
 #' 
 #' @export
 run_backfill <- function(df, value_type, geo_level, params,
@@ -76,8 +77,8 @@ run_backfill <- function(df, value_type, geo_level, params,
           filter(issue_date >= test_date) %>% 
           filter(issue_date < test_date + params$testing_window) %>%
           drop_na()
-        if (dim(geo_test_data)[1] == 0) next
-        if (dim(geo_train_data)[1] <= 200) next
+        if (nrow(geo_test_data) == 0) next
+        if (nrow(geo_train_data) <= 200) next
         
         if (value_type == "ratio"){
           geo_prior_test_data = combined_df %>% 
@@ -111,8 +112,7 @@ run_backfill <- function(df, value_type, geo_level, params,
           coefs <- prediction_results[[2]]
           test_data <- evl(test_data, params$taus)
           
-          export_test_result(test_data, coefs, params$export_dir, geo_level,
-                             geo, test_lag)
+          export_test_result(test_data, coefs, params$export_dir, geo_level, test_lag)
         }# End for test lags
       }# End for test date list
     }# End for signal suffixes

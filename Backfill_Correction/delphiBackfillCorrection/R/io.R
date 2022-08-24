@@ -18,15 +18,17 @@ read_data <- function(path){
 #' @param coef_data data frame with the estimated coefficients
 #' @param export_dir export directory
 #' @param geo_level geographical level, can be county or state
-#' @param geo the geogrpahical location
-#' @param test_lag 
+#' @param test_lag
 #' 
 #' @export
-export_test_result <- function(test_data, coef_data, export_dir, geo) {
-  pred_output_dir = paste("prediction", geo, sep="_")
+export_test_result <- function(test_data, coef_data, export_dir,
+                               geo_level, test_lag) {
+  ## TODO
+  warning("test_lag arg not being used")
+  pred_output_dir = paste("prediction", geo_level, sep="_")
   write.csv(test_data, paste(export_dir, pred_output_dir , ".csv", sep=""), row.names = FALSE)
   
-  coef_output_dir = paste("coefs", geo, sep="_")
+  coef_output_dir = paste("coefs", geo_level, sep="_")
   write.csv(test_data, paste(export_dir, coef_output_dir , ".csv", sep=""), row.names = FALSE)
   
 }

@@ -1,6 +1,7 @@
 #' Corrected estimates from a single local signal
 #' 
 #' @importFrom dplyr %>% filter
+#' @importFrom tidyr drop_na
 run_backfill_local <- function(df, export_dir, taus,
                          test_date_list, test_lags, 
                          value_cols, training_days, testing_window,
@@ -46,8 +47,8 @@ run_backfill_local <- function(df, export_dir, taus,
         filter(issue_date >= test_date) %>% 
         filter(issue_date < test_date+testing_window) %>%
         drop_na()
-      if (dim(geo_test_data)[1] == 0) next
-      if (dim(geo_train_data)[1] <= 200) next
+      if (nrow(geo_test_data) == 0) next
+      if (nrow(geo_train_data) <= 200) next
       if (value_type == "fraction"){
         geo_prior_test_data = combined_df %>% 
           filter(issue_date > test_date-7) %>%               

@@ -4,7 +4,7 @@
 \alias{export_test_result}
 \title{Export the result to customized directory}
 \usage{
-export_test_result(test_data, coef_data, export_dir, geo)
+export_test_result(test_data, coef_data, export_dir, geo_level, test_lag)
 }
 \arguments{
 \item{test_data}{test data with prediction result}
@@ -12,8 +12,6 @@ export_test_result(test_data, coef_data, export_dir, geo)
 \item{coef_data}{data frame with the estimated coefficients}
 
 \item{export_dir}{export directory}
-
-\item{geo}{the geogrpahical location}
 
 \item{geo_level}{geographical level, can be county or state}
 

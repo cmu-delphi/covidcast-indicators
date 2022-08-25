@@ -56,12 +56,11 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!(taus %in% names(params))) {params$taus <- TAUS}
   if (!(lambda %in% names(params))) {params$lambda <- LAMBDA}
   if (!(lp_solver %in% names(params))) {params$lp_solver <- LP_SOLVER}
-
-  ## TODO what to do with `value_type` parameter?
+  if (!(value_types %in% names(params))) {params$lp_solver <- c("count", "ratio")}
 
   params$parallel_max_cores <- if_else(
     is.null(params$parallel_max_cores),
-    .Machine$integer.max,
+    .Machine$integer.max - 1,
     params$parallel_max_cores
   )
   

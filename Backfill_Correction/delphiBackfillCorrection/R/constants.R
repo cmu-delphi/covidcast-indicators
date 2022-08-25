@@ -26,10 +26,10 @@ WEEK_ISSUES <- c("W1_issue", "W2_issue", "W3_issue") # wm
 TODAY <- Sys.Date()
 
 INDICATORS_AND_SIGNALS <- tribble(
-  ~indicator, ~signal, ~name_suffix, ~value_type, ~sub_dir,
-  "changehc", "covid", "", "count", "chng",
-  "changehc", "flu", "", "count", "chng",
-  "claims_hosp", "", "", "count", "claims_hosp",
+  ~indicator, ~signal, ~name_suffix, ~sub_dir,
+  "changehc", "covid", "", "chng",
+  "changehc", "flu", "", "chng",
+  "claims_hosp", "", "", "claims_hosp",
   # "dv",,,
-  "quidel", "covidtest", c("total", "age_0_4", "age_5_17", "age_18_49", "age_50_64", "age_65plus", "age_0_17"), "count", "quidel_covidtest"
+  "quidel", "covidtest", c("total", "age_0_4", "age_5_17", "age_18_49", "age_50_64", "age_65plus", "age_0_17"), "quidel_covidtest"
 )

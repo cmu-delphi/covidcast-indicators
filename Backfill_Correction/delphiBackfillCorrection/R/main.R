@@ -133,9 +133,10 @@ run_backfill <- function(df, value_type, geo_level, params,
 main <- function(params){
   # Load indicator x signal groups. Combine with params$geo_level to get all
   # possible geo x signal combinations.
-  groups <- merge(INDICATORS_AND_SIGNALS, data.frame(geo_level = params$geo_level))
+  groups <- merge(INDICATORS_AND_SIGNALS, data.frame(geo_level = params$geo_level)) %>%
+    merge(data.frame(value_type = params$value_types))
   
-  # Loop over every indicator + signal + geo type combination.
+  # Loop over every indicator + signal + geo type + value_type combination.
   for (input_group in groups) {
     files_list <- get_files_list(
       input_group$indicator, input_group$signal, input_group$geo_level,

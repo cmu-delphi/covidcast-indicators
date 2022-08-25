@@ -32,37 +32,39 @@
 #'
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
-#' @importFrom lubridate ymd_hms
 read_params <- function(path = "params.json", template_path = "params.json.template") {
   if (!file.exists(path)) file.copy(template_path, path)
   params <- read_json(path, simplifyVector = TRUE)
 
   # Required parameters
-  if (!(input_dir %in% names(params)) || dir.exists(params$input_dir)) {
+  if (!("input_dir" %in% names(params)) || dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
-  if (!(export_dir %in% names(params))) {
+  if (!("export_dir" %in% names(params))) {
     stop("export_dir must be set in `params`")
   }
   
-  # Set default parameter values if not specified
-  if (!(ref_lag %in% names(params))) {params$ref_lag <- REF_LAG}
-  if (!(testing_window %in% names(params))) {params$testing_window <- TESTING_WINDOW}
-  if (!(test_dates %in% names(params))) {params$test_dates <- ...}
-  if (!(training_days %in% names(params))) {params$training_days <- TRAINING_DAYS}
-  if (!(num_col %in% names(params))) {params$num_col <- "num"}
-  if (!(denom_col %in% names(params))) {params$denom_col <- "denom"}
-  if (!(geo_level %in% names(params))) {params$geo_level <- c("state", "county")}
-  if (!(taus %in% names(params))) {params$taus <- TAUS}
-  if (!(lambda %in% names(params))) {params$lambda <- LAMBDA}
-  if (!(lp_solver %in% names(params))) {params$lp_solver <- LP_SOLVER}
-  if (!(value_types %in% names(params))) {params$lp_solver <- c("count", "ratio")}
+  ## Set default parameter values if not specified
+  # Model parameters
+  if (!("taus" %in% names(params))) {params$taus <- TAUS}
+  if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
+  if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
 
-  params$parallel_max_cores <- if_else(
-    is.null(params$parallel_max_cores),
-    .Machine$integer.max - 1,
-    params$parallel_max_cores
-  )
+  # Date parameters
+  if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
+  if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
+  if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
+  if (!("test_dates" %in% names(params))) {params$test_dates <- ...}
+
+  # Data parameters
+  if (!("num_col" %in% names(params))) {params$num_col <- "num"}
+  if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
+  if (!("geo_level" %in% names(params))) {params$geo_level <- c("state", "county")}
+  if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "ratio")}
+
+  # Parallel parameters
+  if (!("parallel" %in% names(params))) {params$parallel <- FALSE}
+  if (!("parallel_max_cores" %in% names(params))) {params$parallel_max_cores <- .Machine$integer.max}
   
   return(params)
 }

@@ -24,7 +24,7 @@ the following elements: `ref_lag`, `testing_window`, `test_dates`,
 and `data_path` (input dir).}
 
 \item{sub_dir}{string specifying the indicator-specific directory within
-the general input directory `params$data_path`}
+the general input directory `params$input_dir`}
 }
 \description{
 List valid input files.

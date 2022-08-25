@@ -26,7 +26,8 @@ Imports:
     tidyr,
     zoo,
     utils,
-    rlang
+    rlang,
+    parallel
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

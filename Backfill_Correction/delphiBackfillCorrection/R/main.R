@@ -119,8 +119,6 @@ run_backfill <- function(df, value_type, geo_level, params,
       }# End for test date list
     }# End for signal suffixes
   }# End for geo list
-
-  return(NULL)
 }
 
 #' Perform backfill correction on all desired signals and geo levels
@@ -128,9 +126,22 @@ run_backfill <- function(df, value_type, geo_level, params,
 #' @template params-template
 #'
 #' @importFrom dplyr bind_rows
+#' @importFrom parallel detectCores
 #' 
 #' @export
 main <- function(params){
+  ## Set default number of cores for mclapply to the half of the total available number.
+  if (params$parallel) {
+    cores <- detectCores()
+
+    if (is.na(cores)) {
+      warning("Could not detect the number of CPU cores; parallel mode disabled")
+      params$parallel <- FALSE
+    } else {
+      options(mc.cores = min(params$parallel_max_cores, floor(cores / 2)))
+    }
+  }
+
   # Load indicator x signal groups. Combine with params$geo_level to get all
   # possible geo x signal combinations.
   groups <- merge(INDICATORS_AND_SIGNALS, data.frame(geo_level = params$geo_level)) %>%

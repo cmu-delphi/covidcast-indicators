@@ -5,7 +5,7 @@
 \title{Main function to correct a single local signal}
 \usage{
 main_local(
-  data_path,
+  input_dir,
   export_dir,
   test_start_date,
   test_end_date,
@@ -20,7 +20,7 @@ main_local(
 )
 }
 \arguments{
-\item{data_path}{path to the input data files}
+\item{input_dir}{path to the input data files}
 
 \item{export_dir}{path to save output}
 

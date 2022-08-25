@@ -25,7 +25,7 @@ they will be filled with default values when possible.
 
 params$ref_lag: reference lag, after x days, the update is considered to be
     the response. 60 is a reasonable choice for CHNG outpatient data
-params$data_path: link to the input data file
+params$input_dir: link to the input data file
 params$testing_window: the testing window used for saving the runtime. Could
     set it to be 1 if time allows
 params$test_dates: list of two elements, the first one is the start date and
@@ -35,7 +35,7 @@ params$num_col: the column name for the counts of the numerator, e.g. the
     number of COVID claims
 params$denom_col: the column name for the counts of the denominator, e.g. the
     number of total claims
-params$geo_level: list("state", "county")
+params$geo_level: character vector of "state" and "county", by default
 params$taus: vector of considered quantiles
 params$lambda: the level of lasso penalty
 params$export_dir: directory to save corrected data to

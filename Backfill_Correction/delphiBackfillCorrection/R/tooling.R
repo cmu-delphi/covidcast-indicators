@@ -119,7 +119,7 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
 
 #' Main function to correct a single local signal
 #'
-#' @param data_path path to the input data files
+#' @param input_dir path to the input data files
 #' @param export_dir path to save output
 #' @param test_start_date Date to start making predictions on
 #' @param test_end_date Date to stop making predictions on
@@ -136,12 +136,12 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
 #' @importFrom readr read_csv
 #' 
 #' @export
-main_local <- function(data_path, export_dir, 
+main_local <- function(input_dir, export_dir,
                  test_start_date, test_end_date, training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
                  value_type, num_col, denom_col, 
                  lambda = LAMBDA, ref_lag = REF_LAG, lp_solver = LP_SOLVER){
   # Check input data
-  df = read_csv(data_path)
+  df = read_csv(input_dir)
 
   # Check data type and required columns
   result <- validity_checks(df, value_type, num_col, denom_col)

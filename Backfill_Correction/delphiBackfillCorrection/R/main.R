@@ -131,8 +131,6 @@ run_backfill <- function(df, value_type, geo_level, params,
 #' 
 #' @export
 main <- function(params){
-  ## TODO may need more args, not sure
-
   # Load indicator x signal groups. Combine with params$geo_level to get all
   # possible geo x signal combinations.
   groups <- merge(INDICATORS_AND_SIGNALS, data.frame(geo_level = params$geo_level))
@@ -163,7 +161,7 @@ main <- function(params){
     }
     
     # Check data type and required columns
-    ## TODO num and denom names need suffixes to be check properly
+    ## TODO num and denom names need suffixes to be checked properly
     result <- validity_checks(input_data, input_group$value_type, params$num_col, params$denom_col)
     input_data <- result[["df"]]
     

@@ -44,13 +44,13 @@ export_test_result <- function(test_data, coef_data, export_dir,
 #' @template geo_level-template
 #' @template params-template
 #' @param sub_dir string specifying the indicator-specific directory within
-#'     the general input directory `params$data_path`
+#'     the general input directory `params$input_dir`
 get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
   # Make sure we're reading in both 4-week rollup and daily files.
   if (!is.null(sub_dir) && sub_dir != "") {
-    data_path <- paste(params$data_path, sub_dir, sep="_")
+    input_dir <- paste(params$input_dir, sub_dir, sep="_")
   } else {
-    data_path <- params$data_path
+    input_dir <- params$input_dir
   }
 
   # Convert input_group into file names.
@@ -63,9 +63,9 @@ get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
   
   ## TODO: decide whether to use full path or just file name (may not be able to read in)
   # Filter files lists to only include those containing dates we need for training
-  daily_input_files <- list.files(data_path, pattern = daily_pattern) %>%
+  daily_input_files <- list.files(input_dir, pattern = daily_pattern) %>%
     subset_valid_files("daily", params)
-  rollup_input_files <- list.files(data_path, pattern = rollup_pattern) %>%
+  rollup_input_files <- list.files(input_dir, pattern = rollup_pattern) %>%
     subset_valid_files("rollup", params)
   
   return(c(daily_input_files, rollup_input_files))

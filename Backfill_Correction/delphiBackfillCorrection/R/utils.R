@@ -8,7 +8,7 @@
 #'
 #' params$ref_lag: reference lag, after x days, the update is considered to be
 #'     the response. 60 is a reasonable choice for CHNG outpatient data
-#' params$data_path: link to the input data file
+#' params$input_dir: link to the input data file
 #' params$testing_window: the testing window used for saving the runtime. Could
 #'     set it to be 1 if time allows
 #' params$test_dates: list of two elements, the first one is the start date and
@@ -18,7 +18,7 @@
 #'     number of COVID claims
 #' params$denom_col: the column name for the counts of the denominator, e.g. the
 #'     number of total claims
-#' params$geo_level: list("state", "county")
+#' params$geo_level: character vector of "state" and "county", by default
 #' params$taus: vector of considered quantiles
 #' params$lambda: the level of lasso penalty
 #' params$export_dir: directory to save corrected data to
@@ -36,8 +36,28 @@
 read_params <- function(path = "params.json", template_path = "params.json.template") {
   if (!file.exists(path)) file.copy(template_path, path)
   params <- read_json(path, simplifyVector = TRUE)
+
+  # Required parameters
+  if (!(input_dir %in% names(params)) || dir.exists(params$input_dir)) {
+    stop("input_dir must be set in `params` and exist")
+  }
+  if (!(export_dir %in% names(params))) {
+    stop("export_dir must be set in `params`")
+  }
   
-  ## TODO set default parameter values if not specified
+  # Set default parameter values if not specified
+  if (!(ref_lag %in% names(params))) {params$ref_lag <- REF_LAG}
+  if (!(testing_window %in% names(params))) {params$testing_window <- TESTING_WINDOW}
+  if (!(test_dates %in% names(params))) {params$test_dates <- ...}
+  if (!(training_days %in% names(params))) {params$training_days <- TRAINING_DAYS}
+  if (!(num_col %in% names(params))) {params$num_col <- "num"}
+  if (!(denom_col %in% names(params))) {params$denom_col <- "denom"}
+  if (!(geo_level %in% names(params))) {params$geo_level <- c("state", "county")}
+  if (!(taus %in% names(params))) {params$taus <- TAUS}
+  if (!(lambda %in% names(params))) {params$lambda <- LAMBDA}
+  if (!(lp_solver %in% names(params))) {params$lp_solver <- LP_SOLVER}
+
+  ## TODO what to do with `value_type` parameter?
 
   params$parallel_max_cores <- if_else(
     is.null(params$parallel_max_cores),

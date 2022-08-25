@@ -61,11 +61,14 @@ get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
     indicator, signal, geo_level, "rollup"
   )
   
-  ## TODO: decide whether to use full path or just file name (may not be able to read in)
   # Filter files lists to only include those containing dates we need for training
-  daily_input_files <- list.files(input_dir, pattern = daily_pattern) %>%
+  daily_input_files <- list.files(
+      input_dir, pattern = daily_pattern, full.names = TRUE
+    ) %>%
     subset_valid_files("daily", params)
-  rollup_input_files <- list.files(input_dir, pattern = rollup_pattern) %>%
+  rollup_input_files <- list.files(
+      input_dir, pattern = rollup_pattern, full.names = TRUE
+    ) %>%
     subset_valid_files("rollup", params)
   
   return(c(daily_input_files, rollup_input_files))
@@ -85,13 +88,13 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   switch(file_type,
          daily = {
            start_dates <- as.Date(
-             sub("^.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
+             sub("^.*/.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
              format = date_format
            )
            end_dates <- start_dates
          },
          rollup = {
-           rollup_pattern <- "^.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
+           rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
            start_dates <- as.Date(
              sub(rollup_pattern, "\\1", files_list),
              format = date_format
@@ -128,7 +131,7 @@ create_name_pattern <- function(indicator, signal, geo_level,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,
-         daily = str_interp("{indicator}_{signal}_as_of_[0-9]{8}.parquet"),
-         rollup = str_interp("{indicator}_{signal}_from_[0-9]{8}_to_[0-9]{8}.parquet")
+         daily = str_interp("{indicator}_{signal}_as_of_[0-9]{8}.parquet$"),
+         rollup = str_interp("{indicator}_{signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
   )
 }

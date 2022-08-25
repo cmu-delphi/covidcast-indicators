@@ -102,8 +102,7 @@ run_backfill <- function(df, value_type, geo_level, params,
           test_data <- updated_data[[2]]
           sqrtscale <- updated_data[[3]]
           
-          ## TODO what is wd2?
-          covariates <- list(Y7DAV, WEEKDAYS_ABBR, wd2, WEEK_ISSUES, SLOPE, SQRTSCALE)
+          covariates <- list(Y7DAV, WEEKDAYS_ABBR, WEEK_ISSUES, SLOPE, SQRTSCALE)
           params_list <- c(YITL, as.vector(unlist(covariates)))
           
           # Model training and testing

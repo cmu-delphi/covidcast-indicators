@@ -23,9 +23,9 @@ SQRTSCALE <-c('sqrty0', 'sqrty1', "sqrty2")
 LOG_LAG <-"inv_log_lag"
 
 # Dates
-WEEKDAYS_ABBR <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat")
-WEEK_ISSUES <- c("W1_issue", "W2_issue", "W3_issue")
-TODAY <-Sys.Date()
+WEEKDAYS_ABBR <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat") # wd
+WEEK_ISSUES <- c("W1_issue", "W2_issue", "W3_issue") # wm
+TODAY <- Sys.Date()
 
 INDICATORS_AND_SIGNALS <- tribble(
   ~indicator, ~signal, ~name_suffix, ~value_type, ~sub_dir,

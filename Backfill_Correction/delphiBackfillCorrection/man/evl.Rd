@@ -9,11 +9,12 @@ from the `evalcast` package from Delphi}
 evl(test_data, taus)
 }
 \arguments{
-\item{test_data}{multiple columns for the prediction results of different 
-quantiles. Each row represents an update with certain (reference_date, 
-issue_date, location) combination.}
+\item{test_data}{dataframe with a column containing the prediction results of
+each requested quantile. Each row represents an update with certain
+(reference_date, issue_date, location) combination.}
 
-\item{taus}{vector of quantiles interested}
+\item{taus}{numeric vector of quantiles to be predicted. Values
+must be between 0 and 1.}
 }
 \description{
 Evaluation of the test results based on WIS score

@@ -7,7 +7,7 @@
 data_filteration(test_lag, geo_train_data, geo_test_data)
 }
 \arguments{
-\item{test_lag}{}
+\item{test_lag}{integer number of days ago to predict for}
 
 \item{geo_train_data}{training data for a certain location}
 

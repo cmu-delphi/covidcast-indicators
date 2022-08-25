@@ -6,6 +6,26 @@
 \usage{
 get_files_list(indicator, signal, geo_level, params, sub_dir = "")
 }
+\arguments{
+\item{indicator}{string specifying the name of the indicator as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{signal}{string specifying the name of the signal as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
+
+\item{params}{named list containing modeling and data settings. Must include
+the following elements: `ref_lag`, `testing_window`, `test_dates`,
+`training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
+and `data_path` (input dir).}
+
+\item{sub_dir}{string specifying the indicator-specific directory within
+the general input directory `params$data_path`}
+}
 \description{
 List valid input files.
 }

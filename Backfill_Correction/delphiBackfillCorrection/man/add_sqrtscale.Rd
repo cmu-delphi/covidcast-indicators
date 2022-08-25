@@ -11,9 +11,10 @@ add_sqrtscale(train_data, test_data, max_raw, value_col)
 
 \item{test_data}{Data Frame for testing}
 
-\item{value_col}{the column name of the considered value}
+\item{max_raw}{the maximum value in the training data at square root level}
 
-\item{the}{maximum value in the training data at square root level}
+\item{value_col}{string specifying name of value (counts) field within
+the input dataframe.}
 }
 \description{
 Add columns to indicate the scale of value at square root level

@@ -9,12 +9,12 @@
 
 
 #' Re-index, fill na, make sure all reference date have enough rows for updates
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
-#' @param refd_col column name for the column of reference date
-#' @param lag_col column name for the column of lag
+#' @template df-template
+#' @template refd_col-template
+#' @template lag_col-template
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
+#' @param ref_lag max lag to use for training
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #'
@@ -36,11 +36,10 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_L
 #' previous reports exist for issue date D_p < D, all the dates between
 #' [D_p, D] are filled with with the reported value on date D_p. If there is 
 #' no update for any previous issue date, fill in with 0.
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
-#' @param value_col column name for the column of counts
-#' @param refd_col column name for the column of reference date
-#' @param lag_col column name for the column of lag
+#' @template df-template
+#' @template value_col-template
+#' @template refd_col-template
+#' @template lag_col-template
 #' 
 #' @importFrom tidyr fill pivot_wider pivot_longer
 #' @importFrom dplyr %>% everything select
@@ -69,7 +68,7 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 #' The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
-#' @param refd_col column name for the column of reference date
+#' @template refd_col-template
 #' 
 #' @importFrom zoo rollmeanr
 #' 
@@ -88,10 +87,9 @@ get_7dav <- function(pivot_df, refd_col){
 
 #' Used for data shifting in terms of reference date
 #' 
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
+#' @template df-template
 #' @param n_day number of days to be shifted
-#' @param refd_col column name for the column of reference date
+#' @template refd_col-template
 #' 
 #' @export
 add_shift <- function(df, n_day, refd_col){
@@ -102,15 +100,14 @@ add_shift <- function(df, n_day, refd_col){
 #' Add one hot encoding for day of a week info in terms of reference
 #' and issue date
 #' 
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
+#' @template df-template
 #' @param wd vector of days of a week
 #' @param time_col column used for the date, can be either reference date or 
 #'    issue date
 #' @param suffix suffix added to indicate which kind of date is used
 #' 
 #' @export
-add_dayofweek <- function(df, wd = weekdays_abbr, time_col, suffix){
+add_dayofweek <- function(df, wd = WEEKDAYS_ABBR, time_col, suffix){
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
   for (i in 1:6){
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
@@ -122,13 +119,14 @@ add_dayofweek <- function(df, wd = weekdays_abbr, time_col, suffix){
 }
 
 #' Get week of a month info according to a date
+#'
 #' All the dates on or before the ith Sunday but after the (i-1)th Sunday
 #' is considered to be the ith week. Notice that the dates in the 5th week
 #' this month are actually in the same week with the dates in the 1st week
 #' next month and those dates are sparse. Thus, we assign the dates in the 
 #' 5th week to the 1st week.
 #' 
-#' @param date as.Date
+#' @param date Date object
 #' 
 #' @importFrom lubridate make_date year month day
 #' 
@@ -143,14 +141,13 @@ get_weekofmonth <- function(date){
 
 #' Add one hot encoding for week of a month info in terms of issue date
 #' 
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
+#' @template df-template
 #' @param wm vector of weeks of a month
-#' @param time_col column used for the date, can be either reference date or 
-#'    issue date
+#' @param time_col string specifying name of column used for the date,
+#'     can be either reference date or issue date
 #' 
 #' @export
-add_weekofmonth <- function(df, wm = week_issues, time_col){
+add_weekofmonth <- function(df, wm = WEEK_ISSUES, time_col){
   weekofmonth <- get_weekofmonth(df[[time_col]])
   for (i in 1:3){
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
@@ -160,18 +157,17 @@ add_weekofmonth <- function(df, wm = week_issues, time_col){
 
 #' Add 7dav and target to the data
 #' Target is the updates made ref_lag days after the first release
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
-#' @param value_col column name for the column of raw value
-#' @param refd_col column name for the column of reference date
-#' @param lag_col column name for the column of lag
+#' @template df-template
+#' @template value_col-template
+#' @template refd_col-template
+#' @template lag_col-template
+#' @param ref_lag max lag to use for training
 #' 
 #' @importFrom dplyr %>%
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
-  
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF_LAG){
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
@@ -208,28 +204,29 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag){
 }
 
 #' Add params related to date
+#'
 #' Target is the updates made ref_lag days after the first release
-#' @param df Data Frame of aggregated counts within a single location 
-#'    reported for each reference date and issue date.
-#' @param refd_col column name for the column of reference date
-#' @param lag_col column name for the column of lag
-add_params_for_dates <- function(backfill_df, refd_col, lag_col){
+#'
+#' @template df-template
+#' @template refd_col-template
+#' @template lag_col-template
+add_params_for_dates <- function(df, refd_col, lag_col){
   # Add columns for day-of-week effect
-  backfill_df <- add_dayofweek(backfill_df, wd, refd_col, "_ref")
-  backfill_df <- add_dayofweek(backfill_df, wd, "issue_date", "_issue")
+  df <- add_dayofweek(df, WEEKDAYS_ABBR, refd_col, "_ref")
+  df <- add_dayofweek(df, WEEKDAYS_ABBR, "issue_date", "_issue")
   
   # Add columns for week-of-month effect
-  backfill_df <- add_weekofmonth(backfill_df, wm, "issue_date")
+  df <- add_weekofmonth(df, WEEK_ISSUES, "issue_date")
   
-  return (as.data.frame(backfill_df))
+  return (as.data.frame(df))
 }
 
 #' Add columns to indicate the scale of value at square root level
 #' 
 #' @param train_data Data Frame for training
 #' @param test_data Data Frame for testing
-#' @param value_col the column name of the considered value
-#' @param the maximum value in the training data at square root level
+#' @param max_raw the maximum value in the training data at square root level
+#' @template value_col-template
 add_sqrtscale <- function(train_data, test_data, max_raw, value_col){
   sqrtscale = c()
   sub_max_raw = sqrt(max(train_data$value_raw)) / 2
@@ -250,5 +247,3 @@ add_sqrtscale <- function(train_data, test_data, max_raw, value_col){
   
   return (list(train_data, test_data, sqrtscale))
 }
-
-

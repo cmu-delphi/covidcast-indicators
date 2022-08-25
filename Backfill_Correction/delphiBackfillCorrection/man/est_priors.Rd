@@ -9,9 +9,9 @@ a certain day of a week}
 est_priors(
   train_data,
   prior_test_data,
-  cov,
+  dw,
   taus,
-  params_list,
+  covariates,
   response,
   lp_solver,
   lambda,
@@ -25,23 +25,24 @@ est_priors(
 
 \item{prior_test_data}{Data Frame for testing}
 
-\item{taus}{vector of considered quantiles}
+\item{dw}{column name to indicate which day of a week it is}
 
-\item{params_list}{the list of parameters for training}
+\item{taus}{numeric vector of quantiles to be predicted. Values
+must be between 0 and 1.}
+
+\item{covariates}{character vector of column names serving as the covariates for the model}
 
 \item{response}{the column name of the response variable}
 
 \item{lp_solver}{the lp solver used in Quantgen}
 
+\item{lambda}{the level of lasso penalty}
+
 \item{start}{the initialization of the the points in nlm}
 
+\item{base_pseudo_denom}{the pseudo counts added to denominator if little data for training}
+
 \item{base_pseudo_num}{the pseudo counts added to numerator if little data for training}
-
-\item{dw}{column name to indicate which day of a week it is}
-
-\item{labmda}{the level of lasso penalty}
-
-\item{base_pseudo_denum}{the pseudo counts added to denominator if little data for training}
 }
 \description{
 Main function for the beta prior approach

@@ -13,6 +13,7 @@ Depends:
     R (>= 3.5.0),
 Imports:
     dplyr,
+    plyr,
     readr,
     tibble,
     stringr,
@@ -23,7 +24,9 @@ Imports:
     jsonlite,
     lubridate,
     tidyr,
-    zoo
+    zoo,
+    utils,
+    rlang
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

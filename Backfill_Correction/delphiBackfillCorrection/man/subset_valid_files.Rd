@@ -6,6 +6,17 @@
 \usage{
 subset_valid_files(files_list, file_type = c("daily", "rollup"), params)
 }
+\arguments{
+\item{files_list}{character vector of input files of a given `file_type`}
+
+\item{file_type}{string specifying time period coverage of input files.
+Either "daily" or "rollup"}
+
+\item{params}{named list containing modeling and data settings. Must include
+the following elements: `ref_lag`, `testing_window`, `test_dates`,
+`training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
+and `data_path` (input dir).}
+}
 \description{
 Parse filenames to find included dates. Use different patterns if file
 includes daily or rollup (multiple days) data.

@@ -11,6 +11,21 @@ create_name_pattern(
   file_type = c("daily", "rollup")
 )
 }
+\arguments{
+\item{indicator}{string specifying the name of the indicator as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{signal}{string specifying the name of the signal as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
+
+\item{file_type}{string specifying time period coverage of input files.
+Either "daily" or "rollup"}
+}
 \description{
 Create pattern to match input files of a given type, signal, and geo level
 }

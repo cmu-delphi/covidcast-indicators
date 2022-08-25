@@ -7,15 +7,16 @@
 export_test_result(test_data, coef_data, export_dir, geo_level, test_lag)
 }
 \arguments{
-\item{test_data}{test data with prediction result}
+\item{test_data}{test data containing prediction results}
 
-\item{coef_data}{data frame with the estimated coefficients}
+\item{coef_data}{data frame containing the estimated coefficients}
 
 \item{export_dir}{export directory}
 
-\item{geo_level}{geographical level, can be county or state}
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
 
-\item{test_lag}{}
+\item{test_lag}{integer number of days ago to predict for}
 }
 \description{
 Export the result to customized directory

@@ -10,14 +10,17 @@ no update for any previous issue date, fill in with 0.}
 fill_missing_updates(df, value_col, refd_col, lag_col)
 }
 \arguments{
-\item{df}{Data Frame of aggregated counts within a single location 
+\item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{value_col}{column name for the column of counts}
+\item{value_col}{string specifying name of value (counts) field within
+the input dataframe.}
 
-\item{refd_col}{column name for the column of reference date}
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 
-\item{lag_col}{column name for the column of lag}
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
 }
 \description{
 Get pivot table, filling NANs. If there is no update on issue date D but 

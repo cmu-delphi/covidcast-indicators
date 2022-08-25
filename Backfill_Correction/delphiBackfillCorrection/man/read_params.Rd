@@ -36,8 +36,8 @@ params$num_col: the column name for the counts of the numerator, e.g. the
 params$denom_col: the column name for the counts of the denominator, e.g. the
     number of total claims
 params$geo_level: list("state", "county")
-params$taus: ??
-params$lambda: ??
-params$export_dir: ??
+params$taus: vector of considered quantiles
+params$lambda: the level of lasso penalty
+params$export_dir: directory to save corrected data to
 params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
 }

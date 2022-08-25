@@ -4,7 +4,13 @@
 \alias{main}
 \title{Perform backfill correction on all desired signals and geo levels}
 \usage{
-main(params, ...)
+main(params)
+}
+\arguments{
+\item{params}{named list containing modeling and data settings. Must include
+the following elements: `ref_lag`, `testing_window`, `test_dates`,
+`training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
+and `data_path` (input dir).}
 }
 \description{
 Perform backfill correction on all desired signals and geo levels

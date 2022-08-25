@@ -5,10 +5,10 @@
 \title{Add one hot encoding for day of a week info in terms of reference
 and issue date}
 \usage{
-add_dayofweek(df, wd = weekdays_abbr, time_col, suffix)
+add_dayofweek(df, wd = WEEKDAYS_ABBR, time_col, suffix)
 }
 \arguments{
-\item{df}{Data Frame of aggregated counts within a single location 
+\item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
 \item{wd}{vector of days of a week}

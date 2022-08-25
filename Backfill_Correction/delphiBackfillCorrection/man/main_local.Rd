@@ -9,14 +9,41 @@ main_local(
   export_dir,
   test_start_date,
   test_end_date,
-  traning_days,
-  testing_window,
+  training_days = TRAINING_DAYS,
+  testing_window = TESTING_WINDOW,
   value_type,
   num_col,
   denom_col,
-  lambda,
-  ref_lag
+  lambda = LAMBDA,
+  ref_lag = REF_LAG,
+  lp_solver = LP_SOLVER
 )
+}
+\arguments{
+\item{data_path}{path to the input data files}
+
+\item{export_dir}{path to save output}
+
+\item{test_start_date}{Date to start making predictions on}
+
+\item{test_end_date}{Date to stop making predictions on}
+
+\item{training_days}{integer number of days to use for training}
+
+\item{testing_window}{the testing window used for saving the runtime. Could
+set it to be 1 if time allows}
+
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
+
+\item{num_col}{name of numerator column in the input dataframe}
+
+\item{denom_col}{name of denominator column in the input dataframe}
+
+\item{lambda}{the level of lasso penalty}
+
+\item{ref_lag}{max lag to use for training}
+
+\item{lp_solver}{the lp solver used in Quantgen}
 }
 \description{
 Main function to correct a single local signal

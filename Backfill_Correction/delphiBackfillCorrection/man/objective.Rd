@@ -9,7 +9,11 @@ objective(theta, x, prob, ...)
 \arguments{
 \item{theta}{parameters for the distribution in log scale}
 
+\item{x}{vector of quantiles}
+
 \item{prob}{the expected probabilities}
+
+\item{...}{additional arguments}
 }
 \description{
 Generate objection function

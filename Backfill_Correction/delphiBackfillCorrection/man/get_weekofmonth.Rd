@@ -2,23 +2,17 @@
 % Please edit documentation in R/preprocessing.R
 \name{get_weekofmonth}
 \alias{get_weekofmonth}
-\title{Get week of a month info according to a date
-All the dates on or before the ith Sunday but after the (i-1)th Sunday
-is considered to be the ith week. Notice that the dates in the 5th week
-this month are actually in the same week with the dates in the 1st week
-next month and those dates are sparse. Thus, we assign the dates in the 
-5th week to the 1st week.}
+\title{Get week of a month info according to a date}
 \usage{
 get_weekofmonth(date)
 }
 \arguments{
-\item{date}{as.Date}
+\item{date}{Date object}
 }
 \value{
 a integer indicating which week it is in a month
 }
 \description{
-Get week of a month info according to a date
 All the dates on or before the ith Sunday but after the (i-1)th Sunday
 is considered to be the ith week. Notice that the dates in the 5th week
 this month are actually in the same week with the dates in the 1st week

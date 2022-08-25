@@ -7,16 +7,20 @@
 fill_rows(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG)
 }
 \arguments{
-\item{df}{Data Frame of aggregated counts within a single location 
+\item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{refd_col}{column name for the column of reference date}
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 
-\item{lag_col}{column name for the column of lag}
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
 
 \item{min_refd}{the earliest reference date considered in the data}
 
 \item{max_refd}{the latest reference date considered in the data}
+
+\item{ref_lag}{max lag to use for training}
 }
 \value{
 df_new Data Frame with filled rows for missing lags

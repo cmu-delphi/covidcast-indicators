@@ -11,7 +11,8 @@ get_7dav(pivot_df, refd_col)
 \item{pivot_df}{Data Frame where the columns are issue dates and the rows are 
 reference dates}
 
-\item{refd_col}{column name for the column of reference date}
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 }
 \description{
 Calculate 7 day moving average for each issue date

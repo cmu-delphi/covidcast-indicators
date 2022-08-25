@@ -15,24 +15,32 @@ run_backfill(
 )
 }
 \arguments{
-\item{df}{dataframe of input data containing a single indicator + signal +
-level of geographic coverage.}
+\item{df}{Data Frame of aggregated counts within a single location
+reported for each reference date and issue date.}
 
-\item{value_type}{string describing signal type of "count" and "ratio".}
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
 
-\item{geo_level}{string describing geo coverage of input data. "state" or
-"county". If "county" is selected, only data from the 200 most populous
-counties in the US (*not* the dataset) will be used.}
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
 
 \item{params}{named list containing modeling and data settings. Must include
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
 and `data_path` (input dir).}
 
-\item{refd_col}{string containing name of reference date field within `df`.}
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 
-\item{lag_col}{string containing name of lag field within `df`.}
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
+
+\item{signal_suffixes}{character vector specifying value column name
+endings to be appended to standard value column names from
+`params$num_col` and `params$denom_col`. Used for non-standard
+value column names and when processing multiple signals from a
+single input dataframe, as with `quidel`'s age buckets.}
 }
 \description{
-Get backfill-corrected estimates for a single signal + geo combination
+If "county" is selected for `geo_level`, only data from the 200 most populous
+counties in the US (*not* the dataset) will be used.
 }

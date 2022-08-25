@@ -9,10 +9,11 @@ model_training_and_testing(
   train_data,
   test_data,
   taus,
-  params_list,
+  covariates,
   lp_solver,
   lambda,
-  test_date
+  test_date,
+  geo
 )
 }
 \arguments{
@@ -20,15 +21,19 @@ model_training_and_testing(
 
 \item{test_data}{Data frame for testing}
 
-\item{taus}{vector of considered quantiles}
+\item{taus}{numeric vector of quantiles to be predicted. Values
+must be between 0 and 1.}
 
-\item{params_list}{the list of column names serving as the covariates}
+\item{covariates}{list of column names serving as the covariates for the model}
 
 \item{lp_solver}{the lp solver used in Quantgen}
 
 \item{lambda}{the level of lasso penalty}
 
-\item{test_date}{as.Date}
+\item{test_date}{Date object representing test date}
+
+\item{geo}{string specifying the name of the geo region (e.g. FIPS
+code for counties)}
 }
 \description{
 Model training and prediction using quantile regression with Lasso penalty

@@ -1,9 +1,10 @@
-#' Functions for Beta Prior Approach.
-#' This is used only for the ratio prediction e.g. fraction of Covid claims, 
-#' percentage of positive tests. We assume that the ratio follows a beta distribution
-#' that is day-of-week dependent. A quantile regression model is used first with lasso
-#' penalty for supporting quantile estimation and then a non-linear minimization is used
-#' for prior estimation. 
+## Functions for Beta Prior Approach.
+##
+## This is used only for the ratio prediction e.g. fraction of Covid claims,
+## percentage of positive tests. We assume that the ratio follows a beta distribution
+## that is day-of-week dependent. A quantile regression model is used first with lasso
+## penalty for supporting quantile estimation and then a non-linear minimization is used
+## for prior estimation.
 
 #' Sum of squared error
 #' 
@@ -13,11 +14,11 @@ delta <- function(fit, actual) sum((fit-actual)^2)
 
 #' Generate objection function
 #' @param theta parameters for the distribution in log scale 
+#' @param x vector of quantiles
 #' @param prob the expected probabilities
+#' @param ... additional arguments
 #' 
 #' @importFrom stats pbeta
-#' 
-#' @export
 objective <- function(theta, x, prob, ...) {
   ab <- exp(theta) # Parameters are the *logs* of alpha and beta
   fit <- pbeta(x, ab[1], ab[2])
@@ -31,24 +32,24 @@ objective <- function(theta, x, prob, ...) {
 #' @param train_data Data Frame for training
 #' @param prior_test_data Data Frame for testing 
 #' @param dw column name to indicate which day of a week it is
-#' @param taus vector of considered quantiles
-#' @param params_list the list of parameters for training
+#' @template taus-template
+#' @param covariates character vector of column names serving as the covariates for the model
 #' @param response the column name of the response variable
 #' @param lp_solver the lp solver used in Quantgen
-#' @param labmda the level of lasso penalty
+#' @param lambda the level of lasso penalty
 #' @param start the initialization of the the points in nlm
-#' @param base_pseudo_denum the pseudo counts added to denominator if little data for training
+#' @param base_pseudo_denom the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
 #' 
-#' @importFrom stats nlm
+#' @importFrom stats nlm predict
 #' @importFrom dplyr %>% filter
 #' @importFrom quantgen quantile_lasso
-est_priors <- function(train_data, prior_test_data, cov, taus, 
-                       params_list, response, lp_solver, lambda, 
+est_priors <- function(train_data, prior_test_data, dw, taus,
+                       covariates, response, lp_solver, lambda,
                        start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10){
-  sub_train_data <- train_data %>% filter(train_data[[cov]] == 1)
-  sub_test_data <- prior_test_data %>% filter(prior_test_data[[cov]] == 1)
+  sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
+  sub_test_data <- prior_test_data %>% filter(prior_test_data[[dw]] == 1)
   if (nrow(sub_test_data) == 0) {
     pseudo_denom <- base_pseudo_denom
     pseudo_num <- base_pseudo_num
@@ -57,10 +58,10 @@ est_priors <- function(train_data, prior_test_data, cov, taus,
     quantiles <- list()
     for (idx in 1:length(taus)){
       tau <- taus[idx]
-      obj <- quantile_lasso(as.matrix(sub_train_data[params_list]), 
+      obj <- quantile_lasso(as.matrix(sub_train_data[covariates]),
                            sub_train_data[response], tau = tau,
                            lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
-      y_hat_all <- as.numeric(predict(obj, newx = as.matrix(sub_test_data[params_list])))
+      y_hat_all <- as.numeric(predict(obj, newx = as.matrix(sub_test_data[covariates])))
       quantiles[idx] <- exp(mean(y_hat_all, na.rm=TRUE)) # back to the actual scale
     }
     quantiles <- as.vector(unlist(quantiles))  
@@ -85,13 +86,13 @@ est_priors <- function(train_data, prior_test_data, cov, taus,
 #' @param denom_col the column name for the denominator
 #' 
 #' @export
-ratio_adj_with_pseudo <- function(data, cov, pseudo_num, pseudo_denom, num_col, denom_col){
-  if (is.null(cov)){
+ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col){
+  if (is.null(dw)){
     num_adj <- data[[num_col]]  + pseudo_num
     denom_adj <- data[[denom_col]]  + pseudo_denom
   } else {
-    num_adj <- data[[num_col]][data[[cov]] == 1]  + pseudo_num
-    denom_adj <- data[data[[cov]] == 1, denom_col]  + pseudo_denom
+    num_adj <- data[[num_col]][data[[dw]] == 1]  + pseudo_num
+    denom_adj <- data[data[[dw]] == 1, denom_col]  + pseudo_denom
   }
   return (num_adj / denom_adj)
 }
@@ -101,9 +102,11 @@ ratio_adj_with_pseudo <- function(data, cov, pseudo_num, pseudo_denom, num_col, 
 #' @param train_data training data
 #' @param test_data testing data
 #' @param prior_test_data testing data for the lag -1 model
+#' @template taus-template
+#' @param lp_solver the lp solver used in Quantgen
 #' 
 #' @export
-ratio_adj <- function(train_data, test_data, prior_test_data){
+ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_solver = LP_SOLVER){
   train_data$value_target <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
   train_data$value_7dav <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   test_data$value_target <- ratio_adj_with_pseudo(test_data, NULL, 1, 100, "value_target_num", "value_target_denom")
@@ -114,7 +117,7 @@ ratio_adj <- function(train_data, test_data, prior_test_data){
   test_data$log_value_target <- log(test_data$value_target)
   prior_test_data$log_value_7dav <- log(prior_test_data$value_7dav)
   
-  pre_params_list = c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref",
+  pre_covariates = c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref",
                       "log_value_7dav")
   #For training
   train_data$value_raw = NaN
@@ -131,7 +134,7 @@ ratio_adj <- function(train_data, test_data, prior_test_data){
   
   for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")){
     pseudo_counts <- est_priors(train_data, prior_test_data, cov, taus, 
-                        pre_params_list, "log_value_target", lp_solver, lambda=0.1)
+                        pre_covariates, "log_value_target", lp_solver, lambda=0.1)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
     pseudo_num = pseudo_counts[1]
     # update current data

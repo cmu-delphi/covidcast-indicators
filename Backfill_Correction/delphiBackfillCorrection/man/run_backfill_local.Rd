@@ -7,16 +7,45 @@
 run_backfill_local(
   df,
   export_dir,
-  taus,
+  taus = TAUS,
   test_date_list,
-  test_lags,
+  test_lags = TEST_LAGS,
   value_cols,
-  training_days,
-  testing_window,
-  ref_lag,
+  training_days = TRAINING_DAYS,
+  testing_window = TESTING_WINDOW,
+  ref_lag = REF_LAG,
   value_type,
-  lambda
+  lambda = LAMBDA,
+  lp_solver = LP_SOLVER
 )
+}
+\arguments{
+\item{df}{Data Frame of aggregated counts within a single location
+reported for each reference date and issue date.}
+
+\item{export_dir}{path to save output}
+
+\item{taus}{numeric vector of quantiles to be predicted. Values
+must be between 0 and 1.}
+
+\item{test_date_list}{Date vector of dates to make predictions for}
+
+\item{test_lags}{integer vector of number of days ago to predict for}
+
+\item{value_cols}{character vector of numerator and/or denominator field names}
+
+\item{training_days}{integer number of days to use for training}
+
+\item{testing_window}{the testing window used for saving the runtime. Could
+set it to be 1 if time allows}
+
+\item{ref_lag}{max lag to use for training}
+
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
+
+\item{lambda}{the level of lasso penalty}
+
+\item{lp_solver}{the lp solver used in Quantgen}
 }
 \description{
 Corrected estimates from a single local signal

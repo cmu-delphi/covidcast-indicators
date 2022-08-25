@@ -4,7 +4,12 @@
 \alias{training_days_check}
 \title{Check available training days}
 \usage{
-training_days_check(issue_date, training_days)
+training_days_check(issue_date, training_days = TRAINING_DAYS)
+}
+\arguments{
+\item{issue_date}{contents of input data's `issue_date` column}
+
+\item{training_days}{integer number of days to use for training}
 }
 \description{
 Check available training days

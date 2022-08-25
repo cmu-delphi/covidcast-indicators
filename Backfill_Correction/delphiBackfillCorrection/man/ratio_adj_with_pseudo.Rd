@@ -4,10 +4,12 @@
 \alias{ratio_adj_with_pseudo}
 \title{Update ratio based on the pseudo counts for numerators and denominators}
 \usage{
-ratio_adj_with_pseudo(data, cov, pseudo_num, pseudo_denom, num_col, denom_col)
+ratio_adj_with_pseudo(data, dw, pseudo_num, pseudo_denom, num_col, denom_col)
 }
 \arguments{
 \item{data}{Data Frame}
+
+\item{dw}{character to indicate the day of a week. Can be NULL for all the days}
 
 \item{pseudo_num}{the estimated counts to be added to numerators}
 
@@ -16,8 +18,6 @@ ratio_adj_with_pseudo(data, cov, pseudo_num, pseudo_denom, num_col, denom_col)
 \item{num_col}{the column name for the numerator}
 
 \item{denom_col}{the column name for the denominator}
-
-\item{dw}{character to indicate the day of a week. Can be NULL for all the days}
 }
 \description{
 Update ratio based on the pseudo counts for numerators and denominators

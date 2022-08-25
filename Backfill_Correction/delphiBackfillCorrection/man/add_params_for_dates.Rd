@@ -2,20 +2,20 @@
 % Please edit documentation in R/preprocessing.R
 \name{add_params_for_dates}
 \alias{add_params_for_dates}
-\title{Add params related to date
-Target is the updates made ref_lag days after the first release}
+\title{Add params related to date}
 \usage{
-add_params_for_dates(backfill_df, refd_col, lag_col)
+add_params_for_dates(df, refd_col, lag_col)
 }
 \arguments{
-\item{refd_col}{column name for the column of reference date}
-
-\item{lag_col}{column name for the column of lag}
-
-\item{df}{Data Frame of aggregated counts within a single location 
+\item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
+
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
+
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
 }
 \description{
-Add params related to date
 Target is the updates made ref_lag days after the first release
 }

@@ -4,37 +4,55 @@
 #'
 #' @importFrom arrow read_parquet
 #' @importFrom dplyr select %>%
+#' @importFrom rlang .data
 #'
 #' @export
-read_data <- function(path){
-  df <- read_parquet(path, as_data_frame = TRUE) %>% 
-    select(-`__index_level_0__`)
+read_data <- function(path) {
+  df <- read_parquet(path, as_data_frame = TRUE) %>%
+    ## TODO make this more robust
+    select(-.data$`__index_level_0__`)
   return (df)
 }
 
 #' Export the result to customized directory
 #'
-#' @param test_data test data with prediction result
-#' @param coef_data data frame with the estimated coefficients
+#' @param test_data test data containing prediction results
+#' @param coef_data data frame containing the estimated coefficients
 #' @param export_dir export directory
-#' @param geo_level geographical level, can be county or state
-#' @param test_lag
-#' 
+#' @template geo_level-template
+#' @template test_lag-template
+#'
+#' @importFrom readr write_csv
+#'
 #' @export
 export_test_result <- function(test_data, coef_data, export_dir,
                                geo_level, test_lag) {
-  ## TODO
-  warning("test_lag arg not being used")
-  pred_output_dir = paste("prediction", geo_level, sep="_")
-  write.csv(test_data, paste(export_dir, pred_output_dir , ".csv", sep=""), row.names = FALSE)
+  ## TODO why not being used? Probably want test_lag in output name
+  warning("test_lag arg ", test_lag, " not being used")
+
+  pred_output_dir = paste("prediction", geo_level, ".csv", sep="_")
+  write_csv(test_data, file.path(export_dir, pred_output_dir))
   
-  coef_output_dir = paste("coefs", geo_level, sep="_")
-  write.csv(test_data, paste(export_dir, coef_output_dir , ".csv", sep=""), row.names = FALSE)
-  
+  coef_output_dir = paste("coefs", geo_level, ".csv", sep="_")
+  write_csv(test_data, file.path(export_dir, coef_output_dir))
 }
 
 #' List valid input files.
+#'
+#' @template indicator-template
+#' @template signal-template
+#' @template geo_level-template
+#' @template params-template
+#' @param sub_dir string specifying the indicator-specific directory within
+#'     the general input directory `params$data_path`
 get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
+  # Make sure we're reading in both 4-week rollup and daily files.
+  if (!is.null(sub_dir) && sub_dir != "") {
+    data_path <- paste(params$data_path, sub_dir, sep="_")
+  } else {
+    data_path <- params$data_path
+  }
+
   # Convert input_group into file names.
   daily_pattern <- create_name_pattern(
     indicator, signal, geo_level, "daily"
@@ -43,19 +61,12 @@ get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
     indicator, signal, geo_level, "rollup"
   )
   
-  # Make sure we're reading in both 4-week rollup and daily files.
-  if (!is.null(sub_dir) && sub_dir != "") {
-    data_path <- paste(params$data_path, sub_dir, sep="_")
-  } else {
-    data_path <- params$data_path
-  }
-  
-  daily_input_files <- list.files(data_path, pattern = daily_pattern)
-  rollup_input_files <- list.files(data_path, pattern = rollup_pattern)
-  
+  ## TODO: decide whether to use full path or just file name (may not be able to read in)
   # Filter files lists to only include those containing dates we need for training
-  daily_input_files <- subset_valid_files(daily_input_files, "daily", params)
-  rollup_input_files <- subset_valid_files(rollup_input_files, "rollup", params)
+  daily_input_files <- list.files(data_path, pattern = daily_pattern) %>%
+    subset_valid_files("daily", params)
+  rollup_input_files <- list.files(data_path, pattern = rollup_pattern) %>%
+    subset_valid_files("rollup", params)
   
   return(c(daily_input_files, rollup_input_files))
 }
@@ -64,6 +75,10 @@ get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
 #' 
 #' Parse filenames to find included dates. Use different patterns if file
 #' includes daily or rollup (multiple days) data.
+#'
+#' @param files_list character vector of input files of a given `file_type`
+#' @template file_type-template
+#' @template params-template
 subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
   file_type <- match.arg(file_type)
   date_format = "%Y%m%d"
@@ -89,8 +104,8 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   )
   
   ## TODO: start_date depends on if we're doing model training or just corrections.
-  start_date <- today - params$training_days - params$ref_lag
-  end_date <- today - 1
+  start_date <- TODAY - params$training_days - params$ref_lag
+  end_date <- TODAY - 1
   
   # Only keep files with data that falls at least somewhat between the desired
   # start and end range dates.
@@ -103,6 +118,11 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
 
 #' Create pattern to match input files of a given type, signal, and geo level
 #' 
+#' @template indicator-template
+#' @template signal-template
+#' @template geo_level-template
+#' @template file_type-template
+#'
 #' @importFrom stringr str_interp
 create_name_pattern <- function(indicator, signal, geo_level,
                                 file_type = c("daily", "rollup")) {

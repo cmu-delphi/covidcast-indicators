@@ -19,14 +19,14 @@
 #' params$denom_col: the column name for the counts of the denominator, e.g. the
 #'     number of total claims
 #' params$geo_level: list("state", "county")
-#' params$taus: ??
-#' params$lambda: ??
-#' params$export_dir: ??
+#' params$taus: vector of considered quantiles
+#' params$lambda: the level of lasso penalty
+#' params$export_dir: directory to save corrected data to
 #' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
 #'
-#' @param path    path to the parameters file; if not present, will try to copy the file
-#'                "params.json.template"
-#' @param template_path    path to the template parameters file
+#' @param path path to the parameters file; if not present, will try to copy the file
+#'     "params.json.template"
+#' @param template_path path to the template parameters file
 #'
 #' @return a named list of parameters values
 #'
@@ -37,17 +37,8 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!file.exists(path)) file.copy(template_path, path)
   params <- read_json(path, simplifyVector = TRUE)
   
-  params$num_filter <- if_else(params$debug, 2L, 100L)
-  params$s_weight <- if_else(params$debug, 1.00, 0.01)
-  params$s_mix_coef <- if_else(params$debug, 0.05, 0.05)
-  
-  params$start_time <- ymd_hms(
-    sprintf("%s 00:00:00", params$start_date), tz = tz_to
-  )
-  params$end_time <- ymd_hms(
-    sprintf("%s 23:59:59", params$end_date), tz = tz_to
-  )
-  
+  ## TODO set default parameter values if not specified
+
   params$parallel_max_cores <- if_else(
     is.null(params$parallel_max_cores),
     .Machine$integer.max,
@@ -59,7 +50,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
 
 #' Create directory if not already existing
 #'
-#' @param path character vector giving the directory to create
+#' @param path string specifying a directory to create
 #'
 #' @export
 create_dir_not_exist <- function(path)
@@ -68,7 +59,12 @@ create_dir_not_exist <- function(path)
 }
 
 #' Check input data for validity
-validity_checks <- function(df, value_type) {
+#'
+#' @template df-template
+#' @template value_type-template
+#' @param num_col name of numerator column in the input dataframe
+#' @param denom_col name of denominator column in the input dataframe
+validity_checks <- function(df, value_type, num_col, denom_col) {
   # Check data type and required columns
   if (value_type == "count"){
     if (num_col %in% colnames(df)) {value_cols=c(num_col)}
@@ -78,12 +74,12 @@ validity_checks <- function(df, value_type) {
     }
   } else if (value_type == "fraction"){
     value_cols = c(num_col, denom_col)
-    if ( any(!value_cols %in% colnames(df)) ){
+    if ( !any(value_cols %in% colnames(df)) ){
       stop("No valid column name detected for the fraction values!")
     }
   }
   
-  # time_value must exists in the dataset
+  # time_value must exist in the dataset
   if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
   
   # issue_date or lag should exist in the dataset
@@ -93,10 +89,15 @@ validity_checks <- function(df, value_type) {
     }
     else {stop("No issue_date or lag exists!")}
   }
+
+  return(list(df = df, value_cols = value_cols))
 }
 
 #' Check available training days
-training_days_check <- function(issue_date, training_days) {
+#'
+#' @param issue_date contents of input data's `issue_date` column
+#' @param training_days integer number of days to use for training
+training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
   valid_training_days = as.integer(max(issue_date) - min(issue_date))
   if (training_days > valid_training_days){
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
@@ -104,6 +105,8 @@ training_days_check <- function(issue_date, training_days) {
 }
 
 #' Subset list of counties to those included in the 200 most populous in the US
+#'
+#' @param geos character vector of county FIPS codes
 filter_counties <- function(geos) {
   top_200_geos <- get_populous_counties()
   return(intersect(geos, top_200_geos))
@@ -111,15 +114,17 @@ filter_counties <- function(geos) {
 
 #' Subset list of counties to those included in the 200 most populous in the US
 #' 
-#' @importFrom dplyr select %>% arrange desc
+#' @importFrom dplyr select %>% arrange desc pull
+#' @importFrom rlang .data
+#' @importFrom utils head
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      select(pop = POPESTIMATE2019, fips = FIPS) %>%
+      select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
       # Drop megacounties (states)
-      filter(!endsWith(fips, "000")) %>% 
-      arrange(desc(pop)) %>%
-      pull(fips) %>%
+      filter(!endsWith(.data$fips, "000")) %>%
+      arrange(desc(.data$pop)) %>%
+      pull(.data$fips) %>%
       head(n=200)
   )
 }

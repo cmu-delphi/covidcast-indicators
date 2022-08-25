@@ -6,6 +6,9 @@
 \usage{
 filter_counties(geos)
 }
+\arguments{
+\item{geos}{character vector of county FIPS codes}
+}
 \description{
 Subset list of counties to those included in the 200 most populous in the US
 }

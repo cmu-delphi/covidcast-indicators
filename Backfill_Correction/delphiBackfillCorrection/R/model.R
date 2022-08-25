@@ -1,9 +1,11 @@
 #' Filtration for training and testing data with different lags
 #' 
-#' @param test_lag 
+#' @template test_lag-template
 #' @param geo_train_data training data for a certain location
 #' @param geo_test_data testing data for a certain location
 #' 
+#' @importFrom rlang .data
+#'
 #' @export
 data_filteration <- function(test_lag, geo_train_data, geo_test_data){
   if (test_lag <= 14){
@@ -20,11 +22,11 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
     test_lag_pad2=9
   }
   train_data = geo_train_data %>% 
-    filter(lag >= test_lag-test_lag_pad ) %>%
-    filter(lag <= test_lag+test_lag_pad ) 
+    filter(.data$lag >= test_lag-test_lag_pad ) %>%
+    filter(.data$lag <= test_lag+test_lag_pad )
   test_data = geo_test_data %>%
-    filter(lag >= test_lag-test_lag_pad1) %>%
-    filter(lag <= test_lag+test_lag_pad2)
+    filter(.data$lag >= test_lag-test_lag_pad1) %>%
+    filter(.data$lag <= test_lag+test_lag_pad2)
   return (list(train_data, test_data))
 }
 
@@ -34,28 +36,32 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
 #'
 #' @param train_data Data frame for training
 #' @param test_data Data frame for testing 
-#' @param taus vector of considered quantiles
-#' @param params_list the list of column names serving as the covariates
+#' @template taus-template
+#' @param covariates list of column names serving as the covariates for the model
 #' @param lp_solver the lp solver used in Quantgen
 #' @param lambda the level of lasso penalty
-#' @param test_date as.Date
+#' @param test_date Date object representing test date
+#' @param geo string specifying the name of the geo region (e.g. FIPS
+#'     code for counties)
+#'
+#' @importFrom stats predict coef
 #'
 #' @export
-model_training_and_testing <- function(train_data, test_data, taus, params_list,  
-                                       lp_solver, lambda, test_date){
+model_training_and_testing <- function(train_data, test_data, taus, covariates,
+                                       lp_solver, lambda, test_date, geo) {
   success = 0
   coefs_result = list()
-  coef_list = c("intercept", paste(params_list, '_coef', sep=''))
+  coef_list = c("intercept", paste(covariates, '_coef', sep=''))
   for (tau in taus){
     #options(error=NULL)
     tryCatch(
       expr = {
         # Quantile regression
-        obj = quantile_lasso(as.matrix(train_data[params_list]), 
+        obj = quantile_lasso(as.matrix(train_data[covariates]),
                              train_data$log_value_target, tau = tau,
                              lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
         
-        y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[params_list])))
+        y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
         test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
         
         coefs_result[[success+1]] = coef(obj)
@@ -77,10 +83,10 @@ model_training_and_testing <- function(train_data, test_data, taus, params_list,
 #' The WIS score calculation is based on the weighted_interval_score function 
 #' from the `evalcast` package from Delphi
 #' 
-#' @param test_data multiple columns for the prediction results of different 
-#'    quantiles. Each row represents an update with certain (reference_date, 
-#'    issue_date, location) combination.
-#' @param taus vector of quantiles interested
+#' @param test_data dataframe with a column containing the prediction results of
+#'    each requested quantile. Each row represents an update with certain
+#'    (reference_date, issue_date, location) combination.
+#' @template taus-template
 #' 
 #' @importFrom evalcast weighted_interval_score
 #' 

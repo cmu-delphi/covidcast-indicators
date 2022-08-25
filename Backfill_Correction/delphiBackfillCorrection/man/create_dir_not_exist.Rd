@@ -7,7 +7,7 @@
 create_dir_not_exist(path)
 }
 \arguments{
-\item{path}{character vector giving the directory to create}
+\item{path}{string specifying a directory to create}
 }
 \description{
 Create directory if not already existing

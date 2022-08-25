@@ -7,12 +7,13 @@
 add_shift(df, n_day, refd_col)
 }
 \arguments{
-\item{df}{Data Frame of aggregated counts within a single location 
+\item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
 \item{n_day}{number of days to be shifted}
 
-\item{refd_col}{column name for the column of reference date}
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 }
 \description{
 Used for data shifting in terms of reference date

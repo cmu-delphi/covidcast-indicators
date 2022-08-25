@@ -4,7 +4,13 @@
 \alias{ratio_adj}
 \title{Update ratio using beta prior approach}
 \usage{
-ratio_adj(train_data, test_data, prior_test_data)
+ratio_adj(
+  train_data,
+  test_data,
+  prior_test_data,
+  taus = TAUS,
+  lp_solver = LP_SOLVER
+)
 }
 \arguments{
 \item{train_data}{training data}
@@ -12,6 +18,11 @@ ratio_adj(train_data, test_data, prior_test_data)
 \item{test_data}{testing data}
 
 \item{prior_test_data}{testing data for the lag -1 model}
+
+\item{taus}{numeric vector of quantiles to be predicted. Values
+must be between 0 and 1.}
+
+\item{lp_solver}{the lp solver used in Quantgen}
 }
 \description{
 Update ratio using beta prior approach

@@ -4,7 +4,17 @@
 \alias{validity_checks}
 \title{Check input data for validity}
 \usage{
-validity_checks(df, value_type)
+validity_checks(df, value_type, num_col, denom_col)
+}
+\arguments{
+\item{df}{Data Frame of aggregated counts within a single location
+reported for each reference date and issue date.}
+
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
+
+\item{num_col}{name of numerator column in the input dataframe}
+
+\item{denom_col}{name of denominator column in the input dataframe}
 }
 \description{
 Check input data for validity

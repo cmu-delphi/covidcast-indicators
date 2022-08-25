@@ -1,20 +1,23 @@
 #' Get backfill-corrected estimates for a single signal + geo combination
 #' 
-#' @param df dataframe of input data containing a single indicator + signal +
-#'     level of geographic coverage.
-#' @param value_type string describing signal type of "count" and "ratio".
-#' @param geo_level string describing geo coverage of input data. "state" or
-#'     "county". If "county" is selected, only data from the 200 most populous
-#'     counties in the US (*not* the dataset) will be used.
-#' @param params named list containing modeling and data settings. Must include
-#'     the following elements: `ref_lag`, `testing_window`, `test_dates`,
-#'     `training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
-#'     and `data_path` (input dir).
-#' @param refd_col string containing name of reference date field within `df`.
-#' @param lag_col string containing name of lag field within `df`.
+#' If "county" is selected for `geo_level`, only data from the 200 most populous
+#' counties in the US (*not* the dataset) will be used.
+#'
+#' @template df-template
+#' @template value_type-template
+#' @template geo_level-template
+#' @template params-template
+#' @template refd_col-template
+#' @template lag_col-template
+#' @param signal_suffixes character vector specifying value column name
+#'     endings to be appended to standard value column names from
+#'     `params$num_col` and `params$denom_col`. Used for non-standard
+#'     value column names and when processing multiple signals from a
+#'     single input dataframe, as with `quidel`'s age buckets.
 #' 
 #' @importFrom dplyr %>% filter
 #' @importFrom tidyr drop_na
+#' @importFrom rlang .data
 #' 
 #' @export
 run_backfill <- function(df, value_type, geo_level, params,
@@ -29,7 +32,7 @@ run_backfill <- function(df, value_type, geo_level, params,
   
   # Build model for each location
   for (geo in geo_list) {
-    subdf <- df %>% filter(geo_value == geo) %>% filter(lag < params$ref_lag)
+    subdf <- df %>% filter(.data$geo_value == geo) %>% filter(.data$lag < params$ref_lag)
     min_refd <- min(subdf[[refd_col]])
     max_refd <- max(subdf[[refd_col]])
     subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
@@ -65,25 +68,24 @@ run_backfill <- function(df, value_type, geo_level, params,
         )
       }
       combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
-      test_date_list <- get_test_dates(combined_df, params$test_dates)
       
-      for (test_date in test_date_list){
+      for (test_date in params$test_dates) {
         geo_train_data = combined_df %>% 
-          filter(issue_date < test_date) %>% 
-          filter(target_date <= test_date) %>%
-          filter(target_date > test_date - params$training_days) %>%
+          filter(.data$issue_date < test_date) %>%
+          filter(.data$target_date <= test_date) %>%
+          filter(.data$target_date > test_date - params$training_days) %>%
           drop_na()
         geo_test_data = combined_df %>% 
-          filter(issue_date >= test_date) %>% 
-          filter(issue_date < test_date + params$testing_window) %>%
+          filter(.data$issue_date >= test_date) %>%
+          filter(.data$issue_date < test_date + params$testing_window) %>%
           drop_na()
         if (nrow(geo_test_data) == 0) next
         if (nrow(geo_train_data) <= 200) next
         
         if (value_type == "ratio"){
           geo_prior_test_data = combined_df %>% 
-            filter(issue_date > test_date - 7) %>% 
-            filter(issue_date <= test_date)
+            filter(.data$issue_date > test_date - 7) %>%
+            filter(.data$issue_date <= test_date)
           
           updated_data <- ratio_adj(geo_train_data, geo_test_data, geo_prior_test_data)
           geo_train_data <- updated_data[[1]]
@@ -100,13 +102,14 @@ run_backfill <- function(df, value_type, geo_level, params,
           test_data <- updated_data[[2]]
           sqrtscale <- updated_data[[3]]
           
-          covariates <- list(y7dav, wd, wd2, wm, slope, sqrtscale)
-          params_list <- c(yitl, as.vector(unlist(covariates)))
+          ## TODO what is wd2?
+          covariates <- list(Y7DAV, WEEKDAYS_ABBR, wd2, WEEK_ISSUES, SLOPE, SQRTSCALE)
+          params_list <- c(YITL, as.vector(unlist(covariates)))
           
           # Model training and testing
           prediction_results <- model_training_and_testing(
             train_data, test_data, params$taus, params_list,
-            params$lp_solver, params$lambda, test_date
+            params$lp_solver, params$lambda, test_date, geo
           )
           test_data <- prediction_results[[1]]
           coefs <- prediction_results[[2]]
@@ -123,13 +126,17 @@ run_backfill <- function(df, value_type, geo_level, params,
 
 #' Perform backfill correction on all desired signals and geo levels
 #' 
+#' @template params-template
+#'
 #' @importFrom dplyr bind_rows
 #' 
 #' @export
-main <- function(params, ...){
+main <- function(params){
+  ## TODO may need more args, not sure
+
   # Load indicator x signal groups. Combine with params$geo_level to get all
   # possible geo x signal combinations.
-  groups <- merge(indicators_and_signals, data.frame(geo_level = params$geo_level))
+  groups <- merge(INDICATORS_AND_SIGNALS, data.frame(geo_level = params$geo_level))
   
   # Loop over every indicator + signal + geo type combination.
   for (input_group in groups) {
@@ -157,7 +164,9 @@ main <- function(params, ...){
     }
     
     # Check data type and required columns
-    validity_checks(input_data, input_group$value_type)
+    ## TODO num and denom names need suffixes to be check properly
+    result <- validity_checks(input_data, input_group$value_type, params$num_col, params$denom_col)
+    input_data <- result[["df"]]
     
     # Check available training days
     training_days_check(input_data$issue_date, params$training_days)

@@ -17,7 +17,7 @@
 #' @importFrom dplyr %>% filter
 #' @importFrom plyr rbind.fill
 #' @importFrom tidyr drop_na
-#' @importFrom rlang .data
+#' @importFrom rlang .data .env
 #'
 #' @export
 run_backfill_local <- function(df, export_dir, taus = TAUS,
@@ -32,7 +32,7 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
   coef_df_list = list()
 
   for (geo in geo_list) {
-    subdf <- df %>% filter(.data$geo_value == geo) %>% filter(.data$lag < ref_lag)
+    subdf <- df %>% filter(.data$geo_value == .env$geo) %>% filter(.data$lag < .env$ref_lag)
     min_refd <- min(subdf$time_value)
     max_refd <- max(subdf$time_value)
     subdf <- fill_rows(subdf, "time_value", "lag", min_refd, max_refd)
@@ -54,20 +54,20 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
     
     for (test_date in test_date_list) {
       geo_train_data = combined_df %>% 
-        filter(.data$issue_date < test_date) %>%
-        filter(.data$target_date <= test_date) %>%
-        filter(.data$target_date > test_date - training_days) %>%
+        filter(.data$issue_date < .env$test_date) %>%
+        filter(.data$target_date <= .env$test_date) %>%
+        filter(.data$target_date > .env$test_date - .env$training_days) %>%
         drop_na()
       geo_test_data = combined_df %>% 
-        filter(.data$issue_date >= test_date) %>%
-        filter(.data$issue_date < test_date+testing_window) %>%
+        filter(.data$issue_date >= .env$test_date) %>%
+        filter(.data$issue_date < .env$test_date + .env$testing_window) %>%
         drop_na()
       if (nrow(geo_test_data) == 0) next
       if (nrow(geo_train_data) <= 200) next
       if (value_type == "fraction"){
         geo_prior_test_data = combined_df %>% 
-          filter(.data$issue_date > test_date-7) %>%
-          filter(.data$issue_date <= test_date)
+          filter(.data$issue_date > .env$test_date - 7) %>%
+          filter(.data$issue_date <= .env$test_date)
             
         updated_data <- ratio_adj(geo_train_data, geo_test_data, geo_prior_test_data)
         geo_train_data <- updated_data[[1]]

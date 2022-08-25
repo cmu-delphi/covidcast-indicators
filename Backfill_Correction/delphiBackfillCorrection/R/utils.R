@@ -45,16 +45,14 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   
   ## Set default parameter values if not specified
+  # Parallel parameters
+  if (!("parallel" %in% names(params))) {params$parallel <- FALSE}
+  if (!("parallel_max_cores" %in% names(params))) {params$parallel_max_cores <- .Machine$integer.max}
+
   # Model parameters
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
   if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
-
-  # Date parameters
-  if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
-  if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
-  if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
-  if (!("test_dates" %in% names(params))) {params$test_dates <- ...}
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
@@ -62,9 +60,15 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("geo_level" %in% names(params))) {params$geo_level <- c("state", "county")}
   if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "ratio")}
 
-  # Parallel parameters
-  if (!("parallel" %in% names(params))) {params$parallel <- FALSE}
-  if (!("parallel_max_cores" %in% names(params))) {params$parallel_max_cores <- .Machine$integer.max}
+  # Date parameters
+  if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
+  if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
+  if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
+  if (!("test_dates" %in% names(params))) {
+    start_date <- TODAY - params$testing_window
+    end_date <- TODAY - 1
+    params$test_dates <- seq(start_date, end_date, by="days")
+  }
   
   return(params)
 }

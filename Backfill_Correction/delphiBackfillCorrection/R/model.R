@@ -91,7 +91,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 #' @importFrom evalcast weighted_interval_score
 #' 
 #' @export
-evl <- function(test_data, taus){
+evaluate <- function(test_data, taus){
   n_row = nrow(test_data)
   taus_list = as.list(data.frame(matrix(replicate(n_row, taus), ncol=n_row)))
   

@@ -112,7 +112,7 @@ run_backfill <- function(df, value_type, geo_level, params,
           )
           test_data <- prediction_results[[1]]
           coefs <- prediction_results[[2]]
-          test_data <- evl(test_data, params$taus)
+          test_data <- evaluate(test_data, params$taus)
           
           export_test_result(test_data, coefs, params$export_dir, geo_level, test_lag)
         }# End for test lags

@@ -98,7 +98,7 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
         )
         test_data <- prediction_results[[1]]
         coefs <- prediction_results[[2]]
-        test_data <- evl(test_data, taus)
+        test_data <- evaluate(test_data, taus)
         test_data$test_date <- test_date
         coefs$test_date <- test_date
         coefs$test_lag <- test_lag

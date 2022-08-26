@@ -26,7 +26,7 @@ read_data <- function(path) {
 #'
 #' @export
 export_test_result <- function(test_data, coef_data, export_dir,
-                               geo_level, test_lag) {
+                               geo_level, test_lag = NULL) {
   ## TODO why not being used? Probably want test_lag in output name
   warning("test_lag arg ", test_lag, " not being used")
 

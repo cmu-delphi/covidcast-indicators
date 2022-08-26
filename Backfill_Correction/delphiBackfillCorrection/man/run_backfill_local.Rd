@@ -7,14 +7,14 @@
 run_backfill_local(
   df,
   export_dir,
-  taus = TAUS,
   test_date_list,
-  test_lags = TEST_LAGS,
   value_cols,
+  value_type,
+  taus = TAUS,
+  test_lags = TEST_LAGS,
   training_days = TRAINING_DAYS,
   testing_window = TESTING_WINDOW,
   ref_lag = REF_LAG,
-  value_type,
   lambda = LAMBDA,
   lp_solver = LP_SOLVER
 )
@@ -25,14 +25,16 @@ reported for each reference date and issue date.}
 
 \item{export_dir}{path to save output}
 
+\item{test_date_list}{Date vector of dates to make predictions for}
+
+\item{value_cols}{character vector of numerator and/or denominator field names}
+
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
+
 \item{taus}{numeric vector of quantiles to be predicted. Values
 must be between 0 and 1.}
 
-\item{test_date_list}{Date vector of dates to make predictions for}
-
 \item{test_lags}{integer vector of number of days ago to predict for}
-
-\item{value_cols}{character vector of numerator and/or denominator field names}
 
 \item{training_days}{integer number of days to use for training}
 
@@ -40,8 +42,6 @@ must be between 0 and 1.}
 set it to be 1 if time allows}
 
 \item{ref_lag}{max lag to use for training}
-
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
 
 \item{lambda}{the level of lasso penalty}
 

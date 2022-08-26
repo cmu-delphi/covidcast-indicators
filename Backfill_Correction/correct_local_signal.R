@@ -27,6 +27,8 @@ parser <- add_argument(parser, arg="--ref_lag", type="integer", default = 60, he
 args = parse_args(parser)
 
 main_local(args.data_path, args.export_dir,
-     args.test_start_date, args.test_end_date, args.traning_days, args.testing_window,
-     args.value_type, args.num_col, args.denom_col,
+     args.test_start_date, args.test_end_date,
+     args.num_col, args.denom_col,
+     args.value_type,
+     args.training_days, args.testing_window,
      args.lambda, args.ref_lag)

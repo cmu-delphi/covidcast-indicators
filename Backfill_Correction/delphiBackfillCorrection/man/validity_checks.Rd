@@ -16,6 +16,11 @@ reported for each reference date and issue date.}
 
 \item{denom_col}{name of denominator column in the input dataframe}
 }
+\value{
+list of input dataframe augmented with lag column, if it
+    didn't already exist, and character vector of one or two value
+    column names, depending on requested `value_type`
+}
 \description{
 Check input data for validity
 }

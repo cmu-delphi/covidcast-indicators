@@ -89,23 +89,27 @@ create_dir_not_exist <- function(path)
 #' @template value_type-template
 #' @param num_col name of numerator column in the input dataframe
 #' @param denom_col name of denominator column in the input dataframe
+#'
+#' @return list of input dataframe augmented with lag column, if it
+#'     didn't already exist, and character vector of one or two value
+#'     column names, depending on requested `value_type`
 validity_checks <- function(df, value_type, num_col, denom_col) {
   # Check data type and required columns
   if (value_type == "count"){
     if (num_col %in% colnames(df)) {value_cols=c(num_col)}
     else if (denom_col %in% colnames(df)) {value_cols=c(denom_col)}
-    else {
-      stop("No valid column name detected for the count values!")
-    }
-  } else if (value_type == "fraction"){
+    else {stop("No valid column name detected for the count values!")}
+  } else if (value_type == "ratio"){
     value_cols = c(num_col, denom_col)
-    if ( !any(value_cols %in% colnames(df)) ){
-      stop("No valid column name detected for the fraction values!")
+    if ( any(!(value_cols %in% colnames(df))) ){
+      stop("No valid column name detected for the ratio values!")
     }
   }
   
   # time_value must exist in the dataset
-  if ( !"time_value" %in% colnames(df) ){stop("No column for the reference date")}
+  if ( !"time_value" %in% colnames(df) ) {
+    stop("No 'time_value' column detected for the reference date!")
+  }
   
   # issue_date or lag should exist in the dataset
   if ( !"lag" %in% colnames(df) ){

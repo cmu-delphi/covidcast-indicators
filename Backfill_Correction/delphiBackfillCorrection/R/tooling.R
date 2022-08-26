@@ -2,15 +2,15 @@
 #' 
 #' @template df-template
 #' @param export_dir path to save output
-#' @template taus-template
 #' @param test_date_list Date vector of dates to make predictions for
-#' @param test_lags integer vector of number of days ago to predict for
 #' @param value_cols character vector of numerator and/or denominator field names
+#' @template value_type-template
+#' @template taus-template
+#' @param test_lags integer vector of number of days ago to predict for
 #' @param training_days integer number of days to use for training
 #' @param testing_window the testing window used for saving the runtime. Could
 #'     set it to be 1 if time allows
 #' @param ref_lag max lag to use for training
-#' @template value_type-template
 #' @param lambda the level of lasso penalty
 #' @param lp_solver the lp solver used in Quantgen
 #'
@@ -20,10 +20,10 @@
 #' @importFrom rlang .data .env
 #'
 #' @export
-run_backfill_local <- function(df, export_dir, taus = TAUS,
-                         test_date_list, test_lags = TEST_LAGS,
-                         value_cols, training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
-                         ref_lag = REF_LAG, value_type, lambda = LAMBDA, lp_solver = LP_SOLVER) {
+run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value_type,
+                         taus = TAUS, test_lags = TEST_LAGS,
+                         training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
+                         ref_lag = REF_LAG, lambda = LAMBDA, lp_solver = LP_SOLVER) {
   # Get all the locations that are considered
   geo_list <- unique(df[df$time_value %in% test_date_list, "geo_value"])
   # Build model for each location
@@ -64,7 +64,7 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
         drop_na()
       if (nrow(geo_test_data) == 0) next
       if (nrow(geo_train_data) <= 200) next
-      if (value_type == "fraction"){
+      if (value_type == "ratio"){
         geo_prior_test_data = combined_df %>% 
           filter(.data$issue_date > .env$test_date - 7) %>%
           filter(.data$issue_date <= .env$test_date)
@@ -121,14 +121,16 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
 #'
 #' @param input_dir path to the input data files
 #' @param export_dir path to save output
-#' @param test_start_date Date to start making predictions on
-#' @param test_end_date Date to stop making predictions on
+#' @param test_start_date Date or string in the format "YYYY-MM-DD" to start
+#'     making predictions on
+#' @param test_end_date Date or string in the format "YYYY-MM-DD" to stop
+#'     making predictions on
+#' @param num_col name of numerator column in the input dataframe
+#' @param denom_col name of denominator column in the input dataframe
+#' @template value_type-template
 #' @param training_days integer number of days to use for training
 #' @param testing_window the testing window used for saving the runtime. Could
 #'     set it to be 1 if time allows
-#' @template value_type-template
-#' @param num_col name of numerator column in the input dataframe
-#' @param denom_col name of denominator column in the input dataframe
 #' @param lambda the level of lasso penalty
 #' @param ref_lag max lag to use for training
 #' @param lp_solver the lp solver used in Quantgen
@@ -137,9 +139,12 @@ run_backfill_local <- function(df, export_dir, taus = TAUS,
 #' 
 #' @export
 main_local <- function(input_dir, export_dir,
-                 test_start_date, test_end_date, training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
-                 value_type, num_col, denom_col, 
+                 test_start_date, test_end_date,
+                 num_col, denom_col,value_type = c("count", "ratio"),
+                 training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
                  lambda = LAMBDA, ref_lag = REF_LAG, lp_solver = LP_SOLVER){
+  value_type <- match.arg(value_type)
+
   # Check input data
   df = read_csv(input_dir)
 
@@ -166,8 +171,8 @@ main_local <- function(input_dir, export_dir,
   # Check available training days
   training_days_check(df$issue_date, training_days)
   
-  run_backfill_local(df, export_dir, TAUS,
-               test_date_list, TEST_LAGS,
-               value_cols, training_days, testing_window,
-               ref_lag, value_type, lambda, lp_solver)
+  run_backfill_local(df, export_dir,
+               test_date_list, value_cols, value_type,
+               TAUS, TEST_LAGS, training_days, testing_window,
+               ref_lag, lambda, lp_solver)
 }

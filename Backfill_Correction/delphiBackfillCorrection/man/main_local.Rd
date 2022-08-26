@@ -9,11 +9,11 @@ main_local(
   export_dir,
   test_start_date,
   test_end_date,
-  training_days = TRAINING_DAYS,
-  testing_window = TESTING_WINDOW,
-  value_type,
   num_col,
   denom_col,
+  value_type = c("count", "ratio"),
+  training_days = TRAINING_DAYS,
+  testing_window = TESTING_WINDOW,
   lambda = LAMBDA,
   ref_lag = REF_LAG,
   lp_solver = LP_SOLVER
@@ -24,20 +24,22 @@ main_local(
 
 \item{export_dir}{path to save output}
 
-\item{test_start_date}{Date to start making predictions on}
+\item{test_start_date}{Date or string in the format "YYYY-MM-DD" to start
+making predictions on}
 
-\item{test_end_date}{Date to stop making predictions on}
+\item{test_end_date}{Date or string in the format "YYYY-MM-DD" to stop
+making predictions on}
+
+\item{num_col}{name of numerator column in the input dataframe}
+
+\item{denom_col}{name of denominator column in the input dataframe}
+
+\item{value_type}{string describing signal type. Either "count" or "ratio".}
 
 \item{training_days}{integer number of days to use for training}
 
 \item{testing_window}{the testing window used for saving the runtime. Could
 set it to be 1 if time allows}
-
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
-
-\item{num_col}{name of numerator column in the input dataframe}
-
-\item{denom_col}{name of denominator column in the input dataframe}
 
 \item{lambda}{the level of lasso penalty}
 

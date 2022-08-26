@@ -54,12 +54,12 @@ get_block_item_map <- function(qsf) {
 #'
 #' @return (mostly) integer wave number
 get_wave <- function(path_to_file) {
-  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]*([.][0-9])?)(.*qsf.*)"
-  version_name_pattern <- "(.*v)([0-9]*([.][0-9])?)(.*qsf.*)"
+  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]+([.][0-9])?)(_.*qsf.*)"
+  version_name_pattern <- "(.*v)([0-9]+([.][0-9])?)(_.*qsf.*)"
   if (!grepl(wave_name_pattern, path_to_file) && !grepl(version_name_pattern, path_to_file)) {
     stop(
       "The QSF filename must include the string 'qsf', and the wave number in ",
-      "the format 'Wave_XX', 'WaveXX', 'wave_XX', 'waveXX', or 'vXX' where 'XX' is an ",
+      "the format 'Wave_XX_', 'WaveXX_', 'wave_XX_', 'waveXX_', or 'vXX_' where 'XX' is an ",
       "integer or float. The wave specification can occur anywhere in the ",
       "filename but must precede the string 'qsf'."
     )
@@ -87,12 +87,12 @@ get_wave <- function(path_to_file) {
 #'
 #' @return (mostly) integer wave number
 get_wave_from_csv <- function(path_to_file) {
-  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]*([.][0-9])?)(.*csv.*)"
-  version_name_pattern <- "(.*v)([0-9]*([.][0-9])?)(.*csv.*)"
+  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]+([.][0-9])?)(_.*csv.*)"
+  version_name_pattern <- "(.*v)([0-9]+([.][0-9])?)(_.*csv.*)"
   if (!grepl(wave_name_pattern, path_to_file) && !grepl(version_name_pattern, path_to_file)) {
     stop(
       "The CSV filename must include the string 'csv', and the wave number in ",
-      "the format 'Wave_XX', 'WaveXX', 'wave_XX', 'waveXX', or 'vXX' where 'XX' is an ",
+      "the format 'Wave_XX_', 'WaveXX_', 'wave_XX_', 'waveXX_', or 'vXX_' where 'XX' is an ",
       "integer or float. The wave specification can occur anywhere in the ",
       "filename but must precede the string 'csv'."
     )

@@ -5,18 +5,18 @@
 \title{Add one hot encoding for day of a week info in terms of reference
 and issue date}
 \usage{
-add_dayofweek(df, wd = WEEKDAYS_ABBR, time_col, suffix)
+add_dayofweek(df, time_col, suffix, wd = WEEKDAYS_ABBR)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{wd}{vector of days of a week}
-
 \item{time_col}{string specifying name of column used for the
 date, can be either reference date or issue date}
 
 \item{suffix}{suffix added to indicate which kind of date is used}
+
+\item{wd}{vector of days of a week}
 }
 \description{
 Add one hot encoding for day of a week info in terms of reference

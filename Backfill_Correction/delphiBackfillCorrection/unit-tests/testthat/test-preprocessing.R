@@ -71,7 +71,7 @@ test_that("testing the data shifting", {
 
 
 test_that("testing adding columns for each day of a week", {
-  df_new <- add_dayofweek(fake_df, wd, refd_col, "_ref")
+  df_new <- add_dayofweek(fake_df, refd_col, "_ref", wd)
   
   expect_equal(ncol(fake_df) + 7, ncol(df_new))
   expect_true(all(rowSums(df_new[, -c(1:ncol(fake_df))]) == 1))
@@ -89,7 +89,7 @@ test_that("testing the calculation of week of a month", {
 })
 
 test_that("testing the calculation of 7-day moving average", {
-  df_new <- add_weekofmonth(fake_df, wm, refd_col)
+  df_new <- add_weekofmonth(fake_df, refd_col, wm)
   
   expect_equal(ncol(fake_df) + 3, ncol(df_new))
   expect_true(all(rowSums(df_new[, -c(1:ncol(fake_df))]) == 1))

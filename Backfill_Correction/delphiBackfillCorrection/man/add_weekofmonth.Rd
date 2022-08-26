@@ -4,16 +4,16 @@
 \alias{add_weekofmonth}
 \title{Add one hot encoding for week of a month info in terms of issue date}
 \usage{
-add_weekofmonth(df, wm = WEEK_ISSUES, time_col)
+add_weekofmonth(df, time_col, wm = WEEK_ISSUES)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{wm}{vector of weeks of a month}
-
 \item{time_col}{string specifying name of column used for the
 date, can be either reference date or issue date}
+
+\item{wm}{vector of weeks of a month}
 }
 \description{
 Add one hot encoding for week of a month info in terms of issue date

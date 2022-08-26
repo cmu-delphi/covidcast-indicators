@@ -106,7 +106,7 @@ add_shift <- function(df, n_day, refd_col){
 #' @param suffix suffix added to indicate which kind of date is used
 #' 
 #' @export
-add_dayofweek <- function(df, wd = WEEKDAYS_ABBR, time_col, suffix){
+add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR){
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
   for (i in 1:6){
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
@@ -145,7 +145,7 @@ get_weekofmonth <- function(date){
 #' @template time_col-template
 #' 
 #' @export
-add_weekofmonth <- function(df, wm = WEEK_ISSUES, time_col){
+add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES){
   weekofmonth <- get_weekofmonth(df[[time_col]])
   for (i in 1:3){
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
@@ -210,11 +210,11 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF
 #' @template lag_col-template
 add_params_for_dates <- function(df, refd_col, lag_col){
   # Add columns for day-of-week effect
-  df <- add_dayofweek(df, WEEKDAYS_ABBR, refd_col, "_ref")
-  df <- add_dayofweek(df, WEEKDAYS_ABBR, "issue_date", "_issue")
+  df <- add_dayofweek(df, refd_col, "_ref", WEEKDAYS_ABBR)
+  df <- add_dayofweek(df, "issue_date", "_issue", WEEKDAYS_ABBR)
   
   # Add columns for week-of-month effect
-  df <- add_weekofmonth(df, WEEK_ISSUES, "issue_date")
+  df <- add_weekofmonth(df, "issue_date", WEEK_ISSUES)
   
   return (as.data.frame(df))
 }

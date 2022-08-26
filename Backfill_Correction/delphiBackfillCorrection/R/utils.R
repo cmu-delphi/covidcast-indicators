@@ -87,8 +87,8 @@ create_dir_not_exist <- function(path)
 #'
 #' @template df-template
 #' @template value_type-template
-#' @param num_col name of numerator column in the input dataframe
-#' @param denom_col name of denominator column in the input dataframe
+#' @template num_col-template
+#' @template denom_col-template
 #' @template signal_suffixes-template
 #'
 #' @return list of input dataframe augmented with lag column, if it
@@ -131,7 +131,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
 #' Check available training days
 #'
 #' @param issue_date contents of input data's `issue_date` column
-#' @param training_days integer number of days to use for training
+#' @template training_days-template
 training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
   valid_training_days = as.integer(max(issue_date) - min(issue_date))
   if (training_days > valid_training_days){

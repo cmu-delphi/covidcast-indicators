@@ -1,14 +1,14 @@
 #' Read a parquet file into a dataframe
 #' 
-#' @param path path to the input data
+#' @template input_dir-template
 #'
 #' @importFrom arrow read_parquet
 #' @importFrom dplyr select %>%
 #' @importFrom rlang .data
 #'
 #' @export
-read_data <- function(path) {
-  df <- read_parquet(path, as_data_frame = TRUE) %>%
+read_data <- function(input_dir) {
+  df <- read_parquet(input_dir, as_data_frame = TRUE) %>%
     ## TODO make this more robust
     select(-.data$`__index_level_0__`)
   return (df)
@@ -18,7 +18,7 @@ read_data <- function(path) {
 #'
 #' @param test_data test data containing prediction results
 #' @param coef_data data frame containing the estimated coefficients
-#' @param export_dir export directory
+#' @template export_dir-template
 #' @template geo_level-template
 #' @template test_lag-template
 #'

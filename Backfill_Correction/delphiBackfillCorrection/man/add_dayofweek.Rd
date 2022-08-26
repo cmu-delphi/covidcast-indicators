@@ -13,8 +13,8 @@ reported for each reference date and issue date.}
 
 \item{wd}{vector of days of a week}
 
-\item{time_col}{column used for the date, can be either reference date or 
-issue date}
+\item{time_col}{string specifying name of column used for the
+date, can be either reference date or issue date}
 
 \item{suffix}{suffix added to indicate which kind of date is used}
 }

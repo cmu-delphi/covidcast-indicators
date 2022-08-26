@@ -17,16 +17,19 @@ model_training_and_testing(
 )
 }
 \arguments{
-\item{train_data}{Data frame for training}
+\item{train_data}{Data Frame containing training data}
 
 \item{test_data}{Data frame for testing}
 
 \item{taus}{numeric vector of quantiles to be predicted. Values
 must be between 0 and 1.}
 
-\item{covariates}{list of column names serving as the covariates for the model}
+\item{covariates}{character vector of column names serving as the covariates for the model}
 
-\item{lp_solver}{the lp solver used in Quantgen}
+\item{lp_solver}{string specifying the lp solver to use in
+Quantgen fitting. Either "glpk" or "gurobi". For faster
+optimization, use Gurobi (requires separate installation
+of the `gurobi` package).}
 
 \item{lambda}{the level of lasso penalty}
 

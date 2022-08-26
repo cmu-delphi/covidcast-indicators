@@ -29,14 +29,14 @@ objective <- function(theta, x, prob, ...) {
 #' Estimate the priors for the beta distribution based on data for 
 #' a certain day of a week
 #' 
-#' @param train_data Data Frame for training
+#' @template train_data-template
 #' @param prior_test_data Data Frame for testing 
 #' @param dw column name to indicate which day of a week it is
 #' @template taus-template
-#' @param covariates character vector of column names serving as the covariates for the model
+#' @template covariates-template
 #' @param response the column name of the response variable
-#' @param lp_solver the lp solver used in Quantgen
-#' @param lambda the level of lasso penalty
+#' @template lp_solver-template
+#' @template lambda-template
 #' @param start the initialization of the the points in nlm
 #' @param base_pseudo_denom the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
@@ -82,8 +82,8 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
 #' @param dw character to indicate the day of a week. Can be NULL for all the days
 #' @param pseudo_num the estimated counts to be added to numerators
 #' @param pseudo_denom the estimated counts to be added to denominators
-#' @param num_col the column name for the numerator
-#' @param denom_col the column name for the denominator
+#' @template num_col-template
+#' @template denom_col-template
 #' 
 #' @export
 ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col){
@@ -99,11 +99,11 @@ ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, d
 
 #' Update ratio using beta prior approach
 #' 
-#' @param train_data training data
+#' @template train_data-template
 #' @param test_data testing data
 #' @param prior_test_data testing data for the lag -1 model
 #' @template taus-template
-#' @param lp_solver the lp solver used in Quantgen
+#' @template lp_solver-template
 #' 
 #' @export
 ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_solver = LP_SOLVER){

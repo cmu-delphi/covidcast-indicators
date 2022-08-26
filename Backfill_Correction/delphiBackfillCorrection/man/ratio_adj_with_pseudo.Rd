@@ -15,9 +15,9 @@ ratio_adj_with_pseudo(data, dw, pseudo_num, pseudo_denom, num_col, denom_col)
 
 \item{pseudo_denom}{the estimated counts to be added to denominators}
 
-\item{num_col}{the column name for the numerator}
+\item{num_col}{name of numerator column in the input dataframe}
 
-\item{denom_col}{the column name for the denominator}
+\item{denom_col}{name of denominator column in the input dataframe}
 }
 \description{
 Update ratio based on the pseudo counts for numerators and denominators

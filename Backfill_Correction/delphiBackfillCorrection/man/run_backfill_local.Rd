@@ -23,7 +23,7 @@ run_backfill_local(
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{export_dir}{path to save output}
+\item{export_dir}{path to directory to save output to}
 
 \item{test_date_list}{Date vector of dates to make predictions for}
 
@@ -45,7 +45,10 @@ set it to be 1 if time allows}
 
 \item{lambda}{the level of lasso penalty}
 
-\item{lp_solver}{the lp solver used in Quantgen}
+\item{lp_solver}{string specifying the lp solver to use in
+Quantgen fitting. Either "glpk" or "gurobi". For faster
+optimization, use Gurobi (requires separate installation
+of the `gurobi` package).}
 }
 \description{
 Corrected estimates from a single local signal

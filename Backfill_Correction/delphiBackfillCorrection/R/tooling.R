@@ -1,18 +1,17 @@
 #' Corrected estimates from a single local signal
 #' 
 #' @template df-template
-#' @param export_dir path to save output
+#' @template export_dir-template
 #' @param test_date_list Date vector of dates to make predictions for
 #' @param value_cols character vector of numerator and/or denominator field names
 #' @template value_type-template
 #' @template taus-template
 #' @param test_lags integer vector of number of days ago to predict for
-#' @param training_days integer number of days to use for training
-#' @param testing_window the testing window used for saving the runtime. Could
-#'     set it to be 1 if time allows
-#' @param ref_lag max lag to use for training
-#' @param lambda the level of lasso penalty
-#' @param lp_solver the lp solver used in Quantgen
+#' @template training_days-template
+#' @template testing_window-template
+#' @template ref_lag-template
+#' @template lambda-template
+#' @template lp_solver-template
 #'
 #' @importFrom dplyr %>% filter
 #' @importFrom plyr rbind.fill
@@ -119,21 +118,20 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
 
 #' Main function to correct a single local signal
 #'
-#' @param input_dir path to the input data files
-#' @param export_dir path to save output
+#' @template input_dir-template
+#' @template export_dir-template
 #' @param test_start_date Date or string in the format "YYYY-MM-DD" to start
 #'     making predictions on
 #' @param test_end_date Date or string in the format "YYYY-MM-DD" to stop
 #'     making predictions on
-#' @param num_col name of numerator column in the input dataframe
-#' @param denom_col name of denominator column in the input dataframe
+#' @template num_col-template
+#' @template denom_col-template
 #' @template value_type-template
-#' @param training_days integer number of days to use for training
-#' @param testing_window the testing window used for saving the runtime. Could
-#'     set it to be 1 if time allows
-#' @param lambda the level of lasso penalty
-#' @param ref_lag max lag to use for training
-#' @param lp_solver the lp solver used in Quantgen
+#' @template training_days-template
+#' @template testing_window-template
+#' @template lambda-template
+#' @template ref_lag-template
+#' @template lp_solver-template
 #'
 #' @importFrom readr read_csv
 #' 

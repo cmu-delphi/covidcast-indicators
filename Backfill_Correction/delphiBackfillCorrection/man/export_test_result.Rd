@@ -11,7 +11,7 @@ export_test_result(test_data, coef_data, export_dir, geo_level, test_lag)
 
 \item{coef_data}{data frame containing the estimated coefficients}
 
-\item{export_dir}{export directory}
+\item{export_dir}{path to directory to save output to}
 
 \item{geo_level}{string describing geo coverage of input data. Either "state"
 or "county".}

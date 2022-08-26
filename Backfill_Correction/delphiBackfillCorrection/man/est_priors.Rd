@@ -21,7 +21,7 @@ est_priors(
 )
 }
 \arguments{
-\item{train_data}{Data Frame for training}
+\item{train_data}{Data Frame containing training data}
 
 \item{prior_test_data}{Data Frame for testing}
 
@@ -34,7 +34,10 @@ must be between 0 and 1.}
 
 \item{response}{the column name of the response variable}
 
-\item{lp_solver}{the lp solver used in Quantgen}
+\item{lp_solver}{string specifying the lp solver to use in
+Quantgen fitting. Either "glpk" or "gurobi". For faster
+optimization, use Gurobi (requires separate installation
+of the `gurobi` package).}
 
 \item{lambda}{the level of lasso penalty}
 

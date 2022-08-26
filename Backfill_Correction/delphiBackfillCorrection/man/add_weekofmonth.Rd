@@ -12,8 +12,8 @@ reported for each reference date and issue date.}
 
 \item{wm}{vector of weeks of a month}
 
-\item{time_col}{string specifying name of column used for the date,
-can be either reference date or issue date}
+\item{time_col}{string specifying name of column used for the
+date, can be either reference date or issue date}
 }
 \description{
 Add one hot encoding for week of a month info in terms of issue date

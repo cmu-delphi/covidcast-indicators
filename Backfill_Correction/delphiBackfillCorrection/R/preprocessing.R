@@ -14,7 +14,7 @@
 #' @template lag_col-template
 #' @param min_refd the earliest reference date considered in the data
 #' @param max_refd the latest reference date considered in the data
-#' @param ref_lag max lag to use for training
+#' @template ref_lag-template
 #' 
 #' @return df_new Data Frame with filled rows for missing lags
 #'
@@ -102,8 +102,7 @@ add_shift <- function(df, n_day, refd_col){
 #' 
 #' @template df-template
 #' @param wd vector of days of a week
-#' @param time_col column used for the date, can be either reference date or 
-#'    issue date
+#' @template time_col-template
 #' @param suffix suffix added to indicate which kind of date is used
 #' 
 #' @export
@@ -143,8 +142,7 @@ get_weekofmonth <- function(date){
 #' 
 #' @template df-template
 #' @param wm vector of weeks of a month
-#' @param time_col string specifying name of column used for the date,
-#'     can be either reference date or issue date
+#' @template time_col-template
 #' 
 #' @export
 add_weekofmonth <- function(df, wm = WEEK_ISSUES, time_col){
@@ -161,7 +159,7 @@ add_weekofmonth <- function(df, wm = WEEK_ISSUES, time_col){
 #' @template value_col-template
 #' @template refd_col-template
 #' @template lag_col-template
-#' @param ref_lag max lag to use for training
+#' @template ref_lag-template
 #' 
 #' @importFrom dplyr %>%
 #' @importFrom tidyr pivot_wider drop_na
@@ -223,7 +221,7 @@ add_params_for_dates <- function(df, refd_col, lag_col){
 
 #' Add columns to indicate the scale of value at square root level
 #' 
-#' @param train_data Data Frame for training
+#' @template train_data-template
 #' @param test_data Data Frame for testing
 #' @param max_raw the maximum value in the training data at square root level
 #' @template value_col-template

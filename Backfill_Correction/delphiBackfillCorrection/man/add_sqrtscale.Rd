@@ -7,7 +7,7 @@
 add_sqrtscale(train_data, test_data, max_raw, value_col)
 }
 \arguments{
-\item{train_data}{Data Frame for training}
+\item{train_data}{Data Frame containing training data}
 
 \item{test_data}{Data Frame for testing}
 

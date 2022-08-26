@@ -36,12 +36,12 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
 #' Model training and prediction using quantile regression with Lasso penalty
 #' The quantile regression uses the quantile_lasso function from quantgen package
 #'
-#' @param train_data Data frame for training
+#' @template train_data-template
 #' @param test_data Data frame for testing 
 #' @template taus-template
-#' @param covariates list of column names serving as the covariates for the model
-#' @param lp_solver the lp solver used in Quantgen
-#' @param lambda the level of lasso penalty
+#' @template covariates-template
+#' @template lp_solver-template
+#' @template lambda-template
 #' @param test_date Date object representing test date
 #' @param geo string specifying the name of the geo region (e.g. FIPS
 #'     code for counties)

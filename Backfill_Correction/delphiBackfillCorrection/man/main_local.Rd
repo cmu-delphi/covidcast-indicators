@@ -20,9 +20,9 @@ main_local(
 )
 }
 \arguments{
-\item{input_dir}{path to the input data files}
+\item{input_dir}{path to the directory containing input data}
 
-\item{export_dir}{path to save output}
+\item{export_dir}{path to directory to save output to}
 
 \item{test_start_date}{Date or string in the format "YYYY-MM-DD" to start
 making predictions on}
@@ -45,7 +45,10 @@ set it to be 1 if time allows}
 
 \item{ref_lag}{max lag to use for training}
 
-\item{lp_solver}{the lp solver used in Quantgen}
+\item{lp_solver}{string specifying the lp solver to use in
+Quantgen fitting. Either "glpk" or "gurobi". For faster
+optimization, use Gurobi (requires separate installation
+of the `gurobi` package).}
 }
 \description{
 Main function to correct a single local signal

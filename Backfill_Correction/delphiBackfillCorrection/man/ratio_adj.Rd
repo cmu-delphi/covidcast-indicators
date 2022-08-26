@@ -13,7 +13,7 @@ ratio_adj(
 )
 }
 \arguments{
-\item{train_data}{training data}
+\item{train_data}{Data Frame containing training data}
 
 \item{test_data}{testing data}
 
@@ -22,7 +22,10 @@ ratio_adj(
 \item{taus}{numeric vector of quantiles to be predicted. Values
 must be between 0 and 1.}
 
-\item{lp_solver}{the lp solver used in Quantgen}
+\item{lp_solver}{string specifying the lp solver to use in
+Quantgen fitting. Either "glpk" or "gurobi". For faster
+optimization, use Gurobi (requires separate installation
+of the `gurobi` package).}
 }
 \description{
 Update ratio using beta prior approach

@@ -1,6 +1,3 @@
-## TODO not sure how to import roxygen-style outside of a function
-library(tibble)
-
 # Constants for the backfill correction model
 TAUS <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
 REF_LAG <- 60
@@ -25,7 +22,7 @@ WEEKDAYS_ABBR <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat") # wd
 WEEK_ISSUES <- c("W1_issue", "W2_issue", "W3_issue") # wm
 TODAY <- Sys.Date()
 
-INDICATORS_AND_SIGNALS <- tribble(
+INDICATORS_AND_SIGNALS <- tibble::tribble(
   ~indicator, ~signal, ~name_suffix, ~sub_dir,
   "changehc", "covid", "", "chng",
   "changehc", "flu", "", "chng",

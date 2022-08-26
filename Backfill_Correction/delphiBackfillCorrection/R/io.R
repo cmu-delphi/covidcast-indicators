@@ -23,17 +23,21 @@ read_data <- function(path) {
 #' @template test_lag-template
 #'
 #' @importFrom readr write_csv
+#' @importFrom stringr str_interp
 #'
 #' @export
 export_test_result <- function(test_data, coef_data, export_dir,
-                               geo_level, test_lag = NULL) {
-  ## TODO why not being used? Probably want test_lag in output name
-  warning("test_lag arg ", test_lag, " not being used")
+                               geo_level, test_lag) {
+  if (!missing(test_lag)) {
+    base_name = str_interp("{geo_level}_lag{test_lag}.csv")
+  } else {
+    base_name = str_interp("{geo_level}.csv")
+  }
 
-  pred_output_dir = paste("prediction", geo_level, ".csv", sep="_")
+  pred_output_dir = str_interp("prediction_{base_name}")
   write_csv(test_data, file.path(export_dir, pred_output_dir))
   
-  coef_output_dir = paste("coefs", geo_level, ".csv", sep="_")
+  coef_output_dir = str_interp("coefs_{base_name}")
   write_csv(test_data, file.path(export_dir, coef_output_dir))
 }
 
@@ -45,10 +49,10 @@ export_test_result <- function(test_data, coef_data, export_dir,
 #' @template params-template
 #' @param sub_dir string specifying the indicator-specific directory within
 #'     the general input directory `params$input_dir`
-get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
+get_files_list <- function(indicator, signal, geo_level, params, sub_dir) {
   # Make sure we're reading in both 4-week rollup and daily files.
-  if (!is.null(sub_dir) && sub_dir != "") {
-    input_dir <- paste(params$input_dir, sub_dir, sep="_")
+  if (!missing(sub_dir)) {
+    input_dir <- file.path(params$input_dir, sub_dir)
   } else {
     input_dir <- params$input_dir
   }

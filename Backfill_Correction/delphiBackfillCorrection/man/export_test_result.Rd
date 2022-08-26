@@ -4,13 +4,7 @@
 \alias{export_test_result}
 \title{Export the result to customized directory}
 \usage{
-export_test_result(
-  test_data,
-  coef_data,
-  export_dir,
-  geo_level,
-  test_lag = NULL
-)
+export_test_result(test_data, coef_data, export_dir, geo_level, test_lag)
 }
 \arguments{
 \item{test_data}{test data containing prediction results}

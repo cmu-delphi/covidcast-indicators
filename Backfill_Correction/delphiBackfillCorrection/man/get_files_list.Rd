@@ -4,7 +4,7 @@
 \alias{get_files_list}
 \title{List valid input files.}
 \usage{
-get_files_list(indicator, signal, geo_level, params, sub_dir = "")
+get_files_list(indicator, signal, geo_level, params, sub_dir)
 }
 \arguments{
 \item{indicator}{string specifying the name of the indicator as used in

@@ -9,11 +9,7 @@
 #' @template params-template
 #' @template refd_col-template
 #' @template lag_col-template
-#' @param signal_suffixes character vector specifying value column name
-#'     endings to be appended to standard value column names from
-#'     `params$num_col` and `params$denom_col`. Used for non-standard
-#'     value column names and when processing multiple signals from a
-#'     single input dataframe, as with `quidel`'s age buckets.
+#' @template signal_suffixes-template
 #' 
 #' @importFrom dplyr %>% filter
 #' @importFrom tidyr drop_na
@@ -173,8 +169,10 @@ main <- function(params){
     }
     
     # Check data type and required columns
-    ## TODO num and denom names need suffixes to be checked properly
-    result <- validity_checks(input_data, input_group$value_type, params$num_col, params$denom_col)
+    result <- validity_checks(
+      input_data, input_group$value_type,
+      params$num_col, params$denom_col, input_group$name_suffix
+    )
     input_data <- result[["df"]]
     
     # Check available training days

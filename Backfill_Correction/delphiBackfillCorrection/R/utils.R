@@ -89,15 +89,21 @@ create_dir_not_exist <- function(path)
 #' @template value_type-template
 #' @param num_col name of numerator column in the input dataframe
 #' @param denom_col name of denominator column in the input dataframe
+#' @template signal_suffixes-template
 #'
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
-validity_checks <- function(df, value_type, num_col, denom_col) {
+validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes) {
+  if (!missing(signal_suffixes)) {
+    num_col <- paste(num_col, signal_suffixes, sep = "_")
+    denom_col <- paste(num_col, signal_suffixes, sep = "_")
+  }
+
   # Check data type and required columns
   if (value_type == "count"){
-    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
-    else if (denom_col %in% colnames(df)) {value_cols=c(denom_col)}
+    if (all(num_col %in% colnames(df))) {value_cols=c(num_col)}
+    else if (all(denom_col %in% colnames(df))) {value_cols=c(denom_col)}
     else {stop("No valid column name detected for the count values!")}
   } else if (value_type == "ratio"){
     value_cols = c(num_col, denom_col)

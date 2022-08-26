@@ -4,7 +4,7 @@
 \alias{validity_checks}
 \title{Check input data for validity}
 \usage{
-validity_checks(df, value_type, num_col, denom_col)
+validity_checks(df, value_type, num_col, denom_col, signal_suffixes)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -15,6 +15,12 @@ reported for each reference date and issue date.}
 \item{num_col}{name of numerator column in the input dataframe}
 
 \item{denom_col}{name of denominator column in the input dataframe}
+
+\item{signal_suffixes}{character vector specifying value column name
+endings to be appended to standard value column names from
+`params$num_col` and `params$denom_col`. Used for non-standard
+value column names and when processing multiple signals from a
+single input dataframe, as with `quidel`'s age buckets.}
 }
 \value{
 list of input dataframe augmented with lag column, if it

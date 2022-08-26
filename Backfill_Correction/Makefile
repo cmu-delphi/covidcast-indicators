@@ -29,6 +29,3 @@ test: delphiBackfillCorrection_1.0.tar.gz
 
 delphiBackfillCorrection_1.0.tar.gz: $(wildcard delphiBackfillCorrection/R/*.R)
 	R CMD build delphiBackfillCorrection
-
-validate-covidcast:
-	@echo validate-covidcast not yet implemented

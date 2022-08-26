@@ -6,7 +6,7 @@ Date: 2022-08-24
 Author: Jingjing Tang
 Maintainer: Jingjing Tang <jtang2@andrew.cmu.edu>
 Description: Takes formatted output from COVIDcast API data pipelines and
-    adjusted unusual values using a lasso-penalized quantile regression.
+    adjusts unusual values using a lasso-penalized quantile regression.
     Output is used for research and model development.
 License: file LICENSE
 Depends:

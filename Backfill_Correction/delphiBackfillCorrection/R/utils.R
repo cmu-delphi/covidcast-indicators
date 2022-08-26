@@ -40,11 +40,12 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("input_dir" %in% names(params)) || dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
-  if (!("export_dir" %in% names(params))) {
-    stop("export_dir must be set in `params`")
-  }
   
   ## Set default parameter values if not specified
+  # Paths
+  if (!("export_dir" %in% names(params))) {params$export_dir <- "./receiving"}
+  if (!("cache_dir" %in% names(params))) {params$cache_dir <- "./cache"}
+
   # Parallel parameters
   if (!("parallel" %in% names(params))) {params$parallel <- FALSE}
   if (!("parallel_max_cores" %in% names(params))) {params$parallel_max_cores <- .Machine$integer.max}

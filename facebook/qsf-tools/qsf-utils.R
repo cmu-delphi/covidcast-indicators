@@ -50,23 +50,30 @@ get_block_item_map <- function(qsf) {
 #' Wave number as provided in the qsf name should be an integer or a float with
 #' one decimal place.
 #'
-#' @param path_to_qsf
+#' @param path_to_file
 #'
 #' @return (mostly) integer wave number
-get_wave <- function(path_to_qsf) {
+get_wave <- function(path_to_file) {
   wave_name_pattern <- "(.*[Ww]ave_?)([0-9]*([.][0-9])?)(.*qsf.*)"
-  if (!grepl(wave_name_pattern, path_to_qsf)) {
+  version_name_pattern <- "(.*v)([0-9]*([.][0-9])?)(.*qsf.*)"
+  if (!grepl(wave_name_pattern, path_to_file) && !grepl(version_name_pattern, path_to_file)) {
     stop(
-      "The qsf filename must include the string 'qsf', and the wave number in ",
-      "the format 'Wave_XX', 'WaveXX', 'wave_XX', or 'waveXX' where 'XX' is an ",
+      "The QSF filename must include the string 'qsf', and the wave number in ",
+      "the format 'Wave_XX', 'WaveXX', 'wave_XX', 'waveXX', or 'vXX' where 'XX' is an ",
       "integer or float. The wave specification can occur anywhere in the ",
       "filename but must precede the string 'qsf'."
     )
   }
 
-  wave <- as.numeric(
-    sub(wave_name_pattern, "\\2", path_to_qsf)
-  ) 
+  if (grepl(wave_name_pattern, path_to_file)) {
+    wave <- as.numeric(
+      sub(wave_name_pattern, "\\2", path_to_file)
+    )
+  } else if (grepl(version_name_pattern, path_to_file)) {
+    wave <- as.numeric(
+      sub(version_name_pattern, "\\2", path_to_file)
+    )
+  }
   
   return(wave)
 }

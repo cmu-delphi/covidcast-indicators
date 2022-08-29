@@ -4,7 +4,7 @@
     "log_exceptions": false
   },
   "indicator": {
-    "input_file": "./tests/test_data/SYNEDI_AGG_INPATIENT_11062020_1451CDT.csv.gz",
+    "input_dir": "./retrieve_files",
     "start_date": "2020-02-01",
     "end_date": null,
     "drop_date": null,
@@ -14,7 +14,13 @@
     "obfuscated_prefix": "foo_obfuscated",
     "parallel": false,
     "geos": ["state", "msa", "hrr", "county"],
-    "weekday": [true, false]
+    "weekday": [true, false],
+    "ftp_credentials": {
+      "host": "",
+      "user": "",
+      "pass": "",
+      "port": 2222
+    }
   },
   "validation": {
     "common": {

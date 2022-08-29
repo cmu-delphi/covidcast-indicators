@@ -11,6 +11,8 @@ RUN install2.r --error \
     roxygen2 \
     Rcpp \
     BH \
+    plyr \
+    survey \
     readr
 
 RUN apt-get update && apt-get install -qq -y \

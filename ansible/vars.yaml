@@ -26,6 +26,18 @@ changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
+# claims_hosp
+claims_hosp_ftp_user: "{{ vault_claims_hosp_ftp_user }}"
+claims_hosp_ftp_password: "{{ vault_claims_hosp_ftp_password }}"
+claims_hosp_ftp_host: "{{ vault_claims_hosp_ftp_host }}"
+claims_hosp_midas_user: "{{ vault_claims_hosp_midas_user }}"
+claims_hosp_midas_password: "{{ vault_claims_hosp_midas_password }}"
+# doctor_visits
+doctor_visits_ftp_user: "{{ vault_doctor_visits_ftp_user }}"
+doctor_visits_ftp_password: "{{ vault_doctor_visits_ftp_password }}"
+doctor_visits_ftp_host: "{{ vault_doctor_visits_ftp_host }}"
+doctor_visits_midas_user: "{{ vault_doctor_visits_midas_user }}"
+doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 # NCHS
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 # SirCAL
@@ -47,3 +59,6 @@ google_symptoms_auth_uri: "{{ vault_google_symptoms_auth_uri }}"
 google_symptoms_token_uri: "{{ vault_google_symptoms_token_uri }}"
 google_symptoms_auth_provider_x509_cert_url: "{{ vault_google_symptoms_auth_provider_x509_cert_url }}"
 google_symptoms_client_x509_cert_url: "{{ vault_google_symptoms_client_x509_cert_url }}"
+# flagger
+flagger_aws_access_key_id: "{{ vault_flagger_aws_access_key_id }}"
+flagger_aws_secret_access_key: "{{ vault_flagger_aws_secret_access_key }}"

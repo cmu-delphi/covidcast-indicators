@@ -29,14 +29,14 @@ read_contingency_params <- function(path = "params.json", template_path = "param
   
   global_params <- c("archive_days", "backfill_days", "static_dir", "cache_dir", 
                      "archive_dir", "weights_in_dir", "input_dir", "debug", 
-                     "parallel", "qualtrics")
+                     "parallel", "qualtrics", "parallel_max_cores")
   for (param in global_params) {
     if ( is.null(contingency_params[[param]]) & !is.null(params[[param]]) ) {
       contingency_params[[param]] <- params[[param]]
     }
   }
   
-  contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 100L)
+  contingency_params$num_filter <- if_else(contingency_params$debug, 2L, 40L)
   contingency_params$s_weight <- if_else(contingency_params$debug, 1.00, 0.01)
   contingency_params$s_mix_coef <- if_else(contingency_params$debug, 0.05, 0.05)
   contingency_params$use_input_asis <- if_else(
@@ -209,9 +209,8 @@ verify_aggs <- function(aggregations) {
                            MARGIN=1, FUN=paste, collapse="_")
   
   aggregations$var_weight <- "weight"
-  aggregations$skip_mixing <- FALSE
   
-  expected_names <- c("name", "var_weight", "metric", "group_by", "skip_mixing", 
+  expected_names <- c("name", "var_weight", "metric", "group_by",
                       "compute_fn", "post_fn", "id")
   if ( !all(expected_names %in% names(aggregations)) ) {
     stop(sprintf(

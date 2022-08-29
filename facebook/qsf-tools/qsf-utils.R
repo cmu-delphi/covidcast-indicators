@@ -87,8 +87,8 @@ get_wave <- function(path_to_file) {
 #'
 #' @return (mostly) integer wave number
 get_wave_from_csv <- function(path_to_file) {
-  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]+([.][0-9])?)(_.*csv.*)"
-  version_name_pattern <- "(.*v)([0-9]+([.][0-9])?)(_.*csv.*)"
+  wave_name_pattern <- "(.*[Ww]ave_?)([0-9]+([.][0-9])?)(.*csv.*)"
+  version_name_pattern <- "(.*v)([0-9]+([.][0-9])?)(.*csv.*)"
   if (!grepl(wave_name_pattern, path_to_file) && !grepl(version_name_pattern, path_to_file)) {
     stop(
       "The CSV filename must include the string 'csv', and the wave number in ",

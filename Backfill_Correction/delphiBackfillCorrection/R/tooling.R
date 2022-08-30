@@ -38,7 +38,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
     if (value_type == "count") { # For counts data only
       combined_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_df <- add_7davs_and_target(combined_df, "value_raw", "time_value", "lag", ref_lag)
-    } else if (value_type == "fraction"){
+    } else if (value_type == "ratio"){
       combined_num_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", "time_value", "lag", ref_lag)
           

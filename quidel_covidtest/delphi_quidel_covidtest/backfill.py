@@ -112,7 +112,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
     path = backfill_dir + "/quidel_covidtest_from_%s_to_%s.parquet"%(
         datetime.strftime(earliest_date, "%Y%m%d"),
         datetime.strftime(latest_date, "%Y%m%d"))
-    merged_file.to_parquet(path)
+    merged_file.to_parquet(path, index=False)
 
     # Delete daily files once we have the merged one.
     if not test_mode:

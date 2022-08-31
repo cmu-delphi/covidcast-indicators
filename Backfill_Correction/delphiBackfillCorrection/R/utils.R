@@ -50,8 +50,6 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("make_predictions" %in% names(params))) {
     stop("make_predictions flag must be set in `params`")
   }
-
-params$train_models params$make_predictions
   
   ## Set default parameter values if not specified
   # Paths

@@ -126,6 +126,11 @@ run_backfill <- function(df, value_type, geo_level, params,
 #' 
 #' @export
 main <- function(params){
+  if (!params$train_models && !params$make_predictions) {
+    message("both model training and prediction generation are turned off; exiting")
+    return
+  }
+
   ## Set default number of cores for mclapply to the half of the total available number.
   if (params$parallel) {
     cores <- detectCores()

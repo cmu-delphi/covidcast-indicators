@@ -23,6 +23,10 @@
 #' params$lambda: the level of lasso penalty
 #' params$export_dir: directory to save corrected data to
 #' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
+#' params$train_models: boolean indicating whether to train models (TRUE). If
+#'     FALSE previously trained models (stored locally) will be used instead.
+#' params$make_predictions: boolean indicating whether to generate and save
+#'      corrections.
 #'
 #' @param path path to the parameters file; if not present, will try to copy the file
 #'     "params.json.template"
@@ -40,6 +44,14 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("input_dir" %in% names(params)) || !dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
+  if (!("train_models" %in% names(params))) {
+    stop("train_models flag must be set in `params`")
+  }
+  if (!("make_predictions" %in% names(params))) {
+    stop("make_predictions flag must be set in `params`")
+  }
+
+params$train_models params$make_predictions
   
   ## Set default parameter values if not specified
   # Paths
@@ -65,7 +77,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
   if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
   if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
-  if (!("test_dates" %in% names(params))) {
+  if (!("test_dates" %in% names(params)) || length(params$test_dates) == 0) {
     start_date <- TODAY - params$testing_window
     end_date <- TODAY - 1
     params$test_dates <- seq(start_date, end_date, by="days")

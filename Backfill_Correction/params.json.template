@@ -1,13 +1,14 @@
 {
-  "ref_lag": 60,
+  "ref_lag": 7,
   "input_dir": "",
   "cache_dir": "./cache",
-  "test_dates":["", ""] ,
   "testing_window": 1,
-  "training_days": 270,
+  "training_days": 30,
   "export_dir": "./receiving",
   "geo_levels": ["state", "county"],
   "value_types": ["count", "ratio"],
   "num_col": "num",
   "denom_col": "den",
+  "train_models": true,
+  "make_predictions": true
 }

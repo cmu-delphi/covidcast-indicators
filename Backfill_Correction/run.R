@@ -13,7 +13,7 @@ suppressPackageStartupMessages({
 
 
 parser <- arg_parser(description='Run backfill corrections pipeline')
-# Default to FALSE if not specified.
+# Both flags default to FALSE (do not train/predict) if not specified.
 parser <- add_argument(parser, arg="--train_models", flag=TRUE)
 parser <- add_argument(parser, arg="--make_predictions", flag=TRUE)
 args = parse_args(parser)

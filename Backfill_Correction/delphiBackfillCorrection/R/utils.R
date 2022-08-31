@@ -37,7 +37,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   params <- read_json(path, simplifyVector = TRUE)
 
   # Required parameters
-  if (!("input_dir" %in% names(params)) || dir.exists(params$input_dir)) {
+  if (!("input_dir" %in% names(params)) || !dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
   

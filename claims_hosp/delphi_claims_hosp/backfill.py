@@ -11,9 +11,12 @@ from datetime import datetime
 
 # third party
 import pandas as pd
+from delphi_utils import GeoMapper
 
-# first party
+
 from .config import Config
+
+gmpr = GeoMapper()
 
 def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     """
@@ -33,7 +36,8 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
         dtype=Config.CLAIMS_DTYPES,
         parse_dates=[Config.CLAIMS_DATE_COL],
     )
-
+    backfilldata = gmpr.add_geocode(backfilldata, from_code="fips", new_code="state_id",
+                           from_col="fips", new_col="state_id")
     backfilldata.rename({"ServiceDate": "time_value",
                          "PatCountyFIPS": "fips",
                          "Denominator": "den",
@@ -41,7 +45,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
                         axis=1, inplace=True)
     #Store one year's backfill data
     _start_date = _end_date.replace(year=_end_date.year-1)
-    selected_columns = ['time_value', 'fips',
+    selected_columns = ['time_value', 'fips', 'state_id',
                         'den', 'num']
     backfilldata = backfilldata.loc[(backfilldata["time_value"] >= _start_date)
                                     & (~backfilldata["fips"].isnull()),
@@ -49,7 +53,7 @@ def store_backfill_file(claims_filepath, _end_date, backfill_dir):
     path = backfill_dir + \
         "/claims_hosp_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path)
+    backfilldata.to_parquet(path, index=False)
 
 def merge_backfill_file(backfill_dir, backfill_merge_day, today,
                         test_mode=False, check_nd=25):
@@ -103,7 +107,7 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
     path = backfill_dir + "/claims_hosp_from_%s_to_%s.parquet"%(
         datetime.strftime(earliest_date, "%Y%m%d"),
         datetime.strftime(latest_date, "%Y%m%d"))
-    merged_file.to_parquet(path)
+    merged_file.to_parquet(path, index=False)
 
     # Delete daily files once we have the merged one.
     if not test_mode:

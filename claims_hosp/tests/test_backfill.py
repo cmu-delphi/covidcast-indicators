@@ -36,7 +36,7 @@ class TestBackfill:
         fn = "claims_hosp_as_of_20200101.parquet"
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         
-        selected_columns = ['time_value', 'fips',
+        selected_columns = ['time_value', 'fips', 'state_id',
                         'num', 'den']
         assert set(selected_columns) == set(backfill_df.columns)  
         

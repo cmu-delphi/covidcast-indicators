@@ -103,76 +103,78 @@ run_backfill <- function(df, value_type, params,
           denom_col <- params$denom_col
         }
 
-        # Handle different signal types
-        if (value_type == "count") { # For counts data only
-          combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
-          combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
+        for (value_type in params$value_types) {
+          # Handle different signal types
+          if (value_type == "count") { # For counts data only
+            combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
+            combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
 
-        } else if (value_type == "ratio"){
-          combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
-          combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
+          } else if (value_type == "ratio"){
+            combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
+            combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
 
-          combined_denom_df <- fill_missing_updates(subdf, denom_col, refd_col, lag_col)
-          combined_denom_df <- add_7davs_and_target(combined_denom_df, "value_raw", refd_col, lag_col)
+            combined_denom_df <- fill_missing_updates(subdf, denom_col, refd_col, lag_col)
+            combined_denom_df <- add_7davs_and_target(combined_denom_df, "value_raw", refd_col, lag_col)
 
-          combined_df <- merge(
-            combined_num_df, combined_denom_df,
-            by=c(refd_col, "issue_date", lag_col, "target_date"), all.y=TRUE,
-            suffixes=c("_num", "_denom")
-          )
-        }
-        combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
-        test_date_list <- get_test_dates(combined_df, params$test_dates)
-
-        for (test_date in test_date_list){
-          geo_train_data = combined_df %>%
-            filter(issue_date < test_date) %>%
-            filter(target_date <= test_date) %>%
-            filter(target_date > test_date - params$training_days) %>%
-            drop_na()
-          geo_test_data = combined_df %>%
-            filter(issue_date >= test_date) %>%
-            filter(issue_date < test_date + params$testing_window) %>%
-            drop_na()
-          if (dim(geo_test_data)[1] == 0) next
-          if (dim(geo_train_data)[1] <= 200) next
-
-          if (value_type == "ratio"){
-            geo_prior_test_data = combined_df %>%
-              filter(issue_date > test_date - 7) %>%
-              filter(issue_date <= test_date)
-
-            updated_data <- ratio_adj(geo_train_data, geo_test_data, geo_prior_test_data)
-            geo_train_data <- updated_data[[1]]
-            geo_test_data <- updated_data[[2]]
-          }
-          max_raw = sqrt(max(geo_train_data$value_raw))
-          for (test_lag in c(1:14, 21, 35, 51)){
-            filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
-            train_data <- filtered_data[[1]]
-            test_data <- filtered_data[[2]]
-
-            updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
-            train_data <- updated_data[[1]]
-            test_data <- updated_data[[2]]
-            sqrtscale <- updated_data[[3]]
-
-            covariates <- list(y7dav, wd, wd2, wm, slope, sqrtscale)
-            params_list <- c(yitl, as.vector(unlist(covariates)))
-
-            # Model training and testing
-            prediction_results <- model_training_and_testing(
-              train_data, test_data, params$taus, params_list,
-              params$lp_solver, params$lambda, test_date
+            combined_df <- merge(
+              combined_num_df, combined_denom_df,
+              by=c(refd_col, "issue_date", lag_col, "target_date"), all.y=TRUE,
+              suffixes=c("_num", "_denom")
             )
-            test_data <- prediction_results[[1]]
-            coefs <- prediction_results[[2]]
-            test_data <- evl(test_data, params$taus)
+          }
+          combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
+          test_date_list <- get_test_dates(combined_df, params$test_dates)
 
-            export_test_result(test_data, coefs, params$export_dir, geo_level,
-                               geo, test_lag)
-          }# End for test lags
-        }# End for test date list
+          for (test_date in test_date_list){
+            geo_train_data = combined_df %>%
+              filter(issue_date < test_date) %>%
+              filter(target_date <= test_date) %>%
+              filter(target_date > test_date - params$training_days) %>%
+              drop_na()
+            geo_test_data = combined_df %>%
+              filter(issue_date >= test_date) %>%
+              filter(issue_date < test_date + params$testing_window) %>%
+              drop_na()
+            if (dim(geo_test_data)[1] == 0) next
+            if (dim(geo_train_data)[1] <= 200) next
+
+            if (value_type == "ratio"){
+              geo_prior_test_data = combined_df %>%
+                filter(issue_date > test_date - 7) %>%
+                filter(issue_date <= test_date)
+
+              updated_data <- ratio_adj(geo_train_data, geo_test_data, geo_prior_test_data)
+              geo_train_data <- updated_data[[1]]
+              geo_test_data <- updated_data[[2]]
+            }
+            max_raw = sqrt(max(geo_train_data$value_raw))
+            for (test_lag in c(1:14, 21, 35, 51)){
+              filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
+              train_data <- filtered_data[[1]]
+              test_data <- filtered_data[[2]]
+
+              updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
+              train_data <- updated_data[[1]]
+              test_data <- updated_data[[2]]
+              sqrtscale <- updated_data[[3]]
+
+              covariates <- list(y7dav, wd, wd2, wm, slope, sqrtscale)
+              params_list <- c(yitl, as.vector(unlist(covariates)))
+
+              # Model training and testing
+              prediction_results <- model_training_and_testing(
+                train_data, test_data, params$taus, params_list,
+                params$lp_solver, params$lambda, test_date
+              )
+              test_data <- prediction_results[[1]]
+              coefs <- prediction_results[[2]]
+              test_data <- evl(test_data, params$taus)
+
+              export_test_result(test_data, coefs, params$export_dir, geo_level,
+                                 geo, test_lag)
+            }# End for test lags
+          }# End for test date list
+        }# End for value types
       }# End for signal suffixes
     }# End for geo list
   }# End geo type
@@ -190,11 +192,8 @@ run_backfill <- function(df, value_type, params,
 #' 
 #' @export
 main <- function(params, ...){
-  # Load indicator x signal groups.
-  groups <- indicators_and_signals
-  
-  # Loop over every indicator + signal + geo type combination.
-  for (input_group in groups) {
+  # Loop over every indicator + signal combination.
+  for (input_group in indicators_and_signals) {
     files_list <- get_files_list(
       input_group$indicator, input_group$signal, params, input_group$sub_dir
     )
@@ -218,13 +217,15 @@ main <- function(params, ...){
     }
     
     # Check data type and required columns
-    validity_checks(input_data, input_group$value_type)
+    for (value_type in params$value_types) {
+      validity_checks(input_data, value_type)
+    }
     
     # Check available training days
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, input_group$value_type,
+    run_backfill(input_data,
                  params, signal_suffixes = input_group$name_suffix
     )
   }

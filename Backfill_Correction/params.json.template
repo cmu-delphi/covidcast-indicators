@@ -6,7 +6,7 @@
   "training_days": 270,
   "export_dir": "./receiving",
   "geo_levels": ["state", "county"],
-  "value_type": ["count", "ratio"],
+  "value_types": ["count", "ratio"],
   "num_col": "",
   "denom_col": "",
 }

@@ -9,5 +9,5 @@
   "geo_levels": ["state", "county"],
   "value_types": ["count", "ratio"],
   "num_col": "num",
-  "denom_col": "den",
+  "denom_col": "den"
 }

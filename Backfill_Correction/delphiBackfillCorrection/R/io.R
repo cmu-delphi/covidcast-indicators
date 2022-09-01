@@ -3,14 +3,10 @@
 #' @template input_dir-template
 #'
 #' @importFrom arrow read_parquet
-#' @importFrom dplyr select %>%
-#' @importFrom rlang .data
 #'
 #' @export
 read_data <- function(input_dir) {
-  df <- read_parquet(input_dir, as_data_frame = TRUE) %>%
-    ## TODO make this more robust
-    select(-.data$`__index_level_0__`)
+  df <- read_parquet(input_dir, as_data_frame = TRUE)
   return (df)
 }
 
@@ -45,11 +41,10 @@ export_test_result <- function(test_data, coef_data, export_dir,
 #'
 #' @template indicator-template
 #' @template signal-template
-#' @template geo_level-template
 #' @template params-template
 #' @param sub_dir string specifying the indicator-specific directory within
 #'     the general input directory `params$input_dir`
-get_files_list <- function(indicator, signal, geo_level, params, sub_dir) {
+get_files_list <- function(indicator, signal, params, sub_dir) {
   # Make sure we're reading in both 4-week rollup and daily files.
   if (!missing(sub_dir)) {
     input_dir <- file.path(params$input_dir, sub_dir)
@@ -58,12 +53,8 @@ get_files_list <- function(indicator, signal, geo_level, params, sub_dir) {
   }
 
   # Convert input_group into file names.
-  daily_pattern <- create_name_pattern(
-    indicator, signal, geo_level, "daily"
-  )
-  rollup_pattern <- create_name_pattern(
-    indicator, signal, geo_level, "rollup"
-  )
+  daily_pattern <- create_name_pattern(indicator, signal, "daily")
+  rollup_pattern <- create_name_pattern(indicator, signal, "rollup")
   
   # Filter files lists to only include those containing dates we need for training
   daily_input_files <- list.files(
@@ -123,7 +114,7 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   return(files_list)
 }
 
-#' Create pattern to match input files of a given type, signal, and geo level
+#' Create pattern to match input files of a given type and signal
 #' 
 #' @template indicator-template
 #' @template signal-template
@@ -131,7 +122,7 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
 #' @template file_type-template
 #'
 #' @importFrom stringr str_interp
-create_name_pattern <- function(indicator, signal, geo_level,
+create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,

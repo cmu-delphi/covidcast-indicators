@@ -111,7 +111,10 @@ run_backfill <- function(df, params,
               test_data <- updated_data[[2]]
               sqrtscale <- updated_data[[3]]
               
-              covariates <- list(Y7DAV, WEEKDAYS_ABBR, WEEK_ISSUES, SLOPE, SQRTSCALE)
+              covariates <- list(
+                Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
+                paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, SQRTSCALE
+              )
               params_list <- c(YITL, as.vector(unlist(covariates)))
               
               # Model training and testing

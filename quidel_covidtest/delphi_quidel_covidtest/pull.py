@@ -8,11 +8,9 @@ import boto3
 import pandas as pd
 import numpy as np
 
-from delphi_utils import GeoMapper
-
 from .constants import AGE_GROUPS
 
-gmpr = GeoMapper()
+
 
 def get_from_s3(start_date, end_date, bucket, logger):
     """

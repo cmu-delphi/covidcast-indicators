@@ -26,6 +26,8 @@ def store_backfill_file(df, _end_date, backfill_dir):
     backfilldata = df.copy()
     backfilldata = gmpr.replace_geocode(backfilldata, from_code="zip", new_code="fips",
                           from_col="zip", new_col="fips", date_col="timestamp")
+    backfilldata = gmpr.add_geocode(backfilldata, from_code="fips", new_code="state_id",
+                          from_col="fips", new_col="state_id")
     backfilldata.rename({"timestamp": "time_value",
                          "totalTest_total": "den_total",
                          "positiveTest_total": "num_total",
@@ -44,7 +46,7 @@ def store_backfill_file(df, _end_date, backfill_dir):
                         axis=1, inplace=True)
     #Store one year's backfill data
     _start_date = _end_date.replace(year=_end_date.year-1)
-    selected_columns = ['time_value', 'fips',
+    selected_columns = ['time_value', 'fips', 'state_id',
                         'den_total', 'num_total',
                         'num_age_0_4', 'den_age_0_4',
                         'num_age_5_17', 'den_age_5_17',
@@ -57,7 +59,7 @@ def store_backfill_file(df, _end_date, backfill_dir):
     path = backfill_dir + \
         "/quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path)
+    backfilldata.to_parquet(path, index=False)
 
 def merge_backfill_file(backfill_dir, backfill_merge_day, today,
                         test_mode=False, check_nd=25):

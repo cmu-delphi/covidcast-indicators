@@ -41,7 +41,7 @@ class TestBackfill:
         
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         
-        selected_columns = ['time_value', 'fips',
+        selected_columns = ['time_value', 'fips', 'state_id',
                         'den_total', 'num_total',
                         'num_age_0_4', 'den_age_0_4',
                         'num_age_5_17', 'den_age_5_17',

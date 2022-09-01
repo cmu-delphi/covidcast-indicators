@@ -9,7 +9,9 @@ import os
 from datetime import datetime
 # third party
 import pandas as pd
+from delphi_utils import GeoMapper
 
+gmpr = GeoMapper()
 
 def store_backfill_file(df, _end_date, backfill_dir, numtype, geo, weekday):
     """
@@ -35,17 +37,19 @@ def store_backfill_file(df, _end_date, backfill_dir, numtype, geo, weekday):
         return
 
     backfilldata = df.reset_index().copy()
+    backfilldata = gmpr.add_geocode(backfilldata, from_code="fips", new_code="state_id",
+                           from_col="fips", new_col="state_id")
     backfilldata.rename({"timestamp": "time_value"}, axis=1, inplace=True)
     #Store one year's backfill data
     _start_date = _end_date.replace(year=_end_date.year-1)
-    selected_columns = ['time_value', 'fips',
+    selected_columns = ['time_value', 'fips', 'state_id',
                         'num', 'den']
     backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date,
                                     selected_columns]
     path = backfill_dir + \
         "/changehc_%s_as_of_%s.parquet"%(numtype, datetime.strftime(_end_date, "%Y%m%d"))
     # Store intermediate file into the backfill folder
-    backfilldata.to_parquet(path)
+    backfilldata.to_parquet(path, index=False)
 
 def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
                         today, test_mode=False, check_nd=25):
@@ -111,7 +115,7 @@ def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
         numtype,
         datetime.strftime(earliest_date, "%Y%m%d"),
         datetime.strftime(latest_date, "%Y%m%d"))
-    merged_file.to_parquet(path)
+    merged_file.to_parquet(path, index=False)
 
     # Delete daily files once we have the merged one.
     if not test_mode:

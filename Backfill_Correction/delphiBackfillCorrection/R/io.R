@@ -30,14 +30,10 @@ export_test_result <- function(test_data, coef_data, export_dir, geo) {
 }
 
 #' List valid input files.
-get_files_list <- function(indicator, signal, geo_level, params, sub_dir = "") {
+get_files_list <- function(indicator, signal, params, sub_dir = "") {
   # Convert input_group into file names.
-  daily_pattern <- create_name_pattern(
-    indicator, signal, geo_level, "daily"
-  )
-  rollup_pattern <- create_name_pattern(
-    indicator, signal, geo_level, "rollup"
-  )
+  daily_pattern <- create_name_pattern(indicator, signal, "daily")
+  rollup_pattern <- create_name_pattern(indicator, signal, "rollup")
   
   # Make sure we're reading in both 4-week rollup and daily files.
   if (!is.null(sub_dir) && sub_dir != "") {
@@ -97,10 +93,10 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   return(files_list)
 }
 
-#' Create pattern to match input files of a given type, signal, and geo level
+#' Create pattern to match input files of a given type and signal
 #' 
 #' @importFrom stringr str_interp
-create_name_pattern <- function(indicator, signal, geo_level,
+create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,

@@ -182,7 +182,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF
                         list(df, avg_df, avg_df_prev7))
   
   # Add target
-  target_df <- df[df$lag==ref_lag, c(refd_col, "value_raw", "issue_date")]
+  target_df <- df[df$lag==ref_lag, c(refd_col, value_col, "issue_date")]
   names(target_df)[names(target_df) == value_col] <- 'value_target'
   names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
   

@@ -1,14 +1,12 @@
 #' Read a parquet file into a dataframe
 #' 
-#' @param path path to the input data
+#' @param path path to a single parquet file to read in
 #'
 #' @importFrom arrow read_parquet
-#' @importFrom dplyr select %>%
 #'
 #' @export
 read_data <- function(path){
-  df <- read_parquet(path, as_data_frame = TRUE) %>% 
-    select(-`__index_level_0__`)
+  df <- read_parquet(path, as_data_frame = TRUE)
   return (df)
 }
 

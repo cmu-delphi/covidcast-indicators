@@ -22,7 +22,7 @@
 #' @importFrom stats setNames
 #'
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG){
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG) {
   lags <- min(df[[lag_col]]): ref_lag # Full list of lags
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
   row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
@@ -73,8 +73,8 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 #' @importFrom zoo rollmeanr
 #' 
 #' @export
-get_7dav <- function(pivot_df, refd_col){
-  for (col in colnames(pivot_df)){
+get_7dav <- function(pivot_df, refd_col) {
+  for (col in colnames(pivot_df)) {
     if (col == refd_col) next
     pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
   }
@@ -92,7 +92,7 @@ get_7dav <- function(pivot_df, refd_col){
 #' @template refd_col-template
 #' 
 #' @export
-add_shift <- function(df, n_day, refd_col){
+add_shift <- function(df, n_day, refd_col) {
   df[, refd_col] <- as.Date(df[, refd_col]) + n_day
   return (df)
 }
@@ -106,12 +106,12 @@ add_shift <- function(df, n_day, refd_col){
 #' @param suffix suffix added to indicate which kind of date is used
 #' 
 #' @export
-add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR){
+add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
-  for (i in 1:6){
+  for (i in 1:6) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
-  if (suffix == "_ref"){
+  if (suffix == "_ref") {
     df[, paste0("Sun", suffix)] <- as.numeric(dayofweek == 7)
   }
   return (df)
@@ -130,7 +130,7 @@ add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR){
 #' @importFrom lubridate make_date year month day
 #' 
 #' @return a integer indicating which week it is in a month
-get_weekofmonth <- function(date){
+get_weekofmonth <- function(date) {
   year <- year(date)
   month <- month(date)
   day <- day(date)
@@ -145,9 +145,9 @@ get_weekofmonth <- function(date){
 #' @template time_col-template
 #' 
 #' @export
-add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES){
+add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
   weekofmonth <- get_weekofmonth(df[[time_col]])
-  for (i in 1:3){
+  for (i in 1:3) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
   return (df)
@@ -165,7 +165,7 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES){
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF_LAG){
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF_LAG) {
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
@@ -208,7 +208,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF
 #' @template df-template
 #' @template refd_col-template
 #' @template lag_col-template
-add_params_for_dates <- function(df, refd_col, lag_col){
+add_params_for_dates <- function(df, refd_col, lag_col) {
   # Add columns for day-of-week effect
   df <- add_dayofweek(df, refd_col, "_ref", WEEKDAYS_ABBR)
   df <- add_dayofweek(df, "issue_date", "_issue", WEEKDAYS_ABBR)
@@ -225,11 +225,11 @@ add_params_for_dates <- function(df, refd_col, lag_col){
 #' @param test_data Data Frame for testing
 #' @param max_raw the maximum value in the training data at square root level
 #' @template value_col-template
-add_sqrtscale <- function(train_data, test_data, max_raw, value_col){
+add_sqrtscale <- function(train_data, test_data, max_raw, value_col) {
   sqrtscale = c()
   sub_max_raw = sqrt(max(train_data$value_raw)) / 2
   
-  for (split in seq(0, 3)){
+  for (split in seq(0, 3)) {
     if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
     train_data[paste0("sqrty", as.character(split))] = 0
     test_data[paste0("sqrty", as.character(split))] = 0

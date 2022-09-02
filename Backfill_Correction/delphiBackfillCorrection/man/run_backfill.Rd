@@ -9,7 +9,9 @@ run_backfill(
   params,
   refd_col = "time_value",
   lag_col = "lag",
-  signal_suffixes = c("")
+  signal_suffixes = c(""),
+  indicator = "",
+  signal = ""
 )
 }
 \arguments{
@@ -32,6 +34,14 @@ endings to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
+
+\item{indicator}{string specifying the name of the indicator as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{signal}{string specifying the name of the signal as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
 }
 \description{
 Get backfill-corrected estimates for a single signal + geo combination

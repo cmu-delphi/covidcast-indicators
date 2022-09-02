@@ -7,7 +7,7 @@
 #' @importFrom rlang .data .env
 #'
 #' @export
-data_filteration <- function(test_lag, geo_train_data, geo_test_data){
+data_filteration <- function(test_lag, geo_train_data, geo_test_data) {
   if (test_lag <= 14) {
     test_lag_pad=2
     test_lag_pad1=0
@@ -33,8 +33,7 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
 }
 
 
-#' Model training and prediction using quantile regression with Lasso penalty
-#' The quantile regression uses the quantile_lasso function from quantgen package
+#' Fetch model and use to generate predictions/perform corrections
 #'
 #' @template train_data-template
 #' @param test_data Data frame for testing 
@@ -43,25 +42,32 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data){
 #' @template lp_solver-template
 #' @template lambda-template
 #' @param test_date Date object representing test date
-#' @param geo string specifying the name of the geo region (e.g. FIPS
-#'     code for counties)
+#' @template geo-template
+#' @template indicator-template
+#' @template signal-template
+#' @template signal_suffix-template
+#' @template value_type-template
+#' @template test_lag-template
+#' @template train_models-template
+#' @template make_predictions-template
 #'
 #' @importFrom stats predict coef
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
-                                       lp_solver, lambda, test_date, geo) {
+                                       lp_solver, lambda, test_date, geo, indicator = "", signal = "",
+                                       train_models = TRUE, make_predictions = TRUE,
+                                       signal_suffix = "", value_type = "", test_lag = "") {
   success = 0
   coefs_result = list()
   coef_list = c("intercept", paste(covariates, '_coef', sep=''))
-  for (tau in taus){
-    #options(error=NULL)
+  for (tau in taus) {
     tryCatch(
       expr = {
-        # Quantile regression
-        obj = quantile_lasso(as.matrix(train_data[covariates]),
-                             train_data$log_value_target, tau = tau,
-                             lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
+        model_path <- generate_model_filename(indicator, signal, geo, signal_suffix,
+                                              value_type, test_lag, tau, lambda)
+        obj = get_model(train_data, covariates, tau = tau,
+                  lambda = lambda, lp_solver = lp_solver, model_path, train_models)
         
         y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
         test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
@@ -73,7 +79,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
       error=function(e) {print(paste(geo, test_date, as.character(tau), sep="_"))}
     )
   }
-  if (success < 9){ return (NULL)}
+  if (success < 9) { return (NULL)}
   coef_combined_result = data.frame(tau=taus,
                            issue_date=test_date)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))
@@ -93,7 +99,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 #' @importFrom evalcast weighted_interval_score
 #' 
 #' @export
-evaluate <- function(test_data, taus){
+evaluate <- function(test_data, taus) {
   n_row = nrow(test_data)
   taus_list = as.list(data.frame(matrix(replicate(n_row, taus), ncol=n_row)))
   
@@ -110,4 +116,60 @@ evaluate <- function(test_data, taus){
   test_data$wis_exp = mapply(weighted_interval_score, taus_list, predicted_trans_exp, 0)
   
   return (test_data)
+}
+
+#' Train model using quantile regression with Lasso penalty, or load from disk
+#'
+#' @param model_path path to read model from or to save model to
+#' @template train_data-template
+#' @template covariates-template
+#' @param tau decimal quantile to be predicted. Values must be between 0 and 1.
+#' @template lp_solver-template
+#' @template lambda-template
+#' @template train_models-template
+#'
+#' @importFrom quantgen quantile_lasso
+get_model <- function(model_path, train_data, covariates, tau,
+            lambda, lp_solver, train_models) {
+  if (train_models) {
+    # Quantile regression
+    obj <- quantile_lasso(as.matrix(train_data[covariates]),
+                         train_data$log_value_target, tau = tau,
+                         lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
+
+    # Save model to cache.
+    create_dir_not_exist(dirname(model_path))
+    save(obj, file=model_path)
+  } else {
+    # Load model from cache.
+    obj <- load(model_path)
+  }
+
+  return(obj)
+}
+
+#' Construct filename for model with given parameters
+#'
+#' @template indicator-template
+#' @template signal-template
+#' @template geo-template
+#' @template signal_suffix-template
+#' @template value_type-template
+#' @template test_lag-template
+#' @param tau decimal quantile to be predicted. Values must be between 0 and 1.
+#' @template lambda-template
+#'
+#' @return path to file containing model object
+#'
+#' @importFrom stringr str_interp
+generate_model_filename <- function(indicator, signal, geo, signal_suffix,
+                                    value_type, test_lag, tau, lambda) {
+  prefix_components <- c(indicator, signal, signal_suffix)
+  filename = paste0(
+    # Drop any empty strings.
+    paste(prefix_components[prefix_components != ""], sep="_"),
+    str_interp("_{value_type}_{geo}_lag{test_lag}_tau{tau}_lambda{lambda}.model")
+  )
+
+  return(filename)
 }

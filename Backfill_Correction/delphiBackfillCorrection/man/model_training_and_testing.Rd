@@ -2,8 +2,7 @@
 % Please edit documentation in R/model.R
 \name{model_training_and_testing}
 \alias{model_training_and_testing}
-\title{Model training and prediction using quantile regression with Lasso penalty
-The quantile regression uses the quantile_lasso function from quantgen package}
+\title{Fetch model and use to generate predictions/perform corrections}
 \usage{
 model_training_and_testing(
   train_data,
@@ -13,7 +12,14 @@ model_training_and_testing(
   lp_solver,
   lambda,
   test_date,
-  geo
+  geo,
+  indicator = "",
+  signal = "",
+  train_models = TRUE,
+  make_predictions = TRUE,
+  signal_suffix = "",
+  value_type = "",
+  test_lag = ""
 )
 }
 \arguments{
@@ -37,8 +43,32 @@ of the `gurobi` package).}
 
 \item{geo}{string specifying the name of the geo region (e.g. FIPS
 code for counties)}
+
+\item{indicator}{string specifying the name of the indicator as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{signal}{string specifying the name of the signal as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{train_models}{boolean indicating whether to train models (TRUE). If
+FALSE previously trained models (stored locally) will be used instead.
+Default is TRUE.}
+
+\item{make_predictions}{boolean indicating whether to generate and save
+corrections (TRUE) or not. Default is TRUE.}
+
+\item{signal_suffix}{string specifying value column name
+ending to be appended to standard value column names from
+`params$num_col` and `params$denom_col`. Used for non-standard
+value column names and when processing multiple signals from a
+single input dataframe, as with `quidel`'s age buckets.}
+
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
+
+\item{test_lag}{integer number of days ago to predict for}
 }
 \description{
-Model training and prediction using quantile regression with Lasso penalty
-The quantile regression uses the quantile_lasso function from quantgen package
+Fetch model and use to generate predictions/perform corrections
 }

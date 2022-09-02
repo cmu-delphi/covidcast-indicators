@@ -5,6 +5,8 @@
 #' @template refd_col-template
 #' @template lag_col-template
 #' @template signal_suffixes-template
+#' @template indicator-template
+#' @template signal-template
 #' 
 #' @importFrom dplyr %>% filter select group_by summarize across everything
 #' @importFrom tidyr drop_na
@@ -12,7 +14,8 @@
 #' 
 #' @export
 run_backfill <- function(df, params, refd_col = "time_value",
-                         lag_col = "lag", signal_suffixes = c("")) {
+                         lag_col = "lag", signal_suffixes = c(""),
+                         indicator = "", signal = "") {
   geo_levels <- params$geo_level
   if ("state" %in% geo_levels) {
     # If state included, do it last since state processing modifies the
@@ -62,7 +65,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
 
-          } else if (value_type == "fraction"){
+          } else if (value_type == "fraction") {
             combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
 
@@ -90,7 +93,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
             if (nrow(geo_test_data) == 0) next
             if (nrow(geo_train_data) <= 200) next
 
-            if (value_type == "fraction"){
+            if (value_type == "fraction") {
               geo_prior_test_data = combined_df %>%
                 filter(.data$issue_date > .env$test_date - 7) %>%
                 filter(.data$issue_date <= .env$test_date)
@@ -100,7 +103,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
               geo_test_data <- updated_data[[2]]
             }
             max_raw = sqrt(max(geo_train_data$value_raw))
-            for (test_lag in c(1:14, 21, 35, 51)){
+            for (test_lag in c(1:14, 21, 35, 51)) {
               filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
               train_data <- filtered_data[[1]]
               test_data <- filtered_data[[2]]
@@ -119,8 +122,13 @@ run_backfill <- function(df, params, refd_col = "time_value",
               # Model training and testing
               prediction_results <- model_training_and_testing(
                 train_data, test_data, params$taus, params_list,
-                params$lp_solver, params$lambda, test_date, geo
+                params$lp_solver, params$lambda, test_date, geo,
+                indicator = indicator, signal = signal, signal_suffix = suffix,
+                value_type = value_type, test_lag = test_lag,
+                train_models = params$train_models,
+                make_predictions = params$make_predictions
               )
+
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus)
@@ -142,7 +150,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
 #' @importFrom parallel detectCores
 #' 
 #' @export
-main <- function(params){
+main <- function(params) {
   if (!params$train_models && !params$make_predictions) {
     message("both model training and prediction generation are turned off; exiting")
     return
@@ -201,6 +209,8 @@ main <- function(params){
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, params, signal_suffixes = input_group$name_suffix)
+    run_backfill(input_data, params,
+      indicator = input_group$indicator, signal = input_group$signal,
+      signal_suffixes = input_group$name_suffix)
   }
 }

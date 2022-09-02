@@ -41,7 +41,7 @@ test_that("testing NA filling for missing udpates", {
 
   expect_equal(nrow(backfill_df), n_refds*(ref_lag+1))
   
-  for (d in seq(min_refd, max_refd, by="day")){
+  for (d in seq(min_refd, max_refd, by="day")) {
     expect_true(all(diff(backfill_df[backfill_df[,refd_col]==d, "value_raw"])>=0 ))
   }
 })

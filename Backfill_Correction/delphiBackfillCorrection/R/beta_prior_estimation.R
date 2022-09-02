@@ -47,7 +47,7 @@ objective <- function(theta, x, prob, ...) {
 est_priors <- function(train_data, prior_test_data, dw, taus,
                        covariates, response, lp_solver, lambda,
                        start=c(0, log(10)),
-                       base_pseudo_denom=1000, base_pseudo_num=10){
+                       base_pseudo_denom=1000, base_pseudo_num=10) {
   sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
   sub_test_data <- prior_test_data %>% filter(prior_test_data[[dw]] == 1)
   if (nrow(sub_test_data) == 0) {
@@ -56,7 +56,7 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
   } else {
     # Using quantile regression to get estimated quantiles at log scale
     quantiles <- list()
-    for (idx in 1:length(taus)){
+    for (idx in 1:length(taus)) {
       tau <- taus[idx]
       obj <- quantile_lasso(as.matrix(sub_train_data[covariates]),
                            sub_train_data[response], tau = tau,
@@ -86,8 +86,8 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
 #' @template denom_col-template
 #' 
 #' @export
-ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col){
-  if (is.null(dw)){
+ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col) {
+  if (is.null(dw)) {
     num_adj <- data[[num_col]]  + pseudo_num
     denom_adj <- data[[denom_col]]  + pseudo_denom
   } else {
@@ -106,7 +106,7 @@ ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, d
 #' @template lp_solver-template
 #' 
 #' @export
-ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_solver = LP_SOLVER){
+ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_solver = LP_SOLVER) {
   train_data$value_target <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
   train_data$value_7dav <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   test_data$value_target <- ratio_adj_with_pseudo(test_data, NULL, 1, 100, "value_target_num", "value_target_denom")
@@ -132,7 +132,7 @@ ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_so
   test_data$pseudo_num = NaN
   test_data$pseudo_denum = NaN
   
-  for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")){
+  for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")) {
     pseudo_counts <- est_priors(train_data, prior_test_data, cov, taus, 
                         pre_covariates, "log_value_target", lp_solver, lambda=0.1)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]

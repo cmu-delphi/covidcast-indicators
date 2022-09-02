@@ -68,18 +68,23 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
                                               value_type, test_lag, tau, lambda)
         obj = get_model(train_data, covariates, tau = tau,
                   lambda = lambda, lp_solver = lp_solver, model_path, train_models)
-        
-        y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
-        test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
-        
-        coefs_result[[success+1]] = coef(obj)
-        coefs_result[[success+1]]$tau = tau
+
+        if (make_predictions) {
+          y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
+          test_data[paste0("predicted_tau", as.character(tau))] = y_hat_all
+
+          coefs_result[[success+1]] = coef(obj)
+          coefs_result[[success+1]]$tau = tau
+        }
+
         success = success + 1
       },
       error=function(e) {print(paste(geo, test_date, as.character(tau), sep="_"))}
     )
   }
-  if (success < 9) { return (NULL)}
+  if (success < 9) {return (NULL)}
+  if (!make_predictions) {return (list())}
+
   coef_combined_result = data.frame(tau=taus,
                            issue_date=test_date)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))

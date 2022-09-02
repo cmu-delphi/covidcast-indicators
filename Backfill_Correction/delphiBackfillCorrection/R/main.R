@@ -129,11 +129,15 @@ run_backfill <- function(df, params, refd_col = "time_value",
                 make_predictions = params$make_predictions
               )
 
-              test_data <- prediction_results[[1]]
-              coefs <- prediction_results[[2]]
-              test_data <- evaluate(test_data, params$taus)
+              # Model objects are saved during training, so only need to export
+              # output if making predictions/corrections
+              if (params$make_predictions) {
+                test_data <- prediction_results[[1]]
+                coefs <- prediction_results[[2]]
+                test_data <- evaluate(test_data, params$taus)
 
-              export_test_result(test_data, coefs, params$export_dir, geo_level, test_lag)
+                export_test_result(test_data, coefs, params$export_dir, geo_level, test_lag)
+              }
             }# End for test lags
           }# End for test date list
         }# End for value types

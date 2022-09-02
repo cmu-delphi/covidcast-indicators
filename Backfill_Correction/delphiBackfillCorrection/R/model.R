@@ -134,9 +134,14 @@ evaluate <- function(test_data, taus) {
 #' @template train_models-template
 #'
 #' @importFrom quantgen quantile_lasso
+#' @importFrom stringr str_interp
 get_model <- function(model_path, train_data, covariates, tau,
             lambda, lp_solver, train_models) {
-  if (train_models) {
+  if (train_models || !file.exists(model_path)) {
+    if (!train_models && !file.exists(model_path)) {
+      warning(str_interp("user requested use of cached model but file {model_path}"),
+        " does not exist; training new model")
+    }
     # Quantile regression
     obj <- quantile_lasso(as.matrix(train_data[covariates]),
                          train_data$log_value_target, tau = tau,

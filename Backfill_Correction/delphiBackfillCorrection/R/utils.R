@@ -23,33 +23,31 @@
 #' params$lambda: the level of lasso penalty
 #' params$export_dir: directory to save corrected data to
 #' params$lp_solver: LP solver to use in quantile_lasso(); "gurobi" or "glpk"
-#' params$train_models: boolean indicating whether to train models (TRUE). If
-#'     FALSE previously trained models (stored locally) will be used instead.
-#' params$make_predictions: boolean indicating whether to generate and save
-#'      corrections.
 #'
 #' @param path path to the parameters file; if not present, will try to copy the file
 #'     "params.json.template"
 #' @param template_path path to the template parameters file
+#' @param train_models boolean indicating whether to train models (TRUE). If
+#'     FALSE previously trained models (stored locally) will be used instead.
+#'     Default is TRUE.
+#' @param make_predictions boolean indicating whether to generate and save
+#'     corrections (TRUE) or not. Default is TRUE.
 #'
 #' @return a named list of parameters values
 #'
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
-read_params <- function(path = "params.json", template_path = "params.json.template") {
-  if (!file.exists(path)) file.copy(template_path, path)
+read_params <- function(path = "params.json", template_path = "params.json.template",
+                        train_models = TRUE, make_predictions = TRUE) {
+  if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
   # Required parameters
   if (!("input_dir" %in% names(params)) || !dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
-  if (!("train_models" %in% names(params))) {
-    stop("train_models flag must be set in `params`")
-  }
-  if (!("make_predictions" %in% names(params))) {
-    stop("make_predictions flag must be set in `params`")
-  }
+  params$train_models <- train_models
+  params$make_predictions <- make_predictions
   
   ## Set default parameter values if not specified
   # Paths

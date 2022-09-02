@@ -10,7 +10,7 @@ validity_checks(df, value_type, num_col, denom_col, signal_suffixes)
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{num_col}{name of numerator column in the input dataframe}
 

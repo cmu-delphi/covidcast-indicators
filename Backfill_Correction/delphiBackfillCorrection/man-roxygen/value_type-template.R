@@ -1,1 +1,1 @@
-#' @param value_type string describing signal type. Either "count" or "ratio".
+#' @param value_type string describing signal type. Either "count" or "fraction".

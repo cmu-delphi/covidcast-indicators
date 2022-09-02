@@ -2,7 +2,7 @@
 % Please edit documentation in R/beta_prior_estimation.R
 \name{ratio_adj_with_pseudo}
 \alias{ratio_adj_with_pseudo}
-\title{Update ratio based on the pseudo counts for numerators and denominators}
+\title{Update fraction based on the pseudo counts for numerators and denominators}
 \usage{
 ratio_adj_with_pseudo(data, dw, pseudo_num, pseudo_denom, num_col, denom_col)
 }
@@ -20,5 +20,5 @@ ratio_adj_with_pseudo(data, dw, pseudo_num, pseudo_denom, num_col, denom_col)
 \item{denom_col}{name of denominator column in the input dataframe}
 }
 \description{
-Update ratio based on the pseudo counts for numerators and denominators
+Update fraction based on the pseudo counts for numerators and denominators
 }

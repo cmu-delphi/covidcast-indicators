@@ -63,7 +63,7 @@ run_backfill <- function(df, params,
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
             
-          } else if (value_type == "ratio"){
+          } else if (value_type == "fraction"){
             combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
             
@@ -91,7 +91,7 @@ run_backfill <- function(df, params,
             if (nrow(geo_test_data) == 0) next
             if (nrow(geo_train_data) <= 200) next
             
-            if (value_type == "ratio"){
+            if (value_type == "fraction"){
               geo_prior_test_data = combined_df %>% 
                 filter(.data$issue_date > .env$test_date - 7) %>%
                 filter(.data$issue_date <= .env$test_date)

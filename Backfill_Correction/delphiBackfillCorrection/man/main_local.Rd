@@ -11,7 +11,7 @@ main_local(
   test_end_date,
   num_col,
   denom_col,
-  value_type = c("count", "ratio"),
+  value_type = c("count", "fraction"),
   training_days = TRAINING_DAYS,
   testing_window = TESTING_WINDOW,
   lambda = LAMBDA,
@@ -34,7 +34,7 @@ making predictions on}
 
 \item{denom_col}{name of denominator column in the input dataframe}
 
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{training_days}{integer number of days to use for training}
 

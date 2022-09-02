@@ -76,7 +76,7 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
   return (c(pseudo_denom, pseudo_num))
 }
 
-#' Update ratio based on the pseudo counts for numerators and denominators 
+#' Update fraction based on the pseudo counts for numerators and denominators
 #' 
 #' @param data Data Frame
 #' @param dw character to indicate the day of a week. Can be NULL for all the days
@@ -97,7 +97,7 @@ ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, d
   return (num_adj / denom_adj)
 }
 
-#' Update ratio using beta prior approach
+#' Update fraction using beta prior approach
 #' 
 #' @template train_data-template
 #' @param test_data testing data

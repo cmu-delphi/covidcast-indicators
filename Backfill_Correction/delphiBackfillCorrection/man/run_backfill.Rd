@@ -18,7 +18,7 @@ run_backfill(
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{geo_level}{string describing geo coverage of input data. Either "state"
 or "county".}

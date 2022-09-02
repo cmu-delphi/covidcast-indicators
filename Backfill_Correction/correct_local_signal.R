@@ -18,7 +18,7 @@ parser <- add_argument(parser, arg="--export_dir", type="character", default = "
 parser <- add_argument(parser, arg="--test_start_date", type="character", help = "Should be in the format as '2020-01-01'")
 parser <- add_argument(parser, arg="--test_end_date", type="character", help = "Should be in the format as '2020-01-01'")
 parser <- add_argument(parser, arg="--testing_window", type="integer", default = 1, help = "The number of issue dates for testing per trained model")
-parser <- add_argument(parser, arg="--value_type", type="character", default = "ratio", help = "Can be 'count' or 'ratio'")
+parser <- add_argument(parser, arg="--value_type", type="character", default = "fraction", help = "Can be 'count' or 'fraction'")
 parser <- add_argument(parser, arg="--num_col", type="character", default = "num", help = "The column name for the numerator")
 parser <- add_argument(parser, arg="--denum_col", type="character", default = "den", help = "The column name for the denominator")
 parser <- add_argument(parser, arg="--lambda", type="character", default = 0.1, help = "The parameter lambda for the lasso regression")

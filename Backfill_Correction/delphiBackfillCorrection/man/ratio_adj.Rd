@@ -2,7 +2,7 @@
 % Please edit documentation in R/beta_prior_estimation.R
 \name{ratio_adj}
 \alias{ratio_adj}
-\title{Update ratio using beta prior approach}
+\title{Update fraction using beta prior approach}
 \usage{
 ratio_adj(
   train_data,
@@ -28,5 +28,5 @@ optimization, use Gurobi (requires separate installation
 of the `gurobi` package).}
 }
 \description{
-Update ratio using beta prior approach
+Update fraction using beta prior approach
 }

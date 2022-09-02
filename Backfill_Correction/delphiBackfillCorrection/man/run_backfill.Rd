@@ -6,8 +6,6 @@
 \usage{
 run_backfill(
   df,
-  value_type,
-  geo_level,
   params,
   refd_col = "time_value",
   lag_col = "lag",
@@ -18,15 +16,10 @@ run_backfill(
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
-
-\item{geo_level}{string describing geo coverage of input data. Either "state"
-or "county".}
-
 \item{params}{named list containing modeling and data settings. Must include
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
-`training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
-and `data_path` (input dir).}
+`training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
+`lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
 
 \item{refd_col}{string specifying name of reference date field within
 the input dataframe.}
@@ -41,6 +34,5 @@ value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
 }
 \description{
-If "county" is selected for `geo_level`, only data from the 200 most populous
-counties in the US (*not* the dataset) will be used.
+Get backfill-corrected estimates for a single signal + geo combination
 }

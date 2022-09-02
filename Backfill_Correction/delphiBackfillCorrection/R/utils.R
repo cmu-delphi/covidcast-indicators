@@ -69,7 +69,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
   if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
   if (!("geo_level" %in% names(params))) {params$geo_level <- c("state", "county")}
-  if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "ratio")}
+  if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "fraction")}
 
   # Date parameters
   if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
@@ -116,10 +116,10 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
     if (all(num_col %in% colnames(df))) {value_cols=c(num_col)}
     else if (all(denom_col %in% colnames(df))) {value_cols=c(denom_col)}
     else {stop("No valid column name detected for the count values!")}
-  } else if (value_type == "ratio"){
+  } else if (value_type == "fraction"){
     value_cols = c(num_col, denom_col)
     if ( any(!(value_cols %in% colnames(df))) ){
-      stop("No valid column name detected for the ratio values!")
+      stop("No valid column name detected for the fraction values!")
     }
   }
   

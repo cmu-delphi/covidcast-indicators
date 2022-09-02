@@ -38,7 +38,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
     if (value_type == "count") { # For counts data only
       combined_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_df <- add_7davs_and_target(combined_df, "value_raw", "time_value", "lag", ref_lag)
-    } else if (value_type == "ratio"){
+    } else if (value_type == "fraction"){
       combined_num_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", "time_value", "lag", ref_lag)
           
@@ -63,7 +63,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
         drop_na()
       if (nrow(geo_test_data) == 0) next
       if (nrow(geo_train_data) <= 200) next
-      if (value_type == "ratio"){
+      if (value_type == "fraction"){
         geo_prior_test_data = combined_df %>% 
           filter(.data$issue_date > .env$test_date - 7) %>%
           filter(.data$issue_date <= .env$test_date)
@@ -138,7 +138,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
 #' @export
 main_local <- function(input_dir, export_dir,
                  test_start_date, test_end_date,
-                 num_col, denom_col,value_type = c("count", "ratio"),
+                 num_col, denom_col,value_type = c("count", "fraction"),
                  training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
                  lambda = LAMBDA, ref_lag = REF_LAG, lp_solver = LP_SOLVER){
   value_type <- match.arg(value_type)

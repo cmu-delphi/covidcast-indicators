@@ -29,7 +29,7 @@ reported for each reference date and issue date.}
 
 \item{value_cols}{character vector of numerator and/or denominator field names}
 
-\item{value_type}{string describing signal type. Either "count" or "ratio".}
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{taus}{numeric vector of quantiles to be predicted. Values
 must be between 0 and 1.}

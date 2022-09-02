@@ -118,7 +118,6 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
 #' 
 #' @template indicator-template
 #' @template signal-template
-#' @template geo_level-template
 #' @template file_type-template
 #'
 #' @importFrom stringr str_interp

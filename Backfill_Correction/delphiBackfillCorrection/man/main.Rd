@@ -9,8 +9,8 @@ main(params)
 \arguments{
 \item{params}{named list containing modeling and data settings. Must include
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
-`training_days`, `num_col`, `taus`, `lambda`, `export_dir`, `lp_solver`,
-and `data_path` (input dir).}
+`training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
+`lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
 }
 \description{
 Perform backfill correction on all desired signals and geo levels

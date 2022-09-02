@@ -11,11 +11,10 @@
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params,
-                         refd_col = "time_value", lag_col = "lag",
-                         signal_suffixes = c("")) {
+run_backfill <- function(df, params, refd_col = "time_value",
+                         lag_col = "lag", signal_suffixes = c("")) {
   geo_levels <- params$geo_level
-  if ("state" in geo_levels) {
+  if ("state" %in% geo_levels) {
     # If state included, do it last since state processing modifies the
     # `df` object.
     geo_levels <- c(setdiff(geo_levels, c("state")), "state")
@@ -143,8 +142,8 @@ run_backfill <- function(df, params,
 #' @importFrom parallel detectCores
 #' 
 #' @export
-main <- function(params){
-  ## Set default number of cores for mclapply to the half of the total available number.
+main <- function(params) {
+  ## Set default number of cores for mclapply to half of the total available number.
   if (params$parallel) {
     cores <- detectCores()
 
@@ -163,7 +162,9 @@ main <- function(params){
     )
     
     if (length(files_list) == 0) {
-      warning(str_interp("No files found for {input_group$indicator} {input_group$signal}, skipping"))
+      warning(str_interp(
+        "No files found for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+      ))
       next
     }
     
@@ -176,7 +177,9 @@ main <- function(params){
     ) %>% bind_rows
     
     if (nrow(input_data) == 0) {
-      warning(str_interp("No data available for {input_group$indicator} {input_group$signal}, skipping"))
+      warning(str_interp(
+        "No data available for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+      ))
       next
     }
     
@@ -193,8 +196,6 @@ main <- function(params){
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data,
-                 params, signal_suffixes = input_group$name_suffix
-    )
+    run_backfill(input_data, params, signal_suffixes = input_group$name_suffix)
   }
 }

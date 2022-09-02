@@ -2,14 +2,9 @@
 % Please edit documentation in R/io.R
 \name{create_name_pattern}
 \alias{create_name_pattern}
-\title{Create pattern to match input files of a given type, signal, and geo level}
+\title{Create pattern to match input files of a given type and signal}
 \usage{
-create_name_pattern(
-  indicator,
-  signal,
-  geo_level,
-  file_type = c("daily", "rollup")
-)
+create_name_pattern(indicator, signal, file_type = c("daily", "rollup"))
 }
 \arguments{
 \item{indicator}{string specifying the name of the indicator as used in
@@ -20,12 +15,9 @@ with multiple signals.}
 `parquet` input data filenames. One indicator can be associated
 with multiple signals.}
 
-\item{geo_level}{string describing geo coverage of input data. Either "state"
-or "county".}
-
 \item{file_type}{string specifying time period coverage of input files.
 Either "daily" or "rollup"}
 }
 \description{
-Create pattern to match input files of a given type, signal, and geo level
+Create pattern to match input files of a given type and signal
 }

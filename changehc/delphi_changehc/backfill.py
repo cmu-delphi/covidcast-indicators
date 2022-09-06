@@ -87,6 +87,10 @@ def merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
 
     new_files = glob.glob(backfill_dir + "/changehc_%s_as_of_*"%numtype)
 
+    if len(new_files) == 0: # if no any daily file is stored
+        return
+        
+
     def get_date(file_link):
         # Keep the function here consistent with the backfill path in
         # function `store_backfill_file`

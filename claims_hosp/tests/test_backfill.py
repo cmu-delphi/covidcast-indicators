@@ -76,6 +76,8 @@ class TestBackfill:
         new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")
         pdList = []        
         for file in new_files:
+            if "from" in file:
+                continue
             df = pd.read_parquet(file, engine='pyarrow')
             issue_date = datetime.strptime(file[-16:-8], "%Y%m%d")
             df["issue_date"] = issue_date

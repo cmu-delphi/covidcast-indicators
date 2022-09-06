@@ -68,7 +68,7 @@ class TestBackfill:
         fn = "changehc_covid_as_of_20200101.parquet"
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         
-        selected_columns = ['time_value', 'fips',
+        selected_columns = ['time_value', 'fips', 'state_id',
                         'num', 'den']
         assert set(selected_columns) == set(backfill_df.columns)  
         
@@ -77,14 +77,24 @@ class TestBackfill:
         
     def test_merge_backfill_file(self):
         
-        today = datetime.today()
         geo = "county"
         weekday = False
         numtype = "covid"
         
-        new_files = glob.glob(backfill_dir + "/changehc_%s*.parquet"%numtype)
+        today = datetime(2020, 6, 4)
         fn = "changehc_covid_from_20200601_to_20200604.parquet"
         assert fn not in os.listdir(backfill_dir)
+        
+        merge_backfill_file(backfill_dir, numtype, geo, weekday, today.weekday(),
+                            today, test_mode=True, check_nd=2)         
+        assert fn not in os.listdir(backfill_dir)
+        
+        # Generate backfill daily files     
+        for d in range(1, 5):
+            dropdate = datetime(2020, 6, d)        
+            store_backfill_file(combined_data, dropdate, backfill_dir, \
+                                numtype, geo, weekday)
+
         
         # Check the when the merged file is not generated
         today = datetime(2020, 6, 4)
@@ -92,20 +102,26 @@ class TestBackfill:
                             today, test_mode=True, check_nd=8)
         assert fn not in os.listdir(backfill_dir)
         
-         # Generate the merged file, but not delete it
+        # Generate the merged file, but not delete it
         merge_backfill_file(backfill_dir, numtype, geo, weekday, today.weekday(),
                             today, test_mode=True, check_nd=2)         
         assert fn in os.listdir(backfill_dir)
 
         # Read daily file
+        new_files = glob.glob(backfill_dir + "/changehc_%s*.parquet"%numtype)
         pdList = []        
         for file in new_files:
+            if "from" in file:
+                continue
             df = pd.read_parquet(file, engine='pyarrow')
             issue_date = datetime.strptime(file[-16:-8], "%Y%m%d")
             df["issue_date"] = issue_date
             df["lag"] = [(issue_date - x).days for x in df["time_value"]]
             pdList.append(df)
-            
+            os.remove(file)
+        new_files = glob.glob(backfill_dir + "/changehc_%s*.parquet"%numtype)
+        assert len(new_files) == 1
+        
         expected = pd.concat(pdList).sort_values(["time_value", "fips"])
         
         # Read the merged file

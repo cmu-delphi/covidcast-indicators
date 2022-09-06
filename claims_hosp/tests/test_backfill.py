@@ -47,9 +47,19 @@ class TestBackfill:
         
         today = datetime.today()
         
-        new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")
         fn = "claims_hosp_from_20200611_to_20200614.parquet"
         assert fn not in os.listdir(backfill_dir)
+        
+        # Check when there is no daily file to merge.
+        today = datetime(2020, 6, 14)
+        merge_backfill_file(backfill_dir, today.weekday(), today, 
+                            test_mode=True, check_nd=8)
+        assert fn not in os.listdir(backfill_dir)
+        
+        # Generate backfill daily files     
+        for d in range(11, 15):
+            dropdate = datetime(2020, 6, d)        
+            store_backfill_file(DATA_FILEPATH, dropdate, backfill_dir)
         
         # Check the when the merged file is not generated
         today = datetime(2020, 6, 14)
@@ -63,6 +73,7 @@ class TestBackfill:
         assert fn in os.listdir(backfill_dir)
 
         # Read daily file
+        new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")
         pdList = []        
         for file in new_files:
             df = pd.read_parquet(file, engine='pyarrow')
@@ -70,6 +81,10 @@ class TestBackfill:
             df["issue_date"] = issue_date
             df["lag"] = [(issue_date - x).days for x in df["time_value"]]
             pdList.append(df)
+            os.remove(file)
+        new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")
+        assert len(new_files) == 1
+
         expected = pd.concat(pdList).sort_values(["time_value", "fips"])
         
         # Read the merged file

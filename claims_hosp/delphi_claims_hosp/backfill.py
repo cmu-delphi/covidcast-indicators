@@ -79,6 +79,8 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
         considerations
     """
     new_files = glob.glob(backfill_dir + "/claims_hosp_as_of_*")
+    if len(new_files) == 0: # if no any daily file is stored
+        return
 
     def get_date(file_link):
         # Keep the function here consistent with the backfill path in

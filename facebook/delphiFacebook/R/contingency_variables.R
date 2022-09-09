@@ -1658,7 +1658,7 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$language_home_chinese <- input_data$D12 == 3
     input_data$language_home_vietnamese <- input_data$D12 == 4
     input_data$language_home_french <- input_data$D12 == 5
-    input_data$language_home_portugese <- input_data$D12 == 6
+    input_data$language_home_portuguese <- input_data$D12 == 6
     input_data$language_home_other <- input_data$D12 == 7
   } else {
     input_data$language_home_english <- NA
@@ -1666,7 +1666,7 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$language_home_chinese <- NA
     input_data$language_home_vietnamese <- NA
     input_data$language_home_french <- NA
-    input_data$language_home_portugese <- NA
+    input_data$language_home_portuguese <- NA
     input_data$language_home_other <- NA
   }
 

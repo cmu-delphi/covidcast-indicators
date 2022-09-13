@@ -4,6 +4,7 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
+    "pyarrow",
     "pydocstyle",
     "pytest",
     "pytest-cov",

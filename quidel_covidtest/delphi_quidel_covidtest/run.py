@@ -26,7 +26,7 @@ from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-
+from .backfill import (store_backfill_file, merge_backfill_file)
 
 def log_exit(start_time, stats, logger):
     """Log at program exit."""
@@ -66,6 +66,7 @@ def run_module(params: Dict[str, Any]):
     - indicator":
         - "static_file_dir": str, directory name with population information
         - "input_cache_dir": str, directory in which to cache input data
+        - "backfill_dir": str, directory in which to store the backfill files
         - "export_start_date": str, YYYY-MM-DD format of earliest date to create output
         - "export_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
                              through the present
@@ -85,6 +86,8 @@ def run_module(params: Dict[str, Any]):
     stats = []
     atexit.register(log_exit, start_time, stats, logger)
     cache_dir = params["indicator"]["input_cache_dir"]
+    backfill_dir = params["indicator"]["backfill_dir"]
+    backfill_merge_day = params["indicator"]["backfill_merge_day"]
     export_dir = params["common"]["export_dir"]
     export_start_date = params["indicator"]["export_start_date"]
     export_end_date = params["indicator"]["export_end_date"]
@@ -92,9 +95,15 @@ def run_module(params: Dict[str, Any]):
 
     # Pull data and update export date
     df, _end_date = pull_quidel_covidtest(params["indicator"], logger)
+    # Merge 4 weeks' data into one file to save runtime
+    # Notice that here we don't check the _end_date(receive date)
+    # since we always want such merging happens on a certain day of a week
+    merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
     if _end_date is None:
         logger.info("The data is up-to-date. Currently, no new data to be ingested.")
         return
+    # Store the backfill intermediate file
+    store_backfill_file(df, _end_date, backfill_dir)
     export_end_date = check_export_end_date(
         export_end_date, _end_date, END_FROM_TODAY_MINUS)
     export_start_date = check_export_start_date(

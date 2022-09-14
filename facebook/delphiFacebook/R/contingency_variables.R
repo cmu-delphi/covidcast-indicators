@@ -367,11 +367,11 @@ code_addl_vaccines <- function(input_data, wave) {
   }
 
   if ("B6" %in% names(input_data)) {
-    input_data$t_unusual_symptom_hospital <- input_data$B6 == 1
-    input_data$t_unusual_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
+    input_data$t_symptom_hospital <- input_data$B6 == 1
+    input_data$t_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
   } else {
-    input_data$t_unusual_symptom_hospital <- NA
-    input_data$t_unusual_symptom_hospital_tried <- NA
+    input_data$t_symptom_hospital <- NA
+    input_data$t_symptom_hospital_tried <- NA
   }
 
   if ("B7" %in% names(input_data) && wave != 10) {
@@ -392,6 +392,7 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$unusual_symptom_medical_care_er <- is_selected(unusual_symptoms_care, "5")
     input_data$unusual_symptom_medical_care_hospital <- is_selected(unusual_symptoms_care, "6")
     input_data$unusual_symptom_medical_care_tried <- is_selected(unusual_symptoms_care, "7")
+    input_data$unusual_symptom_medical_care_none <- is_selected(unusual_symptoms_care, "8")
   } else {
     input_data$unusual_symptom_medical_care_called_doctor <- NA
     input_data$unusual_symptom_medical_care_telemedicine <- NA
@@ -400,6 +401,7 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$unusual_symptom_medical_care_er <- NA
     input_data$unusual_symptom_medical_care_hospital <- NA
     input_data$unusual_symptom_medical_care_tried <- NA
+    input_data$unusual_symptom_medical_care_none <- NA
   }
 
   if ( "B12a" %in% names(input_data) ) {

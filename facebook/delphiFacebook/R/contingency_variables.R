@@ -165,6 +165,19 @@ code_health <- function(input_data, wave) {
     input_data$comorbidobese <- is_selected(comorbidities, "13")
     input_data$comorbid_none <- is_selected(comorbidities, "9")
 
+    if (wave < 4) {
+      # Added in Wave 4
+      input_data$comorbidimmuno <- NA
+    }
+    if (wave < 8) {
+      # Added in Wave 8
+      input_data$comorbidobese <- NA
+    }
+    if (wave >= 11) {
+      # Removed in Wave 11
+      input_data$comorbid_autoimmune <- NA
+    }
+
     # Combo vaccine-eligibility
     input_data$eligible <- 
       input_data$comorbidheartdisease |
@@ -1156,6 +1169,32 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_headache <- is_selected(symptoms, "18")
     input_data$symp_sleep_changes <- is_selected(symptoms, "19")
     input_data$symp_stuffy_nose <- is_selected(symptoms, "20")
+
+    if (wave < 3) {
+      # Added in Wave 3
+      input_data$symp_eye_pain <- NA
+    }
+    if (wave < 4) {
+      # Added in Wave 4
+      input_data$symp_chills <- NA
+    }
+    if (wave < 5) {
+      # Added in Wave 5
+      input_data$symp_headache <- NA
+      input_data$symp_sleep_changes <- NA
+    }
+    if (wave < 11) {
+      # Added in Wave 11
+      input_data$symp_stuffy_nose <- NA
+    }
+    if (wave >= 11) {
+      # All removed in Wave 11
+      input_data$symp_nasal_congestion <- NA
+      input_data$symp_runny_nose <- NA
+      input_data$symp_eye_pain <- NA
+      input_data$symp_sleep_changes <- NA
+    }
+
   } else {
     input_data$symp_fever <- NA
     input_data$symp_cough <- NA
@@ -1267,6 +1306,33 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_unusual_given_stuffy_nose <- calc_unusual_given_symptom(
       input_data$symp_stuffy_nose, is_selected(symptoms, "20")
     )
+
+    if (wave < 5) {
+      # Added in Wave 5
+      input_data$symp_headache_unusual <- NA
+      input_data$symp_sleep_changes_unusual <- NA
+
+      input_data$symp_unusual_given_headache <- NA
+      input_data$symp_unusual_given_sleep_changes <- NA
+    }
+    if (wave < 11) {
+      # Added in Wave 11
+      input_data$symp_stuffy_nose_unusual <- NA
+
+      input_data$symp_unusual_given_stuffy_nose <- NA
+    }
+    if (wave >= 11) {
+      # All removed in Wave 11
+      input_data$symp_nasal_congestion_unusual <- NA
+      input_data$symp_runny_nose_unusual <- NA
+      input_data$symp_eye_pain_unusual <- NA
+      input_data$symp_sleep_changes_unusual <- NA
+
+      input_data$symp_unusual_given_nasal_congestion <- NA
+      input_data$symp_unusual_given_runny_nose <- NA
+      input_data$symp_unusual_given_eye_pain <- NA
+      input_data$symp_unusual_given_sleep_changes <- NA
+    }
   } else {
     input_data$symp_unusual_given_fever <- NA
     input_data$symp_unusual_given_cough <- NA

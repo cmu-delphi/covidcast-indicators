@@ -23,7 +23,9 @@
 #'
 #' @export
 fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG) {
-  lags <- min(df[[lag_col]]): ref_lag # Full list of lags
+  # Full list of lags
+  # +30 to have values for calculating 7-day averages
+  lags <- min(df[[lag_col]]): (ref_lag + 30) 
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
   row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
     setNames(c(refd_col, lag_col))
@@ -50,7 +52,7 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
     pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
   
   if (any(diff(pivot_df[[lag_col]]) != 1)) {
-    stop("Risk exists in forward fill")
+    stop("Risk exists in forward filling")
   }
   pivot_df <- pivot_df %>% fill(everything(), .direction="down")
   
@@ -135,7 +137,7 @@ get_weekofmonth <- function(date) {
   month <- month(date)
   day <- day(date)
   firstdayofmonth <- as.numeric(format(make_date(year, month, 1), format="%u"))
-  return (((day + firstdayofmonth - 1) %/% 7) %% 5 + 1)
+  return (((day + firstdayofmonth - 1) %/% 7) %% 4 + 1)
 }
 
 #' Add one hot encoding for week of a month info in terms of issue date

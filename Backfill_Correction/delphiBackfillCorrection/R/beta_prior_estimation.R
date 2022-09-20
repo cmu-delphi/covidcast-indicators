@@ -1,7 +1,7 @@
 ## Functions for Beta Prior Approach.
 ##
-## This is used only for the ratio prediction e.g. fraction of Covid claims,
-## percentage of positive tests. We assume that the ratio follows a beta distribution
+## This is used only for the fraction prediction e.g. fraction of Covid claims,
+## percentage of positive tests. We assume that the fraction follows a beta distribution
 ## that is day-of-week dependent. A quantile regression model is used first with lasso
 ## penalty for supporting quantile estimation and then a non-linear minimization is used
 ## for prior estimation.
@@ -21,7 +21,7 @@ delta <- function(fit, actual) sum((fit-actual)^2)
 #' @importFrom stats pbeta
 objective <- function(theta, x, prob, ...) {
   ab <- exp(theta) # Parameters are the *logs* of alpha and beta
-  fit <- pbeta(x, ab[1], ab[2])
+  fit <- qbeta(x, ab[1], ab[2])
   return (delta(fit, prob))
 }
 
@@ -44,10 +44,12 @@ objective <- function(theta, x, prob, ...) {
 #' @importFrom stats nlm predict
 #' @importFrom dplyr %>% filter
 #' @importFrom quantgen quantile_lasso
-est_priors <- function(train_data, prior_test_data, dw, taus,
-                       covariates, response, lp_solver, lambda,
+#' 
+est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus, 
+                       covariates, response, lp_solver, lambda, model_path_prefix,
                        start=c(0, log(10)),
-                       base_pseudo_denom=1000, base_pseudo_num=10) {
+                       base_pseudo_denom=1000, base_pseudo_num=10,
+                       train_models = TRUE, make_predictions = TRUE) {
   sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
   sub_test_data <- prior_test_data %>% filter(prior_test_data[[dw]] == 1)
   if (nrow(sub_test_data) == 0) {
@@ -58,9 +60,11 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
     quantiles <- list()
     for (idx in 1:length(taus)) {
       tau <- taus[idx]
-      obj <- quantile_lasso(as.matrix(sub_train_data[covariates]),
-                           sub_train_data[response], tau = tau,
-                           lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
+      model_path <- paste0(model_path_prefix, "_beta_prior", 
+                           str_interp("_${value_type}_${geo}_${dw}_tau${tau}"), ".model")
+      obj = get_model(model_path, sub_train_data, covariates, tau = tau,
+                      lambda = lambda, lp_solver = lp_solver, train_models)
+
       y_hat_all <- as.numeric(predict(obj, newx = as.matrix(sub_test_data[covariates])))
       quantiles[idx] <- exp(mean(y_hat_all, na.rm=TRUE)) # back to the actual scale
     }
@@ -86,7 +90,7 @@ est_priors <- function(train_data, prior_test_data, dw, taus,
 #' @template denom_col-template
 #' 
 #' @export
-ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col) {
+frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, denom_col) {
   if (is.null(dw)) {
     num_adj <- data[[num_col]]  + pseudo_num
     denom_adj <- data[[denom_col]]  + pseudo_denom
@@ -106,15 +110,14 @@ ratio_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, d
 #' @template lp_solver-template
 #' 
 #' @export
-ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_solver = LP_SOLVER) {
-  train_data$value_target <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
-  train_data$value_7dav <- ratio_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
-  test_data$value_target <- ratio_adj_with_pseudo(test_data, NULL, 1, 100, "value_target_num", "value_target_denom")
-  prior_test_data$value_7dav <- ratio_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
+frac_adj <- function(train_data, test_data, prior_test_data, model_path_prefix,
+                     geo, value_type, taus = TAUS, lp_solver = LP_SOLVER) {
+  train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
+  train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
+  prior_test_data$value_7dav <- frac_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   
   train_data$log_value_target <- log(train_data$value_target)
   train_data$log_value_7dav <- log(train_data$value_7dav)
-  test_data$log_value_target <- log(test_data$value_target)
   prior_test_data$log_value_7dav <- log(prior_test_data$value_7dav)
   
   pre_covariates = c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref",
@@ -133,25 +136,27 @@ ratio_adj <- function(train_data, test_data, prior_test_data, taus = TAUS, lp_so
   test_data$pseudo_denum = NaN
   
   for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")) {
-    pseudo_counts <- est_priors(train_data, prior_test_data, cov, taus, 
-                        pre_covariates, "log_value_target", lp_solver, lambda=0.1)
+    pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, 
+                                cov, taus, pre_covariates, "log_value_target", 
+                                lp_solver, lambda=0.1, 
+                                model_path_prefix=model_path_prefix)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
     pseudo_num = pseudo_counts[1]
     # update current data
     # For training
-    train_data$value_raw[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_raw[train_data[[cov]] == 1] <- frac_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_raw_num", "value_raw_denom")
-    train_data$value_7dav[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_7dav[train_data[[cov]] == 1] <- frac_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_7dav_num", "value_7dav_denom")
-    train_data$value_prev_7dav[train_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    train_data$value_prev_7dav[train_data[[cov]] == 1] <- frac_adj_with_pseudo(
       train_data, cov, pseudo_num, pseudo_denum, "value_prev_7dav_num", "value_prev_7dav_denom")
     
     #For testing
-    test_data$value_raw[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_raw[test_data[[cov]] == 1] <- frac_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_raw_num", "value_raw_denom")
-    test_data$value_7dav[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_7dav[test_data[[cov]] == 1] <- frac_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_7dav_num", "value_7dav_denom")
-    test_data$value_prev_7dav[test_data[[cov]] == 1] <- ratio_adj_with_pseudo(
+    test_data$value_prev_7dav[test_data[[cov]] == 1] <- frac_adj_with_pseudo(
       test_data, cov, pseudo_num, pseudo_denum, "value_prev_7dav_num", "value_prev_7dav_denom")
     
     test_data$pseudo_num[test_data[[cov]] == 1] = pseudo_num

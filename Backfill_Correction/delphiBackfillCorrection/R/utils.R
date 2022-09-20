@@ -63,8 +63,8 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
   if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
-  if (!("geo_level" %in% names(params))) {params$geo_level <- c("state", "county")}
-  if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "fraction")}
+  if (!("geo_levels" %in% names(params))) {params$geo_levels <- c("state", "county")}
+  if (!("value_types" %in% names(params))) {params$value_types <- c("count", "fraction")}
 
   # Date parameters
   if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
@@ -139,7 +139,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
 training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
-  valid_training_days = as.integer(max(issue_date) - min(issue_date))
+  valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
   if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
@@ -161,10 +161,10 @@ filter_counties <- function(geos) {
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
+      dplyr::select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
       # Drop megacounties (states)
       filter(!endsWith(.data$fips, "000")) %>%
-      arrange(desc(.data$pop)) %>%
+      arrange(desc(pop)) %>%
       pull(.data$fips) %>%
       head(n=200)
   )

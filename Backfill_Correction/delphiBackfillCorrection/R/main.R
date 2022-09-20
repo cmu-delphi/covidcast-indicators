@@ -192,7 +192,11 @@ main <- function(params) {
       options(mc.cores = min(params$parallel_max_cores, floor(cores / 2)))
     }
   }
-
+  
+  #TO-DO
+  # Get the training end date according to the current date which is the date
+  # when the newest models were trained
+  
   # Loop over every indicator + signal combination.
   for (input_group in INDICATORS_AND_SIGNALS) {
     files_list <- get_files_list(
@@ -234,7 +238,7 @@ main <- function(params) {
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, params,
+    run_backfill(input_data, params, training_end_date,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
   }

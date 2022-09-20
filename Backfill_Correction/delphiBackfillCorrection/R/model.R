@@ -8,19 +8,25 @@
 #'
 #' @export
 data_filteration <- function(test_lag, geo_train_data, geo_test_data) {
-  if (test_lag <= 14) {
-    test_lag_pad=2
-  } else if (test_lag < 51) {
-    test_lag_pad=3
-  } else {
+  if (test_lag <= 14){
+    test_lag_pad=lag_pad
+    test_lag_pad1=0
+    test_lag_pad2=0
+  }else if (test_lag < 51){
     test_lag_pad=7
+    test_lag_pad1=6
+    test_lag_pad2=7
+  }else {
+    test_lag_pad=9
+    test_lag_pad1=8
+    test_lag_pad2=9
   }
-
   train_data = geo_train_data %>% 
     filter(.data$lag >= .env$test_lag - .env$test_lag_pad ) %>%
     filter(.data$lag <= .env$test_lag + .env$test_lag_pad )
   test_data = geo_test_data %>%
-    filter(.data$lag == .env$test_lag)
+    filter(.data$lag >= .env$test_lag - .env$test_lag_pad1 ) %>%
+    filter(.data$lag <= .env$test_lag + .env$test_lag_pad2)
 
   return (list(train_data, test_data))
 }

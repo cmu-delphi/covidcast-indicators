@@ -22,7 +22,7 @@ dayofweek_covariates <- c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref",
                           "Fri_ref", "Sat_ref")
 response <- "log_value_target"
 train_beta_vs <- log(rbeta(1000, 2, 5))
-test_beta_vs <- log(rbeta(50, 2, 5))
+test_beta_vs <- log(rbeta(61, 2, 5))
 train_data <- data.frame(log_value_7dav = train_beta_vs,
                          log_value_target = train_beta_vs)
 train_data$value_target_num <- exp(train_beta_vs) * 100
@@ -128,7 +128,7 @@ test_that("testing data filteration", {
   train_data$lag <- rep(0:60, nrow(train_data))[1:nrow(train_data)]
   test_data$lag <- rep(0:60, nrow(test_data))[1:nrow(test_data)]
   
-  # When test lag is smal0
+  # When test lag is small
   test_lag <- 5
   result <- data_filteration(test_lag, train_data, test_data)
   train_df <- result[[1]]
@@ -138,13 +138,21 @@ test_that("testing data filteration", {
   expect_true(all(test_df$lag == test_lag))
   
   # When test lag is large
-  test_lag <- 50
+  test_lag <- 48
   result <- data_filteration(test_lag, train_data, test_data)
   train_df <- result[[1]]
   test_df <- result[[2]]
-  expect_true(max(train_df$lag) == test_lag+3)
-  expect_true(min(train_df$lag) == test_lag-3)
-  expect_true(all(test_df$lag == test_lag))
+  expect_true(max(test_df$lag) == test_lag+7)
+  expect_true(min(test_df$lag) == test_lag-6)
+  
+  # Make sure that all lags are tested
+  included_lags = c()
+  for (test_lag in c(1:14, 21, 35, 51)){
+    result <- data_filteration(test_lag, train_data, test_data)
+    test_df <- result[[2]]
+    included_lags <- c(included_lags, unique(test_df$lag))
+  }
+  expect_true(all(1:60 %in% included_lags))
 })
 
 

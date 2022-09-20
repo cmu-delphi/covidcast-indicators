@@ -19,7 +19,7 @@ read_data <- function(input_dir) {
 #' @template value_type-template
 #'
 #' @importFrom readr write_csv
-#' @importFrom stringr str_interp, str_split
+#' @importFrom stringr str_interp str_split
 #'
 #' @export
 export_test_result <- function(test_data, coef_data, training_end_date,

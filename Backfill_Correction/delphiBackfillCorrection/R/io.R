@@ -14,26 +14,24 @@ read_data <- function(input_dir) {
 #'
 #' @param test_data test data containing prediction results
 #' @param coef_data data frame containing the estimated coefficients
+#' @param model_path_prefix string containing necessary information
 #' @template export_dir-template
-#' @template geo_level-template
-#' @template test_lag-template
+#' @template value_type-template
 #'
 #' @importFrom readr write_csv
-#' @importFrom stringr str_interp
+#' @importFrom stringr str_interp, str_split
 #'
 #' @export
-export_test_result <- function(test_data, coef_data, export_dir,
-                               geo_level, test_lag) {
-  if (!missing(test_lag)) {
-    base_name = str_interp("{geo_level}_lag{test_lag}.csv")
-  } else {
-    base_name = str_interp("{geo_level}.csv")
-  }
+export_test_result <- function(test_data, coef_data, training_end_date,
+                               value_type, export_dir,
+                               model_path_prefix) {
+  base_name <- paste(as.character(training_end_date),
+                     model_path_prefix, str_interp("${value_type}.csv"), sep="_")
 
-  pred_output_dir = str_interp("prediction_{base_name}")
+  pred_output_dir <- str_interp("prediction_${base_name}")
   write_csv(test_data, file.path(export_dir, pred_output_dir))
   
-  coef_output_dir = str_interp("coefs_{base_name}")
+  coef_output_dir <- str_interp("coefs_${base_name}")
   write_csv(test_data, file.path(export_dir, coef_output_dir))
 }
 
@@ -103,7 +101,7 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   
   ## TODO: start_date depends on if we're doing model training or just corrections.
   start_date <- TODAY - params$training_days - params$ref_lag
-  end_date <- TODAY - 1
+  end_date <- TODAY
   
   # Only keep files with data that falls at least somewhat between the desired
   # start and end range dates.
@@ -125,7 +123,7 @@ create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,
-         daily = str_interp("{indicator}_{signal}_as_of_[0-9]{8}.parquet$"),
-         rollup = str_interp("{indicator}_{signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
+         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}.parquet$"),
+         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
   )
 }

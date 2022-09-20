@@ -53,8 +53,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
       }
       
       model_path_prefix <- generate_model_filename_prefix(
-        params$model_save_dir, indicator, signal, 
-        geo_level, signal_suffix, lambda)
+        indicator, signal, geo_level, signal_suffix, lambda)
 
       test_data_list <- list()
       coef_list <- list()
@@ -89,82 +88,81 @@ run_backfill <- function(df, params, refd_col = "time_value",
             )
           }
           combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
+          combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
 
-          for (test_date in params$test_dates) {
-            geo_train_data = combined_df %>%
-              filter(.data$issue_date < .env$test_date) %>%
-              filter(.data$target_date <= .env$test_date) %>%
-              filter(.data$target_date > .env$test_date - params$training_days) %>%
-              drop_na()
-            geo_test_data = combined_df %>%
-              filter(.data$issue_date >= .env$test_date) %>%
-              filter(.data$issue_date < .env$test_date + params$testing_window) %>%
-              drop_na()
-            if (nrow(geo_test_data) == 0) next
-            if (nrow(geo_train_data) <= 200) next
+          test_date <- min(params$test_dates)
+          geo_train_data <- combined_df %>%
+            filter(.data$issue_date < .env$test_date) %>%
+            filter(.data$target_date <= .env$test_date) %>%
+            filter(.data$target_date > .env$test_date - params$training_days) %>%
+            drop_na()
+          geo_test_data <- combined_df %>%
+            filter(.data$issue_date %in% params$test_dates) %>%
+            drop_na()
+          if (nrow(geo_test_data) == 0) next
+          if (nrow(geo_train_data) <= 200) next
 
-            if (value_type == "fraction") {
-              # Use beta prior approach to adjust fractions
-              geo_prior_test_data = combined_df %>%
-                filter(.data$issue_date > .env$test_date - 7) %>%
-                filter(.data$issue_date <= .env$test_date)
+          if (value_type == "fraction") {
+            # Use beta prior approach to adjust fractions
+            geo_prior_test_data = combined_df %>%
+              filter(.data$issue_date > .env$test_date - 7) %>%
+              filter(.data$issue_date <= .env$test_date)
+            updated_data <- frac_adj(geo_train_data, geo_test_data, 
+                                     geo_prior_test_data, test_date-1, 
+                                     model_save_dir, model_path_prefix,
+                                     geo, value_type)
+            geo_train_data <- updated_data[[1]]
+            geo_test_data <- updated_data[[2]]
+          }
+          max_raw = sqrt(max(geo_train_data$value_raw))
+          for (test_lag in c(1:14, 21, 35, 51)) {
+            filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
+            train_data <- filtered_data[[1]]
+            test_data <- filtered_data[[2]]
 
-              updated_data <- frac_adj(geo_train_data, geo_test_data, 
-                                       geo_prior_test_data, model_path_prefix,
-                                       geo, value_type)
-              geo_train_data <- updated_data[[1]]
-              geo_test_data <- updated_data[[2]]
+            updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
+            train_data <- updated_data[[1]]
+            test_data <- updated_data[[2]]
+            sqrtscale <- updated_data[[3]]
+
+            covariates <- list(
+              Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
+              paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, sqrtscale
+            )
+            params_list <- c(YITL, as.vector(unlist(covariates)))
+
+            # Model training and testing
+            prediction_results <- model_training_and_testing(
+              train_data, test_data, params$taus, params_list, params$lp_solver, 
+              params$lambda, model_save_dir = params$model_save_dir, 
+              training_end_date = test_date - 1, test_lag = test_lag, 
+              geo = geo, value_type = value_type,
+              model_path_prefix=model_path_prefix,
+              train_models = params$train_models,
+              make_predictions = params$make_predictions
+            )
+
+            # Model objects are saved during training, so only need to export
+            # output if making predictions/corrections
+            if (params$make_predictions) {
+              test_data <- prediction_results[[1]]
+              coefs <- prediction_results[[2]]
+              test_data <- evaluate(test_data, params$taus)
+              
+              idx <- length(test_data_list[[value_type]]) + 1
+              test_data_list[[value_type]][[idx]] <- test_data
+              coef_list[[value_type]][[idx]] <- coefs
             }
-            max_raw = sqrt(max(geo_train_data$value_raw))
-            for (test_lag in c(1:14, 21, 35, 51)) {
-              filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
-              train_data <- filtered_data[[1]]
-              test_data <- filtered_data[[2]]
-
-              updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
-              train_data <- updated_data[[1]]
-              test_data <- updated_data[[2]]
-              sqrtscale <- updated_data[[3]]
-
-              covariates <- list(
-                Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
-                paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, sqrtscale
-              )
-              params_list <- c(YITL, as.vector(unlist(covariates)))
-
-              # Model training and testing
-              prediction_results <- model_training_and_testing(
-                train_data, test_data, params$taus, params_list, params$lp_solver, 
-                params$lambda, test_date, test_lag = test_lag, 
-                geo = geo, value_type = value_type,
-                model_path_prefix=model_path_prefix,
-                train_models = params$train_models,
-                make_predictions = params$make_predictions
-              )
-
-              # Model objects are saved during training, so only need to export
-              # output if making predictions/corrections
-              if (params$make_predictions) {
-                test_data <- prediction_results[[1]]
-                coefs <- prediction_results[[2]]
-                test_data <- evaluate(test_data, params$taus)
-                
-                idx <- length(test_data_list[[value_type]]) + 1
-                test_data_list[[value_type]][[idx]] <- test_data
-                coef_list[[value_type]][[idx]] <- coefs
-              }
-            }# End for test lags
-          }# End for test date list
+          }# End for test lags
         }# End for value types
       }# End for geo list
       if (params$make_predictions) {
         for (value_type in params$value_types) {
           test_combined <- do.call(plyr::rbind.fill, test_data_list[[value_type]]) 
           coef_combined <- do.call(plyr::rbind.fill, coef_list[[value_type]]) 
-          export_test_result(test_combined, coef_combined, value_type
-                             params$export_dir, model_path_prefix)
+          export_test_result(test_combined, coef_combined, training_end_date,
+                             value_type, params$export_dir, model_path_prefix)
         }
-        
       }
     }# End for geo type
   }# End for signal suffixes

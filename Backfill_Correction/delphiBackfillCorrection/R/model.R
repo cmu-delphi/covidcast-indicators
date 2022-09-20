@@ -153,7 +153,6 @@ evaluate <- function(test_data, taus) {
   predicted_all_exp = exp(predicted_all)
   predicted_trans = as.list(data.frame(t(predicted_all - test_data$log_value_target)))
   test_data$wis = mapply(weighted_interval_score, taus_list, predicted_trans, 0)
-  #test_data$wis_exp = mapply(weighted_interval_score, taus_list, predicted_trans_exp, 0)
   
   return (test_data)
 }

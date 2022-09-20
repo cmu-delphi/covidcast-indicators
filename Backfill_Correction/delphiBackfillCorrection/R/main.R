@@ -13,7 +13,7 @@
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, refd_col = "time_value",
+run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
                          lag_col = "lag", signal_suffixes = c(""),
                          indicator = "", signal = "") {
   for (suffix in signal_suffixes) {
@@ -90,11 +90,10 @@ run_backfill <- function(df, params, refd_col = "time_value",
           combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
           combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
 
-          test_date <- min(params$test_dates)
           geo_train_data <- combined_df %>%
-            filter(.data$issue_date < .env$test_date) %>%
-            filter(.data$target_date <= .env$test_date) %>%
-            filter(.data$target_date > .env$test_date - params$training_days) %>%
+            filter(.data$issue_date < training_end_date) %>%
+            filter(.data$target_date <= training_end_date) %>%
+            filter(.data$target_date > training_end_date - params$training_days) %>%
             drop_na()
           geo_test_data <- combined_df %>%
             filter(.data$issue_date %in% params$test_dates) %>%
@@ -105,10 +104,10 @@ run_backfill <- function(df, params, refd_col = "time_value",
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions
             geo_prior_test_data = combined_df %>%
-              filter(.data$issue_date > .env$test_date - 7) %>%
-              filter(.data$issue_date <= .env$test_date)
+              filter(.data$issue_date > min(params$test_dates) - 7) %>%
+              filter(.data$issue_date <= max(params$test_dates))
             updated_data <- frac_adj(geo_train_data, geo_test_data, 
-                                     geo_prior_test_data, test_date-1, 
+                                     geo_prior_test_data, training_end_date, 
                                      model_save_dir, model_path_prefix,
                                      geo, value_type)
             geo_train_data <- updated_data[[1]]
@@ -135,7 +134,7 @@ run_backfill <- function(df, params, refd_col = "time_value",
             prediction_results <- model_training_and_testing(
               train_data, test_data, params$taus, params_list, params$lp_solver, 
               params$lambda, model_save_dir = params$model_save_dir, 
-              training_end_date = test_date - 1, test_lag = test_lag, 
+              training_end_date = training_end_date, test_lag = test_lag, 
               geo = geo, value_type = value_type,
               model_path_prefix=model_path_prefix,
               train_models = params$train_models,

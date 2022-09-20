@@ -119,7 +119,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   }
   if (success < 9) {return (NULL)}
   if (!make_predictions) {return (list())}
-
+  
   coef_combined_result = data.frame(tau=taus, issue_date=test_date, 
                                     geo=geo, test_lag=test_lag)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))
@@ -208,11 +208,13 @@ get_model <- function(model_path, train_data, covariates, tau,
 #'
 #' @importFrom stringr str_interp
 #' 
-generate_model_filename_prefix <- function(indicator, signal, geo_level, 
-                                           signal_suffix, lambda) {
+generate_model_filename_prefix <- function(model_save_dir, indicator, signal, 
+                                           geo_level, signal_suffix, lambda) {
   prefix_components <- c(indicator, signal, signal_suffix)
   filename = paste0(
     # Drop any empty strings.
+    model_save_dir, 
+    "/",
     paste(prefix_components[prefix_components != ""], collapse="_"),
     str_interp("_${geo_level}_lambda${lambda}")
   )

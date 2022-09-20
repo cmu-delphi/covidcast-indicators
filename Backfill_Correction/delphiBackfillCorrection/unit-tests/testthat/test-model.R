@@ -8,6 +8,7 @@ signal_suffix <- ""
 lambda <- 0.1
 lp_solver <- "gurobi"
 lambda <- 0.1
+model_save_dir <- "./model"
 model_path_prefix <- "model/test"
 geo <- "pa"
 value_type <- "fraction"
@@ -37,12 +38,13 @@ for (cov in c(dayofweek_covariates, "Sun_ref")){
   train_data[[cov]] <- 1
   test_data[[cov]] <- 1
 }
+covariates <- c(main_covariate, dayofweek_covariates)
   
   
 test_that("testing the generation of model filename prefix", {
-  model_prefix <- generate_model_filename_prefix(indicator, signal, geo_level, 
-                                                 signal_suffix, lambda)
-  expected <- "chng_outpatient_state_lambda0.1"
+  model_prefix <- generate_model_filename_prefix(model_save_dir, indicator, signal, 
+                                                 geo_level, signal_suffix, lambda)
+  expected <- "./model/chng_outpatient_state_lambda0.1"
   expect_equal(model_prefix, expected)
 })
 
@@ -51,7 +53,7 @@ test_that("testing the evaluation", {
     test_data[[paste0("predicted_tau", as.character(tau))]] <- log(quantile(exp(train_beta_vs), tau))
   }
   result <- evaluate(test_data, taus)
-  expect_true(mean(result$wis) < 0.2)
+  expect_true(mean(result$wis) < 0.3)
 })
 
 test_that("testing generating or loading the model", {

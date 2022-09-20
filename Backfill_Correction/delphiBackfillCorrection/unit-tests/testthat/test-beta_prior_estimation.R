@@ -11,10 +11,14 @@ dayofweek_covariates <- c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref",
 response <- "log_value_target"
 lp_solver <- "gurobi"
 lambda <- 0.1
-model_path_prefix <- "model/test"
+model_save_dir <- "./model"
+model_path_prefix <- "test"
 geo <- "pa"
 value_type <- "fraction"
+training_end_date <- as.Date("2022-01-01")
 taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
+
+set.seed(2022)
 train_beta_vs <- log(rbeta(1000, 2, 5))
 test_beta_vs <- log(rbeta(50, 2, 5))
 train_data <- data.frame(log_value_7dav = train_beta_vs,
@@ -58,22 +62,24 @@ test_that("testing the squared error objection function given the beta prior", {
 
 
 test_that("testing the prior estimation", {
-  set.seed(1)
   dw <- "Sat_ref"
   priors <- est_priors(train_data, test_data, geo, value_type, dw, taus, 
-                       main_covariate, response, lp_solver, lambda, model_path_prefix,
+                       main_covariate, response, lp_solver, lambda,
+                       training_end_date, model_save_dir, model_path_prefix,
                        start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10,
                        train_models = TRUE, make_predictions = TRUE)
   beta <- priors[2]
   alpha <- priors[1] - beta
-  expect_true((alpha > 0)& (alpha < 4))
-  expect_true((beta > 4)& (beta < 6))
+  expect_true((alpha > 0) & (alpha < 4))
+  expect_true((beta > 4) & (beta < 8))
   
   for (idx in 1:length(taus)) {
     tau <- taus[idx]
-    model_path <- paste0(model_path_prefix, "_beta_prior", 
-                         str_interp("_${value_type}_${geo}_${dw}_tau${tau}"), ".model")
+    model_path <- paste0(
+      model_save_dir,
+      str_interp("/${training_end_date}_beta_prior_${model_path_prefix}_${value_type}_${geo}_${dw}_tau${tau}"), 
+      ".model")
     expect_true(file.exists(model_path)) 
     file.remove(model_path)
   }
@@ -92,7 +98,8 @@ test_that("testing the fraction adjustment with pseudo counts", {
 
 test_that("testing the main beta prior adjustment function", {
   set.seed(1)
-  updated_data <- frac_adj(train_data, test_data, prior_test_data, model_path_prefix,
+  updated_data <- frac_adj(train_data, test_data, prior_test_data, 
+                           training_end_date, model_save_dir, model_path_prefix,
                            geo, value_type, taus = taus, lp_solver = lp_solver)
   updated_train_data <- updated_data[[1]]
   updated_test_data <- updated_data[[2]]
@@ -100,8 +107,10 @@ test_that("testing the main beta prior adjustment function", {
   for (dw in c(dayofweek_covariates, "Sun_ref")){
     for (idx in 1:length(taus)) {
       tau <- taus[idx]
-      model_path <- paste0(model_path_prefix, "_beta_prior", 
-                           str_interp("_${value_type}_${geo}_${dw}_tau${tau}"), ".model")
+      model_path <- paste0(
+        model_save_dir,
+        str_interp("/${training_end_date}_beta_prior_${model_path_prefix}_${value_type}_${geo}_${dw}_tau${tau}"), 
+        ".model")
       expect_true(file.exists(model_path)) 
       file.remove(model_path)
     }

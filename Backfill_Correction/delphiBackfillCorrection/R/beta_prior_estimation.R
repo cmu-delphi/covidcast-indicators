@@ -46,8 +46,8 @@ objective <- function(theta, x, prob, ...) {
 #' @importFrom quantgen quantile_lasso
 #' 
 est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus, 
-                       covariates, response, lp_solver, lambda, model_path_prefix,
-                       start=c(0, log(10)),
+                       covariates, response, lp_solver, lambda, training_end_date,
+                       model_save_dir, model_path_prefix, start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10,
                        train_models = TRUE, make_predictions = TRUE) {
   sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
@@ -60,8 +60,10 @@ est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus,
     quantiles <- list()
     for (idx in 1:length(taus)) {
       tau <- taus[idx]
-      model_path <- paste0(model_path_prefix, "_beta_prior", 
-                           str_interp("_${value_type}_${geo}_${dw}_tau${tau}"), ".model")
+      model_path <- paste0(
+        model_save_dir,
+        str_interp("/${training_end_date}_beta_prior_${model_path_prefix}_${value_type}_${geo}_${dw}_tau${tau}"), 
+        ".model")
       obj = get_model(model_path, sub_train_data, covariates, tau = tau,
                       lambda = lambda, lp_solver = lp_solver, train_models)
 
@@ -110,7 +112,8 @@ frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, de
 #' @template lp_solver-template
 #' 
 #' @export
-frac_adj <- function(train_data, test_data, prior_test_data, model_path_prefix,
+frac_adj <- function(train_data, test_data, prior_test_data, traning_end_date,
+                     model_save_dir, model_path_prefix,
                      geo, value_type, taus = TAUS, lp_solver = LP_SOLVER) {
   train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
   train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
@@ -138,7 +141,7 @@ frac_adj <- function(train_data, test_data, prior_test_data, model_path_prefix,
   for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")) {
     pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, 
                                 cov, taus, pre_covariates, "log_value_target", 
-                                lp_solver, lambda=0.1, 
+                                lp_solver, 0.1, training_end_date, model_save_dir,
                                 model_path_prefix=model_path_prefix)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
     pseudo_num = pseudo_counts[1]

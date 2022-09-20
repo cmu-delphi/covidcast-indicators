@@ -90,8 +90,9 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
-                                       lp_solver, lambda, test_date, test_lag,
-                                       geo, value_type, model_path_prefix, 
+                                       lp_solver, lambda, test_lag,
+                                       geo, value_type, model_save_dir, 
+                                       training_end_date, model_path_prefix, 
                                        train_models = TRUE,
                                        make_predictions = TRUE) {
   success = 0
@@ -100,8 +101,8 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   for (tau in taus) {
     tryCatch(
       expr = {
-        model_path <- paste(model_path_prefix, 
-                            str_interp("_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
+        model_path <- paste(model_save_dir,
+                            str_interp("/${training_end_date}_${model_path_prefix}_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
         obj <- get_model(model_path, train_data, covariates, tau,
                          lambda, lp_solver, train_models=TRUE) 
 
@@ -208,13 +209,11 @@ get_model <- function(model_path, train_data, covariates, tau,
 #'
 #' @importFrom stringr str_interp
 #' 
-generate_model_filename_prefix <- function(model_save_dir, indicator, signal, 
+generate_model_filename_prefix <- function(indicator, signal, 
                                            geo_level, signal_suffix, lambda) {
   prefix_components <- c(indicator, signal, signal_suffix)
   filename = paste0(
     # Drop any empty strings.
-    model_save_dir, 
-    "/",
     paste(prefix_components[prefix_components != ""], collapse="_"),
     str_interp("_${geo_level}_lambda${lambda}")
   )

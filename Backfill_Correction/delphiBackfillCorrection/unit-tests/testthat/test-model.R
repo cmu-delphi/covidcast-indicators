@@ -9,9 +9,10 @@ lambda <- 0.1
 lp_solver <- "gurobi"
 lambda <- 0.1
 model_save_dir <- "./model"
-model_path_prefix <- "model/test"
+model_path_prefix <- "test"
 geo <- "pa"
 value_type <- "fraction"
+training_end_date <- as.Date("2022-01-01")
 taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
 
 # Generate Test Data
@@ -42,9 +43,9 @@ covariates <- c(main_covariate, dayofweek_covariates)
   
   
 test_that("testing the generation of model filename prefix", {
-  model_prefix <- generate_model_filename_prefix(model_save_dir, indicator, signal, 
+  model_prefix <- generate_model_filename_prefix(indicator, signal, 
                                                  geo_level, signal_suffix, lambda)
-  expected <- "./model/chng_outpatient_state_lambda0.1"
+  expected <- "chng_outpatient_state_lambda0.1"
   expect_equal(model_prefix, expected)
 })
 
@@ -73,8 +74,9 @@ test_that("testing generating or loading the model", {
 
 test_that("testing model training and testing", {
   result <- model_training_and_testing(train_data, test_data, taus, covariates,
-                                       lp_solver, lambda, test_date, test_lag,
-                                       geo, value_type, model_path_prefix, 
+                                       lp_solver, lambda, test_lag,
+                                       geo, value_type, model_save_dir,
+                                       training_end_date, model_path_prefix, 
                                        train_models = TRUE, make_predictions = TRUE)
   test_result <- result[[1]]
   coef_df <- result[[2]]
@@ -83,8 +85,8 @@ test_that("testing model training and testing", {
     cov <- paste0("predicted_tau", as.character(tau))
     expect_true(cov %in% colnames(test_result))
     
-    model_path <- paste(model_path_prefix, 
-                        str_interp("_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
+    model_path <- paste(model_save_dir, 
+                        str_interp("/${training_end_date}_${model_path_prefix}_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
     expect_true(file.exists(model_path))
     
     expect_silent(file.remove(model_path))

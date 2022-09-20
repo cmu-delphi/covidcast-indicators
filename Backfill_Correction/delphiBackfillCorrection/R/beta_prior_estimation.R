@@ -18,7 +18,7 @@ delta <- function(fit, actual) sum((fit-actual)^2)
 #' @param prob the expected probabilities
 #' @param ... additional arguments
 #' 
-#' @importFrom stats pbeta
+#' @importFrom stats qbeta
 objective <- function(theta, x, prob, ...) {
   ab <- exp(theta) # Parameters are the *logs* of alpha and beta
   fit <- qbeta(x, ab[1], ab[2])

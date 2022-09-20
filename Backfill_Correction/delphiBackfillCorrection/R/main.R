@@ -157,8 +157,8 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
       }# End for geo list
       if (params$make_predictions) {
         for (value_type in params$value_types) {
-          test_combined <- do.call(plyr::rbind.fill, test_data_list[[value_type]]) 
-          coef_combined <- do.call(plyr::rbind.fill, coef_list[[value_type]]) 
+          test_combined <- bind_rows(test_data_list[[value_type]]) 
+          coef_combined <- bind_rows(coef_list[[value_type]]) 
           export_test_result(test_combined, coef_combined, training_end_date,
                              value_type, params$export_dir, model_path_prefix)
         }

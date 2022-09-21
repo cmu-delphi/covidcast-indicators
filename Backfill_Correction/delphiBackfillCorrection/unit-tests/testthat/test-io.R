@@ -15,9 +15,9 @@ training_end_date <- as.Date("2022-01-01")
 
  
 test_that("testing exporting the output file", {
-  test_data <- data.frame()
-  coef_data <- data.frame()
-
+  test_data <- data.frame(test=TRUE)
+  coef_data <- data.frame(test=TRUE)
+  
   export_test_result(test_data, coef_data, indicator, signal, 
                      geo_level, signal_suffix, lambda,
                      training_end_date,
@@ -31,6 +31,3 @@ test_that("testing exporting the output file", {
   file.remove(prediction_file)
   file.remove(coefs_file)
 })
-
-
-

@@ -23,49 +23,52 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
     geo_levels <- c(setdiff(geo_levels, c("state")), "state")
   }
   
-  for (suffix in signal_suffixes) {
-    # For each suffix listed in `signal_suffixes`, run training/testing
-    # process again. Main use case is for quidel which has overall and
-    # age-based signals.
-    if (suffix != "") {
-      num_col <- paste(params$num_col, suffix, sep = "_")
-      denom_col <- paste(params$denom_col, suffix, sep = "_")
-    } else {
-      num_col <- params$num_col
-      denom_col <- params$denom_col
+  for (geo_level in geo_levels) {
+    # Get full list of interested locations
+    if (geo_level == "state") {
+      # Drop county field and make new "geo_value" field from "state_id".        
+      # Aggregate counties up to state level
+      df <- df %>%
+        dplyr::select(-.data$geo_value, geo_value = .data$state_id) %>%
+        dplyr::group_by(across(c("geo_value", refd_col, lag_col))) %>%
+        # Summarized columns keep original names
+        dplyr::summarize(across(everything(), sum))
+    }
+    geo_list <- unique(df$geo_value)
+    if (geo_level == "county") {
+      # Keep only 200 most populous (within the US) counties
+      geo_list <- filter_counties(geo_list)
+    }
+      
+    test_data_list <- list()
+    coef_list <- list()
+    
+    for (value_type in params$value_types) {
+      for (signal_suffix in signal_suffixes) {
+        key = paste(value_type, signal_suffix)
+        test_data_list[[key]] <- list()
+        coef_list[[key]] <- list()
+      }
     }
     
-    
-    
-    for (geo_level in geo_levels) {
-      # Get full list of interested locations
-      if (geo_level == "state") {
-        # Drop county field and make new "geo_value" field from "state_id".
-        # Aggregate counties up to state level
-        df <- df %>%
-          dplyr::select(-.data$geo_value, geo_value = .data$state_id) %>%
-          dplyr::group_by(across(c("geo_value", refd_col, lag_col))) %>%
-          # Summarized columns keep original names
-          dplyr::summarize(across(everything(), sum))
-      }
-      geo_list <- unique(df$geo_value)
-      if (geo_level == "county") {
-        # Keep only 200 most populous (within the US) counties
-        geo_list <- filter_counties(geo_list)
-      }
+    # Build model for each location
+    for (geo in geo_list) {
+      subdf <- df %>% filter(.data$geo_value == .env$geo) %>% filter(.data$lag < params$ref_lag)
+      min_refd <- min(subdf[[refd_col]])
+      max_refd <- max(subdf[[refd_col]])
+      subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
       
-      test_data_list <- list()
-      coef_list <- list()
-      for (value_type in params$value_types) {
-        test_data_list[[value_type]] <- list()
-        coef_list[[value_type]] <- list()
-      }
-      # Build model for each location
-      for (geo in geo_list) {
-        subdf <- df %>% filter(.data$geo_value == .env$geo) %>% filter(.data$lag < params$ref_lag)
-        min_refd <- min(subdf[[refd_col]])
-        max_refd <- max(subdf[[refd_col]])
-        subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
+      for (signal_suffix in signal_suffixes) {
+        # For each suffix listed in `signal_suffixes`, run training/testing
+        # process again. Main use case is for quidel which has overall and
+        # age-based signals.
+        if (signal_suffix != "") {
+          num_col <- paste(params$num_col, signal_suffix, sep = "_")
+          denom_col <- paste(params$denom_col, signal_suffix, sep = "_")
+        } else {
+          num_col <- params$num_col
+          denom_col <- params$denom_col
+        }
         
         for (value_type in params$value_types) {
           # Handle different signal types
@@ -152,20 +155,25 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
             }
           }# End for test lags
         }# End for value types
-      }# End for geo list
+      }# End for signal suffixes
+      
       if (params$make_predictions) {
         for (value_type in params$value_types) {
-          test_combined <- bind_rows(test_data_list[[value_type]]) 
-          coef_combined <- bind_rows(coef_list[[value_type]]) 
-          export_test_result(test_combined, coef_combined, 
-                             indicator, signal, 
-                             geo_level, signal_suffix, lambda,
-                             training_end_date,
-                             value_type, export_dir params$export_dir)
+          for (signal_suffix in signal_suffixes) {
+            key = paste(value_type, signal_suffix)
+            test_combined <- bind_rows(test_data_list[[key]]) 
+            coef_combined <- bind_rows(coef_list[[key]]) 
+            export_test_result(test_combined, coef_combined, 
+                               indicator, signal, 
+                               geo_level, signal_suffix, lambda,
+                               training_end_date,
+                               value_type, export_dir params$export_dir)
+          }
         }
       }
-    }# End for geo type
-  }# End for signal suffixes
+      
+    }# End for geo list
+  }# End for geo type
 }
 
 #' Perform backfill correction on all desired signals and geo levels

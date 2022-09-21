@@ -7,7 +7,7 @@
 #' @importFrom rlang .data .env
 #'
 #' @export
-data_filteration <- function(test_lag, geo_train_data, geo_test_data) {
+data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
   if (test_lag <= 14){
     test_lag_pad=lag_pad
     test_lag_pad1=0

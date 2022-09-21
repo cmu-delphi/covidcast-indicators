@@ -115,7 +115,8 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
           }
           max_raw = sqrt(max(geo_train_data$value_raw))
           for (test_lag in c(1:14, 21, 35, 51)) {
-            filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
+            filtered_data <- data_filteration(test_lag, geo_train_data, 
+                                              geo_test_data, params$lag_pad)
             train_data <- filtered_data[[1]]
             test_data <- filtered_data[[2]]
 

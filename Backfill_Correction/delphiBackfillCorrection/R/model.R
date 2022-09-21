@@ -31,12 +31,13 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data) {
   return (list(train_data, test_data))
 }
 
-#' Add square root scale indicator
+#' Add columns to indicate the scale of value at square root level
 #' 
-#' @param train_data training data for a certain location and a certain test lag
-#' @param test_data testing data for a certain location and a certain test lag
-#' @param max_raw the value raw maximum for a certain location
-#'
+#' @template train_data-template
+#' @param test_data Data Frame for testing
+#' @param max_raw the maximum value in the training data at square root level
+#' @template value_col-template
+#' 
 #' @export
 add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
   if (!(value_col %in% colnames(train_data))){

@@ -220,30 +220,3 @@ add_params_for_dates <- function(df, refd_col, lag_col) {
   
   return (as.data.frame(df))
 }
-
-#' Add columns to indicate the scale of value at square root level
-#' 
-#' @template train_data-template
-#' @param test_data Data Frame for testing
-#' @param max_raw the maximum value in the training data at square root level
-#' @template value_col-template
-add_sqrtscale <- function(train_data, test_data, max_raw, value_col) {
-  sqrtscale = c()
-  sub_max_raw = sqrt(max(train_data$value_raw)) / 2
-  
-  for (split in seq(0, 3)) {
-    if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
-    train_data[paste0("sqrty", as.character(split))] = 0
-    test_data[paste0("sqrty", as.character(split))] = 0
-    qv_pre = max_raw * split * 0.2
-    qv_next = max_raw * (split+1) * 0.2
-
-    train_data[(train_data$value_raw <= (qv_next)^2)
-               & (train_data$value_raw > (qv_pre)^2), paste0("sqrty", as.character(split))] = 1
-    test_data[(test_data$value_raw <= (qv_next)^2)
-              & (test_data$value_raw > (qv_pre)^2), paste0("sqrty", as.character(split))] = 1
-    sqrtscale[split+1] = paste0("sqrty", as.character(split))
-  }
-  
-  return (list(train_data, test_data, sqrtscale))
-}

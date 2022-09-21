@@ -1,7 +1,6 @@
 {
   "ref_lag": 7,
   "input_dir": "",
-  "model_save_dir": "./model",
   "cache_dir": "./cache",
   "testing_window": 1,
   "training_days": 30,

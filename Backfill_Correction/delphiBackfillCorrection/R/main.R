@@ -167,7 +167,7 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
                                indicator, signal, 
                                geo_level, signal_suffix, lambda,
                                training_end_date,
-                               value_type, export_dir params$export_dir)
+                               value_type, export_dir, params$export_dir)
           }
         }
       }

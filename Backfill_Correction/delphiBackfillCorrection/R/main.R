@@ -16,6 +16,13 @@
 run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
                          lag_col = "lag", signal_suffixes = c(""),
                          indicator = "", signal = "") {
+  geo_levels <- params$geo_levels
+  if ("state" %in% geo_levels) {
+    # If state included, do it last since state processing modifies the
+    # `df` object.
+    geo_levels <- c(setdiff(geo_levels, c("state")), "state")
+  }
+  
   for (suffix in signal_suffixes) {
     # For each suffix listed in `signal_suffixes`, run training/testing
     # process again. Main use case is for quidel which has overall and
@@ -28,12 +35,7 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
       denom_col <- params$denom_col
     }
     
-    geo_levels <- params$geo_levels
-    if ("state" %in% geo_levels) {
-      # If state included, do it last since state processing modifies the
-      # `df` object.
-      geo_levels <- c(setdiff(geo_levels, c("state")), "state")
-    }
+    
     
     for (geo_level in geo_levels) {
       # Get full list of interested locations
@@ -52,9 +54,6 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
         geo_list <- filter_counties(geo_list)
       }
       
-      model_path_prefix <- generate_model_filename_prefix(
-        indicator, signal, geo_level, signal_suffix, lambda)
-
       test_data_list <- list()
       coef_list <- list()
       for (value_type in params$value_types) {
@@ -106,9 +105,9 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
             geo_prior_test_data = combined_df %>%
               filter(.data$issue_date > min(params$test_dates) - 7) %>%
               filter(.data$issue_date <= max(params$test_dates))
-            updated_data <- frac_adj(geo_train_data, geo_test_data, 
-                                     geo_prior_test_data, training_end_date, 
-                                     model_save_dir, model_path_prefix,
+            updated_data <- frac_adj(train_data, test_data, prior_test_data, 
+                                     indicator, signal, geo_level, signal_suffix,
+                                     traning_end_date, params$cache_dir, 
                                      geo, value_type)
             geo_train_data <- updated_data[[1]]
             geo_test_data <- updated_data[[2]]
@@ -134,10 +133,8 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
             # Model training and testing
             prediction_results <- model_training_and_testing(
               train_data, test_data, params$taus, params_list, params$lp_solver, 
-              params$lambda, model_save_dir = params$model_save_dir, 
-              training_end_date = training_end_date, test_lag = test_lag, 
-              geo = geo, value_type = value_type,
-              model_path_prefix=model_path_prefix,
+              params$lambda, test_lag, geo, params$cache_dir, 
+              indicator, signal, geo_level, signal_suffix,training_end_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
             )
@@ -160,8 +157,11 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
         for (value_type in params$value_types) {
           test_combined <- bind_rows(test_data_list[[value_type]]) 
           coef_combined <- bind_rows(coef_list[[value_type]]) 
-          export_test_result(test_combined, coef_combined, training_end_date,
-                             value_type, params$export_dir, model_path_prefix)
+          export_test_result(test_combined, coef_combined, 
+                             indicator, signal, 
+                             geo_level, signal_suffix, lambda,
+                             training_end_date,
+                             value_type, export_dir params$export_dir)
         }
       }
     }# End for geo type

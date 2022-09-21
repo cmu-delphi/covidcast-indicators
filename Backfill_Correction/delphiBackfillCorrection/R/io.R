@@ -22,12 +22,13 @@ read_data <- function(input_dir) {
 #' @importFrom stringr str_interp str_split
 #'
 #' @export
-export_test_result <- function(test_data, coef_data, training_end_date,
-                               value_type, export_dir,
-                               model_path_prefix) {
-  base_name <- paste(as.character(training_end_date),
-                     model_path_prefix, str_interp("${value_type}.csv"), sep="_")
-
+export_test_result <- function(test_data, coef_data, indicator, signal, 
+                               geo_level, signal_suffix, lambda,
+                               training_end_date,
+                               value_type, export_dir) {
+  base_name <- generate_filename(indicator, signal, 
+                                 geo_level, signal_suffix, lambda,
+                                 training_end_date, value_type, model_mode=FALSE)
   pred_output_dir <- str_interp("prediction_${base_name}")
   write_csv(test_data, file.path(export_dir, pred_output_dir))
   

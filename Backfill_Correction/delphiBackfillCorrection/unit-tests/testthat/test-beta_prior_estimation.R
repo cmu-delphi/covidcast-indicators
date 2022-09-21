@@ -12,7 +12,6 @@ response <- "log_value_target"
 lp_solver <- "gurobi"
 lambda <- 0.1
 model_save_dir <- "./model"
-model_path_prefix <- "test"
 geo <- "pa"
 value_type <- "fraction"
 training_end_date <- as.Date("2022-01-01")

@@ -8,7 +8,7 @@
 #' @template indicator-template
 #' @template signal-template
 #' 
-#' @importFrom dplyr %>% filter select group_by summarize across everything
+#' @importFrom dplyr %>% filter select group_by summarize across everything group_split
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
@@ -16,6 +16,8 @@
 run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
                          lag_col = "lag", signal_suffixes = c(""),
                          indicator = "", signal = "") {
+  df <- filter(df, .data$lag < params$ref_lag)
+
   geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
     # If state included, do it last since state processing modifies the
@@ -51,9 +53,11 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
       }
     }
     
+    group_dfs <- group_split(df, geo_value)
+
     # Build model for each location
-    for (geo in geo_list) {
-      subdf <- df %>% filter(.data$geo_value == .env$geo) %>% filter(.data$lag < params$ref_lag)
+    for (subdf in group_dfs) {
+      geo <- group_df$geo_value[1]
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
       subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)

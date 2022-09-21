@@ -36,10 +36,10 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
         # Summarized columns keep original names
         dplyr::summarize(across(everything(), sum))
     }
-    geo_list <- unique(df$geo_value)
     if (geo_level == "county") {
       # Keep only 200 most populous (within the US) counties
-      geo_list <- filter_counties(geo_list)
+      top_200_geos <- get_populous_counties()
+      df <- filter(df, geo_value %in% top_200_geos)
     }
       
     test_data_list <- list()

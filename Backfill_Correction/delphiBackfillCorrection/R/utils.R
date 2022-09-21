@@ -147,14 +147,6 @@ training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
 }
 
 #' Subset list of counties to those included in the 200 most populous in the US
-#'
-#' @param geos character vector of county FIPS codes
-filter_counties <- function(geos) {
-  top_200_geos <- get_populous_counties()
-  return(intersect(geos, top_200_geos))
-}
-
-#' Subset list of counties to those included in the 200 most populous in the US
 #' 
 #' @importFrom dplyr select %>% arrange desc pull
 #' @importFrom rlang .data

@@ -39,13 +39,6 @@ test_that("testing get the top200 populous counties", {
   expect_true("06037" %in% counties)
 })
 
-
-test_that("testing the filteration of top200 populous counties", {
-  geos = c("06037", "58001")
-  expect_true(filter_counties(geos) == "06037")
-})
-
-
 test_that("testing read parameters", {
   # No input file
   expect_error(read_params(path = "params.json", template_path = "params.json.template",

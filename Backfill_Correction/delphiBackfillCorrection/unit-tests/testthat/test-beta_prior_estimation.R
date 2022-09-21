@@ -54,11 +54,10 @@ test_that("testing the sum of squared error", {
 
 test_that("testing the squared error objection function given the beta prior", {
   theta <- c(log(1), log(2))
-  x <- c(0.1, 0.25, 0.5, 0.75, 0.9)
-  prob <- qbeta(x, 1, 2)
+  x <- qbeta(TAUS, 1, 2)
   
   expected <-0
-  computed <- objective(theta, x, prob)
+  computed <- objective(theta, x, TAUS)
   expect_equal(expected, computed)
 })
 

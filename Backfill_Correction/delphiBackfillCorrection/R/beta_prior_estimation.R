@@ -31,15 +31,25 @@ objective <- function(theta, x, prob, ...) {
 #' 
 #' @template train_data-template
 #' @param prior_test_data Data Frame for testing 
-#' @param dw column name to indicate which day of a week it is
 #' @template taus-template
 #' @template covariates-template
-#' @param response the column name of the response variable
 #' @template lp_solver-template
 #' @template lambda-template
+#' @template geo_level-template
+#' @template geo-template
+#' @template indicator-template
+#' @template signal-template
+#' @template signal_suffix-template
+#' @template value_type-template
+#' @template train_models-template
+#' @template make_predictions-template
+#' @param dw column name to indicate which day of a week it is
+#' @param response the column name of the response variable
 #' @param start the initialization of the the points in nlm
 #' @param base_pseudo_denom the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
+#' @param training_end_date the most recent training date
+#' @param model_save_dir directory containing trained models
 #' 
 #' @importFrom stats nlm predict
 #' @importFrom dplyr %>% filter
@@ -113,14 +123,24 @@ frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, de
 #' @template train_data-template
 #' @param test_data testing data
 #' @param prior_test_data testing data for the lag -1 model
+#' @param training_end_date the most recent training date
+#' @param model_save_dir directory containing trained models
+#' @template indicator-template
+#' @template signal-template
+#' @template geo-template
+#' @template signal_suffix-template
+#' @template lambda-template
+#' @template value_type-template
+#' @template geo_level-template
 #' @template taus-template
 #' @template lp_solver-template
 #' 
 #' @export
 frac_adj <- function(train_data, test_data, prior_test_data, 
                      indicator, signal, geo_level, signal_suffix,
-                     traning_end_date, model_save_dir, 
-                     geo, value_type, taus = TAUS, lp_solver = LP_SOLVER) {
+                     lambda, value_type, geo, 
+                     training_end_date, model_save_dir, 
+                     taus = TAUS, lp_solver = LP_SOLVER) {
   train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
   train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   prior_test_data$value_7dav <- frac_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
@@ -145,10 +165,10 @@ frac_adj <- function(train_data, test_data, prior_test_data,
   test_data$pseudo_denum = NaN
   
   for (cov in c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref", "Sun_ref")) {
-    pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, 
-                                cov, taus, pre_covariates, "log_value_target", 
-                                lp_solver, 0.1, indicator, signal, geo_level,
-                                signal_suffix, training_end_date, model_save_dir)
+    pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, cov, taus, 
+                                pre_covariates, "log_value_target", lp_solver, lambda, 
+                                indicator, signal, geo_level, signal_suffix, 
+                                training_end_date, model_save_dir)
     pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
     pseudo_num = pseudo_counts[1]
     # update current data

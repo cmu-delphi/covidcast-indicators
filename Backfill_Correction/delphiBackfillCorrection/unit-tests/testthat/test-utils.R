@@ -1,6 +1,4 @@
 context("Testing utils helper functions")
-
-TRAINING_DAYS = 10
  
 test_that("testing create directory if not exist", {
   # If not exists

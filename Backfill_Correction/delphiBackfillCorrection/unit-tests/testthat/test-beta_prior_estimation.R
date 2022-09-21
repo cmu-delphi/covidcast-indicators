@@ -1,7 +1,17 @@
 context("Testing helper functions for beta prior estimation")
 
+# Constants
+indicator <- "chng"
+signal <- "outpatient" 
+geo_level <- "state"
+signal_suffix <- ""
+lambda <- 0.1
+geo <- "pa"
+value_type <- "fraction"
+model_save_dir <- "./model"
+training_end_date <- as.Date("2022-01-01")
+
 # Generate Test Data
-prior <- c(1, 2)
 main_covariate <- c("log_value_7dav")
 null_covariates <- c("value_raw_num", "value_raw_denom",
                      "value_7dav_num", "value_7dav_denom",
@@ -9,13 +19,6 @@ null_covariates <- c("value_raw_num", "value_raw_denom",
 dayofweek_covariates <- c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", 
                           "Fri_ref", "Sat_ref")
 response <- "log_value_target"
-lp_solver <- "gurobi"
-lambda <- 0.1
-model_save_dir <- "./model"
-geo <- "pa"
-value_type <- "fraction"
-training_end_date <- as.Date("2022-01-01")
-taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
 
 set.seed(2022)
 train_beta_vs <- log(rbeta(1000, 2, 5))
@@ -100,8 +103,9 @@ test_that("testing the main beta prior adjustment function", {
   set.seed(1)
   updated_data <- frac_adj(train_data, test_data, prior_test_data, 
                            indicator, signal, geo_level, signal_suffix,
-                           traning_end_date, model_save_dir, 
-                           geo, value_type, taus = taus, lp_solver = lp_solver)
+                           lambda, value_type, geo, 
+                           training_end_date, model_save_dir, 
+                           taus = TAUS, lp_solver = LP_SOLVER)
   updated_train_data <- updated_data[[1]]
   updated_test_data <- updated_data[[2]]
   

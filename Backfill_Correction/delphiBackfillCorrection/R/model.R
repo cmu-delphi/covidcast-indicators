@@ -1,6 +1,7 @@
 #' Filtration for training and testing data with different lags
 #' 
 #' @template test_lag-template
+#' @param lag_pad lag padding for training
 #' @param geo_train_data training data for a certain location
 #' @param geo_test_data testing data for a certain location
 #' 
@@ -77,7 +78,7 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @template covariates-template
 #' @template lp_solver-template
 #' @template lambda-template
-#' @param test_date Date object representing test date
+#' @template geo_level-template
 #' @template geo-template
 #' @template indicator-template
 #' @template signal-template
@@ -86,13 +87,15 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @template test_lag-template
 #' @template train_models-template
 #' @template make_predictions-template
+#' @param model_save_dir directory containing trained models
+#' @param training_end_date Most recent training date
 #'
 #' @importFrom stats predict coef
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
                                        lp_solver, lambda, test_lag,
-                                       geo, model_save_dir, 
+                                       geo, value_type, model_save_dir, 
                                        indicator, signal, 
                                        geo_level, signal_suffix,
                                        training_end_date, 
@@ -127,8 +130,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   if (success < 9) {return (NULL)}
   if (!make_predictions) {return (list())}
   
-  coef_combined_result = data.frame(tau=taus, issue_date=test_date, 
-                                    geo=geo, test_lag=test_lag)
+  coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))
   
   return (list(test_data, coef_combined_result))
@@ -204,10 +206,16 @@ get_model <- function(model_path, train_data, covariates, tau,
 #' @template signal-template
 #' @template geo-template
 #' @template signal_suffix-template
+#' @template lambda-template
 #' @template value_type-template
 #' @template test_lag-template
+#' @template geo_level-template
+#' @template test_lag-template
+#' @param dw string, indicate the day of a week
 #' @param tau decimal quantile to be predicted. Values must be between 0 and 1.
-#' @template lambda-template
+#' @param beta_prior_mode bool, indicate whether it is for a beta prior model
+#' @param model_mode bool, indicate whether the file name is for a model
+#' @param training_end_date the most recent training date
 #'
 #' @return path to file containing model object
 #'

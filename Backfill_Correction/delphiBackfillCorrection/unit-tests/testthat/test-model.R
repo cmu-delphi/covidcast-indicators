@@ -6,8 +6,7 @@ signal <- "outpatient"
 geo_level <- "state"
 signal_suffix <- ""
 lambda <- 0.1
-lp_solver <- "gurobi"
-lambda <- 0.1
+test_lag <- 1
 model_save_dir <- "./model"
 geo <- "pa"
 value_type <- "fraction"
@@ -62,12 +61,12 @@ test_that("testing generating or loading the model", {
   model_file_name <- generate_filename(indicator, signal, 
                                        geo_level, signal_suffix, lambda,
                                        geo=geo, test_lag=test_lag, tau=tau)
-  model_path <- file.path(model_save_dir, model_name)
+  model_path <- file.path(model_save_dir, model_file_name)
   expect_true(!file.exists(model_path))
   
   # Generate the model and check again
   obj <- get_model(model_path, train_data, covariates, tau,
-                        lambda, lp_solver, train_models=TRUE) 
+                        lambda, LP_SOLVER, train_models=TRUE) 
   expect_true(file.exists(model_path))
   
   expect_silent(file.remove(model_path))
@@ -75,8 +74,8 @@ test_that("testing generating or loading the model", {
 
 test_that("testing model training and testing", {
   result <- model_training_and_testing(train_data, test_data, taus, covariates,
-                                       lp_solver, lambda, test_lag,
-                                       geo, model_save_dir, 
+                                       LP_SOLVER, lambda, test_lag,
+                                       geo, value_type, model_save_dir, 
                                        indicator, signal, 
                                        geo_level, signal_suffix,
                                        training_end_date, 

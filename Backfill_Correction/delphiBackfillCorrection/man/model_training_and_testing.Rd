@@ -13,6 +13,7 @@ model_training_and_testing(
   lambda,
   test_lag,
   geo,
+  value_type,
   model_save_dir,
   indicator,
   signal,
@@ -45,6 +46,10 @@ of the `gurobi` package).}
 \item{geo}{string specifying the name of the geo region (e.g. FIPS
 code for counties)}
 
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
+
+\item{model_save_dir}{directory containing trained models}
+
 \item{indicator}{string specifying the name of the indicator as used in
 `parquet` input data filenames. One indicator can be associated
 with multiple signals.}
@@ -53,11 +58,16 @@ with multiple signals.}
 `parquet` input data filenames. One indicator can be associated
 with multiple signals.}
 
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
+
 \item{signal_suffix}{string specifying value column name
 ending to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
+
+\item{training_end_date}{Most recent training date}
 
 \item{train_models}{boolean indicating whether to train models (TRUE). If
 FALSE previously trained models (stored locally) will be used instead.
@@ -65,10 +75,6 @@ Default is TRUE.}
 
 \item{make_predictions}{boolean indicating whether to generate and save
 corrections (TRUE) or not. Default is TRUE.}
-
-\item{test_date}{Date object representing test date}
-
-\item{value_type}{string describing signal type. Either "count" or "fraction".}
 }
 \description{
 Fetch model and use to generate predictions/perform corrections

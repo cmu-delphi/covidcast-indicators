@@ -1,29 +1,22 @@
 context("Testing io helper functions")
 
 # Constants
-params <- list()
-params$input_dir <- "./input"
-params$taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
-
 indicator <- "chng"
 signal <- "outpatient" 
 geo_level <- "state"
 signal_suffix <- ""
 lambda <- 0.1
 lp_solver <- "gurobi"
-lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
-
+input_dir <- "./input"
+export_dir <- "./output"
+training_end_date <- as.Date("2022-01-01")
 
  
 test_that("testing exporting the output file", {
   test_data <- data.frame()
   coef_data <- data.frame()
-  export_dir <- "./output"
-  value_type <- "fraction"
-  geo_level <- "state"
-  training_end_date <- as.Date("2022-01-01'")
 
   export_test_result(test_data, coef_data, indicator, signal, 
                      geo_level, signal_suffix, lambda,

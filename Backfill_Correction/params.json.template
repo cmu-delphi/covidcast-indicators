@@ -4,6 +4,7 @@
   "cache_dir": "./cache",
   "testing_window": 1,
   "training_days": 30,
+  "lag_pad":2
   "export_dir": "./receiving",
   "geo_levels": ["state", "county"],
   "value_types": ["count", "fraction"],

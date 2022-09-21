@@ -12,6 +12,8 @@ data_filteration(test_lag, geo_train_data, geo_test_data, lag_pad)
 \item{geo_train_data}{training data for a certain location}
 
 \item{geo_test_data}{testing data for a certain location}
+
+\item{lag_pad}{lag padding for training}
 }
 \description{
 Filtration for training and testing data with different lags

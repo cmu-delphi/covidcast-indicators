@@ -7,14 +7,16 @@
 #' @template signal_suffixes-template
 #' @template indicator-template
 #' @template signal-template
+#' @param training_end_date the most recent training date
 #' 
 #' @importFrom dplyr %>% filter select group_by summarize across everything
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
-                         lag_col = "lag", signal_suffixes = c(""),
+run_backfill <- function(df, params, training_end_date, 
+                         refd_col = "time_value", lag_col = "lag", 
+                         signal_suffixes = c(""),
                          indicator = "", signal = "") {
   geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
@@ -110,7 +112,7 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
               filter(.data$issue_date <= max(params$test_dates))
             updated_data <- frac_adj(train_data, test_data, prior_test_data, 
                                      indicator, signal, geo_level, signal_suffix,
-                                     traning_end_date, params$cache_dir, 
+                                     training_end_date, params$cache_dir, 
                                      geo, value_type)
             geo_train_data <- updated_data[[1]]
             geo_test_data <- updated_data[[2]]
@@ -136,7 +138,7 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
             # Model training and testing
             prediction_results <- model_training_and_testing(
               train_data, test_data, params$taus, params_list, params$lp_solver, 
-              params$lambda, test_lag, geo, params$cache_dir, 
+              params$lambda, test_lag, geo, value_type, params$cache_dir, 
               indicator, signal, geo_level, signal_suffix,training_end_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
@@ -167,7 +169,7 @@ run_backfill <- function(df, params, training_end_date, refd_col = "time_value",
                                indicator, signal, 
                                geo_level, signal_suffix, lambda,
                                training_end_date,
-                               value_type, export_dir, params$export_dir)
+                               value_type, export_dir=params$export_dir)
           }
         }
       }

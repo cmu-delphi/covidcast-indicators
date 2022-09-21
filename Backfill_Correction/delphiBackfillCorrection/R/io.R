@@ -14,9 +14,14 @@ read_data <- function(input_dir) {
 #'
 #' @param test_data test data containing prediction results
 #' @param coef_data data frame containing the estimated coefficients
-#' @param model_path_prefix string containing necessary information
-#' @template export_dir-template
+#' @template indicator-template
+#' @template signal-template
+#' @template geo_level-template
+#' @template signal_suffix-template
+#' @template lambda-template
 #' @template value_type-template
+#' @template export_dir-template
+#' @param training_end_date the most recent training date
 #'
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split

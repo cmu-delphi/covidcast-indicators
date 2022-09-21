@@ -11,7 +11,6 @@ model_save_dir <- "./model"
 geo <- "pa"
 value_type <- "fraction"
 training_end_date <- as.Date("2022-01-01")
-taus <- c(0.01, 0.025, 0.1, 0.25, 0.5, 0.75, 0.9, 0.975, 0.99)
 
 # Generate Test Data
 main_covariate <- c("log_value_7dav")
@@ -48,10 +47,10 @@ test_that("testing the generation of model filename prefix", {
 })
 
 test_that("testing the evaluation", {
-  for (tau in taus){
+  for (tau in TAUS){
     test_data[[paste0("predicted_tau", as.character(tau))]] <- log(quantile(exp(train_beta_vs), tau))
   }
-  result <- evaluate(test_data, taus)
+  result <- evaluate(test_data, TAUS)
   expect_true(mean(result$wis) < 0.3)
 })
 
@@ -73,7 +72,7 @@ test_that("testing generating or loading the model", {
 })
 
 test_that("testing model training and testing", {
-  result <- model_training_and_testing(train_data, test_data, taus, covariates,
+  result <- model_training_and_testing(train_data, test_data, TAUS, covariates,
                                        LP_SOLVER, lambda, test_lag,
                                        geo, value_type, model_save_dir, 
                                        indicator, signal, 
@@ -84,7 +83,7 @@ test_that("testing model training and testing", {
   test_result <- result[[1]]
   coef_df <- result[[2]]
   
-  for (tau in taus){
+  for (tau in TAUS){
     cov <- paste0("predicted_tau", as.character(tau))
     expect_true(cov %in% colnames(test_result))
     

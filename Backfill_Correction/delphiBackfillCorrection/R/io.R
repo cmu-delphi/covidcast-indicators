@@ -25,8 +25,6 @@ read_data <- function(input_dir) {
 #'
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
-#'
-#' @export
 export_test_result <- function(test_data, coef_data, indicator, signal, 
                                geo_level, signal_suffix, lambda,
                                training_end_date,

@@ -65,7 +65,7 @@ test_that("testing the squared error objection function given the beta prior", {
 
 test_that("testing the prior estimation", {
   dw <- "Sat_ref"
-  priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, taus, 
+  priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, TAUS, 
                        covariates, response, lp_solver, lambda, 
                        indicator, signal, geo_level, signal_suffix, 
                        training_end_date, model_save_dir)
@@ -74,8 +74,8 @@ test_that("testing the prior estimation", {
   expect_true((alpha > 0) & (alpha < 4))
   expect_true((beta > 4) & (beta < 8))
   
-  for (idx in 1:length(taus)) {
-    tau <- taus[idx]
+  for (idx in 1:length(TAUS)) {
+    tau <- TAUS[idx]
     model_file_name <- generate_filename(indicator, signal, 
                                          geo_level, signal_suffix, lambda,
                                          geo=geo, dw=dw, tau=tau,
@@ -110,8 +110,8 @@ test_that("testing the main beta prior adjustment function", {
   updated_test_data <- updated_data[[2]]
   
   for (dw in c(dayofweek_covariates, "Sun_ref")){
-    for (idx in 1:length(taus)) {
-      tau <- taus[idx]
+    for (idx in 1:length(TAUS)) {
+      tau <- TAUS[idx]
       model_file_name <- generate_filename(indicator, signal, 
                                            geo_level, signal_suffix, lambda,
                                            geo=geo, dw=dw, tau=tau,

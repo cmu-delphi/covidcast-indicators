@@ -63,12 +63,10 @@ test_that("testing the squared error objection function given the beta prior", {
 
 test_that("testing the prior estimation", {
   dw <- "Sat_ref"
-  priors <- est_priors(train_data, test_data, geo, value_type, dw, taus, 
-                       main_covariate, response, lp_solver, lambda,
-                       training_end_date, model_save_dir, model_path_prefix,
-                       start=c(0, log(10)),
-                       base_pseudo_denom=1000, base_pseudo_num=10,
-                       train_models = TRUE, make_predictions = TRUE)
+  priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, taus, 
+                       covariates, response, lp_solver, lambda, 
+                       indicator, signal, geo_level, signal_suffix, 
+                       training_end_date, model_save_dir)
   beta <- priors[2]
   alpha <- priors[1] - beta
   expect_true((alpha > 0) & (alpha < 4))
@@ -76,10 +74,13 @@ test_that("testing the prior estimation", {
   
   for (idx in 1:length(taus)) {
     tau <- taus[idx]
-    model_path <- paste0(
-      model_save_dir,
-      str_interp("/${training_end_date}_beta_prior_${model_path_prefix}_${value_type}_${geo}_${dw}_tau${tau}"), 
-      ".model")
+    model_file_name <- generate_filename(indicator, signal, 
+                                         geo_level, signal_suffix, lambda,
+                                         geo=geo, dw=dw, tau=tau,
+                                         value_type=value_type,
+                                         training_end_date=training_end_date,
+                                         beta_prior_mode=TRUE)
+    model_path <- file.path(model_save_dir, model_file_name)
     expect_true(file.exists(model_path)) 
     file.remove(model_path)
   }
@@ -99,7 +100,8 @@ test_that("testing the fraction adjustment with pseudo counts", {
 test_that("testing the main beta prior adjustment function", {
   set.seed(1)
   updated_data <- frac_adj(train_data, test_data, prior_test_data, 
-                           training_end_date, model_save_dir, model_path_prefix,
+                           indicator, signal, geo_level, signal_suffix,
+                           traning_end_date, model_save_dir, 
                            geo, value_type, taus = taus, lp_solver = lp_solver)
   updated_train_data <- updated_data[[1]]
   updated_test_data <- updated_data[[2]]
@@ -107,10 +109,13 @@ test_that("testing the main beta prior adjustment function", {
   for (dw in c(dayofweek_covariates, "Sun_ref")){
     for (idx in 1:length(taus)) {
       tau <- taus[idx]
-      model_path <- paste0(
-        model_save_dir,
-        str_interp("/${training_end_date}_beta_prior_${model_path_prefix}_${value_type}_${geo}_${dw}_tau${tau}"), 
-        ".model")
+      model_file_name <- generate_filename(indicator, signal, 
+                                           geo_level, signal_suffix, lambda,
+                                           geo=geo, dw=dw, tau=tau,
+                                           value_type=value_type,
+                                           training_end_date=training_end_date,
+                                           beta_prior_mode=TRUE)
+      model_path <- file.path(model_save_dir, model_file_name)
       expect_true(file.exists(model_path)) 
       file.remove(model_path)
     }

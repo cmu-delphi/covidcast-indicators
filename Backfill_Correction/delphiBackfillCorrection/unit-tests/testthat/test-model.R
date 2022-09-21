@@ -43,10 +43,10 @@ covariates <- c(main_covariate, dayofweek_covariates)
   
   
 test_that("testing the generation of model filename prefix", {
-  model_prefix <- generate_model_filename_prefix(indicator, signal, 
-                                                 geo_level, signal_suffix, lambda)
-  expected <- "chng_outpatient_state_lambda0.1"
-  expect_equal(model_prefix, expected)
+  model_file_name <- generate_filename(indicator, signal, 
+                                    geo_level, signal_suffix, lambda)
+  expected <- "chng_outpatient_state_lambda0.1.model"
+  expect_equal(model_file_name, expected)
 })
 
 test_that("testing the evaluation", {
@@ -60,8 +60,10 @@ test_that("testing the evaluation", {
 test_that("testing generating or loading the model", {
   # Check the model that does not exist
   tau = 0.5
-  model_path <- paste(model_path_prefix, 
-                      str_interp("_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
+  model_file_name <- generate_filename(indicator, signal, 
+                                       geo_level, signal_suffix, lambda,
+                                       geo=geo, test_lag=test_lag, tau=tau)
+  model_path <- file.path(model_save_dir, model_name)
   expect_true(!file.exists(model_path))
   
   # Generate the model and check again
@@ -75,9 +77,12 @@ test_that("testing generating or loading the model", {
 test_that("testing model training and testing", {
   result <- model_training_and_testing(train_data, test_data, taus, covariates,
                                        lp_solver, lambda, test_lag,
-                                       geo, value_type, model_save_dir,
-                                       training_end_date, model_path_prefix, 
-                                       train_models = TRUE, make_predictions = TRUE)
+                                       geo, model_save_dir, 
+                                       indicator, signal, 
+                                       geo_level, signal_suffix,
+                                       training_end_date, 
+                                       train_models = TRUE,
+                                       make_predictions = TRUE) 
   test_result <- result[[1]]
   coef_df <- result[[2]]
   
@@ -85,8 +90,11 @@ test_that("testing model training and testing", {
     cov <- paste0("predicted_tau", as.character(tau))
     expect_true(cov %in% colnames(test_result))
     
-    model_path <- paste(model_save_dir, 
-                        str_interp("/${training_end_date}_${model_path_prefix}_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
+    model_file_name <- generate_filename(indicator, signal, 
+                                         geo_level, signal_suffix, lambda,
+                                         geo=geo, test_lag=test_lag, tau=tau,
+                                         training_end_date=training_end_date)
+    model_path <- file.path(model_save_dir, model_file_name)
     expect_true(file.exists(model_path))
     
     expect_silent(file.remove(model_path))
@@ -134,7 +142,7 @@ test_that("testing data filteration", {
   
   # When test lag is small
   test_lag <- 5
-  result <- data_filteration(test_lag, train_data, test_data)
+  result <- data_filteration(test_lag, train_data, test_data, 2)
   train_df <- result[[1]]
   test_df <- result[[2]]
   expect_true(max(train_df$lag) == test_lag+2)
@@ -143,7 +151,7 @@ test_that("testing data filteration", {
   
   # When test lag is large
   test_lag <- 48
-  result <- data_filteration(test_lag, train_data, test_data)
+  result <- data_filteration(test_lag, train_data, test_data, 2)
   train_df <- result[[1]]
   test_df <- result[[2]]
   expect_true(max(test_df$lag) == test_lag+7)
@@ -152,7 +160,7 @@ test_that("testing data filteration", {
   # Make sure that all lags are tested
   included_lags = c()
   for (test_lag in c(1:14, 21, 35, 51)){
-    result <- data_filteration(test_lag, train_data, test_data)
+    result <- data_filteration(test_lag, train_data, test_data, 2)
     test_df <- result[[2]]
     included_lags <- c(included_lags, unique(test_df$lag))
   }

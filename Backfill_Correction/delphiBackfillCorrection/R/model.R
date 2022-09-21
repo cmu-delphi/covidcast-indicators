@@ -92,8 +92,10 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
                                        lp_solver, lambda, test_lag,
-                                       geo, value_type, model_save_dir, 
-                                       training_end_date, model_path_prefix, 
+                                       geo, model_save_dir, 
+                                       indicator, signal, 
+                                       geo_level, signal_suffix,
+                                       training_end_date, 
                                        train_models = TRUE,
                                        make_predictions = TRUE) {
   success = 0
@@ -102,8 +104,11 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   for (tau in taus) {
     tryCatch(
       expr = {
-        model_path <- paste(model_save_dir,
-                            str_interp("/${training_end_date}_${model_path_prefix}_${geo}_lag${test_lag}_tau${tau}"), ".model", sep="")
+        model_file_name <- generate_filename(indicator, signal, 
+                                        geo_level, signal_suffix, lambda,
+                                        training_end_date, geo, 
+                                        value_type, test_lag, tau)
+        model_path <- file.path(model_save_dir, model_file_name)
         obj <- get_model(model_path, train_data, covariates, tau,
                          lambda, lp_solver, train_models=TRUE) 
 
@@ -208,14 +213,39 @@ get_model <- function(model_path, train_data, covariates, tau,
 #'
 #' @importFrom stringr str_interp
 #' 
-generate_model_filename_prefix <- function(indicator, signal, 
-                                           geo_level, signal_suffix, lambda) {
-  prefix_components <- c(indicator, signal, signal_suffix)
+generate_filename <- function(indicator, signal, 
+                              geo_level, signal_suffix, lambda,
+                              training_end_date="", geo="", 
+                              value_type = "", test_lag="", tau="", dw="",
+                              beta_prior_mode = FALSE, model_mode = TRUE) {
+  if (lambda != "") {
+    lambda <- str_interp("lambda${lambda}")
+  }
+  if (test_lag != "") {
+    test_lag <- str_interp("lag${test_lag}")
+  }
+  if (tau != "") {
+    tau <- str_interp("tau${tau}")
+  }
+  if (beta_prior_mode) {
+    beta_prior <- "beta_prior"
+  } else {
+    beta_prior <- ""
+  }
+  if (model_mode) {
+    file_type <- ".model"
+  } else {
+    file_type <- ".csv"
+  }
+  components <- c(as.character(training_end_date), beta_prior,
+                  indicator, signal, signal_suffix,
+                  geo_level, lambda,
+                  geo, test_lag, dw, tau)
+  
   filename = paste0(
     # Drop any empty strings.
-    paste(prefix_components[prefix_components != ""], collapse="_"),
-    str_interp("_${geo_level}_lambda${lambda}")
+    paste(components[components != ""], collapse="_"),
+    file_type
   )
-
   return(filename)
 }

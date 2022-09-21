@@ -4,7 +4,7 @@
 \alias{data_filteration}
 \title{Filtration for training and testing data with different lags}
 \usage{
-data_filteration(test_lag, geo_train_data, geo_test_data)
+data_filteration(test_lag, geo_train_data, geo_test_data, lag_pad)
 }
 \arguments{
 \item{test_lag}{integer number of days ago to predict for}

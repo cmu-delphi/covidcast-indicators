@@ -7,10 +7,14 @@
 export_test_result(
   test_data,
   coef_data,
+  indicator,
+  signal,
+  geo_level,
+  signal_suffix,
+  lambda,
   training_end_date,
   value_type,
-  export_dir,
-  model_path_prefix
+  export_dir
 )
 }
 \arguments{

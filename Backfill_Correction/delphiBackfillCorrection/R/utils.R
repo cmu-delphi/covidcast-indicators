@@ -50,7 +50,6 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Paths
   if (!("export_dir" %in% names(params))) {params$export_dir <- "./receiving"}
   if (!("cache_dir" %in% names(params))) {params$cache_dir <- "./cache"}
-  if (!("model_save_dir" %in% names(params))) {params$model_save_dir <- "./model"}
 
   # Parallel parameters
   if (!("parallel" %in% names(params))) {params$parallel <- FALSE}
@@ -60,6 +59,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
   if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
+  if (!("lag_pad" %in% names(params))) {params$lag_pad <- LAG_PAD}
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}

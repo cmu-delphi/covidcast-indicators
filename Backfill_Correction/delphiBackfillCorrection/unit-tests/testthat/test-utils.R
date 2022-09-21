@@ -57,7 +57,6 @@ test_that("testing read parameters", {
   # Check initialization
   expect_true(!("export_dir" %in% names(params)))
   expect_true(!("cache_dir" %in% names(params)))
-  expect_true(!("model_save_dir" %in% names(params)))
 
   expect_true(!("parallel" %in% names(params)))
   expect_true(!("parallel_max_cores" %in% names(params)))
@@ -66,6 +65,7 @@ test_that("testing read parameters", {
   expect_true(!("taus" %in% names(params)))
   expect_true(!("lambda" %in% names(params)))
   expect_true(!("lp_solver" %in% names(params)))
+  expect_true(!("lag_pad" %in% names(params)))
   
   expect_true(!("taus" %in% names(params)))
   expect_true(!("lambda" %in% names(params)))
@@ -92,7 +92,6 @@ test_that("testing read parameters", {
   
   expect_true("export_dir" %in% names(params))
   expect_true("cache_dir" %in% names(params))
-  expect_true("model_save_dir" %in% names(params))
   
   expect_true("parallel" %in% names(params))
   expect_true("parallel_max_cores" %in% names(params))
@@ -105,6 +104,7 @@ test_that("testing read parameters", {
   expect_true("taus" %in% names(params))
   expect_true("lambda" %in% names(params))
   expect_true("lp_solver" %in% names(params))
+  expect_true("lag_pad" %in% names(params))
   
   expect_true("num_col" %in% names(params))
   expect_true("denom_col" %in% names(params))
@@ -118,7 +118,6 @@ test_that("testing read parameters", {
   
   expect_true(params$export_dir == "./receiving")
   expect_true(params$cache_dir == "./cache")
-  expect_true(params$model_save_dir == "./model")
   
   expect_true(params$parallel == FALSE)
   expect_true(params$parallel_max_cores == .Machine$integer.max)
@@ -126,6 +125,7 @@ test_that("testing read parameters", {
   expect_true(all(params$taus == TAUS))
   expect_true(params$lambda == LAMBDA)
   expect_true(params$lp_solver == LP_SOLVER)
+  expect_true(params$lag_pad == LAG_PAD)
   
   expect_true(params$num_col == "num")
   expect_true(params$denom_col == "denom")

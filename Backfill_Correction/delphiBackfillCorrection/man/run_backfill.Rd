@@ -7,6 +7,7 @@
 run_backfill(
   df,
   params,
+  training_end_date,
   refd_col = "time_value",
   lag_col = "lag",
   signal_suffixes = c(""),

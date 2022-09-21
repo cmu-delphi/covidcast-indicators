@@ -4,19 +4,25 @@
 \alias{export_test_result}
 \title{Export the result to customized directory}
 \usage{
-export_test_result(test_data, coef_data, export_dir, geo_level, test_lag)
+export_test_result(
+  test_data,
+  coef_data,
+  training_end_date,
+  value_type,
+  export_dir,
+  model_path_prefix
+)
 }
 \arguments{
 \item{test_data}{test data containing prediction results}
 
 \item{coef_data}{data frame containing the estimated coefficients}
 
+\item{value_type}{string describing signal type. Either "count" or "fraction".}
+
 \item{export_dir}{path to directory to save output to}
 
-\item{geo_level}{string describing geo coverage of input data. Either "state"
-or "county".}
-
-\item{test_lag}{integer number of days ago to predict for}
+\item{model_path_prefix}{string containing necessary information}
 }
 \description{
 Export the result to customized directory

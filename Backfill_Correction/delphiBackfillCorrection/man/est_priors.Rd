@@ -9,15 +9,22 @@ a certain day of a week}
 est_priors(
   train_data,
   prior_test_data,
+  geo,
+  value_type,
   dw,
   taus,
   covariates,
   response,
   lp_solver,
   lambda,
+  training_end_date,
+  model_save_dir,
+  model_path_prefix,
   start = c(0, log(10)),
   base_pseudo_denom = 1000,
-  base_pseudo_num = 10
+  base_pseudo_num = 10,
+  train_models = TRUE,
+  make_predictions = TRUE
 )
 }
 \arguments{

@@ -36,6 +36,7 @@ test_that("testing exporting the output file", {
   # Remove
   file.remove(prediction_file)
   file.remove(coefs_file)
+  file.remove("params-run.json")
 })
 
 
@@ -67,6 +68,7 @@ test_that("testing creating file name pattern", {
   
   file.remove(daily_file_name)
   file.remove(rollup_file_name)
+  file.remove("params-run.json")
 })
 
 
@@ -87,6 +89,8 @@ test_that("testing", {
       "chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet")))
   rollup_valid_files <- subset_valid_files(rollup_files_list, "rollup", params)
   expect_equal(rollup_valid_files, rollup_files_list[2])
+
+  file.remove("params-run.json")
 })
 
 test_that("testing", {
@@ -108,6 +112,7 @@ test_that("testing", {
   
   file.remove(daily_file_name)
   file.remove(rollup_file_name)
+  file.remove("params-run.json")
 })
 
 

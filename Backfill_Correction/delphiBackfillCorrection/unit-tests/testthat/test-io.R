@@ -1,3 +1,5 @@
+library(arrow)
+
 context("Testing io helper functions")
 
 # Constants
@@ -45,12 +47,12 @@ test_that("testing creating file name pattern", {
   daily_file <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
                                str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
-  write_csv(daily_file, daily_file_name)
+  write_parquet(daily_file, daily_file_name)
   
   rollup_file_name <- file.path(params$input_dir,
                                 str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
   rollup_data <- data.frame(test=TRUE)
-  write_csv(rollup_file, rollup_file_name)
+  write_parquet(rollup_file, rollup_file_name)
   
   
   filtered_daily_file <- list.files(
@@ -87,12 +89,12 @@ test_that("testing", {
   daily_file <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
                                str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
-  write_csv(daily_file, daily_file_name)
+  write_parquet(daily_file, daily_file_name)
   
   rollup_file_name <- file.path(params$input_dir,
                                 str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
   rollup_data <- data.frame(test=TRUE)
-  write_csv(rollup_file, rollup_file_name)
+  write_parquet(rollup_file, rollup_file_name)
   
   
   files <- get_files_list(indicator, signal, params)

@@ -18,7 +18,7 @@ run_backfill <- function(df, params, training_end_date,
                          refd_col = "time_value", lag_col = "lag", 
                          signal_suffixes = c(""),
                          indicator = "", signal = "") {
-  df <- filter(df, .data$lag < params$ref_lag)
+  df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
 
   geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
@@ -116,8 +116,10 @@ run_backfill <- function(df, params, training_end_date,
               filter(.data$issue_date <= max(params$test_dates))
             updated_data <- frac_adj(train_data, test_data, prior_test_data, 
                                      indicator, signal, geo_level, signal_suffix,
-                                     training_end_date, params$cache_dir, 
-                                     geo, value_type)
+                                     lambda, value_type, geo, 
+                                     training_end_date, params$cache_dir,
+                                     train_models = params$train_models,
+                                     make_predictions = params$make_predictions)
             geo_train_data <- updated_data[[1]]
             geo_test_data <- updated_data[[2]]
           }
@@ -195,6 +197,15 @@ main <- function(params) {
     message("both model training and prediction generation are turned off; exiting")
     return
   }
+  
+  if (params$train_models) {
+    # Remove all the stored models
+    files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
+    file.remove(file.path(mydir, files_list))
+    
+    training_end_date <- as.Date(readLines(
+      file.path(params$cache_dir, "training_end_date.txt")))
+  }
 
   ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {
@@ -208,10 +219,6 @@ main <- function(params) {
     }
   }
   
-  #TO-DO
-  # Get the training end date according to the current date which is the date
-  # when the newest models were trained
-  
   # Loop over every indicator + signal combination.
   for (input_group in INDICATORS_AND_SIGNALS) {
     files_list <- get_files_list(
@@ -220,7 +227,7 @@ main <- function(params) {
     
     if (length(files_list) == 0) {
       warning(str_interp(
-        "No files found for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+        "No files found for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
       ))
       next
     }
@@ -235,7 +242,7 @@ main <- function(params) {
     
     if (nrow(input_data) == 0) {
       warning(str_interp(
-        "No data available for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+        "No data available for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
       ))
       next
     }
@@ -256,5 +263,11 @@ main <- function(params) {
     run_backfill(input_data, params, training_end_date,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
+    
+    if (params$train_models) {
+      # Save the training end date to a text file.
+      writeLines(as.character(TODAY), 
+                 file.path(params$cache_dir, "training_end_date.txt"))
+    }
   }
 }

@@ -18,7 +18,9 @@ frac_adj(
   training_end_date,
   model_save_dir,
   taus = TAUS,
-  lp_solver = LP_SOLVER
+  lp_solver = LP_SOLVER,
+  train_models = TRUE,
+  make_predictions = TRUE
 )
 }
 \arguments{
@@ -63,6 +65,13 @@ must be between 0 and 1.}
 Quantgen fitting. Either "glpk" or "gurobi". For faster
 optimization, use Gurobi (requires separate installation
 of the `gurobi` package).}
+
+\item{train_models}{boolean indicating whether to train models (TRUE). If
+FALSE previously trained models (stored locally) will be used instead.
+Default is TRUE.}
+
+\item{make_predictions}{boolean indicating whether to generate and save
+corrections (TRUE) or not. Default is TRUE.}
 }
 \description{
 Update fraction using beta prior approach

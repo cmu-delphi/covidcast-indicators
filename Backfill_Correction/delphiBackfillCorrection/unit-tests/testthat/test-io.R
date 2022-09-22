@@ -6,12 +6,15 @@ signal <- "outpatient"
 geo_level <- "state"
 signal_suffix <- ""
 lambda <- 0.1
-lp_solver <- "gurobi"
 geo <- "pa"
 value_type <- "fraction"
-input_dir <- "./input"
-export_dir <- "./output"
-training_end_date <- as.Date("2022-01-01")
+ 
+params <- list()
+params$training_end_date <- as.Date("2022-01-01")
+params$training_days <- 7
+params$ref_lag <- 3
+params$input_dir <- "./input"
+params$export_dir <- "./output"
 
  
 test_that("testing exporting the output file", {
@@ -31,3 +34,72 @@ test_that("testing exporting the output file", {
   file.remove(prediction_file)
   file.remove(coefs_file)
 })
+
+
+test_that("testing creating file name pattern", {
+  daily_pattern <- create_name_pattern(indicator, signal, "daily")
+  rollup_pattern <- create_name_pattern(indicator, signal, "rollup")
+  
+  # Create test files
+  daily_file <- data.frame(test=TRUE)
+  daily_file_name <- file.path(params$input_dir,
+                               str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
+  write_csv(daily_file, daily_file_name)
+  
+  rollup_file_name <- file.path(params$input_dir,
+                                str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
+  rollup_data <- data.frame(test=TRUE)
+  write_csv(rollup_file, rollup_file_name)
+  
+  
+  filtered_daily_file <- list.files(
+    params$input_dir, pattern = daily_pattern, full.names = TRUE)
+  expect_equal(filtered_daily_file, daily_file_name)
+  
+  filtered_rollup_file <- list.files(
+    params$input_dir, pattern = rollup_pattern, full.names = TRUE)
+  expect_equal(filtered_rollup_file, rollup_file_name)
+  
+  file.remove(daily_file_name)
+  file.remove(rollup_file_name)
+})
+
+
+test_that("testing", {
+  date_format = "%Y%m%d"
+  daily_files_list <- c(str_interp("./input/chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet"),
+                        str_interp("./input/chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"),
+                        str_interp("./input/chng_outpatient_as_of_${format(TODAY, date_format)}.parquet"))
+  daily_valid_files <- subset_valid_files(daily_files_list, "daily", params)
+  expect_equal(daily_valid_files, daily_files_list[2])
+  
+  rollup_files_list <- c(str_interp(
+    "./input/chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY-11, date_format)}.parquet"),
+    str_interp(
+    "./input/chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"),
+    str_interp(
+      "./input/chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet"))
+  rollup_valid_files <- subset_valid_files(rollup_files_list, "rollup", params)
+  expect_equal(rollup_valid_files, rollup_files_list[2])
+})
+
+test_that("testing", {
+  daily_file <- data.frame(test=TRUE)
+  daily_file_name <- file.path(params$input_dir,
+                               str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
+  write_csv(daily_file, daily_file_name)
+  
+  rollup_file_name <- file.path(params$input_dir,
+                                str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
+  rollup_data <- data.frame(test=TRUE)
+  write_csv(rollup_file, rollup_file_name)
+  
+  
+  files <- get_files_list(indicator, signal, params)
+  expect_true(all(files == c(daily_file_name, rollup_file_name)))
+  
+  file.remove(daily_file_name)
+  file.remove(rollup_file_name)
+})
+
+

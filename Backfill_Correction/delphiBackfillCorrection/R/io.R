@@ -105,7 +105,7 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   
   ## TODO: start_date depends on if we're doing model training or just corrections.
   start_date <- TODAY - params$training_days - params$ref_lag
-  end_date <- TODAY
+  end_date <- TODAY - 1
   
   # Only keep files with data that falls at least somewhat between the desired
   # start and end range dates.

@@ -39,12 +39,12 @@ test_that("testing get the top200 populous counties", {
 
 test_that("testing read parameters", {
   # No input file
-  expect_error(read_params(path = "params.json", template_path = "params.json.template",
+  expect_error(read_params(path = "params-test.json", template_path = "params-test.json.template",
                            train_models = TRUE, make_predictions = TRUE),
                "input_dir must be set in `params` and exist")
   
   # Check parameters
-  params <- read_json("params.json", simplifyVector = TRUE)
+  params <- read_json("params-test.json", simplifyVector = TRUE)
   # Check initialization
   expect_true(!("export_dir" %in% names(params)))
   expect_true(!("cache_dir" %in% names(params)))
@@ -75,8 +75,8 @@ test_that("testing read parameters", {
   # Create input file
   path = "test.tempt"
   create_dir_not_exist(path)
-  expect_silent(params <- read_params(path = "params.json", 
-                                      template_path = "params.json.template",
+  expect_silent(params <- read_params(path = "params-test.json",
+                                      template_path = "params-test.json.template",
                                       train_models = TRUE, make_predictions = TRUE))
   unlink(path, recursive = TRUE)
   
@@ -130,7 +130,7 @@ test_that("testing read parameters", {
   end_date <- TODAY - 1
   expect_true(all(params$test_dates == seq(start_date, end_date, by="days")))
   
-  expect_silent(file.remove("params.json"))
+  expect_silent(file.remove("params-test.json"))
 })
 
 

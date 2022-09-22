@@ -11,25 +11,25 @@ lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
 date_format = "%Y%m%d"
+training_end_date <- as.Date("2022-01-01")
 
-params <- list()
-params$training_end_date <- as.Date("2022-01-01")
-params$training_days <- 7
-params$ref_lag <- 3
-params$input_dir <- "./input"
-params$export_dir <- "./output"
-
+create_dir_not_exist("./input")
+create_dir_not_exist("./output")
+create_dir_not_exist("./cache")
  
 test_that("testing exporting the output file", {
+  params <- read_params("params-run.json", "params-run.json.template")
+
   test_data <- data.frame(test=TRUE)
   coef_data <- data.frame(test=TRUE)
-  
+
   export_test_result(test_data, coef_data, indicator, signal, 
                      geo_level, signal_suffix, lambda,
                      training_end_date,
-                     value_type, export_dir)
-  prediction_file <- "./output/prediction_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv"
-  coefs_file <- "./output/coefs_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv"
+                     value_type, params$export_dir)
+  prediction_file <- file.path(params$export_dir, "prediction_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv")
+  coefs_file <- file.path(params$export_dir, "coefs_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv")
+
   expect_true(file.exists(prediction_file))
   expect_true(file.exists(coefs_file))
   
@@ -40,19 +40,21 @@ test_that("testing exporting the output file", {
 
 
 test_that("testing creating file name pattern", {
+  params <- read_params("params-run.json", "params-run.json.template")
+
   daily_pattern <- create_name_pattern(indicator, signal, "daily")
   rollup_pattern <- create_name_pattern(indicator, signal, "rollup")
   
   # Create test files
-  daily_file <- data.frame(test=TRUE)
+  daily_data <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
                                str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
-  write_parquet(daily_file, daily_file_name)
+  write_parquet(daily_data, daily_file_name)
   
   rollup_file_name <- file.path(params$input_dir,
                                 str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
   rollup_data <- data.frame(test=TRUE)
-  write_parquet(rollup_file, rollup_file_name)
+  write_parquet(rollup_data, rollup_file_name)
   
   
   filtered_daily_file <- list.files(
@@ -69,32 +71,36 @@ test_that("testing creating file name pattern", {
 
 
 test_that("testing", {
-  daily_files_list <- c(str_interp("./input/chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet"),
-                        str_interp("./input/chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"),
-                        str_interp("./input/chng_outpatient_as_of_${format(TODAY, date_format)}.parquet"))
+  params <- read_params("params-run.json", "params-run.json.template")
+
+  daily_files_list <- c(file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet")),
+                        file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet")),
+                        file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY, date_format)}.parquet")))
   daily_valid_files <- subset_valid_files(daily_files_list, "daily", params)
   expect_equal(daily_valid_files, daily_files_list[2])
   
-  rollup_files_list <- c(str_interp(
-    "./input/chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY-11, date_format)}.parquet"),
-    str_interp(
-    "./input/chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"),
-    str_interp(
-      "./input/chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet"))
+  rollup_files_list <- c(file.path(params$input_dir, str_interp(
+    "chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY-11, date_format)}.parquet")),
+    file.path(params$input_dir, str_interp(
+    "chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet")),
+    file.path(params$input_dir, str_interp(
+      "chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet")))
   rollup_valid_files <- subset_valid_files(rollup_files_list, "rollup", params)
   expect_equal(rollup_valid_files, rollup_files_list[2])
 })
 
 test_that("testing", {
-  daily_file <- data.frame(test=TRUE)
+  params <- read_params("params-run.json", "params-run.json.template")
+
+  daily_data <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
                                str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
-  write_parquet(daily_file, daily_file_name)
+  write_parquet(daily_data, daily_file_name)
   
   rollup_file_name <- file.path(params$input_dir,
                                 str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
   rollup_data <- data.frame(test=TRUE)
-  write_parquet(rollup_file, rollup_file_name)
+  write_parquet(rollup_data, rollup_file_name)
   
   
   files <- get_files_list(indicator, signal, params)

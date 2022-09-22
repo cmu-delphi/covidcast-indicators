@@ -8,7 +8,8 @@ signal_suffix <- ""
 lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
- 
+date_format = "%Y%m%d"
+
 params <- list()
 params$training_end_date <- as.Date("2022-01-01")
 params$training_days <- 7
@@ -66,7 +67,6 @@ test_that("testing creating file name pattern", {
 
 
 test_that("testing", {
-  date_format = "%Y%m%d"
   daily_files_list <- c(str_interp("./input/chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet"),
                         str_interp("./input/chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"),
                         str_interp("./input/chng_outpatient_as_of_${format(TODAY, date_format)}.parquet"))

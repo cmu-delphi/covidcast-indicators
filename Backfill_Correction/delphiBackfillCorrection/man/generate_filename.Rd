@@ -29,6 +29,9 @@ with multiple signals.}
 `parquet` input data filenames. One indicator can be associated
 with multiple signals.}
 
+\item{geo_level}{string describing geo coverage of input data. Either "state"
+or "county".}
+
 \item{signal_suffix}{string specifying value column name
 ending to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
@@ -36,6 +39,8 @@ value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
 
 \item{lambda}{the level of lasso penalty}
+
+\item{training_end_date}{the most recent training date}
 
 \item{geo}{string specifying the name of the geo region (e.g. FIPS
 code for counties)}
@@ -45,6 +50,12 @@ code for counties)}
 \item{test_lag}{integer number of days ago to predict for}
 
 \item{tau}{decimal quantile to be predicted. Values must be between 0 and 1.}
+
+\item{dw}{string, indicate the day of a week}
+
+\item{beta_prior_mode}{bool, indicate whether it is for a beta prior model}
+
+\item{model_mode}{bool, indicate whether the file name is for a model}
 }
 \value{
 path to file containing model object

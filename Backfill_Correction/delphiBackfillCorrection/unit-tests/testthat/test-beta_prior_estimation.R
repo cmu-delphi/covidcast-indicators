@@ -65,13 +65,13 @@ test_that("testing the squared error objection function given the beta prior", {
 test_that("testing the prior estimation", {
   dw <- "Sat_ref"
   priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, TAUS, 
-                       covariates, response, lp_solver, lambda, 
+                       covariates, response, LP_SOLVER, lambda, 
                        indicator, signal, geo_level, signal_suffix, 
                        training_end_date, model_save_dir)
-  beta <- priors[2]
-  alpha <- priors[1] - beta
-  expect_true((alpha > 0) & (alpha < 4))
-  expect_true((beta > 4) & (beta < 8))
+  alpha <- priors[2]
+  beta <- priors[1] - alpha
+  expect_true((alpha > 1) & (alpha < 3))
+  expect_true((beta > 4) & (beta < 6))
   
   for (idx in 1:length(TAUS)) {
     tau <- TAUS[idx]
@@ -124,7 +124,7 @@ test_that("testing the main beta prior adjustment function", {
   }
   
   expect_true(unique(updated_train_data$value_raw) == unique(updated_test_data$value_raw))
-  expect_true(all(updated_train_data$value_raw < 6/(6+1)))
-  expect_true(all(updated_train_data$value_raw > 4/(4+4)))
+  expect_true(all(updated_train_data$value_raw < 3/(3+4)))
+  expect_true(all(updated_train_data$value_raw > 1/(1+6)))
 })
 

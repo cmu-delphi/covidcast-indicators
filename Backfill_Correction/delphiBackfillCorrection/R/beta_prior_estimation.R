@@ -134,13 +134,17 @@ frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, de
 #' @template geo_level-template
 #' @template taus-template
 #' @template lp_solver-template
+#' @template train_models-template
+#' @template make_predictions-template
 #' 
 #' @export
 frac_adj <- function(train_data, test_data, prior_test_data, 
                      indicator, signal, geo_level, signal_suffix,
                      lambda, value_type, geo, 
                      training_end_date, model_save_dir, 
-                     taus = TAUS, lp_solver = LP_SOLVER) {
+                     taus = TAUS, lp_solver = LP_SOLVER,
+                     train_models = TRUE,
+                     make_predictions = TRUE) {
   train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
   train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   prior_test_data$value_7dav <- frac_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
@@ -168,9 +172,11 @@ frac_adj <- function(train_data, test_data, prior_test_data,
     pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, cov, taus, 
                                 pre_covariates, "log_value_target", lp_solver, lambda, 
                                 indicator, signal, geo_level, signal_suffix, 
-                                training_end_date, model_save_dir)
-    pseudo_denum = pseudo_counts[1] + pseudo_counts[2]
-    pseudo_num = pseudo_counts[1]
+                                training_end_date, model_save_dir,
+                                train_models = train_models,
+                                make_predictions = make_predictions)
+    pseudo_denum = pseudo_counts[1]
+    pseudo_num = pseudo_counts[2]
     # update current data
     # For training
     train_data$value_raw[train_data[[cov]] == 1] <- frac_adj_with_pseudo(

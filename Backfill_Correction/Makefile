@@ -1,4 +1,4 @@
-SHELL:=/bin/bash --rcfile bash-init.sh
+SHELL:=/bin/bash
 
 default:
 	@echo No default implemented yet

@@ -1,0 +1,37 @@
+Package: delphiBackfillCorrection
+Type: Package
+Title: Correct signal outliers
+Version: 1.0
+Date: 2022-08-24
+Author: Jingjing Tang
+Maintainer: Jingjing Tang <jtang2@andrew.cmu.edu>
+Description: Takes formatted output from COVIDcast API data pipelines and
+    adjusts unusual values using a lasso-penalized quantile regression.
+    Output is used for research and model development.
+License: file LICENSE
+Depends:
+    R (>= 3.5.0),
+Imports:
+    dplyr,
+    plyr,
+    readr,
+    tibble,
+    stringr,
+    covidcast,
+    quantgen,
+    arrow,
+    evalcast,
+    jsonlite,
+    lubridate,
+    tidyr,
+    zoo,
+    utils,
+    rlang,
+    parallel
+Suggests:
+    knitr (>= 1.15),
+    rmarkdown (>= 1.4),
+    testthat (>= 1.0.1),
+    covr (>= 2.2.2)
+RoxygenNote: 7.2.0
+Encoding: UTF-8

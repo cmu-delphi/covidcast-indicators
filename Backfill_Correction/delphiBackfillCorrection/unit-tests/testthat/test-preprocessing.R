@@ -1,10 +1,3 @@
-library(jsonlite)
-library(testthat)
-library(dplyr)
-library(tidyr)
-library(zoo)
-library(stats)
-library(lubridate)
 context("Testing preprocessing helper functions")
 
 refd_col <- "time_value"
@@ -25,44 +18,45 @@ wm <- c("W1_issue", "W2_issue", "W3_issue")
   
   
 test_that("testing rows filling for missing lags", {
-  #Make sure all reference date have enough rows for updates
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  # Make sure all reference date have enough rows for updates
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
   
-  expect_equal(dim(df_new)[1], n_refds*(ref_lag+1))
+  expect_equal(nrow(df_new), n_refds*(ref_lag+31))
   expect_equal(df_new %>% drop_na(), fake_df)
 })
 
 
 test_that("testing NA filling for missing udpates", {
-  #Make sure all the updates are valid integers
+  # Make sure all the updates are valid integers
   
   # Assuming the input data does not have enough rows for consecutive lags
   expect_error(fill_missing_updates(fake_df, value_col, refd_col, lag_col), 
-               "Risk exists in forward fill")
+               "Risk exists in forward filling")
   
   # Assuming the input data is already prepared 
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   n_refds <- as.numeric(max_refd - min_refd)+1
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
 
-  expect_equal(dim(backfill_df)[1], n_refds*(ref_lag+1))
+  expect_equal(nrow(backfill_df), n_refds*(ref_lag+31))
   
-  for (d in seq(min_refd, max_refd, by="day")){
+  for (d in seq(min_refd, max_refd, by="day")) {
     expect_true(all(diff(backfill_df[backfill_df[,refd_col]==d, "value_raw"])>=0 ))
   }
 })
 
 
-test_that("testing the caculation of 7-day moving average", {
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+test_that("testing the calculation of 7-day moving average", {
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
                 values_from="value_raw")
-  pivot_df[is.na(pivot_df)] <- 0
+  pivot_df[is.na(pivot_df)] = 0
   backfill_df <- get_7dav(pivot_df, refd_col)
+  
   
   output <- backfill_df[backfill_df[[refd_col]] == as.Date("2022-01-07"), "value_raw"]
   expected <- colSums(pivot_df[, -1]) / 7
@@ -78,35 +72,40 @@ test_that("testing the data shifting", {
 
 
 test_that("testing adding columns for each day of a week", {
-  df_new <- add_dayofweek(fake_df, wd, refd_col, "_ref")
+  df_new <- add_dayofweek(fake_df, refd_col, "_ref", wd)
   
-  expect_equal(dim(fake_df)[2] + 7, dim(df_new)[2])
-  expect_true(all(rowSums(df_new[, -c(1:dim(fake_df)[2])]) == 1))
+  expect_equal(ncol(fake_df) + 7, ncol(df_new))
+  expect_true(all(rowSums(df_new[, -c(1:ncol(fake_df))]) == 1))
   expect_true(all(df_new[df_new[[refd_col]] == as.Date("2022-01-03"), "Mon_ref"] == 1))
   expect_true(all(df_new[df_new[[refd_col]] == as.Date("2022-01-05"), "Wed_ref"] == 1))
 })
 
 
 test_that("testing the calculation of week of a month", {
+  expect_equal(get_weekofmonth(as.Date("2021-12-31")), 1)
   expect_equal(get_weekofmonth(as.Date("2022-01-01")), 1)
-  expect_equal(get_weekofmonth(as.Date("2022-01-03")), 2)
-  expect_equal(get_weekofmonth(as.Date("2022-01-10")), 3)
-  expect_equal(get_weekofmonth(as.Date("2022-01-31")), 1)
+  expect_equal(get_weekofmonth(as.Date("2022-01-02")), 2)
+  
+  expect_equal(get_weekofmonth(as.Date("2022-09-01")), 1)
+  expect_equal(get_weekofmonth(as.Date("2022-09-04")), 2)
+  expect_equal(get_weekofmonth(as.Date("2022-09-24")), 4)
+  expect_equal(get_weekofmonth(as.Date("2022-09-25")), 1)
   
 })
 
-test_that("testing the caculation of 7-day moving average", {
-  df_new <- add_weekofmonth(fake_df, wm, refd_col)
+test_that("testing adding columns for each week of a month", {
+  df_new <- add_weekofmonth(fake_df, refd_col, wm)
   
-  expect_equal(dim(fake_df)[2] + 3, dim(df_new)[2])
-  expect_true(all(rowSums(df_new[, -c(1:dim(fake_df)[2])]) == 1))
+  expect_equal(ncol(fake_df) + 3, ncol(df_new))
+  expect_true(all(rowSums(df_new[, -c(1:ncol(fake_df))]) == 1))
   expect_true(all(df_new[df_new[[refd_col]] == as.Date("2022-01-03"), "W2_issue"] == 1))
 })
 
+
 test_that("testing adding 7 day avg and target", {
-  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd)
+  df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   backfill_df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
-  df_new <- add_7davs_and_target(backfill_df, "value_raw", refd_col, lag_col)
+  df_new <- add_7davs_and_target(backfill_df, "value_raw", refd_col, lag_col, ref_lag)
   
   # Existing columns:
   #     time_value: reference date
@@ -118,7 +117,8 @@ test_that("testing adding 7 day avg and target", {
   #     value_prev_7dav: 7day avg of the counts from -14 days to -8 days
   #     value_target: updated counts on the target date
   #     target_date: the date ref_lag days after the reference date
-  expect_equal(dim(df_new)[2], 3 + 1 + 1 + 1 + 1 + 1)
-  expect_equal(dim(df_new)[1], 7 * 8)
+  # and 5 log columns
+  expect_equal(ncol(df_new), 3 + 10)
+  expect_equal(nrow(df_new), 7 * (ref_lag + 30 + 1))
 })
 

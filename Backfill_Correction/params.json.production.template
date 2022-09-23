@@ -1,10 +1,10 @@
 {
-  "ref_lag": 7,
+  "ref_lag": 60,
   "input_dir": "",
   "cache_dir": "./cache",
   "testing_window": 1,
-  "training_days": 30,
-  "lag_pad":2
+  "training_days": 270,
+  "lag_pad":2,
   "export_dir": "./receiving",
   "geo_levels": ["state", "county"],
   "value_types": ["count", "fraction"],

@@ -1,0 +1,8 @@
+{
+  "training_end_date": "2022-01-01",
+  "training_days": 7,
+  "ref_lag": 3,
+  "input_dir": "./input",
+  "export_dir": "./output",
+  "cache_dir": "./cache"
+}

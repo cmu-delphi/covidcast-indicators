@@ -7,6 +7,7 @@
 run_backfill(
   df,
   params,
+  training_end_date,
   refd_col = "time_value",
   lag_col = "lag",
   signal_suffixes = c(""),
@@ -22,6 +23,8 @@ reported for each reference date and issue date.}
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
 `lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
+
+\item{training_end_date}{the most recent training date}
 
 \item{refd_col}{string specifying name of reference date field within
 the input dataframe.}

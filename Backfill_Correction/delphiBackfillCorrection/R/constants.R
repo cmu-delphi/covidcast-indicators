@@ -6,6 +6,7 @@ TRAINING_DAYS <- 270
 TESTING_WINDOW <- 14
 LAG_WINDOW <- 5
 LAMBDA <- 0.1
+LAG_PAD <- 2
 LP_SOLVER <-"gurobi" # LP solver to use in quantile_lasso(); "gurobi" or "glpk"
 
 YITL <-"log_value_raw"

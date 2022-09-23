@@ -91,6 +91,8 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
         params_list <- c(YITL, as.vector(unlist(covariates)))
             
         # Model training and testing
+        model_path_prefix <- generate_model_filename_prefix(
+          indicator, signal, geo, signal_suffix, value_type, test_lag, tau, lambda)
         prediction_results <- model_training_and_testing(
             train_data, test_data, taus, params_list, lp_solver,
             lambda, test_date, geo, value_type = value_type, test_lag = test_lag

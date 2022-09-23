@@ -5,7 +5,7 @@ Version: 1.0
 Date: 2022-08-24
 Author: Jingjing Tang
 Maintainer: Jingjing Tang <jtang2@andrew.cmu.edu>
-Description: Takes formatted output from COVIDcast API data pipelines and
+Description: Takes auxiliary output from COVIDcast API data pipelines and
     adjusts unusual values using a lasso-penalized quantile regression.
     Output is used for research and model development.
 License: file LICENSE

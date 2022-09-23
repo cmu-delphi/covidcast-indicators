@@ -8,7 +8,7 @@ signal_suffix <- ""
 lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
-model_save_dir <- "./model"
+model_save_dir <- "./cache"
 training_end_date <- as.Date("2022-01-01")
 
 # Generate Test Data

@@ -72,7 +72,7 @@ test_that("testing creating file name pattern", {
 })
 
 
-test_that("testing", {
+test_that("testing the filtration of the files for training and predicting", {
   params <- read_params("params-run.json", "params-run.json.template")
 
   daily_files_list <- c(file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet")),
@@ -93,7 +93,7 @@ test_that("testing", {
   file.remove("params-run.json")
 })
 
-test_that("testing", {
+test_that("testing fetching list of files for training and predicting", {
   params <- read_params("params-run.json", "params-run.json.template")
 
   daily_data <- data.frame(test=TRUE)

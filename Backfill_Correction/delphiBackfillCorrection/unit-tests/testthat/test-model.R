@@ -7,7 +7,7 @@ geo_level <- "state"
 signal_suffix <- ""
 lambda <- 0.1
 test_lag <- 1
-model_save_dir <- "./model"
+model_save_dir <- "./cache"
 geo <- "pa"
 value_type <- "fraction"
 training_end_date <- as.Date("2022-01-01")

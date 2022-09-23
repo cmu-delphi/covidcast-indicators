@@ -67,6 +67,12 @@ test_that("testing generating or loading the model", {
   obj <- get_model(model_path, train_data, covariates, tau,
                         lambda, LP_SOLVER, train_models=TRUE) 
   expect_true(file.exists(model_path))
+  created <- file.info(model_path)$ctime
+  
+  # Check that the model was not generated again.
+  obj <- get_model(model_path, train_data, covariates, tau,
+                        lambda, LP_SOLVER, train_models=FALSE)   
+  expect_equal(file.info(model_path)$ctime, created)
   
   expect_silent(file.remove(model_path))
 })

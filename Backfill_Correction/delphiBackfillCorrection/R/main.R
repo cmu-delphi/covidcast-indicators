@@ -202,10 +202,10 @@ main <- function(params) {
     # Remove all the stored models
     files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
     file.remove(file.path(mydir, files_list))
-    
-    training_end_date <- as.Date(readLines(
-      file.path(params$cache_dir, "training_end_date.txt")))
   }
+    
+  training_end_date <- as.Date(readLines(
+    file.path(params$cache_dir, "training_end_date.txt")))
 
   ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {

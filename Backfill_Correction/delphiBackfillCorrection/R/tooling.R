@@ -38,7 +38,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
     if (value_type == "count") { # For counts data only
       combined_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_df <- add_7davs_and_target(combined_df, "value_raw", "time_value", "lag", ref_lag)
-    } else if (value_type == "fraction"){
+    } else if (value_type == "fraction") {
       combined_num_df <- fill_missing_updates(subdf, value_cols[1], "time_value", "lag")
       combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", "time_value", "lag", ref_lag)
           
@@ -63,7 +63,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
         drop_na()
       if (nrow(geo_test_data) == 0) next
       if (nrow(geo_train_data) <= 200) next
-      if (value_type == "fraction"){
+      if (value_type == "fraction") {
         geo_prior_test_data = combined_df %>% 
           filter(.data$issue_date > .env$test_date - 7) %>%
           filter(.data$issue_date <= .env$test_date)
@@ -74,7 +74,7 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
       }
       
       max_raw = sqrt(max(geo_train_data$value_raw))
-      for (test_lag in test_lags){
+      for (test_lag in test_lags) {
         filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
         train_data <- filtered_data[[1]]
         test_data <- filtered_data[[2]]
@@ -91,9 +91,11 @@ run_backfill_local <- function(df, export_dir, test_date_list, value_cols, value
         params_list <- c(YITL, as.vector(unlist(covariates)))
             
         # Model training and testing
+        model_path_prefix <- generate_model_filename_prefix(
+          indicator, signal, geo, signal_suffix, value_type, test_lag, tau, lambda)
         prediction_results <- model_training_and_testing(
             train_data, test_data, taus, params_list, lp_solver,
-            lambda, test_date, geo
+            lambda, test_date, geo, value_type = value_type, test_lag = test_lag
         )
         test_data <- prediction_results[[1]]
         coefs <- prediction_results[[2]]
@@ -140,7 +142,7 @@ main_local <- function(input_dir, export_dir,
                  test_start_date, test_end_date,
                  num_col, denom_col,value_type = c("count", "fraction"),
                  training_days = TRAINING_DAYS, testing_window = TESTING_WINDOW,
-                 lambda = LAMBDA, ref_lag = REF_LAG, lp_solver = LP_SOLVER){
+                 lambda = LAMBDA, ref_lag = REF_LAG, lp_solver = LP_SOLVER) {
   value_type <- match.arg(value_type)
 
   # Check input data
@@ -152,13 +154,13 @@ main_local <- function(input_dir, export_dir,
   value_cols <- result[["value_cols"]]
   
   # Get test date list according to the test start date
-  if (is.null(test_start_date)){
+  if (is.null(test_start_date)) {
     test_start_date = max(df$issue_date)
   } else {
     test_start_date = as.Date(test_start_date)
   }
   
-  if (is.null(test_end_date)){
+  if (is.null(test_end_date)) {
     test_end_date = max(df$issue_date)
   } else {
     test_end_date = as.Date(test_end_date)

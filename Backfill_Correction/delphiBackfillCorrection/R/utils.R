@@ -27,19 +27,24 @@
 #' @param path path to the parameters file; if not present, will try to copy the file
 #'     "params.json.template"
 #' @param template_path path to the template parameters file
+#' @template train_models-template
+#' @template make_predictions-template
 #'
 #' @return a named list of parameters values
 #'
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
-read_params <- function(path = "params.json", template_path = "params.json.template") {
-  if (!file.exists(path)) file.copy(template_path, path)
+read_params <- function(path = "params.json", template_path = "params.json.template",
+                        train_models = TRUE, make_predictions = TRUE) {
+  if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
   # Required parameters
-  if (!("input_dir" %in% names(params)) || dir.exists(params$input_dir)) {
+  if (!("input_dir" %in% names(params)) || !dir.exists(params$input_dir)) {
     stop("input_dir must be set in `params` and exist")
   }
+  params$train_models <- train_models
+  params$make_predictions <- make_predictions
   
   ## Set default parameter values if not specified
   # Paths
@@ -54,18 +59,19 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
   if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
+  if (!("lag_pad" %in% names(params))) {params$lag_pad <- LAG_PAD}
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
   if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
-  if (!("geo_level" %in% names(params))) {params$geo_level <- c("state", "county")}
-  if (!("value_types" %in% names(params))) {params$lp_solver <- c("count", "fraction")}
+  if (!("geo_levels" %in% names(params))) {params$geo_levels <- c("state", "county")}
+  if (!("value_types" %in% names(params))) {params$value_types <- c("count", "fraction")}
 
   # Date parameters
   if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
   if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
   if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
-  if (!("test_dates" %in% names(params))) {
+  if (!("test_dates" %in% names(params)) || length(params$test_dates) == 0) {
     start_date <- TODAY - params$testing_window
     end_date <- TODAY - 1
     params$test_dates <- seq(start_date, end_date, by="days")
@@ -102,13 +108,13 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
   }
 
   # Check data type and required columns
-  if (value_type == "count"){
+  if (value_type == "count") {
     if (all(num_col %in% colnames(df))) {value_cols=c(num_col)}
     else if (all(denom_col %in% colnames(df))) {value_cols=c(denom_col)}
     else {stop("No valid column name detected for the count values!")}
-  } else if (value_type == "fraction"){
+  } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
-    if ( any(!(value_cols %in% colnames(df))) ){
+    if ( any(!(value_cols %in% colnames(df))) ) {
       stop("No valid column name detected for the fraction values!")
     }
   }
@@ -119,8 +125,8 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
   }
   
   # issue_date or lag should exist in the dataset
-  if ( !"lag" %in% colnames(df) ){
-    if ( "issue_date" %in% colnames(df) ){
+  if ( !"lag" %in% colnames(df) ) {
+    if ( "issue_date" %in% colnames(df) ) {
       df$lag = as.integer(df$issue_date - df$time_value)
     }
     else {stop("No issue_date or lag exists!")}
@@ -134,18 +140,10 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
 training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
-  valid_training_days = as.integer(max(issue_date) - min(issue_date))
-  if (training_days > valid_training_days){
+  valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
+  if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
-}
-
-#' Subset list of counties to those included in the 200 most populous in the US
-#'
-#' @param geos character vector of county FIPS codes
-filter_counties <- function(geos) {
-  top_200_geos <- get_populous_counties()
-  return(intersect(geos, top_200_geos))
 }
 
 #' Subset list of counties to those included in the 200 most populous in the US
@@ -156,10 +154,10 @@ filter_counties <- function(geos) {
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
+      dplyr::select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
       # Drop megacounties (states)
       filter(!endsWith(.data$fips, "000")) %>%
-      arrange(desc(.data$pop)) %>%
+      arrange(desc(pop)) %>%
       pull(.data$fips) %>%
       head(n=200)
   )

@@ -4,13 +4,25 @@
 \alias{read_params}
 \title{Return params file as an R list}
 \usage{
-read_params(path = "params.json", template_path = "params.json.template")
+read_params(
+  path = "params.json",
+  template_path = "params.json.template",
+  train_models = TRUE,
+  make_predictions = TRUE
+)
 }
 \arguments{
 \item{path}{path to the parameters file; if not present, will try to copy the file
 "params.json.template"}
 
 \item{template_path}{path to the template parameters file}
+
+\item{train_models}{boolean indicating whether to train models (TRUE). If
+FALSE previously trained models (stored locally) will be used instead.
+Default is TRUE.}
+
+\item{make_predictions}{boolean indicating whether to generate and save
+corrections (TRUE) or not. Default is TRUE.}
 }
 \value{
 a named list of parameters values

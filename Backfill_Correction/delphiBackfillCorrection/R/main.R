@@ -5,15 +5,22 @@
 #' @template refd_col-template
 #' @template lag_col-template
 #' @template signal_suffixes-template
+#' @template indicator-template
+#' @template signal-template
+#' @param training_end_date the most recent training date
 #' 
-#' @importFrom dplyr %>% filter select group_by summarize across everything
+#' @importFrom dplyr %>% filter select group_by summarize across everything group_split
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, refd_col = "time_value",
-                         lag_col = "lag", signal_suffixes = c("")) {
-  geo_levels <- params$geo_level
+run_backfill <- function(df, params, training_end_date, 
+                         refd_col = "time_value", lag_col = "lag", 
+                         signal_suffixes = c(""),
+                         indicator = "", signal = "") {
+  df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
+
+  geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
     # If state included, do it last since state processing modifies the
     # `df` object.
@@ -23,46 +30,59 @@ run_backfill <- function(df, params, refd_col = "time_value",
   for (geo_level in geo_levels) {
     # Get full list of interested locations
     if (geo_level == "state") {
-      # Drop county field and make new "geo_value" field from "state_id".
+      # Drop county field and make new "geo_value" field from "state_id".        
       # Aggregate counties up to state level
       df <- df %>%
-        select(-.data$geo_value, geo_value = .data$state_id) %>%
-        group_by(across(c("geo_value", refd_col, lag_col))) %>%
+        dplyr::select(-.data$geo_value, geo_value = .data$state_id) %>%
+        dplyr::group_by(across(c("geo_value", refd_col, lag_col))) %>%
         # Summarized columns keep original names
-        summarize(across(everything(), sum))
+        dplyr::summarize(across(everything(), sum))
     }
-    geo_list <- unique(df$geo_value)
     if (geo_level == "county") {
       # Keep only 200 most populous (within the US) counties
-      geo_list <- filter_counties(geo_list)
-    } 
+      top_200_geos <- get_populous_counties()
+      df <- filter(df, geo_value %in% top_200_geos)
+    }
+      
+    test_data_list <- list()
+    coef_list <- list()
+    
+    for (value_type in params$value_types) {
+      for (signal_suffix in signal_suffixes) {
+        key = paste(value_type, signal_suffix)
+        test_data_list[[key]] <- list()
+        coef_list[[key]] <- list()
+      }
+    }
+    
+    group_dfs <- group_split(df, geo_value)
 
     # Build model for each location
-    for (geo in geo_list) {
-      subdf <- df %>% filter(.data$geo_value == .env$geo) %>% filter(.data$lag < params$ref_lag)
+    for (subdf in group_dfs) {
+      geo <- group_df$geo_value[1]
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
       subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
       
-      for (suffix in signal_suffixes) {
+      for (signal_suffix in signal_suffixes) {
         # For each suffix listed in `signal_suffixes`, run training/testing
         # process again. Main use case is for quidel which has overall and
         # age-based signals.
-        if (suffix != "") {
-          num_col <- paste(params$num_col, suffix, sep = "_")
-          denom_col <- paste(params$denom_col, suffix, sep = "_")
+        if (signal_suffix != "") {
+          num_col <- paste(params$num_col, signal_suffix, sep = "_")
+          denom_col <- paste(params$denom_col, signal_suffix, sep = "_")
         } else {
           num_col <- params$num_col
           denom_col <- params$denom_col
         }
-       
-        for (value_type in params$value_types) { 
+        
+        for (value_type in params$value_types) {
           # Handle different signal types
           if (value_type == "count") { # For counts data only
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
             
-          } else if (value_type == "fraction"){
+          } else if (value_type == "fraction") {
             combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
             combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
             
@@ -76,60 +96,90 @@ run_backfill <- function(df, params, refd_col = "time_value",
             )
           }
           combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
-          
-          for (test_date in params$test_dates) {
-            geo_train_data = combined_df %>% 
-              filter(.data$issue_date < .env$test_date) %>%
-              filter(.data$target_date <= .env$test_date) %>%
-              filter(.data$target_date > .env$test_date - params$training_days) %>%
-              drop_na()
-            geo_test_data = combined_df %>% 
-              filter(.data$issue_date >= .env$test_date) %>%
-              filter(.data$issue_date < .env$test_date + params$testing_window) %>%
-              drop_na()
-            if (nrow(geo_test_data) == 0) next
-            if (nrow(geo_train_data) <= 200) next
-            
-            if (value_type == "fraction"){
-              geo_prior_test_data = combined_df %>% 
-                filter(.data$issue_date > .env$test_date - 7) %>%
-                filter(.data$issue_date <= .env$test_date)
-              
-              updated_data <- ratio_adj(geo_train_data, geo_test_data, geo_prior_test_data)
-              geo_train_data <- updated_data[[1]]
-              geo_test_data <- updated_data[[2]]
-            }
-            max_raw = sqrt(max(geo_train_data$value_raw))
-            for (test_lag in c(1:14, 21, 35, 51)){
-              filtered_data <- data_filteration(test_lag, geo_train_data, geo_test_data)
-              train_data <- filtered_data[[1]]
-              test_data <- filtered_data[[2]]
-              
-              updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
-              train_data <- updated_data[[1]]
-              test_data <- updated_data[[2]]
-              sqrtscale <- updated_data[[3]]
-              
-              covariates <- list(
-                Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
-                paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, SQRTSCALE
-              )
-              params_list <- c(YITL, as.vector(unlist(covariates)))
-              
-              # Model training and testing
-              prediction_results <- model_training_and_testing(
-                train_data, test_data, params$taus, params_list,
-                params$lp_solver, params$lambda, test_date, geo
-              )
+          combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
+
+          geo_train_data <- combined_df %>%
+            filter(.data$issue_date < training_end_date) %>%
+            filter(.data$target_date <= training_end_date) %>%
+            filter(.data$target_date > training_end_date - params$training_days) %>%
+            drop_na()
+          geo_test_data <- combined_df %>%
+            filter(.data$issue_date %in% params$test_dates) %>%
+            drop_na()
+          if (nrow(geo_test_data) == 0) next
+          if (nrow(geo_train_data) <= 200) next
+
+          if (value_type == "fraction") {
+            # Use beta prior approach to adjust fractions
+            geo_prior_test_data = combined_df %>%
+              filter(.data$issue_date > min(params$test_dates) - 7) %>%
+              filter(.data$issue_date <= max(params$test_dates))
+            updated_data <- frac_adj(train_data, test_data, prior_test_data, 
+                                     indicator, signal, geo_level, signal_suffix,
+                                     lambda, value_type, geo, 
+                                     training_end_date, params$cache_dir,
+                                     train_models = params$train_models,
+                                     make_predictions = params$make_predictions)
+            geo_train_data <- updated_data[[1]]
+            geo_test_data <- updated_data[[2]]
+          }
+          max_raw = sqrt(max(geo_train_data$value_raw))
+          for (test_lag in c(1:14, 21, 35, 51)) {
+            filtered_data <- data_filteration(test_lag, geo_train_data, 
+                                              geo_test_data, params$lag_pad)
+            train_data <- filtered_data[[1]]
+            test_data <- filtered_data[[2]]
+
+            updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
+            train_data <- updated_data[[1]]
+            test_data <- updated_data[[2]]
+            sqrtscale <- updated_data[[3]]
+
+            covariates <- list(
+              Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
+              paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, sqrtscale
+            )
+            params_list <- c(YITL, as.vector(unlist(covariates)))
+
+            # Model training and testing
+            prediction_results <- model_training_and_testing(
+              train_data, test_data, params$taus, params_list, params$lp_solver, 
+              params$lambda, test_lag, geo, value_type, params$cache_dir, 
+              indicator, signal, geo_level, signal_suffix,training_end_date,
+              train_models = params$train_models,
+              make_predictions = params$make_predictions
+            )
+
+            # Model objects are saved during training, so only need to export
+            # output if making predictions/corrections
+            if (params$make_predictions) {
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus)
               
-              export_test_result(test_data, coefs, params$export_dir, geo_level, test_lag)
-            }# End for test lags
-          }# End for test date list
+              idx <- length(test_data_list[[value_type]]) + 1
+              test_data_list[[value_type]][[idx]] <- test_data
+              coef_list[[value_type]][[idx]] <- coefs
+            }
+          }# End for test lags
         }# End for value types
       }# End for signal suffixes
+      
+      if (params$make_predictions) {
+        for (value_type in params$value_types) {
+          for (signal_suffix in signal_suffixes) {
+            key = paste(value_type, signal_suffix)
+            test_combined <- bind_rows(test_data_list[[key]]) 
+            coef_combined <- bind_rows(coef_list[[key]]) 
+            export_test_result(test_combined, coef_combined, 
+                               indicator, signal, 
+                               geo_level, signal_suffix, lambda,
+                               training_end_date,
+                               value_type, export_dir=params$export_dir)
+          }
+        }
+      }
+      
     }# End for geo list
   }# End for geo type
 }
@@ -143,7 +193,21 @@ run_backfill <- function(df, params, refd_col = "time_value",
 #' 
 #' @export
 main <- function(params) {
-  ## Set default number of cores for mclapply to half of the total available number.
+  if (!params$train_models && !params$make_predictions) {
+    message("both model training and prediction generation are turned off; exiting")
+    return
+  }
+  
+  if (params$train_models) {
+    # Remove all the stored models
+    files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
+    file.remove(file.path(mydir, files_list))
+  }
+    
+  training_end_date <- as.Date(readLines(
+    file.path(params$cache_dir, "training_end_date.txt")))
+
+  ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {
     cores <- detectCores()
 
@@ -154,7 +218,7 @@ main <- function(params) {
       options(mc.cores = min(params$parallel_max_cores, floor(cores / 2)))
     }
   }
-
+  
   # Loop over every indicator + signal combination.
   for (input_group in INDICATORS_AND_SIGNALS) {
     files_list <- get_files_list(
@@ -163,7 +227,7 @@ main <- function(params) {
     
     if (length(files_list) == 0) {
       warning(str_interp(
-        "No files found for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+        "No files found for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
       ))
       next
     }
@@ -178,7 +242,7 @@ main <- function(params) {
     
     if (nrow(input_data) == 0) {
       warning(str_interp(
-        "No data available for indicator {input_group$indicator} signal {input_group$signal}, skipping"
+        "No data available for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
       ))
       next
     }
@@ -196,6 +260,14 @@ main <- function(params) {
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, params, signal_suffixes = input_group$name_suffix)
+    run_backfill(input_data, params, training_end_date,
+      indicator = input_group$indicator, signal = input_group$signal,
+      signal_suffixes = input_group$name_suffix)
+    
+    if (params$train_models) {
+      # Save the training end date to a text file.
+      writeLines(as.character(TODAY), 
+                 file.path(params$cache_dir, "training_end_date.txt"))
+    }
   }
 }

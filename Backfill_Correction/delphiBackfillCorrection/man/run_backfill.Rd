@@ -7,9 +7,12 @@
 run_backfill(
   df,
   params,
+  training_end_date,
   refd_col = "time_value",
   lag_col = "lag",
-  signal_suffixes = c("")
+  signal_suffixes = c(""),
+  indicator = "",
+  signal = ""
 )
 }
 \arguments{
@@ -20,6 +23,8 @@ reported for each reference date and issue date.}
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
 `lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
+
+\item{training_end_date}{the most recent training date}
 
 \item{refd_col}{string specifying name of reference date field within
 the input dataframe.}
@@ -32,6 +37,14 @@ endings to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
+
+\item{indicator}{string specifying the name of the indicator as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
+
+\item{signal}{string specifying the name of the signal as used in
+`parquet` input data filenames. One indicator can be associated
+with multiple signals.}
 }
 \description{
 Get backfill-corrected estimates for a single signal + geo combination

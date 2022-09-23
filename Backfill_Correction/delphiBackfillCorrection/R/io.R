@@ -14,26 +14,28 @@ read_data <- function(input_dir) {
 #'
 #' @param test_data test data containing prediction results
 #' @param coef_data data frame containing the estimated coefficients
-#' @template export_dir-template
+#' @template indicator-template
+#' @template signal-template
 #' @template geo_level-template
-#' @template test_lag-template
+#' @template signal_suffix-template
+#' @template lambda-template
+#' @template value_type-template
+#' @template export_dir-template
+#' @param training_end_date the most recent training date
 #'
 #' @importFrom readr write_csv
-#' @importFrom stringr str_interp
-#'
-#' @export
-export_test_result <- function(test_data, coef_data, export_dir,
-                               geo_level, test_lag) {
-  if (!missing(test_lag)) {
-    base_name = str_interp("{geo_level}_lag{test_lag}.csv")
-  } else {
-    base_name = str_interp("{geo_level}.csv")
-  }
-
-  pred_output_dir = str_interp("prediction_{base_name}")
+#' @importFrom stringr str_interp str_split
+export_test_result <- function(test_data, coef_data, indicator, signal, 
+                               geo_level, signal_suffix, lambda,
+                               training_end_date,
+                               value_type, export_dir) {
+  base_name <- generate_filename(indicator, signal, 
+                                 geo_level, signal_suffix, lambda,
+                                 training_end_date, value_type, model_mode=FALSE)
+  pred_output_dir <- str_interp("prediction_${base_name}")
   write_csv(test_data, file.path(export_dir, pred_output_dir))
   
-  coef_output_dir = str_interp("coefs_{base_name}")
+  coef_output_dir <- str_interp("coefs_${base_name}")
   write_csv(test_data, file.path(export_dir, coef_output_dir))
 }
 
@@ -125,7 +127,7 @@ create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,
-         daily = str_interp("{indicator}_{signal}_as_of_[0-9]{8}.parquet$"),
-         rollup = str_interp("{indicator}_{signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
+         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}.parquet$"),
+         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
   )
 }

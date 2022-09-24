@@ -85,7 +85,7 @@ test_that("testing the calculation of week of a month", {
   expect_equal(get_weekofmonth(as.Date("2021-12-31")), 1)
   expect_equal(get_weekofmonth(as.Date("2022-01-01")), 1)
   expect_equal(get_weekofmonth(as.Date("2022-01-02")), 1)
-  expect_equal(get_weekofmonth(as.Date("2022-01-09")), 1)
+  expect_equal(get_weekofmonth(as.Date("2022-01-09")), 2)
   
   expect_equal(get_weekofmonth(as.Date("2022-09-01")), 1)
   expect_equal(get_weekofmonth(as.Date("2022-09-04")), 2)

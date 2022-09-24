@@ -122,14 +122,18 @@ add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
 #' Get week of a month info according to a date
 #'
 #' All the dates on or before the ith Sunday but after the (i-1)th Sunday
-#' is considered to be the ith week. Notice that the dates in the 5th week
-#' this month are actually in the same week with the dates in the 1st week
-#' next month and those dates are sparse. Thus, we assign the dates in the 
-#' 5th week to the 1st week.
+#' is considered to be the ith week. Notice that 
+#'     If there are 4 or 5 weeks in total, the ith weeks is labeled as i 
+#'     and the dates in the 5th week this month are actually in the same
+#'     week with the dates in the 1st week next month and those dates are
+#'     sparse. Thus, we assign the dates in the 5th week to the 1st week. 
+#'     If there are 6 weeks in total, the 1st, 2nd, 3rd, 4th, 5th, 6th weeks
+#'     are labeled as c(1, 1, 2, 3, 4, 1) which means we will merge the first,
+#'     second and the last weeks together.
 #' 
 #' @param date Date object
 #' 
-#' @importFrom lubridate make_date year month day
+#' @importFrom lubridate make_date days_in_month year month day
 #' 
 #' @return a integer indicating which week it is in a month
 get_weekofmonth <- function(date) {
@@ -137,7 +141,10 @@ get_weekofmonth <- function(date) {
   month <- month(date)
   day <- day(date)
   firstdayofmonth <- as.numeric(format(make_date(year, month, 1), format="%u"))
-  return (((day + firstdayofmonth - 1) %/% 7) %% 4 + 1)
+  n_days <- lubridate::days_in_month(date)
+  n_weeks <- (n_days + firstdayofmonth - 1) %/% 7 + 1
+  extra_check <- as.integer(n_weeks > 5)
+  return (max((day + firstdayofmonth - 1) %/% 7 - extra_check, 0) %% 4 + 1)
 }
 
 #' Add one hot encoding for week of a month info in terms of issue date

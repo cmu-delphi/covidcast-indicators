@@ -83,7 +83,7 @@ anything that needs it to read or write files.
 Repeatedly building the package and running the full check suite is tedious if
 you are working on fixing a failing test. A faster workflow is this:
 
-1. Set your R working directory to `delphiFacebook/tests/testthat`.
+1. Set your R working directory to `delphiBackfillCorrection/tests/testthat`.
 2. Run `testthat::test_dir('.')`
 
 This will test the live code without having to rebuild the package.
@@ -114,9 +114,15 @@ Required columns without fixed column names:
 The pipeline produces two output types:
 
 1. Predictions
-2. Model objects. In production, models are trained on the last year of
+
+| geo_value | time_value |lag | value | predicted_tauX | ... | wis | 
+|--- | --- | --- | --- |--- |--- |--- |
+| pa | 2022-01-01 | 1 | 0.1 | 0 | ... | 0.01 |
+
+3. Model objects. In production, models are trained on the last year of
    versions (as-of dates) and the last year of reference (report) dates. For
    one signal at the state level, a model takes about 30 minutes to train. Due
    to resource limitations in production, we only train models once a month
    and save the model objects between runs. By default, these are saved to the
-   `cache` directory.
+   `cache` directory name with suffix `.model`.
+   

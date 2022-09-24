@@ -14,7 +14,7 @@ lib:
 run-R:
 	rm -rf tmp
 	time Rscript run.R 2>&1 | tee tmp
-	grep "run_facebook completed successfully" tmp
+	grep "run_backfill_corrections completed successfully" tmp
 	grep "scheduled core" tmp ; \
 	[ "$$?" -eq 1 ]
 

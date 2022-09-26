@@ -215,7 +215,7 @@ main <- function(params) {
       warning("Could not detect the number of CPU cores; parallel mode disabled")
       params$parallel <- FALSE
     } else {
-      options(mc.cores = min(params$parallel_max_cores, floor(cores / 2)))
+      options(mc.cores = min(params$parallel_max_cores, max(floor(cores / 2), 1L)))
     }
   }
   

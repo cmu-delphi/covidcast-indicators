@@ -106,7 +106,7 @@ test_that("testing adding columns for each week of a month", {
   
   expect_equal(ncol(fake_df) + 3, ncol(df_new))
   expect_true(all(rowSums(df_new[, -c(1:ncol(fake_df))]) == 1))
-  expect_true(all(df_new[df_new[[refd_col]] == as.Date("2022-01-03"), "W2_issue"] == 1))
+  expect_true(all(df_new[df_new[[refd_col]] == as.Date("2022-01-03"), "W1_issue"] == 1))
 })
 
 

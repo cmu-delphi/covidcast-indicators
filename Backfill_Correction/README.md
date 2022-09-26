@@ -67,13 +67,13 @@ There should be good coverage of all the core functions in the package.
 Because the package tests involve reading and writing files, we must be
 careful with working directories to ensure the tests are portable.
 
-For reading and writing to files contained in the `tests/testthat/` directory,
+For reading and writing to files contained in the `unit-tests/testthat/` directory,
 use the `testthat::test_path` function. It works much like `file.path` but
-automatically provides paths relative to `tests/testthat/`, so e.g.
-`test_path("input")` becomes `tests/testthat/input/` or whatever relative path
+automatically provides paths relative to `unit-tests/testthat/`, so e.g.
+`test_path("input")` becomes `unit-tests/testthat/input/` or whatever relative path
 is needed to get there.
 
-`params.json` files contain paths, so `tests/testthat/helper-relativize.R`
+`params.json` files contain paths, so `unit-tests/testthat/helper-relativize.R`
 contains `relativize_params`, which takes a `params` list and applies
 `test_path` to all of its path components. This object can then be passed to
 anything that needs it to read or write files.
@@ -83,7 +83,7 @@ anything that needs it to read or write files.
 Repeatedly building the package and running the full check suite is tedious if
 you are working on fixing a failing test. A faster workflow is this:
 
-1. Set your R working directory to `delphiBackfillCorrection/tests/testthat`.
+1. Set your R working directory to `delphiBackfillCorrection/unit-tests/testthat`.
 2. Run `testthat::test_dir('.')`
 
 This will test the live code without having to rebuild the package.

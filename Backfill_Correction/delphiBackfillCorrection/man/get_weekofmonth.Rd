@@ -14,8 +14,12 @@ a integer indicating which week it is in a month
 }
 \description{
 All the dates on or before the ith Sunday but after the (i-1)th Sunday
-is considered to be the ith week. Notice that the dates in the 5th week
-this month are actually in the same week with the dates in the 1st week
-next month and those dates are sparse. Thus, we assign the dates in the 
-5th week to the 1st week.
+is considered to be the ith week. Notice that 
+    If there are 4 or 5 weeks in total, the ith weeks is labeled as i 
+    and the dates in the 5th week this month are actually in the same
+    week with the dates in the 1st week next month and those dates are
+    sparse. Thus, we assign the dates in the 5th week to the 1st week. 
+    If there are 6 weeks in total, the 1st, 2nd, 3rd, 4th, 5th, 6th weeks
+    are labeled as c(1, 1, 2, 3, 4, 1) which means we will merge the first,
+    second and the last weeks together.
 }

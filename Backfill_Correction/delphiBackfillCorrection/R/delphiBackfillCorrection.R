@@ -1,4 +1,3 @@
-# Suppress R CMD check note
+# Load `tribble` for defining global variables
 #' @importFrom tibble tribble
-#' @import covidcast
 NULL

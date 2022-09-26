@@ -151,6 +151,7 @@ training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
 #' @importFrom dplyr select %>% arrange desc pull
 #' @importFrom rlang .data
 #' @importFrom utils head
+#' @import covidcast
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%

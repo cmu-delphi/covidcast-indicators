@@ -1,5 +1,9 @@
 SHELL:=/bin/bash
 
+TODAY:=$(shell date -u +"%Y-%m-%d")
+CURR_TIME:=$(shell date -u +"%Hh%Mm%Ss")
+LOG_FILE:=$(TODAY)_$(CURR_TIME).log
+
 default:
 	@echo No default implemented yet
 
@@ -12,10 +16,9 @@ lib:
 	R -e 'roxygen2::roxygenise("delphiBackfillCorrection")'
 
 run-R:
-	rm -rf tmp
-	time Rscript run.R 2>&1 | tee tmp
-	grep "run_backfill_corrections completed successfully" tmp
-	grep "scheduled core" tmp ; \
+	time Rscript run.R 2>&1 | tee $(LOG_FILE)
+	grep "backfill correction completed successfully" $(LOG_FILE)
+	grep "scheduled core" $(LOG_FILE) ; \
 	[ "$$?" -eq 1 ]
 
 coverage:

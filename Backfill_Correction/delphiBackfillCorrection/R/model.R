@@ -127,7 +127,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
       error=function(e) {print(paste("Training failed for", model_path, sep=" "))}
     )
   }
-  if (success < 9) {return (NULL)}
+  if (success < length(taus)) {return (NULL)}
   if (!make_predictions) {return (list())}
   
   coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag)

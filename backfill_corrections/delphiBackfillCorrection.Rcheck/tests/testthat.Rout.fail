@@ -1,0 +1,33 @@
+
+R version 4.2.0 (2022-04-22) -- "Vigorous Calisthenics"
+Copyright (C) 2022 The R Foundation for Statistical Computing
+Platform: x86_64-pc-linux-gnu (64-bit)
+
+R is free software and comes with ABSOLUTELY NO WARRANTY.
+You are welcome to redistribute it under certain conditions.
+Type 'license()' or 'licence()' for distribution details.
+
+R is a collaborative project with many contributors.
+Type 'contributors()' for more information and
+'citation()' on how to cite R or R packages in publications.
+
+Type 'demo()' for some demos, 'help()' for on-line help, or
+'help.start()' for an HTML browser interface to help.
+Type 'q()' to quit R.
+
+> library(testthat)
+> library(delphiBackfillCorrection)
+> 
+> test_check("delphiBackfillCorrection", stop_on_warning = FALSE)
+[ FAIL 1 | WARN 0 | SKIP 0 | PASS 250 ]
+
+== Failed tests ================================================================
+-- Failure (test-preprocessing.R:109:3): testing adding columns for each week of a month --
+all(...) is not TRUE
+
+`actual`:   FALSE
+`expected`: TRUE 
+
+[ FAIL 1 | WARN 0 | SKIP 0 | PASS 250 ]
+Error: Test failures
+Execution halted

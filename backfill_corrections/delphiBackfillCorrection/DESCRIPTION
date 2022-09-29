@@ -13,7 +13,6 @@ Depends:
     R (>= 3.5.0),
 Imports:
     dplyr,
-    plyr,
     readr,
     tibble,
     stringr,

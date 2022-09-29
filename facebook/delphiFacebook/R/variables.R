@@ -428,6 +428,11 @@ code_testing <- function(input_data, wave) {
     input_data$t_tested_reason_other <- is_selected(testing_reasons, "8")
     input_data$t_tested_reason_travel <- is_selected(testing_reasons, "9")
     
+
+    if (wave < 11) {
+      # Added in Wave 11
+      input_data$t_tested_reason_travel <- NA
+    }
     if (wave >= 11) {
       input_data$t_tested_reason_large_event <- NA
       input_data$t_tested_reason_crowd <- NA

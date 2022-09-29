@@ -165,6 +165,19 @@ code_health <- function(input_data, wave) {
     input_data$comorbidobese <- is_selected(comorbidities, "13")
     input_data$comorbid_none <- is_selected(comorbidities, "9")
 
+    if (wave < 4) {
+      # Added in Wave 4
+      input_data$comorbidimmuno <- NA
+    }
+    if (wave < 8) {
+      # Added in Wave 8
+      input_data$comorbidobese <- NA
+    }
+    if (wave >= 11) {
+      # Removed in Wave 11
+      input_data$comorbid_autoimmune <- NA
+    }
+
     # Combo vaccine-eligibility
     input_data$eligible <- 
       input_data$comorbidheartdisease |
@@ -367,11 +380,11 @@ code_addl_vaccines <- function(input_data, wave) {
   }
 
   if ("B6" %in% names(input_data)) {
-    input_data$t_unusual_symptom_hospital <- input_data$B6 == 1
-    input_data$t_unusual_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
+    input_data$t_symptom_hospital <- input_data$B6 == 1
+    input_data$t_symptom_hospital_tried <- input_data$B6 == 1 | input_data$B6 == 3
   } else {
-    input_data$t_unusual_symptom_hospital <- NA
-    input_data$t_unusual_symptom_hospital_tried <- NA
+    input_data$t_symptom_hospital <- NA
+    input_data$t_symptom_hospital_tried <- NA
   }
 
   if ("B7" %in% names(input_data) && wave != 10) {
@@ -392,6 +405,7 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$unusual_symptom_medical_care_er <- is_selected(unusual_symptoms_care, "5")
     input_data$unusual_symptom_medical_care_hospital <- is_selected(unusual_symptoms_care, "6")
     input_data$unusual_symptom_medical_care_tried <- is_selected(unusual_symptoms_care, "7")
+    input_data$unusual_symptom_medical_care_none <- is_selected(unusual_symptoms_care, "8")
   } else {
     input_data$unusual_symptom_medical_care_called_doctor <- NA
     input_data$unusual_symptom_medical_care_telemedicine <- NA
@@ -400,6 +414,7 @@ code_addl_vaccines <- function(input_data, wave) {
     input_data$unusual_symptom_medical_care_er <- NA
     input_data$unusual_symptom_medical_care_hospital <- NA
     input_data$unusual_symptom_medical_care_tried <- NA
+    input_data$unusual_symptom_medical_care_none <- NA
   }
 
   if ( "B12a" %in% names(input_data) ) {
@@ -1154,6 +1169,32 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_headache <- is_selected(symptoms, "18")
     input_data$symp_sleep_changes <- is_selected(symptoms, "19")
     input_data$symp_stuffy_nose <- is_selected(symptoms, "20")
+
+    if (wave < 3) {
+      # Added in Wave 3
+      input_data$symp_eye_pain <- NA
+    }
+    if (wave < 4) {
+      # Added in Wave 4
+      input_data$symp_chills <- NA
+    }
+    if (wave < 5) {
+      # Added in Wave 5
+      input_data$symp_headache <- NA
+      input_data$symp_sleep_changes <- NA
+    }
+    if (wave < 11) {
+      # Added in Wave 11
+      input_data$symp_stuffy_nose <- NA
+    }
+    if (wave >= 11) {
+      # All removed in Wave 11
+      input_data$symp_nasal_congestion <- NA
+      input_data$symp_runny_nose <- NA
+      input_data$symp_eye_pain <- NA
+      input_data$symp_sleep_changes <- NA
+    }
+
   } else {
     input_data$symp_fever <- NA
     input_data$symp_cough <- NA
@@ -1265,6 +1306,33 @@ code_addl_symptoms <- function(input_data, wave) {
     input_data$symp_unusual_given_stuffy_nose <- calc_unusual_given_symptom(
       input_data$symp_stuffy_nose, is_selected(symptoms, "20")
     )
+
+    if (wave < 5) {
+      # Added in Wave 5
+      input_data$symp_headache_unusual <- NA
+      input_data$symp_sleep_changes_unusual <- NA
+
+      input_data$symp_unusual_given_headache <- NA
+      input_data$symp_unusual_given_sleep_changes <- NA
+    }
+    if (wave < 11) {
+      # Added in Wave 11
+      input_data$symp_stuffy_nose_unusual <- NA
+
+      input_data$symp_unusual_given_stuffy_nose <- NA
+    }
+    if (wave >= 11) {
+      # All removed in Wave 11
+      input_data$symp_nasal_congestion_unusual <- NA
+      input_data$symp_runny_nose_unusual <- NA
+      input_data$symp_eye_pain_unusual <- NA
+      input_data$symp_sleep_changes_unusual <- NA
+
+      input_data$symp_unusual_given_nasal_congestion <- NA
+      input_data$symp_unusual_given_runny_nose <- NA
+      input_data$symp_unusual_given_eye_pain <- NA
+      input_data$symp_unusual_given_sleep_changes <- NA
+    }
   } else {
     input_data$symp_unusual_given_fever <- NA
     input_data$symp_unusual_given_cough <- NA
@@ -1658,7 +1726,7 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$language_home_chinese <- input_data$D12 == 3
     input_data$language_home_vietnamese <- input_data$D12 == 4
     input_data$language_home_french <- input_data$D12 == 5
-    input_data$language_home_portugese <- input_data$D12 == 6
+    input_data$language_home_portuguese <- input_data$D12 == 6
     input_data$language_home_other <- input_data$D12 == 7
   } else {
     input_data$language_home_english <- NA
@@ -1666,7 +1734,7 @@ code_addl_demographic <- function(input_data, wave) {
     input_data$language_home_chinese <- NA
     input_data$language_home_vietnamese <- NA
     input_data$language_home_french <- NA
-    input_data$language_home_portugese <- NA
+    input_data$language_home_portuguese <- NA
     input_data$language_home_other <- NA
   }
 

@@ -170,6 +170,13 @@ THEME_GROUPS <- list(
     "pct_hesitant_dontneed_reason_not_serious",
     "pct_hesitant_dontneed_reason_other",
     "pct_hesitant_dontneed_reason_precautions",
+    "pct_barrier_reason_dontneed_had_covid",
+    "pct_barrier_reason_dontneed_dont_spend_time",
+    "pct_barrier_reason_dontneed_not_high_risk",
+    "pct_barrier_reason_dontneed_precautions",
+    "pct_barrier_reason_dontneed_not_serious",
+    "pct_barrier_reason_dontneed_not_beneficial",
+    "pct_barrier_reason_dontneed_other",
     "pct_hesitant_trust_covid_info_cdc",
     "pct_hesitant_trust_covid_info_doctors",
     "pct_hesitant_trust_covid_info_experts",
@@ -388,8 +395,8 @@ THEME_GROUPS <- list(
     "pct_unusual_symptom_sleep_changes",
     "pct_unusual_symptom_stuffy_nose",
     "pct_unusual_symptom_other",
-    "pct_unusual_symptom_hospital",
-    "pct_unusual_symptom_hospital_tried",
+    "pct_symptom_hospital",
+    "pct_symptom_hospital_tried",
     "pct_unusual_symptom_medical_care_called_doctor",
     "pct_unusual_symptom_medical_care_telemedicine",
     "pct_unusual_symptom_medical_care_visited_doctor",
@@ -397,6 +404,7 @@ THEME_GROUPS <- list(
     "pct_unusual_symptom_medical_care_er",
     "pct_unusual_symptom_medical_care_hospital",
     "pct_unusual_symptom_medical_care_tried",
+    "pct_unusual_symptom_medical_care_none",
     "pct_unusual_symptom_tested",
     "pct_unusual_symptom_tested_positive"
   ),
@@ -720,6 +728,19 @@ get_aggs <- function() {
     "pct_unusual_symptom_stuffy_nose", "symp_stuffy_nose_unusual", compute_binary, jeffreys_binary,
     "pct_unusual_symptom_other", "symp_other_unusual", compute_binary, jeffreys_binary,
 
+    # symptom followup medical care
+    "pct_symptom_hospital", "t_symptom_hospital", compute_binary, jeffreys_binary,
+    "pct_symptom_hospital_tried", "t_symptom_hospital_tried", compute_binary, jeffreys_binary,
+
+    "pct_unusual_symptom_medical_care_called_doctor", "unusual_symptom_medical_care_called_doctor", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_telemedicine", "unusual_symptom_medical_care_telemedicine", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_visited_doctor", "unusual_symptom_medical_care_visited_doctor", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_urgent_care", "unusual_symptom_medical_care_urgent_care", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_er", "unusual_symptom_medical_care_er", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_hospital", "unusual_symptom_medical_care_hospital", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_tried", "unusual_symptom_medical_care_tried", compute_binary, jeffreys_binary,
+    "pct_unusual_symptom_medical_care_none", "unusual_symptom_medical_care_none", compute_binary, jeffreys_binary,
+
     # vaccines
     "pct_vaccinated", "v_covid_vaccinated", compute_binary, jeffreys_binary,
     "pct_received_2_vaccine_doses", "v_received_2_vaccine_doses", compute_binary, jeffreys_binary,
@@ -846,6 +867,14 @@ get_aggs <- function() {
     "pct_hesitant_dontneed_reason_not_serious", "v_hesitant_dontneed_reason_not_serious", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_not_beneficial", "v_hesitant_dontneed_reason_not_beneficial", compute_binary, jeffreys_binary,
     "pct_hesitant_dontneed_reason_other", "v_hesitant_dontneed_reason_other", compute_binary, jeffreys_binary,
+
+    "pct_barrier_reason_dontneed_had_covid", "v_dontneed_reason_had_covid", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_dont_spend_time", "v_dontneed_reason_dont_spend_time", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_not_high_risk", "v_dontneed_reason_not_high_risk", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_precautions", "v_dontneed_reason_precautions", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_not_serious", "v_dontneed_reason_not_serious", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_not_beneficial", "v_dontneed_reason_not_beneficial", compute_binary, jeffreys_binary,
+    "pct_barrier_reason_dontneed_other", "v_dontneed_reason_other", compute_binary, jeffreys_binary,
 
     "pct_barrier_sideeffects", "v_hesitancy_reason_sideeffects", compute_binary, jeffreys_binary,
     "pct_barrier_allergic", "v_hesitancy_reason_allergic", compute_binary, jeffreys_binary,
@@ -1001,16 +1030,6 @@ get_aggs <- function() {
 
     "pct_unusual_symptom_tested", "t_unusual_symptom_tested", compute_binary, jeffreys_binary,
     "pct_unusual_symptom_tested_positive", "t_unusual_symptom_tested_positive", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_hospital", "t_unusual_symptom_hospital", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_hospital_tried", "t_unusual_symptom_hospital_tried", compute_binary, jeffreys_binary,
-
-    "pct_unusual_symptom_medical_care_called_doctor", "unusual_symptom_medical_care_called_doctor", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_telemedicine", "unusual_symptom_medical_care_telemedicine", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_visited_doctor", "unusual_symptom_medical_care_visited_doctor", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_urgent_care", "unusual_symptom_medical_care_urgent_care", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_er", "unusual_symptom_medical_care_er", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_hospital", "unusual_symptom_medical_care_hospital", compute_binary, jeffreys_binary,
-    "pct_unusual_symptom_medical_care_tried", "unusual_symptom_medical_care_tried", compute_binary, jeffreys_binary,
 
     "pct_reason_not_tested_tried", "t_reason_not_tested_tried", compute_binary, jeffreys_binary,
     "pct_reason_not_tested_appointment", "t_reason_not_tested_appointment", compute_binary, jeffreys_binary,

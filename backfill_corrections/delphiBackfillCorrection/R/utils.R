@@ -158,7 +158,7 @@ get_populous_counties <- function() {
       dplyr::select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
       # Drop megacounties (states)
       filter(!endsWith(.data$fips, "000")) %>%
-      arrange(desc(pop)) %>%
+      arrange(desc(.data$pop)) %>%
       pull(.data$fips) %>%
       head(n=200)
   )

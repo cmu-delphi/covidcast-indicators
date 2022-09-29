@@ -41,7 +41,7 @@ run_backfill <- function(df, params, training_end_date,
     if (geo_level == "county") {
       # Keep only 200 most populous (within the US) counties
       top_200_geos <- get_populous_counties()
-      df <- filter(df, geo_value %in% top_200_geos)
+      df <- filter(df, .data$geo_value %in% top_200_geos)
     }
       
     test_data_list <- list()
@@ -55,11 +55,11 @@ run_backfill <- function(df, params, training_end_date,
       }
     }
     
-    group_dfs <- group_split(df, geo_value)
+    group_dfs <- group_split(df, .data$geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
-      geo <- group_df$geo_value[1]
+      geo <- subdf$geo_value[1]
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
       subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
@@ -114,9 +114,9 @@ run_backfill <- function(df, params, training_end_date,
             geo_prior_test_data = combined_df %>%
               filter(.data$issue_date > min(params$test_dates) - 7) %>%
               filter(.data$issue_date <= max(params$test_dates))
-            updated_data <- frac_adj(train_data, test_data, prior_test_data, 
+            updated_data <- frac_adj(train_data, test_data, geo_prior_test_data,
                                      indicator, signal, geo_level, signal_suffix,
-                                     lambda, value_type, geo, 
+                                     params$lambda, value_type, geo,
                                      training_end_date, params$cache_dir,
                                      train_models = params$train_models,
                                      make_predictions = params$make_predictions)
@@ -173,7 +173,7 @@ run_backfill <- function(df, params, training_end_date,
             coef_combined <- bind_rows(coef_list[[key]]) 
             export_test_result(test_combined, coef_combined, 
                                indicator, signal, 
-                               geo_level, signal_suffix, lambda,
+                               geo_level, signal_suffix, params$lambda,
                                training_end_date,
                                value_type, export_dir=params$export_dir)
           }

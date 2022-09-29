@@ -101,7 +101,7 @@ Required columns with fixed column names:
 - lag: the number of days between issue date and the reference date
 - issue_date: issue date/report, required if lag is not available
 
-Required columns without fixed column names:
+Required columns without fixed column names (column names must be specified in [TODO]):
 
 - num_col: the column for the number of reported counts of the numerator. e.g.
   the number of COVID claims counts according to insurance data.

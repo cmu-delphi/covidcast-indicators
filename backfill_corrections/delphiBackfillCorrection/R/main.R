@@ -201,7 +201,7 @@ main <- function(params) {
   if (params$train_models) {
     # Remove all the stored models
     files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
-    file.remove(file.path(mydir, files_list))
+    file.remove(files_list)
   }
     
   training_end_date <- as.Date(readLines(

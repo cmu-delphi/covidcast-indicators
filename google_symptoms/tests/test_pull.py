@@ -1,5 +1,6 @@
 import pytest
 import mock
+import db_dtypes
 from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
@@ -89,6 +90,16 @@ class TestPullGoogleSymptoms:
         df = pd.read_csv(bad_input["invalid_fips"])
         with pytest.raises(AssertionError):
             preprocess(df, "county")
+
+    def test_no_rows_nulled(self):
+        """
+        Check that rows are not mysteriously nulled out. See
+        https://github.com/cmu-delphi/covidcast-indicators/pull/1496 for motivating issue.
+        """
+        # Cast date field to `dbdate` to match dataframe dtypes as provided by the BigQuery fetch.
+        df = pd.read_csv("test_data/state_data_20220916-20220924.csv").astype({"date": "dbdate"})
+        out = preprocess(df, "state")
+        assert df.shape[0] == out[~out.Cough.isna()].shape[0]
 
 
 class TestPullHelperFuncs:

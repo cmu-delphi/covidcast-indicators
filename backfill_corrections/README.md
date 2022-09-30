@@ -21,14 +21,6 @@ To execute the module and produce the output datasets (by default, in
 Rscript run.R
 ```
 
-The functions in `tooling.R` are provided as a user-friendly way to run
-backfill corrections on any dataset that the user has on hand. This local
-processing can be done by running the following from this directory:
-
-```
-Rscript correct_local_signal.R
-```
-
 Default values are provided for most parameters; `input_dir`,
 `test_start_date`, and `test_end_date` must be provided as command line
 arguments.

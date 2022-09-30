@@ -12,7 +12,7 @@ code_trust(input_data, wave)
 \item{wave}{integer indicating survey version}
 }
 \value{
-data frame augmented with demographic grouping variables
+augmented data frame
 }
 \description{
 Trust in various individuals and organizations for recommendations and info

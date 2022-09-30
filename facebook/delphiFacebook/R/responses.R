@@ -193,6 +193,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
   input_data <- code_activities(input_data, wave)
   input_data <- code_vaccines(input_data, wave)
   input_data <- code_schooling(input_data, wave)
+  input_data <- code_children(input_data, wave)
   input_data <- code_beliefs(input_data, wave)
   input_data <- code_news_and_info(input_data, wave)
   input_data <- code_gender(input_data, wave)
@@ -234,6 +235,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_occupation(input_data, wave)
     input_data <- code_education(input_data, wave)
     input_data <- code_vaccinated_breakdown(input_data, wave)
+    input_data <- code_addl_demographic(input_data, wave)
     
     # Indicators
     input_data <- code_addl_vaccines(input_data, wave)
@@ -244,6 +246,7 @@ load_response_one <- function(input_filename, params, contingency_run) {
     input_data <- code_vaccine_barriers(input_data, wave)
     input_data <- code_behaviors(input_data, wave)
     input_data <- code_addl_activities(input_data, wave)
+    input_data <- code_addl_mental_health(input_data, wave)
   }
 
   return(input_data)
@@ -389,6 +392,22 @@ filter_data_for_aggregation <- function(df, params, lead_days = 12L)
   )
 
   msg_plain(paste0("Finished filtering data for aggregations"))
+  return(df)
+}
+
+#' Filter out low-quality data for contingency tables
+#'
+#' @param df data frame of responses
+#'
+#' @importFrom dplyr filter
+filter_data_for_contingency <- function(df)
+{
+  if ("D1" %in% names(df)) {
+    # What is your gender?
+    # Coded as 1 = male, 2 = female, 3 = non-binary, 4 = self-describe, 5 = prefer not to answer
+    # Self-describe responses are usually bad faith responses, so drop them.
+    df <- filter(df, is.na(.data$D1) | .data$D1 != 4)
+  }
   return(df)
 }
 
@@ -778,10 +797,10 @@ filter_complete_responses <- function(data_full, params)
   data_full <- select(data_full, -.data$zip5)
 
   # 9 includes StartDatetime, EndDatetime, Date, token, wave, geo_id,
-  # UserLanguage + two questions (ignore raceethnicity, module, and
-  # w12_assignment fields which may or may not exist, depending on params and
+  # UserLanguage + two questions (ignore raceethnicity, module,
+  # w12_assignment, and weekly weights fields which may or may not exist, depending on params and
   # survey version)
-  ignore_cols <- c("raceethnicity", "w12_assignment", "module")
+  ignore_cols <- c("raceethnicity", "w12_assignment", "module", "weight_wf", "weight_wp")
   valid_row_filter <- rowSums( !is.na(data_full[, !(names(data_full) %in% ignore_cols)]) ) >= 9
   data_full <- data_full[valid_row_filter, ]
 

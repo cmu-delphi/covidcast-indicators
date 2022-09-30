@@ -7,12 +7,13 @@ import pandas as pd
 
 
 class TestRun:
-    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-18"])
+    # the 14th was a Monday
+    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-17", "2020-09-18"])
     def test_output_files_exist(self, run_as_module, date):
-        is_monday = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == 0
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
 
         folders = ["daily_cache"]
-        if is_monday:
+        if is_mon_or_thurs:
             folders.append("receiving")
 
         for output_folder in folders:
@@ -48,12 +49,13 @@ class TestRun:
                                                + metric + "_" + sensor + ".csv"]
             assert set(expected_files).issubset(set(csv_files))
 
-    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-18"])
+    # the 14th was a Monday
+    @pytest.mark.parametrize("date", ["2020-09-14", "2020-09-17", "2020-09-18"])
     def test_output_file_format(self, run_as_module, date):
-        is_monday = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == 0
+        is_mon_or_thurs = dt.datetime.strptime(date, "%Y-%m-%d").weekday() == (0 or 3)
 
         folders = ["daily_cache"]
-        if is_monday:
+        if is_mon_or_thurs:
             folders.append("receiving")
 
         for output_folder in folders:

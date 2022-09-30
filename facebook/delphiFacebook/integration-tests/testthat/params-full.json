@@ -9,6 +9,7 @@
   "archive_dir": "./archive",
   "individual_dir": "./individual_full",
   "weights_in_dir": "./weights_full",
+  "weekly_weights_in_dir": "./weights_full_weekly",
   "weights_out_dir": "./weights_out",
   "experimental_weights_out_dir": "./exp_weights_out",
   "input_dir": "./input",

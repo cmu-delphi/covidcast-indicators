@@ -45,9 +45,9 @@ test_that("testing write_contingency_tables command", {
                                          aggregate_range = "week"), 
                            "state", 
                            c("geo_id", "tested"))
-  expect_setequal(!!dir(tdir), c("20200510_20200516_weekly_state_tested.csv"))
+  expect_setequal(!!dir(tdir), c("20200510_20200516_weekly_state_all_indicators_tested.csv.gz"))
   
-  df <- read_csv(file.path(tdir, "20200510_20200516_weekly_state_tested.csv"))
+  df <- read_csv(file.path(tdir, "20200510_20200516_weekly_state_all_indicators_tested.csv.gz"))
   expect_equivalent(df, test_data)
 })
 
@@ -59,13 +59,13 @@ test_that("testing command to create output filenames", {
     end_date=as.Date("2021-01-02")
   )
   out <- get_file_name(params, "nation", c("gender"))
-  expected <- "DebugOn-DoNotShare_20210101_20210102_monthly_nation_gender.csv"
+  expected <- "DebugOn-DoNotShare_20210101_20210102_monthly_nation_all_indicators_gender.csv.gz"
   
   expect_equal(out, expected)
   
   params$debug <- FALSE
   out <- get_file_name(params, "nation", c("gender", "race", "ethnicity"))
-  expected <- "20210101_20210102_monthly_nation_ethnicity_gender_race.csv"
+  expected <- "20210101_20210102_monthly_nation_all_indicators_ethnicity_gender_race.csv.gz"
   
   expect_equal(out, expected)
 })

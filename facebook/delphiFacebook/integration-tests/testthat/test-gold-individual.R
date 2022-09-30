@@ -20,7 +20,8 @@ test_that("individual output files exist", {
 test_that("contents are the same", {
   for (f in expected_files) {
     test_df <- read.csv(test_path("individual_full", f))
-    gold_df <- read.csv(test_path("gold_individual", f))
+    gold_df <- read.csv(test_path("gold_individual", f)) %>%
+      mutate(weight_wp = weight, weight_wf = weight)
 
     expect_equal(nrow(gold_df), nrow(test_df))
 

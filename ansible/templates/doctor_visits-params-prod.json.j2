@@ -1,0 +1,45 @@
+{
+  "common": {
+    "export_dir": "./receiving",
+    "log_filename": "./doctor-visits.log"
+  },
+  "indicator": {
+    "input_file": "./input/SYNEDI_AGG_OUTPATIENT_18052020_1455CDT.csv.gz",
+    "drop_date": "",
+    "n_backfill_days": 70,
+    "n_waiting_days": 3,
+    "weekday": [true, false],
+    "se": false,
+    "obfuscated_prefix": "wip_XXXXX",
+    "parallel": false,
+    "ftp_credentials": {
+      "host": "{{ doctor_visits_ftp_host }}",
+      "user": "{{ doctor_visits_ftp_user }}",
+      "pass": "{{ doctor_visits_ftp_password }}",
+      "port": 2222
+    }
+  },
+  "validation": {
+    "common": {
+      "data_source": "doctor-visits",
+      "span_length": 14,
+      "min_expected_lag": {"all": "3"},
+      "max_expected_lag": {"all": "4"},
+      "dry_run": true,
+      "suppressed_errors": [
+      ]
+    },
+    "static": {
+      "minimum_sample_size": 5,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7,
+      "smoothed_signals": [
+      "smoothed_cli",
+      "smoothed_adj_cli"
+      ]
+    }
+  }
+}

@@ -171,8 +171,8 @@ def produce_query(level, date_range):
     base_query = """
     select
         case
-            when sub_region_2_code is null then sub_region_1_code
-            when sub_region_2_code is not null then concat(sub_region_1_code, "-", sub_region_2_code)
+            when coalesce(sub_region_2_code, "") = "" then sub_region_1_code
+            when coalesce(sub_region_2_code, "") != "" then concat(sub_region_1_code, "-", sub_region_2_code)
         end as open_covid_region_code,
         date,
         {symptom_cols}

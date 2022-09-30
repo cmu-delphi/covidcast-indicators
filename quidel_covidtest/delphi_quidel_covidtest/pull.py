@@ -10,6 +10,8 @@ import numpy as np
 
 from .constants import AGE_GROUPS
 
+
+
 def get_from_s3(start_date, end_date, bucket, logger):
     """
     Get raw data from aws s3 bucket.
@@ -57,6 +59,8 @@ def get_from_s3(start_date, end_date, bucket, logger):
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
+                if ".csv" not in fn:
+                    continue  #Add to avoid that the folder name was readed as a fn.
                 if fn in set(df["fname"].values):
                     continue
                 obj = bucket.Object(key=fn)

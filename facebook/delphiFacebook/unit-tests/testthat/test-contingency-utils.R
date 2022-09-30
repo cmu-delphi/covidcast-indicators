@@ -135,10 +135,10 @@ test_that("testing verify_aggs command", {
   )
   
   expected_output <- tribble(
-    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight, ~skip_mixing, 
-    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL, "no_change_C14_c(\"geo_id\", \"mc_race\", \"DDD1_23\")", "weight", FALSE,
-    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, "duplicated_DDD1_23_c(\"geo_id\", \"mc_race\")", "weight", FALSE,
-    "duplicated", "DDD1_23", c("geo_id"), NULL, NULL, "duplicated_DDD1_23_geo_id", "weight", FALSE
+    ~name, ~metric, ~group_by, ~compute_fn, ~post_fn, ~id, ~var_weight,
+    "no_change", "C14", c("geo_id", "mc_race", "DDD1_23"), NULL, NULL, "no_change_C14_c(\"geo_id\", \"mc_race\", \"DDD1_23\")", "weight",
+    "duplicated", "DDD1_23", c("geo_id", "mc_race"), NULL, NULL, "duplicated_DDD1_23_c(\"geo_id\", \"mc_race\")", "weight",
+    "duplicated", "DDD1_23", c("geo_id"), NULL, NULL, "duplicated_DDD1_23_geo_id", "weight",
   )
   
   out <- verify_aggs(input_aggs)

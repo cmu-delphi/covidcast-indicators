@@ -13,6 +13,6 @@ apply_privacy_censoring(df, params)
 "num_filter"}
 }
 \description{
-Currently done in simple, static way: Rows with sample size less than 100 are
-removed; no noise is added.
+Currently done in simple, static way: Rows with sample size less than num_filter
+are removed; no noise is added.
 }

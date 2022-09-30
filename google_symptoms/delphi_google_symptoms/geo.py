@@ -37,7 +37,7 @@ def generate_transition_matrix(geo_res):
     if geo_res == "hrr":
         map_df["population"] = map_df["population"] *  map_df["weight"]
 
-    aggregated_pop = map_df.groupby(geo_res).sum().reset_index()
+    aggregated_pop = map_df.groupby(geo_res).sum(numeric_only=True).reset_index()
     map_df = map_df.merge(
             aggregated_pop, on=geo_res, how="inner", suffixes=["_raw", "_groupsum"]
             )

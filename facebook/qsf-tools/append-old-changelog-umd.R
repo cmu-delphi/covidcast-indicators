@@ -26,7 +26,7 @@ add_rationales_from_old_changelog <- function(path_to_changelog, path_to_old_cha
         new_version = col_double(),
         old_version = col_double()
     )) %>%
-        select(new_version, old_version, variable_name, change_type,eu_noneu, notes)
+        select(new_version, old_version, variable_name, change_type, eu_noneu, notes)
     changelog <- changelog %>%
         select(-notes) %>%
         left_join(old_changelog, by=c("new_version", "old_version", "variable_name", "change_type","eu_noneu"))

@@ -79,8 +79,11 @@ def geo_map(df, geo_res, namescols =  None):
         return df
 
     map_df = generate_transition_matrix(geo_res)
-    converted_df = pd.DataFrame(columns = df.columns)
-    for _date in df["timestamp"].unique():
+
+    dates_list = df["timestamp"].unique()
+    dfs_list = [pd.DataFrame()] * len(dates_list)
+
+    for i, _date in enumerate(dates_list):
         val_lists = df[df["timestamp"] == _date].merge(
                 map_df["geo_id"], how="right"
                 )[namescols].fillna(0)
@@ -92,5 +95,8 @@ def geo_map(df, geo_res, namescols =  None):
         newdf["geo_id"] = list(map_df.keys())[1:]
         mask = (newdf == 0)
         newdf[mask] = np.nan
-        converted_df = pd.concat([converted_df, newdf])
-    return converted_df
+        dfs_list[i] = newdf
+
+    # Reindex to make sure output has same columns as input df. Filled with
+    # NaN values if column doesn't already exist.
+    return pd.concat(dfs_list).reindex(df.columns, axis=1)

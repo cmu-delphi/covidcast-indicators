@@ -11,6 +11,8 @@
 
 suppressPackageStartupMessages({
   library(tidyverse)
+  library(jsonlite)
+  library(stringr)
 })
 
 # "old" = new
@@ -46,7 +48,7 @@ WAVE_COMPARE_MAP <- list(
 
 DIFF_COLS <- c(
   "question",
-  "matrix_subquestion",
+  "subquestion",
   "response_options",
   "display_logic",
   "response_option_randomization",
@@ -59,9 +61,9 @@ CHANGE_TYPE_MAP <- c(
   question = "Question wording changed",
   display_logic = "Display logic changed",
   response_options = "Answer choices changed",
-  matrix_subquestion = "Matrix subquestion text changed",
+  subquestion = "Matrix subquestion text changed",
   response_option_randomization = "Answer choice order changed",
-  respondent_group = "Respondent group changed"
+  respondent_group = "Display logic changed"
 )
 
 
@@ -151,33 +153,30 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- added_items %>%
-    filter(question_type == "Matrix" | !is.na(new_matrix_base_name) | !is.na(new_matrix_subquestion)) %>%
-    distinct(old_version, new_matrix_base_name)
+    filter(question_type == "Matrix" | !is.na(new_originating_question) | !is.na(new_subquestion)) %>%
+    distinct(old_version, new_originating_question)
   
   for (i in seq_len(nrow(combos))) {
     wave = combos[i,] %>% pull(old_version)
-    base_name = combos[i,] %>% pull(new_matrix_base_name)
+    base_name = combos[i,] %>% pull(new_originating_question)
     tmp <- added_items %>%
       filter(
-        old_version == wave, new_matrix_base_name == base_name
+        old_version == wave, new_originating_question == base_name
       )
     added_items <- anti_join(added_items, tmp)
-    if (nrow(filter(codebook_raw, version == wave, matrix_base_name == base_name)) == 0) {
+    if (nrow(filter(codebook_raw, version == wave, originating_question == base_name)) == 0) {
       # Dedup subqs so only report base question once
       tmp <- tmp %>%
-        group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
+        group_by(old_originating_question, new_originating_question, new_version, old_version) %>%
         mutate(
-          variable_name = new_matrix_base_name,
-          old_matrix_subquestion = NA,
-          new_matrix_subquestion = "Differ by subquestion",
-          old_response_options = case_when(
-            length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ "Differ by subquestion"
-          ),
+          old_subquestion = NA,
+          new_subquestion = collapse_subq_elements(variable_name, new_subquestion, base_name),
+          old_response_options = NA,
           new_response_options = case_when(
             length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ "Differ by subquestion"
-          )
+            TRUE ~ rep(collapse_subq_elements(variable_name, new_response_options, base_name), length(new_response_options))
+          ),
+          variable_name = new_originating_question
         ) %>%
         slice_head() %>%
         ungroup()
@@ -205,33 +204,30 @@ generate_changelog <- function(path_to_codebook,
     select(-x_exists, -y_exists)
   
   combos <- removed_items %>%
-    filter(question_type == "Matrix" | !is.na(old_matrix_base_name) | !is.na(old_matrix_subquestion)) %>%
-    distinct(new_version, old_matrix_base_name)
+    filter(question_type == "Matrix" | !is.na(old_originating_question) | !is.na(old_subquestion)) %>%
+    distinct(new_version, old_originating_question)
   
   for (i in seq_len(nrow(combos))) {
     wave = combos[i,] %>% pull(new_version)
-    base_name = combos[i,] %>% pull(old_matrix_base_name)
+    base_name = combos[i,] %>% pull(old_originating_question)
     tmp <- removed_items %>%
       filter(
-        new_version == wave, old_matrix_base_name == base_name
+        new_version == wave, old_originating_question == base_name
       )
     removed_items <- anti_join(removed_items, tmp)
-    if (nrow(filter(codebook_raw, version == wave, matrix_base_name == base_name)) == 0) {
+    if (nrow(filter(codebook_raw, version == wave, originating_question == base_name)) == 0) {
       # Dedup subqs so only report base question once
       tmp <- tmp %>%
-        group_by(old_matrix_base_name, new_matrix_base_name, new_version, old_version) %>%
+        group_by(old_originating_question, new_originating_question, new_version, old_version) %>%
         mutate(
-          variable_name = old_matrix_base_name,
-          old_matrix_subquestion = "Differ by subquestion",
-          new_matrix_subquestion = NA,
+          old_subquestion = collapse_subq_elements(variable_name, old_subquestion, base_name),
+          new_subquestion = NA,
           old_response_options = case_when(
             length(unique(old_response_options)) == 1 ~ old_response_options,
-            TRUE ~ "Differ by subquestion"
+            TRUE ~ rep(collapse_subq_elements(variable_name, old_response_options, base_name), length(old_response_options))
           ),
-          new_response_options = case_when(
-            length(unique(new_response_options)) == 1 ~ new_response_options,
-            TRUE ~ "Differ by subquestion"
-          )
+          new_response_options = NA,
+          variable_name = old_originating_question
         ) %>%
         slice_head() %>%
         ungroup()
@@ -270,11 +266,11 @@ generate_changelog <- function(path_to_codebook,
   
   ## Don't report all matrix subquestions when the change is shared between all
   ## of them, just report the base item.
-  # Group by matrix_base_name, change_type, and wave, as long as the change_type is relevant and matrix_base_name is not NA.
+  # Group by originating_question, change_type, and wave, as long as the change_type is relevant and originating_question is not NA.
   # Keep only one obs for each group.
-  # Set var name in kept obs to matrix_base_name for generality and to be able to join rationales on.
+  # Set var name in kept obs to originating_question for generality and to be able to join rationales on.
   combos <- changelog %>%
-    filter((question_type == "Matrix" | !is.na(old_matrix_base_name) | !is.na(old_matrix_subquestion)) & 
+    filter((question_type == "Matrix" | !is.na(old_originating_question) | !is.na(old_subquestion)) &
              change_type %in% c(
                "Question wording changed",
                "Display logic changed",
@@ -283,7 +279,7 @@ generate_changelog <- function(path_to_codebook,
                "Respondent group changed"
              )
     ) %>%
-    distinct(new_version, old_version, new_matrix_base_name, old_matrix_base_name, change_type)
+    distinct(new_version, old_version, new_originating_question, old_originating_question, change_type)
   
   SPECIAL_HANDLING <- list(
     "Answer choices changed" = list("new_response_options", "old_response_options"),
@@ -292,16 +288,16 @@ generate_changelog <- function(path_to_codebook,
   for (i in seq_len(nrow(combos))) {
     new_v <- combos[i,] %>% pull(new_version)
     old_v <- combos[i,] %>% pull(old_version)
-    new_base <- combos[i,] %>% pull(new_matrix_base_name)
-    old_base <- combos[i,] %>% pull(old_matrix_base_name)
+    new_base <- combos[i,] %>% pull(new_originating_question)
+    old_base <- combos[i,] %>% pull(old_originating_question)
     change <- combos[i,] %>% pull(change_type)
     
     tmp <- changelog %>%
       filter(
         new_version == new_v,
         old_version == old_v,
-        new_matrix_base_name == new_base,
-        old_matrix_base_name == old_base,
+        new_originating_question == new_base,
+        old_originating_question == old_base,
         change_type == change
       )
     changelog <- anti_join(changelog, tmp)
@@ -316,8 +312,8 @@ generate_changelog <- function(path_to_codebook,
         length(unique(tmp[[new_col]])) == 1 &&
         length(unique(tmp[[old_col]])) == 1 &&
         (
-          nrow(tmp) == codebook_raw %>% filter(version == old_v, matrix_base_name == old_base) %>% nrow() ||
-          nrow(tmp) == codebook_raw %>% filter(version == new_v, matrix_base_name == new_base) %>% nrow()
+          nrow(tmp) == codebook_raw %>% filter(version == old_v, originating_question == old_base) %>% nrow() ||
+          nrow(tmp) == codebook_raw %>% filter(version == new_v, originating_question == new_base) %>% nrow()
         )
       ) {
         combine_flag <- TRUE   
@@ -331,11 +327,11 @@ generate_changelog <- function(path_to_codebook,
         slice_head() %>% 
         mutate(
           variable_name = case_when(
-            old_matrix_base_name != new_matrix_base_name ~ paste(old_matrix_base_name, new_matrix_base_name, sep="/"),
-            TRUE ~ old_matrix_base_name
+            old_originating_question != new_originating_question ~ paste(old_originating_question, new_originating_question, sep="/"),
+            TRUE ~ old_originating_question
           ),
-          old_matrix_subquestion = NA,
-          new_matrix_subquestion = NA
+          old_subquestion = NA,
+          new_subquestion = NA
         )
     }
     
@@ -365,8 +361,8 @@ generate_changelog <- function(path_to_codebook,
       rename(
         new_question_text = new_question,
         old_question_text = old_question,
-        new_matrix_subquestion_text = new_matrix_subquestion,
-        old_matrix_subquestion_text = old_matrix_subquestion
+        new_subquestion_text = new_subquestion,
+        old_subquestion_text = old_subquestion
       ) %>% 
       select(
         new_version,
@@ -374,16 +370,16 @@ generate_changelog <- function(path_to_codebook,
         variable_name,
         description,
         change_type,
-        new_matrix_base_name,
+        new_originating_question,
         new_question_text,
-        new_matrix_subquestion_text,
+        new_subquestion_text,
         new_response_options,
         new_display_logic,
         new_response_option_randomization,
         new_respondent_group,
-        old_matrix_base_name,
+        old_originating_question,
         old_question_text,
-        old_matrix_subquestion_text,
+        old_subquestion_text,
         old_response_options,
         old_display_logic,
         old_response_option_randomization,
@@ -396,7 +392,7 @@ generate_changelog <- function(path_to_codebook,
 }
 
 rename_col <- function(col, prefix) {
-  if (col %in% c(DIFF_COLS, "matrix_base_name")) {
+  if (col %in% c(DIFF_COLS, "originating_question")) {
     paste(prefix, col, sep = "_") 
   } else {
     col
@@ -411,6 +407,16 @@ get_old_version <- function(new_version, compare_map) {
   ifelse(new_version %in% compare_map, compare_map[compare_map == new_version] %>% names(), NA_character_)
 }
 
+collapse_subq_elements <- function(variable_name, matrix_field, base_name) {
+  subq_codes <- str_replace(variable_name, paste0(base_name, "_"), "") %>%
+    strsplit("_") %>%
+    # Get the first underscore-delimited chunk. Handles the C10 case, where
+    # matrix subqs are called C10_<code>_1.
+    purrr::map(~ .x[1])
+  matrix_field <- as.list(matrix_field)
+  names(matrix_field) <- subq_codes
+  toJSON(matrix_field, auto_unbox = TRUE)
+}
 
 args <- commandArgs(TRUE)
 

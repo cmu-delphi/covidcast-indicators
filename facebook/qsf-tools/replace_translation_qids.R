@@ -19,18 +19,19 @@ suppressPackageStartupMessages({
 replace_qid_wrapper <- function(path_to_translations, path_to_codebook) {
   if (dir.exists(path_to_translations)) {
     # Process all CSVs in directory
-    csvs <- list.files(path_to_translations, pattern = "*.csv$", full.names = TRUE)
+    csvs <- list.files(path_to_translations, pattern = "*.csv$", full.names = FALSE)
     for (csv in csvs) {
-      replace_qids(csv, path_to_codebook)
+      replace_qids(path_to_translations, csv, path_to_codebook)
     }
   } else if (file.exists(path_to_translations)) {
-    replace_qids(path_to_translations, path_to_codebook)
+    main_dir <- dirname(path_to_translations)
+    replace_qids(main_dir, path_to_translations, path_to_codebook)
   } else {
     stop(path_to_translations, " is not a valid file or directory")
   }
 }
 
-replace_qids <- function(path_to_translation_file, path_to_codebook) {
+replace_qids <- function(path_to_dir, path_to_translation_file, path_to_codebook) {
   wave <- get_wave_from_csv(path_to_translation_file)
   # Load codebook
   codebook <- read_csv(path_to_codebook, col_types = cols(
@@ -40,12 +41,12 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     filter(!is.na(qid), version == wave)
 
   # Load translation file
-  translation <- read_csv(path_to_translation_file, show_col_types = FALSE) %>% 
+  translation <- read_csv(file.path(path_to_dir, path_to_translation_file), show_col_types = FALSE) %>%
     # Drop survey ID line
     filter(!startsWith(PhraseID, "SV_"))  
 
   # Use codebook to make a mapping of QID -> item name.
-  var_qid_pairs <- codebook %>% mutate(variable = coalesce(matrix_base_name, variable)) %>% distinct(qid, variable)
+  var_qid_pairs <- codebook %>% mutate(variable = coalesce(originating_question, variable)) %>% distinct(qid, variable)
   qid_item_map <- var_qid_pairs %>% pull(variable)
   names(qid_item_map) <- var_qid_pairs %>% pull(qid)
   
@@ -57,8 +58,11 @@ replace_qids <- function(path_to_translation_file, path_to_codebook) {
     })
   ) 
   
-  # Save processed file back to CSV under the same name.
-  write_excel_csv(translation, path_to_translation_file, quote = "needed")
+  # Save processed file back to CSV under the same name in a new dir `modified_translations` (created
+  # if doesn't exist) within the parent directory of where the translation files live.
+  out_path <- file.path(path_to_dir, "..", "modified_translations")
+  if (!dir.exists(out_path)) { dir.create(out_path) }
+  write_excel_csv(translation, file.path(out_path, path_to_translation_file), quote = "needed")
 }
 
 args <- commandArgs(TRUE)

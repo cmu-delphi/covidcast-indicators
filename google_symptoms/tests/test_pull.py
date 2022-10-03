@@ -97,7 +97,7 @@ class TestPullGoogleSymptoms:
         https://github.com/cmu-delphi/covidcast-indicators/pull/1496 for motivating issue.
         """
         # Cast date field to `dbdate` to match dataframe dtypes as provided by the BigQuery fetch.
-        df = pd.read_csv("test_data/state_data_20220916-20220924.csv").astype({"date": "dbdate"})
+        df = pd.read_csv(good_input["state"]).astype({"date": "dbdate"})
         out = preprocess(df, "state")
         assert df.shape[0] == out[~out.Cough.isna()].shape[0]
 

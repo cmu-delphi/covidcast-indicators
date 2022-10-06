@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        packages: [ facebook ]
+        packages: [ backfill_corrections ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2

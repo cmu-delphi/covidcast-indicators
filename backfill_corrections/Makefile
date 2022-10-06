@@ -2,7 +2,7 @@ SHELL:=/bin/bash
 
 TODAY:=$(shell date -u +"%Y-%m-%d")
 CURR_TIME:=$(shell date -u +"%Hh%Mm%Ss")
-LOG_FILE:=$(TODAY)_$(CURR_TIME).log
+LOG_FILE:=logs/$(TODAY)_$(CURR_TIME).log
 
 default:
 	@echo No default implemented yet

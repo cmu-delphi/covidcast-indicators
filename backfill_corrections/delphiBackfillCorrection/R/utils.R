@@ -32,10 +32,12 @@
 #'
 #' @return a named list of parameters values
 #'
+#' @export
+#'
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
 read_params <- function(path = "params.json", template_path = "params.json.template",
-                        train_models = TRUE, make_predictions = TRUE) {
+                        train_models = FALSE, make_predictions = FALSE) {
   if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
@@ -97,20 +99,22 @@ create_dir_not_exist <- function(path)
 #' @template num_col-template
 #' @template denom_col-template
 #' @template signal_suffixes-template
+#' @template lag_col-template
+#' @template issued_col-template
 #'
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
-validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes) {
-  if (!missing(signal_suffixes)) {
+validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
+                            lag_col = "lag", issued_col = "issue_date") {
+  if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
     denom_col <- paste(num_col, signal_suffixes, sep = "_")
   }
 
   # Check data type and required columns
   if (value_type == "count") {
-    if (all(num_col %in% colnames(df))) {value_cols=c(num_col)}
-    else if (all(denom_col %in% colnames(df))) {value_cols=c(denom_col)}
+    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
     else {stop("No valid column name detected for the count values!")}
   } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
@@ -125,8 +129,8 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
   }
   
   # issue_date or lag should exist in the dataset
-  if ( !"lag" %in% colnames(df) ) {
-    if ( "issue_date" %in% colnames(df) ) {
+  if ( !lag_col %in% colnames(df) ) {
+    if ( issued_col %in% colnames(df) ) {
       df$lag = as.integer(df$issue_date - df$time_value)
     }
     else {stop("No issue_date or lag exists!")}

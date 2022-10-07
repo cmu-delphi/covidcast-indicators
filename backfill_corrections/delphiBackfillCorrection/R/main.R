@@ -4,18 +4,19 @@
 #' @template params-template
 #' @template refd_col-template
 #' @template lag_col-template
+#' @template issued_col-template
 #' @template signal_suffixes-template
 #' @template indicator-template
 #' @template signal-template
 #' @param training_end_date the most recent training date
 #' 
-#' @importFrom dplyr %>% filter select group_by summarize across everything group_split
+#' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
 #' @export
 run_backfill <- function(df, params, training_end_date, 
-                         refd_col = "time_value", lag_col = "lag", 
+                         refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""),
                          indicator = "", signal = "") {
   df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
@@ -32,11 +33,13 @@ run_backfill <- function(df, params, training_end_date,
     if (geo_level == "state") {
       # Drop county field and make new "geo_value" field from "state_id".        
       # Aggregate counties up to state level
+      agg_cols <- c("geo_value", issued_col, refd_col, lag_col)
+      # Sum all non-agg columns. Summarized columns keep original names
       df <- df %>%
-        dplyr::select(-.data$geo_value, geo_value = .data$state_id) %>%
-        dplyr::group_by(across(c("geo_value", refd_col, lag_col))) %>%
-        # Summarized columns keep original names
-        dplyr::summarize(across(everything(), sum))
+        select(-.data$geo_value, geo_value = .data$state_id) %>%
+        group_by(across(agg_cols)) %>%
+        summarize(df, across(everything(), sum)) %>%
+        ungroup()
     }
     if (geo_level == "county") {
       # Keep only 200 most populous (within the US) counties
@@ -54,12 +57,13 @@ run_backfill <- function(df, params, training_end_date,
         coef_list[[key]] <- list()
       }
     }
-    
+
     group_dfs <- group_split(df, .data$geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
+
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
       subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
@@ -91,7 +95,7 @@ run_backfill <- function(df, params, training_end_date,
             
             combined_df <- merge(
               combined_num_df, combined_denom_df,
-              by=c(refd_col, "issue_date", lag_col, "target_date"), all.y=TRUE,
+              by=c(refd_col, issued_col, lag_col, "target_date"), all.y=TRUE,
               suffixes=c("_num", "_denom")
             )
           }
@@ -106,6 +110,7 @@ run_backfill <- function(df, params, training_end_date,
           geo_test_data <- combined_df %>%
             filter(.data$issue_date %in% params$test_dates) %>%
             drop_na()
+
           if (nrow(geo_test_data) == 0) next
           if (nrow(geo_train_data) <= 200) next
 
@@ -188,18 +193,17 @@ run_backfill <- function(df, params, training_end_date,
 #' 
 #' @template params-template
 #'
-#' @importFrom dplyr bind_rows
+#' @importFrom dplyr bind_rows mutate
 #' @importFrom parallel detectCores
+#' @importFrom rlang .data
 #' 
 #' @export
 main <- function(params) {
   if (!params$train_models && !params$make_predictions) {
-    message("both model training and prediction generation are turned off; exiting")
     return
   }
   
   if (params$train_models) {
-    # Remove all the stored models
     files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
     file.remove(files_list)
   }
@@ -220,11 +224,14 @@ main <- function(params) {
   }
   
   # Loop over every indicator + signal combination.
-  for (input_group in INDICATORS_AND_SIGNALS) {
+  for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
+    input_group <- INDICATORS_AND_SIGNALS[group_i,]
+      "Processing indicator ${input_group$indicator} signal ${input_group$signal}"
+    ))
+
     files_list <- get_files_list(
       input_group$indicator, input_group$signal, params, input_group$sub_dir
     )
-    
     if (length(files_list) == 0) {
       warning(str_interp(
         "No files found for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
@@ -232,21 +239,19 @@ main <- function(params) {
       next
     }
     
-    # Read in all listed files and combine
     input_data <- lapply(
       files_list,
-      function(file) {
-        input_data[[file]] <- read_data(file)
-      }
-    ) %>% bind_rows
-    
+      function(file) {read_data(file)}
+    ) %>%
+      bind_rows()
+
     if (nrow(input_data) == 0) {
       warning(str_interp(
         "No data available for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
       ))
       next
     }
-    
+
     # Check data type and required columns
     for (value_type in params$value_types) {
       result <- validity_checks(

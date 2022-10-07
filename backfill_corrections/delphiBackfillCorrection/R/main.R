@@ -29,6 +29,7 @@ run_backfill <- function(df, params, training_end_date,
   }
   
   for (geo_level in geo_levels) {
+    msg_ts(str_interp("geo level ${geo_level}"))
     # Get full list of interested locations
     if (geo_level == "state") {
       # Drop county field and make new "geo_value" field from "state_id".        
@@ -58,11 +59,13 @@ run_backfill <- function(df, params, training_end_date,
       }
     }
 
+    msg_ts("Splitting data into geo groups")
     group_dfs <- group_split(df, .data$geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
+      msg_ts(str_interp("Processing ${geo} geo group"))
 
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
@@ -73,6 +76,7 @@ run_backfill <- function(df, params, training_end_date,
         # process again. Main use case is for quidel which has overall and
         # age-based signals.
         if (signal_suffix != "") {
+          msg_ts(str_interp("signal suffix ${signal_suffix}"))
           num_col <- paste(params$num_col, signal_suffix, sep = "_")
           denom_col <- paste(params$denom_col, signal_suffix, sep = "_")
         } else {
@@ -81,6 +85,7 @@ run_backfill <- function(df, params, training_end_date,
         }
         
         for (value_type in params$value_types) {
+          msg_ts(str_interp("value type ${value_type}"))
           # Handle different signal types
           if (value_type == "count") { # For counts data only
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
@@ -130,6 +135,7 @@ run_backfill <- function(df, params, training_end_date,
           }
           max_raw = sqrt(max(geo_train_data$value_raw))
           for (test_lag in c(1:14, 21, 35, 51)) {
+            msg_ts(str_interp("test lag ${test_lag}"))
             filtered_data <- data_filteration(test_lag, geo_train_data, 
                                               geo_test_data, params$lag_pad)
             train_data <- filtered_data[[1]]
@@ -147,6 +153,7 @@ run_backfill <- function(df, params, training_end_date,
             params_list <- c(YITL, as.vector(unlist(covariates)))
 
             # Model training and testing
+            msg_ts("Training or loading model")
             prediction_results <- model_training_and_testing(
               train_data, test_data, params$taus, params_list, params$lp_solver, 
               params$lambda, test_lag, geo, value_type, params$cache_dir, 
@@ -158,6 +165,7 @@ run_backfill <- function(df, params, training_end_date,
             # Model objects are saved during training, so only need to export
             # output if making predictions/corrections
             if (params$make_predictions) {
+              msg_ts("Generating predictions")
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus)
@@ -200,10 +208,12 @@ run_backfill <- function(df, params, training_end_date,
 #' @export
 main <- function(params) {
   if (!params$train_models && !params$make_predictions) {
+    msg_ts("both model training and prediction generation are turned off; exiting")
     return
   }
   
   if (params$train_models) {
+    msg_ts("Removing stored models")
     files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
     file.remove(files_list)
   }
@@ -226,6 +236,7 @@ main <- function(params) {
   # Loop over every indicator + signal combination.
   for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
     input_group <- INDICATORS_AND_SIGNALS[group_i,]
+    msg_ts(str_interp(
       "Processing indicator ${input_group$indicator} signal ${input_group$signal}"
     ))
 
@@ -239,6 +250,7 @@ main <- function(params) {
       next
     }
     
+    msg_ts("Reading in and combining associated files")
     input_data <- lapply(
       files_list,
       function(file) {read_data(file)}
@@ -253,7 +265,9 @@ main <- function(params) {
     }
 
     # Check data type and required columns
+    msg_ts("Validating input data")
     for (value_type in params$value_types) {
+      msg_ts(str_interp("for ${value_type}"))
       result <- validity_checks(
         input_data, value_type,
         params$num_col, params$denom_col, input_group$name_suffix

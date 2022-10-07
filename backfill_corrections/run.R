@@ -14,13 +14,19 @@ suppressPackageStartupMessages({
 
 parser <- arg_parser(description='Run backfill corrections pipeline')
 # Both flags default to FALSE (do not train/predict) if not specified.
-parser <- add_argument(parser, arg="--train_models", flag=TRUE)
-parser <- add_argument(parser, arg="--make_predictions", flag=TRUE)
+parser <- add_argument(
+  parser, arg="--train_models", flag=TRUE,
+  help="flag indicating whether to train models or not (default)"
+)
+parser <- add_argument(
+  parser, arg="--make_predictions", flag=TRUE,
+  help="flag indicating whether to generate predictions or not (default)"
+)
 args = parse_args(parser)
 
 params <- read_params(
   "params.json",
-  train_models = args.train_models, make_predictions = args.make_predictions
+  train_models = args$train_models, make_predictions = args$make_predictions
 )
 
 delphiBackfillCorrection::main(params)

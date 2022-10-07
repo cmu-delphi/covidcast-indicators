@@ -39,7 +39,7 @@ run_backfill <- function(df, params, training_end_date,
       df <- df %>%
         select(-.data$geo_value, geo_value = .data$state_id) %>%
         group_by(across(agg_cols)) %>%
-        summarize(df, across(everything(), sum)) %>%
+        summarize(across(everything(), sum)) %>%
         ungroup()
     }
     if (geo_level == "county") {

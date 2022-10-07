@@ -167,3 +167,12 @@ get_populous_counties <- function() {
       head(n=200)
   )
 }
+
+#' Write a message to the console with the current time
+#'
+#' @param text the body of the message to display
+#'
+#' @export
+msg_ts <- function(text) {
+  message(sprintf("%s --- %s", format(Sys.time()), text))
+}

@@ -35,7 +35,7 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
                                  lambda=lambda, training_end_date=training_end_date,
                                  geo=geo, value_type=value_type, model_mode=FALSE)
 
-  signal_info <- str_interp("indicator ${input_group$indicator} signal ${input_group$signal} geo ${geo}")
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo}")
   if (nrow(test_data) == 0) {
     warning(str_interp("No test data available for ${signal_info}"))
   } else {

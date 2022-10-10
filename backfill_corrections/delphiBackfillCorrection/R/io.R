@@ -34,13 +34,23 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
                                  geo_level=geo_level, signal_suffix=signal_suffix,
                                  lambda=lambda, training_end_date=training_end_date,
                                  geo=geo, value_type=value_type, model_mode=FALSE)
-  msg_ts("Saving predictions to disk")
-  pred_output_file <- str_interp("prediction_${base_name}")
-  write_csv(test_data, file.path(export_dir, pred_output_file))
+
+  signal_info <- str_interp("indicator ${input_group$indicator} signal ${input_group$signal} geo ${geo}")
+  if (nrow(test_data) == 0) {
+    warning(str_interp("No test data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving predictions to disk for ${signal_info}"))
+    pred_output_file <- str_interp("prediction_${base_name}")
+    write_csv(test_data, file.path(export_dir, pred_output_file))
+  }
   
-  msg_ts("Saving coefficients to disk")
+  if (nrow(coef_data) == 0) {
+    warning(str_interp("No coef data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving coefficients to disk for ${signal_info}"))
   coef_output_file <- str_interp("coefs_${base_name}")
   write_csv(coef_data, file.path(export_dir, coef_output_file))
+  }
 }
 
 #' List valid input files.

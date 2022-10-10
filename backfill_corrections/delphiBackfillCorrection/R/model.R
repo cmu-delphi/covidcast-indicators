@@ -245,7 +245,7 @@ generate_filename <- function(indicator, signal,
   if (model_mode) {
     file_type <- ".model"
   } else {
-    file_type <- ".csv"
+    file_type <- ".csv.gz"
   }
   components <- c(as.character(training_end_date), beta_prior,
                   indicator, signal, signal_suffix,

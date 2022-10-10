@@ -227,6 +227,7 @@ main <- function(params) {
     
   training_end_date <- as.Date(readLines(
     file.path(params$cache_dir, "training_end_date.txt")))
+  msg_ts(str_interp("training_end_date is ${training_end_date}"))
 
   ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {

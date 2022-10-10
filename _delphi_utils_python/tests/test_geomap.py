@@ -3,6 +3,7 @@ from delphi_utils.geomap import GeoMapper
 import pytest
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import numpy as np
 
 
@@ -204,13 +205,12 @@ class TestGeoMapper:
                 "count": [8, 7, 3, 10021],
             }
         )
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
         # chng-fips should have the same behavior when converting to megacounties.
         mega_county_groups = self.mega_data_3.copy()
         mega_county_groups.fips.replace({1125:"01g01"}, inplace = True)
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
         expected_df = pd.DataFrame(
             {
@@ -220,12 +220,12 @@ class TestGeoMapper:
                 "count": [6, 5, 7, 10021],
             }
         )
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
         # chng-fips should have the same behavior when converting to megacounties.
         mega_county_groups = self.mega_data_3.copy()
         mega_county_groups.fips.replace({1123:"01g01"}, inplace = True)
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
 
     def test_add_population_column(self, geomapper):
         new_data = geomapper.add_population_column(self.fips_data_3, "fips")

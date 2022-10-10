@@ -141,6 +141,13 @@ run_backfill <- function(df, params, training_end_date,
             train_data <- filtered_data[[1]]
             test_data <- filtered_data[[2]]
 
+            if (nrow(train_data) == 0 || nrow(test_data) == 0) {
+              msg_ts(str_interp(
+                "Not enough data to either train or test for test_lag ${test_lag}, skipping"
+              ))
+              next
+            }
+
             updated_data <- add_sqrtscale(train_data, test_data, max_raw, "value_raw")
             train_data <- updated_data[[1]]
             test_data <- updated_data[[2]]

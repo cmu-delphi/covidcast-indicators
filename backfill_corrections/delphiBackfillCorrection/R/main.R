@@ -53,7 +53,7 @@ run_backfill <- function(df, params, training_end_date,
     
     for (value_type in params$value_types) {
       for (signal_suffix in signal_suffixes) {
-        key = paste(value_type, signal_suffix)
+        key <- make_key(value_type, signal_suffix)
         test_data_list[[key]] <- list()
         coef_list[[key]] <- list()
       }
@@ -177,9 +177,10 @@ run_backfill <- function(df, params, training_end_date,
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus)
               
-              idx <- length(test_data_list[[value_type]]) + 1
-              test_data_list[[value_type]][[idx]] <- test_data
-              coef_list[[value_type]][[idx]] <- coefs
+              key <- make_key(value_type, signal_suffix)
+              idx <- length(test_data_list[[key]]) + 1
+              test_data_list[[key]][[idx]] <- test_data
+              coef_list[[key]][[idx]] <- coefs
             }
           }# End for test lags
         }# End for value types
@@ -188,7 +189,7 @@ run_backfill <- function(df, params, training_end_date,
       if (params$make_predictions) {
         for (value_type in params$value_types) {
           for (signal_suffix in signal_suffixes) {
-            key = paste(value_type, signal_suffix)
+            key <- make_key(value_type, signal_suffix)
             test_combined <- bind_rows(test_data_list[[key]]) 
             coef_combined <- bind_rows(coef_list[[key]]) 
             export_test_result(test_combined, coef_combined, 

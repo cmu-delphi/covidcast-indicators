@@ -183,3 +183,17 @@ get_populous_counties <- function() {
 msg_ts <- function(text) {
   message(sprintf("%s --- %s", format(Sys.time()), text))
 }
+
+#' Generate key for identifying a value_type-signal combo
+#'
+#' @template value_type-template
+#' @template signal_suffix-template
+make_key <- function(value_type, signal_suffix) {
+  if (signal_suffix == "" || is.na(signal_suffix)) {
+    key <- value_type
+  } else {
+    key <- paste(value_type, signal_suffix)
+  }
+
+  return(key)
+}

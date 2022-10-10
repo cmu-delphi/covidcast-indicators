@@ -250,7 +250,7 @@ generate_filename <- function(indicator, signal,
   }
   components <- c(as.character(training_end_date), beta_prior,
                   indicator, signal, signal_suffix,
-                  geo_level, lambda,
+                  geo_level, lambda, value_type,
                   geo, test_lag, dw, tau)
   
   filename = paste0(

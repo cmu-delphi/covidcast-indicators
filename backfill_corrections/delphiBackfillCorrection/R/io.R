@@ -17,6 +17,7 @@ read_data <- function(input_dir) {
 #' @template indicator-template
 #' @template signal-template
 #' @template geo_level-template
+#' @template geo-template
 #' @template signal_suffix-template
 #' @template lambda-template
 #' @template value_type-template
@@ -26,12 +27,13 @@ read_data <- function(input_dir) {
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
-                               geo_level, signal_suffix, lambda,
+                               geo_level, geo, signal_suffix, lambda,
                                training_end_date,
                                value_type, export_dir) {
-  base_name <- generate_filename(indicator, signal, 
-                                 geo_level, signal_suffix, lambda,
-                                 training_end_date, value_type, model_mode=FALSE)
+  base_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 geo=geo, value_type=value_type, model_mode=FALSE)
   msg_ts("Saving predictions to disk")
   pred_output_file <- str_interp("prediction_${base_name}")
   write_csv(test_data, file.path(export_dir, pred_output_file))

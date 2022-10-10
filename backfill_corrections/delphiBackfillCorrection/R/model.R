@@ -109,10 +109,11 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   for (tau in taus) {
     tryCatch(
       expr = {
-        model_file_name <- generate_filename(indicator, signal, 
-                                        geo_level, signal_suffix, lambda,
-                                        training_end_date, geo, 
-                                        value_type, test_lag, tau)
+        model_file_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 geo=geo, value_type=value_type,
+                                 test_lag=test_lag, tau=tau)
         model_path <- file.path(model_save_dir, model_file_name)
         obj <- get_model(model_path, train_data, covariates, tau,
                          lambda, lp_solver, train_models=TRUE) 

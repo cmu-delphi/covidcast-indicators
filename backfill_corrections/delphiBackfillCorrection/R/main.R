@@ -194,7 +194,7 @@ run_backfill <- function(df, params, training_end_date,
             coef_combined <- bind_rows(coef_list[[key]]) 
             export_test_result(test_combined, coef_combined, 
                                indicator, signal, 
-                               geo_level, signal_suffix, params$lambda,
+                               geo_level, geo, signal_suffix, params$lambda,
                                training_end_date,
                                value_type, export_dir=params$export_dir)
           }

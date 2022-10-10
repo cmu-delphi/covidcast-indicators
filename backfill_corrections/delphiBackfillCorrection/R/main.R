@@ -216,7 +216,7 @@ run_backfill <- function(df, params, training_end_date,
 main <- function(params) {
   if (!params$train_models && !params$make_predictions) {
     msg_ts("both model training and prediction generation are turned off; exiting")
-    return
+    return(NULL)
   }
   
   if (params$train_models) {

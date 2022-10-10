@@ -32,11 +32,13 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
   base_name <- generate_filename(indicator, signal, 
                                  geo_level, signal_suffix, lambda,
                                  training_end_date, value_type, model_mode=FALSE)
-  pred_output_dir <- str_interp("prediction_${base_name}")
-  write_csv(test_data, file.path(export_dir, pred_output_dir))
+  msg_ts("Saving predictions to disk")
+  pred_output_file <- str_interp("prediction_${base_name}")
+  write_csv(test_data, file.path(export_dir, pred_output_file))
   
-  coef_output_dir <- str_interp("coefs_${base_name}")
-  write_csv(test_data, file.path(export_dir, coef_output_dir))
+  msg_ts("Saving coefficients to disk")
+  coef_output_file <- str_interp("coefs_${base_name}")
+  write_csv(coef_data, file.path(export_dir, coef_output_file))
 }
 
 #' List valid input files.

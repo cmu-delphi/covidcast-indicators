@@ -100,6 +100,7 @@ test_that("testing the fraction adjustment with pseudo counts", {
 
 test_that("testing the main beta prior adjustment function", {
   set.seed(1)
+  browser()
   updated_data <- frac_adj(train_data, test_data, prior_test_data, 
                            indicator, signal, geo_level, signal_suffix,
                            lambda, value_type, geo, 

@@ -54,18 +54,19 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
   
   for (split in seq(0, 3)){
     if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
-    train_data[paste0("sqrty", as.character(split))] = 0
-    test_data[paste0("sqrty", as.character(split))] = 0
+    y0_col <- paste0("sqrty", as.character(split))
+    train_data[y0_col] = 0
+    test_data[y0_col] = 0
     qv_pre = max_raw * split * 0.2
     qv_next = max_raw * (split+1) * 0.2
 
     train_data[(train_data[[value_col]] <= (qv_next)^2)
                & (train_data[[value_col]] > (qv_pre)^2), 
-               paste0("sqrty", as.character(split))] = 1
+               y0_col] = 1
     test_data[(test_data[[value_col]] <= (qv_next)^2)
               & (test_data[[value_col]] > (qv_pre)^2), 
-              paste0("sqrty", as.character(split))] = 1
-    sqrtscale[split+1] = paste0("sqrty", as.character(split))
+              y0_col] = 1
+    sqrtscale[split+1] = y0_col
   }
   return (list(train_data, test_data, sqrtscale))
 }
@@ -91,6 +92,7 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @param training_end_date Most recent training date
 #'
 #' @importFrom stats predict coef
+#' @importFrom stringr str_interp
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
@@ -124,7 +126,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {print(paste("Training failed for", model_path, sep=" "))}
+      error=function(e) {msg_ts(str_interp("Training failed for ${model_path}"))}
     )
   }
   if (success < length(taus)) {return (NULL)}

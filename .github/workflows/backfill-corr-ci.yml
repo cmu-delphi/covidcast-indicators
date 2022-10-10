@@ -55,7 +55,7 @@ jobs:
           if ( !require("remotes") ) {
             install.packages("remotes")
           }
-          remotes::update_packages(c("rcmdcheck", "remotes", "devtools"), upgrade="always")
+          remotes::update_packages(c("rcmdcheck", "remotes", "devtools", "pkgdown"), upgrade="always")
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
           remotes::update_packages(dependency_list$package, upgrade="always")
 

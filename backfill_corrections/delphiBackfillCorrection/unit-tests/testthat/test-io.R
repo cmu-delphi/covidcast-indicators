@@ -22,13 +22,13 @@ test_that("testing exporting the output file", {
 
   test_data <- data.frame(test=TRUE)
   coef_data <- data.frame(test=TRUE)
-
+  
   export_test_result(test_data, coef_data, indicator, signal, 
-                     geo_level, signal_suffix, lambda,
+                     geo_level, geo="", signal_suffix, lambda,
                      training_end_date,
                      value_type, params$export_dir)
-  prediction_file <- file.path(params$export_dir, "prediction_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv")
-  coefs_file <- file.path(params$export_dir, "coefs_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv")
+  prediction_file <- file.path(params$export_dir, "prediction_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv.gz")
+  coefs_file <- file.path(params$export_dir, "coefs_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv.gz")
 
   expect_true(file.exists(prediction_file))
   expect_true(file.exists(coefs_file))

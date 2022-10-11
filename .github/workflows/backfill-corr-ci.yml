@@ -38,7 +38,9 @@ jobs:
               libcurl4-openssl-dev \
               libgdal-dev \
               libudunits2-dev \
-              libglpk-dev
+              libglpk-dev \
+              libharfbuzz-dev \
+              libfribidi-dev
       - name: Get date
         id: get-date
         run: |

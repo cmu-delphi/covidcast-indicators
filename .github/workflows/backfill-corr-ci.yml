@@ -53,6 +53,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-r-backfillcorr-
       - name: Install R dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if ( !require("remotes") ) {
             install.packages("remotes")

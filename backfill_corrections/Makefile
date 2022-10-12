@@ -8,9 +8,12 @@ OPTIONS=--train_models --make_predictions
 S3_URL=https://backfill_corrections.s3.us-east-2.amazonaws.com
 S3_BUCKET=s3://backfill_corrections
 
-TODAY:=$(shell date -u +"%Y-%m-%d")
-CURR_TIME:=$(shell date -u +"%Hh%Mm%Ss")
+# System time and date
+TODAY:=$(shell date +"%Y-%m-%d")
+CURR_TIME:=$(shell date +"%Hh%Mm%Ss")
 LOG_FILE:=logs/$(TODAY)_$(CURR_TIME).log
+
+PWD=$(shell pwd)
 
 default:
 	@echo No default implemented yet
@@ -30,17 +33,19 @@ run-local:
 	[ "$$?" -eq 1 ]
 
 run:
+	# Assumes receiving is output dir
 	docker run --rm --pull=always \
 	    -v "${PWD}"/logs:/backfill_corrections/logs \
 	    -v "${PWD}"/receiving:/backfill_corrections/receiving \
-	    -v "${PWD}"/params.json:/backfill_corrections/params.json \
 	    -v "${PWD}"/input:/backfill_corrections/input \
+	    -v "${PWD}"/cache:/backfill_corrections/cache \
+	    -v "${PWD}"/params.json:/backfill_corrections/params.json \
 		-i "${DOCKER_IMAGE}:${DOCKER_TAG}" \
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 
 deploy: run
-	# TODO: assumes receiving is output dir
-	aws s3 cp receiving/ $(S3_BUCKET)/ --recursive --exclude "*" --include "*csv" --acl public-read
+	# Assumes receiving is output dir
+	aws s3 cp receiving/ $(S3_BUCKET)/ --recursive --exclude "*" --include "*csv.gz" --acl public-read
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiBackfillCorrection")'

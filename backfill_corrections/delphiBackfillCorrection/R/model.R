@@ -116,7 +116,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
                                  test_lag=test_lag, tau=tau)
         model_path <- file.path(model_save_dir, model_file_name)
         obj <- get_model(model_path, train_data, covariates, tau,
-                         lambda, lp_solver, train_models=TRUE) 
+                         lambda, lp_solver, train_models)
 
         if (make_predictions) {
           y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
@@ -196,8 +196,10 @@ get_model <- function(model_path, train_data, covariates, tau,
     create_dir_not_exist(dirname(model_path))
     save(obj, file=model_path)
   } else {
-    # Load model from cache.
-    obj <- load(model_path)
+    # Load model from cache invisibly. Object has the same name as the original
+    # model object, `obj`.
+    msg_ts(str_interp("Loading from ${model_path}"))
+    load(model_path)
   }
 
   return(obj)

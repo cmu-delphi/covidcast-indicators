@@ -35,11 +35,11 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
                                  lambda=lambda, training_end_date=training_end_date,
                                  geo=geo, value_type=value_type, model_mode=FALSE)
 
-  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo}")
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")
   if (nrow(test_data) == 0) {
     warning(str_interp("No test data available for ${signal_info}"))
   } else {
-    msg_ts(str_interp("Saving predictions to disk for ${signal_info}"))
+    msg_ts(str_interp("Saving predictions to disk for ${signal_info} "))
     pred_output_file <- str_interp("prediction_${base_name}")
     write_csv(test_data, file.path(export_dir, pred_output_file))
   }

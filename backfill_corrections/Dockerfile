@@ -20,7 +20,8 @@ RUN apt-get update && apt-get install -qq -y \
 RUN install2.r --error \
     roxygen2 \
     zoo \
-    Rglpk
+    Rglpk \
+    argparser
 
 RUN R -e 'devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")'
 RUN R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")'

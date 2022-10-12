@@ -160,11 +160,14 @@ run_backfill <- function(df, params, training_end_date,
             params_list <- c(YITL, as.vector(unlist(covariates)))
 
             # Model training and testing
-            msg_ts("Training or loading model")
+            msg_ts("Training or loading models")
             prediction_results <- model_training_and_testing(
-              train_data, test_data, params$taus, params_list, params$lp_solver, 
-              params$lambda, test_lag, geo, value_type, params$cache_dir, 
-              indicator, signal, geo_level, signal_suffix,training_end_date,
+              train_data, test_data, taus = params$taus, covariates = params_list,
+              lp_solver = params$lp_solver,
+              lambda = params$lambda, test_lag = test_lag, geo = geo,
+              value_type = value_type, model_save_dir = params$cache_dir,
+              indicator = indicator, signal = signal, geo_level = geo_level,
+              signal_suffix =signal_suffix, training_end_date = training_end_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
             )

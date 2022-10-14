@@ -73,7 +73,6 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("training_days" %in% names(params))) {params$training_days <- TRAINING_DAYS}
   if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
   if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
-  # TODO: format doesn't agree with description in docs above ("list of two elements, etc")
   if (!("test_dates" %in% names(params)) || length(params$test_dates) == 0) {
     start_date <- TODAY - params$testing_window
     end_date <- TODAY - 1

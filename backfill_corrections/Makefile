@@ -5,26 +5,41 @@ DOCKER_TAG=latest
 # Change training options during `make` call via `make <command> OPTIONS="<options>"`
 OPTIONS=--train_models --make_predictions
 
-S3_URL=https://backfill_corrections.s3.us-east-2.amazonaws.com
-S3_BUCKET=s3://backfill_corrections
+PYTHON:=env/bin/python
+USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
+USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
+USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
-AWS_KEY_ID=aws_access_key_id
-AWS_SECRET_KEY=aws_secret_access_key
+# Static dir names for use inside Docker container
+INPUT_DIR=input
+CACHE_DIR=cache
+LOG_DIR=logs
+EXPORT_DIR=receiving
+
+AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_access_key_id)
+AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_secret_access_key)
+S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
 
 # System time and date
 TODAY:=$(shell date +"%Y-%m-%d")
 CURR_TIME:=$(shell date +"%Hh%Mm%Ss")
-LOG_FILE:=logs/$(TODAY)_$(CURR_TIME).log
+LOG_FILE:=$(LOG_DIR)/$(TODAY)_$(CURR_TIME).log
 
 PWD=$(shell pwd)
 
 default:
 	@echo No default implemented yet
 
-install: dev
+install: install-R install-python
 
-dev: delphiBackfillCorrection_1.0.tar.gz
+install-R: delphiBackfillCorrection_1.0.tar.gz
 	R CMD INSTALL delphiBackfillCorrection_1.0.tar.gz
+
+install-python:
+	python3.8 -m venv env
+	source env/bin/activate && \
+	pip install wheel && \
+	pip install delphi_utils
 
 lib:
 	R -e 'roxygen2::roxygenise("delphiBackfillCorrection")'
@@ -36,21 +51,40 @@ run-local:
 	[ "$$?" -eq 1 ]
 
 run:
-	# Assumes receiving is output dir
 	docker run --rm --pull=always \
-	    -v "${PWD}"/logs:/backfill_corrections/logs \
-	    -v "${PWD}"/receiving:/backfill_corrections/receiving \
-	    -v "${PWD}"/input:/backfill_corrections/input \
-	    -v "${PWD}"/cache:/backfill_corrections/cache \
+	    -v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \
+	    -v "${shell realpath $(USR_EXPORT_DIR)}:/backfill_corrections/${EXPORT_DIR}" \
+	    -v "${shell realpath $(USR_INPUT_DIR)}:/backfill_corrections/${INPUT_DIR}" \
+	    -v "${shell realpath $(USR_CACHE_DIR)}:/backfill_corrections/${CACHE_DIR}" \
 	    -v "${PWD}"/params.json:/backfill_corrections/params.json \
 		-i "${DOCKER_IMAGE}:${DOCKER_TAG}" \
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 
-deploy: run
+publish:
 	aws configure set aws_access_key_id AWS_KEY_ID
 	aws configure set aws_secret_access_key AWS_SECRET_KEY
-	# Assumes receiving is output dir
-	aws s3 cp receiving/ $(S3_BUCKET)/ --recursive --exclude "*" --include "*csv.gz" --acl public-read
+	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*csv.gz" --acl public-read
+
+pipeline: setup run publish teardown
+
+setup:
+	# Make sure all required dirs exist. Set dir names to standard values for use in Docker.
+	[ -f $(USR_INPUT_DIR) ] || mkdir -p $(USR_INPUT_DIR)
+	[ -f $(USR_CACHE_DIR) ] || mkdir -p $(USR_CACHE_DIR)
+	[ -f $(USR_EXPORT_DIR) ] || mkdir -p $(USR_EXPORT_DIR)
+	[ -f $(LOG_DIR) ] || mkdir -p $(LOG_DIR)
+	$(PYTHON) -m delphi_utils set input_dir $(INPUT_DIR)
+	$(PYTHON) -m delphi_utils set cache_dir $(CACHE_DIR)
+	$(PYTHON) -m delphi_utils set export_dir $(EXPORT_DIR)
+
+clean:
+	rm -f $(USR_EXPORT_DIR)/*.csv.gz
+
+teardown: clean
+	# Restore dir names in params to user-provided values.
+	$(PYTHON) -m delphi_utils set input_dir $(USR_INPUT_DIR)
+	$(PYTHON) -m delphi_utils set cache_dir $(USR_CACHE_DIR)
+	$(PYTHON) -m delphi_utils set export_dir $(USR_EXPORT_DIR)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiBackfillCorrection")'

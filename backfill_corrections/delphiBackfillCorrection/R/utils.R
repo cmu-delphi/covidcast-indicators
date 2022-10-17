@@ -196,3 +196,11 @@ make_key <- function(value_type, signal_suffix) {
 
   return(key)
 }
+
+#' Check if an element in params exists and is not missing
+#'
+#' @template params-template
+#' @param key string indicating name of element within `params` to check
+params_element_exists_and_valid <- function(params, key) {
+  return(key %in% names(params) && !is.na(params[[key]]) && params[[key]] != "")
+}

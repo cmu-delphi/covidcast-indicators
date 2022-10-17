@@ -1,7 +1,5 @@
 SHELL:=/bin/bash
 
-DOCKER_IMAGE=ghcr.io/cmu-delphi/covidcast-indicators-backfill_corrections
-DOCKER_TAG=latest
 # Change training options during `make` call via `make <command> OPTIONS="<options>"`
 OPTIONS=--train_models --make_predictions
 
@@ -10,22 +8,26 @@ USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
 USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
 USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
+AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_access_key_id)
+AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_secret_access_key)
+S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
+
+DOCKER_IMAGE=ghcr.io/cmu-delphi/covidcast-indicators-backfill_corrections
+DOCKER_TAG=latest
+
 # Static dir names for use inside Docker container
 INPUT_DIR=input
 CACHE_DIR=cache
 LOG_DIR=logs
 EXPORT_DIR=receiving
 
-AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_access_key_id)
-AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_secret_access_key)
-S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
+PWD=$(shell pwd)
 
 # System time and date
 TODAY:=$(shell date +"%Y-%m-%d")
 CURR_TIME:=$(shell date +"%Hh%Mm%Ss")
-LOG_FILE:=$(LOG_DIR)/$(TODAY)_$(CURR_TIME).log
 
-PWD=$(shell pwd)
+LOG_FILE:=$(LOG_DIR)/$(TODAY)_$(CURR_TIME).log
 
 default:
 	@echo No default implemented yet
@@ -64,12 +66,12 @@ publish:
  	aws configure set aws_access_key_id AWS_KEY_ID
  	aws configure set aws_secret_access_key AWS_SECRET_KEY
  	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
-	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
+ 	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 
 pipeline: setup run publish teardown
 
+# Make sure all required dirs exist. Set dir names to standard values for use in Docker.
 setup:
-	# Make sure all required dirs exist. Set dir names to standard values for use in Docker.
 	[ -f $(USR_INPUT_DIR) ] || mkdir -p $(USR_INPUT_DIR)
 	[ -f $(USR_CACHE_DIR) ] || mkdir -p $(USR_CACHE_DIR)
 	[ -f $(USR_EXPORT_DIR) ] || mkdir -p $(USR_EXPORT_DIR)
@@ -81,8 +83,8 @@ setup:
 clean:
 	rm -f $(USR_EXPORT_DIR)/*.csv.gz
 
+# Restore dir names in params to user-provided values.
 teardown: clean
-	# Restore dir names in params to user-provided values.
 	$(PYTHON) -m delphi_utils set input_dir $(USR_INPUT_DIR)
 	$(PYTHON) -m delphi_utils set cache_dir $(USR_CACHE_DIR)
 	$(PYTHON) -m delphi_utils set export_dir $(USR_EXPORT_DIR)

@@ -8,6 +8,9 @@ OPTIONS=--train_models --make_predictions
 S3_URL=https://backfill_corrections.s3.us-east-2.amazonaws.com
 S3_BUCKET=s3://backfill_corrections
 
+AWS_KEY_ID=aws_access_key_id
+AWS_SECRET_KEY=aws_secret_access_key
+
 # System time and date
 TODAY:=$(shell date +"%Y-%m-%d")
 CURR_TIME:=$(shell date +"%Hh%Mm%Ss")
@@ -44,6 +47,8 @@ run:
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 
 deploy: run
+	aws configure set aws_access_key_id AWS_KEY_ID
+	aws configure set aws_secret_access_key AWS_SECRET_KEY
 	# Assumes receiving is output dir
 	aws s3 cp receiving/ $(S3_BUCKET)/ --recursive --exclude "*" --include "*csv.gz" --acl public-read
 

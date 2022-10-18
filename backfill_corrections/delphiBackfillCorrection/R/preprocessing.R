@@ -110,7 +110,7 @@ add_shift <- function(df, n_day, refd_col) {
 #' @export
 add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
-  for (i in 1:6) {
+  for (i in seq_along(wd)) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
   if (suffix == "_ref") {
@@ -156,7 +156,7 @@ get_weekofmonth <- function(date) {
 #' @export
 add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
   weekofmonth <- get_weekofmonth(df[[time_col]])
-  for (i in 1:3) {
+  for (i in seq_along(wm)) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
   return (df)

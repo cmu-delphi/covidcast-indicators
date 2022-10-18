@@ -8,8 +8,8 @@ USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
 USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
 USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
-AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_access_key_id)
-AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get archive.aws_credentials.aws_secret_access_key)
+AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_access_key_id)
+AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_secret_access_key)
 S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
 
 DOCKER_IMAGE=ghcr.io/cmu-delphi/covidcast-indicators-backfill_corrections

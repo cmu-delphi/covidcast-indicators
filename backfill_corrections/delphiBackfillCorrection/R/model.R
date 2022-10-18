@@ -262,3 +262,48 @@ generate_filename <- function(indicator, signal,
   )
   return(filename)
 }
+
+#' Get dates for which to fetch input data
+#'
+#' Calculate training end date, input data start date, and input
+#' data end date based on user settings.
+#'
+#' Cases:
+#'   1. We are training new models.
+#'   2. We are not training new models and cached models exist.
+#'   3. We are not training new models and cached models don't exist.
+#'
+#' Sometimes we want to allow the user to specify an end date in
+#' params that overrides the automatically-generated end date. This is
+#' only relevant when the user requests to train new models.
+#'
+#' @template params-template
+get_training_date_range <- function(params) {
+  if (params$train_models) {
+    if (params_element_exists_and_valid(params, "training_end_date")) {
+      # Use user-provided end date.
+      training_end_date <- as.Date(params$training_end_date)
+    } else {
+      # Default end date is today.
+      training_end_date <- TODAY
+    }
+  } else {
+    # Get end date from cached model files.
+    # Assumes filename format like `2022-06-28_changehc_covid_state_lambda0.1_count_ca_lag5_tau0.9.model`
+    # where the leading date is the training end date for that model.
+    model_files <- list.files(params$cache_dir, "202[0-9]-[0-9]{2}-[0-9]{2}*.model")
+    training_end_date <- max(as.Date(substr(model_files, 1, 10)))
+  }
+
+  training_start_date <- training_end_date - params$training_days
+
+  msg_ts(paste0(
+    str_interp("training_start_date is ${training_start_date}, "),
+    str_interp("training_end_date is ${training_end_date}")
+  ))
+
+  return(list(
+    "training_start_date"=training_start_date,
+    "training_end_date"=training_end_date
+  ))
+}

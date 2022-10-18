@@ -8,16 +8,19 @@
 #' @template signal_suffixes-template
 #' @template indicator-template
 #' @template signal-template
-#' @param training_end_date the most recent training date
 #' 
 #' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, training_end_date,
+run_backfill <- function(df, params,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
+  result <- get_training_date_range(params)
+  training_start_date <- result$training_start_date
+  training_end_date <- result$training_end_date
+
   df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
 
   geo_levels <- params$geo_levels
@@ -117,7 +120,7 @@ run_backfill <- function(df, params, training_end_date,
           geo_train_data <- combined_df %>%
             filter(.data$issue_date < training_end_date) %>%
             filter(.data$target_date <= training_end_date) %>%
-            filter(.data$target_date > training_end_date - params$training_days) %>%
+            filter(.data$target_date > training_start_date) %>%
             drop_na()
           geo_test_data <- combined_df %>%
             filter(.data$issue_date %in% params$test_dates) %>%
@@ -236,10 +239,6 @@ main <- function(params) {
     file.remove(files_list)
   }
 
-  training_end_date <- as.Date(readLines(
-    file.path(params$cache_dir, "training_end_date.txt")))
-  msg_ts(str_interp("training_end_date is ${training_end_date}"))
-
   ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {
     cores <- detectCores()
@@ -298,14 +297,8 @@ main <- function(params) {
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, params, training_end_date,
+    run_backfill(input_data, params,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
-
-    if (params$train_models) {
-      # Save the training end date to a text file.
-      writeLines(as.character(TODAY),
-                 file.path(params$cache_dir, "training_end_date.txt"))
-    }
   }
 }

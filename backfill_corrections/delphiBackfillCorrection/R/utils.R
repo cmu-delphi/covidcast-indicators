@@ -87,6 +87,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
       by="days"
     )
   }
+  if (!("test_lags" %in% names(params))) {
+    params$test_lags <- TEST_LAGS
+  }
   
   return(params)
 }

@@ -145,7 +145,7 @@ run_backfill <- function(df, params, training_end_date,
             geo_test_data <- updated_data[[2]]
           }
           max_raw = sqrt(max(geo_train_data$value_raw))
-          for (test_lag in c(1:14, 21, 35, 51)) {
+          for (test_lag in params$test_lags) {
             msg_ts(str_interp("test lag ${test_lag}"))
             filtered_data <- data_filteration(test_lag, geo_train_data, 
                                               geo_test_data, params$lag_pad)

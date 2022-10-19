@@ -96,41 +96,59 @@ get_files_list <- function(indicator, signal, params, sub_dir) {
 subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
   file_type <- match.arg(file_type)
   date_format = "%Y%m%d"
+
+  # Put min and max issue date for each file into vectors the same length as
+  # `files_list`.
   switch(file_type,
          daily = {
-           start_dates <- as.Date(
+           start_issue_dates <- as.Date(
              sub("^.*/.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
              format = date_format
            )
-           end_dates <- start_dates
+           end_issue_dates <- start_issue_dates
          },
          rollup = {
            rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
-           start_dates <- as.Date(
+           start_issue_dates <- as.Date(
              sub(rollup_pattern, "\\1", files_list),
              format = date_format
            )
-           end_dates <- as.Date(
+           end_issue_dates <- as.Date(
              sub(rollup_pattern, "\\2", files_list),
              format = date_format
            )
          }
   )
   
-  # Start_date depends on if we're doing model training or just corrections.
-  n_addl_days <- params$ref_lag
-  if (params$train_models) {
-    n_addl_days <- n_addl_days + params$training_days
-  }
-
-  start_date <- TODAY - n_addl_days
-  end_date <- TODAY - 1
+  # Find the earliest and latest issue dates needed for either training or testing.
+  #
+  # With current logic, we always need to include data for model training (in
+  # case cached models are not available for a "make_predictions"-only run and
+  # we need to train new models)
+  #
+  # We generate test and train data by applying the following filters:
+  #   - Test data is data where issue_date is in params$test_dates
+  #     (as a continuous filter, min(params$test_dates) <= issue_date <= max(params$test_dates) )
+  #   - Train data is data where issue_date < training_end_date; and
+  #     training_start_date < target_date <= training_end_date
+  #
+  # Train data doesn't have an explicit lower bound on issue_date, but we can
+  # derive one.
+  #
+  # Since target_date = reference_date + params$ref_lag and issue_date >=
+  # reference_date, the requirement that training_start_date < target_date
+  # also implies that issue date must be > training_start_date - params$ref_lag
+  result <- get_training_date_range(params)
+  training_start_date <- result$training_start_date
+  training_end_date <- result$training_end_date
+  start_issue <- min(training_start_date - params$ref_lag, params$test_dates)
+  end_issue <- max(training_end_date, params$test_dates)
   
   # Only keep files with data that falls at least somewhat between the desired
-  # start and end range dates.
+  # start and end issue dates.
   files_list <- files_list[
-    !(( start_dates < start_date & end_dates < start_date ) | 
-        ( start_dates > end_date & end_dates > end_date ))]
+    !(( start_issue_dates < start_issue & end_issue_dates < start_issue ) |
+        ( start_issue_dates > end_issue & end_issue_dates > end_issue ))]
   
   return(files_list)
 }

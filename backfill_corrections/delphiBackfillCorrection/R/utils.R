@@ -78,6 +78,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
     end_date <- TODAY - 1
     params$test_dates <- seq(start_date, end_date, by="days")
   } else {
+    if (length(params$test_dates) != 2) {
+      stop("`test_dates` setting in params must be a length-2 list of dates")
+    }
     params$test_dates <- seq(
       as.Date(params$test_dates[1]),
       as.Date(params$test_dates[2]),

@@ -296,6 +296,8 @@ get_training_date_range <- function(params) {
       # We know we'll be retraining models today.
       training_end_date <- TODAY
     } else {
+      # If only some models are in the cache, they will be used and those
+      # missing will be regenerated as-of the training end date.
       training_end_date <- max(as.Date(substr(model_files, 1, 10)))
     }
   }

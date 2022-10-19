@@ -152,7 +152,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
 #'
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
-training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
+training_days_check <- function(issue_date, training_days) {
   valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
   if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))

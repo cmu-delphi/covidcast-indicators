@@ -132,9 +132,13 @@ run_backfill <- function(df, params, training_end_date,
               filter(.data$issue_date > min(params$test_dates) - 7) %>%
               filter(.data$issue_date <= max(params$test_dates))
             updated_data <- frac_adj(geo_train_data, geo_test_data, geo_prior_test_data,
-                                     indicator, signal, geo_level, signal_suffix,
-                                     params$lambda, value_type, geo,
-                                     training_end_date, params$cache_dir,
+                                     indicator = indicator, signal = signal,
+                                     geo_level = geo_level, signal_suffix = signal_suffix,
+                                     lambda = params$lambda, value_type = value_type, geo = geo,
+                                     training_end_date = training_end_date,
+                                     model_save_dir = params$cache_dir,
+                                     taus = params$taus,
+                                     lp_solver = params$lp_solver,
                                      train_models = params$train_models,
                                      make_predictions = params$make_predictions)
             geo_train_data <- updated_data[[1]]

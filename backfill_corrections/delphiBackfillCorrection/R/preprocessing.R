@@ -22,7 +22,7 @@
 #' @importFrom stats setNames
 #'
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG) {
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # Full list of lags
   # +30 to have values for calculating 7-day averages
   lags <- min(df[[lag_col]]): (ref_lag + 30) 
@@ -174,7 +174,7 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF_LAG) {
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 

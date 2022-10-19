@@ -15,10 +15,9 @@
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, training_end_date, 
+run_backfill <- function(df, params, training_end_date,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
-                         signal_suffixes = c(""),
-                         indicator = "", signal = "") {
+                         signal_suffixes = c(""), indicator = "", signal = "") {
   df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
 
   geo_levels <- params$geo_levels
@@ -69,7 +68,9 @@ run_backfill <- function(df, params, training_end_date,
 
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
-      subdf <- fill_rows(subdf, refd_col, lag_col, min_refd, max_refd)
+      subdf <- fill_rows(
+        subdf, refd_col, lag_col, min_refd, max_refd, ref_lag = params$ref_lag
+      )
       
       for (signal_suffix in signal_suffixes) {
         # For each suffix listed in `signal_suffixes`, run training/testing
@@ -89,14 +90,20 @@ run_backfill <- function(df, params, training_end_date,
           # Handle different signal types
           if (value_type == "count") { # For counts data only
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
-            combined_df <- add_7davs_and_target(combined_df, "value_raw", refd_col, lag_col)
+            combined_df <- add_7davs_and_target(
+              combined_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
             
           } else if (value_type == "fraction") {
             combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
-            combined_num_df <- add_7davs_and_target(combined_num_df, "value_raw", refd_col, lag_col)
+            combined_num_df <- add_7davs_and_target(
+              combined_num_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
             
             combined_denom_df <- fill_missing_updates(subdf, denom_col, refd_col, lag_col)
-            combined_denom_df <- add_7davs_and_target(combined_denom_df, "value_raw", refd_col, lag_col)
+            combined_denom_df <- add_7davs_and_target(
+              combined_denom_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
             
             combined_df <- merge(
               combined_num_df, combined_denom_df,
@@ -228,7 +235,7 @@ main <- function(params) {
     files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
     file.remove(files_list)
   }
-    
+
   training_end_date <- as.Date(readLines(
     file.path(params$cache_dir, "training_end_date.txt")))
   msg_ts(str_interp("training_end_date is ${training_end_date}"))
@@ -294,10 +301,10 @@ main <- function(params) {
     run_backfill(input_data, params, training_end_date,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
-    
+
     if (params$train_models) {
       # Save the training end date to a text file.
-      writeLines(as.character(TODAY), 
+      writeLines(as.character(TODAY),
                  file.path(params$cache_dir, "training_end_date.txt"))
     }
   }

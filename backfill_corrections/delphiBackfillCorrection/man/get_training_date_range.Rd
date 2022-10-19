@@ -2,7 +2,7 @@
 % Please edit documentation in R/model.R
 \name{get_training_date_range}
 \alias{get_training_date_range}
-\title{Get dates for which to fetch input data}
+\title{Get date range of data to use for training models}
 \usage{
 get_training_date_range(params)
 }

@@ -263,7 +263,7 @@ generate_filename <- function(indicator, signal,
   return(filename)
 }
 
-#' Get dates for which to fetch input data
+#' Get date range of data to use for training models
 #'
 #' Calculate training end date, input data start date, and input
 #' data end date based on user settings.
@@ -292,7 +292,12 @@ get_training_date_range <- function(params) {
     # Assumes filename format like `2022-06-28_changehc_covid_state_lambda0.1_count_ca_lag5_tau0.9.model`
     # where the leading date is the training end date for that model.
     model_files <- list.files(params$cache_dir, "202[0-9]-[0-9]{2}-[0-9]{2}*.model")
-    training_end_date <- max(as.Date(substr(model_files, 1, 10)))
+    if (length(model_files) == 0) {
+      # We know we'll be retraining models today.
+      training_end_date <- TODAY
+    } else {
+      training_end_date <- max(as.Date(substr(model_files, 1, 10)))
+    }
   }
 
   training_start_date <- training_end_date - params$training_days

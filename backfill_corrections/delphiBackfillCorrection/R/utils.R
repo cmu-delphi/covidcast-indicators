@@ -78,6 +78,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
     end_date <- TODAY - 1
     params$test_dates <- seq(start_date, end_date, by="days")
   } else {
+    if (length(params$test_dates) != 2) {
+      stop("`test_dates` setting in params must be a length-2 list of dates")
+    }
     params$test_dates <- seq(
       as.Date(params$test_dates[1]),
       as.Date(params$test_dates[2]),
@@ -88,6 +91,10 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
     if (as.Date(params$training_end_date) > TODAY) {
       stop("training_end_date can't be in the future")
     }
+  }
+
+  if (!("test_lags" %in% names(params))) {
+    params$test_lags <- TEST_LAGS
   }
   
   return(params)
@@ -154,7 +161,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
 #'
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
-training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
+training_days_check <- function(issue_date, training_days) {
   valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
   if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))

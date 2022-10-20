@@ -142,7 +142,7 @@ frac_adj <- function(train_data, test_data, prior_test_data,
                      indicator, signal, geo_level, signal_suffix,
                      lambda, value_type, geo, 
                      training_end_date, model_save_dir, 
-                     taus = TAUS, lp_solver = LP_SOLVER,
+                     taus, lp_solver,
                      train_models = TRUE,
                      make_predictions = TRUE) {
   train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")

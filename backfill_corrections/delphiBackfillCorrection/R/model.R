@@ -314,3 +314,194 @@ get_training_date_range <- function(params) {
     "training_end_date"=training_end_date
   ))
 }
+
+train_models <- function(df_list, params, model_combos,
+                         refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
+                         signal_suffixes = c(""), indicator = "", signal = "") {
+  make_predictions_or_train(df_list, params, mode = "train_models", model_combos = model_combos,
+                            issued_col = issued_col, signal_suffixes = signal_suffixes,
+                            indicator = indicator, signal = signal))
+}
+
+make_predictions <- function(df_list, params,
+                         refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
+                         signal_suffixes = c(""), indicator = "", signal = "") {
+  make_predictions_or_train(df_list, params, mode = "make_predictions",
+                            refd_col = refd_col, lag_col = lag_col,
+                            issued_col = issued_col, signal_suffixes = signal_suffixes,
+                            indicator = indicator, signal = signal)
+}
+
+make_predictions_or_train <- function(df_list, params, mode = c("make_predictions", "train_models"), model_combos = data.frame(),
+                         refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
+                         signal_suffixes = c(""), indicator = "", signal = "") {
+  mode <- match.args(mode)
+
+  for (geo_level in params$geo_levels) {
+    msg_ts(str_interp("geo level ${geo_level}"))
+
+    if (mode == "make_predictions") {
+      test_data_list <- list()
+      coef_list <- list()
+
+      for (value_type in params$value_types) {
+        for (signal_suffix in signal_suffixes) {
+          key <- make_key(value_type, signal_suffix)
+          test_data_list[[key]] <- list()
+          coef_list[[key]] <- list()
+        }
+      }
+    }
+
+    # Process each location
+    for (geo in names(df_list[[geo_level]])) {
+      msg_ts(str_interp("Processing ${geo} geo group"))
+      subdf <- df_list[[geo_level]][[geo]]
+
+      for (signal_suffix in signal_suffixes) {
+        # Run training/testing for each suffix listed in `signal_suffixes`.
+        # Main use case is for quidel which has overall and age-based signals.
+        result <- suffix_pad_col_names(signal_suffix, params)
+        num_col <- result$num_col
+        denom_col <- result$denom_col
+
+        for (value_type in params$value_types) {
+          if (mode == "train_models") {
+            # Before we do the expensive 7dav calculations, check that some
+            # models actually need this data.
+            if (nrow(
+              filter(model_combos[[geo_level]],
+                .data$geo == .env$geo,
+                .data$signal_suffix == .env$signal_suffix,
+                .data$value_type == .env$value_type
+              )) == 0) {
+              next
+            }
+          }
+          msg_ts(str_interp("value type ${value_type}"))
+          # Handle different signal types
+          if (value_type == "count") { # For counts data only
+            combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
+            combined_df <- add_7davs_and_target(
+              combined_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
+
+          } else if (value_type == "fraction") {
+            combined_num_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
+            combined_num_df <- add_7davs_and_target(
+              combined_num_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
+
+            combined_denom_df <- fill_missing_updates(subdf, denom_col, refd_col, lag_col)
+            combined_denom_df <- add_7davs_and_target(
+              combined_denom_df, "value_raw", refd_col, lag_col, ref_lag = params$ref_lag
+            )
+
+            combined_df <- merge(
+              combined_num_df, combined_denom_df,
+              by=c(refd_col, issued_col, lag_col, "target_date"), all.y=TRUE,
+              suffixes=c("_num", "_denom")
+            )
+          }
+          combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
+          combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
+
+          if (mode == "train_models") {
+            # Make training data
+            geo_data <- combined_df %>%
+              filter(.data$issue_date < training_end_date) %>%
+              filter(.data$target_date <= training_end_date) %>%
+              filter(.data$target_date > training_start_date) %>%
+              drop_na()
+
+            if (nrow(geo_data) <= 200) next
+          }
+          if (mode == "make_predictions") {
+            # Make testing data
+            geo_data <- combined_df %>%
+              filter(.data$issue_date %in% params$test_dates) %>%
+              drop_na()
+
+            if (nrow(geo_data) == 0) next
+          }
+
+          if (value_type == "fraction") {
+            # Get empty df with same column names as `combined_df`
+            geo_prior_test_data <- combined_df[FALSE,]
+            if (mode == "train_models") {
+              geo_prior_test_data = combined_df %>%
+                filter(.data$issue_date > min(params$test_dates) - 7) %>%
+                filter(.data$issue_date <= max(params$test_dates))
+            }
+
+            # Use beta prior approach to adjust fractions
+            geo_data <- frac_adj(geo_train_data, geo_prior_test_data, params)
+          }
+
+          ## TODO: need to save to cache
+          ## Also save:
+          # sub_max_raw = sqrt(max(train_data[[value_col]])) / 2
+          max_raw = sqrt(max(geo_train_data$value_raw))
+          for (test_lag in params$test_lags) {
+            msg_ts(str_interp("test lag ${test_lag}"))
+            geo_data <- data_filteration(geo_data, params$lag_pad, test_lag)
+
+            if (nrow(geo_data) == 0) {
+              msg_ts(str_interp(
+                "Not enough data to either train or test for test_lag ${test_lag}, skipping"
+              ))
+              next
+            }
+
+            updated_data <- add_sqrtscale(geo_data, max_raw, "value_raw")
+            geo_data <- updated_data[[1]]
+            sqrtscale <- updated_data[[2]]
+
+            covariates <- list(
+              Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),
+              paste0(WEEKDAYS_ABBR, "_ref"), WEEK_ISSUES, SLOPE, sqrtscale
+            )
+            params_list <- c(YITL, as.vector(unlist(covariates)))
+
+            # Model training and testing
+            msg_ts("Training or loading models")
+            prediction_results <- model_training_and_testing(
+              geo_data, covariates = params_list, mode = mode
+            )
+
+            # Model objects are saved during training, so only need to export
+            # output if making predictions/corrections
+            if (mode == "make_predictions") {
+              msg_ts("Generating predictions")
+              test_data <- prediction_results[[1]]
+              coefs <- prediction_results[[2]]
+              test_data <- evaluate(test_data, params$taus)
+
+              key <- make_key(value_type, signal_suffix)
+              idx <- length(test_data_list[[key]]) + 1
+              test_data_list[[key]][[idx]] <- test_data
+              coef_list[[key]][[idx]] <- coefs
+            }
+          }# End for test lags
+        }# End for value types
+      }# End for signal suffixes
+
+      if (mode == "make_predictions") {
+        for (value_type in params$value_types) {
+          for (signal_suffix in signal_suffixes) {
+            key <- make_key(value_type, signal_suffix)
+            test_combined <- bind_rows(test_data_list[[key]])
+            coef_combined <- bind_rows(coef_list[[key]])
+            export_test_result(test_combined, coef_combined,
+                               indicator, signal,
+                               geo_level, geo, signal_suffix, params$lambda,
+                               training_end_date,
+                               value_type, export_dir=params$export_dir)
+          }
+        }
+      }
+
+    }# End for geo list
+  }# End for geo type
+}
+

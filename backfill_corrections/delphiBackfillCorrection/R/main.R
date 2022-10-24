@@ -17,10 +17,6 @@
 run_backfill <- function(df, params,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
-  result <- get_training_date_range(params)
-  training_start_date <- result$training_start_date
-  training_end_date <- result$training_end_date
-
   df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
 
   geo_levels <- params$geo_levels
@@ -118,9 +114,9 @@ run_backfill <- function(df, params,
           combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
 
           geo_train_data <- combined_df %>%
-            filter(.data$issue_date < training_end_date) %>%
-            filter(.data$target_date <= training_end_date) %>%
-            filter(.data$target_date > training_start_date) %>%
+            filter(.data$issue_date < params$training_end_date) %>%
+            filter(.data$target_date <= params$training_end_date) %>%
+            filter(.data$target_date > params$training_start_date) %>%
             drop_na()
           geo_test_data <- combined_df %>%
             filter(.data$issue_date %in% params$test_dates) %>%
@@ -138,7 +134,7 @@ run_backfill <- function(df, params,
                                      indicator = indicator, signal = signal,
                                      geo_level = geo_level, signal_suffix = signal_suffix,
                                      lambda = params$lambda, value_type = value_type, geo = geo,
-                                     training_end_date = training_end_date,
+                                     training_end_date = params$training_end_date,
                                      model_save_dir = params$cache_dir,
                                      taus = params$taus,
                                      lp_solver = params$lp_solver,
@@ -181,7 +177,7 @@ run_backfill <- function(df, params,
               lambda = params$lambda, test_lag = test_lag, geo = geo,
               value_type = value_type, model_save_dir = params$cache_dir,
               indicator = indicator, signal = signal, geo_level = geo_level,
-              signal_suffix =signal_suffix, training_end_date = training_end_date,
+              signal_suffix =signal_suffix, training_end_date = params$training_end_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
             )
@@ -212,7 +208,7 @@ run_backfill <- function(df, params,
             export_test_result(test_combined, coef_combined, 
                                indicator, signal, 
                                geo_level, geo, signal_suffix, params$lambda,
-                               training_end_date,
+                               params$training_end_date,
                                value_type, export_dir=params$export_dir)
           }
         }
@@ -254,7 +250,13 @@ main <- function(params) {
       options(mc.cores = min(params$parallel_max_cores, max(floor(cores / 2), 1L)))
     }
   }
-  
+
+  # Training start and end dates are the same for all indicators, so we can fetch
+  # at the beginning.
+  result <- get_training_date_range(params)
+  params$training_start_date <- result$training_start_date
+  params$training_end_date <- result$training_end_date
+
   # Loop over every indicator + signal combination.
   for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
     input_group <- INDICATORS_AND_SIGNALS[group_i,]

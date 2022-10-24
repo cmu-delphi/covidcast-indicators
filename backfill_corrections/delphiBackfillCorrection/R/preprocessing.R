@@ -227,3 +227,52 @@ add_params_for_dates <- function(df, refd_col, lag_col) {
   
   return (as.data.frame(df))
 }
+
+#' Create and filter state and county dfs from overall df
+#'
+#' @importFrom dplyr filter %>% group_by across everything summarize ungroup select
+#' @importFrom rlang .data
+make_geo_level_dfs <- function(df_raw, params, issued_col, refd_col, lag_col) {
+  if (!params$train_models) {
+  # Make df for each geo_level
+  df <- list()
+  if ("state" %in% params$geo_levels) {
+    # Drop county field and make new "geo_value" field from "state_id".
+    # Aggregate counties up to state level
+    agg_cols <- c("geo_value", issued_col, refd_col, lag_col)
+    # Sum all non-grouping columns. Summarized columns keep original names
+    df$state <- df_raw %>%
+      select(-.data$geo_value, geo_value = .data$state_id) %>%
+      group_by(across(agg_cols)) %>%
+      summarize(across(everything(), sum)) %>%
+      ungroup()
+  }
+  if ("county" %in% params$geo_levels) {
+    # Keep only 200 most populous (within the US) counties
+    top_200_geos <- get_populous_counties()
+    df$county <- filter(df_raw, .data$geo_value %in% top_200_geos)
+  }
+
+  return(df)
+}
+
+#' Create list of geo-separated dfs for each geo_level in overall df
+#'
+#' @importFrom dplyr group_split %>%
+#' @importFrom purrr set_names map_chr
+split_by_geo_and_fill <- function(df, params, refd_col, lag_col) {
+  for (geo_level in params$geo_levels) {
+    msg_ts("Splitting data into geo groups")
+    df[[geo_level]] <- group_split(df[[geo_level]], .data$geo_value) %>%
+      set_names(map_chr(., ~.x$geo_value[1]))
+
+    min_refd <- min(df[[geo_level]])
+    max_refd <- max(df[[geo_level]])
+    df[[geo_level]] <- fill_rows(
+      df[[geo_level]], refd_col, lag_col, min_refd, max_refd, ref_lag = params$ref_lag
+    )
+  }
+
+  return(df)
+}
+

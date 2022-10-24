@@ -60,7 +60,10 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
 #' @template params-template
 #' @param sub_dir string specifying the indicator-specific directory within
 #'     the general input directory `params$input_dir`
-get_files_list <- function(indicator, signal, params, sub_dir) {
+get_files_list <- function(indicator, signal, params, sub_dir,
+                           mode = c("make_predictions", "train_models")) {
+  mode <- match.args(mode)
+
   # Make sure we're reading in both 4-week rollup and daily files.
   if (!missing(sub_dir)) {
     input_dir <- file.path(params$input_dir, sub_dir)
@@ -76,11 +79,11 @@ get_files_list <- function(indicator, signal, params, sub_dir) {
   daily_input_files <- list.files(
       input_dir, pattern = daily_pattern, full.names = TRUE
     ) %>%
-    subset_valid_files("daily", params)
+    subset_valid_files("daily", params, mode)
   rollup_input_files <- list.files(
       input_dir, pattern = rollup_pattern, full.names = TRUE
     ) %>%
-    subset_valid_files("rollup", params)
+    subset_valid_files("rollup", params, mode)
   
   return(c(daily_input_files, rollup_input_files))
 }
@@ -93,8 +96,12 @@ get_files_list <- function(indicator, signal, params, sub_dir) {
 #' @param files_list character vector of input files of a given `file_type`
 #' @template file_type-template
 #' @template params-template
-subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
+subset_valid_files <- function(files_list, file_type = c("daily", "rollup"),
+                               params,
+                               mode = c("make_predictions", "train_models")) {
+  mode <- match.args(mode)
   file_type <- match.arg(file_type)
+
   date_format = "%Y%m%d"
   switch(file_type,
          daily = {
@@ -117,9 +124,10 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
          }
   )
   
+  ## TODO: need to update this with changes from `ndefries/bc-input-file-dates` branch
   # Start_date depends on if we're doing model training or just corrections.
   n_addl_days <- params$ref_lag
-  if (params$train_models) {
+  if (mode == "train_models") {
     n_addl_days <- n_addl_days + params$training_days
   }
 
@@ -149,4 +157,50 @@ create_name_pattern <- function(indicator, signal,
          daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}.parquet$"),
          rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
   )
+}
+
+get_data <- function(params, indicator, signal, sub_dir,
+                     signal_suffixes = c(""),
+                     mode = c("make_predictions", "train_models")) {
+  mode <- match.args(mode)
+
+  files_list <- get_files_list(indicator, signal, params, sub_dir, mode)
+  if (length(files_list) == 0) {
+    warning(str_interp(
+      "No files found for indicator ${indicator} signal ${signal}, skipping"
+    ))
+    next
+  }
+
+  msg_ts("Reading in and combining associated files")
+  input_data <- lapply(
+    files_list,
+    function(file) {read_data(file)}
+  ) %>%
+    bind_rows()
+
+  if (nrow(input_data) == 0) {
+    warning(str_interp(
+      "No data available for indicator ${indicator} signal ${signal}, skipping"
+    ))
+    next
+  }
+
+  # Check data type and required columns
+  msg_ts("Validating input data")
+  for (value_type in params$value_types) {
+    msg_ts(str_interp("for ${value_type}"))
+    result <- validity_checks(
+      input_data, value_type,
+      params$num_col, params$denom_col, name_suffix
+    )
+    input_data <- result[["df"]]
+  }
+
+  # Check available training days
+  if (mode == "train_models") {
+    training_days_check(input_data$issue_date, params$training_days)
+  }
+
+  return(input_data)
 }

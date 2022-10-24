@@ -276,3 +276,7 @@ split_by_geo_and_fill <- function(df, params, refd_col, lag_col) {
   return(df)
 }
 
+#' A rough filtration to save memory
+rough_lag_filter <- function(df, params) {
+  return(filter(df, .data$lag < params$ref_lag + 30))
+}

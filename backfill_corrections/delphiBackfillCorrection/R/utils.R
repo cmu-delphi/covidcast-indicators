@@ -209,6 +209,20 @@ make_key <- function(value_type, signal_suffix) {
   return(key)
 }
 
+#' Combine signal_suffix with params-provided value column names
+suffix_pad_col_names <- function(signal_suffix, params) {
+  if (signal_suffix != "") {
+    msg_ts(str_interp("signal suffix ${signal_suffix}"))
+    num_col <- paste(params$num_col, signal_suffix, sep = "_")
+    denom_col <- paste(params$denom_col, signal_suffix, sep = "_")
+  } else {
+    num_col <- params$num_col
+    denom_col <- params$denom_col
+  }
+
+  return(list("num_col" = num_col, "denom_col" = denom_col))
+}
+
 #' Check if an element in params exists and is not missing
 #'
 #' @template params-template

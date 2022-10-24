@@ -66,7 +66,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
   if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
-  if (!("geo_levels" %in% names(params))) {params$geo_levels <- c("state", "county")}
+  if (!("geo_levels" %in% names(params)) || length(params$geo_levels) == 0) {
+    params$geo_levels <- c("state", "county")
+  }
   if (!("value_types" %in% names(params))) {params$value_types <- c("count", "fraction")}
 
   # Date parameters

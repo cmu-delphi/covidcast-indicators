@@ -280,3 +280,32 @@ split_by_geo_and_fill <- function(df, params, refd_col, lag_col) {
 rough_lag_filter <- function(df, params) {
   return(filter(df, .data$lag < params$ref_lag + 30))
 }
+
+get_sqrt_max_val <- function(df, params, value_col = "value_raw",
+                        mode = c("make_predictions", "train_models"),
+                        indicator, signal,
+                        geo_level, geo="", signal_suffix, value_type = "",
+                        test_lag="", filtered = FALSE) {
+  mode <- match.args(mode)
+  max_file_name <- generate_filename(indicator=indicator, signal=signal,
+                                       geo_level=geo_level, signal_suffix=signal_suffix,
+                                       training_end_date=params$training_end_date,
+                                       geo=geo, value_type=value_type,
+                                       test_lag=test_lag, file_extension = "")
+  max_file_name <- paste0(max_file_name, ifelse(filtered, "_filtered", "_unfiltered"), ".max")
+  max_path <- file.path(params$cache_dir, max_file_name)
+
+  if (mode == "make_predictions") {
+    # Load max value from cache invisibly. Object has the same name as the
+    # original model object, `max_val`.
+    msg_ts(str_interp("Loading from ${max_path}"))
+    load(max_path)
+  } else if (mode == "train_models") {
+    # Calculate and save to cache.
+    max_val <- sqrt(max(df[[value_col]]))
+    create_dir_not_exist(dirname(max_path))
+    save(max_val, file=max_path)
+  }
+
+  return(max_val)
+}

@@ -39,7 +39,7 @@ run_backfill <- function(params, input_subdir,
                                   .env$geo_level, .data$signal_suffix, params$lambda,
                                   training_end_date=params$training_end_date, geo=.data$geo,
                                   value_type = .data$value_type, test_lag=.data$test_lag,
-                                  tau=.data$tau, model_mode = TRUE),
+                                  tau=.data$tau, file_extension=".model"),
         in_cache = file.exists(file.path(params$cache_dir, .data$model_name)))
       )
   }

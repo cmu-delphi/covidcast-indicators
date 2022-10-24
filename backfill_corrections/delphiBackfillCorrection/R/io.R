@@ -33,7 +33,7 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
   base_name <- generate_filename(indicator=indicator, signal=signal,
                                  geo_level=geo_level, signal_suffix=signal_suffix,
                                  lambda=lambda, training_end_date=training_end_date,
-                                 geo=geo, value_type=value_type, model_mode=FALSE)
+                                 geo=geo, value_type=value_type, file_extension=".csv.gz")
 
   signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")
   if (nrow(test_data) == 0) {

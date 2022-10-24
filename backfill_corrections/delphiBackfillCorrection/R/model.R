@@ -8,7 +8,7 @@
 #' @importFrom rlang .data .env
 #'
 #' @export
-data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
+data_filtration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
   if (test_lag <= 14){
     test_lag_pad=lag_pad
     test_lag_pad1=0
@@ -40,35 +40,25 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
 #' @template value_col-template
 #' 
 #' @export
-add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
-  if (!(value_col %in% colnames(train_data))){
-    stop("value raw does not exist in training data!")
-  }
-  
-  if (!(value_col %in% colnames(test_data))){
-    stop("value raw does not exist in testing data!")
+add_sqrtscale<- function(df, max_raw, filtered_max_raw, value_col) {
+  if (!(value_col %in% colnames(df))){
+    stop("value column does not exist in input data!")
   }
   
   sqrtscale = c()
-  sub_max_raw = sqrt(max(train_data[[value_col]])) / 2
-  
   for (split in seq(0, 3)){
-    if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
+    if ((filtered_max_raw / 2) < (max_raw * (split+1) * 0.1)) break
     y0_col <- paste0("sqrty", as.character(split))
-    train_data[y0_col] = 0
-    test_data[y0_col] = 0
+    df[y0_col] = 0
     qv_pre = max_raw * split * 0.2
     qv_next = max_raw * (split+1) * 0.2
 
-    train_data[(train_data[[value_col]] <= (qv_next)^2)
-               & (train_data[[value_col]] > (qv_pre)^2), 
+    df[(df[[value_col]] <= (qv_next)^2)
+               & (df[[value_col]] > (qv_pre)^2),
                y0_col] = 1
-    test_data[(test_data[[value_col]] <= (qv_next)^2)
-              & (test_data[[value_col]] > (qv_pre)^2), 
-              y0_col] = 1
     sqrtscale[split+1] = y0_col
   }
-  return (list(train_data, test_data, sqrtscale))
+  return (list(df = df, sqrtscale = sqrtscale))
 }
 
 #' Fetch model and use to generate predictions/perform corrections
@@ -219,7 +209,7 @@ get_model <- function(model_path, train_data, covariates, tau,
 #' @param dw string, indicate the day of a week
 #' @param tau decimal quantile to be predicted. Values must be between 0 and 1.
 #' @param beta_prior_mode bool, indicate whether it is for a beta prior model
-#' @param model_mode bool, indicate whether the file name is for a model
+#' @param file_extension string
 #' @param training_end_date the most recent training date
 #'
 #' @return path to file containing model object
@@ -230,7 +220,7 @@ generate_filename <- function(indicator, signal,
                               geo_level, signal_suffix, lambda,
                               training_end_date="", geo="", 
                               value_type = "", test_lag="", tau="", dw="",
-                              beta_prior_mode = FALSE, model_mode = TRUE) {
+                              beta_prior_mode = FALSE, file_extension=".model") {
   if (lambda != "") {
     lambda <- str_interp("lambda${lambda}")
   }
@@ -245,11 +235,7 @@ generate_filename <- function(indicator, signal,
   } else {
     beta_prior <- ""
   }
-  if (model_mode) {
-    file_type <- ".model"
-  } else {
-    file_type <- ".csv.gz"
-  }
+
   components <- c(as.character(training_end_date), beta_prior,
                   indicator, signal, signal_suffix,
                   geo_level, lambda, value_type,
@@ -258,7 +244,7 @@ generate_filename <- function(indicator, signal,
   filename = paste0(
     # Drop any empty strings.
     paste(components[components != ""], collapse="_"),
-    file_type
+    file_extension
   )
   return(filename)
 }
@@ -332,7 +318,9 @@ make_predictions <- function(df_list, params,
                             indicator = indicator, signal = signal)
 }
 
-make_predictions_or_train <- function(df_list, params, mode = c("make_predictions", "train_models"), model_combos = data.frame(),
+make_predictions_or_train <- function(df_list, params,
+                         mode = c("make_predictions", "train_models"),
+                         model_combos = data.frame(),
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
   mode <- match.args(mode)
@@ -438,13 +426,16 @@ make_predictions_or_train <- function(df_list, params, mode = c("make_prediction
             geo_data <- frac_adj(geo_train_data, geo_prior_test_data, params)
           }
 
-          ## TODO: need to save to cache
-          ## Also save:
-          # sub_max_raw = sqrt(max(train_data[[value_col]])) / 2
-          max_raw = sqrt(max(geo_train_data$value_raw))
+          max_raw = get_sqrt_max_val(
+            geo_data, params, value_col = "value_raw", mode = mode,
+            indicator=indicator, signal=signal,
+            geo_level=geo_level, geo=geo,
+            signal_suffix=signal_suffix, value_type=value_type,
+            filtered = FALSE
+          )
           for (test_lag in params$test_lags) {
             msg_ts(str_interp("test lag ${test_lag}"))
-            geo_data <- data_filteration(geo_data, params$lag_pad, test_lag)
+            geo_data <- data_filtration(geo_data, params$lag_pad, test_lag)
 
             if (nrow(geo_data) == 0) {
               msg_ts(str_interp(
@@ -453,9 +444,18 @@ make_predictions_or_train <- function(df_list, params, mode = c("make_prediction
               next
             }
 
-            updated_data <- add_sqrtscale(geo_data, max_raw, "value_raw")
-            geo_data <- updated_data[[1]]
-            sqrtscale <- updated_data[[2]]
+            filtered_max_raw = get_sqrt_max_val(
+              geo_data, params, value_col = "value_raw", mode = mode,
+              indicator=indicator, signal=signal,
+              geo_level=geo_level, geo=geo,
+              signal_suffix=signal_suffix, value_type=value_type,
+              test_lag=test_lag, filtered = TRUE
+            )
+            updated_data <- add_sqrtscale(
+              geo_data, max_raw, filtered_max_raw, value_col = "value_raw"
+            )
+            geo_data <- updated_data$df
+            sqrtscale <- updated_data$sqrtscale
 
             covariates <- list(
               Y7DAV, paste0(WEEKDAYS_ABBR, "_issue"),

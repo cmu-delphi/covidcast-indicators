@@ -1,7 +1,8 @@
 SHELL:=/bin/bash
 
 # Change training options during `make` call via `make <command> OPTIONS="<options>"`
-OPTIONS=--train_models --make_predictions
+# Allowed OPTIONS flags are `--train_models` and `--make_predictions`
+OPTIONS=
 
 PYTHON:=env/bin/python
 USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)

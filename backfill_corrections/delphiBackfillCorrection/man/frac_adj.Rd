@@ -16,6 +16,7 @@ frac_adj(
   value_type,
   geo,
   training_end_date,
+  training_start_date,
   model_save_dir,
   taus,
   lp_solver,
@@ -54,7 +55,9 @@ single input dataframe, as with `quidel`'s age buckets.}
 \item{geo}{string specifying the name of the geo region (e.g. FIPS
 code for counties)}
 
-\item{training_end_date}{the most recent training date}
+\item{training_end_date}{the latest target date and issue date included in training data}
+
+\item{training_start_date}{the earliest target date included in training data}
 
 \item{model_save_dir}{directory containing trained models}
 

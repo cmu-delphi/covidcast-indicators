@@ -13,8 +13,10 @@ the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
 }
 \description{
-Calculate training end date, input data start date, and input
-data end date based on user settings.
+Calculate training start and end dates based on user settings.
+`training_start_date` is the minimum allowed target date when selecting
+training data to use. `training_end_date` is the maximum allowed target
+date and maximum allowed issue date.
 }
 \details{
 Cases:

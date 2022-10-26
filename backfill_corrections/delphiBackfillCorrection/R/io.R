@@ -22,17 +22,19 @@ read_data <- function(input_dir) {
 #' @template lambda-template
 #' @template value_type-template
 #' @template export_dir-template
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #'
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
                                geo_level, geo, signal_suffix, lambda,
-                               training_end_date,
+                               training_end_date, training_start_date,
                                value_type, export_dir) {
   base_name <- generate_filename(indicator=indicator, signal=signal,
                                  geo_level=geo_level, signal_suffix=signal_suffix,
                                  lambda=lambda, training_end_date=training_end_date,
+                                 training_start_date=training_start_date,
                                  geo=geo, value_type=value_type, model_mode=FALSE)
 
   signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")

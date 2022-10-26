@@ -135,6 +135,7 @@ run_backfill <- function(df, params,
                                      geo_level = geo_level, signal_suffix = signal_suffix,
                                      lambda = params$lambda, value_type = value_type, geo = geo,
                                      training_end_date = params$training_end_date,
+                                     training_start_date = params$training_start_date,
                                      model_save_dir = params$cache_dir,
                                      taus = params$taus,
                                      lp_solver = params$lp_solver,
@@ -177,7 +178,9 @@ run_backfill <- function(df, params,
               lambda = params$lambda, test_lag = test_lag, geo = geo,
               value_type = value_type, model_save_dir = params$cache_dir,
               indicator = indicator, signal = signal, geo_level = geo_level,
-              signal_suffix =signal_suffix, training_end_date = params$training_end_date,
+              signal_suffix =signal_suffix,
+              training_end_date = params$training_end_date,
+              training_start_date = params$training_start_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
             )
@@ -206,10 +209,12 @@ run_backfill <- function(df, params,
             test_combined <- bind_rows(test_data_list[[key]]) 
             coef_combined <- bind_rows(coef_list[[key]]) 
             export_test_result(test_combined, coef_combined, 
-                               indicator, signal, 
-                               geo_level, geo, signal_suffix, params$lambda,
-                               params$training_end_date,
-                               value_type, export_dir=params$export_dir)
+                               indicator=indicator, signal=signal,
+                               geo_level=geo_level, geo=geo,
+                               signal_suffix=signal_suffix, lambda=params$lambda,
+                               training_end_date=params$training_end_date,
+                               training_start_date=params$training_start_date,
+                               value_type=value_type, export_dir=params$export_dir)
           }
         }
       }

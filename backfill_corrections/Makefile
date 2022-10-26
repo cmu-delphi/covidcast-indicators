@@ -55,19 +55,19 @@ run-local:
 
 run:
 	docker run --rm --pull=always \
-	    -v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \
-	    -v "`realpath $(USR_EXPORT_DIR)`:/backfill_corrections/${EXPORT_DIR}" \
-	    -v "`realpath $(USR_INPUT_DIR)`:/backfill_corrections/${INPUT_DIR}" \
-	    -v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
-	    -v "${PWD}"/params.json:/backfill_corrections/params.json \
+		-v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \
+		-v "`realpath $(USR_EXPORT_DIR)`:/backfill_corrections/${EXPORT_DIR}" \
+		-v "`realpath $(USR_INPUT_DIR)`:/backfill_corrections/${INPUT_DIR}" \
+		-v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
+		-v "${PWD}"/params.json:/backfill_corrections/params.json \
 		-i "${DOCKER_IMAGE}:${DOCKER_TAG}" \
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
- 	aws configure set aws_access_key_id $(AWS_KEY_ID)
- 	aws configure set aws_secret_access_key $(AWS_SECRET_KEY)
- 	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
- 	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
+	aws configure set aws_access_key_id $(AWS_KEY_ID)
+	aws configure set aws_secret_access_key $(AWS_SECRET_KEY)
+	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
+	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 
 pipeline: setup run publish teardown
 

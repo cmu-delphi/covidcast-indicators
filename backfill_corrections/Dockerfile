@@ -15,7 +15,9 @@ ENV LD_LIBRARY_PATH $GUROBI_HOME/lib
 RUN ln -s -f /usr/share/zoneinfo/America/New_York /etc/localtime
 
 RUN apt-get update && apt-get install -qq -y \
-    libglpk-dev
+    libglpk-dev \
+    python3.8-venv \
+    python3.8-dev
 
 RUN install2.r --error \
     roxygen2 \

@@ -299,7 +299,7 @@ get_training_date_range <- function(params) {
     # `20220628_20220529_changehc_covid_state_lambda0.1_count_ca_lag5_tau0.9.model`
     # where the leading date is the training end date for that model, and the
     # second date is the training start date.
-    model_files <- list.files(params$cache_dir, "202[0-9]{5}_202[0-9]{5}*.model")
+    model_files <- list.files(params$cache_dir, "^202[0-9]{5}_202[0-9]{5}.*[.]model$")
     if (length(model_files) == 0) {
       # We know we'll be retraining models today.
       training_end_date <- TODAY

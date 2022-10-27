@@ -240,7 +240,7 @@ main <- function(params) {
   
   if (params$train_models) {
     msg_ts("Removing stored models")
-    files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
+    files_list <- list.files(params$cache_dir, pattern="[.]model$", full.names = TRUE)
     file.remove(files_list)
   }
 

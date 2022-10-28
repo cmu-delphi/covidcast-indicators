@@ -64,8 +64,8 @@ run:
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
- 	aws configure set aws_access_key_id AWS_KEY_ID
- 	aws configure set aws_secret_access_key AWS_SECRET_KEY
+ 	aws configure set aws_access_key_id $(AWS_KEY_ID)
+ 	aws configure set aws_secret_access_key $(AWS_SECRET_KEY)
  	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
  	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 

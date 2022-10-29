@@ -141,7 +141,9 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   result <- get_training_date_range(params)
   training_start_date <- result$training_start_date
   training_end_date <- result$training_end_date
-  start_issue <- min(training_start_date - params$ref_lag, params$test_dates)
+  ## TODO: right now, this gets both training and testing data regardless of
+  #  which mode is selected
+  start_issue <- min(training_start_date - params$ref_lag, params$test_dates - params$ref_lag)
   end_issue <- max(training_end_date, params$test_dates)
   
   # Only keep files with data that falls at least somewhat between the desired

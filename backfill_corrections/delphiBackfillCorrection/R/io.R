@@ -119,12 +119,9 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
          }
   )
   
-  # Start_date depends on if we're doing model training or just corrections.
-  n_addl_days <- params$ref_lag
-  if (params$train_models) {
-    n_addl_days <- n_addl_days + params$training_days
-  }
-
+  ## TODO: right now, this gets both training and testing data regardless of
+  #  which mode is selected
+  n_addl_days <- params$ref_lag + params$training_days
   start_date <- TODAY - n_addl_days
   end_date <- TODAY - 1
   

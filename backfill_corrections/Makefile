@@ -71,7 +71,19 @@ publish:
 
 pipeline: setup run publish teardown
 
-# Make sure all required dirs exist. Set dir names to standard values for use in Docker.
+# Make sure all user-specified dirs exist locally; create them if not.
+# Reconfigure `params.json` to use fixed dir names, INPUT_DIR, etc, as defined
+# above.
+#
+# This is a convenience for working with Docker. It allows local dirs to all
+# be mounted in the Docker container's working directory,
+# `/backfill_corrections/` regardless of the actual locations of the local
+# dirs and whether their locations are provided in `params.json` as absolute
+# or relative paths.
+#
+# (An alternative approach would be to check if the user-provided dir paths
+# are each absolute or relative first, and only concat relative paths with
+# `/backfill_corrections/` in the mount step.)
 setup:
 	[ -f $(USR_INPUT_DIR) ] || mkdir -p $(USR_INPUT_DIR)
 	[ -f $(USR_CACHE_DIR) ] || mkdir -p $(USR_CACHE_DIR)

@@ -121,38 +121,59 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   )
   
   # Find the earliest and latest issue dates needed for either training or testing.
-  #
-  # With current logic, we always need to include data for model training (in
-  # case cached models are not available for a "make_predictions"-only run and
-  # we need to train new models)
-  #
-  # We generate test and train data by applying the following filters:
-  #   - Test data is data where issue_date is in params$test_dates
-  #     (as a continuous filter, min(params$test_dates) <= issue_date <= max(params$test_dates) )
-  #   - Train data is data where issue_date < training_end_date; and
-  #     training_start_date < target_date <= training_end_date
-  #
-  # Train data doesn't have an explicit lower bound on issue_date, but we can
-  # derive one.
-  #
-  # Since target_date = reference_date + params$ref_lag and issue_date >=
-  # reference_date, the requirement that training_start_date < target_date
-  # also implies that issue date must be > training_start_date - params$ref_lag
-  result <- get_training_date_range(params)
-  training_start_date <- result$training_start_date
-  training_end_date <- result$training_end_date
-  ## TODO: right now, this gets both training and testing data regardless of
-  #  which mode is selected
-  start_issue <- min(training_start_date - params$ref_lag, params$test_dates - params$ref_lag)
-  end_issue <- max(training_end_date, params$test_dates)
-  
+  result <- get_issue_date_range(params)
+  start_issue <- result$start_issue
+  end_issue <- result$end_issue
+
   # Only keep files with data that falls at least somewhat between the desired
   # start and end issue dates.
   files_list <- files_list[
     !(( start_issue_dates < start_issue & end_issue_dates < start_issue ) |
         ( start_issue_dates > end_issue & end_issue_dates > end_issue ))]
-  
+
   return(files_list)
+}
+
+#' Find the earliest and latest issue dates needed for either training or testing.
+#'
+#' With current logic, we always need to include data for model training (in
+#' case cached models are not available for a "make_predictions"-only run and
+#' we need to train new models).
+#'
+#' We generate test and train data by applying the following filters:
+#'   - Test data is data where issue_date is in params$test_dates
+#'     (as a continuous filter, min(params$test_dates) <= issue_date <= max(params$test_dates) )
+#'   - Train data is data where issue_date < training_end_date; and
+#'     training_start_date < target_date <= training_end_date
+#'
+#' Train data doesn't have an explicit lower bound on issue_date, but we can
+#' derive one.
+#'
+#' Since target_date = reference_date + params$ref_lag and issue_date >=
+#' reference_date, the requirement that training_start_date < target_date
+#' also implies that issue date must be > training_start_date - params$ref_lag
+#'
+#' @template params-template
+get_issue_date_range <- function(params) {
+  result <- get_training_date_range(params)
+
+  # Check that all training data is earlier than the earliest test date.
+  #
+  # It's inappropriate to make predictions of historical data based on a model
+  # trained using future data. If we want to make predictions for an old test
+  # date t0 (t0 < TODAY), we will always need to train a new model based on
+  # data t < t0.
+  assert(
+    result$training_end_date < min(params$test_dates),
+    "training end date must be earlier than the earliest test date to produce valid predictions"
+  )
+
+  ## TODO: right now, this gets both training and testing data regardless of
+  #  which mode is selected
+  start_issue <- result$training_start_date - params$ref_lag
+  end_issue <- max(params$test_dates)
+
+  return(list("start_issue" = start_issue, "end_issue" = end_issue))
 }
 
 #' Create pattern to match input files of a given type and signal

@@ -10,7 +10,8 @@ generate_filename(
   geo_level,
   signal_suffix,
   lambda,
-  training_end_date = "",
+  training_end_date,
+  training_start_date,
   geo = "",
   value_type = "",
   test_lag = "",
@@ -40,7 +41,9 @@ single input dataframe, as with `quidel`'s age buckets.}
 
 \item{lambda}{the level of lasso penalty}
 
-\item{training_end_date}{the most recent training date}
+\item{training_end_date}{the latest target date and issue date included in training data}
+
+\item{training_start_date}{the earliest target date included in training data}
 
 \item{geo}{string specifying the name of the geo region (e.g. FIPS
 code for counties)}

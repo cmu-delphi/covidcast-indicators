@@ -11,7 +11,9 @@ lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
 date_format = "%Y%m%d"
+training_days <- 7
 training_end_date <- as.Date("2022-01-01")
+training_start_date <- training_end_date - training_days
 
 create_dir_not_exist("./input")
 create_dir_not_exist("./output")
@@ -25,10 +27,10 @@ test_that("testing exporting the output file", {
   
   export_test_result(test_data, coef_data, indicator, signal, 
                      geo_level, geo="", signal_suffix, lambda,
-                     training_end_date,
+                     training_end_date, training_start_date,
                      value_type, params$export_dir)
-  prediction_file <- file.path(params$export_dir, "prediction_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv.gz")
-  coefs_file <- file.path(params$export_dir, "coefs_2022-01-01_chng_outpatient_state_lambda0.1_fraction.csv.gz")
+  prediction_file <- file.path(params$export_dir, "prediction_20220101_20211225_chng_outpatient_state_lambda0.1_fraction.csv.gz")
+  coefs_file <- file.path(params$export_dir, "coefs_20220101_20211225_chng_outpatient_state_lambda0.1_fraction.csv.gz")
 
   expect_true(file.exists(prediction_file))
   expect_true(file.exists(coefs_file))
@@ -74,6 +76,7 @@ test_that("testing creating file name pattern", {
 
 test_that("testing the filtration of the files for training and predicting", {
   params <- read_params("params-run.json", "params-run.json.template")
+  params$train_models <- TRUE
 
   daily_files_list <- c(file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet")),
                         file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet")),
@@ -95,6 +98,7 @@ test_that("testing the filtration of the files for training and predicting", {
 
 test_that("testing fetching list of files for training and predicting", {
   params <- read_params("params-run.json", "params-run.json.template")
+  params$train_models <- TRUE
 
   daily_data <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
@@ -105,7 +109,6 @@ test_that("testing fetching list of files for training and predicting", {
                                 str_interp("chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet"))
   rollup_data <- data.frame(test=TRUE)
   write_parquet(rollup_data, rollup_file_name)
-  
   
   files <- get_files_list(indicator, signal, params)
   expect_true(all(files == c(daily_file_name, rollup_file_name)))

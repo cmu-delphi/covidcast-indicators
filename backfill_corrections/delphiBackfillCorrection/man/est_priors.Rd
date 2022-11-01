@@ -22,6 +22,7 @@ est_priors(
   geo_level,
   signal_suffix,
   training_end_date,
+  training_start_date,
   model_save_dir,
   start = c(0, log(10)),
   base_pseudo_denom = 1000,
@@ -73,7 +74,9 @@ ending to be appended to standard value column names from
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
 
-\item{training_end_date}{the most recent training date}
+\item{training_end_date}{the latest target date and issue date included in training data}
+
+\item{training_start_date}{the earliest target date included in training data}
 
 \item{model_save_dir}{directory containing trained models}
 

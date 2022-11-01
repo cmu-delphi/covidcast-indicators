@@ -216,3 +216,19 @@ make_key <- function(value_type, signal_suffix) {
 params_element_exists_and_valid <- function(params, key) {
   return(key %in% names(params) && !is.null(params[[key]]) && !is.na(params[[key]]) && params[[key]] != "")
 }
+
+#' Assert a logical value
+#'
+#' Will issue a \code{stop} command if the given statement is false.
+#'
+#' @param statement a logical value
+#' @param msg a character string displayed as an additional message
+#'
+#' @export
+assert <- function(statement, msg="")
+{
+  if (!statement)
+  {
+    stop(msg, call.=(msg==""))
+  }
+}

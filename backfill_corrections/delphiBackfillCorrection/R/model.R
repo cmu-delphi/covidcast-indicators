@@ -279,13 +279,15 @@ generate_filename <- function(indicator, signal,
 #'
 #' @template params-template
 get_training_date_range <- function(params) {
+  default_end_date <- TODAY - params$testing_window - 1
+
   if (params$train_models) {
     if (params_element_exists_and_valid(params, "training_end_date")) {
       # Use user-provided end date.
       training_end_date <- as.Date(params$training_end_date)
     } else {
       # Default end date is today.
-      training_end_date <- TODAY
+      training_end_date <- default_end_date
     }
   } else {
     # Get end date from cached model files.
@@ -294,7 +296,7 @@ get_training_date_range <- function(params) {
     model_files <- list.files(params$cache_dir, "202[0-9]-[0-9]{2}-[0-9]{2}*.model")
     if (length(model_files) == 0) {
       # We know we'll be retraining models today.
-      training_end_date <- TODAY
+      training_end_date <- default_end_date
     } else {
       # If only some models are in the cache, they will be used and those
       # missing will be regenerated as-of the training end date.

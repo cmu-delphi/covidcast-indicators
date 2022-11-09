@@ -23,12 +23,11 @@ RUN install2.r --error \
     Rglpk \
     argparser
 
-RUN R -e 'devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")'
-RUN R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")'
+RUN R -e 'devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")' && \
+    R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")'
 
-ADD ./delphiBackfillCorrection /backfill_corrections/delphiBackfillCorrection/
-ADD ./Makefile /backfill_corrections/Makefile
-ADD ./run.R /backfill_corrections/run.R
 WORKDIR /backfill_corrections/
-RUN make lib
-RUN make install-R
+ADD ./delphiBackfillCorrection ./delphiBackfillCorrection/
+ADD [ "Makefile", "run.R", "./" ]
+
+RUN make lib && make install-R

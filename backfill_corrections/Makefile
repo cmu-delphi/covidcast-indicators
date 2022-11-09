@@ -60,9 +60,9 @@ run-local:
 	[ "$$?" -eq 1 ]
 
 run:
-	export GRB_WLSACCESSID=$(GRB_WLSACCESSID)
-	export GRB_WLSSECRET=$(GRB_WLSSECRET)
-	export GRB_LICENSEID=$(GRB_LICENSEID)
+	@export GRB_WLSACCESSID=$(GRB_WLSACCESSID)
+	@export GRB_WLSSECRET=$(GRB_WLSSECRET)
+	@export GRB_LICENSEID=$(GRB_LICENSEID)
 
 	docker run --rm --pull=always \
 		-v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \

@@ -15,9 +15,7 @@ ENV LD_LIBRARY_PATH $GUROBI_HOME/lib
 RUN ln -s -f /usr/share/zoneinfo/America/New_York /etc/localtime
 
 RUN apt-get update && apt-get install -qq -y \
-    libglpk-dev \
-    python3.8-venv \
-    python3.8-dev
+    libglpk-dev
 
 RUN install2.r --error \
     roxygen2 \
@@ -33,4 +31,4 @@ ADD ./Makefile /backfill_corrections/Makefile
 ADD ./run.R /backfill_corrections/run.R
 WORKDIR /backfill_corrections/
 RUN make lib
-RUN make install
+RUN make install-R

@@ -82,7 +82,7 @@ publish:
 	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
 	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 
-pipeline: setup run publish teardown
+pipeline: setup run publish teardown clean
 
 # Make sure all user-specified dirs exist locally; create them if not.
 # Reconfigure `params.json` to use fixed dir names, INPUT_DIR, etc, as defined
@@ -110,7 +110,7 @@ clean:
 	rm -f $(USR_EXPORT_DIR)/*.csv.gz
 
 # Restore dir names in params to user-provided values.
-teardown: clean
+teardown:
 	$(PYTHON) -m delphi_utils set input_dir $(USR_INPUT_DIR)
 	$(PYTHON) -m delphi_utils set cache_dir $(USR_CACHE_DIR)
 	$(PYTHON) -m delphi_utils set export_dir $(USR_EXPORT_DIR)

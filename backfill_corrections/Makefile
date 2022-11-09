@@ -9,6 +9,12 @@ USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
 USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
 USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
+# Gurobi license
+GRB_WLSACCESSID=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_WLSACCESSID)
+GRB_WLSSECRET=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_WLSSECRET)
+GRB_LICENSEID=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_LICENSEID)
+
+# AWS access info
 AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_access_key_id)
 AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_secret_access_key)
 S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
@@ -54,12 +60,19 @@ run-local:
 	[ "$$?" -eq 1 ]
 
 run:
+	export GRB_WLSACCESSID=$(GRB_WLSACCESSID)
+	export GRB_WLSSECRET=$(GRB_WLSSECRET)
+	export GRB_LICENSEID=$(GRB_LICENSEID)
+
 	docker run --rm --pull=always \
 		-v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \
 		-v "`realpath $(USR_EXPORT_DIR)`:/backfill_corrections/${EXPORT_DIR}" \
 		-v "`realpath $(USR_INPUT_DIR)`:/backfill_corrections/${INPUT_DIR}" \
 		-v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
 		-v "${PWD}"/params.json:/backfill_corrections/params.json \
+		--env GRB_WLSACCESSID \
+		--env GRB_WLSSECRET \
+		--env GRB_LICENSEID \
 		-i "${DOCKER_IMAGE}:${DOCKER_TAG}" \
 		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
 

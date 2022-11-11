@@ -136,7 +136,10 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   if (success < length(taus)) {return (NULL)}
   if (!make_predictions) {return (list())}
   
-  coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag)
+  coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag,
+                                    training_end_date=training_end_date,
+                                    training_start_date=training_start_date,
+                                    lambda=lambda)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))
   
   return (list(test_data, coef_combined_result))

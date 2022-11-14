@@ -45,7 +45,11 @@ install-R: delphiBackfillCorrection_1.0.tar.gz
 	R CMD INSTALL delphiBackfillCorrection_1.0.tar.gz
 
 install-python:
-	python3.8 -m venv env
+	if [[ `python3 -c 'import sys; print(sys.version_info.minor)'` -lt 8 ]]; then \
+	  echo 'python must be version 3.8 or higher'; \
+	  exit 1; \
+	fi
+	python3 -m venv env
 	source env/bin/activate && \
 	pip install wheel && \
 	pip install delphi_utils

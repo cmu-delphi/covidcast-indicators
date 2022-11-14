@@ -18,7 +18,7 @@ GRB_LICENSEID=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_LICENSEID)
 # AWS access info
 AWS_KEY_ID=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_access_key_id)
 AWS_SECRET_KEY=$(shell $(PYTHON) -m delphi_utils get post.aws_credentials.aws_secret_access_key)
-S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get bucket_name)
+S3_BUCKET=$(shell $(PYTHON) -m delphi_utils get post.bucket_name)
 
 DOCKER_IMAGE=ghcr.io/cmu-delphi/covidcast-indicators-backfill_corrections
 DOCKER_TAG=latest

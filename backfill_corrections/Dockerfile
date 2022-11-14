@@ -15,7 +15,9 @@ ENV LD_LIBRARY_PATH $GUROBI_HOME/lib
 RUN ln -s -f /usr/share/zoneinfo/America/New_York /etc/localtime
 
 RUN apt-get update && apt-get install -qq -y \
-    libglpk-dev
+    libglpk-dev\
+    python3-venv \
+    python3-dev
 
 RUN install2.r --error \
     roxygen2 \
@@ -24,10 +26,11 @@ RUN install2.r --error \
     argparser
 
 RUN R -e 'devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")' && \
-    R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")'
+    R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")' && \
+    R -e 'install.packages(list.files(path="/opt/gurobi/linux64/R/", pattern="^gurobi_.*[.]tar[.]gz$", full.names = TRUE), repos=NULL)'
 
 WORKDIR /backfill_corrections/
 ADD ./delphiBackfillCorrection ./delphiBackfillCorrection/
 ADD [ "Makefile", "run.R", "./" ]
 
-RUN make lib && make install-R
+RUN make lib && make install

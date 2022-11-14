@@ -10,6 +10,7 @@ USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
 USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
 # Gurobi license
+GRB_LICENSE_FILE=./gurobi.lic
 GRB_WLSACCESSID=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_WLSACCESSID)
 GRB_WLSSECRET=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_WLSSECRET)
 GRB_LICENSEID=$(shell $(PYTHON) -m delphi_utils get gurobi.GRB_LICENSEID)
@@ -63,22 +64,21 @@ run-local:
 	grep "scheduled core" $(LOG_FILE) ; \
 	[ "$$?" -eq 1 ]
 
-run:
-	@export GRB_WLSACCESSID=$(GRB_WLSACCESSID)
-	@export GRB_WLSSECRET=$(GRB_WLSSECRET)
-	@export GRB_LICENSEID=$(GRB_LICENSEID)
+gurobi.lic:
+	@echo WLSACCESSID=$(GRB_WLSACCESSID) >> $(GRB_LICENSE_FILE)
+	@echo WLSSECRET=$(GRB_WLSSECRET) >> $(GRB_LICENSE_FILE)
+	@echo LICENSEID=$(GRB_LICENSEID) >> $(GRB_LICENSE_FILE)
 
+run:
 	docker run --rm --pull=always \
 		-v "${PWD}/${LOG_DIR}:/backfill_corrections/${LOG_DIR}" \
 		-v "`realpath $(USR_EXPORT_DIR)`:/backfill_corrections/${EXPORT_DIR}" \
 		-v "`realpath $(USR_INPUT_DIR)`:/backfill_corrections/${INPUT_DIR}" \
 		-v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
 		-v "${PWD}"/params.json:/backfill_corrections/params.json \
-		--env GRB_WLSACCESSID \
-		--env GRB_WLSSECRET \
-		--env GRB_LICENSEID \
-		-i "${DOCKER_IMAGE}:${DOCKER_TAG}" \
-		/bin/bash -c "make run-local OPTIONS=\"${OPTIONS}\""
+		--env GRB_LICENSE_FILE=$(GRB_LICENSE_FILE) \
+		-it "${DOCKER_IMAGE}:${DOCKER_TAG}" \
+		/bin/bash -c "make gurobi.lic && make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
 	aws configure set aws_access_key_id $(AWS_KEY_ID)

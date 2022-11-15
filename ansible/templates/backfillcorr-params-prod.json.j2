@@ -15,7 +15,7 @@
       "aws_access_key_id": "{{ backfillcorr_aws_access_key_id }}",
       "aws_secret_access_key": "{{ backfillcorr_aws_secret_access_key }}"
     },
-    "bucket_name": "s3://backfill_corrections"
+    "bucket_name": "{{ backfillcorr_aws_bucket_name }}"
   },
   "gurobi": {
     "GRB_LICENSEID": "{{ GRB_LICENSEID }}",

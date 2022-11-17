@@ -64,8 +64,6 @@ run_backfill <- function(df, params,
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
       
-      if (!(geo %in% c("pa", "ma", "ny"))) {next} 
-      
       msg_ts(str_interp("Processing ${geo} geo group"))
 
       min_refd <- min(subdf[[refd_col]])

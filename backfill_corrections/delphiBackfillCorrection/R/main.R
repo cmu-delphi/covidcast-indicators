@@ -56,13 +56,16 @@ run_backfill <- function(df, params,
         coef_list[[key]] <- list()
       }
     }
-
+    
     msg_ts("Splitting data into geo groups")
     group_dfs <- group_split(df, .data$geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
+      
+      if (!(geo %in% c("pa", "ma", "ny"))) {next} 
+      
       msg_ts(str_interp("Processing ${geo} geo group"))
 
       min_refd <- min(subdf[[refd_col]])
@@ -201,25 +204,24 @@ run_backfill <- function(df, params,
           }# End for test lags
         }# End for value types
       }# End for signal suffixes
-      
-      if (params$make_predictions) {
-        for (value_type in params$value_types) {
-          for (signal_suffix in signal_suffixes) {
-            key <- make_key(value_type, signal_suffix)
-            test_combined <- bind_rows(test_data_list[[key]]) 
-            coef_combined <- bind_rows(coef_list[[key]]) 
-            export_test_result(test_combined, coef_combined, 
-                               indicator=indicator, signal=signal,
-                               geo_level=geo_level, geo=geo,
-                               signal_suffix=signal_suffix, lambda=params$lambda,
-                               training_end_date=params$training_end_date,
-                               training_start_date=params$training_start_date,
-                               value_type=value_type, export_dir=params$export_dir)
-          }
+    }# End for geo list
+    
+    if (params$make_predictions) {
+      for (value_type in params$value_types) {
+        for (signal_suffix in signal_suffixes) {
+          key <- make_key(value_type, signal_suffix)
+          test_combined <- bind_rows(test_data_list[[key]]) 
+          coef_combined <- bind_rows(coef_list[[key]]) 
+          export_test_result(test_combined, coef_combined, 
+                             indicator=indicator, signal=signal,
+                             signal_suffix=signal_suffix,
+                             geo_level=geo_level, lambda=params$lambda,
+                             training_end_date=params$training_end_date,
+                             training_start_date=params$training_start_date,
+                             value_type=value_type, export_dir=params$export_dir)
         }
       }
-      
-    }# End for geo list
+    }
   }# End for geo type
 }
 

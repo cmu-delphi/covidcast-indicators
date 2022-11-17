@@ -136,7 +136,8 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   if (success < length(taus)) {return (NULL)}
   if (!make_predictions) {return (list())}
   
-  coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag,
+  test_data$geo_value = geo
+  coef_combined_result = data.frame(tau=taus, geo_value=geo, test_lag=test_lag,
                                     training_end_date=training_end_date,
                                     training_start_date=training_start_date,
                                     lambda=lambda)
@@ -263,7 +264,7 @@ generate_filename <- function(indicator, signal,
                   geo_level, lambda, value_type,
                   geo, test_lag, dw, tau)
   
-  filename = paste0(
+  filename <- paste0(
     # Drop any empty strings.
     paste(components[components != ""], collapse="_"),
     file_type

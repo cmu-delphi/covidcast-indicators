@@ -28,22 +28,21 @@ read_data <- function(input_dir) {
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
-                               geo_level, geo, signal_suffix, lambda,
+                               geo_level, signal_suffix, lambda,
                                training_end_date, training_start_date,
                                value_type, export_dir) {
   base_name <- generate_filename(indicator=indicator, signal=signal,
                                  geo_level=geo_level, signal_suffix=signal_suffix,
                                  lambda=lambda, training_end_date=training_end_date,
                                  training_start_date=training_start_date,
-                                 geo=geo, value_type=value_type, model_mode=FALSE)
+                                 value_type=value_type, model_mode=FALSE)
 
-  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo_level ${geo_level} value_type ${value_type}")
   
   components <- c(indicator, signal, signal_suffix)
-  signal_dir = paste0(
-    # Drop any empty strings.
-    paste(components[components != ""], collapse="_"),
-  )
+  signal_dir <- paste(components[components != ""], collapse="_")
+  
+  dir.create(file.path(export_dir, signal_dir), showWarnings = FALSE)
   
   if (nrow(test_data) == 0) {
     warning(str_interp("No test data available for ${signal_info}"))
@@ -52,7 +51,8 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
     pred_output_file <- str_interp("prediction_${base_name}")
     
     prediction_col <- colnames(test_data)[grepl("^predicted", colnames(test_data))]
-    expected_col <- c("time_value", "issue_date", "lag", "target_date", "wis", prediction_col)
+    expected_col <- c("time_value", "issue_date", "lag", "geo_value", 
+                      "target_date", "wis", prediction_col)
     write_csv(test_data[expected_col], file.path(export_dir, signal_dir, pred_output_file))
   }
   

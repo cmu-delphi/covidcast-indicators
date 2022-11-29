@@ -74,8 +74,8 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
   if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
   if (!("test_dates" %in% names(params)) || length(params$test_dates) == 0) {
-    start_date <- TODAY - params$testing_window
-    end_date <- TODAY - 1
+    start_date <- TODAY - params$testing_window + 1
+    end_date <- TODAY
     params$test_dates <- seq(start_date, end_date, by="days")
   } else {
     if (length(params$test_dates) != 2) {

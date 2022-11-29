@@ -166,7 +166,7 @@ get_issue_date_range <- function(params) {
   # date t0 (t0 < TODAY), we will always need to train a new model based on
   # data t < t0.
   assert(
-    result$training_end_date < min(params$test_dates),
+    result$training_end_date <= min(params$test_dates),
     "training end date must be earlier than the earliest test date to produce valid predictions"
   )
 

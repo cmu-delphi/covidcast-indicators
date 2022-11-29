@@ -286,7 +286,7 @@ generate_filename <- function(indicator, signal,
 #'
 #' @template params-template
 get_training_date_range <- function(params) {
-  default_end_date <- TODAY - params$testing_window - 1
+  default_end_date <- TODAY - params$testing_window + 1
 
   if (params$train_models) {
     if (params_element_exists_and_valid(params, "training_end_date")) {

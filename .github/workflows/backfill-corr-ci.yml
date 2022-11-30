@@ -1,0 +1,75 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+#
+# See https://github.com/r-lib/actions/tree/master/examples#readme for
+# additional example workflows available for the R community.
+
+name: R backfill corrections
+
+on:
+  push:
+    branches: [ main, prod ]
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    branches: [ main, prod ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: github.event.pull_request.draft == false
+    strategy:
+      matrix:
+        r-version: [4.2.1]
+    defaults:
+      run:
+        working-directory: backfill_corrections/delphiBackfillCorrection
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up R ${{ matrix.r-version }}
+        uses: r-lib/actions/setup-r@v1
+        with:
+          r-version: ${{ matrix.r-version }}
+      - name: Install linux dependencies
+        run: |
+            sudo apt-get install \
+              libcurl4-openssl-dev \
+              libgdal-dev \
+              libudunits2-dev \
+              libglpk-dev \
+              libharfbuzz-dev \
+              libfribidi-dev
+      - name: Get date
+        id: get-date
+        run: |
+          echo "::set-output name=date::$(/bin/date -u "+%Y%m%d")"
+      - name: Cache R packages
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-r-backfillcorr-${{ steps.get-date.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-r-backfillcorr-
+      - name: Install R dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if ( !require("remotes") ) {
+            install.packages("remotes")
+          }
+          if ( !require("devtools") ) {
+            install.packages("devtools")
+          }
+          remotes::update_packages(c("rcmdcheck", "remotes", "devtools"), upgrade="always")
+          dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
+          remotes::update_packages(dependency_list$package, upgrade="always")
+
+          devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")
+          devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")
+        shell: Rscript {0}
+      - name: Check
+        run: |
+          rcmdcheck::rcmdcheck(args = c("--no-manual", "--test-dir=unit-tests"), error_on = "error")
+        shell: Rscript {0}

@@ -48,7 +48,8 @@ objective <- function(theta, x, prob, ...) {
 #' @param start the initialization of the the points in nlm
 #' @param base_pseudo_denom the pseudo counts added to denominator if little data for training
 #' @param base_pseudo_num the pseudo counts added to numerator if little data for training
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #' @param model_save_dir directory containing trained models
 #' 
 #' @importFrom stats nlm predict
@@ -58,7 +59,8 @@ objective <- function(theta, x, prob, ...) {
 est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus, 
                        covariates, response, lp_solver, lambda, 
                        indicator, signal, geo_level, signal_suffix, 
-                       training_end_date, model_save_dir, start=c(0, log(10)),
+                       training_end_date, training_start_date,
+                       model_save_dir, start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10,
                        train_models = TRUE, make_predictions = TRUE) {
   sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
@@ -76,6 +78,7 @@ est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus,
                                            geo=geo, dw=dw, tau=tau,
                                            value_type=value_type,
                                            training_end_date=training_end_date,
+                                           training_start_date=training_start_date,
                                            beta_prior_mode=TRUE)
       model_path <- file.path(model_save_dir, model_file_name)
       
@@ -123,7 +126,8 @@ frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, de
 #' @template train_data-template
 #' @param test_data testing data
 #' @param prior_test_data testing data for the lag -1 model
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #' @param model_save_dir directory containing trained models
 #' @template indicator-template
 #' @template signal-template
@@ -141,7 +145,8 @@ frac_adj_with_pseudo <- function(data, dw, pseudo_num, pseudo_denom, num_col, de
 frac_adj <- function(train_data, test_data, prior_test_data, 
                      indicator, signal, geo_level, signal_suffix,
                      lambda, value_type, geo, 
-                     training_end_date, model_save_dir, 
+                     training_end_date, training_start_date,
+                     model_save_dir,
                      taus, lp_solver,
                      train_models = TRUE,
                      make_predictions = TRUE) {
@@ -177,7 +182,7 @@ frac_adj <- function(train_data, test_data, prior_test_data,
     pseudo_counts <- est_priors(train_data, prior_test_data, geo, value_type, cov, taus, 
                                 pre_covariates, "log_value_target", lp_solver, lambda, 
                                 indicator, signal, geo_level, signal_suffix, 
-                                training_end_date, model_save_dir,
+                                training_end_date, training_start_date, model_save_dir,
                                 train_models = train_models,
                                 make_predictions = make_predictions)
     pseudo_denum = pseudo_counts[1]

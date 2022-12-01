@@ -76,8 +76,8 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   if (!("ref_lag" %in% names(params))) {params$ref_lag <- REF_LAG}
   if (!("testing_window" %in% names(params))) {params$testing_window <- TESTING_WINDOW}
   if (!("test_dates" %in% names(params)) || length(params$test_dates) == 0) {
-    start_date <- TODAY - params$testing_window
-    end_date <- TODAY - 1
+    start_date <- TODAY - params$testing_window + 1
+    end_date <- TODAY
     params$test_dates <- seq(start_date, end_date, by="days")
   } else {
     if (length(params$test_dates) != 2) {
@@ -89,6 +89,12 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
       by="days"
     )
   }
+  if (params_element_exists_and_valid(params, "training_end_date")) {
+    if (as.Date(params$training_end_date) > TODAY) {
+      stop("training_end_date can't be in the future")
+    }
+  }
+
   if (!("test_lags" %in% names(params))) {
     params$test_lags <- TEST_LAGS
   }
@@ -203,4 +209,28 @@ make_key <- function(value_type, signal_suffix) {
   }
 
   return(key)
+}
+
+#' Check if an element in params exists and is not missing
+#'
+#' @template params-template
+#' @param key string indicating name of element within `params` to check
+params_element_exists_and_valid <- function(params, key) {
+  return(key %in% names(params) && !is.null(params[[key]]) && !is.na(params[[key]]))
+}
+
+#' Assert a logical value
+#'
+#' Will issue a \code{stop} command if the given statement is false.
+#'
+#' @param statement a logical value
+#' @param msg a character string displayed as an additional message
+#'
+#' @export
+assert <- function(statement, msg="")
+{
+  if (!statement)
+  {
+    stop(msg, call.=(msg==""))
+  }
 }

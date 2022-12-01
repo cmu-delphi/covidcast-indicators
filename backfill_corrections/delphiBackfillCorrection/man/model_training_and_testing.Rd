@@ -20,6 +20,7 @@ model_training_and_testing(
   geo_level,
   signal_suffix,
   training_end_date,
+  training_start_date,
   train_models = TRUE,
   make_predictions = TRUE
 )
@@ -67,7 +68,9 @@ ending to be appended to standard value column names from
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
 
-\item{training_end_date}{Most recent training date}
+\item{training_end_date}{the latest target date and issue date included in training data}
+
+\item{training_start_date}{the earliest target date included in training data}
 
 \item{train_models}{boolean indicating whether to train models (TRUE). If
 FALSE previously trained models (stored locally) will be used instead.

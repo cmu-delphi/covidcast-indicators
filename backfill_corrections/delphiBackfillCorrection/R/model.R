@@ -321,11 +321,6 @@ get_training_date_range <- function(params) {
   # referenced in cached file names, then those cached files will not be used.
   training_start_date <- training_end_date - params$training_days
 
-  msg_ts(paste0(
-    str_interp("training_start_date is ${training_start_date}, "),
-    str_interp("training_end_date is ${training_end_date}")
-  ))
-
   return(list(
     "training_start_date"=training_start_date,
     "training_end_date"=training_end_date

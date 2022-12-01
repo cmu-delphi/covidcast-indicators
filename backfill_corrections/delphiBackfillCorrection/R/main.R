@@ -262,6 +262,11 @@ main <- function(params) {
   params$training_start_date <- result$training_start_date
   params$training_end_date <- result$training_end_date
 
+  msg_ts(paste0(
+    str_interp("training_start_date is ${params$training_start_date}, "),
+    str_interp("training_end_date is ${params$training_end_date}")
+  ))
+
   # Loop over every indicator + signal combination.
   for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
     input_group <- INDICATORS_AND_SIGNALS[group_i,]

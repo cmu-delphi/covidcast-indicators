@@ -1,6 +1,6 @@
 {
   "common": {
-    "export_dir": "./receiving",
+    "export_dir": "/common/covidcast/receiving/hospital-admissions/",
     "log_exceptions": false
   },
   "indicator": {
@@ -13,7 +13,7 @@
     "write_se": false,
     "obfuscated_prefix": "foo_obfuscated",
     "parallel": false,
-    "geos": ["state", "msa", "hrr", "county"],
+    "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
     "weekday": [true, false],
     "ftp_credentials": {
       "host": "{{ claims_hosp_ftp_host }}",

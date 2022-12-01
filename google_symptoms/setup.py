@@ -4,14 +4,15 @@ from setuptools import find_packages
 required = [
     "mock",
     "numpy",
-    "pandas==1.3.5",
+    "pandas",
     "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint==2.8.3",
     "delphi-utils",
     "freezegun",
-    "pandas-gbq"
+    "pandas-gbq",
+    "db-dtypes"
 ]
 
 setup(

@@ -10,7 +10,6 @@ export_test_result(
   indicator,
   signal,
   geo_level,
-  geo,
   signal_suffix,
   lambda,
   training_end_date,
@@ -35,9 +34,6 @@ with multiple signals.}
 \item{geo_level}{string describing geo coverage of input data. Either "state"
 or "county".}
 
-\item{geo}{string specifying the name of the geo region (e.g. FIPS
-code for counties)}
-
 \item{signal_suffix}{string specifying value column name
 ending to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
@@ -53,6 +49,9 @@ single input dataframe, as with `quidel`'s age buckets.}
 \item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{export_dir}{path to directory to save output to}
+
+\item{geo}{string specifying the name of the geo region (e.g. FIPS
+code for counties)}
 }
 \description{
 Export the result to customized directory

@@ -58,7 +58,7 @@ install-python:
 lib:
 	R -e 'roxygen2::roxygenise("delphiBackfillCorrection")'
 
-run-local:
+run-local: setup-dirs
 	time Rscript run.R $(OPTIONS) 2>&1 | tee $(LOG_FILE)
 	grep "backfill correction completed successfully" $(LOG_FILE)
 	grep "scheduled core" $(LOG_FILE) ; \
@@ -86,9 +86,15 @@ publish:
 	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
 	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 
-pipeline: setup run publish teardown clean
+pipeline: setup-dirs standardize-dirs run publish teardown clean
 
 # Make sure all user-specified dirs exist locally; create them if not.
+setup-dirs:
+	[ -f $(USR_INPUT_DIR) ] || mkdir -p $(USR_INPUT_DIR)
+	[ -f $(USR_CACHE_DIR) ] || mkdir -p $(USR_CACHE_DIR)
+	[ -f $(USR_EXPORT_DIR) ] || mkdir -p $(USR_EXPORT_DIR)
+	[ -f $(LOG_DIR) ] || mkdir -p $(LOG_DIR)
+
 # Reconfigure `params.json` to use fixed dir names, INPUT_DIR, etc, as defined
 # above.
 #
@@ -101,11 +107,7 @@ pipeline: setup run publish teardown clean
 # (An alternative approach would be to check if the user-provided dir paths
 # are each absolute or relative first, and only concat relative paths with
 # `/backfill_corrections/` in the mount step.)
-setup:
-	[ -f $(USR_INPUT_DIR) ] || mkdir -p $(USR_INPUT_DIR)
-	[ -f $(USR_CACHE_DIR) ] || mkdir -p $(USR_CACHE_DIR)
-	[ -f $(USR_EXPORT_DIR) ] || mkdir -p $(USR_EXPORT_DIR)
-	[ -f $(LOG_DIR) ] || mkdir -p $(LOG_DIR)
+standardize-dirs:
 	$(PYTHON) -m delphi_utils set input_dir $(INPUT_DIR)
 	$(PYTHON) -m delphi_utils set cache_dir $(CACHE_DIR)
 	$(PYTHON) -m delphi_utils set export_dir $(EXPORT_DIR)

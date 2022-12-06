@@ -191,39 +191,6 @@ def produce_query(level, date_range):
 
     return query
 
-def max_date_query(level, date):
-    """Create query string for getting the maximum date issue in BigQuery.
-
-    Parameters
-    ----------
-    level: str
-        "county" or "state"
-    date_range: list[str]
-        ["YYYY-MM-DD"), "YYYY-MM-DD"] where dates are BigQuery-compatible.
-
-    Returns
-    -------
-    str
-    """
-    base_query = """
-    select distinct
-        date
-    from `bigquery-public-data.covid19_symptom_search.symptom_search_sub_region_1_daily`
-    where timestamp(date) between timestamp("{start_date}") and timestamp("{end_date}") and
-        country_region_code = "US"
-    order by date desc
-    limit 1
-    """
-    base_level_table = {"state": "symptom_search_sub_region_1_daily",
-                        "county": "symptom_search_sub_region_2_daily"}
-
-    # Add custom values to base_query
-    query = base_query.format(
-        start_date=date_range[0],
-        end_date=date_range[1])
-
-    return query
-
 def pull_gs_data_one_geolevel(level, date_range):
     """Pull latest data for a single geo level.
 

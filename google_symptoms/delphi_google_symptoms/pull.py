@@ -48,7 +48,7 @@ def preprocess(df, level):
     for cb_metric in COMBINED_METRIC:
         df[cb_metric] = 0
         for metric in SYMPTOM_SETS[cb_metric]:
-            df[cb_metric] += df[metric].fillna(0)
+            df[cb_metric] += df[metric].fillna(0).astype(float)
         df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
         df.loc[df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
 
@@ -191,6 +191,38 @@ def produce_query(level, date_range):
 
     return query
 
+def max_date_query(level, date):
+    """Create query string for getting the maximum date issue in BigQuery.
+
+    Parameters
+    ----------
+    level: str
+        "county" or "state"
+    date_range: list[str]
+        ["YYYY-MM-DD"), "YYYY-MM-DD"] where dates are BigQuery-compatible.
+
+    Returns
+    -------
+    str
+    """
+    base_query = """
+    select distinct
+        date
+    from `bigquery-public-data.covid19_symptom_search.symptom_search_sub_region_1_daily`
+    where timestamp(date) between timestamp("{start_date}") and timestamp("{end_date}") and
+        country_region_code = "US"
+    order by date desc
+    limit 1
+    """
+    base_level_table = {"state": "symptom_search_sub_region_1_daily",
+                        "county": "symptom_search_sub_region_2_daily"}
+
+    # Add custom values to base_query
+    query = base_query.format(
+        start_date=date_range[0],
+        end_date=date_range[1])
+
+    return query
 
 def pull_gs_data_one_geolevel(level, date_range):
     """Pull latest data for a single geo level.

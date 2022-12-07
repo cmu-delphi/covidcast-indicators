@@ -11,6 +11,9 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
+    strategy:
+     matrix:
+      indicators: [claims_hosp, combo_cases_and_deaths, doctor_visits, dsew_community_profile, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph_patterns, sir_complainsalot, usafacts]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -58,7 +61,11 @@ jobs:
         id: indicators
         run: |
           echo -n "::set-output name=version::"
-          bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,       
+          bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
+      - name: Copy version to indicator dir
+        working-directory: ${{ matrix.indicators }}
+        run: |
+          echo "current_version = ${{ steps.indicators.outputs.version }}" > version.cfg
       - name: Create pull request into prod
         uses: peter-evans/create-pull-request@v3
         with:
@@ -66,8 +73,8 @@ jobs:
           base: prod
           title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
           labels: chore
-          reviewers: krivard
-          assignees: krivard
+          reviewers: M5Skid
+          assignees: M5Skid
           body: |
             Releasing:
             * covidcast-indicators ${{ steps.indicators.outputs.version }}

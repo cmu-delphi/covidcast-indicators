@@ -66,13 +66,21 @@ jobs:
       run:
        working-directory: ${{ matrix.indicator_list }}
     steps:
-      - name: Copy version to indicator directory
-        run: |
-          echo "current_version = ${{ steps.indicators.outputs.version }}" > version.cfg
+    - name: Check out code
+      uses: actions/checkout@v2
+      with:
+        ref: mitch-test
+    - name: Copy version to indicator directory
+      run: |
+        echo "current_version = ${{ steps.indicators.outputs.version }}" > version.cfg
           
   Pull-request:
     runs-on: ubuntu-latest
     steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          ref: mitch-test
       - name: Create pull request
         uses: peter-evans/create-pull-request@v3
         with:

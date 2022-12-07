@@ -18,14 +18,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
         with:
-          ref: prod
-          ssh-key: ${{ secrets.CMU_DELPHI_DEPLOY_MACHINE_SSH }}
-      - name: Reset prod branch
-        run: |
-          git fetch origin main:main
-          git reset --hard main
-          git config --global user.email delphibot@example.com
-          git config --global user.name "Delphi Deploy Bot"
+          ref: mitch-test
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -69,8 +62,8 @@ jobs:
       - name: Create pull request into prod
         uses: peter-evans/create-pull-request@v3
         with:
-          branch: release/indicators_v${{ steps.indicators.outputs.version }}_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
-          base: prod
+          branch: release/test_indicators_v${{ steps.indicators.outputs.version }}_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
+          base: mitch-test
           title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
           labels: chore
           reviewers: M5Skid

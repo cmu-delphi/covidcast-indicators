@@ -48,7 +48,7 @@ def preprocess(df, level):
     for cb_metric in COMBINED_METRIC:
         df[cb_metric] = 0
         for metric in SYMPTOM_SETS[cb_metric]:
-            df[cb_metric] += df[metric].fillna(0)
+            df[cb_metric] += df[metric].fillna(0).astype(float)
         df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
         df.loc[df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
 
@@ -82,7 +82,6 @@ def preprocess(df, level):
         index_df = pd.MultiIndex.from_product(
             [geo_list, date_list], names=['geo_id', 'date']
         )
-        df.date = pd.to_datetime(df.date)
         df = df.set_index(
             ["geo_id", "date"]
         ).reindex(
@@ -192,7 +191,6 @@ def produce_query(level, date_range):
 
     return query
 
-
 def pull_gs_data_one_geolevel(level, date_range):
     """Pull latest data for a single geo level.
 
@@ -297,7 +295,7 @@ def pull_gs_data(credentials, export_start_date, export_end_date, num_export_day
         df_dc_county = dfs["state"][dfs["state"]["geo_id"] == "dc"].drop(
             "geo_id", axis=1)
         df_dc_county["geo_id"] = DC_FIPS
-        dfs["county"] = pd.concat([dfs["county"], df_dc_county])
+        dfs["county"] = dfs["county"].append(df_dc_county)
     except KeyError:
         pass
 

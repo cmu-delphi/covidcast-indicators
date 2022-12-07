@@ -11,14 +11,15 @@ on:
 jobs:
   create-release:
     runs-on: ubuntu-latest
-    strategy:
-     matrix:
-      indicator_list: [claims_hosp, combo_cases_and_deaths, doctor_visits, dsew_community_profile, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph_patterns, sir_complainsalot, usafacts]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
           ref: mitch-test
+      - name: set username
+        run: |  
+          git config --global user.email "mskidmor@andrew.cmu.edu"
+          git config --global user.name "M5Skid"
       - name: Set up Python 3.8
         uses: actions/setup-python@v2
         with:
@@ -55,20 +56,28 @@ jobs:
         run: |
           echo -n "::set-output name=version::"
           bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
-      - name: Copy version to indicator dir
-        working-directory: ${{ matrix.indicator_list }}
+  Copy-version: 
+    runs-on: ubuntu-latest
+    strategy:
+     matrix:
+      indicator_list: [claims_hosp, combo_cases_and_deaths, doctor_visits, dsew_community_profile, google_symptoms, hhs_hosp, hhs_facilities, jhu, nchs_mortality, nowcast, quidel, quidel_covidtest, safegraph_patterns, sir_complainsalot, usafacts]
+    defaults:
+      run:
+       working-directory: ${{ matrix.indicator_list }}
+    steps:
+      - name: Copy version to indicator directory
         run: |
           echo "current_version = ${{ steps.indicators.outputs.version }}" > version.cfg
-      - name: Create pull request into prod
-        uses: peter-evans/create-pull-request@v3
-        with:
-          branch: release/test_indicators_v${{ steps.indicators.outputs.version }}_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
-          base: mitch-test
-          title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
-          labels: chore
-          reviewers: M5Skid
-          assignees: M5Skid
-          body: |
-            Releasing:
-            * covidcast-indicators ${{ steps.indicators.outputs.version }}
-            * delphi-utils ${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }} ${{steps.utils-changed.outputs.msg }}${{ steps.utils-unchanged.outputs.msg }}
+  Pull-request:
+    uses: peter-evans/create-pull-request@v3
+    with:
+      branch: release/test_indicators_v${{ steps.indicators.outputs.version }}_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
+      base: mitch-test
+      title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
+      labels: chore
+      reviewers: M5Skid
+      assignees: M5Skid
+      body: |
+        Releasing:
+        * covidcast-indicators ${{ steps.indicators.outputs.version }}
+        * delphi-utils ${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }} ${{steps.utils-changed.outputs.msg }}${{ steps.utils-unchanged.outputs.msg }}

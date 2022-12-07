@@ -7,10 +7,7 @@ on:
         description: 'Semantic Version Number (i.e., 5.5.0 or patch, minor, major, prepatch, preminor, premajor, prerelease)'
         required: true
         default: patch
-        
-env: 
- indicator_list: ("claims_hosp" "combo_cases_and_deaths" "doctor_visits" "dsew_community_profile" "google_symptoms" "hhs_hosp" "hhs_facilities" "jhu" "nchs_mortality" "nowcast" "quidel" "quidel_covidtest" "safegraph_patterns" "sir_complainsalot" "usafacts")
-
+      
 jobs:
   create-release:
     runs-on: ubuntu-latest
@@ -61,13 +58,14 @@ jobs:
           bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
       - name: Copy version number
         run: |
-          for path in ${{ env.indicator_list }}; do
+          indicator_list = (changehc claims_hosp combo_cases_and_deaths doctor_visits dsew_community_profile google_symptoms hhs_hosp hhs_facilities jhu nchs_mortality nowcast quidel quidel_covidtest safegraph_patterns sir_complainsalot usafacts)
+          for path in ${indicator_list[@]}; do
             echo "Current_version = ${{ steps.indicators.outputs.version }}" > $path/version.cfg
             done
       - name: Create pull request
         uses: peter-evans/create-pull-request@v3
         with:
-          branch: release/test_indicators_v$current_version_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
+          branch: release/test_indicators_v${{ steps.indicators.outputs.version }}_utils_v${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }}
           base: mitch-test
           title: TEST- Release covidcast-indicators ${{ steps.indicators.outputs.version }}
           labels: chore
@@ -76,4 +74,4 @@ jobs:
           body: |
            Releasing:
            * covidcast-indicators ${{ steps.indicators.outputs.version }}
-            * delphi-utils ${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }} ${{steps.utils-changed.outputs.msg }}${{ steps.utils-unchanged.outputs.msg }}
+           * delphi-utils ${{ steps.utils-changed.outputs.version }}${{ steps.utils-unchanged.outputs.version }} ${{steps.utils-changed.outputs.msg }}${{ steps.utils-unchanged.outputs.msg }}

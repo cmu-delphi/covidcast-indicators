@@ -15,14 +15,12 @@ from .constants import HTML_LINK
 
 def outlier(df, iqr_list2=None, replace=pd.DataFrame(), replace_use=False):
     df_fix_unstack = df.ffill()
-    #print(df_fix_unstack)
     diff_df_small = df_fix_unstack.copy().diff(1).bfill()
-    upper = 0.80
-    lower = 0.20
+    upper = 0.75
+    lower = 0.25
     df['day'] = [x.weekday() for x in list(df.index)]
     diff_df2 = diff_df_small
     diff_df2['day'] = df['day']
-
 
     diff_df2_stack = diff_df2.drop(columns=['day']).stack().reset_index()
     diff_df2_stack.columns = ['date', 'state', 'val']
@@ -37,8 +35,8 @@ def outlier(df, iqr_list2=None, replace=pd.DataFrame(), replace_use=False):
         for i, (_, ldf) in enumerate(iqr_spec_df2.groupby(['weekday'])):
             iqr = ldf.groupby('state').apply(lambda x: x.val.quantile([lower, 0.5, upper]).T)
             def fix_iqr(x):
-                upper = 0.80
-                lower = 0.20
+                upper = 0.75
+                lower = 0.25
                 if x[upper] == x[lower]:
                     x[upper] += 2
                     x[lower] -= 2
@@ -75,10 +73,7 @@ def outlier(df, iqr_list2=None, replace=pd.DataFrame(), replace_use=False):
                     f = float(df_fix_unstack.loc[yesterday_date, row.state] + (1 + iqr_df2.loc[row.state, '0.5']))
                     df_fix_unstack.loc[row.date, row.state] = max(f, 1.0)
                     p2_outliers.append(row.copy())
-                    #print('APPENDED', row, p2_outliers)
-    #print("OUTLIERS EVAL ON ", diff_df2_stack)
     diff_df2_stack.apply(lambda x:eval_row(x, replace_use, iqr_list2, replace, df_fix_unstack, diff_df2,) , axis=1)
-    #print("OUTLIERS", pd.DataFrame(p2_outliers))
     return df_fix_unstack, iqr_list2, pd.DataFrame(p2_outliers)
 
 def spike_outliers(df):
@@ -108,7 +103,6 @@ def spike_outliers(df):
     def spike(x):
         window_size = 7
         shift_val = -1 if window_size % 2 == 0 else 0
-        size_cut, sig_cut, sig_consec = 10, 3, 2.25
         group = x.to_frame()
         group.columns =  ["value"]
         rolling_windows = group["value"].rolling(
@@ -188,9 +182,6 @@ def return_vals(val, ref_dist):
     dist.name = 'dist'
     pval = dist.copy()
     pval.name = 'pval'
-    # print("PVAL", pval)
-    # print("DIST", dist)
-    # print("VAL", val)
     for state in dist.index:
         pval[state] = (sum(ref_dist.astype(float) < float(dist[state])) / len(ref_dist))
     val = val.merge(dist, left_on='state', right_index=True, how='outer')
@@ -201,28 +192,19 @@ def eval_day(input_df, iqr_dict, ref_date, weekday_params, linear_coeff):
     val = pd.DataFrame()
     val['y_raw'] = input_df.iloc[-1, :]
     input_df = input_df.clip(0)+1
-    #print(time.time(), 't1')
     lags_names = [f'lags_{i}' for i in range(1, 8)]
-    #print("INPUT DF INTO CHAOS", input_df)
     input_df, _, flag_out = outlier(input_df, iqr_list2=iqr_dict['Before'])
-    #print(time.time(), 't2')
     input_df = input_df.clip(0)
     input_df= Weekday.calc_adjustment(weekday_params.to_numpy()
                     ,input_df.copy().reset_index(), list(input_df.columns),
                     'ref').fillna(0).set_index('ref')
-    #print(time.time(), 't3')
     input_df,  _, flag_out1 = outlier(input_df, iqr_list2=iqr_dict['After'], replace=spike_outliers(input_df), replace_use=True)
-    #print(time.time(), 't4')
     y_predict = input_df.iloc[:, : ].apply(predict_val,params_state=linear_coeff, lags_names=lags_names, axis=0).T.clip(0)
     y_predict.columns = ['y_predict']
-    #print(time.time(), 't5')
-    #print(flag_out1)
-    #print(flag_out)
     val = val.merge(y_predict, left_index=True, right_index=True, how='outer')
     flag_out['flag'] = 'weekday outlier'
     flag_out1['flag'] = 'large_spikes'
     ret_val = pd.concat([flag_out, flag_out1], axis=0).query("date==@ref_date")
-    print(ret_val)
     return input_df, val, ret_val
 
 def flash_eval_lag(input_df, range_tup, lag, source, signal, logger):
@@ -266,27 +248,17 @@ def flash_eval_lag(input_df, range_tup, lag, source, signal, logger):
     # #Make corrections & predictions
     input_df, raw_val, preprocess_outlier = eval_day(input_df, iqr_dict, ref_date, weekday_params, linear_coeff)
     raw_val = raw_val.droplevel(level=0)
-    # input_df = pd.read_csv('input_df.csv', index_col=0)
-    # raw_val = pd.read_csv('raw_val.csv', index_col=0)
-    # preprocess_outlier = pd.read_csv('preprocess_outlier.csv', index_col=0)
-
     s_val = raw_val['y_raw'].to_frame()
     out_range_outlier = pd.concat([s_val.query('y_raw< @range_tup[0]'), s_val.query('y_raw> @range_tup[-1]')], axis=0)
-    #
     # #Anomaly Detection
     thresh = 0.01
-    # print(input_df, raw_val, preprocess_outlier)
-    # input_df.to_csv('input_df.csv')
-    # raw_val.to_csv('raw_val.csv')
-    # preprocess_outlier.to_csv('preprocess_outlier.csv')
-    val_min = return_vals(raw_val, dist_min)[["pval"]]#.to_frame()
-    val_max = return_vals(raw_val, dist_max)[["pval"]]#.to_frame()
+    val_min = return_vals(raw_val, dist_min)[["pval"]]
+    val_max = return_vals(raw_val, dist_max)[["pval"]]
     val_min['flags'] = 'EVD_min'
     val_max['flags'] = 'EVD_max'
     val_min.columns = ['pval', 'flags']
     val_max.columns = ['pval', 'flags']
     def process_anomalies(y, t_skew=None):
-        print('y is ', y)
         def standardize(y, t_skew=None):
             val = y.pval
             if t_skew == None:
@@ -305,7 +277,7 @@ def flash_eval_lag(input_df, range_tup, lag, source, signal, logger):
         y['pval'] = tmp_list
         if not y.empty:
             y = y[['pval']]
-        return y#.reset_index(drop=True)
+        return y
 
     min_thresh = thresh * 2
     max_thresh = 1 - (thresh * 2)
@@ -324,7 +296,6 @@ def flash_eval_lag(input_df, range_tup, lag, source, signal, logger):
             iter_df = iter_df.iloc[:20, :]
         if iter_df.shape[0] > 0 :
             for j, row in iter_df.reset_index().iterrows():
-                print(row)
                 total_flags += 1
                 start_link = f"{HTML_LINK}{ref_date.strftime('%Y-%m_%d')},{report_date.strftime('%Y-%m_%d')},{row.state}"
                 if 'pval' in iter_df.columns :
@@ -342,7 +313,6 @@ def flash_eval(params):
     # if they aren't there, then regenerate them
 
     #STEP 1: API Call for file creation for prior days
-    print('in eval', params)
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
@@ -353,13 +323,11 @@ def flash_eval(params):
     #get most recent d from current files in cache
     #filter those by value & if they are in the json params and then generate the API files
     file_tup = load_all_files(params["common"]["export_dir"], most_recent_d-pd.Timedelta('14d'), most_recent_d)
-    #available_signals =  list(set(["_".join(x.split("_")[2:]).split(".")[0] for (x, y, z) in file_tup])) #need the data anyway to ad din
-    #signals = list(set(available_signals) & set(params["flash"]["signals"]))
     signals = params["flash"]["signals"]
     for signal in signals:
         curr_df = pd.DataFrame()
-        #TODO: change back to 14d below
-        for date_s in pd.date_range(most_recent_d-pd.Timedelta('2d'), most_recent_d-pd.Timedelta('1d')):
+        #TODO: Time data querying time
+        for date_s in pd.date_range(most_recent_d-pd.Timedelta('14d'), most_recent_d-pd.Timedelta('1d')):
             data = covidcast.signal(source, signal, date_s - pd.Timedelta(f'7d'), date_s,
                                     geo_type="nation", as_of=date_s)
             data2 = covidcast.signal(source, signal, date_s - pd.Timedelta(f'7d'), date_s,

@@ -58,10 +58,10 @@ jobs:
           bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
       - name: Copy version number
         run: |
-          indicator_list = (changehc claims_hosp combo_cases_and_deaths doctor_visits dsew_community_profile google_symptoms hhs_hosp hhs_facilities jhu nchs_mortality nowcast quidel quidel_covidtest safegraph_patterns sir_complainsalot usafacts)
+          indicator_list=("changehc" "claims_hosp" "combo_cases_and_deaths" "doctor_visits" "dsew_community_profile" "google_symptoms" "hhs_hosp" "hhs_facilities" "jhu" "nchs_mortality" "nowcast" "quidel" "quidel_covidtest" "safegraph_patterns" "sir_complainsalot" "usafacts")
           for path in ${indicator_list[@]}; do
             echo "Current_version = ${{ steps.indicators.outputs.version }}" > $path/version.cfg
-            done
+          done
       - name: Create pull request
         uses: peter-evans/create-pull-request@v3
         with:

@@ -58,7 +58,13 @@ jobs:
         id: indicators
         run: |
           echo -n "::set-output name=version::"
-          bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,       
+          bump2version --list ${{ github.event.inputs.versionName }} | grep ^new_version | sed -r s,"^.*=",,
+      - name: Copy version to indicator directory
+        run: |
+          indicator_list=("cdc_covidnet" "changehc" "claims_hosp" "combo_cases_and_deaths" "covid_act_now" "doctor_visits" "dsew_community_profile" "google_symptoms" "hhs_hosp" "hhs_facilities" "jhu" "nchs_mortality" "nowcast" "quidel" "quidel_covidtest" "safegraph_patterns" "sir_complainsalot" "usafacts")
+          for path in ${indicator_list[@]}; do
+            echo "current_version = ${{ steps.indicators.outputs.version }}" > $path/version.cfg
+          done
       - name: Create pull request into prod
         uses: peter-evans/create-pull-request@v3
         with:

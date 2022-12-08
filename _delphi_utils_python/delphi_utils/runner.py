@@ -60,7 +60,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                 current_version = str.strip(line)
                 current_version = current_version.replace("current_version = ", "")
     #Logging - Starting Indicator    
-        logger.info(f"Started {ind_name} with version {current_version}")
+        logger.info(f"Started {ind_name} with covidcast-indicators-version {current_version}")
     else: logger.info(f"Started {ind_name} without version.cfg")
     
     indicator_fn(params)

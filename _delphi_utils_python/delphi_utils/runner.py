@@ -1,6 +1,7 @@
 """Indicator running utilities."""
 import argparse as ap
 import importlib
+import os
 from typing import Any, Callable, Dict, Optional
 from .archive import ArchiveDiffer, archiver_from_params
 from .logger import get_structured_logger
@@ -40,6 +41,28 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         name=indicator_fn.__module__,
         filename=params["common"].get("log_filename", None),
         log_exceptions=params["common"].get("log_exceptions", True))
+        
+    #Get version and indicator name for startup
+    runner_dir = os.path.dirname(__file__)
+    ind_name = indicator_fn.__module__
+    ind_name = ind_name.replace(".run", "")
+    ind_name = ind_name.replace("delphi_", "")
+    #hhs_hosp subdir drops "hosp"
+    if ind_name == "hhs":
+        ind_name = "hhs_hosp"
+    #Check for version.cfg in indicator directory
+    ver_loc = runner_dir.replace("_delphi_utils_python/delphi_utils", f"{ind_name}/version.cfg")
+    if os.path.isfile(ver_loc) == True:
+        ver_file = open(ver_loc)
+        current_version = "not found"
+        for line in ver_file:
+            if "current_version" in line:
+                current_version = str.strip(line)
+                current_version = current_version.replace("current_version = ", "")
+    #Logging - Starting Indicator    
+        logger.info(f"Started {ind_name} with version {current_version}")
+    else: logger.info(f"Started {ind_name} without version.cfg")
+    
     indicator_fn(params)
     validator = validator_fn(params)
     archiver = archiver_fn(params)

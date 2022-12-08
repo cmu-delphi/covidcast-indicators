@@ -5,7 +5,7 @@ required = [
     "numpy",
     "pandas",
     "paramiko",
-    "sklearn",
+    "scikit-learn",
     "pytest",
     "pytest-cov",
     "pylint==2.8.3",

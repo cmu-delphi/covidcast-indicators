@@ -66,7 +66,7 @@ def download(ftp_credentials, out_path, logger):
                    password=ftp_credentials["pass"],
                    port=ftp_credentials["port"])
     sftp = client.open_sftp()
-    sftp.chdir('/hosp/receiving')
+    sftp.chdir('./receiving')
 
 
     # go through files in recieving dir

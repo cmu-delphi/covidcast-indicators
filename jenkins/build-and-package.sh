@@ -21,7 +21,7 @@ source env/bin/activate
 pip install --upgrade pip --retries 10 --timeout 20
 pip install numpy --retries 10 --timeout 20
 pip install ../_delphi_utils_python/. --retries 10 --timeout 20
-pip install . --retries 10 --timeout 20
+[ ! -f setup.py ] || pip install . --retries 10 --timeout 20
 
 #
 # Package

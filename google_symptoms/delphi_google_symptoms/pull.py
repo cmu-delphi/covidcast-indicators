@@ -48,7 +48,7 @@ def preprocess(df, level):
     for cb_metric in COMBINED_METRIC:
         df[cb_metric] = 0
         for metric in SYMPTOM_SETS[cb_metric]:
-            df[cb_metric] += df[metric].fillna(0)
+            df[cb_metric] += df[metric].fillna(0).astype(float)
         df[cb_metric] = df[cb_metric]/len(SYMPTOM_SETS[cb_metric])
         df.loc[df[SYMPTOM_SETS[cb_metric]].isnull().all(axis=1), cb_metric] = np.nan
 

@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 import numpy as np
 import pandas as pd
 
-from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS
+from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CONVERSIONS 
 
 
 # Create map of BigQuery symptom column names to desired column names.
@@ -223,7 +223,7 @@ def pull_gs_data_one_geolevel(level, date_range):
     """
     query = produce_query(level, date_range)
 
-    df = pandas_gbq.read_gbq(query, progress_bar_type=None)
+    df = pandas_gbq.read_gbq(query, progress_bar_type=None, dtypes = DTYPE_CONVERSIONS)
 
     if len(df) == 0:
         df = pd.DataFrame(

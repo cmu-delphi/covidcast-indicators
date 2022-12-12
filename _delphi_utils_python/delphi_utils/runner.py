@@ -43,7 +43,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         log_exceptions=params["common"].get("log_exceptions", True))
         
     #Get version and indicator name for startup
-    ind_name = indicator_fn.__module__.replace(".run","")
+    ind_name = indicator_fn.__module__.replace(".run", "")
     #Check for version.cfg in indicator directory
     if os.path.exists("version.cfg"):
         ver_file = open("version.cfg")

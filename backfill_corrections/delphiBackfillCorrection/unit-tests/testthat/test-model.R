@@ -10,7 +10,10 @@ test_lag <- 1
 model_save_dir <- "./cache"
 geo <- "pa"
 value_type <- "fraction"
+date_format = "%Y%m%d"
+training_days <- 7
 training_end_date <- as.Date("2022-01-01")
+training_start_date <- training_end_date - training_days
 
 # Generate Test Data
 main_covariate <- c("log_value_7dav")
@@ -41,8 +44,12 @@ covariates <- c(main_covariate, dayofweek_covariates)
   
 test_that("testing the generation of model filename prefix", {
   model_file_name <- generate_filename(indicator, signal, 
-                                    geo_level, signal_suffix, lambda)
-  expected <- "chng_outpatient_state_lambda0.1.model"
+                                    geo_level, signal_suffix, lambda,
+                                    training_end_date=training_end_date,
+                                    training_start_date=training_start_date)
+  expected <- str_interp(
+    "${format(training_end_date, date_format)}_${format(training_start_date, date_format)}_chng_outpatient_state_lambda0.1.model"
+  )
   expect_equal(model_file_name, expected)
 })
 
@@ -59,7 +66,9 @@ test_that("testing generating or loading the model", {
   tau = 0.5
   model_file_name <- generate_filename(indicator, signal, 
                                        geo_level, signal_suffix, lambda,
-                                       geo=geo, test_lag=test_lag, tau=tau)
+                                       geo=geo, test_lag=test_lag, tau=tau,
+                                       training_end_date=training_end_date,
+                                       training_start_date=training_start_date)
   model_path <- file.path(model_save_dir, model_file_name)
   expect_true(!file.exists(model_path))
   
@@ -78,12 +87,13 @@ test_that("testing generating or loading the model", {
 })
 
 test_that("testing model training and testing", {
-  result <- model_training_and_testing(train_data, test_data, TAUS, covariates,
-                                       LP_SOLVER, lambda, test_lag,
-                                       geo, value_type, model_save_dir, 
-                                       indicator, signal, 
-                                       geo_level, signal_suffix,
-                                       training_end_date, 
+  result <- model_training_and_testing(train_data, test_data, taus=TAUS, covariates=covariates,
+                                       lp_solver=LP_SOLVER, lambda=lambda, test_lag=test_lag,
+                                       geo=geo, value_type=value_type, model_save_dir=model_save_dir,
+                                       indicator=indicator, signal=signal,
+                                       geo_level=geo_level, signal_suffix=signal_suffix,
+                                       training_end_date=training_end_date,
+                                       training_start_date=training_start_date,
                                        train_models = TRUE,
                                        make_predictions = TRUE) 
   test_result <- result[[1]]
@@ -93,10 +103,12 @@ test_that("testing model training and testing", {
     cov <- paste0("predicted_tau", as.character(tau))
     expect_true(cov %in% colnames(test_result))
     
-    model_file_name <- generate_filename(indicator, signal, 
-                                         geo_level, signal_suffix, lambda,
+    model_file_name <- generate_filename(indicator=indicator, signal=signal, 
+                                         geo_level=geo_level, value_type=value_type,
+                                         signal_suffix=signal_suffix, lambda=lambda,
                                          geo=geo, test_lag=test_lag, tau=tau,
-                                         training_end_date=training_end_date)
+                                         training_end_date=training_end_date,
+                                         training_start_date=training_start_date)
     model_path <- file.path(model_save_dir, model_file_name)
     expect_true(file.exists(model_path))
     

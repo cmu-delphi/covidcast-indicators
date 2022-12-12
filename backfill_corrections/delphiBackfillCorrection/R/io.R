@@ -21,22 +21,47 @@ read_data <- function(input_dir) {
 #' @template lambda-template
 #' @template value_type-template
 #' @template export_dir-template
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #'
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
                                geo_level, signal_suffix, lambda,
-                               training_end_date,
+                               training_end_date, training_start_date,
                                value_type, export_dir) {
-  base_name <- generate_filename(indicator, signal, 
-                                 geo_level, signal_suffix, lambda,
-                                 training_end_date, value_type, model_mode=FALSE)
-  pred_output_dir <- str_interp("prediction_${base_name}")
-  write_csv(test_data, file.path(export_dir, pred_output_dir))
+  base_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 training_start_date=training_start_date,
+                                 value_type=value_type, model_mode=FALSE)
+
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo_level ${geo_level} value_type ${value_type}")
   
-  coef_output_dir <- str_interp("coefs_${base_name}")
-  write_csv(test_data, file.path(export_dir, coef_output_dir))
+  components <- c(indicator, signal, signal_suffix)
+  signal_dir <- paste(components[components != ""], collapse="_")
+  
+  dir.create(file.path(export_dir, signal_dir), showWarnings = FALSE)
+  
+  if (nrow(test_data) == 0) {
+    warning(str_interp("No test data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving predictions to disk for ${signal_info} "))
+    pred_output_file <- str_interp("prediction_${base_name}")
+    
+    prediction_col <- colnames(test_data)[grepl("^predicted", colnames(test_data))]
+    expected_col <- c("time_value", "issue_date", "lag", "geo_value", 
+                      "target_date", "wis", prediction_col)
+    write_csv(test_data[expected_col], file.path(export_dir, signal_dir, pred_output_file))
+  }
+  
+  if (nrow(coef_data) == 0) {
+    warning(str_interp("No coef data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving coefficients to disk for ${signal_info}"))
+    coef_output_file <- str_interp("coefs_${base_name}")
+    write_csv(coef_data, file.path(export_dir, signal_dir, coef_output_file))
+  }
 }
 
 #' List valid input files.
@@ -82,38 +107,84 @@ get_files_list <- function(indicator, signal, params, sub_dir) {
 subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), params) {
   file_type <- match.arg(file_type)
   date_format = "%Y%m%d"
+
+  # Put min and max issue date for each file into vectors the same length as
+  # `files_list`.
   switch(file_type,
          daily = {
-           start_dates <- as.Date(
-             sub("^.*/.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
+           start_issue_dates <- as.Date(
+             sub("^.*/.*_as_of_([0-9]{8})[.]parquet$", "\\1", files_list),
              format = date_format
            )
-           end_dates <- start_dates
+           end_issue_dates <- start_issue_dates
          },
          rollup = {
-           rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
-           start_dates <- as.Date(
+           rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8})[.]parquet$"
+           start_issue_dates <- as.Date(
              sub(rollup_pattern, "\\1", files_list),
              format = date_format
            )
-           end_dates <- as.Date(
+           end_issue_dates <- as.Date(
              sub(rollup_pattern, "\\2", files_list),
              format = date_format
            )
          }
   )
   
-  ## TODO: start_date depends on if we're doing model training or just corrections.
-  start_date <- TODAY - params$training_days - params$ref_lag
-  end_date <- TODAY - 1
-  
+  # Find the earliest and latest issue dates needed for either training or testing.
+  result <- get_issue_date_range(params)
+  start_issue <- result$start_issue
+  end_issue <- result$end_issue
+
   # Only keep files with data that falls at least somewhat between the desired
-  # start and end range dates.
+  # start and end issue dates.
   files_list <- files_list[
-    !(( start_dates < start_date & end_dates < start_date ) | 
-        ( start_dates > end_date & end_dates > end_date ))]
-  
+    !(( start_issue_dates < start_issue & end_issue_dates < start_issue ) |
+        ( start_issue_dates > end_issue & end_issue_dates > end_issue ))]
+
   return(files_list)
+}
+
+#' Find the earliest and latest issue dates needed for either training or testing.
+#'
+#' With current logic, we always need to include data for model training (in
+#' case cached models are not available for a "make_predictions"-only run and
+#' we need to train new models).
+#'
+#' We generate test and train data by applying the following filters:
+#'   - Test data is data where issue_date is in params$test_dates
+#'     (as a continuous filter, min(params$test_dates) <= issue_date <= max(params$test_dates) )
+#'   - Train data is data where issue_date < training_end_date; and
+#'     training_start_date < target_date <= training_end_date
+#'
+#' Train data doesn't have an explicit lower bound on issue_date, but we can
+#' derive one.
+#'
+#' Since target_date = reference_date + params$ref_lag and issue_date >=
+#' reference_date, the requirement that training_start_date < target_date
+#' also implies that issue date must be > training_start_date - params$ref_lag
+#'
+#' @template params-template
+get_issue_date_range <- function(params) {
+  result <- get_training_date_range(params)
+
+  # Check that all training data is earlier than the earliest test date.
+  #
+  # It's inappropriate to make predictions of historical data based on a model
+  # trained using future data. If we want to make predictions for an old test
+  # date t0 (t0 < TODAY), we will always need to train a new model based on
+  # data t < t0.
+  assert(
+    result$training_end_date <= min(params$test_dates),
+    "training end date must be earlier than the earliest test date to produce valid predictions"
+  )
+
+  ## TODO: right now, this gets both training and testing data regardless of
+  #  which mode is selected
+  start_issue <- result$training_start_date - params$ref_lag
+  end_issue <- max(params$test_dates)
+
+  return(list("start_issue" = start_issue, "end_issue" = end_issue))
 }
 
 #' Create pattern to match input files of a given type and signal
@@ -127,7 +198,7 @@ create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,
-         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}.parquet$"),
-         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
+         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}[.]parquet$"),
+         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}[.]parquet$")
   )
 }

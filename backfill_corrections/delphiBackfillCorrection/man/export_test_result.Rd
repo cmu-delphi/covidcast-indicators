@@ -49,9 +49,6 @@ single input dataframe, as with `quidel`'s age buckets.}
 \item{value_type}{string describing signal type. Either "count" or "fraction".}
 
 \item{export_dir}{path to directory to save output to}
-
-\item{geo}{string specifying the name of the geo region (e.g. FIPS
-code for counties)}
 }
 \description{
 Export the result to customized directory

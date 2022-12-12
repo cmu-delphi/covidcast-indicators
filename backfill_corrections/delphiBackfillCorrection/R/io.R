@@ -17,7 +17,6 @@ read_data <- function(input_dir) {
 #' @template indicator-template
 #' @template signal-template
 #' @template geo_level-template
-#' @template geo-template
 #' @template signal_suffix-template
 #' @template lambda-template
 #' @template value_type-template

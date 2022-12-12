@@ -87,7 +87,6 @@ test_that("testing generating or loading the model", {
 })
 
 test_that("testing model training and testing", {
-  browser()
   result <- model_training_and_testing(train_data, test_data, taus=TAUS, covariates=covariates,
                                        lp_solver=LP_SOLVER, lambda=lambda, test_lag=test_lag,
                                        geo=geo, value_type=value_type, model_save_dir=model_save_dir,

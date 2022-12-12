@@ -46,8 +46,8 @@ SMOOTHERS_MAP = {
 }
 
 DTYPE_CONVERSIONS = {'open_covid_region_code':'string','date': 'datetime64'}
-for symptom in range(len(METRICS)):
-    key = "symptom_" + METRICS[symptom].replace(" ","_")
+for index, symptom in enumerate(METRICS):
+    key = "symptom_" + METRICS[index].replace(" ","_")
     DTYPE_CONVERSIONS[key] = "float"
 
 STATE_TO_ABBREV = {'Alabama': 'al',

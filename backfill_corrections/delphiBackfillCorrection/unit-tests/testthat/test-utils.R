@@ -73,7 +73,7 @@ test_that("testing read parameters", {
   expect_true(!("test_dates" %in% names(params)))
   
   # Create input file
-  path = "test.tempt"
+  path = "test.temp"
   create_dir_not_exist(path)
   expect_silent(params <- read_params(path = "params-test.json",
                                       template_path = "params-test.json.template",
@@ -126,8 +126,8 @@ test_that("testing read parameters", {
   expect_true(params$training_days == TRAINING_DAYS)
   expect_true(params$ref_lag == REF_LAG)
   expect_true(params$testing_window == TESTING_WINDOW)
-  start_date <- TODAY - params$testing_window
-  end_date <- TODAY - 1
+  start_date <- TODAY - params$testing_window + 1
+  end_date <- TODAY
   expect_true(all(params$test_dates == seq(start_date, end_date, by="days")))
   
   expect_silent(file.remove("params-test.json"))

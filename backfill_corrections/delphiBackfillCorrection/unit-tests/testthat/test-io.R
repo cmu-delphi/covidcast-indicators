@@ -85,20 +85,22 @@ test_that("testing the filtration of the files for training and predicting", {
   params <- read_params("params-run.json", "params-run.json.template")
   params$train_models <- TRUE
 
-  daily_files_list <- c(file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet")),
+  daily_files_list <- c(file.path(params$input_dir, "chng_outpatient_as_of_20200202.parquet"),
+                        file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-15, date_format)}.parquet")),
                         file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet")),
                         file.path(params$input_dir, str_interp("chng_outpatient_as_of_${format(TODAY, date_format)}.parquet")))
   daily_valid_files <- subset_valid_files(daily_files_list, "daily", params)
-  expect_equal(daily_valid_files, daily_files_list[2])
+  expect_equal(daily_valid_files, daily_files_list[2:4])
   
   rollup_files_list <- c(file.path(params$input_dir, str_interp(
     "chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY-11, date_format)}.parquet")),
     file.path(params$input_dir, str_interp(
     "chng_outpatient_from_${format(TODAY-15, date_format)}_to_${format(TODAY, date_format)}.parquet")),
     file.path(params$input_dir, str_interp(
-      "chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet")))
+      "chng_outpatient_from_${format(TODAY, date_format)}_to_${format(TODAY+3, date_format)}.parquet")),
+    file.path(params$input_dir, "chng_outpatient_from_20200202_to_20210304.parquet"))
   rollup_valid_files <- subset_valid_files(rollup_files_list, "rollup", params)
-  expect_equal(rollup_valid_files, rollup_files_list[2])
+  expect_equal(rollup_valid_files, rollup_files_list[1:3])
 
   file.remove("params-run.json")
 })

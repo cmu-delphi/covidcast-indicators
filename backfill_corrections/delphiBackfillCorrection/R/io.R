@@ -22,34 +22,46 @@ read_data <- function(input_dir) {
 #' @template lambda-template
 #' @template value_type-template
 #' @template export_dir-template
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #'
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
-                               geo_level, geo, signal_suffix, lambda,
-                               training_end_date,
+                               geo_level, signal_suffix, lambda,
+                               training_end_date, training_start_date,
                                value_type, export_dir) {
   base_name <- generate_filename(indicator=indicator, signal=signal,
                                  geo_level=geo_level, signal_suffix=signal_suffix,
                                  lambda=lambda, training_end_date=training_end_date,
-                                 geo=geo, value_type=value_type, model_mode=FALSE)
+                                 training_start_date=training_start_date,
+                                 value_type=value_type, model_mode=FALSE)
 
-  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo_level ${geo_level} value_type ${value_type}")
+  
+  components <- c(indicator, signal, signal_suffix)
+  signal_dir <- paste(components[components != ""], collapse="_")
+  
+  dir.create(file.path(export_dir, signal_dir), showWarnings = FALSE)
+  
   if (nrow(test_data) == 0) {
     warning(str_interp("No test data available for ${signal_info}"))
   } else {
     msg_ts(str_interp("Saving predictions to disk for ${signal_info} "))
     pred_output_file <- str_interp("prediction_${base_name}")
-    write_csv(test_data, file.path(export_dir, pred_output_file))
+    
+    prediction_col <- colnames(test_data)[grepl("^predicted", colnames(test_data))]
+    expected_col <- c("time_value", "issue_date", "lag", "geo_value", 
+                      "target_date", "wis", prediction_col)
+    write_csv(test_data[expected_col], file.path(export_dir, signal_dir, pred_output_file))
   }
   
   if (nrow(coef_data) == 0) {
     warning(str_interp("No coef data available for ${signal_info}"))
   } else {
     msg_ts(str_interp("Saving coefficients to disk for ${signal_info}"))
-  coef_output_file <- str_interp("coefs_${base_name}")
-  write_csv(coef_data, file.path(export_dir, coef_output_file))
+    coef_output_file <- str_interp("coefs_${base_name}")
+    write_csv(coef_data, file.path(export_dir, signal_dir, coef_output_file))
   }
 }
 
@@ -99,13 +111,13 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
   switch(file_type,
          daily = {
            start_dates <- as.Date(
-             sub("^.*/.*_as_of_([0-9]{8}).parquet$", "\\1", files_list),
+             sub("^.*/.*_as_of_([0-9]{8})[.]parquet$", "\\1", files_list),
              format = date_format
            )
            end_dates <- start_dates
          },
          rollup = {
-           rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8}).parquet$"
+           rollup_pattern <- "^.*/.*_from_([0-9]{8})_to_([0-9]{8})[.]parquet$"
            start_dates <- as.Date(
              sub(rollup_pattern, "\\1", files_list),
              format = date_format
@@ -117,12 +129,9 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
          }
   )
   
-  # Start_date depends on if we're doing model training or just corrections.
-  n_addl_days <- params$ref_lag
-  if (params$train_models) {
-    n_addl_days <- n_addl_days + params$training_days
-  }
-
+  ## TODO: right now, this gets both training and testing data regardless of
+  #  which mode is selected
+  n_addl_days <- params$ref_lag + params$training_days
   start_date <- TODAY - n_addl_days
   end_date <- TODAY - 1
   
@@ -146,7 +155,7 @@ create_name_pattern <- function(indicator, signal,
                                 file_type = c("daily", "rollup")) {
   file_type <- match.arg(file_type)
   switch(file_type,
-         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}.parquet$"),
-         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}.parquet$")
+         daily = str_interp("${indicator}_${signal}_as_of_[0-9]{8}[.]parquet$"),
+         rollup = str_interp("${indicator}_${signal}_from_[0-9]{8}_to_[0-9]{8}[.]parquet$")
   )
 }

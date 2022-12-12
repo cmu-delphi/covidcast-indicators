@@ -8,14 +8,13 @@
 #' @template signal_suffixes-template
 #' @template indicator-template
 #' @template signal-template
-#' @param training_end_date the most recent training date
 #' 
 #' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
 #' 
 #' @export
-run_backfill <- function(df, params, training_end_date,
+run_backfill <- function(df, params,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
   df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
@@ -57,13 +56,14 @@ run_backfill <- function(df, params, training_end_date,
         coef_list[[key]] <- list()
       }
     }
-
+    
     msg_ts("Splitting data into geo groups")
     group_dfs <- group_split(df, .data$geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
+      
       msg_ts(str_interp("Processing ${geo} geo group"))
 
       min_refd <- min(subdf[[refd_col]])
@@ -115,9 +115,9 @@ run_backfill <- function(df, params, training_end_date,
           combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
 
           geo_train_data <- combined_df %>%
-            filter(.data$issue_date < training_end_date) %>%
-            filter(.data$target_date <= training_end_date) %>%
-            filter(.data$target_date > training_end_date - params$training_days) %>%
+            filter(.data$issue_date < params$training_end_date) %>%
+            filter(.data$target_date <= params$training_end_date) %>%
+            filter(.data$target_date > params$training_start_date) %>%
             drop_na()
           geo_test_data <- combined_df %>%
             filter(.data$issue_date %in% params$test_dates) %>%
@@ -135,7 +135,8 @@ run_backfill <- function(df, params, training_end_date,
                                      indicator = indicator, signal = signal,
                                      geo_level = geo_level, signal_suffix = signal_suffix,
                                      lambda = params$lambda, value_type = value_type, geo = geo,
-                                     training_end_date = training_end_date,
+                                     training_end_date = params$training_end_date,
+                                     training_start_date = params$training_start_date,
                                      model_save_dir = params$cache_dir,
                                      taus = params$taus,
                                      lp_solver = params$lp_solver,
@@ -178,7 +179,9 @@ run_backfill <- function(df, params, training_end_date,
               lambda = params$lambda, test_lag = test_lag, geo = geo,
               value_type = value_type, model_save_dir = params$cache_dir,
               indicator = indicator, signal = signal, geo_level = geo_level,
-              signal_suffix =signal_suffix, training_end_date = training_end_date,
+              signal_suffix =signal_suffix,
+              training_end_date = params$training_end_date,
+              training_start_date = params$training_start_date,
               train_models = params$train_models,
               make_predictions = params$make_predictions
             )
@@ -199,23 +202,24 @@ run_backfill <- function(df, params, training_end_date,
           }# End for test lags
         }# End for value types
       }# End for signal suffixes
-      
-      if (params$make_predictions) {
-        for (value_type in params$value_types) {
-          for (signal_suffix in signal_suffixes) {
-            key <- make_key(value_type, signal_suffix)
-            test_combined <- bind_rows(test_data_list[[key]]) 
-            coef_combined <- bind_rows(coef_list[[key]]) 
-            export_test_result(test_combined, coef_combined, 
-                               indicator, signal, 
-                               geo_level, geo, signal_suffix, params$lambda,
-                               training_end_date,
-                               value_type, export_dir=params$export_dir)
-          }
+    }# End for geo list
+    
+    if (params$make_predictions) {
+      for (value_type in params$value_types) {
+        for (signal_suffix in signal_suffixes) {
+          key <- make_key(value_type, signal_suffix)
+          test_combined <- bind_rows(test_data_list[[key]]) 
+          coef_combined <- bind_rows(coef_list[[key]]) 
+          export_test_result(test_combined, coef_combined, 
+                             indicator=indicator, signal=signal,
+                             signal_suffix=signal_suffix,
+                             geo_level=geo_level, lambda=params$lambda,
+                             training_end_date=params$training_end_date,
+                             training_start_date=params$training_start_date,
+                             value_type=value_type, export_dir=params$export_dir)
         }
       }
-      
-    }# End for geo list
+    }
   }# End for geo type
 }
 
@@ -236,13 +240,9 @@ main <- function(params) {
   
   if (params$train_models) {
     msg_ts("Removing stored models")
-    files_list <- list.files(params$cache_dir, pattern="*.model", full.names = TRUE)
+    files_list <- list.files(params$cache_dir, pattern="[.]model$", full.names = TRUE)
     file.remove(files_list)
   }
-
-  training_end_date <- as.Date(readLines(
-    file.path(params$cache_dir, "training_end_date.txt")))
-  msg_ts(str_interp("training_end_date is ${training_end_date}"))
 
   ## Set default number of cores for mclapply to half of those available.
   if (params$parallel) {
@@ -255,7 +255,18 @@ main <- function(params) {
       options(mc.cores = min(params$parallel_max_cores, max(floor(cores / 2), 1L)))
     }
   }
-  
+
+  # Training start and end dates are the same for all indicators, so we can fetch
+  # at the beginning.
+  result <- get_training_date_range(params)
+  params$training_start_date <- result$training_start_date
+  params$training_end_date <- result$training_end_date
+
+  msg_ts(paste0(
+    str_interp("training_start_date is ${params$training_start_date}, "),
+    str_interp("training_end_date is ${params$training_end_date}")
+  ))
+
   # Loop over every indicator + signal combination.
   for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
     input_group <- INDICATORS_AND_SIGNALS[group_i,]
@@ -302,14 +313,8 @@ main <- function(params) {
     training_days_check(input_data$issue_date, params$training_days)
     
     # Perform backfill corrections and save result
-    run_backfill(input_data, params, training_end_date,
+    run_backfill(input_data, params,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
-
-    if (params$train_models) {
-      # Save the training end date to a text file.
-      writeLines(as.character(TODAY),
-                 file.path(params$cache_dir, "training_end_date.txt"))
-    }
   }
 }

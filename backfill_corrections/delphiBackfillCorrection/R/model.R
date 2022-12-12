@@ -54,18 +54,19 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
   
   for (split in seq(0, 3)){
     if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
-    train_data[paste0("sqrty", as.character(split))] = 0
-    test_data[paste0("sqrty", as.character(split))] = 0
+    y0_col <- paste0("sqrty", as.character(split))
+    train_data[y0_col] = 0
+    test_data[y0_col] = 0
     qv_pre = max_raw * split * 0.2
     qv_next = max_raw * (split+1) * 0.2
 
     train_data[(train_data[[value_col]] <= (qv_next)^2)
                & (train_data[[value_col]] > (qv_pre)^2), 
-               paste0("sqrty", as.character(split))] = 1
+               y0_col] = 1
     test_data[(test_data[[value_col]] <= (qv_next)^2)
               & (test_data[[value_col]] > (qv_pre)^2), 
-              paste0("sqrty", as.character(split))] = 1
-    sqrtscale[split+1] = paste0("sqrty", as.character(split))
+              y0_col] = 1
+    sqrtscale[split+1] = y0_col
   }
   return (list(train_data, test_data, sqrtscale))
 }
@@ -91,6 +92,7 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @param training_end_date Most recent training date
 #'
 #' @importFrom stats predict coef
+#' @importFrom stringr str_interp
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
@@ -107,13 +109,14 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   for (tau in taus) {
     tryCatch(
       expr = {
-        model_file_name <- generate_filename(indicator, signal, 
-                                        geo_level, signal_suffix, lambda,
-                                        training_end_date, geo, 
-                                        value_type, test_lag, tau)
+        model_file_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 geo=geo, value_type=value_type,
+                                 test_lag=test_lag, tau=tau)
         model_path <- file.path(model_save_dir, model_file_name)
         obj <- get_model(model_path, train_data, covariates, tau,
-                         lambda, lp_solver, train_models=TRUE) 
+                         lambda, lp_solver, train_models)
 
         if (make_predictions) {
           y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
@@ -124,7 +127,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {print(paste("Training failed for", model_path, sep=" "))}
+      error=function(e) {msg_ts(str_interp("Training failed for ${model_path}"))}
     )
   }
   if (success < length(taus)) {return (NULL)}
@@ -193,8 +196,10 @@ get_model <- function(model_path, train_data, covariates, tau,
     create_dir_not_exist(dirname(model_path))
     save(obj, file=model_path)
   } else {
-    # Load model from cache.
-    obj <- load(model_path)
+    # Load model from cache invisibly. Object has the same name as the original
+    # model object, `obj`.
+    msg_ts(str_interp("Loading from ${model_path}"))
+    load(model_path)
   }
 
   return(obj)
@@ -243,11 +248,11 @@ generate_filename <- function(indicator, signal,
   if (model_mode) {
     file_type <- ".model"
   } else {
-    file_type <- ".csv"
+    file_type <- ".csv.gz"
   }
   components <- c(as.character(training_end_date), beta_prior,
                   indicator, signal, signal_suffix,
-                  geo_level, lambda,
+                  geo_level, lambda, value_type,
                   geo, test_lag, dw, tau)
   
   filename = paste0(

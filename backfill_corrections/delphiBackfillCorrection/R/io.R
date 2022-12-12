@@ -17,6 +17,7 @@ read_data <- function(input_dir) {
 #' @template indicator-template
 #' @template signal-template
 #' @template geo_level-template
+#' @template geo-template
 #' @template signal_suffix-template
 #' @template lambda-template
 #' @template value_type-template
@@ -26,17 +27,30 @@ read_data <- function(input_dir) {
 #' @importFrom readr write_csv
 #' @importFrom stringr str_interp str_split
 export_test_result <- function(test_data, coef_data, indicator, signal, 
-                               geo_level, signal_suffix, lambda,
+                               geo_level, geo, signal_suffix, lambda,
                                training_end_date,
                                value_type, export_dir) {
-  base_name <- generate_filename(indicator, signal, 
-                                 geo_level, signal_suffix, lambda,
-                                 training_end_date, value_type, model_mode=FALSE)
-  pred_output_dir <- str_interp("prediction_${base_name}")
-  write_csv(test_data, file.path(export_dir, pred_output_dir))
+  base_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 geo=geo, value_type=value_type, model_mode=FALSE)
+
+  signal_info <- str_interp("indicator ${indicator} signal ${signal} geo ${geo} value_type ${value_type}")
+  if (nrow(test_data) == 0) {
+    warning(str_interp("No test data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving predictions to disk for ${signal_info} "))
+    pred_output_file <- str_interp("prediction_${base_name}")
+    write_csv(test_data, file.path(export_dir, pred_output_file))
+  }
   
-  coef_output_dir <- str_interp("coefs_${base_name}")
-  write_csv(test_data, file.path(export_dir, coef_output_dir))
+  if (nrow(coef_data) == 0) {
+    warning(str_interp("No coef data available for ${signal_info}"))
+  } else {
+    msg_ts(str_interp("Saving coefficients to disk for ${signal_info}"))
+  coef_output_file <- str_interp("coefs_${base_name}")
+  write_csv(coef_data, file.path(export_dir, coef_output_file))
+  }
 }
 
 #' List valid input files.
@@ -103,8 +117,13 @@ subset_valid_files <- function(files_list, file_type = c("daily", "rollup"), par
          }
   )
   
-  ## TODO: start_date depends on if we're doing model training or just corrections.
-  start_date <- TODAY - params$training_days - params$ref_lag
+  # Start_date depends on if we're doing model training or just corrections.
+  n_addl_days <- params$ref_lag
+  if (params$train_models) {
+    n_addl_days <- n_addl_days + params$training_days
+  }
+
+  start_date <- TODAY - n_addl_days
   end_date <- TODAY - 1
   
   # Only keep files with data that falls at least somewhat between the desired

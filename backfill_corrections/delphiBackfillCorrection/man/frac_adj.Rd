@@ -17,8 +17,8 @@ frac_adj(
   geo,
   training_end_date,
   model_save_dir,
-  taus = TAUS,
-  lp_solver = LP_SOLVER,
+  taus,
+  lp_solver,
   train_models = TRUE,
   make_predictions = TRUE
 )

@@ -29,6 +29,9 @@ train_data$value_target_num <- exp(train_beta_vs) * 100
 train_data$value_target_denom <- 100
 test_data <- data.frame(log_value_7dav = test_beta_vs,
                          log_value_target = test_beta_vs)
+test_data$value_target_num <- exp(test_beta_vs) * 100
+test_data$value_target_denom <- 100
+
 for (cov in null_covariates){
   train_data[[cov]] <- 0
   test_data[[cov]] <- 0

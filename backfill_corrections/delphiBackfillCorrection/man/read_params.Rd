@@ -7,8 +7,8 @@
 read_params(
   path = "params.json",
   template_path = "params.json.template",
-  train_models = TRUE,
-  make_predictions = TRUE
+  train_models = FALSE,
+  make_predictions = FALSE
 )
 }
 \arguments{

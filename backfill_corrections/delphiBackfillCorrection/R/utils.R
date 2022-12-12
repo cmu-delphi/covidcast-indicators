@@ -32,10 +32,12 @@
 #'
 #' @return a named list of parameters values
 #'
+#' @export
+#'
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
 read_params <- function(path = "params.json", template_path = "params.json.template",
-                        train_models = TRUE, make_predictions = TRUE) {
+                        train_models = FALSE, make_predictions = FALSE) {
   if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
@@ -64,7 +66,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
   if (!("denom_col" %in% names(params))) {params$denom_col <- "denom"}
-  if (!("geo_levels" %in% names(params))) {params$geo_levels <- c("state", "county")}
+  if (!("geo_levels" %in% names(params)) || length(params$geo_levels) == 0) {
+    params$geo_levels <- c("state", "county")
+  }
   if (!("value_types" %in% names(params))) {params$value_types <- c("count", "fraction")}
 
   # Date parameters
@@ -75,6 +79,18 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
     start_date <- TODAY - params$testing_window
     end_date <- TODAY - 1
     params$test_dates <- seq(start_date, end_date, by="days")
+  } else {
+    if (length(params$test_dates) != 2) {
+      stop("`test_dates` setting in params must be a length-2 list of dates")
+    }
+    params$test_dates <- seq(
+      as.Date(params$test_dates[1]),
+      as.Date(params$test_dates[2]),
+      by="days"
+    )
+  }
+  if (!("test_lags" %in% names(params))) {
+    params$test_lags <- TEST_LAGS
   }
   
   return(params)
@@ -97,20 +113,22 @@ create_dir_not_exist <- function(path)
 #' @template num_col-template
 #' @template denom_col-template
 #' @template signal_suffixes-template
+#' @template lag_col-template
+#' @template issued_col-template
 #'
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
-validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes) {
-  if (!missing(signal_suffixes)) {
+validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
+                            lag_col = "lag", issued_col = "issue_date") {
+  if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
     denom_col <- paste(num_col, signal_suffixes, sep = "_")
   }
 
   # Check data type and required columns
   if (value_type == "count") {
-    if (all(num_col %in% colnames(df))) {value_cols=c(num_col)}
-    else if (all(denom_col %in% colnames(df))) {value_cols=c(denom_col)}
+    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
     else {stop("No valid column name detected for the count values!")}
   } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
@@ -125,8 +143,8 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
   }
   
   # issue_date or lag should exist in the dataset
-  if ( !"lag" %in% colnames(df) ) {
-    if ( "issue_date" %in% colnames(df) ) {
+  if ( !lag_col %in% colnames(df) ) {
+    if ( issued_col %in% colnames(df) ) {
       df$lag = as.integer(df$issue_date - df$time_value)
     }
     else {stop("No issue_date or lag exists!")}
@@ -139,7 +157,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes)
 #'
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
-training_days_check <- function(issue_date, training_days = TRAINING_DAYS) {
+training_days_check <- function(issue_date, training_days) {
   valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
   if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
@@ -162,4 +180,27 @@ get_populous_counties <- function() {
       pull(.data$fips) %>%
       head(n=200)
   )
+}
+
+#' Write a message to the console with the current time
+#'
+#' @param text the body of the message to display
+#'
+#' @export
+msg_ts <- function(text) {
+  message(sprintf("%s --- %s", format(Sys.time()), text))
+}
+
+#' Generate key for identifying a value_type-signal combo
+#'
+#' @template value_type-template
+#' @template signal_suffix-template
+make_key <- function(value_type, signal_suffix) {
+  if (signal_suffix == "" || is.na(signal_suffix)) {
+    key <- value_type
+  } else {
+    key <- paste(value_type, signal_suffix)
+  }
+
+  return(key)
 }

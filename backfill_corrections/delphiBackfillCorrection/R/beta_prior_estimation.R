@@ -142,17 +142,22 @@ frac_adj <- function(train_data, test_data, prior_test_data,
                      indicator, signal, geo_level, signal_suffix,
                      lambda, value_type, geo, 
                      training_end_date, model_save_dir, 
-                     taus = TAUS, lp_solver = LP_SOLVER,
+                     taus, lp_solver,
                      train_models = TRUE,
                      make_predictions = TRUE) {
   train_data$value_target <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_target_num", "value_target_denom")
-  train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
-  prior_test_data$value_7dav <- frac_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
-  
   train_data$log_value_target <- log(train_data$value_target)
+
+  test_data$value_target <- frac_adj_with_pseudo(test_data, NULL, 1, 100, "value_target_num", "value_target_denom")
+  test_data$log_value_target <- log(test_data$value_target)
+
+  train_data$value_7dav <- frac_adj_with_pseudo(train_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   train_data$log_value_7dav <- log(train_data$value_7dav)
+
+  prior_test_data$value_7dav <- frac_adj_with_pseudo(prior_test_data, NULL, 1, 100, "value_7dav_num", "value_7dav_denom")
   prior_test_data$log_value_7dav <- log(prior_test_data$value_7dav)
   
+
   pre_covariates = c("Mon_ref", "Tue_ref", "Wed_ref", "Thurs_ref", "Fri_ref", "Sat_ref",
                       "log_value_7dav")
   #For training

@@ -1,6 +1,6 @@
 {
   "ref_lag": 60,
-  "input_dir": "",
+  "input_dir": "/common/backfill/",
   "cache_dir": "./cache",
   "testing_window": 1,
   "training_days": 270,

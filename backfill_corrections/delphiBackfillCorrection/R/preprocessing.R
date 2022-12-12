@@ -22,7 +22,7 @@
 #' @importFrom stats setNames
 #'
 #' @export
-fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag = REF_LAG) {
+fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # Full list of lags
   # +30 to have values for calculating 7-day averages
   lags <- min(df[[lag_col]]): (ref_lag + 30) 
@@ -110,7 +110,7 @@ add_shift <- function(df, n_day, refd_col) {
 #' @export
 add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
   dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
-  for (i in 1:6) {
+  for (i in seq_along(wd)) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
   if (suffix == "_ref") {
@@ -156,7 +156,7 @@ get_weekofmonth <- function(date) {
 #' @export
 add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
   weekofmonth <- get_weekofmonth(df[[time_col]])
-  for (i in 1:3) {
+  for (i in seq_along(wm)) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
   return (df)
@@ -174,7 +174,7 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
-add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag = REF_LAG) {
+add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   df$issue_date <- df[[refd_col]] + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 

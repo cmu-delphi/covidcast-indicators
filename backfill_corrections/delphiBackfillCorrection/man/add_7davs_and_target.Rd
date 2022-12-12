@@ -5,7 +5,7 @@
 \title{Add 7dav and target to the data
 Target is the updates made ref_lag days after the first release}
 \usage{
-add_7davs_and_target(df, value_col, refd_col, lag_col, ref_lag = REF_LAG)
+add_7davs_and_target(df, value_col, refd_col, lag_col, ref_lag)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location

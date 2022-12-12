@@ -7,7 +7,7 @@ from google.oauth2 import service_account
 import numpy as np
 import pandas as pd
 
-from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CONVERSIONS 
+from .constants import DC_FIPS, METRICS, COMBINED_METRIC, SYMPTOM_SETS, DTYPE_CONVERSIONS
 
 
 # Create map of BigQuery symptom column names to desired column names.

@@ -9,7 +9,9 @@ lambda <- 0.1
 geo <- "pa"
 value_type <- "fraction"
 model_save_dir <- "./cache"
+training_days <- 7
 training_end_date <- as.Date("2022-01-01")
+training_start_date <- training_end_date - training_days
 
 # Generate Test Data
 main_covariate <- c("log_value_7dav")
@@ -29,6 +31,9 @@ train_data$value_target_num <- exp(train_beta_vs) * 100
 train_data$value_target_denom <- 100
 test_data <- data.frame(log_value_7dav = test_beta_vs,
                          log_value_target = test_beta_vs)
+test_data$value_target_num <- exp(test_beta_vs) * 100
+test_data$value_target_denom <- 100
+
 for (cov in null_covariates){
   train_data[[cov]] <- 0
   test_data[[cov]] <- 0
@@ -67,7 +72,7 @@ test_that("testing the prior estimation", {
   priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, TAUS, 
                        covariates, response, LP_SOLVER, lambda, 
                        indicator, signal, geo_level, signal_suffix, 
-                       training_end_date, model_save_dir)
+                       training_end_date, training_start_date, model_save_dir)
   alpha <- priors[2]
   beta <- priors[1] - alpha
   expect_true((alpha > 1) & (alpha < 3))
@@ -80,6 +85,7 @@ test_that("testing the prior estimation", {
                                          geo=geo, dw=dw, tau=tau,
                                          value_type=value_type,
                                          training_end_date=training_end_date,
+                                         training_start_date=training_start_date,
                                          beta_prior_mode=TRUE)
     model_path <- file.path(model_save_dir, model_file_name)
     expect_true(file.exists(model_path)) 
@@ -103,7 +109,7 @@ test_that("testing the main beta prior adjustment function", {
   updated_data <- frac_adj(train_data, test_data, prior_test_data, 
                            indicator, signal, geo_level, signal_suffix,
                            lambda, value_type, geo, 
-                           training_end_date, model_save_dir, 
+                           training_end_date, training_start_date, model_save_dir,
                            taus = TAUS, lp_solver = LP_SOLVER)
   updated_train_data <- updated_data[[1]]
   updated_test_data <- updated_data[[2]]
@@ -116,6 +122,7 @@ test_that("testing the main beta prior adjustment function", {
                                            geo=geo, dw=dw, tau=tau,
                                            value_type=value_type,
                                            training_end_date=training_end_date,
+                                           training_start_date=training_start_date,
                                            beta_prior_mode=TRUE)
       model_path <- file.path(model_save_dir, model_file_name)
       expect_true(file.exists(model_path)) 

@@ -7,9 +7,9 @@
 run_backfill(
   df,
   params,
-  training_end_date,
   refd_col = "time_value",
   lag_col = "lag",
+  issued_col = "issue_date",
   signal_suffixes = c(""),
   indicator = "",
   signal = ""
@@ -24,12 +24,13 @@ the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
 `lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
 
-\item{training_end_date}{the most recent training date}
-
 \item{refd_col}{string specifying name of reference date field within
 the input dataframe.}
 
 \item{lag_col}{string specifying name of lag field within
+the input dataframe.}
+
+\item{issued_col}{string specifying name of issue date (version) field within
 the input dataframe.}
 
 \item{signal_suffixes}{character vector specifying value column name

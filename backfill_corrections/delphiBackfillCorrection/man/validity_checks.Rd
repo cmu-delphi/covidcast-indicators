@@ -4,7 +4,15 @@
 \alias{validity_checks}
 \title{Check input data for validity}
 \usage{
-validity_checks(df, value_type, num_col, denom_col, signal_suffixes)
+validity_checks(
+  df,
+  value_type,
+  num_col,
+  denom_col,
+  signal_suffixes,
+  lag_col = "lag",
+  issued_col = "issue_date"
+)
 }
 \arguments{
 \item{df}{Data Frame of aggregated counts within a single location
@@ -21,6 +29,12 @@ endings to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
+
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
+
+\item{issued_col}{string specifying name of issue date (version) field within
+the input dataframe.}
 }
 \value{
 list of input dataframe augmented with lag column, if it

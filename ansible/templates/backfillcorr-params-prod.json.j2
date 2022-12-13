@@ -1,0 +1,25 @@
+{
+  "ref_lag": 60,
+  "input_dir": "/common/backfill/",
+  "cache_dir": "./cache",
+  "testing_window": 1,
+  "training_days": 270,
+  "lag_pad":2,
+  "export_dir": "./receiving",
+  "geo_levels": ["state", "county"],
+  "value_types": ["count", "fraction"],
+  "num_col": "num",
+  "denom_col": "den",
+  "post": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ backfillcorr_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ backfillcorr_aws_secret_access_key }}"
+    },
+    "bucket_name": "{{ backfillcorr_aws_bucket_name }}"
+  },
+  "gurobi": {
+    "GRB_LICENSEID": "{{ grb_licenseid }}",
+    "GRB_WLSACCESSID": "{{ grb_wlsaccessid }}",
+    "GRB_WLSSECRET": "{{ grb_wlssecret }}"
+  }
+}

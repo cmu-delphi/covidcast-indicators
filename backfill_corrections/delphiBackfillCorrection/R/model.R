@@ -54,18 +54,19 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
   
   for (split in seq(0, 3)){
     if (sub_max_raw < (max_raw * (split+1) * 0.1)) break
-    train_data[paste0("sqrty", as.character(split))] = 0
-    test_data[paste0("sqrty", as.character(split))] = 0
+    y0_col <- paste0("sqrty", as.character(split))
+    train_data[y0_col] = 0
+    test_data[y0_col] = 0
     qv_pre = max_raw * split * 0.2
     qv_next = max_raw * (split+1) * 0.2
 
     train_data[(train_data[[value_col]] <= (qv_next)^2)
                & (train_data[[value_col]] > (qv_pre)^2), 
-               paste0("sqrty", as.character(split))] = 1
+               y0_col] = 1
     test_data[(test_data[[value_col]] <= (qv_next)^2)
               & (test_data[[value_col]] > (qv_pre)^2), 
-              paste0("sqrty", as.character(split))] = 1
-    sqrtscale[split+1] = paste0("sqrty", as.character(split))
+              y0_col] = 1
+    sqrtscale[split+1] = y0_col
   }
   return (list(train_data, test_data, sqrtscale))
 }
@@ -88,9 +89,11 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @template train_models-template
 #' @template make_predictions-template
 #' @param model_save_dir directory containing trained models
-#' @param training_end_date Most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #'
 #' @importFrom stats predict coef
+#' @importFrom stringr str_interp
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
@@ -99,6 +102,7 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
                                        indicator, signal, 
                                        geo_level, signal_suffix,
                                        training_end_date, 
+                                       training_start_date,
                                        train_models = TRUE,
                                        make_predictions = TRUE) {
   success = 0
@@ -107,13 +111,15 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
   for (tau in taus) {
     tryCatch(
       expr = {
-        model_file_name <- generate_filename(indicator, signal, 
-                                        geo_level, signal_suffix, lambda,
-                                        training_end_date, geo, 
-                                        value_type, test_lag, tau)
+        model_file_name <- generate_filename(indicator=indicator, signal=signal,
+                                 geo_level=geo_level, signal_suffix=signal_suffix,
+                                 lambda=lambda, training_end_date=training_end_date,
+                                 training_start_date=training_start_date,
+                                 geo=geo, value_type=value_type,
+                                 test_lag=test_lag, tau=tau)
         model_path <- file.path(model_save_dir, model_file_name)
         obj <- get_model(model_path, train_data, covariates, tau,
-                         lambda, lp_solver, train_models=TRUE) 
+                         lambda, lp_solver, train_models)
 
         if (make_predictions) {
           y_hat_all = as.numeric(predict(obj, newx = as.matrix(test_data[covariates])))
@@ -124,13 +130,17 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {print(paste("Training failed for", model_path, sep=" "))}
+      error=function(e) {msg_ts(str_interp("Training failed for ${model_path}"))}
     )
   }
   if (success < length(taus)) {return (NULL)}
   if (!make_predictions) {return (list())}
   
-  coef_combined_result = data.frame(tau=taus, geo=geo, test_lag=test_lag)
+  test_data$geo_value = geo
+  coef_combined_result = data.frame(tau=taus, geo_value=geo, test_lag=test_lag,
+                                    training_end_date=training_end_date,
+                                    training_start_date=training_start_date,
+                                    lambda=lambda)
   coef_combined_result[coef_list] = as.matrix(do.call(rbind, coefs_result))
   
   return (list(test_data, coef_combined_result))
@@ -193,8 +203,10 @@ get_model <- function(model_path, train_data, covariates, tau,
     create_dir_not_exist(dirname(model_path))
     save(obj, file=model_path)
   } else {
-    # Load model from cache.
-    obj <- load(model_path)
+    # Load model from cache invisibly. Object has the same name as the original
+    # model object, `obj`.
+    msg_ts(str_interp("Loading from ${model_path}"))
+    load(model_path)
   }
 
   return(obj)
@@ -215,7 +227,8 @@ get_model <- function(model_path, train_data, covariates, tau,
 #' @param tau decimal quantile to be predicted. Values must be between 0 and 1.
 #' @param beta_prior_mode bool, indicate whether it is for a beta prior model
 #' @param model_mode bool, indicate whether the file name is for a model
-#' @param training_end_date the most recent training date
+#' @template training_end_date-template
+#' @template training_start_date-template
 #'
 #' @return path to file containing model object
 #'
@@ -223,7 +236,7 @@ get_model <- function(model_path, train_data, covariates, tau,
 #' 
 generate_filename <- function(indicator, signal, 
                               geo_level, signal_suffix, lambda,
-                              training_end_date="", geo="", 
+                              training_end_date, training_start_date, geo="",
                               value_type = "", test_lag="", tau="", dw="",
                               beta_prior_mode = FALSE, model_mode = TRUE) {
   if (lambda != "") {
@@ -243,17 +256,75 @@ generate_filename <- function(indicator, signal,
   if (model_mode) {
     file_type <- ".model"
   } else {
-    file_type <- ".csv"
+    file_type <- ".csv.gz"
   }
-  components <- c(as.character(training_end_date), beta_prior,
+  components <- c(format(training_end_date, "%Y%m%d"),
+                  format(training_start_date, "%Y%m%d"), beta_prior,
                   indicator, signal, signal_suffix,
-                  geo_level, lambda,
+                  geo_level, lambda, value_type,
                   geo, test_lag, dw, tau)
   
-  filename = paste0(
+  filename <- paste0(
     # Drop any empty strings.
     paste(components[components != ""], collapse="_"),
     file_type
   )
   return(filename)
+}
+
+#' Get date range of data to use for training models
+#'
+#' Calculate training start and end dates based on user settings.
+#' `training_start_date` is the minimum allowed target date when selecting
+#' training data to use. `training_end_date` is the maximum allowed target
+#' date and maximum allowed issue date.
+#'
+#' Cases:
+#'   1. We are training new models.
+#'   2. We are not training new models and cached models exist.
+#'   3. We are not training new models and cached models don't exist.
+#'
+#' Sometimes we want to allow the user to specify an end date in
+#' params that overrides the automatically-generated end date. This is
+#' only relevant when the user requests to train new models.
+#'
+#' @template params-template
+get_training_date_range <- function(params) {
+  default_end_date <- TODAY - params$testing_window + 1
+
+  if (params$train_models) {
+    if (params_element_exists_and_valid(params, "training_end_date")) {
+      # Use user-provided end date.
+      training_end_date <- as.Date(params$training_end_date)
+    } else {
+      # Default end date is today.
+      training_end_date <- default_end_date
+    }
+  } else {
+    # Get end date from cached model files. Assumes filename format like
+    # `20220628_20220529_changehc_covid_state_lambda0.1_count_ca_lag5_tau0.9.model`
+    # where the leading date is the training end date for that model, and the
+    # second date is the training start date.
+    model_files <- list.files(params$cache_dir, "^202[0-9]{5}_202[0-9]{5}.*[.]model$")
+    if (length(model_files) == 0) {
+      # We know we'll be retraining models today.
+      training_end_date <- default_end_date
+    } else {
+      # If only some models are in the cache, they will be used and those
+      # missing will be regenerated as-of the training end date.
+      training_end_date <- max(as.Date(substr(model_files, 1, 8), "%Y%m%d"))
+    }
+  }
+
+  # Calculate start date instead of reading from cached files. This assumes
+  # that the user-provided `params$training_days` is more up-to-date. If
+  # `params$training_days` has changed such that for a given training end
+  # date, the calculated training start date differs from the start date
+  # referenced in cached file names, then those cached files will not be used.
+  training_start_date <- training_end_date - params$training_days
+
+  return(list(
+    "training_start_date"=training_start_date,
+    "training_end_date"=training_end_date
+  ))
 }

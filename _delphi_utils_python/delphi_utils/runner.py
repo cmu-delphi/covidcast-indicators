@@ -41,7 +41,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         name=indicator_fn.__module__,
         filename=params["common"].get("log_filename", None),
         log_exceptions=params["common"].get("log_exceptions", True))
-        
+
     #Get version and indicator name for startup
     ind_name = indicator_fn.__module__.replace(".run", "")
     #Check for version.cfg in indicator directory
@@ -52,7 +52,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                 if "current_version" in line:
                     current_version = str.strip(line)
                     current_version = current_version.replace("current_version = ", "")
-    #Logging - Starting Indicator    
+    #Logging - Starting Indicator
         logger.info(f"Started {ind_name} with covidcast-indicators version {current_version}")
     else: logger.info(f"Started {ind_name} without version.cfg")
 

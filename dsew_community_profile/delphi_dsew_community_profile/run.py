@@ -125,3 +125,6 @@ def run_module(params):
                 csv_export_count = csv_export_count,
                 max_lag_in_days = max_lag_in_days,
                 oldest_final_export_date = formatted_min_max_date)
+    # Print warning if no CSV export
+    if csv_export_count == 0:
+        logger.warning("No CSV output - manual validation may be needed")

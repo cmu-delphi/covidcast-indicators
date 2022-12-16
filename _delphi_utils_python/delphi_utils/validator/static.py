@@ -93,25 +93,26 @@ class StaticValidator:
         # Create set of all dates seen in CSV names.
         unique_dates = {datetime.strptime(
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
+        # Check if there any dates in unique_dates before checking if any dates are missing
+        # Validation will be skipped if there is no CSV export
+        if len(unique_dates) > 0:
+            # Diff expected and observed dates.
+            expected_dates = self.params.time_window.date_seq
+            if len(self.params.max_expected_lag) == 0:
+                max_expected_lag_overall = 10
+            else:
+                max_expected_lag_overall = max(self.params.max_expected_lag.values())
 
-        # Diff expected and observed dates.
-        expected_dates = self.params.time_window.date_seq
-
-        if len(self.params.max_expected_lag) == 0:
-            max_expected_lag_overall = 10
-        else:
-            max_expected_lag_overall = max(self.params.max_expected_lag.values())
-
-        # Only check for date if it should definitely be present,
-        # i.e if it is more than max_expected_lag since the checking date
-        expected_dates = [date for date in expected_dates if
+            # Only check for date if it should definitely be present,
+            # i.e if it is more than max_expected_lag since the checking date
+            expected_dates = [date for date in expected_dates if
             ((datetime.today().date() - date).days) > max_expected_lag_overall]
-        check_dateholes = list(set(expected_dates).difference(unique_dates))
-        check_dateholes.sort()
+            check_dateholes = list(set(expected_dates).difference(unique_dates))
+            check_dateholes.sort()
 
-        if check_dateholes:
-            report.add_raised_error(
-                ValidationFailure("check_missing_date_files",
+            if check_dateholes:
+                report.add_raised_error(
+                    ValidationFailure("check_missing_date_files",
                                   message="Missing dates are observed; if these dates are already "
                                           "in the API they would not be updated"))
 

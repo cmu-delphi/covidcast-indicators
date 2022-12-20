@@ -91,9 +91,9 @@ class StaticValidator:
             - None
         """
         # Check to see if there are any files in the export directory
-        # Validator will throw a warning if the directory is empty
+        # Validator will throw an error if the directory is empty, which can be suppressed
         if len(daily_filenames) == 0:
-            report.add_raised_warning(
+            report.add_raised_error(
                 ValidationFailure("check_empty_filelist",
                                   message="No files found in export directory"))
         # Check for missing date only happens when files are found

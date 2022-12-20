@@ -27,9 +27,8 @@ class TestCheckMissingDates:
         filenames = list()
         validator.check_missing_date_files(filenames, report)
 
-        # Empty file list now triggers a raised warning and not an error in validation
-        assert len(report.raised_warnings) == 1
-        assert report.raised_warnings[0].check_name == "check_empty_filelist"
+        assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_empty_filelist"
 
     def test_same_day(self):
         params = {

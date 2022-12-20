@@ -95,7 +95,11 @@ class StaticValidator:
             daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
         # Check if there any dates in unique_dates before checking if any dates are missing
         # Validation will be skipped if there is no CSV export
-        if len(unique_dates) > 0:
+        if len(unique_dates) == 0:
+            report.add_raised_warning(
+                ValidationFailure("check_empty_filelist",
+                                  message="No files found in export directory"))
+        else:
             # Diff expected and observed dates.
             expected_dates = self.params.time_window.date_seq
             if len(self.params.max_expected_lag) == 0:

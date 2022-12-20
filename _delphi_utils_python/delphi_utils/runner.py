@@ -71,7 +71,6 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         if "delivery" in params:
             transfer_files()
 
-
 if __name__ == "__main__":
     parser = ap.ArgumentParser()
     parser.add_argument("indicator_name",

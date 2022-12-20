@@ -76,11 +76,10 @@ def aggregate_frames(frames_list):
         df['time_value'] = datetime.strptime(
             match.groupdict()['date'], "%Y%m%d").date()
         df['signal'] = match.groupdict()['signal']
-        # Check if df is empty before concat
-        if len(df) > 0:
-            all_frames.append(df)
-            all_frames = pd.concat(all_frames).reset_index(drop=True)
-    return all_frames
+
+        all_frames.append(df)
+
+    return pd.concat(all_frames).reset_index(drop=True)
 
 def lag_converter(lag_dict):
     """Convert a dictionary of lag values into the proper format.

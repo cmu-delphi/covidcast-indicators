@@ -16,7 +16,7 @@ def run_module():
 
 
 
-def flagger_from_params(params, df=None):
+def flagger_from_params(params):
     """Construct a validator from `params`.
 
     Arguments
@@ -24,4 +24,4 @@ def flagger_from_params(params, df=None):
     params: Dict[str, Any]
         Dictionary of parameters
     """
-    return flash_eval(params, df)
+    return flash_eval(params)

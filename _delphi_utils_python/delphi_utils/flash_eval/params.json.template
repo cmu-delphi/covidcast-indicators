@@ -1,14 +1,6 @@
 {
-  "flagging_meta": {
-    "generate_dates": true,
-    "output_dir": "./flag_output"
-  },
-  "flagging": [
-      {"lags": ["var"],
-        "sig_fold": "chng",
-        "sig_str": "smoothed_outpatient_cli",
-        "sig_type": "api"
-      }
-    ]
+  "flash": {
+    "signals": ["confirmed_incidence_num"]
+  }
 }
 

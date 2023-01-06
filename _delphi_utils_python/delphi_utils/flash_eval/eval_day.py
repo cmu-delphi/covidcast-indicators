@@ -1,5 +1,5 @@
 "Functions pretaining to running FlaSH daily."
-import time
+#import time
 import math
 import numpy as np
 import covidcast
@@ -41,7 +41,6 @@ def outlier(df, iqr_list=None, replace=pd.DataFrame(), replace_use=False):
     df['day'] = [x.weekday() for x in list(df.index)]
     diff_df2 = diff_df_small
     diff_df2['day'] = df['day']
-
     diff_df2_stack = diff_df2.drop(columns=['day']).stack().reset_index()
     diff_df2_stack.columns = ['date', 'state', 'val']
     diff_df2_stack['weekday'] = diff_df2_stack.date.dt.weekday
@@ -54,7 +53,7 @@ def outlier(df, iqr_list=None, replace=pd.DataFrame(), replace_use=False):
         iqr_spec_df2 = diff_df2_stack.iloc[1:, :]
         for _, (_, ldf) in enumerate(iqr_spec_df2.groupby(['weekday'])):
             iqr = ldf.groupby('state').apply(lambda x: x.val.quantile([lower, 0.5, upper]).T)
-            iqr = fix_iqr(iqr)
+            iqr = iqr.apply(lambda x: fix_iqr(x), axis=1)
             iqr['delta'] = 1.5 * (np.ceil(iqr[upper]) - np.floor(iqr[lower]))
             iqr['lower_bound'] = iqr[lower] - iqr['delta']
             iqr['upper_bound'] = iqr[upper] + iqr['delta']
@@ -113,7 +112,7 @@ def spike_outliers(df):
         window_size = 7
         shift_val = -1 if window_size % 2 == 0 else 0
         group = x.to_frame()
-        group.columns =  ["value"]
+        group.columns = ["value"]
         rolling_windows = group["value"].rolling(
             window_size, min_periods=window_size)
         center_windows = group["value"].rolling(
@@ -127,7 +126,7 @@ def spike_outliers(df):
         group['state'] = x.name
         group_list.append(group)
 
-    spike(all_frames_orig.T)
+    all_frames_orig.apply(lambda x: spike(x), axis=0).to_list()
     all_frames = pd.concat(group_list)
     outlier_df = all_frames.reset_index().sort_values(by=['state', 'ref']) \
         .reset_index(drop=True).copy()
@@ -197,7 +196,7 @@ def eval_day(input_df, iqr_dict, ref_date, weekday_params, linear_coeff):
                         lags_names=lags_names, axis=0).T.clip(0)
     y_predict.columns = ['y_predict']
     y_values_df = y_values_df.merge(y_predict, left_index=True,
-                        right_index=True, how='outer').droplevel(level=0)
+                        right_index=True, how='outer')#.droplevel(level=0)
     weekday_outlier_flags['flag'] = 'weekday outlier'
     large_spike_flags['flag'] = 'large_spikes'
     flags_returned = pd.concat([weekday_outlier_flags,
@@ -215,8 +214,8 @@ def return_vals(val, ref_dist):
     pval.name = 'pval'
     for state in dist.index:
         pval[state] = (sum(ref_dist.astype(float) < float(dist[state])) / len(ref_dist))
-    val = val.merge(dist, left_on='state', right_index=True, how='outer')
-    val = val.merge(pval, left_on='state', right_index=True, how='outer')
+    val = val.merge(dist, left_index=True, right_index=True, how='outer')
+    val = val.merge(pval, left_index=True, right_index=True, how='outer')
     return val
 
 def process_anomalies(y, t_skew=None):
@@ -322,16 +321,16 @@ def flash_eval_lag(input_df, range_tup, lag, signal, logger):
         if iter_df.shape[0] > 0 :
             for _, row in iter_df.reset_index().iterrows():
                 total_flags += 1
-
-                start_link = f"{starter_link},{row.state}"
+                start_link = f"{starter_link},{row['index']}"
                 if 'pval' in iter_df.columns :
-                    p_text += f"\t{start_link}|*{row.state}, {row.pval}*>\n"
+                    p_text += f"\t{start_link}|*{row['index']}, {row.pval}*>\n"
                 elif 'y_raw' in iter_df.columns :
-                    p_text += f"\t{start_link}|*{row.state}, {row.y_raw}*>\n"
+                    p_text += f"\t{start_link}|*{row['index']}, {row.y_raw}*>\n"
             logger.info(name,
                         payload=p_text,
                         hits=iter_df.shape[0])
             p_text = ""
+
 
 def flash_eval(params):
     """ Evaluate most recent data using FlaSH.
@@ -342,7 +341,6 @@ def flash_eval(params):
     Input: params
     Ouput: None
     """
-
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
@@ -358,7 +356,7 @@ def flash_eval(params):
     signals = params["flash"]["signals"]
     for signal in signals:
         curr_df = pd.DataFrame()
-        start_time = time.time()
+        #start_time = time.time()
         for date_s in pd.date_range(most_recent_d-pd.Timedelta('14d'),
                                     most_recent_d-pd.Timedelta('1d')):
             data = covidcast.signal(source, signal,
@@ -395,12 +393,12 @@ def flash_eval(params):
                     data = data.set_index(['state', 'lag', 'ref', 'as_of'])
                     curr_df = pd.concat([data, curr_df])
         curr_df = curr_df[~curr_df.index.duplicated(keep='first')].reset_index()
-        end_time = time.time()
-        print(f"Total Download Time: {start_time-end_time}")
+        #end_time = time.time()
+        #print(f"Total Download Time: {start_time-end_time}")
 
 
         for lag in range(1,8):
-            start_time = time.time()
+            #start_time = time.time()
             date_range = list(pd.date_range(most_recent_d-pd.Timedelta(f'{lag+7}d'),
                                             most_recent_d-pd.Timedelta(f'{lag}d')))
             input_df = curr_df.query('lag==@lag and ref in @date_range').sort_values('ref')
@@ -411,6 +409,7 @@ def flash_eval(params):
             input_df = input_df.merge(date_df, left_index=True, right_index=True,
                                       how='right').ffill().bfill().reset_index()
             input_df = input_df.set_index(['ref', 'state'])[['value']].unstack().ffill().bfill()
+            input_df.columns = input_df.columns.droplevel()
             flash_eval_lag(input_df, [0, math.inf], lag, signal, logger)
-            end_time = time.time()
-            print(f"Time lag {lag}: {start_time - end_time}")
+            #end_time = time.time()
+            #print(f"Time lag {lag}: {start_time - end_time}")

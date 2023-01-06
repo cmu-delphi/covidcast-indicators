@@ -46,7 +46,8 @@ the flagging system , as follows:
 
 ```
 env/bin/python -m delphi_INDICATORNAME
-env/bin/python -m delphi_utils.flagging
+env/bin/python -m delphi_utils.flash_eval
+
 ```
 
 Once you are finished with the code, you can deactivate the virtual environment
@@ -91,7 +92,7 @@ make test
 or 
 
 ```
-(cd tests && ../env/bin/pytest test_file.py --cov=delphi_utils.flagging --cov-report=term-missing)
+(cd tests && ../env/bin/pytest test_file.py --cov=delphi_utils --cov-report=term-missing)
 ```
 
 The output will show the number of unit tests that passed and failed, along with the percentage of code covered by the tests. None of the tests should fail and the code lines that are not covered by unit tests should be small and should not include critical sub-routines.

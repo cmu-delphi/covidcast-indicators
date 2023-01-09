@@ -18,6 +18,7 @@ def deploy_production = [:]
 pipeline {
     agent any
     stages {
+/*
         stage('Build and Package SK-55') {
             when {
                 branch "SK-55";
@@ -45,6 +46,37 @@ pipeline {
                         }
                     }
                     parallel deploy_staging
+                }
+            }
+        }
+*/
+        stage('Build and Package SK-55 prod') {
+            when {
+                branch "SK-55";
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        build_package_prod[indicator] = {
+                            sh "jenkins/build-and-package.sh ${indicator} prod"
+                        }
+                    }
+                    parallel build_package_prod
+                }
+            }
+        }
+        stage('Deploy SK-55 production') {
+            when {
+                branch "SK-55";
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        deploy_production[indicator] = {
+                            sh "jenkins/deploy-production.sh ${indicator}"
+                        }
+                    }
+                    parallel deploy_production
                 }
             }
         }

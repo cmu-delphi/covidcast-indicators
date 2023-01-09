@@ -1,6 +1,7 @@
 [runtime_host]
-delphi-master-prod-01.delphi.cmu.edu
-bigchunk-dev-02.delphi.cmu.edu
+jenkinstest-dev.delphi.cmu.edu
+#delphi-master-prod-01.delphi.cmu.edu
+#bigchunk-dev-02.delphi.cmu.edu
 
 [runtime_host_staging]
 jenkinstest-dev.delphi.cmu.edu

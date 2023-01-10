@@ -5,9 +5,9 @@ SHELL:=/bin/bash
 OPTIONS=
 
 PYTHON:=env/bin/python
-USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
-USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
-USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
+USR_INPUT_DIR:=$(shell $(PYTHON) -m delphi_utils get input_dir)
+USR_CACHE_DIR:=$(shell $(PYTHON) -m delphi_utils get cache_dir)
+USR_EXPORT_DIR:=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
 # Gurobi license
 GRB_LICENSE_FILE=./gurobi.lic

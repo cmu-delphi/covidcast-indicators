@@ -53,7 +53,7 @@ install-python:
 	python3 -m venv env
 	source env/bin/activate && \
 	pip install wheel && \
-	pip install delphi_utils
+	pip install --timeout 1000 delphi_utils
 
 lib:
 	R -e 'roxygen2::roxygenise("delphiBackfillCorrection")'

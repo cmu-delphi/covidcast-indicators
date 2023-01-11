@@ -1,13 +1,48 @@
 #' Read a parquet file into a dataframe
 #' 
-#' @template input_dir-template
+#' @template input_file-template
 #'
 #' @importFrom arrow read_parquet
+#' @importFrom dplyr %>%
 #'
 #' @export
-read_data <- function(input_dir) {
-  df <- read_parquet(input_dir, as_data_frame = TRUE)
+read_data <- function(input_file) {
+  df <- read_parquet(input_file, as_data_frame = TRUE)
   return (df)
+}
+
+#' Add `issue_date` parsed from filename to daily input, if needed
+#'
+#' @template input_file-template
+#' @template indicator-template
+#' @template signal-template
+#' @template issued_col-template
+#' @template lag_col-template
+#'
+#' @importFrom stringr str_interp
+add_issue_date <- function(df, input_file, indicator, signal, issued_col, lag_col) {
+  daily_pattern <- create_name_pattern(indicator, signal, "daily")
+  if (grepl(daily_pattern, input_file)) {
+    # Daily file
+    if (!(issued_col %in% names(df)) || any(is.na(df[[issued_col]]))) {
+      # Capture issue date from filename
+      issue_date <- as.Date(
+        sub("^.*/.*_as_of_([0-9]{8})[.]parquet$", "\\1", input_file),
+        format = "%Y%m%d"
+      )
+      df[[issued_col]] <- issue_date
+    }
+  } else {
+    # Rollup file
+    if (!(lag_col %in% colnames(df)) && !(issue_col %in% colnames(df))) {
+      stop("since rollup files contain data spanning multiple issues, ",
+           "the issue date field cannot be reconstructed from the ",
+           "filename. Thus, either issue date or lag must be ",
+           str_interp("provided in the input file ${input_file}"))
+    }
+  }
+
+  return(df)
 }
 
 #' Export the result to customized directory

@@ -287,7 +287,10 @@ main <- function(params) {
     msg_ts("Reading in and combining associated files")
     input_data <- lapply(
       files_list,
-      function(file) {read_data(file)}
+      function(file) {
+        read_data(file) %>%
+        add_issue_date(file, input_group$indicator, input_group$signal, issued_col, lag_col)
+      }
     ) %>%
       bind_rows()
 

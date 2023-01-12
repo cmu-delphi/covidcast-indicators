@@ -37,7 +37,7 @@ class TestBackfill:
         backfill_df = pd.read_parquet(backfill_dir + "/"+ fn, engine='pyarrow')
         
         selected_columns = ['time_value', 'fips', 'state_id',
-                        'num', 'den']
+                        'num', 'den', 'lag', 'issue_date']
         assert set(selected_columns) == set(backfill_df.columns)  
         
         os.remove(backfill_dir + "/" + fn)
@@ -79,9 +79,6 @@ class TestBackfill:
             if "from" in file:
                 continue
             df = pd.read_parquet(file, engine='pyarrow')
-            issue_date = datetime.strptime(file[-16:-8], "%Y%m%d")
-            df["issue_date"] = issue_date
-            df["lag"] = [(issue_date - x).days for x in df["time_value"]]
             pdList.append(df)
             os.remove(file)
         new_files = glob.glob(backfill_dir + "/claims_hosp*.parquet")

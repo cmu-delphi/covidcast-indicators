@@ -4,9 +4,18 @@
 \alias{add_issue_date}
 \title{Add `issue_date` parsed from filename to daily input, if needed}
 \usage{
-add_issue_date(df, input_file, indicator, signal, issued_col, lag_col)
+add_issue_date(
+  df,
+  input_file,
+  indicator,
+  signal,
+  lag_col = "lag",
+  issued_col = "issue_date"
+)
 }
 \arguments{
+\item{df}{dataframe containing input data from a single parquet file}
+
 \item{input_file}{path to the an individual file containing input data
 in `.parquet` format.}
 
@@ -18,10 +27,10 @@ with multiple signals.}
 `parquet` input data filenames. One indicator can be associated
 with multiple signals.}
 
-\item{issued_col}{string specifying name of issue date (version) field within
+\item{lag_col}{string specifying name of lag field within
 the input dataframe.}
 
-\item{lag_col}{string specifying name of lag field within
+\item{issued_col}{string specifying name of issue date (version) field within
 the input dataframe.}
 }
 \description{

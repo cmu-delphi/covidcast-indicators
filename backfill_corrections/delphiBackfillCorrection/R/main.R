@@ -289,7 +289,9 @@ main <- function(params) {
       files_list,
       function(file) {
         read_data(file) %>%
-        add_issue_date(file, input_group$indicator, input_group$signal, issued_col, lag_col)
+        datetime_to_date() %>%
+        add_issue_date(file, input_group$indicator, input_group$signal) %>%
+        add_lag()
       }
     ) %>%
       bind_rows()

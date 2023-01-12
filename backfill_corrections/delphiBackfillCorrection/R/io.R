@@ -13,14 +13,16 @@ read_data <- function(input_file) {
 
 #' Add `issue_date` parsed from filename to daily input, if needed
 #'
+#' @param df dataframe containing input data from a single parquet file
 #' @template input_file-template
 #' @template indicator-template
 #' @template signal-template
-#' @template issued_col-template
 #' @template lag_col-template
+#' @template issued_col-template
 #'
 #' @importFrom stringr str_interp
-add_issue_date <- function(df, input_file, indicator, signal, issued_col, lag_col) {
+add_issue_date <- function(df, input_file, indicator, signal,
+  lag_col = "lag", issued_col = "issue_date") {
   daily_pattern <- create_name_pattern(indicator, signal, "daily")
   if (grepl(daily_pattern, input_file)) {
     # Daily file
@@ -34,14 +36,46 @@ add_issue_date <- function(df, input_file, indicator, signal, issued_col, lag_co
     }
   } else {
     # Rollup file
-    if (!(lag_col %in% colnames(df)) && !(issue_col %in% colnames(df))) {
+    if (!(lag_col %in% colnames(df)) && !(issued_col %in% colnames(df))) {
       stop("since rollup files contain data spanning multiple issues, ",
            "the issue date field cannot be reconstructed from the ",
            "filename. Thus, either issue date or lag must be ",
            str_interp("provided in the input file ${input_file}"))
     }
+    if (!(issued_col %in% colnames(df))) {
+      df[[issued_col]] <- as.Date(df$time_value + df[[lag_col]])
+    }
   }
 
+  return(df)
+}
+
+#' Add `lag` field based on issue date and time value, if needed
+#'
+#' @param df dataframe containing input data from a single parquet file
+#' @template lag_col-template
+#' @template issued_col-template
+add_lag <- function(df, lag_col = "lag", issued_col = "issue_date") {
+  if ( (lag_col %in% colnames(df) && any(is.na(df[[lag_col]]))) ||
+    !(lag_col %in% colnames(df)) ) {
+    df[[lag_col]] <- as.integer(df[[issued_col]] - df$time_value)
+  }
+
+  return(df)
+}
+
+#' Extract date from datetime column in timezone-aware way
+#'
+#' @param df dataframe containing input data from a single parquet file
+#' @param cols vector of names of datetime fields to convert to date
+#'
+#' @importFrom lubridate with_tz
+datetime_to_date <- function(df, cols = c("time_value", "issue_date")) {
+  for (col in cols) {
+    if (col %in% colnames(df)) {
+      df[[col]] <- as.Date(with_tz(df[[col]], "UTC"))
+    }
+  }
   return(df)
 }
 

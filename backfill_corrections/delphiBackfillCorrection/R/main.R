@@ -227,7 +227,7 @@ run_backfill <- function(df, params,
 #' 
 #' @template params-template
 #'
-#' @importFrom dplyr bind_rows mutate
+#' @importFrom dplyr bind_rows mutate rename
 #' @importFrom parallel detectCores
 #' @importFrom rlang .data
 #' 
@@ -294,7 +294,8 @@ main <- function(params) {
         add_lag()
       }
     ) %>%
-      bind_rows()
+      bind_rows() %>%
+      rename(geo_value = .data$fips)
 
     if (nrow(input_data) == 0) {
       warning(str_interp(

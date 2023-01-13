@@ -148,12 +148,14 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
     stop("No 'time_value' column detected for the reference date!")
   }
   
-  # issue_date or lag should exist in the dataset
-  if ( !lag_col %in% colnames(df) ) {
-    if ( issued_col %in% colnames(df) ) {
-      df$lag = as.integer(df$issue_date - df$time_value)
-    }
-    else {stop("No issue_date or lag exists!")}
+  # issue_date and lag should exist in the dataset
+  if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
+    stop("`issue_date` and `lag` fields must exist in the input data")
+  }
+
+  if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||
+    any(is.na(df$time_value)) ) {
+    stop("`issue_date`, `lag`, or `time_value` contain missing values")
   }
 
   return(list(df = df, value_cols = value_cols))

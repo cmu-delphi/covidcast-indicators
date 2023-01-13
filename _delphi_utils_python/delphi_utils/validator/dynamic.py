@@ -5,7 +5,7 @@ from typing import Dict, Set
 import re
 import pandas as pd
 import numpy as np
-from .errors import ValidationFailure, APIDataFetchError
+from .errors import ValidationFailure
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
@@ -116,7 +116,7 @@ class DynamicValidator:
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
             report.increment_total_checks()
-            if isinstance(api_df_or_error, APIDataFetchError):
+            if not isinstance(api_df_or_error, pd.DataFrame):
                 report.add_raised_error(api_df_or_error)
                 continue
 

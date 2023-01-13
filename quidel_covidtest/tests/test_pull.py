@@ -103,3 +103,4 @@ class TestingPullData:
         expected = [datetime(2020, 5, 26), datetime(2020, 6, 20), datetime(2020, 5, 26)]
 
         assert tested == expected
+        

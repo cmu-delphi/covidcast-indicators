@@ -1,8 +1,10 @@
 import pytest
 import mock
+import db_dtypes
 from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from delphi_google_symptoms.pull import (
     pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel, get_date_range)
@@ -90,6 +92,16 @@ class TestPullGoogleSymptoms:
         with pytest.raises(AssertionError):
             preprocess(df, "county")
 
+    def test_no_rows_nulled(self):
+        """
+        Check that rows are not mysteriously nulled out. See
+        https://github.com/cmu-delphi/covidcast-indicators/pull/1496 for motivating issue.
+        """
+        # Cast date field to `dbdate` to match dataframe dtypes as provided by the BigQuery fetch.
+        df = pd.read_csv(good_input["state"]).astype({"date": "dbdate"})
+        out = preprocess(df, "state")
+        assert df.shape[0] == out[~out.Cough.isna()].shape[0]
+
 
 class TestPullHelperFuncs:
     @freeze_time("2021-01-05")
@@ -128,9 +140,9 @@ class TestPullHelperFuncs:
 
         output = pull_gs_data_one_geolevel("state", ["", ""])
         expected = pd.DataFrame(columns=new_keep_cols)
-        assert output.equals(expected)
+        assert_frame_equal(output, expected, check_dtype = False)
 
     def test_preprocess_no_data(self):
         output = preprocess(pd.DataFrame(columns=keep_cols), "state")
         expected = pd.DataFrame(columns=new_keep_cols)
-        assert output.equals(expected)
+        assert_frame_equal(output, expected, check_dtype = False)

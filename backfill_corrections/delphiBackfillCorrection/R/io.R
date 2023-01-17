@@ -1,13 +1,29 @@
 #' Read a parquet file into a dataframe
 #' 
-#' @template input_dir-template
+#' @template input_file-template
 #'
 #' @importFrom arrow read_parquet
 #'
 #' @export
-read_data <- function(input_dir) {
-  df <- read_parquet(input_dir, as_data_frame = TRUE)
+read_data <- function(input_file) {
+  df <- read_parquet(input_file, as_data_frame = TRUE)
   return (df)
+}
+
+#' Make sure data contains a `geo_value` field
+#'
+#' @template df-template
+#'
+#' @importFrom dplyr rename %>%
+#' @importFrom rlang .data
+fips_to_geovalue <- function(df) {
+  if ( !("geo_value" %in% colnames(df)) ) {
+    if ( !("fips" %in% colnames(df)) ) {
+      stop("Either `fips` or `geo_value` field must be available")
+    }
+    df <- rename(df, geo_value = .data$fips)
+  }
+  return(df)
 }
 
 #' Export the result to customized directory

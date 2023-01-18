@@ -78,7 +78,7 @@ run:
 		-v "${PWD}"/params.json:/backfill_corrections/params.host.json \
 		--env GRB_LICENSE_FILE=$(GRB_LICENSE_FILE) \
 		-it "${DOCKER_IMAGE}:${DOCKER_TAG}" \
-		/bin/bash -c "cp params.host.json params.json; make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\""
+		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
 	aws configure set aws_access_key_id $(AWS_KEY_ID)

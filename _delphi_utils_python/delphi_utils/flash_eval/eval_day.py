@@ -53,7 +53,7 @@ def outlier(df, iqr_list=None, replace=pd.DataFrame(), replace_use=False):
         iqr_spec_df2 = diff_df2_stack.iloc[1:, :]
         for _, (_, ldf) in enumerate(iqr_spec_df2.groupby(['weekday'])):
             iqr = ldf.groupby('state').apply(lambda x: x.val.quantile([lower, 0.5, upper]).T)
-            iqr = iqr.apply(lambda x: fix_iqr(x), axis=1)
+            iqr = iqr.apply(fix_iqr, axis=1)
             iqr['delta'] = 1.5 * (np.ceil(iqr[upper]) - np.floor(iqr[lower]))
             iqr['lower_bound'] = iqr[lower] - iqr['delta']
             iqr['upper_bound'] = iqr[upper] + iqr['delta']
@@ -126,7 +126,7 @@ def spike_outliers(df):
         group['state'] = x.name
         group_list.append(group)
 
-    all_frames_orig.apply(lambda x: spike(x), axis=0).to_list()
+    all_frames_orig.apply(spike, axis=0).to_list()
     all_frames = pd.concat(group_list)
     outlier_df = all_frames.reset_index().sort_values(by=['state', 'ref']) \
         .reset_index(drop=True).copy()

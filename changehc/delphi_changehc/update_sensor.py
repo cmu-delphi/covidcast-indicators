@@ -154,6 +154,15 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
+
+            #Create length column, find index values with a geo_id less than 5 digits
+            data['length'] = data['fips'].apply(len)
+            badindex = data.loc[data['length'] < 5].index
+            #Drop bad index values, drop length column
+            if len(badindex) > 0:
+                data = data.drop(badindex)
+            data = data.drop('length', axis=1)
+
             data_frame = gmpr.fips_to_megacounty(data,
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,

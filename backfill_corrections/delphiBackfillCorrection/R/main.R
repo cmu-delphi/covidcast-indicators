@@ -287,7 +287,7 @@ main <- function(params) {
     msg_ts("Reading in and combining associated files")
     input_data <- lapply(
       files_list,
-      function(file) {read_data(file)}
+      function(file) {read_data(file) %>% fips_to_geovalue()}
     ) %>%
       bind_rows()
 

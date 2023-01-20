@@ -226,13 +226,17 @@ run_backfill <- function(df, params,
 #' Perform backfill correction on all desired signals and geo levels
 #' 
 #' @template params-template
+#' @template refd_col-template
+#' @template lag_col-template
+#' @template issued_col-template
 #'
-#' @importFrom dplyr bind_rows mutate
+#' @importFrom dplyr bind_rows mutate %>%
 #' @importFrom parallel detectCores
-#' @importFrom rlang .data
+#' @importFrom rlang .data :=
 #' 
 #' @export
-main <- function(params) {
+main <- function(params,
+  refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!params$train_models && !params$make_predictions) {
     msg_ts("both model training and prediction generation are turned off; exiting")
     return(NULL)
@@ -287,7 +291,16 @@ main <- function(params) {
     msg_ts("Reading in and combining associated files")
     input_data <- lapply(
       files_list,
-      function(file) {read_data(file) %>% fips_to_geovalue()}
+      function(file) {
+        read_data(file) %>%
+        fips_to_geovalue() %>%
+        mutate(
+          # Use `glue` syntax to construct a new field by variable,
+          # from https://stackoverflow.com/a/26003971/14401472
+          "{refd_col}" := as.Date(.data[[refd_col]], "%Y-%m-%d"),
+          "{issued_col}" := as.Date(.data[[issued_col]], "%Y-%m-%d")
+        )
+      }
     ) %>%
       bind_rows()
 
@@ -304,16 +317,18 @@ main <- function(params) {
       msg_ts(str_interp("for ${value_type}"))
       result <- validity_checks(
         input_data, value_type,
-        params$num_col, params$denom_col, input_group$name_suffix
+        params$num_col, params$denom_col, input_group$name_suffix,
+        refd_col = refd_col, lag_col = lag_col, issued_col = issued_col
       )
       input_data <- result[["df"]]
     }
     
     # Check available training days
-    training_days_check(input_data$issue_date, params$training_days)
+    training_days_check(input_data[[issued_col]], params$training_days)
     
     # Perform backfill corrections and save result
     run_backfill(input_data, params,
+      refd_col = refd_col, lag_col = lag_col, issued_col = issued_col,
       indicator = input_group$indicator, signal = input_group$signal,
       signal_suffixes = input_group$name_suffix)
   }

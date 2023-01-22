@@ -48,5 +48,10 @@
     "bucket_name": "",
     "cache_dir": "./cache",
     "indicator_prefix": "jhu"
+  },
+  "flash": {
+    "signals": ["confirmed_incidence_num"],
+    "lags": [1],
+    "support": [0, 400000000]
   }
 }

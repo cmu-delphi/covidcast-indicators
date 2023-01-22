@@ -1,415 +1,303 @@
-"Functions pretaining to running FlaSH daily."
-#import time
-import math
+"""Functions pertaining to running FlaSH daily."""
+
 import numpy as np
-import covidcast
-from scipy.stats import nbinom
 import pandas as pd
-from ..validator.datafetcher import load_all_files, read_filenames
-from ..weekday import Weekday
+from scipy.stats import binom
+from delphi_utils.weekday import Weekday
+from .constants import HTML_LINK, STATES
 from .. import (
     get_structured_logger,
 )
-from .constants import HTML_LINK
 
 
-def fix_iqr(x):
-    "Changes to account that the delta may be positive or negative."
-    upper = 0.75
-    lower = 0.25
-    if x[upper] == x[lower]:
-        x[upper] += 2
-        x[lower] -= 2
-    if x[lower] >= 0:
-        x[lower] = -1
-    if x[upper] <= 0:
-        x[upper] = 1
-    return x
+def split_reporting_schedule_dfs(input_df, flash_dir, lag):
+    """Separate the input df by reporting schedule (pre-determined).
 
-def outlier(df, iqr_list=None, replace=pd.DataFrame(), replace_use=False):
-    """Two diferent outlier processing methods.
-    One, using the interquartile-range, and the other using the baseline spikes method.
-    Input: df:streaming dataframe
-    IQR_list: If available, provides the IQR needed for determining weekday outliers
-    Replace: Points to replace (if they were global outliers)
-    Replace_use: Distinguishes between the two times of outliers: global and weekday
+    Parameters
+    ----------
+    input_df: the df to split up
+    flash_dir: the string reference directory to find all files
+    lag: difference between reporting and reference date.
+
+    Returns
+    -------
+    df of streams updated daily, less often than daily BUT has enough data to use the AR method
+    and data that's updated very infrequently and there's not enough data to use the AR method.
     """
-    df_fix_unstack = df.ffill()
-    diff_df_small = df_fix_unstack.copy().diff(1).bfill()
-    upper = 0.75
-    lower = 0.25
-    df['day'] = [x.weekday() for x in list(df.index)]
-    diff_df2 = diff_df_small
-    diff_df2['day'] = df['day']
-    diff_df2_stack = diff_df2.drop(columns=['day']).stack().reset_index()
-    diff_df2_stack.columns = ['date', 'state', 'val']
-    diff_df2_stack['weekday'] = diff_df2_stack.date.dt.weekday
+    rep_sched = pd.read_csv(f'{flash_dir}/reporting_sched_{lag}.csv', index_col=0)
+    min_cut = rep_sched.loc['min_cut'][0]
+    rep_sched = rep_sched.drop('min_cut')
+    glob_out_list = []
+    non_daily_ar = []
+    for i, df in rep_sched.groupby('0'):
+        fixed_sum = []
+        columns = []
+        for col in input_df.columns:
+            if col in df.index:
+                columns.append(col)
+                fixed_sum.append(input_df[col])
 
-    if df.columns.nlevels > 1:
-        diff_df2.columns = diff_df2.columns.droplevel()
-        df_fix_unstack.columns = df_fix_unstack.columns.droplevel()
-    if iqr_list is None:
-        iqr_list = []
-        iqr_spec_df2 = diff_df2_stack.iloc[1:, :]
-        for _, (_, ldf) in enumerate(iqr_spec_df2.groupby(['weekday'])):
-            iqr = ldf.groupby('state').apply(lambda x: x.val.quantile([lower, 0.5, upper]).T)
-            iqr = iqr.apply(fix_iqr, axis=1)
-            iqr['delta'] = 1.5 * (np.ceil(iqr[upper]) - np.floor(iqr[lower]))
-            iqr['lower_bound'] = iqr[lower] - iqr['delta']
-            iqr['upper_bound'] = iqr[upper] + iqr['delta']
-            iqr.columns = iqr.columns.astype(str)
-            iqr_list.append(iqr)
-    p2_outliers = []
-    def eval_row(row, replace_use, iqr_list2, replace, df_fix_unstack, diff_df2):
-        if replace_use:
-            if not replace.empty:
-                iqr_df2 = iqr_list2[row.weekday]
-                row.state = df.columns[0]
-                if not replace.query("date==@row.date and state==@row.state").empty:
-                    yesterday_date = row.date - pd.Timedelta('1d')
-                    if yesterday_date in df_fix_unstack.index:
-                        f = float(df_fix_unstack.loc[yesterday_date, row.state] +
-                                  (1 + iqr_df2.loc[row.state, '0.5']))
-                        df_fix_unstack.loc[row.date, row.state] = max(f, 1.0)
-                        p2_outliers.append(row.copy())
-        else:
-            iqr_df2 = iqr_list2[row.weekday]
-            iqr_df2 = iqr_df2.set_index('state')
-            if (not (iqr_df2.loc[row.state, 'upper_bound'] >=
-                     diff_df2.loc[row.date, row.state] >= iqr_df2.loc[row.state, 'lower_bound'])):
-                yesterday_date = row.date - pd.Timedelta('1d')
-                if yesterday_date in df_fix_unstack.index:
-                    f = float(df_fix_unstack.loc[yesterday_date, row.state]
-                              + (1 + iqr_df2.loc[row.state, '0.5']))
-                    df_fix_unstack.loc[row.date, row.state] = max(f, 1.0)
-                    p2_outliers.append(row.copy())
-    diff_df2_stack.apply(lambda x:eval_row(x, replace_use, iqr_list,
-                                           replace, df_fix_unstack, diff_df2,) , axis=1)
-    return df_fix_unstack, iqr_list, pd.DataFrame(p2_outliers)
-
-def spike_outliers(df):
-    """An adaptation of the existing spike outliers baseline.
-    Input: df: input df with columns as geographies and time as the rows
-    Output: global outliers dataframe"""
-    size_cut, sig_cut = 10, 3
-
-    def outlier_flag(frame):
-        if (abs(frame["value"]) > size_cut) and not (pd.isna(frame["ststat"])) \
-                and (frame["ststat"] > sig_cut):
-            return True
-        if (abs(frame["value"]) > size_cut) and (pd.isna(frame["ststat"])) and \
-                not (pd.isna(frame["ftstat"])) and (frame["ftstat"] > sig_cut):
-            return True
-        if (frame["value"] < -size_cut) and not (pd.isna(frame["ststat"])) and \
-                not pd.isna(frame["ftstat"]):
-            return True
-        return False
-
-    outliers_list = []
-    group_list = []
-    all_frames_orig = df.copy()
-    def spike(x):
-        window_size = 7
-        shift_val = -1 if window_size % 2 == 0 else 0
-        group = x.to_frame()
-        group.columns = ["value"]
-        rolling_windows = group["value"].rolling(
-            window_size, min_periods=window_size)
-        center_windows = group["value"].rolling(
-            window_size, min_periods=window_size, center=True)
-        fmedian = rolling_windows.median()
-        smedian = center_windows.median().shift(shift_val)
-        fsd = rolling_windows.std() + 0.000001
-        ssd = center_windows.std().shift(shift_val) + 0.000001
-        group['ftstat'] = abs(group["value"] - fmedian.fillna(0)) / fsd
-        group['ststat'] = abs(group["value"] - smedian.fillna(0)) / ssd
-        group['state'] = x.name
-        group_list.append(group)
-
-    all_frames_orig.apply(spike, axis=0).to_list()
-    all_frames = pd.concat(group_list)
-    outlier_df = all_frames.reset_index().sort_values(by=['state', 'ref']) \
-        .reset_index(drop=True).copy()
-    outliers = outlier_df[outlier_df.apply(outlier_flag, axis=1)]
-
-    outliers_list.append(outliers)
-
-    all_outliers = pd.concat(outliers_list).sort_values(by=['ref', 'state']). \
-        drop_duplicates().reset_index(drop=True)
-    return all_outliers
-
-#Empirically validated test-statistic distribution
-def bin_dist(ref_y, ref_y_predict):
-    "A vectorized test statistic distribution [log]."
-    def ts_dist(x, y, model=""):
-        "Initial test statistic distribution which is then vectorized."
-        if model == "nbinom":
-            alpha = 0.5
-            n = 1 / alpha
-            p = 1 / (1 + (alpha * y))
-        return nbinom.cdf(x, n, p)
-    vec_ts_dist = np.vectorize(ts_dist)
-    return vec_ts_dist(np.log(1 + ref_y), np.log(1 + ref_y_predict), "nbinom")
-
-def eval_day(input_df, iqr_dict, ref_date, weekday_params, linear_coeff):
-    """Submethod to correct historical data and predict if today's data is a flag.
-    Input: input_df: a dataframe of the past 7 days.
-    iqr_dict: Dictionary of the inter-quartile ranges acceptable when conducting outlier analysis
-    ref_date: The reference date of the most recent dataa
-    weekday params: Parameters for the weekday correction
-    linear_coeff: The linear coeffecients for predicting today's indicator
-    value (to compare to prior historical values)
-
-    Output: origini
-    """
-    y_values_df = pd.DataFrame()
-    y_values_df['y_raw'] = input_df.iloc[-1, :]
-    # remove out-of-range data & add 1 to address multiplicative issues in weekday smoothing
-    corrected_input_df = input_df.clip(0)+1
-    lags_names = [f'lags_{i}' for i in range(1, 8)]
-    #first pass of outlier detection to detect and correct weekday outliers
-    corrected_input_df, _, weekday_outlier_flags = outlier(corrected_input_df,
-                                                           iqr_list=iqr_dict['Before'])
-    corrected_input_df = corrected_input_df.clip(0) #for corrections that are <0
-    #apply the weekday correction
-    corrected_input_df= Weekday.calc_adjustment(weekday_params.to_numpy()
-                    ,corrected_input_df.copy().reset_index(), list(corrected_input_df.columns),
-                    'ref').fillna(0).set_index('ref')
-    #second pass outlier detection to detect and correct global outliers
-    corrected_input_df,  _, large_spike_flags = outlier(corrected_input_df,
-                iqr_list=iqr_dict['After'], replace=spike_outliers(input_df), replace_use=True)
-
-    #final, prediction of the day's values
-    def predict_val(col, params_state, lags_names):
-        state_df = pd.DataFrame()
-        state_df['model'] = col
-        for i in range(1, 8):
-            state_df[f'lags_{i}'] = state_df['model'].shift(i)
-        state_df = state_df.dropna()
-        x = state_df.drop(columns=['model'])
-        x = x[lags_names]
-        beta = np.asarray(params_state[col.name])
-        pred_val = pd.Series(np.dot(x, beta), index=state_df.index)
-        return pred_val
-    y_predict = corrected_input_df.iloc[:, : ].apply(predict_val,
-                        params_state=linear_coeff,
-                        lags_names=lags_names, axis=0).T.clip(0)
-    y_predict.columns = ['y_predict']
-    y_values_df = y_values_df.merge(y_predict, left_index=True,
-                        right_index=True, how='outer')#.droplevel(level=0)
-    weekday_outlier_flags['flag'] = 'weekday outlier'
-    large_spike_flags['flag'] = 'large_spikes'
-    flags_returned = pd.concat([weekday_outlier_flags,
-                        large_spike_flags], axis=0)
-    flags_returned = flags_returned[flags_returned.date == ref_date]
-    return y_values_df, flags_returned
-
-def return_vals(val, ref_dist):
-    """Returns the p-value of the test"""
-    ref_y = val['y_raw'].clip(1)
-    ref_y_predict = val['y_predict'].clip(1)
-    dist = pd.Series(bin_dist(ref_y, ref_y_predict).T, index=val.index, dtype=float)
-    dist.name = 'dist'
-    pval = dist.copy()
-    pval.name = 'pval'
-    for state in dist.index:
-        pval[state] = (sum(ref_dist.astype(float) < float(dist[state])) / len(ref_dist))
-    val = val.merge(dist, left_index=True, right_index=True, how='outer')
-    val = val.merge(pval, left_index=True, right_index=True, how='outer')
-    return val
-
-def process_anomalies(y, t_skew=None):
-    "Create a meaningful outlier score."
-    def standardize(y, t_skew=None):
-        val = y.pval
-        if t_skew is None:
-            val = 2 * abs(y.pval - 0.5)
-            if y.pval <= 0.5:
-                val = 2 * abs(y.pval - 0.5)
-        else:
-            if t_skew == 'max':
-                if y.pval < 0.5:
-                    val = 0.5
+        if len(fixed_sum) > 0:
+            fixed_sum_df = pd.concat(fixed_sum).to_frame().T
+            fixed_sum_df.columns = columns
+            fixed_sum_df.index = [input_df.index[0]]
+            if i ==1:
+                daily_df = fixed_sum_df
+            elif i >= min_cut:
+                glob_out_list.append(fixed_sum_df)
             else:
-                if y.pval > 0.5:
-                    val = 0.5
-        return val
-    tmp_list = y.copy().apply(lambda z: standardize(z, t_skew=t_skew), axis=1)
-    y['pval'] = tmp_list
-    if not y.empty:
-        y = y[['pval']]
-    return y
+                non_daily_ar.append(fixed_sum_df)
+    return daily_df, pd.concat(non_daily_ar,axis=1) , pd.concat(glob_out_list, axis=1)
 
-def flash_eval_lag(input_df, range_tup, lag, signal, logger):
-    """Create a list of the most interesting points that is saved in the output log
-    Inputs: - input_df = A dataframe with the past 7 days of data
-                at the same lag including most recent data as final row.
-            This is created from the files in the cache (else they are pulled from the API)
-            - lag: which lag are we working on
-            - range_tup: acceptable range of values
-    Other Files:
-            - dist_min = Min EVD distribution for comparison
-            - dist_max = Max EVD distribution for comparison
-            - iqr_dictionary = Range values for removing large spikes before &
-                                after weekday corrections
-            - weekend_params = Saturday and Sunday manual corrections for weekday
-            - weekday_params: Weekday correction parameters
-            - linear_coeff: Linear regression coeffecients
-            - range_tup: Acceptable range of values for that signal
-            These are created from files in the reference folder.
-    Output: None
+
+def bin_approach(y, yhat, pop, log=False):
+    """Create test statistic.
+
+    Parameters
+    ----------
+    y: observed values for streams
+    yhat: predicted values for streams
+    pop: population for a region
+    log: difference between reporting and reference date
+
+    Returns
+    -------
+    today's test-statistic values for the stream
     """
+    def ts_dist(x, y, n):
+        """Initialize test statistic distribution which is then vectorized."""
+        # print(x, y,  y/n, n, binom.cdf(x, int(n), y/n)
+        return binom.cdf(x, int(n), y/n)
+    vec_ts_dist = np.vectorize(ts_dist)
+    if log:
+        return vec_ts_dist(np.log(y+2), np.log(yhat+2), np.log(pd.Series(pop)+2))
+    return vec_ts_dist(y, yhat, pop)
 
 
-    ref_date = input_df.index[-1]
-    report_date =ref_date + pd.Timedelta(f'{lag}d')
+def global_outlier_detect(df, mean, var):
+    """Determine global outliers by using abs(t-statistic) > 5.
 
-    #Get necessary reference files per signal
-    dist_min = pd.read_csv(f"flash_ref/{signal}/dist_min.csv")['0']
-    dist_max = pd.read_csv(f"flash_ref/{signal}/dist_max.csv")['0']
-    bef_list = list(np.zeros(7))
-    aft_list = list(np.zeros(7))
-    for i in range(7):
-        bef_list[i] = pd.read_csv(f"flash_ref/{signal}/iqr0_{lag}_{i}.csv")
-        aft_list[i] = pd.read_csv(f"flash_ref/{signal}/iqr1_{lag}_{i}.csv")
-    iqr_dict = {'Before': bef_list,
-                'After': aft_list}
-    weekday_params = pd.read_csv(f"flash_ref/{signal}/weekday_{lag}.csv", index_col=0)
-    linear_coeff = pd.read_csv(f"flash_ref/{signal}/linear_coeff_{lag}.csv", index_col=0)
+    Parameters
+    ----------
+    df: Current df to evaluate for global outliers
+    mean: Mean needed for t-statistic calculation
+    var: Variance for t-statistic calculation
 
-
-    # Make corrections & predictions
-    y_values_df, preprocess_outlier = eval_day(input_df, iqr_dict,
-                                               ref_date, weekday_params, linear_coeff)
-    s_val = y_values_df['y_raw'].to_frame()
-    out_range_outlier = pd.concat([s_val[s_val.y_raw < range_tup[0]],
-                                   s_val[s_val.y_raw > range_tup[-1]]], axis=0)
-
-    # Anomaly Detection
-    thresh = 0.01
-
-    val_min = return_vals(y_values_df, dist_min)[["pval"]]
-    val_max = return_vals(y_values_df, dist_max)[["pval"]]
-    val_min['flags'] = 'EVD_min'
-    val_max['flags'] = 'EVD_max'
-    val_min.columns = ['pval', 'flags']
-    val_max.columns = ['pval', 'flags']
-
-
-    min_thresh = thresh * 2
-    max_thresh = 1 - (thresh * 2)
-    max_anomalies = process_anomalies(val_max, 'max').dropna(
-        axis=1)
-    min_anomalies = process_anomalies(val_min, 'min').dropna(
-        axis=1)
-    max_anomalies = max_anomalies[max_anomalies.pval
-                                  > max_thresh].sort_values('pval')#.reset_index(drop=True)
-    min_anomalies = min_anomalies[min_anomalies.pval
-                                  < min_thresh].sort_values('pval')#.reset_index(drop=True)
-
-    starter_link = f"{HTML_LINK}{ref_date.strftime('%Y-%m_%d')},{report_date.strftime('%Y-%m_%d')}"
-
-    total_flags = 0
-    for (df, name) in zip(
-            [out_range_outlier, preprocess_outlier, max_anomalies, min_anomalies],
-            ['out_of_range', 'large_spike or weekday', 'max_anomalies', 'min_anomalies']):
-        p_text = ""
-        p_text += f"*{ref_date}* \n"
-        iter_df = df.copy()
-        if df.shape[0] > 20:
-            iter_df = iter_df.iloc[:20, :]
-        if iter_df.shape[0] > 0 :
-            for _, row in iter_df.reset_index().iterrows():
-                total_flags += 1
-                start_link = f"{starter_link},{row['index']}"
-                if 'pval' in iter_df.columns :
-                    p_text += f"\t{start_link}|*{row['index']}, {row.pval}*>\n"
-                elif 'y_raw' in iter_df.columns :
-                    p_text += f"\t{start_link}|*{row['index']}, {row.y_raw}*>\n"
-            logger.info(name,
-                        payload=p_text,
-                        hits=iter_df.shape[0])
-            p_text = ""
-
-
-def flash_eval(params):
-    """ Evaluate most recent data using FlaSH.
-    First, get any necessary files from the cache or download from the API.
-    Concat historical data with the most recent data from the cache.
-    Then, evaluate today's data for up to lag 8 prior days,
-            where each flag is written to the logger.
-    Input: params
-    Ouput: None
+    Returns
+    -------
+    The columns that are global outliers.
     """
+    all_columns = list(df.columns)
+    mean = mean[all_columns]
+    var = var[all_columns]
+    return df.columns[((abs(df.T.iloc[:, 0].sort_index() - mean.sort_index())/var.clip(1)).gt(5))]
 
-    logger = get_structured_logger(
-        __name__, filename=params["common"].get("log_filename"),
-        log_exceptions=params["common"].get("log_exceptions", True))
+def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_table):
+    """Predict y_hat using an AR model.
 
-    export_files = read_filenames(params["common"]["export_dir"])
-    most_recent_d = pd.Series([
-        pd.to_datetime(x.split('_')[0], format="%Y%m%d",errors='raise')
-        if '.git' not in x  else None for (x, y) in export_files ]).dropna().max()
-    source = params["validation"]["common"]["data_source"]
-    file_tup = load_all_files(params["common"]["export_dir"],
-                              most_recent_d-pd.Timedelta('14d'), most_recent_d)
-    signals = params["flash"]["signals"]
-    for signal in signals:
-        curr_df = pd.DataFrame()
-        #start_time = time.time()
-        for date_s in pd.date_range(most_recent_d-pd.Timedelta('14d'),
-                                    most_recent_d-pd.Timedelta('1d')):
-            data = covidcast.signal(source, signal,
-                                    date_s - pd.Timedelta('7d'), date_s,
-                                    geo_type="nation", as_of=date_s)
-            data2 = covidcast.signal(source, signal,
-                                     date_s - pd.Timedelta('7d'), date_s,
-                                     geo_type="state", as_of=date_s)
-            data3 = covidcast.signal(source, signal,
-                                     date_s - pd.Timedelta('7d'), date_s,
-                                     geo_type="county", as_of=date_s)
-            if (data is not None) or ((data2 is not None) or (data3 is not None)):
-                data = pd.concat([data, data2, data3])
-                if data is not None:
-                    data = data[['geo_value', 'value', 'time_value']]
-                    data.columns = ['state', 'value', 'ref']
-                    data['as_of'] = date_s
-                    data['lag'] = (data['as_of'] - data['ref']).dt.days
-                    data = data.set_index(['state', 'lag', 'ref', 'as_of'])
-                    curr_df = pd.concat([data, curr_df])
-        #Add in data gathered today
-        for (filename, _ , data) in file_tup:
-            if signal in filename:
-                as_of = most_recent_d
-                ref = pd.to_datetime(filename.split('_')[0],
-                                     format="%Y%m%d",errors='raise')
-                region = filename.split('_')[1]
-                if region in ['county', 'state', 'nation']:
-                    data = data[['geo_id', 'val']]
-                    data.columns = ['state', 'value']
-                    data['as_of'] = as_of #pd.to_datetime(pd.Timestamp.today())
-                    data['ref'] = ref
-                    data['lag'] = (data['as_of'] - data['ref']).dt.days
-                    data = data.set_index(['state', 'lag', 'ref', 'as_of'])
-                    curr_df = pd.concat([data, curr_df])
-        curr_df = curr_df[~curr_df.index.duplicated(keep='first')].reset_index()
-        #end_time = time.time()
-        #print(f"Total Download Time: {start_time-end_time}")
+    Parameters
+    ----------
+    last_7: the prior 7 days
+    flash_dir: the string reference directory to find all files
+    lag: the difference between reporing and reference date
+    weekday_correction: daily data after weekday correction has been applied
+    non_daily_df: df of streams that are not updated daily
+    fips_pop_table: df of fips to population
+
+    Returns
+    -------
+    ts_streams: return of test statistic for the day's steams.
+    """
+    lin_coeff = pd.read_csv(f'{flash_dir}/lin_coeff_{lag}.csv', index_col=0)
+    y = pd.concat([weekday_correction, non_daily_df], axis=1)
+    y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns])
+    ts_streams = pd.DataFrame(bin_approach(y, y_hat,
+                            list(fips_pop_table[y.columns].iloc[0, :]), log=True),
+                            columns=y.columns)
+    return ts_streams
+
+def output(evd_ranking, day, lag, signal, logger):
+    """Write the top streams that warrant human inspection to the log.
+
+    Parameters
+    ----------
+    evd_ranking: the ranking from EVD method (shown to users)
+    day: reference date
+    lag: difference between reference and report date
+    signal: current signal
+    logger: logger to write the output of FlaSH
+
+    Returns
+    -------
+    None
+    """
+    starter_link = f"{HTML_LINK}{(day+pd.Timedelta(f'{lag}d')).strftime('%Y-%m_%d')}"
+    p_text = ""
+    for j, (index, value) in enumerate(evd_ranking.sort_values(ascending=False).iteritems()):
+        if j < 30:
+            start_link = f"{starter_link},{day.strftime('%Y-%m_%d')},{index}"
+            p_text += f"\t{start_link}|*{index}*, {'{:.2f}'.format(value)}>\n"
+    name = f"Signal: {signal} Lag: {lag}"
+    logger.info(name, payload=p_text)
 
 
-        for lag in range(1,8):
-            #start_time = time.time()
-            date_range = list(pd.date_range(most_recent_d-pd.Timedelta(f'{lag+7}d'),
-                                            most_recent_d-pd.Timedelta(f'{lag}d')))
-            input_df = curr_df.query('lag==@lag and ref in @date_range').sort_values('ref')
-            date_df = pd.DataFrame()
-            date_df['ref'] = date_range
-            date_df = date_df.set_index('ref')
-            input_df = input_df.set_index('ref')
-            input_df = input_df.merge(date_df, left_index=True, right_index=True,
-                                      how='right').ffill().bfill().reset_index()
-            input_df = input_df.set_index(['ref', 'state'])[['value']].unstack().ffill().bfill()
-            input_df.columns = input_df.columns.droplevel()
-            flash_eval_lag(input_df, [0, math.inf], lag, signal, logger)
-            #end_time = time.time()
-            #print(f"Time lag {lag}: {start_time - end_time}")
+def evd_ranking_fn(ts_streams, flash_dir):
+    """Create ranking using EVDs.
+
+    Parameters
+    ----------
+    ts_streams: today's test-statistic values for the stream
+    flash_dir: the string reference directory to find all files
+
+    Returns
+    -------
+    evd_ranking: Ranking streams via the extreme value distribution
+    """
+    EVD_max = pd.read_csv(f'{flash_dir}/max.csv', index_col=0)
+    EVD_min = pd.read_csv(f'{flash_dir}/min.csv', index_col=0)
+    evd_ranking = pd.concat(
+        [ts_streams.apply(lambda x: sum(x.values[0] <= EVD_min['0'])
+                                  / EVD_min['0'].shape[0], axis=0).sort_values(),
+         ts_streams.apply(lambda x: sum(x.values[0] >= EVD_max['0'])
+                                  / EVD_max['0'].shape[0], axis=0).sort_values()],
+        axis=1).max(axis=1)
+    evd_ranking.name = 'evd_ranking'
+    return evd_ranking
+
+
+def streams_groups_fn(stream, ts_streams):
+    """Create the ranking from streams using geographical groupings.
+
+    Uses historical distribution from the test-statistics.
+
+    Parameters
+    ----------
+    stream: historical test statistic csv
+    ts_streams: today's test-statistic values for the stream
+
+    Returns
+    -------
+    stream_group: the ranking using geographically group test statistic distributions
+    """
+    streams_groups = stream.copy()
+    streams_state = stream[list(filter(lambda x: len(x) == 2,
+                                       stream.columns))].unstack().dropna()  # .values
+    streams_groups.columns = streams_groups.columns.str[:2]
+    ranking_streams = {}
+    for key, group in streams_groups.stack().reset_index().groupby('level_1'):
+        for col, val in ts_streams.T.iterrows():
+            if key == col[:2]:
+                total_dist = pd.concat([group[0], streams_state]).reset_index(drop=True)
+                ranking_streams[col] = sum(total_dist < val[0]) / total_dist.shape[0]
+    stream_group = pd.Series(ranking_streams, name='stream_group')
+    return stream_group
+def flash_eval(lag, day, input_df, signal, params, logger=None):
+    """Evaluate most recent data using FlaSH.
+
+    Input:
+    lag: the difference between the reporting and reference date
+    day: the day of the reference date (today is the reporting date)
+    input_df: a df from the day for a particular signal that includes natl. state, and county data
+    params: additional params needed.
+    Ouput:
+    None
+    """
+    if not logger:
+        logger = get_structured_logger(
+            name=signal,
+            filename=params["common"].get("log_filename", None),
+            log_exceptions=params["common"].get("log_exceptions", True))
+
+    flash_dir = f'flash_ref/{signal}'
+    last_7 = pd.read_csv(f'{flash_dir}/last_7_{lag}.csv', index_col=0).astype(float)
+    wk_mean = pd.read_csv(f'{flash_dir}/weekday_mean_df_{lag}.csv', index_col=0)
+    wk_var = pd.read_csv(f'{flash_dir}/weekday_var_df_{lag}.csv', index_col=0)
+    weekday_params = pd.read_csv(f'{flash_dir}/weekday_params_{lag}.csv', index_col=0)
+    summary_stats = pd.read_csv(f'{flash_dir}/summary_stats_{lag}.csv', index_col=0)
+    stream = pd.read_csv(f'{flash_dir}/ret_df2_{lag}.csv', index_col=0)
+    fips_lookup = pd.read_csv(f'{flash_dir}/fips.csv',
+                    header=None).astype(str).set_axis(['FIPS', 'STATE'], axis=1)
+    fips_lookup['FIPS'] = fips_lookup['FIPS'].str.zfill(2)
+    fips_to_STATE = fips_lookup.set_index("FIPS").to_dict()['STATE']
+    STATE_to_fips = fips_lookup.set_index("STATE").to_dict()['FIPS']
+    fips = pd.read_csv(f'{flash_dir}/geo_fips.csv', index_col=0)
+    orig_fips = fips[fips['pop'].isna()].geo
+    geos_repl = [fips_to_STATE[x] for x in orig_fips.str[:2]]
+    fips = fips.set_index('geo')
+    fips.loc[orig_fips, 'pop'] = [float(fips[fips.index == x]['pop']) for x in geos_repl]
+    fips_pop_table = fips.unstack().to_frame().T
+    fips_pop_table.columns = fips_pop_table.columns.droplevel()
+    fips_pop_table.columns = [STATE_to_fips[x] if x in list(STATES)
+                              else x for x in fips_pop_table.columns]
+    input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
+                        else x for x in input_df.columns]
+
+    # disucss where to do out-of-range handling
+    # out_range = input_df.columns[input_df.lt(params['flash']['support'][0]).iloc[0, :].values
+    #                     & input_df.gt(params['flash']['support'][1]).iloc[0, :].values ]
+
+
+    daily_update_df, non_daily_df_test, non_ar_df = split_reporting_schedule_dfs(input_df,
+                                                                                 flash_dir, lag)
+    # Weekday outlier [only for Daily Df]
+    weekday_outlier = daily_update_df.columns[((abs(
+        daily_update_df.T.sort_index()[day] - wk_mean.loc[day.day_of_week,
+        daily_update_df.columns].sort_index()) /wk_var.loc[day.day_of_week,
+        daily_update_df.columns].clip(1)).gt(5))]
+
+    # Make weekday correction for daily update
+    additive_factor = summary_stats[daily_update_df.columns].iloc[4, :]
+    weekday_correction = (Weekday.calc_adjustment(
+                          weekday_params.loc[daily_update_df.columns, :].to_numpy(), \
+                          (daily_update_df + additive_factor).reset_index(),
+                           daily_update_df.columns, \
+                          'index').set_index('index') - additive_factor).clip(0)
+
+    global_outlier_list = []
+    for df in [weekday_correction, non_daily_df_test, non_ar_df]:
+        global_outlier_list += list(
+            global_outlier_detect(df, summary_stats[df.columns].iloc[2],
+                                  summary_stats[df.columns].iloc[4]))
+
+    # Apply AR
+    ts_streams = apply_ar(last_7, flash_dir, lag, weekday_correction,
+                        non_daily_df_test, fips_pop_table)
+    # find stream ranking (individual)
+    stream_individual = ts_streams.apply(
+        lambda x: sum(x.values[0] <= stream[x.name].dropna()) /
+                  stream[x.name].dropna().shape[0], axis=0)
+    stream_individual.name = 'stream_individual'
+
+
+    # find stream ranking (group)
+    stream_group = streams_groups_fn(stream, ts_streams)
+
+    # find EVD ranking
+    evd_ranking = evd_ranking_fn(ts_streams, flash_dir)
+    # Save the different categories of outliers/day + rankings for future analysis
+    type_of_outlier = pd.DataFrame(index=input_df.columns)
+    weekday_frame = weekday_outlier.to_frame()
+    weekday_frame[0] = 1
+    weekday_frame.columns = ['weekday_outlier']
+    type_of_outlier = type_of_outlier.merge(weekday_frame,
+            left_index=True, right_index=True, how='outer').fillna(0)
+    type_of_outlier['global_outlier'] = 0
+    type_of_outlier.loc[global_outlier_list, 'global_outlier'] = 1
+    stream_group = stream_group.apply(lambda x: 2 * (0.5 - x) if x < 0.5 else x)
+    stream_individual = stream_individual.apply(lambda x: 2 * (0.5 - x) if x < 0.5 else x)
+    type_of_outlier = type_of_outlier.merge(stream_individual,
+                      left_index=True, right_index=True,
+                      how='outer').merge(stream_group,
+                      left_index=True, right_index=True, how='outer').merge(evd_ranking,
+                      left_index=True, right_index=True, how='outer'
+                      ).to_csv(f'{flash_dir}/results/{day.strftime("%m_%d_%Y")}_{lag}.csv')
+    not_fix_daily = list(filter(lambda x: x not in global_outlier_list, daily_update_df.columns))
+    not_fix_last_7 = list(filter(lambda x: x not in not_fix_daily, last_7.columns))
+    last_7 = pd.concat(
+        [pd.concat([last_7[not_fix_daily].iloc[1:, :],
+         weekday_correction[not_fix_daily]]).reset_index(drop=True),
+         last_7[not_fix_last_7]], axis=1).to_csv(f'{flash_dir}/last_7_{lag}.csv')
+
+
+    # Save to output log
+    output(evd_ranking, day, lag, signal, logger)

@@ -3,11 +3,13 @@ import argparse as ap
 import importlib
 import os
 from typing import Any, Callable, Dict, Optional
+import threading
 from .archive import ArchiveDiffer, archiver_from_params
 from .logger import get_structured_logger
 from .utils import read_params, transfer_files, delete_move_files
 from .validator.validate import Validator
 from .validator.run import validator_from_params
+
 
 Params = Dict[str, Any]
 
@@ -15,20 +17,24 @@ Params = Dict[str, Any]
 NULL_FN = lambda x: None
 
 def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
+                            flash_fn: Callable[[Params], None] = NULL_FN,
                            validator_fn:  Callable[[Params], Optional[Validator]] = NULL_FN,
-                           archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN):
+                           archiver_fn:  Callable[[Params], Optional[ArchiveDiffer]] = NULL_FN,
+                             timer=1):
     """Run an indicator with its optional validation and archiving.
 
     Each argument to this function should itself be a function that will be passed a common set of
-    parameters (see details below).  This parameter dictionary should have four subdictionaries
-    keyed as "indicator", "validation", "archive", and "common" corresponding to parameters to be
-    used in `indicator_fn`, `validator_fn`, `archiver_fn`, and shared across functions,
-    respectively.
+    parameters (see details below).  This parameter dictionary should have five subdictionaries
+    keyed as "indicator", "validation", "archive", "flash", and "common" corresponding to parameters
+    to be used in `indicator_fn`, `validator_fn`, `archiver_fn`, `flash_fn` and shared across
+    functions, respectively.The timer function stops the flash process after a certain time.
 
     Arguments
     ---------
     indicator_fn: Callable[[Params], None]
         function that takes a dictionary of parameters and produces indicator output
+    flash_fn: Callable[[Params], None]
+        function that takes a dictionary of parameters and writes points of interest to the log.
     validator_fn: Callable[[Params], Optional[Validator]]
         function that takes a dictionary of parameters and produces the associated Validator or
         None if no validation should be performed.
@@ -59,6 +65,16 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     indicator_fn(params)
     validator = validator_fn(params)
     archiver = archiver_fn(params)
+
+    if flash_fn:
+        t = threading.Timer(timer, flash_fn)
+        t.start()
+        t.join(timer)
+        if t.is_alive():
+            t.cancel()
+            t.join()
+
+
     if validator:
         validation_report = validator.validate()
         validation_report.log(logger)
@@ -80,6 +96,10 @@ if __name__ == "__main__":
                              "must export a `run.run_module(params)` function.")
     args = parser.parse_args()
     indicator_module = importlib.import_module(args.indicator_name)
+    flash_module = importlib.import_module('delphi_utils.flash_eval.run')
     run_indicator_pipeline(indicator_module.run.run_module,
+                           flash_module.run_module,
                            validator_from_params,
-                           archiver_from_params)
+                           archiver_from_params,
+                           timer=600
+                           )

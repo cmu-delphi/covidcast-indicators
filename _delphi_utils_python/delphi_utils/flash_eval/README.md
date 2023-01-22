@@ -1,4 +1,4 @@
-# Change Flagging System
+# FlaSH System
 
 THIS README IS IN PROGRESS
 
@@ -28,8 +28,8 @@ You can excecute the Python module contained in this
 directory from the main directory of the indicator of interest.
 
 The safest way to do this is to create a virtual environment,
-and install the common DELPHI tools, including the flagger, and the
-flagging module and its dependencies to the virtual environment.
+and install the common DELPHI tools, including flash, and the
+flash module and its dependencies to the virtual environment.
 
 To do this, navigate to the main directory of the indicator of interest and run the following code:
 
@@ -40,9 +40,8 @@ pip install ../_delphi_utils_python/.
 pip install .
 ```
 
-To execute the module run the indicator to generate data files , 
-then run a module to put them in the correct dataframe, and finally then run
-the flagging system , as follows:
+To execute the module run the indicator to generate data files and then run
+the flash system , as follows:
 
 ```
 env/bin/python -m delphi_INDICATORNAME

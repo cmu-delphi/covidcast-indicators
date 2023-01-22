@@ -51,7 +51,7 @@
   },
   "flash": {
     "signals": ["confirmed_incidence_num"],
-    "lags": [1],
-    "support": [0, 400000000]
+    "lags": ["1"],
+    "support": ["0", "400000000"]
   }
 }

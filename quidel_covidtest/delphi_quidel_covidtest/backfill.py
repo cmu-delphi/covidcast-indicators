@@ -56,6 +56,17 @@ def store_backfill_file(df, _end_date, backfill_dir):
                         'num_age_0_17', 'den_age_0_17']
     backfilldata = backfilldata.loc[backfilldata["time_value"] >= _start_date,
                                     selected_columns]
+    backfilldata["lag"] = [(_end_date - x).days for x in backfilldata["time_value"]]
+    backfilldata["time_value"] = backfilldata.time_value.dt.strftime("%Y-%m-%d")
+    backfilldata["issue_date"] = datetime.strftime(_end_date, "%Y-%m-%d")
+
+    backfilldata = backfilldata.astype({
+        "time_value": "string",
+        "issue_date": "string",
+        "fips": "string",
+        "state_id": "string"
+    })
+
     path = backfill_dir + \
         "/quidel_covidtest_as_of_%s.parquet"%datetime.strftime(_end_date, "%Y%m%d")
     # Store intermediate file into the backfill folder
@@ -108,9 +119,6 @@ def merge_backfill_file(backfill_dir, backfill_merge_day, today,
     pdList = []
     for fn in new_files:
         df = pd.read_parquet(fn, engine='pyarrow')
-        issue_date = get_date(fn)
-        df["issue_date"] = issue_date
-        df["lag"] = [(issue_date - x).days for x in df["time_value"]]
         pdList.append(df)
     merged_file = pd.concat(pdList).sort_values(["time_value", "fips"])
     path = backfill_dir + "/quidel_covidtest_from_%s_to_%s.parquet"%(

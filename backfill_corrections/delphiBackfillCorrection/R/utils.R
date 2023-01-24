@@ -40,7 +40,7 @@
 #' @importFrom jsonlite read_json
 read_params <- function(path = "params.json", template_path = "params.json.template",
                         train_models = FALSE, make_predictions = FALSE,
-                        indicators = "all") {
+                        indicators = c("all", unique(INDICATORS_AND_SIGNALS$indicator))) {
   if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
@@ -50,6 +50,9 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   params$train_models <- train_models
   params$make_predictions <- make_predictions
+
+  indicators <- match.arg(indicators)
+  if (length(indicators) != 1) stop("`indicators` arg must be a single string")
   params$indicators <- indicators
   
   ## Set default parameter values if not specified

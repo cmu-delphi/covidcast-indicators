@@ -24,7 +24,7 @@ parser <- add_argument(
 )
 parser <- add_argument(
   parser, arg="--indicators", default = "all",
-  help="string specifying a single indicator to process or all indicators (\"all\", default)"
+  help="string specifying a single indicator or all indicators to process"
 )
 args = parse_args(parser)
 

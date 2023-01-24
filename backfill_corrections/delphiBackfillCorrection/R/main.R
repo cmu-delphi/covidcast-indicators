@@ -257,7 +257,7 @@ main <- function(params,
     model_name_pat <- "[.]model$"
     # Remove models for only currently selected indicator, if any.
     if (params$indicators != "all") {
-      model_name_pat <- str_interp(".*{params$indicators}.*[.]model$")
+      model_name_pat <- str_interp(".*${params$indicators}.*[.]model$")
     }
     files_list <- list.files(params$cache_dir, pattern=model_name_pat, full.names = TRUE)
     file.remove(files_list)

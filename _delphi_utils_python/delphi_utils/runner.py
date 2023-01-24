@@ -67,7 +67,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     archiver = archiver_fn(params)
 
     if flash_fn:
-        t = threading.Timer(timer, flash_fn)
+        t = threading.Timer(timer, flash_fn(params))
         t.start()
         t.join(timer)
         if t.is_alive():

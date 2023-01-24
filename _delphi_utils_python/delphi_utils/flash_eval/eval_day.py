@@ -5,7 +5,7 @@ import pandas as pd
 from scipy.stats import binom
 import boto3
 from delphi_utils.weekday import Weekday
-from .constants import HTML_LINK, STATES, BUCKET
+from .constants import HTML_LINK, STATES
 from .. import (
     get_structured_logger,
 )
@@ -30,7 +30,8 @@ def split_reporting_schedule_dfs(input_df, flash_dir, lag):
     rep_sched = rep_sched.drop('min_cut')
     glob_out_list = []
     non_daily_ar = []
-    for i, df in rep_sched.groupby('0'):
+    rep_sched.columns = ['schedule']
+    for i, df in rep_sched.groupby('schedule'):
         fixed_sum = []
         columns = []
         for col in input_df.columns:
@@ -48,18 +49,20 @@ def split_reporting_schedule_dfs(input_df, flash_dir, lag):
                 glob_out_list.append(fixed_sum_df)
             else:
                 non_daily_ar.append(fixed_sum_df)
-    return daily_df, pd.concat(non_daily_ar,axis=1) , pd.concat(glob_out_list, axis=1)
+    return (daily_df, pd.concat(non_daily_ar,axis=1) , pd.concat(glob_out_list, axis=1))
 
 
-def bin_approach(y, yhat, pop, log=False):
+def bin_approach(df, log=False):
     """Create test statistic.
 
     Parameters
     ----------
+    df with columns of
     y: observed values for streams
     yhat: predicted values for streams
     pop: population for a region
-    log: difference between reporting and reference date
+
+    log: taking the log for the test statistic measure
 
     Returns
     -------
@@ -67,31 +70,32 @@ def bin_approach(y, yhat, pop, log=False):
     """
     def ts_dist(x, y, n):
         """Initialize test statistic distribution which is then vectorized."""
-        # print(x, y,  y/n, n, binom.cdf(x, int(n), y/n)
-        return binom.cdf(x, int(n), y/n)
+        return binom.cdf(x, int(n), y / n)
+
     vec_ts_dist = np.vectorize(ts_dist)
     if log:
-        return vec_ts_dist(np.log(y+2), np.log(yhat+2), np.log(pd.Series(pop)+2))
-    return vec_ts_dist(y, yhat, pop)
+        return pd.DataFrame(vec_ts_dist(np.log(df.y + 2),
+                        np.log(df.yhat + 2), np.log(df['pop'] + 2)),
+                            index=df.index)
+    return pd.DataFrame(vec_ts_dist(df.y, df.yhat, df.pop), index=df.index)
 
 
-def global_outlier_detect(df, mean, var):
+
+
+def outlier_detect(df):
     """Determine global outliers by using abs(t-statistic) > 5.
 
     Parameters
     ----------
-    df: Current df to evaluate for global outliers
-    mean: Mean needed for t-statistic calculation
-    var: Variance for t-statistic calculation
+    df: Current df to evaluate for global outliers with columns
+    for mean and var.
 
     Returns
     -------
     The columns that are global outliers.
     """
-    all_columns = list(df.columns)
-    mean = mean[all_columns]
-    var = var[all_columns]
-    return df.columns[((abs(df.T.iloc[:, 0].sort_index() - mean.sort_index())/var.clip(1)).gt(5))]
+    df.columns = ['x', 'mean', 'var']
+    return df.index[((abs(df['x'] - df['mean']) / (df['var'].clip(1))).gt(5))]
 
 def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_table):
     """Predict y_hat using an AR model.
@@ -109,13 +113,17 @@ def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_
     -------
     ts_streams: return of test statistic for the day's steams.
     """
-    lin_coeff = pd.read_csv(f'{flash_dir}/lin_coeff_{lag}.csv', index_col=0)
     y = pd.concat([weekday_correction, non_daily_df], axis=1)
-    y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns])
-    ts_streams = pd.DataFrame(bin_approach(y, y_hat,
-                            list(fips_pop_table[y.columns].iloc[0, :]), log=True),
-                            columns=y.columns)
-    return ts_streams
+    y.name = 'y'
+    lin_coeff = pd.read_csv(f'{flash_dir}/lin_coeff_{lag}.csv', index_col=0)
+    y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns], name='yhat')
+    y_hat.index = y.columns
+    df_for_ts = y.T.merge(y_hat, left_index=True, right_index=True).merge(fips_pop_table.T
+                              , left_index=True, right_index=True)
+    df_for_ts.columns = ['y', 'yhat', 'pop']
+
+    return df_for_ts, bin_approach(df_for_ts, log=True)
+
 
 def output(evd_ranking, day, lag, signal, logger):
     """Write the top streams that warrant human inspection to the log.
@@ -138,6 +146,8 @@ def output(evd_ranking, day, lag, signal, logger):
         if j < 30:
             start_link = f"{starter_link},{day.strftime('%Y-%m_%d')},{index}"
             p_text += f"\t{start_link}|*{index}*, {'{:.2f}'.format(value)}>\n"
+        else:
+            break
     name = f"Signal: {signal} Lag: {lag}"
     logger.info(name, payload=p_text)
 
@@ -157,10 +167,10 @@ def evd_ranking_fn(ts_streams, flash_dir):
     EVD_max = pd.read_csv(f'{flash_dir}/max.csv', index_col=0)
     EVD_min = pd.read_csv(f'{flash_dir}/min.csv', index_col=0)
     evd_ranking = pd.concat(
-        [ts_streams.apply(lambda x: sum(x.values[0] <= EVD_min['0'])
-                                  / EVD_min['0'].shape[0], axis=0).sort_values(),
-         ts_streams.apply(lambda x: sum(x.values[0] >= EVD_max['0'])
-                                  / EVD_max['0'].shape[0], axis=0).sort_values()],
+        [ts_streams.apply(lambda x: ts_val(x.values[0],
+                                           EVD_min['0']), axis=1).sort_values(),
+         ts_streams.apply(lambda x :1-ts_val(x.values[0],
+                                           EVD_max['0']), axis=1).sort_values()],
         axis=1).max(axis=1)
     evd_ranking.name = 'evd_ranking'
     return evd_ranking
@@ -189,7 +199,7 @@ def streams_groups_fn(stream, ts_streams):
         for col, val in ts_streams.T.iterrows():
             if key == col[:2]:
                 total_dist = pd.concat([group[0], streams_state]).reset_index(drop=True)
-                ranking_streams[col] = sum(total_dist < val[0]) / total_dist.shape[0]
+                ranking_streams[col] = ts_val(val[0], total_dist)
     stream_group = pd.Series(ranking_streams, name='stream_group')
     return stream_group
 
@@ -213,6 +223,22 @@ def setup_fips(flash_dir):
     fips_pop_table.columns = [STATE_to_fips[x] if x in list(STATES)
                           else x for x in fips_pop_table.columns.droplevel()]
     return STATE_to_fips, fips_pop_table
+
+
+def ts_val(val, dist):
+    """Determine p-value from the test statistic distribution.
+
+    Parameters
+    ----------
+    val: The test statistic
+    dist: The distribution to compare to
+
+    Returns: p-value
+    -------
+
+    """
+    return sum(val <= dist) / dist.shape[0]
+
 def flash_eval(lag, day, input_df, signal, params, logger=None):
     """Evaluate most recent data using FlaSH.
 
@@ -224,20 +250,20 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
     Ouput:
     None
     """
-
     if not logger:
         logger = get_structured_logger(
             name=signal,
             filename=params["common"].get("log_filename", None),
             log_exceptions=params["common"].get("log_exceptions", True))
 
-    #TODOv4: Change these to a local dir
+    #TODOv4: Change these to a local dir or aws
     flash_dir = f'flash_ref/{signal}'
     last_7 = pd.read_csv(f'{flash_dir}/last_7_{lag}.csv', index_col=0).astype(float)
     wk_mean = pd.read_csv(f'{flash_dir}/weekday_mean_df_{lag}.csv', index_col=0)
     wk_var = pd.read_csv(f'{flash_dir}/weekday_var_df_{lag}.csv', index_col=0)
     weekday_params = pd.read_csv(f'{flash_dir}/weekday_params_{lag}.csv', index_col=0)
     summary_stats = pd.read_csv(f'{flash_dir}/summary_stats_{lag}.csv', index_col=0)
+    summary_stats.index = ['0.25', 'median', '0.75', 'mean', 'var']
     stream = pd.read_csv(f'{flash_dir}/ret_df2_{lag}.csv', index_col=0)
 
 
@@ -256,10 +282,9 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
     daily_update_df, non_daily_df_test, non_ar_df = split_reporting_schedule_dfs(input_df,
                                                                                  flash_dir, lag)
     # Weekday outlier [only for Daily Df]
-    weekday_outlier = daily_update_df.columns[((abs(
-        daily_update_df.T.sort_index()[day] - wk_mean.loc[day.day_of_week,
-        daily_update_df.columns].sort_index()) /wk_var.loc[day.day_of_week,
-        daily_update_df.columns].clip(1)).gt(5))]
+    weekday_outlier = outlier_detect(daily_update_df.T.merge(wk_mean.loc[day.day_of_week, :],
+                      left_index=True, right_index=True).merge(wk_var.loc[day.day_of_week, :],
+                      left_index=True, right_index=True))
 
     # Make weekday correction for daily update
     additive_factor = summary_stats[daily_update_df.columns].iloc[4, :]
@@ -271,17 +296,18 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
 
     global_outlier_list = []
     for df in [weekday_correction, non_daily_df_test, non_ar_df]:
-        global_outlier_list += list(
-            global_outlier_detect(df, summary_stats[df.columns].iloc[2],
-                                  summary_stats[df.columns].iloc[4]))
+        global_outlier_list+=list(outlier_detect(df.T.merge(summary_stats[df.columns].loc['median'
+                        ,:],left_index=True, right_index=True
+                        ).merge(summary_stats[df.columns].loc['var',:],
+                        left_index=True, right_index=True)))
 
     # Apply AR
-    ts_streams = apply_ar(last_7, flash_dir, lag, weekday_correction,
+    ts_streams, df_for_ts = apply_ar(last_7, flash_dir, lag, weekday_correction,
                         non_daily_df_test, fips_pop_table)
     # find stream ranking (individual)
-    stream_individual = ts_streams.apply(
-        lambda x: sum(x.values[0] <= stream[x.name].dropna()) /
-                  stream[x.name].dropna().shape[0], axis=0)
+    stream_individual = ts_streams.T.apply(lambda x:  ts_val(x.values[0],
+                                            stream[x.name].dropna()))
+
     stream_individual.name = 'stream_individual'
 
 
@@ -306,7 +332,8 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                       how='outer').merge(stream_group,
                       left_index=True, right_index=True, how='outer').merge(evd_ranking,
                       left_index=True, right_index=True, how='outer'
-                      )
+                      ).merge(df_for_ts, left_index=True,
+                              right_index=True, how='outer')
     #if aws parameters are passed, save this dataframe to AWS
     if params.get('archive', None):
         if params['archive'].get("aws_credentials", None):
@@ -314,7 +341,7 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                 aws_access_key_id=params['archive']['aws_credentials']["aws_access_key_id"],
                 aws_secret_access_key=params['archive']['aws_credentials']["aws_secret_access_key"])
             s3 = session.resource('s3')
-            s3.Object(BUCKET,
+            s3.Object(params['flash']["aws_bucket"],
                       f'flags-dev/flash_results/{signal}_{day.strftime("%m_%d_%Y")}_{lag}.csv').put(
                 Body=type_of_outlier.to_csv(), ACL='public-read')
 

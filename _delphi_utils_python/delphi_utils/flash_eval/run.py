@@ -33,5 +33,7 @@ def run_module():
             today = date.today()
             lag= (pd.to_datetime(today)-pd.to_datetime(day)).days
             #test case for inital flash implementation assume lag == 1
-            if str(lag) in params["flash"]["lags"]:
+            #if str(lag) in params["flash"]["lags"]:
+            if True:
+                lag=1
                 flash_eval(int(lag), day, input_df, signal, params)

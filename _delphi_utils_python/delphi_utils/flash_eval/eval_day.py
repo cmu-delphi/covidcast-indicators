@@ -224,6 +224,7 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
     Ouput:
     None
     """
+
     if not logger:
         logger = get_structured_logger(
             name=signal,
@@ -245,8 +246,8 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                         else x for x in input_df.columns]
 
     # discuss where to do out-of-range handling
-    out_range = input_df.columns[input_df.lt(params['flash']['support'][0]).iloc[0, :].values
-                        & input_df.gt(params['flash']['support'][1]).iloc[0, :].values ]
+    out_range = input_df.columns[input_df.lt(int(params['flash']['support'][0])).iloc[0, :].values
+                        & input_df.gt(int(params['flash']['support'][1])).iloc[0, :].values ]
 
 
     #only rank streams without out of range data

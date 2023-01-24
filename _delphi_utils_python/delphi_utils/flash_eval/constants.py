@@ -10,3 +10,6 @@ STATES = ['ak', 'al', 'ar', 'as', 'az', 'ca', 'co', 'ct', 'dc', 'de', 'fl', 'ga'
 
 #HTML Link for the visualization tool alerts
 HTML_LINK = "<https://ananya-joshi-visapp-vis-523f3g.streamlitapp.com/?params="
+
+#Bucket for AWS
+BUCKET = 'delphi-covidcast-public'

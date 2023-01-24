@@ -3,8 +3,9 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import binom
+import boto3
 from delphi_utils.weekday import Weekday
-from .constants import HTML_LINK, STATES
+from .constants import HTML_LINK, STATES, BUCKET
 from .. import (
     get_structured_logger,
 )
@@ -191,6 +192,27 @@ def streams_groups_fn(stream, ts_streams):
                 ranking_streams[col] = sum(total_dist < val[0]) / total_dist.shape[0]
     stream_group = pd.Series(ranking_streams, name='stream_group')
     return stream_group
+
+
+def setup_fips(flash_dir):
+    """Set up fips related dictionaries and population table.
+
+    Input: The directory location for files
+    Output: conversion dictionary state to fips & population per fips df
+    """
+    fips_lookup = pd.read_csv(f'{flash_dir}/fips.csv',
+                header=None).astype(str).set_axis(['FIPS', 'STATE'], axis=1)
+    fips_lookup['FIPS'] = fips_lookup['FIPS'].str.zfill(2)
+    fips_to_STATE = fips_lookup.set_index("FIPS").to_dict()['STATE']
+    STATE_to_fips = fips_lookup.set_index("STATE").to_dict()['FIPS']
+    fips = pd.read_csv(f'{flash_dir}/geo_fips.csv', index_col=0).set_index('geo')
+    orig_fips = fips[fips['pop'].isna()].index
+    geos_repl = [fips_to_STATE[x] for x in orig_fips.str[:2]]
+    fips.loc[orig_fips, 'pop'] = [float(fips[fips.index == x]['pop']) for x in geos_repl]
+    fips_pop_table = fips.unstack().to_frame().T
+    fips_pop_table.columns = [STATE_to_fips[x] if x in list(STATES)
+                          else x for x in fips_pop_table.columns.droplevel()]
+    return STATE_to_fips, fips_pop_table
 def flash_eval(lag, day, input_df, signal, params, logger=None):
     """Evaluate most recent data using FlaSH.
 
@@ -208,6 +230,7 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
             filename=params["common"].get("log_filename", None),
             log_exceptions=params["common"].get("log_exceptions", True))
 
+    #TODOv4: Change these to a local dir
     flash_dir = f'flash_ref/{signal}'
     last_7 = pd.read_csv(f'{flash_dir}/last_7_{lag}.csv', index_col=0).astype(float)
     wk_mean = pd.read_csv(f'{flash_dir}/weekday_mean_df_{lag}.csv', index_col=0)
@@ -215,27 +238,19 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
     weekday_params = pd.read_csv(f'{flash_dir}/weekday_params_{lag}.csv', index_col=0)
     summary_stats = pd.read_csv(f'{flash_dir}/summary_stats_{lag}.csv', index_col=0)
     stream = pd.read_csv(f'{flash_dir}/ret_df2_{lag}.csv', index_col=0)
-    fips_lookup = pd.read_csv(f'{flash_dir}/fips.csv',
-                    header=None).astype(str).set_axis(['FIPS', 'STATE'], axis=1)
-    fips_lookup['FIPS'] = fips_lookup['FIPS'].str.zfill(2)
-    fips_to_STATE = fips_lookup.set_index("FIPS").to_dict()['STATE']
-    STATE_to_fips = fips_lookup.set_index("STATE").to_dict()['FIPS']
-    fips = pd.read_csv(f'{flash_dir}/geo_fips.csv', index_col=0)
-    orig_fips = fips[fips['pop'].isna()].geo
-    geos_repl = [fips_to_STATE[x] for x in orig_fips.str[:2]]
-    fips = fips.set_index('geo')
-    fips.loc[orig_fips, 'pop'] = [float(fips[fips.index == x]['pop']) for x in geos_repl]
-    fips_pop_table = fips.unstack().to_frame().T
-    fips_pop_table.columns = fips_pop_table.columns.droplevel()
-    fips_pop_table.columns = [STATE_to_fips[x] if x in list(STATES)
-                              else x for x in fips_pop_table.columns]
+
+
+    STATE_to_fips, fips_pop_table = setup_fips(flash_dir)
     input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
                         else x for x in input_df.columns]
 
-    # disucss where to do out-of-range handling
-    # out_range = input_df.columns[input_df.lt(params['flash']['support'][0]).iloc[0, :].values
-    #                     & input_df.gt(params['flash']['support'][1]).iloc[0, :].values ]
+    # discuss where to do out-of-range handling
+    out_range = input_df.columns[input_df.lt(params['flash']['support'][0]).iloc[0, :].values
+                        & input_df.gt(params['flash']['support'][1]).iloc[0, :].values ]
 
+
+    #only rank streams without out of range data
+    input_df = input_df[filter(lambda x: x not in out_range, input_df.columns)]
 
     daily_update_df, non_daily_df_test, non_ar_df = split_reporting_schedule_dfs(input_df,
                                                                                  flash_dir, lag)
@@ -290,7 +305,18 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                       how='outer').merge(stream_group,
                       left_index=True, right_index=True, how='outer').merge(evd_ranking,
                       left_index=True, right_index=True, how='outer'
-                      ).to_csv(f'{flash_dir}/results/{day.strftime("%m_%d_%Y")}_{lag}.csv')
+                      )
+    #if aws parameters are passed, save this dataframe to AWS
+    if params.get('archive', None):
+        if params['archive'].get("aws_credentials", None):
+            session = boto3.Session(
+                aws_access_key_id=params['archive']['aws_credentials']["aws_access_key_id"],
+                aws_secret_access_key=params['archive']['aws_credentials']["aws_secret_access_key"])
+            s3 = session.resource('s3')
+            s3.Object(BUCKET,
+                      f'flags-dev/flash_results/{signal}_{day.strftime("%m_%d_%Y")}_{lag}.csv').put(
+                Body=type_of_outlier.to_csv(), ACL='public-read')
+
     not_fix_daily = list(filter(lambda x: x not in global_outlier_list, daily_update_df.columns))
     not_fix_last_7 = list(filter(lambda x: x not in not_fix_daily, last_7.columns))
     last_7 = pd.concat(

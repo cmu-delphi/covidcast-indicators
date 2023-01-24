@@ -5,9 +5,9 @@ SHELL:=/bin/bash
 OPTIONS=
 
 PYTHON:=env/bin/python
-USR_INPUT_DIR=$(shell $(PYTHON) -m delphi_utils get input_dir)
-USR_CACHE_DIR=$(shell $(PYTHON) -m delphi_utils get cache_dir)
-USR_EXPORT_DIR=$(shell $(PYTHON) -m delphi_utils get export_dir)
+USR_INPUT_DIR:=$(shell $(PYTHON) -m delphi_utils get input_dir)
+USR_CACHE_DIR:=$(shell $(PYTHON) -m delphi_utils get cache_dir)
+USR_EXPORT_DIR:=$(shell $(PYTHON) -m delphi_utils get export_dir)
 
 # Gurobi license
 GRB_LICENSE_FILE=./gurobi.lic
@@ -53,7 +53,7 @@ install-python:
 	python3 -m venv env
 	source env/bin/activate && \
 	pip install wheel && \
-	pip install delphi_utils
+	pip install --timeout 1000 delphi_utils
 
 lib:
 	R -e 'roxygen2::roxygenise("delphiBackfillCorrection")'
@@ -75,10 +75,10 @@ run:
 		-v "`realpath $(USR_EXPORT_DIR)`:/backfill_corrections/${EXPORT_DIR}" \
 		-v "`realpath $(USR_INPUT_DIR)`:/backfill_corrections/${INPUT_DIR}" \
 		-v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
-		-v "${PWD}"/params.json:/backfill_corrections/params.json \
+		-v "${PWD}"/params.json:/backfill_corrections/params.host.json \
 		--env GRB_LICENSE_FILE=$(GRB_LICENSE_FILE) \
 		-it "${DOCKER_IMAGE}:${DOCKER_TAG}" \
-		/bin/bash -c "make gurobi.lic && make run-local OPTIONS=\"${OPTIONS}\""
+		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
 	aws configure set aws_access_key_id $(AWS_KEY_ID)
@@ -86,7 +86,7 @@ publish:
 	aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read
 	echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE)
 
-pipeline: setup-dirs standardize-dirs run publish teardown clean
+pipeline: setup-dirs run publish clean
 
 # Make sure all user-specified dirs exist locally; create them if not.
 setup-dirs:
@@ -114,12 +114,6 @@ standardize-dirs:
 
 clean:
 	rm -f $(USR_EXPORT_DIR)/*.csv.gz
-
-# Restore dir names in params to user-provided values.
-teardown:
-	$(PYTHON) -m delphi_utils set input_dir $(USR_INPUT_DIR)
-	$(PYTHON) -m delphi_utils set cache_dir $(USR_CACHE_DIR)
-	$(PYTHON) -m delphi_utils set export_dir $(USR_EXPORT_DIR)
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiBackfillCorrection")'

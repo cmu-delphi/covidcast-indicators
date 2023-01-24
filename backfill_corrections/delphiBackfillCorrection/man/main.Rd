@@ -4,13 +4,27 @@
 \alias{main}
 \title{Perform backfill correction on all desired signals and geo levels}
 \usage{
-main(params)
+main(
+  params,
+  refd_col = "time_value",
+  lag_col = "lag",
+  issued_col = "issue_date"
+)
 }
 \arguments{
 \item{params}{named list containing modeling and data settings. Must include
 the following elements: `ref_lag`, `testing_window`, `test_dates`,
 `training_days`, `num_col`, `denom_col`, `taus`, `lambda`, `export_dir`,
 `lp_solver`, `input_dir`, `cache_dir`, `geo_levels`, and `value_types`.}
+
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
+
+\item{lag_col}{string specifying name of lag field within
+the input dataframe.}
+
+\item{issued_col}{string specifying name of issue date (version) field within
+the input dataframe.}
 }
 \description{
 Perform backfill correction on all desired signals and geo levels

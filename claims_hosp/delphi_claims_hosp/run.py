@@ -20,6 +20,7 @@ from .download_claims_ftp_files import download
 from .modify_claims_drops import modify_and_write
 from .get_latest_claims_name import get_latest_filename
 from .update_indicator import ClaimsHospIndicatorUpdater
+from .backfill import (store_backfill_file, merge_backfill_file)
 
 
 def run_module(params):
@@ -88,6 +89,12 @@ def run_module(params):
         enddate = params["indicator"]["end_date"]
     if params["indicator"]["start_date"] is not None:
         startdate = params["indicator"]['start_date']
+
+    # Store backfill data
+    backfill_dir = params["indicator"]["backfill_dir"]
+    backfill_merge_day = params["indicator"]["backfill_merge_day"]
+    merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+    store_backfill_file(claims_file, dropdate_dt, backfill_dir)
 
     # print out information
     logger.info("Loaded params",

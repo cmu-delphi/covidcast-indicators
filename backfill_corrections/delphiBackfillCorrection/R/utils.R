@@ -29,6 +29,8 @@
 #' @param template_path path to the template parameters file
 #' @template train_models-template
 #' @template make_predictions-template
+#' @param indicators string specifying a single indicator to process or all
+#'     indicators ("all", default)
 #'
 #' @return a named list of parameters values
 #'
@@ -37,7 +39,8 @@
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
 read_params <- function(path = "params.json", template_path = "params.json.template",
-                        train_models = FALSE, make_predictions = FALSE) {
+                        train_models = FALSE, make_predictions = FALSE,
+                        indicators = "all") {
   if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
@@ -47,6 +50,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   params$train_models <- train_models
   params$make_predictions <- make_predictions
+  params$indicators <- indicators
   
   ## Set default parameter values if not specified
   # Paths

@@ -9,7 +9,7 @@ read_params(
   template_path = "params.json.template",
   train_models = FALSE,
   make_predictions = FALSE,
-  indicators = "all"
+  indicators = c("all", unique(INDICATORS_AND_SIGNALS$indicator))
 )
 }
 \arguments{

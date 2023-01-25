@@ -1,4 +1,6 @@
 context("Testing utils helper functions")
+
+library(stringr)
  
 test_that("testing create directory if not exist", {
   # If not exists
@@ -75,11 +77,6 @@ test_that("testing read parameters", {
   expect_true(!("make_predictions" %in% names(params)))
   expect_true(!("train_models" %in% names(params)))
   expect_true(!("indicators" %in% names(params)))
-
-  # Check mode settings.
-  expect_equal(params$make_predictions, FALSE)
-  expect_equal(params$train_models, FALSE)
-  expect_equal(params$indicators, "all")
   
   # Create input file
   path = "test.temp"
@@ -116,9 +113,9 @@ test_that("testing read parameters", {
   expect_true("testing_window" %in% names(params))
   expect_true("test_dates" %in% names(params))
   
-  expect_true(!("make_predictions" %in% names(params)))
-  expect_true(!("train_models" %in% names(params)))
-  expect_true(!("indicators" %in% names(params)))
+  expect_true("make_predictions" %in% names(params))
+  expect_true("train_models" %in% names(params))
+  expect_true("indicators" %in% names(params))
 
   expect_true(params$export_dir == "./receiving")
   expect_true(params$cache_dir == "./cache")
@@ -151,32 +148,113 @@ test_that("testing read parameters", {
   expect_silent(file.remove("params-test.json"))
 })
 
-test_that("validity_checks fail appropriately", {
-  ## TODO
-  validity_checks()
+test_that("validity_checks alerts appropriately", {
+  time_value = as.Date(c("2022-01-01", "2022-01-02", "2022-01-03"))
+  issue_date = as.Date(c("2022-01-05", "2022-01-05", "2022-01-05"))
+  lag = issue_date - time_value
+  num = c(10, 15, 2)
+  den = c(101, 104, 102)
+  state_id = rep("al", 3)
+  geo_value = rep("01001", 3)
 
+  check_wrapper <- function(df, value_type, signal_suffixes = "") {
+    validity_checks(df, value_type = value_type, num_col = "num",
+      denom_col = "den", signal_suffixes = signal_suffixes)
+  }
+
+  missing_count_cols_error <- "No valid column name detected for the count values!"
+  expect_error(check_wrapper(data.frame(), "count"),
+    missing_count_cols_error)
+  expect_error(check_wrapper(data.frame(num_1 = num), "count", c("1", "2")),
+    missing_count_cols_error)
+
+  missing_fraction_cols_error <- "No valid column name detected for the fraction values!"
+  expect_error(check_wrapper(data.frame(), "fraction"),
+    missing_fraction_cols_error)
+  expect_error(check_wrapper(data.frame(num), "fraction"),
+    missing_fraction_cols_error)
+  expect_error(check_wrapper(data.frame(num_1 = num, den_1 = den), "count", c("1", "2")),
+    missing_count_cols_error)
+
+
+  expect_error(check_wrapper(data.frame(num, den), "count"),
+    "No reference date column detected for the reference date!")
+  expect_error(check_wrapper(data.frame(num, den, time_value = as.character(time_value)), "count"),
+    "Reference date column must be of `Date` type")
+
+
+  issued_lag_error <- "Issue date and lag fields must exist in the input data"
+  expect_error(check_wrapper(data.frame(num, den, time_value), "count"),
+    issued_lag_error)
+  expect_error(check_wrapper(data.frame(num, den, time_value, lag), "count"),
+    issued_lag_error)
+  expect_error(check_wrapper(data.frame(num, den, time_value, issue_date), "count"),
+    issued_lag_error)
+
+
+  missing_val_error <- "Issue date, lag, or reference date fields contain missing values"
+  df <- data.frame(num, den, time_value, issue_date, lag)
+  new_row <- df[1,]
+  new_row$time_value <- NA
+  expect_error(check_wrapper(bind_rows(df, new_row), "count"), missing_val_error)
+  new_row <- df[1,]
+  new_row$issue_date <- NA
+  expect_error(check_wrapper(bind_rows(df, new_row), "count"), missing_val_error)
+  new_row <- df[1,]
+  new_row$lag <- NA
+  expect_error(check_wrapper(bind_rows(df, new_row), "count"), missing_val_error)
+
+
+  expect_error(check_wrapper(data.frame(num, den, time_value, lag, issue_date = as.character(issue_date)), "count"),
+    "Issue date column must be of `Date` type")
+
+
+  df <- data.frame(num, den, time_value, issue_date, lag, geo_value, state_id)
+  expect_warning(check_wrapper(df[rep(1, 3), ], "count"),
+    "Data contains duplicate rows, dropping")
+
+  df <- data.frame(num, den, time_value, issue_date, lag, geo_value, state_id)
+  df <- df[rep(1, 3), ]
+  df$num <- num
+  expect_error(check_wrapper(df, "count"),
+    "Data contains multiple entries with differing values")
+
+  df <- data.frame(num, den, time_value, issue_date, lag, geo_value, state_id)
+  expect_error(check_wrapper(df, "count"), NA)
+  expect_error(check_wrapper(df, "fraction"), NA)
 })
 
-test_that("make_key", {
-  ## TODO
-  make_key()
+test_that("testing key creation behavior", {
+  value_type <- "covid"
+  signal_suffix <- "52"
 
+  expect_equal(
+    make_key(value_type = value_type, signal_suffix = signal_suffix),
+    str_interp("${value_type} ${signal_suffix}")
+  )
+  expect_equal(
+    make_key(value_type = value_type, signal_suffix = ""), value_type
+  )
+  expect_equal(
+    make_key(value_type = value_type, signal_suffix = NA), value_type
+  )
 })
 
-test_that("params_element_exists_and_valid", {
-  ## TODO
-  params_element_exists_and_valid()
-
+test_that("testing params element existence checker", {
+  params <- list("setting" = 5)
+  expect_true(params_element_exists_and_valid(params, "setting"))
+  params <- list("setting" = NA)
+  expect_false(params_element_exists_and_valid(params, "setting"))
+  params <- list("setting" = NULL)
+  expect_false(params_element_exists_and_valid(params, "setting"))
 })
 
-test_that("assert", {
-  ## TODO
-  assert()
-
+test_that("testing assert command", {
+  expect_equal(assert(TRUE), NULL)
+  expect_error(assert(FALSE))
+  expect_error(assert(FALSE, "Don't do that"), "Don't do that")
 })
 
-test_that("msg_ts", {
-  ## TODO
-  msg_ts()
-
+test_that("testing timestamp message command", {
+  expect_message(msg_ts("Hello"), paste0(format(Sys.time(), "%Y-%m-%d %H:%M:%S"), " --- Hello"))
 })

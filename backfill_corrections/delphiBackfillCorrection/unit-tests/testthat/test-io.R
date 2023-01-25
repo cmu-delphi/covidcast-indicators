@@ -1,4 +1,5 @@
 library(arrow)
+library(stringr)
 
 context("Testing io helper functions")
 
@@ -106,8 +107,8 @@ test_that("testing the filtration of the files for training and predicting", {
 })
 
 test_that("testing fetching list of files for training and predicting", {
-  params <- read_params("params-run.json", "params-run.json.template")
-  params$train_models <- TRUE
+  params <- read_params("params-run.json", "params-run.json.template",
+    train_models = TRUE)
 
   daily_data <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
@@ -128,16 +129,36 @@ test_that("testing fetching list of files for training and predicting", {
 })
 
 
-test_that("read_data", {
-  ## TODO
-  read_data()
+test_that("testing read_data type", {
+  params <- read_params("params-run.json", "params-run.json.template")
+  daily_data <- data.frame(test=c(TRUE, FALSE), num = c(1, 2))
+  daily_file_name <- file.path(params$input_dir,
+                               str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
+  write_parquet(daily_data, daily_file_name)
 
+  expect_true(inherits(read_data(daily_file_name), "data.frame"))
+
+  file.remove(daily_file_name)
+  file.remove("params-run.json")
 })
 
-test_that("fips_to_geovalue", {
-  ## TODO
-  fips_to_geovalue()
+test_that("testing conversion of fips to geo_value", {
+  geo_value = c("01001", "99999", "12347")
+  fips = c("55555", "52390", "00111")
 
+  # Fail if neither `fips` nor `geo_value` exist
+  expect_error(fips_to_geovalue(data.frame(empty_col = fips)),
+    "Either `fips` or `geo_value` field must be available")
+
+  # Return same df if only `geo_value` exists
+  df <- data.frame(geo_value)
+  expect_equal(fips_to_geovalue(df), df)
+
+  # Drop `fips` field if both `fips` and `geo_value` exist
+  expect_equal(fips_to_geovalue(data.frame(geo_value, fips)), data.frame(geo_value))
+
+  # Rename `fips` to `geo_value` if only `fips` exists
+  expect_equal(fips_to_geovalue(data.frame(fips)), data.frame(geo_value = fips))
 })
 
 test_that("get_issue_date_range", {

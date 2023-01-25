@@ -14,7 +14,7 @@ read_data <- function(input_file) {
 #'
 #' @template df-template
 #'
-#' @importFrom dplyr rename %>%
+#' @importFrom dplyr rename select
 #' @importFrom rlang .data
 fips_to_geovalue <- function(df) {
   if ( !("geo_value" %in% colnames(df)) ) {
@@ -22,6 +22,9 @@ fips_to_geovalue <- function(df) {
       stop("Either `fips` or `geo_value` field must be available")
     }
     df <- rename(df, geo_value = .data$fips)
+  }
+  if ( "fips" %in% colnames(df) ) {
+    df <- select(df, -.data$fips)
   }
   return(df)
 }

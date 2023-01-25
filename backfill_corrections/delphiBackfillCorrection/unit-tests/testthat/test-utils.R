@@ -1,7 +1,7 @@
+library(stringr)
+
 context("Testing utils helper functions")
 
-library(stringr)
- 
 test_that("testing create directory if not exist", {
   # If not exists
   path = "test.test"

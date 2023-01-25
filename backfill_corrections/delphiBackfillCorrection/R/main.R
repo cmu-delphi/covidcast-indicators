@@ -246,7 +246,7 @@ main <- function(params,
 
   indicators_subset <- INDICATORS_AND_SIGNALS
   if (params$indicators != "all") {
-    indicators_subset <- filter(indicators_subset, indicator == params$indicators)
+    indicators_subset <- filter(indicators_subset, .data$indicator == params$indicators)
   }
   if (nrow(indicators_subset) == 0) {
     stop("no indicators to process")

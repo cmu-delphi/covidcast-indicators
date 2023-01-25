@@ -142,8 +142,8 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
 
   # Check data type and required columns
   if (value_type == "count") {
-    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
-    else {stop("No valid column name detected for the count values!")}
+    if ( all(num_col %in% colnames(df)) ) { value_cols=c(num_col) }
+    else { stop("No valid column name detected for the count values!") }
   } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
     if ( !all(value_cols %in% colnames(df)) ) {
@@ -163,6 +163,10 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   # issue_date and lag should exist in the dataset
   if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
     stop("Issue date and lag fields must exist in the input data")
+  }
+
+  if (!(inherits(df[[issued_col]], "Date"))) {
+    stop("Issue date column must be of `Date` type")
   }
 
   if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||

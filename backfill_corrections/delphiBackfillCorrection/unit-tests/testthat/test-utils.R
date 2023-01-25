@@ -71,6 +71,15 @@ test_that("testing read parameters", {
   expect_true(!("ref_lag" %in% names(params)))
   expect_true(!("testing_window" %in% names(params)))
   expect_true(!("test_dates" %in% names(params)))
+
+  expect_true(!("make_predictions" %in% names(params)))
+  expect_true(!("train_models" %in% names(params)))
+  expect_true(!("indicators" %in% names(params)))
+
+  # Check mode settings.
+  expect_equal(params$make_predictions, FALSE)
+  expect_equal(params$train_models, FALSE)
+  expect_equal(params$indicators, "all")
   
   # Create input file
   path = "test.temp"
@@ -107,6 +116,10 @@ test_that("testing read parameters", {
   expect_true("testing_window" %in% names(params))
   expect_true("test_dates" %in% names(params))
   
+  expect_true(!("make_predictions" %in% names(params)))
+  expect_true(!("train_models" %in% names(params)))
+  expect_true(!("indicators" %in% names(params)))
+
   expect_true(params$export_dir == "./receiving")
   expect_true(params$cache_dir == "./cache")
   
@@ -129,6 +142,11 @@ test_that("testing read parameters", {
   start_date <- TODAY - params$testing_window + 1
   end_date <- TODAY
   expect_true(all(params$test_dates == seq(start_date, end_date, by="days")))
+
+  # Check mode settings.
+  expect_equal(params$make_predictions, TRUE)
+  expect_equal(params$train_models, TRUE)
+  expect_equal(params$indicators, "all")
   
   expect_silent(file.remove("params-test.json"))
 })

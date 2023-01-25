@@ -137,7 +137,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
-    denom_col <- paste(num_col, signal_suffixes, sep = "_")
+    denom_col <- paste(denom_col, signal_suffixes, sep = "_")
   }
 
   # Check data type and required columns
@@ -224,6 +224,9 @@ msg_ts <- function(text) {
 }
 
 #' Generate key for identifying a value_type-signal combo
+#'
+#' If `signal_suffix` is not an empty string, concatenate the two arguments.
+#' Otherwise, return only `value_type`.
 #'
 #' @template value_type-template
 #' @template signal_suffix-template

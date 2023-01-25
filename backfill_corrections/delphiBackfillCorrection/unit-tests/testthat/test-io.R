@@ -128,3 +128,26 @@ test_that("testing fetching list of files for training and predicting", {
 })
 
 
+test_that("read_data", {
+  ## TODO
+  read_data()
+
+})
+
+test_that("fips_to_geovalue", {
+  ## TODO
+  fips_to_geovalue()
+
+})
+
+test_that("get_issue_date_range", {
+  ## TODO
+  get_issue_date_range()
+
+})
+
+test_that("get_training_date_range", {
+  ## TODO
+  get_training_date_range()
+
+})

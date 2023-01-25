@@ -151,4 +151,32 @@ test_that("testing read parameters", {
   expect_silent(file.remove("params-test.json"))
 })
 
+test_that("validity_checks fail appropriately", {
+  ## TODO
+  validity_checks()
 
+})
+
+test_that("make_key", {
+  ## TODO
+  make_key()
+
+})
+
+test_that("params_element_exists_and_valid", {
+  ## TODO
+  params_element_exists_and_valid()
+
+})
+
+test_that("assert", {
+  ## TODO
+  assert()
+
+})
+
+test_that("msg_ts", {
+  ## TODO
+  msg_ts()
+
+})

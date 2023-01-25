@@ -37,3 +37,4 @@ params <- read_params(
 
 delphiBackfillCorrection::main(params)
 message("backfill correction completed successfully")
+print(warnings())

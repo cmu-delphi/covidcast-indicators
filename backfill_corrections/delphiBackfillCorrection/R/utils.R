@@ -146,7 +146,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
     else {stop("No valid column name detected for the count values!")}
   } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
-    if ( any(!(value_cols %in% colnames(df))) ) {
+    if ( !all(value_cols %in% colnames(df)) ) {
       stop("No valid column name detected for the fraction values!")
     }
   }
@@ -168,6 +168,18 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||
     any(is.na(df[[refd_col]])) ) {
     stop("Issue date, lag, or reference date fields contain missing values")
+  }
+
+  # Drop duplicate rows.
+  duplicate_i <- duplicated(df)
+  if (any(duplicate_i)) {
+    warning("Data contains duplicate rows, dropping")
+    df <- df[!duplicate_i,]
+  }
+
+  if (anyDuplicated(df[, c(refd_col, issued_col, "geo_value", "state_id")])) {
+    stop("Data contains multiple entries with differing values for at",
+         " least one reference date-issue date-location combination")
   }
 
   return(list(df = df, value_cols = value_cols))

@@ -11,12 +11,33 @@ import numpy as np
 
 from delphi_utils import (
     create_export_csv,
-    get_structured_logger
+    get_structured_logger,
+    Nans
 )
 
 from .constants import GEO_RESOLUTIONS, SIGNALS
 from .geo import geo_map
 from .pull import load_data, extract_testing_metrics
+
+def add_nancodes(df, signal):
+    """Add nancodes to the dataframe."""
+    # Default missingness codes
+    df["missing_val"] = Nans.NOT_MISSING
+    df["missing_se"] = Nans.NOT_MISSING if signal == "pcr_tests_positive" else Nans.NOT_APPLICABLE
+    df["missing_sample_size"] = (
+        Nans.NOT_MISSING if signal == "pcr_tests_positive" else Nans.NOT_APPLICABLE
+    )
+
+    # Mark any nans with unknown
+    val_nans_mask = df["val"].isnull()
+    df.loc[val_nans_mask, "missing_val"] = Nans.OTHER
+    if signal == "pcr_tests_positive":
+        se_nans_mask = df["se"].isnull()
+        df.loc[se_nans_mask, "missing_se"] = Nans.OTHER
+        sample_size_nans_mask = df["sample_size"].isnull()
+        df.loc[sample_size_nans_mask, "missing_sample_size"] = Nans.OTHER
+
+    return df
 
 def run_module(params):
     """
@@ -59,6 +80,7 @@ def run_module(params):
         df = geo_map(df_county_testing, geo_res)
 
         # Export 'pcr_specimen_positivity_rate'
+        df = add_nancodes(df, "pcr_tests_positive")
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,
@@ -69,6 +91,7 @@ def run_module(params):
         df["val"] = df["sample_size"]
         df["sample_size"] = np.nan
         df["se"] = np.nan
+        df = add_nancodes(df, "pcr_tests_total")
         exported_csv_dates = create_export_csv(
             df,
             export_dir=export_dir,

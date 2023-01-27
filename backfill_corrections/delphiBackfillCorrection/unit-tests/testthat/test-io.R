@@ -167,7 +167,87 @@ test_that("get_issue_date_range", {
 })
 
 test_that("get_training_date_range", {
-  ## TODO
-  get_training_date_range()
+  # train_models = TRUE
+  # training_end_date provided
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31"
+  )
+  result <- get_training_date_range(params)
+  expect_equal(names(result), c("training_start_date", "training_end_date"))
+  expect_equal(
+    result,
+    list("training_start_date"=as.Date("2022-01-03"), "training_end_date"=as.Date("2022-01-31"))
+  )
 
+  # train_models = TRUE
+  # training_end_date not provided
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28
+  )
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=Sys.Date() - 6 - 28, "training_end_date"=Sys.Date() - 6)
+  )
+
+  # train_models = FALSE
+  # training_end_date provided or not shouldn't impact result
+  # No model files
+  tdir <- tempdir() # empty
+  params <- list(
+    "train_models" = FALSE,
+    "cache_dir" = tdir,
+    "testing_window" = 7, # days
+    "training_days" = 28
+  )
+  params_tenddate <- list(
+    "train_models" = FALSE,
+    "cache_dir" = tdir,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31" # expect to be ignored
+  )
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=Sys.Date() - 6 - 28, "training_end_date"=Sys.Date() - 6)
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
+
+  # train_models = FALSE
+  # training_end_date provided or not shouldn't impact result
+  # Some model files
+  empty_obj <- list()
+  save(empty_obj,
+    file=file.path(tdir, "20201031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  save(empty_obj,
+    file=file.path(tdir, "20201031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.75.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2020-10-03"), "training_end_date"=as.Date("2020-10-31"))
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
+
+  # With cached models having mixed training end dates.
+  save(empty_obj,
+    file=file.path(tdir, "20211031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2021-10-03"), "training_end_date"=as.Date("2021-10-31"))
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
 })
+
+

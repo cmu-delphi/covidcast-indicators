@@ -124,8 +124,14 @@ run_backfill <- function(df, params,
             filter(.data$issue_date %in% params$test_dates) %>%
             drop_na()
 
-          if (nrow(geo_test_data) == 0) next
-          if (nrow(geo_train_data) <= 200) next
+          if (nrow(geo_test_data) == 0) {
+            warning("Not enough test data")
+            next
+          }
+          if (nrow(geo_train_data) <= 200) {
+            warning("Not enough training data")
+            next
+          }
 
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions

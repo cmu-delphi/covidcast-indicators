@@ -128,7 +128,6 @@ test_that("testing fetching list of files for training and predicting", {
   file.remove("params-run.json")
 })
 
-
 test_that("testing read_data type", {
   params <- read_params("params-run.json", "params-run.json.template")
   daily_data <- data.frame(test=c(TRUE, FALSE), num = c(1, 2))

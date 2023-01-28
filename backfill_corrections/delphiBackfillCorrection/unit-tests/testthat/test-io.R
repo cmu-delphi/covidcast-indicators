@@ -161,9 +161,29 @@ test_that("testing conversion of fips to geo_value", {
 })
 
 test_that("get_issue_date_range", {
-  ## TODO
-  get_issue_date_range()
+  # Initial call to `get_training_date_range` will return
+  # list("training_start_date"=as.Date("2022-01-03"), "training_end_date"=as.Date("2022-01-31"))
+  # with these settings.
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31",
+    "ref_lag" = 14 # days
+  )
 
+  # Requested test dates too early compared to requested training dates.
+  params$test_dates <- as.Date(c("2022-01-01", "2022-01-02"))
+  expect_error(get_issue_date_range(params),
+    "training end date must be earlier than the earliest test date")
+
+  params$test_dates <- as.Date(c("2022-06-01", "2022-06-02"))
+  result <- get_issue_date_range(params)
+  expect_equal(names(result), c("start_issue", "end_issue"))
+  expect_equal(
+    result,
+    list("start_issue"=as.Date("2022-01-03") - 14, "end_issue"=as.Date("2022-06-02"))
+  )
 })
 
 test_that("get_training_date_range", {

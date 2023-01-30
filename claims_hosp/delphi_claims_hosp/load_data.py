@@ -5,7 +5,6 @@ Author: Maria Jahja
 Created: 2020-09-27
 
 """
-
 # third party
 import pandas as pd
 
@@ -52,7 +51,6 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     claims_data.dropna(inplace=True)  # drop rows with any missing entries
 
     return claims_data
-
 
 def load_data(input_filepath, dropdate, base_geo):
     """

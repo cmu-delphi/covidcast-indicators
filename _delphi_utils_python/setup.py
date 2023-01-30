@@ -26,7 +26,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.3.7",
+    version="0.3.8",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

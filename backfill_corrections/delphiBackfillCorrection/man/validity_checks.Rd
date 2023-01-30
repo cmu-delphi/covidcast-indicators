@@ -10,6 +10,7 @@ validity_checks(
   num_col,
   denom_col,
   signal_suffixes,
+  refd_col = "time_value",
   lag_col = "lag",
   issued_col = "issue_date"
 )
@@ -29,6 +30,9 @@ endings to be appended to standard value column names from
 `params$num_col` and `params$denom_col`. Used for non-standard
 value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
+
+\item{refd_col}{string specifying name of reference date field within
+the input dataframe.}
 
 \item{lag_col}{string specifying name of lag field within
 the input dataframe.}

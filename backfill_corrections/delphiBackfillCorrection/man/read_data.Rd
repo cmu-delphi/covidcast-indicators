@@ -4,10 +4,10 @@
 \alias{read_data}
 \title{Read a parquet file into a dataframe}
 \usage{
-read_data(input_dir)
+read_data(input_file)
 }
 \arguments{
-\item{input_dir}{path to the directory containing input data}
+\item{input_file}{path to input data file in parquet format}
 }
 \description{
 Read a parquet file into a dataframe

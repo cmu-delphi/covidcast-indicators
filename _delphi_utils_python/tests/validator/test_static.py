@@ -28,7 +28,27 @@ class TestCheckMissingDates:
         validator.check_missing_date_files(filenames, report)
 
         assert len(report.raised_errors) == 1
+        assert report.raised_errors[0].check_name == "check_empty_filelist"
+
+    def test_missing_date_files(self):
+        params = {
+            "common": {
+                "data_source": "",
+                "span_length": 5,
+                "end_date": "2020-09-05",
+                "max_expected_lag": {"all": "1"}
+            }
+        }
+        validator = StaticValidator(params)
+        report = ValidationReport([])
+        filenames = [("20200901_county_signal_signal.csv", "match_obj"),
+                     ("20200903_county_signal_signal.csv", "match_obj"),
+                     ("20200904_county_signal_signal.csv", "match_obj"),
+                     ("20200905_county_signal_signal.csv", "match_obj")]
+        validator.check_missing_date_files(filenames, report)
+        assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_missing_date_files"
+
 
     def test_same_day(self):
         params = {

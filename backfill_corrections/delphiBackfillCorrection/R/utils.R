@@ -119,6 +119,7 @@ create_dir_not_exist <- function(path)
 #' @template num_col-template
 #' @template denom_col-template
 #' @template signal_suffixes-template
+#' @template refd_col-template
 #' @template lag_col-template
 #' @template issued_col-template
 #'
@@ -126,7 +127,7 @@ create_dir_not_exist <- function(path)
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
 validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
-                            lag_col = "lag", issued_col = "issue_date") {
+                            refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
     denom_col <- paste(num_col, signal_suffixes, sep = "_")
@@ -144,16 +145,22 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   }
   
   # time_value must exist in the dataset
-  if ( !"time_value" %in% colnames(df) ) {
-    stop("No 'time_value' column detected for the reference date!")
+  if ( !(refd_col %in% colnames(df)) ) {
+    stop("No reference date column detected for the reference date!")
+  }
+
+  if (!(inherits(df[[refd_col]], "Date"))) {
+    stop("Reference date column must be of `Date` type")
   }
   
-  # issue_date or lag should exist in the dataset
-  if ( !lag_col %in% colnames(df) ) {
-    if ( issued_col %in% colnames(df) ) {
-      df$lag = as.integer(df$issue_date - df$time_value)
-    }
-    else {stop("No issue_date or lag exists!")}
+  # issue_date and lag should exist in the dataset
+  if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
+    stop("Issue date and lag fields must exist in the input data")
+  }
+
+  if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||
+    any(is.na(df[[refd_col]])) ) {
+    stop("Issue date, lag, or reference date fields contain missing values")
   }
 
   return(list(df = df, value_cols = value_cols))

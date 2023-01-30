@@ -262,6 +262,11 @@ get_training_date_range <- function(params) {
     } else {
       # If only some models are in the cache, they will be used and those
       # missing will be regenerated as-of the training end date.
+      #
+      # All available model files will be used to determine the training end
+      # date, even if those models don't match a specific indicator requested
+      # via the command-line `--indicators` argument. We assume that training
+      # date ranges should match between all indicators.
       training_end_date <- max(as.Date(substr(model_files, 1, 8), "%Y%m%d"))
     }
   }

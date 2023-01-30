@@ -281,6 +281,10 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
 
     daily_update_df, non_daily_df_test, non_ar_df = split_reporting_schedule_dfs(input_df,
                                                                                  flash_dir, lag)
+
+    # only consider non-daily values that are non-0
+    non_daily_df_test = non_daily_df_test[non_daily_df_test != 0].dropna(axis=1)
+
     # Weekday outlier [only for Daily Df]
     weekday_outlier = outlier_detect(daily_update_df.T.merge(wk_mean.loc[day.day_of_week, :],
                       left_index=True, right_index=True).merge(wk_var.loc[day.day_of_week, :],

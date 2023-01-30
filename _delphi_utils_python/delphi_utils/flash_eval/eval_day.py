@@ -124,7 +124,7 @@ def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_
     df_for_ts.columns = ['y', 'yhat', 'pop']
     ts_streams = bin_approach(df_for_ts, log=True)
     ts_streams.columns = ['test-statistic']
-    return ts_streams  , df_for_ts,
+    return ts_streams, df_for_ts
 
 
 def output(evd_ranking, day, lag, signal, logger):
@@ -168,9 +168,11 @@ def evd_ranking_fn(ts_streams, flash_dir):
     """
     EVD_max = pd.read_csv(f'{flash_dir}/max.csv', index_col=0)
     EVD_min = pd.read_csv(f'{flash_dir}/min.csv', index_col=0)
-    evd_ranking = pd.concat([ts_streams.apply(lambda x: ts_val(x.values[0], EVD_min['0']), axis=1).sort_values(),
-               ts_streams.apply(lambda x:
-                              1 - ts_val(x.values[0], EVD_max['0']), axis=1).sort_values()], axis=1).max(axis=1)
+    evd_ranking = pd.concat([ts_streams.apply(lambda x: ts_val(x.values[0],
+                             EVD_min['0']), axis=1).sort_values(),
+                              ts_streams.apply(lambda x:
+                              1 - ts_val(x.values[0], EVD_max['0']),
+                              axis=1).sort_values()], axis=1).max(axis=1)
     evd_ranking.name = 'evd_ranking'
     return evd_ranking
 

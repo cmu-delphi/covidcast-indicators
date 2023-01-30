@@ -274,8 +274,7 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
 
     # discuss where to do out-of-range handling
     out_range = input_df.columns[input_df.lt(int(params['flash']['support'][0])).iloc[0, :].values
-                        & input_df.gt(int(params['flash']['support'][1])).iloc[0, :].values ]
-
+                        | input_df.gt(int(params['flash']['support'][1])).iloc[0, :].values ]
 
     #only rank streams without out of range data
     input_df = input_df[filter(lambda x: x not in out_range, input_df.columns)]

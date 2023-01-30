@@ -112,6 +112,7 @@ def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_
     Returns
     -------
     ts_streams: return of test statistic for the day's steams.
+    df_for_ts: dataframe for the test-statistic
     """
     y = pd.concat([weekday_correction, non_daily_df], axis=1)
     y.name = 'y'
@@ -121,8 +122,9 @@ def apply_ar(last_7, flash_dir, lag, weekday_correction, non_daily_df, fips_pop_
     df_for_ts = y.T.merge(y_hat, left_index=True, right_index=True).merge(fips_pop_table.T
                               , left_index=True, right_index=True)
     df_for_ts.columns = ['y', 'yhat', 'pop']
-
-    return df_for_ts, bin_approach(df_for_ts, log=True)
+    ts_streams = bin_approach(df_for_ts, log=True)
+    ts_streams.columns = ['test-statistic']
+    return ts_streams  , df_for_ts,
 
 
 def output(evd_ranking, day, lag, signal, logger):
@@ -166,12 +168,9 @@ def evd_ranking_fn(ts_streams, flash_dir):
     """
     EVD_max = pd.read_csv(f'{flash_dir}/max.csv', index_col=0)
     EVD_min = pd.read_csv(f'{flash_dir}/min.csv', index_col=0)
-    evd_ranking = pd.concat(
-        [ts_streams.apply(lambda x: ts_val(x.values[0],
-                                           EVD_min['0']), axis=1).sort_values(),
-         ts_streams.apply(lambda x :1-ts_val(x.values[0],
-                                           EVD_max['0']), axis=1).sort_values()],
-        axis=1).max(axis=1)
+    evd_ranking = pd.concat([ts_streams.apply(lambda x: ts_val(x.values[0], EVD_min['0']), axis=1).sort_values(),
+               ts_streams.aapply(lambda x:
+                              1 - ts_val(x.values[0], EVD_max['0']), axis=1).sort_values()], axis=1).max(axis=1)
     evd_ranking.name = 'evd_ranking'
     return evd_ranking
 
@@ -337,7 +336,11 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                       left_index=True, right_index=True, how='outer').merge(evd_ranking,
                       left_index=True, right_index=True, how='outer'
                       ).merge(df_for_ts, left_index=True,
-                              right_index=True, how='outer')
+                              right_index=True, how='outer').merge(ts_streams,
+                            left_index=True, right_index=True, how='outer')
+    type_of_outlier['flash'] = type_of_outlier['evd_ranking']
+    indices = type_of_outlier.index[type_of_outlier['evd_ranking'].isna()]
+    type_of_outlier.loc[indices, 'flash'] = type_of_outlier.loc[indices, 'global_outlier']
     #if aws parameters are passed, save this dataframe to AWS
     if params.get('archive', None):
         if params['archive'].get("aws_credentials", None):

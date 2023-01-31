@@ -63,5 +63,5 @@ class Validator:
             all_frames = []
         else:
             all_frames = aggregate_frames(frames_list)
-        self.dynamic_validation.validate(all_frames, report)
+            self.dynamic_validation.validate(all_frames, report)
         return report

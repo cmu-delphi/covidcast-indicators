@@ -21,7 +21,6 @@ class TestCheckMissingDates:
             }
         }
         validator = StaticValidator(params)
-        #wtf is this
         report = ValidationReport([])
         report = ValidationReport([])
 

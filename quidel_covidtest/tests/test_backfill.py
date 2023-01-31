@@ -49,7 +49,8 @@ class TestBackfill:
                         'num_age_18_49', 'den_age_18_49',
                         'num_age_50_64', 'den_age_50_64',
                         'num_age_65plus', 'den_age_65plus',
-                        'num_age_0_17', 'den_age_0_17']
+                        'num_age_0_17', 'den_age_0_17',
+                        'lag', 'issue_date']
         assert set(selected_columns) == set(backfill_df.columns)  
         
         os.remove(backfill_dir + "/" + fn)
@@ -86,9 +87,6 @@ class TestBackfill:
             if "from" in file:
                 continue
             df = pd.read_parquet(file, engine='pyarrow')
-            issue_date = datetime.strptime(file[-16:-8], "%Y%m%d")
-            df["issue_date"] = issue_date
-            df["lag"] = [(issue_date - x).days for x in df["time_value"]]
             pdList.append(df)
             os.remove(file)
         new_files = glob.glob(backfill_dir + "/quidel_covidtest*.parquet")

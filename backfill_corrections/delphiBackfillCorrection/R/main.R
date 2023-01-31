@@ -125,7 +125,7 @@ run_backfill <- function(df, params,
             drop_na()
 
           if (nrow(geo_test_data) == 0) {
-            warning("Not enough test data")
+            warning("No test data")
             next
           }
           if (nrow(geo_train_data) <= 200) {

@@ -58,10 +58,7 @@ class Validator:
         frames_list = load_all_files(self.export_dir, self.time_window.start_date,
                                      self.time_window.end_date)
         self.static_validation.validate(frames_list, report)
-        # Check if frames_list is empty before calling aggregate_frames
-        if len(frames_list) == 0:
-            all_frames = []
-        else:
-            all_frames = aggregate_frames(frames_list)
-            self.dynamic_validation.validate(all_frames, report)
+        # Dynamic Validation only performed when frames_list is populated
+        if len(frames_list) > 0:
+            self.dynamic_validation.validate(aggregate_frames(frames_list), report)
         return report

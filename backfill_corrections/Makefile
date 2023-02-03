@@ -81,10 +81,10 @@ run:
 		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\""
 
 publish:
-	if [ -f $(USR_INPUT_DIR)/*.csv.gz ]; then \
+	if [ -f $(USR_EXPORT_DIR)/*.csv.gz ]; then \
 		aws configure set aws_access_key_id $(AWS_KEY_ID); \
 		aws configure set aws_secret_access_key $(AWS_SECRET_KEY); \
-		aws s3 cp $(USR_INPUT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read; \
+		aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read; \
 		echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE); \
 	else \
 		echo "No files in $(USR_EXPORT_DIR) to publish" >> $(LOG_FILE); \

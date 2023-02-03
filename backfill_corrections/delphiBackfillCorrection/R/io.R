@@ -239,6 +239,8 @@ create_name_pattern <- function(indicator, signal,
 #' only relevant when the user requests to train new models.
 #'
 #' @template params-template
+#'
+#' @importFrom stringr str_interp
 get_training_date_range <- function(params) {
   default_end_date <- TODAY - params$testing_window + 1
 
@@ -256,17 +258,22 @@ get_training_date_range <- function(params) {
     # where the leading date is the training end date for that model, and the
     # second date is the training start date.
     model_files <- list.files(params$cache_dir, "^20[0-9]{6}_20[0-9]{6}.*[.]model$")
+    if (params$indicators != "all") {
+      # If an single indicator is specified via the command-line
+      # `--indicators` argument, the training end date from available model
+      # files for only that indicator will be used. This means that model
+      # training date ranges may not match across all indicators.
+      model_files <- list.files(
+        params$cache_dir,
+        str_interp("^20[0-9]{6}_20[0-9]{6}_${params$indicators}.*[.]model$")
+      )
+    }
     if (length(model_files) == 0) {
       # We know we'll be retraining models today.
       training_end_date <- default_end_date
     } else {
       # If only some models are in the cache, they will be used and those
       # missing will be regenerated as-of the training end date.
-      #
-      # All available model files will be used to determine the training end
-      # date, even if those models don't match a specific indicator requested
-      # via the command-line `--indicators` argument. We assume that training
-      # date ranges should match between all indicators.
       training_end_date <- max(as.Date(substr(model_files, 1, 8), "%Y%m%d"))
     }
   }

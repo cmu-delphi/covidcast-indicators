@@ -222,14 +222,16 @@ test_that("get_training_date_range", {
     "train_models" = FALSE,
     "cache_dir" = tdir,
     "testing_window" = 7, # days
-    "training_days" = 28
+    "training_days" = 28,
+    "indicators" = "all"
   )
   params_tenddate <- list(
     "train_models" = FALSE,
     "cache_dir" = tdir,
     "testing_window" = 7, # days
     "training_days" = 28,
-    "training_end_date" = "2022-01-31" # expect to be ignored
+    "training_end_date" = "2022-01-31", # expect to be ignored
+    "indicators" = "all"
   )
   expect_equal(
     get_training_date_range(params),
@@ -267,6 +269,16 @@ test_that("get_training_date_range", {
   expect_equal(
     get_training_date_range(params),
     get_training_date_range(params_tenddate)
+  )
+
+  # When given a specific indicator via `params`, only existing models of that same type are used
+  # to fetch training_end_date
+  params$indicators <- "flu"
+  save(empty_obj,
+    file=file.path(tdir, "20221031_20130610_flu_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2022-10-03"), "training_end_date"=as.Date("2022-10-31"))
   )
 })
 

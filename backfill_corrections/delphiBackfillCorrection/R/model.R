@@ -289,6 +289,8 @@ generate_filename <- function(indicator, signal,
 #' only relevant when the user requests to train new models.
 #'
 #' @template params-template
+#'
+#' @importFrom stringr str_interp
 get_training_date_range <- function(params) {
   default_end_date <- TODAY - params$testing_window + 1
 
@@ -305,20 +307,23 @@ get_training_date_range <- function(params) {
     # `20220628_20220529_changehc_covid_state_lambda0.1_count_ca_lag5_tau0.9.model`
     # where the leading date is the training end date for that model, and the
     # second date is the training start date.
-    model_files <- list.files(params$cache_dir, "^202[0-9]{5}_202[0-9]{5}.*[.]model$")
+    model_files <- list.files(params$cache_dir, "^20[0-9]{6}_20[0-9]{6}.*[.]model$")
+    if (params$indicators != "all") {
+      # If an single indicator is specified via the command-line
+      # `--indicators` argument, the training end date from available model
+      # files for only that indicator will be used. This means that model
+      # training date ranges may not match across all indicators.
+      model_files <- list.files(
+        params$cache_dir,
+        str_interp("^20[0-9]{6}_20[0-9]{6}_${params$indicators}.*[.]model$")
+      )
+    }
     if (length(model_files) == 0) {
       # We know we'll be retraining models today.
       training_end_date <- default_end_date
     } else {
       # If only some models are in the cache, they will be used and those
       # missing will be regenerated as-of the training end date.
-      #
-      # If there are no model files available for a specific indicator, e.g.
-      # specified via the command-line `--indicators` argument, the training
-      # end date from available model files will be used, even if the indicator
-      # those models were trained on differs from the requested indicator. We
-      # assume that training date ranges should match between all indicator
-      # models.
       training_end_date <- max(as.Date(substr(model_files, 1, 8), "%Y%m%d"))
     }
   }

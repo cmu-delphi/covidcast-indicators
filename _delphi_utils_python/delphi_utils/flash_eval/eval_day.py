@@ -291,7 +291,7 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
                       left_index=True, right_index=True))
 
     # Make weekday correction for daily update
-    additive_factor = summary_stats[daily_update_df.columns].iloc[4, :]
+    additive_factor = 1
     weekday_correction = (Weekday.calc_adjustment(
                           weekday_params.loc[daily_update_df.columns, :].to_numpy(), \
                           (daily_update_df + additive_factor).reset_index(),

@@ -14,6 +14,11 @@ def mock_indicator_fn():
     yield mock.Mock()
 
 @pytest.fixture
+def mock_flash_fn():
+    """Set up a mock flash function."""
+    yield mock.Mock()
+
+@pytest.fixture
 def mock_validator_fn():
     """Set up a mock validator function."""
     validator_fn = mock.Mock()
@@ -43,13 +48,14 @@ class TestRunIndicator:
 
     @mock.patch("delphi_utils.runner.read_params")
     def test_full_run(self, mock_read_params,
-                      mock_indicator_fn, mock_validator_fn, mock_archiver_fn):
+                      mock_indicator_fn, mock_flash_fn,  mock_validator_fn, mock_archiver_fn, ):
         """Test that pipeline runs with validation and archiving."""
         mock_read_params.return_value = self.PARAMS
 
-        run_indicator_pipeline(mock_indicator_fn, mock_validator_fn, mock_archiver_fn)
+        run_indicator_pipeline(mock_indicator_fn,mock_flash_fn,  mock_validator_fn, mock_archiver_fn)
 
         mock_indicator_fn.assert_called_once_with(self.PARAMS)
+        # mock_flash_fn.assert_called_once_with(self.PARAMS)
         mock_validator_fn.assert_called_once_with(self.PARAMS)
         mock_archiver_fn.assert_called_once_with(self.PARAMS)
         mock_validator_fn.return_value.validate.assert_called_once()
@@ -58,13 +64,13 @@ class TestRunIndicator:
     @mock.patch("delphi_utils.runner.delete_move_files")
     @mock.patch("delphi_utils.runner.read_params")
     def test_failed_validation(self, mock_read_params, mock_delete_move_files,
-                               mock_indicator_fn, mock_validator_fn, mock_archiver_fn):
+                               mock_indicator_fn, mock_flash_fn, mock_validator_fn, mock_archiver_fn):
         """Test that archiving is not called when validation fails."""
         mock_read_params.return_value = self.PARAMS
         report = mock_validator_fn.return_value.validate.return_value
         report.add_raised_error(ValidationFailure("", "2020-10-10", ""))
 
-        run_indicator_pipeline(mock_indicator_fn, mock_validator_fn, mock_archiver_fn)
+        run_indicator_pipeline(mock_indicator_fn, mock_flash_fn, mock_validator_fn, mock_archiver_fn)
 
         mock_delete_move_files.assert_called_once()
         mock_indicator_fn.assert_called_once_with(self.PARAMS)
@@ -77,10 +83,11 @@ class TestRunIndicator:
     def test_indicator_only(self, mock_read_params, mock_indicator_fn):
         """Test that pipeline runs without validation or archiving."""
         mock_read_params.return_value = self.PARAMS
+        mock_null_flash_fn = mock.Mock(return_value=None)
         mock_null_validator_fn = mock.Mock(return_value=None)
         mock_null_archiver_fn = mock.Mock(return_value=None)
 
-        run_indicator_pipeline(mock_indicator_fn, mock_null_validator_fn, mock_null_archiver_fn)
+        run_indicator_pipeline(mock_indicator_fn, mock_null_flash_fn, mock_null_validator_fn, mock_null_archiver_fn)
 
         mock_indicator_fn.assert_called_once_with(self.PARAMS)
         mock_null_validator_fn.assert_called_once_with(self.PARAMS)

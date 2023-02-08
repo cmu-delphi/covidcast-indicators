@@ -124,8 +124,14 @@ run_backfill <- function(df, params,
             filter(.data$issue_date %in% params$test_dates) %>%
             drop_na()
 
-          if (nrow(geo_test_data) == 0) next
-          if (nrow(geo_train_data) <= 200) next
+          if (nrow(geo_test_data) == 0) {
+            warning("No test data")
+            next
+          }
+          if (nrow(geo_train_data) <= 200) {
+            warning("Not enough training data")
+            next
+          }
 
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions
@@ -246,7 +252,7 @@ main <- function(params,
 
   indicators_subset <- INDICATORS_AND_SIGNALS
   if (params$indicators != "all") {
-    indicators_subset <- filter(indicators_subset, indicator == params$indicators)
+    indicators_subset <- filter(indicators_subset, .data$indicator == params$indicators)
   }
   if (nrow(indicators_subset) == 0) {
     stop("no indicators to process")

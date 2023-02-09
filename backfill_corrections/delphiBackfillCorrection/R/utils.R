@@ -29,6 +29,8 @@
 #' @param template_path path to the template parameters file
 #' @template train_models-template
 #' @template make_predictions-template
+#' @param indicators string specifying a single indicator to process or all
+#'     indicators ("all", default)
 #'
 #' @return a named list of parameters values
 #'
@@ -37,7 +39,8 @@
 #' @importFrom dplyr if_else
 #' @importFrom jsonlite read_json
 read_params <- function(path = "params.json", template_path = "params.json.template",
-                        train_models = FALSE, make_predictions = FALSE) {
+                        train_models = FALSE, make_predictions = FALSE,
+                        indicators = c("all", unique(INDICATORS_AND_SIGNALS$indicator))) {
   if (!file.exists(path)) {file.copy(template_path, path)}
   params <- read_json(path, simplifyVector = TRUE)
 
@@ -47,6 +50,10 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   params$train_models <- train_models
   params$make_predictions <- make_predictions
+
+  indicators <- match.arg(indicators)
+  if (length(indicators) != 1) stop("`indicators` arg must be a single string")
+  params$indicators <- indicators
   
   ## Set default parameter values if not specified
   # Paths
@@ -130,16 +137,16 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
-    denom_col <- paste(num_col, signal_suffixes, sep = "_")
+    denom_col <- paste(denom_col, signal_suffixes, sep = "_")
   }
 
   # Check data type and required columns
   if (value_type == "count") {
-    if (num_col %in% colnames(df)) {value_cols=c(num_col)}
-    else {stop("No valid column name detected for the count values!")}
+    if ( all(num_col %in% colnames(df)) ) { value_cols=c(num_col) }
+    else { stop("No valid column name detected for the count values!") }
   } else if (value_type == "fraction") {
     value_cols = c(num_col, denom_col)
-    if ( any(!(value_cols %in% colnames(df))) ) {
+    if ( !all(value_cols %in% colnames(df)) ) {
       stop("No valid column name detected for the fraction values!")
     }
   }
@@ -158,9 +165,25 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
     stop("Issue date and lag fields must exist in the input data")
   }
 
+  if (!(inherits(df[[issued_col]], "Date"))) {
+    stop("Issue date column must be of `Date` type")
+  }
+
   if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||
     any(is.na(df[[refd_col]])) ) {
     stop("Issue date, lag, or reference date fields contain missing values")
+  }
+
+  # Drop duplicate rows.
+  duplicate_i <- duplicated(df)
+  if (any(duplicate_i)) {
+    warning("Data contains duplicate rows, dropping")
+    df <- df[!duplicate_i,]
+  }
+
+  if (anyDuplicated(df[, c(refd_col, issued_col, "geo_value", "state_id")])) {
+    stop("Data contains multiple entries with differing values for at",
+         " least one reference date-issue date-location combination")
   }
 
   return(list(df = df, value_cols = value_cols))
@@ -205,6 +228,9 @@ msg_ts <- function(text) {
 }
 
 #' Generate key for identifying a value_type-signal combo
+#'
+#' If `signal_suffix` is not an empty string, concatenate the two arguments.
+#' Otherwise, return only `value_type`.
 #'
 #' @template value_type-template
 #' @template signal_suffix-template

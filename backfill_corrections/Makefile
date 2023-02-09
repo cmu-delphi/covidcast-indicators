@@ -1,7 +1,11 @@
 SHELL:=/bin/bash
 
 # Change training options during `make` call via `make <command> OPTIONS="<options>"`
-# Allowed OPTIONS flags are `--train_models` and `--make_predictions`
+#
+# Allowed OPTIONS flags are `--train_models` and `--make_predictions`. The indicator
+# can be run on a single indicator at a time with `--indicators <indicator name>`,
+# or all indicators either by default (not passing `--indicators` at all) or with
+# `--indicators all`.
 OPTIONS=
 
 PYTHON:=env/bin/python

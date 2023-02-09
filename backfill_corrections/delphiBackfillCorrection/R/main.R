@@ -12,6 +12,7 @@
 #' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
+#' @importFrom stringr str_interp
 #' 
 #' @export
 run_backfill <- function(df, params,
@@ -123,8 +124,14 @@ run_backfill <- function(df, params,
             filter(.data$issue_date %in% params$test_dates) %>%
             drop_na()
 
-          if (nrow(geo_test_data) == 0) next
-          if (nrow(geo_train_data) <= 200) next
+          if (nrow(geo_test_data) == 0) {
+            warning("No test data")
+            next
+          }
+          if (nrow(geo_train_data) <= 200) {
+            warning("Not enough training data")
+            next
+          }
 
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions
@@ -233,6 +240,7 @@ run_backfill <- function(df, params,
 #' @importFrom dplyr bind_rows mutate %>%
 #' @importFrom parallel detectCores
 #' @importFrom rlang .data :=
+#' @importFrom stringr str_interp
 #' 
 #' @export
 main <- function(params,
@@ -241,10 +249,23 @@ main <- function(params,
     msg_ts("both model training and prediction generation are turned off; exiting")
     return(NULL)
   }
+
+  indicators_subset <- INDICATORS_AND_SIGNALS
+  if (params$indicators != "all") {
+    indicators_subset <- filter(indicators_subset, .data$indicator == params$indicators)
+  }
+  if (nrow(indicators_subset) == 0) {
+    stop("no indicators to process")
+  }
   
   if (params$train_models) {
     msg_ts("Removing stored models")
-    files_list <- list.files(params$cache_dir, pattern="[.]model$", full.names = TRUE)
+    model_name_pat <- "[.]model$"
+    # Remove models for only currently selected indicator, if any.
+    if (params$indicators != "all") {
+      model_name_pat <- str_interp(".*${params$indicators}.*[.]model$")
+    }
+    files_list <- list.files(params$cache_dir, pattern=model_name_pat, full.names = TRUE)
     file.remove(files_list)
   }
 
@@ -272,8 +293,8 @@ main <- function(params,
   ))
 
   # Loop over every indicator + signal combination.
-  for (group_i in seq_len(nrow(INDICATORS_AND_SIGNALS))) {
-    input_group <- INDICATORS_AND_SIGNALS[group_i,]
+  for (group_i in seq_len(nrow(indicators_subset))) {
+    input_group <- indicators_subset[group_i,]
     msg_ts(str_interp(
       "Processing indicator ${input_group$indicator} signal ${input_group$signal}"
     ))

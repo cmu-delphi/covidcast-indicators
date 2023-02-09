@@ -16,5 +16,6 @@ value column names and when processing multiple signals from a
 single input dataframe, as with `quidel`'s age buckets.}
 }
 \description{
-Generate key for identifying a value_type-signal combo
+If `signal_suffix` is not an empty string, concatenate the two arguments.
+Otherwise, return only `value_type`.
 }

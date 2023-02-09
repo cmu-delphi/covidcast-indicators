@@ -181,5 +181,3 @@ test_that("testing data filteration", {
   }
   expect_true(all(1:60 %in% included_lags))
 })
-
-

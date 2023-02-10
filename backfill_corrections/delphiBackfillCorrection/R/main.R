@@ -192,7 +192,8 @@ run_backfill <- function(df, params,
               msg_ts("Generating predictions")
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
-              test_data <- evaluate(test_data, params$taus)
+              test_data <- evaluate(test_data, params$taus) %>%
+                exponentiate_preds(params$taus)
               
               key <- make_key(value_type, signal_suffix)
               idx <- length(test_data_list[[key]]) + 1

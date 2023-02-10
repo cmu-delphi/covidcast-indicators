@@ -298,6 +298,13 @@ class Dataset:
             # exclude "People who are fully vaccinated - 12-17" ...
             header.find("-") < 0,
         ]) or all([
+            # include "People with a completed primary series"
+            header.startswith("People with a completed primary series"),
+            # exclude "People with a completed primary series as % of adult population"
+            header.find("%") < 0,
+            # exclude "People with a completed primary series - ages 65+"
+            header.find("-") < 0,
+        ]) or all([
             # include "People with full course administered"
             header.startswith("People with full course"),
             # exclude "People with full course administered as % of adult population"
@@ -368,8 +375,14 @@ class Dataset:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             # The name of the cumulative vaccination was changed after 03/09/2021
             # when J&J vaccines were added.
+            # 01/12/2023 - new name again
             if (sig == "fully vaccinated") and (len(sig_select) == 0):
-                sig_select = [s for s in select if s[-1].find("people with full course") >= 0]
+                other_sigs = [
+                    "people with a completed primary series",
+                    "people with full course"
+                    ]
+                sig_select = [s for s in select if s[-1] in other_sigs]
+
             # Since "doses administered" is a substring of another desired header,
             # "booster doses administered", we need to more strictly check if "doses administered"
             # occurs at the beginning of a header to find the correct match.

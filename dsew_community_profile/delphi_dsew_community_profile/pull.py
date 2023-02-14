@@ -379,7 +379,7 @@ class Dataset:
             if (sig == "fully vaccinated") and (len(sig_select) == 0):
                 other_sigs = [
                     "people with a completed primary series",
-                    "people with full course"
+                    "people with full course administered"
                     ]
                 sig_select = [s for s in select if s[-1] in other_sigs]
 

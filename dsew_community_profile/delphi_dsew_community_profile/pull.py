@@ -375,8 +375,9 @@ class Dataset:
             sig_select = [s for s in select if s[-1].find(sig) >= 0]
             # The name of the cumulative vaccination was changed after 03/09/2021
             # when J&J vaccines were added.
-            # 01/12/2023 - new name again
+            # fully vacinated signal was renamed again on 01/12/2023
             if (sig == "fully vaccinated") and (len(sig_select) == 0):
+                # Read these headers if "fully vaccinated" not found in source data
                 other_sigs = [
                     "people with a completed primary series",
                     "people with full course administered"

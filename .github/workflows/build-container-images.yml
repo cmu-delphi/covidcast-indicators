@@ -43,6 +43,6 @@ jobs:
           else
             cd ${{ github.workspace }}/${{ matrix.packages }}
             echo "using tag: --${imageTag}--"
-            docker build -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
+            DOCKER_BUILDKIT=1 BUILDKIT_PROGRESS=plain docker build --secret id=GITHUB_TOKEN -t ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag --file Dockerfile .
             docker push ghcr.io/${{ github.repository }}-${{ matrix.packages }}:$imageTag
           fi

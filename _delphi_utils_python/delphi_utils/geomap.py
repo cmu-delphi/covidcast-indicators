@@ -13,6 +13,7 @@ from os.path import join
 import pandas as pd
 import pkg_resources
 from pandas.api.types import is_string_dtype
+from collections import defaultdict
 
 
 class GeoMapper:  # pylint: disable=too-many-public-methods
@@ -110,25 +111,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         census_year: int
             Year of Census population data. 2019 estimates and 2020 full Census supported.
         """
-        self._crosswalks = {
-            "zip": {
-                geo: None for geo in ["fips", "hrr", "msa", "pop", "state", "hhs"]
-            },
-            "fips": {
-                geo: None for geo in ["zip", "hrr", "msa", "pop", "state", "hhs"]
-            },
-            "state": {"state": None},
-            "state_code": {"hhs": None, "pop": None},
-            "state_id": {"pop": None},
-            "state_name": {"pop": None},
-            "hhs": {"pop": None},
-            "nation": {"pop": None},
-            "jhu_uid": {"fips": None},
-        }
-        self._geo_sets = {
-            geo: None for geo in ["zip", "fips", "hrr", "state_id", "state_code",
-                                  "state_name", "hhs", "msa", "nation"]
-        }
+        self._crosswalks = defaultdict(dict)
+        self._geo_sets = dict()
+
+        # Include all unique geos from first-level and second-level keys in
+        # CROSSWALK_FILENAMES, with a few exceptions
+        self._geos = {
+                subkey for mainkey in self.CROSSWALK_FILENAMES.keys()
+                for subkey in self.CROSSWALK_FILENAMES[mainkey].keys()
+            }.union({
+                mainkey for mainkey in self.CROSSWALK_FILENAMES.keys()
+            }) - set(["state", "pop", "jhu_uid"])
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
@@ -138,7 +131,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                                                    join(f"data/{census_year}", file_path)
                                                    )
 
-        for geo_type in self._geo_sets:
+        for geo_type in self._geos:
             self._geo_sets[geo_type] = self._load_geo_values(geo_type)
 
     def _load_crosswalk_from_file(self, from_code, to_code, data_path):
@@ -146,17 +139,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         dtype = {
             from_code: str,
             to_code: str,
-            "fips": str,
-            "zip": str,
-            "hrr": str,
-            "hhs": str,
-            "msa": str,
-            "state_code": str,
-            "state_id": str,
-            "state_name": str,
             "pop": int,
-            "weight": float
+            "weight": float,
+            **{geo: str for geo in self._geos - set("nation")}
         }
+
         usecols = [from_code, "pop"] if to_code == "pop" else None
         return pd.read_csv(stream, dtype=dtype, usecols=usecols)
 

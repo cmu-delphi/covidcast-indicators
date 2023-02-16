@@ -303,6 +303,8 @@ class Dataset:
             # exclude "People with a completed primary series as % of adult population"
             header.find("%") < 0,
             # exclude "People with a completed primary series - ages 65+"
+            header.find(" age") < 0,
+            # exclude "People with a completed primary series - 12-17" ...
             header.find("-") < 0,
         ]) or all([
             # include "People with full course administered"

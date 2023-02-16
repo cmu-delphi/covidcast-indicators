@@ -150,6 +150,22 @@ class TestPull:
             example("Confirmed COVID-19 admissions - last 7 days - age unknown",
                     False),
             example("Confirmed COVID-19 admissions per 100 inpatient beds - last 7 days",
+                    False),
+            example("People who are fully vaccinated",
+                    True),
+            example("People who are fully vaccinated - ages 5-11",
+                    False),
+            example("People who are fully vaccinated as % of total population",
+                    False),
+            example("People with a completed primary series",
+                    True),
+            example("People with a completed primary series - ages 5-11",
+                    False),
+            example("People with a completed primary series as % of total population",
+                    False),
+            example("People with full course",
+                    True),
+            example("People with full course as % of total population",
                     False)
         ]
         for ex in examples:

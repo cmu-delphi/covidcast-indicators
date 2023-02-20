@@ -11,7 +11,6 @@ from pandas.testing import assert_frame_equal
 
 from delphi_utils import create_export_csv, Nans
 
-
 def _clean_directory(directory):
     """Clean files out of a directory."""
     for fname in listdir(directory):

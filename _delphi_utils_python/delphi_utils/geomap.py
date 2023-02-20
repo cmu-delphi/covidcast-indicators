@@ -169,7 +169,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
-        """Convert fips string to a megafips string."""
+        """Convert fips or popsafe-fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
         data[mega_col] = data[mega_col].str.slice_replace(start=2, stop=5, repl="000")
@@ -276,7 +276,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
-            if from_code in ["fips", "zip"]:
+            if from_code in ["fips", "zip", "popsafe-fips"]:
                 df[from_col] = df[from_col].astype(str).str.zfill(5)
             else:
                 df[from_col] = df[from_col].astype(str)
@@ -463,7 +463,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         mega_col="megafips",
         count_cols=None,
     ):
-        """Convert and aggregate from FIPS to megaFIPS.
+        """Convert and aggregate from FIPS or popsafe-fips to megaFIPS.
 
         Parameters
         ---------
@@ -590,13 +590,17 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 crosswalk_state = self._crosswalks["fips"]["state"]
                 fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
                 return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif ((contained_geocode_type == "county" or contained_geocode_type == "fips") and
-            container_geocode_type == "state"):
-            crosswalk = self._crosswalks["fips"]["state"]
-            return set(crosswalk[crosswalk["state_id"] == container_geocode]["fips"])
-        elif contained_geocode_type == "popsafe-fips" and container_geocode_type == "state":
-            crosswalk = self._crosswalks["popsafe-fips"]["state"]
-            return set(crosswalk[crosswalk["state_id"] == container_geocode]["popsafe-fips"])
+        elif (
+                (
+                    contained_geocode_type == "county" or
+                    contained_geocode_type == "fips" or
+                    contained_geocode_type == "popsafe-fips"
+                ) and
+                container_geocode_type == "state"
+            ):
+            contained_geocode_type = self.as_mapper_name(contained_geocode_type)
+            crosswalk = self._crosswalks[contained_geocode_type]["state"]
+            return set(crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type])
         raise ValueError("(contained_geocode_type, container_geocode_type) was "
                          f"({contained_geocode_type}, {container_geocode_type}), but "
                          "must be one of (state, nation), (state, hhs), (county, state)"

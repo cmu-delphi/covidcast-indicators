@@ -33,6 +33,7 @@ FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
 ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
+LOWPOP_COUNTY_GROUPS_FILE = "lowpop_county_groups.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -40,8 +41,10 @@ FIPS_MSA_OUT_FILENAME = "fips_msa_table.csv"
 FIPS_HRR_OUT_FILENAME = "fips_hrr_table.csv"
 FIPS_ZIP_OUT_FILENAME = "fips_zip_table.csv"
 FIPS_HHS_FILENAME = "fips_hhs_table.csv"
+FIPS_POPSAFEFIPS_OUT_FILENAME = "fips_popsafe-fips_table.csv"
 FIPS_POPULATION_OUT_FILENAME = "fips_pop.csv"
 
+POPSAFEFIPS_STATE_OUT_FILENAME = "popsafe-fips_state_table.csv"
 ZIP_HSA_OUT_FILENAME = "zip_hsa_table.csv"
 ZIP_HRR_OUT_FILENAME = "zip_hrr_table.csv"
 ZIP_FIPS_OUT_FILENAME = "zip_fips_table.csv"
@@ -475,6 +478,70 @@ def derive_zip_hhs_crosswalk():
     zip_state.sort_values(["zip", "hhs"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
 
 
+def derive_fips_popsafefips_crosswalk():
+    """Build a crosswalk table for FIPS to pop-safe fips."""
+    if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
+        derive_fips_state_crosswalk()
+
+    county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False
+        ).drop(columns = "fips_list")
+
+    # Change to long format.
+    county_groups = pd.melt(
+            county_groups,
+            id_vars = ["state_fips", "group"],
+            var_name = "county_num",
+            value_name = "fips"
+        ).drop(
+            columns="county_num"
+        ).dropna()
+
+    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2).astype("string")
+    county_groups["group"] = county_groups["group"].str.zfill(2).astype("string")
+    county_groups["fips"] = county_groups["fips"].str.zfill(5).astype("string")
+    # Combine state codes and group ids into a single FIPS code.
+    county_groups["popsafe-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]
+
+    county_groups = county_groups[["fips", "popsafe-fips"]]
+    fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
+
+    # Get all the fips that aren't included in the low-population groupings.
+    extra_fips_list = list(set(fips_to_state.fips) - set(county_groups.fips))
+    # Normal fips codes and pop-safe fips codes are the same for high-population counties.
+    extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "popsafe-fips" : extra_fips_list}, dtype="string")
+
+    # Combine high-pop and low-pop counties.
+    pd.concat(
+        [county_groups, extra_fips_df]
+    ).sort_values(
+        ["fips", "popsafe-fips"]
+    ).to_csv(
+        join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME), index=False
+    )
+
+
+def derive_popsafefips_state_crosswalk():
+    """Build a crosswalk table for FIPS to pop-safe fips."""
+    if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
+        derive_fips_state_crosswalk()
+
+    if not isfile(join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME)):
+        derive_fips_popsafefips_crosswalk()
+
+    fips_to_group = pd.read_csv(join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME), dtype="string", index_col=False)
+    fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
+
+    group_to_state = fips_to_group.join(
+            fips_to_state.set_index("fips"), on="fips", how="left"
+        ).drop(
+            columns = "fips"
+        ).drop_duplicates(
+        ).sort_values(
+            ["popsafe-fips", "state_code"]
+        )
+    group_to_state.to_csv(join(OUTPUT_DIR, POPSAFEFIPS_STATE_OUT_FILENAME), index=False)
+
+
 def clear_dir(dir_path: str):
     for fname in listdir(dir_path):
         remove(join(dir_path, fname))
@@ -501,3 +568,5 @@ if __name__ == "__main__":
     derive_zip_population_table()
     derive_fips_hhs_crosswalk()
     derive_zip_hhs_crosswalk()
+    derive_fips_popsafefips_crosswalk()
+    derive_popsafefips_state_crosswalk()

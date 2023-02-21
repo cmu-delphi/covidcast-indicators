@@ -8,7 +8,8 @@ read_params(
   path = "params.json",
   template_path = "params.json.template",
   train_models = FALSE,
-  make_predictions = FALSE
+  make_predictions = FALSE,
+  indicators = c("all", unique(INDICATORS_AND_SIGNALS$indicator))
 )
 }
 \arguments{
@@ -23,6 +24,9 @@ Default is TRUE.}
 
 \item{make_predictions}{boolean indicating whether to generate and save
 corrections (TRUE) or not. Default is TRUE.}
+
+\item{indicators}{string specifying a single indicator to process or all
+indicators ("all", default)}
 }
 \value{
 a named list of parameters values

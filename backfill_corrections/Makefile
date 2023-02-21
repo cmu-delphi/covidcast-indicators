@@ -1,7 +1,11 @@
 SHELL:=/bin/bash
 
 # Change training options during `make` call via `make <command> OPTIONS="<options>"`
-# Allowed OPTIONS flags are `--train_models` and `--make_predictions`
+#
+# Allowed OPTIONS flags are `--train_models` and `--make_predictions`. The indicator
+# can be run on a single indicator at a time with `--indicators <indicator name>`,
+# or all indicators either by default (not passing `--indicators` at all) or with
+# `--indicators all`.
 OPTIONS=
 
 PYTHON:=env/bin/python
@@ -78,14 +82,15 @@ run:
 		-v "${PWD}"/params.json:/backfill_corrections/params.host.json \
 		--env GRB_LICENSE_FILE=$(GRB_LICENSE_FILE) \
 		-it "${DOCKER_IMAGE}:${DOCKER_TAG}" \
-		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\""
+		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\" LOG_FILE=${LOG_FILE}"
 
 publish:
-	if [ -f $(USR_EXPORT_DIR)/*.csv.gz ]; then \
+	NUM_FILES=`find $(USR_EXPORT_DIR) -name "*csv.gz" | wc -l`; \
+	if [[ $$NUM_FILES -gt 0 ]]; then \
 		aws configure set aws_access_key_id $(AWS_KEY_ID); \
 		aws configure set aws_secret_access_key $(AWS_SECRET_KEY); \
 		aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read; \
-		echo "SUCCESS: published `ls -1 $(USR_EXPORT_DIR)/*.csv.gz | wc -l` files to the S3 bucket" >> $(LOG_FILE); \
+		echo "SUCCESS: published $${NUM_FILES} files to the S3 bucket" >> $(LOG_FILE); \
 	else \
 		echo "No files in $(USR_EXPORT_DIR) to publish" >> $(LOG_FILE); \
 	fi

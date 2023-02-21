@@ -1,4 +1,5 @@
 library(arrow)
+library(stringr)
 
 context("Testing io helper functions")
 
@@ -106,8 +107,8 @@ test_that("testing the filtration of the files for training and predicting", {
 })
 
 test_that("testing fetching list of files for training and predicting", {
-  params <- read_params("params-run.json", "params-run.json.template")
-  params$train_models <- TRUE
+  params <- read_params("params-run.json", "params-run.json.template",
+    train_models = TRUE)
 
   daily_data <- data.frame(test=TRUE)
   daily_file_name <- file.path(params$input_dir,
@@ -125,6 +126,160 @@ test_that("testing fetching list of files for training and predicting", {
   file.remove(daily_file_name)
   file.remove(rollup_file_name)
   file.remove("params-run.json")
+})
+
+test_that("testing read_data type", {
+  params <- read_params("params-run.json", "params-run.json.template")
+  daily_data <- data.frame(test=c(TRUE, FALSE), num = c(1, 2))
+  daily_file_name <- file.path(params$input_dir,
+                               str_interp("chng_outpatient_as_of_${format(TODAY-5, date_format)}.parquet"))
+  write_parquet(daily_data, daily_file_name)
+
+  expect_true(inherits(read_data(daily_file_name), "data.frame"))
+
+  file.remove(daily_file_name)
+  file.remove("params-run.json")
+})
+
+test_that("testing conversion of fips to geo_value", {
+  geo_value = c("01001", "99999", "12347")
+  fips = c("55555", "52390", "00111")
+
+  # Fail if neither `fips` nor `geo_value` exist
+  expect_error(fips_to_geovalue(data.frame(empty_col = fips)),
+    "Either `fips` or `geo_value` field must be available")
+
+  # Return same df if only `geo_value` exists
+  df <- data.frame(geo_value)
+  expect_equal(fips_to_geovalue(df), df)
+
+  # Drop `fips` field if both `fips` and `geo_value` exist
+  expect_equal(fips_to_geovalue(data.frame(geo_value, fips)), data.frame(geo_value))
+
+  # Rename `fips` to `geo_value` if only `fips` exists
+  expect_equal(fips_to_geovalue(data.frame(fips)), data.frame(geo_value = fips))
+})
+
+test_that("get_issue_date_range", {
+  # Initial call to `get_training_date_range` will return
+  # list("training_start_date"=as.Date("2022-01-03"), "training_end_date"=as.Date("2022-01-31"))
+  # with these settings.
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31",
+    "ref_lag" = 14 # days
+  )
+
+  # Requested test dates too early compared to requested training dates.
+  params$test_dates <- as.Date(c("2022-01-01", "2022-01-02"))
+  expect_error(get_issue_date_range(params),
+    "training end date must be earlier than the earliest test date")
+
+  params$test_dates <- as.Date(c("2022-06-01", "2022-06-02"))
+  result <- get_issue_date_range(params)
+  expect_equal(names(result), c("start_issue", "end_issue"))
+  expect_equal(
+    result,
+    list("start_issue"=as.Date("2022-01-03") - 14, "end_issue"=as.Date("2022-06-02"))
+  )
+})
+
+test_that("get_training_date_range", {
+  # train_models = TRUE
+  # training_end_date provided
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31"
+  )
+  result <- get_training_date_range(params)
+  expect_equal(names(result), c("training_start_date", "training_end_date"))
+  expect_equal(
+    result,
+    list("training_start_date"=as.Date("2022-01-03"), "training_end_date"=as.Date("2022-01-31"))
+  )
+
+  # train_models = TRUE
+  # training_end_date not provided
+  params <- list(
+    "train_models" = TRUE,
+    "testing_window" = 7, # days
+    "training_days" = 28
+  )
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=Sys.Date() - 6 - 28, "training_end_date"=Sys.Date() - 6)
+  )
+
+  # train_models = FALSE
+  # training_end_date provided or not shouldn't impact result
+  # No model files
+  tdir <- tempdir() # empty
+  params <- list(
+    "train_models" = FALSE,
+    "cache_dir" = tdir,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "indicators" = "all"
+  )
+  params_tenddate <- list(
+    "train_models" = FALSE,
+    "cache_dir" = tdir,
+    "testing_window" = 7, # days
+    "training_days" = 28,
+    "training_end_date" = "2022-01-31", # expect to be ignored
+    "indicators" = "all"
+  )
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=Sys.Date() - 6 - 28, "training_end_date"=Sys.Date() - 6)
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
+
+  # train_models = FALSE
+  # training_end_date provided or not shouldn't impact result
+  # Some model files
+  empty_obj <- list()
+  save(empty_obj,
+    file=file.path(tdir, "20201031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  save(empty_obj,
+    file=file.path(tdir, "20201031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.75.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2020-10-03"), "training_end_date"=as.Date("2020-10-31"))
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
+
+  # With cached models having mixed training end dates.
+  save(empty_obj,
+    file=file.path(tdir, "20211031_20130610_changehc_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2021-10-03"), "training_end_date"=as.Date("2021-10-31"))
+  )
+  expect_equal(
+    get_training_date_range(params),
+    get_training_date_range(params_tenddate)
+  )
+
+  # When given a specific indicator via `params`, only existing models of that same type are used
+  # to fetch training_end_date
+  params$indicators <- "flu"
+  save(empty_obj,
+    file=file.path(tdir, "20221031_20130610_flu_covid_state_lambda0.1_fraction_ny_lag1_tau0.5.model"))
+  expect_equal(
+    get_training_date_range(params),
+    list("training_start_date"=as.Date("2022-10-03"), "training_end_date"=as.Date("2022-10-31"))
+  )
 })
 
 

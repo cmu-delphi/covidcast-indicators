@@ -66,14 +66,12 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     validator = validator_fn(params)
     archiver = archiver_fn(params)
 
-    if flash_fn:
-        t = threading.Timer(timer, flash_fn(params))
-        t.start()
-        t.join(timer)
-        if t.is_alive():
-            t.cancel()
-            t.join()
-
+    t = threading.Timer(timer, flash_fn, args=[params])
+    t.start()
+    t.join(timer)
+    if t.is_alive():
+        t.cancel()
+        t.join()
 
     if validator:
         validation_report = validator.validate()

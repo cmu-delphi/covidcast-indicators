@@ -42,6 +42,7 @@ def create_export_csv(
     write_empty_days: Optional[bool] = False,
     logger: Optional[logging.Logger] = None,
     weekly_dates = False,
+    sort_geos: bool = False
 ):
     """Export data in the format expected by the Delphi API.
 
@@ -73,6 +74,9 @@ def create_export_csv(
     weekly_dates: Optional[bool]
         Whether the output data are weekly or not. If True, will prefix files with
         "weekly_YYYYWW" where WW is the epiweek instead of the usual YYYYMMDD for daily files.
+    sort_geos: bool
+        If True, the dataframe is sorted by geo before writing. Otherwise, the dataframe is
+        written as is.
 
     Returns
     ---------
@@ -122,5 +126,7 @@ def create_export_csv(
         if remove_null_samples:
             export_df = export_df[export_df["sample_size"].notnull()]
         export_df = export_df.round({"val": 7, "se": 7})
+        if sort_geos:
+            export_df = export_df.sort_values(by="geo_id")
         export_df.to_csv(export_file, index=False, na_rep="NA")
     return dates

@@ -54,11 +54,48 @@ test_that("testing the generation of model filename prefix", {
 })
 
 test_that("testing the evaluation", {
+  pred_cols = paste0("predicted_tau", TAUS)
+
   for (tau in TAUS){
     test_data[[paste0("predicted_tau", as.character(tau))]] <- log(quantile(exp(train_beta_vs), tau))
   }
   result <- evaluate(test_data, TAUS)
   expect_true(mean(result$wis) < 0.3)
+
+  # Prediction columns are unchanged
+  expect_equal(test_data[, pred_cols], result[, pred_cols])
+})
+
+test_that("testing prediction column exponentiation", {
+  # Basic example
+  input <- data.frame(
+    time_value = 5,
+    predicted_tau0.1 = c(0, 1, 1),
+    predicted_tau0.5 = c(2, 0, 1)
+  )
+  expected <- data.frame(
+    time_value = 5,
+    predicted_tau0.1 = c(1, exp(1), exp(1)),
+    predicted_tau0.5 = c(exp(2), 1, exp(1))
+  )
+  expect_equal(expected, exponentiate_preds(input, c(0.1, 0.5)))
+
+
+  # Realistic test df
+  pred_cols = paste0("predicted_tau", TAUS)
+  test_data <- mutate(test_data, time_value = as.Date("2022-12-02"))
+
+  for (tau in TAUS){
+    test_data[[paste0("predicted_tau", as.character(tau))]] <- log(quantile(exp(train_beta_vs), tau))
+  }
+
+  expected <- test_data
+  for (col_name in pred_cols){
+    expected[[col_name]] <- exp(test_data[[col_name]])
+  }
+
+  result <- exponentiate_preds(test_data, TAUS)
+  expect_equal(result, expected)
 })
 
 test_that("testing generating or loading the model", {
@@ -181,5 +218,3 @@ test_that("testing data filteration", {
   }
   expect_true(all(1:60 %in% included_lags))
 })
-
-

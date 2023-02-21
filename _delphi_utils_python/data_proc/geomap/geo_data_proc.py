@@ -483,6 +483,12 @@ def derive_fips_popsafefips_crosswalk():
     if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
         derive_fips_state_crosswalk()
 
+    # County mapping file is derived from
+    # https://docs.google.com/spreadsheets/d/1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0/edit#gid=871427657.
+    # We assign an incrementing integer to be the group id of each county
+    # grouping within the given state via:
+    #
+    # county_groups["group"] = (county_groups.groupby("state_fips").cumcount() + 1).astype("string")
     county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False
         ).drop(columns = "fips_list")
 

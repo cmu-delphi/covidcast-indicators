@@ -9,11 +9,11 @@ TODO:
 """
 # pylint: disable=too-many-lines
 from os.path import join
+from collections import defaultdict
 
 import pandas as pd
 import pkg_resources
 from pandas.api.types import is_string_dtype
-from collections import defaultdict
 
 
 class GeoMapper:  # pylint: disable=too-many-public-methods
@@ -121,11 +121,11 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         # Include all unique geos from first-level and second-level keys in
         # CROSSWALK_FILENAMES, with a few exceptions
         self._geos = {
-                subkey for mainkey in self.CROSSWALK_FILENAMES.keys()
-                for subkey in self.CROSSWALK_FILENAMES[mainkey].keys()
-            }.union({
-                mainkey for mainkey in self.CROSSWALK_FILENAMES.keys()
-            }) - set(["state", "pop", "jhu_uid"])
+                subkey for mainkey in self.CROSSWALK_FILENAMES
+                for subkey in self.CROSSWALK_FILENAMES[mainkey]
+            }.union(
+                set(self.CROSSWALK_FILENAMES.keys())
+            ) - set(["state", "pop", "jhu_uid"])
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
@@ -590,17 +590,13 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 crosswalk_state = self._crosswalks["fips"]["state"]
                 fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
                 return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif (
-                (
-                    contained_geocode_type == "county" or
-                    contained_geocode_type == "fips" or
-                    contained_geocode_type == "popsafe-fips"
-                ) and
-                container_geocode_type == "state"
-            ):
+        elif (contained_geocode_type in ("county", "fips", "popsafe-fips") and
+                container_geocode_type == "state"):
             contained_geocode_type = self.as_mapper_name(contained_geocode_type)
             crosswalk = self._crosswalks[contained_geocode_type]["state"]
-            return set(crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type])
+            return set(
+                crosswalk[crosswalk["state_id"] == container_geocode][contained_geocode_type]
+            )
         raise ValueError("(contained_geocode_type, container_geocode_type) was "
                          f"({contained_geocode_type}, {container_geocode_type}), but "
                          "must be one of (state, nation), (state, hhs), (county, state)"

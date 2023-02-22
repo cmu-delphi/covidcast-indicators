@@ -89,7 +89,7 @@ publish:
 	if [[ $$NUM_FILES -gt 0 ]]; then \
 		aws configure set aws_access_key_id $(AWS_KEY_ID); \
 		aws configure set aws_secret_access_key $(AWS_SECRET_KEY); \
-		aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz" --acl public-read; \
+		aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*.csv.gz"; \
 		echo "SUCCESS: published $${NUM_FILES} files to the S3 bucket" >> $(LOG_FILE); \
 	else \
 		echo "No files in $(USR_EXPORT_DIR) to publish" >> $(LOG_FILE); \

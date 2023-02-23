@@ -30,7 +30,7 @@ weekday = True
 backfill_merge_day = 0
 
 class TestLoadData:
-    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
+    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH,
                                        "fips", backfill_dir, geo, weekday, "covid",
                                        backfill_merge_day)
 

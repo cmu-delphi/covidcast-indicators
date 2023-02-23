@@ -183,16 +183,16 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 )
                 if numtype == "covid":
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"],dropdate_dt,"fips",
+                             file_dict["covid"], "fips",
                              backfill_dir, geo, weekday, numtype,
                              backfill_merge_day)
                 elif numtype == "cli":
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips",
+                             file_dict["flu_like"],file_dict["covid_like"], "fips",
                              backfill_dir, geo, weekday, numtype, backfill_merge_day)
                 elif numtype == "flu":
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             dropdate_dt,"fips",backfill_dir, geo, weekday,
+                             "fips",backfill_dir, geo, weekday,
                              numtype, backfill_merge_day)
                 more_stats = su_inst.update_sensor(
                     data,

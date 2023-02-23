@@ -37,10 +37,10 @@ class TestLoadData:
                     Config.DENOM_COLS, Config.DENOM_DTYPES, Config.DENOM_COL)
     covid_data = load_chng_data(COVID_FILEPATH, DROP_DATE, "fips",
                     Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
-    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
+    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, 
                                        "fips", backfill_dir, geo, weekday, "covid",
                                        backfill_merge_day)
-    flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE,"fips",
+    flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "fips",
                              backfill_dir, geo, weekday, "flu", backfill_merge_day)
     gmpr = GeoMapper()
 
@@ -54,11 +54,11 @@ class TestLoadData:
                     Config.DENOM_COLS, Config.DENOM_DTYPES, Config.COVID_COL)
 
         with pytest.raises(AssertionError):
-            load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE, "foo", 
+            load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, "foo", 
                                backfill_dir, geo, weekday, "covid", backfill_merge_day)
 
         with pytest.raises(AssertionError):
-            load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, DROP_DATE, "foo", 
+            load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "foo", 
                           backfill_dir, geo, weekday, "covid", backfill_merge_day)
 
     def test_denom_columns(self):

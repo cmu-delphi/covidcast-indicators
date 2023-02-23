@@ -95,8 +95,7 @@ def load_combined_data(denom_filepath, covid_filepath, base_geo,
     issue_date = datetime.strptime(covid_filepath.split("/")[-1][:8], "%Y%m%d")
     assert (
         issue_date == datetime.strptime(denom_filepath.split("/")[-1][:8], "%Y%m%d")
-    ), "The aggregated files used for Covid Claims and Total Claims should have the same drop date."
-    
+    ), "The aggregated files used for Covid Claims and Total Claims should have the same drop date." 
 
     # load each data stream
     denom_data = load_chng_data(denom_filepath, issue_date, base_geo,
@@ -144,7 +143,6 @@ def load_cli_data(denom_filepath, flu_filepath, mixed_filepath, flu_like_filepat
     assert (
         issue_date == datetime.strptime(denom_filepath.split("/")[-1][:8], "%Y%m%d")
     ), "The aggregated files used for CLI Claims and Total Claims should have the same drop date."
-    
 
     # load each data stream
     denom_data = load_chng_data(denom_filepath, issue_date, base_geo,
@@ -199,7 +197,6 @@ def load_flu_data(denom_filepath, flu_filepath, base_geo,
     assert (
         issue_date == datetime.strptime(denom_filepath.split("/")[-1][:8], "%Y%m%d")
     ), "The aggregated files used for Flu Claims and Total Claims should have the same drop date."
-    
 
     # load each data stream
     denom_data = load_chng_data(denom_filepath, issue_date, base_geo,

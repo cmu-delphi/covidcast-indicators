@@ -89,7 +89,9 @@ publish:
 	if [[ $$NUM_FILES -gt 0 ]]; then \
 		aws configure set aws_access_key_id $(AWS_KEY_ID); \
 		aws configure set aws_secret_access_key $(AWS_SECRET_KEY); \
-		aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*/prediction*.csv.gz"; \
+		AWS_MSG=`aws s3 cp $(USR_EXPORT_DIR) $(S3_BUCKET)/ --recursive --exclude "*" --include "*/prediction*.csv.gz"`; \
+		echo "$${AWS_MSG}"; \
+		[[ `echo "$${AWS_MSG}" | grep "upload:" | wc -l` -eq $$NUM_FILES ]] || ( echo "ERROR: Not all $${NUM_FILES} expected files were uploaded" && exit 74 ); \
 		echo "SUCCESS: published $${NUM_FILES} files to the S3 bucket" >> $(LOG_FILE); \
 	else \
 		echo "No files in $(USR_EXPORT_DIR) to publish" >> $(LOG_FILE); \

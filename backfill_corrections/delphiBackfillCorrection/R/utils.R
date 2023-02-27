@@ -220,11 +220,12 @@ get_populous_counties <- function() {
 
 #' Write a message to the console with the current time
 #'
-#' @param text the body of the message to display
+#' @param ... the body of the message to display. Objects should be strings or
+#'   coercible to strings and are pasted together with no separator.
 #'
 #' @export
-msg_ts <- function(text) {
-  message(sprintf("%s --- %s", format(Sys.time()), text))
+msg_ts <- function(...) {
+  message(sprintf("%s --- %s", format(Sys.time()), .makeMessage(...)))
 }
 
 #' Generate key for identifying a value_type-signal combo

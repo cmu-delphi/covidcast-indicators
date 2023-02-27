@@ -12,7 +12,6 @@
 #' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom rlang .data .env
-#' @importFrom stringr str_interp
 #' 
 #' @export
 run_backfill <- function(df, params,
@@ -28,7 +27,7 @@ run_backfill <- function(df, params,
   }
   
   for (geo_level in geo_levels) {
-    msg_ts(str_interp("geo level ${geo_level}"))
+    msg_ts("geo level ", geo_level)
     # Get full list of interested locations
     if (geo_level == "state") {
       # Drop county field and make new "geo_value" field from "state_id".        
@@ -65,7 +64,7 @@ run_backfill <- function(df, params,
     for (subdf in group_dfs) {
       geo <- subdf$geo_value[1]
       
-      msg_ts(str_interp("Processing ${geo} geo group"))
+      msg_ts("Processing ", geo, " geo group")
 
       min_refd <- min(subdf[[refd_col]])
       max_refd <- max(subdf[[refd_col]])
@@ -78,7 +77,7 @@ run_backfill <- function(df, params,
         # process again. Main use case is for quidel which has overall and
         # age-based signals.
         if (signal_suffix != "") {
-          msg_ts(str_interp("signal suffix ${signal_suffix}"))
+          msg_ts("signal suffix ", signal_suffix)
           num_col <- paste(params$num_col, signal_suffix, sep = "_")
           denom_col <- paste(params$denom_col, signal_suffix, sep = "_")
         } else {
@@ -87,7 +86,7 @@ run_backfill <- function(df, params,
         }
         
         for (value_type in params$value_types) {
-          msg_ts(str_interp("value type ${value_type}"))
+          msg_ts("value type ", value_type)
           # Handle different signal types
           if (value_type == "count") { # For counts data only
             combined_df <- fill_missing_updates(subdf, num_col, refd_col, lag_col)
@@ -154,16 +153,15 @@ run_backfill <- function(df, params,
           }
           max_raw = sqrt(max(geo_train_data$value_raw))
           for (test_lag in params$test_lags) {
-            msg_ts(str_interp("test lag ${test_lag}"))
+            msg_ts("test lag ", test_lag)
             filtered_data <- data_filteration(test_lag, geo_train_data, 
                                               geo_test_data, params$lag_pad)
             train_data <- filtered_data[[1]]
             test_data <- filtered_data[[2]]
 
             if (nrow(train_data) == 0 || nrow(test_data) == 0) {
-              msg_ts(str_interp(
-                "Not enough data to either train or test for test_lag ${test_lag}, skipping"
-              ))
+              msg_ts("Not enough data to either train or test for test_lag ",
+                test_lag, ", skipping")
               next
             }
 
@@ -288,25 +286,20 @@ main <- function(params,
   params$training_start_date <- result$training_start_date
   params$training_end_date <- result$training_end_date
 
-  msg_ts(paste0(
-    str_interp("training_start_date is ${params$training_start_date}, "),
-    str_interp("training_end_date is ${params$training_end_date}")
-  ))
+  msg_ts("training_start_date is ", params$training_start_date,
+         ", training_end_date is ", params$training_end_date)
 
   # Loop over every indicator + signal combination.
   for (group_i in seq_len(nrow(indicators_subset))) {
     input_group <- indicators_subset[group_i,]
-    msg_ts(str_interp(
-      "Processing indicator ${input_group$indicator} signal ${input_group$signal}"
-    ))
+    msg_ts("Processing indicator ", input_group$indicator, " signal ", input_group$signal)
 
     files_list <- get_files_list(
       input_group$indicator, input_group$signal, params, input_group$sub_dir
     )
     if (length(files_list) == 0) {
-      warning(str_interp(
-        "No files found for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
-      ))
+      warning("No files found for indicator indicator ", input_group$indicator,
+              " signal ", input_group$signal, ", skipping")
       next
     }
     
@@ -327,16 +320,15 @@ main <- function(params,
       bind_rows()
 
     if (nrow(input_data) == 0) {
-      warning(str_interp(
-        "No data available for indicator ${input_group$indicator} signal ${input_group$signal}, skipping"
-      ))
+      warning("No data available for indicator ", input_group$indicator,
+              " signal ", input_group$signal, ", skipping")
       next
     }
 
     # Check data type and required columns
     msg_ts("Validating input data")
     for (value_type in params$value_types) {
-      msg_ts(str_interp("for ${value_type}"))
+      msg_ts("for ", value_type)
       result <- validity_checks(
         input_data, value_type,
         params$num_col, params$denom_col, input_group$name_suffix,

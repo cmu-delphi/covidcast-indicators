@@ -62,16 +62,17 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         logger.info(f"Started {ind_name} with covidcast-indicators version {current_version}")
     else: logger.info(f"Started {ind_name} without version.cfg")
 
-    indicator_fn(params)
-    validator = validator_fn(params)
-    archiver = archiver_fn(params)
+    # indicator_fn(params)
+    # validator = validator_fn(params)
+    # archiver = archiver_fn(params)
 
-    t = threading.Timer(timer, flash_fn, args=[params])
+    t = threading.Thread(target=flash_fn, args=[params])
     t.start()
     t.join(timer)
     if t.is_alive():
         t.cancel()
         t.join()
+
 
     if validator:
         validation_report = validator.validate()

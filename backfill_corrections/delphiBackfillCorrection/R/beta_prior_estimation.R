@@ -53,7 +53,7 @@ objective <- function(theta, x, prob, ...) {
 #' @param model_save_dir directory containing trained models
 #' 
 #' @importFrom stats nlm predict
-#' @importFrom dplyr %>% filter
+#' @importFrom dplyr filter
 #' @importFrom quantgen quantile_lasso
 #' 
 est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus, 
@@ -63,8 +63,8 @@ est_priors <- function(train_data, prior_test_data, geo, value_type, dw, taus,
                        model_save_dir, start=c(0, log(10)),
                        base_pseudo_denom=1000, base_pseudo_num=10,
                        train_models = TRUE, make_predictions = TRUE) {
-  sub_train_data <- train_data %>% filter(train_data[[dw]] == 1)
-  sub_test_data <- prior_test_data %>% filter(prior_test_data[[dw]] == 1)
+  sub_train_data <- filter(train_data, train_data[[dw]] == 1)
+  sub_test_data <- filter(prior_test_data, prior_test_data[[dw]] == 1)
   if (nrow(sub_test_data) == 0) {
     pseudo_denom <- base_pseudo_denom
     pseudo_num <- base_pseudo_num

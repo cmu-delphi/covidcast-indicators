@@ -112,15 +112,17 @@ run_backfill <- function(df, params,
             )
           }
           combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
-          combined_df <- combined_df %>% filter(lag < params$ref_lag)
+          combined_df <- filter(combined_df, lag < params$ref_lag)
 
-          geo_train_data <- combined_df %>%
-            filter(issue_date < params$training_end_date) %>%
-            filter(target_date <= params$training_end_date) %>%
-            filter(target_date > params$training_start_date) %>%
+          geo_train_data <- filter(combined_df,
+              issue_date < params$training_end_date,
+              target_date <= params$training_end_date,
+              target_date > params$training_start_date,
+            ) %>%
             drop_na()
-          geo_test_data <- combined_df %>%
-            filter(issue_date %in% params$test_dates) %>%
+          geo_test_data <- filter(combined_df,
+              issue_date %in% params$test_dates
+            ) %>%
             drop_na()
 
           if (nrow(geo_test_data) == 0) {
@@ -134,9 +136,10 @@ run_backfill <- function(df, params,
 
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions
-            geo_prior_test_data = combined_df %>%
-              filter(issue_date > min(params$test_dates) - 7) %>%
-              filter(issue_date <= max(params$test_dates))
+            geo_prior_test_data = filter(combined_df,
+                issue_date > min(params$test_dates) - 7,
+                issue_date <= max(params$test_dates)
+            )
             updated_data <- frac_adj(geo_train_data, geo_test_data, geo_prior_test_data,
                                      indicator = indicator, signal = signal,
                                      geo_level = geo_level, signal_suffix = signal_suffix,

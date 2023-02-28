@@ -203,17 +203,16 @@ training_days_check <- function(issue_date, training_days) {
 #' Subset list of counties to those included in the 200 most populous in the US
 #' 
 #' @importFrom dplyr select %>% arrange desc pull
-#' @importFrom rlang .data
 #' @importFrom utils head
 #' @import covidcast
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      dplyr::select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
+      dplyr::select(pop = POPESTIMATE2019, fips = FIPS) %>%
       # Drop megacounties (states)
-      filter(!endsWith(.data$fips, "000")) %>%
-      arrange(desc(.data$pop)) %>%
-      pull(.data$fips) %>%
+      filter(!endsWith(fips, "000")) %>%
+      arrange(desc(pop)) %>%
+      pull(fips) %>%
       head(n=200)
   )
 }

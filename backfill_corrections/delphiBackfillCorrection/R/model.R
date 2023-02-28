@@ -5,8 +5,6 @@
 #' @param geo_train_data training data for a certain location
 #' @param geo_test_data testing data for a certain location
 #' 
-#' @importFrom rlang .data .env
-#'
 #' @export
 data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
   if (test_lag <= 14){
@@ -23,11 +21,11 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
     test_lag_pad2=9
   }
   train_data = geo_train_data %>% 
-    filter(.data$lag >= .env$test_lag - .env$test_lag_pad ) %>%
-    filter(.data$lag <= .env$test_lag + .env$test_lag_pad )
+    filter(lag >= test_lag - test_lag_pad ) %>%
+    filter(lag <= test_lag + test_lag_pad )
   test_data = geo_test_data %>%
-    filter(.data$lag >= .env$test_lag - .env$test_lag_pad1 ) %>%
-    filter(.data$lag <= .env$test_lag + .env$test_lag_pad2)
+    filter(lag >= test_lag - test_lag_pad1 ) %>%
+    filter(lag <= test_lag + test_lag_pad2)
 
   return (list(train_data, test_data))
 }

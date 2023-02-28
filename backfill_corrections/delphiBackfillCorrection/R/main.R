@@ -9,15 +9,14 @@
 #' @template indicator-template
 #' @template signal-template
 #' 
-#' @importFrom dplyr %>% filter select group_by summarize across everything group_split ungroup
+#' @importFrom dplyr %>% filter group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
-#' @importFrom rlang .data .env
 #' 
 #' @export
 run_backfill <- function(df, params,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
-  df <- filter(df, .data$lag < params$ref_lag + 30) # a rough filtration to save memory
+  df <- filter(df, lag < params$ref_lag + 30) # a rough filtration to save memory
 
   geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
@@ -34,8 +33,9 @@ run_backfill <- function(df, params,
       # Aggregate counties up to state level
       agg_cols <- c("geo_value", issued_col, refd_col, lag_col)
       # Sum all non-agg columns. Summarized columns keep original names
+      df$geo_value <- df$state_id
+      df$state_id <- NULL
       df <- df %>%
-        select(-.data$geo_value, geo_value = .data$state_id) %>%
         group_by(across(agg_cols)) %>%
         summarize(across(everything(), sum)) %>%
         ungroup()
@@ -43,7 +43,7 @@ run_backfill <- function(df, params,
     if (geo_level == "county") {
       # Keep only 200 most populous (within the US) counties
       top_200_geos <- get_populous_counties()
-      df <- filter(df, .data$geo_value %in% top_200_geos)
+      df <- filter(df, geo_value %in% top_200_geos)
     }
       
     test_data_list <- list()
@@ -58,7 +58,7 @@ run_backfill <- function(df, params,
     }
     
     msg_ts("Splitting data into geo groups")
-    group_dfs <- group_split(df, .data$geo_value)
+    group_dfs <- group_split(df, geo_value)
 
     # Build model for each location
     for (subdf in group_dfs) {
@@ -112,15 +112,15 @@ run_backfill <- function(df, params,
             )
           }
           combined_df <- add_params_for_dates(combined_df, refd_col, lag_col)
-          combined_df <- combined_df %>% filter(.data$lag < params$ref_lag)
+          combined_df <- combined_df %>% filter(lag < params$ref_lag)
 
           geo_train_data <- combined_df %>%
-            filter(.data$issue_date < params$training_end_date) %>%
-            filter(.data$target_date <= params$training_end_date) %>%
-            filter(.data$target_date > params$training_start_date) %>%
+            filter(issue_date < params$training_end_date) %>%
+            filter(target_date <= params$training_end_date) %>%
+            filter(target_date > params$training_start_date) %>%
             drop_na()
           geo_test_data <- combined_df %>%
-            filter(.data$issue_date %in% params$test_dates) %>%
+            filter(issue_date %in% params$test_dates) %>%
             drop_na()
 
           if (nrow(geo_test_data) == 0) {
@@ -135,8 +135,8 @@ run_backfill <- function(df, params,
           if (value_type == "fraction") {
             # Use beta prior approach to adjust fractions
             geo_prior_test_data = combined_df %>%
-              filter(.data$issue_date > min(params$test_dates) - 7) %>%
-              filter(.data$issue_date <= max(params$test_dates))
+              filter(issue_date > min(params$test_dates) - 7) %>%
+              filter(issue_date <= max(params$test_dates))
             updated_data <- frac_adj(geo_train_data, geo_test_data, geo_prior_test_data,
                                      indicator = indicator, signal = signal,
                                      geo_level = geo_level, signal_suffix = signal_suffix,
@@ -236,9 +236,8 @@ run_backfill <- function(df, params,
 #' @template lag_col-template
 #' @template issued_col-template
 #'
-#' @importFrom dplyr bind_rows mutate %>%
+#' @importFrom dplyr bind_rows %>%
 #' @importFrom parallel detectCores
-#' @importFrom rlang .data :=
 #' @importFrom stringr str_interp
 #' 
 #' @export
@@ -251,7 +250,7 @@ main <- function(params,
 
   indicators_subset <- INDICATORS_AND_SIGNALS
   if (params$indicators != "all") {
-    indicators_subset <- filter(indicators_subset, .data$indicator == params$indicators)
+    indicators_subset <- filter(indicators_subset, indicator == params$indicators)
   }
   if (nrow(indicators_subset) == 0) {
     stop("no indicators to process")
@@ -307,14 +306,12 @@ main <- function(params,
     input_data <- lapply(
       files_list,
       function(file) {
-        read_data(file) %>%
-        fips_to_geovalue() %>%
-        mutate(
-          # Use `glue` syntax to construct a new field by variable,
-          # from https://stackoverflow.com/a/26003971/14401472
-          "{refd_col}" := as.Date(.data[[refd_col]], "%Y-%m-%d"),
-          "{issued_col}" := as.Date(.data[[issued_col]], "%Y-%m-%d")
-        )
+        df <- read_data(file) %>%
+          fips_to_geovalue()
+        df[[refd_col]] <- as.Date(df[[refd_col]], "%Y-%m-%d")
+        df[[issued_col]] <- as.Date(df[[issued_col]], "%Y-%m-%d")
+
+        return(df)
       }
     ) %>%
       bind_rows()

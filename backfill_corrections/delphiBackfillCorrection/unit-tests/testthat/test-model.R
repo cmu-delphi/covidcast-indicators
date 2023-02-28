@@ -1,5 +1,7 @@
 context("Testing the helper functions for modeling")
 
+library(dplyr)
+
 # Constants
 indicator <- "chng"
 signal <- "outpatient" 

@@ -122,7 +122,8 @@ create_dir_not_exist <- function(path)
 #' Check input data for validity
 #'
 #' @template df-template
-#' @template value_type-template
+#' @param value_types character vector of all signal types to process. Either
+#'   or both of "count" and "fraction".
 #' @template num_col-template
 #' @template denom_col-template
 #' @template signal_suffixes-template
@@ -133,7 +134,7 @@ create_dir_not_exist <- function(path)
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
-validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
+validity_checks <- function(df, value_types, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
@@ -141,10 +142,12 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   }
 
   # Check data type and required columns
-  if (value_type == "count") {
-    if ( all(num_col %in% colnames(df)) ) { value_cols=c(num_col) }
-    else { stop("No valid column name detected for the count values!") }
-  } else if (value_type == "fraction") {
+  if ("count" %in% value_types) {
+    if ( !all(num_col %in% colnames(df)) ) {
+      stop("No valid column name detected for the count values!")
+    }
+  }
+  if ("fraction" %in% value_types) {
     value_cols = c(num_col, denom_col)
     if ( !all(value_cols %in% colnames(df)) ) {
       stop("No valid column name detected for the fraction values!")
@@ -157,7 +160,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   }
 
   # issue_date and lag should exist in the dataset
-  if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
+  if ( !all(c(lag_col, issued_col) %in% colnames(df)) ) {
     stop("Issue date and lag fields must exist in the input data")
   }
 
@@ -178,7 +181,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
          " least one reference date-issue date-location combination")
   }
 
-  return(list(df = df, value_cols = value_cols))
+  return(df)
 }
 
 #' Check available training days

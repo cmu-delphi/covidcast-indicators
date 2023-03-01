@@ -324,15 +324,12 @@ main <- function(params,
 
     # Check data type and required columns
     msg_ts("Validating input data")
-    for (value_type in params$value_types) {
-      msg_ts("for ", value_type)
-      result <- validity_checks(
-        input_data, value_type,
-        params$num_col, params$denom_col, input_group$name_suffix,
-        refd_col = refd_col, lag_col = lag_col, issued_col = issued_col
-      )
-      input_data <- result[["df"]]
-    }
+    # Validate while date fields still stored as strings for speed.
+    input_data <- validity_checks(
+      input_data, params$value_types,
+      params$num_col, params$denom_col, input_group$name_suffix,
+      refd_col = refd_col, lag_col = lag_col, issued_col = issued_col
+    )
 
     input_data[[refd_col]] <- as.Date(input_data[[refd_col]], "%Y-%m-%d")
     input_data[[issued_col]] <- as.Date(input_data[[issued_col]], "%Y-%m-%d")

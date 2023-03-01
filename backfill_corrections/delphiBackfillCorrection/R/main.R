@@ -309,12 +309,9 @@ main <- function(params,
     input_data <- lapply(
       files_list,
       function(file) {
-        df <- read_data(file) %>%
+        # refd_col and issued_col read in as strings
+        read_data(file) %>%
           fips_to_geovalue()
-        df[[refd_col]] <- as.Date(df[[refd_col]], "%Y-%m-%d")
-        df[[issued_col]] <- as.Date(df[[issued_col]], "%Y-%m-%d")
-
-        return(df)
       }
     ) %>%
       bind_rows()
@@ -336,6 +333,9 @@ main <- function(params,
       )
       input_data <- result[["df"]]
     }
+
+    input_data[[refd_col]] <- as.Date(input_data[[refd_col]], "%Y-%m-%d")
+    input_data[[issued_col]] <- as.Date(input_data[[issued_col]], "%Y-%m-%d")
     
     # Check available training days
     training_days_check(input_data[[issued_col]], params$training_days)

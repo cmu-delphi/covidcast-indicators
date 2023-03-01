@@ -156,17 +156,9 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
     stop("No reference date column detected for the reference date!")
   }
 
-  if (!(inherits(df[[refd_col]], "Date"))) {
-    stop("Reference date column must be of `Date` type")
-  }
-  
   # issue_date and lag should exist in the dataset
   if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
     stop("Issue date and lag fields must exist in the input data")
-  }
-
-  if (!(inherits(df[[issued_col]], "Date"))) {
-    stop("Issue date column must be of `Date` type")
   }
 
   if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||

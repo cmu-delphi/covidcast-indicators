@@ -191,14 +191,10 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   avg_df_prev7 <- add_shift(avg_df, 7, refd_col)
   names(avg_df_prev7)[names(avg_df_prev7) == 'value_7dav'] <- 'value_prev_7dav'
 
-  # Join would be faster without the select (minimal) and arrange (3x). It's
-  # unclear if row order matters for downstream uses of this df.
   backfill_df <- Reduce(
         function(x, y) full_join(x, y, by=c("time_value", "issue_date")),
         list(df, avg_df, avg_df_prev7)
       )
-      # %>% select(time_value, issue_date, everything()) %>%
-      # arrange(time_value, issue_date)
   
   # Add target
   target_df <- df[df$lag==ref_lag, c(refd_col, value_col, "issue_date")]

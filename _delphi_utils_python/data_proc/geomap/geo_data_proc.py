@@ -41,10 +41,10 @@ FIPS_MSA_OUT_FILENAME = "fips_msa_table.csv"
 FIPS_HRR_OUT_FILENAME = "fips_hrr_table.csv"
 FIPS_ZIP_OUT_FILENAME = "fips_zip_table.csv"
 FIPS_HHS_FILENAME = "fips_hhs_table.csv"
-FIPS_POPSAFEFIPS_OUT_FILENAME = "fips_popsafe-fips_table.csv"
+FIPS_CHNGFIPS_OUT_FILENAME = "fips_chng-fips_table.csv"
 FIPS_POPULATION_OUT_FILENAME = "fips_pop.csv"
 
-POPSAFEFIPS_STATE_OUT_FILENAME = "popsafe-fips_state_table.csv"
+CHNGFIPS_STATE_OUT_FILENAME = "chng-fips_state_table.csv"
 ZIP_HSA_OUT_FILENAME = "zip_hsa_table.csv"
 ZIP_HRR_OUT_FILENAME = "zip_hrr_table.csv"
 ZIP_FIPS_OUT_FILENAME = "zip_fips_table.csv"
@@ -478,8 +478,8 @@ def derive_zip_hhs_crosswalk():
     zip_state.sort_values(["zip", "hhs"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
 
 
-def derive_fips_popsafefips_crosswalk():
-    """Build a crosswalk table for FIPS to pop-safe fips."""
+def derive_fips_chngfips_crosswalk():
+    """Build a crosswalk table for FIPS to CHNG FIPS."""
     if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
         derive_fips_state_crosswalk()
 
@@ -506,35 +506,35 @@ def derive_fips_popsafefips_crosswalk():
     county_groups["group"] = county_groups["group"].str.zfill(2).astype("string")
     county_groups["fips"] = county_groups["fips"].str.zfill(5).astype("string")
     # Combine state codes and group ids into a single FIPS code.
-    county_groups["popsafe-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]
+    county_groups["chng-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]
 
-    county_groups = county_groups[["fips", "popsafe-fips"]]
+    county_groups = county_groups[["fips", "chng-fips"]]
     fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
 
     # Get all the fips that aren't included in the low-population groupings.
     extra_fips_list = list(set(fips_to_state.fips) - set(county_groups.fips))
-    # Normal fips codes and pop-safe fips codes are the same for high-population counties.
-    extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "popsafe-fips" : extra_fips_list}, dtype="string")
+    # Normal fips codes and CHNG fips codes are the same for high-population counties.
+    extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "chng-fips" : extra_fips_list}, dtype="string")
 
     # Combine high-pop and low-pop counties.
     pd.concat(
         [county_groups, extra_fips_df]
     ).sort_values(
-        ["fips", "popsafe-fips"]
+        ["fips", "chng-fips"]
     ).to_csv(
-        join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME), index=False
+        join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME), index=False
     )
 
 
-def derive_popsafefips_state_crosswalk():
-    """Build a crosswalk table for FIPS to pop-safe fips."""
+def derive_chngfips_state_crosswalk():
+    """Build a crosswalk table for FIPS to CHNG FIPS."""
     if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
         derive_fips_state_crosswalk()
 
-    if not isfile(join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME)):
-        derive_fips_popsafefips_crosswalk()
+    if not isfile(join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME)):
+        derive_fips_chngfips_crosswalk()
 
-    fips_to_group = pd.read_csv(join(OUTPUT_DIR, FIPS_POPSAFEFIPS_OUT_FILENAME), dtype="string", index_col=False)
+    fips_to_group = pd.read_csv(join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME), dtype="string", index_col=False)
     fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
 
     group_to_state = fips_to_group.join(
@@ -543,9 +543,9 @@ def derive_popsafefips_state_crosswalk():
             columns = "fips"
         ).drop_duplicates(
         ).sort_values(
-            ["popsafe-fips", "state_code"]
+            ["chng-fips", "state_code"]
         )
-    group_to_state.to_csv(join(OUTPUT_DIR, POPSAFEFIPS_STATE_OUT_FILENAME), index=False)
+    group_to_state.to_csv(join(OUTPUT_DIR, CHNGFIPS_STATE_OUT_FILENAME), index=False)
 
 
 def clear_dir(dir_path: str):
@@ -574,5 +574,5 @@ if __name__ == "__main__":
     derive_zip_population_table()
     derive_fips_hhs_crosswalk()
     derive_zip_hhs_crosswalk()
-    derive_fips_popsafefips_crosswalk()
-    derive_popsafefips_state_crosswalk()
+    derive_fips_chngfips_crosswalk()
+    derive_chngfips_state_crosswalk()

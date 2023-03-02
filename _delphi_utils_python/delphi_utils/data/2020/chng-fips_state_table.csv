@@ -1,4 +1,4 @@
-popsafe-fips,state_code,state_id,state_name
+chng-fips,state_code,state_id,state_name
 01000,01,al,Alabama
 01001,01,al,Alabama
 01003,01,al,Alabama
@@ -71,6 +71,8 @@ popsafe-fips,state_code,state_id,state_name
 02020,02,ak,Alaska
 02050,02,ak,Alaska
 02060,02,ak,Alaska
+02063,02,ak,Alaska
+02066,02,ak,Alaska
 02068,02,ak,Alaska
 02070,02,ak,Alaska
 02090,02,ak,Alaska
@@ -91,7 +93,6 @@ popsafe-fips,state_code,state_id,state_name
 02220,02,ak,Alaska
 02230,02,ak,Alaska
 02240,02,ak,Alaska
-02261,02,ak,Alaska
 02275,02,ak,Alaska
 02282,02,ak,Alaska
 02290,02,ak,Alaska

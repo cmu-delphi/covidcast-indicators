@@ -41,8 +41,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
     - [x] fips -> megacounty
     - [x] fips -> hrr
     - [x] fips -> hhs
-    - [x] fips -> popsafe-fips
-    - [x] popsafe-fips -> state : unweighted
+    - [x] fips -> chng-fips
+    - [x] chng-fips -> state : unweighted
     - [x] nation
     - [ ] zip -> dma (postponed)
 
@@ -82,7 +82,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "hhs": "zip_hhs_table.csv"
         },
         "fips": {
-            "popsafe-fips": "fips_popsafe-fips_table.csv",
+            "chng-fips": "fips_chng-fips_table.csv",
             "zip": "fips_zip_table.csv",
             "hrr": "fips_hrr_table.csv",
             "msa": "fips_msa_table.csv",
@@ -90,7 +90,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             "state": "fips_state_table.csv",
             "hhs": "fips_hhs_table.csv",
         },
-        "popsafe-fips": {"state": "popsafe-fips_state_table.csv"},
+        "chng-fips": {"state": "chng-fips_state_table.csv"},
         "state": {"state": "state_codes_table.csv"},
         "state_code": {
             "hhs": "state_code_hhs_table.csv",
@@ -169,7 +169,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
 
     @staticmethod
     def convert_fips_to_mega(data, fips_col="fips", mega_col="megafips"):
-        """Convert fips or popsafe-fips string to a megafips string."""
+        """Convert fips or chng-fips string to a megafips string."""
         data = data.copy()
         data[mega_col] = data[fips_col].astype(str).str.zfill(5)
         data[mega_col] = data[mega_col].str.slice_replace(start=2, stop=5, repl="000")
@@ -234,8 +234,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """Add a new geocode column to a dataframe.
 
         Currently supported conversions:
-        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs, popsafe-fips
-        - popsafe-fips -> state_code, state_id, state_name
+        - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs, chng-fips
+        - chng-fips -> state_code, state_id, state_name
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
         - jhu_uid -> fips
         - state_x -> state_y (where x and y are in {code, id, name}), nation
@@ -245,10 +245,10 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         ---------
         df: pd.DataFrame
             Input dataframe.
-        from_code: {'fips', 'popsafe-fips', 'zip', 'jhu_uid', 'state_code',
+        from_code: {'fips', 'chng-fips', 'zip', 'jhu_uid', 'state_code',
                     'state_id', 'state_name'}
             Specifies the geocode type of the data in from_col.
-        new_code: {'fips', 'popsafe-fips', 'zip', 'state_code', 'state_id',
+        new_code: {'fips', 'chng-fips', 'zip', 'state_code', 'state_id',
                    'state_name', 'hrr', 'msa', 'hhs'}
             Specifies the geocode type in new_col.
         from_col: str, default None
@@ -276,7 +276,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         state_codes = ["state_code", "state_id", "state_name"]
 
         if not is_string_dtype(df[from_col]):
-            if from_code in ["fips", "zip", "popsafe-fips"]:
+            if from_code in ["fips", "zip", "chng-fips"]:
                 df[from_col] = df[from_col].astype(str).str.zfill(5)
             else:
                 df[from_col] = df[from_col].astype(str)
@@ -348,8 +348,8 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         """Replace a geocode column in a dataframe.
 
         Currently supported conversions:
-        - fips -> popsafe-fips, state_code, state_id, state_name, zip, msa, hrr, nation
-        - popsafe-fips -> state_code, state_id, state_name
+        - fips -> chng-fips, state_code, state_id, state_name, zip, msa, hrr, nation
+        - chng-fips -> state_code, state_id, state_name
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
         - jhu_uid -> fips
         - state_x -> state_y (where x and y are in {code, id, name}), nation
@@ -463,7 +463,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         mega_col="megafips",
         count_cols=None,
     ):
-        """Convert and aggregate from FIPS or popsafe-fips to megaFIPS.
+        """Convert and aggregate from FIPS or chng-fips to megaFIPS.
 
         Parameters
         ---------
@@ -565,7 +565,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         Supports these 4 combinations:
             - all states within a nation
             - all counties within a state
-            - all popsafe counties within a state
+            - all CHNG counties+county groups within a state
             - all states within an hhs region
 
         Parameters
@@ -573,7 +573,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         container_geocode: str
             Instance of nation/state/hhs to find the sub-regions of
         contained_geocode_type: str
-            The subregion type to retrieve. One of "state", "county", "fips", "popsafe-fips"
+            The subregion type to retrieve. One of "state", "county", "fips", "chng-fips"
         container_geocode_type: str
             The parent region type. One of "state", "nation", "hhs"
 
@@ -590,7 +590,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 crosswalk_state = self._crosswalks["fips"]["state"]
                 fips_hhs = crosswalk_hhs[crosswalk_hhs["hhs"] == container_geocode]["fips"]
                 return set(crosswalk_state[crosswalk_state["fips"].isin(fips_hhs)]["state_id"])
-        elif (contained_geocode_type in ("county", "fips", "popsafe-fips") and
+        elif (contained_geocode_type in ("county", "fips", "chng-fips") and
                 container_geocode_type == "state"):
             contained_geocode_type = self.as_mapper_name(contained_geocode_type)
             crosswalk = self._crosswalks[contained_geocode_type]["state"]
@@ -600,4 +600,4 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         raise ValueError("(contained_geocode_type, container_geocode_type) was "
                          f"({contained_geocode_type}, {container_geocode_type}), but "
                          "must be one of (state, nation), (state, hhs), (county, state)"
-                         ", (fips, state), (popsafe-fips, state)")
+                         ", (fips, state), (chng-fips, state)")

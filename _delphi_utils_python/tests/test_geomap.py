@@ -190,9 +190,9 @@ class TestGeoMapper:
         msa_data = geomapper.get_crosswalk(from_code="fips", to_code="msa")
         assert tuple(msa_data.columns) == ("fips", "msa")
 
-    def test_load_fips_popsafefips_table(self, geomapper):
-        popsafe_data = geomapper.get_crosswalk(from_code="fips", to_code="popsafe-fips")
-        assert tuple(popsafe_data.columns) == ("fips", "popsafe-fips")
+    def test_load_fips_chngfips_table(self, geomapper):
+        chngfips_data = geomapper.get_crosswalk(from_code="fips", to_code="chng-fips")
+        assert tuple(chngfips_data.columns) == ("fips", "chng-fips")
 
     def test_load_jhu_uid_fips_table(self, geomapper):
         jhu_data = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
@@ -230,7 +230,7 @@ class TestGeoMapper:
             }
         )
         pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-        # popsafe-county should have the same behavior when converting to megacounties.
+        # chng-fips should have the same behavior when converting to megacounties.
         mega_county_groups = self.mega_data_3.copy()
         mega_county_groups.fips.replace({1125:"01g01"}, inplace = True)
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
@@ -246,7 +246,7 @@ class TestGeoMapper:
             }
         )
         pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-        # popsafe-county should have the same behavior when converting to megacounties.
+        # chng-fips should have the same behavior when converting to megacounties.
         mega_county_groups = self.mega_data_3.copy()
         mega_county_groups.fips.replace({1123:"01g01"}, inplace = True)
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
@@ -260,7 +260,7 @@ class TestGeoMapper:
         with pytest.raises(ValueError):
             new_data = geomapper.add_population_column(self.zip_data, "hrr")
         with pytest.raises(ValueError):
-            new_data = geomapper.add_population_column(self.zip_data, "popsafe-fips")
+            new_data = geomapper.add_population_column(self.zip_data, "chng-fips")
         new_data = geomapper.add_population_column(self.fips_data_5, "fips")
         assert new_data.shape == (4, 5)
         new_data = geomapper.add_population_column(self.state_data, "state_code")
@@ -302,22 +302,22 @@ class TestGeoMapper:
             )
         )
 
-        # fips -> popsafe-fips
-        new_data = geomapper.add_geocode(self.fips_data_5, "fips", "popsafe-fips")
-        assert sorted(list(new_data["popsafe-fips"])) == ['01123', '18181', '48g19', '72003']
-        assert new_data["popsafe-fips"].size == self.fips_data_5.fips.size
-        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "popsafe-fips")
-        assert sorted(list(new_data["popsafe-fips"])) == ['01123', '18181', '48g19', '72003']
-        assert new_data["popsafe-fips"].size == self.fips_data_5.fips.size
+        # fips -> chng-fips
+        new_data = geomapper.add_geocode(self.fips_data_5, "fips", "chng-fips")
+        assert sorted(list(new_data["chng-fips"])) == ['01123', '18181', '48g19', '72003']
+        assert new_data["chng-fips"].size == self.fips_data_5.fips.size
+        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "chng-fips")
+        assert sorted(list(new_data["chng-fips"])) == ['01123', '18181', '48g19', '72003']
+        assert new_data["chng-fips"].size == self.fips_data_5.fips.size
 
-        # popsafe-fips -> state_id
-        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "popsafe-fips")
-        new_data2 = geomapper.add_geocode(new_data, "popsafe-fips", "state_id")
+        # chng-fips -> state_id
+        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "chng-fips")
+        new_data2 = geomapper.add_geocode(new_data, "chng-fips", "state_id")
         assert new_data2["state_id"].unique().size == 4
         assert new_data2["state_id"].size == self.fips_data_5.fips.size
         assert sorted(list(new_data2["state_id"])) == ['al', 'in', 'pr', 'tx']
 
-        new_data2 = geomapper.replace_geocode(new_data, "popsafe-fips", "state_id")
+        new_data2 = geomapper.replace_geocode(new_data, "chng-fips", "state_id")
         assert new_data2["state_id"].unique().size == 4
         assert new_data2["state_id"].size == 4
         assert sorted(list(new_data2["state_id"])) == ['al', 'in', 'pr', 'tx']
@@ -395,20 +395,20 @@ class TestGeoMapper:
         assert geomapper.get_geo_values("nation") == {"us"}
         assert geomapper.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
         assert len(geomapper.get_geo_values("fips")) == 3236
-        assert len(geomapper.get_geo_values("popsafe-fips")) == 2711
+        assert len(geomapper.get_geo_values("chng-fips")) == 2711
         assert len(geomapper.get_geo_values("state_id")) == 60
         assert len(geomapper.get_geo_values("zip")) == 32976
 
     def test_get_geos_2019(self, geomapper_2019):
         assert len(geomapper_2019.get_geo_values("fips")) == 3235
-        assert len(geomapper_2019.get_geo_values("popsafe-fips")) == 2710
+        assert len(geomapper_2019.get_geo_values("chng-fips")) == 2710
 
     def test_get_geos_within(self, geomapper):
         assert len(geomapper.get_geos_within("us","state","nation")) == 60
         assert len(geomapper.get_geos_within("al","county","state")) == 68
         assert len(geomapper.get_geos_within("al","fips","state")) == 68
         assert geomapper.get_geos_within("al","fips","state") == geomapper.get_geos_within("al","county","state")
-        assert len(geomapper.get_geos_within("al","popsafe-fips","state")) == 66
+        assert len(geomapper.get_geos_within("al","chng-fips","state")) == 66
         assert len(geomapper.get_geos_within("4","state","hhs")) == 8
         assert geomapper.get_geos_within("4","state","hhs") == {'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}
 

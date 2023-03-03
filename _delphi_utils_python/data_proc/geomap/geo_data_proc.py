@@ -483,12 +483,7 @@ def derive_fips_chngfips_crosswalk():
     if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
         derive_fips_state_crosswalk()
 
-    # County mapping file is derived from
-    # https://docs.google.com/spreadsheets/d/1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0/edit#gid=871427657.
-    # We assign an incrementing integer to be the group id of each county
-    # grouping within the given state via:
-    #
-    # county_groups["group"] = (county_groups.groupby("state_fips").cumcount() + 1).astype("string")
+    assign_county_groups()
     county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False
         ).drop(columns = "fips_list")
 
@@ -546,6 +541,99 @@ def derive_chngfips_state_crosswalk():
             ["chng-fips", "state_code"]
         )
     group_to_state.to_csv(join(OUTPUT_DIR, CHNGFIPS_STATE_OUT_FILENAME), index=False)
+
+
+def fetch_county_groups_spreadsheet():
+    # County mapping file is derived from
+    # https://docs.google.com/spreadsheets/d/1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0/edit#gid=871427657
+    sheet_id = "1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0"
+    sheet_name = "groupings"
+    # Request sheet in CSV format via tag in URL.
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+
+    county_groups = pd.read_csv(
+            url, dtype="string", index_col=False
+        ).dropna(
+            how="all", axis=1
+        )
+    county_groups["state FIPS"] = county_groups["state FIPS"].astype(int)
+
+    # Counties belonging to each group are listed (as FIPS codes) in the "county
+    # FIPS grouping" column, concatenated and separated by the pipe "|". Each
+    # included FIPS code is also listed in its own unnamed column. County groups
+    # can contain varying numbers of counties, and if CHNG provides new or updated
+    # county groupings the number of unnamed columns listing included counties
+    # could change. Use a general approach to find all of them.
+    county_cols = [colname for colname in county_groups.columns if colname.startswith("Unnamed: ")]
+
+    new_names = {
+        "state FIPS": "state_fips",
+        "county FIPS grouping": "fips_list",
+        **{ colname: ("county" + str(i + 1)) for i, colname in enumerate(county_cols)}
+    }
+
+    county_groups = county_groups.rename(
+            columns=new_names
+        )[new_names.values()]
+
+    return county_groups
+
+
+def assign_county_groups():
+    county_groups = fetch_county_groups_spreadsheet()
+
+    # If a `lowpop_county_groups.csv` already exists in `data_proc/geomap`, we
+    # have to be careful to not reassign a group number to a different group.
+    # Group numbers must remain fixed, even if a given county group is no longer
+    # being used.
+    if isfile(LOWPOP_COUNTY_GROUPS_FILE):
+        old_county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+        old_county_groups.group = old_county_groups.group.astype(int)
+        old_county_groups.state_fips = old_county_groups.state_fips.astype(int)
+
+        # Remove rows from county_groups if that `fips_list` value already
+        # exists in old_county_groups.
+        county_groups = county_groups[
+            ~county_groups.fips_list.isin(old_county_groups.fips_list)
+        ]
+
+        # If grouping file has no new rows, no need to process again.
+        if county_groups.empty:
+            return
+
+        # Assign an incrementing integer to be the group id of each remaining
+        # county grouping within a state using the given sort order.
+        county_groups["group"] = county_groups.groupby("state_fips").cumcount() + 1
+
+        # Find max group number by state in old_county_groups, join on, and
+        # add max group number to group number.
+        max_group_by_state = old_county_groups.groupby(
+                "state_fips"
+            ).group.max(
+            ).reset_index(
+            ).rename(
+                columns = {"group": "max_group"}
+            )
+        county_groups = county_groups.join(
+                max_group_by_state.set_index("state_fips"),
+                how="left",
+                on="state_fips"
+            ).assign(
+                group = lambda x: x.group + x.max_group
+            ).drop(
+                ["max_group"], axis=1
+            )
+
+        # Combine old_county_groups and county_groups
+        county_groups = pd.concat([old_county_groups, county_groups])
+    else:
+        county_groups["group"] = county_groups.groupby("state_fips").cumcount() + 1
+
+    county_groups.sort_values(
+            ["state_fips"], kind="stable"
+        ).to_csv(
+            LOWPOP_COUNTY_GROUPS_FILE, index=False
+        )
 
 
 def clear_dir(dir_path: str):

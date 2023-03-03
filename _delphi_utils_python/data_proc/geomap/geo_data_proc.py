@@ -33,7 +33,7 @@ FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
 ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
-LOWPOP_COUNTY_GROUPS_FILE = "lowpop_county_groups.csv"
+CHNG_COUNTY_GROUPS_FILE = "chng_county_groups.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -489,7 +489,7 @@ def derive_fips_chngfips_crosswalk():
     # grouping within the given state via:
     #
     # county_groups["group"] = (county_groups.groupby("state_fips").cumcount() + 1).astype("string")
-    county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False
+    county_groups = pd.read_csv(CHNG_COUNTY_GROUPS_FILE, dtype="string", index_col=False
         ).drop(columns = "fips_list")
 
     # Change to long format.
@@ -511,12 +511,12 @@ def derive_fips_chngfips_crosswalk():
     county_groups = county_groups[["fips", "chng-fips"]]
     fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
 
-    # Get all the fips that aren't included in the low-population groupings.
+    # Get all the fips that aren't included in the chng groupings.
     extra_fips_list = list(set(fips_to_state.fips) - set(county_groups.fips))
-    # Normal fips codes and CHNG fips codes are the same for high-population counties.
+    # Normal fips codes and CHNG fips codes are the same for ungrouped counties.
     extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "chng-fips" : extra_fips_list}, dtype="string")
 
-    # Combine high-pop and low-pop counties.
+    # Combine grouped and ungrouped counties.
     pd.concat(
         [county_groups, extra_fips_df]
     ).sort_values(

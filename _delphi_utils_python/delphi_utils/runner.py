@@ -3,7 +3,8 @@ import argparse as ap
 import importlib
 import os
 from typing import Any, Callable, Dict, Optional
-import threading
+import multiprocessing
+import time
 from .archive import ArchiveDiffer, archiver_from_params
 from .logger import get_structured_logger
 from .utils import read_params, transfer_files, delete_move_files
@@ -66,13 +67,16 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     validator = validator_fn(params)
     archiver = archiver_fn(params)
 
-    t = threading.Thread(target=flash_fn, args=[params])
-    t.start()
-    t.join(timer)
-    if t.is_alive():
-        t.join()
-
-
+    t1 = multiprocessing.Process(target=flash_fn, args=[params])
+    t1.start()
+    start = time.time()
+    while time.time()-start < timer:
+        if not t1.is_alive():
+            break
+        time.sleep(10)
+    if t1.is_alive():
+        t1.terminate()
+        t1.join()
     if validator:
         validation_report = validator.validate()
         validation_report.log(logger)

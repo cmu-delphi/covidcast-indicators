@@ -272,7 +272,7 @@ def aws_params(lag, day, input_df, signal, params, logger):
             EVD_min = pd.read_csv(zipf.open('params/min.csv'), index_col=0)
     last_7 = pd.read_csv(s3.Object(params['flash']["aws_bucket"],
                     f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').get()['Body'], index_col=0)
-    STATE_to_fips, fips_pop_table = setup_fips(f'flash_ref/{signal}')
+    STATE_to_fips, fips_pop_table = setup_fips('flash_ref')
     input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
                         else x for x in input_df.columns]
     # discuss where to do out-of-range handling

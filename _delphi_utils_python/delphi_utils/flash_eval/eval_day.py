@@ -487,7 +487,7 @@ def local_params(lag, day, input_df, signal, params, logger):
     # Save to output log
     output(evd_ranking, day, lag, signal, logger)
     return last_7, type_of_outlier
-def flash_eval(lag, day, input_df, signal, params, logger=None):
+def flash_eval(lag, day, input_df, signal, params, logger=None, local=False):
     """Call fn to evaluate most recent data using FlaSH.
 
     Input:
@@ -504,8 +504,9 @@ def flash_eval(lag, day, input_df, signal, params, logger=None):
             name=signal,
             filename=params["common"].get("log_filename", None),
             log_exceptions=params["common"].get("log_exceptions", True))
+    if local:
+        return local_params(lag, day, input_df, signal, params, logger)
     if params.get('archive', None):
         if params['archive'].get("aws_credentials", None):
             return aws_params(lag, day, input_df, signal, params, logger)
-
-    return local_params(lag, day, input_df, signal, params, logger)
+    return None

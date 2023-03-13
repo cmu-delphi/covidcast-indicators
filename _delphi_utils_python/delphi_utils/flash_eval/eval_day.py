@@ -396,7 +396,8 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
     type_of_outlier['flash'] = type_of_outlier['evd_ranking']
     indices = type_of_outlier.index[type_of_outlier['evd_ranking'].isna()]
     type_of_outlier.loc[indices, 'flash'] = type_of_outlier.loc[indices, 'global']
-    not_fix_daily = list(filter(lambda x: x not in pd.concat(global_outlier_list).index, daily_update_df.columns))
+    not_fix_daily = list(filter(lambda x: x not in pd.concat(global_outlier_list).index,
+                                daily_update_df.columns))
     not_fix_last_7 = list(filter(lambda x: x not in not_fix_daily, last_7.columns))
     last_7 = pd.concat(
         [pd.concat([last_7[not_fix_daily].iloc[1:, :],

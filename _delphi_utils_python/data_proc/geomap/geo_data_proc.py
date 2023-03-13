@@ -502,8 +502,8 @@ def derive_fips_chngfips_crosswalk():
             columns="county_num"
         ).dropna()
 
-    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2).astype("string")
-    county_groups["group"] = county_groups["group"].str.zfill(2).astype("string")
+    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2)
+    county_groups["group"] = county_groups["group"].str.zfill(2)
     county_groups["fips"] = county_groups["fips"].str.zfill(5).astype("string")
     # Combine state codes and group ids into a single FIPS code.
     county_groups["chng-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]

@@ -94,10 +94,12 @@ def outlier_detect(df):
 
     Returns
     -------
-    The columns that are global outliers.
+    The zscore with respect to the empirical distribution
     """
     df.columns = ['x', 'mean', 'var']
-    return df.index[((abs(df['x'] - df['mean']) / (df['var'].clip(1))).gt(5))]
+    ret_series = abs(df['x'] - df['mean']) / (df['var'].clip(1))
+    ret_series.index = df.index
+    return ret_series
 
 def apply_ar(last_7, lin_coeff, weekday_correction, non_daily_df, fips_pop_table):
     """Predict y_hat using an AR model.
@@ -241,7 +243,54 @@ def ts_val(val, dist):
     return sum(val <= dist) / dist.shape[0]
 
 
-def aws_params(lag, day, input_df, signal, params, logger):
+def generate_files(params, lag, signal, local=False, s3=None):
+    """Generate files needed for evaluation.
+
+    Parameters
+    ----------
+    params: params from json file
+    lag, signal:to access appropriate files
+    local, s3: determine if files are local or on AWS
+
+    Returns: all files needed for evaluation
+    """
+    if not local:
+        with io.BytesIO(s3.Object(params['flash']["aws_bucket"],
+                f'flags-dev/flash_params/{signal}/params.zip').get()['Body'].read()) as readio:
+            with zipfile.ZipFile(readio, mode='r') as zipf:
+                wk_mean = pd.read_csv(zipf.open(f'params/weekday_mean_df_{lag}.csv'), index_col=0)
+                wk_var = pd.read_csv(zipf.open(f'params/weekday_var_df_{lag}.csv'), index_col=0)
+                weekday_params = pd.read_csv(zipf.open(f'params/weekday_params_{lag}.csv'),
+                                             index_col=0)
+                summary_stats = pd.read_csv(zipf.open(f'params/summary_stats_{lag}.csv'),
+                                            index_col=0)
+                summary_stats.index = ['0.25', 'median', '0.75', 'mean', 'var']
+                stream = pd.read_csv(zipf.open(f'params/ret_df2_{lag}.csv'), index_col=0)
+                rep_sched = pd.read_csv(zipf.open(f'params/reporting_sched_{lag}.csv'), index_col=0)
+                lin_coeff = pd.read_csv(zipf.open(f'params/lin_coeff_{lag}.csv'), index_col=0)
+                EVD_max = pd.read_csv(zipf.open('params/max.csv'), index_col=0)
+                EVD_min = pd.read_csv(zipf.open('params/min.csv'), index_col=0)
+        last_7 = pd.read_csv(s3.Object(params['flash']["aws_bucket"],
+                        f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').get()['Body'],
+                             index_col=0)
+        STATE_to_fips, fips_pop_table = setup_fips('flash_ref')
+    else:
+        wk_mean = pd.read_csv((f'flash_ref/{signal}/weekday_mean_df_{lag}.csv'), index_col=0)
+        wk_var = pd.read_csv((f'flash_ref/{signal}/weekday_var_df_{lag}.csv'), index_col=0)
+        weekday_params = pd.read_csv((f'flash_ref/{signal}/weekday_params_{lag}.csv'), index_col=0)
+        summary_stats = pd.read_csv((f'flash_ref/{signal}/summary_stats_{lag}.csv'), index_col=0)
+        summary_stats.index = ['0.25', 'median', '0.75', 'mean', 'var']
+        stream = pd.read_csv((f'flash_ref/{signal}/ret_df2_{lag}.csv'), index_col=0)
+        rep_sched = pd.read_csv((f'flash_ref/{signal}/reporting_sched_{lag}.csv'), index_col=0)
+        lin_coeff = pd.read_csv((f'flash_ref/{signal}/lin_coeff_{lag}.csv'), index_col=0)
+        EVD_max = pd.read_csv((f'flash_ref/{signal}/max.csv'), index_col=0)
+        EVD_min = pd.read_csv((f'flash_ref/{signal}/min.csv'), index_col=0)
+        last_7 = pd.read_csv((f'flash_ref/{signal}/last_7_{lag}.csv'), index_col=0)
+        STATE_to_fips, fips_pop_table = setup_fips(f'flash_ref/{signal}')
+    return wk_mean, wk_var, weekday_params, summary_stats, stream, rep_sched, \
+                lin_coeff, EVD_max, EVD_min, last_7, STATE_to_fips, fips_pop_table
+
+def process_params(lag, day, input_df, signal, params, logger, local=False):
     """Evaluate most recent data using FlaSH.
 
     Input:
@@ -253,26 +302,18 @@ def aws_params(lag, day, input_df, signal, params, logger):
     Ouput:
     None
     """
-    s3 = boto3.Session(
-        aws_access_key_id=params['archive']['aws_credentials']["aws_access_key_id"],
-        aws_secret_access_key=params['archive']['aws_credentials']["aws_secret_access_key"]
+    s3=None
+    if not local:
+        s3 = boto3.Session(
+            aws_access_key_id=params['archive']['aws_credentials']["aws_access_key_id"],
+            aws_secret_access_key=params['archive']['aws_credentials']["aws_secret_access_key"]
         ).resource('s3')
-    with io.BytesIO(s3.Object(params['flash']["aws_bucket"],
-            f'flags-dev/flash_params/{signal}/params.zip').get()['Body'].read()) as readio:
-        with zipfile.ZipFile(readio, mode='r') as zipf:
-            wk_mean = pd.read_csv(zipf.open(f'params/weekday_mean_df_{lag}.csv'), index_col=0)
-            wk_var = pd.read_csv(zipf.open(f'params/weekday_var_df_{lag}.csv'), index_col=0)
-            weekday_params = pd.read_csv(zipf.open(f'params/weekday_params_{lag}.csv'), index_col=0)
-            summary_stats = pd.read_csv(zipf.open(f'params/summary_stats_{lag}.csv'), index_col=0)
-            summary_stats.index = ['0.25', 'median', '0.75', 'mean', 'var']
-            stream = pd.read_csv(zipf.open(f'params/ret_df2_{lag}.csv'), index_col=0)
-            rep_sched = pd.read_csv(zipf.open(f'params/reporting_sched_{lag}.csv'), index_col=0)
-            lin_coeff = pd.read_csv(zipf.open(f'params/lin_coeff_{lag}.csv'), index_col=0)
-            EVD_max = pd.read_csv(zipf.open('params/max.csv'), index_col=0)
-            EVD_min = pd.read_csv(zipf.open('params/min.csv'), index_col=0)
-    last_7 = pd.read_csv(s3.Object(params['flash']["aws_bucket"],
-                    f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').get()['Body'], index_col=0)
-    STATE_to_fips, fips_pop_table = setup_fips('flash_ref')
+
+    (wk_mean, wk_var, weekday_params,
+     summary_stats, stream, rep_sched, \
+    lin_coeff, EVD_max, EVD_min, last_7, \
+     STATE_to_fips, fips_pop_table) = generate_files(params, lag, signal, local=local, s3=s3)
+
     input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
                         else x for x in input_df.columns]
     # discuss where to do out-of-range handling
@@ -303,7 +344,7 @@ def aws_params(lag, day, input_df, signal, params, logger):
 
     global_outlier_list = []
     for df in [weekday_correction, non_daily_df_test, non_ar_df]:
-        global_outlier_list += list(outlier_detect(df.T.merge(summary_stats[df.columns].loc['median'
+        global_outlier_list.append(outlier_detect(df.T.merge(summary_stats[df.columns].loc['median'
                   , :], left_index=True, right_index=True
                   ).merge(summary_stats[df.columns].loc['var', :],
                           left_index=True, right_index=True)))
@@ -326,16 +367,19 @@ def aws_params(lag, day, input_df, signal, params, logger):
     evd_ranking = evd_ranking_fn(ts_streams, EVD_max, EVD_min)
     # Save the different categories of outliers/day + rankings for future analysis
     type_of_outlier = pd.DataFrame(index=input_df.columns)
-    weekday_frame = weekday_outlier.to_frame()
-    weekday_frame[0] = 1
-    weekday_frame.columns = ['weekday_outlier']
-    type_of_outlier = type_of_outlier.merge(weekday_frame,
-                                    left_index=True, right_index=True, how='outer').fillna(0)
-    type_of_outlier['global_outlier'] = 0
-    type_of_outlier.loc[global_outlier_list, 'global_outlier'] = 1
+    type_of_outlier = type_of_outlier.merge(weekday_outlier.to_frame(name='weekday'),
+                        left_index=True, right_index=True,
+                        how='outer').fillna(0)
+    glob = pd.concat(global_outlier_list)
+    glob.name = 'global'
+    print(glob)
+    type_of_outlier = type_of_outlier.merge(glob,
+                        left_index=True, right_index=True, how='outer').fillna(0)
+
     stream_group = stream_group.apply(lambda x: 2 * (0.5 - x) if x < 0.5 else 2 * (x - 0.5))
     stream_individual = stream_individual.apply(lambda x: 2 * (0.5 - x) if
     x < 0.5 else 2 * (x - 0.5))
+
     type_of_outlier = type_of_outlier.merge(stream_individual,
         left_index=True, right_index=True,
         how='outer').merge(stream_group,
@@ -351,142 +395,25 @@ def aws_params(lag, day, input_df, signal, params, logger):
         left_index=True, right_index=True, how='outer')
     type_of_outlier['flash'] = type_of_outlier['evd_ranking']
     indices = type_of_outlier.index[type_of_outlier['evd_ranking'].isna()]
-    type_of_outlier.loc[indices, 'flash'] = type_of_outlier.loc[indices, 'global_outlier']
-
-    s3.Object(params['flash']["aws_bucket"],
-              f'flags-dev/flash_results/{signal}_{day.strftime("%m_%d_%Y")}_{lag}.csv').put(
-        Body=type_of_outlier.to_csv(), ACL='public-read')
-
-    not_fix_daily = list(filter(lambda x: x not in global_outlier_list, daily_update_df.columns))
+    type_of_outlier.loc[indices, 'flash'] = type_of_outlier.loc[indices, 'global']
+    not_fix_daily = list(filter(lambda x: x not in pd.concat(global_outlier_list).index, daily_update_df.columns))
     not_fix_last_7 = list(filter(lambda x: x not in not_fix_daily, last_7.columns))
     last_7 = pd.concat(
         [pd.concat([last_7[not_fix_daily].iloc[1:, :],
                     weekday_correction[not_fix_daily]]).reset_index(drop=True),
          last_7[not_fix_last_7]], axis=1)
-    s3.Object(params['flash']["aws_bucket"],
-              f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').put(
-        Body=last_7.to_csv(), ACL='public-read')
+    if not local:
+        s3.Object(params['flash']["aws_bucket"],
+                  f'flags-dev/flash_results/{signal}_{day.strftime("%m_%d_%Y")}_{lag}.csv').put(
+            Body=type_of_outlier.to_csv(), ACL='public-read')
+        s3.Object(params['flash']["aws_bucket"],
+                  f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').put(
+            Body=last_7.to_csv(), ACL='public-read')
     # Save to output log
     output(evd_ranking, day, lag, signal, logger)
     return last_7, type_of_outlier
 
 
-
-def local_params(lag, day, input_df, signal, params, logger):
-    """Evaluate most recent data using FlaSH locally.
-
-    Input:
-    lag: the difference between the reporting and reference date
-    day: the day of the reference date (today is the reporting date)
-    input_df: a df from the day for a particular signal that includes natl. state, and county data
-    signal: the signal to search for.
-    params: additional params needed.
-    Ouput:
-    None
-    """
-    wk_mean = pd.read_csv((f'flash_ref/{signal}/weekday_mean_df_{lag}.csv'), index_col=0)
-    wk_var = pd.read_csv((f'flash_ref/{signal}/weekday_var_df_{lag}.csv'), index_col=0)
-    weekday_params = pd.read_csv((f'flash_ref/{signal}/weekday_params_{lag}.csv'), index_col=0)
-    summary_stats = pd.read_csv((f'flash_ref/{signal}/summary_stats_{lag}.csv'), index_col=0)
-    summary_stats.index = ['0.25', 'median', '0.75', 'mean', 'var']
-    stream = pd.read_csv((f'flash_ref/{signal}/ret_df2_{lag}.csv'), index_col=0)
-    rep_sched = pd.read_csv((f'flash_ref/{signal}/reporting_sched_{lag}.csv'), index_col=0)
-    lin_coeff = pd.read_csv((f'flash_ref/{signal}/lin_coeff_{lag}.csv'), index_col=0)
-    EVD_max = pd.read_csv((f'flash_ref/{signal}/max.csv'), index_col=0)
-    EVD_min = pd.read_csv((f'flash_ref/{signal}/min.csv'), index_col=0)
-    last_7 = pd.read_csv((f'flash_ref/{signal}/last_7_{lag}.csv'), index_col=0)
-    STATE_to_fips, fips_pop_table = setup_fips(f'flash_ref/{signal}')
-    input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
-                        else x for x in input_df.columns]
-    # discuss where to do out-of-range handling
-    out_range = input_df.columns[input_df.lt(int(params['flash']['support'][0])).iloc[0, :].values
-                        | input_df.gt(int(params['flash']['support'][1])).iloc[0, :].values]
-
-    # only rank streams without out of range data
-    input_df = input_df[filter(lambda x: x not in out_range, input_df.columns)]
-    daily_update_df, non_daily_df_test, non_ar_df = split_reporting_schedule_dfs(input_df,
-                                                                                 rep_sched)
-
-    # only consider non-daily values that are non-0
-    non_daily_df_test = non_daily_df_test[non_daily_df_test != 0].dropna(axis=1)
-
-    # Weekday outlier [only for Daily Df]
-    weekday_outlier = outlier_detect(daily_update_df.T.merge(wk_mean.loc[day.day_of_week, :],
-        left_index=True, right_index=True).merge(
-        wk_var.loc[day.day_of_week, :],
-        left_index=True, right_index=True))
-
-    # Make weekday correction for daily update
-    additive_factor = 1
-    weekday_correction = (Weekday.calc_adjustment(
-        weekday_params.loc[daily_update_df.columns, :].to_numpy(), \
-        (daily_update_df + additive_factor).reset_index(),
-        daily_update_df.columns, \
-        'index').set_index('index') - additive_factor).clip(0)
-
-    global_outlier_list = []
-    for df in [weekday_correction, non_daily_df_test, non_ar_df]:
-        global_outlier_list += list(outlier_detect(df.T.merge(summary_stats[df.columns].loc['median'
-                  , :], left_index=True, right_index=True
-                  ).merge(summary_stats[df.columns].loc['var', :],
-                          left_index=True, right_index=True)))
-
-    # Apply AR
-
-    ts_streams, df_for_ts = apply_ar(last_7, lin_coeff, weekday_correction,
-                                     non_daily_df_test, fips_pop_table)
-    # find stream ranking (individual)
-    stream_individual = ts_streams.T.apply(lambda x: ts_val(x.values[0],
-                                                            stream[x.name].dropna()))
-
-    stream_individual.name = 'stream_individual'
-
-    # find stream ranking (group)
-    stream_group = streams_groups_fn(stream, ts_streams)
-
-    # find EVD ranking
-
-    evd_ranking = evd_ranking_fn(ts_streams, EVD_max, EVD_min)
-    # Save the different categories of outliers/day + rankings for future analysis
-    type_of_outlier = pd.DataFrame(index=input_df.columns)
-    weekday_frame = weekday_outlier.to_frame()
-    weekday_frame[0] = 1
-    weekday_frame.columns = ['weekday_outlier']
-    type_of_outlier = type_of_outlier.merge(weekday_frame,
-                                    left_index=True, right_index=True, how='outer').fillna(0)
-    type_of_outlier['global_outlier'] = 0
-    type_of_outlier.loc[global_outlier_list, 'global_outlier'] = 1
-    stream_group = stream_group.apply(lambda x: 2 * (0.5 - x) if x < 0.5 else 2 * (x - 0.5))
-    stream_individual = stream_individual.apply(lambda x: 2 * (0.5 - x) if
-    x < 0.5 else 2 * (x - 0.5))
-    type_of_outlier = type_of_outlier.merge(stream_individual,
-        left_index=True, right_index=True,
-        how='outer').merge(stream_group,
-                           left_index=True, right_index=True,
-                           how='outer').merge(evd_ranking,
-                                              left_index=True,
-                                              right_index=True, how='outer'
-                                              ).merge(df_for_ts,
-                                                      left_index=True,
-                                                      right_index=True,
-                                                      how='outer').merge(
-        ts_streams,
-        left_index=True, right_index=True, how='outer')
-    type_of_outlier['flash'] = type_of_outlier['evd_ranking']
-    indices = type_of_outlier.index[type_of_outlier['evd_ranking'].isna()]
-    type_of_outlier.loc[indices, 'flash'] = type_of_outlier.loc[indices,
-    'global_outlier']
-    #.to_csv(f'flash_ref/{signal}/results/{signal}_{day.strftime("%m_%d_%Y")}_{lag}.csv')
-
-    not_fix_daily = list(filter(lambda x: x not in global_outlier_list, daily_update_df.columns))
-    not_fix_last_7 = list(filter(lambda x: x not in not_fix_daily, last_7.columns))
-    last_7 = pd.concat(
-        [pd.concat([last_7[not_fix_daily].iloc[1:, :],
-                    weekday_correction[not_fix_daily]]).reset_index(drop=True),
-         last_7[not_fix_last_7]], axis=1)#.to_csv(f'flash_params/{signal}/last_7_{lag}.csv')
-    # Save to output log
-    output(evd_ranking, day, lag, signal, logger)
-    return last_7, type_of_outlier
 def flash_eval(lag, day, input_df, signal, params, logger=None, local=False):
     """Call fn to evaluate most recent data using FlaSH.
 
@@ -504,9 +431,4 @@ def flash_eval(lag, day, input_df, signal, params, logger=None, local=False):
             name=signal,
             filename=params["common"].get("log_filename", None),
             log_exceptions=params["common"].get("log_exceptions", True))
-    if local:
-        return local_params(lag, day, input_df, signal, params, logger)
-    if params.get('archive', None):
-        if params['archive'].get("aws_credentials", None):
-            return aws_params(lag, day, input_df, signal, params, logger)
-    return None
+    return process_params(lag, day, input_df, signal, params, logger, local)

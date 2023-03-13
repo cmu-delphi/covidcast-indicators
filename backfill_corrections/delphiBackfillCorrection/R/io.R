@@ -244,7 +244,7 @@ get_training_date_range <- function(params) {
   if (params$train_models) {
     if (params_element_exists_and_valid(params, "training_end_date")) {
       # Use user-provided end date.
-      training_end_date <- as.Date(params$training_end_date)
+      training_end_date <- as.Date(params$training_end_date, DATE_FORMAT)
     } else {
       # Default end date is today.
       training_end_date <- default_end_date

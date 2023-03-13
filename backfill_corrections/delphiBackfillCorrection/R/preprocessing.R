@@ -27,7 +27,9 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # +30 to have values for calculating 7-day averages
   lags <- min(df[[lag_col]]): (ref_lag + 30)
   # Full list reference dates
-  refds <- as.character(seq(as.Date(min_refd), as.Date(max_refd), by="day"))
+  refds <- as.character(
+    seq(as.Date(min_refd, DATE_FORMAT), as.Date(max_refd, DATE_FORMAT), by="day")
+  )
   row_inds_df <- setNames(
     as.data.frame(crossing(refds, lags)),
     c(refd_col, lag_col)
@@ -101,7 +103,7 @@ get_7dav <- function(pivot_df, refd_col) {
 #' 
 #' @export
 add_shift <- function(df, n_day, refd_col) {
-  df[, refd_col] <- as.character(as.Date(df[[refd_col]]) + n_day)
+  df[[refd_col]] <- as.character(as.Date(df[[refd_col]], DATE_FORMAT) + n_day)
   return (df)
 }
 
@@ -115,7 +117,7 @@ add_shift <- function(df, n_day, refd_col) {
 #' 
 #' @export
 add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
-  dayofweek <- as.numeric(format(as.Date(df[[time_col]]), format="%u"))
+  dayofweek <- as.numeric(format(as.Date(df[[time_col]], DATE_FORMAT), format="%u"))
   for (i in seq_along(wd)) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
@@ -161,7 +163,7 @@ get_weekofmonth <- function(date) {
 #' 
 #' @export
 add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
-  weekofmonth <- get_weekofmonth(as.Date(df[[time_col]]))
+  weekofmonth <- get_weekofmonth(as.Date(df[[time_col]], DATE_FORMAT))
   for (i in seq_along(wm)) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
@@ -180,12 +182,12 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
-  df$issue_date <- as.character(as.Date(df[[refd_col]]) + df[[lag_col]])
+  df$issue_date <- as.character(as.Date(df[[refd_col]], DATE_FORMAT) + df[[lag_col]])
   pivot_df <- pivot_wider(
     df[order(df$issue_date, decreasing=FALSE), ],
     id_cols=refd_col, names_from="issue_date", values_from=value_col
   )
-  
+
   # Add 7dav avg
   avg_df <- get_7dav(pivot_df, refd_col)
   avg_df <- add_shift(avg_df, 1, refd_col) # 7dav until yesterday

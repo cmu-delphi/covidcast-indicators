@@ -86,7 +86,6 @@ get_7dav <- function(pivot_df, refd_col) {
   backfill_df <- pivot_longer(pivot_df,
     -refd_col, values_to="value_raw", names_to="issue_date"
   )
-  backfill_df[["issue_date"]] = as.Date(backfill_df[["issue_date"]])
   return (as.data.frame(backfill_df))
 }
 
@@ -178,7 +177,7 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
-  df$issue_date <- as.Date(df[[refd_col]]) + df[[lag_col]]
+  df$issue_date <- as.character(as.Date(df[[refd_col]]) + df[[lag_col]])
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
                 values_from=value_col)

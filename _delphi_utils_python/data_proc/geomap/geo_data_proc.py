@@ -559,17 +559,10 @@ def fetch_county_groups_spreadsheet():
     county_groups["state FIPS"] = county_groups["state FIPS"].astype(int)
 
     # Counties belonging to each group are listed (as FIPS codes) in the "county
-    # FIPS grouping" column, concatenated and separated by the pipe "|". Each
-    # included FIPS code is also listed in its own unnamed column. County groups
-    # can contain varying numbers of counties, and if CHNG provides new or updated
-    # county groupings the number of unnamed columns listing included counties
-    # could change. Use a general approach to find all of them.
-    county_cols = [colname for colname in county_groups.columns if colname.startswith("Unnamed: ")]
-
+    # FIPS grouping" column, concatenated and separated by the pipe "|".
     new_names = {
         "state FIPS": "state_fips",
-        "county FIPS grouping": "fips_list",
-        **{ colname: ("county" + str(i + 1)) for i, colname in enumerate(county_cols)}
+        "county FIPS grouping": "fips_list"
     }
 
     county_groups = county_groups.rename(

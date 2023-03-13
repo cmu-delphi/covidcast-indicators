@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 from scipy.stats import binom
 import boto3
-
+from delphi_utils.geomap import GeoMapper
 from delphi_utils.weekday import Weekday
 from .constants import HTML_LINK, STATES
 from .. import (
@@ -119,10 +119,10 @@ def apply_ar(last_7, lin_coeff, weekday_correction, non_daily_df, fips_pop_table
     df_for_ts: dataframe for the test-statistic
     """
     y = pd.concat([weekday_correction, non_daily_df], axis=1)
-    y.name = 'y'
+    y.index = ['y']
     y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns], name='yhat')
     y_hat.index = y.columns
-    df_for_ts = y.T.merge(y_hat, left_index=True, right_index=True).merge(fips_pop_table.T
+    df_for_ts = y.T.merge(y_hat, left_index=True, right_index=True).merge(fips_pop_table
                               , left_index=True, right_index=True)
     df_for_ts.columns = ['y', 'yhat', 'pop']
     ts_streams = bin_approach(df_for_ts, log=True)
@@ -207,24 +207,26 @@ def streams_groups_fn(stream, ts_streams):
     return stream_group
 
 
-def setup_fips(flash_dir):
+def setup_fips():
     """Set up fips related dictionaries and population table.
 
     Input: The directory location for files
     Output: conversion dictionary state to fips & population per fips df
     """
-    fips_lookup = pd.read_csv(f'{flash_dir}/fips.csv',
-                header=None).astype(str).set_axis(['FIPS', 'STATE'], axis=1)
-    fips_lookup['FIPS'] = fips_lookup['FIPS'].str.zfill(2)
-    fips_to_STATE = fips_lookup.set_index("FIPS").to_dict()['STATE']
-    STATE_to_fips = fips_lookup.set_index("STATE").to_dict()['FIPS']
-    fips = pd.read_csv(f'{flash_dir}/geo_fips.csv', index_col=0).set_index('geo')
-    orig_fips = fips[fips['pop'].isna()].index
-    geos_repl = [fips_to_STATE[x] for x in orig_fips.str[:2]]
-    fips.loc[orig_fips, 'pop'] = [float(fips[fips.index == x]['pop']) for x in geos_repl]
-    fips_pop_table = fips.unstack().to_frame().T
-    fips_pop_table.columns = [STATE_to_fips[x] if x in list(STATES)
-                          else x for x in fips_pop_table.columns.droplevel()]
+    gmpr = GeoMapper()
+    STATE_to_fips = gmpr.get_crosswalk("state", "state")
+    STATE_to_fips = pd.DataFrame(STATE_to_fips)[["state_id",
+        "state_code"]].set_index("state_id").to_dict()["state_code"]
+    state_df = gmpr.get_crosswalk("state_code", "pop")
+    state_df.columns = ['geo', 'pop']
+    fips_df = gmpr.get_crosswalk("fips", "pop")
+    fips_df.columns = ['geo', 'pop']
+    natl_df = gmpr.get_crosswalk("nation", "pop")
+    natl_df.columns = ['geo', 'pop']
+    fips_pop_table = pd.concat([state_df, fips_df, natl_df])
+    fips_pop_table = fips_pop_table.set_index('geo')
+
+
     return STATE_to_fips, fips_pop_table
 
 
@@ -273,7 +275,7 @@ def generate_files(params, lag, signal, local=False, s3=None):
         last_7 = pd.read_csv(s3.Object(params['flash']["aws_bucket"],
                         f'flags-dev/flash_params/{signal}/last_7_{lag}.csv').get()['Body'],
                              index_col=0)
-        STATE_to_fips, fips_pop_table = setup_fips('flash_ref')
+        STATE_to_fips, fips_pop_table = setup_fips()
     else:
         wk_mean = pd.read_csv((f'flash_ref/{signal}/weekday_mean_df_{lag}.csv'), index_col=0)
         wk_var = pd.read_csv((f'flash_ref/{signal}/weekday_var_df_{lag}.csv'), index_col=0)
@@ -286,7 +288,7 @@ def generate_files(params, lag, signal, local=False, s3=None):
         EVD_max = pd.read_csv((f'flash_ref/{signal}/max.csv'), index_col=0)
         EVD_min = pd.read_csv((f'flash_ref/{signal}/min.csv'), index_col=0)
         last_7 = pd.read_csv((f'flash_ref/{signal}/last_7_{lag}.csv'), index_col=0)
-        STATE_to_fips, fips_pop_table = setup_fips(f'flash_ref/{signal}')
+        STATE_to_fips, fips_pop_table = setup_fips()
     return wk_mean, wk_var, weekday_params, summary_stats, stream, rep_sched, \
                 lin_coeff, EVD_max, EVD_min, last_7, STATE_to_fips, fips_pop_table
 

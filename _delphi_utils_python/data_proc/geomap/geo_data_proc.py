@@ -484,8 +484,14 @@ def derive_fips_chngfips_crosswalk():
         derive_fips_state_crosswalk()
 
     assign_county_groups()
-    county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False
-        ).drop(columns = "fips_list")
+    county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+    # Split list of county FIPS codes into separate columns.
+    county_groups = pd.concat(
+            [county_groups, county_groups.fips_list.str.split("|", expand=True)],
+            axis=1
+        ).drop(
+            columns = "fips_list"
+        )
 
     # Change to long format.
     county_groups = pd.melt(

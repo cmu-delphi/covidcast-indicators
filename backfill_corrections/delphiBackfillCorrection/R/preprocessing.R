@@ -25,8 +25,9 @@
 fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # Full list of lags
   # +30 to have values for calculating 7-day averages
-  lags <- min(df[[lag_col]]): (ref_lag + 30) 
-  refds <- seq(min_refd, max_refd, by="day") # Full list reference date
+  lags <- min(df[[lag_col]]): (ref_lag + 30)
+  # Full list reference dates
+  refds <- as.character(seq(as.Date(min_refd), as.Date(max_refd), by="day"))
   row_inds_df <- setNames(
     as.data.frame(crossing(refds, lags)),
     c(refd_col, lag_col)
@@ -64,7 +65,6 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   backfill_df <- pivot_longer(pivot_df,
     -lag_col, values_to="value_raw", names_to=refd_col
   )
-  backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
   
   return (as.data.frame(backfill_df))
 }
@@ -86,7 +86,6 @@ get_7dav <- function(pivot_df, refd_col) {
   backfill_df <- pivot_longer(pivot_df,
     -refd_col, values_to="value_raw", names_to="issue_date"
   )
-  backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
   backfill_df[["issue_date"]] = as.Date(backfill_df[["issue_date"]])
   return (as.data.frame(backfill_df))
 }
@@ -99,7 +98,7 @@ get_7dav <- function(pivot_df, refd_col) {
 #' 
 #' @export
 add_shift <- function(df, n_day, refd_col) {
-  df[, refd_col] <- as.Date(df[, refd_col]) + n_day
+  df[, refd_col] <- as.character(as.Date(df[[refd_col]]) + n_day)
   return (df)
 }
 
@@ -113,7 +112,7 @@ add_shift <- function(df, n_day, refd_col) {
 #' 
 #' @export
 add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
-  dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
+  dayofweek <- as.numeric(format(as.Date(df[[time_col]]), format="%u"))
   for (i in seq_along(wd)) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
@@ -159,7 +158,7 @@ get_weekofmonth <- function(date) {
 #' 
 #' @export
 add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
-  weekofmonth <- get_weekofmonth(df[[time_col]])
+  weekofmonth <- get_weekofmonth(as.Date(df[[time_col]]))
   for (i in seq_along(wm)) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
@@ -179,7 +178,7 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
-  df$issue_date <- df[[refd_col]] + df[[lag_col]]
+  df$issue_date <- as.Date(df[[refd_col]]) + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
                 values_from=value_col)

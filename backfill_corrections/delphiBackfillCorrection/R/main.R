@@ -331,7 +331,6 @@ main <- function(params,
       refd_col = refd_col, lag_col = lag_col, issued_col = issued_col
     )
 
-    input_data[[refd_col]] <- as.Date(input_data[[refd_col]], "%Y-%m-%d")
     input_data[[issued_col]] <- as.Date(input_data[[issued_col]], "%Y-%m-%d")
     
     # Check available training days

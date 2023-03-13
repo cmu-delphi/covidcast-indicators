@@ -599,6 +599,16 @@ def assign_county_groups():
         # If grouping file has no new rows, no need to process again.
         if county_groups.empty:
             return
+        # Grouping spreadsheet contains rows not seen in old, on-disk county
+        # groupings file. Combining the two is delicate. While the code below
+        # appears to work, it has not been formally tested and could be
+        # invalid for even small changes to the format of the input county
+        # groupings file.
+        else:
+            raise NotImplementedError(
+                "Can't combine old and new county groupings automatically, "
+                "code is not tested or robust to changes in input format"
+            )
 
         # Assign an incrementing integer to be the group id of each remaining
         # county grouping within a state using the given sort order.

@@ -607,7 +607,9 @@ def assign_county_groups():
         else:
             raise NotImplementedError(
                 "Can't combine old and new county groupings automatically, "
-                "code is not tested or robust to changes in input format"
+                "code below is not tested or robust to changes in input format."
+                "We recommend manually working with the code below and the new"
+                "data in a REPL."
             )
 
         # Assign an incrementing integer to be the group id of each remaining

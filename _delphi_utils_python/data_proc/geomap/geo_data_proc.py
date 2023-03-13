@@ -33,7 +33,7 @@ FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
 ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
-LOWPOP_COUNTY_GROUPS_FILE = "lowpop_county_groups.csv"
+CHNG_COUNTY_GROUPS_FILE = "chng_county_groups.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -484,7 +484,7 @@ def derive_fips_chngfips_crosswalk():
         derive_fips_state_crosswalk()
 
     assign_county_groups()
-    county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+    county_groups = pd.read_csv(CHNG_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
     # Split list of county FIPS codes into separate columns.
     county_groups = pd.concat(
             [county_groups, county_groups.fips_list.str.split("|", expand=True)],
@@ -503,8 +503,8 @@ def derive_fips_chngfips_crosswalk():
             columns="county_num"
         ).dropna()
 
-    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2).astype("string")
-    county_groups["group"] = county_groups["group"].str.zfill(2).astype("string")
+    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2)
+    county_groups["group"] = county_groups["group"].str.zfill(2)
     county_groups["fips"] = county_groups["fips"].str.zfill(5).astype("string")
     # Combine state codes and group ids into a single FIPS code.
     county_groups["chng-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]
@@ -512,12 +512,12 @@ def derive_fips_chngfips_crosswalk():
     county_groups = county_groups[["fips", "chng-fips"]]
     fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
 
-    # Get all the fips that aren't included in the low-population groupings.
+    # Get all the fips that aren't included in the chng groupings.
     extra_fips_list = list(set(fips_to_state.fips) - set(county_groups.fips))
-    # Normal fips codes and CHNG fips codes are the same for high-population counties.
+    # Normal fips codes and CHNG fips codes are the same for ungrouped counties.
     extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "chng-fips" : extra_fips_list}, dtype="string")
 
-    # Combine high-pop and low-pop counties.
+    # Combine grouped and ungrouped counties.
     pd.concat(
         [county_groups, extra_fips_df]
     ).sort_values(
@@ -581,12 +581,12 @@ def fetch_county_groups_spreadsheet():
 def assign_county_groups():
     county_groups = fetch_county_groups_spreadsheet()
 
-    # If a `lowpop_county_groups.csv` already exists in `data_proc/geomap`, we
+    # If a county groups mapping file already exists in `data_proc/geomap`, we
     # have to be careful to not reassign a group number to a different group.
     # Group numbers must remain fixed, even if a given county group is no longer
     # being used.
-    if isfile(LOWPOP_COUNTY_GROUPS_FILE):
-        old_county_groups = pd.read_csv(LOWPOP_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+    if isfile(CHNG_COUNTY_GROUPS_FILE):
+        old_county_groups = pd.read_csv(CHNG_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
         old_county_groups.group = old_county_groups.group.astype(int)
         old_county_groups.state_fips = old_county_groups.state_fips.astype(int)
 
@@ -636,12 +636,13 @@ def assign_county_groups():
         # Combine old_county_groups and county_groups
         county_groups = pd.concat([old_county_groups, county_groups])
     else:
+        # Group numbers are 1-indexed.
         county_groups["group"] = county_groups.groupby("state_fips").cumcount() + 1
 
     county_groups.sort_values(
             ["state_fips"], kind="stable"
         ).to_csv(
-            LOWPOP_COUNTY_GROUPS_FILE, index=False
+            CHNG_COUNTY_GROUPS_FILE, index=False
         )
 
 

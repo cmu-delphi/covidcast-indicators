@@ -6,7 +6,7 @@
 \usage{
 validity_checks(
   df,
-  value_type,
+  value_types,
   num_col,
   denom_col,
   signal_suffixes,
@@ -19,7 +19,8 @@ validity_checks(
 \item{df}{Data Frame of aggregated counts within a single location
 reported for each reference date and issue date.}
 
-\item{value_type}{string describing signal type. Either "count" or "fraction".}
+\item{value_types}{character vector of all signal types to process. Either
+or both of "count" and "fraction".}
 
 \item{num_col}{name of numerator column in the input dataframe}
 

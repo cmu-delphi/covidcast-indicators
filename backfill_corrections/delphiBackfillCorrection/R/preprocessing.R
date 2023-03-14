@@ -27,8 +27,10 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # +30 to have values for calculating 7-day averages
   lags <- min(df[[lag_col]]): (ref_lag + 30) 
   refds <- seq(min_refd, max_refd, by="day") # Full list reference date
-  row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
-    setNames(c(refd_col, lag_col))
+  row_inds_df <- setNames(
+    as.data.frame(crossing(refds, lags)),
+    c(refd_col, lag_col)
+  )
   df_new = merge(x=df, y=row_inds_df,
                  by=c(refd_col, lag_col),  all.y=TRUE)
   return (df_new)
@@ -54,13 +56,14 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   if (any(diff(pivot_df[[lag_col]]) != 1)) {
     stop("Risk exists in forward filling")
   }
-  pivot_df <- pivot_df %>% fill(everything(), .direction="down")
+  pivot_df <- fill(pivot_df, everything(), .direction="down")
   
   # Fill NAs with 0s
   pivot_df[is.na(pivot_df)] <- 0
   
-  backfill_df <- pivot_df %>%
-    pivot_longer(-lag_col, values_to="value_raw", names_to=refd_col)
+  backfill_df <- pivot_longer(pivot_df,
+    -lag_col, values_to="value_raw", names_to=refd_col
+  )
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
   
   return (as.data.frame(backfill_df))
@@ -80,8 +83,9 @@ get_7dav <- function(pivot_df, refd_col) {
     if (col == refd_col) next
     pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
   }
-  backfill_df <- pivot_df %>%
-    pivot_longer(-refd_col, values_to="value_raw", names_to="issue_date")
+  backfill_df <- pivot_longer(pivot_df,
+    -refd_col, values_to="value_raw", names_to="issue_date"
+  )
   backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
   backfill_df[["issue_date"]] = as.Date(backfill_df[["issue_date"]])
   return (as.data.frame(backfill_df))
@@ -205,7 +209,7 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   backfill_df$log_7dav_slope = backfill_df$log_value_7dav - backfill_df$log_value_prev_7dav
   
   # Remove invalid rows
-  backfill_df <- backfill_df %>% drop_na(c(lag_col))
+  backfill_df <- drop_na(backfill_df, c(lag_col))
   
   return (as.data.frame(backfill_df))
 }

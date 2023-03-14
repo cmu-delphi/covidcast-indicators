@@ -4,10 +4,11 @@
 \alias{msg_ts}
 \title{Write a message to the console with the current time}
 \usage{
-msg_ts(text)
+msg_ts(...)
 }
 \arguments{
-\item{text}{the body of the message to display}
+\item{...}{the body of the message to display. Objects should be strings or
+coercible to strings and are pasted together with no separator.}
 }
 \description{
 Write a message to the console with the current time

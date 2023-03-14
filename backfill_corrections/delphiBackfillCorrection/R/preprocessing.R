@@ -47,16 +47,20 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
 #' @template lag_col-template
 #' 
 #' @importFrom tidyr fill pivot_wider pivot_longer
-#' @importFrom dplyr %>% everything select
+#' @importFrom dplyr everything
 #' 
 #' @export
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
-  pivot_df <- df[order(df[[lag_col]], decreasing=FALSE), ] %>%
-    pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
+  pivot_df <- pivot_wider(
+    df[order(df[[lag_col]], decreasing=FALSE), ],
+    id_cols=lag_col, names_from=refd_col, values_from=value_col
+  )
   
   if (any(diff(pivot_df[[lag_col]]) != 1)) {
     stop("Risk exists in forward filling")
   }
+  ## TODO: Calls rlang:::quos_auto_name with lots of quos. Call
+  #  `vec_fill_missing` directly?
   pivot_df <- fill(pivot_df, everything(), .direction="down")
   
   # Fill NAs with 0s
@@ -172,15 +176,15 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' @template lag_col-template
 #' @template ref_lag-template
 #' 
-#' @importFrom dplyr %>%
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   df$issue_date <- as.character(as.Date(df[[refd_col]]) + df[[lag_col]])
-  pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
-    pivot_wider(id_cols=refd_col, names_from="issue_date", 
-                values_from=value_col)
+  pivot_df <- pivot_wider(
+    df[order(df$issue_date, decreasing=FALSE), ],
+    id_cols=refd_col, names_from="issue_date", values_from=value_col
+  )
   
   # Add 7dav avg
   avg_df <- get_7dav(pivot_df, refd_col)

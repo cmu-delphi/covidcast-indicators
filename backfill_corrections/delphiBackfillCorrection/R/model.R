@@ -183,11 +183,8 @@ evaluate <- function(test_data, taus) {
 exponentiate_preds <- function(test_data, taus) {
   pred_cols = paste0("predicted_tau", taus)
 
-  # Drop original predictions and join on exponentiated versions
-  test_data = bind_cols(
-    select(test_data, -starts_with("predicted")),
-    exp(test_data[, pred_cols])
-  )
+  # Replace original predictions with exponentiated versions
+  test_data[, pred_cols] <- exp(test_data[, pred_cols])
 
   return(test_data)
 }

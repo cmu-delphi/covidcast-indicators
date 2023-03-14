@@ -87,6 +87,8 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 get_7dav <- function(pivot_df, refd_col) {
   for (col in colnames(pivot_df)) {
     if (col == refd_col) next
+    ## TODO: Faster and less restrictive-license version of zoo::rollmeanr?
+    # https://stackoverflow.com/questions/16193333/moving-average-of-previous-three-values-in-r ?
     pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
   }
   backfill_df <- pivot_longer(pivot_df,

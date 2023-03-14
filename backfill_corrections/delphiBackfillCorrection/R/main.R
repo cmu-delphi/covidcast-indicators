@@ -300,7 +300,7 @@ main <- function(params,
       input_group$indicator, input_group$signal, params, input_group$sub_dir
     )
     if (length(files_list) == 0) {
-      warning("No files found for indicator indicator ", input_group$indicator,
+      warning("No files found for indicator ", input_group$indicator,
               " signal ", input_group$signal, ", skipping")
       next
     }

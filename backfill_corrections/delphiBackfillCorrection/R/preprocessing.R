@@ -89,13 +89,15 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
 #'
 #' @export
 get_7dav <- function(pivot_df, refd_col) {
-  pivot_df <- map_dfc(pivot_df, function(col) {
-    # If a column contains char or date elements, it is the reference date field;
-    # skip it. Checking the type here is slightly (10%) faster than passing only
-    # non-`refd_col` columns into `map_dfc`.
-    if (inherits(col[1L], "character") || inherits(col[1L], "Date")) {return(col)}
-    roll_mean(col, 7L, align = "right", fill = NA)
-  })
+  pivot_df <- cbind(
+    # Keep time values at the front
+    pivot_df[, refd_col],
+    # Compute moving average of all non-refd columns
+    RcppRoll::roll_mean(
+      as.matrix(pivot_df[, names(pivot_df)[names(pivot_df) != refd_col]]),
+      7L, align = "right", fill = NA
+    )
+  )
   backfill_df <- pivot_longer(pivot_df,
     -refd_col, values_to="value_raw", names_to="issue_date"
   )

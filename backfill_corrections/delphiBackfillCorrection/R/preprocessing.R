@@ -77,21 +77,6 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   return (as.data.frame(backfill_df))
 }
 
-#' Right-aligned moving average to replace `zoo::rollmeanr`
-#'
-#' @param x numeric vector
-#' @param n integer indicating how many total points (current included) to use
-#'   in mean
-moving_average <- function(x,n) {
-  # `stats::filter` returns time series objects; keep only transforme data and
-  # drop nonessential attributes
-  as.numeric(
-    # Be specific about which package this is coming from to avoid conflicts
-    # with `dplyr::filter`
-    stats::filter(x, rep(1/n, n), sides=1)
-  )
-}
-
 #' Calculate 7 day moving average for each issue date
 #'
 #' The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
@@ -100,6 +85,8 @@ moving_average <- function(x,n) {
 #'    reference dates
 #' @template refd_col-template
 #' 
+#' @importFrom RcppRoll roll_mean
+#'
 #' @export
 get_7dav <- function(pivot_df, refd_col) {
   pivot_df <- map_dfc(pivot_df, function(col) {
@@ -107,7 +94,7 @@ get_7dav <- function(pivot_df, refd_col) {
     # skip it. Checking the type here is slightly (10%) faster than passing only
     # non-`refd_col` columns into `map_dfc`.
     if (inherits(col[1L], "character") || inherits(col[1L], "Date")) {return(col)}
-    moving_average(col, 7L)
+    roll_mean(col, 7L, align = "right", fill = NA)
   })
   backfill_df <- pivot_longer(pivot_df,
     -refd_col, values_to="value_raw", names_to="issue_date"

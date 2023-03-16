@@ -27,7 +27,7 @@ Imports:
     parallel,
     purrr,
     vctrs,
-    stats
+    RcppRoll
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

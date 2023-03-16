@@ -48,8 +48,9 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
 #' @template refd_col-template
 #' @template lag_col-template
 #' 
-#' @importFrom tidyr fill pivot_wider pivot_longer
-#' @importFrom dplyr everything
+#' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom purrr map_dfc
+#' @importFrom vctrs vec_fill_missing
 #' 
 #' @export
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
@@ -61,9 +62,10 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   if (any(diff(pivot_df[[lag_col]]) != 1)) {
     stop("Risk exists in forward filling")
   }
-  ## TODO: Calls rlang:::quos_auto_name with lots of quos. Call
-  #  `vec_fill_missing` directly?
-  pivot_df <- fill(pivot_df, everything(), .direction="down")
+
+  pivot_df <- map_dfc(pivot_df,function(col) {
+    vec_fill_missing(col, direction="down")
+  })
   
   # Fill NAs with 0s
   pivot_df[is.na(pivot_df)] <- 0

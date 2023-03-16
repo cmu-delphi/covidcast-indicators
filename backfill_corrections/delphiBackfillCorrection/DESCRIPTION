@@ -25,7 +25,9 @@ Imports:
     tidyr,
     zoo,
     utils,
-    parallel
+    parallel,
+    purrr,
+    vctrs
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

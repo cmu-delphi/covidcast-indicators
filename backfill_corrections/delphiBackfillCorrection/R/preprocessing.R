@@ -63,7 +63,7 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
     stop("Risk exists in forward filling")
   }
 
-  pivot_df <- map_dfc(pivot_df,function(col) {
+  pivot_df <- map_dfc(pivot_df, function(col) {
     vec_fill_missing(col, direction="down")
   })
   
@@ -77,22 +77,38 @@ fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
   return (as.data.frame(backfill_df))
 }
 
+#' Right-aligned moving average to replace `zoo::rollmeanr`
+#'
+#' @param x numeric vector
+#' @param n integer indicating how many total points (current included) to use
+#'   in mean
+moving_average <- function(x,n) {
+  # `stats::filter` returns time series objects; keep only transforme data and
+  # drop nonessential attributes
+  as.numeric(
+    # Be specific about which package this is coming from to avoid conflicts
+    # with `dplyr::filter`
+    stats::filter(x, rep(1/n, n), sides=1)
+  )
+}
+
 #' Calculate 7 day moving average for each issue date
+#'
 #' The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
+#'
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
 #' @template refd_col-template
 #' 
-#' @importFrom zoo rollmeanr
-#' 
 #' @export
 get_7dav <- function(pivot_df, refd_col) {
-  for (col in colnames(pivot_df)) {
-    if (col == refd_col) next
-    ## TODO: Faster and less restrictive-license version of zoo::rollmeanr?
-    # https://stackoverflow.com/questions/16193333/moving-average-of-previous-three-values-in-r ?
-    pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
-  }
+  pivot_df <- map_dfc(pivot_df, function(col) {
+    # If a column contains char or date elements, it is the reference date field;
+    # skip it. Checking the type here is slightly (10%) faster than passing only
+    # non-`refd_col` columns into `map_dfc`.
+    if (inherits(col[1L], "character") || inherits(col[1L], "Date")) {return(col)}
+    moving_average(col, 7L)
+  })
   backfill_df <- pivot_longer(pivot_df,
     -refd_col, values_to="value_raw", names_to="issue_date"
   )

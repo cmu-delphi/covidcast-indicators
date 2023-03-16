@@ -2,8 +2,7 @@
 % Please edit documentation in R/preprocessing.R
 \name{get_7dav}
 \alias{get_7dav}
-\title{Calculate 7 day moving average for each issue date
-The 7dav for date D reported on issue date D_i is the average from D-7 to D-1}
+\title{Calculate 7 day moving average for each issue date}
 \usage{
 get_7dav(pivot_df, refd_col)
 }
@@ -15,6 +14,5 @@ reference dates}
 the input dataframe.}
 }
 \description{
-Calculate 7 day moving average for each issue date
 The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
 }

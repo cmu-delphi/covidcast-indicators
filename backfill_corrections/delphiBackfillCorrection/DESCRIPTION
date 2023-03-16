@@ -23,11 +23,11 @@ Imports:
     jsonlite,
     lubridate,
     tidyr,
-    zoo,
     utils,
     parallel,
     purrr,
-    vctrs
+    vctrs,
+    stats
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

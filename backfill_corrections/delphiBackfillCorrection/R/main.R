@@ -121,7 +121,7 @@ run_backfill <- function(df, params,
             ) %>%
             drop_na()
           geo_test_data <- filter(combined_df,
-              issue_date %in% params$test_dates
+              issue_date %in% as.character(params$test_dates)
             ) %>%
             drop_na()
 
@@ -300,7 +300,7 @@ main <- function(params,
       input_group$indicator, input_group$signal, params, input_group$sub_dir
     )
     if (length(files_list) == 0) {
-      warning("No files found for indicator indicator ", input_group$indicator,
+      warning("No files found for indicator ", input_group$indicator,
               " signal ", input_group$signal, ", skipping")
       next
     }
@@ -331,9 +331,6 @@ main <- function(params,
       refd_col = refd_col, lag_col = lag_col, issued_col = issued_col
     )
 
-    input_data[[refd_col]] <- as.Date(input_data[[refd_col]], "%Y-%m-%d")
-    input_data[[issued_col]] <- as.Date(input_data[[issued_col]], "%Y-%m-%d")
-    
     # Check available training days
     training_days_check(input_data[[issued_col]], params$training_days)
     

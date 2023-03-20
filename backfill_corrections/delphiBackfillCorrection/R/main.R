@@ -12,7 +12,7 @@
 #' @importFrom dplyr %>% filter group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
 #' @importFrom purrr map map_dfr
-#' @importFrom parallel mclapply
+#' @importFrom bettermc mclapply
 #' 
 #' @export
 run_backfill <- function(df, params,

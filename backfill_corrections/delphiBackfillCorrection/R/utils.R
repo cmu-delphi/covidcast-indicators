@@ -205,7 +205,7 @@ training_days_check <- function(issue_date, training_days) {
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      dplyr::select(pop = POPESTIMATE2019, fips = FIPS) %>%
+      select(pop = POPESTIMATE2019, fips = FIPS) %>%
       # Drop megacounties (states)
       filter(!endsWith(fips, "000")) %>%
       arrange(desc(pop)) %>%

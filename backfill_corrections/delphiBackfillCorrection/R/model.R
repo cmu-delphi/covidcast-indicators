@@ -208,22 +208,17 @@ get_model <- function(model_path, train_data, covariates, tau,
         " does not exist; training new model")
     }
     # Quantile regression
-    ## TODO: how does the speed compare using GLPK? Apparently it's faster on smaller
-    # models.
     obj <- quantile_lasso(as.matrix(train_data[covariates]),
                          train_data$log_value_target, tau = tau,
                          lambda = lambda, standardize = FALSE, lp_solver = lp_solver)
 
     # Save model to cache.
     create_dir_not_exist(dirname(model_path))
-    ## TODO: save() is fairly slow. Since we're not sharing the model files, can we
-    # use saveRDS() instead?
     save(obj, file=model_path)
   } else {
     # Load model from cache invisibly. Object has the same name as the original
     # model object, `obj`.
     msg_ts("Loading from ", model_path)
-    ## TODO: readRDS()
     load(model_path)
   }
 

@@ -50,7 +50,7 @@ test_that("testing NA filling for missing udpates", {
 test_that("testing the calculation of 7-day moving average", {
   df_new <- fill_rows(fake_df, refd_col, lag_col, min_refd, max_refd, ref_lag)
   df <- fill_missing_updates(df_new, value_col, refd_col, lag_col)
-  df$issue_date <- df[[refd_col]] + df[[lag_col]]
+  df$issue_date <- as.Date(df[[refd_col]]) + df[[lag_col]]
   pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
     pivot_wider(id_cols=refd_col, names_from="issue_date", 
                 values_from="value_raw")
@@ -58,7 +58,7 @@ test_that("testing the calculation of 7-day moving average", {
   backfill_df <- get_7dav(pivot_df, refd_col)
   
   
-  output <- backfill_df[backfill_df[[refd_col]] == as.Date("2022-01-07"), "value_raw"]
+  output <- backfill_df[backfill_df[[refd_col]] == "2022-01-07", "value_raw"]
   expected <- colSums(pivot_df[, -1]) / 7
   expect_true(all(output == expected))
 })

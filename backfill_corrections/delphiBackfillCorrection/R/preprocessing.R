@@ -93,7 +93,7 @@ get_7dav <- function(pivot_df, refd_col) {
     # Keep time values at the front
     pivot_df[, refd_col],
     # Compute moving average of all non-refd columns
-    RcppRoll::roll_mean(
+    roll_mean(
       as.matrix(pivot_df[, names(pivot_df)[names(pivot_df) != refd_col]]),
       7L, align = "right", fill = NA
     )
@@ -158,7 +158,7 @@ get_weekofmonth <- function(date) {
   month <- month(date)
   day <- day(date)
   firstdayofmonth <- as.numeric(format(make_date(year, month, 1), format="%u"))
-  n_days <- lubridate::days_in_month(date)
+  n_days <- days_in_month(date)
   n_weeks <- (n_days + firstdayofmonth - 1) %/% 7 + 1
   extra_check <- as.integer(n_weeks > 5)
   return (max((day + firstdayofmonth - 1) %/% 7 - extra_check, 0) %% 4 + 1)

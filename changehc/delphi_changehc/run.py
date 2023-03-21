@@ -143,14 +143,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
 
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
-    enddate = str(enddate_dt.date())
-    startdate = str(startdate_dt.date())
-
     # now allow manual overrides
-    if params["indicator"]["end_date"] is not None:
-        enddate = params["indicator"]["end_date"]
-    if params["indicator"]["start_date"] is not None:
-        startdate = params["indicator"]["start_date"]
+    enddate = enddate = params["indicator"].get("end_date",str(enddate_dt.date()))
+    startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
 
     logger.info("generating signal and exporting to CSV",
         first_sensor_date = startdate,

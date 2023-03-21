@@ -35,7 +35,7 @@ backfill_merge_day = 0
 
 combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, 
                                        "fips", backfill_dir, geo, weekday, "covid",
-                                       backfill_merge_day)
+                                       True, backfill_merge_day)
 
 class TestBackfill:
     

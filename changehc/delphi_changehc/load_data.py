@@ -78,7 +78,8 @@ def load_chng_data(filepath, dropdate, base_geo,
 
 
 def load_combined_data(denom_filepath, covid_filepath, base_geo,
-                       backfill_dir, geo, weekday, numtype, backfill_merge_day):
+                       backfill_dir, geo, weekday, numtype,
+                       generate_backfill_files, backfill_merge_day):
     """Load in denominator and covid data, and combine them.
 
     Args:
@@ -114,15 +115,17 @@ def load_combined_data(denom_filepath, covid_filepath, base_geo,
     data = data[["num", "den"]]
 
     # Store for backfill
-    merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
-                        issue_date, test_mode=False, check_nd=25)
-    store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
+    if generate_backfill_files:
+        merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
+                            issue_date, test_mode=False, check_nd=25)
+        store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
     return data
 
 
 def load_cli_data(denom_filepath, flu_filepath, mixed_filepath, flu_like_filepath,
                   covid_like_filepath, base_geo,
-                  backfill_dir, geo, weekday, numtype, backfill_merge_day):
+                  backfill_dir, geo, weekday, numtype,
+                  generate_backfill_files, backfill_merge_day):
     """Load in denominator and covid-like data, and combine them.
 
     Args:
@@ -172,14 +175,16 @@ def load_cli_data(denom_filepath, flu_filepath, mixed_filepath, flu_like_filepat
     data = data[["num", "den"]]
 
     # Store for backfill
-    merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
-                        issue_date, test_mode=False, check_nd=25)
-    store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
+    if generate_backfill_files:
+        merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
+                            issue_date, test_mode=False, check_nd=25)
+        store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
     return data
 
 
 def load_flu_data(denom_filepath, flu_filepath, base_geo,
-                  backfill_dir, geo, weekday, numtype, backfill_merge_day):
+                  backfill_dir, geo, weekday, numtype,
+                  generate_backfill_files, backfill_merge_day):
     """Load in denominator and flu data, and combine them.
 
     Args:
@@ -215,7 +220,8 @@ def load_flu_data(denom_filepath, flu_filepath, base_geo,
     data = data[["num", "den"]]
 
     # Store for backfill
-    merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
-                        issue_date, test_mode=False, check_nd=25)
-    store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
+    if generate_backfill_files:
+        merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
+                            issue_date, test_mode=False, check_nd=25)
+        store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
     return data

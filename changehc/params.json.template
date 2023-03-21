@@ -17,6 +17,7 @@
     "start_date": null,
     "end_date": null,
     "drop_date": null,
+    "generate_backfill_files": false,
     "backfill_dir": "./backfill",
     "backfill_merge_day": 0,
     "n_backfill_days": 60,

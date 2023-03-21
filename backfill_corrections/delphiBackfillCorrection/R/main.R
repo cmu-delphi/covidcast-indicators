@@ -170,7 +170,7 @@ run_backfill <- function(df, params,
             test_data <- filtered_data[[2]]
 
             if (nrow(train_data) == 0 || nrow(test_data) == 0) {
-              msg_ts("Not enough data to either train or test for test_lag ",
+              msg_ts("Not enough data to either train or test for test lag ",
                 test_lag, ", skipping")
               next
             }
@@ -187,7 +187,6 @@ run_backfill <- function(df, params,
             params_list <- c(YITL, as.vector(unlist(covariates)))
 
             # Model training and testing
-            msg_ts("Training or loading models")
             prediction_results <- model_training_and_testing(
               train_data, test_data, taus = params$taus, covariates = params_list,
               lp_solver = params$lp_solver,
@@ -204,7 +203,6 @@ run_backfill <- function(df, params,
             # Model objects are saved during training, so only need to export
             # output if making predictions/corrections
             if (params$make_predictions) {
-              msg_ts("Generating predictions")
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus) %>%

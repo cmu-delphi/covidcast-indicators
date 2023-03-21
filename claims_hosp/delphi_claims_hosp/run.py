@@ -91,10 +91,11 @@ def run_module(params):
         startdate = params["indicator"]['start_date']
 
     # Store backfill data
-    backfill_dir = params["indicator"]["backfill_dir"]
-    backfill_merge_day = params["indicator"]["backfill_merge_day"]
-    merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
-    store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+    if params["indicator"].get("generate_backfill_files", True):
+        backfill_dir = params["indicator"]["backfill_dir"]
+        backfill_merge_day = params["indicator"]["backfill_merge_day"]
+        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+        store_backfill_file(claims_file, dropdate_dt, backfill_dir)
 
     # print out information
     logger.info("Loaded params",

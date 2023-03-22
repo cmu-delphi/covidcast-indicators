@@ -131,7 +131,14 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {msg_ts("Training failed for ", model_path)}
+      error=function(e) {
+        if (e$message == "Error 10032: License has expired\n") {
+          stop("The gurobi license has expired. Please renew or switch to ",
+            "using glpk. lp_solver can be specified in params.json.")
+        }
+        msg_ts("Training failed for ", model_path, ". Check that your gurobi ",
+          "license is valid and being passed properly to the program.")
+      }
     )
   }
   if (success < length(taus)) {return (NULL)}

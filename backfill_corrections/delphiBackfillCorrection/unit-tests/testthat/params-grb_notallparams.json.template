@@ -1,0 +1,5 @@
+{
+  "input_dir": "./test.temp",
+  "lp_solver": "gurobi",
+  "gurobi": {"GRB_WLSACCESSID": ""}
+}

@@ -81,9 +81,11 @@ test_that("testing read parameters", {
   # Create input file
   path = "test.temp"
   create_dir_not_exist(path)
-  expect_silent(params <- read_params(path = "params-test.json",
+  expect_warning(params <- read_params(path = "params-test.json",
                                       template_path = "params-test.json.template",
-                                      train_models = TRUE, make_predictions = TRUE))
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
   unlink(path, recursive = TRUE)
   
   
@@ -125,7 +127,7 @@ test_that("testing read parameters", {
   
   expect_true(all(params$taus == TAUS))
   expect_true(params$lambda == LAMBDA)
-  expect_true(params$lp_solver == LP_SOLVER)
+  expect_true(params$lp_solver == "glpk")
   expect_true(params$lag_pad == LAG_PAD)
   
   expect_true(params$num_col == "num")
@@ -146,6 +148,44 @@ test_that("testing read parameters", {
   expect_equal(params$indicators, "all")
   
   expect_silent(file.remove("params-test.json"))
+})
+
+test_that("lp_solver selection works", {
+  # GLPK selected explicitly.
+  path = "test.temp"
+  create_dir_not_exist(path)
+  expect_silent(params <- read_params(path = "params-glpk_direct.json",
+                                      template_path = "params-glpk_direct.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-glpk_direct.json"))
+
+  # gurobi selected explicitly, but without gurobi params subsection
+  expect_warning(params <- read_params(path = "params-grb_noparams.json",
+                                      template_path = "params-grb_noparams.json.template",
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-grb_noparams.json"))
+
+  # gurobi selected explicitly, with gurobi params subsection, but without license information
+  expect_warning(params <- read_params(path = "params-grb_notallparams.json",
+                                      template_path = "params-grb_notallparams.json.template",
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-grb_notallparams.json"))
+
+  # gurobi selected explicitly
+  expect_silent(params <- read_params(path = "params-grb.json",
+                                      template_path = "params-grb.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "gurobi")
+  expect_silent(file.remove("params-grb.json"))
+
+  unlink(path, recursive = TRUE)
 })
 
 test_that("validity_checks alerts appropriately", {

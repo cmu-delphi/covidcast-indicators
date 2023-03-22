@@ -1,0 +1,9 @@
+{
+  "input_dir": "./test.temp",
+  "lp_solver": "gurobi",
+  "gurobi": {
+    "GRB_LICENSEID": "1",
+    "GRB_WLSACCESSID": "2",
+    "GRB_WLSSECRET": "3"
+  }
+}

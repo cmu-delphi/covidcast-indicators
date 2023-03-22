@@ -67,8 +67,23 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Model parameters
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
-  if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
   if (!("lag_pad" %in% names(params))) {params$lag_pad <- LAG_PAD}
+
+  if ("lp_solver" %in% names(params)) {
+    params$lp_solver <- match.arg(params$lp_solver, c("gurobi", "glpk"))
+  } else {
+    params$lp_solver <- LP_SOLVER
+  }
+  if (params$lp_solver == "gurobi" && (
+      !("gurobi" %in% names(params)) ||
+      !params_element_exists_and_valid(params$gurobi, "GRB_LICENSEID") ||
+      !params_element_exists_and_valid(params$gurobi, "GRB_WLSACCESSID") ||
+      !params_element_exists_and_valid(params$gurobi, "GRB_WLSSECRET")
+    )) {
+    warning("gurobi solver was requested but license information was ",
+      "not available; using glpk instead")
+    params$lp_solver <- "glpk"
+  }
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}

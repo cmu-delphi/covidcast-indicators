@@ -74,25 +74,28 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   } else {
     params$lp_solver <- LP_SOLVER
   }
-  # Make call to gurobi CLI to check license. Returns a status of `0` if
-  # license can be found and is valid.
-  tryCatch(
-    expr = {
-      license_status <- run_cli("gurobi_cl")
-    },
-    error=function(e) {
-      if (grepl("Error 10032: License has expired", e$message, fixed=TRUE)) {
-        stop("The gurobi license has expired. Please renew or switch to ",
-          "using glpk. lp_solver can be specified in params.json.")
+  if (params$lp_solver == "gurobi") {
+    # Make call to gurobi CLI to check license. Returns a status of `0` if
+    # license can be found and is valid.
+    tryCatch(
+      expr = {
+        license_status <- run_cli("gurobi_cl")
+      },
+      error=function(e) {
+        if (grepl("Error 10032: License has expired", e$message, fixed=TRUE)) {
+          stop("The gurobi license has expired. Please renew or switch to ",
+            "using glpk. lp_solver can be specified in params.json.")
+        }
+        msg_ts(e$message)
+        license_status <- 1
       }
-      msg_ts(e$message)
-      license_status <- 1
+    )
+
+    if (license_status != 0) {
+      warning("gurobi solver was requested but license information was ",
+        "not available or not valid; using glpk instead")
+      params$lp_solver <- "glpk"
     }
-  )
-  if (params$lp_solver == "gurobi" && license_status != 0) {
-    warning("gurobi solver was requested but license information was ",
-      "not available or not valid; using glpk instead")
-    params$lp_solver <- "glpk"
   }
 
   # Data parameters

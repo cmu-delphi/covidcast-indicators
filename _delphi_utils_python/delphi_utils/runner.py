@@ -74,7 +74,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
         if not t1.is_alive():
             break
         time.sleep(10)
-    if t1.is_alive():
+    else:
         t1.terminate()
         t1.join()
     if validator:

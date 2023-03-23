@@ -20,8 +20,7 @@ def split_reporting_schedule_dfs(input_df, rep_sched):
     Parameters
     ----------
     input_df: the df to split up
-    flash_dir: the string reference directory to find all files
-    lag: difference between reporting and reference date.
+    rep_sched: a series of regions and their reporting schedules
 
     Returns
     -------
@@ -122,8 +121,9 @@ def apply_ar(last_7, lin_coeff, weekday_correction, non_daily_df, fips_pop_table
     y.index = ['y']
     y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns], name='yhat')
     y_hat.index = y.columns
-    df_for_ts = y.T.merge(y_hat, left_index=True, right_index=True).merge(fips_pop_table
-                              , left_index=True, right_index=True)
+    df_for_ts = y.T.merge(y_hat, left_index=True,
+                          right_index=True).merge(fips_pop_table,
+                          left_index=True, right_index=True)
     df_for_ts.columns = ['y', 'yhat', 'pop']
     ts_streams = bin_approach(df_for_ts, log=True)
     ts_streams.columns = ['test-statistic']
@@ -209,8 +209,6 @@ def streams_groups_fn(stream, ts_streams):
 
 def setup_fips():
     """Set up fips related dictionaries and population table.
-
-    Input: The directory location for files
     Output: conversion dictionary state to fips & population per fips df
     """
     gmpr = GeoMapper()
@@ -302,7 +300,8 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
     signal: the signal to search for.
     params: additional params needed.
     Ouput:
-    None
+    last_7: A dataframe with the final 7 days
+    type_of_outlier:  dataframe with many types of outliers
     """
     s3=None
     if not local:
@@ -374,7 +373,6 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
                         how='outer').fillna(0)
     glob = pd.concat(global_outlier_list)
     glob.name = 'global'
-    print(glob)
     type_of_outlier = type_of_outlier.merge(glob,
                         left_index=True, right_index=True, how='outer').fillna(0)
 
@@ -424,10 +422,10 @@ def flash_eval(lag, day, input_df, signal, params, logger=None, local=False):
     lag: the difference between the reporting and reference date
     day: the day of the reference date (today is the reporting date)
     input_df: a df from the day for a particular signal that includes natl. state, and county data
+    signal: the name of the signal
     params: additional params needed.
     Ouput:
-    None if remote
-    Locally returns past 7 days and the all outliers dataframe
+    Returns past 7 days and the all outliers dataframe
     """
     if not logger:
         logger = get_structured_logger(

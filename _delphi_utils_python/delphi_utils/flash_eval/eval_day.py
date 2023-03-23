@@ -119,8 +119,8 @@ def apply_ar(last_7, lin_coeff, weekday_correction, non_daily_df, fips_pop_table
     """
     y = pd.concat([weekday_correction, non_daily_df], axis=1)
     y.index = ['y']
-    y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in y.columns], name='yhat')
-    y_hat.index = y.columns
+    y_hat = pd.Series([np.dot(lin_coeff[x], last_7[x]) for x in last_7.columns], name='yhat')
+    y_hat.index = last_7.columns
     df_for_ts = y.T.merge(y_hat, left_index=True,
                           right_index=True).merge(fips_pop_table,
                           left_index=True, right_index=True)

@@ -70,7 +70,7 @@ test_that("testing the squared error objection function given the beta prior", {
 test_that("testing the prior estimation", {
   dw <- "Sat_ref"
   priors <- est_priors(train_data, prior_test_data, geo, value_type, dw, TAUS, 
-                       covariates, response, LP_SOLVER, lambda, 
+                       covariates, response, "glpk", lambda,
                        indicator, signal, geo_level, signal_suffix, 
                        training_end_date, training_start_date, model_save_dir)
   alpha <- priors[2]
@@ -110,7 +110,7 @@ test_that("testing the main beta prior adjustment function", {
                            indicator, signal, geo_level, signal_suffix,
                            lambda, value_type, geo, 
                            training_end_date, training_start_date, model_save_dir,
-                           taus = TAUS, lp_solver = LP_SOLVER)
+                           taus = TAUS, lp_solver = "glpk")
   updated_train_data <- updated_data[[1]]
   updated_test_data <- updated_data[[2]]
   

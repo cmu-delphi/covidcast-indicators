@@ -4,5 +4,6 @@
   "ref_lag": 3,
   "input_dir": "./input",
   "export_dir": "./output",
-  "cache_dir": "./cache"
+  "cache_dir": "./cache",
+  "lp_solver": "glpk"
 }

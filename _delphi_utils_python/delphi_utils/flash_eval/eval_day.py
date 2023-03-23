@@ -209,6 +209,7 @@ def streams_groups_fn(stream, ts_streams):
 
 def setup_fips():
     """Set up fips related dictionaries and population table.
+
     Output: conversion dictionary state to fips & population per fips df
     """
     gmpr = GeoMapper()

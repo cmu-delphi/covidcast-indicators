@@ -249,7 +249,7 @@ def generate_files(params, lag, signal, local=False, s3=None):
     Parameters
     ----------
     params: params from json file
-    lag, signal:to access appropriate files
+    lag, signal: as specified on filesystem for e.g. params.zip (signal) and inner weekday csv (lag)
     local, s3: determine if files are local or on AWS
 
     Returns: all files needed for evaluation

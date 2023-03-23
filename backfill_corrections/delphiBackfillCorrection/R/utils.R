@@ -81,7 +81,7 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
       license_status <- run_cli("gurobi_cl")
     },
     error=function(e) {
-      if (e$message == "Error 10032: License has expired\n") {
+      if (grepl("Error 10032: License has expired", e$message, fixed=TRUE)) {
         stop("The gurobi license has expired. Please renew or switch to ",
           "using glpk. lp_solver can be specified in params.json.")
       }

@@ -299,6 +299,9 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
     input_df: a df from the day for a particular signal that includes natl. state, and county data
     signal: the signal to search for.
     params: additional params needed.
+    logger: external logger to save error messages and some FlaSH Output (to send to Slack).
+    local: controls if the dependent files for FlaSH will be available in a 'flash_ref'
+    directory or should be pulled from the AWS bucket (more frequently updated).
     Ouput:
     last_7: A dataframe with the final 7 days
     type_of_outlier:  dataframe with many types of outliers
@@ -424,6 +427,8 @@ def flash_eval(lag, day, input_df, signal, params, logger=None, local=False):
     input_df: a df from the day for a particular signal that includes natl. state, and county data
     signal: the name of the signal
     params: additional params needed.
+    logger: external logger to save error messages and some FlaSH Output (to send to Slack).
+    local: controls if the dependent files for FlaSH will be available in a 'flash_ref'
     Ouput:
     Returns past 7 days and the all outliers dataframe
     """

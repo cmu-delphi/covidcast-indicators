@@ -315,9 +315,9 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
         ).resource('s3')
 
     (wk_mean, wk_var, weekday_params,
-     summary_stats, stream, rep_sched, \
+    summary_stats, stream, rep_sched, \
     lin_coeff, EVD_max, EVD_min, last_7, \
-     STATE_to_fips, fips_pop_table) = generate_files(params, lag, signal, local=local, s3=s3)
+    STATE_to_fips, fips_pop_table) = generate_files(params, lag, signal, local=local, s3=s3)
 
     input_df.columns = [str(STATE_to_fips[x]) if x in list(STATES)
                         else x for x in input_df.columns]
@@ -349,10 +349,10 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
 
     global_outlier_list = []
     for df in [weekday_correction, non_daily_df_test, non_ar_df]:
-        global_outlier_list.append(outlier_detect(df.T.merge(summary_stats[df.columns].loc['median'
-                  , :], left_index=True, right_index=True
-                  ).merge(summary_stats[df.columns].loc['var', :],
-                          left_index=True, right_index=True)))
+        global_outlier_list.append(outlier_detect(df.T.merge(summary_stats[df.columns].loc[
+                  'median', :], left_index=True, right_index=True).merge(
+                   summary_stats[df.columns].loc['var', :],
+                   left_index=True, right_index=True)))
 
     # Apply AR
 
@@ -387,14 +387,14 @@ def process_params(lag, day, input_df, signal, params, logger, local=False):
     type_of_outlier = type_of_outlier.merge(stream_individual,
         left_index=True, right_index=True,
         how='outer').merge(stream_group,
-                           left_index=True, right_index=True,
-                           how='outer').merge(evd_ranking,
-                                              left_index=True,
-                                              right_index=True, how='outer'
-                                              ).merge(df_for_ts,
-                                                      left_index=True,
-                                                      right_index=True,
-                                                      how='outer').merge(
+        left_index=True, right_index=True,
+        how='outer').merge(evd_ranking,
+        left_index=True,
+        right_index=True, how='outer'
+        ).merge(df_for_ts,
+        left_index=True,
+        right_index=True,
+        how='outer').merge(
         ts_streams,
         left_index=True, right_index=True, how='outer')
     type_of_outlier['flash'] = type_of_outlier['evd_ranking']

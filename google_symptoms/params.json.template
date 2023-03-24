@@ -22,19 +22,7 @@
         {"signal": "anosmia_raw_search"},
         {"signal": "anosmia_smoothed_search"},
         {"signal": "sum_anosmia_ageusia_raw_search"},
-        {"signal": "sum_anosmia_ageusia_smoothed_search"},
-        {"signal": "s05_raw_search",
-        "geo_type": "msa"},
-        {"signal": "s05_smoothed_search",
-        "geo_type": "msa"},
-        {"signal": "s05_raw_search",
-        "geo_type": "hrr"},
-        {"signal": "s05_smoothed_search",
-        "geo_type": "hrr"},
-        {"signal": "s05_raw_search",
-        "geo_type": "county"},
-        {"signal": "s05_smoothed_search",
-        "geo_type": "county"}
+        {"signal": "sum_anosmia_ageusia_smoothed_search"}
       ]
     },
     "static": {

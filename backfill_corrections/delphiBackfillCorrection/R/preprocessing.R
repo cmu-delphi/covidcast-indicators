@@ -187,6 +187,8 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' @template lag_col-template
 #' @template ref_lag-template
 #' 
+#' @importFrom dplyr full_join left_join
+#' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
@@ -203,16 +205,21 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   names(avg_df)[names(avg_df) == value_col] <- 'value_7dav'
   avg_df_prev7 <- add_shift(avg_df, 7, refd_col)
   names(avg_df_prev7)[names(avg_df_prev7) == 'value_7dav'] <- 'value_prev_7dav'
-  
-  backfill_df <- Reduce(function(x, y) merge(x, y, all=TRUE), 
-                        list(df, avg_df, avg_df_prev7))
+
+  backfill_df <- reduce(
+    list(df, avg_df, avg_df_prev7),
+    full_join, by=c(refd_col, "issue_date")
+  )
   
   # Add target
   target_df <- df[df$lag==ref_lag, c(refd_col, value_col, "issue_date")]
   names(target_df)[names(target_df) == value_col] <- 'value_target'
   names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
   
-  backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
+  backfill_df <- left_join(backfill_df, target_df, by=c(refd_col))
+
+  # Remove invalid rows
+  backfill_df <- drop_na(backfill_df, c(lag_col))
   
   # Add log values
   backfill_df$log_value_raw = log(backfill_df$value_raw + 1)
@@ -220,9 +227,6 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   backfill_df$log_value_target = log(backfill_df$value_target + 1)
   backfill_df$log_value_prev_7dav = log(backfill_df$value_prev_7dav + 1)
   backfill_df$log_7dav_slope = backfill_df$log_value_7dav - backfill_df$log_value_prev_7dav
-  
-  # Remove invalid rows
-  backfill_df <- drop_na(backfill_df, c(lag_col))
   
   return (as.data.frame(backfill_df))
 }

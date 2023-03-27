@@ -1,4 +1,4 @@
 {
   "input_dir": "./test.temp",
-  "lp_solver": "gurobi"
+  "lp_solver": "glpk"
 }

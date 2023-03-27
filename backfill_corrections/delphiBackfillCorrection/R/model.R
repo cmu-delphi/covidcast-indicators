@@ -131,7 +131,10 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {msg_ts("Training failed for ", model_path)}
+      error=function(e) {
+        msg_ts("Training failed for ", model_path, ". Check that your gurobi ",
+          "license is valid and being passed properly to the program.")
+      }
     )
   }
   if (success < length(taus)) {return (NULL)}

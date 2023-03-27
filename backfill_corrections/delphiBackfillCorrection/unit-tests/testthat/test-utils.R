@@ -1,6 +1,12 @@
 library(stringr)
+library(mockr)
 
 context("Testing utils helper functions")
+
+# Make it look like we have a valid gurobi license for testing purposes.
+mock_system2 <- function(...) {
+  return(0)
+}
 
 test_that("testing create directory if not exist", {
   # If not exists
@@ -55,14 +61,9 @@ test_that("testing read parameters", {
   expect_true(!("parallel_max_cores" %in% names(params)))
   
   
-  expect_true(!("taus" %in% names(params)))
-  expect_true(!("lambda" %in% names(params)))
-  expect_true(!("lp_solver" %in% names(params)))
   expect_true(!("lag_pad" %in% names(params)))
-  
   expect_true(!("taus" %in% names(params)))
   expect_true(!("lambda" %in% names(params)))
-  expect_true(!("lp_solver" %in% names(params)))
   
   expect_true(!("num_col" %in% names(params)))
   expect_true(!("denom_col" %in% names(params)))
@@ -81,9 +82,11 @@ test_that("testing read parameters", {
   # Create input file
   path = "test.temp"
   create_dir_not_exist(path)
-  expect_silent(params <- read_params(path = "params-test.json",
+  expect_warning(params <- read_params(path = "params-test.json",
                                       template_path = "params-test.json.template",
-                                      train_models = TRUE, make_predictions = TRUE))
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
   unlink(path, recursive = TRUE)
   
   
@@ -92,12 +95,7 @@ test_that("testing read parameters", {
   
   expect_true("parallel" %in% names(params))
   expect_true("parallel_max_cores" %in% names(params))
-  
-  
-  expect_true("taus" %in% names(params))
-  expect_true("lambda" %in% names(params))
-  expect_true("lp_solver" %in% names(params))
-  
+
   expect_true("taus" %in% names(params))
   expect_true("lambda" %in% names(params))
   expect_true("lp_solver" %in% names(params))
@@ -125,7 +123,7 @@ test_that("testing read parameters", {
   
   expect_true(all(params$taus == TAUS))
   expect_true(params$lambda == LAMBDA)
-  expect_true(params$lp_solver == LP_SOLVER)
+  expect_true(params$lp_solver == "glpk")
   expect_true(params$lag_pad == LAG_PAD)
   
   expect_true(params$num_col == "num")
@@ -146,6 +144,36 @@ test_that("testing read parameters", {
   expect_equal(params$indicators, "all")
   
   expect_silent(file.remove("params-test.json"))
+})
+
+test_that("lp_solver selection works", {
+  # GLPK selected explicitly.
+  path = "test.temp"
+  create_dir_not_exist(path)
+  expect_silent(params <- read_params(path = "params-glpk.json",
+                                      template_path = "params-glpk.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-glpk.json"))
+
+  # gurobi selected explicitly, but without gurobi license file
+  expect_warning(params <- read_params(path = "params-gurobi.json",
+                                      template_path = "params-gurobi.json.template",
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-gurobi.json"))
+
+  # gurobi selected explicitly, with gurobi license file mocked to appear available and valid
+  local_mock("delphiBackfillCorrection::run_cli" = mock_system2)
+  expect_silent(params <- read_params(path = "params-gurobi.json",
+                                      template_path = "params-gurobi.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "gurobi")
+  expect_silent(file.remove("params-gurobi.json"))
+
+  unlink(path, recursive = TRUE)
 })
 
 test_that("validity_checks alerts appropriately", {

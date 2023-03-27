@@ -67,8 +67,36 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Model parameters
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
-  if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
   if (!("lag_pad" %in% names(params))) {params$lag_pad <- LAG_PAD}
+
+  if ("lp_solver" %in% names(params)) {
+    params$lp_solver <- match.arg(params$lp_solver, c("gurobi", "glpk"))
+  } else {
+    params$lp_solver <- LP_SOLVER
+  }
+  if (params$lp_solver == "gurobi") {
+    # Make call to gurobi CLI to check license. Returns a status of `0` if
+    # license can be found and is valid.
+    tryCatch(
+      expr = {
+        license_status <- run_cli("gurobi_cl")
+      },
+      error=function(e) {
+        if (grepl("Error 10032: License has expired", e$message, fixed=TRUE)) {
+          stop("The gurobi license has expired. Please renew or switch to ",
+            "using glpk. lp_solver can be specified in params.json.")
+        }
+        msg_ts(e$message)
+        license_status <- 1
+      }
+    )
+
+    if (license_status != 0) {
+      warning("gurobi solver was requested but license information was ",
+        "not available or not valid; using glpk instead")
+      params$lp_solver <- "glpk"
+    }
+  }
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
@@ -107,6 +135,13 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   
   return(params)
+}
+
+#' Wrapper for `base::system2` for testing convenience
+#'
+#' @param command string to run as command
+run_cli <- function(command) {
+  system2(command)
 }
 
 #' Create directory if not already existing

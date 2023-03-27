@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install -qq -y \
 
 RUN install2.r --error \
     roxygen2 \
-    zoo \
     Rglpk \
     argparser
 

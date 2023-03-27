@@ -23,9 +23,11 @@ Imports:
     jsonlite,
     lubridate,
     tidyr,
-    zoo,
     utils,
-    parallel
+    parallel,
+    purrr,
+    vctrs,
+    RcppRoll
 Suggests:
     knitr (>= 1.15),
     rmarkdown (>= 1.4),

@@ -11,6 +11,8 @@
 #' 
 #' @importFrom dplyr %>% filter group_by summarize across everything group_split ungroup
 #' @importFrom tidyr drop_na
+#' @importFrom purrr map map_dfr
+#' @importFrom bettermc mclapply
 #' 
 #' @export
 run_backfill <- function(df, params,
@@ -61,7 +63,12 @@ run_backfill <- function(df, params,
     group_dfs <- group_split(df, geo_value)
 
     # Build model for each location
-    for (subdf in group_dfs) {
+    apply_fn <- ifelse(params$parallel, mclapply, lapply)
+    result <- apply_fn(group_dfs, function(subdf) {
+      # Make a copy with the same structure.
+      state_test_data_list <- test_data_list
+      state_coef_list <- coef_list
+
       geo <- subdf$geo_value[1]
       
       msg_ts("Processing ", geo, " geo group")
@@ -163,7 +170,7 @@ run_backfill <- function(df, params,
             test_data <- filtered_data[[2]]
 
             if (nrow(train_data) == 0 || nrow(test_data) == 0) {
-              msg_ts("Not enough data to either train or test for test_lag ",
+              msg_ts("Not enough data to either train or test for test lag ",
                 test_lag, ", skipping")
               next
             }
@@ -180,7 +187,6 @@ run_backfill <- function(df, params,
             params_list <- c(YITL, as.vector(unlist(covariates)))
 
             # Model training and testing
-            msg_ts("Training or loading models")
             prediction_results <- model_training_and_testing(
               train_data, test_data, taus = params$taus, covariates = params_list,
               lp_solver = params$lp_solver,
@@ -197,28 +203,32 @@ run_backfill <- function(df, params,
             # Model objects are saved during training, so only need to export
             # output if making predictions/corrections
             if (params$make_predictions) {
-              msg_ts("Generating predictions")
               test_data <- prediction_results[[1]]
               coefs <- prediction_results[[2]]
               test_data <- evaluate(test_data, params$taus) %>%
                 exponentiate_preds(params$taus)
               
               key <- make_key(value_type, signal_suffix)
-              idx <- length(test_data_list[[key]]) + 1
-              test_data_list[[key]][[idx]] <- test_data
-              coef_list[[key]][[idx]] <- coefs
+              idx <- length(state_test_data_list[[key]]) + 1
+              state_test_data_list[[key]][[idx]] <- test_data
+              state_coef_list[[key]][[idx]] <- coefs
             }
           }# End for test lags
         }# End for value types
       }# End for signal suffixes
-    }# End for geo list
+
+      return(list(coefs = state_coef_list, test_data = state_test_data_list))
+    }) # End for geo list
+
+    test_data_list <- map(result, ~.x$test_data)
+    coef_list <- map(result, ~.x$coefs)
     
     if (params$make_predictions) {
       for (value_type in params$value_types) {
         for (signal_suffix in signal_suffixes) {
           key <- make_key(value_type, signal_suffix)
-          test_combined <- bind_rows(test_data_list[[key]]) 
-          coef_combined <- bind_rows(coef_list[[key]]) 
+          test_combined <- map_dfr(test_data_list, ~.x[[key]])
+          coef_combined <- map_dfr(coef_list, ~.x[[key]])
           export_test_result(test_combined, coef_combined, 
                              indicator=indicator, signal=signal,
                              signal_suffix=signal_suffix,

@@ -39,9 +39,9 @@ class TestLoadData:
                     Config.COVID_COLS, Config.COVID_DTYPES, Config.COVID_COL)
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, 
                                        "fips", backfill_dir, geo, weekday, "covid",
-                                       backfill_merge_day)
+                                       True, backfill_merge_day)
     flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "fips",
-                             backfill_dir, geo, weekday, "flu", backfill_merge_day)
+                             backfill_dir, geo, weekday, "flu", True, backfill_merge_day)
     gmpr = GeoMapper()
 
     def test_base_unit(self):
@@ -55,11 +55,11 @@ class TestLoadData:
 
         with pytest.raises(AssertionError):
             load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, "foo", 
-                               backfill_dir, geo, weekday, "covid", backfill_merge_day)
+                               backfill_dir, geo, weekday, "covid", True, backfill_merge_day)
 
         with pytest.raises(AssertionError):
             load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "foo", 
-                          backfill_dir, geo, weekday, "covid", backfill_merge_day)
+                          backfill_dir, geo, weekday, "covid", True, backfill_merge_day)
 
     def test_denom_columns(self):
         assert "fips" in self.denom_data.index.names

@@ -12,9 +12,9 @@ def test_flash_input():
 
     lag = 1
     day = pd.to_datetime("1/1/2023", format="%m/%d/%Y")
-    signal = 'confirmed_incidence_num'
+    signal = './confirmed_incidence_num'
     params = {'flash': {'support':[0,1]}}
     initial_7_day_file = pd.read_csv(f'flash_ref/{signal}/last_7_1.csv',
                                                   index_col=0, parse_dates=[0], header=0)
-    flash_eval(lag, day, input_df, signal, params, logger=mock_logger)
+    last_7, type_of_outlier = flash_eval(lag, day, input_df, signal, params, logger=mock_logger, local=True)
     initial_7_day_file.to_csv(f'flash_ref/{signal}/last_7_1.csv')

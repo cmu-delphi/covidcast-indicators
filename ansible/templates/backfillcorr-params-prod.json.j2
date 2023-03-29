@@ -4,12 +4,14 @@
   "cache_dir": "./cache",
   "testing_window": 1,
   "training_days": 270,
-  "lag_pad":2,
+  "lag_pad": 2,
   "export_dir": "./receiving",
-  "geo_levels": ["state", "county"],
+  "geo_levels": ["state"],
   "value_types": ["count", "fraction"],
   "num_col": "num",
   "denom_col": "den",
+  "parallel": true,
+  "parallel_max_cores": 2,
   "post": {
     "aws_credentials": {
       "aws_access_key_id": "{{ backfillcorr_aws_access_key_id }}",

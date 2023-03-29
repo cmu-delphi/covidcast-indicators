@@ -25,10 +25,15 @@
 fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
   # Full list of lags
   # +30 to have values for calculating 7-day averages
-  lags <- min(df[[lag_col]]): (ref_lag + 30) 
-  refds <- seq(min_refd, max_refd, by="day") # Full list reference date
-  row_inds_df <- as.data.frame(crossing(refds, lags)) %>%
-    setNames(c(refd_col, lag_col))
+  lags <- min(df[[lag_col]]): (ref_lag + 30)
+  # Full list reference dates
+  refds <- as.character(
+    seq(as.Date(min_refd, DATE_FORMAT), as.Date(max_refd, DATE_FORMAT), by="day")
+  )
+  row_inds_df <- setNames(
+    as.data.frame(crossing(refds, lags)),
+    c(refd_col, lag_col)
+  )
   df_new = merge(x=df, y=row_inds_df,
                  by=c(refd_col, lag_col),  all.y=TRUE)
   return (df_new)
@@ -43,47 +48,59 @@ fill_rows <- function(df, refd_col, lag_col, min_refd, max_refd, ref_lag) {
 #' @template refd_col-template
 #' @template lag_col-template
 #' 
-#' @importFrom tidyr fill pivot_wider pivot_longer
-#' @importFrom dplyr %>% everything select
+#' @importFrom tidyr pivot_wider pivot_longer
+#' @importFrom purrr map_dfc
+#' @importFrom vctrs vec_fill_missing
 #' 
 #' @export
 fill_missing_updates <- function(df, value_col, refd_col, lag_col) {
-  pivot_df <- df[order(df[[lag_col]], decreasing=FALSE), ] %>%
-    pivot_wider(id_cols=lag_col, names_from=refd_col, values_from=value_col)
+  pivot_df <- pivot_wider(
+    df[order(df[[lag_col]], decreasing=FALSE), ],
+    id_cols=lag_col, names_from=refd_col, values_from=value_col
+  )
   
   if (any(diff(pivot_df[[lag_col]]) != 1)) {
     stop("Risk exists in forward filling")
   }
-  pivot_df <- pivot_df %>% fill(everything(), .direction="down")
+
+  pivot_df <- map_dfc(pivot_df, function(col) {
+    vec_fill_missing(col, direction="down")
+  })
   
   # Fill NAs with 0s
   pivot_df[is.na(pivot_df)] <- 0
   
-  backfill_df <- pivot_df %>%
-    pivot_longer(-lag_col, values_to="value_raw", names_to=refd_col)
-  backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
+  backfill_df <- pivot_longer(pivot_df,
+    -lag_col, values_to="value_raw", names_to=refd_col
+  )
   
   return (as.data.frame(backfill_df))
 }
 
 #' Calculate 7 day moving average for each issue date
+#'
 #' The 7dav for date D reported on issue date D_i is the average from D-7 to D-1
+#'
 #' @param pivot_df Data Frame where the columns are issue dates and the rows are 
 #'    reference dates
 #' @template refd_col-template
 #' 
-#' @importFrom zoo rollmeanr
-#' 
+#' @importFrom RcppRoll roll_mean
+#'
 #' @export
 get_7dav <- function(pivot_df, refd_col) {
-  for (col in colnames(pivot_df)) {
-    if (col == refd_col) next
-    pivot_df[, col] <- rollmeanr(pivot_df[, col], 7, align="right", fill=NA)
-  }
-  backfill_df <- pivot_df %>%
-    pivot_longer(-refd_col, values_to="value_raw", names_to="issue_date")
-  backfill_df[[refd_col]] = as.Date(backfill_df[[refd_col]])
-  backfill_df[["issue_date"]] = as.Date(backfill_df[["issue_date"]])
+  pivot_df <- cbind(
+    # Keep time values at the front
+    pivot_df[, refd_col],
+    # Compute moving average of all non-refd columns
+    roll_mean(
+      as.matrix(pivot_df[, names(pivot_df)[names(pivot_df) != refd_col]]),
+      7L, align = "right", fill = NA
+    )
+  )
+  backfill_df <- pivot_longer(pivot_df,
+    -refd_col, values_to="value_raw", names_to="issue_date"
+  )
   return (as.data.frame(backfill_df))
 }
 
@@ -95,7 +112,7 @@ get_7dav <- function(pivot_df, refd_col) {
 #' 
 #' @export
 add_shift <- function(df, n_day, refd_col) {
-  df[, refd_col] <- as.Date(df[, refd_col]) + n_day
+  df[[refd_col]] <- as.character(as.Date(df[[refd_col]], DATE_FORMAT) + n_day)
   return (df)
 }
 
@@ -109,7 +126,7 @@ add_shift <- function(df, n_day, refd_col) {
 #' 
 #' @export
 add_dayofweek <- function(df, time_col, suffix, wd = WEEKDAYS_ABBR) {
-  dayofweek <- as.numeric(format(df[[time_col]], format="%u"))
+  dayofweek <- as.numeric(format(as.Date(df[[time_col]], DATE_FORMAT), format="%u"))
   for (i in seq_along(wd)) {
     df[, paste0(wd[i], suffix)] <- as.numeric(dayofweek == i)
   }
@@ -141,7 +158,7 @@ get_weekofmonth <- function(date) {
   month <- month(date)
   day <- day(date)
   firstdayofmonth <- as.numeric(format(make_date(year, month, 1), format="%u"))
-  n_days <- lubridate::days_in_month(date)
+  n_days <- days_in_month(date)
   n_weeks <- (n_days + firstdayofmonth - 1) %/% 7 + 1
   extra_check <- as.integer(n_weeks > 5)
   return (max((day + firstdayofmonth - 1) %/% 7 - extra_check, 0) %% 4 + 1)
@@ -155,7 +172,7 @@ get_weekofmonth <- function(date) {
 #' 
 #' @export
 add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
-  weekofmonth <- get_weekofmonth(df[[time_col]])
+  weekofmonth <- get_weekofmonth(as.Date(df[[time_col]], DATE_FORMAT))
   for (i in seq_along(wm)) {
     df[, paste0(wm[i])] <- as.numeric(weekofmonth == i)
   }
@@ -170,32 +187,39 @@ add_weekofmonth <- function(df, time_col, wm = WEEK_ISSUES) {
 #' @template lag_col-template
 #' @template ref_lag-template
 #' 
-#' @importFrom dplyr %>%
+#' @importFrom dplyr full_join left_join
+#' @importFrom purrr reduce
 #' @importFrom tidyr pivot_wider drop_na
 #' 
 #' @export
 add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
-  df$issue_date <- df[[refd_col]] + df[[lag_col]]
-  pivot_df <- df[order(df$issue_date, decreasing=FALSE), ] %>%
-    pivot_wider(id_cols=refd_col, names_from="issue_date", 
-                values_from=value_col)
-  
+  df$issue_date <- as.character(as.Date(df[[refd_col]], DATE_FORMAT) + df[[lag_col]])
+  pivot_df <- pivot_wider(
+    df[order(df$issue_date, decreasing=FALSE), ],
+    id_cols=refd_col, names_from="issue_date", values_from=value_col
+  )
+
   # Add 7dav avg
   avg_df <- get_7dav(pivot_df, refd_col)
   avg_df <- add_shift(avg_df, 1, refd_col) # 7dav until yesterday
   names(avg_df)[names(avg_df) == value_col] <- 'value_7dav'
   avg_df_prev7 <- add_shift(avg_df, 7, refd_col)
   names(avg_df_prev7)[names(avg_df_prev7) == 'value_7dav'] <- 'value_prev_7dav'
-  
-  backfill_df <- Reduce(function(x, y) merge(x, y, all=TRUE), 
-                        list(df, avg_df, avg_df_prev7))
+
+  backfill_df <- reduce(
+    list(df, avg_df, avg_df_prev7),
+    full_join, by=c(refd_col, "issue_date")
+  )
   
   # Add target
   target_df <- df[df$lag==ref_lag, c(refd_col, value_col, "issue_date")]
   names(target_df)[names(target_df) == value_col] <- 'value_target'
   names(target_df)[names(target_df) == 'issue_date'] <- 'target_date'
   
-  backfill_df <- merge(backfill_df, target_df, by=refd_col, all.x=TRUE)
+  backfill_df <- left_join(backfill_df, target_df, by=c(refd_col))
+
+  # Remove invalid rows
+  backfill_df <- drop_na(backfill_df, c(lag_col))
   
   # Add log values
   backfill_df$log_value_raw = log(backfill_df$value_raw + 1)
@@ -203,9 +227,6 @@ add_7davs_and_target <- function(df, value_col, refd_col, lag_col, ref_lag) {
   backfill_df$log_value_target = log(backfill_df$value_target + 1)
   backfill_df$log_value_prev_7dav = log(backfill_df$value_prev_7dav + 1)
   backfill_df$log_7dav_slope = backfill_df$log_value_7dav - backfill_df$log_value_prev_7dav
-  
-  # Remove invalid rows
-  backfill_df <- backfill_df %>% drop_na(c(lag_col))
   
   return (as.data.frame(backfill_df))
 }

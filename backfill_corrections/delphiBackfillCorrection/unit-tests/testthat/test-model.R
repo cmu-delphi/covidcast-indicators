@@ -1,5 +1,7 @@
 context("Testing the helper functions for modeling")
 
+library(dplyr)
+
 # Constants
 indicator <- "chng"
 signal <- "outpatient" 
@@ -111,13 +113,13 @@ test_that("testing generating or loading the model", {
   
   # Generate the model and check again
   obj <- get_model(model_path, train_data, covariates, tau,
-                        lambda, LP_SOLVER, train_models=TRUE) 
+                        lambda, "glpk", train_models=TRUE)
   expect_true(file.exists(model_path))
   created <- file.info(model_path)$ctime
   
   # Check that the model was not generated again.
   obj <- get_model(model_path, train_data, covariates, tau,
-                        lambda, LP_SOLVER, train_models=FALSE)   
+                        lambda, "glpk", train_models=FALSE)
   expect_equal(file.info(model_path)$ctime, created)
   
   expect_silent(file.remove(model_path))
@@ -125,7 +127,7 @@ test_that("testing generating or loading the model", {
 
 test_that("testing model training and testing", {
   result <- model_training_and_testing(train_data, test_data, taus=TAUS, covariates=covariates,
-                                       lp_solver=LP_SOLVER, lambda=lambda, test_lag=test_lag,
+                                       lp_solver="glpk", lambda=lambda, test_lag=test_lag,
                                        geo=geo, value_type=value_type, model_save_dir=model_save_dir,
                                        indicator=indicator, signal=signal,
                                        geo_level=geo_level, signal_suffix=signal_suffix,

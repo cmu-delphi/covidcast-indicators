@@ -67,8 +67,36 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   # Model parameters
   if (!("taus" %in% names(params))) {params$taus <- TAUS}
   if (!("lambda" %in% names(params))) {params$lambda <- LAMBDA}
-  if (!("lp_solver" %in% names(params))) {params$lp_solver <- LP_SOLVER}
   if (!("lag_pad" %in% names(params))) {params$lag_pad <- LAG_PAD}
+
+  if ("lp_solver" %in% names(params)) {
+    params$lp_solver <- match.arg(params$lp_solver, c("gurobi", "glpk"))
+  } else {
+    params$lp_solver <- LP_SOLVER
+  }
+  if (params$lp_solver == "gurobi") {
+    # Make call to gurobi CLI to check license. Returns a status of `0` if
+    # license can be found and is valid.
+    tryCatch(
+      expr = {
+        license_status <- run_cli("gurobi_cl")
+      },
+      error=function(e) {
+        if (grepl("Error 10032: License has expired", e$message, fixed=TRUE)) {
+          stop("The gurobi license has expired. Please renew or switch to ",
+            "using glpk. lp_solver can be specified in params.json.")
+        }
+        msg_ts(e$message)
+        license_status <- 1
+      }
+    )
+
+    if (license_status != 0) {
+      warning("gurobi solver was requested but license information was ",
+        "not available or not valid; using glpk instead")
+      params$lp_solver <- "glpk"
+    }
+  }
 
   # Data parameters
   if (!("num_col" %in% names(params))) {params$num_col <- "num"}
@@ -91,13 +119,13 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
       stop("`test_dates` setting in params must be a length-2 list of dates")
     }
     params$test_dates <- seq(
-      as.Date(params$test_dates[1]),
-      as.Date(params$test_dates[2]),
+      as.Date(params$test_dates[1], DATE_FORMAT),
+      as.Date(params$test_dates[2], DATE_FORMAT),
       by="days"
     )
   }
   if (params_element_exists_and_valid(params, "training_end_date")) {
-    if (as.Date(params$training_end_date) > TODAY) {
+    if (as.Date(params$training_end_date, DATE_FORMAT) > TODAY) {
       stop("training_end_date can't be in the future")
     }
   }
@@ -107,6 +135,13 @@ read_params <- function(path = "params.json", template_path = "params.json.templ
   }
   
   return(params)
+}
+
+#' Wrapper for `base::system2` for testing convenience
+#'
+#' @param command string to run as command
+run_cli <- function(command) {
+  system2(command)
 }
 
 #' Create directory if not already existing
@@ -122,7 +157,8 @@ create_dir_not_exist <- function(path)
 #' Check input data for validity
 #'
 #' @template df-template
-#' @template value_type-template
+#' @param value_types character vector of all signal types to process. Either
+#'   or both of "count" and "fraction".
 #' @template num_col-template
 #' @template denom_col-template
 #' @template signal_suffixes-template
@@ -133,7 +169,7 @@ create_dir_not_exist <- function(path)
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
-validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
+validity_checks <- function(df, value_types, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
     num_col <- paste(num_col, signal_suffixes, sep = "_")
@@ -141,10 +177,12 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
   }
 
   # Check data type and required columns
-  if (value_type == "count") {
-    if ( all(num_col %in% colnames(df)) ) { value_cols=c(num_col) }
-    else { stop("No valid column name detected for the count values!") }
-  } else if (value_type == "fraction") {
+  if ("count" %in% value_types) {
+    if ( !all(num_col %in% colnames(df)) ) {
+      stop("No valid column name detected for the count values!")
+    }
+  }
+  if ("fraction" %in% value_types) {
     value_cols = c(num_col, denom_col)
     if ( !all(value_cols %in% colnames(df)) ) {
       stop("No valid column name detected for the fraction values!")
@@ -156,17 +194,9 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
     stop("No reference date column detected for the reference date!")
   }
 
-  if (!(inherits(df[[refd_col]], "Date"))) {
-    stop("Reference date column must be of `Date` type")
-  }
-  
   # issue_date and lag should exist in the dataset
-  if ( !(lag_col %in% colnames(df)) || !(issued_col %in% colnames(df)) ) {
+  if ( !all(c(lag_col, issued_col) %in% colnames(df)) ) {
     stop("Issue date and lag fields must exist in the input data")
-  }
-
-  if (!(inherits(df[[issued_col]], "Date"))) {
-    stop("Issue date column must be of `Date` type")
   }
 
   if ( any(is.na(df[[lag_col]])) || any(is.na(df[[issued_col]])) ||
@@ -186,7 +216,7 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
          " least one reference date-issue date-location combination")
   }
 
-  return(list(df = df, value_cols = value_cols))
+  return(df)
 }
 
 #' Check available training days
@@ -194,7 +224,9 @@ validity_checks <- function(df, value_type, num_col, denom_col, signal_suffixes,
 #' @param issue_date contents of input data's `issue_date` column
 #' @template training_days-template
 training_days_check <- function(issue_date, training_days) {
-  valid_training_days = as.integer(max(issue_date) - min(issue_date)) + 1
+  valid_training_days = as.integer(
+    as.Date(max(issue_date), DATE_FORMAT) - as.Date(min(issue_date), DATE_FORMAT)
+  ) + 1
   if (training_days > valid_training_days) {
     warning(sprintf("Only %d days are available at most for training.", valid_training_days))
   }
@@ -203,28 +235,28 @@ training_days_check <- function(issue_date, training_days) {
 #' Subset list of counties to those included in the 200 most populous in the US
 #' 
 #' @importFrom dplyr select %>% arrange desc pull
-#' @importFrom rlang .data
 #' @importFrom utils head
 #' @import covidcast
 get_populous_counties <- function() {
   return(
     covidcast::county_census %>%
-      dplyr::select(pop = .data$POPESTIMATE2019, fips = .data$FIPS) %>%
+      select(pop = POPESTIMATE2019, fips = FIPS) %>%
       # Drop megacounties (states)
-      filter(!endsWith(.data$fips, "000")) %>%
-      arrange(desc(.data$pop)) %>%
-      pull(.data$fips) %>%
+      filter(!endsWith(fips, "000")) %>%
+      arrange(desc(pop)) %>%
+      pull(fips) %>%
       head(n=200)
   )
 }
 
 #' Write a message to the console with the current time
 #'
-#' @param text the body of the message to display
+#' @param ... the body of the message to display. Objects should be strings or
+#'   coercible to strings and are pasted together with no separator.
 #'
 #' @export
-msg_ts <- function(text) {
-  message(sprintf("%s --- %s", format(Sys.time()), text))
+msg_ts <- function(...) {
+  message(sprintf("%s --- %s", format(Sys.time()), .makeMessage(...)))
 }
 
 #' Generate key for identifying a value_type-signal combo

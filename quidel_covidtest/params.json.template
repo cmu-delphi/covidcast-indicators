@@ -7,6 +7,7 @@
   "indicator": {
     "static_file_dir": "./static",
     "input_cache_dir": "./cache",
+    "generate_backfill_files": false,
     "backfill_dir": "./backfill",
     "backfill_merge_day": 0,
     "export_start_date": "2020-05-26",

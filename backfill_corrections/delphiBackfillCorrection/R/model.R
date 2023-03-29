@@ -5,7 +5,7 @@
 #' @param geo_train_data training data for a certain location
 #' @param geo_test_data testing data for a certain location
 #' 
-#' @importFrom rlang .data .env
+#' @importFrom dplyr filter
 #'
 #' @export
 data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
@@ -22,12 +22,14 @@ data_filteration <- function(test_lag, geo_train_data, geo_test_data, lag_pad) {
     test_lag_pad1=8
     test_lag_pad2=9
   }
-  train_data = geo_train_data %>% 
-    filter(.data$lag >= .env$test_lag - .env$test_lag_pad ) %>%
-    filter(.data$lag <= .env$test_lag + .env$test_lag_pad )
-  test_data = geo_test_data %>%
-    filter(.data$lag >= .env$test_lag - .env$test_lag_pad1 ) %>%
-    filter(.data$lag <= .env$test_lag + .env$test_lag_pad2)
+  train_data = filter(geo_train_data,
+    lag >= test_lag - test_lag_pad,
+    lag <= test_lag + test_lag_pad
+  )
+  test_data = filter(geo_test_data,
+    lag >= test_lag - test_lag_pad1,
+    lag <= test_lag + test_lag_pad2
+  )
 
   return (list(train_data, test_data))
 }
@@ -93,7 +95,6 @@ add_sqrtscale<- function(train_data, test_data, max_raw, value_col) {
 #' @template training_start_date-template
 #'
 #' @importFrom stats predict coef
-#' @importFrom stringr str_interp
 #'
 #' @export
 model_training_and_testing <- function(train_data, test_data, taus, covariates,
@@ -130,7 +131,10 @@ model_training_and_testing <- function(train_data, test_data, taus, covariates,
 
         success = success + 1
       },
-      error=function(e) {msg_ts(str_interp("Training failed for ${model_path}"))}
+      error=function(e) {
+        msg_ts("Training failed for ", model_path, ". Check that your gurobi ",
+          "license is valid and being passed properly to the program.")
+      }
     )
   }
   if (success < length(taus)) {return (NULL)}
@@ -182,11 +186,8 @@ evaluate <- function(test_data, taus) {
 exponentiate_preds <- function(test_data, taus) {
   pred_cols = paste0("predicted_tau", taus)
 
-  # Drop original predictions and join on exponentiated versions
-  test_data = bind_cols(
-    select(test_data, -starts_with("predicted")),
-    exp(test_data[, pred_cols])
-  )
+  # Replace original predictions with exponentiated versions
+  test_data[, pred_cols] <- exp(test_data[, pred_cols])
 
   return(test_data)
 }
@@ -202,12 +203,11 @@ exponentiate_preds <- function(test_data, taus) {
 #' @template train_models-template
 #'
 #' @importFrom quantgen quantile_lasso
-#' @importFrom stringr str_interp
 get_model <- function(model_path, train_data, covariates, tau,
             lambda, lp_solver, train_models) {
   if (train_models || !file.exists(model_path)) {
     if (!train_models && !file.exists(model_path)) {
-      warning(str_interp("user requested use of cached model but file {model_path}"),
+      warning("user requested use of cached model but file ", model_path,
         " does not exist; training new model")
     }
     # Quantile regression
@@ -221,7 +221,7 @@ get_model <- function(model_path, train_data, covariates, tau,
   } else {
     # Load model from cache invisibly. Object has the same name as the original
     # model object, `obj`.
-    msg_ts(str_interp("Loading from ${model_path}"))
+    msg_ts("Loading from ", model_path)
     load(model_path)
   }
 
@@ -248,21 +248,19 @@ get_model <- function(model_path, train_data, covariates, tau,
 #'
 #' @return path to file containing model object
 #'
-#' @importFrom stringr str_interp
-#' 
 generate_filename <- function(indicator, signal, 
                               geo_level, signal_suffix, lambda,
                               training_end_date, training_start_date, geo="",
                               value_type = "", test_lag="", tau="", dw="",
                               beta_prior_mode = FALSE, model_mode = TRUE) {
   if (lambda != "") {
-    lambda <- str_interp("lambda${lambda}")
+    lambda <- paste0("lambda", lambda)
   }
   if (test_lag != "") {
-    test_lag <- str_interp("lag${test_lag}")
+    test_lag <- paste0("lag", test_lag)
   }
   if (tau != "") {
-    tau <- str_interp("tau${tau}")
+    tau <- paste0("tau", tau)
   }
   if (beta_prior_mode) {
     beta_prior <- "beta_prior"

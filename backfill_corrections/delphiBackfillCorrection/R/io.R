@@ -13,18 +13,15 @@ read_data <- function(input_file) {
 #' Make sure data contains a `geo_value` field
 #'
 #' @template df-template
-#'
-#' @importFrom dplyr rename select
-#' @importFrom rlang .data
 fips_to_geovalue <- function(df) {
   if ( !("geo_value" %in% colnames(df)) ) {
     if ( !("fips" %in% colnames(df)) ) {
       stop("Either `fips` or `geo_value` field must be available")
     }
-    df <- rename(df, geo_value = .data$fips)
+    df$geo_value <- df$fips
   }
   if ( "fips" %in% colnames(df) ) {
-    df <- select(df, -.data$fips)
+    df$fips <- NULL
   }
   return(df)
 }
@@ -63,10 +60,10 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
   dir.create(file.path(export_dir, signal_dir), showWarnings = FALSE)
   
   if (nrow(test_data) == 0) {
-    warning(str_interp("No test data available for ${signal_info}"))
+    warning("No test data available for ", signal_info)
   } else {
-    msg_ts(str_interp("Saving predictions to disk for ${signal_info} "))
-    pred_output_file <- str_interp("prediction_${base_name}")
+    msg_ts("Saving predictions to disk for ", signal_info)
+    pred_output_file <- paste0("prediction_", base_name)
     
     prediction_col <- colnames(test_data)[grepl("^predicted", colnames(test_data))]
     expected_col <- c("time_value", "issue_date", "lag", "geo_value", 
@@ -75,10 +72,10 @@ export_test_result <- function(test_data, coef_data, indicator, signal,
   }
   
   if (nrow(coef_data) == 0) {
-    warning(str_interp("No coef data available for ${signal_info}"))
+    warning("No coef data available for ", signal_info)
   } else {
-    msg_ts(str_interp("Saving coefficients to disk for ${signal_info}"))
-    coef_output_file <- str_interp("coefs_${base_name}")
+    msg_ts("Saving coefficients to disk for ", signal_info)
+    coef_output_file <- paste0("coefs_", base_name)
     write_csv(coef_data, file.path(export_dir, signal_dir, coef_output_file))
   }
 }
@@ -247,7 +244,7 @@ get_training_date_range <- function(params) {
   if (params$train_models) {
     if (params_element_exists_and_valid(params, "training_end_date")) {
       # Use user-provided end date.
-      training_end_date <- as.Date(params$training_end_date)
+      training_end_date <- as.Date(params$training_end_date, DATE_FORMAT)
     } else {
       # Default end date is today.
       training_end_date <- default_end_date

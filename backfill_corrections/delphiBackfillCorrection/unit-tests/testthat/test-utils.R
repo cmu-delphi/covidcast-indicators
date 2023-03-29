@@ -1,6 +1,12 @@
 library(stringr)
+library(mockr)
 
 context("Testing utils helper functions")
+
+# Make it look like we have a valid gurobi license for testing purposes.
+mock_system2 <- function(...) {
+  return(0)
+}
 
 test_that("testing create directory if not exist", {
   # If not exists
@@ -55,14 +61,9 @@ test_that("testing read parameters", {
   expect_true(!("parallel_max_cores" %in% names(params)))
   
   
-  expect_true(!("taus" %in% names(params)))
-  expect_true(!("lambda" %in% names(params)))
-  expect_true(!("lp_solver" %in% names(params)))
   expect_true(!("lag_pad" %in% names(params)))
-  
   expect_true(!("taus" %in% names(params)))
   expect_true(!("lambda" %in% names(params)))
-  expect_true(!("lp_solver" %in% names(params)))
   
   expect_true(!("num_col" %in% names(params)))
   expect_true(!("denom_col" %in% names(params)))
@@ -81,9 +82,11 @@ test_that("testing read parameters", {
   # Create input file
   path = "test.temp"
   create_dir_not_exist(path)
-  expect_silent(params <- read_params(path = "params-test.json",
+  expect_warning(params <- read_params(path = "params-test.json",
                                       template_path = "params-test.json.template",
-                                      train_models = TRUE, make_predictions = TRUE))
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
   unlink(path, recursive = TRUE)
   
   
@@ -92,12 +95,7 @@ test_that("testing read parameters", {
   
   expect_true("parallel" %in% names(params))
   expect_true("parallel_max_cores" %in% names(params))
-  
-  
-  expect_true("taus" %in% names(params))
-  expect_true("lambda" %in% names(params))
-  expect_true("lp_solver" %in% names(params))
-  
+
   expect_true("taus" %in% names(params))
   expect_true("lambda" %in% names(params))
   expect_true("lp_solver" %in% names(params))
@@ -125,7 +123,7 @@ test_that("testing read parameters", {
   
   expect_true(all(params$taus == TAUS))
   expect_true(params$lambda == LAMBDA)
-  expect_true(params$lp_solver == LP_SOLVER)
+  expect_true(params$lp_solver == "glpk")
   expect_true(params$lag_pad == LAG_PAD)
   
   expect_true(params$num_col == "num")
@@ -148,6 +146,36 @@ test_that("testing read parameters", {
   expect_silent(file.remove("params-test.json"))
 })
 
+test_that("lp_solver selection works", {
+  # GLPK selected explicitly.
+  path = "test.temp"
+  create_dir_not_exist(path)
+  expect_silent(params <- read_params(path = "params-glpk.json",
+                                      template_path = "params-glpk.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-glpk.json"))
+
+  # gurobi selected explicitly, but without gurobi license file
+  expect_warning(params <- read_params(path = "params-gurobi.json",
+                                      template_path = "params-gurobi.json.template",
+                                      train_models = TRUE, make_predictions = TRUE),
+                 "gurobi solver was requested but license information was not available"
+  )
+  expect_true(params$lp_solver == "glpk")
+  expect_silent(file.remove("params-gurobi.json"))
+
+  # gurobi selected explicitly, with gurobi license file mocked to appear available and valid
+  local_mock("delphiBackfillCorrection::run_cli" = mock_system2)
+  expect_silent(params <- read_params(path = "params-gurobi.json",
+                                      template_path = "params-gurobi.json.template",
+                                      train_models = TRUE, make_predictions = TRUE))
+  expect_true(params$lp_solver == "gurobi")
+  expect_silent(file.remove("params-gurobi.json"))
+
+  unlink(path, recursive = TRUE)
+})
+
 test_that("validity_checks alerts appropriately", {
   time_value = as.Date(c("2022-01-01", "2022-01-02", "2022-01-03"))
   issue_date = as.Date(c("2022-01-05", "2022-01-05", "2022-01-05"))
@@ -158,7 +186,7 @@ test_that("validity_checks alerts appropriately", {
   geo_value = rep("01001", 3)
 
   check_wrapper <- function(df, value_type, signal_suffixes = "") {
-    validity_checks(df, value_type = value_type, num_col = "num",
+    validity_checks(df, value_types = value_type, num_col = "num",
       denom_col = "den", signal_suffixes = signal_suffixes)
   }
 
@@ -179,8 +207,6 @@ test_that("validity_checks alerts appropriately", {
 
   expect_error(check_wrapper(data.frame(num, den), "count"),
     "No reference date column detected for the reference date!")
-  expect_error(check_wrapper(data.frame(num, den, time_value = as.character(time_value)), "count"),
-    "Reference date column must be of `Date` type")
 
 
   issued_lag_error <- "Issue date and lag fields must exist in the input data"
@@ -203,10 +229,6 @@ test_that("validity_checks alerts appropriately", {
   new_row <- df[1,]
   new_row$lag <- NA
   expect_error(check_wrapper(bind_rows(df, new_row), "count"), missing_val_error)
-
-
-  expect_error(check_wrapper(data.frame(num, den, time_value, lag, issue_date = as.character(issue_date)), "count"),
-    "Issue date column must be of `Date` type")
 
 
   df <- data.frame(num, den, time_value, issue_date, lag, geo_value, state_id)

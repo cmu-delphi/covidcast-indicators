@@ -32,7 +32,7 @@ backfill_merge_day = 0
 class TestLoadData:
     combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH,
                                        "fips", backfill_dir, geo, weekday, "covid",
-                                       backfill_merge_day)
+                                       True, backfill_merge_day)
 
     def test_backfill(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

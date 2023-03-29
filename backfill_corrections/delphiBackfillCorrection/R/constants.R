@@ -19,10 +19,12 @@ SQRTSCALE <-c('sqrty0', 'sqrty1', "sqrty2")
 LOG_LAG <-"inv_log_lag"
 
 # Dates
+DATE_FORMAT <- "%Y-%m-%d"
 WEEKDAYS_ABBR <- c("Mon", "Tue", "Wed", "Thurs", "Fri", "Sat") # wd
 WEEK_ISSUES <- c("W1_issue", "W2_issue", "W3_issue") # wm
 TODAY <- Sys.Date()
 
+# Signals we want to make predictions for
 INDICATORS_AND_SIGNALS <- tibble::tribble(
   ~indicator, ~signal, ~name_suffix, ~sub_dir,
   "changehc", "covid", "", "chng",

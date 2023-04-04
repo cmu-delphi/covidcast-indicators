@@ -18,8 +18,6 @@
 run_backfill <- function(df, params,
                          refd_col = "time_value", lag_col = "lag", issued_col = "issue_date",
                          signal_suffixes = c(""), indicator = "", signal = "") {
-  df <- filter(df, lag < params$ref_lag + 30) # a rough filtration to save memory
-
   geo_levels <- params$geo_levels
   if ("state" %in% geo_levels) {
     # If state included, do it last since state processing modifies the
@@ -325,6 +323,7 @@ main <- function(params,
       }
     ) %>%
       bind_rows()
+    input_data <- filter(input_data, lag < params$ref_lag + 30) # a rough filter to save memory
 
     if (nrow(input_data) == 0) {
       warning("No data available for indicator ", input_group$indicator,

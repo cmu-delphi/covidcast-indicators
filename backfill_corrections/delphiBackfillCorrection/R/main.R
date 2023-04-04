@@ -318,8 +318,9 @@ main <- function(params,
       files_list, read_data # refd_col and issued_col read in as strings
     ) %>%
       bind_rows() %>%
-      fips_to_geovalue()
-    input_data <- filter(input_data, lag < params$ref_lag + 30) # a rough filter to save memory
+      fips_to_geovalue() %>%
+       # a rough filter to save memory
+      filter(lag < params$ref_lag + 30)
 
     if (nrow(input_data) == 0) {
       warning("No data available for indicator ", input_group$indicator,

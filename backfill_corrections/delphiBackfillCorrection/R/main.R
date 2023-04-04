@@ -315,14 +315,10 @@ main <- function(params,
     
     msg_ts("Reading in and combining associated files")
     input_data <- lapply(
-      files_list,
-      function(file) {
-        # refd_col and issued_col read in as strings
-        read_data(file) %>%
-          fips_to_geovalue()
-      }
+      files_list, read_data # refd_col and issued_col read in as strings
     ) %>%
-      bind_rows()
+      bind_rows() %>%
+      fips_to_geovalue()
     input_data <- filter(input_data, lag < params$ref_lag + 30) # a rough filter to save memory
 
     if (nrow(input_data) == 0) {

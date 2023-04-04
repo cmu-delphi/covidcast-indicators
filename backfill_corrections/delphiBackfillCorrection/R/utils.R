@@ -170,7 +170,7 @@ create_dir_not_exist <- function(path)
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
 #'
-#' @importFrom dplyr distinct
+#' @importFrom dplyr distinct across
 validity_checks <- function(df, value_types, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {

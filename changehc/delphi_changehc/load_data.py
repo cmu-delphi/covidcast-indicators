@@ -71,7 +71,7 @@ def load_chng_data(filepath, dropdate, base_geo,
     ), "Counts must be nonnegative"
 
     # aggregate age groups (so data is unique by date and base geography)
-    data = data.groupby([base_geo, Config.DATE_COL]).sum()
+    data = data.groupby([base_geo, Config.DATE_COL]).sum(numeric_only=True)
     data.dropna(inplace=True)  # drop rows with any missing entries
 
     return data

@@ -275,6 +275,10 @@ class TestGeoMapper:
         new_data = geomapper.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = geomapper.add_geocode(new_data, "state_code", "nation")
         assert new_data2["nation"].unique()[0] == "us"
+        new_data = geomapper.replace_geocode(self.zip_data, "zip", "state_code")
+        new_data2 = geomapper.add_geocode(new_data, "state_code", "state_id", new_col="state")
+        new_data3 = geomapper.replace_geocode(new_data2, "state_code", "nation", new_col="geo_id")
+        assert "state" not in new_data3.columns
 
         # state_code -> hhs
         new_data = geomapper.add_geocode(self.zip_data, "zip", "state_code")

@@ -14,7 +14,7 @@ required = [
     "mock",
     "moto",
     "numpy",
-    "pandas>=1.1.0",
+    "pandas>=1.1.0,<2",
     "pydocstyle",
     "pylint==2.8.3",
     "pytest",
@@ -26,7 +26,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.3.11",
+    version="0.3.12",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

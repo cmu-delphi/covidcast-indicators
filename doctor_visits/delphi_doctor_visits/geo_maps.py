@@ -49,7 +49,7 @@ class GeoMaps:
                                      from_col="PatCountyFIPS",
                                      new_col="cbsa_id")
         data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "cbsa_id"]).sum().reset_index()
+        data = data.groupby(["ServiceDate", "cbsa_id"]).sum(numeric_only=True).reset_index()
 
         return data.groupby("cbsa_id"), "cbsa_id"
 
@@ -66,7 +66,7 @@ class GeoMaps:
                                      "state_id",
                                      from_col="PatCountyFIPS")
         data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "state_id"]).sum().reset_index()
+        data = data.groupby(["ServiceDate", "state_id"]).sum(numeric_only=True).reset_index()
 
         return data.groupby("state_id"), "state_id"
 
@@ -83,7 +83,7 @@ class GeoMaps:
                                      "hhs",
                                      from_col="PatCountyFIPS")
         data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "hhs"]).sum().reset_index()
+        data = data.groupby(["ServiceDate", "hhs"]).sum(numeric_only=True).reset_index()
 
         return data.groupby("hhs"), "hhs"
 
@@ -100,7 +100,7 @@ class GeoMaps:
                                      "nation",
                                      from_col="PatCountyFIPS")
         data.drop(columns="PatCountyFIPS", inplace=True)
-        data = data.groupby(["ServiceDate", "nation"]).sum().reset_index()
+        data = data.groupby(["ServiceDate", "nation"]).sum(numeric_only=True).reset_index()
 
         return data.groupby("nation"), "nation"
 

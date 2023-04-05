@@ -61,13 +61,15 @@ class DoctorVisitsSensor:
         cols = y_data.columns
 
         if first_date not in y_data.index:
-            y_data = y_data.append(
+            y_data = pd.concat([
+                y_data,
                 pd.DataFrame(dict.fromkeys(cols, 0.0), columns=cols, index=[first_date])
-            )
+            ])
         if last_date not in y_data.index:
-            y_data = y_data.append(
+            y_data = pd.concat([
+                y_data,
                 pd.DataFrame(dict.fromkeys(cols, 0.0), columns=cols, index=[last_date])
-            )
+            ])
 
         y_data.sort_index(inplace=True)
         y_data = y_data.asfreq("D", fill_value=0)

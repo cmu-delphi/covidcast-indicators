@@ -63,11 +63,14 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
             stat = stat * 100
 
         se = se * 100
-        state_df = state_df.append(pd.DataFrame({"geo_id": state,
-                                                 "timestamp": state_group.index,
-                                                 "val": stat,
-                                                 "se": se,
-                                                 "sample_size": sample_size}))
+        state_df = pd.concat([
+            state_df,
+            pd.DataFrame({"geo_id": state,
+                         "timestamp": state_group.index,
+                         "val": stat,
+                         "se": se,
+                         "sample_size": sample_size})
+        ])
     return remove_null_samples(state_df)
 
 def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
@@ -147,9 +150,12 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
                 stat = stat * 100
 
         se = se * 100
-        res_df = res_df.append(pd.DataFrame({"geo_id": loc,
-                                             "timestamp": res_group.index,
-                                             "val": stat,
-                                             "se": se,
-                                             "sample_size": sample_size}))
+        res_df = pd.concat([
+            res_df,
+            pd.DataFrame({"geo_id": loc,
+                         "timestamp": res_group.index,
+                         "val": stat,
+                         "se": se,
+                         "sample_size": sample_size})
+        ])
     return remove_null_samples(res_df)

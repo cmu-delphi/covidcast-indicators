@@ -68,7 +68,7 @@ def get_from_s3(start_date, end_date, bucket, logger):
                                     parse_dates=["StorageDate", "TestDate"],
                                     low_memory=False)
                 newdf["fname"] = fn
-                df = df.append(newdf[selected_columns])
+                df = pd.concat([df, newdf[selected_columns]])
                 time_flag = search_date
     return df, time_flag
 
@@ -297,7 +297,7 @@ def pull_quidel_covidtest(params, logger):
 
     # Utilize previously stored data
     if previous_df is not None:
-        df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
+        df = pd.concat([previous_df, df]).groupby(["timestamp", "zip"]).sum(numeric_only=True).reset_index()
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,

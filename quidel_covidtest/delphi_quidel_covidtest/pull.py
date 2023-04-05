@@ -297,7 +297,14 @@ def pull_quidel_covidtest(params, logger):
 
     # Utilize previously stored data
     if previous_df is not None:
-        df = pd.concat([previous_df, df]).groupby(["timestamp", "zip"]).sum(numeric_only=True).reset_index()
+        df = pd.concat(
+            [previous_df, df]
+        ).groupby(
+            ["timestamp", "zip"]
+        ).sum(
+            numeric_only=True
+        ).reset_index(
+        )
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,

@@ -108,7 +108,15 @@ Columns available:
     # Get mask df to ignore cells where both of them have NAN values
     mask = (df_ny[keep_columns].isnull().values \
             & df_nyc[keep_columns].isnull().values)
-    df_ny = pd.concat([df_ny, df_nyc]).groupby("timestamp").sum(numeric_only=True).where(~mask, np.nan)
+    df_ny = pd.concat(
+        [df_ny, df_nyc]
+    ).groupby(
+        "timestamp"
+    ).sum(
+        numeric_only=True
+    ).where(
+        ~mask, np.nan
+    )
     df_ny["state"] = "New York"
     # Drop NYC and NY in the full dataset
     df = df.loc[~df["state"].isin(["New York", "New York City"]), :]

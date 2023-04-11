@@ -124,7 +124,7 @@ standardize-dirs:
 	$(PYTHON) -m delphi_utils set export_dir $(EXPORT_DIR)
 
 clean:
-	rm -f $(USR_EXPORT_DIR)/*.csv.gz
+	rm -rf $(USR_EXPORT_DIR)/*
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiBackfillCorrection")'

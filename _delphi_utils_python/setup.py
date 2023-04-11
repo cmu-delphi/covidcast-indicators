@@ -14,7 +14,7 @@ required = [
     "mock",
     "moto",
     "numpy",
-    "pandas>=1.1.0,<2",
+    "pandas>=1.1.0",
     "pydocstyle",
     "pylint==2.8.3",
     "pytest",

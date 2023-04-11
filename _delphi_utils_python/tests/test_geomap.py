@@ -196,7 +196,7 @@ class TestGeoMapper:
 
     def test_load_jhu_uid_fips_table(self, geomapper):
         jhu_data = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), 1.0)
+        assert np.allclose(jhu_data.groupby("jhu_uid").sum(numeric_only=True), 1.0)
 
     def test_load_zip_hrr_table(self, geomapper):
         zip_data = geomapper.get_crosswalk(from_code="zip", to_code="hrr")

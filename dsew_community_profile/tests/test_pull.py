@@ -240,8 +240,8 @@ class TestPull:
                 'sample_size': [None, None],
                 'publish_date': [datetime(year=2020, month=1, day=1)]*2,})
 
-        pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
-        wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
+        pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"].iloc[0])
+        wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"].iloc[0])
         tot_pop = pa_pop + wv_pop
 
         assert True, nation_from_state(
@@ -285,7 +285,14 @@ class TestPull:
         geomapper = GeoMapper()
         county_pop = geomapper.get_crosswalk("fips", "pop")
         county_msa = geomapper.get_crosswalk("fips", "msa")
-        msa_pop = county_pop.merge(county_msa, on="fips", how="inner").groupby("msa").sum().reset_index()
+        msa_pop = county_pop.merge(
+            county_msa, on="fips", how="inner"
+        ).groupby(
+            "msa"
+        ).sum(
+            numeric_only=True
+        ).reset_index(
+        )
 
         test_df = pd.DataFrame({
                 'geo_id': ['35620', '31080'],
@@ -294,8 +301,8 @@ class TestPull:
                 'se': [None, None],
                 'sample_size': [None, None],})
 
-        nyc_pop = int(msa_pop.loc[msa_pop.msa == "35620", "pop"])
-        la_pop = int(msa_pop.loc[msa_pop.msa == "31080", "pop"])
+        nyc_pop = int(msa_pop.loc[msa_pop.msa == "35620", "pop"].iloc[0])
+        la_pop = int(msa_pop.loc[msa_pop.msa == "31080", "pop"].iloc[0])
 
         expected_df = pd.DataFrame({
                 'geo_id': ['35620', '31080'],
@@ -342,8 +349,8 @@ class TestPull:
                     'se': [None, None],
                     'sample_size': [None, None],})
 
-            pop1 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][0], "pop"])
-            pop2 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][1], "pop"])
+            pop1 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][0], "pop"].iloc[0])
+            pop2 = int(geo_pop.loc[geo_pop[settings["code_name"]] == settings["geo_names"][1], "pop"].iloc[0])
 
             expected_df = pd.DataFrame({
                     'geo_id': settings["geo_names"],

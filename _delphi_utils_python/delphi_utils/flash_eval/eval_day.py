@@ -147,7 +147,7 @@ def output(evd_ranking, day, lag, signal, logger):
     """
     starter_link = f"{HTML_LINK}{(day+pd.Timedelta(f'{lag}d')).strftime('%Y-%m_%d')}"
     p_text = ""
-    for j, (index, value) in enumerate(evd_ranking.sort_values(ascending=False).iteritems()):
+    for j, (index, value) in enumerate(evd_ranking.sort_values(ascending=False).items()):
         if j < 30:
             start_link = f"{starter_link},{day.strftime('%Y-%m_%d')},{index}"
             p_text += f"\t{start_link}|*{index}*, {'{:.2f}'.format(value)}>\n"

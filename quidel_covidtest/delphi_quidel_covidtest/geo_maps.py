@@ -88,5 +88,5 @@ def add_parent_state(data, geo_res, geo_key):
     # Merge the info of parent state to the data
     data = data.merge(mix_map, how="left", on=geo_key).drop(
         columns=["population"]).dropna()
-    data = data.groupby(["timestamp", geo_key, "state_id"]).sum().reset_index()
+    data = data.groupby(["timestamp", geo_key, "state_id"]).sum(numeric_only=True).reset_index()
     return data

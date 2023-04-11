@@ -195,7 +195,7 @@ class DynamicValidator:
             start_date = self.params.time_window.start_date)
 
         if not error_df.empty:
-            for index, value in error_df.iteritems():
+            for index, value in error_df.items():
                 report.add_raised_error(
                     ValidationFailure("check_val_missing",
                                       geo_type=geo_type,

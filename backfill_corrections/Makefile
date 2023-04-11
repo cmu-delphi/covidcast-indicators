@@ -67,6 +67,8 @@ run-local: setup-dirs
 	grep "backfill correction completed successfully" $(LOG_FILE)
 	grep "scheduled core" $(LOG_FILE) ; \
 	[ "$$?" -eq 1 ]
+	grep "SIGBUS" $(LOG_FILE) ; \
+	[ "$$?" -eq 1 ]
 
 gurobi.lic:
 	@echo WLSACCESSID=$(GRB_WLSACCESSID) >> $(GRB_LICENSE_FILE)

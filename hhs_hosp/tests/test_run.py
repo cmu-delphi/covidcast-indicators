@@ -100,8 +100,8 @@ def test_transform_signal_pop():
         'timestamp': [datetime(year=2020, month=1, day=1)]*2,
         'val': [15., 150.],})
 
-    pa_pop = int(state_pop.loc[state_pop.state_id == "pa", "pop"])
-    wv_pop = int(state_pop.loc[state_pop.state_id == "wv", "pop"])
+    pa_pop = int(state_pop[state_pop.state_id == "pa"]["pop"].iloc[0])
+    wv_pop = int(state_pop[state_pop.state_id == "wv"]["pop"].iloc[0])
     pd.testing.assert_frame_equal(
         transform_signal(
             CONFIRMED_PROP,

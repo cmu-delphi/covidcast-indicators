@@ -27,8 +27,8 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
     Returns:
         df: pd.DataFrame
     """
-    state_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size", "timestamp"])
     state_list = list(state_groups.groups.keys())
+    df_list = []
     for state in state_list:
         state_group = state_groups.get_group(state)
         state_group = state_group.drop(columns=[res_key])
@@ -63,12 +63,15 @@ def generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
             stat = stat * 100
 
         se = se * 100
-        state_df = state_df.append(pd.DataFrame({"geo_id": state,
-                                                 "timestamp": state_group.index,
-                                                 "val": stat,
-                                                 "se": se,
-                                                 "sample_size": sample_size}))
-    return remove_null_samples(state_df)
+        df_list.append(
+            pd.DataFrame({"geo_id": state,
+                         "timestamp": state_group.index,
+                         "val": stat,
+                         "se": se,
+                         "sample_size": sample_size})
+        )
+
+    return remove_null_samples(pd.concat(df_list))
 
 def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
                                    device, first_date, last_date, suffix):
@@ -88,9 +91,9 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
         df: pd.DataFrame
     """
     has_parent = True
-    res_df = pd.DataFrame(columns=["geo_id", "val", "se", "sample_size"])
     if res_key == "fips": # Add rest-of-state report for county level
         data = add_megacounties(data, smooth)
+    df_list = []
     for loc, res_group in data.groupby(res_key):
         parent_state = res_group['state_id'].values[0]
         try:
@@ -147,9 +150,12 @@ def generate_sensor_for_parent_geo(state_groups, data, res_key, smooth,
                 stat = stat * 100
 
         se = se * 100
-        res_df = res_df.append(pd.DataFrame({"geo_id": loc,
-                                             "timestamp": res_group.index,
-                                             "val": stat,
-                                             "se": se,
-                                             "sample_size": sample_size}))
-    return remove_null_samples(res_df)
+        df_list.append(
+            pd.DataFrame({"geo_id": loc,
+                         "timestamp": res_group.index,
+                         "val": stat,
+                         "se": se,
+                         "sample_size": sample_size})
+        )
+
+    return remove_null_samples(pd.concat(df_list))

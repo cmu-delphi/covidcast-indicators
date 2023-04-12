@@ -60,6 +60,7 @@ run_backfill <- function(df, params,
     msg_ts("Splitting data into geo groups")
     group_dfs <- group_split(df, geo_value)
 
+    msg_ts("Beginning training and/or testing...")
     # Build model for each location
     apply_fn <- ifelse(params$parallel, mclapply, lapply)
     result <- apply_fn(group_dfs, function(subdf) {

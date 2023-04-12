@@ -101,7 +101,7 @@ def update_sensor(
     data.dropna(inplace=True)  # drop rows with any missing entries
 
     # aggregate age groups (so data is unique by service date and FIPS)
-    data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum().reset_index()
+    data = data.groupby([Config.DATE_COL, Config.GEO_COL]).sum(numeric_only=True).reset_index()
     assert np.sum(data.duplicated()) == 0, "Duplicates after age group aggregation"
     assert (data[Config.COUNT_COLS] >= 0).all().all(), "Counts must be nonnegative"
 

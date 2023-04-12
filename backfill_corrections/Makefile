@@ -67,6 +67,8 @@ run-local: setup-dirs
 	grep "backfill correction completed successfully" $(LOG_FILE)
 	grep "scheduled core" $(LOG_FILE) ; \
 	[ "$$?" -eq 1 ]
+	grep "SIGBUS" $(LOG_FILE) ; \
+	[ "$$?" -eq 1 ]
 
 gurobi.lic:
 	@echo WLSACCESSID=$(GRB_WLSACCESSID) >> $(GRB_LICENSE_FILE)
@@ -81,6 +83,7 @@ run:
 		-v "`realpath $(USR_CACHE_DIR)`:/backfill_corrections/${CACHE_DIR}" \
 		-v "${PWD}"/params.json:/backfill_corrections/params.host.json \
 		--env GRB_LICENSE_FILE=$(GRB_LICENSE_FILE) \
+		--shm-size=2gb \
 		-it "${DOCKER_IMAGE}:${DOCKER_TAG}" \
 		/bin/bash -c "cp params.host.json params.json && make gurobi.lic && make standardize-dirs && make run-local OPTIONS=\"${OPTIONS}\" LOG_FILE=${LOG_FILE}"
 
@@ -124,7 +127,7 @@ standardize-dirs:
 	$(PYTHON) -m delphi_utils set export_dir $(EXPORT_DIR)
 
 clean:
-	rm -f $(USR_EXPORT_DIR)/*.csv.gz
+	rm -rf $(USR_EXPORT_DIR)/*
 
 coverage:
 	Rscript -e 'covr::package_coverage("delphiBackfillCorrection")'

@@ -34,7 +34,6 @@ def get_from_s3(start_date, end_date, bucket, logger):
                                'State', 'Zip', 'PatientAge', 'Result1',
                                'Result2', 'OverallResult', 'StorageDate',
                                'fname']
-    df = pd.DataFrame(columns=selected_columns)
     s3_files = {}
     for obj in bucket.objects.all():
         if "-sars" in obj.key:
@@ -52,25 +51,30 @@ def get_from_s3(start_date, end_date, bucket, logger):
                 s3_files[received_date].append(obj.key)
 
     n_days = (end_date - start_date).days + 1
+    df_list = []
+    seen_files = set()
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
-            # Avoid appending duplicate datasets
             logger.info(f"Pulling data received on {search_date.date()}")
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
+                # Skip non-CSV files, such as directories
                 if ".csv" not in fn:
-                    continue  #Add to avoid that the folder name was readed as a fn.
-                if fn in set(df["fname"].values):
+                    continue
+                # Avoid appending duplicate datasets
+                if fn in seen_files:
                     continue
                 obj = bucket.Object(key=fn)
                 newdf = pd.read_csv(obj.get()["Body"],
                                     parse_dates=["StorageDate", "TestDate"],
                                     low_memory=False)
+                seen_files.add(fn)
                 newdf["fname"] = fn
-                df = df.append(newdf[selected_columns])
+                df_list.append(newdf[selected_columns])
                 time_flag = search_date
-    return df, time_flag
+
+    return pd.concat(df_list), time_flag
 
 def fix_zipcode(df):
     """Fix zipcode that is 9 digit instead of 5 digit."""
@@ -297,7 +301,14 @@ def pull_quidel_covidtest(params, logger):
 
     # Utilize previously stored data
     if previous_df is not None:
-        df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
+        df = pd.concat(
+            [previous_df, df]
+        ).groupby(
+            ["timestamp", "zip"]
+        ).sum(
+            numeric_only=True
+        ).reset_index(
+        )
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,

@@ -401,9 +401,9 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             df.drop("weight", axis=1, inplace=True)
 
         if not date_col is None:
-            df = df.groupby([date_col, new_col]).sum().reset_index()
+            df = df.groupby([date_col, new_col]).sum(numeric_only=True).reset_index()
         else:
-            df = df.groupby([new_col]).sum().reset_index()
+            df = df.groupby([new_col]).sum(numeric_only=True).reset_index()
         return df
 
     def add_population_column(self, data, geocode_type, geocode_col=None, dropna=True):
@@ -501,7 +501,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         )
         data.set_index([fips_col, date_col], inplace=True)
         data = data.join(mega_data)
-        data = data.reset_index().groupby([date_col, mega_col]).sum()
+        data = data.reset_index().groupby([date_col, mega_col]).sum(numeric_only=True)
         return data.reset_index()
 
     def as_mapper_name(self, geo_type, state="state_id"):

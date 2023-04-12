@@ -30,14 +30,18 @@ def fill_dates(y_data, first_date, last_date):
     Returns: dataframe containing all dates given
     """
     cols = y_data.columns
-    if first_date not in y_data.index:
-        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-                                            columns=cols, index=[first_date]))
-    if last_date not in y_data.index:
-        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-                                            columns=cols, index=[last_date]))
 
-    y_data.sort_index(inplace=True)
+    df_list = [y_data]
+    if first_date not in y_data.index:
+        df_list.append(
+            pd.DataFrame(dict.fromkeys(cols, 0.), columns=cols, index=[first_date])
+        )
+    if last_date not in y_data.index:
+        df_list.append(
+            pd.DataFrame(dict.fromkeys(cols, 0.), columns=cols, index=[last_date])
+        )
+
+    y_data = pd.concat(df_list).sort_index()
     y_data = y_data.asfreq('D', fill_value=0)
     y_data.fillna(0, inplace=True)
     return y_data

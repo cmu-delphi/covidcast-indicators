@@ -250,15 +250,15 @@ class TestExport:
         """Test that `remove_null_samples = True` removes entries with null samples."""
         _clean_directory(self.TEST_DIR)
 
-        df_with_nulls = self.DF.copy().append(
-            {
+        df_with_nulls = pd.concat(
+            [self.DF.copy(),
+            pd.DataFrame({
                 "geo_id": "66666",
                 "timestamp": datetime(2020, 6, 6),
                 "val": 10,
                 "se": 0.2,
                 "sample_size": pd.NA,
-            },
-            ignore_index=True,
+            }, index = [0])]
         )
 
         create_export_csv(
@@ -283,15 +283,15 @@ class TestExport:
         """Test that `remove_null_samples = False` does not remove entries with null samples."""
         _clean_directory(self.TEST_DIR)
 
-        df_with_nulls = self.DF.copy().append(
-            {
+        df_with_nulls = pd.concat(
+            [self.DF.copy(),
+            pd.DataFrame({
                 "geo_id": "66666",
                 "timestamp": datetime(2020, 6, 6),
                 "val": 10,
                 "se": 0.2,
                 "sample_size": pd.NA,
-            },
-            ignore_index=True,
+            }, index = [0])]
         )
 
         create_export_csv(

@@ -701,6 +701,7 @@ def generate_prop_signal(df, geo, geo_mapper):
         ).groupby(
             geo
         ).sum(
+            numeric_only=True
         ).reset_index(
         )
         df = pd.merge(df, map_df, left_on="geo_id", right_on=geo, how="inner")

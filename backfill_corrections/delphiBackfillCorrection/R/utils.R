@@ -169,6 +169,8 @@ create_dir_not_exist <- function(path)
 #' @return list of input dataframe augmented with lag column, if it
 #'     didn't already exist, and character vector of one or two value
 #'     column names, depending on requested `value_type`
+#'
+#' @importFrom dplyr distinct across
 validity_checks <- function(df, value_types, num_col, denom_col, signal_suffixes,
                             refd_col = "time_value", lag_col = "lag", issued_col = "issue_date") {
   if (!missing(signal_suffixes) && !is.na(signal_suffixes) && !all(signal_suffixes == "") && !all(is.na(signal_suffixes))) {
@@ -205,13 +207,16 @@ validity_checks <- function(df, value_types, num_col, denom_col, signal_suffixes
   }
 
   # Drop duplicate rows.
-  duplicate_i <- duplicated(df)
-  if (any(duplicate_i)) {
+  raw_df_rows <- nrow(df)
+  df <- distinct(df)
+  new_df_rows <- nrow(df)
+  if (raw_df_rows != new_df_rows) {
     warning("Data contains duplicate rows, dropping")
-    df <- df[!duplicate_i,]
   }
 
-  if (anyDuplicated(df[, c(refd_col, issued_col, "geo_value", "state_id")])) {
+  if (new_df_rows != nrow(
+      distinct(df, across(c(refd_col, issued_col, "geo_value", "state_id")))
+    )) {
     stop("Data contains multiple entries with differing values for at",
          " least one reference date-issue date-location combination")
   }

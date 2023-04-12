@@ -102,7 +102,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         "state_name": {
             "pop": "state_pop.csv"
         },
-        "jhu_uid": {"fips": "jhu_uid_fips_table.csv"},
         "hhs": {"pop": "hhs_pop.csv"},
         "nation": {"pop": "nation_pop.csv"},
     }
@@ -125,7 +124,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
                 for subkey in self.CROSSWALK_FILENAMES[mainkey]
             }.union(
                 set(self.CROSSWALK_FILENAMES.keys())
-            ) - set(["state", "pop", "jhu_uid"])
+            ) - set(["state", "pop"])
 
         for from_code, to_codes in self.CROSSWALK_FILENAMES.items():
             for to_code, file_path in to_codes.items():
@@ -237,7 +236,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> state_code, state_id, state_name, zip, msa, hrr, nation, hhs, chng-fips
         - chng-fips -> state_code, state_id, state_name
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation, hhs
-        - jhu_uid -> fips
         - state_x -> state_y (where x and y are in {code, id, name}), nation
         - state_code -> hhs, nation
 
@@ -245,7 +243,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         ---------
         df: pd.DataFrame
             Input dataframe.
-        from_code: {'fips', 'chng-fips', 'zip', 'jhu_uid', 'state_code',
+        from_code: {'fips', 'chng-fips', 'zip', 'state_code',
                     'state_id', 'state_name'}
             Specifies the geocode type of the data in from_col.
         new_code: {'fips', 'chng-fips', 'zip', 'state_code', 'state_id',
@@ -351,7 +349,6 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
         - fips -> chng-fips, state_code, state_id, state_name, zip, msa, hrr, nation
         - chng-fips -> state_code, state_id, state_name
         - zip -> state_code, state_id, state_name, fips, msa, hrr, nation
-        - jhu_uid -> fips
         - state_x -> state_y (where x and y are in {code, id, name}), nation
         - state_code -> hhs, nation
 
@@ -361,7 +358,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             Input dataframe.
         from_col: str
             Name of the column in data to match and remove.
-        from_code: {'fips', 'zip', 'jhu_uid', 'state_code', 'state_id', 'state_name'}
+        from_code: {'fips', 'zip', 'state_code', 'state_id', 'state_name'}
             Specifies the geocode type of the data in from_col.
         new_col: str
             Name of the new column to add to data.

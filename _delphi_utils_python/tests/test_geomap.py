@@ -112,24 +112,6 @@ class TestGeoMapper:
             "count": [2, 1, 5, 7, 3, 10021],
         }
     )
-    jhu_uid_data = pd.DataFrame(
-        {
-            "jhu_uid": [
-                84048315,
-                84048137,
-                84013299,
-                84013299,
-                84070002,
-                84000013,
-                84090002,
-            ],
-            "timestamp": [pd.Timestamp("2018-01-01")] * 3
-            + [pd.Timestamp("2018-01-03")] * 3
-            + [pd.Timestamp("2018-01-01")],
-            "count": [1, 2, 3, 4, 8, 5, 20],
-            "total": [2, 4, 7, 11, 100, 10, 40],
-        }
-    )
     state_data = pd.DataFrame(
         {
             "state_code": ["01", "02", "04"],
@@ -148,7 +130,6 @@ class TestGeoMapper:
             "count": [7],
         }
     )
-    # jhu_big_data = pd.read_csv("test_dir/small_deaths.csv")
 
     # Loading tests updated 8/26
     def test_crosswalks(self, geomapper):
@@ -161,8 +142,6 @@ class TestGeoMapper:
         )  # some weight discrepancy is fine for HRR
         cw = geomapper.get_crosswalk(from_code="fips", to_code="zip")
         assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
-        cw = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert cw.groupby("jhu_uid")["weight"].sum().round(5).eq(1.0).all()
         cw = geomapper.get_crosswalk(from_code="zip", to_code="fips")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         # weight discrepancy is fine for MSA, for the same reasons as HRR
@@ -193,10 +172,6 @@ class TestGeoMapper:
     def test_load_fips_chngfips_table(self, geomapper):
         chngfips_data = geomapper.get_crosswalk(from_code="fips", to_code="chng-fips")
         assert tuple(chngfips_data.columns) == ("fips", "chng-fips")
-
-    def test_load_jhu_uid_fips_table(self, geomapper):
-        jhu_data = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), 1.0)
 
     def test_load_zip_hrr_table(self, geomapper):
         zip_data = geomapper.get_crosswalk(from_code="zip", to_code="hrr")

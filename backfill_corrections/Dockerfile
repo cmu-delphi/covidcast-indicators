@@ -26,6 +26,7 @@ RUN install2.r --error \
 
 RUN --mount=type=secret,id=GITHUB_TOKEN \
     export GITHUB_PAT="$(cat /run/secrets/GITHUB_TOKEN)" && \
+    R -e 'devtools::install_version("bettermc", version = "1.1.2")' && \
     R -e 'devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")' && \
     R -e 'devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")' && \
     R -e 'install.packages(list.files(path="/opt/gurobi/linux64/R/", pattern="^gurobi_.*[.]tar[.]gz$", full.names = TRUE), repos=NULL)'

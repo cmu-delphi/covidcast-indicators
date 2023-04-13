@@ -1,5 +1,5 @@
 """Tests for dynamic validator."""
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
@@ -465,3 +465,32 @@ class TestDataOutlier:
 
         assert len(report.raised_warnings) == 2
         assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
+
+class TestDateComparison:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+
+    def test_date_comparison_by_type(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+
+        ref_val = [30, 30, 30]
+        test_val = [100, 100, 100]
+
+        START = datetime.strptime("2020-10-01", "%Y-%m-%d")
+        ref_data = pd.DataFrame({"val": ref_val, "se": [np.nan] * len(ref_val),
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                    # datetime64 type
+                    "time_value": pd.date_range(start=START, end=START + timedelta(days=len(ref_val) - 1))})
+        test_data = pd.DataFrame({"val": test_val, "se": [np.nan] * len(test_val),
+                     "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                     # datetime.date type
+                     "time_value": datetime.strptime("2020-10-26", "%Y-%m-%d").date()})
+
+        # This should run without raising any errors.
+        validator.check_max_date_vs_reference(test_data, ref_data, "date", "state", "signal", report)

@@ -404,7 +404,7 @@ class DynamicValidator:
         Returns:
             - None
         """
-        if df_to_test["time_value"].max() < df_to_reference["time_value"].max():
+        if df_to_test["time_value"].max() < df_to_reference["time_value"].max().date():
             report.add_raised_error(
                 ValidationFailure("check_max_date_vs_reference",
                                   checking_date,

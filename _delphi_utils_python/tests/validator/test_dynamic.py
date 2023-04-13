@@ -1,5 +1,5 @@
 """Tests for dynamic validator."""
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
@@ -479,17 +479,14 @@ class TestDateComparison:
         validator = DynamicValidator(self.params)
         report = ValidationReport([])
 
-        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
-                   31.42857143, 31.71428571, 32, 32, 32.14285714,
-                   32.28571429, 32.42857143, 32.57142857, 32.71428571,
-                   32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
-                   33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+        ref_val = [30, 30, 30]
         test_val = [100, 100, 100]
 
+        START = datetime.strptime("2020-10-01", "%Y-%m-%d")
         ref_data = pd.DataFrame({"val": ref_val, "se": [np.nan] * len(ref_val),
                     "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
                     # datetime64 type
-                    "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")})
+                    "time_value": pd.date_range(start=START, end=START + timedelta(days=len(ref_val) - 1))})
         test_data = pd.DataFrame({"val": test_val, "se": [np.nan] * len(test_val),
                      "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
                      # datetime.date type

@@ -492,8 +492,5 @@ class TestDateComparison:
                      # datetime.date type
                      "time_value": datetime.strptime("2020-10-26", "%Y-%m-%d").date()})
 
-        try:
-            # This should run without raising any errors.
-            validator.check_max_date_vs_reference(test_data, ref_data, "date", "state", "signal", report)
-        except TypeError:
-            assert False
+        # This should run without raising any errors.
+        validator.check_max_date_vs_reference(test_data, ref_data, "date", "state", "signal", report)

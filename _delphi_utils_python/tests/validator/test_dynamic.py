@@ -465,3 +465,38 @@ class TestDataOutlier:
 
         assert len(report.raised_warnings) == 2
         assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
+
+class TestDateComparison:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+
+    def test_date_comparison_by_type(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+
+        ref_val = [30, 30.28571429, 30.57142857, 30.85714286, 31.14285714,
+                   31.42857143, 31.71428571, 32, 32, 32.14285714,
+                   32.28571429, 32.42857143, 32.57142857, 32.71428571,
+                   32.85714286, 33, 33, 33, 33, 33, 33, 33, 33,
+                   33, 33, 33, 33.28571429, 33.57142857, 33.85714286, 34.14285714]
+        test_val = [100, 100, 100]
+
+        ref_data = pd.DataFrame({"val": ref_val, "se": [np.nan] * len(ref_val),
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                    # datetime64 type
+                    "time_value": pd.date_range(start="2020-09-24", end="2020-10-23")})
+        test_data = pd.DataFrame({"val": test_val, "se": [np.nan] * len(test_val),
+                     "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                     # datetime.date type
+                     "time_value": datetime.strptime("2020-10-26", "%Y-%m-%d").date()})
+
+        try:
+            # This should run without raising any errors.
+            validator.check_max_date_vs_reference(test_data, ref_data, "date", "state", "signal", report)
+        except TypeError:
+            assert False

@@ -27,7 +27,6 @@ FIPS_BY_ZIP_POP_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_
 ZIP_HSA_HRR_URL = "https://atlasdata.dartmouth.edu/downloads/geography/ZipHsaHrr18.csv.zip"
 ZIP_HSA_HRR_FILENAME = "ZipHsaHrr18.csv"
 FIPS_MSA_URL = "https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2018/delineation-files/list1_Sep_2018.xls"
-JHU_FIPS_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
@@ -57,7 +56,6 @@ STATE_HHS_OUT_FILENAME = "state_code_hhs_table.csv"
 STATE_POPULATION_OUT_FILENAME = "state_pop.csv"
 HHS_POPULATION_OUT_FILENAME = "hhs_pop.csv"
 NATION_POPULATION_OUT_FILENAME = "nation_pop.csv"
-JHU_FIPS_OUT_FILENAME = "jhu_uid_fips_table.csv"
 
 
 def create_fips_zip_crosswalk():
@@ -110,101 +108,6 @@ def create_fips_msa_crosswalk():
 
     msa_df.sort_values(["fips", "msa"]).to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), columns=["fips", "msa"], index=False)
 
-
-def create_jhu_uid_fips_crosswalk():
-    """Build a crosswalk table from JHU UID to FIPS."""
-    # These are hand modifications that need to be made to the translation
-    # between JHU UID and FIPS. See below for the special cases information
-    # https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html#geographical-exceptions
-    hand_additions = pd.DataFrame(
-        [
-            {
-                "jhu_uid": "84070002",
-                "fips": "25007",  # Split aggregation of Dukes and Nantucket, Massachusetts
-                "weight": 16535 / (16535 + 10172),  # Population: 16535
-            },
-            {
-                "jhu_uid": "84070002",
-                "fips": "25019",
-                "weight": 10172 / (16535 + 10172),  # Population: 10172
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29095",  # Kansas City, Missouri
-                "weight": 674158 / 1084897,  # Population: 674158
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29165",
-                "weight": 89322 / 1084897,  # Population: 89322
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29037",
-                "weight": 99478 / 1084897,  # Population: 99478
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29047",
-                "weight": 221939 / 1084897,  # Population: 221939
-            },
-            # Kusilvak, Alaska
-            {"jhu_uid": "84002158", "fips": "02270", "weight": 1.0},
-            # Oglala Lakota
-            {"jhu_uid": "84046102", "fips": "46113", "weight": 1.0},
-            # Aggregate Utah territories into a "State FIPS"
-            {"jhu_uid": "84070015", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070016", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070017", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070018", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070019", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070020", "fips": "49000", "weight": 1.0},
-        ]
-    )
-    # Map the Unassigned category to a custom megaFIPS XX000
-    unassigned_states = pd.DataFrame(
-        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-        for x in range(84090001, 84090057)
-    )
-    # Map the Out of State category to a custom megaFIPS XX000
-    out_of_state = pd.DataFrame(
-        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-        for x in range(84080001, 84080057)
-    )
-    # Map the Unassigned and Out of State categories to the cusom megaFIPS 72000
-    puerto_rico_unassigned = pd.DataFrame(
-        [
-            {"jhu_uid": "63072888", "fips": "72000", "weight": 1.0},
-            {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
-        ]
-    )
-    cruise_ships = pd.DataFrame(
-        [
-            {"jhu_uid": "84088888", "fips": "88888", "weight": 1.0},
-            {"jhu_uid": "84099999", "fips": "99999", "weight": 1.0},
-        ]
-    )
-
-
-    jhu_df = pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str}).query("Country_Region == 'US'")
-    jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])
-
-    # FIPS Codes that are just two digits long should be zero filled on the right.
-    # These are US state codes (XX) and the territories Guam (66), Northern Mariana Islands (69),
-    # Virgin Islands (78), and Puerto Rico (72).
-    fips_territories = jhu_df["fips"].str.len() <= 2
-    jhu_df.loc[fips_territories, "fips"] = jhu_df.loc[fips_territories, "fips"].str.ljust(5, "0")
-
-    # Drop the JHU UIDs that were hand-modified
-    manual_correction_ids = pd.concat([hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned, cruise_ships])["jhu_uid"]
-    jhu_df.drop(jhu_df.index[jhu_df["jhu_uid"].isin(manual_correction_ids)], inplace=True)
-
-    # Add weights of 1.0 to everything not in hand additions, then merge in hand-additions
-    # Finally, zero fill FIPS
-    jhu_df["weight"] = 1.0
-    jhu_df = pd.concat([jhu_df, hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned])
-    jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
-    jhu_df.sort_values(["jhu_uid", "fips"]).to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), columns=["jhu_uid", "fips", "weight"], index=False)
 
 
 def create_state_codes_crosswalk():
@@ -659,7 +562,6 @@ if __name__ == "__main__":
     create_fips_zip_crosswalk()
     create_zip_hsa_hrr_crosswalk()
     create_fips_msa_crosswalk()
-    create_jhu_uid_fips_crosswalk()
     create_state_codes_crosswalk()
     create_state_hhs_crosswalk()
     create_fips_population_table()

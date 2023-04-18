@@ -158,7 +158,7 @@ class GeoMapper:  # pylint: disable=too-many-public-methods
             to_code = from_code = "state"
         elif geo_type == "fips":
             from_code = "fips"
-            to_code = "pop"
+            to_code = "state"
         else:
             from_code = "fips"
             to_code = geo_type

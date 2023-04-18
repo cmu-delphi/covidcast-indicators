@@ -21,7 +21,7 @@ pipeline {
     stages {
         stage('Build and Package main') {
             when {
-                branch "main";
+                branch "test-indicator-build";
             }
             steps {
                 script {
@@ -30,7 +30,7 @@ pipeline {
                             sh "jenkins/build-and-package.sh ${indicator} main"
                         }
                     }
-                    parallel build_package_main
+                    #parallel build_package_main
                 }
             }
         }

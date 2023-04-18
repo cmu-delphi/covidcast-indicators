@@ -373,13 +373,13 @@ class TestGeoMapper:
     def test_get_geos(self, geomapper):
         assert geomapper.get_geo_values("nation") == {"us"}
         assert geomapper.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(geomapper.get_geo_values("fips")) == 3236
+        assert len(geomapper.get_geo_values("fips")) == 3293
         assert len(geomapper.get_geo_values("chng-fips")) == 2711
         assert len(geomapper.get_geo_values("state_id")) == 60
         assert len(geomapper.get_geo_values("zip")) == 32976
 
     def test_get_geos_2019(self, geomapper_2019):
-        assert len(geomapper_2019.get_geo_values("fips")) == 3235
+        assert len(geomapper_2019.get_geo_values("fips")) == 3292
         assert len(geomapper_2019.get_geo_values("chng-fips")) == 2710
 
     def test_get_geos_within(self, geomapper):

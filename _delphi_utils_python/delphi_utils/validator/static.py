@@ -166,8 +166,6 @@ class StaticValidator:
         gmpr = GeoMapper()
         valid_geos = gmpr.get_geo_values(geomap_type)
         valid_geos |= set(self.params.additional_valid_geo_values.get(geo_type, []))
-        if geo_type == "county":
-            valid_geos |= set(x + "000" for x in gmpr.get_geo_values("state_code"))
         return valid_geos
 
     def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):

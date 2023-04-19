@@ -12,7 +12,7 @@
 
 //def indicator_list = ["backfill_corrections", "changehc", "claims_hosp", "google_symptoms", "hhs_hosp", "jhu", "nchs_mortality", "quidel_covidtest", "sir_complainsalot", "dsew_community_profile", "doctor_visits"]
 //def indicator_list = ["backfill_corrections", "changehc"]
-def indicator_list = ["changehc"]
+def indicator_list = ["changehc","backfill_corrections"]
 def build_package_main = [:]
 def build_package_prod = [:]
 def deploy_staging = [:]

@@ -22,6 +22,7 @@ pipeline {
         stage('Build and Package main') {
             when {
                 branch "test-indicator-build";
+            }
             steps {
                 script {
                     indicator_list.each { indicator ->
@@ -32,7 +33,6 @@ pipeline {
                 }
             }
         }
-    }
         stage('Build and Package prod') {
             when {
                 branch "prod";

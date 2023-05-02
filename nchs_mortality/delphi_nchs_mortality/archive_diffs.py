@@ -33,7 +33,7 @@ def arch_diffs(params, daily_arch_diff, logger):
     # - Does not upload to S3, that is handled by daily run of archive utility
     # - Exports issues into receiving for the API
     n = 0
-    if datetime.today().weekday() == (0 or 3):
+    if datetime.today().weekday() in {0, 3}:
         # Copy todays raw output to receiving and log the number of published files
         for output_file in listdir(daily_export_dir):
             copy(

@@ -66,7 +66,7 @@ jobs:
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
           remotes::update_packages(dependency_list$package, upgrade="always")
 
-          devtools::install_version("bettermc", version = "1.1.2"
+          devtools::install_version("bettermc", version = "1.1.2")
           devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")
           devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")
         shell: Rscript {0}

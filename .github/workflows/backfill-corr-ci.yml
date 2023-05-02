@@ -52,23 +52,24 @@ jobs:
           key: ${{ runner.os }}-r-backfillcorr-${{ steps.get-date.outputs.date }}
           restore-keys: |
             ${{ runner.os }}-r-backfillcorr-
-      - name: Install R dependencies
+      - name: Install and cache dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          working-directory: backfill_corrections/delphiBackfillCorrection
+          upgrade: 'TRUE'
+          extra-packages: |
+            any::rcmdcheck
+            any::devtools
+            any::remotes
+      - name: Update R dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if ( !require("remotes") ) {
-            install.packages("remotes")
-          }
-          if ( !require("devtools") ) {
-            install.packages("devtools")
-          }
           remotes::update_packages(c("rcmdcheck", "remotes", "devtools"), upgrade="always")
           dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
           remotes::update_packages(dependency_list$package, upgrade="always")
-
-          devtools::install_version("bettermc", version = "1.1.2")
-          devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")
-          devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")
         shell: Rscript {0}
       - name: Check
         run: |

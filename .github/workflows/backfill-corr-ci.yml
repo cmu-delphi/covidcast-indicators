@@ -59,19 +59,9 @@ jobs:
         with:
           working-directory: backfill_corrections/delphiBackfillCorrection
           upgrade: 'TRUE'
-          extra-packages: |
-            any::rcmdcheck
-            any::devtools
-            any::remotes
-      - name: Update R dependencies
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          remotes::update_packages(c("rcmdcheck", "remotes", "devtools"), upgrade="always")
-          dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
-          remotes::update_packages(dependency_list$package, upgrade="always")
-        shell: Rscript {0}
-      - name: Check
-        run: |
-          rcmdcheck::rcmdcheck(args = c("--no-manual", "--test-dir=unit-tests"), error_on = "error")
-        shell: Rscript {0}
+      - name: Check package
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: backfill_corrections/delphiBackfillCorrection
+          args: 'c("--no-manual", "--test-dir=unit-tests")'
+          error-on: '"error"'

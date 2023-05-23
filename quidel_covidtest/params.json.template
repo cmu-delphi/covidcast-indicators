@@ -7,6 +7,9 @@
   "indicator": {
     "static_file_dir": "./static",
     "input_cache_dir": "./cache",
+    "generate_backfill_files": false,
+    "backfill_dir": "./backfill",
+    "backfill_merge_day": 0,
     "export_start_date": "2020-05-26",
     "export_end_date": "",
     "pull_start_date": "2020-05-26",
@@ -19,6 +22,15 @@
     "bucket_name": "",
     "wip_signal": [""],
     "test_mode": false
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+    },
+    "bucket_name": "delphi-covidcast-indicator-output",
+    "cache_dir": "./archivediffer_cache",
+    "indicator_prefix": "quidel"
   },
   "validation": {
     "common": {

@@ -144,16 +144,19 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     # range of estimates to produce
     n_backfill_days = params["indicator"]["n_backfill_days"]  # produce estimates for n_backfill_days
     n_waiting_days = params["indicator"]["n_waiting_days"]  # most recent n_waiting_days won't be est
+
+    generate_backfill_files = params["indicator"].get("generate_backfill_files", True)
+    backfill_dir = ""
+    backfill_merge_day = 0
+    if generate_backfill_files:
+        backfill_dir = params["indicator"]["backfill_dir"]
+        backfill_merge_day = params["indicator"]["backfill_merge_day"]
+
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
-    enddate = str(enddate_dt.date())
-    startdate = str(startdate_dt.date())
-
     # now allow manual overrides
-    if params["indicator"]["end_date"] is not None:
-        enddate = params["indicator"]["end_date"]
-    if params["indicator"]["start_date"] is not None:
-        startdate = params["indicator"]["start_date"]
+    enddate = enddate = params["indicator"].get("end_date",str(enddate_dt.date()))
+    startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
 
     logger.info("generating signal and exporting to CSV",
         first_sensor_date = startdate,
@@ -195,20 +198,24 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 if numtype == "covid":
                     base_geo = "fips"
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"],dropdate_dt, base_geo)
+                             file_dict["covid"], "fips",
+                             backfill_dir, geo, weekday, numtype,
+                             generate_backfill_files, backfill_merge_day)
                 elif numtype == "cli":
                     base_geo = "fips"
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,base_geo)
+                             file_dict["flu_like"],file_dict["covid_like"], "fips",
+                             backfill_dir, geo, weekday, numtype,
+                             generate_backfill_files, backfill_merge_day)
                 elif numtype == "flu":
                     base_geo = "fips"
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             dropdate_dt,base_geo)
+                             "fips",backfill_dir, geo, weekday,
+                             numtype, generate_backfill_files, backfill_merge_day)
                 elif numtype == "flu_inpatient":
                     base_geo = "state_code"
                     data = load_flu_inpatient_data(file_dict["denom_inpatient_state"],file_dict["flu_inpatient"],
                              dropdate_dt,base_geo)
-                    
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],

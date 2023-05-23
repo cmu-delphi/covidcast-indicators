@@ -7,6 +7,7 @@ when the module is run with `python -m delphi_claims_hosp`.
 
 # standard packages
 import time
+import os
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -15,7 +16,11 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .config import Config
+from .download_claims_ftp_files import download
+from .modify_claims_drops import modify_and_write
+from .get_latest_claims_name import get_latest_filename
 from .update_indicator import ClaimsHospIndicatorUpdater
+from .backfill import (store_backfill_file, merge_backfill_file)
 
 
 def run_module(params):
@@ -31,7 +36,7 @@ def run_module(params):
             - "log_exceptions" (optional): bool, whether to log exceptions to file.
             - "log_filename" (optional): str, name of file to write logs
         - "indicator":
-            - "input_file": str, optional filenames to download. If null,
+            - "input_dir": str, directory to downloaded raw files. If null,
                 defaults are set in retrieve_files().
             - "start_date": str, YYYY-MM-DD format, first day to generate data for.
             - "end_date": str or null, YYYY-MM-DD format, last day to generate data for.
@@ -53,11 +58,21 @@ def run_module(params):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
 
+    # pull latest data
+    download(params["indicator"]["ftp_credentials"],
+             params["indicator"]["input_dir"], logger)
+
+    # aggregate data
+    modify_and_write(params["indicator"]["input_dir"], logger)
+
+    # find the latest files (these have timestamps)
+    claims_file = get_latest_filename(params["indicator"]["input_dir"], logger)
+
     # handle range of estimates to produce
     # filename expected to have format: EDI_AGG_INPATIENT_DDMMYYYY_HHMM{timezone}.csv.gz
     if params["indicator"]["drop_date"] is None:
         dropdate_dt = datetime.strptime(
-            Path(params["indicator"]["input_file"]).name.split("_")[3], "%d%m%Y")
+            Path(claims_file).name.split("_")[3], "%d%m%Y")
     else:
         dropdate_dt = datetime.strptime(params["indicator"]["drop_date"], "%Y-%m-%d")
 
@@ -75,6 +90,13 @@ def run_module(params):
     if params["indicator"]["start_date"] is not None:
         startdate = params["indicator"]['start_date']
 
+    # Store backfill data
+    if params["indicator"].get("generate_backfill_files", True):
+        backfill_dir = params["indicator"]["backfill_dir"]
+        backfill_merge_day = params["indicator"]["backfill_merge_day"]
+        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+        store_backfill_file(claims_file, dropdate_dt, backfill_dir)
+
     # print out information
     logger.info("Loaded params",
                 startdate = startdate,
@@ -88,6 +110,8 @@ def run_module(params):
                 weekday = params["indicator"]["weekday"],
                 write_se = params["indicator"]["write_se"])
 
+    max_dates = []
+    n_csv_export = []
     # generate indicator csvs
     for geo in params["indicator"]["geos"]:
         for weekday in params["indicator"]["weekday"]:
@@ -114,12 +138,27 @@ def run_module(params):
                 signal_name
             )
             updater.update_indicator(
-                params["indicator"]["input_file"],
+                claims_file,
                 params["common"]["export_dir"],
                 logger,
             )
+            max_dates.append(updater.output_dates[-1])
+            n_csv_export.append(len(updater.output_dates))
         logger.info("finished updating", geo = geo)
 
+    # Remove all the raw files
+    for fn in os.listdir(params["indicator"]["input_dir"]):
+        if ".csv.gz" in fn:
+            os.remove(f'{params["indicator"]["input_dir"]}/{fn}')
+    logger.info('Remove all the raw files.')
+
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    min_max_date = min(max_dates)
+    max_lag_in_days = (datetime.now() - min_max_date).days
+    csv_export_count = sum(n_csv_export)
+    formatted_min_max_date = min_max_date.strftime("%Y-%m-%d")
     logger.info("Completed indicator run",
-        elapsed_time_in_seconds = elapsed_time_in_seconds)
+                elapsed_time_in_seconds = elapsed_time_in_seconds,
+                csv_export_count = csv_export_count,
+                max_lag_in_days = max_lag_in_days,
+                oldest_final_export_date = formatted_min_max_date)

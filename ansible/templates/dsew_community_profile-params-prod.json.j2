@@ -6,13 +6,20 @@
   "indicator": {
     "input_cache": "./input_cache",
     "reports": "new",
-    "export_signals": ["confirmed covid-19 admissions"]
+    "export_signals": [
+      "confirmed covid-19 admissions",
+      "doses administered",
+      "booster doses administered",
+      "fully vaccinated",
+      "booster dose since",
+      "positivity"
+    ]
   },
   "validation": {
     "common": {
       "data_source": "dsew-cpr",
       "span_length": 14,
-      "min_expected_lag": {"all": "5"},
+      "min_expected_lag": {"all": "3"},
       "max_expected_lag": {"all": "9"},
       "dry_run": true,
       "suppressed_errors": []
@@ -25,9 +32,21 @@
     "dynamic": {
       "ref_window_size": 7,
       "smoothed_signals": [
-        "naats_total_7dav",
-        "naats_positivity_7dav"
+        "naats_positivity_7dav",
+        "confirmed_admissions_covid_1d_prop_7dav",
+        "confirmed_admissions_covid_1d_7dav",
+        "doses_admin_7dav",
+        "booster_doses_admin_7dav"
       ]
     }
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+    },
+    "bucket_name": "delphi-covidcast-indicator-output",
+    "cache_dir": "./cache",
+    "indicator_prefix": "delphi_dsew_community_profile"
   }
 }

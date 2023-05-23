@@ -9,26 +9,43 @@
    - Keep in sync with '.github/workflows/python-ci.yml'.
    - TODO: #527 Get this list automatically from python-ci.yml at runtime.
  */
-def indicator_list = ["changehc", "claims_hosp", "facebook", "google_symptoms", "hhs_hosp", "jhu", "nchs_mortality", "quidel", "quidel_covidtest", "safegraph_patterns", "sir_complainsalot", "usafacts", "dsew_community_profile"]
-def build_package = [:]
+
+def indicator_list = ["backfill_corrections", "changehc", "claims_hosp", "google_symptoms", "hhs_hosp", "nchs_mortality", "quidel_covidtest", "sir_complainsalot", "dsew_community_profile", "doctor_visits"]
+def build_package_main = [:]
+def build_package_prod = [:]
 def deploy_staging = [:]
 def deploy_production = [:]
 
 pipeline {
     agent any
     stages {
-        stage('Build and Package') {
+        stage('Build and Package main') {
             when {
                 branch "main";
             }
             steps {
                 script {
                     indicator_list.each { indicator ->
-                        build_package[indicator] = {
-                            sh "jenkins/build-and-package.sh ${indicator}"
+                        build_package_main[indicator] = {
+                            sh "jenkins/build-and-package.sh ${indicator} main"
                         }
                     }
-                    parallel build_package
+                    parallel build_package_main
+                }
+            }
+        }
+        stage('Build and Package prod') {
+            when {
+                branch "prod";
+            }
+            steps {
+                script {
+                    indicator_list.each { indicator ->
+                        build_package_prod[indicator] = {
+                            sh "jenkins/build-and-package.sh ${indicator} prod"
+                        }
+                    }
+                    parallel build_package_prod
                 }
             }
         }

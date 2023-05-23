@@ -10,6 +10,9 @@
     "export_end_date": "",
     "pull_start_date": "2020-05-26",
     "pull_end_date":"",
+    "generate_backfill_files": true,
+    "backfill_dir": "/common/backfill/quidel_covidtest",
+    "backfill_merge_day": 0,
     "export_day_range":40,
     "aws_credentials": {
       "aws_access_key_id": "{{ quidel_aws_access_key_id }}",
@@ -47,6 +50,15 @@
         "covid_ag_smoothed_pct_positive"
       ]
     }
+  },
+  "archive": {
+    "aws_credentials": {
+      "aws_access_key_id": "{{ delphi_aws_access_key_id }}",
+      "aws_secret_access_key": "{{ delphi_aws_secret_access_key }}"
+    },
+    "bucket_name": "delphi-covidcast-indicator-output",
+    "cache_dir": "./archivediffer_cache",
+    "indicator_prefix": "quidel"
   },
   "delivery": {
     "delivery_dir": "/common/covidcast/receiving/quidel"

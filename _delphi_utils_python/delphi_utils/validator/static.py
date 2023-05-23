@@ -90,28 +90,34 @@ class StaticValidator:
         Returns:
             - None
         """
-        # Create set of all dates seen in CSV names.
-        unique_dates = {datetime.strptime(
-            daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
-
-        # Diff expected and observed dates.
-        expected_dates = self.params.time_window.date_seq
-
-        if len(self.params.max_expected_lag) == 0:
-            max_expected_lag_overall = 10
-        else:
-            max_expected_lag_overall = max(self.params.max_expected_lag.values())
-
-        # Only check for date if it should definitely be present,
-        # i.e if it is more than max_expected_lag since the checking date
-        expected_dates = [date for date in expected_dates if
-            ((datetime.today().date() - date).days) > max_expected_lag_overall]
-        check_dateholes = list(set(expected_dates).difference(unique_dates))
-        check_dateholes.sort()
-
-        if check_dateholes:
+        # Check to see if there are any files in the export directory
+        # Validator will throw an error if the directory is empty, which can be suppressed
+        if len(daily_filenames) == 0:
             report.add_raised_error(
-                ValidationFailure("check_missing_date_files",
+                ValidationFailure("check_empty_filelist",
+                                  message="No files found in export directory"))
+        # Check for missing date only happens when files are found
+        else:
+            # Create set of all dates seen in CSV names.
+            unique_dates = {datetime.strptime(
+                daily_filename[0][0:8], '%Y%m%d').date() for daily_filename in daily_filenames}
+            # Diff expected and observed dates.
+            expected_dates = self.params.time_window.date_seq
+            if len(self.params.max_expected_lag) == 0:
+                max_expected_lag_overall = 10
+            else:
+                max_expected_lag_overall = max(self.params.max_expected_lag.values())
+
+            # Only check for date if it should definitely be present,
+            # i.e if it is more than max_expected_lag since the checking date
+            expected_dates = [date for date in expected_dates if
+                ((datetime.today().date() - date).days) > max_expected_lag_overall]
+            check_dateholes = list(set(expected_dates).difference(unique_dates))
+            check_dateholes.sort()
+
+            if check_dateholes:
+                report.add_raised_error(
+                    ValidationFailure("check_missing_date_files",
                                   message="Missing dates are observed; if these dates are already "
                                           "in the API they would not be updated"))
 
@@ -160,8 +166,6 @@ class StaticValidator:
         gmpr = GeoMapper()
         valid_geos = gmpr.get_geo_values(geomap_type)
         valid_geos |= set(self.params.additional_valid_geo_values.get(geo_type, []))
-        if geo_type == "county":
-            valid_geos |= set(x + "000" for x in gmpr.get_geo_values("state_code"))
         return valid_geos
 
     def check_bad_geo_id_value(self, df_to_test, filename, geo_type, report):
@@ -294,14 +298,6 @@ class StaticValidator:
                                               "for proportions"))
 
             report.increment_total_checks()
-
-        if df_to_test['val'].isnull().values.any():
-            report.add_raised_error(
-                ValidationFailure("check_val_missing",
-                                  filename=nameformat,
-                                  message="val column can't have any cell that is NA"))
-
-        report.increment_total_checks()
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
             report.add_raised_error(

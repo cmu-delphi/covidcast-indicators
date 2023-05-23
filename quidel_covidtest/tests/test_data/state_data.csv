@@ -1,4 +1,4 @@
-timestamp,state_id,totalTest,numUniqueDevices,positiveTest
+timestamp,state_id,totalTest_total,numUniqueDevices_total,positiveTest_total
 2020-06-14,al,6,2,1.0
 2020-06-14,ar,4,1,1.0
 2020-06-14,ca,53,6,2.0

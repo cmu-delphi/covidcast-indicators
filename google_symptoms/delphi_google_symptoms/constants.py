@@ -11,11 +11,11 @@ SYMPTOM_SETS = {
             "Rhinitis", "Common cold"],
     "s03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
     #"s04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
-    "s05": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
+    "s04": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
             "Crackles", "Acute bronchitis", "Bronchitis"],
-    "s06": ["Anosmia", "Dysgeusia", "Ageusia"],
+    "s05": ["Anosmia", "Dysgeusia", "Ageusia"],
     #"s07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
-    "s08": ["Laryngitis", "Sore throat", "Throat irritation"],
+    "s06": ["Laryngitis", "Sore throat", "Throat irritation"],
     #"s09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
     #"s10": ["Night sweats","Perspiration", "hyperhidrosis"],
     "scontrol": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
@@ -45,7 +45,10 @@ SMOOTHERS_MAP = {
                                    impute_method='zeros'), lambda d: d)
 }
 
-
+DTYPE_CONVERSIONS = {'open_covid_region_code':'string','date': 'datetime64'}
+for index, symptom in enumerate(METRICS):
+    key = "symptom_" + METRICS[index].replace(" ","_")
+    DTYPE_CONVERSIONS[key] = "float"
 
 STATE_TO_ABBREV = {'Alabama': 'al',
                    'Alaska': 'ak',

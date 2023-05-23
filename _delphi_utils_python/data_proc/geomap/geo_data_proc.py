@@ -27,11 +27,12 @@ FIPS_BY_ZIP_POP_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_
 ZIP_HSA_HRR_URL = "https://atlasdata.dartmouth.edu/downloads/geography/ZipHsaHrr18.csv.zip"
 ZIP_HSA_HRR_FILENAME = "ZipHsaHrr18.csv"
 FIPS_MSA_URL = "https://www2.census.gov/programs-surveys/metro-micro/geographies/reference-files/2018/delineation-files/list1_Sep_2018.xls"
-JHU_FIPS_URL = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/UID_ISO_FIPS_LookUp_Table.csv"
 STATE_CODES_URL = "http://www2.census.gov/geo/docs/reference/state.txt?#"
 FIPS_POPULATION_URL = f"https://www2.census.gov/programs-surveys/popest/datasets/2010-{YEAR}/counties/totals/co-est{YEAR}-alldata.csv"
 FIPS_PUERTO_RICO_POPULATION_URL = "https://www2.census.gov/geo/docs/maps-data/data/rel/zcta_county_rel_10.txt?"
 STATE_HHS_FILE = "hhs.txt"
+ZIP_POP_MISSING_FILE = "zip_pop_filling.csv"
+CHNG_COUNTY_GROUPS_FILE = "chng_county_groups.csv"
 
 # Out files
 FIPS_STATE_OUT_FILENAME = "fips_state_table.csv"
@@ -39,8 +40,10 @@ FIPS_MSA_OUT_FILENAME = "fips_msa_table.csv"
 FIPS_HRR_OUT_FILENAME = "fips_hrr_table.csv"
 FIPS_ZIP_OUT_FILENAME = "fips_zip_table.csv"
 FIPS_HHS_FILENAME = "fips_hhs_table.csv"
+FIPS_CHNGFIPS_OUT_FILENAME = "fips_chng-fips_table.csv"
 FIPS_POPULATION_OUT_FILENAME = "fips_pop.csv"
 
+CHNGFIPS_STATE_OUT_FILENAME = "chng-fips_state_table.csv"
 ZIP_HSA_OUT_FILENAME = "zip_hsa_table.csv"
 ZIP_HRR_OUT_FILENAME = "zip_hrr_table.csv"
 ZIP_FIPS_OUT_FILENAME = "zip_fips_table.csv"
@@ -53,7 +56,6 @@ STATE_HHS_OUT_FILENAME = "state_code_hhs_table.csv"
 STATE_POPULATION_OUT_FILENAME = "state_pop.csv"
 HHS_POPULATION_OUT_FILENAME = "hhs_pop.csv"
 NATION_POPULATION_OUT_FILENAME = "nation_pop.csv"
-JHU_FIPS_OUT_FILENAME = "jhu_uid_fips_table.csv"
 
 
 def create_fips_zip_crosswalk():
@@ -106,100 +108,6 @@ def create_fips_msa_crosswalk():
 
     msa_df.sort_values(["fips", "msa"]).to_csv(join(OUTPUT_DIR, FIPS_MSA_OUT_FILENAME), columns=["fips", "msa"], index=False)
 
-
-def create_jhu_uid_fips_crosswalk():
-    """Build a crosswalk table from JHU UID to FIPS."""
-    # These are hand modifications that need to be made to the translation
-    # between JHU UID and FIPS. See below for the special cases information
-    # https://cmu-delphi.github.io/delphi-epidata/api/covidcast-signals/jhu-csse.html#geographical-exceptions
-    hand_additions = pd.DataFrame(
-        [
-            {
-                "jhu_uid": "84070002",
-                "fips": "25007",  # Split aggregation of Dukes and Nantucket, Massachusetts
-                "weight": 16535 / (16535 + 10172),  # Population: 16535
-            },
-            {
-                "jhu_uid": "84070002",
-                "fips": "25019",
-                "weight": 10172 / (16535 + 10172),  # Population: 10172
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29095",  # Kansas City, Missouri
-                "weight": 674158 / 1084897,  # Population: 674158
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29165",
-                "weight": 89322 / 1084897,  # Population: 89322
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29037",
-                "weight": 99478 / 1084897,  # Population: 99478
-            },
-            {
-                "jhu_uid": "84070003",
-                "fips": "29047",
-                "weight": 221939 / 1084897,  # Population: 221939
-            },
-            # Kusilvak, Alaska
-            {"jhu_uid": "84002158", "fips": "02270", "weight": 1.0},
-            # Oglala Lakota
-            {"jhu_uid": "84046102", "fips": "46113", "weight": 1.0},
-            # Aggregate Utah territories into a "State FIPS"
-            {"jhu_uid": "84070015", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070016", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070017", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070018", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070019", "fips": "49000", "weight": 1.0},
-            {"jhu_uid": "84070020", "fips": "49000", "weight": 1.0},
-        ]
-    )
-    # Map the Unassigned category to a custom megaFIPS XX000
-    unassigned_states = pd.DataFrame(
-        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-        for x in range(84090001, 84090057)
-    )
-    # Map the Out of State category to a custom megaFIPS XX000
-    out_of_state = pd.DataFrame(
-        {"jhu_uid": str(x), "fips": str(x)[-2:].ljust(5, "0"), "weight": 1.0}
-        for x in range(84080001, 84080057)
-    )
-    # Map the Unassigned and Out of State categories to the cusom megaFIPS 72000
-    puerto_rico_unassigned = pd.DataFrame(
-        [
-            {"jhu_uid": "63072888", "fips": "72000", "weight": 1.0},
-            {"jhu_uid": "63072999", "fips": "72000", "weight": 1.0},
-        ]
-    )
-    cruise_ships = pd.DataFrame(
-        [
-            {"jhu_uid": "84088888", "fips": "88888", "weight": 1.0},
-            {"jhu_uid": "84099999", "fips": "99999", "weight": 1.0},
-        ]
-    )
-
-    jhu_df = pd.read_csv(JHU_FIPS_URL, dtype={"UID": str, "FIPS": str}).query("Country_Region == 'US'")
-    jhu_df = jhu_df.rename(columns={"UID": "jhu_uid", "FIPS": "fips"}).dropna(subset=["fips"])
-
-    # FIPS Codes that are just two digits long should be zero filled on the right.
-    # These are US state codes (XX) and the territories Guam (66), Northern Mariana Islands (69),
-    # Virgin Islands (78), and Puerto Rico (72).
-    fips_territories = jhu_df["fips"].str.len() <= 2
-    jhu_df.loc[fips_territories, "fips"] = jhu_df.loc[fips_territories, "fips"].str.ljust(5, "0")
-
-    # Drop the JHU UIDs that were hand-modified
-    manual_correction_ids = pd.concat([hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned, cruise_ships])["jhu_uid"]
-    jhu_df.drop(jhu_df.index[jhu_df["jhu_uid"].isin(manual_correction_ids)], inplace=True)
-
-    # Add weights of 1.0 to everything not in hand additions, then merge in hand-additions
-    # Finally, zero fill FIPS
-    jhu_df["weight"] = 1.0
-    jhu_df = pd.concat([jhu_df, hand_additions, unassigned_states, out_of_state, puerto_rico_unassigned])
-    jhu_df["fips"] = jhu_df["fips"].astype(int).astype(str).str.zfill(5)
-    jhu_df.sort_values(["jhu_uid", "fips"]).to_csv(join(OUTPUT_DIR, JHU_FIPS_OUT_FILENAME), columns=["jhu_uid", "fips", "weight"], index=False)
 
 
 def create_state_codes_crosswalk():
@@ -336,6 +244,7 @@ def create_hhs_population_table():
     state_pop = pd.read_csv(join(OUTPUT_DIR, STATE_POPULATION_OUT_FILENAME), dtype={"state_code": str, "hhs": int}, usecols=["state_code", "pop"])
     state_hhs = pd.read_csv(join(OUTPUT_DIR, STATE_HHS_OUT_FILENAME), dtype=str)
     hhs_pop = state_pop.merge(state_hhs, on="state_code").groupby("hhs", as_index=False).sum()
+
     hhs_pop.sort_values("hhs").to_csv(join(OUTPUT_DIR, HHS_POPULATION_OUT_FILENAME), index=False)
 
 
@@ -363,6 +272,18 @@ def derive_zip_population_table():
     df = census_pop.merge(fz_df, on="fips", how="left")
     df["pop"] = df["pop"].multiply(df["weight"], axis=0)
     df = df.drop(columns=["fips", "weight"]).groupby("zip").sum().dropna().reset_index()
+
+    ## loading populatoin of some zips- #Issue 0648
+    zip_pop_missing = pd.read_csv(
+        ZIP_POP_MISSING_FILE,sep=",",
+        dtype={"zip":str,"pop":np.int32}
+        )
+    ## cheking if each zip still missing, and concatenating if True
+    for x_zip in zip_pop_missing['zip']:
+        if x_zip not in df['zip']:
+            df = pd.concat([df, zip_pop_missing[zip_pop_missing['zip'] == x_zip]],
+                          ignore_index=True)
+
     df["pop"] = df["pop"].astype(int)
     df.sort_values("zip").to_csv(join(OUTPUT_DIR, ZIP_POPULATION_OUT_FILENAME), index=False)
 
@@ -460,6 +381,176 @@ def derive_zip_hhs_crosswalk():
     zip_state.sort_values(["zip", "hhs"]).to_csv(join(OUTPUT_DIR, ZIP_HHS_FILENAME), index=False)
 
 
+def derive_fips_chngfips_crosswalk():
+    """Build a crosswalk table for FIPS to CHNG FIPS."""
+    if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
+        derive_fips_state_crosswalk()
+
+    assign_county_groups()
+    county_groups = pd.read_csv(CHNG_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+    # Split list of county FIPS codes into separate columns.
+    county_groups = pd.concat(
+            [county_groups, county_groups.fips_list.str.split("|", expand=True)],
+            axis=1
+        ).drop(
+            columns = "fips_list"
+        )
+
+    # Change to long format.
+    county_groups = pd.melt(
+            county_groups,
+            id_vars = ["state_fips", "group"],
+            var_name = "county_num",
+            value_name = "fips"
+        ).drop(
+            columns="county_num"
+        ).dropna()
+
+    county_groups["state_fips"] = county_groups["state_fips"].str.zfill(2)
+    county_groups["group"] = county_groups["group"].str.zfill(2)
+    county_groups["fips"] = county_groups["fips"].str.zfill(5).astype("string")
+    # Combine state codes and group ids into a single FIPS code.
+    county_groups["chng-fips"] = county_groups["state_fips"] + "g" + county_groups["group"]
+
+    county_groups = county_groups[["fips", "chng-fips"]]
+    fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
+
+    # Get all the fips that aren't included in the chng groupings.
+    extra_fips_list = list(set(fips_to_state.fips) - set(county_groups.fips))
+    # Normal fips codes and CHNG fips codes are the same for ungrouped counties.
+    extra_fips_df = pd.DataFrame({"fips" : extra_fips_list, "chng-fips" : extra_fips_list}, dtype="string")
+
+    # Combine grouped and ungrouped counties.
+    pd.concat(
+        [county_groups, extra_fips_df]
+    ).sort_values(
+        ["fips", "chng-fips"]
+    ).to_csv(
+        join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME), index=False
+    )
+
+
+def derive_chngfips_state_crosswalk():
+    """Build a crosswalk table for FIPS to CHNG FIPS."""
+    if not isfile(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME)):
+        derive_fips_state_crosswalk()
+
+    if not isfile(join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME)):
+        derive_fips_chngfips_crosswalk()
+
+    fips_to_group = pd.read_csv(join(OUTPUT_DIR, FIPS_CHNGFIPS_OUT_FILENAME), dtype="string", index_col=False)
+    fips_to_state = pd.read_csv(join(OUTPUT_DIR, FIPS_STATE_OUT_FILENAME), dtype="string", index_col=False)
+
+    group_to_state = fips_to_group.join(
+            fips_to_state.set_index("fips"), on="fips", how="left"
+        ).drop(
+            columns = "fips"
+        ).drop_duplicates(
+        ).sort_values(
+            ["chng-fips", "state_code"]
+        )
+    group_to_state.to_csv(join(OUTPUT_DIR, CHNGFIPS_STATE_OUT_FILENAME), index=False)
+
+
+def fetch_county_groups_spreadsheet():
+    # County mapping file is derived from
+    # https://docs.google.com/spreadsheets/d/1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0/edit#gid=871427657
+    sheet_id = "1PEce4CjjHbRM1Z5xEMNI6Xsq_b2kkCh0"
+    sheet_name = "groupings"
+    # Request sheet in CSV format via tag in URL.
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+
+    county_groups = pd.read_csv(
+            url, dtype="string", index_col=False
+        ).dropna(
+            how="all", axis=1
+        )
+    county_groups["state FIPS"] = county_groups["state FIPS"].astype(int)
+
+    # Counties belonging to each group are listed (as FIPS codes) in the "county
+    # FIPS grouping" column, concatenated and separated by the pipe "|".
+    new_names = {
+        "state FIPS": "state_fips",
+        "county FIPS grouping": "fips_list"
+    }
+
+    county_groups = county_groups.rename(
+            columns=new_names
+        )[new_names.values()]
+
+    return county_groups
+
+
+def assign_county_groups():
+    county_groups = fetch_county_groups_spreadsheet()
+
+    # If a county groups mapping file already exists in `data_proc/geomap`, we
+    # have to be careful to not reassign a group number to a different group.
+    # Group numbers must remain fixed, even if a given county group is no longer
+    # being used.
+    if isfile(CHNG_COUNTY_GROUPS_FILE):
+        old_county_groups = pd.read_csv(CHNG_COUNTY_GROUPS_FILE, dtype="string", index_col=False)
+        old_county_groups.group = old_county_groups.group.astype(int)
+        old_county_groups.state_fips = old_county_groups.state_fips.astype(int)
+
+        # Remove rows from county_groups if that `fips_list` value already
+        # exists in old_county_groups.
+        county_groups = county_groups[
+            ~county_groups.fips_list.isin(old_county_groups.fips_list)
+        ]
+
+        # If grouping file has no new rows, no need to process again.
+        if county_groups.empty:
+            return
+        # Grouping spreadsheet contains rows not seen in old, on-disk county
+        # groupings file. Combining the two is delicate. While the code below
+        # appears to work, it has not been formally tested and could be
+        # invalid for even small changes to the format of the input county
+        # groupings file.
+        else:
+            raise NotImplementedError(
+                "Can't combine old and new county groupings automatically, "
+                "code below is not tested or robust to changes in input format."
+                "We recommend manually working with the code below and the new"
+                "data in a REPL."
+            )
+
+        # Assign an incrementing integer to be the group id of each remaining
+        # county grouping within a state using the given sort order.
+        county_groups["group"] = county_groups.groupby("state_fips").cumcount() + 1
+
+        # Find max group number by state in old_county_groups, join on, and
+        # add max group number to group number.
+        max_group_by_state = old_county_groups.groupby(
+                "state_fips"
+            ).group.max(
+            ).reset_index(
+            ).rename(
+                columns = {"group": "max_group"}
+            )
+        county_groups = county_groups.join(
+                max_group_by_state.set_index("state_fips"),
+                how="left",
+                on="state_fips"
+            ).assign(
+                group = lambda x: x.group + x.max_group
+            ).drop(
+                ["max_group"], axis=1
+            )
+
+        # Combine old_county_groups and county_groups
+        county_groups = pd.concat([old_county_groups, county_groups])
+    else:
+        # Group numbers are 1-indexed.
+        county_groups["group"] = county_groups.groupby("state_fips").cumcount() + 1
+
+    county_groups.sort_values(
+            ["state_fips"], kind="stable"
+        ).to_csv(
+            CHNG_COUNTY_GROUPS_FILE, index=False
+        )
+
+
 def clear_dir(dir_path: str):
     for fname in listdir(dir_path):
         remove(join(dir_path, fname))
@@ -471,7 +562,6 @@ if __name__ == "__main__":
     create_fips_zip_crosswalk()
     create_zip_hsa_hrr_crosswalk()
     create_fips_msa_crosswalk()
-    create_jhu_uid_fips_crosswalk()
     create_state_codes_crosswalk()
     create_state_hhs_crosswalk()
     create_fips_population_table()
@@ -486,3 +576,5 @@ if __name__ == "__main__":
     derive_zip_population_table()
     derive_fips_hhs_crosswalk()
     derive_zip_hhs_crosswalk()
+    derive_fips_chngfips_crosswalk()
+    derive_chngfips_state_crosswalk()

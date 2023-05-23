@@ -91,7 +91,7 @@ class TestCHCSensorUpdater:
                 "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
             data_frame = su_inst.geo_reindex(test_data, "fips")
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
-            assert (data_frame.sum() == (4200,19000)).all()
+            assert (data_frame.sum(numeric_only=True) == (4200,19000)).all()
 
     def test_update_sensor(self):
         """Tests that the sensors are properly updated."""

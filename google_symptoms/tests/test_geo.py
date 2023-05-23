@@ -47,6 +47,7 @@ class TestGeo:
             ).drop("weight", axis="columns")
         hrr_pop = fips2hrr.groupby("hrr"
             ).sum(
+                numeric_only=True
             ).reset_index(
             ).rename(columns={"population": "hrr_pop"})
         df_plus = df.merge(fips2hrr, left_on="geo_id", right_on="fips", how="left"
@@ -59,6 +60,7 @@ class TestGeo:
                 combined_metric = lambda x: x.metric_0/3 + x.metric_1/3 + x.metric_2/3
             ).groupby("hrr"
             ).sum(
+                numeric_only=True
             ).drop(
                 labels=[METRICS[23], METRICS[24], METRICS[25], COMBINED_METRIC[4]],
                 axis="columns"
@@ -91,6 +93,7 @@ class TestGeo:
         fips2msa = gmpr.add_population_column(gmpr.get_crosswalk("fips", "msa"), "fips")
         msa_pop = fips2msa.groupby("msa"
             ).sum(
+                numeric_only=True
             ).reset_index(
             ).rename(columns={"population": "msa_pop"})
         df_plus = df.merge(fips2msa, left_on="geo_id", right_on="fips", how="left"
@@ -103,6 +106,7 @@ class TestGeo:
                 combined_metric = lambda x: x.metric_0/3 + x.metric_1/3 + x.metric_2/3
             ).groupby("msa"
             ).sum(
+                numeric_only=True
             ).drop(
                 labels=[METRICS[23], METRICS[24], METRICS[25], COMBINED_METRIC[4]],
                 axis="columns"
@@ -136,6 +140,7 @@ class TestGeo:
         state2hhs = gmpr.add_geocode(state2hhs, "state_code", "hhs")
         hhs_pop = state2hhs.groupby("hhs"
             ).sum(
+                numeric_only=True
             ).reset_index(
             ).rename(columns={"population": "hhs_pop"})
         df_plus = df.merge(state2hhs, left_on="geo_id", right_on="state_id", how="left"
@@ -148,6 +153,7 @@ class TestGeo:
                 combined_metric = lambda x: x.metric_0/3 + x.metric_1/3 + x.metric_2/3
             ).groupby("hhs"
             ).sum(
+                numeric_only=True
             ).drop(
                 labels=[METRICS[23], METRICS[24], METRICS[25], COMBINED_METRIC[4]],
                 axis="columns"
@@ -181,6 +187,7 @@ class TestGeo:
         state2nation = gmpr.add_geocode(state2nation, "state_code", "nation")
         nation_pop = state2nation.groupby("nation"
             ).sum(
+                numeric_only=True
             ).reset_index(
             ).rename(columns={"population": "nation_pop"})
         df_plus = df.merge(state2nation, left_on="geo_id", right_on="state_id", how="left"
@@ -193,6 +200,7 @@ class TestGeo:
                 combined_metric = lambda x: x.metric_0/3 + x.metric_1/3 + x.metric_2/3
             ).groupby("nation"
             ).sum(
+                numeric_only=True
             ).drop(
                 labels=[METRICS[23], METRICS[24], METRICS[25], COMBINED_METRIC[4]],
                 axis="columns"

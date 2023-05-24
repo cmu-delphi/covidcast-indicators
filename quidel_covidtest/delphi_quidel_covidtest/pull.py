@@ -8,6 +8,10 @@ import boto3
 import pandas as pd
 import numpy as np
 
+from .constants import AGE_GROUPS
+
+
+
 def get_from_s3(start_date, end_date, bucket, logger):
     """
     Get raw data from aws s3 bucket.
@@ -30,7 +34,6 @@ def get_from_s3(start_date, end_date, bucket, logger):
                                'State', 'Zip', 'PatientAge', 'Result1',
                                'Result2', 'OverallResult', 'StorageDate',
                                'fname']
-    df = pd.DataFrame(columns=selected_columns)
     s3_files = {}
     for obj in bucket.objects.all():
         if "-sars" in obj.key:
@@ -48,23 +51,30 @@ def get_from_s3(start_date, end_date, bucket, logger):
                 s3_files[received_date].append(obj.key)
 
     n_days = (end_date - start_date).days + 1
+    df_list = []
+    seen_files = set()
     for search_date in [start_date + timedelta(days=x) for x in range(n_days)]:
         if search_date in s3_files.keys():
-            # Avoid appending duplicate datasets
             logger.info(f"Pulling data received on {search_date.date()}")
 
             # Fetch data received on the same day
             for fn in s3_files[search_date]:
-                if fn in set(df["fname"].values):
+                # Skip non-CSV files, such as directories
+                if ".csv" not in fn:
+                    continue
+                # Avoid appending duplicate datasets
+                if fn in seen_files:
                     continue
                 obj = bucket.Object(key=fn)
                 newdf = pd.read_csv(obj.get()["Body"],
                                     parse_dates=["StorageDate", "TestDate"],
                                     low_memory=False)
+                seen_files.add(fn)
                 newdf["fname"] = fn
-                df = df.append(newdf[selected_columns])
+                df_list.append(newdf[selected_columns])
                 time_flag = search_date
-    return df, time_flag
+
+    return pd.concat(df_list), time_flag
 
 def fix_zipcode(df):
     """Fix zipcode that is 9 digit instead of 5 digit."""
@@ -163,21 +173,21 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
     overall_pos = df[df["OverallResult"] == "positive"].groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_pos["positiveTest"] = overall_pos["OverallResult"]
+    overall_pos["positiveTest_total"] = overall_pos["OverallResult"]
     overall_pos.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute overallTotal
     overall_total = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)['OverallResult'].count()
-    overall_total["totalTest"] = overall_total["OverallResult"]
+    overall_total["totalTest_total"] = overall_total["OverallResult"]
     overall_total.drop(labels="OverallResult", axis="columns", inplace=True)
 
     # Compute numUniqueDevices
     numUniqueDevices = df.groupby(
         by=["timestamp", "zip"],
         as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
-            columns={"SofiaSerNum": "numUniqueDevices"}
+            columns={"SofiaSerNum": "numUniqueDevices_total"}
         )
 
     df_merged = overall_total.merge(
@@ -186,6 +196,55 @@ def preprocess_new_data(start_date, end_date, params, test_mode, logger):
         overall_pos, on=["timestamp", "zip"], how="left"
         ).fillna(0).drop_duplicates()
 
+    # Compute Summary info for age groups
+    df["PatientAge"] = df["PatientAge"].fillna(-1)
+    df.loc[df["PatientAge"] == "<1", "PatientAge"] = 0.5
+    df.loc[df["PatientAge"] == ">85", "PatientAge"] = 100
+    df["PatientAge"] = df["PatientAge"] .astype(float)
+
+    # Should match the suffixes of signal names
+    df["label"] = None
+    df.loc[df["PatientAge"] < 5, "label"] = "age_0_4"
+    df.loc[((df["PatientAge"] >= 5)) & (df["PatientAge"] < 18), "label"] = "age_5_17"
+    df.loc[((df["PatientAge"] >= 18)) & (df["PatientAge"] < 50), "label"] = "age_18_49"
+    df.loc[((df["PatientAge"] >= 50)) & (df["PatientAge"] < 65), "label"] = "age_50_64"
+    df.loc[(df["PatientAge"] >= 65), "label"] = "age_65plus"
+    df.loc[df["PatientAge"] == -1, "label"] = "NA"
+
+    for agegroup in AGE_GROUPS[1:]: # Exclude total
+        if agegroup == "age_0_17":
+            ages = ["age_0_4", "age_5_17"]
+        else:
+            ages = [agegroup]
+        # Compute overallPositive
+        group_pos = df.loc[(df["OverallResult"] == "positive")
+                             & (df["label"].isin(ages))].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_pos[f"positiveTest_{agegroup}"] = group_pos["OverallResult"]
+        group_pos.drop(labels="OverallResult", axis="columns", inplace=True)
+
+        # Compute overallTotal
+        group_total = df.loc[df["label"].isin(ages)].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)['OverallResult'].count()
+        group_total[f"totalTest_{agegroup}"] = group_total["OverallResult"]
+        group_total.drop(labels="OverallResult", axis="columns", inplace=True)
+
+        # Compute numUniqueDevices
+        group_numUniqueDevices = df.loc[df["label"].isin(ages)].groupby(
+            by=["timestamp", "zip"],
+            as_index=False)["SofiaSerNum"].agg({"SofiaSerNum": "nunique"}).rename(
+                columns={"SofiaSerNum": f"numUniqueDevices_{agegroup}"}
+            )
+
+        df_merged = df_merged.merge(
+            group_numUniqueDevices, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_pos, on=["timestamp", "zip"], how="left"
+            ).merge(
+            group_total, on=["timestamp", "zip"], how="left"
+            ).fillna(0).drop_duplicates()
 
     return df_merged, time_flag
 
@@ -242,7 +301,14 @@ def pull_quidel_covidtest(params, logger):
 
     # Utilize previously stored data
     if previous_df is not None:
-        df = previous_df.append(df).groupby(["timestamp", "zip"]).sum().reset_index()
+        df = pd.concat(
+            [previous_df, df]
+        ).groupby(
+            ["timestamp", "zip"]
+        ).sum(
+            numeric_only=True
+        ).reset_index(
+        )
     return df, _end_date
 
 def check_export_end_date(input_export_end_date, _end_date,
@@ -295,7 +361,7 @@ def check_export_start_date(export_start_date, export_end_date,
         export_start_date = datetime(2020, 5, 26)
     else:
         export_start_date = datetime.strptime(export_start_date, '%Y-%m-%d')
-     # Only export data from -45 days to -5 days
+     # Only export data from -50 days to -5 days
     if (export_end_date - export_start_date).days > export_day_range:
         export_start_date = export_end_date - timedelta(days=export_day_range)
 

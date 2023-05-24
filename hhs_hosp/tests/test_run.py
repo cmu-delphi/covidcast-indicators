@@ -5,7 +5,7 @@ import tempfile
 import os
 
 from delphi_hhs.run import _date_to_int, int_date_to_previous_day_datetime, generate_date_ranges, \
-    make_signal, make_geo, run_module, pop_proportion
+    make_signal, make_geo, run_module, transform_signal
 from delphi_hhs.constants import SMOOTHERS, GEOS, SIGNALS, \
     CONFIRMED, SUM_CONF_SUSP, CONFIRMED_FLU, CONFIRMED_PROP, SUM_CONF_SUSP_PROP, CONFIRMED_FLU_PROP
 from delphi_utils.geomap import GeoMapper
@@ -89,40 +89,51 @@ def test_make_signal():
     with pytest.raises(Exception):
         make_signal(data, "zig")
 
-def test_pop_proportion():
+def test_transform_signal_pop():
     geo_mapper = GeoMapper()
-    state_pop = geo_mapper.get_crosswalk("state_code", "pop")
+    state_pop = geo_mapper.get_crosswalk("state_id", "pop")
+    identity_smoother = SMOOTHERS[0]
+    hundo_k = 100000
 
     test_df = pd.DataFrame({  
-        'state': ['PA'],
-        'state_code': [42],
-        'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [15.],})
+        'state': ['pa', 'wv'],
+        'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+        'val': [15., 150.],})
 
-    pa_pop = int(state_pop.loc[state_pop.state_code == "42", "pop"])
+    pa_pop = int(state_pop[state_pop.state_id == "pa"]["pop"].iloc[0])
+    wv_pop = int(state_pop[state_pop.state_id == "wv"]["pop"].iloc[0])
     pd.testing.assert_frame_equal(
-        pop_proportion(test_df, geo_mapper),
+        transform_signal(
+            CONFIRMED_PROP,
+            identity_smoother,
+            'state',
+            test_df.copy(),
+            geo_mapper),
         pd.DataFrame({
-            'state': ['PA'],
-            'state_code': [42],
-            'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [15/pa_pop*100000],})
+            'geo_id': ['pa', 'wv'],
+            'timestamp': [datetime(year=2020, month=1, day=1)]*2,
+            'val': [15/pa_pop*hundo_k, 150/wv_pop*hundo_k],
+            'se': [None]*2,
+            'sample_size': [None]*2,}),
+        check_dtype=False,
+        check_like=True
     )
 
-    test_df= pd.DataFrame({  
-        'state': ['WV'],
-        'state_code': [54],
-        'timestamp': [datetime(year=2020, month=1, day=1)],
-        'val': [150.],})
-
-    wv_pop = int(state_pop.loc[state_pop.state_code == "54", "pop"])
     pd.testing.assert_frame_equal(
-        pop_proportion(test_df, geo_mapper),
+        transform_signal(
+            CONFIRMED_PROP,
+            identity_smoother,
+            'nation',
+            test_df.copy(),
+            geo_mapper),
         pd.DataFrame({
-            'state': ['WV'],
-            'state_code': [54],
+            'geo_id': ['us'],
             'timestamp': [datetime(year=2020, month=1, day=1)],
-            'val': [150/wv_pop*100000],})
+            'val': [165/(pa_pop+wv_pop)*hundo_k],
+            'se': [None],
+            'sample_size': [None],}),
+        check_dtype=False,
+        check_like=True
     )
 
 def test_make_geo():

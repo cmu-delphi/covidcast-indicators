@@ -1,15 +1,33 @@
 """Registry for constants."""
-from functools import partial
 from datetime import timedelta
 
-from .smooth import (
-    identity,
-    kday_moving_average,
-)
+from delphi_utils import Smoother
 
 # global constants
-METRICS = ["Anosmia", "Ageusia"]
-COMBINED_METRIC = "sum_anosmia_ageusia"
+
+SYMPTOM_SETS = {
+    "s01": ["Cough", "Phlegm", "Sputum", "Upper respiratory tract infection"],
+    "s02": ["Nasal congestion", "Post nasal drip", "Rhinorrhea", "Sinusitis",
+            "Rhinitis", "Common cold"],
+    "s03": ["Fever", "Hyperthermia", "Chills", "Shivering", "Low grade fever"],
+    #"s04": ["Fatigue", "Weakness", "Muscle weakness", "Myalgia", "Pain"],
+    "s04": ["Shortness of breath", "Wheeze", "Croup", "Pneumonia", "Asthma",
+            "Crackles", "Acute bronchitis", "Bronchitis"],
+    "s05": ["Anosmia", "Dysgeusia", "Ageusia"],
+    #"s07": ["Nausea", "Vomiting", "Diarrhea", "Indigestion", "Abdominal pain"],
+    "s06": ["Laryngitis", "Sore throat", "Throat irritation"],
+    #"s09": ["Headache", "Migraine", "Cluster headache", "Dizziness", "Lightheadedness"],
+    #"s10": ["Night sweats","Perspiration", "hyperhidrosis"],
+    "scontrol": ["Type 2 diabetes", "Urinary tract infection", "Hair loss",
+                 "Candidiasis", "Weight gain"]
+}
+
+COMBINED_METRIC = list(SYMPTOM_SETS.keys())
+
+METRICS = list()
+for combmetric in COMBINED_METRIC:
+    METRICS = METRICS + SYMPTOM_SETS[combmetric]
+
 SMOOTHERS = ["raw", "smoothed"]
 GEO_RESOLUTIONS = [
     "state",
@@ -20,11 +38,17 @@ GEO_RESOLUTIONS = [
     "nation"
 ]
 
-seven_day_moving_average = partial(kday_moving_average, k=7)
 SMOOTHERS_MAP = {
-    "raw":           (identity, lambda d: d - timedelta(days=7)),
-    "smoothed":      (seven_day_moving_average, lambda d: d),
+    "raw":               (Smoother("identity", impute_method=None),
+                          lambda d: d - timedelta(days=7)),
+    "smoothed":          (Smoother("moving_average", window_length=7,
+                                   impute_method='zeros'), lambda d: d)
 }
+
+DTYPE_CONVERSIONS = {'open_covid_region_code':'string','date': 'datetime64'}
+for index, symptom in enumerate(METRICS):
+    key = "symptom_" + METRICS[index].replace(" ","_")
+    DTYPE_CONVERSIONS[key] = "float"
 
 STATE_TO_ABBREV = {'Alabama': 'al',
                    'Alaska': 'ak',

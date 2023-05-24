@@ -4,7 +4,8 @@ from setuptools import find_packages
 required = [
     "numpy",
     "pandas",
-    "sklearn",
+    "paramiko",
+    "scikit-learn",
     "pytest",
     "pytest-cov",
     "pylint==2.8.3",

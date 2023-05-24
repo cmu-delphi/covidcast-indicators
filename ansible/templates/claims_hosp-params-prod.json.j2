@@ -1,0 +1,46 @@
+{
+  "common": {
+    "export_dir": "/common/covidcast/receiving/hospital-admissions/",
+    "log_filename": "/var/log/indicators/hospital-admissions.log"
+  },
+  "indicator": {
+    "input_dir": "./retrieve_files",
+    "start_date": "2020-02-01",
+    "end_date": null,
+    "drop_date": null,
+    "generate_backfill_files": true,
+    "backfill_dir": "/common/backfill/claims_hosp",
+    "backfill_merge_day": 0,
+    "n_backfill_days": 70,
+    "n_waiting_days": 3,
+    "write_se": false,
+    "obfuscated_prefix": "foo_obfuscated",
+    "parallel": false,
+    "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
+    "weekday": [true, false],
+    "ftp_credentials": {
+      "host": "{{ claims_hosp_ftp_host }}",
+      "user": "{{ claims_hosp_ftp_user }}",
+      "pass": "{{ claims_hosp_ftp_password }}",
+      "port": 2222
+    }
+  },
+  "validation": {
+    "common": {
+      "data_source": "hospital-admissions",
+      "span_length": 14,
+      "min_expected_lag": {"all": "3"},
+      "max_expected_lag": {"all": "4"},
+      "dry_run": true,
+      "suppressed_errors": []
+    },
+    "static": {
+      "minimum_sample_size": 5,
+      "missing_se_allowed": true,
+      "missing_sample_size_allowed": true
+    },
+    "dynamic": {
+      "ref_window_size": 7
+    }
+  }
+}

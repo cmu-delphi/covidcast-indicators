@@ -1,8 +1,10 @@
 import pytest
 import mock
+import db_dtypes
 from freezegun import freeze_time
 from datetime import date, datetime
 import pandas as pd
+from pandas.testing import assert_frame_equal
 
 from delphi_google_symptoms.pull import (
     pull_gs_data, preprocess, format_dates_for_query, pull_gs_data_one_geolevel, get_date_range)
@@ -21,7 +23,7 @@ bad_input = {
 symptom_names = ["symptom_" +
                  metric.replace(" ", "_") for metric in METRICS]
 keep_cols = ["open_covid_region_code", "date"] + symptom_names
-new_keep_cols = ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
+new_keep_cols = ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
 
 
 class TestPullGoogleSymptoms:
@@ -46,20 +48,39 @@ class TestPullGoogleSymptoms:
             df = dfs[level]
             assert (
                 df.columns.values
-                == ["geo_id", "timestamp"] + METRICS + [COMBINED_METRIC]
+                == ["geo_id", "timestamp"] + METRICS + COMBINED_METRIC
             ).all()
 
-            # combined_symptoms is nan when both Anosmia and Ageusia are nan
+            # combined_symptoms is nan when both Anosmia, Ageusia, and Dysgeusia are nan
             assert sum(~df.loc[
-                (df[METRICS[0]].isnull())
-                & (df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
-            # combined_symptoms is not nan when either Anosmia or Ageusia isn't nan
+                (df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            # combined_symptoms is not nan when at least one of them isn't nan
             assert sum(df.loc[
-                (~df[METRICS[0]].isnull())
-                & (df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
+                (~df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
             assert sum(df.loc[
-                (df[METRICS[0]].isnull())
-                & (~df[METRICS[1]].isnull()), COMBINED_METRIC].isnull()) == 0
+                (df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (~df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (~df[METRICS[23]].isnull())
+                & (df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
+            assert sum(df.loc[
+                (df[METRICS[23]].isnull())
+                & (~df[METRICS[24]].isnull())
+                & (~df[METRICS[25]].isnull()), COMBINED_METRIC[4]].isnull()) == 0
 
     def test_missing_cols(self):
         df = pd.read_csv(bad_input["missing_cols"])
@@ -70,6 +91,16 @@ class TestPullGoogleSymptoms:
         df = pd.read_csv(bad_input["invalid_fips"])
         with pytest.raises(AssertionError):
             preprocess(df, "county")
+
+    def test_no_rows_nulled(self):
+        """
+        Check that rows are not mysteriously nulled out. See
+        https://github.com/cmu-delphi/covidcast-indicators/pull/1496 for motivating issue.
+        """
+        # Cast date field to `dbdate` to match dataframe dtypes as provided by the BigQuery fetch.
+        df = pd.read_csv(good_input["state"]).astype({"date": "dbdate"})
+        out = preprocess(df, "state")
+        assert df.shape[0] == out[~out.Cough.isna()].shape[0]
 
 
 class TestPullHelperFuncs:
@@ -109,9 +140,9 @@ class TestPullHelperFuncs:
 
         output = pull_gs_data_one_geolevel("state", ["", ""])
         expected = pd.DataFrame(columns=new_keep_cols)
-        assert output.equals(expected)
+        assert_frame_equal(output, expected, check_dtype = False)
 
     def test_preprocess_no_data(self):
         output = preprocess(pd.DataFrame(columns=keep_cols), "state")
         expected = pd.DataFrame(columns=new_keep_cols)
-        assert output.equals(expected)
+        assert_frame_equal(output, expected, check_dtype = False)

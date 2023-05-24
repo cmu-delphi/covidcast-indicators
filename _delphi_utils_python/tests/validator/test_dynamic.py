@@ -1,5 +1,5 @@
 """Tests for dynamic validator."""
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import numpy as np
 import pandas as pd
 
@@ -25,8 +25,9 @@ class TestReferencePadding:
         test_df = pd.DataFrame(data)
         ref_df = pd.DataFrame(data)
 
+        ref_date = datetime.strptime("2021-01-06", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-06", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         assert new_ref_df.equals(ref_df)
 
@@ -42,11 +43,12 @@ class TestReferencePadding:
         ref_df = pd.DataFrame(ref_data)
         test_df = pd.DataFrame(test_data)
 
+        ref_date = datetime.strptime("2021-01-15", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         # Check it only takes missing dates - so the last 5 dates
-        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-11",
+        assert new_ref_df.time_value.max().date() == datetime.strptime("2021-01-11",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 11
         assert new_ref_df["val"].iloc[5] == 2
@@ -64,11 +66,12 @@ class TestReferencePadding:
         ref_df = pd.DataFrame(ref_data)
         test_df = pd.DataFrame(test_data)
 
+        ref_date = datetime.strptime("2021-01-15", "%Y-%m-%d").date()
         new_ref_df = validator.pad_reference_api_df(
-            ref_df, test_df, datetime.strptime("2021-01-15", "%Y-%m-%d").date())
+            ref_df, test_df, ref_date, ref_date)
 
         # Check it only takes missing dates up to the day before the reference
-        assert new_ref_df.time_value.max() == datetime.strptime("2021-01-15",
+        assert new_ref_df.time_value.max().date() == datetime.strptime("2021-01-15",
             "%Y-%m-%d").date()
         assert new_ref_df.shape[0] == 15
         assert new_ref_df["val"].iloc[5] == 2
@@ -106,6 +109,28 @@ class TestCheckRapidChange:
         assert len(report.raised_errors) == 1
         assert report.raised_errors[0].check_name == "check_rapid_change_num_rows"
 
+class TestCheckNaVals:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 14,
+            "end_date": "2020-09-02"
+        }
+    }
+    def test_missing(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+        data = {"val": [np.nan] * 15, "geo_id": [0,1] * 7 + [2], 
+            "time_value": ["2021-08-30"] * 14 + ["2021-05-01"]}
+        df = pd.DataFrame(data)
+        df.time_value = (pd.to_datetime(df.time_value)).dt.date
+        validator.check_na_vals(df, "geo", "signal", report)
+
+        assert len(report.raised_errors) == 2
+        assert report.raised_errors[0].check_name == "check_val_missing"
+        assert report.raised_errors[0].message == "geo_id 0"
+        assert report.raised_errors[1].check_name == "check_val_missing"
+        assert report.raised_errors[1].message == "geo_id 1"
 
 class TestCheckAvgValDiffs:
     params = {
@@ -440,3 +465,32 @@ class TestDataOutlier:
 
         assert len(report.raised_warnings) == 2
         assert report.raised_warnings[0].check_name == "check_positive_negative_spikes"
+
+class TestDateComparison:
+    params = {
+        "common": {
+            "data_source": "",
+            "span_length": 1,
+            "end_date": "2020-09-02"
+        }
+    }
+
+    def test_date_comparison_by_type(self):
+        validator = DynamicValidator(self.params)
+        report = ValidationReport([])
+
+        ref_val = [30, 30, 30]
+        test_val = [100, 100, 100]
+
+        START = datetime.strptime("2020-10-01", "%Y-%m-%d")
+        ref_data = pd.DataFrame({"val": ref_val, "se": [np.nan] * len(ref_val),
+                    "sample_size": [np.nan] * len(ref_val), "geo_id": ["1"] * len(ref_val),
+                    # datetime64 type
+                    "time_value": pd.date_range(start=START, end=START + timedelta(days=len(ref_val) - 1))})
+        test_data = pd.DataFrame({"val": test_val, "se": [np.nan] * len(test_val),
+                     "sample_size": [np.nan] * len(test_val), "geo_id": ["1"] * len(test_val),
+                     # datetime.date type
+                     "time_value": datetime.strptime("2020-10-26", "%Y-%m-%d").date()})
+
+        # This should run without raising any errors.
+        validator.check_max_date_vs_reference(test_data, ref_data, "date", "state", "signal", report)

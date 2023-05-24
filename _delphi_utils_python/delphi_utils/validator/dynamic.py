@@ -5,7 +5,7 @@ from typing import Dict, Set
 import re
 import pandas as pd
 import numpy as np
-from .errors import ValidationFailure, APIDataFetchError
+from .errors import ValidationFailure
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
 
@@ -110,11 +110,13 @@ class DynamicValidator:
             self.check_max_allowed_max_date(
                 max_date, geo_type, signal_type, report)
 
+            self.check_na_vals(geo_sig_df, geo_type, signal_type, report)
+
             # Get relevant reference data from API dictionary.
             api_df_or_error = all_api_df[(geo_type, signal_type)]
 
             report.increment_total_checks()
-            if isinstance(api_df_or_error, APIDataFetchError):
+            if not isinstance(api_df_or_error, pd.DataFrame):
                 report.add_raised_error(api_df_or_error)
                 continue
 
@@ -167,6 +169,43 @@ class DynamicValidator:
             kroc += 1
             if self.test_mode and kroc == 2:
                 break
+
+    def check_na_vals(self, geo_sig_df, geo_type, signal_type, report):
+        """Check if there are any NA values.
+
+        In particular, make sure that error doesn't occur for new Geo IDs introduced.
+
+        Arguments:
+            - geo_type: str; geo type name (county, msa, hrr, state) as in the CSV name
+            - signal_type: str; signal name as in the CSV name
+            - report: ValidationReport; report where results are added
+
+        Returns:
+            - None
+        """
+        def replace_first_six(df, start_date):
+            x = df.val.isnull()
+            # First 6 days have to be null
+            x.iloc[:6] = False
+            df = df[x]
+            return df.time_value[df.time_value >= start_date]
+
+        grouped_df = geo_sig_df.groupby('geo_id')
+        error_df = grouped_df.apply(replace_first_six,
+            start_date = self.params.time_window.start_date)
+
+        if not error_df.empty:
+            for index, value in error_df.items():
+                report.add_raised_error(
+                    ValidationFailure("check_val_missing",
+                                      geo_type=geo_type,
+                                      signal=signal_type,
+                                      date=value,
+                                      message=f"geo_id {index[0]}"
+                                      )
+                )
+
+        report.increment_total_checks()
 
     def check_min_allowed_max_date(self, max_date, geo_type, signal_type, report):
         """Check if time since data was generated is reasonable or too long ago.
@@ -234,8 +273,8 @@ class DynamicValidator:
             - report: ValidationReport; report where results are added
 
         Returns:
-            - False if recent_df is empty, else (recent_df, reference_api_df)
-            (after reference_api_df has been padded if necessary)
+            - False if recent_df is empty after padding, else (recent_df, reference_api_df)
+            (reference_api_df will be padded if necessary)
         """
         # recent_lookbehind: start from the check date and working backward in time,
         # how many days at a time do we want to check for anomalies?
@@ -281,47 +320,71 @@ class DynamicValidator:
         reference_api_df = api_df_or_error.query(
             "time_value >= @reference_start_date & time_value <= @reference_end_date")
 
-        report.increment_total_checks()
+        pre_pad_empty_flag = reference_api_df.empty
+        reference_api_df = self.pad_reference_api_df(
+            reference_api_df, geo_sig_df, reference_start_date, reference_end_date)
 
+        report.increment_total_checks()
         if reference_api_df.empty:
-            report.add_raised_error(
-                ValidationFailure("empty_reference_data",
+            report.add_raised_error(ValidationFailure("empty_reference_data",
                                   checking_date,
                                   geo_type,
                                   signal_type,
                                   "reference data is empty; comparative checks could not "
                                   "be performed"))
             return False
-
-        reference_api_df = self.pad_reference_api_df(
-            reference_api_df, geo_sig_df, reference_end_date)
+        if pre_pad_empty_flag:
+            report.add_raised_warning(ValidationFailure("empty_reference_data",
+                                  checking_date,
+                                  geo_type,
+                                  signal_type,
+                                  "pre-padding reference data is empty and indicates data "
+                                  "missing from the API; please verify that this is expected"))
 
         return (geo_sig_df, reference_api_df)
 
-    def pad_reference_api_df(self, reference_api_df, geo_sig_df, reference_end_date):
+    # `reference_start_date` is used in the call to `geo_sig_df.query()`
+    # below but pylint doesn't recognize that.
+    # pylint: disable=unused-argument
+    def pad_reference_api_df(self, reference_api_df, geo_sig_df,
+                             reference_start_date, reference_end_date):
         """Check if API data is missing, and supplement from test data.
 
         Arguments:
             - reference_api_df: API data within lookbehind range
             - geo_sig_df: Test data
-            - reference_end_date: Supposed end date of reference data
+            - reference_start_date: Desired start date of reference data
+            - reference_end_date: Desired end date of reference data
 
         Returns:
             - reference_api_df: Supplemented version of original
         """
-        reference_api_df_max_date = reference_api_df.time_value.max()
-        if reference_api_df_max_date < reference_end_date:
-            # Querying geo_sig_df, only taking relevant rows
+        # Value is `NaT` (not a time) if reference_api_df is empty.
+        reference_api_df_max_date = reference_api_df.time_value.max().date()
+        if reference_api_df.empty:
+            geo_sig_df_supplement = geo_sig_df.query(
+                'time_value <= @reference_end_date & time_value >= \
+                @reference_start_date')[[
+                "geo_id", "val", "se", "sample_size", "time_value"]]
+        elif reference_api_df_max_date < reference_end_date:
+            # If actual end date `reference_api_df_max_date` is not as recent as
+            # the desired end date `reference_end_date`, add rows from recently
+            # generate data, in `geo_sig_df`, to the reference data.
             geo_sig_df_supplement = geo_sig_df.query(
                 'time_value <= @reference_end_date & time_value > \
                 @reference_api_df_max_date')[[
                 "geo_id", "val", "se", "sample_size", "time_value"]]
-            # Matching time_value format
-            geo_sig_df_supplement["time_value"] = \
-                pd.to_datetime(geo_sig_df_supplement["time_value"],
-                    format = "%Y-%m-%d %H:%M:%S")
-            reference_api_df = pd.concat(
-                [reference_api_df, geo_sig_df_supplement])
+        else:
+            return reference_api_df
+
+        # Final processing after supplementing reference_api_df
+        # Matching time_value format
+        geo_sig_df_supplement["time_value"] = \
+            pd.to_datetime(geo_sig_df_supplement["time_value"],
+                format = "%Y-%m-%d %H:%M:%S")
+        reference_api_df = pd.concat(
+            [reference_api_df, geo_sig_df_supplement])
+
         return reference_api_df
 
     def check_max_date_vs_reference(self, df_to_test, df_to_reference, checking_date,
@@ -341,7 +404,7 @@ class DynamicValidator:
         Returns:
             - None
         """
-        if df_to_test["time_value"].max() < df_to_reference["time_value"].max():
+        if df_to_test["time_value"].max() < df_to_reference["time_value"].max().date():
             report.add_raised_error(
                 ValidationFailure("check_max_date_vs_reference",
                                   checking_date,

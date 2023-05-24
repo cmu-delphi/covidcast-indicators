@@ -14,6 +14,7 @@ PARAMS = {
     "indicator": {
         "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
         "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "backfill_dir": "./backfill",
         "drop_date": "2020-06-01"
     }
 }
@@ -22,9 +23,16 @@ DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 TEST_LOGGER = logging.getLogger()
 
+backfill_dir = PARAMS["indicator"]["backfill_dir"]
+
+geo = "county"
+weekday = True
+backfill_merge_day = 0
+
 class TestLoadData:
-    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH, DROP_DATE,
-                                       "fips")
+    combined_data = load_combined_data(DENOM_FILEPATH, COVID_FILEPATH,
+                                       "fips", backfill_dir, geo, weekday, "covid",
+                                       True, backfill_merge_day)
 
     def test_backfill(self):
         num0 = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8], dtype=float).reshape(-1, 1)

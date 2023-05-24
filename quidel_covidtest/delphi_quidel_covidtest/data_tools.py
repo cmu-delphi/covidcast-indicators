@@ -30,14 +30,18 @@ def fill_dates(y_data, first_date, last_date):
     Returns: dataframe containing all dates given
     """
     cols = y_data.columns
-    if first_date not in y_data.index:
-        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-                                            columns=cols, index=[first_date]))
-    if last_date not in y_data.index:
-        y_data = y_data.append(pd.DataFrame(dict.fromkeys(cols, 0.),
-                                            columns=cols, index=[last_date]))
 
-    y_data.sort_index(inplace=True)
+    df_list = [y_data]
+    if first_date not in y_data.index:
+        df_list.append(
+            pd.DataFrame(dict.fromkeys(cols, 0.), columns=cols, index=[first_date])
+        )
+    if last_date not in y_data.index:
+        df_list.append(
+            pd.DataFrame(dict.fromkeys(cols, 0.), columns=cols, index=[last_date])
+        )
+
+    y_data = pd.concat(df_list).sort_index()
     y_data = y_data.asfreq('D', fill_value=0)
     y_data.fillna(0, inplace=True)
     return y_data
@@ -67,15 +71,14 @@ def _slide_window_sum(arr, k):
     sarr = np.convolve(temp, np.ones(k, dtype=int), 'valid')
     return sarr
 
-
 def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
     Determine how many samples from the parent geography must be borrowed.
 
-    If there are no samples available in the parent, the borrow_prop is 0.  If
-    the parent does not have enough samples, we return a borrow_prop of 1, and
-    the fact that the pooled samples are insufficient are handled in the
-    statistic fitting step.
+    If there are no samples available in the parent, the borrow_prop is 0.
+    If the parent does not have enough samples, we return a borrow_prop of 1.
+    No more samples borrowed from the parent compared to the number of samples
+    we currently have.
 
     Args:
         tpooled_tests: np.ndarray[float]
@@ -93,10 +96,12 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     """
     if (np.any(np.isnan(tpooled_tests)) or np.any(np.isnan(tpooled_ptests))):
         raise ValueError('[parent] tests should be non-negative '
-                         'with no np.nan')
+                          'with no np.nan')
     # STEP 1: "TOP UP" USING PARENT LOCATION
     # Number of observations we need to borrow to "top up"
+    # Can't borrow more than total no. observations.
     borrow_tests = np.maximum(min_obs - tpooled_tests, 0)
+    borrow_tests = np.minimum(borrow_tests, tpooled_tests)
     # There are many cases (a, b > 0):
     # Case 1: a / b => no problem
     # Case 2: a / 0 => np.inf => borrow_prop becomes 1
@@ -108,12 +113,13 @@ def _geographical_pooling(tpooled_tests, tpooled_ptests, min_obs):
     with np.errstate(divide='ignore', invalid='ignore'):
         borrow_prop = borrow_tests / tpooled_ptests
         # If there's nothing to borrow, then ya can't borrow
-        borrow_prop[np.isnan(borrow_prop)] = 0
-        # Can't borrow more than total no. observations.
+        borrow_prop[(np.isnan(borrow_prop))
+                    | (tpooled_tests == 0)
+                    | (tpooled_ptests == 0)] = 0
+        # Can't borrow more than total no. observations in the parent state
         # Relies on the fact that np.inf > 1
         borrow_prop[borrow_prop > 1] = 1
     return borrow_prop
-
 
 def raw_positive_prop(positives, tests, min_obs):
     """

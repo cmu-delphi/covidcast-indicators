@@ -111,12 +111,9 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    source_signal_mappings = {
-        'chng': ['chng-cli', 'chng-covid'],
-        'indicator-combination': ['indicator-combination-cases-deaths'],
-        'quidel': ['quidel-covid-ag'],
-        'safegraph': ['safegraph-weekly']
-    }
+
+    source_signal_mappings = {i['source']:i['db_source'] for i in
+        requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta").json()}
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -128,8 +125,9 @@ def get_geo_signal_combos(data_source):
     # True/False indicate if status is active, "unknown" means we should check
     sig_combo_seen = dict()
     for combo in geo_signal_combos:
-        if source_signal_mappings.get(data_source):
-            src_list = source_signal_mappings.get(data_source)
+        if data_source in source_signal_mappings.values():
+            src_list = [key for (key, value) in source_signal_mappings.items()
+                if value == data_source]
         else:
             src_list = [data_source]
         for src in src_list:

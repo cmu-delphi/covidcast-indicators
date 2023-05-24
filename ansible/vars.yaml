@@ -1,41 +1,66 @@
 ---
+#
 # Store unencrypted variables and pointers to vault.yaml variables here.
 #
 runtime_user: "indicators"
 jenkins_user: "jenkins"
 jenkins_artifact_dir: "/var/lib/jenkins/artifacts"
 indicators_runtime_dir: "/home/{{ runtime_user }}/runtime"
-package: "{{ indicator }}.tar.gz" # {{ indicator }} is passed in from the Jenkins shell script wrapper.
+package_staging: "main_{{ indicator }}.tar.gz" # {{ indicator }} is passed in from the Jenkins shell script wrapper.
+package_production: "prod_{{ indicator }}.tar.gz" # {{ indicator }} is passed in from the Jenkins shell script wrapper.
 python_version: "3.8.2"
 pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }}/bin/python"
 
+#
 # Indicators variables
+#
 # Google Health
 google_health_api_key: "{{ vault_google_health_api_key }}"
 delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
 delphi_aws_secret_access_key: "{{ vault_delphi_aws_secret_access_key }}"
+
 # SafeGraph
 safegraph_aws_access_key_id: "{{ vault_safegraph_aws_access_key_id }}"
 safegraph_aws_secret_access_key: "{{ vault_safegraph_aws_secret_access_key }}"
+
 # Quidel
 quidel_aws_access_key_id: "{{ vault_quidel_aws_access_key_id }}"
 quidel_aws_secret_access_key: "{{ vault_quidel_aws_secret_access_key }}"
 quidel_aws_bucket_name: 'delphi-quidel-data'
+
 # Change Healthcare
 changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
 changehc_sftp_password: "{{ vault_changehc_sftp_password }}"
+
+# claims_hosp
+claims_hosp_ftp_user: "{{ vault_claims_hosp_ftp_user }}"
+claims_hosp_ftp_password: "{{ vault_claims_hosp_ftp_password }}"
+claims_hosp_ftp_host: "{{ vault_claims_hosp_ftp_host }}"
+claims_hosp_midas_user: "{{ vault_claims_hosp_midas_user }}"
+claims_hosp_midas_password: "{{ vault_claims_hosp_midas_password }}"
+
+# doctor_visits
+doctor_visits_ftp_user: "{{ vault_doctor_visits_ftp_user }}"
+doctor_visits_ftp_password: "{{ vault_doctor_visits_ftp_password }}"
+doctor_visits_ftp_host: "{{ vault_doctor_visits_ftp_host }}"
+doctor_visits_midas_user: "{{ vault_doctor_visits_midas_user }}"
+doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
+
 # NCHS
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
+
 # SirCAL
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"
+
 # Survey
 fb_qualtrics_token: "{{ vault_fb_qualtrics_token }}"
 fb_notify_weights_email_list: "{{ vault_fb_notify_weights_email_list }}"
 fb_survey_email_user: "{{ vault_fb_survey_email_user }}"
 fb_survey_sftp_password: "{{ vault_fb_survey_sftp_password }}"
 fb_survey_sftp_user: "{{ vault_fb_survey_sftp_user }}"
+
 ## Google Symptoms
 google_symptoms_account_type: "{{ vault_google_symptoms_account_type }}"
 google_symptoms_project_id: "{{ vault_google_symptoms_project_id }}"
@@ -47,3 +72,17 @@ google_symptoms_auth_uri: "{{ vault_google_symptoms_auth_uri }}"
 google_symptoms_token_uri: "{{ vault_google_symptoms_token_uri }}"
 google_symptoms_auth_provider_x509_cert_url: "{{ vault_google_symptoms_auth_provider_x509_cert_url }}"
 google_symptoms_client_x509_cert_url: "{{ vault_google_symptoms_client_x509_cert_url }}"
+
+# flagger
+flagger_aws_access_key_id: "{{ vault_flagger_aws_access_key_id }}"
+flagger_aws_secret_access_key: "{{ vault_flagger_aws_secret_access_key }}"
+
+# Gurobi
+grb_licenseid: "{{ vault_grb_licenseid }}"
+grb_wlsaccessid: "{{ vault_grb_wlsaccessid }}"
+grb_wlssecret: "{{ vault_grb_wlssecret }}"
+
+# Backfill Projections S3
+backfillcorr_aws_access_key_id: "{{ vault_backfillcorr_aws_access_key_id }}"
+backfillcorr_aws_secret_access_key: "{{ vault_backfillcorr_aws_secret_access_key }}"
+backfillcorr_aws_bucket_name: "{{ vault_backfillcorr_aws_bucket_name }}"

@@ -91,23 +91,6 @@ def make_asserts(params):
                     "files must be all present or all absent"
 
 
-def get_data(file_dict, numtype, dropdate_dt):
-    """Call correct load_data function depending on numtype."""
-    if numtype == "covid":
-        data = load_combined_data(file_dict["denom"],
-                 file_dict["covid"],dropdate_dt,"fips")
-    elif numtype == "cli":
-        data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                 file_dict["flu_like"],file_dict["covid_like"],dropdate_dt,"fips")
-    elif numtype == "flu":
-        data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                 dropdate_dt,"fips")
-    elif numtype == "ili":
-        data = load_ili_data(file_dict["denom"],file_dict["flu"],
-                 file_dict["flu_like"],dropdate_dt,"fips")
-    return data
-
-
 def run_module(params: Dict[str, Dict[str, Any]]):
     """
     Run the delphi_changehc module.
@@ -162,16 +145,19 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     # range of estimates to produce
     n_backfill_days = params["indicator"]["n_backfill_days"]  # produce estimates for n_backfill_days
     n_waiting_days = params["indicator"]["n_waiting_days"]  # most recent n_waiting_days won't be est
+
+    generate_backfill_files = params["indicator"].get("generate_backfill_files", True)
+    backfill_dir = ""
+    backfill_merge_day = 0
+    if generate_backfill_files:
+        backfill_dir = params["indicator"]["backfill_dir"]
+        backfill_merge_day = params["indicator"]["backfill_merge_day"]
+
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
-    enddate = str(enddate_dt.date())
-    startdate = str(startdate_dt.date())
-
     # now allow manual overrides
-    if params["indicator"]["end_date"] is not None:
-        enddate = params["indicator"]["end_date"]
-    if params["indicator"]["start_date"] is not None:
-        startdate = params["indicator"]["start_date"]
+    enddate = enddate = params["indicator"].get("end_date",str(enddate_dt.date()))
+    startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
 
     logger.info("generating signal and exporting to CSV",
         first_sensor_date = startdate,
@@ -207,7 +193,24 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     params["indicator"]["wip_signal"],
                     logger
                 )
-                data = get_data(file_dict, numtype, dropdate_dt)
+                if numtype == "covid":
+                    data = load_combined_data(file_dict["denom"],
+                             file_dict["covid"], "fips",
+                             backfill_dir, geo, weekday, numtype,
+                             generate_backfill_files, backfill_merge_day)
+                elif numtype == "cli":
+                    data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
+                             file_dict["flu_like"],file_dict["covid_like"], "fips",
+                             backfill_dir, geo, weekday, numtype,
+                             generate_backfill_files, backfill_merge_day)
+                elif numtype == "flu":
+                    data = load_flu_data(file_dict["denom"],file_dict["flu"],
+                             "fips",backfill_dir, geo, weekday,
+                             numtype, generate_backfill_files, backfill_merge_day)
+                elif numtype == "ili":
+                    data = load_ili_data(file_dict["denom"],file_dict["flu"],
+                             file_dict["flu_like"],dropdate_dt,"fips")
+
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],

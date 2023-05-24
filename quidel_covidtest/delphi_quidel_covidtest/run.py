@@ -18,14 +18,15 @@ from delphi_utils import (
 from .constants import (END_FROM_TODAY_MINUS,
                         SMOOTHED_POSITIVE, RAW_POSITIVE,
                         SMOOTHED_TEST_PER_DEVICE, RAW_TEST_PER_DEVICE,
-                        PARENT_GEO_RESOLUTIONS, SENSORS, SMOOTHERS, NONPARENT_GEO_RESOLUTIONS)
+                        PARENT_GEO_RESOLUTIONS, SENSORS, SMOOTHERS, NONPARENT_GEO_RESOLUTIONS,
+                        AGE_GROUPS)
 from .generate_sensor import generate_sensor_for_parent_geo, generate_sensor_for_nonparent_geo
 from .geo_maps import geo_map
 from .pull import (pull_quidel_covidtest,
                    check_export_start_date,
                    check_export_end_date,
                    update_cache_file)
-
+from .backfill import (store_backfill_file, merge_backfill_file)
 
 def log_exit(start_time, stats, logger):
     """Log at program exit."""
@@ -40,6 +41,20 @@ def log_exit(start_time, stats, logger):
                 max_lag_in_days = max_lag_in_days,
                 oldest_final_export_date = formatted_min_max_date)
 
+def get_smooth_info(sensors, _SMOOTHERS):
+    """Get smooth info from SMOOTHERS."""
+    smoothers = _SMOOTHERS.copy()
+    for sensor in sensors:
+        if sensor.endswith(SMOOTHED_POSITIVE):
+            smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
+        elif sensor.endswith(RAW_POSITIVE):
+            smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
+        elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
+            smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
+        else:
+            smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
+    return smoothers
+
 def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
 
@@ -51,6 +66,7 @@ def run_module(params: Dict[str, Any]):
     - indicator":
         - "static_file_dir": str, directory name with population information
         - "input_cache_dir": str, directory in which to cache input data
+        - "backfill_dir": str, directory in which to store the backfill files
         - "export_start_date": str, YYYY-MM-DD format of earliest date to create output
         - "export_end_date": str, YYYY-MM-DD format of latest date to create output or "" to create
                              through the present
@@ -77,68 +93,85 @@ def run_module(params: Dict[str, Any]):
 
     # Pull data and update export date
     df, _end_date = pull_quidel_covidtest(params["indicator"], logger)
-    if _end_date is None:
-        logger.info("The data is up-to-date. Currently, no new data to be ingested.")
-        return
-    export_end_date = check_export_end_date(export_end_date, _end_date,
-                                            END_FROM_TODAY_MINUS)
-    export_start_date = check_export_start_date(export_start_date,
-                                                export_end_date, export_day_range)
+
+    # Allow user to turn backfill file generation on or off. Defaults to True
+    # (generate files).
+    if params["indicator"].get("generate_backfill_files", True):
+        backfill_dir = params["indicator"]["backfill_dir"]
+        backfill_merge_day = params["indicator"]["backfill_merge_day"]
+
+        # Merge 4 weeks' data into one file to save runtime
+        # Notice that here we don't check the _end_date(receive date)
+        # since we always want such merging happens on a certain day of a week
+        merge_backfill_file(backfill_dir, backfill_merge_day, datetime.today())
+        if _end_date is None:
+            logger.info("The data is up-to-date. Currently, no new data to be ingested.")
+            return
+        # Store the backfill intermediate file
+        store_backfill_file(df, _end_date, backfill_dir)
+
+    export_end_date = check_export_end_date(
+        export_end_date, _end_date, END_FROM_TODAY_MINUS)
+    export_start_date = check_export_start_date(
+        export_start_date, export_end_date, export_day_range)
 
     first_date, last_date = df["timestamp"].min(), df["timestamp"].max()
 
-    # State Level
     data = df.copy()
     # Add prefix, if required
     sensors = add_prefix(SENSORS,
                          wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
-    smoothers = SMOOTHERS.copy()
+    smoothers = get_smooth_info(sensors, SMOOTHERS)
     for geo_res in NONPARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
         geo_groups = geo_data.groupby(res_key)
-        for sensor in sensors:
-            logger.info("Generating signal and exporting to CSV",
-                        geo_res=geo_res,
-                        sensor=sensor)
-            if sensor.endswith(SMOOTHED_POSITIVE):
-                smoothers[sensor] = smoothers.pop(SMOOTHED_POSITIVE)
-            elif sensor.endswith(RAW_POSITIVE):
-                smoothers[sensor] = smoothers.pop(RAW_POSITIVE)
-            elif sensor.endswith(SMOOTHED_TEST_PER_DEVICE):
-                smoothers[sensor] = smoothers.pop(SMOOTHED_TEST_PER_DEVICE)
-            else:
-                smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
-            state_df = generate_sensor_for_nonparent_geo(
-                geo_groups, res_key, smooth=smoothers[sensor][1],
-                device=smoothers[sensor][0], first_date=first_date,
-                last_date=last_date)
-            dates = create_export_csv(
-                state_df,
-                geo_res=geo_res,
-                sensor=sensor,
-                export_dir=export_dir,
-                start_date=export_start_date,
-                end_date=export_end_date)
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
-
+        for agegroup in AGE_GROUPS:
+            for sensor in sensors:
+                if agegroup == "total":
+                    sensor_name = sensor
+                else:
+                    sensor_name = "_".join([sensor, agegroup])
+                logger.info("Generating signal and exporting to CSV",
+                            geo_res=geo_res,
+                            sensor=sensor_name)
+                state_df = generate_sensor_for_nonparent_geo(
+                    geo_groups, res_key, smooth=smoothers[sensor][1],
+                    device=smoothers[sensor][0], first_date=first_date,
+                    last_date=last_date, suffix=agegroup)
+                dates = create_export_csv(
+                    state_df,
+                    geo_res=geo_res,
+                    sensor=sensor_name,
+                    export_dir=export_dir,
+                    start_date=export_start_date,
+                    end_date=export_end_date)
+                if len(dates) > 0:
+                    stats.append((max(dates), len(dates)))
+    assert geo_res == "state" # Make sure geo_groups is for state level
     # County/HRR/MSA level
     for geo_res in PARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
-        for sensor in sensors:
-            logger.info("Generating signal and exporting to CSV",
-                        geo_res=geo_res,
-                        sensor=sensor)
-            res_df = generate_sensor_for_parent_geo(
-                geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
-                device=smoothers[sensor][0], first_date=first_date,
-                last_date=last_date)
-            dates = create_export_csv(res_df, geo_res=geo_res, sensor=sensor, export_dir=export_dir,
-                              start_date=export_start_date, end_date=export_end_date,
-                              remove_null_samples=True)
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
+        for agegroup in AGE_GROUPS:
+            for sensor in sensors:
+                if agegroup == "total":
+                    sensor_name = sensor
+                else:
+                    sensor_name = "_".join([sensor, agegroup])
+                logger.info("Generating signal and exporting to CSV",
+                            geo_res=geo_res,
+                            sensor=sensor_name)
+                res_df = generate_sensor_for_parent_geo(
+                    geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
+                    device=smoothers[sensor][0], first_date=first_date,
+                    last_date=last_date, suffix=agegroup)
+                dates = create_export_csv(res_df, geo_res=geo_res,
+                                          sensor=sensor_name, export_dir=export_dir,
+                                          start_date=export_start_date,
+                                          end_date=export_end_date,
+                                          remove_null_samples=True)
+                if len(dates) > 0:
+                    stats.append((max(dates), len(dates)))
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

@@ -5,7 +5,6 @@ Author: Maria Jahja
 Created: 2020-09-27
 
 """
-
 # third party
 import pandas as pd
 
@@ -48,11 +47,10 @@ def load_claims_data(claims_filepath, dropdate, base_geo):
     ), "Claims counts must be nonnegative"
 
     # aggregate age groups (so data is unique by date and base geography)
-    claims_data = claims_data.groupby([base_geo, Config.DATE_COL]).sum()
+    claims_data = claims_data.groupby([base_geo, Config.DATE_COL]).sum(numeric_only=True)
     claims_data.dropna(inplace=True)  # drop rows with any missing entries
 
     return claims_data
-
 
 def load_data(input_filepath, dropdate, base_geo):
     """

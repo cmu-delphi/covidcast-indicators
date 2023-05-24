@@ -104,22 +104,12 @@ class TestGeoMapper:
             ),
         )
     )
-    jhu_uid_data = pd.DataFrame(
+    mega_data_3 = pd.DataFrame(
         {
-            "jhu_uid": [
-                84048315,
-                84048137,
-                84013299,
-                84013299,
-                84070002,
-                84000013,
-                84090002,
-            ],
-            "timestamp": [pd.Timestamp("2018-01-01")] * 3
-            + [pd.Timestamp("2018-01-03")] * 3
-            + [pd.Timestamp("2018-01-01")],
-            "count": [1, 2, 3, 4, 8, 5, 20],
-            "total": [2, 4, 7, 11, 100, 10, 40],
+            "fips": [1123, 1125, 1126, 1128, 1129, 18181],
+            "timestamp": [pd.Timestamp("2018-01-01")] * 6,
+            "visits": [4, 1, 2, 5, 10, 100001],
+            "count": [2, 1, 5, 7, 3, 10021],
         }
     )
     state_data = pd.DataFrame(
@@ -140,7 +130,6 @@ class TestGeoMapper:
             "count": [7],
         }
     )
-    # jhu_big_data = pd.read_csv("test_dir/small_deaths.csv")
 
     # Loading tests updated 8/26
     def test_crosswalks(self, geomapper):
@@ -153,8 +142,6 @@ class TestGeoMapper:
         )  # some weight discrepancy is fine for HRR
         cw = geomapper.get_crosswalk(from_code="fips", to_code="zip")
         assert cw.groupby("fips")["weight"].sum().round(5).eq(1.0).all()
-        cw = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert cw.groupby("jhu_uid")["weight"].sum().round(5).eq(1.0).all()
         cw = geomapper.get_crosswalk(from_code="zip", to_code="fips")
         assert cw.groupby("zip")["weight"].sum().round(5).eq(1.0).all()
         # weight discrepancy is fine for MSA, for the same reasons as HRR
@@ -182,9 +169,9 @@ class TestGeoMapper:
         msa_data = geomapper.get_crosswalk(from_code="fips", to_code="msa")
         assert tuple(msa_data.columns) == ("fips", "msa")
 
-    def test_load_jhu_uid_fips_table(self, geomapper):
-        jhu_data = geomapper.get_crosswalk(from_code="jhu_uid", to_code="fips")
-        assert np.allclose(jhu_data.groupby("jhu_uid").sum(), 1.0)
+    def test_load_fips_chngfips_table(self, geomapper):
+        chngfips_data = geomapper.get_crosswalk(from_code="fips", to_code="chng-fips")
+        assert tuple(chngfips_data.columns) == ("fips", "chng-fips")
 
     def test_load_zip_hrr_table(self, geomapper):
         zip_data = geomapper.get_crosswalk(from_code="zip", to_code="hrr")
@@ -208,6 +195,38 @@ class TestGeoMapper:
             new_data[["count"]].sum() - self.mega_data[["count"]].sum()
         ).sum() < 1e-3
 
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
+        expected_df = pd.DataFrame(
+            {
+                "megafips": ["01000", "01128", "01129", "18181"],
+                "timestamp": [pd.Timestamp("2018-01-01")] * 4,
+                "visits": [7, 5, 10, 100001],
+                "count": [8, 7, 3, 10021],
+            }
+        )
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        # chng-fips should have the same behavior when converting to megacounties.
+        mega_county_groups = self.mega_data_3.copy()
+        mega_county_groups.fips.replace({1125:"01g01"}, inplace = True)
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
+        expected_df = pd.DataFrame(
+            {
+                "megafips": ["01000", "01126", "01128", "18181"],
+                "timestamp": [pd.Timestamp("2018-01-01")] * 4,
+                "visits": [15, 2, 5, 100001],
+                "count": [6, 5, 7, 10021],
+            }
+        )
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        # chng-fips should have the same behavior when converting to megacounties.
+        mega_county_groups = self.mega_data_3.copy()
+        mega_county_groups.fips.replace({1123:"01g01"}, inplace = True)
+        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
+        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+
     def test_add_population_column(self, geomapper):
         new_data = geomapper.add_population_column(self.fips_data_3, "fips")
         assert new_data.shape == (5, 5)
@@ -215,6 +234,8 @@ class TestGeoMapper:
         assert new_data.shape == (6, 5)
         with pytest.raises(ValueError):
             new_data = geomapper.add_population_column(self.zip_data, "hrr")
+        with pytest.raises(ValueError):
+            new_data = geomapper.add_population_column(self.zip_data, "chng-fips")
         new_data = geomapper.add_population_column(self.fips_data_5, "fips")
         assert new_data.shape == (4, 5)
         new_data = geomapper.add_population_column(self.state_data, "state_code")
@@ -229,6 +250,10 @@ class TestGeoMapper:
         new_data = geomapper.add_geocode(self.zip_data, "zip", "state_code")
         new_data2 = geomapper.add_geocode(new_data, "state_code", "nation")
         assert new_data2["nation"].unique()[0] == "us"
+        new_data = geomapper.replace_geocode(self.zip_data, "zip", "state_code")
+        new_data2 = geomapper.add_geocode(new_data, "state_code", "state_id", new_col="state")
+        new_data3 = geomapper.replace_geocode(new_data2, "state_code", "nation", new_col="geo_id")
+        assert "state" not in new_data3.columns
 
         # state_code -> hhs
         new_data = geomapper.add_geocode(self.zip_data, "zip", "state_code")
@@ -255,6 +280,26 @@ class TestGeoMapper:
                 }
             )
         )
+
+        # fips -> chng-fips
+        new_data = geomapper.add_geocode(self.fips_data_5, "fips", "chng-fips")
+        assert sorted(list(new_data["chng-fips"])) == ['01123', '18181', '48g19', '72003']
+        assert new_data["chng-fips"].size == self.fips_data_5.fips.size
+        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "chng-fips")
+        assert sorted(list(new_data["chng-fips"])) == ['01123', '18181', '48g19', '72003']
+        assert new_data["chng-fips"].size == self.fips_data_5.fips.size
+
+        # chng-fips -> state_id
+        new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "chng-fips")
+        new_data2 = geomapper.add_geocode(new_data, "chng-fips", "state_id")
+        assert new_data2["state_id"].unique().size == 4
+        assert new_data2["state_id"].size == self.fips_data_5.fips.size
+        assert sorted(list(new_data2["state_id"])) == ['al', 'in', 'pr', 'tx']
+
+        new_data2 = geomapper.replace_geocode(new_data, "chng-fips", "state_id")
+        assert new_data2["state_id"].unique().size == 4
+        assert new_data2["state_id"].size == 4
+        assert sorted(list(new_data2["state_id"])) == ['al', 'in', 'pr', 'tx']
 
         # zip -> nation
         new_data = geomapper.replace_geocode(self.zip_data, "zip", "nation")
@@ -328,18 +373,23 @@ class TestGeoMapper:
     def test_get_geos(self, geomapper):
         assert geomapper.get_geo_values("nation") == {"us"}
         assert geomapper.get_geo_values("hhs") == set(str(i) for i in range(1, 11))
-        assert len(geomapper.get_geo_values("fips")) == 3236
+        assert len(geomapper.get_geo_values("fips")) == 3293
+        assert len(geomapper.get_geo_values("chng-fips")) == 2711
         assert len(geomapper.get_geo_values("state_id")) == 60
         assert len(geomapper.get_geo_values("zip")) == 32976
 
     def test_get_geos_2019(self, geomapper_2019):
-        assert len(geomapper_2019.get_geo_values("fips")) == 3235
+        assert len(geomapper_2019.get_geo_values("fips")) == 3292
+        assert len(geomapper_2019.get_geo_values("chng-fips")) == 2710
 
     def test_get_geos_within(self, geomapper):
         assert len(geomapper.get_geos_within("us","state","nation")) == 60
         assert len(geomapper.get_geos_within("al","county","state")) == 68
+        assert len(geomapper.get_geos_within("al","fips","state")) == 68
+        assert geomapper.get_geos_within("al","fips","state") == geomapper.get_geos_within("al","county","state")
+        assert len(geomapper.get_geos_within("al","chng-fips","state")) == 66
         assert len(geomapper.get_geos_within("4","state","hhs")) == 8
-        assert geomapper.get_geos_within("4","state","hhs") =={'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}
+        assert geomapper.get_geos_within("4","state","hhs") == {'al', 'fl', 'ga', 'ky', 'ms', 'nc', "tn", "sc"}
 
     def test_census_year_pop(self, geomapper, geomapper_2019):
         df = pd.DataFrame({"fips": ["01001"]})

@@ -141,7 +141,7 @@ class TestClaimsHospIndicatorUpdater:
         updater.write_to_csv(res0, td.name)
 
         # check outputs
-        expected_name = f"20200502_geography_{Config.signal_name}.csv"
+        expected_name = f"20200501_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
@@ -155,7 +155,7 @@ class TestClaimsHospIndicatorUpdater:
         assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
-        expected_name = f"20200503_geography_{Config.signal_name}.csv"
+        expected_name = f"20200502_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
@@ -167,7 +167,7 @@ class TestClaimsHospIndicatorUpdater:
         assert np.isnan(output_data.direction.values).all()
         assert np.isnan(output_data.sample_size.values).all()
 
-        expected_name = f"20200505_geography_{Config.signal_name}.csv"
+        expected_name = f"20200504_geography_{Config.signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (
@@ -221,7 +221,7 @@ class TestClaimsHospIndicatorUpdater:
         updater.write_to_csv(res0, td.name)
 
         # check outputs
-        expected_name = f"20200502_geography_{signal_name}.csv"
+        expected_name = f"20200501_geography_{signal_name}.csv"
         assert exists(join(td.name, expected_name))
         output_data = pd.read_csv(join(td.name, expected_name))
         assert (

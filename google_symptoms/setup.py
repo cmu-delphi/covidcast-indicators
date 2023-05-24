@@ -11,7 +11,8 @@ required = [
     "pylint==2.8.3",
     "delphi-utils",
     "freezegun",
-    "pandas-gbq"
+    "pandas-gbq",
+    "db-dtypes"
 ]
 
 setup(

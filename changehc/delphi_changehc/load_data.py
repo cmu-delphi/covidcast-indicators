@@ -30,7 +30,7 @@ def load_chng_data(filepath, dropdate, base_geo,
     Returns:
         cleaned dataframe
     """
-    assert base_geo == "fips" or ((counts_col == Config.FLU_INPATIENT_COL or counts_col == Config.DENOM_INPATIENT_STATE_COL) and
+    assert base_geo == "fips" or (counts_col in {Config.FLU_INPATIENT_COL,Config.DENOM_INPATIENT_STATE_COL} and
                      base_geo == "state_code"), "base unit must be 'fips', or state_code for Flu-Inpatient"
     count_flag = False
     date_flag = False

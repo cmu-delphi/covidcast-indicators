@@ -17,8 +17,8 @@ install-ci: venv
 	pip install .
 
 lint:
-	. env/bin/activate; pylint $(dir)
-	. env/bin/activate; pydocstyle $(dir)
+	. env/bin/activate; pylint $(dir);\
+	pydocstyle $(dir)
 
 test:
 	. env/bin/activate ;\

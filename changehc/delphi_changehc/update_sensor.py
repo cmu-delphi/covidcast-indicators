@@ -169,9 +169,6 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                               date_col=Config.DATE_COL)
         else:
             data_frame = gmpr.replace_geocode(data, base_geo, geo, date_col=Config.DATE_COL)
-            
-        
-
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
         # for each location, fill in all missing dates with 0 values

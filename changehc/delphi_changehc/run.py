@@ -59,7 +59,6 @@ def retrieve_files(params, filedate, logger):
     if "flu_inpatient" in params["indicator"]["types"]:
         file_dict["flu_inpatient"] = flu_inpatient_file
         file_dict["denom_inpatient_state"] = denom_inpatient_state_file
-        
     return file_dict
 
 

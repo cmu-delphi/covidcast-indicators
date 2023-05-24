@@ -198,19 +198,19 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                 if numtype == "covid":
                     base_geo = "fips"
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"], "fips",
+                             file_dict["covid"], base_geo,
                              backfill_dir, geo, weekday, numtype,
                              generate_backfill_files, backfill_merge_day)
                 elif numtype == "cli":
                     base_geo = "fips"
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"], "fips",
+                             file_dict["flu_like"],file_dict["covid_like"], base_geo,
                              backfill_dir, geo, weekday, numtype,
                              generate_backfill_files, backfill_merge_day)
                 elif numtype == "flu":
                     base_geo = "fips"
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             "fips",backfill_dir, geo, weekday,
+                             base_geo,backfill_dir, geo, weekday,
                              numtype, generate_backfill_files, backfill_merge_day)
                 elif numtype == "flu_inpatient":
                     base_geo = "state_code"

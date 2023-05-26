@@ -19,6 +19,8 @@ RUN apt-get update && apt-get install -qq -y \
     python3-venv \
     python3-dev
 
+RUN python3 -m pip install --upgrade pip==22.0.3 
+
 RUN install2.r --error \
     roxygen2 \
     Rglpk \

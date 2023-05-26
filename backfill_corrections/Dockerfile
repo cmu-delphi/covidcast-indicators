@@ -17,7 +17,8 @@ RUN ln -s -f /usr/share/zoneinfo/America/New_York /etc/localtime
 RUN apt-get update && apt-get install -qq -y \
     libglpk-dev\
     python3-venv \
-    python3-dev
+    python3-dev \
+    python3-pip
 
 RUN python3 -m pip install --upgrade pip==22.0.3 
 

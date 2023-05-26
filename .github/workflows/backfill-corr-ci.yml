@@ -58,6 +58,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
+          extra-packages: any::rcmdcheck
           working-directory: backfill_corrections/delphiBackfillCorrection
           upgrade: 'TRUE'
       - name: Check package

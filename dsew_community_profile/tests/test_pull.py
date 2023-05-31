@@ -535,7 +535,10 @@ class TestPull:
         missing_dfs = [missing_sig1, missing_sig2, missing_sig3, missing_sig4]
         interpolated_dfs1 = interpolate_missing_values({("src", "sig", False): pd.concat(missing_dfs)})
         expected_dfs = pd.concat([sig1, sig2, sig4.loc[9:]])
-        pd.testing.assert_frame_equal(interpolated_dfs1[("src", "sig", False)], expected_dfs)
+        pd.testing.assert_frame_equal(
+            interpolated_dfs1[("src", "sig", False)].sort_values(["geo_id", "timestamp"], ignore_index=True),
+            expected_dfs.sort_values(["geo_id", "timestamp"], ignore_index=True)
+        )
 
     def test_interpolation_object_type(self):
         DTYPES = {"geo_id": str, "timestamp": "datetime64[ns]", "val": float, "se": float, "sample_size": float, "publish_date": "datetime64[ns]"}

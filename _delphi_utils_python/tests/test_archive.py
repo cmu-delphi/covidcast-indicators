@@ -31,6 +31,7 @@ class Example:
         self.before = fix_df(before)
         self.after = fix_df(after)
         self.diff = fix_df(diff)
+
     @staticmethod
     def _set_df_datatypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
         df = df.copy()
@@ -52,6 +53,7 @@ class Expecteds:
         self.raw_exports = list(self.common_diffs.keys()) + self.new
         self.diffed_exports = self.raw_exports + [diff_name for diff_name in self.common_diffs.values() if diff_name is not None]
         self.filtered_exports = [f.replace(".diff", "") for f in self.diffed_exports if f.endswith(".diff")] + self.new
+
 EMPTY = "empty"
 CSVS = {
     "unchanged": Example( # was: csv0
@@ -75,33 +77,33 @@ CSVS = {
         }),
         diff=EMPTY # unchanged names are listed in common files but have no diff file
     ),
-    "mod_2_del_3_add_4": Example( # was: csv1
+    "mod_3_del_3_add_4": Example( # was: csv1
         before=pd.DataFrame({
-            "geo_id": ["1", "2", "3"],
-            "val": [1.0, 2.0, 3.0],
-            "se": [np.nan, 0.20000002, 0.30000003],
-            "sample_size": [10.0, 20.0, 30.0],
-            "missing_val": [Nans.NOT_MISSING] * 3,
-            "missing_se": [Nans.CENSORED] + [Nans.NOT_MISSING] * 2,
-            "missing_sample_size": [Nans.NOT_MISSING] * 3,
+            "geo_id": ["1", "2", "3", "02100"],
+            "val": [1.0, 2.0, 3.0, 4.0],
+            "se": [np.nan, 0.20000002, 0.30000003, np.nan],
+            "sample_size": [10.0, 20.0, 30.0, np.nan],
+            "missing_val": [Nans.NOT_MISSING] * 4,
+            "missing_se": [Nans.CENSORED] + [Nans.NOT_MISSING] * 2 + [Nans.NOT_APPLICABLE],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.NOT_APPLICABLE],
         }),
         after=pd.DataFrame({
-            "geo_id": ["1", "2", "4"],
-            "val": [1.0, 2.1, 4.0],
-            "se": [np.nan, 0.21, np.nan],
-            "sample_size": [10.0, 21.0, 40.0],
-            "missing_val": [Nans.NOT_MISSING] * 3,
-            "missing_se": [Nans.CENSORED] + [Nans.NOT_MISSING] * 2,
-            "missing_sample_size": [Nans.NOT_MISSING] * 3,
+            "geo_id": ["1", "2", "4", "02100"],
+            "val": [1.0, 2.1, 4.0, 0.0],
+            "se": [np.nan, 0.21, np.nan, np.nan],
+            "sample_size": [10.0, 21.0, 40.0, np.nan],
+            "missing_val": [Nans.NOT_MISSING] * 4,
+            "missing_se": [Nans.CENSORED] + [Nans.NOT_MISSING] * 2 + [Nans.NOT_APPLICABLE],
+            "missing_sample_size": [Nans.NOT_MISSING] * 3 + [Nans.NOT_APPLICABLE],
         }),
         diff=pd.DataFrame({
-            "geo_id": ["2", "3", "4"],
-            "val": [2.1, np.nan, 4.0],
-            "se": [0.21, np.nan, np.nan],
-            "sample_size": [21.0, np.nan, 40.0],
-            "missing_val": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING],
-            "missing_se": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING],
-            "missing_sample_size": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING],
+            "geo_id": ["2", "3", "4", "02100"],
+            "val": [2.1, np.nan, 4.0, 0.0],
+            "se": [0.21, np.nan, np.nan, np.nan],
+            "sample_size": [21.0, np.nan, 40.0, np.nan],
+            "missing_val": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING, Nans.NOT_MISSING],
+            "missing_se": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING, Nans.NOT_APPLICABLE],
+            "missing_sample_size": [Nans.NOT_MISSING, Nans.DELETED, Nans.NOT_MISSING, Nans.NOT_APPLICABLE],
         })
     ),
     "delete_file": Example( # was: csv2
@@ -202,6 +204,7 @@ class ArchiveDifferTestlike:
         mkdir(cache_dir)
         mkdir(export_dir)
         return cache_dir, export_dir
+
     def check_filtered_exports(self, export_dir):
         assert set(listdir(export_dir)) == set(EXPECTEDS.filtered_exports)
         for f in EXPECTEDS.filtered_exports:
@@ -213,7 +216,6 @@ class ArchiveDifferTestlike:
             )
 
 class TestArchiveDiffer(ArchiveDifferTestlike):
-
     def test_stubs(self):
         arch_diff = ArchiveDiffer("cache", "export")
 
@@ -299,8 +301,8 @@ class TestS3ArchiveDiffer(ArchiveDifferTestlike):
         s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir, export_dir = self.set_up(tmp_path)
 
-        csv1 = CSVS["mod_2_del_3_add_4"].before
-        csv2 = CSVS["mod_2_del_3_add_4"].after
+        csv1 = CSVS["mod_3_del_3_add_4"].before
+        csv2 = CSVS["mod_3_del_3_add_4"].after
         csv1_buf = StringIO()
         csv2_buf = StringIO()
         csv1.to_csv(csv1_buf, index=False)
@@ -335,7 +337,7 @@ class TestS3ArchiveDiffer(ArchiveDifferTestlike):
         s3_client = Session(**AWS_CREDENTIALS).client("s3")
         cache_dir, export_dir = self.set_up(tmp_path)
 
-        csv1 = CSVS["mod_2_del_3_add_4"].before
+        csv1 = CSVS["mod_3_del_3_add_4"].before
         csv1.to_csv(join(export_dir, "csv1.csv"), index=False)
 
         s3_client.create_bucket(Bucket=self.bucket_name)

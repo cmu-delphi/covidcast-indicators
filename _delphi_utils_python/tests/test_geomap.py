@@ -3,6 +3,7 @@ from delphi_utils.geomap import GeoMapper
 import pytest
 
 import pandas as pd
+from pandas.testing import assert_frame_equal
 import numpy as np
 
 
@@ -204,13 +205,7 @@ class TestGeoMapper:
                 "count": [8, 7, 3, 10021],
             }
         )
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-        # chng-fips should have the same behavior when converting to megacounties.
-        mega_county_groups = self.mega_data_3.copy()
-        mega_county_groups.fips.replace({1125:"01g01"}, inplace = True)
-        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1)
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
         new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
         expected_df = pd.DataFrame(
             {
@@ -220,12 +215,7 @@ class TestGeoMapper:
                 "count": [6, 5, 7, 10021],
             }
         )
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
-        # chng-fips should have the same behavior when converting to megacounties.
-        mega_county_groups = self.mega_data_3.copy()
-        mega_county_groups.fips.replace({1123:"01g01"}, inplace = True)
-        new_data = geomapper.fips_to_megacounty(self.mega_data_3, 4, 1, thr_col="count")
-        pd.testing.assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
+        assert_frame_equal(new_data.set_index("megafips").sort_index(axis=1), expected_df.set_index("megafips").sort_index(axis=1))
 
     def test_add_population_column(self, geomapper):
         new_data = geomapper.add_population_column(self.fips_data_3, "fips")
@@ -269,7 +259,7 @@ class TestGeoMapper:
 
         # fips -> nation
         new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "nation", new_col="NATION")
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -303,7 +293,7 @@ class TestGeoMapper:
 
         # zip -> nation
         new_data = geomapper.replace_geocode(self.zip_data, "zip", "nation")
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -329,7 +319,7 @@ class TestGeoMapper:
 
         # fips -> zip (date_col=None chech)
         new_data = geomapper.replace_geocode(self.fips_data_5.drop(columns=["timestamp"]), "fips", "hrr", date_col=None)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -343,7 +333,7 @@ class TestGeoMapper:
         # fips -> hhs
         new_data = geomapper.replace_geocode(self.fips_data_3.drop(columns=["timestamp"]),
                                         "fips", "hhs", date_col=None)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -357,7 +347,7 @@ class TestGeoMapper:
         # zip -> hhs
         new_data = geomapper.replace_geocode(self.zip_data, "zip", "hhs")
         new_data = new_data.round(10)  # get rid of a floating point error with 99.00000000000001
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {

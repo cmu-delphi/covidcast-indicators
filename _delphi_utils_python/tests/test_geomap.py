@@ -269,7 +269,7 @@ class TestGeoMapper:
 
         # fips -> nation
         new_data = geomapper.replace_geocode(self.fips_data_5, "fips", "nation", new_col="NATION")
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -303,7 +303,7 @@ class TestGeoMapper:
 
         # zip -> nation
         new_data = geomapper.replace_geocode(self.zip_data, "zip", "nation")
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -329,7 +329,7 @@ class TestGeoMapper:
 
         # fips -> zip (date_col=None chech)
         new_data = geomapper.replace_geocode(self.fips_data_5.drop(columns=["timestamp"]), "fips", "hrr", date_col=None)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -343,7 +343,7 @@ class TestGeoMapper:
         # fips -> hhs
         new_data = geomapper.replace_geocode(self.fips_data_3.drop(columns=["timestamp"]),
                                         "fips", "hhs", date_col=None)
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {
@@ -357,7 +357,7 @@ class TestGeoMapper:
         # zip -> hhs
         new_data = geomapper.replace_geocode(self.zip_data, "zip", "hhs")
         new_data = new_data.round(10)  # get rid of a floating point error with 99.00000000000001
-        pd.testing.assert_frame_equal(
+        assert_frame_equal(
             new_data,
             pd.DataFrame().from_dict(
                 {

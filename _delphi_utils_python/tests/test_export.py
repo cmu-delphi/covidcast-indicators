@@ -1,6 +1,6 @@
 """Tests for exporting CSV files."""
 from datetime import datetime
-from os import listdir, remove
+from os import listdir
 from os.path import join
 from typing import Any, Dict, List
 
@@ -11,23 +11,6 @@ from pandas.testing import assert_frame_equal
 
 from delphi_utils import create_export_csv, Nans
 
-
-def _clean_directory(directory):
-    """Clean files out of a directory."""
-    for fname in listdir(directory):
-        if fname.startswith("."):
-            continue
-        remove(join(directory, fname))
-
-
-def _non_ignored_files_set(directory):
-    """List all files in a directory not preceded by a '.' and store them in a set."""
-    out = set()
-    for fname in listdir(directory):
-        if fname.startswith("."):
-            continue
-        out.add(fname)
-    return out
 
 def _set_df_dtypes(df: pd.DataFrame, dtypes: Dict[str, Any]) -> pd.DataFrame:
     assert all(isinstance(e, type) or isinstance(e, str) for e in dtypes.values()), (
@@ -109,25 +92,19 @@ class TestExport:
         }
     )
 
-    # Directory in which to store tests.
-    TEST_DIR = "test_dir"
-
-    def test_export_with_metric(self):
+    def test_export_with_metric(self, tmp_path):
         """Test that exporting CSVs with the `metrics` argument yields the correct files."""
-
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             metric="deaths",
             geo_res="county",
             sensor="test",
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_county_deaths_test.csv",
                 "20200301_county_deaths_test.csv",
@@ -135,22 +112,19 @@ class TestExport:
             ]
         )
 
-    def test_export_rounding(self):
+    def test_export_rounding(self, tmp_path):
         """Test that exporting CSVs with the `metrics` argument yields the correct files."""
-
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             metric="deaths",
             geo_res="county",
             sensor="test",
         )
         assert_frame_equal(
-            pd.read_csv(join(self.TEST_DIR, "20200215_county_deaths_test.csv")),
+            pd.read_csv(join(tmp_path, "20200215_county_deaths_test.csv")),
             pd.DataFrame(
                 {
                     "geo_id": [51093, 51175],
@@ -161,21 +135,18 @@ class TestExport:
             ),
         )
 
-    def test_export_without_metric(self):
+    def test_export_without_metric(self, tmp_path):
         """Test that exporting CSVs without the `metrics` argument yields the correct files."""
-
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-15", "%Y-%m-%d"),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test",
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_county_test.csv",
                 "20200301_county_test.csv",
@@ -183,62 +154,54 @@ class TestExport:
             ]
         )
 
-    def test_export_with_limiting_start_date(self):
+    def test_export_with_limiting_start_date(self, tmp_path):
         """Test that the `start_date` prevents earlier dates from being exported."""
-
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             start_date=datetime.strptime("2020-02-20", "%Y-%m-%d"),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test",
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200301_county_test.csv",
                 "20200315_county_test.csv",
             ]
         )
 
-    def test_export_with_limiting_end_date(self):
+    def test_export_with_limiting_end_date(self, tmp_path):
         """Test that the `end_date` prevents later dates from being exported."""
 
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
             end_date=datetime.strptime("2020-03-07", "%Y-%m-%d"),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test",
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_county_test.csv",
                 "20200301_county_test.csv",
             ]
         )
 
-    def test_export_with_no_dates(self):
+    def test_export_with_no_dates(self, tmp_path):
         """Test that omitting the `start_date` and `end_date` exports all dates."""
-
-        # Clean receiving directory
-        _clean_directory(self.TEST_DIR)
 
         create_export_csv(
             df=self.DF,
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="state",
             sensor="test",
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_state_test.csv",
                 "20200301_state_test.csv",
@@ -246,9 +209,8 @@ class TestExport:
             ]
         )
 
-    def test_export_with_null_removal(self):
+    def test_export_with_null_removal(self, tmp_path):
         """Test that `remove_null_samples = True` removes entries with null samples."""
-        _clean_directory(self.TEST_DIR)
 
         df_with_nulls = pd.concat(
             [self.DF.copy(),
@@ -263,13 +225,13 @@ class TestExport:
 
         create_export_csv(
             df=df_with_nulls,
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="state",
             sensor="test",
             remove_null_samples=True
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_state_test.csv",
                 "20200301_state_test.csv",
@@ -277,12 +239,10 @@ class TestExport:
                 "20200606_state_test.csv"
             ]
         )
-        assert pd.read_csv(join(self.TEST_DIR, "20200606_state_test.csv")).size == 0
+        assert pd.read_csv(join(tmp_path, "20200606_state_test.csv")).size == 0
 
-    def test_export_without_null_removal(self):
+    def test_export_without_null_removal(self, tmp_path):
         """Test that `remove_null_samples = False` does not remove entries with null samples."""
-        _clean_directory(self.TEST_DIR)
-
         df_with_nulls = pd.concat(
             [self.DF.copy(),
             pd.DataFrame({
@@ -296,13 +256,13 @@ class TestExport:
 
         create_export_csv(
             df=df_with_nulls,
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="state",
             sensor="test",
             remove_null_samples=False
         )
 
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_state_test.csv",
                 "20200301_state_test.csv",
@@ -310,15 +270,14 @@ class TestExport:
                 "20200606_state_test.csv"
             ]
         )
-        assert pd.read_csv(join(self.TEST_DIR, "20200606_state_test.csv")).size > 0
+        assert pd.read_csv(join(tmp_path, "20200606_state_test.csv")).size > 0
 
-    def test_export_df_without_missingness(self):
-        _clean_directory(self.TEST_DIR)
+    def test_export_df_without_missingness(self, tmp_path):
 
         create_export_csv(
-            df=self.DF.copy(), export_dir=self.TEST_DIR, geo_res="county", sensor="test"
+            df=self.DF.copy(), export_dir=tmp_path, geo_res="county", sensor="test"
         )
-        df = pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")).astype(
+        df = pd.read_csv(join(tmp_path, "20200215_county_test.csv")).astype(
             {"geo_id": str, "sample_size": int}
         )
         expected_df = pd.DataFrame(
@@ -331,23 +290,22 @@ class TestExport:
         ).astype({"geo_id": str, "sample_size": int})
         assert_frame_equal(df, expected_df)
 
-    def test_export_df_with_missingness(self):
-        _clean_directory(self.TEST_DIR)
+    def test_export_df_with_missingness(self, tmp_path):
 
         create_export_csv(
             df=self.DF2.copy(),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test",
         )
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_county_test.csv",
                 "20200301_county_test.csv",
                 "20200315_county_test.csv",
             ]
         )
-        df = pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")).astype(
+        df = pd.read_csv(join(tmp_path, "20200215_county_test.csv")).astype(
             {"geo_id": str, "sample_size": int}
         )
         expected_df = pd.DataFrame(
@@ -364,31 +322,28 @@ class TestExport:
         assert_frame_equal(df, expected_df)
 
     @mock.patch("delphi_utils.logger")
-    def test_export_df_with_contradictory_missingness(self, mock_logger):
-        _clean_directory(self.TEST_DIR)
+    def test_export_df_with_contradictory_missingness(self, mock_logger, tmp_path):
 
         create_export_csv(
             df=self.DF3.copy(),
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="state",
             sensor="test",
             logger=mock_logger
         )
-        assert _non_ignored_files_set(self.TEST_DIR) == set(
+        assert set(listdir(tmp_path)) == set(
             [
                 "20200215_state_test.csv",
                 "20200301_state_test.csv",
                 "20200315_state_test.csv",
             ]
         )
-        assert pd.read_csv(join(self.TEST_DIR, "20200315_state_test.csv")).size > 0
+        assert pd.read_csv(join(tmp_path, "20200315_state_test.csv")).size > 0
         mock_logger.info.assert_called_once_with(
             "Filtering contradictory missing code in test_None_2020-02-15."
         )
 
-    def test_export_sort(self):
-        _clean_directory(self.TEST_DIR)
-
+    def test_export_sort(self, tmp_path):
         unsorted_df = pd.DataFrame({
             "geo_id": ["51175", "51093", "51175", "51620"],
             "timestamp": [
@@ -401,7 +356,7 @@ class TestExport:
         })
         create_export_csv(
             unsorted_df,
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test"
         )
@@ -411,13 +366,12 @@ class TestExport:
             "se": [0.15, 0.22],
             "sample_size": [100, 100],
         })
-        unsorted_csv = _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str})
+        unsorted_csv = _set_df_dtypes(pd.read_csv(join(tmp_path, "20200215_county_test.csv")), dtypes={"geo_id": str})
         assert_frame_equal(unsorted_csv, expected_df)
 
-        _clean_directory(self.TEST_DIR)
         create_export_csv(
             unsorted_df,
-            export_dir=self.TEST_DIR,
+            export_dir=tmp_path,
             geo_res="county",
             sensor="test",
             sort_geos=True
@@ -428,5 +382,5 @@ class TestExport:
             "se": [0.22, 0.15],
             "sample_size": [100, 100],
         })
-        sorted_csv = _set_df_dtypes(pd.read_csv(join(self.TEST_DIR, "20200215_county_test.csv")), dtypes={"geo_id": str})
+        sorted_csv = _set_df_dtypes(pd.read_csv(join(tmp_path, "20200215_county_test.csv")), dtypes={"geo_id": str})
         assert_frame_equal(sorted_csv,expected_df)

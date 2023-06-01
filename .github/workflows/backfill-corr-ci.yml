@@ -29,9 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Set up R ${{ matrix.r-version }}
-        uses: r-lib/actions/setup-r@v1
+        uses: r-lib/actions/setup-r@v2
         with:
           r-version: ${{ matrix.r-version }}
+          use-public-rspm: true
       - name: Install linux dependencies
         run: |
             sudo apt-get install \
@@ -52,24 +53,17 @@ jobs:
           key: ${{ runner.os }}-r-backfillcorr-${{ steps.get-date.outputs.date }}
           restore-keys: |
             ${{ runner.os }}-r-backfillcorr-
-      - name: Install R dependencies
+      - name: Install and cache dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if ( !require("remotes") ) {
-            install.packages("remotes")
-          }
-          if ( !require("devtools") ) {
-            install.packages("devtools")
-          }
-          remotes::update_packages(c("rcmdcheck", "remotes", "devtools"), upgrade="always")
-          dependency_list <- remotes::dev_package_deps(dependencies=TRUE)
-          remotes::update_packages(dependency_list$package, upgrade="always")
-
-          devtools::install_github("cmu-delphi/covidcast", ref = "evalcast", subdir = "R-packages/evalcast")
-          devtools::install_github(repo="ryantibs/quantgen", subdir="quantgen")
-        shell: Rscript {0}
-      - name: Check
-        run: |
-          rcmdcheck::rcmdcheck(args = c("--no-manual", "--test-dir=unit-tests"), error_on = "error")
-        shell: Rscript {0}
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck
+          working-directory: backfill_corrections/delphiBackfillCorrection
+          upgrade: 'TRUE'
+      - name: Check package
+        uses: r-lib/actions/check-r-package@v2
+        with:
+          working-directory: backfill_corrections/delphiBackfillCorrection
+          args: 'c("--no-manual", "--test-dir=unit-tests")'
+          error-on: '"error"'

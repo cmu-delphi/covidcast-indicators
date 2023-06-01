@@ -17,7 +17,8 @@ RUN ln -s -f /usr/share/zoneinfo/America/New_York /etc/localtime
 RUN apt-get update && apt-get install -qq -y \
     libglpk-dev\
     python3-venv \
-    python3-dev
+    python3-dev \
+    python3-pip
 
 RUN install2.r --error \
     roxygen2 \

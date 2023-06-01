@@ -35,5 +35,9 @@ Suggests:
     testthat (>= 1.0.1),
     covr (>= 2.2.2),
     mockr
+Remotes:
+    bettermc=github::gfkse/bettermc@v1.1.2,
+    evalcast=github::cmu-delphi/covidcast/R-packages/evalcast@evalcast,
+    quantgen=github::ryantibs/quantgen/quantgen
 RoxygenNote: 7.2.0
 Encoding: UTF-8

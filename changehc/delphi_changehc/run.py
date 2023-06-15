@@ -144,7 +144,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
 
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
-    #pdb.set_trace()
     # now allow manual overrides
 
     enddate = params["indicator"].get("end_date")

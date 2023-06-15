@@ -9,6 +9,7 @@ when the module is run with `python -m delphi_changehc`.
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any
+import pdb
 
 #  third party
 from delphi_utils import get_structured_logger
@@ -143,9 +144,15 @@ def run_module(params: Dict[str, Dict[str, Any]]):
 
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
+    #pdb.set_trace()
     # now allow manual overrides
-    enddate = enddate = params["indicator"].get("end_date",str(enddate_dt.date()))
+
+    enddate = params["indicator"].get("end_date")
+    if enddate is None:
+            enddate = str(enddate_dt.date())
     startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
+    if startdate is None:
+        startdate = str(startdate_dt.date())
 
     logger.info("generating signal and exporting to CSV",
         first_sensor_date = startdate,

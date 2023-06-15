@@ -160,6 +160,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  thr_col="den",
                                                  mega_col=geo,
                                                  date_col=Config.DATE_COL)
+            # this line should be removed once the fix is implemented for megacounties
+            data_frame = data_frame[~((data_frame['county'].str.len() > 5) | (data_frame['county'].str.contains('_')))]
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
                                               date_col=Config.DATE_COL)
@@ -172,7 +174,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         multiindex = pd.MultiIndex.from_product((unique_geo_ids, self.fit_dates),
                                                 names=[geo, Config.DATE_COL])
         assert (len(multiindex) <= (len(gmpr.get_geo_values(gmpr.as_mapper_name(geo))) * len(self.fit_dates))
-                ), "more loc-date pairs than maximum number of geographies x number of dates"
+                ), f"more loc-date pairs than maximum number of geographies x number of dates, length of multiindex is {len(multiindex)}, geo level is {geo}"
+
         # fill dataframe with missing dates using 0
         data_frame = data_frame.reindex(multiindex, fill_value=0)
         data_frame.fillna(0, inplace=True)

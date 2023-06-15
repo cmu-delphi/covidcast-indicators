@@ -9,7 +9,6 @@ when the module is run with `python -m delphi_changehc`.
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import pdb
 
 #  third party
 from delphi_utils import get_structured_logger

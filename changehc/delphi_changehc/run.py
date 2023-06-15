@@ -80,6 +80,7 @@ def make_asserts(params):
             "exactly one of denom and flu files are provided"
 
 def process_dates(params, startdate_dt, enddate_dt):
+    """Process the start and end dates for indicator."""
     enddate = params["indicator"].get("end_date")
     if enddate is None:
         enddate = str(enddate_dt.date())

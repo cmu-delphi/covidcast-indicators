@@ -78,6 +78,16 @@ def make_asserts(params):
         assert (files["denom"] is None) == (files["flu"] is None), \
             "exactly one of denom and flu files are provided"
 
+def process_dates(params, startdate_dt, enddate_dt):
+    """Process the start and end dates for indicator."""
+    enddate = params["indicator"].get("end_date")
+    if enddate is None:
+        enddate = str(enddate_dt.date())
+    startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
+    if startdate is None:
+        startdate = str(startdate_dt.date())
+    return startdate, enddate
+
 
 def run_module(params: Dict[str, Dict[str, Any]]):
     """
@@ -144,8 +154,8 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     enddate_dt = dropdate_dt - timedelta(days=n_waiting_days)
     startdate_dt = enddate_dt - timedelta(days=n_backfill_days)
     # now allow manual overrides
-    enddate = enddate = params["indicator"].get("end_date",str(enddate_dt.date()))
-    startdate = params["indicator"].get("start_date", str(startdate_dt.date()))
+
+    startdate, enddate = process_dates(params, startdate_dt, enddate_dt)
 
     logger.info("generating signal and exporting to CSV",
         first_sensor_date = startdate,

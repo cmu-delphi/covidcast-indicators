@@ -120,14 +120,13 @@ def run_module(params: Dict[str, Dict[str, Any]]):
             - "types": list of str, sensor types to generate.
             - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
             - "ftp_conn": dict, connection information for source FTP.
-            - "api_credentials": str, api key used 
+            - "api_credentials": str, api key used
     """
     start_time = time.time()
 
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
-    
     covidcast.use_api_key(params["indicator"]["api_credentials"])
 
     make_asserts(params)

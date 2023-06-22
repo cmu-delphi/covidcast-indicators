@@ -46,6 +46,7 @@ def run_module(params):
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
+    covidcast.use_api_key(params["indicator"]["api_credentials"])
 
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")

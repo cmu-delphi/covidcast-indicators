@@ -29,6 +29,7 @@ quidel_aws_secret_access_key: "{{ vault_quidel_aws_secret_access_key }}"
 quidel_aws_bucket_name: 'delphi-quidel-data'
 
 # Change Healthcare
+changehc_api_key: "{{ vault_changehc_api_key }}"
 changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"
@@ -52,6 +53,7 @@ doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 
 # SirCAL
+sir_complainsalot_api_key: "{{ vault_sir_complainsalot_api_key }}"
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"
 
 # Survey
@@ -62,6 +64,7 @@ fb_survey_sftp_password: "{{ vault_fb_survey_sftp_password }}"
 fb_survey_sftp_user: "{{ vault_fb_survey_sftp_user }}"
 
 ## Google Symptoms
+google_symptoms_api_key: "{{ vault_google_symptoms_api_key }}"
 google_symptoms_account_type: "{{ vault_google_symptoms_account_type }}"
 google_symptoms_project_id: "{{ vault_google_symptoms_project_id }}"
 google_symptoms_private_key_id: "{{ vault_google_symptoms_private_key_id }}"

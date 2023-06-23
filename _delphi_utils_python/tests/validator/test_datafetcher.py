@@ -48,6 +48,8 @@ class TestDataFetcher:
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)
 
+    # the `kw` approach is needed here because otherwise pytest thinks the 
+    # requests_mock arg is supposed to be a fixture
     @requests_mock.Mocker(kw="mock_requests")
     def test_bad_api_key(self, **kwargs):
         kwargs["mock_requests"].get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", status_code=429)

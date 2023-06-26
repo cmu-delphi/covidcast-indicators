@@ -17,6 +17,7 @@ def run_module():
     args = parser.parse_args()
     params = read_params()
     assert "validation" in params
+    covidcast.use_api_key(params["validation"]["common"]["api_credentials"])
     dry_run_param = params["validation"]["common"].get("dry_run", False)
     params["validation"]["common"]["dry_run"] = args.dry_run or dry_run_param
     validator = Validator(params)

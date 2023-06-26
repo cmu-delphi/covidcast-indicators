@@ -9,7 +9,6 @@ when the module is run with `python -m delphi_changehc`.
 import time
 from datetime import datetime, timedelta
 from typing import Dict, Any
-import covidcast
 
 #  third party
 from delphi_utils import get_structured_logger
@@ -127,7 +126,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
-    covidcast.use_api_key(params["indicator"]["api_credentials"])
 
     make_asserts(params)
 

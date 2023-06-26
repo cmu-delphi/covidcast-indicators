@@ -14,6 +14,8 @@ pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }
 #
 # Indicators variables
 #
+# Validation
+validation_api_key: "{{ vault_validator_api_key }}"
 # Google Health
 google_health_api_key: "{{ vault_google_health_api_key }}"
 delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
@@ -29,7 +31,6 @@ quidel_aws_secret_access_key: "{{ vault_quidel_aws_secret_access_key }}"
 quidel_aws_bucket_name: 'delphi-quidel-data'
 
 # Change Healthcare
-changehc_api_key: "{{ vault_changehc_api_key }}"
 changehc_sftp_host: "{{ vault_changehc_sftp_host }}"
 changehc_sftp_port: "{{ vault_changehc_sftp_port }}"
 changehc_sftp_user: "{{ vault_changehc_sftp_user }}"

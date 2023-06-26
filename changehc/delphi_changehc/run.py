@@ -119,7 +119,6 @@ def run_module(params: Dict[str, Dict[str, Any]]):
             - "types": list of str, sensor types to generate.
             - "wip_signal": list of str or bool, to be passed to delphi_utils.add_prefix.
             - "ftp_conn": dict, connection information for source FTP.
-            - "api_credentials": str, api key used
     """
     start_time = time.time()
 

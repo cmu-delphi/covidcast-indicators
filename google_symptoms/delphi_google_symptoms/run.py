@@ -46,7 +46,6 @@ def run_module(params):
     start_time = time.time()
     csv_export_count = 0
     oldest_final_export_date = None
-    covidcast.use_api_key(params["indicator"]["api_credentials"])
 
     export_start_date = datetime.strptime(
         params["indicator"]["export_start_date"], "%Y-%m-%d")
@@ -67,6 +66,7 @@ def run_module(params):
         )
 
         # Fetch metadata to check how recent each signal is
+        covidcast.use_api_key(params["indicator"]["api_credentials"])
         metadata = covidcast.metadata()
         # Filter to only those we currently want to produce, ignore any old or deprecated signals
         gs_metadata = metadata[(metadata.data_source == "google-symptoms") &

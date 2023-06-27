@@ -6,6 +6,7 @@
   "indicator": {
     "export_start_date": "2020-02-20",
     "num_export_days": null,
+    "api_credentials": "{{ google_symptoms_api_key }}",
     "bigquery_credentials": {
       "type": "{{ google_symptoms_account_type }}",
       "project_id": "{{ google_symptoms_project_id }}",
@@ -22,6 +23,7 @@
   "validation": {
     "common": {
       "data_source": "google-symptoms",
+      "api_credentials": "{{ validation_api_key }}",
       "validation_failure_dir": "./validation_failures",
       "span_length": 14,
       "min_expected_lag": {"all": "3"},

@@ -4,11 +4,15 @@ from datetime import date
 import mock
 import numpy as np
 import pandas as pd
+import pytest
+from requests.exceptions import HTTPError
+import requests_mock
 from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
                                                 make_date_filter,
                                                 get_geo_signal_combos,
                                                 threaded_api_calls)
 from delphi_utils.validator.errors import ValidationFailure
+
 
 
 class TestDataFetcher:
@@ -24,6 +28,7 @@ class TestDataFetcher:
     # Solution from https://stackoverflow.com/questions/15753390/
     #how-can-i-mock-requests-and-the-response
     def mocked_requests_get(*args, **kwargs):
+        # TODO #1863: convert to requests_mock
         class MockResponse:
             def __init__(self, json_data, status_code):
                 self.json_data = json_data
@@ -31,6 +36,10 @@ class TestDataFetcher:
 
             def json(self):
                 return self.json_data
+
+            def raise_for_status(self):
+                if self.status_code != 200:
+                    raise HTTPError()
         if len(kwargs) == 0:
             return MockResponse([{'source': 'chng', 'db_source': 'chng'},
                 {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
@@ -38,6 +47,15 @@ class TestDataFetcher:
             return MockResponse([{"signals": [{"active": False}]}], 200)
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)
+
+    # the `kw` approach is needed here because otherwise pytest thinks the 
+    # requests_mock arg is supposed to be a fixture
+    @requests_mock.Mocker(kw="mock_requests")
+    def test_bad_api_key(self, **kwargs):
+        kwargs["mock_requests"].get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", status_code=429)
+        with pytest.raises(HTTPError):
+            get_geo_signal_combos("chng")
+
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     @mock.patch("covidcast.metadata")
     def test_get_geo_signal_combos(self, mock_metadata, mock_get):

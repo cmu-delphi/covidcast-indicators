@@ -29,6 +29,7 @@ def run_module():
     """Run SirCAL."""
     start_time = time.time()
     params = read_params()
+    covidcast.use_api_key(params["api_credentials"])
     meta = covidcast.metadata()
     slack_notifier = None
     if "channel" in params and "slack_token" in params:

@@ -19,6 +19,7 @@ required = [
     "pylint==2.8.3",
     "pytest",
     "pytest-cov",
+    "requests-mock",
     "slackclient",
     "structlog",
     "xlrd"
@@ -26,7 +27,7 @@ required = [
 
 setup(
     name="delphi_utils",
-    version="0.3.16",
+    version="0.3.17",
     description="Shared Utility Functions for Indicators",
     long_description=long_description,
     long_description_content_type="text/markdown",

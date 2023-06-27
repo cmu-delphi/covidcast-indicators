@@ -14,6 +14,8 @@ pyenv_python_path: "/home/{{ runtime_user }}/.pyenv/versions/{{ python_version }
 #
 # Indicators variables
 #
+# Validation
+validation_api_key: "{{ vault_validator_api_key }}"
 # Google Health
 google_health_api_key: "{{ vault_google_health_api_key }}"
 delphi_aws_access_key_id: "{{ vault_delphi_aws_access_key_id }}"
@@ -52,6 +54,7 @@ doctor_visits_midas_password: "{{ vault_doctor_visits_midas_password }}"
 nchs_mortality_token: "{{ vault_nchs_mortality_token }}"
 
 # SirCAL
+sir_complainsalot_api_key: "{{ vault_sir_complainsalot_api_key }}"
 sir_complainsalot_slack_token: "{{ vault_sir_complainsalot_slack_token }}"
 
 # Survey
@@ -62,6 +65,7 @@ fb_survey_sftp_password: "{{ vault_fb_survey_sftp_password }}"
 fb_survey_sftp_user: "{{ vault_fb_survey_sftp_user }}"
 
 ## Google Symptoms
+google_symptoms_api_key: "{{ vault_google_symptoms_api_key }}"
 google_symptoms_account_type: "{{ vault_google_symptoms_account_type }}"
 google_symptoms_project_id: "{{ vault_google_symptoms_project_id }}"
 google_symptoms_private_key_id: "{{ vault_google_symptoms_private_key_id }}"

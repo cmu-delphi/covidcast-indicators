@@ -43,7 +43,7 @@ class TestDataFetcher:
         if len(kwargs) == 0:
             return MockResponse([{'source': 'chng', 'db_source': 'chng'},
                 {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
-        elif kwargs["params"] == {'signal': 'chng:inactive'}:
+        elif "params" in kwargs.keys() and kwargs["params"] == {'signal': 'chng:inactive'}:
             return MockResponse([{"signals": [{"active": False}]}], 200)
         else:
             return MockResponse([{"signals": [{"active": True}]}], 200)

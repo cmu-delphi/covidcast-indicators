@@ -112,7 +112,7 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", 
+    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
                                  auth=API_KEY)
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in

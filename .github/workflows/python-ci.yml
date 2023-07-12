@@ -12,6 +12,8 @@ on:
 
 jobs:
   build:
+    env:
+      COVIDCAST_INDICATORS_KEY: ${{ secrets.COVIDCAST_INDICATORS_KEY }}
     runs-on: ubuntu-20.04
     if: github.event.pull_request.draft == false
     strategy:

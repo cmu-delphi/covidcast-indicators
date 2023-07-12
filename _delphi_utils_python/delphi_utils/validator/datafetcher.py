@@ -3,13 +3,13 @@
 
 import re
 import threading
+import os
 from os import listdir
 from os.path import isfile, join
 import warnings
 import requests
 import pandas as pd
 import numpy as np
-import os
 import covidcast
 from .errors import APIDataFetchError, ValidationFailure
 
@@ -112,7 +112,8 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", auth=API_KEY)
+    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", 
+                                 auth=API_KEY)
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}

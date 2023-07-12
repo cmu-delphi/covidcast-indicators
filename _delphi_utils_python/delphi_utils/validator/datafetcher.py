@@ -113,7 +113,7 @@ def get_geo_signal_combos(data_source):
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
     meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                                 auth=API_KEY)
+                                 auth="abfce08f9d15d")
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
@@ -141,7 +141,7 @@ def get_geo_signal_combos(data_source):
             elif geo_status == "unknown":
                 epidata_signal = requests.get(
                     "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                    params={'signal': f"{src}:{sig}"}, auth=API_KEY)
+                    params={'signal': f"{src}:{sig}"}, auth="abfce08f9d15d")
                 epidata_signal.raise_for_status()
                 # Not an active signal
                 active_status = [val['active'] for i in epidata_signal.json()

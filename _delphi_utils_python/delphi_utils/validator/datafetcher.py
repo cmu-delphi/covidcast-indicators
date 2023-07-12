@@ -114,9 +114,11 @@ def get_geo_signal_combos(data_source):
     # Maps data_source name with what's in the API, lists used in case of multiple names
     meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
                                  auth="abfce08f9d15d")
+    print(meta_response)
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
+    print(meta_response.json())
     meta = covidcast.metadata()
     source_meta = meta[meta['data_source'] == data_source]
     # Need to convert np.records to tuples so they are hashable and can be used in sets and dicts.
@@ -141,7 +143,7 @@ def get_geo_signal_combos(data_source):
             elif geo_status == "unknown":
                 epidata_signal = requests.get(
                     "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                    params={'signal': f"{src}:{sig}"}, auth="abfce08f9d15d")
+                    params={'signal': f"{src}:{sig}"}, auth=API_KEY)
                 epidata_signal.raise_for_status()
                 # Not an active signal
                 active_status = [val['active'] for i in epidata_signal.json()

@@ -9,18 +9,14 @@ import warnings
 import requests
 import pandas as pd
 import numpy as np
-
+import os
 import covidcast
 from .errors import APIDataFetchError, ValidationFailure
-from .. import read_params
 
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-params = read_params()
-assert "validation" in params
-password = params["validation"]["common"]["api_credentials"]
-username = "none"
+API_KEY = os.environ.get("COVIDCAST_INDICATORS_KEY")
 
 def make_date_filter(start_date, end_date):
     """
@@ -116,8 +112,7 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-        auth=(username, password))
+    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", auth=API_KEY)
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}
@@ -145,7 +140,7 @@ def get_geo_signal_combos(data_source):
             elif geo_status == "unknown":
                 epidata_signal = requests.get(
                     "https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                    params={'signal': f"{src}:{sig}"}, auth = (username, password))
+                    params={'signal': f"{src}:{sig}"}, auth=API_KEY)
                 epidata_signal.raise_for_status()
                 # Not an active signal
                 active_status = [val['active'] for i in epidata_signal.json()

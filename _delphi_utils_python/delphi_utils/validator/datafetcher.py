@@ -16,8 +16,8 @@ from .errors import APIDataFetchError, ValidationFailure
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-API_KEY = os.environ.get("COVIDCAST_INDICATORS_KEY")
-
+#API_KEY = os.environ.get("COVIDCAST_INDICATORS_KEY")
+API_KEY = "9328d11cfe46d"
 def make_date_filter(start_date, end_date):
     """
     Create a function to filter dates in the specified date range (inclusive).
@@ -112,9 +112,9 @@ def get_geo_signal_combos(data_source):
     Cross references based on combinations reported available by COVIDcast metadata.
     """
     # Maps data_source name with what's in the API, lists used in case of multiple names
-    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
-                                 auth="abfce08f9d15d")
-    print(meta_response)
+    meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", auth=API_KEY)
+    
+    print("meta_response:", meta_response)
     meta_response.raise_for_status()
     source_signal_mappings = {i['source']:i['db_source'] for i in
         meta_response.json()}

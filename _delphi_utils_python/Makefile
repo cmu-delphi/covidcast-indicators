@@ -19,7 +19,7 @@ lint:
 
 test:
 	. env/bin/activate ;\
-	(cd tests && ../env/bin/pytest -rP --cov=delphi_utils --cov-report=term-missing)
+	(cd tests && ../env/bin/pytest -srP --cov=delphi_utils --cov-report=term-missing)
 
 clean:
 	rm -rf env

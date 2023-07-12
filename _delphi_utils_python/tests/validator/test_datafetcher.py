@@ -5,6 +5,7 @@ import mock
 import numpy as np
 import pandas as pd
 import pytest
+import requests
 from requests.exceptions import HTTPError
 import requests_mock
 from delphi_utils.validator.datafetcher import (FILENAME_REGEX,
@@ -40,7 +41,7 @@ class TestDataFetcher:
             def raise_for_status(self):
                 if self.status_code != 200:
                     raise HTTPError()
-        if len(kwargs) == 0:
+        if len(kwargs) == 0 or list(kwargs.keys()) == ["auth"]:
             return MockResponse([{'source': 'chng', 'db_source': 'chng'},
                 {'source': 'covid-act-now', 'db_source': 'covid-act-now'}], 200)
         elif "params" in kwargs.keys() and kwargs["params"] == {'signal': 'chng:inactive'}:
@@ -78,7 +79,6 @@ class TestDataFetcher:
                                                                 "hrr", "msa", "msa",
                                                                 "state"]
                                                   })
-
         assert set(get_geo_signal_combos("chng")) == set(
             [("state", "smoothed_outpatient_cli"),
              ("state", "smoothed_outpatient_covid"),

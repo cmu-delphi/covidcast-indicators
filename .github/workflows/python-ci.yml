@@ -10,9 +10,6 @@ on:
     types: [ opened, synchronize, reopened, ready_for_review ]
     branches: [ main, prod ]
 
-env:
-  COVIDCAST_INDICATORS_KEY: ${{ secrets.DELPHI_GITHUB_ACTIONS_EPIDATA_API_KEY }}
-
 jobs:
   build:
     runs-on: ubuntu-20.04

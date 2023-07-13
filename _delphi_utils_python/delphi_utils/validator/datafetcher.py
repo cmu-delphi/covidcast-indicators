@@ -16,7 +16,7 @@ from .errors import APIDataFetchError, ValidationFailure
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-API_KEY = ("api_key",os.environ.get("COVIDCAST_INDICATORS_KEY"))
+API_KEY = ("epidata", os.environ.get("COVIDCAST_INDICATORS_KEY"))
 
 def make_date_filter(start_date, end_date):
     """

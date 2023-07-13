@@ -11,12 +11,15 @@ import requests
 import pandas as pd
 import numpy as np
 import covidcast
+from .. import read_params
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
     r'^(?P<date>\d{8})_(?P<geo_type>\w+?)_(?P<signal>\w+)\.csv$')
 
-API_KEY = ("epidata", os.environ.get("COVIDCAST_INDICATORS_KEY"))
+params = read_params()
+assert "validation" in params
+API_KEY = ("epidata", params["validation"]["common"]["api_credentials"])
 
 def make_date_filter(start_date, end_date):
     """

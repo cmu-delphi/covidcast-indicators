@@ -30,7 +30,8 @@ def load_chng_data(filepath, dropdate, base_geo,
     Returns:
         cleaned dataframe
     """
-    assert base_geo == "fips", "base unit must be 'fips'"
+    assert base_geo == "fips" or (counts_col in {Config.FLU_INPATIENT_COL,Config.DENOM_INPATIENT_STATE_COL} and
+                     base_geo == "state_code"), "base unit must be 'fips', or state_code for Flu-Inpatient"
     count_flag = False
     date_flag = False
     geo_flag = False
@@ -39,11 +40,11 @@ def load_chng_data(filepath, dropdate, base_geo,
             count_flag = True
         elif n == Config.DATE_COL:
             date_flag = True
-        elif n == "fips":
+        elif n == base_geo:
             geo_flag = True
     assert count_flag, "counts_col must be present in col_names"
     assert date_flag, "'%s' must be present in col_names"%(Config.DATE_COL)
-    assert geo_flag, "'fips' must be present in col_names"
+    assert geo_flag, "'base_geo (%s) must be present in col_names"%(base_geo)
 
     data = pd.read_csv(
         filepath,
@@ -224,4 +225,37 @@ def load_flu_data(denom_filepath, flu_filepath, base_geo,
         merge_backfill_file(backfill_dir, numtype, geo, weekday, backfill_merge_day,
                             issue_date, test_mode=False, check_nd=25)
         store_backfill_file(data, issue_date, backfill_dir, numtype, geo, weekday)
+    return data
+
+
+def load_flu_inpatient_data(denom_filepath, flu_filepath, dropdate, base_geo):
+    """Load in denominator and flu inpatient data, and combine them.
+
+    Args:
+        denom_filepath: path to the aggregated denominator data
+        flu_filepath: path to the aggregated flu inpatient data
+        dropdate: data drop date (datetime object)
+        base_geo: base geographic unit before aggregation ('state_code')
+
+    Returns:
+        combined multiindexed dataframe, index 0 is geo_base, index 1 is date
+    """
+    assert base_geo == "state_code", "base unit must be 'state_code'"
+
+    # load each data stream
+    denom_data = load_chng_data(denom_filepath, dropdate, base_geo,
+                     Config.DENOM_COLS_STATE, Config.DENOM_DTYPES_STATE, Config.DENOM_INPATIENT_STATE_COL)
+    flu_data = load_chng_data(flu_filepath, dropdate, base_geo,
+                     Config.FLU_INPATIENT_COLS, Config.FLU_INPATIENT_DTYPES, Config.FLU_INPATIENT_COL)
+
+    # merge data
+    data = denom_data.merge(flu_data, how="outer", left_index=True, right_index=True)
+    assert data.isna().all(axis=1).sum() == 0, "entire row is NA after merge"
+
+    # calculate combined numerator and denominator
+    data.fillna(0, inplace=True)
+    data["num"] = data[Config.FLU_INPATIENT_COL]
+    data["den"] = data[Config.DENOM_INPATIENT_STATE_COL]
+    data = data[["num", "den"]]
+
     return data

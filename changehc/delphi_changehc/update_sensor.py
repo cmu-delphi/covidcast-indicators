@@ -16,7 +16,8 @@ from delphi_utils import GeoMapper, add_prefix, create_export_csv, Weekday
 # first party
 from .config import Config
 from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_CLI, SMOOTHED_ADJ_CLI,\
-                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, NA
+                       SMOOTHED_FLU, SMOOTHED_ADJ_FLU, SMOOTHED_FLU_INPATIENT,\
+                       SMOOTHED_ADJ_FLU_INPATIENT, NA
 from .sensor import CHCSensor
 
 
@@ -117,6 +118,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             signal_name = SMOOTHED_ADJ_CLI if self.weekday else SMOOTHED_CLI
         elif self.numtype == "flu":
             signal_name = SMOOTHED_ADJ_FLU if self.weekday else SMOOTHED_FLU
+        elif self.numtype == 'flu_inpatient':
+            signal_name = SMOOTHED_ADJ_FLU_INPATIENT if self.weekday else SMOOTHED_FLU_INPATIENT
         else:
             raise ValueError(f'Unsupported numtype received "{numtype}",'
                              f' must be one of ["covid", "cli", "flu"]')
@@ -138,7 +141,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         self.sensor_dates = drange(self.startdate, self.enddate)
         return True
 
-    def geo_reindex(self, data):
+    def geo_reindex(self, data, base_geo):
         """Reindex based on geography, include all date, geo pairs.
 
         Args:
@@ -154,6 +157,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
         if geo == "county":
+            assert base_geo == "fips", "can only convert fips to county, not %s"%(base_geo)
             data_frame = gmpr.fips_to_megacounty(data,
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
@@ -163,11 +167,10 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             # this line should be removed once the fix is implemented for megacounties
             data_frame = data_frame[~((data_frame['county'].str.len() > 5) | (data_frame['county'].str.contains('_')))]
         elif geo == "state":
-            data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
+            data_frame = gmpr.replace_geocode(data, base_geo, "state_id", new_col="state",
                                               date_col=Config.DATE_COL)
         else:
-            data_frame = gmpr.replace_geocode(data, "fips", geo, date_col=Config.DATE_COL)
-
+            data_frame = gmpr.replace_geocode(data, base_geo, geo, date_col=Config.DATE_COL)
         unique_geo_ids = pd.unique(data_frame[geo])
         data_frame.set_index([geo, Config.DATE_COL],inplace=True)
         # for each location, fill in all missing dates with 0 values
@@ -184,12 +187,14 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
 
     def update_sensor(self,
         data,
-        output_path):
+        output_path,
+        base_geo):
         """Generate sensor values, and write to csv format.
 
         Args:
             data: pd.DataFrame with columns num and den
             output_path: output path for the csv results
+            base_geo: base geographic unit of data before aggregation
         """
         self.shift_dates()
         final_sensor_idxs = (self.burn_in_dates >= self.startdate) &\
@@ -197,7 +202,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
 
         # load data
         data.reset_index(inplace=True)
-        data_frame = self.geo_reindex(data)
+        data_frame = self.geo_reindex(data, base_geo)
         # handle if we need to adjust by weekday
         wd_params = Weekday.get_params(
             data_frame,

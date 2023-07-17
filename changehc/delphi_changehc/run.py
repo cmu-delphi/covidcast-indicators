@@ -15,7 +15,7 @@ from delphi_utils import get_structured_logger
 
 # first party
 from .download_ftp_files import download_counts
-from .load_data import (load_combined_data, load_cli_data, load_flu_data)
+from .load_data import load_combined_data, load_cli_data, load_flu_data, load_flu_inpatient_data
 from .update_sensor import CHCSensorUpdater
 
 
@@ -34,6 +34,8 @@ def retrieve_files(params, filedate, logger):
         mixed_file = "%s/%s_Counts_Products_Mixed.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
         flu_like_file = "%s/%s_Counts_Products_Flu_Like.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
         covid_like_file = "%s/%s_Counts_Products_Covid_Like.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        flu_inpatient_file = "%s/%s_Counts_Products_Flu_Inpatient.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
+        denom_inpatient_state_file = "%s/%s_Counts_Products_Denom_Inpatient_By_State.dat.gz" % (params["indicator"]["input_cache_dir"],filedate)
     else:
         denom_file = files["denom"]
         covid_file = files["covid"]
@@ -41,6 +43,8 @@ def retrieve_files(params, filedate, logger):
         mixed_file = files["mixed"]
         flu_like_file = files["flu_like"]
         covid_like_file = files["covid_like"]
+        flu_inpatient_file = files["flu_inpatient"]
+        denom_inpatient_state_file = files["denom_inpatient_state"]
 
     file_dict = {"denom": denom_file}
     if "covid" in params["indicator"]["types"]:
@@ -52,6 +56,9 @@ def retrieve_files(params, filedate, logger):
         file_dict["covid_like"] = covid_like_file
     if "flu" in params["indicator"]["types"]:
         file_dict["flu"] = flu_file
+    if "flu_inpatient" in params["indicator"]["types"]:
+        file_dict["flu_inpatient"] = flu_inpatient_file
+        file_dict["denom_inpatient_state"] = denom_inpatient_state_file
     return file_dict
 
 
@@ -77,6 +84,9 @@ def make_asserts(params):
     if "flu" in params["indicator"]["types"]:
         assert (files["denom"] is None) == (files["flu"] is None), \
             "exactly one of denom and flu files are provided"
+    if "flu_inpatient" in params["indicator"]["types"]:
+        assert (files["denom_inpatient_state"] is None) == (files["flu_inpatient"] is None), \
+            "exactly one of denom_inpatient_state and flu_inpatient files are provided"
 
 def process_dates(params, startdate_dt, enddate_dt):
     """Process the start and end dates for indicator."""
@@ -174,6 +184,9 @@ def run_module(params: Dict[str, Dict[str, Any]]):
     stats = []
     for geo in params["indicator"]["geos"]:
         for numtype in params["indicator"]["types"]:
+            if numtype == "flu_inpatient" and geo not in ("state", "nation", "hhs"):
+                logger.info("Skipping because flu_inpatient is not available at this geo", geo = geo)
+                continue
             for weekday in params["indicator"]["weekday"]:
                 if weekday:
                     logger.info("starting weekday adj", geo = geo, numtype = numtype)
@@ -192,22 +205,30 @@ def run_module(params: Dict[str, Dict[str, Any]]):
                     logger
                 )
                 if numtype == "covid":
+                    base_geo = "fips"
                     data = load_combined_data(file_dict["denom"],
-                             file_dict["covid"], "fips",
+                             file_dict["covid"], base_geo,
                              backfill_dir, geo, weekday, numtype,
                              generate_backfill_files, backfill_merge_day)
                 elif numtype == "cli":
+                    base_geo = "fips"
                     data = load_cli_data(file_dict["denom"],file_dict["flu"],file_dict["mixed"],
-                             file_dict["flu_like"],file_dict["covid_like"], "fips",
+                             file_dict["flu_like"],file_dict["covid_like"], base_geo,
                              backfill_dir, geo, weekday, numtype,
                              generate_backfill_files, backfill_merge_day)
                 elif numtype == "flu":
+                    base_geo = "fips"
                     data = load_flu_data(file_dict["denom"],file_dict["flu"],
-                             "fips",backfill_dir, geo, weekday,
+                             base_geo,backfill_dir, geo, weekday,
                              numtype, generate_backfill_files, backfill_merge_day)
+                elif numtype == "flu_inpatient":
+                    base_geo = "state_code"
+                    data = load_flu_inpatient_data(file_dict["denom_inpatient_state"],file_dict["flu_inpatient"],
+                             dropdate_dt,base_geo)
                 more_stats = su_inst.update_sensor(
                     data,
                     params["common"]["export_dir"],
+                    base_geo
                 )
                 stats.extend(more_stats)
 

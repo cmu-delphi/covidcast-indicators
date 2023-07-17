@@ -18,13 +18,19 @@ PARAMS = {
         "input_denom_file": "test_data/20200601_Counts_Products_Denom.dat.gz",
         "input_covid_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
         "input_flu_file": "test_data/20200601_Counts_Products_Covid.dat.gz",
+        "input_denom_inpatient_state_file": "test_data/20200601_Counts_Products_Denom_Inpatient_By_State.dat.gz",
+        "input_flu_inpatient_file": "test_data/20200601_Counts_Products_Flu_Inpatient.dat.gz",
         "backfill_dir": "./backfill",
         "drop_date": "2020-06-01"
     }
 }
 COVID_FILEPATH = PARAMS["indicator"]["input_covid_file"]
 FLU_FILEPATH = PARAMS["indicator"]["input_flu_file"]
+FLU_INPATIENT_FILEPATH = PARAMS["indicator"]["input_flu_inpatient_file"]
+
 DENOM_FILEPATH = PARAMS["indicator"]["input_denom_file"]
+DENOM_INPATIENT_STATE_FILEPATH = PARAMS["indicator"]["input_denom_inpatient_state_file"]
+
 DROP_DATE = pd.to_datetime(PARAMS["indicator"]["drop_date"])
 backfill_dir = PARAMS["indicator"]["backfill_dir"]
 
@@ -42,6 +48,8 @@ class TestLoadData:
                                        True, backfill_merge_day)
     flu_data = load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "fips",
                              backfill_dir, geo, weekday, "flu", True, backfill_merge_day)
+    flu_inpatient_data = load_flu_inpatient_data(DENOM_INPATIENT_STATE_FILEPATH, 
+                                            FLU_INPATIENT_FILEPATH, DROP_DATE, "state_code")
     gmpr = GeoMapper()
 
     def test_base_unit(self):
@@ -60,6 +68,10 @@ class TestLoadData:
         with pytest.raises(AssertionError):
             load_flu_data(DENOM_FILEPATH, FLU_FILEPATH, "foo", 
                           backfill_dir, geo, weekday, "covid", True, backfill_merge_day)
+        
+        with pytest.raises(AssertionError):
+            load_flu_inpatient_data(DENOM_INPATIENT_STATE_FILEPATH, FLU_INPATIENT_FILEPATH, 
+                                    DROP_DATE, "foo")
 
     def test_denom_columns(self):
         assert "fips" in self.denom_data.index.names
@@ -98,6 +110,17 @@ class TestLoadData:
             assert col in self.flu_data.columns
         assert len(
             set(self.flu_data.columns) - set(expected_flu_columns)) == 0
+    
+    def test_flu_inpatient_columns(self):
+        assert "state_code" in self.flu_inpatient_data.index.names
+        assert "timestamp" in self.flu_inpatient_data.index.names
+
+        expected_flu_columns = ["num", "den"]
+        for col in expected_flu_columns:
+            assert col in self.flu_inpatient_data.columns
+        assert len(
+            set(self.flu_inpatient_data.columns) - set(expected_flu_columns)) == 0
+
 
     def test_edge_values(self):
         for data in [self.denom_data,

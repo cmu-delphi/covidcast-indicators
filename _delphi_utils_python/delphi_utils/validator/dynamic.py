@@ -15,7 +15,7 @@ class DynamicValidator:
     """Class for validation of static properties of individual datasets."""
 
     @dataclass
-    class Parameters:
+    class Parameters: # pylint: disable=too-many-instance-attributes
         """Configuration parameters."""
 
         # data source name, one of
@@ -82,7 +82,8 @@ class DynamicValidator:
         covidcast.use_api_key(self.params.api_key)
 
         # Get all expected combinations of geo_type and signal.
-        geo_signal_combos = get_geo_signal_combos(self.params.data_source, api_key = self.params.api_key)
+        geo_signal_combos = get_geo_signal_combos(self.params.data_source,
+                                                  api_key = self.params.api_key)
 
         all_api_df = threaded_api_calls(self.params.data_source,
                                         self.params.time_window.start_date - outlier_lookbehind,

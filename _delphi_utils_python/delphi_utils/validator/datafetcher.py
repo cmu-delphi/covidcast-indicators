@@ -165,6 +165,7 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
 
     error_context = f"when fetching reference data from {start_date} to {end_date} " +\
         f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
+
     if api_df is None:
         raise APIDataFetchError("Error: no API data was returned " + error_context)
     if not isinstance(api_df, pd.DataFrame):
@@ -217,7 +218,8 @@ def get_one_api_df(data_source, min_date, max_date,
 
 MAX_ALLOWED_THREADS = 32
 
-def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=MAX_ALLOWED_THREADS):
+def threaded_api_calls(data_source, min_date, max_date,
+                       geo_signal_combos, n_threads=MAX_ALLOWED_THREADS):
     """Get data from API for all geo-signal combinations in a threaded way."""
     if n_threads > MAX_ALLOWED_THREADS:
         n_threads = MAX_ALLOWED_THREADS

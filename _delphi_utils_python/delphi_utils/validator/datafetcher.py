@@ -10,7 +10,6 @@ import requests
 import pandas as pd
 import numpy as np
 import covidcast
-from .. import read_params
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
@@ -103,15 +102,13 @@ def load_csv(path):
         })
 
 
-def get_geo_signal_combos(data_source):
+def get_geo_signal_combos(data_source, api_key):
     """
     Get list of geo type-signal type combinations that we expect to see.
 
     Cross references based on combinations reported available by COVIDcast metadata.
     """
-    params = read_params()
-    assert "validation" in params
-    api_key = ("epidata", params["validation"]["common"]["api_credentials"])
+    api_key = ("epidata", api_key)
     # Maps data_source name with what's in the API, lists used in case of multiple names
     meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
                                  auth=api_key)

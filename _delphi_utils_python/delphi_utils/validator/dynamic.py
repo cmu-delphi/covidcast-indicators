@@ -5,6 +5,7 @@ from typing import Dict, Set
 import re
 import pandas as pd
 import numpy as np
+import covidcast
 from .errors import ValidationFailure
 from .datafetcher import get_geo_signal_combos, threaded_api_calls
 from .utils import relative_difference_by_min, TimeWindow, lag_converter
@@ -20,6 +21,8 @@ class DynamicValidator:
         # data source name, one of
         # https://cmu-delphi.github.io/delphi-epidata/api/covidcast_signals.html
         data_source: str
+        # COVIDcast API key
+        api_key: str
         # span of time over which to perform checks
         time_window: TimeWindow
         # date that this df_to_test was generated; typically 1 day after the last date in df_to_test
@@ -48,6 +51,7 @@ class DynamicValidator:
 
         self.params = self.Parameters(
             data_source=common_params["data_source"],
+            api_key = params["common"]["api_credentials"],
             time_window=TimeWindow.from_params(common_params["end_date"],
                                                common_params["span_length"]),
             generation_date=date.today(),
@@ -74,8 +78,11 @@ class DynamicValidator:
         # Get 14 days prior to the earliest list date
         outlier_lookbehind = timedelta(days=14)
 
+        # Authenticate API
+        covidcast.use_api_key(self.params.api_key)
+
         # Get all expected combinations of geo_type and signal.
-        geo_signal_combos = get_geo_signal_combos(self.params.data_source)
+        geo_signal_combos = get_geo_signal_combos(self.params.data_source, api_key = self.params.api_key)
 
         all_api_df = threaded_api_calls(self.params.data_source,
                                         self.params.time_window.start_date - outlier_lookbehind,

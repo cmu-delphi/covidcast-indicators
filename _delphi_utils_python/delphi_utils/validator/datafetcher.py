@@ -220,11 +220,13 @@ def get_one_api_df(data_source, min_date, max_date,
     dict_lock.release()
 
 
-def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=32):
+MAX_ALLOWED_THREADS = 32
+
+def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=MAX_ALLOWED_THREADS):
     """Get data from API for all geo-signal combinations in a threaded way."""
-    if n_threads > 32:
-        n_threads = 32
-        print("Warning: Don't run more than 32 threads at once due "
+    if n_threads > MAX_ALLOWED_THREADS:
+        n_threads = MAX_ALLOWED_THREADS
+        warnings.warn(f"Warning: Don't run more than {MAX_ALLOWED_THREADS} threads at once due "
                 + "to API resource limitations")
 
     output_dict = dict()

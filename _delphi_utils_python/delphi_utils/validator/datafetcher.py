@@ -166,14 +166,12 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         api_df = covidcast.signal(
             data_source, signal_type, start_date, end_date, geo_type)
 
+    error_context = f"when fetching reference data from {start_date} to {end_date} " +\
+        f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
+    if api_df is None:
+        raise APIDataFetchError("Error: no API data was returned " + error_context)
     if not isinstance(api_df, pd.DataFrame):
-        custom_msg = "Error fetching data from " + str(start_date) + \
-                     " to " + str(end_date) + \
-                     " for data source: " + data_source + \
-                     ", signal type: " + signal_type + \
-                     ", geo type: " + geo_type
-
-        raise APIDataFetchError(custom_msg)
+        raise APIDataFetchError("Error: API return value was not a dataframe " + error_context)
 
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]

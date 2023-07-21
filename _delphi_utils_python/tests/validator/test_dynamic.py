@@ -11,7 +11,8 @@ class TestReferencePadding:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
 

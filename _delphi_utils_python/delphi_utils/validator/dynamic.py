@@ -51,7 +51,7 @@ class DynamicValidator:
 
         self.params = self.Parameters(
             data_source=common_params["data_source"],
-            api_key = params["common"]["api_credentials"],
+            api_key = common_params["api_credentials"],
             time_window=TimeWindow.from_params(common_params["end_date"],
                                                common_params["span_length"]),
             generation_date=date.today(),

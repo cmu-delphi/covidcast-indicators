@@ -120,7 +120,7 @@ jobs:
           base: main
           title: 'chore: sync prod->main'
           labels: chore
-          reviewers: krivard
-          assignees: krivard
+          reviewers: melange396
+          assignees: melange396
           body: |
             Syncing Prod->Main.

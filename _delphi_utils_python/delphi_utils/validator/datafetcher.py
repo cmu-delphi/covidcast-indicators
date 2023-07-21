@@ -223,7 +223,7 @@ def threaded_api_calls(data_source, min_date, max_date,
     """Get data from API for all geo-signal combinations in a threaded way."""
     if n_threads > MAX_ALLOWED_THREADS:
         n_threads = MAX_ALLOWED_THREADS
-        warnings.warn(f"Warning: Don't run more than {MAX_ALLOWED_THREADS} threads at once due "
+        warnings.warn(f"Warning: instead of requested thread count, using only {MAX_ALLOWED_THREADS} threads due "
                 + "to API resource limitations")
 
     output_dict = dict()

@@ -72,8 +72,8 @@ jobs:
           base: prod
           title: Release covidcast-indicators ${{ steps.indicators.outputs.version }}
           labels: chore
-          reviewers: krivard
-          assignees: krivard
+          reviewers: melange396
+          assignees: melange396
           body: |
             Releasing:
             * covidcast-indicators ${{ steps.indicators.outputs.version }}

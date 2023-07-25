@@ -3,7 +3,7 @@ name: Data quality issue
 about: Missing data, weird data, broken data 
 title: ''
 labels: 'data quality'
-assignees: 'krivard'
+assignees: 'nolangormley'
 ---
 
 **Actual Behavior:**

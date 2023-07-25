@@ -11,7 +11,8 @@ class TestReferencePadding:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
 
@@ -81,7 +82,8 @@ class TestCheckRapidChange:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
 
@@ -114,7 +116,8 @@ class TestCheckNaVals:
         "common": {
             "data_source": "",
             "span_length": 14,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
     def test_missing(self):
@@ -137,7 +140,8 @@ class TestCheckAvgValDiffs:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
 
@@ -278,7 +282,8 @@ class TestDataOutlier:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
     pd.set_option("display.max_rows", None, "display.max_columns", None)
@@ -471,7 +476,8 @@ class TestDateComparison:
         "common": {
             "data_source": "",
             "span_length": 1,
-            "end_date": "2020-09-02"
+            "end_date": "2020-09-02",
+            "api_credentials": ""
         }
     }
 

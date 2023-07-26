@@ -54,7 +54,7 @@ class TestDataFetcher:
     def test_bad_api_key(self, **kwargs):
         kwargs["mock_requests"].get("https://api.covidcast.cmu.edu/epidata/covidcast/meta", status_code=429)
         with pytest.raises(HTTPError):
-            get_geo_signal_combos("chng")
+            get_geo_signal_combos("chng", api_key="")
 
     @mock.patch('requests.get', side_effect=mocked_requests_get)
     @mock.patch("covidcast.metadata")
@@ -78,11 +78,11 @@ class TestDataFetcher:
                                                                 "hrr", "msa", "msa",
                                                                 "state"]
                                                   })
-        assert set(get_geo_signal_combos("chng")) == set(
+        assert set(get_geo_signal_combos("chng", api_key="")) == set(
             [("state", "smoothed_outpatient_cli"),
              ("state", "smoothed_outpatient_covid"),
              ("county", "smoothed_outpatient_covid")])
-        assert set(get_geo_signal_combos("covid-act-now")) == set(
+        assert set(get_geo_signal_combos("covid-act-now", api_key="")) == set(
             [("hrr", "pcr_specimen_positivity_rate"),
              ("msa", "pcr_specimen_positivity_rate"),
              ("msa", "pcr_specimen_total_tests")])
@@ -138,7 +138,8 @@ class TestDataFetcher:
             ("state", "b"): ValidationFailure("api_data_fetch_error",
                                               geo_type="state",
                                               signal="b",
-                                             message="Error fetching data from 2020-03-10 "
+                                             message="Error: no API data was returned when "
+                                             "fetching reference data from 2020-03-10 "
                                              "to 2020-06-10 for data source: "
                                              "source, signal type: b, geo type: state")
         }

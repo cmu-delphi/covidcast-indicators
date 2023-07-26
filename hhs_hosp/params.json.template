@@ -7,8 +7,8 @@
     "common": {
       "data_source": "hhs",
       "span_length": 14,
-      "min_expected_lag": {"all": "1"},
-      "max_expected_lag": {"all": "7"},
+      "min_expected_lag": {"all": "8"},
+      "max_expected_lag": {"all": "14"},
       "dry_run": true,
       "suppressed_errors": []
     },

@@ -15,7 +15,8 @@ class TestValidatorInitialization:
                 "common": {
                     "data_source": "",
                     "span_length": 0,
-                    "end_date": "2020-09-01"
+                    "end_date": "2020-09-01",
+                    "api_credentials": ""
                 }
             }
         }
@@ -46,7 +47,8 @@ class TestValidatorInitialization:
                                            "signal": "b"},
                                           {"check_name":"c",
                                            "date": None,
-                                           "geo_type": "d"}]
+                                           "geo_type": "d"}],
+                    "api_credentials": ""
                 }
             }
         }
@@ -76,7 +78,8 @@ class TestValidatorInitialization:
                                                "date": None,
                                                "geo_type": "d"},
                                               {"check_name": "a",
-                                               "fake": "b"}]
+                                               "fake": "b"}],
+                        "api_credentials": ""
                     }
                 }
             })
@@ -98,7 +101,8 @@ class TestValidatorInitialization:
                                           {"check_name":"c",
                                            "date": None,
                                            "geo_type": "d"},
-                                          ["ab"]]
+                                          ["ab"]],
+                    "api_credentials": ""
                     }
                 }
             })

@@ -10,7 +10,6 @@ import requests
 import pandas as pd
 import numpy as np
 import covidcast
-from .. import read_params
 from .errors import APIDataFetchError, ValidationFailure
 
 FILENAME_REGEX = re.compile(
@@ -103,15 +102,13 @@ def load_csv(path):
         })
 
 
-def get_geo_signal_combos(data_source):
+def get_geo_signal_combos(data_source, api_key):
     """
     Get list of geo type-signal type combinations that we expect to see.
 
     Cross references based on combinations reported available by COVIDcast metadata.
     """
-    params = read_params()
-    assert "validation" in params
-    api_key = ("epidata", params["validation"]["common"]["api_credentials"])
+    api_key = ("epidata", api_key)
     # Maps data_source name with what's in the API, lists used in case of multiple names
     meta_response = requests.get("https://api.covidcast.cmu.edu/epidata/covidcast/meta",
                                  auth=api_key)
@@ -166,14 +163,13 @@ def fetch_api_reference(data_source, start_date, end_date, geo_type, signal_type
         api_df = covidcast.signal(
             data_source, signal_type, start_date, end_date, geo_type)
 
-    if not isinstance(api_df, pd.DataFrame):
-        custom_msg = "Error fetching data from " + str(start_date) + \
-                     " to " + str(end_date) + \
-                     " for data source: " + data_source + \
-                     ", signal type: " + signal_type + \
-                     ", geo type: " + geo_type
+    error_context = f"when fetching reference data from {start_date} to {end_date} " +\
+        f"for data source: {data_source}, signal type: {signal_type}, geo type: {geo_type}"
 
-        raise APIDataFetchError(custom_msg)
+    if api_df is None:
+        raise APIDataFetchError("Error: no API data was returned " + error_context)
+    if not isinstance(api_df, pd.DataFrame):
+        raise APIDataFetchError("Error: API return value was not a dataframe " + error_context)
 
     column_names = ["geo_id", "val",
                     "se", "sample_size", "time_value"]
@@ -220,12 +216,15 @@ def get_one_api_df(data_source, min_date, max_date,
     dict_lock.release()
 
 
-def threaded_api_calls(data_source, min_date, max_date, geo_signal_combos, n_threads=32):
+MAX_ALLOWED_THREADS = 32
+
+def threaded_api_calls(data_source, min_date, max_date,
+                       geo_signal_combos, n_threads=MAX_ALLOWED_THREADS):
     """Get data from API for all geo-signal combinations in a threaded way."""
-    if n_threads > 32:
-        n_threads = 32
-        print("Warning: Don't run more than 32 threads at once due "
-                + "to API resource limitations")
+    if n_threads > MAX_ALLOWED_THREADS:
+        n_threads = MAX_ALLOWED_THREADS
+        warnings.warn("Warning: instead of requested thread count, using " + \
+            f"only {MAX_ALLOWED_THREADS} threads due to API resource limitations")
 
     output_dict = dict()
     dict_lock = threading.Lock()

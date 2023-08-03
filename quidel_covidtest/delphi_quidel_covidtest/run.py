@@ -56,7 +56,7 @@ def get_smooth_info(sensors, _SMOOTHERS):
             smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
     return smoothers
 
-def run_module(params: Dict[str, Any]):
+def run_module(params: Dict[str, Any]): # pylint: disable=too-many-statements
     """Run the quidel_covidtest indicator.
 
     The `params` argument is expected to have the following structure:

@@ -152,10 +152,10 @@ def run_module(params: Dict[str, Any]):
             pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
             for state_df, sensor_name in pool_results:
                 dates = create_export_csv(state_df, geo_res=geo_res,
-                                            sensor=sensor_name,
-                                            export_dir=export_dir,
-                                            start_date=export_start_date,
-                                            end_date=export_end_date)
+                                          sensor=sensor_name,
+                                          export_dir=export_dir,
+                                          start_date=export_start_date,
+                                          end_date=export_end_date)
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
     assert geo_res == "state" # Make sure geo_groups is for state level
@@ -186,10 +186,10 @@ def run_module(params: Dict[str, Any]):
             pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
             for res_df, sensor_name in pool_results:
                 dates = create_export_csv(res_df, geo_res=geo_res,
-                                            sensor=sensor_name, export_dir=export_dir,
-                                            start_date=export_start_date,
-                                            end_date=export_end_date,
-                                            remove_null_samples=True)
+                                          sensor=sensor_name, export_dir=export_dir,
+                                          start_date=export_start_date,
+                                          end_date=export_end_date,
+                                          remove_null_samples=True)
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
 

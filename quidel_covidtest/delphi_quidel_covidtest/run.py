@@ -124,11 +124,11 @@ def run_module(params: Dict[str, Any]):
                          wip_signal=params["indicator"]["wip_signal"],
                          prefix="wip_")
     smoothers = get_smooth_info(sensors, SMOOTHERS)
+    n_cpu = min(8, cpu_count()) # for parallelization
     for geo_res in NONPARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
         geo_groups = geo_data.groupby(res_key)
         # Parallelize generate_sensor_for_nonparent_geo calls
-        n_cpu = min(8, cpu_count())
         with Pool(n_cpu) as pool:
             pool_results = []
             for agegroup in AGE_GROUPS:
@@ -143,19 +143,19 @@ def run_module(params: Dict[str, Any]):
                     pool_results.append((
                         pool.apply_async(
                             generate_sensor_for_nonparent_geo,
-                            args=(geo_groups, res_key, smoothers[sensor][1], smoothers[sensor][0], first_date, last_date, agegroup)
+                            args=(geo_groups, res_key,
+                                  smoothers[sensor][1], smoothers[sensor][0],
+                                  first_date, last_date, agegroup)
                         ),
                         sensor_name
                     ))
             pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
             for state_df, sensor_name in pool_results:
-                dates = create_export_csv(
-                    state_df,
-                    geo_res=geo_res,
-                    sensor=sensor_name,
-                    export_dir=export_dir,
-                    start_date=export_start_date,
-                    end_date=export_end_date)
+                dates = create_export_csv(state_df, geo_res=geo_res,
+                                            sensor=sensor_name,
+                                            export_dir=export_dir,
+                                            start_date=export_start_date,
+                                            end_date=export_end_date)
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
     assert geo_res == "state" # Make sure geo_groups is for state level
@@ -163,7 +163,6 @@ def run_module(params: Dict[str, Any]):
     for geo_res in PARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
         # Parallelize generate_sensor_for_parent_geo calls
-        n_cpu = min(8, cpu_count())
         with Pool(n_cpu) as pool:
             pool_results = []
             for agegroup in AGE_GROUPS:
@@ -178,7 +177,9 @@ def run_module(params: Dict[str, Any]):
                     pool_results.append((
                         pool.apply_async(
                             generate_sensor_for_parent_geo,
-                            args=(geo_groups, geo_data, res_key, smoothers[sensor][1], smoothers[sensor][0], first_date, last_date, agegroup)
+                            args=(geo_groups, geo_data, res_key,
+                                  smoothers[sensor][1], smoothers[sensor][0],
+                                  first_date, last_date, agegroup)
                         ),
                         sensor_name
                     ))

@@ -6,6 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import atexit
 from datetime import datetime
+from multiprocessing import Pool, cpu_count
 import time
 from typing import Dict, Any
 
@@ -126,19 +127,28 @@ def run_module(params: Dict[str, Any]):
     for geo_res in NONPARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
         geo_groups = geo_data.groupby(res_key)
-        for agegroup in AGE_GROUPS:
-            for sensor in sensors:
-                if agegroup == "total":
-                    sensor_name = sensor
-                else:
-                    sensor_name = "_".join([sensor, agegroup])
-                logger.info("Generating signal and exporting to CSV",
-                            geo_res=geo_res,
-                            sensor=sensor_name)
-                state_df = generate_sensor_for_nonparent_geo(
-                    geo_groups, res_key, smooth=smoothers[sensor][1],
-                    device=smoothers[sensor][0], first_date=first_date,
-                    last_date=last_date, suffix=agegroup)
+        # Parallelize generate_sensor_for_nonparent_geo calls
+        n_cpu = min(8, cpu_count())
+        with Pool(n_cpu) as pool:
+            pool_results = []
+            for agegroup in AGE_GROUPS:
+                for sensor in sensors:
+                    if agegroup == "total":
+                        sensor_name = sensor
+                    else:
+                        sensor_name = "_".join([sensor, agegroup])
+                    logger.info("Generating signal and exporting to CSV",
+                                geo_res=geo_res,
+                                sensor=sensor_name)
+                    pool_results.append((
+                        pool.apply_async(
+                            generate_sensor_for_nonparent_geo,
+                            args=(geo_groups, res_key, smoothers[sensor][1], smoothers[sensor][0], first_date, last_date, agegroup)
+                        ),
+                        sensor_name
+                    ))
+            pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
+            for state_df, sensor_name in pool_results:
                 dates = create_export_csv(
                     state_df,
                     geo_res=geo_res,
@@ -152,24 +162,33 @@ def run_module(params: Dict[str, Any]):
     # County/HRR/MSA level
     for geo_res in PARENT_GEO_RESOLUTIONS:
         geo_data, res_key = geo_map(geo_res, data)
-        for agegroup in AGE_GROUPS:
-            for sensor in sensors:
-                if agegroup == "total":
-                    sensor_name = sensor
-                else:
-                    sensor_name = "_".join([sensor, agegroup])
-                logger.info("Generating signal and exporting to CSV",
-                            geo_res=geo_res,
-                            sensor=sensor_name)
-                res_df = generate_sensor_for_parent_geo(
-                    geo_groups, geo_data, res_key, smooth=smoothers[sensor][1],
-                    device=smoothers[sensor][0], first_date=first_date,
-                    last_date=last_date, suffix=agegroup)
+        # Parallelize generate_sensor_for_parent_geo calls
+        n_cpu = min(8, cpu_count())
+        with Pool(n_cpu) as pool:
+            pool_results = []
+            for agegroup in AGE_GROUPS:
+                for sensor in sensors:
+                    if agegroup == "total":
+                        sensor_name = sensor
+                    else:
+                        sensor_name = "_".join([sensor, agegroup])
+                    logger.info("Generating signal and exporting to CSV",
+                                geo_res=geo_res,
+                                sensor=sensor_name)
+                    pool_results.append((
+                        pool.apply_async(
+                            generate_sensor_for_parent_geo,
+                            args=(geo_groups, geo_data, res_key, smoothers[sensor][1], smoothers[sensor][0], first_date, last_date, agegroup)
+                        ),
+                        sensor_name
+                    ))
+            pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
+            for res_df, sensor_name in pool_results:
                 dates = create_export_csv(res_df, geo_res=geo_res,
-                                          sensor=sensor_name, export_dir=export_dir,
-                                          start_date=export_start_date,
-                                          end_date=export_end_date,
-                                          remove_null_samples=True)
+                                            sensor=sensor_name, export_dir=export_dir,
+                                            start_date=export_start_date,
+                                            end_date=export_end_date,
+                                            remove_null_samples=True)
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
 

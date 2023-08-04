@@ -204,9 +204,6 @@ def run_module(params: Dict[str, Any]):
                         sensor_name = sensor
                     else:
                         sensor_name = "_".join([sensor, agegroup])
-                    logger.info("Generating signal and exporting to CSV",
-                                geo_res=geo_res,
-                                sensor=sensor_name)
                     pool_results.append(
                         pool.apply_async(
                             generate_and_export_for_parent_geo,

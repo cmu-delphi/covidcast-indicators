@@ -229,7 +229,6 @@ def run_module(params: Dict[str, Any]):
             if len(dates) > 0:
                 stats.append((max(dates), len(dates)))
 
-
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
     update_cache_file(df, _end_date, cache_dir)

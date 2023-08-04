@@ -57,7 +57,7 @@ def get_smooth_info(sensors, _SMOOTHERS):
             smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
     return smoothers
 
-def generate_and_export_for_nonparent_geo(state_groups, res_key, smooth, device,
+def generate_and_export_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                           first_date, last_date, suffix, # generate args
                                           geo_res, sensor_name, export_dir,
                                           export_start_date, export_end_date, # export args
@@ -68,7 +68,7 @@ def generate_and_export_for_nonparent_geo(state_groups, res_key, smooth, device,
             geo_res=geo_res,
             sensor=sensor_name,
             pid=os.getpid())
-    res_df = generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
+    res_df = generate_sensor_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                                first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,
                               sensor=sensor_name, export_dir=export_dir,
@@ -76,7 +76,7 @@ def generate_and_export_for_nonparent_geo(state_groups, res_key, smooth, device,
                               end_date=export_end_date)
     return dates
 
-def generate_and_export_for_parent_geo(state_groups, geo_data, res_key, smooth, device,
+def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
                                        first_date, last_date, suffix, # generate args
                                        geo_res, sensor_name, export_dir,
                                        export_start_date, export_end_date, # export args
@@ -87,7 +87,7 @@ def generate_and_export_for_parent_geo(state_groups, geo_data, res_key, smooth, 
                 geo_res=geo_res,
                 sensor=sensor_name,
                 pid=os.getpid())
-    res_df = generate_sensor_for_parent_geo(state_groups, geo_data, res_key, smooth, device,
+    res_df = generate_sensor_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
                                             first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,
                               sensor=sensor_name, export_dir=export_dir,

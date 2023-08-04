@@ -7,6 +7,7 @@ when the module is run with `python -m MODULE_NAME`.
 import atexit
 from datetime import datetime
 from multiprocessing import Pool, cpu_count
+import os
 import time
 from typing import Dict, Any
 
@@ -56,7 +57,46 @@ def get_smooth_info(sensors, _SMOOTHERS):
             smoothers[sensor] = smoothers.pop(RAW_TEST_PER_DEVICE)
     return smoothers
 
-def run_module(params: Dict[str, Any]): # pylint: disable=too-many-statements
+def generate_and_export_for_nonparent_geo(state_groups, res_key, smooth, device,
+                                          first_date, last_date, suffix, # generate args
+                                          geo_res, sensor_name, export_dir,
+                                          export_start_date, export_end_date, # export args
+                                          log_filename, log_exceptions): # logger args
+    """Generate sensors, create export CSV then return stats."""
+    logger = get_structured_logger(__name__, log_filename, log_exceptions)
+    logger.info("Generating signal and exporting to CSV",
+            geo_res=geo_res,
+            sensor=sensor_name,
+            pid=os.getpid())
+    res_df = generate_sensor_for_nonparent_geo(state_groups, res_key, smooth, device,
+                                               first_date, last_date, suffix)
+    dates = create_export_csv(res_df, geo_res=geo_res,
+                              sensor=sensor_name, export_dir=export_dir,
+                              start_date=export_start_date,
+                              end_date=export_end_date)
+    return dates
+
+def generate_and_export_for_parent_geo(state_groups, geo_data, res_key, smooth, device,
+                                       first_date, last_date, suffix, # generate args
+                                       geo_res, sensor_name, export_dir,
+                                       export_start_date, export_end_date, # export args
+                                       log_filename, log_exceptions): # logger args
+    """Generate sensors, create export CSV then return stats."""
+    logger = get_structured_logger(__name__, log_filename, log_exceptions)
+    logger.info("Generating signal and exporting to CSV",
+                geo_res=geo_res,
+                sensor=sensor_name,
+                pid=os.getpid())
+    res_df = generate_sensor_for_parent_geo(state_groups, geo_data, res_key, smooth, device,
+                                            first_date, last_date, suffix)
+    dates = create_export_csv(res_df, geo_res=geo_res,
+                              sensor=sensor_name, export_dir=export_dir,
+                              start_date=export_start_date,
+                              end_date=export_end_date,
+                              remove_null_samples=True)
+    return dates
+
+def run_module(params: Dict[str, Any]):
     """Run the quidel_covidtest indicator.
 
     The `params` argument is expected to have the following structure:
@@ -125,12 +165,39 @@ def run_module(params: Dict[str, Any]): # pylint: disable=too-many-statements
                          prefix="wip_")
     smoothers = get_smooth_info(sensors, SMOOTHERS)
     n_cpu = min(8, cpu_count()) # for parallelization
-    for geo_res in NONPARENT_GEO_RESOLUTIONS:
-        geo_data, res_key = geo_map(geo_res, data)
-        geo_groups = geo_data.groupby(res_key)
-        # Parallelize generate_sensor_for_nonparent_geo calls
-        with Pool(n_cpu) as pool:
-            pool_results = []
+    logger.info("Parallelizing sensor generation", n_cpu=n_cpu)
+    with Pool(n_cpu) as pool:
+        pool_results = []
+        for geo_res in NONPARENT_GEO_RESOLUTIONS:
+            geo_data, res_key = geo_map(geo_res, data)
+            geo_groups = geo_data.groupby(res_key)
+            for agegroup in AGE_GROUPS:
+                for sensor in sensors:
+                    if agegroup == "total":
+                        sensor_name = sensor
+                    else:
+                        sensor_name = "_".join([sensor, agegroup])
+                    pool_results.append(
+                        pool.apply_async(
+                            generate_and_export_for_nonparent_geo,
+                            args=(
+                                # generate_sensors_for_parent_geo
+                                geo_groups, res_key,
+                                smoothers[sensor][1], smoothers[sensor][0],
+                                first_date, last_date, agegroup,
+                                # create_export_csv
+                                geo_res, sensor_name, export_dir,
+                                export_start_date, export_end_date,
+                                # logger params
+                                params["common"].get("log_filename"),
+                                params["common"].get("log_exceptions", True)
+                            )
+                        )
+                    )
+        assert geo_res == "state" # Make sure geo_groups is for state level
+        # County/HRR/MSA level
+        for geo_res in PARENT_GEO_RESOLUTIONS:
+            geo_data, res_key = geo_map(geo_res, data)
             for agegroup in AGE_GROUPS:
                 for sensor in sensors:
                     if agegroup == "total":
@@ -140,58 +207,28 @@ def run_module(params: Dict[str, Any]): # pylint: disable=too-many-statements
                     logger.info("Generating signal and exporting to CSV",
                                 geo_res=geo_res,
                                 sensor=sensor_name)
-                    pool_results.append((
+                    pool_results.append(
                         pool.apply_async(
-                            generate_sensor_for_nonparent_geo,
-                            args=(geo_groups, res_key,
-                                  smoothers[sensor][1], smoothers[sensor][0],
-                                  first_date, last_date, agegroup)
-                        ),
-                        sensor_name
-                    ))
-            pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
-            for state_df, sensor_name in pool_results:
-                dates = create_export_csv(state_df, geo_res=geo_res,
-                                          sensor=sensor_name,
-                                          export_dir=export_dir,
-                                          start_date=export_start_date,
-                                          end_date=export_end_date)
-                if len(dates) > 0:
-                    stats.append((max(dates), len(dates)))
-    assert geo_res == "state" # Make sure geo_groups is for state level
-    # County/HRR/MSA level
-    for geo_res in PARENT_GEO_RESOLUTIONS:
-        geo_data, res_key = geo_map(geo_res, data)
-        # Parallelize generate_sensor_for_parent_geo calls
-        with Pool(n_cpu) as pool:
-            pool_results = []
-            for agegroup in AGE_GROUPS:
-                for sensor in sensors:
-                    if agegroup == "total":
-                        sensor_name = sensor
-                    else:
-                        sensor_name = "_".join([sensor, agegroup])
-                    logger.info("Generating signal and exporting to CSV",
-                                geo_res=geo_res,
-                                sensor=sensor_name)
-                    pool_results.append((
-                        pool.apply_async(
-                            generate_sensor_for_parent_geo,
-                            args=(geo_groups, geo_data, res_key,
-                                  smoothers[sensor][1], smoothers[sensor][0],
-                                  first_date, last_date, agegroup)
-                        ),
-                        sensor_name
-                    ))
-            pool_results = [(proc.get(), sensor_name) for (proc, sensor_name) in pool_results]
-            for res_df, sensor_name in pool_results:
-                dates = create_export_csv(res_df, geo_res=geo_res,
-                                          sensor=sensor_name, export_dir=export_dir,
-                                          start_date=export_start_date,
-                                          end_date=export_end_date,
-                                          remove_null_samples=True)
-                if len(dates) > 0:
-                    stats.append((max(dates), len(dates)))
+                            generate_and_export_for_parent_geo,
+                            args=(
+                                # generate_sensors_for_parent_geo
+                                geo_groups, geo_data, res_key,
+                                smoothers[sensor][1], smoothers[sensor][0],
+                                first_date, last_date, agegroup,
+                                # create_export_csv
+                                geo_res, sensor_name, export_dir,
+                                export_start_date, export_end_date,
+                                # logger params
+                                params["common"].get("log_filename"),
+                                params["common"].get("log_exceptions", True)
+                            )
+                        )
+                    )
+        pool_results = [proc.get() for proc in pool_results]
+        for dates in pool_results:
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))
+
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file

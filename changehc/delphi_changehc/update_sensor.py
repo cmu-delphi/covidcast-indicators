@@ -91,7 +91,7 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
             startdate: first sensor date (YYYY-mm-dd)
             enddate: last sensor date (YYYY-mm-dd)
             dropdate: data drop date (YYYY-mm-dd)
-            geo: geographic resolution, one of ["county", "state", "msa", "hrr", "hhs", "nation"]
+            geo: geographic resolution, one of ["county", "chng-fips", "state", "msa", "hrr", "hhs", "nation"]
             parallel: boolean to run the sensor update in parallel
             weekday: boolean to adjust for weekday effects
             numtype: type of count data used, one of ["covid", "cli"]
@@ -149,19 +149,26 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
         # get right geography
         geo = self.geo
         gmpr = GeoMapper()
-        if geo not in {"county", "state", "msa", "hrr", "nation", "hhs"}:
-            self.logger.error("{0} is invalid, pick one of 'county', "
+        if geo not in {"county", "chng-fips", "state", "msa", "hrr", "nation", "hhs"}:
+            self.logger.error("{0} is invalid, pick one of 'county', 'chng-fips', "
                           "'state', 'msa', 'hrr', 'hss','nation'".format(geo))
             return False
-        if geo == "county":
-            data_frame = gmpr.fips_to_megacounty(data,
+        if geo == "county" or geo == "chng-fips":
+            if geo == "chng-fips":
+                data_frame = gmpr.replace_geocode(data, "fips", geo, new_col="chng-fips-raw", date_col=Config.DATE_COL)
+                fips_col = "chng-fips-raw"
+            else:
+                data_frame = data
+                fips_col = "fips"
+            data_frame = gmpr.fips_to_megacounty(data_frame,
                                                  Config.MIN_DEN,
                                                  Config.MAX_BACKFILL_WINDOW,
                                                  thr_col="den",
                                                  mega_col=geo,
-                                                 date_col=Config.DATE_COL)
+                                                 date_col=Config.DATE_COL,
+                                                 fips_col=fips_col)
             # this line should be removed once the fix is implemented for megacounties
-            data_frame = data_frame[~((data_frame['county'].str.len() > 5) | (data_frame['county'].str.contains('_')))]
+            data_frame = data_frame[~((data_frame[geo].str.len() > 5) | (data_frame[geo].str.contains('_')))]
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
                                               date_col=Config.DATE_COL)

@@ -6,7 +6,8 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import atexit
 from datetime import datetime
-from multiprocessing import Pool, cpu_count
+import multiprocessing
+from multiprocessing import Manager, Pool, cpu_count
 import os
 import time
 from typing import Dict, Any
@@ -61,13 +62,15 @@ def generate_and_export_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                           first_date, last_date, suffix, # generate args
                                           geo_res, sensor_name, export_dir,
                                           export_start_date, export_end_date, # export args
-                                          log_filename, log_exceptions): # logger args
+                                          lock, log_filename, log_exceptions): # logger args
     """Generate sensors, create export CSV then return stats."""
-    logger = get_structured_logger(__name__, log_filename, log_exceptions)
-    logger.info("Generating signal and exporting to CSV",
-            geo_res=geo_res,
-            sensor=sensor_name,
-            pid=os.getpid())
+    # logger cannot be passed to child processes, so has to be recreated
+    with lock:
+        logger = get_structured_logger(__name__, log_filename, log_exceptions)
+        logger.info("Generating signal and exporting to CSV",
+                geo_res=geo_res,
+                sensor=sensor_name,
+                pid=multiprocessing.current_process().pid)
     res_df = generate_sensor_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                                first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,
@@ -80,20 +83,22 @@ def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, de
                                        first_date, last_date, suffix, # generate args
                                        geo_res, sensor_name, export_dir,
                                        export_start_date, export_end_date, # export args
-                                       log_filename, log_exceptions): # logger args
+                                       lock, log_filename, log_exceptions): # logger args
     """Generate sensors, create export CSV then return stats."""
-    logger = get_structured_logger(__name__, log_filename, log_exceptions)
-    logger.info("Generating signal and exporting to CSV",
-                geo_res=geo_res,
-                sensor=sensor_name,
-                pid=os.getpid())
+    # logger cannot be passed to child processes, so has to be recreated
+    with lock:
+        logger = get_structured_logger(__name__, log_filename, log_exceptions)
+        logger.info("Generating signal and exporting to CSV",
+                    geo_res=geo_res,
+                    sensor=sensor_name,
+                    pid=multiprocessing.current_process().pid)
     res_df = generate_sensor_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
                                             first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,
                               sensor=sensor_name, export_dir=export_dir,
                               start_date=export_start_date,
                               end_date=export_end_date,
-                              remove_null_samples=True)
+                              remove_null_samples=True) # for parent geo, remove null sample size
     return dates
 
 def run_module(params: Dict[str, Any]):
@@ -165,6 +170,7 @@ def run_module(params: Dict[str, Any]):
                          prefix="wip_")
     smoothers = get_smooth_info(sensors, SMOOTHERS)
     n_cpu = min(8, cpu_count()) # for parallelization
+    lock = Manager().Lock() # for using loggers in multiple threads
     logger.info("Parallelizing sensor generation", n_cpu=n_cpu)
     with Pool(n_cpu) as pool:
         pool_results = []
@@ -189,6 +195,7 @@ def run_module(params: Dict[str, Any]):
                                 geo_res, sensor_name, export_dir,
                                 export_start_date, export_end_date,
                                 # logger params
+                                lock,
                                 params["common"].get("log_filename"),
                                 params["common"].get("log_exceptions", True)
                             )
@@ -197,7 +204,7 @@ def run_module(params: Dict[str, Any]):
         assert geo_res == "state" # Make sure geo_groups is for state level
         # County/HRR/MSA level
         for geo_res in PARENT_GEO_RESOLUTIONS:
-            geo_data, res_key = geo_map(geo_res, data)
+            geo_data, res_key = geo_map(geo_res, data) # using the last geo_groups
             for agegroup in AGE_GROUPS:
                 for sensor in sensors:
                     if agegroup == "total":
@@ -216,6 +223,7 @@ def run_module(params: Dict[str, Any]):
                                 geo_res, sensor_name, export_dir,
                                 export_start_date, export_end_date,
                                 # logger params
+                                lock,
                                 params["common"].get("log_filename"),
                                 params["common"].get("log_exceptions", True)
                             )

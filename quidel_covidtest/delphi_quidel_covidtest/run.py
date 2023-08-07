@@ -6,8 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import atexit
 from datetime import datetime
-import multiprocessing
-from multiprocessing import Manager, Pool, cpu_count
+from multiprocessing import Manager, Pool, cpu_count, current_process
 import os
 import time
 from typing import Dict, Any
@@ -70,7 +69,7 @@ def generate_and_export_for_nonparent_geo(geo_groups, res_key, smooth, device,
         logger.info("Generating signal and exporting to CSV",
                 geo_res=geo_res,
                 sensor=sensor_name,
-                pid=multiprocessing.current_process().pid)
+                pid=current_process().pid)
     res_df = generate_sensor_for_nonparent_geo(geo_groups, res_key, smooth, device,
                                                first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,
@@ -91,7 +90,7 @@ def generate_and_export_for_parent_geo(geo_groups, geo_data, res_key, smooth, de
         logger.info("Generating signal and exporting to CSV",
                     geo_res=geo_res,
                     sensor=sensor_name,
-                    pid=multiprocessing.current_process().pid)
+                    pid=current_process().pid)
     res_df = generate_sensor_for_parent_geo(geo_groups, geo_data, res_key, smooth, device,
                                             first_date, last_date, suffix)
     dates = create_export_csv(res_df, geo_res=geo_res,

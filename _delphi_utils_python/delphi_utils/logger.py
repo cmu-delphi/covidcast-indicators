@@ -2,17 +2,18 @@
 
 # the Delphi group uses two ~identical versions of this file.
 # try to keep them in sync with edits, for sanity.
-#   https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py
+#   https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py  # pylint: disable=line-too-long
 #   https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
 
 import contextlib
 import logging
 import multiprocessing
 import os
-import structlog
 import sys
 import threading
 from traceback import format_exception
+
+import structlog
 
 
 def handle_exceptions(logger):
@@ -146,9 +147,6 @@ class LoggerThread():
     and because it might introduce lag to log messages.
     """
 
-    # TODO: add checks to prevent use of a stopped thread?
-    # TODO: reduce level of a bunch of debugging logs (search "self.logger.info")
-
     class SubLogger():
         """
         multiprocessing-safe logger-like interface
@@ -160,10 +158,12 @@ class LoggerThread():
             kwargs_plus = {'sub_pid': multiprocessing.current_process().pid}
             kwargs_plus.update(kwargs)
             self.queue.put([level, args, kwargs_plus])
-        # TODO: add log levels beyond `info`
         def info(self, *args, **kwargs):
             """log an INFO level message"""
             self._log(logging.INFO, *args, **kwargs)
+        def warn(self, *args, **kwargs):
+            """log an WARN level message"""
+            self._log(logging.WARN, *args, **kwargs)
 
 
     def get_sublogger(self):
@@ -178,34 +178,39 @@ class LoggerThread():
             self.msg_queue = multiprocessing.Queue()
 
         def logger_thread_worker():
-            self.logger.info('thread started')
+            logger.info('thread started')
             while True:
                 msg = self.msg_queue.get()
                 if msg == 'STOP':
-                    self.logger.info('received stop signal')
+                    logger.debug('received stop signal')
                     break
                 level, args, kwargs = msg
-                # TODO: add log levels beyond `info`
                 if level == logging.INFO:
-                    self.logger.info(*args, **kwargs)
+                    logger.info(*args, **kwargs)
+                if level == logging.WARN:
+                    logger.warn(*args, **kwargs)
                 else:
-                    self.logger.error('received unknown logging level!  exiting...')
+                    logger.error('received unknown logging level!  exiting...')
                     break
-            self.logger.info('stopping thread')
+            logger.debug('stopping thread')
 
         self.thread = threading.Thread(target=logger_thread_worker,
-                                       name="LoggerThread__"+self.logger.name)
-        self.logger.info('starting thread')
+                                       name="LoggerThread__"+logger.name)
+        logger.debug('starting thread')
         self.thread.start()
 
         self.sublogger = LoggerThread.SubLogger(self.msg_queue)
+        self.running = True
 
     def stop(self):
         """terminate this LoggerThread"""
-        # TODO: make this safely re-callable?
-        self.logger.info('sending stop signal')
+        if not self.running:
+            self.logger.warn('thread already stopped')
+            return
+        self.logger.debug('sending stop signal')
         self.msg_queue.put('STOP')
         self.thread.join()
+        self.running = False
         self.logger.info('thread stopped')
 
 

@@ -76,9 +76,7 @@ def get_structured_logger(name=__name__,
         handlers=[logging.StreamHandler()])
 
     def add_pid(_logger, _method_name, event_dict):
-        """
-        Add current PID to the event dict.
-        """
+        """Add current PID to the event dict."""
         event_dict["pid"] = os.getpid()
         return event_dict
 
@@ -149,25 +147,29 @@ class LoggerThread():
 
     class SubLogger():
         """
-        multiprocessing-safe logger-like interface
-        to convey log messages to a listening LoggerThread
+        Multiprocessing-safe logger-like interface
+        to convey log messages to a listening LoggerThread.
         """
+
         def __init__(self, queue):
             self.queue = queue
+
         def _log(self, level, *args, **kwargs):
             kwargs_plus = {'sub_pid': multiprocessing.current_process().pid}
             kwargs_plus.update(kwargs)
             self.queue.put([level, args, kwargs_plus])
+
         def info(self, *args, **kwargs):
-            """log an INFO level message"""
+            """Log an INFO level message."""
             self._log(logging.INFO, *args, **kwargs)
+
         def warn(self, *args, **kwargs):
-            """log an WARN level message"""
+            """Log a WARN level message."""
             self._log(logging.WARN, *args, **kwargs)
 
 
     def get_sublogger(self):
-        """accessor method to retrieve a SubLogger for this LoggerThread"""
+        """Accessor method to retrieve a SubLogger for this LoggerThread."""
         return self.sublogger
 
     def __init__(self, logger, q=None):
@@ -203,7 +205,7 @@ class LoggerThread():
         self.running = True
 
     def stop(self):
-        """terminate this LoggerThread"""
+        """Terminate this LoggerThread."""
         if not self.running:
             self.logger.warn('thread already stopped')
             return
@@ -218,7 +220,7 @@ class LoggerThread():
 @contextlib.contextmanager
 def pool_and_threadedlogger(logger, *poolargs):
     """
-    emulates the multiprocessing.Pool() context manager,
+    Emulates the multiprocessing.Pool() context manager,
     but also provides a logger that can be used by pool workers.
     """
     with multiprocessing.Manager() as manager:

@@ -169,7 +169,8 @@ def run_module(params: Dict[str, Any]):
     smoothers = get_smooth_info(sensors, SMOOTHERS)
     n_cpu = min(8, cpu_count()) # for parallelization
     with Manager() as manager:
-         # for using loggers in multiple threads
+        # for using loggers in multiple threads
+        # disabled due to a Pylint bug, resolved by version bump (#1886)
         lock = manager.Lock() # pylint: disable=no-member
         logger.info("Parallelizing sensor generation", n_cpu=n_cpu)
         with Pool(n_cpu) as pool:

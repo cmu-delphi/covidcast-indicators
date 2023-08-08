@@ -5,7 +5,9 @@
 #   https://github.com/cmu-delphi/covidcast-indicators/blob/main/_delphi_utils_python/delphi_utils/logger.py
 #   https://github.com/cmu-delphi/delphi-epidata/blob/dev/src/common/logger.py
 
+import contextlib
 import logging
+import multiprocessing
 import os
 import structlog
 import sys
@@ -129,10 +131,6 @@ def get_structured_logger(name=__name__,
 
 
 
-
-import contextlib
-import multiprocessing
-
 class LoggerThread():
     """
     the bare structlog loggers are thread-safe but not multiprocessing-safe.
@@ -152,6 +150,10 @@ class LoggerThread():
     # TODO: reduce level of a bunch of debugging logs (search "self.logger.info")
 
     class SubLogger():
+        """
+        multiprocessing-safe logger-like interface
+        to convey log messages to a listening LoggerThread
+        """
         def __init__(self, queue):
             self.queue = queue
         def _log(self, level, *args, **kwargs):
@@ -160,10 +162,12 @@ class LoggerThread():
             self.queue.put([level, args, kwargs_plus])
         # TODO: add log levels beyond `info`
         def info(self, *args, **kwargs):
+            """log an INFO level message"""
             self._log(logging.INFO, *args, **kwargs)
 
 
     def get_sublogger(self):
+        """accessor method to retrieve a SubLogger for this LoggerThread"""
         return self.sublogger
 
     def __init__(self, logger, q=None):
@@ -197,6 +201,7 @@ class LoggerThread():
         self.sublogger = LoggerThread.SubLogger(self.msg_queue)
 
     def stop(self):
+        """terminate this LoggerThread"""
         # TODO: make this safely re-callable?
         self.logger.info('sending stop signal')
         self.msg_queue.put('STOP')

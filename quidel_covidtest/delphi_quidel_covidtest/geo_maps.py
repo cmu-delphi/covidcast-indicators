@@ -75,11 +75,11 @@ def add_parent_state(data, geo_res, geo_key):
     """
     fips_to_state = GMPR.get_crosswalk(from_code="fips", to_code="state")
     if geo_res == "county":
-        mix_map = fips_to_state[["fips", "state_id"]]  # pylint: disable=unsubscriptable-object
+        mix_map = fips_to_state[["fips", "state_id"]]
     else:
         fips_to_geo_res = GMPR.get_crosswalk(from_code="fips", to_code=geo_res)
         mix_map = fips_to_geo_res[["fips", geo_res]].merge(
-                fips_to_state[["fips", "state_id"]],  # pylint: disable=unsubscriptable-object
+                fips_to_state[["fips", "state_id"]],
                 on="fips",
                 how="inner")
         mix_map = GMPR.add_population_column(mix_map, "fips").groupby(

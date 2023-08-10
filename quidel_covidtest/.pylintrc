@@ -9,6 +9,7 @@ disable=logging-format-interpolation,
     no-self-use,
     # Allow pytest classes to have one test.
     too-few-public-methods
+enable=useless-suppression
 
 [BASIC]
 

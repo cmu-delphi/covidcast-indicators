@@ -149,12 +149,10 @@ class LoggerThread():
     """
 
     class SubLogger():
-        """
-        MP-safe logger-like interface  to convey log messages to a listening LoggerThread.
-        """
+        """MP-safe logger-like interface to convey log messages to a listening LoggerThread."""
 
         def __init__(self, queue):
-            """Save a handle to the queue"""
+            """Create SubLogger with a bound queue."""
             self.queue = queue
 
         def _log(self, level, *args, **kwargs):
@@ -186,11 +184,11 @@ class LoggerThread():
 
 
     def get_sublogger(self):
-        """Accessor method to retrieve a SubLogger for this LoggerThread."""
+        """Retrieve SubLogger for this LoggerThread."""
         return self.sublogger
 
     def __init__(self, logger, q=None):
-        """Save handles to logger and queue, creating queue if not specified."""
+        """Create and start LoggerThread with supplied logger, creating a queue if not provided."""
         self.logger = logger
         if q:
             self.msg_queue = q
@@ -237,10 +235,13 @@ class LoggerThread():
 @contextlib.contextmanager
 def pool_and_threadedlogger(logger, *poolargs):
     """
-    Makes a proxy to logger available to a mp.Pool, which it also cleans up.
+    Provide (to a context) a multiprocessing Pool and a proxy to the supplied logger.
 
     Emulates the multiprocessing.Pool() context manager,
-    but also provides a wrapper to logger that can be used by pool workers.
+    but also provides (via a LoggerThread) a SubLogger proxy to logger
+    that can be safely used by pool workers.
+    Also "cleans up" the pool by waiting for workers to complete
+    as it exits the context.
     """
     with multiprocessing.Manager() as manager:
         logger_thread = LoggerThread(logger, manager.Queue())

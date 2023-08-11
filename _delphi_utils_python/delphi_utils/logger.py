@@ -181,8 +181,6 @@ class LoggerThread():
             self._log(logging.CRITICAL, *args, **kwargs)
 
 
-
-
     def get_sublogger(self):
         """Retrieve SubLogger for this LoggerThread."""
         return self.sublogger

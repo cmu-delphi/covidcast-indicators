@@ -6,7 +6,7 @@ when the module is run with `python -m MODULE_NAME`.
 """
 import atexit
 from datetime import datetime
-from multiprocessing import Pool, cpu_count, current_process
+from multiprocessing import cpu_count
 import time
 from typing import Dict, Any
 

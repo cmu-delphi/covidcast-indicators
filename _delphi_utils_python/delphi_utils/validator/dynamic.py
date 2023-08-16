@@ -310,7 +310,8 @@ class DynamicValidator:
                                     "test data for a given checking date-geo type-signal type"
                                     " combination is missing. Source data may be missing"
                                     " for one or more dates "
-                                    f"({checking_date} < {self.params.generation_date} - {min_thres})"))
+                                    f"({checking_date} < {self.params.generation_date} "
+                                    f"- {min_thres})"))
             return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date
@@ -422,7 +423,8 @@ class DynamicValidator:
                                   geo_type,
                                   signal_type,
                                   "reference df has days beyond the max date in the =df_to_test= "
-                                  f"{df_to_test['time_value'].max()} < {df_to_reference['time_value'].max().date()}"))
+                                  f"{df_to_test['time_value'].max()} < "
+                                  f"{df_to_reference['time_value'].max().date()}"))
 
         report.increment_total_checks()
 

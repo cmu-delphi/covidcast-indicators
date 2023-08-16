@@ -72,6 +72,7 @@ class ValidationReport:
         self.total_checks += 1
 
     def set_elapsed_time_in_seconds(self, time):
+        """Set elapsed runtime in seconds for later logging."""
         self.elapsed_time_in_seconds = time
 
     def add_raised_warning(self, warning):

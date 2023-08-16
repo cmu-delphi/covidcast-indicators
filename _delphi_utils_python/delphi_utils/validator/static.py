@@ -230,7 +230,7 @@ class StaticValidator:
                         ValidationFailure(
                             "check_geo_id_type",
                             filename=nameformat,
-                            message="geo_ids saved as floats; strings preferred"))
+                            message=f"{len(leftover)} geo_ids saved as floats; strings preferred"))
 
             if geo_type in fill_len.keys():
                 # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
@@ -281,29 +281,35 @@ class StaticValidator:
 
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
+                bad_values = df_to_test[(df_to_test['val'] > 100)]['val'].unique()
                 report.add_raised_error(
                     ValidationFailure(
                         "check_val_pct_gt_100",
                         filename=nameformat,
-                        message="val column can't have any cell greater than 100 for percents"))
+                        message="val column can't have any cell greater than 100 for percents; "
+                                f"invalid values: {bad_values}"))
 
             report.increment_total_checks()
 
         if proportion_option:
             if not df_to_test[(df_to_test['val'] > 100000)].empty:
+                bad_values = df_to_test[(df_to_test['val'] > 100000)]['val'].unique()
                 report.add_raised_error(
                     ValidationFailure("check_val_prop_gt_100k",
                                       filename=nameformat,
                                       message="val column can't have any cell greater than 100000 "
-                                              "for proportions"))
+                                              "for proportions; "
+                                              f"invalid values: {bad_values}"))
 
             report.increment_total_checks()
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
+            bad_values = df_to_test[(df_to_test['val'] < 0)]['val'].unique()
             report.add_raised_error(
                 ValidationFailure("check_val_lt_0",
                                   filename=nameformat,
-                                  message="val column can't have any cell smaller than 0"))
+                                  message="val column can't have any cell smaller than 0; "
+                                          f"invalid values: {bad_values}"))
 
         report.increment_total_checks()
 
@@ -346,10 +352,12 @@ class StaticValidator:
             report.increment_total_checks()
 
             if df_to_test["se"].isnull().mean() > 0.5:
+                bad_mean = round(df_to_test["se"].isnull().mean() * 100, 2)
                 report.add_raised_error(
                     ValidationFailure("check_se_many_missing",
                                       filename=nameformat,
-                                      message='Recent se values are >50% NA'))
+                                      message='Many recent se values are missing: '
+                                              f'{bad_mean} > 50%'))
 
             report.increment_total_checks()
 

@@ -2,6 +2,7 @@
 """Collect and process Quidel export files."""
 from os.path import join
 import os
+import time
 from datetime import datetime, timedelta
 import boto3
 
@@ -369,7 +370,7 @@ def check_export_start_date(export_start_date, export_end_date,
         return datetime(2020, 5, 26)
     return export_start_date
 
-def update_cache_file(df, _end_date, cache_dir):
+def update_cache_file(df, _end_date, cache_dir, logger):
     """
     Update cache file. Remove the old one, export the new one.
 
@@ -380,8 +381,15 @@ def update_cache_file(df, _end_date, cache_dir):
             The most recent date when the raw data is received
         cache_dir:
             ./cache where the cache file is stored
+        logger: logging.Logger
+            Structured logger.
     """
+    start_time = time.time()
     for fn in os.listdir(cache_dir):
         if ".csv" in fn:
             os.remove(join(cache_dir, fn))
     df.to_csv(join(cache_dir, "pulled_until_%s.csv") % _end_date.strftime("%Y%m%d"), index=False)
+    elapsed_time_in_seconds = round(time.time() - start_time, 2)
+    logger.info("Completed cache file update",
+                end_date = _end_date,
+                elapsed_time_in_seconds = elapsed_time_in_seconds)

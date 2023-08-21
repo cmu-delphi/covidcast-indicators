@@ -67,20 +67,22 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
     validator = validator_fn(params)
     archiver = archiver_fn(params)
 
-    start_time = time.time()
     t1 = multiprocessing.Process(target=flash_fn, args=[params])
     t1.start()
     start = time.time()
     while time.time()-start < timer:
         if not t1.is_alive():
+            elapsed_time_in_seconds = round(time.time() - start, 2)
+            logger.info("Completed flash step",
+                    elapsed_time_in_seconds = elapsed_time_in_seconds)
             break
         time.sleep(10)
     else:
+        elapsed_time_in_seconds = round(time.time() - start, 2)
+        logger.error(f"Flash step timed out ({timer} s), terminating",
+                elapsed_time_in_seconds = elapsed_time_in_seconds)
         t1.terminate()
         t1.join()
-    elapsed_time_in_seconds = round(time.time() - start_time, 2)
-    logger.info("Completed flash step",
-            elapsed_time_in_seconds = elapsed_time_in_seconds)
 
     if validator:
         validation_report = validator.validate()

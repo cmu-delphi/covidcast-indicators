@@ -46,7 +46,7 @@ class ValidationReport:
         self.raised_warnings = []
         self.unsuppressed_errors = []
         self.dry_run = dry_run
-        self.elapsed_time_in_seconds = 0
+        self.elapsed_time_in_seconds = -1
     # pylint: enable=R0902
 
     def add_raised_error(self, error):

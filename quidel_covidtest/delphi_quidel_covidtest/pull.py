@@ -391,5 +391,5 @@ def update_cache_file(df, _end_date, cache_dir, logger):
     df.to_csv(join(cache_dir, "pulled_until_%s.csv") % _end_date.strftime("%Y%m%d"), index=False)
     elapsed_time_in_seconds = round(time.time() - start_time, 2)
     logger.info("Completed cache file update",
-                end_date = _end_date,
+                end_date = _end_date.strftime('%Y-%m-%d'),
                 elapsed_time_in_seconds = elapsed_time_in_seconds)

@@ -83,7 +83,6 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
                 elapsed_time_in_seconds = elapsed_time_in_seconds)
         t1.terminate()
         t1.join()
-
     if validator:
         validation_report = validator.validate()
         validation_report.log(logger)

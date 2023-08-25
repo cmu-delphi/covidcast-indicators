@@ -112,7 +112,7 @@ class StaticValidator:
             # i.e if it is more than max_expected_lag since the checking date
             expected_dates = [date for date in expected_dates if
                 ((datetime.today().date() - date).days) > max_expected_lag_overall]
-            check_dateholes = list({(expected_dates).difference(unique_dates)})
+            check_dateholes = list(set(expected_dates).difference(unique_dates))
             check_dateholes.sort()
 
             if check_dateholes:

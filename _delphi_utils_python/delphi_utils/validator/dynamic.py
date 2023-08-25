@@ -237,6 +237,7 @@ class DynamicValidator:
                 ValidationFailure("check_min_max_date",
                                   geo_type=geo_type,
                                   signal=signal_type,
+                                  date=max_date,
                                   message="date of most recent generated file seems too long ago "
                                   f"({max_date} < {self.params.generation_date} - {min_thres})"))
 
@@ -264,6 +265,7 @@ class DynamicValidator:
                 ValidationFailure("check_max_max_date",
                                   geo_type=geo_type,
                                   signal=signal_type,
+                                  date=max_date,
                                   message="date of most recent generated file seems too recent "
                                   f"({max_date} > {self.params.generation_date} - {max_thres})"))
 

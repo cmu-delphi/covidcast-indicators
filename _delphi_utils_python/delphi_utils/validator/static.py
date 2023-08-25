@@ -112,7 +112,7 @@ class StaticValidator:
             # i.e if it is more than max_expected_lag since the checking date
             expected_dates = [date for date in expected_dates if
                 ((datetime.today().date() - date).days) > max_expected_lag_overall]
-            check_dateholes = list(set(expected_dates).difference(unique_dates))
+            check_dateholes = list({(expected_dates).difference(unique_dates)})
             check_dateholes.sort()
 
             if check_dateholes:
@@ -178,8 +178,8 @@ class StaticValidator:
             - report: ValidationReport; report where results are added
         """
         valid_geos = self._get_valid_geo_values(geo_type)
-        unexpected_geos = list(set([geo for geo in df_to_test['geo_id']
-                           if geo.lower() not in valid_geos]))
+        unexpected_geos = list({([geo for geo in df_to_test['geo_id']
+                           if geo.lower() not in valid_geos])})
         if len(unexpected_geos) > 0:
             report.add_raised_error(
                 ValidationFailure(
@@ -187,8 +187,8 @@ class StaticValidator:
                     filename=filename,
                     message=f"Unrecognized geo_ids (not in historical data) {unexpected_geos}"))
         report.increment_total_checks()
-        upper_case_geos = list(set([
-            geo for geo in df_to_test['geo_id'] if geo.lower() != geo]))
+        upper_case_geos = list({([
+            geo for geo in df_to_test['geo_id'] if geo.lower() != geo])})
         if len(upper_case_geos) > 0:
             report.add_raised_warning(
                 ValidationFailure(

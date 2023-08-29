@@ -121,6 +121,7 @@ def run_module(params: Dict[str, Any]):
         __name__, filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True))
     stats = []
+    # Log at program exit in case of an exception, otherwise after successful completion
     atexit.register(log_exit, start_time, stats, logger)
     cache_dir = params["indicator"]["input_cache_dir"]
     export_dir = params["common"]["export_dir"]
@@ -223,4 +224,7 @@ def run_module(params: Dict[str, Any]):
 
     # Export the cache file if the pipeline runs successfully.
     # Otherwise, don't update the cache file
-    update_cache_file(df, _end_date, cache_dir)
+    update_cache_file(df, _end_date, cache_dir, logger)
+    # Log stats now instead of at program exit
+    atexit.unregister(log_exit)
+    log_exit(start_time, stats, logger)

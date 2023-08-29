@@ -75,7 +75,7 @@ def run_indicator_pipeline(indicator_fn:  Callable[[Params], None],
             logger.info("Completed flash step",
                     elapsed_time_in_seconds = round(time.time() - start, 2))
             break
-        time.sleep(10)
+        time.sleep(1)
     else:
         logger.error(f"Flash step timed out ({timer} s), terminating",
                 elapsed_time_in_seconds = round(time.time() - start, 2))

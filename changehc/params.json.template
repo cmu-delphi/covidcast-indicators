@@ -24,9 +24,9 @@
     "n_waiting_days": 3,
     "se": false,
     "parallel": false,
-    "geos": ["state", "msa", "hrr", "county", "nation", "hhs"],
+    "geos": ["state", "msa", "hrr", "chng-fips", "nation", "hhs"],
     "weekday": [true, false],
-    "types": ["covid","cli"],
+    "types": ["covid","cli", "flu"],
     "wip_signal": "",
     "ftp_conn": {
       "host": "",

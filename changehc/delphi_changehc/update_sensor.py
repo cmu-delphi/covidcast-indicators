@@ -162,6 +162,8 @@ class CHCSensorUpdater:  # pylint: disable=too-many-instance-attributes
                                                  date_col=Config.DATE_COL)
             # this line should be removed once the fix is implemented for megacounties
             data_frame = data_frame[~((data_frame['county'].str.len() > 5) | (data_frame['county'].str.contains('_')))]
+            # handle rogue \N:
+            data_frame = data_frame[data_frame['county'] != r'\N']
         elif geo == "state":
             data_frame = gmpr.replace_geocode(data, "fips", "state_id", new_col="state",
                                               date_col=Config.DATE_COL)

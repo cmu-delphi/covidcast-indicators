@@ -11,6 +11,7 @@ import numpy as np
 from boto3 import Session
 from moto import mock_s3
 import pytest
+import pdb
 
 # first party
 from delphi_changehc.config import Config
@@ -89,9 +90,15 @@ class TestCHCSensorUpdater:
                 "fips": ['01001'] * 7 + ['04007'] * 6,
                 "den": [1000] * 7 + [2000] * 6,
                 "timestamp": [pd.Timestamp(f'03-{i}-2020') for i in range(1, 14)]})
+            if geo == "county": # test for rogue \N
+                row_contain_N = {"num": 700, "fips": r"\N", "den": 2000, "timestamp": pd.Timestamp("03-15-2020")}
+                test_data = test_data.append(row_contain_N, ignore_index=True)
             data_frame = su_inst.geo_reindex(test_data)
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum(numeric_only=True) == (4200,19000)).all()
+            if geo == "county":
+                pdb.set_trace()
+                assert r'\N' not in data_frame.index.get_level_values('county')
 
     def test_update_sensor(self):
         """Tests that the sensors are properly updated."""

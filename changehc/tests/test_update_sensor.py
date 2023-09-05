@@ -11,7 +11,6 @@ import numpy as np
 from boto3 import Session
 from moto import mock_s3
 import pytest
-import pdb
 
 # first party
 from delphi_changehc.config import Config
@@ -97,7 +96,6 @@ class TestCHCSensorUpdater:
             assert data_frame.shape[0] == multiple*len(su_inst.fit_dates)
             assert (data_frame.sum(numeric_only=True) == (4200,19000)).all()
             if geo == "county":
-                pdb.set_trace()
                 assert r'\N' not in data_frame.index.get_level_values('county')
 
     def test_update_sensor(self):

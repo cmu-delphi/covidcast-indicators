@@ -35,6 +35,8 @@ class ValidationReport:
             Warnings raised from validation execution
         unsuppressed_errors: List[Exception]
             Errors raised from validation failures not found in `self.errors_to_suppress`
+        elapsed_time_in_seconds: float
+            Elapsed time of validation run, rounded down
         """
         self.errors_to_suppress = errors_to_suppress
         self.data_source = data_source
@@ -44,6 +46,7 @@ class ValidationReport:
         self.raised_warnings = []
         self.unsuppressed_errors = []
         self.dry_run = dry_run
+        self.elapsed_time_in_seconds = -1
     # pylint: enable=R0902
 
     def add_raised_error(self, error):
@@ -67,6 +70,10 @@ class ValidationReport:
     def increment_total_checks(self):
         """Record a check."""
         self.total_checks += 1
+
+    def set_elapsed_time_in_seconds(self, time):
+        """Set elapsed runtime in seconds for later logging."""
+        self.elapsed_time_in_seconds = time
 
     def add_raised_warning(self, warning):
         """Add a warning to the report.
@@ -94,7 +101,8 @@ class ValidationReport:
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
                 warnings = len(self.raised_warnings),
-                phase = "validation")
+                phase = "validation",
+                elapsed_time_in_seconds=self.elapsed_time_in_seconds)
         else:
             logger.info("Validation run unsuccessful",
                 data_source = self.data_source,
@@ -102,7 +110,8 @@ class ValidationReport:
                 checks_failed = len(self.unsuppressed_errors),
                 checks_suppressed = self.num_suppressed,
                 warnings = len(self.raised_warnings),
-                phase="validation")
+                phase="validation",
+                elapsed_time_in_seconds=self.elapsed_time_in_seconds)
         # Threshold for slack alerts if warnings are excessive,
         # Currently extremely strict, set by observation of 1 month's logs
         excessive_warnings = self.total_checks > 0 and \

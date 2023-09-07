@@ -237,7 +237,9 @@ class DynamicValidator:
                 ValidationFailure("check_min_max_date",
                                   geo_type=geo_type,
                                   signal=signal_type,
-                                  message="date of most recent generated file seems too long ago"))
+                                  date=max_date,
+                                  message="date of most recent generated file seems too long ago "
+                                  f"({max_date} < {self.params.generation_date} - {min_thres})"))
 
         report.increment_total_checks()
 
@@ -263,7 +265,9 @@ class DynamicValidator:
                 ValidationFailure("check_max_max_date",
                                   geo_type=geo_type,
                                   signal=signal_type,
-                                  message="date of most recent generated file seems too recent"))
+                                  date=max_date,
+                                  message="date of most recent generated file seems too recent "
+                                  f"({max_date} > {self.params.generation_date} - {max_thres})"))
 
         report.increment_total_checks()
 
@@ -307,7 +311,9 @@ class DynamicValidator:
                                     signal_type,
                                     "test data for a given checking date-geo type-signal type"
                                     " combination is missing. Source data may be missing"
-                                    " for one or more dates"))
+                                    " for one or more dates "
+                                    f"({checking_date} < {self.params.generation_date} "
+                                    f"- {min_thres})"))
             return False
 
         # Reference dataframe runs backwards from the recent_cutoff_date
@@ -418,7 +424,9 @@ class DynamicValidator:
                                   checking_date,
                                   geo_type,
                                   signal_type,
-                                  "reference df has days beyond the max date in the =df_to_test="))
+                                  "reference df has days beyond the max date in the =df_to_test= "
+                                  f"{df_to_test['time_value'].max()} < "
+                                  f"{df_to_reference['time_value'].max().date()}"))
 
         report.increment_total_checks()
 
@@ -459,7 +467,8 @@ class DynamicValidator:
                                   geo_type,
                                   signal_type,
                                   "Number of rows per day seems to have changed rapidly (reference "
-                                  "vs test data)"))
+                                  "vs test data); "
+                                  f"relative difference: {abs(compare_rows)} > 0.35"))
         report.increment_total_checks()
 
     def check_positive_negative_spikes(self, source_df, api_frames, geo, sig, report):

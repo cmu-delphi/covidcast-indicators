@@ -178,8 +178,8 @@ class StaticValidator:
             - report: ValidationReport; report where results are added
         """
         valid_geos = self._get_valid_geo_values(geo_type)
-        unexpected_geos = [geo for geo in df_to_test['geo_id']
-                           if geo.lower() not in valid_geos]
+        unexpected_geos = {geo for geo in df_to_test['geo_id']
+                           if geo.lower() not in valid_geos}
         if len(unexpected_geos) > 0:
             report.add_raised_error(
                 ValidationFailure(
@@ -187,8 +187,8 @@ class StaticValidator:
                     filename=filename,
                     message=f"Unrecognized geo_ids (not in historical data) {unexpected_geos}"))
         report.increment_total_checks()
-        upper_case_geos = [
-            geo for geo in df_to_test['geo_id'] if geo.lower() != geo]
+        upper_case_geos = {
+            geo for geo in df_to_test['geo_id'] if geo.lower() != geo}
         if len(upper_case_geos) > 0:
             report.add_raised_warning(
                 ValidationFailure(
@@ -218,8 +218,8 @@ class StaticValidator:
             if geo_type in numeric_geo_types:
                 # Check if geo_ids were stored as floats (contain decimal point) and
                 # contents before decimal match the specified regex pattern.
-                leftover = [geo[1] for geo in df_to_test["geo_id"].str.split(
-                    ".") if len(geo) > 1 and re.match(geo_regex, geo[0])]
+                leftover = {geo[1] for geo in df_to_test["geo_id"].str.split(
+                    ".") if len(geo) > 1 and re.match(geo_regex, geo[0])}
 
                 # If any floats found, remove decimal and anything after.
                 if len(leftover) > 0:
@@ -230,7 +230,7 @@ class StaticValidator:
                         ValidationFailure(
                             "check_geo_id_type",
                             filename=nameformat,
-                            message="geo_ids saved as floats; strings preferred"))
+                            message=f"geo_ids saved as floats; strings preferred: {leftover}"))
 
             if geo_type in fill_len.keys():
                 # Left-pad with zeroes up to expected length. Fixes missing leading zeroes
@@ -281,29 +281,35 @@ class StaticValidator:
 
         if percent_option:
             if not df_to_test[(df_to_test['val'] > 100)].empty:
+                bad_values = df_to_test[(df_to_test['val'] > 100)]['val'].unique()
                 report.add_raised_error(
                     ValidationFailure(
                         "check_val_pct_gt_100",
                         filename=nameformat,
-                        message="val column can't have any cell greater than 100 for percents"))
+                        message="val column can't have any cell greater than 100 for percents; "
+                                f"invalid values: {bad_values}"))
 
             report.increment_total_checks()
 
         if proportion_option:
             if not df_to_test[(df_to_test['val'] > 100000)].empty:
+                bad_values = df_to_test[(df_to_test['val'] > 100000)]['val'].unique()
                 report.add_raised_error(
                     ValidationFailure("check_val_prop_gt_100k",
                                       filename=nameformat,
                                       message="val column can't have any cell greater than 100000 "
-                                              "for proportions"))
+                                              "for proportions; "
+                                              f"invalid values: {bad_values}"))
 
             report.increment_total_checks()
 
         if not df_to_test[(df_to_test['val'] < 0)].empty:
+            bad_values = df_to_test[(df_to_test['val'] < 0)]['val'].unique()
             report.add_raised_error(
                 ValidationFailure("check_val_lt_0",
                                   filename=nameformat,
-                                  message="val column can't have any cell smaller than 0"))
+                                  message="val column can't have any cell smaller than 0; "
+                                          f"invalid values: {bad_values}"))
 
         report.increment_total_checks()
 
@@ -346,10 +352,12 @@ class StaticValidator:
             report.increment_total_checks()
 
             if df_to_test["se"].isnull().mean() > 0.5:
+                bad_mean = round(df_to_test["se"].isnull().mean() * 100, 2)
                 report.add_raised_error(
                     ValidationFailure("check_se_many_missing",
                                       filename=nameformat,
-                                      message='Recent se values are >50% NA'))
+                                      message='Recent se values are >50% NA: '
+                                              f'{bad_mean}%'))
 
             report.increment_total_checks()
 

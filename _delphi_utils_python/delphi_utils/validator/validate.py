@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Tools to validate CSV source data, including various check methods."""
+import time
 from .datafetcher import load_all_files
 from .dynamic import DynamicValidator
 from .errors import ValidationFailure
@@ -54,6 +55,7 @@ class Validator:
         Returns:
             - ValidationReport collating the validation outcomes
         """
+        start_time = time.time()
         report = ValidationReport(self.suppressed_errors, self.data_source, self.dry_run)
         frames_list = load_all_files(self.export_dir, self.time_window.start_date,
                                      self.time_window.end_date)
@@ -61,4 +63,5 @@ class Validator:
         # Dynamic Validation only performed when frames_list is populated
         if len(frames_list) > 0:
             self.dynamic_validation.validate(aggregate_frames(frames_list), report)
+        report.set_elapsed_time_in_seconds(round(time.time() - start_time, 2))
         return report

@@ -38,8 +38,7 @@ def get_indicator_data(sensors: List[SensorConfig],
     all_combos = product(sensors, locations)
     as_of_str = as_of.strftime("%Y%m%d")
     all_params = [
-        {"source": "covidcast",
-         "data_source": sensor.source,
+        {"data_source": sensor.source,
          "signals": sensor.signal,
          "time_type": "day",
          "geo_type": location.geo_type,
@@ -48,7 +47,7 @@ def get_indicator_data(sensors: List[SensorConfig],
          "as_of": as_of_str}
         for sensor, location in all_combos
     ]
-    responses = Epidata.async_epidata(all_params)
+    responses = Epidata.async_epidata("covidcast", all_params)
     for response, params in responses:
         # -2 = no results, 1 = success. Truncated data or server errors may lead to this Exception.
         if response["result"] not in (-2, 1):

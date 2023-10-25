@@ -2,6 +2,8 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "darker[flynt]~=1.7.2",
+    "isort==5.12.0",
     "freezegun",
     "numpy",
     "pandas",
@@ -11,7 +13,7 @@ required = [
     "pylint==2.8.3",
     "delphi-utils",
     "covidcast",
-    "delphi-epidata"
+    "delphi-epidata",
 ]
 
 setup(

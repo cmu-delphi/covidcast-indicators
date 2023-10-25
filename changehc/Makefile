@@ -1,6 +1,9 @@
 .PHONY = venv, lint, test, clean
 
 dir = $(shell find ./delphi_* -name __init__.py | grep -o 'delphi_[_[:alnum:]]*' | head -1)
+REVISION ?= ""
+DIFF ?= ""
+CHECK ?= ""
 venv:
 	python3.8 -m venv env
 
@@ -17,8 +20,11 @@ install-ci: venv
 	pip install .
 
 lint:
-	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pylint $(dir) --rcfile=../pyproject.toml
 	. env/bin/activate; pydocstyle $(dir)
+
+format:
+	. env/bin/activate; darker $(DIFF) $(REVISION) $(CHECK) $(dir)
 
 test:
 	. env/bin/activate ;\

@@ -39,3 +39,9 @@ jobs:
     - name: Test
       run: |
         make test
+    - name: Commit Range
+      id: commit-range
+      uses: akaihola/darker/.github/actions/commit-range@1.7.1
+    - name: Format (darker)
+      run: |
+        DIFF="--diff" CHECK="--check" REVISION="--revision='${{ steps.commit-range.outputs.commit-range }}'" make format

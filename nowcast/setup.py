@@ -4,14 +4,16 @@ from setuptools import find_packages
 required = [
     "aiohttp",
     "covidcast",
+    "darker[flynt]~=1.7.2",
     "delphi-utils",
+    "isort==5.12.0",
     "numpy",
     "pandas",
     "pydocstyle",
     "pytest",
     "pytest-cov",
     "pylint==2.8.3",
-    "scipy"
+    "scipy",
 ]
 
 setup(

@@ -14,7 +14,7 @@ from delphi_utils import GeoMapper, Weekday, add_prefix, create_export_csv
 
 # first party
 from .config import Config
-from .constants import NA, SMOOTHED, SMOOTHED_ADJ, SMOOTHED_ADJ_CLI, SMOOTHED_ADJ_FLU, SMOOTHED_CLI, SMOOTHED_FLU
+from .constants import SMOOTHED, SMOOTHED_ADJ, SMOOTHED_ADJ_CLI, SMOOTHED_ADJ_FLU, SMOOTHED_CLI, SMOOTHED_FLU
 from .sensor import CHCSensor
 
 

@@ -2,6 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "darker[isort]~=2.1.1",
     "numpy",
     "pandas",
     "pyarrow",
@@ -11,7 +12,7 @@ required = [
     "pytest-cov",
     "pylint==2.8.3",
     "delphi-utils",
-    "covidcast"
+    "covidcast",
 ]
 
 setup(

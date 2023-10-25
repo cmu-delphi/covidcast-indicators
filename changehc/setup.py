@@ -2,6 +2,7 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "darker[isort]~=2.1.1",
     "numpy",
     "pandas",
     "pyarrow",
@@ -13,7 +14,7 @@ required = [
     "covidcast",
     "boto3",
     "moto~=4.2.14",
-    "paramiko"
+    "paramiko",
 ]
 
 setup(

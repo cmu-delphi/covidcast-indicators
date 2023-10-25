@@ -2,12 +2,13 @@ from setuptools import setup
 from setuptools import find_packages
 
 with open("README.md", "r") as f:
-  long_description = f.read()
+    long_description = f.read()
 
 required = [
     "boto3",
     "covidcast",
     "cvxpy",
+    "darker[isort]~=2.1.1",
     "epiweeks",
     "freezegun",
     "gitpython",

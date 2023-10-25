@@ -17,8 +17,11 @@ install-ci: venv
 	pip install .
 
 lint:
-	. env/bin/activate; pylint $(dir)
+	. env/bin/activate; pylint $(dir) --rcfile=../pyproject.toml --ignore delphi_nowcast/nowcast_fusion
 	. env/bin/activate; pydocstyle $(dir) --match-dir '(?!nowcast_fusion)'
+
+format:
+	. env/bin/activate; darker $(DIFF) $(REVISION) $(CHECK) $(dir)
 
 test:
 	. env/bin/activate ;\

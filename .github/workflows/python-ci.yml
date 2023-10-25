@@ -21,7 +21,9 @@ jobs:
       run:
         working-directory: ${{ matrix.packages }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
     - name: Set up Python 3.8
       uses: actions/setup-python@v2
       with:
@@ -39,3 +41,9 @@ jobs:
     - name: Test
       run: |
         make test
+    # - name: Commit Range
+    #   id: commit-range
+    #   uses: akaihola/darker/.github/actions/commit-range@1.7.1
+    # - name: Format (darker)
+    #   run: |
+    #     DIFF="--diff" CHECK="--check" REVISION="--revision='${{ steps.commit-range.outputs.commit-range }}'" make format

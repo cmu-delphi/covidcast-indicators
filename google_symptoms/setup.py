@@ -2,6 +2,8 @@ from setuptools import setup
 from setuptools import find_packages
 
 required = [
+    "darker[flynt]~=1.7.2",
+    "isort==5.12.0",
     "mock",
     "numpy",
     "pandas",
@@ -12,7 +14,7 @@ required = [
     "delphi-utils",
     "freezegun",
     "pandas-gbq",
-    "db-dtypes"
+    "db-dtypes",
 ]
 
 setup(

@@ -67,7 +67,7 @@ def preprocess(df, level):
     try:
         df = df[KEEP_COLUMNS]
     except KeyError:
-        raise ValueError(
+        raise ValueError(  # pylint: disable=raise-missing-from
             "Some necessary columns are missing. The dataset "
             "schema may have changed. Please investigate."
         )

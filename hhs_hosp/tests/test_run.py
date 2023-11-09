@@ -185,6 +185,12 @@ def test_output_files(mock_covid_hosp):
         params = {
             "common": {
                 "export_dir": tmpdir
+            },
+            "validation": {
+                "common": {
+                "data_source": "hhs",
+                "api_credentials": "fakecred"
+                }
             }
         }
         run_module(params)
@@ -215,6 +221,12 @@ def test_ignore_last_range_no_results(mock_covid_hosp, mock_export):
     params = {
         "common": {
             "export_dir": "./receiving"
-        }
+        },
+        "validation": {
+                "common": {
+                "data_source": "hhs",
+                "api_credentials": "fakecred"
+                }
+            }
     }
     assert not run_module(params)  # function should not raise value error and has no return value

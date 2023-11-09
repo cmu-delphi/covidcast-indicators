@@ -77,6 +77,7 @@ def run_module(params):
             - "log_filename" (optional): str, name of file to write logs
             - "epidata" (optional): dict, extra parameters to send to Epidata.covid_hosp
     """
+    Epidata.auth = ('epidata', str(params["validation"]["common"]["api_credentials"]))
     start_time = time.time()
     logger = get_structured_logger(
         __name__, filename=params["common"].get("log_filename"),

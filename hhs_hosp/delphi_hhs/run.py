@@ -76,6 +76,9 @@ def run_module(params):
             - "export_dir": str, directory to write output
             - "log_filename" (optional): str, name of file to write logs
             - "epidata" (optional): dict, extra parameters to send to Epidata.covid_hosp
+        - "validation":
+            - "common":
+                - "api_credentials": str, api key to prevent hitting max number of query limit.
     """
     Epidata.auth = ('epidata', str(params["validation"]["common"]["api_credentials"]))
     start_time = time.time()

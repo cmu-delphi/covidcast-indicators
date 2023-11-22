@@ -10,6 +10,7 @@ from typing import Dict, Any
 
 import numpy as np
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
+from delphi_utils.geomap import GeoMapper
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
@@ -27,6 +28,21 @@ def add_nancodes(df):
     # Mark any remaining nans with unknown
     remaining_nans_mask = df["val"].isnull()
     df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
+    return df
+
+def county_to_nation(df):
+    """Aggregate county data to national data."""
+    gmpr = GeoMapper()
+
+    # Convert from state code (e.g. 'al', 'ca') to nation code
+    df = gmpr.add_geocode(df, "state_code", "nation", from_col="geo_id", new_col="nation")
+
+    # Replace old geo_id column with new nation column
+    df.drop(columns="geo_id", inplace=True)
+    df.rename(columns={"nation": "geo_id"}, inplace=True)
+
+    # Sum up numeric values, like incidence, deaths or population
+    df = df.groupby(["timestamp", "geo_id"]).sum(numeric_only=True).reset_index()
     return df
 
 def run_module(params: Dict[str, Any]):
@@ -71,45 +87,24 @@ def run_module(params: Dict[str, Any]):
 
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
-    for metric in METRICS:
-        if metric == 'percent_of_expected_deaths':
-            logger.info("Generating signal and exporting to CSV",
-                        metric = metric)
-            df = df_pull.copy()
-            df["val"] = df[metric]
-            df["se"] = np.nan
-            df["sample_size"] = np.nan
-            df = add_nancodes(df)
-            # df = df[~df["val"].isnull()]
-            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
-            dates = create_export_csv(
-                df,
-                geo_res=GEO_RES,
-                export_dir=daily_export_dir,
-                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-                sensor=sensor_name,
-                weekly_dates=True
-            )
-            if len(dates) > 0:
-                stats.append((max(dates), len(dates)))
-        else:
-            for sensor in SENSORS:
+    for geo in GEO_RES:
+        for metric in METRICS:
+            if metric == 'percent_of_expected_deaths':
                 logger.info("Generating signal and exporting to CSV",
                             metric = metric,
                             sensor = sensor)
                 df = df_pull.copy()
-                if sensor == "num":
-                    df["val"] = df[metric]
-                else:
-                    df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
+                if geo == "nation":
+                    df = county_to_nation(df)
+                df["val"] = df[metric]
                 df["se"] = np.nan
                 df["sample_size"] = np.nan
-                df = add_nancodes(df)
                 # df = df[~df["val"].isnull()]
-                sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
+                df = add_nancodes(df)
+                sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
                 dates = create_export_csv(
                     df,
-                    geo_res=GEO_RES,
+                    geo_res=geo,
                     export_dir=daily_export_dir,
                     start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
                     sensor=sensor_name,
@@ -117,6 +112,32 @@ def run_module(params: Dict[str, Any]):
                 )
                 if len(dates) > 0:
                     stats.append((max(dates), len(dates)))
+            else:
+                for sensor in SENSORS:
+                    logger.info("Generating signal and exporting to CSV",
+                                metric = metric)
+                    df = df_pull.copy()
+                    if geo == "nation":
+                        df = county_to_nation(df)
+                    if sensor == "num":
+                        df["val"] = df[metric]
+                    else:
+                        df["val"] = df[metric] / df["population"] * INCIDENCE_BASE
+                    df["se"] = np.nan
+                    df["sample_size"] = np.nan
+                    # df = df[~df["val"].isnull()]
+                    df = add_nancodes(df)
+                    sensor_name = "_".join([SENSOR_NAME_MAP[metric], sensor])
+                    dates = create_export_csv(
+                        df,
+                        geo_res=geo,
+                        export_dir=daily_export_dir,
+                        start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                        sensor=sensor_name,
+                        weekly_dates=True
+                    )
+                    if len(dates) > 0:
+                        stats.append((max(dates), len(dates)))
 
 #     Weekly run of archive utility on Monday
 #     - Does not upload to S3, that is handled by daily run of archive utility

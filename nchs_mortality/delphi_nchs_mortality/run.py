@@ -91,8 +91,7 @@ def run_module(params: Dict[str, Any]):
         for metric in METRICS:
             if metric == 'percent_of_expected_deaths':
                 logger.info("Generating signal and exporting to CSV",
-                            metric = metric,
-                            sensor = sensor)
+                            metric = metric)
                 df = df_pull.copy()
                 if geo == "nation":
                     df = county_to_nation(df)
@@ -115,7 +114,8 @@ def run_module(params: Dict[str, Any]):
             else:
                 for sensor in SENSORS:
                     logger.info("Generating signal and exporting to CSV",
-                                metric = metric)
+                                metric = metric,
+                                sensor=sensor)
                     df = df_pull.copy()
                     if geo == "nation":
                         df = county_to_nation(df)

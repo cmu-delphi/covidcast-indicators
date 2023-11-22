@@ -14,7 +14,7 @@ from delphi_utils.geomap import GeoMapper
 
 from .archive_diffs import arch_diffs
 from .constants import (METRICS, SENSOR_NAME_MAP,
-                        SENSORS, INCIDENCE_BASE, GEO_RES)
+                        SENSORS, INCIDENCE_BASE)
 from .pull import pull_nchs_mortality_data
 
 
@@ -87,31 +87,29 @@ def run_module(params: Dict[str, Any]):
 
     stats = []
     df_pull = pull_nchs_mortality_data(token, test_file)
-    for geo in GEO_RES:
-        for metric in METRICS:
-            if metric == 'percent_of_expected_deaths':
-                logger.info("Generating signal and exporting to CSV",
-                            metric = metric)
-                df = df_pull.copy()
-                if geo == "nation":
-                    df = county_to_nation(df)
-                df["val"] = df[metric]
-                df["se"] = np.nan
-                df["sample_size"] = np.nan
-                # df = df[~df["val"].isnull()]
-                df = add_nancodes(df)
-                sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
-                dates = create_export_csv(
-                    df,
-                    geo_res=geo,
-                    export_dir=daily_export_dir,
-                    start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
-                    sensor=sensor_name,
-                    weekly_dates=True
-                )
-                if len(dates) > 0:
-                    stats.append((max(dates), len(dates)))
-            else:
+    for metric in METRICS:
+        if metric == 'percent_of_expected_deaths':
+            logger.info("Generating signal and exporting to CSV",
+                        metric = metric)
+            df = df_pull.copy()
+            df["val"] = df[metric]
+            df["se"] = np.nan
+            df["sample_size"] = np.nan
+            # df = df[~df["val"].isnull()]
+            df = add_nancodes(df)
+            sensor_name = "_".join([SENSOR_NAME_MAP[metric]])
+            dates = create_export_csv(
+                df,
+                geo_res="state",
+                export_dir=daily_export_dir,
+                start_date=datetime.strptime(export_start_date, "%Y-%m-%d"),
+                sensor=sensor_name,
+                weekly_dates=True
+            )
+            if len(dates) > 0:
+                stats.append((max(dates), len(dates)))
+        else:
+            for geo in ["state", "nation"]:
                 for sensor in SENSORS:
                     logger.info("Generating signal and exporting to CSV",
                                 metric = metric,

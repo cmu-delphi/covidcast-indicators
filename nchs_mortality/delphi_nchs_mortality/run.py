@@ -30,8 +30,8 @@ def add_nancodes(df):
     df.loc[remaining_nans_mask, "missing_val"] = Nans.OTHER
     return df
 
-def county_to_nation(df):
-    """Aggregate county data to national data."""
+def state_to_nation(df):
+    """Aggregate state data to national data."""
     gmpr = GeoMapper()
 
     # Convert from state code (e.g. 'al', 'ca') to nation code
@@ -116,7 +116,7 @@ def run_module(params: Dict[str, Any]):
                                 sensor=sensor)
                     df = df_pull.copy()
                     if geo == "nation":
-                        df = county_to_nation(df)
+                        df = state_to_nation(df)
                     if sensor == "num":
                         df["val"] = df[metric]
                     else:

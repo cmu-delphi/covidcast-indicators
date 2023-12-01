@@ -1,14 +1,14 @@
 from datetime import datetime, timedelta
 import json
 import subprocess
-import os
+from os import makedirs
 
 with open('params.json', 'r') as file:
         data = json.load(file)
 
 SOURCE = "hhs"
 export_dir = "25"
-os.mkdir(export_dir)
+makedirs(export_dir, exist_ok=True)
 
 START_DATE = datetime(2023, 5, 25)
 END_DATE = datetime(2023, 5, 25)
@@ -19,9 +19,8 @@ while current_date <= END_DATE:
     print(date_str)
 
     issue_dir = "issue_%s" % date_str
-    os.mkdir("%s/%s" % (export_dir,issue_dir)) #create issue dir
-    os.mkdir("%s/%s/%s" % (export_dir,issue_dir,SOURCE)) #create source dir
-    
+    makedirs(f"{export_dir}/{issue_dir}/{SOURCE}", exist_ok=True) #create issue & source dir
+
     data['common']['epidata']['as_of'] = date_str
     data['common']['export_dir'] = export_dir + "/" + issue_dir + "/" + SOURCE
     with open('params.json', 'w') as file:

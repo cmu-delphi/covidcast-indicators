@@ -1,5 +1,18 @@
-# MODULE NAME
+# NWSS wastewater data
 
+We import the wastewater data, including percentile, raw counts, and smoothed data, from the CDC website, aggregate to the state level from the sub-county wastewater treatment plant level, and export the aggregated data.
+For details see the `DETAILS.md` file in this directory.
+
+## Create a MyAppToken
+`MyAppToken` is required when fetching data from SODA Consumer API 
+(https://dev.socrata.com/foundry/data.cdc.gov/r8kw-7aab). Follow the 
+steps below to create a MyAppToken.
+- Click the `Sign up for an app token` button in the linked website
+- Sign In or Sign Up with Socrata ID
+- Click the `Create New App Token` button
+- Fill in `Application Name` and `Description` (You can just use NCHS_Mortality
+  for both) and click `Save`
+- Copy the `App Token`
 
 
 ## Running the Indicator

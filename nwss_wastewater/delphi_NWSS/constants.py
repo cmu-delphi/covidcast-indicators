@@ -26,7 +26,7 @@ GEOS = [
 
 SIGNALS = ["pcr_conc_smoothed"]
 METRIC_SIGNALS = ["detect_prop_15d", "percentile", "ptc_15d"]
-METRIC_DATES = ["issue", "date_start", "date_end"]
+METRIC_DATES = ["date_start", "date_end"]
 SAMPLE_SITE_NAMES = {
     "wwtp_jurisdiction": "category",
     "wwtp_id": int,
@@ -48,3 +48,5 @@ SIG_DIGITS = 7
 # ]
 
 SMOOTHERS = []
+
+NEWLINE = "\n"

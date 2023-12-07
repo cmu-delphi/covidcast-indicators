@@ -6,15 +6,25 @@ when the module is run with `python -m MODULE_NAME`.  `run_module`'s lone argume
 nested dictionary of parameters loaded from the params.json file.  We expect the `params` to have
 the following structure:
     - "common":
-        - "export_dir": str, directory to which the results are exported
+        - "daily_export_dir": str, directory to write daily output
+        - "weekly_export_dir": str, directory to write weekly output
         - "log_filename": (optional) str, path to log file
+        - "log_exceptions" (optional): bool, whether to log exceptions to file
     - "indicator": (optional)
-        - "wip_signal": (optional) Any[str, bool], list of signals that are works in progress, or
-            True if all signals in the registry are works in progress, or False if only
-            unpublished signals are.  See `delphi_utils.add_prefix()`
-        - Any other indicator-specific settings
+        - "wip_signal": (optional) Any[str, bool], list of signals that are
+            works in progress, or True if all signals in the registry are works
+            in progress, or False if only unpublished signals are.  See
+            `delphi_utils.add_prefix()`
+        - "test_file" (optional): str, name of file from which to read test data
+        - "token": str, authentication for upstream data pull
+    - "archive" (optional): if provided, output will be archived with S3
+        - "aws_credentials": Dict[str, str], AWS login credentials (see S3 documentation)
+        - "bucket_name: str, name of S3 bucket to read/write
+        - "daily_cache_dir": str, directory of locally cached daily data
+        - "weekly_cache_dir": str, directory of locally cached weekly data
 """
 import time
+import os
 from datetime import timedelta, datetime
 from itertools import product
 
@@ -43,7 +53,7 @@ def add_nancodes(df):
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
     # set the weight of places with na's to zero
     df[f"relevant_pop_{column_aggregating}"] = (
-        df["population_served"] * df[column_aggregating].isna()
+        df["population_served"] * df[column_aggregating].notna()
     )
     # generate the weighted version
     df[f"weighted_{column_aggregating}"] = (
@@ -56,9 +66,10 @@ def add_needed_columns(df, col_names=["se", "sample_size"]):
     for col_name in col_names:
         df[col_name] = np.nan
     df = add_nancodes(df)
+    return df
 
 
-def run_module(params: Dict[str, Any]):
+def run_module(params: dict[str, any]):
     """
     Runs the indicator
 
@@ -99,21 +110,24 @@ def run_module(params: Dict[str, Any]):
         df = generate_weights(df, sensor)
 
         for geo in GEOS:
+            logger.info("Generating signal and exporting to CSV", metric=sensor)
             if geo == "nation":
                 agg_df = df.groupby("timestamp").agg(
                     {"population_served": "sum", f"weighted_{sensor}": "sum"}
                 )
-                agg_df["val"] = agg_df.weighted / agg_df.population_served
-                logger.info("Generating signal and exporting to CSV", metric=sensor)
+                agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
+                agg_df = agg_df.reset_index()
+                agg_df["geo_id"] = "us"
             else:
                 agg_df = df.groupby(["timestamp", geo]).agg(
                     {"population_served": "sum", f"weighted_{sensor}": "sum"}
                 )
-                agg_df["val"] = agg_df.weighted / agg_df.population_served
-                logger.info("Generating signal and exporting to CSV", metric=sensor)
+                agg_df["val"] = agg_df[f"weighted_{sensor}"] / agg_df.population_served
+                agg_df = agg_df.reset_index()
+                agg_df = agg_df.rename(columns={"state": "geo_id"})
             # add se, sample_size, and na codes
             agg_df = add_needed_columns(agg_df)
-
+            print(agg_df)
             # actual export
             dates = create_export_csv(
                 agg_df, geo_res=geo, export_dir=daily_export_dir, sensor=sensor

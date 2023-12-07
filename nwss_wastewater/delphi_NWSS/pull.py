@@ -16,6 +16,7 @@ from .constants import (
     METRIC_DATES,
     SAMPLE_SITE_NAMES,
     SIG_DIGITS,
+    NEWLINE,
 )
 
 
@@ -58,10 +59,12 @@ def pull_nwss_data(token: str, test_file: Optional[str] = None):
     # Constants
     keep_columns = SIGNALS.copy()
     signals_dict_metric = {key: float for key in METRIC_SIGNALS}
+    metric_dates_dict = {key: "datetime64[ns]" for key in METRIC_DATES}
     type_dict_metric = {**metric_dates_dict, **signals_dict_metric, **SAMPLE_SITE_NAMES}
-    type_dict_metric["timestamp"] = "datetime64[ns]"
-    type_dict["timestamp"] = "datetime64[ns]"
+    # concentration key types
     signals_dict = {key: float for key in SIGNALS}
+    type_dict = {**signals_dict}
+    type_dict["timestamp"] = "datetime64[ns]"
 
     if test_file:
         df = pd.read_csv("./test_data/%s" % test_file)
@@ -71,7 +74,8 @@ def pull_nwss_data(token: str, test_file: Optional[str] = None):
         results_concentration = client.get("g653-rqe2", limit=10**10)
         results_metric = client.get("2ew6-ywp6", limit=10**10)
         df_metric = pd.DataFrame.from_records(results_metric)
-        df = pd.DataFrame.from_records(results)
+        df = pd.DataFrame.from_records(results_concentration)
+        df = df.rename(columns={"date": "timestamp"})
     try:
         df = df.astype(type_dict)
     except KeyError as exc:
@@ -113,12 +117,14 @@ Columns available:
     # drop unused columns from df_metric
     df_population = df_metric.loc[:, ["key_plot_id", "date_start", "population_served"]]
     # get matching keys
-    df_population.rename(columns={"date_start": "date"}, inplace=True)
+    df_population = df_population.rename(columns={"date_start": "timestamp"})
+    df_population = df_population.set_index(["key_plot_id", "timestamp"])
+    df = df.set_index(["key_plot_id", "timestamp"])
 
-    df = df.join(df_metric)
-    df.rename(columns={"date": "timestamp"}, inplace=True)
+    df = df.join(df_population)
+    df = df.reset_index()
     # if there are population NA's, assume the previous value is accurate (most likely introduced by dates only present in one and not the other; even otherwise, best to assume some value rather than break the data)
-    df.population_served.ffill(inplace=True)
+    df.population_served = df.population_served.ffill()
 
     keep_columns.extend(["timestamp", "state", "population_served"])
     return df[keep_columns]

@@ -24,16 +24,12 @@ the following structure:
         - "weekly_cache_dir": str, directory of locally cached weekly data
 """
 import time
-import os
-from datetime import timedelta, datetime
-from itertools import product
+from datetime import datetime
 
 import numpy as np
-import pandas as pd
 from delphi_utils import S3ArchiveDiffer, get_structured_logger, create_export_csv, Nans
-from delphi_utils.geomap import GeoMapper
 
-from .constants import GEOS, SIGNALS, SMOOTHERS
+from .constants import GEOS, SIGNALS
 from .pull import pull_nwss_data
 
 
@@ -51,6 +47,12 @@ def add_nancodes(df):
 
 
 def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
+    """
+    Weigh column_aggregating by population.
+
+    generate the relevant population amounts, and create a weighted but
+    unnormalized column, derived from `column_aggregating`
+    """
     # set the weight of places with na's to zero
     df[f"relevant_pop_{column_aggregating}"] = (
         df["population_served"] * df[column_aggregating].notna()
@@ -62,16 +64,20 @@ def generate_weights(df, column_aggregating="pcr_conc_smoothed"):
     return df
 
 
-def add_needed_columns(df, col_names=["se", "sample_size"]):
+def add_needed_columns(df, col_names=None):
+    """Short util to add expected columns not found in the dataset."""
+    if col_names is None:
+        col_names = ["se", "sample_size"]
+
     for col_name in col_names:
         df[col_name] = np.nan
     df = add_nancodes(df)
     return df
 
 
-def run_module(params: dict[str, any]):
+def run_module(params):
     """
-    Runs the indicator
+    Run the indicator.
 
     Arguments
     --------
@@ -84,7 +90,6 @@ def run_module(params: dict[str, any]):
         filename=params["common"].get("log_filename"),
         log_exceptions=params["common"].get("log_exceptions", True),
     )
-    export_start_date = params["indicator"]["export_start_date"]
     daily_export_dir = params["common"]["daily_export_dir"]
     token = params["indicator"]["token"]
     test_file = params["indicator"].get("test_file", None)
@@ -101,8 +106,7 @@ def run_module(params: dict[str, any]):
     run_stats = []
     ## build the base version of the signal at the most detailed geo level you can get.
     ## compute stuff here or farm out to another function or file
-    df_pull = pull_nwss_data(token)
-    start_date = min(df_pull["timestamp"])
+    df_pull = pull_nwss_data(token, test_file)
     ## aggregate
     for sensor in SIGNALS:
         df = df_pull.copy()
@@ -127,7 +131,6 @@ def run_module(params: dict[str, any]):
                 agg_df = agg_df.rename(columns={"state": "geo_id"})
             # add se, sample_size, and na codes
             agg_df = add_needed_columns(agg_df)
-            print(agg_df)
             # actual export
             dates = create_export_csv(
                 agg_df, geo_res=geo, export_dir=daily_export_dir, sensor=sensor

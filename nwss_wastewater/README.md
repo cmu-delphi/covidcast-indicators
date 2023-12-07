@@ -34,7 +34,7 @@ the module and produce the output datasets (by default, in `receiving`), run
 the following:
 
 ```
-env/bin/python -m delphi_NWSS
+env/bin/python -m delphi_nwss
 ```
 
 If you want to enter the virtual environment in your shell, 

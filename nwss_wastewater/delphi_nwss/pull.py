@@ -7,10 +7,7 @@ import numpy as np
 import pandas as pd
 from sodapy import Socrata
 
-from delphi_utils.geomap import GeoMapper
-
 from .constants import (
-    GEOS,
     SIGNALS,
     METRIC_SIGNALS,
     METRIC_DATES,
@@ -20,8 +17,8 @@ from .constants import (
 )
 
 
-def sig_digit_round(value, N):
-    """round the number of significant digits (x.xxe5 would be 3) to `N`."""
+def sig_digit_round(value, n_digits):
+    """Round the number of significant digits (x.xxe5 would be 3) to `N`."""
     in_value = value
     value = np.asarray(value).copy()
     zero_mask = (value == 0) | np.isinf(value) | np.isnan(value)
@@ -29,7 +26,7 @@ def sig_digit_round(value, N):
     sign_mask = value < 0
     value[sign_mask] *= -1
     exponent = np.ceil(np.log10(value))
-    result = 10**exponent * np.round(value * 10 ** (-exponent), N)
+    result = 10**exponent * np.round(value * 10 ** (-exponent), n_digits)
     result[sign_mask] *= -1
     result[zero_mask] = in_value[zero_mask]
     return result
@@ -67,7 +64,7 @@ def pull_nwss_data(token: str, test_file: Optional[str] = None):
     type_dict["timestamp"] = "datetime64[ns]"
 
     if test_file:
-        df = pd.read_csv("./test_data/%s" % test_file)
+        df = pd.read_csv(f"./test_data/{test_file}")
     else:
         # Pull data from Socrata API
         client = Socrata("data.cdc.gov", token)
@@ -123,7 +120,9 @@ Columns available:
 
     df = df.join(df_population)
     df = df.reset_index()
-    # if there are population NA's, assume the previous value is accurate (most likely introduced by dates only present in one and not the other; even otherwise, best to assume some value rather than break the data)
+    # if there are population NA's, assume the previous value is accurate (most
+    # likely introduced by dates only present in one and not the other; even
+    # otherwise, best to assume some value rather than break the data)
     df.population_served = df.population_served.ffill()
 
     keep_columns.extend(["timestamp", "state", "population_served"])

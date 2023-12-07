@@ -1,6 +1,4 @@
-"""
-Registry for variations
-"""
+"""Registry for variations."""
 
 GEOS = [
     "nation",
@@ -29,7 +27,6 @@ METRIC_SIGNALS = ["detect_prop_15d", "percentile", "ptc_15d"]
 METRIC_DATES = ["date_start", "date_end"]
 SAMPLE_SITE_NAMES = {
     "wwtp_jurisdiction": "category",
-    "wwtp_id": int,
     "wwtp_id": int,
     "reporting_jurisdiction": "category",
     "sample_location": "category",

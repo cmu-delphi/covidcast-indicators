@@ -25,7 +25,7 @@ jobs:
             google_symptoms,
             hhs_hosp,
             nchs_mortality,
-            nwss,
+            nwss_wastewater,
             quidel_covidtest,
             sir_complainsalot,
           ]
